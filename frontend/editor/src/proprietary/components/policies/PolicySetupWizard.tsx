@@ -61,7 +61,6 @@ interface PolicySetupWizardProps {
   children?: (frame: PolicySetupFrame) => ReactNode;
 }
 
-/** A policy step plus whether it runs. */
 type ToolState = PolicyToolStep & { enabled: boolean };
 
 /** Resolve each field's effective value: saved override, else definition default. */

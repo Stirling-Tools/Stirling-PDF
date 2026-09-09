@@ -40,7 +40,7 @@ interface DownloadsProcessingWizardProps {
 
 /**
  * Offers to process the PDFs already in the user's Downloads folder, then shows what it is
- * doing: the server names its own Downloads directory and counts what waits; approving
+ * doing: the server names its own Downloads directory and counts what waits, and approving
  * composes a processing folder over it. While the sweep runs the dialog is a wall of cards
  * built from the runs feed itself, so it never promises a file the sweep skipped.
  */
@@ -71,13 +71,11 @@ export function DownloadsProcessingWizard({
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
 
-  // Only offer where it can work: this build must be able to read a file that lives on disk,
-  // and Downloads must exist, be permitted, and hold something. Without canListDirectory the
-  // results are unreadable here (fetchRunOutputFile throws), so the offer would rewrite the
-  // server's own Downloads in place and never show the user a single result.
-  // Asked repeatedly because the window can open before the bundled backend is reachable —
-  // a single attempt would fail on every desktop cold start. Gives up after a bounded wait
-  // so a genuine "no" stops asking.
+  // Only offer where it can work: the build must be able to read a file on disk, and Downloads
+  // must exist, be permitted, and hold something. Without canListDirectory the results are
+  // unreadable here (fetchRunOutputFile throws), so the offer would rewrite the server's own
+  // Downloads in place and show the user nothing. Retried because the window can open before
+  // the bundled backend is reachable, with a bounded wait so a genuine "no" stops asking.
   useEffect(() => {
     if (!active || !canListDirectory) return;
     let cancelled = false;
@@ -126,7 +124,6 @@ export function DownloadsProcessingWizard({
     setActiveFolderId(null);
   };
 
-  /** Stop the sweep: stand the delivery loop down, cancel the runs, reset. */
   const cancelSweep = async () => {
     cancelRequested.current = true;
     if (activeFolderId) {
@@ -139,8 +136,8 @@ export function DownloadsProcessingWizard({
   };
 
   /**
-   * Deliver the sweep's results into the workbench as they settle, mirroring
-   * the shared delivery's progress onto the card wall and the counts line.
+   * Deliver the sweep's results into the workbench as they settle, mirroring the shared
+   * delivery's progress onto the card wall and the counts line.
    */
   const trackRuns = useCallback(
     async (policyId: string, excludeRunIds: ReadonlySet<string>) => {
@@ -206,9 +203,8 @@ export function DownloadsProcessingWizard({
         await cancelProcessingRuns(folder.id).catch(() => {});
         return;
       }
-      // Mount the directory so Downloads exists in the file manager — only where this
-      // build can read it (desktop); a plain browser would show a forever-empty folder.
-      // Idempotent and best-effort.
+      // Mount the directory so Downloads exists in the file manager, only where this build can
+      // read it (desktop); a plain browser would show a forever-empty folder. Best-effort.
       if (canListDirectory) {
         const segments = suggestion.directory.split(/[/\\]/).filter(Boolean);
         await mountLocalFolder(
@@ -233,7 +229,6 @@ export function DownloadsProcessingWizard({
     }
   };
 
-  /** Distinct document types discovered so far, for the counts line. */
   const typesFound = useMemo(() => {
     const ids = new Set<string>();
     for (const card of cards) {

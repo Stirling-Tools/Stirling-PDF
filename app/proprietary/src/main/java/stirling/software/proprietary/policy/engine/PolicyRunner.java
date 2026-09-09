@@ -114,10 +114,9 @@ public class PolicyRunner {
         Semaphore admission = sweepAdmission();
         List<String> runIds = new ArrayList<>();
         if (inputs.isEmpty()) {
-            // Generator pipeline: one run with no input. Still fall through to the cleanup
-            // below so rows recorded for its folder outputs are pruned like anything else,
-            // instead of accumulating until the policy is deleted.
-            // Generator pipeline: no input, so neither a source nor a document to attribute to.
+            // Generator pipeline: one run with no input, so neither a source nor a document to
+            // attribute to. Still falls through to the cleanup below, so rows recorded for its
+            // folder outputs are pruned instead of accumulating until the policy is deleted.
             runIds.add(
                     startRun(
                             policy,

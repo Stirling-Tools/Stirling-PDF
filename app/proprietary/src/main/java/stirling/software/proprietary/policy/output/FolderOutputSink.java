@@ -84,9 +84,8 @@ public class FolderOutputSink implements PolicyOutputSink {
         sweepStaleTmp(tmpDir);
 
         boolean replace = Boolean.parseBoolean(String.valueOf(spec.options().get(REPLACE_OPTION)));
-        // In place means name included: a renaming step must not drop its result beside the
-        // watched file. The input's name wins for one-in-one-out; a splitting pipeline lands
-        // its outputs alongside instead.
+        // In place means the input's name: a renaming step must not drop its result beside the
+        // watched file. One-in-one-out only; a splitting pipeline lands its outputs alongside.
         String inputName =
                 delivery.inputs().primary().size() == 1
                         ? delivery.inputs().primary().get(0).getFilename()
@@ -220,15 +219,13 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Where a same-name re-drop's original is kept once the canonical slot is taken. A
-     * subdirectory, not a numbered sibling: a restore brings back every regular file directly under
-     * {@link #originalsDir}, so a numbered sibling there would be restored as a file the watched
-     * folder never held.
+     * Where a same-name re-drop's original goes once the canonical slot is taken. A subdirectory,
+     * not a numbered sibling: a restore brings back every regular file directly under {@link
+     * #originalsDir}, so a sibling would be restored as a file the watched folder never held.
      *
-     * <p>Canonical stays with the first original, which is right when a file is reprocessed and
-     * wrong when the user replaced it with a different document of the same name - restoring then
-     * returns the earlier document. Telling those apart needs the previous output's content hash,
-     * which the next claim clears from the ledger row, so it is not decidable here today.
+     * <p>Canonical stays with the first original, which is wrong when the user replaced the file
+     * with a different document of the same name; telling that apart needs the previous output's
+     * content hash, which the next claim clears from the ledger row.
      */
     private static Path supersededDir(Path dir) {
         return originalsDir(dir).resolve("superseded");
@@ -236,8 +233,7 @@ public class FolderOutputSink implements PolicyOutputSink {
 
     /**
      * The folder's workspace root, created hidden: a dot prefix for POSIX and the app's own
-     * listings, the DOS attribute for Explorer. Best-effort — a filesystem without DOS attributes
-     * keeps just the dot.
+     * listings, plus the DOS attribute for Explorer where the filesystem has one.
      */
     private static Path stirlingDir(Path dir) throws IOException {
         Path root = dir.resolve(".stirling");
@@ -254,13 +250,10 @@ public class FolderOutputSink implements PolicyOutputSink {
      * Move the target into {@code .stirling/originals} before a replace overwrites it, returning
      * the archived path, or null when nothing is at the target. Throws if an existing target cannot
      * be archived, so the caller aborts before overwriting and never destroys an unpreserved
-     * original.
+     * original. With the canonical slot already taken, the kept original stays there and this
+     * content goes to {@link #supersededDir}.
      *
-     * <p>With the slot already taken the kept original stays canonical and this content goes to
-     * {@link #supersededDir}, not to a numbered sibling that a restore would bring back as a file
-     * the folder never held.
-     *
-     * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} and
+     * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} so
      * needs no atomic visibility, and a plain move survives a cross-device archive dir where {@code
      * ATOMIC_MOVE} would throw.
      */

@@ -511,8 +511,7 @@ export default function FileManagerView() {
       return;
     }
     let cancelled = false;
-    // The directory is the disk's, and anything can write to it - Explorer, a
-    // sync client, a pipeline replacing files in place. Poll it while open so
+    // The directory is the disk's and anything can write to it, so poll while open and let
     // outside changes appear on their own; only a changed listing re-renders.
     const load = async (background: boolean) => {
       if (!background) setDiskLoading(true);
@@ -604,9 +603,8 @@ export default function FileManagerView() {
     [addFiles, navActions, navigate, folders, t],
   );
 
-  // A working folder lists its real contents; each file wears its pipeline
-  // state (ready / processing / waiting) and a state filter narrows the listing.
-  // Files the pipeline never claims carry no state at all.
+  // A working folder lists its real contents; each file wears its pipeline state and a state
+  // filter narrows the listing. Files the pipeline never claims carry no state at all.
   const processingApi = useProcessingFolders();
   const currentProcessing = currentFolder
     ? processingApi.stateFor(currentFolder)
@@ -614,9 +612,8 @@ export default function FileManagerView() {
   const outputDirectory = currentLocalDirectory
     ? currentProcessing?.outputDirectory
     : undefined;
-  // Per-file pipeline state, straight from the backend's ledger — processing
-  // in place leaves nothing else (no output folder) to infer a file's state
-  // from. Polled while the folder is open so badges follow the sweep live.
+  // Per-file state from the backend's ledger: processing in place leaves no output folder to
+  // infer it from. Polled while the folder is open so badges follow the sweep live.
   const [fileStates, setFileStates] = useState<Map<string, DiskFileState>>(
     new Map(),
   );
@@ -625,18 +622,16 @@ export default function FileManagerView() {
     new Set(),
   );
   const processingRecordId = currentProcessing?.id;
-  // The state layer applies inside any working folder: a disk mount's
-  // directory listing or a server folder's stored files, both joined to the
-  // same ledger behind listFiles.
+  // The state layer applies inside any working folder: a mount's directory listing or a
+  // server folder's stored files, both joined to the same ledger behind listFiles.
   const processingView = Boolean(
     processingRecordId && (outputDirectory || !currentLocalDirectory),
   );
   const { listFiles, retryFile, revertFile } = processingApi;
   useEffect(() => {
     if (!processingView || !processingRecordId) {
-      // Keep the empty value when it is already empty: a fresh Map/Set is never Object.is
-      // equal, so setting one unconditionally re-renders, and this effect runs on every
-      // render of a folder that has no processing.
+      // Keep the empty value when it is already empty: a fresh Map/Set is never Object.is equal,
+      // so setting one unconditionally re-renders, on every render of a folder with no processing.
       setFileStates((prev) => (prev.size === 0 ? prev : new Map()));
       setRevertables((prev) => (prev.size === 0 ? prev : new Set()));
       return;
@@ -2693,8 +2688,8 @@ export default function FileManagerView() {
 }
 
 /**
- * A cheap identity for a directory listing, so a background re-read only
- * re-renders the grid when something actually changed on disk.
+ * A cheap identity for a directory listing, so a background re-read only re-renders the
+ * grid when something actually changed on disk.
  */
 function listingSignature(
   files: { path: string; sizeBytes: number; lastModified: number }[],

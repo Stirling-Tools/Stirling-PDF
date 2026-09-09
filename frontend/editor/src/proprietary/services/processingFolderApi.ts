@@ -57,7 +57,6 @@ export async function saveProcessingFolder(
   return res.data;
 }
 
-/** What one sweep took on, as the backend reports it. */
 export interface SweepOutcome {
   runIds: string[];
   filesListed: number;
@@ -68,7 +67,6 @@ export interface SweepOutcome {
   retried: number;
 }
 
-/** Run the pipeline over the folder's current contents now. */
 export async function sweepProcessingFolder(id: string): Promise<SweepOutcome> {
   const res = await apiClient.post<SweepOutcome>(
     `/api/v1/processing-folders/${id}/sweep`,
@@ -98,7 +96,6 @@ export function classificationDefaults(
   };
 }
 
-/** The server's Downloads directory and what is waiting in it. */
 export interface DownloadsSuggestion {
   directory: string;
   available: boolean;
@@ -180,18 +177,15 @@ export async function fetchRunOutputFile(
   });
 }
 
-/** One file in a processing folder, with its place in the pipeline. */
 export interface MountedFile {
   name: string;
   sizeBytes: number;
   lastModified: number;
   /** Its place in the folder's pipeline: done, processing, failed, or waiting. */
   state: "done" | "processing" | "failed" | "waiting";
-  /** Whether a pre-processing original is archived and can be restored. */
   hasOriginal?: boolean;
 }
 
-/** A processing folder's files with their per-file pipeline state. */
 export async function fetchMountedFiles(id: string): Promise<MountedFile[]> {
   const res = await apiClient.get<MountedFile[]>(
     `/api/v1/processing-folders/${id}/files`,

@@ -53,9 +53,8 @@ public interface ProcessedLedger {
     }
 
     /**
-     * Take a parked failure back into PROCESSING at the same gate. Only a user-invoked sweep calls
-     * this; the unattended watcher never retries a failing file until it changes. False when the
-     * row is no longer a same-gate failure.
+     * Take a parked failure back into PROCESSING at the same gate; only a user-invoked sweep calls
+     * this. False when the row is no longer a same-gate failure.
      */
     boolean reclaimFailed(String policyId, String identity, String gate);
 

@@ -217,12 +217,11 @@ public class ApplicationProperties {
         private List<String> allowedFolderRoots = new java.util.ArrayList<>();
 
         /**
-         * How many of one sweep's runs may execute at once; further runs queue (visible as pending)
-         * and start as slots free up. Sweeps fan out one run per file, and a folder of documents
-         * dispatched all at once piles up at the pipeline's slowest tool — nothing visibly finishes
-         * until the end. The cap keeps completions arriving steadily; the default suits API-bound
-         * pipelines (classification is one fast-model call per document). Turn it down for a
-         * heavyweight local engine, 0 = unbounded.
+         * How many of one sweep's runs may execute at once; further runs queue, visible as pending.
+         * A folder dispatched all at once piles up at the pipeline's slowest tool and nothing
+         * visibly finishes until the end, so the cap keeps completions arriving steadily. The
+         * default suits API-bound pipelines; turn it down for a heavyweight local engine, 0 =
+         * unbounded.
          */
         private int sweepConcurrency = 6;
 

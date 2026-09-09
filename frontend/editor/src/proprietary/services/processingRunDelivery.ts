@@ -1,7 +1,6 @@
 /**
- * Delivers a sweep's results into the workbench: polls the folder's runs and opens each
- * run's results as soon as it settles — waiting for the whole sweep would hold everything
- * behind the slowest file.
+ * Delivers a sweep's results into the workbench, opening each run's results as it settles:
+ * waiting for the whole sweep would hold everything behind the slowest file.
  */
 
 import {
@@ -35,7 +34,6 @@ export interface SweepDeliveryProgress {
   stalled: boolean;
 }
 
-/** One run's outcome, with the result files that were opened for it. */
 export interface RunSettlement {
   runId: string;
   /** The input document's display name, when the run's source recorded one. */
@@ -99,22 +97,18 @@ async function mapBounded<T, R>(
 }
 
 /**
- * In-flight delivery per policy id. A second callback-less trigger for a folder
- * joins the running loop rather than starting its own. Distinct folders run in
- * parallel.
+ * In-flight delivery per policy id. A second callback-less trigger for a folder joins the
+ * running loop rather than starting its own.
  */
 const deliveriesInFlight = new Map<string, Promise<SweepDeliveryProgress>>();
 
 /**
- * Runs whose outputs are already in the workbench, per folder, held for as long as
- * any delivery for that folder is live.
- *
- * Joining is not enough on its own: a caller that passes callbacks must run its own
- * loop to receive them, so a resume's delivery and a sweep's overlap by design and
- * both see the same settled run in the feed. The workbench cannot dedup the result
- * away - a disk output File has no stable lastModified, so its
- * `name|size|lastModified` key differs on each fetch - which would open every result
- * twice. Callbacks still fire for both loops; only the opening is claimed once.
+ * Runs whose outputs are already in the workbench, per folder, held while any delivery for that
+ * folder is live. Two deliveries for one folder overlap by design (a caller passing callbacks
+ * must run its own loop to receive them) and both see the same settled run; the workbench
+ * cannot dedup the result away, because a disk output File has no stable lastModified, so its
+ * `name|size|lastModified` key differs on each fetch. Callbacks fire for both loops; only the
+ * opening is claimed once.
  */
 const openedRuns = new Map<string, Set<string>>();
 
@@ -137,7 +131,6 @@ function leaveDelivery(policyId: string): void {
   openedRuns.delete(policyId);
 }
 
-/** True for the first delivery to claim this run's outputs, false for any other. */
 function claimRunForOpening(policyId: string, runId: string): boolean {
   let opened = openedRuns.get(policyId);
   if (!opened) {
@@ -152,16 +145,13 @@ function claimRunForOpening(policyId: string, runId: string): boolean {
 }
 
 /**
- * Poll `policyId`'s runs until they settle, opening each completed run's outputs
- * into the workbench via `addFiles`. A numeric `expected` stops there; `null` is
- * for callers with no count yet, the sweep running behind the create response,
- * and stops once every observed run is terminal and stable, or after a grace
- * period with no runs.
+ * Poll `policyId`'s runs until they settle, opening each completed run's outputs into the
+ * workbench via `addFiles`. A numeric `expected` stops there; `null` is for callers with no
+ * count yet (the sweep runs behind the create response) and stops once every observed run is
+ * terminal and stable, or after a grace period with no runs.
  *
- * A callback-less caller joins a delivery already running for the folder (see
- * {@link deliveriesInFlight}) rather than starting a second. A caller that
- * passes callbacks runs its own delivery, so its onProgress/onRuns/onSettled
- * always fire.
+ * A callback-less caller joins a delivery already running for the folder ({@link
+ * deliveriesInFlight}); one that passes callbacks runs its own, so its callbacks always fire.
  */
 export function deliverSweepResults(
   policyId: string,

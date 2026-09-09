@@ -81,9 +81,9 @@ function directoryKey(directory: string): string {
 }
 
 /**
- * Processing folders for the files page. Record identity is kind-shaped — a server folder
+ * Processing folders for the files page. Record identity is kind-shaped: a server folder
  * matches by storage folderId, a mount by the directory it mirrors. Every mutation reloads
- * rather than patching locally, so the shared list reflects what the server composed.
+ * rather than patching locally, so the list reflects what the server composed.
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
@@ -177,8 +177,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
           steps: paused.steps,
           output: paused.output,
         });
-        // Resume sweeps behind the response; pull a mount's on-disk results into the
-        // workbench.
+        // Resume sweeps behind the response; pull a mount's on-disk results into the workbench.
         if (folderKind(folder) === "local") {
           void deliverSweepResults(paused.id, null, addFiles, {
             excludeRunIds: baseline,

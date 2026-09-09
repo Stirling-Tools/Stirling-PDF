@@ -159,7 +159,6 @@ public interface ProcessedFileRepository
     List<ProcessedFileEntity> findByPolicyIdAndIdentityHashIn(
             String policyId, Collection<String> identityHashes);
 
-    /** Whether the policy has any row in the given status (e.g. an unsettled claim). */
     boolean existsByPolicyIdAndStatus(String policyId, ProcessedFileStatus status);
 
     /**

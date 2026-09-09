@@ -101,9 +101,8 @@ public class FolderInputSource implements InputSource {
                                                             .toLowerCase(Locale.ROOT)
                                                             .endsWith(ext)));
         }
-        // Newest first: a capped sweep spends its budget on what the user most recently
-        // added — on a Downloads-sized folder the cap must not go to whichever old files
-        // happen to sort first. Unreadable mtimes sort oldest and are taken last.
+        // Newest first: a capped sweep must spend its budget on what the user most recently added,
+        // not on whichever old files sort first. Unreadable mtimes sort oldest and are taken last.
         present.sort(Comparator.comparingLong(FolderInputSource::mtimeForOrdering).reversed());
 
         if (config.snapshot()) {
@@ -124,8 +123,7 @@ public class FolderInputSource implements InputSource {
         List<ResolvedInput> work = new ArrayList<>();
         for (Path file : present) {
             // "limit" caps how much one sweep takes on, not what it observes: the full listing is
-            // still reported above so presence cleanup stays honest, and the files beyond the cap
-            // keep their ledger rows and are picked up by later sweeps.
+            // reported above, and files beyond the cap keep their rows for later sweeps.
             if (config.limit() > 0 && work.size() >= config.limit()) {
                 log.debug(
                         "Folder {} has more ready files than this sweep's limit of {}; the rest"

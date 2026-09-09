@@ -1,6 +1,5 @@
-// Read-only view of the classification vocabulary shown in the policy wizard. The labels and their
-// categories are a fixed, built-in set shared across the whole team — there's nothing to edit, but
-// the full vocabulary is browsable: expand a category to see the labels it groups.
+// Read-only view of the classification vocabulary shown in the policy wizard: a fixed, built-in
+// set shared across the whole team, browsable by expanding a category.
 
 import { useState } from "react";
 import { useTranslation } from "react-i18next";

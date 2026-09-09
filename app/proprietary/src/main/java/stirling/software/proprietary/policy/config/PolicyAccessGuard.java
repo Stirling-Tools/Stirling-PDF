@@ -71,11 +71,10 @@ public class PolicyAccessGuard {
      * refuse to run it rather than replace files in place in a folder no one can list, pause,
      * revert or delete.
      *
-     * <p>Two ways in, and the rule has to cover both: a folder created while login was disabled is
-     * stamped with no owner, and enabling login later strands it; a folder whose owner was renamed
-     * or deleted is stamped with a name that no longer resolves. Owner match is by exact name, so
-     * existence is read the same way - a name that would not satisfy {@link #ownedByCurrentUser}
-     * for anyone is not reachable, whatever the users table holds under a different case.
+     * <p>Two ways in: a folder created while login was disabled is stamped with no owner, and
+     * enabling login later strands it; a folder whose owner was renamed or deleted is stamped with
+     * a name that no longer resolves. Existence is read by exact name, the same way {@link
+     * #ownedByCurrentUser} matches, so a different case in the users table does not rescue it.
      */
     public boolean isOrphaned(Policy policy) {
         if (!enforced() || !Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface())) {
@@ -98,9 +97,8 @@ public class PolicyAccessGuard {
     }
 
     /**
-     * The processing folders visible to the caller. Unlike policies these are personal records:
-     * within the team's rows, only the ones the caller owns. Login disabled returns them all {@code
-     * -} the local operator owns everything.
+     * The processing folders visible to the caller: of the team's rows, only the ones the caller
+     * owns, since these are personal records. Login disabled returns them all.
      */
     public List<Policy> visibleProcessingFolders(PolicyStore store) {
         return scopedRows(store).stream()

@@ -7,12 +7,8 @@ export interface FolderProcessingSetupProps {
 }
 
 /**
- * Core stub for the folder-processing setup dialog.
- *
- * The real implementation lives in
- * {@code proprietary/components/policies/FolderProcessingSetup.tsx} and shadows this stub via the
- * {@code @app/*} alias cascade. Core builds have no processing folders, so this renders nothing;
- * the menu entry that opens it never shows there either.
+ * Core stub for the folder-processing setup dialog. The real implementation lives at
+ * the same path under proprietary/ and shadows this via the @app/* alias cascade.
  */
 export function FolderProcessingSetup(_props: FolderProcessingSetupProps) {
   return null;

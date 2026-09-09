@@ -34,9 +34,8 @@ import "@app/components/policies/FolderProcessingSetup.css";
 export type { FolderProcessingSetupProps };
 
 /**
- * The setup flow behind "Process files in this folder": the same guided wizard Processor
- * uses, with the source (this folder) and the output placement already decided, so neither
- * is asked for.
+ * The setup flow behind "Process files in this folder": the same guided wizard Processor uses,
+ * with the source (this folder) and the output placement already decided, so neither is asked.
  */
 export function FolderProcessingSetup({
   folder,
@@ -98,8 +97,7 @@ export function FolderProcessingSetup({
         activity: [],
       },
     });
-    // Re-seed only when the dialog opens for a folder, not on list refreshes
-    // mid-edit.
+    // Re-seed only when the dialog opens for a folder, not on list refreshes mid-edit.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [folder?.id, existingId]);
 
@@ -152,8 +150,7 @@ export function FolderProcessingSetup({
   };
 
   if (wizardEntry) {
-    // The wizard supplies the middle; this dialog stays the frame, so setup feels like
-    // the folder's own flow.
+    // The wizard supplies the middle; this dialog stays the frame.
     return (
       <PolicySetupWizard
         entry={wizardEntry}

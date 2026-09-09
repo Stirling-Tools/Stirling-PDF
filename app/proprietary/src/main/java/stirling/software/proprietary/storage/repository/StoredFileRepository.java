@@ -61,7 +61,6 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
 
     List<StoredFile> findAllByOwner(User owner);
 
-    /** Every file placed in the given storage folder — the working set of a processing folder. */
     List<StoredFile> findAllByFolderId(UUID folderId);
 
     /**

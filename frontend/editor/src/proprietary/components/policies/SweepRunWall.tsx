@@ -17,7 +17,6 @@ const IDLE_POLLS = 3;
 
 export type SweepCardPhase = "pending" | "running" | "done" | "failed";
 
-/** One document in a sweep, as the wall shows it lighting up. */
 export interface SweepWallCard {
   name: string;
   state: SweepCardPhase;
@@ -101,8 +100,7 @@ export interface FolderSweepWallProps {
 
 /**
  * A working folder's live sweep, wherever it came from. Polls the runs feed and raises a
- * one-line strip only while runs are executing — the grid below already wears each file's
- * state badge, so a full wall would say everything twice.
+ * one-line strip only while runs execute: the grid below already wears each file's badge.
  */
 export function FolderSweepWall({ policyId }: FolderSweepWallProps) {
   const { t } = useTranslation();

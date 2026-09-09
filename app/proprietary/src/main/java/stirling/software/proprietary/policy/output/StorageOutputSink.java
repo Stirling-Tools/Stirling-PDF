@@ -30,14 +30,13 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 import stirling.software.proprietary.storage.service.FileStorageService;
 
 /**
- * Writes a run's outputs back into app storage — the output side of a processing folder. {@code
+ * Writes a run's outputs back into app storage, the output side of a processing folder. {@code
  * mode} picks: {@code new_version} (default) replaces the input file's content in place under its
  * own name, settling the ledger at the bumped version; {@code new_file} stores each output as a new
  * file in {@code folderId} (default: the input's folder), recorded in the ledger before it becomes
- * visible so a sweep never claims the policy's own output.
- *
- * <p>Ownership follows the input; a run fed from disk has no anchor, so it is stored as the owner
- * of the {@code folderId} it writes into, and must name one.
+ * visible so a sweep never claims the policy's own output. Ownership follows the input; a run fed
+ * from disk has no anchor, so it is stored as the owner of the {@code folderId} it writes into, and
+ * must name one.
  */
 @Slf4j
 @Service

@@ -245,8 +245,7 @@ class ProcessingFolderControllerTest {
                                         Map.of()))
                         .getBody();
 
-        // Same record, untouched configuration: an offer flow can never overwrite a folder
-        // the user already shaped.
+        // Same record, untouched configuration.
         assertThat(second.id()).isEqualTo(first.id());
         Policy after = policyStore.get(first.id()).orElseThrow();
         assertThat(after.steps()).isEqualTo(before.steps());

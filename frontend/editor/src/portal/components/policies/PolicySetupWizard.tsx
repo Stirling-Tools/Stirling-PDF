@@ -1,7 +1,6 @@
 /**
- * Portal lens on the shared setup wizard: supplies the portal-only seams (the
- * integrations lookup that gates Purview steps, the Purview inline config, and
- * the portal's error copy) and re-exports the component under its old path.
+ * Portal lens on the shared setup wizard: supplies the portal-only seams, the integrations
+ * lookup that gates Purview steps, the Purview inline config and the portal's error copy.
  */
 
 import { PolicySetupWizard as SharedPolicySetupWizard } from "@app/components/policies/PolicySetupWizard";

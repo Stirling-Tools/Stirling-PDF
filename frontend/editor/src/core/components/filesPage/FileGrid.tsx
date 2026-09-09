@@ -124,7 +124,6 @@ export interface FilesPageEntry {
   disk?: DiskFileEntry;
   /** The disk file's processing state; absent on a folder with no pipeline. */
   diskState?: DiskFileState;
-  /** Whether the disk file's pre-processing original is archived. */
   hasOriginal?: boolean;
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
@@ -899,9 +898,8 @@ const FolderCard = React.memo(function FolderCard({
 });
 
 /**
- * A working folder's live per-state counts, on its card: how much is done,
- * running, failed, or still waiting. Light polling — a handful of processing
- * folders at most, and the numbers are the card's whole story.
+ * A working folder's live per-state counts on its card. Light polling: a handful of
+ * processing folders at most, and the numbers are the card's whole story.
  */
 function ProcessingFolderStats({
   recordId,
@@ -952,10 +950,9 @@ function ProcessingFolderStats({
 }
 
 /**
- * The processing entries of a folder's action menu. Every folder kind carries
- * these - including mounts, whose other edit actions are hidden. `continuous`
- * marks a folder whose engine processes arrivals on its own, where an explicit
- * "process now" would have nothing to do.
+ * The processing entries of a folder's action menu, carried by every folder kind including
+ * mounts, whose other edit actions are hidden. `continuous` marks a folder whose engine
+ * processes arrivals on its own, where an explicit "process now" would have nothing to do.
  */
 export function ProcessingMenuItems({
   processing,

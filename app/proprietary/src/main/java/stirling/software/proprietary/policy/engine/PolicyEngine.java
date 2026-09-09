@@ -124,11 +124,8 @@ public class PolicyEngine {
             PolicyInputs inputs,
             PolicyProgressListener listener,
             String policyId) {
-        // Ad-hoc run (no stored policy): bill whoever kicked it off and own the outputs as them
-        // too.
-        // Capture the principal on this (request) thread — it does not survive the hop onto the
-        // async
-        // worker.
+        // Ad-hoc run (no stored policy): bill whoever kicked it off and own its outputs as them.
+        // Captured on this request thread, which the async worker does not inherit.
         String principal = currentActingPrincipal();
         return submitForPrincipal(
                 principal,

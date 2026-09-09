@@ -7,7 +7,6 @@ import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon"
 
 interface PipelineTemplateCardProps {
   entry: CatalogueEntry;
-  /** Open the simple setup wizard seeded from this template. */
   onOpen: (entry: CatalogueEntry) => void;
   /** Setup is unavailable (e.g. the AI engine is off): shown, but not openable. */
   locked?: boolean;
