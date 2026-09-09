@@ -1,5 +1,11 @@
-import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Home } from "@processor/views/Home";
 import { Users } from "@processor/views/Users";
 import { Documents } from "@processor/views/Documents";
@@ -12,6 +18,7 @@ import { Infrastructure } from "@processor/views/Infrastructure";
 import { ProcessorBillingGate } from "@processor/components/billing/ProcessorBillingGate";
 import { ConnectGuardedRoute } from "@processor/components/account-link/ConnectGuardedRoute";
 import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
+import { useUI } from "@processor/contexts/UIContext";
 
 // Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
 const DeveloperDocs = lazy(() =>
@@ -25,6 +32,21 @@ const DeveloperDocs = lazy(() =>
 // logical VIEW_PATHS, and home is the index route. Redirects use toProcessorPath
 // so they resolve to the processor, not the editor root.
 const rel = (viewPath: string) => viewPath.replace(/^\//, "");
+
+/**
+ * Procurement is not a surface of its own: the deal lives on Home, so this raises
+ * the trial-setup step and bounces there. Raised imperatively rather than by
+ * rendering <Navigate>, so the signal is set before the navigation, not racing it.
+ */
+function ProcurementRedirect() {
+  const { requestTrialSetup } = useUI();
+  const navigate = useNavigate();
+  useEffect(() => {
+    requestTrialSetup();
+    navigate(toProcessorPath(VIEW_PATHS.home), { replace: true });
+  }, [requestTrialSetup, navigate]);
+  return null;
+}
 
 /** Redirect the retired Policies path to the unified Pipelines page, carrying any query string. */
 function PoliciesRedirect() {
@@ -96,6 +118,8 @@ export function ViewRouter() {
           </Suspense>
         }
       />
+      {/* A bare path, not a VIEW_PATHS entry: nothing should list it as a view. */}
+      <Route path="procurement" element={<ProcurementRedirect />} />
       {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
       <Route
         path="account-link"
