@@ -9,14 +9,18 @@ vi.mock("@app/services/policyStorage", () => ({
 }));
 
 const runStoredPolicy = vi.fn(async (_id: string) => "run-1");
+// One output, so a run completes rather than throwing "produced no output" - which would abort
+// the per-file policy loop after the first policy and hide the order under test.
+const getPolicyRun = vi.fn(async () => ({
+  status: "COMPLETED" as string,
+  outputs: [{ fileId: "out-1", fileName: "doc.pdf" }] as
+    | { fileId: string; fileName: string }[]
+    | undefined,
+  error: undefined as string | undefined,
+}));
 vi.mock("@app/services/policyApi", () => ({
   runStoredPolicy: (id: string) => runStoredPolicy(id),
-  // One output, so a run completes rather than throwing "produced no output" - which would abort
-  // the per-file policy loop after the first policy and hide the order under test.
-  getPolicyRun: async () => ({
-    status: "COMPLETED",
-    outputs: [{ fileId: "out-1", fileName: "doc.pdf" }],
-  }),
+  getPolicyRun: () => getPolicyRun(),
   downloadPolicyOutput: async () => new Blob(),
   resolvePolicyRunTarget: () => "local",
 }));
@@ -60,7 +64,10 @@ const pdf = () =>
   new File(["%PDF-1.4"], "doc.pdf", { type: "application/pdf" });
 
 describe("export-time policy selection", () => {
-  beforeEach(() => runStoredPolicy.mockClear());
+  beforeEach(() => {
+    runStoredPolicy.mockClear();
+    getPolicyRun.mockClear();
+  });
 
   it("enforces an editor pipeline set to run on export", async () => {
     loadPolicies.mockReturnValue({
@@ -125,5 +132,48 @@ describe("export-time policy selection", () => {
       "backend-first",
       "backend-second",
     ]);
+  });
+});
+
+describe("export enforcement on failure", () => {
+  beforeEach(() => {
+    runStoredPolicy.mockClear();
+    getPolicyRun.mockClear();
+    getPolicyRun.mockResolvedValue({
+      status: "FAILED",
+      outputs: undefined,
+      error: "boom",
+    });
+  });
+
+  it("blocks the file when a required policy fails", async () => {
+    loadPolicies.mockReturnValue({
+      "builder-1": exportPolicy({
+        runsOnEditor: true,
+        backendId: "backend-required",
+        required: true,
+      }),
+    } as unknown as PoliciesByKey);
+
+    const result = await enforceExportPolicies([pdf()], ["file-1"]);
+
+    expect(result.blocked).toEqual(["doc.pdf"]);
+    // The blocked file exports nothing enforced: its original input is left in place.
+    expect(result.files[0].name).toBe("doc.pdf");
+  });
+
+  it("leaves an ordinary pipeline failure soft (exported, not blocked)", async () => {
+    loadPolicies.mockReturnValue({
+      "builder-1": exportPolicy({
+        runsOnEditor: true,
+        backendId: "backend-optional",
+        required: false,
+      }),
+    } as unknown as PoliciesByKey);
+
+    const result = await enforceExportPolicies([pdf()], ["file-1"]);
+
+    expect(result.blocked).toEqual([]);
+    expect(result.files[0].name).toBe("doc.pdf");
   });
 });

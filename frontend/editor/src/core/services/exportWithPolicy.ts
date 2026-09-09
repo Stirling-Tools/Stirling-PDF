@@ -24,6 +24,12 @@ export async function downloadFileWithPolicy(
       : new File([request.data], request.filename, {
           type: request.data.type,
         });
-  const [enforced] = await enforceExportPolicies([input], [request.fileId]);
+  const { files, blocked } = await enforceExportPolicies(
+    [input],
+    [request.fileId],
+  );
+  // A required policy failed: refuse the download (its toast is shown), reported as cancelled.
+  if (blocked.length > 0) return { cancelled: true };
+  const [enforced] = files;
   return downloadFile({ ...request, data: enforced ?? request.data });
 }

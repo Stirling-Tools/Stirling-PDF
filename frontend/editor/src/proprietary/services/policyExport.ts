@@ -46,8 +46,20 @@ interface ExportPolicy {
   backendId: string;
   label: string;
   outputMode: "new_file" | "new_version";
+  /** A policy (blocking): its failure refuses the export, vs an ordinary pipeline that warns. */
+  required: boolean;
   /** The policy's accent as a CSS colour, for the toast glow. */
   accent: string;
+}
+
+/**
+ * The enforced files plus the names of any refused by a failed Policy. When {@link blocked} is
+ * non-empty the caller must abort the export (not download/print/convert anything) - a required
+ * export policy failed on those files.
+ */
+export interface ExportEnforcementResult {
+  files: File[];
+  blocked: string[];
 }
 
 interface PolicyRunResult {
@@ -81,6 +93,7 @@ function activeExportPolicies(): ExportPolicy[] {
         // A builder pipeline has no built-in category, so it labels by its own name.
         label: labels.get(id) ?? s.name ?? "Policy",
         outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
+        required: s.required === true,
         accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
       }))
   );
@@ -140,20 +153,21 @@ function enforcedFilesSummary(names: string[]): string {
 
 /**
  * Enforce every active export-policy on each PDF just before export, returning
- * the files in order (enforced, or the original on failure). `fileIds[i]` is the
- * workspace id of `files[i]` when known — used to version the in-editor file for
- * "new version" policies. Non-PDFs pass through untouched, and a single toast
- * (glowing in the policy's accent while it runs) fades a few seconds after the
- * result.
+ * the files in order (enforced, or the original when a non-blocking pipeline fails)
+ * plus `blocked` - the names of files a failed Policy refuses, which the caller must
+ * not export. `fileIds[i]` is the workspace id of `files[i]` when known — used to
+ * version the in-editor file for "new version" policies. Non-PDFs pass through
+ * untouched, and a single toast (glowing in the policy's accent while it runs) fades
+ * a few seconds after the result.
  */
 export async function enforceExportPolicies(
   files: File[],
   fileIds?: (string | undefined)[],
   trigger: EnforcementTrigger = "export",
-): Promise<File[]> {
+): Promise<ExportEnforcementResult> {
   const active = activeExportPolicies();
   const targets = files.flatMap((f, i) => (isPdf(f) ? [i] : []));
-  if (!active.length || targets.length === 0) return files;
+  if (!active.length || targets.length === 0) return { files, blocked: [] };
 
   // Policies that haven't already enforced this exact file version. Enforcing
   // versions the in-editor file to the policy's output and marks that output
@@ -162,7 +176,8 @@ export async function enforceExportPolicies(
   // new file id that isn't dispatched, so an edited file enforces afresh.
   const pendingFor = (fileId: string | undefined) =>
     active.filter((p) => !(fileId && isDispatched(p.policyKey, fileId)));
-  if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0)) return files;
+  if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0))
+    return { files, blocked: [] };
 
   const names = active.map((p) => p.label).join(", ");
 
@@ -172,7 +187,8 @@ export async function enforceExportPolicies(
   return runQueued({ label: names, trigger }, async () => {
     // An earlier queued job may have just enforced these same files and marked
     // them dispatched, so re-check at run time before doing (or announcing) work.
-    if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0)) return files;
+    if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0))
+      return { files, blocked: [] };
 
     const pending = targets.filter((i) => pendingFor(fileIds?.[i]).length > 0);
     const total = pending.length;
@@ -196,6 +212,7 @@ export async function enforceExportPolicies(
     });
 
     const out = [...files];
+    const blocked: string[] = [];
     let failures = 0;
     let done = 0;
     for (const i of pending) {
@@ -207,20 +224,35 @@ export async function enforceExportPolicies(
         // The last "new version" policy's output is what versions the editor
         // file (recording every policy would double-consume the same input).
         let versionRun: (PolicyRunResult & { policyKey: string }) | undefined;
+        let fileBlocked = false;
         for (const policy of toRun) {
-          const result = await runToCompletion(policy.backendId, current);
+          let result;
+          try {
+            result = await runToCompletion(policy.backendId, current);
+          } catch (e) {
+            // A Policy (required) failing refuses the export for this file; an ordinary pipeline
+            // failure falls through to the soft path (original exported, warning shown).
+            if (policy.required) {
+              blocked.push(file.name);
+              fileBlocked = true;
+              break;
+            }
+            throw e;
+          }
           current = result.file;
           if (policy.outputMode === "new_version" && fileId) {
             versionRun = { ...result, policyKey: policy.policyKey };
           }
         }
-        out[i] = current;
         done += 1;
         if (done < total)
           updateToast(toastId, {
             title: progressTitle(done),
             body: progressBody(done),
           });
+        // A blocked file leaves out[i] as its original input; the caller refuses to export it.
+        if (fileBlocked) continue;
+        out[i] = current;
         if (versionRun && fileId) {
           recordRunStart({
             runId: versionRun.runId,
@@ -236,33 +268,43 @@ export async function enforceExportPolicies(
           });
         }
       } catch {
-        failures += 1; // leave out[i] as the original — never hard-block.
+        failures += 1; // leave out[i] as the original — never hard-block a pipeline failure.
       }
     }
 
     updateToast(
       toastId,
-      failures
+      blocked.length
         ? {
-            alertType: "warning",
-            title: i18n.t("policies.enforcement.failureTitle"),
-            body: i18n.t("policies.enforcement.failureBody", {
-              failures,
-              total,
+            alertType: "error",
+            title: i18n.t("policies.enforcement.blockedTitle"),
+            body: i18n.t("policies.enforcement.blockedBody", {
+              files: enforcedFilesSummary(blocked),
             }),
             isPersistentPopup: false,
             glowColor: undefined,
           }
-        : {
-            alertType: "success",
-            title: i18n.t("policies.enforcement.successTitle", { names }),
-            body: enforcedFilesSummary(pending.map((i) => files[i].name)),
-            isPersistentPopup: false,
-            glowColor: undefined,
-          },
+        : failures
+          ? {
+              alertType: "warning",
+              title: i18n.t("policies.enforcement.failureTitle"),
+              body: i18n.t("policies.enforcement.failureBody", {
+                failures,
+                total,
+              }),
+              isPersistentPopup: false,
+              glowColor: undefined,
+            }
+          : {
+              alertType: "success",
+              title: i18n.t("policies.enforcement.successTitle", { names }),
+              body: enforcedFilesSummary(pending.map((i) => files[i].name)),
+              isPersistentPopup: false,
+              glowColor: undefined,
+            },
     );
     // update() doesn't reschedule auto-dismiss, so fade the result out explicitly.
     window.setTimeout(() => dismissToast(toastId), TOAST_LINGER_MS);
-    return out;
+    return { files: out, blocked };
   });
 }

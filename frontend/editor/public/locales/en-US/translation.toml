@@ -7011,6 +7011,8 @@ timedOut = "Enforcement timed out before the run could finish."
 [policies.enforcement]
 applying = "Applying {{names}}"
 applyingProgress = "Applying {{names}} ({{done}} of {{total}})"
+blockedBody = "{{files}} couldn't be exported: a required policy failed to run. Fix or remove them, then try again."
+blockedTitle = "Export blocked by a policy"
 exportFailureBody = "Security policies couldn't be applied. Files were exported as-is."
 exportFailureTitle = "Exported without enforcement"
 failureBody = "{{failures}} of {{total}} file(s) couldn't be processed and were exported as-is."
