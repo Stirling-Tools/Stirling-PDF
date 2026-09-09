@@ -396,7 +396,11 @@ export interface ConvertToPdfRequest {
   /**
    * Option to determine how the image will fit onto the page
    */
-  fitOption?: "fillPage" | "fitDocumentToImage" | "maintainAspectRatio";
+  fitOption?:
+    | "fillPage"
+    | "fitDocumentToImage"
+    | "fitDocumentToPage"
+    | "maintainAspectRatio";
 }
 export interface CropPdfForm {
   /**
