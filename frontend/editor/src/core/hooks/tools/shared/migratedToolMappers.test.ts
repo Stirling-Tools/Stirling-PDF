@@ -11,32 +11,19 @@ import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperatio
 import { mergeOperationConfig } from "@app/hooks/tools/merge/useMergeOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 // Rolled out in Phase 3.
-import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
 import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
-import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
-import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
-import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
 import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
-import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
 import { pageLayoutOperationConfig } from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
-import { removeBlanksOperationConfig } from "@app/hooks/tools/removeBlanks/useRemoveBlanksOperation";
 import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
-import { removeImageOperationConfig } from "@app/hooks/tools/removeImage/useRemoveImageOperation";
 import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
 import { removePasswordOperationConfig } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
-import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
-import { repairOperationConfig } from "@app/hooks/tools/repair/useRepairOperation";
-import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
 import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
-import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
-import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
 
 // Every tool migrated to the mapper seam. Erased to the registry shape so one
@@ -47,32 +34,19 @@ const MIGRATED_CONFIGS = [
   rotateOperationConfig,
   mergeOperationConfig,
   splitOperationConfig,
-  addAttachmentsOperationConfig,
-  addPageNumbersOperationConfig,
   addWatermarkOperationConfig,
   adjustPageScaleOperationConfig,
-  bookletImpositionOperationConfig,
   certSignOperationConfig,
-  changeMetadataOperationConfig,
   cropOperationConfig,
-  editTableOfContentsOperationConfig,
   extractImagesOperationConfig,
   flattenOperationConfig,
   ocrOperationConfig,
-  overlayPdfsOperationConfig,
   pageLayoutOperationConfig,
   redactOperationConfig,
-  removeBlanksOperationConfig,
   removeCertificateSignOperationConfig,
-  removeImageOperationConfig,
   removePagesOperationConfig,
   removePasswordOperationConfig,
-  reorganizePagesOperationConfig,
-  repairOperationConfig,
-  replaceColorOperationConfig,
   sanitizeOperationConfig,
-  scannerImageSplitOperationConfig,
-  singleLargePageOperationConfig,
   timestampPdfOperationConfig,
   // Erase each tool's own TParams to the shared registry shape (the same
   // existential boundary asRegistryConfig applies) so one loop can call
@@ -81,9 +55,7 @@ const MIGRATED_CONFIGS = [
 
 // A few tools have no static defaultParameters (the UI always supplies a value);
 // give the sweep a minimal valid parameter set for those.
-const FALLBACK_PARAMS: Record<string, Record<string, unknown>> = {
-  editTableOfContents: { bookmarks: [], replaceExisting: false },
-};
+const FALLBACK_PARAMS: Record<string, Record<string, unknown>> = {};
 
 describe("migrated tool mappers (sweep)", () => {
   const file = new File(["x"], "test.pdf", { type: "application/pdf" });
@@ -99,10 +71,10 @@ describe("migrated tool mappers (sweep)", () => {
 
       // Serialize the defaults through the tool's own buildFormData - the real
       // path the executor uses - so a tool whose toApiParams carries a structured
-      // field that buildFormData flattens itself (e.g. changeMetadata's
-      // allRequestParams map) is exercised too, not just tools whose mapper
-      // output is directly objectToFormData-able. Custom tools have no
-      // buildFormData, so fall back to serializing the mapper output directly.
+      // field that buildFormData flattens itself is exercised too, not just
+      // tools whose mapper output is directly objectToFormData-able. Custom
+      // tools have no buildFormData, so fall back to serializing the mapper
+      // output directly.
       const params =
         config.defaultParameters ?? FALLBACK_PARAMS[config.operationType] ?? {};
       if (config.toolType === ToolType.multiFile) {

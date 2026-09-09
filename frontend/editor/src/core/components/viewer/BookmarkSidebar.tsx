@@ -12,7 +12,6 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useFileContext } from "@app/contexts/FileContext";
 import { isStirlingFile, type FileId } from "@app/types/fileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
@@ -104,7 +103,6 @@ export const BookmarkSidebar = ({
     toggleBookmarkSidebar,
   } = useViewer();
   const { t } = useTranslation();
-  const { handleToolSelectForced } = useToolWorkflow();
   const { selectors, actions: fileActions } = useFileContext();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -328,12 +326,16 @@ export const BookmarkSidebar = ({
     setNewBookmarkTitle("");
   }, []);
 
-  // Fallback: open the full Edit Table of Contents tool when inline add is
-  // not viable (e.g. the active file is a preview / unmanaged file we
-  // cannot consume + replace via FileContext).
-  const handleFallbackToTool = useCallback(() => {
-    handleToolSelectForced("editTableOfContents");
-  }, [handleToolSelectForced]);
+  // Inline add is not viable when the active file is a preview / unmanaged
+  // file we cannot consume + replace via FileContext.
+  const handleUnsupportedFile = useCallback(() => {
+    setAddBookmarkError(
+      t(
+        "viewer.bookmarks.unsupportedFile",
+        "This file can't be edited inline. Save it to your files first, then add bookmarks.",
+      ),
+    );
+  }, [t]);
 
   const handleSubmitAddBookmark = useCallback(async () => {
     const title = newBookmarkTitle.trim();
@@ -361,14 +363,14 @@ export const BookmarkSidebar = ({
         ? (resolvedFile.fileId as FileId)
         : null;
     if (!resolvedFileId) {
-      handleFallbackToTool();
+      handleUnsupportedFile();
       return;
     }
     const fileId = resolvedFileId;
     const file = selectors.getFile(fileId);
     const parentStub = selectors.getStirlingFileStub(fileId);
     if (!file || !parentStub) {
-      handleFallbackToTool();
+      handleUnsupportedFile();
       return;
     }
 
@@ -411,7 +413,7 @@ export const BookmarkSidebar = ({
       const { stirlingFiles, stubs } = await createStirlingFilesAndStubs(
         [newFile],
         parentStub,
-        "editTableOfContents",
+        "multiTool",
       );
       const outputFileIds = await fileActions.consumeFiles(
         [fileId],
@@ -451,7 +453,7 @@ export const BookmarkSidebar = ({
     fileActions,
     setActiveFileId,
     activeEntry.bookmarks,
-    handleFallbackToTool,
+    handleUnsupportedFile,
   ]);
 
   const bookmarksWithIds = useMemo(() => {
@@ -872,44 +874,6 @@ export const BookmarkSidebar = ({
             No bookmarks match your search
           </Text>
         </div>
-      )}
-      {bookmarkSupport && documentCacheKey && (
-        <Box
-          px="sm"
-          py="xs"
-          mt="sm"
-          style={{
-            borderTop: "1px solid var(--c-border-subtle)",
-            backgroundColor: "var(--c-bg-raised)",
-            flexShrink: 0,
-          }}
-        >
-          <Button
-            variant="tertiary"
-            hover={false}
-            type="button"
-            onClick={handleFallbackToTool}
-            fullWidth
-            style={{ width: "100%" }}
-          >
-            <Group gap="xs" justify="center" wrap="nowrap">
-              <LocalIcon
-                icon="bookmark-add-rounded"
-                width="0.95rem"
-                height="0.95rem"
-                style={{ color: "var(--c-accent-text)" }}
-              />
-              <Text
-                size="xs"
-                c="blue.5"
-                ta="center"
-                style={{ textDecoration: "underline" }}
-              >
-                Need to reorder or nest? Open the Bookmark Editor
-              </Text>
-            </Group>
-          </Button>
-        </Box>
       )}
     </SidebarBase>
   );

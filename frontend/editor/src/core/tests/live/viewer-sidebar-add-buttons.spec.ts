@@ -1,6 +1,5 @@
 import { test, expect } from "@app/tests/helpers/test-base";
 import { loginAndSetup } from "@app/tests/helpers/login";
-import { runToolAndWaitForReview } from "@app/tests/helpers/ui-helpers";
 import * as path from "path";
 import * as fs from "fs";
 import {
@@ -12,19 +11,14 @@ import {
 } from "@cantoo/pdf-lib";
 
 /**
- * End-to-end validation of the new "Add attachment" and "Add bookmark"
- * buttons on the viewer's attachment / bookmark sidebars.
+ * End-to-end validation of the "Add bookmark" button on the viewer's
+ * bookmark sidebar.
  *
- * Each test:
  *   1. Logs in and uploads a sample PDF via the Read tool's viewer.
- *   2. Opens the relevant sidebar.
- *   3. Confirms the empty-state Add button is visible.
- *   4. Clicks it - URL must switch to the corresponding tool page.
- *   5. Completes the tool's flow (pick a file to attach / type a
- *      bookmark title).
- *   6. Runs the tool and intercepts the backend response.
- *   7. Loads the produced PDF with pdf-lib and verifies it actually
- *      contains the new attachment / new bookmark.
+ *   2. Opens the bookmark sidebar and types a bookmark title inline.
+ *   3. Saves, intercepts the backend response.
+ *   4. Loads the produced PDF with pdf-lib and verifies it actually
+ *      contains the new bookmark.
  *
  * Requires a real Spring Boot backend on :8080 - registered under the
  * `live` Playwright project. The `live-setup` project bootstraps the
@@ -77,58 +71,6 @@ test.describe("Viewer sidebar add buttons - real PDF round-trip", () => {
 
   test.beforeEach(async ({ page }) => {
     await loginAndSetup(page);
-  });
-
-  test("Add attachment from viewer sidebar embeds the chosen file in the produced PDF", async ({
-    page,
-  }) => {
-    await openSamplePdfInViewer(page);
-
-    await page
-      .getByRole("button", { name: /Toggle Attachments/i })
-      .first()
-      .click();
-
-    const addBtn = page.getByRole("button", { name: /^Add attachment$/i });
-    await expect(addBtn).toBeVisible({ timeout: 15_000 });
-
-    await addBtn.click();
-    await expect(page).toHaveURL(/\/add-attachments$/, { timeout: 10_000 });
-
-    // Hidden picker the AddAttachments tool exposes. Attach a small known
-    // file - reuse the sample fixture as the attachment payload so we can
-    // assert on its filename below.
-    const attachmentName = "sample.pdf";
-    await page
-      .locator("#attachments-input")
-      .setInputFiles(fixture(attachmentName));
-
-    // Capture the backend response so we can inspect the produced PDF.
-    const responsePromise = page.waitForResponse(
-      (r) =>
-        /\/api\/v1\/(general|misc)\/add-attachments$/.test(r.url()) &&
-        r.status() === 200,
-      { timeout: 90_000 },
-    );
-
-    await runToolAndWaitForReview(page);
-
-    const response = await responsePromise;
-    const pdfBytes = await response.body();
-
-    // Sanity: response is a PDF (starts with %PDF-)
-    expect(pdfBytes.slice(0, 5).toString()).toBe("%PDF-");
-
-    // Verify the produced PDF actually contains the attachment.
-    const doc = await PDFDocument.load(pdfBytes, {
-      ignoreEncryption: true,
-      throwOnInvalidObject: false,
-    });
-    const attachments = doc.getAttachments();
-    expect(attachments.length).toBeGreaterThan(0);
-    expect(attachments.map((a: { name?: string }) => a.name)).toContain(
-      attachmentName,
-    );
   });
 
   test("Add bookmark from viewer sidebar adds the bookmark to the produced PDF outline", async ({

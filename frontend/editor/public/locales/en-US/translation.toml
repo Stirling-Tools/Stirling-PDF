@@ -23,7 +23,6 @@ confirmCloseUnsaved = "This file has unsaved changes."
 confirmCloseUnsavedList_one = "You have {{count}} file with unsaved changes.\n\n{{fileList}}"
 confirmCloseUnsavedList_other = "You have {{count}} files with unsaved changes.\n\n{{fileList}}"
 custom = "Custom..."
-customTextTooltip = "Optional custom format for page numbers. Use {n} as placeholder for the number. Example: \"Page {n}\" will show \"Page 1\", \"Page 2\", etc."
 delete = "Delete"
 details = "Details"
 discardChanges = "Discard & Leave"
@@ -42,8 +41,6 @@ fileSavedToDisk = "File saved to disk"
 fileSelected = "{{filename}}"
 filesSelected = "{{count}} files"
 font = "Font"
-fontSizeTooltip = "Size of the page number text in points. Larger numbers create bigger text."
-fontTypeTooltip = "Font family for the page numbers. Choose based on your document style."
 green = "Green"
 help = "Help"
 incorrectPasswordMessage = "Current password is incorrect."
@@ -56,7 +53,6 @@ loginAgreementDecline = "Decline"
 loginAgreementProvider = "This notice is provided by your administrator, not Stirling PDF Inc."
 loginAgreementTitle = "Login Agreement"
 logOut = "Log out"
-marginTooltip = "Distance between the page number and the edge of the page."
 moreOptions = "More Options"
 never = "Never"
 no = "No"
@@ -71,7 +67,6 @@ openInViewer = "Open in Viewer"
 operationCancelled = "Operation canceled"
 page = "Page"
 pageNum = "Page Number"
-pageOrderPrompt = "Custom Page Order (Enter a comma-separated list of page numbers or Functions like 2n+1) :"
 pages = "Pages"
 pageSelectionPrompt = "Custom Page Selection (Enter a comma-separated list of page numbers 1,5,6 or Functions like 2n+1)"
 password = "Password"
@@ -87,7 +82,6 @@ review = "Review"
 save = "Save"
 saveUnavailable = "Save unavailable for this item"
 size = "Size"
-startingNumberTooltip = "The first number to display. Subsequent pages will increment from this number."
 submit = "Submit"
 success = "Success"
 termsAndConditions = "Terms & Conditions"
@@ -161,36 +155,6 @@ title = "Two-factor authentication"
 [account.overview]
 logOut = "Log out"
 signedInAs = "Signed in as: {{email}}"
-
-[add-page-numbers]
-tags = "paginate,label,organize,index"
-
-[addAttachments]
-tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
-
-[addAttachments.error]
-failed = "An error occurred while adding attachments to the PDF."
-
-[AddAttachmentsRequest]
-addMoreFiles = "Add more files..."
-attachments = "Select Attachments"
-info = "Select files to attach to your PDF. These files will be embedded and accessible through the PDF's attachment panel."
-placeholder = "Choose files..."
-removeFile = "Remove file"
-selectedFiles = "Selected Files"
-submit = "Add Attachments"
-
-[AddAttachmentsRequest.error]
-failed = "Add attachments operation failed"
-
-[AddAttachmentsRequest.results]
-title = "Attachment Results"
-
-[AddAttachmentsRequest.tooltip.description]
-title = "What it does"
-
-[AddAttachmentsRequest.tooltip.header]
-title = "About Add Attachments"
 
 [addFileCard]
 upload = "Upload"
@@ -272,34 +236,6 @@ image = "Image"
 saved = "Saved"
 text = "Text"
 
-[addPageNumbers]
-customize = "Customize Appearance"
-customNumberDesc = "e.g., \"Page {n}\" or leave blank for just numbers"
-fontName = "Font Name"
-fontSize = "Font Size"
-numberPagesDesc = "e.g., 1,3,5-8 or leave blank for all pages"
-pagesAndStarting = "Pages & Starting Number"
-positionAndPages = "Position & Pages"
-preview = "Position Selection"
-previewDisclaimer = "Preview is approximate. Final output may vary due to PDF font metrics."
-submit = "Add Page Numbers"
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
-title = "Add Page Numbers"
-zeroPad = "Zero‑pad Width (Bates Stamping)"
-zeroPadTooltip = "Zero‑pad (Bates Stamp) page numbers to this width (e.g., 3 ⇒ 001). Set 0 to disable."
-
-[addPageNumbers.error]
-failed = "Add page numbers operation failed"
-
-[addPageNumbers.results]
-title = "Page Number Results"
-
-[addPageNumbers.selectText]
-2 = "Margin Size"
-4 = "Starting Number"
-5 = "Pages to Number"
-6 = "Custom Text Format"
-
 [AddStampRequest]
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
 title = "Stamp PDF"
@@ -378,26 +314,6 @@ text = "Text"
 
 [adjust-contrast]
 tags = "color-correction,tune,modify,enhance"
-
-[adjustContrast]
-adjustColors = "Adjust Colors"
-basic = "Basic Adjustments"
-blue = "Blue"
-brightness = "Brightness:"
-confirm = "Confirm"
-contrast = "Contrast:"
-green = "Green"
-noPreview = "Select a PDF to preview"
-red = "Red"
-saturation = "Saturation:"
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
-title = "Adjust Colors/Contrast"
-
-[adjustContrast.error]
-failed = "Failed to adjust colors/contrast"
-
-[adjustContrast.results]
-title = "Adjusted PDF"
 
 [adjustPageScale]
 submit = "Adjust Page Scale"
@@ -1767,15 +1683,6 @@ description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
 [appBanner]
 dismiss = "Dismiss"
 
-[attachments]
-convertToPdfA3b = "Convert to PDF/A-3b"
-convertToPdfA3bDescription = "Creates an archival PDF with embedded attachments"
-convertToPdfA3bTooltip = "PDF/A-3b is an archival format ensuring long-term preservation. It allows embedding arbitrary file formats as attachments. Conversion requires Ghostscript and may take longer for large files."
-convertToPdfA3bTooltipHeader = "About PDF/A-3b Conversion"
-convertToPdfA3bTooltipTitle = "What it does"
-tags = "attachments,add,remove,embed,file"
-title = "Add Attachments"
-
 [audit]
 configureAudit = "Configure Audit Logging"
 configureAuditMessage = "Adjust audit logging level, retention period, and other settings in the Security & Authentication section."
@@ -2080,91 +1987,6 @@ whatHappensNext = "What happens next?"
 
 [billing.portal]
 error = "Failed to open billing portal"
-
-[bookletImposition]
-paperSizeNote = "Paper size is automatically derived from your first page."
-submit = "Create Booklet"
-tags = "booklet,imposition,printing,binding,folding,signature"
-title = "Booklet Imposition"
-
-[bookletImposition.addBorder]
-label = "Add borders around pages"
-tooltip = "Adds borders around each page section to help with cutting and alignment"
-
-[bookletImposition.addGutter]
-label = "Add gutter margin"
-tooltip = "Adds inner margin space for binding"
-
-[bookletImposition.advanced]
-toggle = "Advanced Options"
-
-[bookletImposition.doubleSided]
-label = "Double-sided printing"
-tooltip = "Creates both front and back sides for proper booklet printing"
-
-[bookletImposition.duplexPass]
-first = "1st Pass"
-firstInstructions = "Prints front sides → stack face-down → run again with 2nd Pass"
-label = "Print Pass"
-second = "2nd Pass"
-secondInstructions = "Load printed stack face-down → prints back sides"
-
-[bookletImposition.error]
-failed = "An error occurred while creating the booklet imposition."
-
-[bookletImposition.flipOnShortEdge]
-label = "Flip on short edge (automatic duplex only)"
-manualNote = "Not needed in manual mode - you flip the stack yourself"
-tooltip = "Enable for short-edge duplex printing (automatic duplex only - ignored in manual mode)"
-
-[bookletImposition.gutterSize]
-label = "Gutter size (points)"
-
-[bookletImposition.manualDuplex]
-instructions = "For printers without automatic duplex. You'll need to run this twice:"
-title = "Manual Duplex Mode"
-
-[bookletImposition.rtlBinding]
-label = "Right-to-left binding"
-tooltip = "For Arabic, Hebrew, or other right-to-left languages"
-
-[bookletImposition.tooltip.advanced]
-bullet1 = "Right-to-Left Binding: For Arabic, Hebrew, or RTL languages"
-bullet2 = "Borders: Shows cut lines for trimming"
-bullet3 = "Gutter Margin: Adds space for binding/stapling"
-bullet4 = "Short-edge Flip: Only for automatic duplex printers"
-text = "Fine-tune your booklet:"
-title = "Advanced Options"
-
-[bookletImposition.tooltip.description]
-text = "Creates professional booklets by arranging pages in the correct printing order. Your PDF pages are placed 2-up on landscape sheets so when folded and bound, they read in proper sequence like a real book."
-title = "What is Booklet Imposition?"
-
-[bookletImposition.tooltip.example]
-bullet1 = "Sheet 1 Front: Pages 8, 1  |  Back: Pages 2, 7"
-bullet2 = "Sheet 2 Front: Pages 6, 3  |  Back: Pages 4, 5"
-bullet3 = "When folded & stacked: Reads 1→2→3→4→5→6→7→8"
-text = "Your 8-page document becomes 2 sheets:"
-title = "Example: 8-Page Booklet"
-
-[bookletImposition.tooltip.header]
-title = "Booklet Creation Guide"
-
-[bookletImposition.tooltip.manualDuplex]
-bullet1 = "Turn OFF 'Double-sided printing'"
-bullet2 = "Select '1st Pass' → Print → Stack face-down"
-bullet3 = "Select '2nd Pass' → Load stack → Print backs"
-bullet4 = "Fold and assemble as normal"
-text = "For printers without automatic duplex:"
-title = "Manual Duplex (Single-sided Printers)"
-
-[bookletImposition.tooltip.printing]
-bullet1 = "Print double-sided with 'Flip on long edge'"
-bullet2 = "Stack sheets in order, fold in half"
-bullet3 = "Staple or bind along the folded spine"
-bullet4 = "For short-edge printers: Enable 'Flip on short edge' option"
-text = "Follow these steps for perfect booklets:"
-title = "How to Print & Assemble"
 
 [bulkSelection]
 syntaxError = "There is a syntax issue. See Page Selection tips for help."
@@ -2576,114 +2398,6 @@ oldPassword = "Current Password"
 ssoManaged = "Your account is managed by your identity provider."
 title = "Change Credentials"
 
-[changeMetadata]
-filenamePrefix = "metadata"
-submit = "Change"
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
-
-[changeMetadata.advanced]
-title = "Advanced Options"
-
-[changeMetadata.author]
-label = "Author"
-placeholder = "Document author"
-
-[changeMetadata.creationDate]
-label = "Creation Date"
-placeholder = "Creation date"
-
-[changeMetadata.creator]
-label = "Creator"
-placeholder = "Document creator"
-
-[changeMetadata.customFields]
-add = "Add Field"
-description = "Add custom metadata fields to the document"
-key = "Key"
-keyPlaceholder = "Custom key"
-remove = "Remove"
-title = "Custom Metadata"
-value = "Value"
-valuePlaceholder = "Custom value"
-
-[changeMetadata.dates]
-title = "Date Fields"
-
-[changeMetadata.deleteAll]
-checkbox = "Delete all metadata"
-label = "Remove Existing Metadata"
-
-[changeMetadata.error]
-failed = "An error occurred while changing the PDF metadata."
-
-[changeMetadata.keywords]
-label = "Keywords"
-placeholder = "Document keywords"
-
-[changeMetadata.modificationDate]
-label = "Modification Date"
-placeholder = "Modification date"
-
-[changeMetadata.producer]
-label = "Producer"
-placeholder = "Document producer"
-
-[changeMetadata.results]
-title = "Updated PDFs"
-
-[changeMetadata.standardFields]
-title = "Standard Fields"
-
-[changeMetadata.subject]
-label = "Subject"
-placeholder = "Document subject"
-
-[changeMetadata.title]
-label = "Title"
-placeholder = "Document title"
-
-[changeMetadata.tooltip.advanced]
-title = "Advanced Options"
-
-[changeMetadata.tooltip.advanced.trapped]
-bullet1 = "True: Document has been trapped for printing"
-bullet2 = "False: Document has not been trapped"
-bullet3 = "Unknown: Trapped status is not specified"
-description = "Indicates if document is prepared for high-quality printing."
-title = "Trapped Status"
-
-[changeMetadata.tooltip.customFields]
-bullet1 = "Add any custom fields relevant to your document"
-bullet2 = "Examples: Department, Project, Version, Status"
-bullet3 = "Both key and value are required for each entry"
-text = "Add your own custom key-value metadata pairs."
-title = "Custom Metadata"
-
-[changeMetadata.tooltip.dates]
-bullet1 = "Creation Date: When original document was made"
-bullet2 = "Modification Date: When last changed"
-text = "When the document was created and modified."
-title = "Date Fields"
-
-[changeMetadata.tooltip.deleteAll]
-text = "Complete metadata deletion to ensure privacy."
-title = "Remove Existing Metadata"
-
-[changeMetadata.tooltip.standardFields]
-bullet1 = "Title: Document name or heading"
-bullet2 = "Author: Person who created the document"
-bullet3 = "Subject: Brief description of content"
-bullet4 = "Keywords: Search terms for the document"
-bullet5 = "Creator/Producer: Software used to create the PDF"
-text = "Common PDF metadata fields that describe the document."
-title = "Standard Fields"
-
-[changeMetadata.trapped]
-false = "False"
-label = "Trapped Status"
-true = "True"
-unknown = "Unknown"
-
 [chat.actions]
 copy = "Copy message"
 
@@ -2781,7 +2495,6 @@ expand = "Expand"
 loading = "Loading..."
 next = "Next"
 open = "Open"
-preview = "Preview"
 previous = "Previous"
 refresh = "Refresh"
 remaining = "Remaining"
@@ -3358,91 +3071,6 @@ selectOption = "Select an option"
 [editableSecretField]
 edit = "Edit"
 editSecretValue = "Edit secret value"
-
-[editTableOfContents]
-submit = "Apply table of contents"
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
-
-[editTableOfContents.actions]
-clipboardUnavailable = "Clipboard access is not available in this browser."
-export = "Export bookmarks"
-exportClipboard = "Copy JSON to clipboard"
-exportJson = "Download JSON"
-importClipboard = "Paste JSON from clipboard"
-importJson = "Import JSON"
-loadFromPdf = "Load from selected PDF"
-noFile = "Select a PDF to extract existing bookmarks."
-selectedFile = "Loaded from {{file}}"
-source = "Load bookmarks"
-
-[editTableOfContents.editor]
-addTopLevel = "Add top-level bookmark"
-childBadge = "Child"
-confirmRemove = "Remove this bookmark and all of its children?"
-defaultChildTitle = "Child bookmark"
-defaultSiblingTitle = "New bookmark"
-defaultTitle = "New bookmark"
-description = "Add, nest, and reorder bookmarks to craft your PDF outline."
-heading = "Bookmark editor"
-pagePreview = "Page {{page}}"
-untitled = "Untitled bookmark"
-
-[editTableOfContents.editor.actions]
-addChild = "Add child bookmark"
-addSibling = "Add sibling bookmark"
-remove = "Remove bookmark"
-toggle = "Toggle children"
-
-[editTableOfContents.editor.empty]
-action = "Add first bookmark"
-description = "Import existing bookmarks or start by adding your first entry."
-title = "No bookmarks yet"
-
-[editTableOfContents.editor.field]
-page = "Target page number"
-title = "Bookmark title"
-
-[editTableOfContents.error]
-failed = "Failed to update the table of contents"
-
-[editTableOfContents.info]
-line1 = "Each bookmark needs a descriptive title and the page it should open."
-line2 = "Use child bookmarks to build a hierarchy for chapters, sections, or subsections."
-line3 = "Import bookmarks from the selected PDF or from a JSON file to save time."
-
-[editTableOfContents.messages]
-copied = "Copied to clipboard"
-copiedBody = "Bookmark JSON copied successfully."
-copyFailed = "Copy failed"
-exported = "JSON download ready"
-imported = "Bookmarks imported"
-importedBody = "Your JSON outline replaced the current editor contents."
-importedClipboard = "Clipboard data replaced the current bookmark list."
-invalidJson = "Invalid JSON structure"
-invalidJsonBody = "Please provide a valid bookmark JSON file and try again."
-loadedBody = "Existing bookmarks from the PDF were loaded into the editor."
-loadedTitle = "Bookmarks extracted"
-loadFailed = "Unable to extract bookmarks from the selected PDF."
-noBookmarks = "No bookmarks were found in the selected PDF."
-
-[editTableOfContents.results]
-subtitle = "Download the processed file or undo the operation below."
-title = "Updated PDF with bookmarks"
-
-[editTableOfContents.settings]
-replaceExisting = "Replace existing bookmarks (uncheck to append)"
-replaceExistingHint = "When disabled, the new outline is appended after the current bookmarks."
-title = "Bookmarks & outline"
-
-[editTableOfContents.workbench]
-changeFile = "Change PDF"
-filePrompt = "Select a PDF from your library or upload a new one to begin."
-selectFile = "Select PDF"
-subtitle = "Import bookmarks, build hierarchies, and apply the outline without cramped side panels."
-
-[editTableOfContents.workbench.empty]
-description = "Select the Edit Table of Contents tool to load its workspace."
-title = "Open the tool to start editing"
 
 [emptyFilesState]
 upload = "Upload"
@@ -4158,35 +3786,45 @@ message = "Create a free account to save your work, access more features, and su
 signUp = "Sign Up Free"
 title = "You're using Stirling PDF as a guest!"
 
-[home.addAttachments]
-desc = "Add or remove embedded files (attachments) to/from a PDF"
-tags = "embed,attach,include,attachments,attach files,embed files,include files,add files,file attachment,associated files,supplementary files"
-title = "Add Attachments"
-
 [home.addImage]
 desc = "Adds a image onto a set location on the PDF"
 tags = "insert,embed,place,add image,insert image,place image,embed image,add photo,add picture,add logo,graphics,insert picture,place photo,PNG,JPG,JPEG"
 title = "Add image"
-
-[home.addPageNumbers]
-desc = "Add Page numbers throughout a document in a set location"
-tags = "number,pagination,count,add page numbers,page numbering,page numbers,footer,header,number pages,sequential,pagination tool"
-title = "Add Page Numbers"
 
 [home.addText]
 desc = "Add custom text anywhere in your PDF"
 tags = "text,annotation,label,add text,insert text,place text,text box,add label,add caption,type on PDF,write on PDF,add words,add note,text overlay,typewriter"
 title = "Add Text"
 
-[home.adjustContrast]
-desc = "Adjust Colors/Contrast, Saturation and Brightness of a PDF"
-tags = "contrast,brightness,saturation,adjust colors,color correction,enhance,lighten,darken,improve quality,color balance,hue,vibrance"
-title = "Adjust Colors/Contrast"
-
 [home.annotate]
 desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
+
+[home.annotateComments]
+desc = "Add review comments, inserted text, or replacement text markup"
+tags = "comment,comments,review,textComment,insert text,replace text,feedback,markup"
+title = "Comments"
+
+[home.annotateDraw]
+desc = "Freehand pen and highlighter drawing directly on the PDF"
+tags = "draw,pen,ink,freehand,highlighter,sketch,markup"
+title = "Draw"
+
+[home.annotateHighlight]
+desc = "Highlight, underline, strike through, or squiggly-underline text"
+tags = "highlight,underline,strikeout,squiggly,markup,text markup"
+title = "Highlight & Markup"
+
+[home.annotateShapes]
+desc = "Draw rectangles, circles, lines, and polygons on the PDF"
+tags = "shapes,rectangle,circle,line,polygon,square,markup"
+title = "Shapes"
+
+[home.annotateStamps]
+desc = "Add text boxes, sticky notes, or image stamps to the PDF"
+tags = "stamp,note,sticky note,text box,markup"
+title = "Notes & Stamps"
 
 [home.autoRotate]
 desc = "Detect each page's orientation and rotate it upright automatically."
@@ -4201,20 +3839,10 @@ title = "Auto Split by Size/Count"
 tags = "auto,split,QR,auto split,QR code,QR split,barcode,automatic split,divider page,separator page,scan divider,batch scanning"
 title = "Auto Split Pages"
 
-[home.bookletImposition]
-desc = "Create booklets with proper page ordering and multi-page layout for printing and binding"
-tags = "booklet,print,binding,imposition,booklet printing,saddle stitch,fold,pamphlet,brochure,print booklet,duplex,two-sided,signature,book layout,page imposition,print layout"
-title = "Booklet Imposition"
-
 [home.certSign]
 desc = "Signs a PDF with a Certificate/Key (PEM/P12)"
 tags = "authenticate,PEM,P12,official,encrypt,sign,certificate,PKCS12,JKS,server,manual,auto,digital certificate,certificate signature,PKI,cryptographic signature,trusted signature"
 title = "Sign with Certificate"
-
-[home.changeMetadata]
-desc = "Change/Remove/Add metadata from a PDF document"
-tags = "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties"
-title = "Change Metadata"
 
 [home.compare]
 desc = "Compares and shows the differences between 2 PDF Documents"
@@ -4255,11 +3883,6 @@ title = "Automated Folder Scanning"
 desc = "Link to SSO guide"
 tags = "SSO,single sign-on,authentication,SAML,OAuth,OIDC,login,enterprise,identity provider,IdP"
 title = "SSO Guide"
-
-[home.editTableOfContents]
-desc = "Add or edit bookmarks and table of contents in PDF documents"
-tags = "bookmarks,contents,edit,table of contents,TOC,outline,navigation,chapters,sections,add bookmarks,edit bookmarks,PDF outline"
-title = "Edit Table of Contents"
 
 [home.extractImages]
 desc = "Extracts all images from a PDF and saves them to zip"
@@ -4309,11 +3932,6 @@ desc = "Cleanup scans and detects text from images within a PDF and re-adds it a
 tags = "extract,scan,OCR,optical character recognition,text recognition,scan to text,image to text,scanned document,searchable PDF,make searchable,extract text,recognize text,read scanned"
 title = "OCR / Cleanup scans"
 
-[home.overlay-pdfs]
-desc = "Overlay one PDF on top of another"
-tags = "overlay,combine,merge,layer,superimpose,overlay PDF,layer PDFs,combine PDFs,stack,overlay pages,background,foreground,composite"
-title = "Overlay PDFs"
-
 [home.pageLayout]
 desc = "Merge multiple pages of a PDF document into a single page"
 tags = "layout,arrange,combine,N-up,2-up,4-up,multiple per page,pages per sheet,layout pages,tile,grid layout,multi-page layout,combine on page,handout"
@@ -4333,11 +3951,6 @@ desc = "Edit existing text and images inside PDFs"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 
-[home.pdfToSinglePage]
-desc = "Merges all PDF pages into one large single page"
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
-title = "PDF to Single Large Page"
-
 [home.read]
 desc = "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -4348,25 +3961,10 @@ desc = "Redacts (blacks out) a PDF based on selected text, drawn shapes and/or s
 tags = "censor,blackout,hide,redact,redaction,black out,block out,remove sensitive,hide text,privacy,confidential,GDPR,PII,sensitive data,permanently remove,cover up,legal redaction"
 title = "Redact"
 
-[home.removeAnnotations]
-desc = "Removes all comments/annotations from a PDF"
-tags = "delete,clean,strip,remove annotations,remove comments,delete comments,remove markup,remove highlights,clean annotations,strip comments,remove notes,delete markup,clear comments"
-title = "Remove Annotations"
-
-[home.removeBlanks]
-desc = "Detects and removes blank pages from a document"
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
-title = "Remove Blank pages"
-
 [home.removeCertSign]
 desc = "Remove certificate signature from PDF"
 tags = "remove,delete,unlock,remove certificate,remove signature,delete signature,unsigned,remove digital signature,strip signature,remove cert,unsign"
 title = "Remove Certificate Sign"
-
-[home.removeImage]
-desc = "Remove image from PDF to reduce file size"
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
-title = "Remove image"
 
 [home.removePages]
 desc = "Remove specific pages from a PDF document"
@@ -4377,21 +3975,6 @@ title = "Remove Pages"
 desc = "Remove password protection from your PDF document."
 tags = "unlock,remove password,unlock PDF,decrypt,remove encryption,unprotect,open protected PDF,password removal,unlock protected,disable password,remove security,remove owner password"
 title = "Remove Password"
-
-[home.reorganizePages]
-desc = "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
-title = "Reorganize Pages"
-
-[home.repair]
-desc = "Tries to repair a corrupt/broken PDF"
-tags = "fix,restore,repair,fix PDF,fix broken,fix corrupt,repair PDF,repair corrupt,broken PDF,corrupt PDF,damaged PDF,recover,fix errors,PDF won't open,can't open PDF,PDF errors,troubleshoot,restore PDF,rebuild,corrupted"
-title = "Repair"
-
-[home.replaceColor]
-desc = "Replace or invert colors in PDF documents"
-tags = "replace color,invert color,color replacement,swap colors,change color,invert,negative,color swap,find and replace color,convert color,color change"
-title = "Replace & Invert Color"
 
 [home.rotate]
 desc = "Easily rotate your PDFs."
@@ -4412,11 +3995,6 @@ title = "Adjust page size/scale"
 desc = "Create a PDF that looks like it was scanned"
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
 title = "Scanner Effect"
-
-[home.scannerImageSplit]
-desc = "Detect and split scanned photos into separate pages"
-tags = "detect,split,photos,auto detect,detect photos,split photos,separate photos,split scanned images,multiple photos,auto split,photo detection,image detection,scan separation"
-title = "Detect & Split Scanned Photos"
 
 [home.sharedSign]
 desc = "Request signatures from others and track signing sessions"
@@ -4967,68 +4545,6 @@ quickAccess = "Start at the <strong>Quick Access</strong> rail to jump between R
 topBar = "The top bar lets you swap between <strong>Viewer</strong>, <strong>Page Editor</strong>, and <strong>Active Files</strong>."
 wrapUp = "That is what is new in V2. Open the <strong>Tours</strong> menu anytime to replay this, the Tools tour, or the Admin tour."
 
-[overlay-pdfs]
-desc = "Overlay one PDF on top of another"
-submit = "Submit"
-tags = "Overlay"
-title = "Overlay PDFs"
-
-[overlay-pdfs.counts]
-item = "Count for file"
-label = "Overlay Counts (for Fixed Repeat Mode)"
-noFiles = "Add overlay files to configure counts"
-
-[overlay-pdfs.error]
-failed = "An error occurred while overlaying PDFs."
-
-[overlay-pdfs.mode]
-fixedRepeat = "Fixed Repeat Overlay"
-interleaved = "Interleaved Overlay"
-label = "Select Overlay Mode"
-sequential = "Sequential Overlay"
-
-[overlay-pdfs.overlayFiles]
-addMore = "Add more PDFs..."
-label = "Select Overlay PDF Files"
-placeholder = "Choose PDF(s)..."
-
-[overlay-pdfs.position]
-background = "Background"
-foreground = "Foreground"
-label = "Select Overlay Position"
-
-[overlay-pdfs.results]
-title = "Overlay Results"
-
-[overlay-pdfs.settings]
-title = "Settings"
-
-[overlay-pdfs.tooltip.counts]
-text = "Provide a positive number for each overlay file showing how many pages to take before moving to the next. Required when mode is Fixed Repeat."
-title = "Counts (Fixed Repeat only)"
-
-[overlay-pdfs.tooltip.description]
-text = "Combine a base PDF with one or more overlay PDFs. Overlays can be applied page-by-page in different modes and placed in the foreground or background."
-title = "Description"
-
-[overlay-pdfs.tooltip.header]
-title = "Overlay PDFs Overview"
-
-[overlay-pdfs.tooltip.mode]
-fixedRepeat = "Fixed Repeat Overlay: Take a set number of pages from each overlay before moving to the next. Use Counts to set the numbers."
-interleaved = "Interleaved Overlay: Take one page from each overlay in turn."
-sequential = "Sequential Overlay: Use pages from the first overlay PDF until it ends, then move to the next."
-text = "Choose how to distribute overlay pages across the base PDF pages."
-title = "Overlay Mode"
-
-[overlay-pdfs.tooltip.overlayFiles]
-text = "Select one or more PDFs to overlay on the base. The order of these files affects how pages are applied in Sequential and Fixed Repeat modes."
-title = "Overlay Files"
-
-[overlay-pdfs.tooltip.position]
-text = "Foreground places the overlay on top of the page. Background places it behind."
-title = "Overlay Position"
-
 [pageEdit]
 deselectAll = "None"
 selectAll = "Check All"
@@ -5495,38 +5011,6 @@ title = "Commented PDF"
 [pdfCommentAgent.settings]
 title = "Comment instructions"
 
-[pdfOrganiser]
-placeholder = "(e.g. 1,3,2 or 4-8,2,10-12 or 2n-1)"
-tags = "duplex,even,odd,sort,move"
-title = "Page Organizer"
-
-[pdfOrganiser.mode]
-1 = "Custom Page Order"
-10 = "Odd-Even Merge"
-11 = "Duplicate all pages"
-2 = "Reverse Order"
-3 = "Duplex Sort"
-4 = "Booklet Sort"
-5 = "Side Stitch Booklet Sort"
-6 = "Odd-Even Split"
-7 = "Remove First"
-8 = "Remove Last"
-9 = "Remove First and Last"
-_value = "Organization mode"
-
-[pdfOrganiser.mode.desc]
-BOOKLET_SORT = "Arrange pages for booklet printing (last, first, second, second last, …)."
-CUSTOM = "Use a custom sequence of page numbers or expressions to define a new order."
-DUPLEX_SORT = "Interleave fronts then backs as if a duplex scanner scanned all fronts, then all backs (1, n, 2, n-1, …)."
-DUPLICATE = "Duplicate each page according to the custom order count (e.g., 4 duplicates each page 4×)."
-ODD_EVEN_MERGE = "Merge two PDFs by alternating pages: odd from the first, even from the second."
-ODD_EVEN_SPLIT = "Split the document into two outputs: all odd pages and all even pages."
-REMOVE_FIRST = "Remove the first page from the document."
-REMOVE_FIRST_AND_LAST = "Remove both the first and last pages from the document."
-REMOVE_LAST = "Remove the last page from the document."
-REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
-SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
-
 [pdfTextEditor]
 conversionFailed = "Failed to convert PDF. Please try again."
 converting = "Converting PDF to editable format..."
@@ -5699,21 +5183,6 @@ title = "PDF To PDF/X"
 header = "PDF to Presentation"
 tags = "slides,show,office,microsoft"
 title = "PDF to Presentation"
-
-[PdfToSinglePage]
-tags = "single page"
-
-[pdfToSinglePage]
-description = "This tool will merge all pages of your PDF into one large single page. The width will remain the same as the original pages, but the height will be the sum of all page heights."
-submit = "Convert To Single Page"
-tags = "combine,merge,single,single page,one page,merge to single,combine all,stitch pages,concatenate vertical,long page,poster"
-title = "PDF To Single Page"
-
-[pdfToSinglePage.error]
-failed = "An error occurred while converting to single page."
-
-[pdfToSinglePage.results]
-title = "Single Page Results"
 
 [PDFToText]
 header = "PDF to RTF (Text)"
@@ -8902,73 +8371,6 @@ title = "Words to Redact"
 [releases]
 title = "Release Notes"
 
-[removeAnnotations]
-submit = "Remove"
-tags = "comments,highlight,notes,markup,remove"
-title = "Remove Annotations"
-
-[removeAnnotations.error]
-failed = "An error occurred while removing annotations from the PDF."
-
-[removeAnnotations.info]
-description = "This tool will remove all annotations (comments, highlights, notes, etc.) from your PDF documents."
-
-[removeAnnotations.settings]
-title = "Settings"
-
-[removeAnnotations.tooltip.description]
-title = "What it does"
-
-[removeAnnotations.tooltip.header]
-title = "About Remove Annotations"
-
-[removeBlanks]
-submit = "Remove blank pages"
-tags = "delete,clean,empty,remove blank,delete blank pages,empty pages,white pages,remove empty,clean up,cleanup blank"
-title = "Remove Blanks"
-
-[removeBlanks.error]
-failed = "Failed to remove blank pages"
-
-[removeBlanks.includeBlankPages]
-label = "Include detected blank pages"
-
-[removeBlanks.results]
-title = "Removed Blank Pages"
-
-[removeBlanks.settings]
-title = "Settings"
-
-[removeBlanks.threshold]
-label = "Pixel Whiteness Threshold"
-
-[removeBlanks.tooltip.header]
-title = "Remove Blank Pages Settings"
-
-[removeBlanks.tooltip.includeBlankPages]
-bullet1 = "Useful for reviewing what was removed"
-bullet2 = "Helps verify the detection accuracy"
-bullet3 = "Can be disabled to reduce output file size"
-text = "When enabled, creates a separate PDF containing all the blank pages that were detected and removed from the original document."
-title = "Include Detected Blank Pages"
-
-[removeBlanks.tooltip.threshold]
-bullet1 = "0 = Pure black (most restrictive)"
-bullet2 = "128 = Medium gray"
-bullet3 = "255 = Pure white (least restrictive)"
-text = "Controls how white a pixel must be to be considered 'white'. This helps determine what counts as a blank area on the page."
-title = "Pixel Whiteness Threshold"
-
-[removeBlanks.tooltip.whitePercent]
-bullet1 = "Lower values (e.g., 80%) = More pages removed"
-bullet2 = "Higher values (e.g., 95%) = Only very blank pages removed"
-bullet3 = "Use higher values for documents with light backgrounds"
-text = "Sets the minimum percentage of white pixels required for a page to be considered blank and removed."
-title = "White Percentage Threshold"
-
-[removeBlanks.whitePercent]
-label = "White Percentage Threshold"
-
 [removeCertSign]
 description = "This tool will remove digital certificate signatures from your PDF document."
 submit = "Remove Signature"
@@ -8980,20 +8382,6 @@ failed = "An error occurred while removing certificate signatures."
 
 [removeCertSign.results]
 title = "Certificate Removal Results"
-
-[removeImage]
-submit = "Remove image"
-tags = "remove,delete,clean,remove image,delete image,strip images,remove pictures,delete photos,clean images,reduce size,remove graphics"
-title = "Remove image"
-
-[removeImage.error]
-failed = "Failed to remove images from the PDF."
-
-[removeImage.results]
-title = "Remove Images Results"
-
-[removeImagePdf]
-tags = "Remove Image,Page operations,Back end,server side"
 
 [removePages]
 submit = "Remove Pages"
@@ -9052,90 +8440,6 @@ title = "Decrypted PDFs"
 
 [removePassword.tooltip]
 description = "Removing password protection requires the password that was used to encrypt the PDF. This will decrypt the document, making it accessible without a password."
-
-[reorganizePages]
-submit = "Reorganize Pages"
-tags = "rearrange,reorder,organize,reorganize,move pages,page order,sort pages,arrange pages,shuffle,resequence"
-
-[reorganizePages.error]
-failed = "Failed to reorganize pages"
-
-[reorganizePages.results]
-title = "Pages Reorganized"
-
-[reorganizePages.settings]
-title = "Settings"
-
-[repair]
-description = "This tool will attempt to repair corrupted or damaged PDF files. No additional settings are required."
-submit = "Repair"
-tags = "fix,restore,correction,recover"
-title = "Repair"
-
-[repair.error]
-failed = "An error occurred while repairing the PDF."
-
-[repair.results]
-title = "Repair Results"
-
-[replace-color]
-submit = "Replace"
-title = "Replace-Invert-Color"
-
-[replace-color.selectText]
-1 = "Replace or invert color options"
-10 = "Choose text Color"
-11 = "Choose background Color"
-5 = "High contrast color options"
-6 = "White text on black background"
-7 = "Black text on white background"
-8 = "Yellow text on black background"
-9 = "Green text on black background"
-
-[replaceColor]
-tags = "Replace Color,Page operations,Back end,server side"
-
-[replaceColor.error]
-failed = "An error occurred while processing the color replacement."
-
-[replaceColor.labels]
-colourOperation = "Color operation"
-settings = "Settings"
-
-[replaceColor.options]
-cmyk = "Convert to CMYK"
-custom = "Custom"
-highContrast = "High contrast"
-invertAll = "Invert all colors"
-
-[replaceColor.tooltip.cmyk]
-text = "Convert the PDF from RGB color space to CMYK color space, optimized for professional printing. This process converts colors to the Cyan, Magenta, Yellow, Black model used by printers."
-title = "Convert to CMYK"
-
-[replaceColor.tooltip.custom]
-bullet1 = "Text color - Choose the color for text elements"
-bullet2 = "Background color - Set the background color for the document"
-text = "Define your own text and background colors using the color pickers. Perfect for creating branded documents or specific accessibility requirements."
-title = "Custom Colors"
-
-[replaceColor.tooltip.description]
-text = "Transform PDF colors to improve readability and accessibility. Choose from high contrast presets, invert all colors, or create custom color schemes."
-title = "Description"
-
-[replaceColor.tooltip.header]
-title = "Replace & Invert Color Settings Overview"
-
-[replaceColor.tooltip.highContrast]
-bullet1 = "White text on black background - Classic dark mode"
-bullet2 = "Black text on white background - Standard high contrast"
-bullet3 = "Yellow text on black background - High visibility option"
-bullet4 = "Green text on black background - Alternative high contrast"
-text = "Apply predefined high contrast color combinations designed for better readability and accessibility compliance."
-title = "High Contrast"
-
-[replaceColor.tooltip.invertAll]
-text = "Completely invert all colors in the PDF, creating a negative-like effect. Useful for creating dark mode versions of documents or reducing eye strain in low-light conditions."
-title = "Invert All Colors"
 
 [rotate]
 rotateLeft = "Rotate Counterclockwise"
@@ -9248,49 +8552,6 @@ unitInvalid = "Invalid unit: {{scaleUnit}}"
 
 [scannerEffect]
 tags = "scan,simulate,create,fake scan,look scanned,scanner effect,make look scanned,photocopy effect,simulate scanner,realistic scan"
-
-[scannerImageSplit]
-submit = "Extract Image Scans"
-tags = "separate,auto-detect,scans,multi-photo,organize"
-title = "Extracted Images"
-
-[scannerImageSplit.error]
-failed = "An error occurred while extracting image scans."
-
-[scannerImageSplit.tooltip]
-headsUp = "Heads-up"
-headsUpDesc = "Overlapping photos or backgrounds very close in color to the photos can reduce accuracy-try a lighter or darker background and leave more space."
-problem1 = "Photos not detected → increase Tolerance to 30-50"
-problem2 = "Too many false detections → increase Minimum Area to 15,000-20,000"
-problem3 = "Crops are too tight → increase Border Size to 5-10"
-problem4 = "Tilted photos not straightened → lower Angle Threshold to ~5°"
-problem5 = "Dust/noise boxes → increase Minimum Contour Area to 1000-2000"
-quickFixes = "Quick fixes"
-setupTips = "Setup tips"
-tip1 = "Use a plain, light background"
-tip2 = "Leave a small gap (≈1 cm) between photos"
-tip3 = "Scan at 300-600 DPI"
-tip4 = "Clean the scanner glass"
-title = "Photo Splitter"
-useCase1 = "Scan whole album pages in one go"
-useCase2 = "Split flatbed batches into separate files"
-useCase3 = "Break collages into individual photos"
-useCase4 = "Pull photos from documents"
-whatThisDoes = "What this does"
-whatThisDoesDesc = "Automatically finds and extracts each photo from a scanned page or composite image-no manual cropping."
-whenToUse = "When to use"
-
-[ScannerImageSplit.selectText]
-1 = "Angle Threshold:"
-10 = "Extra padding (in pixels) around each saved photo so edges aren't cut."
-2 = "Tilt (in degrees) needed before we auto-straighten a photo."
-3 = "Tolerance:"
-4 = "How closely a color must match the page background to count as background. Higher = looser, lower = stricter."
-5 = "Minimum Area:"
-6 = "Smallest photo size (in pixels²) we'll keep to avoid tiny fragments."
-7 = "Minimum Contour Area:"
-8 = "Smallest edge/shape we consider when finding photos (filters dust and specks)."
-9 = "Border Size:"
 
 [search]
 noResults = "No results found"
@@ -9937,12 +9198,6 @@ skip = "Skip"
 subtitle = "Join Stirling PDF to get started"
 title = "Create an account"
 unexpectedError = "Unexpected error: {{message}}"
-
-[sizes]
-large = "Large"
-medium = "Medium"
-small = "Small"
-x-large = "X-Large"
 
 [split]
 resultsTitle = "Split Results"
@@ -10810,7 +10065,6 @@ zoomIn = "Zoom In"
 zoomOut = "Zoom Out"
 
 [viewer.attachments]
-addAttachment = "Add attachment"
 close = "Close attachments"
 closeSidebar = "Close attachments sidebar"
 download = "Download attachment"
@@ -10833,6 +10087,7 @@ empty = "No bookmarks in this document"
 expandAll = "Expand all bookmarks"
 searchPlaceholder = "Search bookmarks"
 title = "Bookmarks"
+unsupportedFile = "This file can't be edited inline. Save it to your files first, then add bookmarks."
 
 [viewer.comments]
 addComment = "Add comment"

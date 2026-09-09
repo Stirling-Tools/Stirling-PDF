@@ -19,6 +19,24 @@ import { useAnnotationStyleState } from "@app/tools/annotate/useAnnotationStyleS
 import { useAnnotationSelection } from "@app/tools/annotate/useAnnotationSelection";
 import { AnnotationPanel } from "@app/tools/annotate/AnnotationPanel";
 import { alert } from "@app/components/toast";
+import type { ToolId } from "@app/types/toolId";
+
+// Direct sidebar entries into Annotate's sub-tools (see
+// useTranslatedToolRegistry.tsx) all reuse this same component; the only
+// difference is which tool is pre-armed when entering. "annotate" itself
+// keeps the plain "select" default.
+const ANNOTATE_VARIANT_DEFAULT_TOOL: Partial<Record<ToolId, AnnotationToolId>> =
+  {
+    annotateHighlight: "highlight",
+    annotateDraw: "ink",
+    annotateShapes: "square",
+    annotateComments: "textComment",
+    annotateStamps: "note",
+  };
+
+const isAnnotateFamily = (toolId: ToolId | null): boolean =>
+  toolId === "annotate" ||
+  (!!toolId && toolId in ANNOTATE_VARIANT_DEFAULT_TOOL);
 
 // Tools that require drawing/interacting with the PDF and should disable pan mode
 const DRAWING_TOOLS: AnnotationToolId[] = [
@@ -111,6 +129,7 @@ const Annotate = (_props: BaseToolProps) => {
   const prevFileIndexRef = useRef<number>(activeFileIndex);
   const activeToolRef = useRef<AnnotationToolId>("select");
   const wasAnnotateActiveRef = useRef<boolean>(false);
+  const prevAnnotateVariantRef = useRef<ToolId | null>(null);
   const [selectedTextDraft, setSelectedTextDraft] = useState<string>("");
   const [selectedFontSize, setSelectedFontSize] = useState<number>(14);
   const [stampImageData, setStampImageData] = useState<string | undefined>();
@@ -235,24 +254,32 @@ const Annotate = (_props: BaseToolProps) => {
 
   useEffect(() => {
     const isAnnotateActive =
-      workbench === "viewer" && selectedTool === "annotate";
+      workbench === "viewer" && isAnnotateFamily(selectedTool);
+    // Re-arm on entering the annotate family, and also when jumping straight
+    // from one sidebar entry to another (e.g. Draw -> Shapes) without ever
+    // leaving — each entry has its own default tool to pre-arm.
+    const variantChanged =
+      isAnnotateActive && prevAnnotateVariantRef.current !== selectedTool;
     if (wasAnnotateActiveRef.current && !isAnnotateActive) {
       annotationApiRef?.current?.deactivateTools?.();
       signatureApiRef?.current?.deactivateTools?.();
       setPlacementMode(false);
       viewerContext?.setAnnotationMode(false);
-    } else if (!wasAnnotateActiveRef.current && isAnnotateActive) {
-      // When entering annotate mode, activate the select tool by default
-      // Also reset React state to match — EmbedPDF always starts at 'select' here
-      setActiveTool("select");
-      activeToolRef.current = "select";
-      const toolOptions = buildToolOptions("select");
+    } else if (variantChanged) {
+      // Also reset React state to match — EmbedPDF always starts here.
+      const defaultTool = selectedTool
+        ? (ANNOTATE_VARIANT_DEFAULT_TOOL[selectedTool] ?? "select")
+        : "select";
+      setActiveTool(defaultTool);
+      activeToolRef.current = defaultTool;
+      const toolOptions = buildToolOptions(defaultTool);
       annotationApiRef?.current?.activateAnnotationTool?.(
-        "select",
+        defaultTool,
         toolOptions,
       );
     }
     wasAnnotateActiveRef.current = isAnnotateActive;
+    prevAnnotateVariantRef.current = isAnnotateActive ? selectedTool : null;
   }, [
     workbench,
     selectedTool,

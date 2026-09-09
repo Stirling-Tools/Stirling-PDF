@@ -33,9 +33,7 @@ describe("getToolOgImage (client resolver)", () => {
 
   it("maps tools whose art uses a legacy v1 filename", () => {
     expect(getToolOgImage("", "merge")).toBe("/og_images/mergePdfs.png");
-    expect(getToolOgImage("", "pdfToSinglePage")).toBe(
-      "/og_images/single-large-page.png",
-    );
+    expect(getToolOgImage("", "crop")).toBe("/og_images/cropPdf.png");
   });
 
   it("falls back to the default image for an unknown tool id or null", () => {

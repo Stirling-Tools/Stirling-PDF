@@ -31,9 +31,9 @@ const registry: Partial<ToolRegistry> = {
     "Remove Password",
     "unlock,remove password,unlock PDF,decrypt,remove encryption,unprotect,open protected PDF,password removal,unlock protected,disable password,remove security,remove owner password",
   ),
-  changeMetadata: makeEntry(
-    "Change Metadata",
-    "edit,modify,update,metadata,properties,document properties,author,title,subject,keywords,creator,producer,info,document info,file properties",
+  showJS: makeEntry(
+    "Show Javascript",
+    "javascript,code,script,show javascript,show JS,find javascript,detect javascript,view javascript,embedded scripts,malware,security,inspect,debug",
   ),
   scannerEffect: makeEntry(
     "Scanner Effect",

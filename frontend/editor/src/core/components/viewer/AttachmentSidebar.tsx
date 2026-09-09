@@ -1,10 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { Text, Loader, Stack } from "@mantine/core";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
-import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
 import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
 import DownloadIcon from "@mui/icons-material/DownloadRounded";
@@ -47,7 +45,6 @@ export const AttachmentSidebar = ({
   const { t } = useTranslation();
   const { attachmentActions, hasAttachmentSupport, toggleAttachmentSidebar } =
     useViewer();
-  const { handleToolSelectForced } = useToolWorkflow();
   const [searchTerm, setSearchTerm] = useState("");
   const [attachmentSupport, setAttachmentSupport] = useState(() =>
     hasAttachmentSupport(),
@@ -256,14 +253,6 @@ export const AttachmentSidebar = ({
     attachmentActions.downloadAttachment(attachment);
   };
 
-  const handleAddAttachment = useCallback(() => {
-    // Close the attachment sidebar before opening the tool so the user
-    // doesn't end up looking at two stacked side panels (the sidebar on
-    // the right + the tool's settings on the left).
-    toggleAttachmentSidebar();
-    handleToolSelectForced("addAttachments");
-  }, [handleToolSelectForced, toggleAttachmentSidebar]);
-
   const filteredAttachments = useMemo(() => {
     const attachments = Array.isArray(activeEntry.attachments)
       ? activeEntry.attachments
@@ -439,36 +428,13 @@ export const AttachmentSidebar = ({
           <Text size="sm" c="dimmed" ta="center">
             {t("viewer.attachments.empty", "No attachments in this document")}
           </Text>
-          <Button
-            variant="tertiary"
-            size="sm"
-            onClick={handleAddAttachment}
-            leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
-          >
-            {t("viewer.attachments.addAttachment", "Add attachment")}
-          </Button>
         </Stack>
       )}
 
       {showAttachmentList && (
-        <>
-          <Button
-            variant="tertiary"
-            size="sm"
-            fullWidth
-            justify="start"
-            onClick={handleAddAttachment}
-            leftSection={
-              <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-            }
-            style={{ marginBottom: "var(--space-xs)" }}
-          >
-            {t("viewer.attachments.addAttachment", "Add attachment")}
-          </Button>
-          <div className="attachment-list">
-            {renderAttachments(filteredAttachments)}
-          </div>
-        </>
+        <div className="attachment-list">
+          {renderAttachments(filteredAttachments)}
+        </div>
       )}
 
       {showSearchEmpty && (

@@ -11,7 +11,6 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/compress-pdf": "compress",
   "/rotate": "rotate",
   "/rotate-pdf": "rotate",
-  "/repair": "repair",
   "/crop": "crop",
 
   // Convert tool and all its variants
@@ -49,43 +48,27 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/ocr": "ocr",
   "/ocr-pdf": "ocr",
   "/add-image": "addImage",
-  "/add-page-numbers": "addPageNumbers",
   "/redact": "redact",
 
   // Page manipulation
   "/remove-pages": "removePages",
-  "/remove-blanks": "removeBlanks",
   "/extract-pages": "extractPages",
-  "/reorganize-pages": "reorganizePages",
-  "/single-large-page": "pdfToSinglePage",
   "/page-layout": "pageLayout",
   "/scale-pages": "scalePages",
-  "/booklet-imposition": "bookletImposition",
 
   // Splitting tools
   "/auto-split-pdf": "split",
   "/auto-size-split-pdf": "split",
-  "/scanner-image-split": "scannerImageSplit",
 
   // Annotation and content removal
   "/annotations": "annotate",
   "/annotate": "annotate",
-  "/remove-annotations": "removeAnnotations",
-  "/remove-image": "removeImage",
 
   // Image and visual tools
   "/extract-images": "extractImages",
-  "/adjust-contrast": "adjustContrast",
   "/fake-scan": "scannerEffect",
-  "/replace-color-pdf": "replaceColor",
-
-  // Metadata and info
-  "/change-metadata": "changeMetadata",
-  "/add-attachments": "addAttachments",
 
   // Advanced tools
-  "/overlay-pdfs": "overlayPdfs",
-  "/edit-table-of-contents": "editTableOfContents",
   "/compare": "compare",
   "/multi-tool": "multiTool",
   "/show-js": "showJS",
@@ -103,23 +86,17 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/dev-airgapped": "devAirgapped",
 
   // Legacy URL mappings from sitemap
-  "/pdf-organizer": "reorganizePages",
   "/multi-page-layout": "pageLayout",
   "/extract-page": "extractPages",
-  "/pdf-to-single-page": "pdfToSinglePage",
   "/img-to-pdf": "convert",
   "/pdf-to-presentation": "convert",
   "/pdf-to-text": "convert",
   "/pdf-to-html": "convert",
   "/auto-redact": "redact",
   "/view-pdf": "read",
-  "/remove-image-pdf": "removeImage",
-  "/replace-and-invert-color-pdf": "replaceColor",
-  "/extract-image-scans": "scannerImageSplit",
   "/show-javascript": "showJS",
   "/scanner-effect": "scannerEffect",
   "/split-by-size-or-count": "split",
-  "/overlay-pdf": "overlayPdfs",
   "/split-pdf-by-sections": "split",
   "/split-pdf-by-chapters": "split",
 };

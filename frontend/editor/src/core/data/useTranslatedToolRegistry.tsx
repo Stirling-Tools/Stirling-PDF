@@ -4,7 +4,6 @@ import GroupAddOutlinedIcon from "@mui/icons-material/GroupAddOutlined";
 import StraightenOutlinedIcon from "@mui/icons-material/StraightenOutlined";
 import { useTranslation } from "react-i18next";
 import { devApiLink } from "@app/constants/links";
-import { reorganizePagesOperationConfig } from "@app/hooks/tools/reorganizePages/useReorganizePagesOperation";
 import {
   SubcategoryId,
   ToolCategoryId,
@@ -18,44 +17,30 @@ import {
   asRegistryConfig,
   lazySettings,
 } from "@app/hooks/tools/shared/toolOperationTypes";
-import { adjustContrastOperationConfig } from "@app/hooks/tools/adjustContrast/useAdjustContrastOperation";
 import { getSynonyms } from "@app/utils/toolSynonyms";
 import { useProprietaryToolRegistry } from "@app/data/useProprietaryToolRegistry";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
 import { splitOperationConfig } from "@app/hooks/tools/split/useSplitOperation";
 import { removePasswordOperationConfig } from "@app/hooks/tools/removePassword/useRemovePasswordOperation";
-import { repairOperationConfig } from "@app/hooks/tools/repair/useRepairOperation";
 import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
 import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
-import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
-import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
 import { removeCertificateSignOperationConfig } from "@app/hooks/tools/removeCertificateSign/useRemoveCertificateSignOperation";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
 import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
-import { bookletImpositionOperationConfig } from "@app/hooks/tools/bookletImposition/useBookletImpositionOperation";
 import { mergeOperationConfig } from "@app/hooks/tools/merge/useMergeOperation";
-import { editTableOfContentsOperationConfig } from "@app/hooks/tools/editTableOfContents/useEditTableOfContentsOperation";
 import { usePrototypeToolRegistry } from "@app/data/usePrototypeToolRegistry";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { rotateOperationConfig } from "@app/hooks/tools/rotate/useRotateOperation";
 import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRotateOperation";
-import { changeMetadataOperationConfig } from "@app/hooks/tools/changeMetadata/useChangeMetadataOperation";
 import { signOperationConfig } from "@app/hooks/tools/sign/useSignOperation";
 import { cropOperationConfig } from "@app/hooks/tools/crop/useCropOperation";
-import { removeAnnotationsOperationConfig } from "@app/hooks/tools/removeAnnotations/useRemoveAnnotationsOperation";
-import { removeImageOperationConfig } from "@app/hooks/tools/removeImage/useRemoveImageOperation";
 import { pageLayoutOperationConfig } from "@app/hooks/tools/pageLayout/usePageLayoutOperation";
 import { extractImagesOperationConfig } from "@app/hooks/tools/extractImages/useExtractImagesOperation";
-import { replaceColorOperationConfig } from "@app/hooks/tools/replaceColor/useReplaceColorOperation";
 import { removePagesOperationConfig } from "@app/hooks/tools/removePages/useRemovePagesOperation";
-import { removeBlanksOperationConfig } from "@app/hooks/tools/removeBlanks/useRemoveBlanksOperation";
-import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
 import { adjustPageScaleOperationConfig } from "@app/hooks/tools/adjustPageScale/useAdjustPageScaleOperation";
-import { scannerImageSplitOperationConfig } from "@app/hooks/tools/scannerImageSplit/useScannerImageSplitOperation";
-import { addPageNumbersOperationConfig } from "@app/components/tools/addPageNumbers/useAddPageNumbersOperation";
 import { extractPagesOperationConfig } from "@app/hooks/tools/extractPages/useExtractPagesOperation";
 import { ENDPOINTS as SPLIT_ENDPOINT_NAMES } from "@app/constants/splitConstants";
 import { ToolId } from "@app/types/toolId";
@@ -299,6 +284,126 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "annotate"),
         supportsAutomate: false,
       },
+      // Direct sidebar entries into Annotate's sub-tools, so a specific
+      // drawing tool is one click away instead of opening Annotate and then
+      // picking from its full button set. Each reuses the same Annotate
+      // component/view; only the tool that's pre-armed on entry differs
+      // (see ANNOTATE_VARIANT_DEFAULT_TOOL in tools/Annotate.tsx).
+      annotateHighlight: {
+        icon: (
+          <LocalIcon
+            icon="border-color-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.annotateHighlight.title", "Highlight & Markup"),
+        component: lazy(() => import("@app/tools/Annotate")),
+        description: t(
+          "home.annotateHighlight.desc",
+          "Highlight, underline, strike through, or squiggly-underline text",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: "viewer",
+        endpoints: ["view-pdf"],
+        operationConfig: asRegistryConfig(signOperationConfig),
+        automationSettings: null,
+        synonyms: getSynonyms(t, "annotateHighlight"),
+        supportsAutomate: false,
+      },
+      annotateDraw: {
+        icon: (
+          <LocalIcon
+            icon="draw-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.annotateDraw.title", "Draw"),
+        component: lazy(() => import("@app/tools/Annotate")),
+        description: t(
+          "home.annotateDraw.desc",
+          "Freehand pen and highlighter drawing directly on the PDF",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: "viewer",
+        endpoints: ["view-pdf"],
+        operationConfig: asRegistryConfig(signOperationConfig),
+        automationSettings: null,
+        synonyms: getSynonyms(t, "annotateDraw"),
+        supportsAutomate: false,
+      },
+      annotateShapes: {
+        icon: (
+          <LocalIcon
+            icon="shapes-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.annotateShapes.title", "Shapes"),
+        component: lazy(() => import("@app/tools/Annotate")),
+        description: t(
+          "home.annotateShapes.desc",
+          "Draw rectangles, circles, lines, and polygons on the PDF",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: "viewer",
+        endpoints: ["view-pdf"],
+        operationConfig: asRegistryConfig(signOperationConfig),
+        automationSettings: null,
+        synonyms: getSynonyms(t, "annotateShapes"),
+        supportsAutomate: false,
+      },
+      annotateComments: {
+        icon: (
+          <LocalIcon
+            icon="comment-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.annotateComments.title", "Comments"),
+        component: lazy(() => import("@app/tools/Annotate")),
+        description: t(
+          "home.annotateComments.desc",
+          "Add review comments, inserted text, or replacement text markup",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: "viewer",
+        endpoints: ["view-pdf"],
+        operationConfig: asRegistryConfig(signOperationConfig),
+        automationSettings: null,
+        synonyms: getSynonyms(t, "annotateComments"),
+        supportsAutomate: false,
+      },
+      annotateStamps: {
+        icon: (
+          <LocalIcon
+            icon="sticky-note-2-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.annotateStamps.title", "Notes & Stamps"),
+        component: lazy(() => import("@app/tools/Annotate")),
+        description: t(
+          "home.annotateStamps.desc",
+          "Add text boxes, sticky notes, or image stamps to the PDF",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.GENERAL,
+        workbench: "viewer",
+        endpoints: ["view-pdf"],
+        operationConfig: asRegistryConfig(signOperationConfig),
+        automationSettings: null,
+        synonyms: getSynonyms(t, "annotateStamps"),
+        supportsAutomate: false,
+      },
       takeoff: {
         icon: <StraightenOutlinedIcon sx={{ fontSize: "1.5rem" }} />,
         name: t("home.takeoff.title", "Take Off"),
@@ -441,48 +546,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         supportsAutomate: false,
         automationSettings: null,
       },
-      changeMetadata: {
-        icon: (
-          <LocalIcon
-            icon="assignment-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.changeMetadata.title", "Change Metadata"),
-        component: lazy(() => import("@app/tools/ChangeMetadata")),
-        description: t(
-          "home.changeMetadata.desc",
-          "Change/Remove/Add metadata from a PDF document",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
-        maxFiles: -1,
-        endpoints: ["update-metadata"],
-        operationConfig: asRegistryConfig(changeMetadataOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/changeMetadata/ChangeMetadataSingleStep"),
-        ),
-        synonyms: getSynonyms(t, "changeMetadata"),
-      },
-      editTableOfContents: {
-        icon: <LocalIcon icon="toc-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.editTableOfContents.title", "Edit Table of Contents"),
-        component: lazy(() => import("@app/tools/EditTableOfContents")),
-        description: t(
-          "home.editTableOfContents.desc",
-          "Add or edit bookmarks and table of contents in PDF documents",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.DOCUMENT_REVIEW,
-        maxFiles: 1,
-        endpoints: ["edit-table-of-contents"],
-        operationConfig: asRegistryConfig(editTableOfContentsOperationConfig),
-        automationSettings: null,
-        supportsAutomate: false,
-        synonyms: getSynonyms(t, "editTableOfContents"),
-      },
+
       // Page Formatting
 
       crop: {
@@ -568,26 +632,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         synonyms: getSynonyms(t, "split"),
       },
-      reorganizePages: {
-        icon: (
-          <LocalIcon icon="move-down-rounded" width="1.5rem" height="1.5rem" />
-        ),
-        name: t("home.reorganizePages.title", "Reorganize Pages"),
-        component: lazy(() => import("@app/tools/ReorganizePages")),
-        description: t(
-          "home.reorganizePages.desc",
-          "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control.",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        endpoints: ["rearrange-pages"],
-        operationConfig: asRegistryConfig(reorganizePagesOperationConfig),
-        synonyms: getSynonyms(t, "reorganizePages"),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/reorganizePages/ReorganizePagesSettings"),
-        ),
-      },
       scalePages: {
         icon: (
           <LocalIcon icon="crop-free-rounded" width="1.5rem" height="1.5rem" />
@@ -608,25 +652,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
             import("@app/components/tools/adjustPageScale/AdjustPageScaleSettings"),
         ),
         synonyms: getSynonyms(t, "scalePages"),
-      },
-      addPageNumbers: {
-        icon: <LocalIcon icon="123-rounded" width="1.5rem" height="1.5rem" />,
-        name: t("home.addPageNumbers.title", "Add Page Numbers"),
-        component: lazy(() => import("@app/tools/AddPageNumbers")),
-        description: t(
-          "home.addPageNumbers.desc",
-          "Add Page numbers throughout a document in a set location",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/addPageNumbers/AddPageNumbersAutomationSettings"),
-        ),
-        maxFiles: -1,
-        endpoints: ["add-page-numbers"],
-        operationConfig: asRegistryConfig(addPageNumbersOperationConfig),
-        synonyms: getSynonyms(t, "addPageNumbers"),
       },
       pageLayout: {
         icon: (
@@ -652,74 +677,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ),
         synonyms: getSynonyms(t, "pageLayout"),
       },
-      bookletImposition: {
-        icon: (
-          <LocalIcon
-            icon="menu-book-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.bookletImposition.title", "Booklet Imposition"),
-        component: lazy(() => import("@app/tools/BookletImposition")),
-        operationConfig: asRegistryConfig(bookletImpositionOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/bookletImposition/BookletImpositionSettings"),
-        ),
-        description: t(
-          "home.bookletImposition.desc",
-          "Create booklets with proper page ordering and multi-page layout for printing and binding",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        endpoints: ["booklet-imposition"],
-      },
-      pdfToSinglePage: {
-        icon: (
-          <LocalIcon
-            icon="looks-one-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.pdfToSinglePage.title", "PDF to Single Large Page"),
-        component: lazy(() => import("@app/tools/SingleLargePage")),
-
-        description: t(
-          "home.pdfToSinglePage.desc",
-          "Merges all PDF pages into one large single page",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        maxFiles: -1,
-        endpoints: ["pdf-to-single-page"],
-        operationConfig: asRegistryConfig(singleLargePageOperationConfig),
-        synonyms: getSynonyms(t, "pdfToSinglePage"),
-        automationSettings: null,
-      },
-      addAttachments: {
-        icon: (
-          <LocalIcon icon="attachment-rounded" width="1.5rem" height="1.5rem" />
-        ),
-        name: t("home.addAttachments.title", "Add Attachments"),
-        component: lazy(() => import("@app/tools/AddAttachments")),
-        description: t(
-          "home.addAttachments.desc",
-          "Add or remove embedded files (attachments) to/from a PDF",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.PAGE_FORMATTING,
-        synonyms: getSynonyms(t, "addAttachments"),
-        maxFiles: 1,
-        endpoints: ["add-attachments"],
-        operationConfig: asRegistryConfig(addAttachmentsOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/addAttachments/AddAttachmentsSettings"),
-        ),
-      },
-
       // Extraction
 
       extractPages: {
@@ -794,75 +751,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           () => import("@app/components/tools/removePages/RemovePagesSettings"),
         ),
       },
-      removeBlanks: {
-        icon: (
-          <LocalIcon
-            icon="scan-delete-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.removeBlanks.title", "Remove Blank Pages"),
-        component: lazy(() => import("@app/tools/RemoveBlanks")),
-        description: t(
-          "home.removeBlanks.desc",
-          "Remove blank pages from PDF documents",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.REMOVAL,
-        maxFiles: 1,
-        endpoints: ["remove-blanks"],
-        synonyms: getSynonyms(t, "removeBlanks"),
-        operationConfig: asRegistryConfig(removeBlanksOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/removeBlanks/RemoveBlanksSettings"),
-        ),
-      },
-      removeAnnotations: {
-        icon: (
-          <LocalIcon
-            icon="thread-unread-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.removeAnnotations.title", "Remove Annotations"),
-        component: lazy(() => import("@app/tools/RemoveAnnotations")),
-        description: t(
-          "home.removeAnnotations.desc",
-          "Remove annotations and comments from PDF documents",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.REMOVAL,
-        maxFiles: -1,
-        endpoints: ["remove-annotations"],
-        operationConfig: asRegistryConfig(removeAnnotationsOperationConfig),
-        automationSettings: null,
-        synonyms: getSynonyms(t, "removeAnnotations"),
-      },
-      removeImage: {
-        icon: (
-          <LocalIcon
-            icon="remove-selection-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.removeImage.title", "Remove Images"),
-        component: lazy(() => import("@app/tools/RemoveImage")),
-        description: t(
-          "home.removeImage.desc",
-          "Remove all images from a PDF document",
-        ),
-        categoryId: ToolCategoryId.STANDARD_TOOLS,
-        subcategoryId: SubcategoryId.REMOVAL,
-        maxFiles: -1,
-        endpoints: ["remove-image-pdf"],
-        operationConfig: asRegistryConfig(removeImageOperationConfig),
-        synonyms: getSynonyms(t, "removeImage"),
-        automationSettings: null,
-      },
       removePassword: {
         icon: (
           <LocalIcon
@@ -913,125 +801,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
 
       // Advanced Formatting
 
-      adjustContrast: {
-        icon: (
-          <LocalIcon icon="palette-outline" width="1.5rem" height="1.5rem" />
-        ),
-        name: t("home.adjustContrast.title", "Adjust Colors/Contrast"),
-        component: lazy(() => import("@app/tools/AdjustContrast")),
-        description: t(
-          "home.adjustContrast.desc",
-          "Adjust colors and contrast of PDF documents",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        maxFiles: -1,
-        endpoints: ["adjust-contrast"],
-        operationConfig: asRegistryConfig(adjustContrastOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/adjustContrast/AdjustContrastSingleStepSettings"),
-        ),
-        synonyms: getSynonyms(t, "adjustContrast"),
-      },
-      repair: {
-        icon: (
-          <LocalIcon
-            icon="build-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.repair.title", "Repair"),
-        component: lazy(() => import("@app/tools/Repair")),
-        description: t(
-          "home.repair.desc",
-          "Repair corrupted or damaged PDF files",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        maxFiles: -1,
-        endpoints: ["repair"],
-        operationConfig: asRegistryConfig(repairOperationConfig),
-        synonyms: getSynonyms(t, "repair"),
-        automationSettings: null,
-      },
-      scannerImageSplit: {
-        icon: (
-          <LocalIcon
-            icon="scanner-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t(
-          "home.scannerImageSplit.title",
-          "Detect & Split Scanned Photos",
-        ),
-        component: lazy(() => import("@app/tools/ScannerImageSplit")),
-        description: t(
-          "home.scannerImageSplit.desc",
-          "Detect and split scanned photos into separate pages",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        maxFiles: -1,
-        endpoints: ["extract-image-scans"],
-        operationConfig: asRegistryConfig(scannerImageSplitOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/scannerImageSplit/ScannerImageSplitSettings"),
-        ),
-        synonyms: getSynonyms(t, "scannerImageSplit"),
-      },
-      overlayPdfs: {
-        icon: (
-          <LocalIcon
-            icon="layers-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.overlay-pdfs.title", "Overlay PDFs"),
-        component: lazy(() => import("@app/tools/OverlayPdfs")),
-        description: t(
-          "home.overlay-pdfs.desc",
-          "Overlay one PDF on top of another",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        endpoints: ["overlay-pdf"],
-        operationConfig: asRegistryConfig(overlayPdfsOperationConfig),
-        synonyms: getSynonyms(t, "overlay-pdfs"),
-        automationSettings: lazySettings(
-          () => import("@app/components/tools/overlayPdfs/OverlayPdfsSettings"),
-        ),
-      },
-      replaceColor: {
-        icon: (
-          <LocalIcon
-            icon="format-color-fill-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
-        name: t("home.replaceColor.title", "Replace & Invert Color"),
-        component: lazy(() => import("@app/tools/ReplaceColor")),
-        description: t(
-          "home.replaceColor.desc",
-          "Replace or invert colors in PDF documents",
-        ),
-        categoryId: ToolCategoryId.ADVANCED_TOOLS,
-        subcategoryId: SubcategoryId.ADVANCED_FORMATTING,
-        maxFiles: -1,
-        endpoints: ["replace-invert-pdf"],
-        operationConfig: asRegistryConfig(replaceColorOperationConfig),
-        automationSettings: lazySettings(
-          () =>
-            import("@app/components/tools/replaceColor/ReplaceColorSettings"),
-        ),
-        synonyms: getSynonyms(t, "replaceColor"),
-      },
       scannerEffect: {
         icon: (
           <LocalIcon

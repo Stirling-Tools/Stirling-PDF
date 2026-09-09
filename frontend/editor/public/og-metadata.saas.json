@@ -36,21 +36,6 @@
       "title": "Remove Pages - Stirling PDF",
       "description": "Remove specific pages from a PDF document"
     },
-    "removeBlanks": {
-      "image": "/og_images/remove-blank-pages.png",
-      "title": "Remove Blank Pages - Stirling PDF",
-      "description": "Remove blank pages from PDF documents"
-    },
-    "removeAnnotations": {
-      "image": "/og_images/remove-annotations.png",
-      "title": "Remove Annotations - Stirling PDF",
-      "description": "Remove annotations and comments from PDF documents"
-    },
-    "removeImage": {
-      "image": "/og_images/remove-image.png",
-      "title": "Remove Images - Stirling PDF",
-      "description": "Remove all images from a PDF document"
-    },
     "watermark": {
       "image": "/og_images/add-watermark.png",
       "title": "Add Watermark - Stirling PDF",
@@ -101,20 +86,35 @@
       "title": "Annotate - Stirling PDF",
       "description": "Highlight, draw, add notes, and shapes directly in the viewer"
     },
+    "annotateHighlight": {
+      "image": "/og_images/home.png",
+      "title": "Highlight & Markup - Stirling PDF",
+      "description": "Highlight, underline, strike through, or squiggly-underline text"
+    },
+    "annotateDraw": {
+      "image": "/og_images/home.png",
+      "title": "Draw - Stirling PDF",
+      "description": "Freehand pen and highlighter drawing directly on the PDF"
+    },
+    "annotateShapes": {
+      "image": "/og_images/home.png",
+      "title": "Shapes - Stirling PDF",
+      "description": "Draw rectangles, circles, lines, and polygons on the PDF"
+    },
+    "annotateComments": {
+      "image": "/og_images/home.png",
+      "title": "Comments - Stirling PDF",
+      "description": "Add review comments, inserted text, or replacement text markup"
+    },
+    "annotateStamps": {
+      "image": "/og_images/home.png",
+      "title": "Notes & Stamps - Stirling PDF",
+      "description": "Add text boxes, sticky notes, or image stamps to the PDF"
+    },
     "takeoff": {
       "image": "/og_images/home.png",
       "title": "Take Off - Stirling PDF",
       "description": "Measure lengths, areas, and counts on a plan and price them out as a materials list"
-    },
-    "scannerImageSplit": {
-      "image": "/og_images/detect-split-scanned-photos.png",
-      "title": "Detect & Split Scanned Photos - Stirling PDF",
-      "description": "Detect and split scanned photos into separate pages"
-    },
-    "editTableOfContents": {
-      "image": "/og_images/edit-table-of-contents.png",
-      "title": "Edit Table of Contents - Stirling PDF",
-      "description": "Add or edit bookmarks and table of contents in PDF documents"
     },
     "scannerEffect": {
       "image": "/og_images/scanner-effect.png",
@@ -131,35 +131,15 @@
       "title": "Adjust page size/scale - Stirling PDF",
       "description": "Change the size/scale of a page and/or its contents."
     },
-    "adjustContrast": {
-      "image": "/og_images/adjust-colors-contrast.png",
-      "title": "Adjust Colors/Contrast - Stirling PDF",
-      "description": "Adjust colors and contrast of PDF documents"
-    },
     "crop": {
       "image": "/og_images/cropPdf.png",
       "title": "Crop PDF - Stirling PDF",
       "description": "Crop a PDF to reduce its size (maintains text!)"
     },
-    "pdfToSinglePage": {
-      "image": "/og_images/single-large-page.png",
-      "title": "PDF to Single Large Page - Stirling PDF",
-      "description": "Merges all PDF pages into one large single page"
-    },
-    "repair": {
-      "image": "/og_images/repair.png",
-      "title": "Repair - Stirling PDF",
-      "description": "Repair corrupted or damaged PDF files"
-    },
     "compare": {
       "image": "/og_images/compare.png",
       "title": "Compare - Stirling PDF",
       "description": "Compare two PDF documents and highlight differences"
-    },
-    "addPageNumbers": {
-      "image": "/og_images/add-page-numbers.png",
-      "title": "Add Page Numbers - Stirling PDF",
-      "description": "Add Page numbers throughout a document in a set location"
     },
     "redact": {
       "image": "/og_images/redact.png",
@@ -186,50 +166,20 @@
       "title": "Extract Pages - Stirling PDF",
       "description": "Extract specific pages from a PDF document"
     },
-    "reorganizePages": {
-      "image": "/og_images/reorganize-pages.png",
-      "title": "Reorganize Pages - Stirling PDF",
-      "description": "Rearrange, duplicate, or delete PDF pages with visual drag-and-drop control."
-    },
     "extractImages": {
       "image": "/og_images/extract-images.png",
       "title": "Extract Images - Stirling PDF",
       "description": "Extract images from PDF documents"
-    },
-    "addAttachments": {
-      "image": "/og_images/add-attachments.png",
-      "title": "Add Attachments - Stirling PDF",
-      "description": "Add or remove embedded files (attachments) to/from a PDF"
-    },
-    "changeMetadata": {
-      "image": "/og_images/change-metadata.png",
-      "title": "Change Metadata - Stirling PDF",
-      "description": "Change/Remove/Add metadata from a PDF document"
-    },
-    "overlayPdfs": {
-      "image": "/og_images/overlay-pdfs.png",
-      "title": "Overlay Pdfs - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "timestampPdf": {
       "image": "/og_images/timestamp-pdf.png",
       "title": "Timestamp PDF - Stirling PDF",
       "description": "Add an RFC 3161 document timestamp to prove when your PDF existed"
     },
-    "replaceColor": {
-      "image": "/og_images/replace-and-invert-color.png",
-      "title": "Replace & Invert Color - Stirling PDF",
-      "description": "Replace or invert colors in PDF documents"
-    },
     "showJS": {
       "image": "/og_images/show-javascript.png",
       "title": "Show JavaScript - Stirling PDF",
       "description": "Extract and display JavaScript code from PDF documents"
-    },
-    "bookletImposition": {
-      "image": "/og_images/booklet-imposition.png",
-      "title": "Booklet Imposition - Stirling PDF",
-      "description": "Create booklets with proper page ordering and multi-page layout for printing and binding"
     },
     "pdfTextEditor": {
       "image": "/og_images/pdf-text-editor.png",
@@ -521,9 +471,6 @@
     "/add-text": "addText",
     "/remove-password": "removePassword",
     "/remove-pages": "removePages",
-    "/remove-blanks": "removeBlanks",
-    "/remove-annotations": "removeAnnotations",
-    "/remove-image": "removeImage",
     "/watermark": "watermark",
     "/sanitize": "sanitize",
     "/split": "split",
@@ -534,32 +481,25 @@
     "/rotate": "rotate",
     "/auto-rotate": "autoRotate",
     "/annotate": "annotate",
+    "/annotate-highlight": "annotateHighlight",
+    "/annotate-draw": "annotateDraw",
+    "/annotate-shapes": "annotateShapes",
+    "/annotate-comments": "annotateComments",
+    "/annotate-stamps": "annotateStamps",
     "/takeoff": "takeoff",
-    "/scanner-image-split": "scannerImageSplit",
-    "/edit-table-of-contents": "editTableOfContents",
     "/scanner-effect": "scannerEffect",
     "/page-layout": "pageLayout",
     "/scale-pages": "scalePages",
-    "/adjust-contrast": "adjustContrast",
     "/crop": "crop",
-    "/pdf-to-single-page": "pdfToSinglePage",
-    "/repair": "repair",
     "/compare": "compare",
-    "/add-page-numbers": "addPageNumbers",
     "/redact": "redact",
     "/flatten": "flatten",
     "/remove-cert-sign": "removeCertSign",
     "/compress": "compress",
     "/extract-pages": "extractPages",
-    "/reorganize-pages": "reorganizePages",
     "/extract-images": "extractImages",
-    "/add-attachments": "addAttachments",
-    "/change-metadata": "changeMetadata",
-    "/overlay-pdfs": "overlayPdfs",
     "/timestamp-pdf": "timestampPdf",
-    "/replace-color": "replaceColor",
     "/show-j-s": "showJS",
-    "/booklet-imposition": "bookletImposition",
     "/pdf-text-editor": "pdfTextEditor",
     "/form-fill": "formFill",
     "/multi-tool": "multiTool",
@@ -593,14 +533,11 @@
     "/sanitize-pdf": "sanitize",
     "/add-watermark": "watermark",
     "/ocr-pdf": "ocr",
-    "/single-large-page": "pdfToSinglePage",
     "/auto-split-pdf": "split",
     "/auto-size-split-pdf": "split",
     "/annotations": "annotate",
     "/fake-scan": "scannerEffect",
-    "/replace-color-pdf": "replaceColor",
     "/show-js": "showJS",
-    "/pdf-organizer": "reorganizePages",
     "/multi-page-layout": "pageLayout",
     "/extract-page": "extractPages",
     "/img-to-pdf": "convert",
@@ -609,12 +546,8 @@
     "/pdf-to-html": "convert",
     "/auto-redact": "redact",
     "/view-pdf": "read",
-    "/remove-image-pdf": "removeImage",
-    "/replace-and-invert-color-pdf": "replaceColor",
-    "/extract-image-scans": "scannerImageSplit",
     "/show-javascript": "showJS",
     "/split-by-size-or-count": "split",
-    "/overlay-pdf": "overlayPdfs",
     "/split-pdf-by-sections": "split",
     "/split-pdf-by-chapters": "split",
     "/editor": "/editor",

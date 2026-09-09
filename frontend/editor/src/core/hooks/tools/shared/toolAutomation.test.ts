@@ -29,8 +29,6 @@ import { autoRotateOperationConfig } from "@app/hooks/tools/autoRotate/useAutoRo
 import { defaultParameters as autoRotateDefaults } from "@app/hooks/tools/autoRotate/useAutoRotateParameters";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
 import { defaultParameters as convertDefaults } from "@app/hooks/tools/convert/useConvertParameters";
-import { overlayPdfsOperationConfig } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsOperation";
-import { defaultParameters as overlayDefaults } from "@app/hooks/tools/overlayPdfs/useOverlayPdfsParameters";
 import { certSignOperationConfig } from "@app/hooks/tools/certSign/useCertSignOperation";
 import { defaultParameters as certSignDefaults } from "@app/hooks/tools/certSign/useCertSignParameters";
 
@@ -50,10 +48,10 @@ function entry(over: Partial<ToolRegistryEntry>): ToolRegistryEntry {
 const NoopSettings = () => null;
 
 // A migrated, param-less config (mappers present, no settings UI) -> "noSettings".
-const repairConfig = asRegistryConfig({
+const flattenConfig = asRegistryConfig({
   toolType: ToolType.singleFile,
-  operationType: "repair",
-  endpoint: "/api/v1/misc/repair",
+  operationType: "flatten",
+  endpoint: "/api/v1/misc/flatten",
   defaultParameters: {},
   buildFormData: () => new FormData(),
   toApiParams: () => ({}),
@@ -61,10 +59,10 @@ const repairConfig = asRegistryConfig({
 });
 
 // A config with no mappers (not migrated) -> "unsupported".
-const changeMetadataConfig = asRegistryConfig({
+const showJSConfig = asRegistryConfig({
   toolType: ToolType.singleFile,
-  operationType: "changeMetadata",
-  endpoint: "/api/v1/misc/update-metadata",
+  operationType: "showJS",
+  endpoint: "/api/v1/security/get-info-on-pdf",
   defaultParameters: {},
   buildFormData: () => new FormData(),
 });
@@ -75,17 +73,17 @@ const registry: Partial<ToolRegistry> = {
     automationSettings: NoopSettings,
     operationConfig: asRegistryConfig(compressOperationConfig),
   }),
-  repair: entry({ name: "Repair", operationConfig: repairConfig }),
-  changeMetadata: entry({
-    name: "Change metadata",
+  flatten: entry({ name: "Flatten", operationConfig: flattenConfig }),
+  showJS: entry({
+    name: "Show Javascript",
     automationSettings: NoopSettings,
-    operationConfig: changeMetadataConfig,
+    operationConfig: showJSConfig,
   }),
   // Excluded: automation explicitly off.
   sign: entry({
     name: "Sign",
     supportsAutomate: false,
-    operationConfig: repairConfig,
+    operationConfig: flattenConfig,
   }),
   // Excluded: no operationConfig at all.
   extractPages: entry({ name: "Extract pages" }),
@@ -114,15 +112,15 @@ describe("getExecutableTools", () => {
   test("lists automatable tools with a resolvable endpoint, classified by support", () => {
     const tools = getExecutableTools(registry);
     expect(tools.map((t) => t.toolId)).toEqual([
-      "changeMetadata",
       "compress",
-      "repair",
+      "flatten",
+      "showJS",
     ]);
     expect(Object.fromEntries(tools.map((t) => [t.toolId, t.support]))).toEqual(
       {
         compress: "editable",
-        repair: "noSettings",
-        changeMetadata: "unsupported",
+        flatten: "noSettings",
+        showJS: "unsupported",
       },
     );
   });
@@ -432,28 +430,12 @@ describe("convert (format-routed custom tool)", () => {
 
 describe("supporting files", () => {
   const fileRegistry: Partial<ToolRegistry> = {
-    overlayPdfs: entry({
-      name: "Overlay",
-      automationSettings: NoopSettings,
-      operationConfig: asRegistryConfig(overlayPdfsOperationConfig),
-    }),
     certSign: entry({
       name: "Cert sign",
       automationSettings: NoopSettings,
       operationConfig: asRegistryConfig(certSignOperationConfig),
     }),
   };
-
-  const overlayStep = (
-    params: Record<string, unknown>,
-    fileParameters?: Record<string, string>,
-  ): WorkingToolStep => ({
-    toolId: "overlayPdfs" as ToolId,
-    operation: "/api/v1/general/overlay-pdfs",
-    params: { ...overlayDefaults, ...params },
-    support: "editable",
-    fileParameters,
-  });
 
   const certStep = (
     params: Record<string, unknown>,
@@ -464,14 +446,6 @@ describe("supporting files", () => {
     params: { ...certSignDefaults, signMode: "MANUAL", ...params },
     support: "editable",
     fileParameters,
-  });
-
-  test("extractStepFiles groups fresh picks by their backend file field", () => {
-    const a = new File(["1"], "a.pdf", { type: "application/pdf" });
-    const b = new File(["2"], "b.pdf", { type: "application/pdf" });
-    expect(
-      extractStepFiles(overlayStep({ overlayFiles: [a, b] }), fileRegistry),
-    ).toEqual({ overlayFiles: [a, b] });
   });
 
   test("extractStepFiles respects a tool's file selection (certSign by certType)", () => {
@@ -546,16 +520,6 @@ describe("supporting files", () => {
       fileParameters: { certFile: "asset:x" },
     };
     expect(activeFileFields(step, registry)).toBeNull();
-  });
-
-  test("the overlay sentinel is sized to the binding's asset count", () => {
-    // Two ids -> two files, matching two counts, so FixedRepeat validation passes.
-    const step = overlayStep(
-      { overlayMode: "FixedRepeatOverlay", counts: [1, 2] },
-      { overlayFiles: "asset:one,two" },
-    );
-    expect(activeFileFields(step, fileRegistry)).toEqual(["overlayFiles"]);
-    expect(stepNeedsConfiguring(step, fileRegistry)).toBe(false);
   });
 
   test("a rename override binds a backend field to a differently-named param", () => {

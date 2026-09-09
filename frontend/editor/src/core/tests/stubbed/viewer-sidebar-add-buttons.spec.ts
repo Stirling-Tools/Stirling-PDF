@@ -2,17 +2,12 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import path from "path";
 
 /**
- * Verifies the new "Add attachment" and "Add bookmark" buttons on the
- * viewer's attachment + bookmark sidebars.
+ * Verifies the "Add bookmark" button on the viewer's bookmark sidebar.
  *
- * After the UX refactor:
- *   - Attachment sidebar's Add button still navigates to the
- *     AddAttachments tool, BUT also closes the attachment sidebar so
- *     the user doesn't see two stacked side panels.
- *   - Bookmark sidebar's Add button opens an inline form (title + page,
- *     defaulting to the current page) inside the sidebar - the user
- *     never leaves the viewer. Submitting POSTs to the backend (not
- *     covered here - see the live spec for that).
+ * Bookmark sidebar's Add button opens an inline form (title + page,
+ * defaulting to the current page) inside the sidebar - the user never
+ * leaves the viewer. Submitting POSTs to the backend (not covered here -
+ * see the live spec for that).
  *
  * Backend-free spec.
  */
@@ -34,32 +29,7 @@ async function openViewerWithSample(page: import("@playwright/test").Page) {
   });
 }
 
-test.describe("Viewer sidebar: Add attachment / Add bookmark buttons", () => {
-  test("Attachment sidebar Add button navigates to tool and closes the sidebar", async ({
-    page,
-  }) => {
-    await openViewerWithSample(page);
-
-    const attachmentsToggle = page
-      .getByRole("button", { name: /Toggle Attachments/i })
-      .first();
-    await attachmentsToggle.click();
-
-    // Sidebar header shows up
-    const sidebarTitle = page.getByText(/^Attachments$/i).first();
-    await expect(sidebarTitle).toBeVisible({ timeout: 10_000 });
-
-    const addBtn = page.getByRole("button", { name: /^Add attachment$/i });
-    await expect(addBtn).toBeVisible({ timeout: 15_000 });
-
-    await addBtn.click();
-
-    // URL syncs to /add-attachments
-    await expect(page).toHaveURL(/\/add-attachments$/, { timeout: 10_000 });
-    // Sidebar should have auto-closed (no stacked panels)
-    await expect(sidebarTitle).not.toBeVisible({ timeout: 5_000 });
-  });
-
+test.describe("Viewer sidebar: Add bookmark button", () => {
   test("Bookmark sidebar Add button opens an inline form (no navigation away from viewer)", async ({
     page,
   }) => {

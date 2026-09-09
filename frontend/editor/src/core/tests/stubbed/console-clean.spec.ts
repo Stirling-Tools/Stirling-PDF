@@ -85,7 +85,6 @@ const ROUTES: { name: string; path: string }[] = [
   { name: "merge", path: "/merge" },
   { name: "convert", path: "/convert" },
   { name: "rotate", path: "/rotate" },
-  { name: "addPageNumbers", path: "/add-page-numbers" },
 ];
 
 // Disable the fixture's auto-goto so we can attach listeners before any
