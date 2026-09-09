@@ -110,6 +110,8 @@ public class DefaultClassificationPolicySeeder {
                 // every consumer of owner already handles its absence.
                 null,
                 true,
+                true,
+                "",
                 List.of(),
                 List.of(new PipelineStep(CLASSIFY_ENDPOINT, Map.of())),
                 new OutputSpec("inline", options),

@@ -31,7 +31,8 @@ public record InstanceEntitlement(
         EntitlementState state,
         UnitCalcPolicy unitCalcPolicy,
         LocalDateTime periodStart,
-        LocalDateTime periodEnd) {
+        LocalDateTime periodEnd,
+        Integer licensedUsers) {
 
     /** Gate-only view with no metering config — used by the revoked sentinel and gate tests. */
     public InstanceEntitlement(
@@ -46,6 +47,7 @@ public record InstanceEntitlement(
                 periodSpendUnits,
                 periodCapUnits,
                 state,
+                null,
                 null,
                 null,
                 null);
