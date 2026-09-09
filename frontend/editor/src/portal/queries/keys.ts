@@ -15,6 +15,7 @@ export const qk = {
   policyRuns: () => ["portal", "policies", "runs"] as const,
   sources: () => ["portal", "sources"] as const,
   pipelines: () => ["portal", "pipelines"] as const,
+  policyPermissions: () => ["portal", "policies", "permissions"] as const,
   fleetStats: () => ["portal", "fleetStats"] as const,
   appConfig: () => ["portal", "appConfig"] as const,
   // Keyed on scope: the open queue and the closed one are different reads.
