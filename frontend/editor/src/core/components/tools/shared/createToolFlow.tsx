@@ -149,7 +149,9 @@ export function createToolFlow<TParams = unknown>(
           config.executeButton.isVisible !== false &&
           (() => {
             const eb = config.executeButton;
-            const hasFiles = (config.files.selectedFiles?.length ?? 0) > 0;
+            const hasFiles =
+              (config.files.selectedFiles?.length ?? 0) >=
+              (config.files.minFiles ?? 1);
             // Compute the disabled reason from structured fields; explicit disabledReason wins if set.
             const effectiveDisabledReason: ExecuteDisabledReason =
               eb.disabledReason !== undefined

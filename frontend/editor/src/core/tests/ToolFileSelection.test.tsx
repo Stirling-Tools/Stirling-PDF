@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import Compress from "@app/tools/Compress";
 import Convert from "@app/tools/Convert";
+import Merge from "@app/tools/Merge";
 import ScannerImageSplit from "@app/tools/ScannerImageSplit";
 import ConvertToPdfUaSettings from "@app/components/tools/convert/ConvertToPdfUaSettings";
 import type { ConvertParameters } from "@app/hooks/tools/convert/useConvertParameters";
@@ -77,6 +78,7 @@ vi.mock("@app/contexts/FileContext", () => ({
   useFileSelectors: () => selectors,
   useFileActions: () => ({ actions: {} }),
   useFileSelection: () => ({ setSelectedFiles: vi.fn() }),
+  useFileManagement: () => ({ reorderFiles: vi.fn() }),
 }));
 vi.mock("@app/contexts/ViewerContext", () => ({
   ViewerContext: createContext(null),
@@ -177,6 +179,49 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("Merge requires two eligible PDFs and follows encryption changes", async () => {
+    const renderMerge = () => (
+      <MantineProvider>
+        <Merge />
+      </MantineProvider>
+    );
+    const view = render(renderMerge());
+    expect(
+      await screen.findByText(/Add at least 2 files to the workbench/),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Merge PDFs/ })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Sort" }),
+    ).not.toBeInTheDocument();
+
+    const secondPdf = createTestStirlingFile(
+      "second.pdf",
+      "pdf",
+      "application/pdf",
+    );
+    const secondStub = createNewStirlingFileStub(secondPdf, secondPdf.fileId);
+    workspace.files.push(secondPdf);
+    workspace.fileStubs.push(secondStub);
+    view.rerender(renderMerge());
+    expect(
+      await screen.findByText(/2 files$/, { selector: "p" }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Merge PDFs/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sort" })).toBeEnabled();
+
+    secondStub.processedFile = { pages: [], isEncrypted: true };
+    view.rerender(renderMerge());
+    expect(screen.getByRole("button", { name: /Merge PDFs/ })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: "Sort" }),
+    ).not.toBeInTheDocument();
+
+    secondStub.processedFile.isEncrypted = false;
+    view.rerender(renderMerge());
+    expect(screen.getByRole("button", { name: /Merge PDFs/ })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sort" })).toBeEnabled();
+  });
+
   test("hidden Files steps leave previews undimmed even with an empty selection", () => {
     const renderFlow = (filesVisible: boolean) => (
       <MantineProvider>
