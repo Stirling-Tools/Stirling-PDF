@@ -34,8 +34,6 @@ downloadUnavailable = "Download unavailable for this item"
 edit = "Edit"
 editSecret = "Edit this value"
 editYourNewFiles = "Edit your new file(s)"
-encryptedFilesBlocked_one = "File is password-protected. Unlock it first."
-encryptedFilesBlocked_other = "{{count}} files are password-protected. Unlock them first."
 exportAndContinue = "Export & Continue"
 false = "False"
 fileNotSavedToDisk = "Not saved to disk"
@@ -390,7 +388,7 @@ stampSetup = "Stamp Setup"
 stampText = "Stamp Text"
 stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 stampType = "Stamp Type"
-submit = "Submit"
+submit = "Add Stamp"
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
 timeDesc = "Current time"
 title = "Stamp PDF"
@@ -4239,6 +4237,7 @@ versionHistory = "Version history"
 [files]
 addFiles = "Add files"
 created = "Created"
+notIncludedInToolRun = "Not included in this tool run"
 selectFromWorkbench = "Add files to the workbench or "
 selectMultipleFromWorkbench = "Add at least {{count}} files to the workbench or "
 size = "File Size"
@@ -8585,6 +8584,8 @@ platform = "PDF Platform"
 processor = "PDF Processor"
 
 [portal.pipelines]
+permissionsRetry = "Retry"
+permissionsUnavailable = "Couldn't check whether you can manage policies, so policy actions are unavailable for now."
 subtitle = "Automate your document workflows. Start from a template for a simple, guided setup, or build a custom pipeline from scratch. Enforce any pipeline as a policy to run it on every document."
 title = "Pipelines"
 
@@ -8637,6 +8638,7 @@ viewDefinition = "View definition"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "Only an admin or team leader can modify a policy"
 name = "Give the pipeline a name"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
@@ -8704,9 +8706,10 @@ description = "Create your first pipeline: pick the sources it runs over, chain 
 title = "No pipelines yet"
 
 [portal.pipelines.enforce]
-desc = "Runs automatically; members can't turn it off"
+desc = "A policy blocks a file that fails it; an ordinary pipeline reports the error but lets the file through."
 info = "What enforcing as a policy means"
 label = "Enforce as policy"
+managerOnly = "Only an admin or team leader can enforce a pipeline as a policy"
 
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
@@ -8738,11 +8741,6 @@ failed_one = "Failed on the only step"
 failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
-
-[portal.pipelines.kpi]
-active = "Active"
-paused = "Paused"
-total = "Pipelines"
 
 [portal.pipelines.run]
 allProcessed_one = "Nothing to run: the source's {{count}} document has already been processed."
@@ -8911,6 +8909,7 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 
 [portal.policies.detail]
 enforces = "Steps"
+managerOnly = "Only an admin or team leader can modify this policy"
 onEveryExport = "On every export"
 onEveryUpload = "On every upload"
 outputAsNewFile = "as a new file"
@@ -9567,11 +9566,6 @@ body = "Delete \"{{name}}\"? This can't be undone. Policies that reference it wo
 cancel = "Cancel"
 confirm = "Delete"
 title = "Delete source?"
-
-[portal.sources.kpi]
-inUse = "In use"
-total = "Connections"
-unused = "Unused"
 
 [portal.sources.networkFields.connection]
 helperText = "The saved connection with the server address and credentials. Shared by every source that uses it."
@@ -10630,12 +10624,6 @@ dismiss = "Dismiss"
 intro = "Enable user authentication, team management, and workspace features for your organization."
 learnMore = "Learn more in documentation"
 title = "For System Administrators"
-
-[settings.general.loginLanding]
-description = "Choose which app opens when you sign in to Stirling Cloud."
-editor = "Editor"
-processor = "Processor"
-title = "After signing in"
 
 [settings.general.mode]
 fullscreen = "Fullscreen"
