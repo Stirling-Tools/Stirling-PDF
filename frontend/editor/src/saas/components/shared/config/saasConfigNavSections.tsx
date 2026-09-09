@@ -7,7 +7,6 @@ import {
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
-import { LoginLandingSetting } from "@app/components/shared/config/LoginLandingSetting";
 import PasswordSecurity from "@app/components/shared/config/configSections/PasswordSecurity";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import McpSection from "@app/components/shared/config/configSections/McpSection";
@@ -255,13 +254,7 @@ export function createSaasConfigNavSections(
       item.key === "general"
         ? {
             ...item,
-            component: (
-              <PreferencesSection
-                hideUpdateSection
-                hideAdminBanner
-                editorDefaultsSlot={<LoginLandingSetting />}
-              />
-            ),
+            component: <PreferencesSection hideUpdateSection hideAdminBanner />,
           }
         : item,
     ),

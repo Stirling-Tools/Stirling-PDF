@@ -390,7 +390,7 @@ stampSetup = "Stamp Setup"
 stampText = "Stamp Text"
 stampTextDescription = "Use dynamic variables below. Use @@ for literal @. Use \\n for new lines."
 stampType = "Stamp Type"
-submit = "Submit"
+submit = "Add Stamp"
 tags = "Stamp, Add image, center image, Watermark, PDF, Embed, Customize"
 timeDesc = "Current time"
 title = "Stamp PDF"
@@ -10619,12 +10619,6 @@ dismiss = "Dismiss"
 intro = "Enable user authentication, team management, and workspace features for your organization."
 learnMore = "Learn more in documentation"
 title = "For System Administrators"
-
-[settings.general.loginLanding]
-description = "Choose which app opens when you sign in to Stirling Cloud."
-editor = "Editor"
-processor = "Processor"
-title = "After signing in"
 
 [settings.general.mode]
 fullscreen = "Fullscreen"

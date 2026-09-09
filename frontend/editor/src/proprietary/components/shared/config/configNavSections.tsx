@@ -42,7 +42,6 @@ const AdminAiSection = lazy(
   () => import("@app/components/shared/config/configSections/AdminAiSection"),
 );
 import AccountCards from "@core/components/shared/config/configSections/preferences/AccountCards";
-import { LoginLandingSetting } from "@app/components/shared/config/LoginLandingSetting";
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
@@ -83,7 +82,6 @@ export const useConfigNavSections = (
             ...item,
             component: (
               <PreferencesSection
-                editorDefaultsSlot={<LoginLandingSetting />}
                 accountSlot={loginEnabled ? <AccountCards /> : undefined}
               />
             ),
