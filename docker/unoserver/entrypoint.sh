@@ -18,19 +18,21 @@ case "$RECYCLE_INTERVAL_SECONDS" in ''|*[!0-9]*) log "Invalid UNOSERVER_RECYCLE_
 
 mkdir -p "$PROFILE_DIR"
 
-# LibreOffice network isolation (SSRF guard); default on, LIBREOFFICE_ALLOW_NETWORK=true opts out.
+# LibreOffice egress guard (SSRF): refuses non-loopback connect(). It does not stop
+# DNS or any path that skips the dynamic symbol, so it narrows the reachable surface
+# rather than isolating the process. Default on; LIBREOFFICE_ALLOW_NETWORK=true opts out.
 OFFICE_GUARD_LIB="/usr/local/lib/stirling/soffice_no_network.so"
 OFFICE_LD_PRELOAD=""
 case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lower:]')" in
   1|true|yes|on)
-    log "LibreOffice network isolation DISABLED (LIBREOFFICE_ALLOW_NETWORK=${LIBREOFFICE_ALLOW_NETWORK})"
+    log "LibreOffice egress guard DISABLED (LIBREOFFICE_ALLOW_NETWORK=${LIBREOFFICE_ALLOW_NETWORK})"
     ;;
   *)
     if [ -f "$OFFICE_GUARD_LIB" ]; then
       OFFICE_LD_PRELOAD="$OFFICE_GUARD_LIB"
-      log "LibreOffice network isolation enabled (guard: $OFFICE_GUARD_LIB)"
+      log "LibreOffice egress guard loaded ($OFFICE_GUARD_LIB): non-loopback connect() refused"
     else
-      log "WARNING: LibreOffice network guard missing at $OFFICE_GUARD_LIB; conversions are NOT network-isolated"
+      log "WARNING: LibreOffice egress guard missing at $OFFICE_GUARD_LIB; conversions can reach the network"
     fi
     ;;
 esac
