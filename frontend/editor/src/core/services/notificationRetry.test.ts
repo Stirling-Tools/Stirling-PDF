@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "fake-indexeddb/auto";
 import { indexedDBManager } from "@app/services/indexedDBManager";
+import type { RetryPayload } from "@app/services/notificationRetry";
 
 // The stash survives a reload, cannot grow without bound, and never holds a password.
 
@@ -45,8 +46,9 @@ function payload(overrides: Partial<Record<string, unknown>> = {}) {
     multiFile: false,
     errorCode: "E004",
     recordedAt: 1_000,
+    secretsStripped: false,
     ...overrides,
-  } as Parameters<typeof stashRetryPayload>[0];
+  } as RetryPayload;
 }
 
 /** Reads records straight out of IndexedDB, bypassing the service's own mapping. */

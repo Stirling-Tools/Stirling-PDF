@@ -277,13 +277,10 @@ export function resolutionSpec(
 
       if (target.kind === "policy") {
         // A failed adoption fails the action: dropping the result leaves them nothing.
-        let adopted: FileId[] = [];
+        const adopted: FileId[] = [];
         try {
           for (const document of produced) {
-            adopted = [
-              ...adopted,
-              ...(await take(fileContext.actions, document)),
-            ];
+            adopted.push(...(await take(fileContext.actions, document)));
           }
         } catch {
           return { ok: false, message: resolution.adoptFailed(t) };
