@@ -132,9 +132,6 @@ mail:
   sslEnable: false # enable SSL/TLS wrapper for implicit TLS (typically used with port 465)
   sslTrust: "" # optional trusted host override, e.g. "smtp.example.com" or "*"; defaults to "*" (trust all) when empty
   sslCheckServerIdentity: false # enable hostname verification when using SSL/TLS
-  connectionTimeoutMs: 10000 # SMTP connect timeout in milliseconds; raise for a slow relay
-  readTimeoutMs: 30000 # SMTP read timeout in milliseconds
-  writeTimeoutMs: 30000 # SMTP write timeout in milliseconds
 
 telegram:
   enabled: false # set to 'true' to enable Telegram bot integration

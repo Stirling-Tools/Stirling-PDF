@@ -1415,12 +1415,6 @@ public class ApplicationProperties {
         private String sslTrust;
         // Enables hostname verification for TLS connections
         private Boolean sslCheckServerIdentity;
-
-        // Milliseconds. JavaMail leaves these infinite when unset, and mail sends on request
-        // threads, so a relay that accepts and then stops responding holds one for good.
-        private int connectionTimeoutMs = 10_000;
-        private int readTimeoutMs = 30_000;
-        private int writeTimeoutMs = 30_000;
     }
 
     /**
