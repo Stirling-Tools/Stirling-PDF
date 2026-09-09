@@ -3,6 +3,7 @@ import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import type { FileState } from "@app/types/file";
+import { formatFileSize } from "@app/utils/fileUtils";
 
 interface SelectDocumentStepProps {
   selectedFiles: FileState[];
@@ -56,7 +57,7 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
                 </Text>
                 {selectedFile?.size && (
                   <Text size="xs" c="dimmed">
-                    {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+                    {formatFileSize(selectedFile.size)}
                   </Text>
                 )}
               </div>

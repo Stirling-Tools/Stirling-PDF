@@ -43,6 +43,18 @@ function renderHeader(overrides: Partial<PipelineCreateHeaderProps> = {}) {
 }
 
 describe("PipelineCreateHeader", () => {
+  it("shows the enforce toggle only for an editor-sourced pipeline", () => {
+    renderHeader({ runsOnEditor: false });
+    expect(
+      screen.queryByRole("switch", { name: "portal.pipelines.enforce.label" }),
+    ).not.toBeInTheDocument();
+
+    renderHeader({ runsOnEditor: true });
+    expect(
+      screen.getByRole("switch", { name: "portal.pipelines.enforce.label" }),
+    ).toBeInTheDocument();
+  });
+
   it("edits the pipeline's name", () => {
     const handlers = renderHeader();
     fireEvent.change(
