@@ -96,7 +96,6 @@ ENV VERSION_TAG=$VERSION_TAG \
     PUID=1000 \
     PGID=1000 \
     UMASK=022 \
-    STIRLING_ALLOW_ROOT=false \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \

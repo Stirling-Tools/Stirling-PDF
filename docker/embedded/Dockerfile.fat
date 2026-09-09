@@ -163,7 +163,6 @@ ENV VERSION_TAG=$VERSION_TAG \
     PUID=1000 \
     PGID=1000 \
     UMASK=022 \
-    STIRLING_ALLOW_ROOT=false \
     FAT_DOCKER=true \
     AIENGINE_ENABLED=true \
     STIRLING_ENGINE_HOME=/opt/stirling-engine \

@@ -202,27 +202,11 @@ run_as_runtime_user() {
   fi
 }
 
-# STIRLING_ALLOW_ROOT accepts the application and its converters running as root. The images we
-# build set it to false, so the fail-open paths are fatal there and advisory wherever else this
-# script is reused.
-allow_root() {
-  case "$(printf '%s' "${STIRLING_ALLOW_ROOT:-true}" | tr '[:upper:]' '[:lower:]')" in
-    1|true|yes|on) return 0 ;;
-    *) return 1 ;;
-  esac
-}
-
 resolve_privilege_mode() {
   if [ "$RUID" -eq 0 ]; then
     PRIVILEGE_MODE=none
-    log "WARNING: ${RUNTIME_USER} resolves to uid 0, so Stirling PDF, LibreOffice and every converter run as root."
-    log "WARNING: an escape out of a converter is then an escape as root."
-    if allow_root; then
-      log "WARNING: continuing as root because STIRLING_ALLOW_ROOT=${STIRLING_ALLOW_ROOT:-<unset>}."
-      return
-    fi
-    log "ERROR: refusing to run as root. Give the image a non-root runtime user, or set STIRLING_ALLOW_ROOT=true to accept the risk."
-    exit 1
+    log "Running the application and converters as ${RUNTIME_USER} (uid 0)."
+    return
   fi
   if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
     PRIVILEGE_MODE=none
@@ -240,14 +224,7 @@ resolve_privilege_mode() {
     return
   fi
   PRIVILEGE_MODE=root
-  log "WARNING: setpriv is not available, so Stirling PDF, LibreOffice and every converter would run as root."
-  log "WARNING: an escape out of a converter would then be an escape as root. Install util-linux, or start the container with --user ${RUID}:${RGID}."
-  if allow_root; then
-    log "WARNING: continuing as root because STIRLING_ALLOW_ROOT=${STIRLING_ALLOW_ROOT:-<unset>}."
-    return
-  fi
-  log "ERROR: refusing to run as root. Install util-linux for setpriv, run the container with --user ${RUID}:${RGID}, or set STIRLING_ALLOW_ROOT=true to accept the risk."
-  exit 1
+  log "WARNING: setpriv is not available; running the application and converters as ${CURRENT_USER}."
 }
 
 run_as_runtime_user_with_timeout() {
@@ -920,15 +897,6 @@ fi
 # ---------- UID/GID remap ----------
 # Remap user/group IDs to match container runtime settings.
 if [ "$(id -u)" -eq 0 ]; then
-  if [ "${PUID:-}" = "0" ] || [ "${PGID:-}" = "0" ]; then
-    log "WARNING: PUID/PGID of 0 maps ${RUNTIME_USER} onto root, which turns the privilege drop into a no-op and makes a converter escape a root escape."
-    if allow_root; then
-      log "WARNING: honouring PUID=${PUID:-<unset>} PGID=${PGID:-<unset>} because STIRLING_ALLOW_ROOT=${STIRLING_ALLOW_ROOT:-<unset>}."
-    else
-      log "ERROR: refusing to remap ${RUNTIME_USER} onto uid/gid 0. Choose a non-zero PUID/PGID, or set STIRLING_ALLOW_ROOT=true to accept the risk."
-      exit 1
-    fi
-  fi
   if id -u stirlingpdfuser >/dev/null 2>&1; then
     if [ -n "${PUID:-}" ] && [ "$PUID" != "$(id -u stirlingpdfuser)" ]; then
       usermod -o -u "$PUID" stirlingpdfuser || true
