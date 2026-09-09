@@ -7,8 +7,7 @@ export type IconNode = readonly [
 
 export interface IconEntry {
   readonly viewBox: string;
-  /** True for stroke icons following `currentColor`; false for brand marks
-   * that carry their own fills. */
+  /** True for stroke icons following currentColor, false for brand marks carrying their own fills. */
   readonly mono: boolean;
   readonly nodes: readonly IconNode[];
 }

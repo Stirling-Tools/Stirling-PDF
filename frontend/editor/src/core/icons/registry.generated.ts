@@ -2,9 +2,7 @@
 // Source: lucide-static 1.41.0 + both svg dirs
 // Regenerate with: task frontend:prepare:icons
 
-/*! @license Lucide (ISC). Icon geometry below is Lucide's, used under the
- * ISC licence; the full notice is src/core/icons/LICENSE-lucide.txt, which
- * must stay in the repo for as long as this file does. */
+/*! @license Lucide icons (ISC) - full notice in src/core/icons/LICENSE-lucide.txt */
 
 import type { IconEntry } from "@app/icons/types";
 import { STIRLING_ICONS } from "@app/icons/stirlingIcons.generated";

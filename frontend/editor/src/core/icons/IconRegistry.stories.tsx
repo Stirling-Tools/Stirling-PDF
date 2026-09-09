@@ -13,7 +13,6 @@ import usedIcons from "virtual:used-icons";
 
 import "@app/icons/IconRegistry.css";
 
-/** Every icon the app can render, for checking the set reads as one family. */
 const meta = {
   title: "Icons/Registry",
   parameters: { layout: "fullscreen", a11y: { disable: true } },
@@ -24,8 +23,7 @@ const ALL = Object.keys(ICONS).sort() as IconName[];
 const CUSTOM = new Set(Object.keys(STIRLING_ICONS));
 const BRAND = new Set(Object.keys(THIRD_PARTY_ICONS));
 
-// Brand marks resolve from the connector type the API returns, never from a
-// literal, so the scan cannot see them and they are counted in regardless.
+// Brand marks resolve from a connector id, never a literal, so the scan cannot see them.
 const USED = new Set([...usedIcons, ...BRAND]);
 const IN_USE = ALL.filter((name) => USED.has(name));
 
@@ -83,7 +81,7 @@ function Gallery({
   );
 }
 
-/** The working view: what the app renders today, small enough to scan by eye. */
+/** What the app renders today: check here before adding a name. */
 export const InUse: StoryObj = {
   render: () => (
     <Gallery
@@ -100,7 +98,7 @@ export const InUse: StoryObj = {
   ),
 };
 
-/** The catalogue: everything `IconName` accepts, for finding a name. */
+/** The catalogue: everything IconName accepts. */
 export const AllIcons: StoryObj = {
   render: () => (
     <Gallery
@@ -120,7 +118,7 @@ export const AllIcons: StoryObj = {
   ),
 };
 
-/** Just the icons we draw ourselves, where quality problems show up first. */
+/** Just our own drawings, where quality problems show up first. */
 export const CustomIcons: StoryObj = {
   render: () => (
     <Gallery

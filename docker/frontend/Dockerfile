@@ -11,9 +11,7 @@ RUN npm ci
 
 COPY frontend .
 
-# Generate both icon sets (normally done by task prepare:icons): the registry the
-# <Icon> component renders from, and the material-symbols subset the call sites
-# still on the old component need.
+# Both icon sets, as task prepare:icons would: the <Icon> registry, and the material-symbols subset.
 RUN node editor/scripts/generate-icons.js
 RUN node editor/scripts/generate-icon-registry.mjs
 

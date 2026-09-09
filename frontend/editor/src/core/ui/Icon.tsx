@@ -8,8 +8,6 @@ import {
 } from "@app/icons/registry.generated";
 import type { IconEntry, IconNode } from "@app/icons/types";
 
-// The single entry point for icons: the component lives here beside the other
-// primitives, the generated registry and svg sources stay in core/icons.
 export { DEFAULT_SIZE, ICONS, STROKE_WIDTH, type IconName };
 export { STIRLING_ICONS } from "@app/icons/stirlingIcons.generated";
 export { THIRD_PARTY_ICONS } from "@app/icons/thirdPartyIcons.generated";
@@ -21,16 +19,13 @@ export interface IconProps {
   size?: number | string;
   /** Overrides the app-wide stroke weight. Ignored by brand marks. */
   strokeWidth?: number;
-  /** Fills the glyph with the current colour, for the on state of a toggle
-   * whose off state is the same outline (a favourited star). Brand marks ignore it. */
+  /** Fills a mono icon with currentColor, for a toggle's on state. */
   filled?: boolean;
-  /** Recolours a brand mark to `currentColor`, so it reads as a neutral glyph
-   * beside stroke icons instead of a colour accent. Mono icons ignore it. */
+  /** Repoints a brand mark's own colours at currentColor. Mono icons ignore it. */
   colorless?: boolean;
   className?: string;
   style?: CSSProperties;
-  /** Accessible label. Omitting it marks the icon `aria-hidden`, the right
-   * default for an icon beside a text label. */
+  /** Accessible label; without one the icon is aria-hidden. */
   title?: string;
 }
 
@@ -43,14 +38,12 @@ function renderNode(node: IconNode, key: number): ReactElement {
   );
 }
 
-/** White is a knockout cut out of the mark's body, not one of its colours:
- * recolouring it too would merge the detail away and leave a solid blob. */
+// White is a knockout in the mark's body; recolouring it fills the detail in.
 const KNOCKOUT = /^(#fff(fff)?|white|rgb\(\s*255\s*,\s*255\s*,\s*255\s*\))$/i;
 
 const PAINTS = ["fill", "stroke"] as const;
 
-/** Faintest and strongest a facet may go. The darkest facet keeps full weight
- * so the mark reads as loud as the stroke icons beside it. */
+// Faintest and strongest a facet may go; the darkest keeps full weight.
 const FACET_RANGE = [0.55, 1] as const;
 
 /** WCAG relative luminance of a hex paint; null if it is not one. */
@@ -84,11 +77,7 @@ function eachPaint(
   }
 }
 
-/** Opacity per source colour, so a multi-tone mark keeps its facets when it
- * collapses to one hue. Spread evenly by luminance *rank*, not by luminance
- * itself: brand palettes cluster (five of Drive's six tones sit within 0.15),
- * and proportional spacing flattens back into a silhouette at 18px. Empty for
- * marks with nothing to separate, which then render flat at full strength. */
+/** Per-colour opacity, by luminance rank not value: brand palettes cluster too tightly to separate proportionally. */
 function facetOpacity(nodes: readonly IconNode[]): Map<string, number> {
   const lum = new Map<string, number>();
   eachPaint(nodes, (paint) => {
@@ -107,8 +96,7 @@ function facetOpacity(nodes: readonly IconNode[]): Map<string, number> {
   );
 }
 
-/** Repoints a brand mark's literal colours at currentColor. Recolours rather
- * than strips, so a mark drawn only in strokes (nextcloud) stays visible. */
+/** Recolours rather than strips, so a mark drawn only in strokes stays visible. */
 function recolour(node: IconNode, opacity: Map<string, number>): IconNode {
   const [tag, attrs, children] = node;
   const next: Record<string, string> = { ...attrs };
@@ -127,14 +115,12 @@ function neutralise(nodes: readonly IconNode[]): readonly IconNode[] {
   return nodes.map((node) => recolour(node, opacity));
 }
 
-/** Narrows "a name or your own node" props: ReactNode already includes string,
- * so `typeof x === "string"` yields string rather than IconName. */
+/** Narrows a name-or-node prop: ReactNode includes string, so typeof cannot. */
 export function isIconName(value: unknown): value is IconName {
   return typeof value === "string" && Object.hasOwn(ICONS, value);
 }
 
-/** Drawn in place of a name the registry cannot resolve, so a bad name from
- * data, config or an API costs one odd glyph rather than the surrounding tree. */
+/** Drawn for a name the registry cannot resolve, instead of throwing. */
 export const MISSING_ICON: IconName = "circle-dashed";
 
 const reported = new Set<string>();
@@ -151,8 +137,7 @@ function resolve(name: string): IconEntry {
   return ICONS[MISSING_ICON];
 }
 
-/** The only way to render an icon. Add one by dropping an svg into
- * src/core/icons/svg/stirling or svg/third-party. */
+/** The only icon component: every lucide name, plus the svgs in core/icons/svg. */
 export function Icon({
   name,
   size = DEFAULT_SIZE,

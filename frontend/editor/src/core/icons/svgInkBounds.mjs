@@ -1,8 +1,4 @@
-/** Bounding box of the ink in a parsed svg fragment, so the registry generator
- * can scale a brand mark by what it draws rather than by the viewBox its owner
- * happened to export. Curves and arcs are sampled, which keeps the box within
- * about 0.01 units of exact at the 24 grid; transforms and stroke widths are
- * honoured. Node shape is the generator's [tag, attrs, children?]. */
+/** Bounding box of what a parsed svg fragment paints, so a mark scales by its ink and not its exported viewBox. */
 
 const CURVE_SAMPLES = 32;
 
@@ -103,12 +99,9 @@ function cubicPoints(p0, p1, p2, p3) {
   return pts;
 }
 
-/** SVG arc (endpoint parameterisation, per the spec's F.6.5) sampled along
- * its sweep. Radii too small for the chord are scaled up as a renderer would. */
+/** SVG arc sampled along its sweep, per F.6.5; radii too small for the chord are scaled up as a renderer would. */
 function arcPoints(p0, rx, ry, rotDeg, large, sweep, p1) {
-  // Identical endpoints: F.6.2 omits the segment and renderers draw nothing, so
-  // it contributes no ink. Measuring it anyway divides by zero, and the NaN
-  // spreads to the scale factor of every icon in the file it came from.
+  // F.6.2 omits an arc between identical endpoints; measuring one divides by zero and NaNs the whole mark.
   if (p0[0] === p1[0] && p0[1] === p1[1]) return [p0];
   if (rx === 0 || ry === 0) return [p0, p1];
   const phi = (rotDeg * Math.PI) / 180;
@@ -158,8 +151,7 @@ function arcPoints(p0, rx, ry, rotDeg, large, sweep, p1) {
   return pts;
 }
 
-/** Tokenises a path's `d`: command letters, and numbers with arc flags split
- * out ("0 0112 4" is two flags then 12 and 4). */
+/** Tokenises a path's `d`, splitting glued arc flags out ("0 0112 4" is two flags, then 12 and 4). */
 function tokenisePath(d) {
   const tokens = [];
   const re = /[MmLlHhVvCcSsQqTtAaZz]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi;
@@ -382,12 +374,7 @@ const UNPAINTED = new Set([
   "metadata",
 ]);
 
-/**
- * Bounds of everything the fragment paints, in the fragment's own user units.
- * Stroked outlines extend the box by half their width (scaled with the
- * element's transform); pass `{ stroke: false }` to measure geometry alone.
- * Returns null when nothing is drawn.
- */
+/** Bounds in the fragment's own units, strokes included unless `{ stroke: false }`; null if nothing is drawn. */
 export function inkBounds(nodes, { stroke = true } = {}) {
   let box = null;
   const visit = (list, ctm, inherited) => {

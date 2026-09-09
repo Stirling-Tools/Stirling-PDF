@@ -1,6 +1,4 @@
-/** Serves the migration audit's "before" glyphs as `virtual:legacy-icons`,
- * read from the icon packages at build time. Nothing is written to disk, so
- * their artwork never enters the repo. Delete with IconAudit.stories.tsx. */
+/** Serves the audit's "before" glyphs as `virtual:legacy-icons`, read from the icon packages so none are checked in. */
 import fs from "node:fs";
 import path from "node:path";
 
@@ -23,8 +21,7 @@ function muiBody(modules, name) {
   const re = /_jsxs?\(\s*"([a-zA-Z]+)"\s*,\s*\{/g;
   let m;
   while ((m = re.exec(src))) {
-    // Brace-match the props: an icon with several paths nests braces, so a lazy
-    // regex would stop at the first inner one.
+    // Brace-match: an icon with several paths nests braces, and a lazy regex stops at the first inner one.
     let depth = 0;
     let end = -1;
     let inStr = null;

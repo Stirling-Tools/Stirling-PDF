@@ -7,8 +7,7 @@ import legacyGlyphs from "virtual:legacy-icons";
 
 import "@app/icons/IconAudit.css";
 
-/** Review surface for the icon migration: every legacy icon beside the one that
- * replaced it. Delete this file, its css and icon-map.json once signed off. */
+/** Every legacy icon beside its replacement. Delete with its css and icon-map.json once signed off. */
 const meta = {
   title: "Migration/Icon audit",
   parameters: { layout: "fullscreen", a11y: { disable: true } },

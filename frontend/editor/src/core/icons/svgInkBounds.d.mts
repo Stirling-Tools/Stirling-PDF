@@ -1,5 +1,4 @@
-/** Types for svgInkBounds.mjs, which stays plain JS so the registry generator
- * can import it under node without a build step. */
+/** Types for svgInkBounds.mjs, which stays plain JS so node can import it without a build step. */
 import type { IconNode } from "@app/icons/types";
 
 export interface InkBox {

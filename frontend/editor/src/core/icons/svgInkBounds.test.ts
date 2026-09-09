@@ -45,8 +45,7 @@ describe("inkBounds", () => {
     );
   });
 
-  // A circle exported as a single arc back to its own start draws nothing, and
-  // the box has to stay a real number or the whole icon scales by NaN.
+  // A circle exported as one arc back to its own start draws nothing, and must not NaN the box.
   it("ignores an arc whose endpoints coincide, as a renderer does", () => {
     close(
       inkBounds([["path", { d: "M4 4h6M12 2a10 10 0 1 0 0 0" }]]),

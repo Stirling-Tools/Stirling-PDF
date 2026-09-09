@@ -1,7 +1,5 @@
 #!/usr/bin/env node
-/** Bundles all of lucide, plus every svg in both icon dirs, into the
- * *.generated.ts registry. `--check` fails instead of writing when the
- * committed output is stale. */
+/** Bundles all of lucide plus both svg dirs into the *.generated.ts registry; --check fails on a stale commit. */
 import fs from "node:fs";
 import path from "node:path";
 // oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
@@ -22,8 +20,7 @@ const check = process.argv.includes("--check");
 const log = (m) => console.log(m);
 const debug = (m) => verbose && console.log(m);
 
-// React needs camelCase for the SVG attributes it knows about. Anything not
-// listed passes through unchanged (React forwards unknown attributes as-is).
+// React needs camelCase for the SVG attributes it knows; anything unlisted passes through.
 const ATTR_CASE = {
   "clip-path": "clipPath",
   "clip-rule": "clipRule",
@@ -56,8 +53,7 @@ const camelAttrs = (attrs) =>
   );
 
 function parseAttrs(src) {
-  // Only double-quoted values are read; a single-quoted one would otherwise
-  // vanish silently and leave a blank (and mis-detected mono) icon.
+  // A single-quoted value would vanish silently and leave a blank, mis-detected-mono icon.
   if (/=\s*'/.test(src))
     throw new Error(`single-quoted svg attribute in: ${src.trim()}`);
   const out = {};
@@ -99,8 +95,7 @@ function parseNodes(src) {
   return nodes;
 }
 
-/** Namespaces declared ids so two bundled icons cannot collide on
- * `url(#clip0_…)` once both are mounted. */
+/** Namespaces declared ids so two mounted icons cannot collide on url(#clip0_...). */
 function namespaceIds(nodes, prefix) {
   const walk = (list) => {
     for (const node of list) {
@@ -117,7 +112,6 @@ function namespaceIds(nodes, prefix) {
   return nodes;
 }
 
-/** True if any node paints a literal colour rather than currentColor/none. */
 function hasLiteralColour(nodes) {
   const paints = ["fill", "stroke", "stopColor", "floodColor"];
   const walk = (list) =>
@@ -133,7 +127,6 @@ function hasLiteralColour(nodes) {
   return walk(nodes);
 }
 
-/** A licence notice an svg carries in a leading comment, if any. */
 function readSvgNotice(raw) {
   const m = raw.match(/<!--([\s\S]*?)-->/);
   return m && /Licen[cs]e/i.test(m[1]) ? m[1].trim() : null;
@@ -175,15 +168,10 @@ function lucideVersion() {
   }
 }
 
-// Notices from svgs whose geometry is not entirely ours. Minifiers keep a
-// comment marked @license, so this is what carries them into the bundle.
+// Notices from svgs whose geometry is not entirely ours; @license is what carries them into the bundle.
 const notices = new Map();
 
-// Brand art arrives on whatever grid its owner drew it on (googledrive is
-// 87.3x78, dropbox 16x16, our own drawings sit inset on a 24 grid), and
-// filling a square box makes it out-scale the stroke icons beside it. Each
-// mark is measured by what it paints and mapped onto the 24 grid's 20-unit ink
-// box, so the padding in the source file never reaches the app.
+// Brand art arrives on its owner's grid (googledrive 87.3x78, dropbox 16x16), so remeasure what it paints onto ours.
 const GRID = 24;
 const INK = 20;
 
@@ -239,12 +227,7 @@ const customNames = new Set([
   ...Object.keys(thirdParty),
 ]);
 
-// All of lucide, not the subset the app happens to reference today. Subsetting
-// meant grepping source for names, so a name assembled at runtime was absent
-// from the bundle and rendered the placeholder with nothing failing first; the
-// set also churned whenever an unrelated file gained or lost a literal. The
-// whole set is ~65KB brotli in its own chunk, which buys IconName covering
-// every lucide icon: an unknown name is a compile error, everywhere.
+// All of lucide (~65KB brotli): subsetting from a source grep missed names assembled at runtime.
 const lucideTargets = Object.keys(lucideNodes)
   .filter((n) => !customNames.has(n))
   .sort();
@@ -261,19 +244,12 @@ const HEADER = (from) =>
   `// Source: ${from}\n` +
   `// Regenerate with: task frontend:prepare:icons\n\n`;
 
-// Lucide's geometry ships inside our bundle, and ISC asks for its notice to
-// travel with the copy. Marked @license so the minifier keeps it: esbuild drops
-// every comment that is not `//!`, `/*!`, @license or @preserve, so a plain
-// `//` line here would be stripped and the bundle would carry the art alone.
-const LUCIDE_NOTICE =
-  `/*! @license Lucide (ISC). Icon geometry below is Lucide's, used under the\n` +
-  ` * ISC licence; the full notice is src/core/icons/LICENSE-lucide.txt, which\n` +
-  ` * must stay in the repo for as long as this file does. */\n\n`;
+// @license, not a plain //, is what stops the minifier stripping the ISC notice off the geometry.
+const LUCIDE_NOTICE = `/*! @license Lucide icons (ISC) - full notice in src/core/icons/LICENSE-lucide.txt */\n\n`;
 
 const fmt = (v) => JSON.stringify(v);
 
-// Same content, no write: a fresh mtime would make the dev server reload every
-// consumer of the registry. Under --check a difference is the failure.
+// Same content, no write: a fresh mtime reloads every consumer in dev. Under --check a difference is the failure.
 const stale = [];
 function emit(file, content) {
   const target = path.join(ICONS_DIR, file);

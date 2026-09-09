@@ -46,8 +46,7 @@ tasks:
     run: once
     deps: [install]
     cmds:
-      # Both sets while the icon migration is in flight: unmigrated call sites
-      # still render from the material-symbols subset.
+      # Both sets while the migration is in flight: unmigrated call sites still use material-symbols.
       - node editor/scripts/generate-icons.js
       - node editor/scripts/generate-icon-registry.mjs
 

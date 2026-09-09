@@ -30,8 +30,7 @@ describe("icon registry", () => {
     expect(names.length).toBeGreaterThan(100);
   });
 
-  // The whole point of the registry: every entry must actually draw something.
-  // A silently empty icon looks like a layout bug, not an icon bug.
+  // A silently empty icon reads as a layout bug, not an icon bug.
   it.each(names)("%s renders drawable geometry", (name) => {
     const svg = renderIcon(name);
     expect(svg.getAttribute("viewBox")).toMatch(/^[\d.\s-]+$/);
@@ -96,8 +95,7 @@ describe("colorless brand marks", () => {
     ).toBeGreaterThan(0);
   });
 
-  // A silhouette is the failure mode: Drive's six facets must stay separable,
-  // or the mark reads as a solid triangle at sidebar sizes.
+  // The failure mode is a silhouette: Drive's six facets collapsing into one triangle.
   it("keeps a multi-tone mark's facets distinguishable", () => {
     const svg = renderIcon("googledrive", { colorless: true });
     const opacities = new Set(
@@ -138,8 +136,7 @@ describe("isIconName", () => {
     expect(isIconName(42)).toBe(false);
   });
 
-  // Data-driven names reach the guard unfiltered; Object.prototype keys must
-  // not pass it and then blow up inside the renderer.
+  // Data-driven names reach the guard unfiltered, so Object.prototype keys must not pass it.
   it.each(["constructor", "toString", "hasOwnProperty", "__proto__"])(
     "rejects inherited key %s",
     (key) => {
@@ -173,8 +170,7 @@ describe("unknown names", () => {
 });
 
 describe("id collisions", () => {
-  // Two icons that both shipped an id like "clip0" would fight over url(#clip0)
-  // once both are mounted, so the generator namespaces ids per icon.
+  // Two icons that both shipped "clip0" would fight over url(#clip0) once mounted together.
   it("namespaces every declared id with its icon name", () => {
     for (const name of names) {
       const svg = renderIcon(name);

@@ -1,9 +1,7 @@
 import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
 import tsconfigPaths from "vite-tsconfig-paths";
-// This file runs in node, where the @app/* aliases do not exist, so both icon
-// plugins have to come in by path. legacyIcons lives beside the audit story it
-// serves so the two go in the same deletion.
+// By path, not @app/*: this file runs in node, before the aliases exist.
 // @ts-expect-error -- plain .mjs helper, no types
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
 import { legacyIconsPlugin } from "../editor/src/core/icons/legacyIcons.vite.mjs";
@@ -70,11 +68,9 @@ const config: StorybookConfig = {
     };
     config.plugins = config.plugins ?? [];
     config.plugins.push(editorPathAliases());
-    // Serves the icon audit its "before" glyphs straight from the icon
-    // packages, so none of their artwork is checked in.
+    // Reads the audit's "before" glyphs from the icon packages, so none of their artwork is checked in.
     config.plugins.push(legacyIconsPlugin(resolve(__dirname, "..")));
-    // Serves the registry gallery the names the app references, scanned now
-    // rather than committed so the "in use" view cannot go stale.
+    // Scanned at startup rather than committed, so the gallery's "in use" view cannot go stale.
     config.plugins.push(usedIconsPlugin(resolve(__dirname, "../editor/src")));
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`, so
     // without this a worker importing @app/* fails to resolve while the same

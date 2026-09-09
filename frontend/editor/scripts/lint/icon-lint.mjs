@@ -1,6 +1,5 @@
 #!/usr/bin/env node
-/** Keeps the app on one icon system. Each rule explains itself when it fires;
- * pass "unused" to report svgs of our own that nothing renders. */
+/** Keeps the app on one icon system; pass "unused" to report svgs of our own that nothing renders. */
 import fs from "node:fs";
 import path from "node:path";
 // oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
@@ -10,10 +9,7 @@ const EDITOR = path.join(import.meta.dirname, "..", "..");
 const SRC = path.join(EDITOR, "src");
 const ICONS_DIR = path.join(SRC, "core/icons");
 
-// The four rules below only hold once every call site renders through <Icon>:
-// until then a stylesheet still has to fill the retired filled glyphs, and the
-// retired modules are still imported. The last pull request of the migration
-// switches them on, and is also the one that deletes those modules.
+// The four rules it gates only hold once every call site renders through <Icon>, so the last migration PR flips it.
 const MIGRATION_COMPLETE = false;
 
 const BANNED_IMPORTS = [
@@ -52,9 +48,7 @@ const files = [];
 
 const rel = (f) => path.relative(EDITOR, f);
 
-// An svg that reuses another set's geometry points at the vendored notice.
-// Deleting that notice while the svg remains would leave the geometry here with
-// no licence, so the pointer is only trustworthy if this is enforced.
+// An svg citing the vendored notice is only safe to trust while that notice is still here.
 const licenceFile = path.join(ICONS_DIR, "LICENSE-lucide.txt");
 const citing = fs
   .readdirSync(path.join(ICONS_DIR, "svg/stirling"))
@@ -71,9 +65,7 @@ if (citing.length && !fs.existsSync(licenceFile)) {
   );
 }
 
-// An svg that reuses lucide geometry has to say so, or the notice obligation
-// travels with a file that never mentions it. Straight-line and primitive
-// shapes are excluded: nobody can claim `M4 12h16`.
+// Reused lucide geometry has to declare itself; primitives are excluded, since nobody can claim `M4 12h16`.
 const lucidePath = new Map();
 try {
   const nodes = JSON.parse(
@@ -113,10 +105,7 @@ if (lucidePath.size) {
   }
 }
 
-// Every Material Symbols name, so a leftover from the old icon set is caught
-// wherever it sits (a `return "add-comment"` in a helper typed `string`, not
-// only `<Icon name>`). Read from the package while the migration audit keeps it
-// installed; icon-map.json is the fallback once it goes.
+// Every Material Symbols name, so a leftover is caught wherever it sits, not only in `<Icon name>`.
 function legacyIconNames() {
   try {
     const set = JSON.parse(
@@ -170,8 +159,7 @@ for (const file of files) {
     continue;
   }
 
-  // A stylesheet fill beats <Icon>`s fill="none" presentation attribute, which
-  // turns every stroke icon in that scope into a solid blob.
+  // A stylesheet fill beats <Icon>'s fill="none" attribute and solidifies every stroke icon in scope.
   if (
     MIGRATION_COMPLETE &&
     file.endsWith(".css") &&
@@ -210,11 +198,7 @@ for (const file of files) {
       }
     }
 
-    // A Material name the registry does not also know is a leftover from the
-    // old icon set. These reach <Icon> through props typed
-    // `IconName | ReactNode` (ReactNode admits any string), plain `string`
-    // fields, or a `map[key] ?? fallback` whose fallback the compiler never
-    // checks, so the type system cannot see them.
+    // Leftovers the type system cannot see: ReactNode admits any string, and an unchecked `?? fallback`.
     for (const m of line.matchAll(/"([a-z0-9]+(?:-[a-z0-9]+)+)"/g)) {
       if (!MIGRATION_COMPLETE) break;
       const name = m[1];
@@ -249,8 +233,7 @@ for (const file of files) {
     }
   });
 
-  // Every name literal must resolve. Skipped in core/icons, whose stories build
-  // names from the registry rather than writing them out.
+  // Skipped in core/icons, whose galleries build names from the registry rather than writing them out.
   if (inIconsDir) continue;
   for (const m of text.matchAll(/<Icon\b[^>]*?\bname="([^"]+)"/gs)) {
     // `name="${x}"` inside a template literal is a placeholder, not a name.
@@ -263,19 +246,14 @@ for (const file of files) {
       );
     }
   }
-  // Names also reach <Icon> via ternaries, wrapper props and data tables, so
-  // count any matching literal: over-counting beats deleting a live icon.
+  // Count any matching literal: names reach <Icon> indirectly, and over-counting beats deleting a live icon.
   for (const m of text.matchAll(/"([a-z0-9][a-z0-9-]*)"/g)) {
     if (known.has(m[1])) referenced.add(m[1]);
   }
 }
 
 if (mode === "unused") {
-  // Only the icons we draw. Lucide's are vendored whole whether or not anything
-  // renders them, so reporting those would be noise; one of ours that nothing
-  // renders is a file in this repo to redraw and keep on style for no reason.
-  // Brand marks are excluded too: they resolve from a connector type the API
-  // returns, so they never appear as a literal and always read as unused.
+  // Only the svgs we draw: lucide's cost nothing unused, and brand marks resolve from ids, never literals.
   const unused = ourNames.filter((n) => !referenced.has(n)).sort();
   console.log(
     unused.length
