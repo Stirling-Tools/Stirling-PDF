@@ -250,14 +250,11 @@ public class SaasTeamService {
                     team.getName(),
                     inviter.getUsername());
             saasTeamExtensionService.setPersonal(team, false);
-            // The free allowance, not the unlimited sentinel. Converting does not buy capacity, so
-            // the column keeps stating what the team is allowed; a Team subscription overwrites it
-            // with the real number. Invitations past the allowance still go through, because
-            // capacity is short-circuited for standard teams -- enforcement is a separate change.
-            saasTeamExtensionService.setSeats(
-                    team,
-                    UserLicenseSettingsService.DEFAULT_USER_LIMIT,
-                    UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+            // Still the unlimited sentinel, which is what a standard team is until it buys: nothing
+            // enforces capacity for one. Writing the free allowance here instead would state a
+            // ceiling nothing honours, and SaasTeamController's availableSeats would go negative as
+            // the team grew past it. The sentinel goes when enforcement arrives.
+            saasTeamExtensionService.setSeats(team, Integer.MAX_VALUE, Integer.MAX_VALUE);
         }
 
         // Validate: team can invite (not personal, has available seats)
