@@ -250,6 +250,12 @@ const MISSING_TOOL_ICONS = {
 const kebab = (id) => id.replace(/([A-Z])/g, "-$1").toLowerCase();
 
 // English name/description live next to each tool as the `t(key, fallback)` default.
+// A few entries key their strings off a kebab id ("home.overlay-pdfs.title")
+// while the registry and ogImageMap use the camelCase tool id. Without this the
+// card silently falls back to a humanised id, an empty description and a
+// generic glyph, which is what shipped for Overlay PDFs.
+const toolId = (key) => key.replace(/-([a-z])/g, (_, c) => c.toUpperCase());
+
 function readRegistryStrings() {
   const src = readFileSync(
     path.join(ROOT, "src/core/data/useTranslatedToolRegistry.tsx"),
@@ -259,13 +265,13 @@ function readRegistryStrings() {
   const titles = {},
     descs = {};
   for (const m of src.matchAll(
-    new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.title"\\s*,\\s*' + STR, "g"),
+    new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_-]+)\\.title"\\s*,\\s*' + STR, "g"),
   ))
-    titles[m[1]] = m[2];
+    titles[toolId(m[1])] = m[2];
   for (const m of src.matchAll(
-    new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_]+)\\.desc"\\s*,\\s*' + STR, "g"),
+    new RegExp('t\\(\\s*"home\\.([A-Za-z0-9_-]+)\\.desc"\\s*,\\s*' + STR, "g"),
   ))
-    descs[m[1]] = m[2];
+    descs[toolId(m[1])] = m[2];
   return { titles, descs };
 }
 
@@ -299,12 +305,12 @@ export function readRegistryIcons() {
   }));
   const byId = {};
   for (const m of src.matchAll(
-    /name:\s*t\(\s*"home\.([A-Za-z0-9_]+)\.title"/g,
+    /name:\s*t\(\s*"home\.([A-Za-z0-9_-]+)\.title"/g,
   )) {
     let best = null;
     for (const ic of icons)
       if (ic.pos < m.index && (!best || ic.pos > best.pos)) best = ic;
-    if (best) byId[m[1]] = best.name;
+    if (best) byId[toolId(m[1])] = best.name;
   }
   return byId;
 }
