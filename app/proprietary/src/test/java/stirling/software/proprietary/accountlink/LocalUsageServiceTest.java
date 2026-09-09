@@ -41,7 +41,8 @@ class LocalUsageServiceTest {
                 EntitlementState.OK,
                 null,
                 periodStart,
-                periodStart.plusMonths(1));
+                periodStart.plusMonths(1),
+                null);
     }
 
     @Test
