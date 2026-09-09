@@ -50,6 +50,8 @@ task desktop:dev
 
 This ensures the JLink runtime and backend JAR exist (skipping if already built), then starts Tauri in dev mode.
 
+On macOS the macOS 26 app icon is compiled with `actool`, which needs full Xcode 26 or newer - Command Line Tools alone are not enough. Without it the build still works and falls back to `icons/macos/app.icns`.
+
 ### Build
 
 ```bash
