@@ -13,8 +13,14 @@ public record StorageEncryptionStatusResponse(
         boolean active,
         String masterKeyFingerprint,
         Integer masterKeyVersion,
+        /** Where the master key came from: config, environment or generated. */
+        String masterKeySource,
+        /** Backend serving stored blobs: local, database or s3. */
+        String provider,
         long encryptedFiles,
         long plaintextFiles,
+        /** Key rows still wrapped by an older master key, counted in the database. */
+        long pendingRotationRows,
         List<KeyInfo> keys) {
 
     public record KeyInfo(

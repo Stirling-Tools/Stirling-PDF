@@ -271,7 +271,7 @@ class PaygBillingParityTest {
 
     private static InstanceEntitlement entitled(UnitCalcPolicy policy, LocalDateTime period) {
         return new InstanceEntitlement(
-                true, 0, 0, 100L, EntitlementState.OK, policy, period, period.plusMonths(1));
+                true, 0, 0, 100L, EntitlementState.OK, policy, period, period.plusMonths(1), null);
     }
 
     @SuppressWarnings("unchecked")

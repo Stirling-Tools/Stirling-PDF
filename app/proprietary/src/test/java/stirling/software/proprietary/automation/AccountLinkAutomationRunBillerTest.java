@@ -35,7 +35,7 @@ class AccountLinkAutomationRunBillerTest {
 
     private static InstanceEntitlement entitlement(UnitCalcPolicy policy, LocalDateTime period) {
         return new InstanceEntitlement(
-                true, 0L, 0L, null, EntitlementState.OK, policy, period, null);
+                true, 0L, 0L, null, EntitlementState.OK, policy, period, null, null);
     }
 
     @Test

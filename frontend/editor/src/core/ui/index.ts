@@ -33,6 +33,7 @@ export * from "@app/ui/StatTile";
 
 // Feedback
 export * from "@app/ui/Spinner";
+export * from "@app/ui/Tooltip";
 export * from "@app/ui/Skeleton";
 export * from "@app/ui/Avatar";
 export * from "@app/ui/Chip";
@@ -46,6 +47,7 @@ export * from "@app/ui/Tabs";
 export * from "@app/ui/Dropdown";
 export * from "@app/ui/Drawer";
 export * from "@app/ui/DataTable";
+export * from "@app/ui/DataTableFilterBar";
 
 // Forms
 export * from "@app/ui/FormField";

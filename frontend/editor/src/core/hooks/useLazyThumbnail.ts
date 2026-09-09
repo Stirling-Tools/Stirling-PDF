@@ -32,6 +32,32 @@ function drainLazyThumbQueue(): void {
   });
 }
 
+// Stub updates go through the file context, and each one re-renders every
+// consumer of the file list. A big folder filling in generates hundreds of
+// thumbnails over minutes; flushing them in windows turns that into a handful
+// of re-renders (React batches same-tick updates into one). The card itself
+// paints immediately from its local state — only the shared stub waits.
+const STUB_THUMB_FLUSH_MS = 500;
+const pendingStubThumbs = new Map<
+  FileId,
+  { thumbnail: string; apply: (id: FileId, thumbnail: string) => void }
+>();
+let stubThumbFlushTimer: ReturnType<typeof setTimeout> | null = null;
+
+function queueStubThumbUpdate(
+  fileId: FileId,
+  thumbnail: string,
+  apply: (id: FileId, thumbnail: string) => void,
+): void {
+  pendingStubThumbs.set(fileId, { thumbnail, apply });
+  stubThumbFlushTimer ??= setTimeout(() => {
+    stubThumbFlushTimer = null;
+    const batch = Array.from(pendingStubThumbs);
+    pendingStubThumbs.clear();
+    for (const [id, entry] of batch) entry.apply(id, entry.thumbnail);
+  }, STUB_THUMB_FLUSH_MS);
+}
+
 /**
  * Show the stub's thumbnail if present; otherwise pull bytes from IndexedDB,
  * generate one, persist it, and update the stub. Server-only files with no
@@ -68,7 +94,9 @@ export function useLazyThumbnail(
         if (cancelled || !thumbnail) return;
         setThumb(thumbnail);
         void indexedDB.updateThumbnail(fileId, thumbnail);
-        updateStirlingFileStub(fileId, { thumbnailUrl: thumbnail });
+        queueStubThumbUpdate(fileId, thumbnail, (id, url) =>
+          updateStirlingFileStub(id, { thumbnailUrl: url }),
+        );
       } catch {
         // non-critical
       }

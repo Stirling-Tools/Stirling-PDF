@@ -39,6 +39,7 @@ import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import type { FileId } from "@app/types/file";
+import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
@@ -74,6 +75,7 @@ import {
 } from "@app/components/watchedFolders/watchedFolderDragState";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -192,9 +194,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const isWatchedFoldersActive =
       currentWorkbench === WATCHED_FOLDER_WORKBENCH_ID;
     // The folder currently open in the Watched Folders view (null = folder list/home).
-    const activeWatchedFolderId = (customWorkbenchViews.find(
+    const watchedFolderView = customWorkbenchViews.find(
       (v) => v.id === WATCHED_FOLDER_VIEW_ID,
-    )?.data?.folderId ?? null) as string | null;
+    );
+    const activeWatchedFolderId =
+      (watchedFolderView?.data as WatchedFolderViewData | undefined)
+        ?.folderId ?? null;
     // fileId → folderId[] across all watch folders. In the Watched Folders view the
     // sidebar tick reflects "already in the open folder" instead of workbench
     // membership (which is meaningless there - a click sends to the folder, not
@@ -830,6 +835,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
 
     const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
+    const eligibleFileIds = useToolEligibleFileIds();
 
     // Render one file row (shared by the flat list and the grouped SaaS layout).
     const renderFileRow = (stub: StirlingFileStub) => {
@@ -881,6 +887,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           : lineageKey;
       return (
         <FileItem
+          isToolSkipped={
+            isInWorkbench &&
+            !isWatchedFoldersActive &&
+            eligibleFileIds !== null &&
+            !eligibleFileIds.has(stub.id)
+          }
           key={rowKey}
           fileId={stub.id}
           name={stub.name}
