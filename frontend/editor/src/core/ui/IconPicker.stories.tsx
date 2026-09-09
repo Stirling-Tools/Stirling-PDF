@@ -1,32 +1,36 @@
 import { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
-import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import BoltOutlinedIcon from "@mui/icons-material/BoltOutlined";
-import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
-import AutoAwesomeOutlinedIcon from "@mui/icons-material/AutoAwesomeOutlined";
 import { IconPicker, type IconPickerOption } from "@app/ui/IconPicker";
 
-const sx = { fontSize: "1.25rem" } as const;
 const OPTIONS: IconPickerOption[] = [
-  { key: "shield", label: "Shield", node: <ShieldOutlinedIcon sx={sx} /> },
-  { key: "lock", label: "Lock", node: <LockOutlinedIcon sx={sx} /> },
-  { key: "label", label: "Label", node: <LabelOutlinedIcon sx={sx} /> },
-  { key: "layers", label: "Layers", node: <LayersOutlinedIcon sx={sx} /> },
-  { key: "folder", label: "Folder", node: <FolderOutlinedIcon sx={sx} /> },
-  { key: "bolt", label: "Bolt", node: <BoltOutlinedIcon sx={sx} /> },
+  {
+    key: "shield",
+    label: "Shield",
+    node: <Icon name="shield" size="1.25rem" />,
+  },
+  { key: "lock", label: "Lock", node: <Icon name="lock" size="1.25rem" /> },
+  { key: "label", label: "Label", node: <Icon name="tag" size="1.25rem" /> },
+  {
+    key: "layers",
+    label: "Layers",
+    node: <Icon name="layers" size="1.25rem" />,
+  },
+  {
+    key: "folder",
+    label: "Folder",
+    node: <Icon name="folder" size="1.25rem" />,
+  },
+  { key: "bolt", label: "Bolt", node: <Icon name="zap" size="1.25rem" /> },
   {
     key: "schedule",
     label: "Schedule",
-    node: <ScheduleOutlinedIcon sx={sx} />,
+    node: <Icon name="clock" size="1.25rem" />,
   },
   {
     key: "sparkle",
     label: "Sparkle",
-    node: <AutoAwesomeOutlinedIcon sx={sx} />,
+    node: <Icon name="sparkles" size="1.25rem" />,
   },
 ];
 

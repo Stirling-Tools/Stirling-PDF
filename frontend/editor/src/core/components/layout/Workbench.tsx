@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Icon } from "@app/ui/Icon";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -295,7 +295,7 @@ export default function Workbench() {
               aria-expanded={false}
               aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
               title={t("workbenchBar.showToolbar", "Show toolbar")}
-              leftSection={<KeyboardArrowDownIcon sx={{ fontSize: "1rem" }} />}
+              leftSection={<Icon name="chevron-down" size={"1rem"} />}
             />
           )}
         </div>

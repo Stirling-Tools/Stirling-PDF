@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { NavSurface } from "@app/ui/NavSurface";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { QuickNavBrand } from "@app/components/shared/quickNav/QuickNavBrand";
 import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
 import {
@@ -58,13 +58,7 @@ export function QuickNavRailContainer({
               {onInvite && (
                 <RailButton
                   label={t("quickNav.invite", "Invite")}
-                  icon={
-                    <LocalIcon
-                      icon="person-add-outline-rounded"
-                      width="1.125rem"
-                      height="1.125rem"
-                    />
-                  }
+                  icon={<Icon name="user-plus" size="1.125rem" />}
                   onClick={onInvite}
                 />
               )}

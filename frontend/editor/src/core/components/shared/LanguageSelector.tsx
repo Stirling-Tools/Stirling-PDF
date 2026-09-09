@@ -5,7 +5,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages, setUserLanguage } from "@app/i18n";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import styles from "@app/components/shared/LanguageSelector.module.css";
 import { Z_INDEX_CONFIG_MODAL } from "@app/styles/zIndex";
 
@@ -257,7 +257,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               title={!opened && tooltip ? tooltip : undefined}
               aria-label={tooltip ?? currentLanguage}
             >
-              <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
+              <Icon name="globe" size="1.5rem" />
             </ActionIcon>
           ) : (
             <Button
@@ -265,9 +265,7 @@ const LanguageSelector: React.FC<LanguageSelectorProps> = ({
               accent="neutral"
               size="sm"
               data-testid="language-selector-button"
-              leftSection={
-                <LocalIcon icon="language" width="1.5rem" height="1.5rem" />
-              }
+              leftSection={<Icon name="globe" size="1.5rem" />}
             >
               <span className={styles.languageText}>{currentLanguage}</span>
             </Button>

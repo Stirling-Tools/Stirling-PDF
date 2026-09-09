@@ -2,23 +2,25 @@
 // public/og_images tool cards. Renders an HTML template with Puppeteer.
 //
 // Usage:
-//   node scripts/generate-og-image.mjs --missing      # generate cards for every tool with no art
-//   node scripts/generate-og-image.mjs --name "Add Text" --desc "Add custom text anywhere" \
+//   npx tsx scripts/generate-og-image.mjs --missing      # generate cards for every tool with no art
+//   npx tsx scripts/generate-og-image.mjs --name "Add Text" --desc "Add custom text anywhere" \
 //        --icon text-fields --out public/og_images/add-text.png
 //   # theme overrides, e.g. a different accent:
-//   node scripts/generate-og-image.mjs --name "Sign" --icon draw --bg-top "#1e3a5f" \
+//   npx tsx scripts/generate-og-image.mjs --name "Sign" --icon draw --bg-top "#1e3a5f" \
 //        --bg-bottom "#3b6ea5" --rotate -3 --out /path/sign.png
 //
-// --icon is a material-symbols name (https://fonts.google.com/icons) resolved via iconify,
+// --icon is a registry icon name (a lucide icon, or one of src/core/icons/svg/stirling),
 // or a raw "<svg…>" string. Theme is fully customizable (see THEME / the CLI flags below).
 // After adding images, run `node scripts/generate-og-metadata.mjs` so they get picked up.
 
 /* global document, getComputedStyle */ // used inside page.evaluate (browser context)
 
 import fs from "node:fs/promises";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+// oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
+import { STROKE_WIDTH } from "../src/core/icons/icons.config.ts";
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, "..");
@@ -67,19 +69,36 @@ export const THEME = {
     "https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;900&display=swap",
 };
 
-// ---- icon resolution (material-symbols via iconify) ------------------------
-async function resolveIcon(icon) {
+// The same sources the registry generator bundles, so a card shows the glyph
+// the tool actually uses in the app.
+const ICON_DIRS = [
+  path.join(ROOT, "../node_modules/lucide-static/icons"),
+  path.join(ROOT, "src/core/icons/svg/stirling"),
+];
+
+function iconFile(name) {
+  if (!name || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(name)) return null;
+  for (const dir of ICON_DIRS) {
+    const file = path.join(dir, `${name}.svg`);
+    if (existsSync(file)) return file;
+  }
+  return null;
+}
+
+export async function resolveIcon(icon) {
   if (!icon) return "";
   if (icon.trim().startsWith("<svg")) return icon; // raw svg passed through
-  const { getIconData, iconToSVG } = await import("@iconify/utils");
-  const { default: set } = await import(
-    "@iconify-json/material-symbols/icons.json",
-    { with: { type: "json" } }
-  );
-  const data = getIconData(set, icon);
-  if (!data) throw new Error(`icon not found in material-symbols: "${icon}"`);
-  const { attributes, body } = iconToSVG(data);
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${attributes.viewBox}" style="color:#fff">${body}</svg>`;
+  const file = iconFile(icon);
+  if (!file)
+    throw new Error(
+      `icon not found in the registry (lucide or src/core/icons/svg/stirling): "${icon}"`,
+    );
+  const raw = await fs.readFile(file, "utf8");
+  const open = raw.indexOf("<svg");
+  const body = raw.slice(raw.indexOf(">", open) + 1, raw.lastIndexOf("</svg>"));
+  // Root attributes are replaced: the source files carry lucide's default
+  // weight, and the card wants the app's stroke in white.
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="${STROKE_WIDTH}" stroke-linecap="round" stroke-linejoin="round">${body}</svg>`;
 }
 
 // ---- html template ---------------------------------------------------------
@@ -214,18 +233,18 @@ export async function closeBrowser() {
 }
 
 // ---- batch: generate cards for tools that currently have no bespoke art ----
-// material-symbols icon per tool (the white glyph shown in the card).
+// Registry icon per tool (the white glyph shown in the card).
 const MISSING_TOOL_ICONS = {
-  addText: "title",
-  annotate: "draw",
-  timestampPdf: "schedule",
-  bookletImposition: "menu-book-outline",
-  pdfTextEditor: "edit-document-outline",
-  formFill: "ballot-outline",
+  addText: "type",
+  annotate: "pen-tool",
+  timestampPdf: "clock",
+  bookletImposition: "book-open",
+  pdfTextEditor: "file-pen",
+  formFill: "list-checks",
   devApi: "api",
-  devFolderScanning: "folder-open-outline",
-  devSsoGuide: "key-outline",
-  devAirgapped: "cloud-off-outline",
+  devFolderScanning: "folder-open",
+  devSsoGuide: "key",
+  devAirgapped: "cloud-off",
 };
 
 const kebab = (id) => id.replace(/([A-Z])/g, "-$1").toLowerCase();
@@ -267,14 +286,14 @@ export async function generateMissing(theme = THEME) {
   return results;
 }
 
-// Each tool's app icon lives as `icon="<material-symbol>"` just before its
+// Each tool's app icon lives as `<Icon name="…"` just before its
 // `name: t("home.<id>.title", …)`. Pair each title with the closest preceding icon.
-function readRegistryIcons() {
+export function readRegistryIcons() {
   const src = readFileSync(
     path.join(ROOT, "src/core/data/useTranslatedToolRegistry.tsx"),
     "utf8",
   );
-  const icons = [...src.matchAll(/icon="([^"]+)"/g)].map((m) => ({
+  const icons = [...src.matchAll(/<Icon\s+name="([^"]+)"/g)].map((m) => ({
     pos: m.index,
     name: m[1],
   }));
@@ -290,28 +309,8 @@ function readRegistryIcons() {
   return byId;
 }
 
-async function iconExists(name) {
-  if (!name) return false;
-  try {
-    const { getIconData } = await import("@iconify/utils");
-    const { default: set } = await import(
-      "@iconify-json/material-symbols/icons.json",
-      { with: { type: "json" } }
-    );
-    return !!getIconData(set, name);
-  } catch {
-    return false;
-  }
-}
-
-// First candidate that resolves; also tries dropping a "-rounded" suffix.
-async function firstResolvableIcon(candidates) {
-  for (const c of candidates) {
-    if (await iconExists(c)) return c;
-    const alt = c && c.replace(/-rounded$/, "");
-    if (alt && alt !== c && (await iconExists(alt))) return alt;
-  }
-  return "description-outline";
+function firstResolvableIcon(candidates) {
+  return candidates.find((c) => iconFile(c)) ?? "file-text";
 }
 
 const humanizeId = (id) =>
@@ -331,10 +330,7 @@ export async function generateAll(theme = THEME) {
   );
   const results = [];
   for (const [id, basename] of Object.entries(ogMap)) {
-    const icon = await firstResolvableIcon([
-      regIcons[id],
-      MISSING_TOOL_ICONS[id],
-    ]);
+    const icon = firstResolvableIcon([regIcons[id], MISSING_TOOL_ICONS[id]]);
     await renderOgCard({
       name: titles[id] || humanizeId(id),
       description: descs[id] || "",
