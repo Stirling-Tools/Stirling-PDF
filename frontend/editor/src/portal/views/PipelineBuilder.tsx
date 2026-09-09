@@ -748,7 +748,9 @@ export function PipelineBuilder() {
   const inputValid = sourceChosen && scheduleValid;
   // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
   const outputValid = isEditorInput || outputIds.length === 1;
-  const classifies = steps.some((step) => step.operation === CLASSIFY_OPERATION);
+  const classifies = steps.some(
+    (step) => step.operation === CLASSIFY_OPERATION,
+  );
   // Mirrors PolicyValidator.validateRoutingRules: a rule with nothing to match on, or nowhere to
   // send, would be rejected on save - so it is named here rather than surfaced as a server error.
   const routingValid = routingRules.every(

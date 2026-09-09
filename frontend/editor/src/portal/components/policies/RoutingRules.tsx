@@ -136,10 +136,15 @@ export function RoutingRules({
               <Button
                 variant="tertiary"
                 size="sm"
-                leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+                leftSection={
+                  <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
                 onClick={onCreateDestination}
               >
-                {t("portal.policies.wizard.sources.connect", "Connect a source")}
+                {t(
+                  "portal.policies.wizard.sources.connect",
+                  "Connect a source",
+                )}
               </Button>
             ) : (
               <Banner
@@ -215,7 +220,9 @@ export function RoutingRules({
               <Button
                 variant="tertiary"
                 size="sm"
-                leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+                leftSection={
+                  <AddRoundedIcon style={{ fontSize: "1.125rem" }} />
+                }
                 onClick={add}
               >
                 {t("portal.pipelines.builder.routing.addRule", "Add a route")}
