@@ -98,14 +98,14 @@ ARG VERSION_TAG
 WORKDIR /app
 
 # Application layers
-COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+COPY --link --from=jar-extract /layers/dependencies/           /app/
+COPY --link --from=jar-extract /layers/spring-boot-loader/     /app/
+COPY --link --from=jar-extract /layers/snapshot-dependencies/  /app/
+COPY --link --from=jar-extract /layers/application/            /app/
 
-COPY --link --from=app-build --chown=1000:1000 \
+COPY --link --from=app-build \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --link --chown=1000:1000 scripts/ /scripts/
+COPY --link scripts/ /scripts/
 
 # LibreOffice network guard (loaded via LD_PRELOAD for soffice/unoserver only).
 COPY --link --from=office-guard-build \
@@ -123,7 +123,6 @@ RUN set -eux; \
     ln -s /pipeline /app/pipeline; \
     ln -s /storage /app/storage; \
     chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline /app/storage; \
-    chown stirlingpdfuser:stirlingpdfgroup /app; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
@@ -143,6 +142,7 @@ ENV VERSION_TAG=$VERSION_TAG \
     PUID=1000 \
     PGID=1000 \
     UMASK=022 \
+    STIRLING_ALLOW_ROOT=false \
     STIRLING_TEMPFILES_DIRECTORY=/tmp/stirling-pdf \
     TMPDIR=/tmp/stirling-pdf \
     TEMP=/tmp/stirling-pdf \
