@@ -159,7 +159,8 @@ class PolicyOverviewServiceTest {
                         List.of(),
                         null,
                         EditorConfig.disabled(),
-                        List.of()));
+                        List.of(),
+                        null));
 
         PolicyView view = find(service.overview(), "Mandatory redaction");
         assertTrue(view.required());
@@ -182,7 +183,8 @@ class PolicyOverviewServiceTest {
                         List.of(),
                         null,
                         EditorConfig.disabled(),
-                        List.of()));
+                        List.of(),
+                        null));
         // No explicit icon: a template-derived policy falls back to its categoryId marker.
         policyStore.save(
                 new Policy(
@@ -198,7 +200,8 @@ class PolicyOverviewServiceTest {
                         List.of(),
                         null,
                         EditorConfig.disabled(),
-                        List.of()));
+                        List.of(),
+                        null));
 
         assertEquals("shield", find(service.overview(), "Custom with icon").icon());
         assertEquals("security", find(service.overview(), "Template derived").icon());

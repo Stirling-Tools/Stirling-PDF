@@ -403,7 +403,8 @@ class PolicyValidatorTest {
                 List.of(),
                 null,
                 null,
-                List.of(rules));
+                List.of(rules),
+                Policy.SURFACE_POLICY);
     }
 
     @Test

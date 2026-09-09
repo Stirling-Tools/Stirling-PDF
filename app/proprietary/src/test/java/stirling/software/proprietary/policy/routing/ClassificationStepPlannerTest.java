@@ -32,7 +32,8 @@ class ClassificationStepPlannerTest {
                 List.of(),
                 null,
                 null,
-                List.of(rules));
+                List.of(rules),
+                Policy.SURFACE_POLICY);
     }
 
     private static RoutingRule classificationRule() {

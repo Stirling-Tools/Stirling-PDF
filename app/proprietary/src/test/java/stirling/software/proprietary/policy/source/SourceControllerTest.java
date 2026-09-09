@@ -305,7 +305,8 @@ class SourceControllerTest {
                                 "classification.labels",
                                 MatchOperator.MATCHES_ANY,
                                 List.of("confidential"),
-                                destinationId)));
+                                destinationId)),
+                Policy.SURFACE_POLICY);
     }
 
     private static Policy policyReferencing(String name, String sourceId) {
