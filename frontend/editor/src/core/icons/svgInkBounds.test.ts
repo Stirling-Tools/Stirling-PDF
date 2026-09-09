@@ -45,6 +45,15 @@ describe("inkBounds", () => {
     );
   });
 
+  // A circle exported as a single arc back to its own start draws nothing, and
+  // the box has to stay a real number or the whole icon scales by NaN.
+  it("ignores an arc whose endpoints coincide, as a renderer does", () => {
+    close(
+      inkBounds([["path", { d: "M4 4h6M12 2a10 10 0 1 0 0 0" }]]),
+      [4, 2, 12, 4],
+    );
+  });
+
   it("rounds rect corners instead of measuring their sharp corners under rotation", () => {
     const sharp = inkBounds([
       [
