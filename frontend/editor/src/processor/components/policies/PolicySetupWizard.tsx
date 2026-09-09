@@ -4,7 +4,10 @@
  */
 
 import { PolicySetupWizard as SharedPolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
-import type { CatalogueEntry, PolicySetupResult } from "@processor/api/policies";
+import type {
+  CatalogueEntry,
+  PolicySetupResult,
+} from "@processor/api/policies";
 import { fetchIntegrations } from "@processor/api/integrations";
 import { errorMessage } from "@processor/api/http";
 import { useAsync } from "@processor/hooks/useAsync";

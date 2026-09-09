@@ -7,7 +7,10 @@ import {
 } from "@testing-library/react";
 import { ProcessorTestProviders } from "@processor/test/TestQueryProvider";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
-import type { PipelinesOverviewResponse, Policy } from "@processor/api/pipelines";
+import type {
+  PipelinesOverviewResponse,
+  Policy,
+} from "@processor/api/pipelines";
 import { Pipelines } from "@processor/views/Pipelines";
 
 /** The builder route: shows the draft handed in navigation state, so the Customise hand-off can be
@@ -64,7 +67,8 @@ vi.mock("@processor/api/pipelines", () => ({
 // Spy the wizard's save without stubbing the rest of the module (parseSimplePolicy et al. stay real).
 const savePolicy = vi.fn();
 vi.mock("@processor/api/policies", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@processor/api/policies")>();
+  const actual =
+    await importOriginal<typeof import("@processor/api/policies")>();
   return { ...actual, savePolicy: (body: unknown) => savePolicy(body) };
 });
 

@@ -52,7 +52,9 @@ describe("PipelineEditHeader", () => {
   it("shows the enforce toggle only for an editor-sourced pipeline", () => {
     renderHeader({ runsOnEditor: false });
     expect(
-      screen.queryByRole("switch", { name: "processor.pipelines.enforce.label" }),
+      screen.queryByRole("switch", {
+        name: "processor.pipelines.enforce.label",
+      }),
     ).not.toBeInTheDocument();
 
     renderHeader({ runsOnEditor: true });
