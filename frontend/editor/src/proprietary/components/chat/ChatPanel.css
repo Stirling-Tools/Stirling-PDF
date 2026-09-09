@@ -64,7 +64,7 @@
   height: 1.75rem;
   border-radius: 9999px;
   background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   flex-shrink: 0;
   position: relative;
 }
@@ -139,21 +139,17 @@
     var(--mantine-color-blue-filled) 18%,
     transparent
   );
-  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
+  color: var(--c-accent-text);
 }
 
 /* Same treatment for the input pill and quick-action cards. */
 [data-mantine-color-scheme="dark"] .chat-panel-input {
   background: transparent;
-  box-shadow:
-    0 0 0 1px var(--c-border-subtle),
-    0 6px 16px rgba(0, 0, 0, 0.25);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
 [data-mantine-color-scheme="dark"] .chat-panel-input:focus-within {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--mantine-color-blue-3) 40%, transparent),
-    0 8px 22px color-mix(in srgb, var(--mantine-color-blue-6) 18%, transparent);
+  box-shadow: 0 8px 22px color-mix(in srgb, var(--c-btn-solid) 18%, transparent);
 }
 
 [data-mantine-color-scheme="dark"] .chat-quick-action {
@@ -228,7 +224,7 @@
   border: 1px solid var(--mantine-color-blue-light);
   border-radius: 9999px;
   background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   font-size: 0.8rem;
   font-weight: 500;
   line-height: 1.1;
@@ -306,7 +302,7 @@
   height: 2rem;
   border-radius: 0.5rem;
   background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   flex-shrink: 0;
 }
 
@@ -331,16 +327,12 @@
   border-radius: 1.1rem;
   background: var(--mantine-color-body);
   flex-shrink: 0;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.04),
-    0 4px 14px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
   transition: box-shadow 160ms ease-out;
 }
 
 .chat-panel-input:focus-within {
-  box-shadow:
-    0 0 0 1px color-mix(in srgb, var(--mantine-color-blue-6) 20%, transparent),
-    0 6px 18px color-mix(in srgb, var(--mantine-color-blue-6) 12%, transparent);
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--c-btn-solid) 12%, transparent);
 }
 
 /* Kill the Mantine Textarea's own border/outline — the wrapper owns the chrome. */
@@ -461,7 +453,7 @@
 }
 
 .chat-message-action-btn--active {
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
 }
 
 .chat-message-timestamp {
@@ -479,12 +471,12 @@
 }
 
 .chat-bubble-user {
-  background: var(--mantine-color-blue-filled) !important;
-  color: white !important;
+  background: var(--c-btn-solid) !important;
+  color: var(--c-btn-inverse) !important;
 }
 
 .chat-bubble-user * {
-  color: white !important;
+  color: var(--c-btn-inverse) !important;
 }
 
 /* Assistant messages: no bubble, free-flowing with side padding */
@@ -517,12 +509,23 @@
   padding: 0.2rem 0.5rem 0.35rem;
 }
 
+[data-mantine-color-scheme="dark"] .chat-panel__header .sui-panelhdr__icon,
+.chat-panel__header .sui-panelhdr__icon {
+  background: transparent;
+  border: none;
+}
+
+.chat-panel__header .chat-panel__header-mark {
+  width: auto;
+  height: 26px;
+}
+
 .chat-progress-live__logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-brand-mark);
 }
 
 /* Shimmer: a soft highlight sweeps left-to-right across the muted label. */
@@ -677,7 +680,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.125rem 0.5rem;
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
 }
 
 @media (prefers-reduced-motion: reduce) {

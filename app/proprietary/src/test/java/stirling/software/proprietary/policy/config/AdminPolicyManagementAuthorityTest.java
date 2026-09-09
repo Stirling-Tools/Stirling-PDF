@@ -40,6 +40,18 @@ class AdminPolicyManagementAuthorityTest {
     }
 
     @Test
+    void adminMayTriggerPolicies() {
+        when(userService.isCurrentUserAdmin()).thenReturn(true);
+        assertTrue(authority().canTriggerPolicies());
+    }
+
+    @Test
+    void nonAdminMayNotTriggerPolicies() {
+        when(userService.isCurrentUserAdmin()).thenReturn(false);
+        assertFalse(authority().canTriggerPolicies());
+    }
+
+    @Test
     void currentUserTeamIdResolvesFromTheCurrentUsersTeam() {
         Team team = new Team();
         team.setId(42L);

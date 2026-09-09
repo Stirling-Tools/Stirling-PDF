@@ -12,14 +12,20 @@ const FIXTURES = path.join(
   "../test-fixtures/classification/unlabelled",
 );
 
-/** The stored policy DefaultClassificationPolicySeeder writes for a new team. */
+/**
+ * What GET /api/v1/policies returns for the row an older
+ * DefaultClassificationPolicySeeder wrote - i.e. one stored before editor
+ * participation had its own field. `JpaPolicyStore.liftEditorConfig` derives the
+ * `editor` block from the legacy `output.options` on read; the lift is additive,
+ * so a real response carries both. Migration of the stored shape itself is
+ * covered by JpaPolicyStoreTest, which exercises the Java the stub stands in for.
+ */
 const SEEDED_POLICY = {
   id: "seeded-classification",
   name: "Classification Policy",
   owner: "system",
   enabled: true,
-  trigger: null,
-  sourceIds: [],
+  inputs: [],
   steps: [{ operation: "/api/v1/ai/tools/classify-and-label", parameters: {} }],
   output: {
     type: "inline",
@@ -32,7 +38,9 @@ const SEEDED_POLICY = {
       reviewerEmail: "",
     },
   },
+  outputIds: [],
   teamId: 1,
+  editor: { allowed: true, runOn: "upload" },
 };
 
 test("a 10-file upload wave classifies every file into its group", async ({
@@ -46,7 +54,10 @@ test("a 10-file upload wave classifies every file into its group", async ({
   await page.route("**/api/v1/policies/classify/meter", (route) =>
     route.fulfill({ status: 202, body: "" }),
   );
-  await page.goto("/", { waitUntil: "domcontentloaded", timeout: 120_000 });
+  await page.goto("/editor", {
+    waitUntil: "domcontentloaded",
+    timeout: 120_000,
+  });
 
   await uploadFiles(
     page,

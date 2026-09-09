@@ -281,7 +281,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
             {/* Header */}
             <div className="chat-panel-header">
               <Text fw={600} size="sm">
-                AI Assistant
+                {t("chat.header.assistant")}
               </Text>
               <ActionIcon
                 variant="subtle"
@@ -298,8 +298,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
               <Stack gap="sm" p="sm">
                 {messages.length === 0 && (
                   <Text size="sm" c="dimmed" ta="center" py="xl">
-                    Ask a question about your documents or get help with PDF
-                    tools.
+                    {t("chat.emptyState.text")}
                   </Text>
                 )}
                 {messages.map((msg) => (
@@ -337,7 +336,7 @@ export function ChatPanel(_props: ChatPanelProps = {}) {
             <div className="chat-panel-input">
               <TextInput
                 ref={inputRef}
-                placeholder="Type a message..."
+                placeholder={t("chat.input.placeholder")}
                 value={input}
                 onChange={(e) => setInput(e.currentTarget.value)}
                 onKeyDown={handleKeyDown}

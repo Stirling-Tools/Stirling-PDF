@@ -1,17 +1,75 @@
-.sui-metric-strip {
+.sui-metric-strip--grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
 }
 
 @media (max-width: 50rem) {
-  .sui-metric-strip {
+  .sui-metric-strip--grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 30rem) {
-  .sui-metric-strip {
+  .sui-metric-strip--grid {
     grid-template-columns: 1fr;
+  }
+}
+
+.sui-metric-strip--row {
+  display: flex;
+  align-items: center;
+  gap: 1.75rem;
+  padding: 0.625rem 1.25rem;
+}
+
+.sui-metric-strip__leading {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-shrink: 0;
+  padding-right: 1.25rem;
+  border-right: 1px solid var(--c-border-subtle);
+  align-self: stretch;
+  /* Neutral (ink) tint for a currentColor icon in the leading slot. */
+  color: var(--c-text);
+}
+
+.sui-metric-strip--row .sui-metric {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 0;
+  gap: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+.sui-metric-strip--row .sui-metric__label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--c-text-subtle);
+}
+.sui-metric-strip--row .sui-metric__value {
+  font-size: 1.0625rem;
+  font-weight: 600;
+}
+.sui-metric-strip--row .sui-metric__footer {
+  font-size: 0.6875rem;
+}
+
+@media (max-width: 50rem) {
+  .sui-metric-strip--row {
+    flex-wrap: wrap;
+    gap: 1.25rem 2rem;
+  }
+  .sui-metric-strip__leading {
+    border-right: none;
+    padding-right: 0;
+    flex-basis: 100%;
+  }
+  .sui-metric-strip--row .sui-metric {
+    flex-basis: 40%;
   }
 }

@@ -222,7 +222,8 @@
 /* Error helper text above the input */
 .errorText {
   margin-top: 0.25rem;
-  color: var(--text-brand-accent);
+  /* The brand red is a fill; error copy takes the theme's error ink. */
+  color: var(--color-red-dark);
 }
 
 /* Compact error container for inline tool settings */
@@ -237,7 +238,7 @@
 
 /* Two-line clamp for compact error text */
 .errorTextClamp {
-  color: var(--text-brand-accent);
+  color: var(--color-red-dark);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;

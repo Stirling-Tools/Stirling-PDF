@@ -19,7 +19,7 @@ describe("useRedactParameters", () => {
     { paramName: "wholeWordSearch" as const, value: true },
     { paramName: "redactColor" as const, value: "#FF0000" },
     { paramName: "customPadding" as const, value: 0.5 },
-    { paramName: "convertPDFToImage" as const, value: false },
+    { paramName: "convertPDFToImage" as const, value: true },
   ])("should update parameter $paramName", ({ paramName, value }) => {
     const { result } = renderHook(() => useRedactParameters());
 
@@ -138,7 +138,7 @@ describe("useRedactParameters", () => {
     expect(result.current.parameters.mode).toBe("automatic");
     expect(result.current.parameters.useRegex).toBe(false);
     expect(result.current.parameters.wholeWordSearch).toBe(false);
-    expect(result.current.parameters.convertPDFToImage).toBe(true);
+    expect(result.current.parameters.convertPDFToImage).toBe(false);
   });
 
   test("should handle array parameter updates correctly", () => {

@@ -40,7 +40,9 @@ export function ClassificationCategoryManager({
             <span className="category-visibility-icon">
               <LocalIcon icon={category.icon} width="1.1rem" />
             </span>
-            <span className="category-visibility-name">{category.name}</span>
+            <span className="category-visibility-name">
+              {t(`classification.families.${category.id}`, category.name)}
+            </span>
             {count !== undefined && (
               <span className="category-visibility-count">{count}</span>
             )}

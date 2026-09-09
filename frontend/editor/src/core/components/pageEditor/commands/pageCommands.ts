@@ -244,7 +244,7 @@ export class ReorderPagesCommand extends DOMCommand {
         .map((pageNum) =>
           currentDoc.pages.find((p) => p.pageNumber === pageNum),
         )
-        .filter((page) => page !== undefined) as PDFPage[];
+        .filter((page) => page !== undefined);
 
       const remainingPages = currentDoc.pages.filter(
         (page) => !this.selectedPages!.includes(page.pageNumber),
@@ -686,7 +686,6 @@ export class InsertFilesCommand extends DOMCommand {
   private insertedPages: PDFPage[] = [];
   private originalDocument: PDFDocument | null = null;
   private fileDataMap = new Map<FileId, ArrayBuffer>(); // Store file data for thumbnail generation
-  private originalProcessedFile: any = null; // Store original ProcessedFile for undo
   private insertedFileMap = new Map<FileId, File>(); // Store inserted files for export
 
   constructor(

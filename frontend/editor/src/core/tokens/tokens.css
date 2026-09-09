@@ -25,6 +25,14 @@
   --color-text-on-accent: #ffffff;
 
   /* Brand / status */
+  --color-blue: var(--p-blue-500);
+  --color-blue-light: color-mix(in srgb, var(--p-blue-500) 13%, var(--p-white));
+  --color-blue-border: color-mix(
+    in srgb,
+    var(--p-blue-500) 40%,
+    var(--p-white)
+  );
+  --color-blue-dark: var(--p-blue-700);
   --color-purple: var(--p-blue-400);
   --color-purple-light: color-mix(
     in srgb,
@@ -36,7 +44,11 @@
     var(--p-blue-400) 40%,
     var(--p-white)
   );
-  --color-purple-dark: var(--p-blue-600);
+  /* The -dark shades are the on-light TEXT colours (accents.css --_text and
+     status copy). They have to clear 4.5:1 on the tinted -light surfaces they
+     sit on, not just on the page, which is why they sit well below the base
+     hue rather than one step under it. */
+  --color-purple-dark: var(--p-blue-700);
   --color-green: var(--p-green-500);
   --color-green-light: color-mix(
     in srgb,
@@ -48,11 +60,11 @@
     var(--p-green-500) 40%,
     var(--p-white)
   );
-  --color-green-dark: var(--p-green-600);
+  --color-green-dark: var(--p-green-800);
   --color-red: var(--p-red-500);
   --color-red-light: color-mix(in srgb, var(--p-red-500) 13%, var(--p-white));
   --color-red-border: color-mix(in srgb, var(--p-red-500) 40%, var(--p-white));
-  --color-red-dark: var(--p-red-600);
+  --color-red-dark: var(--p-red-700);
   --color-amber: var(--p-amber-500);
   --color-amber-light: color-mix(
     in srgb,
@@ -64,7 +76,7 @@
     var(--p-amber-500) 42%,
     var(--p-white)
   );
-  --color-amber-dark: var(--p-amber-600);
+  --color-amber-dark: var(--p-amber-800);
   --color-orange: var(--p-amber-600);
   --color-orange-light: color-mix(
     in srgb,
@@ -100,7 +112,9 @@
   --color-tooltip-text: var(--p-gray-50);
 
   /* Navigation */
-  --color-section-label: var(--p-gray-400);
+  /* Form/section labels are small uppercase text, so they need a real text
+     shade: gray-400 only reaches 2.3:1 on the page background. */
+  --color-section-label: var(--p-gray-600);
 
   /* Header */
   --color-search-border-hover: var(--p-gray-300);
@@ -162,6 +176,8 @@
   --code-bg-alt: var(--p-c-eef1f4);
   --code-bg-header: var(--p-c-eaeef2);
   --code-text: var(--p-c-1f2328);
+  /* Both sit on --code-bg-header, the darkest of the code grounds, so they run
+     deeper than a plain "dim/muted" pair would on white. */
   --code-dim: var(--p-c-656d76);
   --code-muted: var(--p-c-8c959f);
   --code-keyword: var(--p-c-cf222e);
@@ -180,6 +196,10 @@
   /* Bumped from #475569 (fails AA) — see light-theme note. */
   --color-text-placeholder: var(--p-gray-600);
 
+  --color-blue: var(--p-blue-500);
+  --color-blue-light: var(--p-zinc-750);
+  --color-blue-border: var(--p-zinc-600);
+  --color-blue-dark: var(--p-blue-400);
   --color-purple: var(--p-blue-400);
   --color-purple-light: var(--p-zinc-750);
   --color-purple-border: var(--p-zinc-600);
@@ -195,7 +215,10 @@
   --color-red: var(--p-red-400);
   --color-red-light: var(--p-zinc-800);
   --color-red-border: var(--p-red-600);
-  --color-red-dark: var(--p-red-500);
+  /* The -dark shades are this theme's TEXT colours. On the dark card and
+     raised surfaces red-500 only reaches ~3.9:1, so error copy runs a step
+     lighter than the base hue. */
+  --color-red-dark: var(--p-red-400);
   --color-amber: var(--p-amber-400);
   --color-amber-light: color-mix(
     in srgb,
@@ -223,7 +246,9 @@
   --color-tooltip-bg: var(--p-gray-250);
   --color-tooltip-text: var(--p-blue-700);
 
-  --color-section-label: var(--p-gray-600);
+  /* Uppercase 12px label text: the light theme's grey only reaches 2.3:1
+     on the dark surfaces, so this theme takes a real on-dark shade. */
+  --color-section-label: var(--p-zinc-200);
 
   --color-search-border-hover: var(--p-gray-600);
   --color-search-text: var(--p-gray-500);
@@ -251,7 +276,9 @@
   --code-bg-alt: var(--p-c-1e293b);
   --code-bg-header: var(--p-c-1a2332);
   --code-text: var(--p-gray-250);
-  --code-dim: var(--p-c-64748b);
+  /* Sits on the code header, the lightest of the dark code grounds, where
+     the mid-slate only reaches 3.3:1. */
+  --code-dim: var(--p-c-8b9bb4);
   --code-muted: var(--p-c-94a3b8);
   --code-keyword: var(--p-blue-400);
   --code-string: var(--p-amber-400);
@@ -324,16 +351,6 @@
   }
   50% {
     opacity: 0.5;
-  }
-}
-@keyframes pulseRing {
-  0% {
-    transform: scale(0.8);
-    opacity: 1;
-  }
-  100% {
-    transform: scale(2.2);
-    opacity: 0;
   }
 }
 @keyframes spin {

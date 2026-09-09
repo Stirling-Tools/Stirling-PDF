@@ -39,6 +39,7 @@ const StorageStatsCard: React.FC<StorageStatsCardProps> = ({
           </Text>
           {storageStats.quota && (
             <Progress
+              aria-label={t("fileManager.storageUsed", "Storage used")}
               value={storageUsagePercent}
               color={
                 storageUsagePercent > 80

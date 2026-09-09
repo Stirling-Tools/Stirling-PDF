@@ -29,6 +29,9 @@ import stirling.software.SPDF.model.api.general.PosterPdfRequest;
 import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.GeneralApi;
 import stirling.software.common.enumeration.ResourceWeight;
+import stirling.software.common.model.tool.ToolArity;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.CustomPDFDocumentFactory;
 import stirling.software.common.util.ExceptionUtils;
 import stirling.software.common.util.GeneralUtils;
@@ -49,13 +52,13 @@ public class PosterPdfController {
             consumes = "multipart/form-data",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MultiFileResponse
+    @ToolIO(produces = ToolFormat.PDF, arity = ToolArity.SIMO)
     @Operation(
             summary = "Split large PDF pages into smaller printable chunks",
             description =
-                    "This endpoint splits large or oddly-sized PDF pages into smaller chunks "
-                            + "suitable for printing on standard paper sizes (e.g., A4, Letter). "
-                            + "Divides each page into a grid of smaller pages using Apache PDFBox. "
-                            + "Input: PDF Output: ZIP-PDF Type: SISO")
+                    "This endpoint splits large or oddly-sized PDF pages into smaller chunks"
+                            + " suitable for printing on standard paper sizes (e.g., A4, Letter). Divides each"
+                            + " page into a grid of smaller pages using Apache PDFBox.")
     public ResponseEntity<Resource> posterPdf(@ModelAttribute PosterPdfRequest request)
             throws Exception {
 

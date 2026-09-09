@@ -14,7 +14,9 @@
   color: var(--c-text-muted);
 }
 
+/* Anchors .portal-shell__notifications without disturbing the column's flow. */
 .portal-shell__main {
+  position: relative;
   flex: 1 1 auto;
   display: flex;
   flex-direction: column;
@@ -26,6 +28,10 @@
   flex: 1 1 auto;
   min-height: 0; /* scroll instead of growing past the viewport */
   overflow-y: auto;
+  /* Hold the scrollbar's width whether or not it is showing. Without this, a page that grows past
+     the viewport (an editor panel filling in, say) makes the bar appear and shunts everything
+     sideways as it does. */
+  scrollbar-gutter: stable;
   animation: fadeInUp var(--motion-enter) both;
 }
 
@@ -38,14 +44,11 @@
   align-items: center;
   gap: 0.375rem;
   padding: 0 0.625rem;
-  background: var(--color-sidebar-bg);
-  border-bottom: 1px solid var(--color-sidebar-border);
+  background: var(--c-bg-raised);
+  border-bottom: 1px solid var(--c-border-subtle);
 }
 
 .portal-shell__topbar-wordmark {
-  height: 1.375rem;
-  width: auto;
-  display: block;
   margin-right: auto;
 }
 
@@ -67,4 +70,13 @@
     /* fadeIn keyframes come from core tokens.css */
     animation: fadeIn var(--motion-fast) both;
   }
+}
+
+/* Sits over the main area's top-right corner. Outside .portal-shell__view so it stays put while
+   the view scrolls, and inside .portal-shell__main so it never overlaps the sidebar. */
+.portal-shell__notifications {
+  position: absolute;
+  top: var(--sp-3, 0.75rem);
+  right: var(--sp-4, 1rem);
+  z-index: var(--z-sticky, 30);
 }

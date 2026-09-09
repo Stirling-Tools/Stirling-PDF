@@ -68,8 +68,6 @@ public class MathAuditorAgentController {
                     Returns a JSON Verdict describing every discrepancy found. How the Verdict is
                     presented to the end user (chat answer, PDF annotations, etc.) is up to the
                     caller.
-
-                    Input: PDF  Output: JSON  Type: SISO
                     """)
     public ResponseEntity<Verdict> mathAuditorAgent(
             @Parameter(description = "The PDF document to audit", required = true)

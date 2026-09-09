@@ -70,21 +70,23 @@ public class CustomLogoutSuccessHandler extends SimpleUrlLogoutSuccessHandler {
 
         if (!response.isCommitted()) {
             if (authentication != null) {
-                if (authentication instanceof Saml2Authentication samlAuthentication) {
-                    // Handle SAML2 logout redirection
-                    getRedirect_saml2(request, response, samlAuthentication);
-                } else if (authentication instanceof OAuth2AuthenticationToken oAuthToken) {
-                    // Handle OAuth2 logout redirection
-                    getRedirect_oauth2(request, response, oAuthToken);
-                } else if (authentication instanceof UsernamePasswordAuthenticationToken) {
-                    // Handle Username/Password logout
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
-                } else {
-                    // Handle unknown authentication types
-                    log.error(
-                            "Authentication class unknown: {}",
-                            authentication.getClass().getSimpleName());
-                    getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                switch (authentication) {
+                    case Saml2Authentication samlAuthentication ->
+                            // Handle SAML2 logout redirection
+                            getRedirect_saml2(request, response, samlAuthentication);
+                    case OAuth2AuthenticationToken oAuthToken ->
+                            // Handle OAuth2 logout redirection
+                            getRedirect_oauth2(request, response, oAuthToken);
+                    case UsernamePasswordAuthenticationToken usernamePasswordAuthenticationToken ->
+                            // Handle Username/Password logout
+                            getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                    default -> {
+                        // Handle unknown authentication types
+                        log.error(
+                                "Authentication class unknown: {}",
+                                authentication.getClass().getSimpleName());
+                        getRedirectStrategy().sendRedirect(request, response, LOGOUT_PATH);
+                    }
                 }
             } else {
                 if (jwtService != null) {

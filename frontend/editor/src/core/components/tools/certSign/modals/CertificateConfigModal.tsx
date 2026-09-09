@@ -249,7 +249,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
               fontSize="small"
               style={{ color: "var(--mantine-color-green-6)" }}
             />
-            <Text size="sm" c="green">
+            <Text size="sm" c="var(--color-green-dark)">
               {t(
                 "certSign.collab.signRequest.certModal.certValidUntil",
                 "Certificate valid until {{date}}",
@@ -271,7 +271,7 @@ export const CertificateConfigModal: React.FC<CertificateConfigModalProps> = ({
               fontSize="small"
               style={{ color: "var(--mantine-color-red-6)" }}
             />
-            <Text size="sm" c="red">
+            <Text size="sm" c="var(--color-red-dark)">
               {t(
                 "certSign.collab.signRequest.certModal.certInvalid",
                 "Certificate invalid: {{error}}",

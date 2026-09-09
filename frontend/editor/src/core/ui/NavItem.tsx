@@ -52,6 +52,7 @@ export function NavItem({
         .join(" ")}
       data-accent={accent}
       aria-current={isActive ? "page" : undefined}
+      aria-label={label}
     >
       {icon && (
         <span className="sui-navitem__icon" aria-hidden>

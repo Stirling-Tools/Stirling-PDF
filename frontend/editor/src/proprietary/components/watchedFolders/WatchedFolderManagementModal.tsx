@@ -482,13 +482,11 @@ export function WatchedFolderManagementModal({
                             variant="tertiary"
                             onClick={async () => {
                               try {
-                                const handle = await (
-                                  window as unknown as {
-                                    showDirectoryPicker: (options?: {
-                                      mode?: "read" | "readwrite";
-                                    }) => Promise<FileSystemDirectoryHandle>;
-                                  }
-                                ).showDirectoryPicker({ mode: "read" });
+                                const handle =
+                                  await window.showDirectoryPicker?.({
+                                    mode: "read",
+                                  });
+                                if (!handle) return;
                                 pendingInputDirHandle.current = handle;
                                 setInputDirName(handle.name);
                               } catch {
@@ -580,13 +578,12 @@ export function WatchedFolderManagementModal({
                           disabled={!canWriteLocalFolder}
                           onClick={async () => {
                             try {
-                              const handle = await (
-                                window as unknown as {
-                                  showDirectoryPicker: (options?: {
-                                    mode?: "read" | "readwrite";
-                                  }) => Promise<FileSystemDirectoryHandle>;
-                                }
-                              ).showDirectoryPicker({ mode: "readwrite" });
+                              const handle = await window.showDirectoryPicker?.(
+                                {
+                                  mode: "readwrite",
+                                },
+                              );
+                              if (!handle) return;
                               pendingDirHandle.current = handle;
                               setOutputDirName(handle.name);
                             } catch {
@@ -859,7 +856,7 @@ export function WatchedFolderManagementModal({
               {t("watchedFolders.modal.sectionSteps", "Steps")}
             </SectionLabel>
             {automationError && (
-              <Text size="xs" c="red" mt={4}>
+              <Text size="xs" c="var(--color-red-dark)" mt={4}>
                 {automationError}
               </Text>
             )}

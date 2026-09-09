@@ -50,9 +50,7 @@ export const WithActions: Story = {
     accent: "purple",
     actions: (
       <>
-        <StatusBadge tone="success" pulse>
-          Healthy
-        </StatusBadge>
+        <StatusBadge tone="success">Healthy</StatusBadge>
         <Button size="sm" variant="secondary">
           Edit composition
         </Button>

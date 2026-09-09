@@ -34,9 +34,7 @@ export const SpaceBetween: Story = {
       }}
     >
       <span>Pipeline name</span>
-      <StatusBadge tone="success" pulse>
-        healthy
-      </StatusBadge>
+      <StatusBadge tone="success">healthy</StatusBadge>
     </Inline>
   ),
 };

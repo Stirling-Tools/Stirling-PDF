@@ -135,7 +135,7 @@ export const AddSignaturesStep: React.FC<AddSignaturesStepProps> = ({
       </Paper>
 
       {placementMode && (
-        <Text size="xs" c="blue" ta="center">
+        <Text size="xs" c="var(--c-accent-text)" ta="center">
           {t(
             "certSign.collab.signRequest.steps.clickMultipleTimes",
             "Click on the PDF multiple times to place signatures. Drag any signature to move or resize it.",

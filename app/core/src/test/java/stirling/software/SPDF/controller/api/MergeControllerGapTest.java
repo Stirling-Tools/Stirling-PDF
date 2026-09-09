@@ -84,12 +84,6 @@ class MergeControllerGapTest {
         return (MultipartFile[]) m.invoke(null, files, fileOrder);
     }
 
-    private String[] parseClientFileIds(String value) throws Exception {
-        Method m = MergeController.class.getDeclaredMethod("parseClientFileIds", String.class);
-        m.setAccessible(true);
-        return (String[]) m.invoke(mergeController, value);
-    }
-
     private long getPdfDateTimeSafe(MultipartFile file) throws Exception {
         Method m =
                 MergeController.class.getDeclaredMethod("getPdfDateTimeSafe", MultipartFile.class);
@@ -328,58 +322,6 @@ class MergeControllerGapTest {
         void returnsZeroOnLoadFailure() throws Exception {
             when(pdfDocumentFactory.load(fileA)).thenThrow(new IOException("cannot open"));
             assertEquals(0L, getPdfDateTimeSafe(fileA));
-        }
-    }
-
-    // ---- parseClientFileIds -------------------------------------------------
-
-    @Nested
-    @DisplayName("parseClientFileIds")
-    class ParseClientFileIds {
-
-        @Test
-        @DisplayName("null input returns empty array")
-        void nullReturnsEmpty() throws Exception {
-            assertEquals(0, parseClientFileIds(null).length);
-        }
-
-        @Test
-        @DisplayName("blank input returns empty array")
-        void blankReturnsEmpty() throws Exception {
-            assertEquals(0, parseClientFileIds("   ").length);
-        }
-
-        @Test
-        @DisplayName("empty JSON array returns empty array")
-        void emptyArrayReturnsEmpty() throws Exception {
-            assertEquals(0, parseClientFileIds("[]").length);
-            assertEquals(0, parseClientFileIds("[   ]").length);
-        }
-
-        @Test
-        @DisplayName("non-array text returns empty array")
-        void nonArrayReturnsEmpty() throws Exception {
-            assertEquals(0, parseClientFileIds("not-an-array").length);
-        }
-
-        @Test
-        @DisplayName("parses quoted, comma-separated ids and strips surrounding quotes")
-        void parsesQuotedIds() throws Exception {
-            String[] result = parseClientFileIds("[\"id1\", \"id2\",\"id3\"]");
-            assertArrayEquals(new String[] {"id1", "id2", "id3"}, result);
-        }
-
-        @Test
-        @DisplayName("parses unquoted ids as-is after trimming")
-        void parsesUnquotedIds() throws Exception {
-            String[] result = parseClientFileIds("[a, b , c]");
-            assertArrayEquals(new String[] {"a", "b", "c"}, result);
-        }
-
-        @Test
-        @DisplayName("single element array yields a one-element result")
-        void singleElement() throws Exception {
-            assertArrayEquals(new String[] {"only"}, parseClientFileIds("[\"only\"]"));
         }
     }
 

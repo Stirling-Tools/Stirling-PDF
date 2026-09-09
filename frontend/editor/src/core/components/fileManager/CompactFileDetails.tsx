@@ -7,6 +7,7 @@ import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import { useTranslation } from "react-i18next";
 import { getFileSize } from "@app/utils/fileUtils";
+import { toolOperationLabel } from "@app/utils/toolOperationLabel";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 
@@ -107,7 +108,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
             {currentFile && ` • v${currentFile.versionNumber || 1}`}
           </Text>
           {hasMultipleFiles && (
-            <Text size="xs" c="blue">
+            <Text size="xs" c="var(--c-accent-text)">
               {currentFileIndex + 1} of {selectedFiles.length}
             </Text>
           )}
@@ -115,7 +116,7 @@ const CompactFileDetails: React.FC<CompactFileDetailsProps> = ({
           {currentFile?.toolHistory && currentFile.toolHistory.length > 0 && (
             <Text size="xs" c="dimmed">
               {currentFile.toolHistory
-                .map((tool) => t(`home.${tool.toolId}.title`, tool.toolId))
+                .map((tool) => toolOperationLabel(tool, t))
                 .join(" → ")}
             </Text>
           )}

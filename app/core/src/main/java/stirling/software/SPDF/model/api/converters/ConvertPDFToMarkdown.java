@@ -17,6 +17,8 @@ import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.annotations.api.ConvertApi;
 import stirling.software.common.enumeration.ResourceWeight;
 import stirling.software.common.model.api.PDFFile;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.pdf.PdfMarkdownConverter;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
@@ -34,10 +36,10 @@ public class ConvertPDFToMarkdown {
             value = "/pdf/markdown",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
     @MarkdownConversionResponse
+    @ToolIO(produces = ToolFormat.MARKDOWN)
     @Operation(
             summary = "Convert PDF to Markdown",
-            description =
-                    "This endpoint converts a PDF file to Markdown format. Input:PDF Output:Markdown Type:SISO")
+            description = "This endpoint converts a PDF file to Markdown format.")
     public ResponseEntity<byte[]> processPdfToMarkdown(@ModelAttribute PDFFile file)
             throws Exception {
         MultipartFile inputFile = file.getFileInput();

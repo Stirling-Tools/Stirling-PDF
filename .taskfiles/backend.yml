@@ -40,12 +40,15 @@ tasks:
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
       SECURITY_ENABLELOGIN: '{{.SECURITY_ENABLELOGIN | default ""}}'
+      # Set by dev:linked. Inline rather than in `env:` so an empty value emits nothing
+      # and cannot blank the committed default.
+      ACCOUNT_LINK_SAAS_BASE_URL: '{{.ACCOUNT_LINK_SAAS_BASE_URL | default ""}}'
     env:
       SERVER_PORT: '{{.PORT}}'
     cmds:
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .ACCOUNT_LINK_SAAS_BASE_URL}}STIRLING_BILLING_ACCOUNT_LINK_ENABLED=true STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL={{.ACCOUNT_LINK_SAAS_BASE_URL}} {{end}}cmd /c ".\gradlew.bat :stirling-pdf:bootRun"'
         platforms: [windows]
-      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}./gradlew :stirling-pdf:bootRun'
+      - cmd: '{{if .AIENGINE_URL}}AIENGINE_URL={{.AIENGINE_URL}} AIENGINE_ENABLED={{.AIENGINE_ENABLED}} AIENGINE_TIMEOUTSECONDS={{.AIENGINE_TIMEOUTSECONDS}} {{end}}{{if .SECURITY_ENABLELOGIN}}SECURITY_ENABLELOGIN={{.SECURITY_ENABLELOGIN}} {{end}}{{if .ACCOUNT_LINK_SAAS_BASE_URL}}STIRLING_BILLING_ACCOUNT_LINK_ENABLED=true STIRLING_BILLING_ACCOUNT_LINK_SAAS_BASE_URL={{.ACCOUNT_LINK_SAAS_BASE_URL}} {{end}}./gradlew :stirling-pdf:bootRun'
         platforms: [linux, darwin]
 
   dev:bundled:
@@ -57,29 +60,128 @@ tasks:
       - cmd: ./gradlew clean bootRun -PbuildWithFrontend=true
         platforms: [linux, darwin]
 
+  # SaaS backend. dev:saas -> the PR's preview branch, staging:saas -> shared v3,
+  # PROFILES=none -> production against your own SAAS_DB_*. Production has no named
+  # task on purpose. Use `none`, not an empty value: Go template `default` treats ""
+  # as absent and would resolve back to dev.
+
   dev:saas:
-    desc: "Start backend in SaaS flavor against Supabase"
-    # `dotenv:` reads from the root Taskfile's directory (".") because this
-    # subtaskfile is included with `dir: .`.
+    desc: "Start SaaS backend against the current PR's Supabase preview branch"
     dotenv: ['app/.env.saas.local', 'app/.env.saas']
+    vars:
+      PROFILES: '{{.PROFILES | default "dev"}}'
+    cmds:
+      # Don't move this check into a `sh:` var: dotenv is visible in cmds but not
+      # during var evaluation, so the test would always see an empty value.
+      - cmd: |
+          if [ "{{.PROFILES}}" = "dev" ] && [ -z "${SAAS_DEV_PROJECT_REF:-}" ]; then
+            echo ">> SAAS_DEV_PROJECT_REF is not set."
+            echo ">> Testing a SaaS PR? Put its ref, DB password and publishable key in app/.env.saas.local."
+            echo ">> Wanted the shared v3 project? Use 'task backend:staging:saas' instead."
+            exit 1
+          fi
+      - task: _run:saas
+        vars:
+          PORT: '{{.PORT}}'
+          PROFILES: '{{.PROFILES}}'
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+          APP_BASE_URL: '{{.APP_BASE_URL}}'
+          BASE_PATH: '{{.BASE_PATH}}'
+
+  staging:saas:
+    desc: "Start SaaS backend against the shared v3 staging project"
+    cmds:
+      - task: _run:saas
+        vars:
+          PORT: '{{.PORT}}'
+          PROFILES: staging
+          AIENGINE_URL: '{{.AIENGINE_URL}}'
+          AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
+          AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+          APP_BASE_URL: '{{.APP_BASE_URL}}'
+          BASE_PATH: '{{.BASE_PATH}}'
+
+  dev:linked:
+    desc: "Self-hosted backend linked to a locally running SaaS backend (see task linked:*)"
     ignore_error: true
     vars:
       PORT: '{{.PORT | default "8080"}}'
-      # Override to "" to run the pure `saas` profile against your own SAAS_DB_*.
+      SAAS_BASE_URL: '{{.SAAS_BASE_URL | default "http://localhost:8081"}}'
+    cmds:
+      - 'echo ">> self-hosted :{{.PORT}} linking to SaaS at {{.SAAS_BASE_URL}}"'
+      # The two backends run different STIRLING_FLAVOURs, which are different Gradle
+      # project graphs sharing one build/ tree. Waiting avoids overlapping builds; it
+      # does not make the sharing safe, so avoid rebuilding one while the other runs.
+      - cmd: |
+          n=0
+          while [ "$n" -lt 150 ]; do
+            if curl -s -m 2 "{{.SAAS_BASE_URL}}" >/dev/null 2>&1; then
+              echo ">> SaaS backend is up, starting self-hosted"
+              break
+            fi
+            n=$((n + 1))
+            {{if eq OS "windows"}}powershell -NoProfile -Command "Start-Sleep -Seconds 2"{{else}}sleep 2{{end}}
+          done
+          if [ "$n" -ge 150 ]; then
+            echo ">> SaaS backend never answered; starting anyway"
+          fi
+      - task: dev:proprietary
+        vars:
+          PORT: '{{.PORT}}'
+          ACCOUNT_LINK_SAAS_BASE_URL: '{{.SAAS_BASE_URL}}'
+
+  _run:saas:
+    internal: true
+    # The frontend files are here only for RUN_SUBPATH, which the authorize URL needs.
+    # Last, because dotenv is set-if-absent: app/* still decides everything else.
+    dotenv:
+      - 'app/.env.saas.local'
+      - 'app/.env.saas'
+      - 'frontend/editor/.env.saas.local'
+      - 'frontend/editor/.env.saas'
+    ignore_error: true
+    vars:
+      PORT: '{{.PORT | default "8080"}}'
       PROFILES: '{{.PROFILES | default "dev"}}'
+      # Built here rather than inline in the cmds below: the Windows line is an
+      # unquoted YAML scalar wrapping a cmd.exe string, so a nested {{if ne .X
+      # "none"}} needs escaped quotes that reach the Go template as literal
+      # backslashes and fail with `unexpected "\" in operand`.
+      PROFILE_ARGS: '{{if ne .PROFILES "none"}}--spring.profiles.include={{.PROFILES}}{{end}}'
       AIENGINE_URL: '{{.AIENGINE_URL | default ""}}'
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED | default "false"}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS | default "120"}}'
+      # Empty is the same as unset: the property defaults to empty and is blank-checked.
+      APP_BASE_URL: '{{.APP_BASE_URL | default ""}}'
+      # Relocates configs/pipeline/logs, for a second backend in the same directory.
+      # Empty is the same as unset: the reader blank-checks it.
+      BASE_PATH: '{{.BASE_PATH | default ""}}'
     env:
       SERVER_PORT: '{{.PORT}}'
       STIRLING_FLAVOR: saas
+      STIRLING_BASE_PATH: '{{.BASE_PATH}}'
       AIENGINE_URL: '{{.AIENGINE_URL}}'
       AIENGINE_ENABLED: '{{.AIENGINE_ENABLED}}'
       AIENGINE_TIMEOUTSECONDS: '{{.AIENGINE_TIMEOUTSECONDS}}'
+      # Appends RUN_SUBPATH: the approval page is at <base>/link, so a subpath build
+      # serves it at <base>/app/link. An explicit value still wins.
+      SYSTEM_FRONTENDURL:
+        sh: |
+          if [ -n "${SYSTEM_FRONTENDURL:-}" ]; then
+            echo "${SYSTEM_FRONTENDURL}"
+          elif [ -n "{{.APP_BASE_URL}}" ] && [ -n "${RUN_SUBPATH:-}" ]; then
+            echo "{{.APP_BASE_URL}}/${RUN_SUBPATH}"
+          else
+            echo "{{.APP_BASE_URL}}"
+          fi
     cmds:
-      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILES}}--args=\"--spring.profiles.include={{.PROFILES}}\"{{end}}"
+      # PROFILE_ARGS is empty when PROFILES=none, i.e. the bare `saas` profile
+      # against SAAS_DB_* (production).
+      - cmd: cmd /c ".\gradlew.bat :stirling-pdf:bootRun {{if .PROFILE_ARGS}}--args=\"{{.PROFILE_ARGS}}\"{{end}}"
         platforms: [windows]
-      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILES}}--args='--spring.profiles.include={{.PROFILES}}'{{end}}
+      - cmd: ./gradlew :stirling-pdf:bootRun {{if .PROFILE_ARGS}}--args='{{.PROFILE_ARGS}}'{{end}}
         platforms: [linux, darwin]
 
   build:
@@ -114,6 +216,15 @@ tasks:
       - cmd: ./gradlew test
         platforms: [linux, darwin]
 
+  test:force:
+    desc: "Run backend tests, ignoring cached results"
+    aliases: [test:no-cache]
+    cmds:
+      - cmd: cmd /c ".\gradlew.bat cleanTest test --no-build-cache"
+        platforms: [windows]
+      - cmd: ./gradlew cleanTest test --no-build-cache
+        platforms: [linux, darwin]
+
   format:
     desc: "Auto-fix code formatting"
     cmds:
@@ -137,6 +248,7 @@ tasks:
 
   swagger:
     desc: "Generate OpenAPI docs"
+    run: once
     cmds:
       - cmd: cmd /c ".\gradlew.bat :stirling-pdf:copySwaggerDoc"
         platforms: [windows]

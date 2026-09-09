@@ -21,7 +21,7 @@ async function setUpEndpointAvailability(
   await seedCookieConsent(page);
   await bypassOnboarding(page);
   await mockAppApis(page, { endpointsAvailability: overrides });
-  await page.goto("/");
+  await page.goto("/editor");
 }
 
 test.describe("Premium / endpoint gating", () => {
@@ -74,7 +74,7 @@ test.describe("Premium / endpoint gating", () => {
         json: { username: "user", email: "user@example.com", isAdmin: false },
       }),
     );
-    await page.goto("/");
+    await page.goto("/editor");
 
     const configBtn = page.locator('[data-testid="config-button"]').first();
     if (!(await configBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {

@@ -27,6 +27,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.model.tool.ToolFormat;
+import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFileManager;
@@ -89,7 +91,10 @@ public class ExternalApiCallController {
     private final TempFileManager tempFileManager;
     private final ApplicationProperties applicationProperties;
 
+    // The document is forwarded as bytes and never parsed, and in 'replace' mode the response
+    // becomes the document, so neither side can be pinned to a format.
     @PostMapping(value = "/external-api-call", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @ToolIO(accepts = ToolFormat.ANY, produces = ToolFormat.ANY)
     @Operation(
             summary = "Send the document to an external API",
             description =
@@ -97,7 +102,7 @@ public class ExternalApiCallController {
                             + " either records the response as a step report or replaces the"
                             + " document with it. Fields, path and headers may reference"
                             + " {{document.*}}, {{classification.*}}, {{sensitivityLabel.*}} and"
-                            + " {{run.*}}. Type:SISO")
+                            + " {{run.*}}.")
     public ResponseEntity<Resource> call(
             @RequestParam("fileInput") MultipartFile fileInput,
             @RequestParam("connectionId") String connectionId,

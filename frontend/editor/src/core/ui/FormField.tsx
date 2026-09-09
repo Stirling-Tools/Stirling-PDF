@@ -5,12 +5,18 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
 import "@app/ui/FormField.css";
 
 export interface FormFieldProps {
   label?: ReactNode;
   /** Helper text shown under the control. Replaced by `error` when present. */
   helperText?: ReactNode;
+  /**
+   * Supplementary explanation shown behind an (i) affordance on the label,
+   * instead of taking up permanent space under the control like `helperText`.
+   */
+  info?: ReactNode;
   /** Error string. Causes the control + helper region to swap to the error tone. */
   error?: ReactNode;
   required?: boolean;
@@ -32,6 +38,7 @@ export interface FormFieldProps {
 export function FormField({
   label,
   helperText,
+  info,
   error,
   required,
   children,
@@ -57,16 +64,21 @@ export function FormField({
         .filter(Boolean)
         .join(" ")}
     >
-      {label && (
-        <label htmlFor={controlId} className="sui-field__label">
-          {label}
-          {required && (
-            <span className="sui-field__required" aria-hidden>
-              {" "}
-              *
-            </span>
+      {(label || info) && (
+        <div className="sui-field__label-row">
+          {label && (
+            <label htmlFor={controlId} className="sui-field__label">
+              {label}
+              {required && (
+                <span className="sui-field__required" aria-hidden>
+                  {" "}
+                  *
+                </span>
+              )}
+            </label>
           )}
-        </label>
+          {info && <InfoTooltip label={info} />}
+        </div>
       )}
       <div className="sui-field__control">{child}</div>
       {(error || helperText) && (

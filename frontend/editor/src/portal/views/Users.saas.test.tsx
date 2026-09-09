@@ -32,6 +32,16 @@ import {
  */
 
 // Keep apiClient.local's transport hermetic (no real token / Supabase at import).
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    available: false,
+    connect: vi.fn(),
+    guard: (fn: unknown) => fn,
+  }),
+}));
+
 vi.mock("@app/auth", () => ({
   getStoredToken: () => null,
   clearStoredToken: vi.fn(),
@@ -45,10 +55,12 @@ vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
 // Force the SaaS flavor: the portal vitest project resolves @app to proprietary,
 // so redirect the two flavor seams to their real SaaS implementations.
 vi.mock("@app/portal/usersCapabilities", async () => ({
+  // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
   usersCapabilities: (await import("../../saas/portal/usersCapabilities"))
     .usersCapabilities,
 }));
 vi.mock("@app/portal/usersBackend", async () => ({
+  // oxlint-disable-next-line no-restricted-imports -- resolve the real SaaS module past the mocked @app alias
   usersBackend: (await import("../../saas/portal/usersBackend")).usersBackend,
 }));
 
@@ -136,7 +148,7 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
     await screen.findByText("sam.lee@acme.com");
     const panel = screen
       .getByText("Pending invitations")
-      .closest("section") as HTMLElement;
+      .closest("table") as HTMLElement;
     fireEvent.click(within(panel).getByRole("button", { name: "Cancel" }));
     // Confirm dialog -> DELETE /invitations/{id} -> refetch drops the invite.
     fireEvent.click(

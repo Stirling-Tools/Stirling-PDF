@@ -58,8 +58,8 @@ const FullscreenToolList = ({
   );
   const recommendedItems = useMemo(() => {
     if (!quickSection)
-      return [] as Array<{ id: string; tool: ToolRegistryEntry }>;
-    const items: Array<{ id: string; tool: ToolRegistryEntry }> = [];
+      return [] as Array<{ id: ToolId; tool: ToolRegistryEntry }>;
+    const items: Array<{ id: ToolId; tool: ToolRegistryEntry }> = [];
     quickSection.subcategories.forEach((sc) =>
       sc.tools.forEach((t) => items.push(t)),
     );
@@ -108,7 +108,7 @@ const FullscreenToolList = ({
         window.open(tool.link, "_blank", "noopener,noreferrer");
         return;
       }
-      onSelect(id as ToolId);
+      onSelect(id);
     };
 
     if (showDescriptions) {
@@ -217,13 +217,13 @@ const FullscreenToolList = ({
               </header>
               {showDescriptions ? (
                 <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                  {recommendedItems.map((item: any) =>
+                  {recommendedItems.map((item) =>
                     renderToolItem(item.id, item.tool),
                   )}
                 </div>
               ) : (
                 <div className="tool-panel__fullscreen-list">
-                  {recommendedItems.map((item: any) =>
+                  {recommendedItems.map((item) =>
                     renderToolItem(item.id, item.tool),
                   )}
                 </div>
@@ -274,15 +274,11 @@ const FullscreenToolList = ({
 
             {showDescriptions ? (
               <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                {tools.map(({ id, tool }) =>
-                  renderToolItem(id as ToolId, tool),
-                )}
+                {tools.map(({ id, tool }) => renderToolItem(id, tool))}
               </div>
             ) : (
               <div className="tool-panel__fullscreen-list">
-                {tools.map(({ id, tool }) =>
-                  renderToolItem(id as ToolId, tool),
-                )}
+                {tools.map(({ id, tool }) => renderToolItem(id, tool))}
               </div>
             )}
           </section>
