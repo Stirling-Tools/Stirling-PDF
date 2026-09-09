@@ -360,8 +360,15 @@ export default defineConfig(async ({ mode, command }) => {
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
+    // They also do not inherit the main build's output.assetFileNames, so the
+    // .mjs-to-.js emission rule lives here too (see mjsToJsAssetFileNames).
     worker: {
       plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+      rollupOptions: {
+        output: {
+          assetFileNames: mjsToJsAssetFileNames,
+        },
+      },
     },
     server: {
       host: true,
@@ -424,16 +431,6 @@ export default defineConfig(async ({ mode, command }) => {
     },
     optimizeDeps: {
       exclude: ["@embedpdf/pdfium"],
-    },
-    // Worker sub-builds do not inherit the main build's output.assetFileNames.
-    // Without this, the pdf.js worker referenced from inside a worker would be
-    // emitted as .mjs (see mjsToJsAssetFileNames above).
-    worker: {
-      rollupOptions: {
-        output: {
-          assetFileNames: mjsToJsAssetFileNames,
-        },
-      },
     },
     // base: "./" produces relative asset URLs which work when dist/ is served
     // at any path (e.g. Spring Boot bundling the frontend at /). But under
