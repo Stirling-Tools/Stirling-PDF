@@ -4,14 +4,18 @@ import math
 
 import pytest
 
-from stirling.agents.operation_shortlist import (
+from stirling.contracts import ConversationMessage
+from stirling.models import OPERATIONS, ToolEndpoint
+from stirling.services.operation_shortlist import (
+    QUERY_HISTORY_TURNS,
+    QUERY_TURN_CHARS,
     OperationShortlist,
     bm25_scores,
     rank_fusion,
+    retrieval_query,
     retrieval_text,
     tokenize,
 )
-from stirling.models import OPERATIONS, ToolEndpoint
 
 
 class StubEmbedder:
@@ -20,6 +24,7 @@ class StubEmbedder:
     def __init__(self, fail: bool = False) -> None:
         self.fail = fail
         self.document_calls = 0
+        self.queries: list[str] = []
 
     @staticmethod
     def _vector(text: str) -> list[float]:
@@ -34,6 +39,7 @@ class StubEmbedder:
     async def embed_query(self, text: str) -> list[float]:
         if self.fail:
             raise RuntimeError("embedding provider unreachable")
+        self.queries.append(text)
         return self._vector(text)
 
 
@@ -57,7 +63,7 @@ class ReversedCatalogueEmbedder:
 
 @pytest.mark.anyio
 async def test_returns_every_operation_when_the_limit_is_not_binding() -> None:
-    shortlist = OperationShortlist(StubEmbedder())
+    shortlist = OperationShortlist(StubEmbedder)  # never resolved: the limit short-circuits first
     operations = list(OPERATIONS)[:5]
 
     assert await shortlist.select("watermark this", operations, len(operations)) == operations
@@ -66,7 +72,8 @@ async def test_returns_every_operation_when_the_limit_is_not_binding() -> None:
 
 @pytest.mark.anyio
 async def test_narrows_to_the_closest_operations() -> None:
-    shortlist = OperationShortlist(StubEmbedder())
+    embedder = StubEmbedder()
+    shortlist = OperationShortlist(lambda: embedder)
     operations = list(OPERATIONS)
 
     selected = await shortlist.select("watermark watermark watermark", operations, 5)
@@ -77,7 +84,8 @@ async def test_narrows_to_the_closest_operations() -> None:
 
 @pytest.mark.anyio
 async def test_falls_back_to_the_full_catalogue_when_embedding_fails() -> None:
-    shortlist = OperationShortlist(StubEmbedder(fail=True))
+    embedder = StubEmbedder(fail=True)
+    shortlist = OperationShortlist(lambda: embedder)
     operations = list(OPERATIONS)
 
     assert await shortlist.select("watermark this", operations, 5) == operations
@@ -86,13 +94,26 @@ async def test_falls_back_to_the_full_catalogue_when_embedding_fails() -> None:
 @pytest.mark.anyio
 async def test_embeds_the_catalogue_once() -> None:
     embedder = StubEmbedder()
-    shortlist = OperationShortlist(embedder)
+    shortlist = OperationShortlist(lambda: embedder)
     operations = list(OPERATIONS)
 
     await shortlist.select("watermark this", operations, 5)
     await shortlist.select("rotate this", operations, 5)
 
     assert embedder.document_calls == 1
+
+
+@pytest.mark.anyio
+async def test_re_embeds_the_catalogue_when_the_embedder_is_swapped() -> None:
+    embedders = [StubEmbedder(), StubEmbedder()]
+    shortlist = OperationShortlist(lambda: embedders[-1])
+    operations = list(OPERATIONS)
+
+    await shortlist.select("watermark this", operations, 5)
+    embedders.append(StubEmbedder())
+    await shortlist.select("watermark this", operations, 5)
+
+    assert [embedder.document_calls for embedder in embedders] == [0, 1, 1]
 
 
 def test_retrieval_text_carries_parameter_descriptions() -> None:
@@ -132,7 +153,7 @@ def test_lexical_scoring_is_zero_when_no_term_matches() -> None:
 @pytest.mark.anyio
 async def test_a_query_matching_no_operation_text_keeps_the_vector_ranking() -> None:
     operations = list(OPERATIONS)
-    shortlist = OperationShortlist(ReversedCatalogueEmbedder(len(operations)))
+    shortlist = OperationShortlist(lambda: ReversedCatalogueEmbedder(len(operations)))
 
     for message in ("给文档加水印", "добавить водяной знак", ""):
         selected = await shortlist.select(message, operations, 20)
@@ -152,3 +173,38 @@ def test_rank_fusion_surfaces_an_operation_only_one_ranking_found() -> None:
     lexical = [ToolEndpoint.TIMESTAMP_PDF, ToolEndpoint.FLATTEN]
 
     assert ToolEndpoint.TIMESTAMP_PDF in rank_fusion(semantic, lexical)
+
+
+def test_retrieval_query_carries_the_recent_conversation() -> None:
+    query = retrieval_query(
+        "do the same to the other file",
+        [
+            ConversationMessage(role="user", content="add a watermark saying DRAFT"),
+            ConversationMessage(role="assistant", content="Watermarked report.pdf."),
+        ],
+    )
+
+    assert "watermark" in query
+    assert query.endswith("do the same to the other file")
+
+
+def test_retrieval_query_bounds_the_history_it_carries() -> None:
+    history = [ConversationMessage(role="user", content=f"turn {index} " + "x" * 2_000) for index in range(10)]
+
+    query = retrieval_query("rotate it", history)
+
+    assert query.startswith(f"turn {len(history) - QUERY_HISTORY_TURNS} ")
+    assert "turn 0" not in query
+    assert len(query) <= QUERY_HISTORY_TURNS * (QUERY_TURN_CHARS + 1) + len("rotate it")
+
+
+@pytest.mark.anyio
+async def test_a_follow_up_turn_still_ranks_the_operation_it_refers_to() -> None:
+    embedder = StubEmbedder()
+    shortlist = OperationShortlist(lambda: embedder)
+    operations = list(OPERATIONS)
+    history = [ConversationMessage(role="user", content="add a watermark saying DRAFT")]
+
+    selected = await shortlist.select(retrieval_query("do the same to the other file", history), operations, 5)
+
+    assert ToolEndpoint.ADD_WATERMARK in selected

@@ -9,7 +9,6 @@ from pydantic_ai import Agent
 from pydantic_ai.output import NativeOutput
 
 from stirling.agents._page_text import format_page_text, get_extracted_text_artifact, has_page_text
-from stirling.agents.operation_shortlist import OperationShortlist
 from stirling.contracts import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -28,7 +27,15 @@ from stirling.contracts import (
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
-from stirling.services import AppRuntime, ToolChainStep, blocking, language_directive, validate_tool_chain
+from stirling.services import (
+    AppRuntime,
+    OperationRanker,
+    ToolChainStep,
+    blocking,
+    language_directive,
+    retrieval_query,
+    validate_tool_chain,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -176,7 +183,7 @@ class PdfEditAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.parameter_selector = PdfEditParameterSelector(runtime)
-        self.shortlist = OperationShortlist(runtime.documents.embedder)
+        self.shortlist: OperationRanker = runtime.operation_shortlist
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfEditResponse:
         """Entry point for the orchestrator delegate — adapts the orchestrator's
@@ -281,7 +288,7 @@ class PdfEditAgent:
         can_request_content = allow_need_content and not has_page_text(request.page_text)
         available = list(supported_operations)
         candidates = await self.shortlist.select(
-            request.user_message,
+            retrieval_query(request.user_message, request.conversation_history),
             available,
             self.runtime.settings.planner_shortlist_size,
         )
