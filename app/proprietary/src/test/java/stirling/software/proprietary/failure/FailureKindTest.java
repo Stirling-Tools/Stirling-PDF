@@ -279,10 +279,20 @@ class FailureKindTest {
         @Test
         void aBrokenEncryptionIsNotAMissingPassword() {
             // E003 is reached only once the key was accepted, so no password would help.
-            assertThat(FailureKind.byErrorCode("E003"))
-                    .contains(FailureKind.INPUT_ENCRYPTION_BROKEN);
-            assertThat(FailureKind.INPUT_ENCRYPTION_BROKEN.declares(FailureActionId.DECRYPT))
-                    .isFalse();
+            assertThat(FailureKind.byErrorCode("E003")).contains(FailureKind.INPUT_CORRUPTED);
+            assertThat(FailureKind.INPUT_CORRUPTED.declares(FailureActionId.DECRYPT)).isFalse();
+        }
+
+        @Test
+        void noRecognisedCodeFallsThroughToUnknown() {
+            // The point of claiming E003: a known failure must not be shown as an unknown one.
+            for (String code : new String[] {"E001", "E002", "E003", "E004"}) {
+                assertThat(FailureKind.byErrorCode(code))
+                        .as("%s", code)
+                        .isPresent()
+                        .get()
+                        .isNotEqualTo(FailureKind.UNKNOWN);
+            }
         }
 
         @Test
@@ -292,8 +302,8 @@ class FailureKindTest {
             // retry match the wrong incident, so this fails until both move together.
             assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getErrorCodes())
                     .containsExactly("E004");
-            assertThat(FailureKind.INPUT_CORRUPTED.getErrorCodes()).containsExactly("E001", "E002");
-            assertThat(FailureKind.INPUT_ENCRYPTION_BROKEN.getErrorCodes()).containsExactly("E003");
+            assertThat(FailureKind.INPUT_CORRUPTED.getErrorCodes())
+                    .containsExactly("E001", "E002", "E003");
             assertThat(FailureKind.UNKNOWN.getErrorCodes()).isEmpty();
         }
 
@@ -335,18 +345,9 @@ class FailureKindTest {
         void aRepairableKindNeverPromotesOpenInToolOverTheRepair() {
             // Opening the tool stays declared for the truncated-upload case, but the same bytes
             // fail the same way, so promoting it would offer a button that almost never works.
-            for (FailureKind kind :
-                    List.of(FailureKind.INPUT_CORRUPTED, FailureKind.INPUT_ENCRYPTION_BROKEN)) {
-                assertThat(kind.getOfferedActions())
-                        .as("%s", kind.getId())
-                        .contains(offered(FailureActionId.REPAIR, OWNER, RESOLUTION, "repair"))
-                        .contains(
-                                offered(
-                                        FailureActionId.OPEN_IN_TOOL,
-                                        OWNER,
-                                        OVERFLOW,
-                                        "openInTool"));
-            }
+            assertThat(FailureKind.INPUT_CORRUPTED.getOfferedActions())
+                    .contains(offered(FailureActionId.REPAIR, OWNER, RESOLUTION, "repair"))
+                    .contains(offered(FailureActionId.OPEN_IN_TOOL, OWNER, OVERFLOW, "openInTool"));
         }
 
         @Test

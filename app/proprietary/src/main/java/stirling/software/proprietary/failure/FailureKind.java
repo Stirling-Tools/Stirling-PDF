@@ -45,36 +45,20 @@ public enum FailureKind {
             global(OPEN_IN_TOOL, OWNER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
+    /**
+     * E003 is claimed here rather than given its own kind. PDFBox swallows every decryption failure
+     * during lazy dereference, so the code is not expected to render; claiming it only guarantees a
+     * known code never lands on {@link #UNKNOWN} if that ever changes.
+     */
     INPUT_CORRUPTED(
             FailureStage.INPUT,
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_FILE_FIX,
             FailureScope.FILE,
-            errorCodes("E001", "E002"),
+            errorCodes("E001", "E002", "E003"),
             fallback("This document is damaged, so the pipeline could not read it."),
             // Repair is the fix. Opening the tool is offered but not promoted: the same bytes
             // fail the same way, so it only helps when the upload itself truncated them.
-            resolution(REPAIR, OWNER),
-            global(VIEW_FILE, OWNER, SECONDARY),
-            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
-            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
-            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
-
-    /**
-     * Encryption PDFBox could not decrypt having already accepted the key, which is a different
-     * failure from a missing or wrong password ({@link #INPUT_PASSWORD_PROTECTED}).
-     */
-    INPUT_ENCRYPTION_BROKEN(
-            FailureStage.INPUT,
-            FailureSeverity.ERROR,
-            FailureRemedy.NEEDS_FILE_FIX,
-            FailureScope.FILE,
-            errorCodes("E003"),
-            fallback(
-                    "This document's encryption could not be read, so the pipeline could not open"
-                            + " it."),
-            // Repair rewrites through Ghostscript or qpdf, whose decryptors accept files PDFBox
-            // refuses. Genuinely damaged ciphertext is beyond all three, so this one often fails.
             resolution(REPAIR, OWNER),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),

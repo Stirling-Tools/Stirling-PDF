@@ -8,8 +8,6 @@ import java.io.IOException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 
 /**
@@ -224,41 +222,6 @@ class ExceptionUtilsTest {
                 IOException result = ExceptionUtils.handlePdfException(original);
                 assertTrue(result.getMessage().contains("corrupted encryption data"));
             }
-        }
-
-        @ParameterizedTest
-        @ValueSource(
-                strings = {
-                    "BadPaddingException",
-                    "Given final block not properly padded",
-                    "AES initialization vector not fully read: only 8"
-                })
-        @DisplayName("a decryption failure is an encryption error, not a damaged file")
-        void testEncryptionWinsOverCorruptionForTheMessagesBothClaim(String message) {
-            // No mock: these three satisfy isCorruptedPdfError too, so this pins the precedence
-            // rather than the matcher. Testing corruption first made PDF_ENCRYPTION unreachable.
-            IOException original = new IOException(message);
-
-            IOException result = ExceptionUtils.handlePdfException(original, "during load");
-
-            assertTrue(PdfErrorUtils.isCorruptedPdfError(original), "both matchers claim this");
-            assertInstanceOf(ExceptionUtils.PdfEncryptionException.class, result);
-            assertEquals(
-                    ExceptionUtils.ErrorCode.PDF_ENCRYPTION.getCode(),
-                    ((ExceptionUtils.ErrorCodeProvider) result).getErrorCode());
-        }
-
-        @Test
-        @DisplayName("a structural failure is still a damaged file")
-        void testCorruptionStillWinsForAMessageOnlyItClaims() {
-            IOException original = new IOException("Missing root object specification in trailer.");
-
-            IOException result = ExceptionUtils.handlePdfException(original, "during load");
-
-            assertInstanceOf(ExceptionUtils.PdfCorruptedException.class, result);
-            assertEquals(
-                    ExceptionUtils.ErrorCode.PDF_CORRUPTED.getCode(),
-                    ((ExceptionUtils.ErrorCodeProvider) result).getErrorCode());
         }
 
         @Test

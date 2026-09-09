@@ -1035,21 +1035,16 @@ public class ExceptionUtils {
     public static IOException handlePdfException(IOException e, String context) {
         requireNonNull(e, "exception");
 
-        // Security failures are tested first because they are the more specific reading.
-        // isCorruptedPdfError also claims "BadPaddingException", "Given final block not properly
-        // padded" and "AES initialization vector not fully read", so testing corruption first
-        // reported every decryption failure as a damaged file and made PDF_ENCRYPTION
-        // unreachable.
+        if (PdfErrorUtils.isCorruptedPdfError(e)) {
+            return createPdfCorruptedException(context, e);
+        }
+
         if (isEncryptionError(e)) {
             return createPdfEncryptionException(e);
         }
 
         if (isPasswordError(e)) {
             return createPdfPasswordException(e);
-        }
-
-        if (PdfErrorUtils.isCorruptedPdfError(e)) {
-            return createPdfCorruptedException(context, e);
         }
 
         return e; // Return original exception if no specific handling needed

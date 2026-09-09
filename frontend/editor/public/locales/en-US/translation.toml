@@ -8118,12 +8118,8 @@ type = "Type"
 user = "User"
 
 [portal.failures.kind.inputCorrupted]
-description = "Your file is damaged, so the run could not read it. Repairing it rewrites the file and often fixes the damage."
+description = "Your file is damaged, so the run could not read it."
 title = "Damaged document"
-
-[portal.failures.kind.inputEncryptionBroken]
-description = "Your file's encryption could not be read, even though the password was accepted. Repairing it sometimes works, but a file whose contents are damaged cannot be recovered."
-title = "Unreadable encryption"
 
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."

@@ -25,7 +25,6 @@ export type { SucceededToolRun, ToolRunOutput };
 const RESOLUTION_TOOLS: Record<string, string> = {
   INPUT_PASSWORD_PROTECTED: "removePassword",
   INPUT_CORRUPTED: "repair",
-  INPUT_ENCRYPTION_BROKEN: "repair",
 };
 
 export function useResolutionContinuation(): (run: SucceededToolRun) => void {

@@ -68,13 +68,14 @@ class FailureClassifierTest {
         }
 
         @Test
-        void separatesADamagedFileFromEncryptionItCannotRead() {
-            // Both are repairable and neither is a password problem, but only E003's document
-            // opens elsewhere, so the two carry different copy.
-            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E001")))
-                    .isEqualTo(FailureKind.INPUT_CORRUPTED);
-            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E003")))
-                    .isEqualTo(FailureKind.INPUT_ENCRYPTION_BROKEN);
+        void everyUnreadableDocumentIsTheSameKind() {
+            // E003 rides along: PDFBox swallows the failure it names, so it is claimed only so a
+            // known code can never surface as UNKNOWN.
+            for (String code : new String[] {"E001", "E002", "E003"}) {
+                assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, code)))
+                        .as("%s", code)
+                        .isEqualTo(FailureKind.INPUT_CORRUPTED);
+            }
         }
 
         @Test

@@ -382,23 +382,14 @@ describe("stashMatchesKind", () => {
     ).toBe(true);
     expect(
       stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E003" })),
+    ).toBe(true);
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E004" })),
     ).toBe(false);
   });
 
   it("keeps a broken encryption apart from a missing password", async () => {
     // Adjacent to a reader, unrelated to the fix: no password helps E003, no repair helps E004.
-    expect(
-      stashMatchesKind(
-        "INPUT_ENCRYPTION_BROKEN",
-        payload({ errorCode: "E003" }),
-      ),
-    ).toBe(true);
-    expect(
-      stashMatchesKind(
-        "INPUT_ENCRYPTION_BROKEN",
-        payload({ errorCode: "E004" }),
-      ),
-    ).toBe(false);
     expect(
       stashMatchesKind(
         "INPUT_PASSWORD_PROTECTED",
