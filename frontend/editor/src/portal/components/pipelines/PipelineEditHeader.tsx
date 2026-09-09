@@ -23,6 +23,18 @@ export interface PipelineEditHeaderProps {
   /** "Enforce as policy" toggle, shown in the actions row. */
   required: boolean;
   onRequiredChange: (required: boolean) => void;
+  /** Whether this pipeline's source is the editor. */
+  runsOnEditor?: boolean;
+  /**
+   * Whether the user may edit pipelines and policies (a manager). When false everything here is
+   * read-only - save, pause, delete, reprocess, rename and the enforce toggle.
+   */
+  canManagePolicies?: boolean;
+  /**
+   * The permission check has not resolved yet. Config actions stay locked (fail-closed), but the
+   * manager-only reason is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
 
   /** The pipeline's live state. Toggling it takes effect immediately, not on save. */
   enabled: boolean;
@@ -61,6 +73,9 @@ export function PipelineEditHeader({
   onIconChange,
   required,
   onRequiredChange,
+  runsOnEditor = false,
+  canManagePolicies = true,
+  permissionsLoading = false,
   enabled,
   onTogglePause,
   togglingEnabled,
@@ -76,6 +91,7 @@ export function PipelineEditHeader({
   onDelete,
 }: PipelineEditHeaderProps) {
   const { t } = useTranslation();
+  const readOnly = !canManagePolicies;
   const [renaming, setRenaming] = useState(false);
   const [draft, setDraft] = useState(name);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -133,6 +149,7 @@ export function PipelineEditHeader({
           onChange={onIconChange}
           options={PIPELINE_ICON_OPTIONS}
           ariaLabel={t("portal.pipelines.builder.icon.label")}
+          disabled={readOnly}
         />
 
         {renaming ? (
@@ -151,23 +168,29 @@ export function PipelineEditHeader({
         ) : (
           <>
             <h1 className="portal-pipeline-edit-header__title">{name}</h1>
-            <ActionIcon
-              variant="quiet"
-              size="sm"
-              onClick={startRename}
-              aria-label={t("portal.pipelines.builder.rename")}
-            >
-              <EditOutlinedIcon style={{ fontSize: "1rem" }} />
-            </ActionIcon>
+            {!readOnly && (
+              <ActionIcon
+                variant="quiet"
+                size="sm"
+                onClick={startRename}
+                aria-label={t("portal.pipelines.builder.rename")}
+              >
+                <EditOutlinedIcon style={{ fontSize: "1rem" }} />
+              </ActionIcon>
+            )}
           </>
         )}
       </div>
 
       <div className="portal-pipeline-edit-header__actions">
-        <EnforceAsPolicyControl
-          required={required}
-          onRequiredChange={onRequiredChange}
-        />
+        {runsOnEditor && (
+          <EnforceAsPolicyControl
+            required={required}
+            onRequiredChange={onRequiredChange}
+            disabled={!canManagePolicies}
+            permissionsLoading={permissionsLoading}
+          />
+        )}
 
         {/* Pause and Save both write the whole policy, so they are mutually exclusive: neither can
             start while the other is committing, or the two writes race and the loser's version wins. */}
@@ -175,7 +198,7 @@ export function PipelineEditHeader({
           variant="secondary"
           size="sm"
           loading={togglingEnabled}
-          disabled={saving}
+          disabled={saving || readOnly}
           onClick={onTogglePause}
           leftSection={
             enabled ? (
@@ -219,7 +242,7 @@ export function PipelineEditHeader({
           <Dropdown.Menu>
             <Dropdown.Item
               onSelect={onReprocess}
-              disabled={reprocessing || running}
+              disabled={reprocessing || running || readOnly}
               leading={<ReplayRoundedIcon style={{ fontSize: "1.125rem" }} />}
             >
               {t("portal.pipelines.detail.clearHistory")}
@@ -227,6 +250,7 @@ export function PipelineEditHeader({
             <Dropdown.Divider />
             <Dropdown.Item
               onSelect={onDelete}
+              disabled={readOnly}
               className="portal-pipeline-edit-header__delete-item"
               leading={
                 <DeleteOutlineRoundedIcon style={{ fontSize: "1.125rem" }} />
@@ -240,14 +264,18 @@ export function PipelineEditHeader({
         {/* Wrapped in a span so the disabled button's hover still reaches the tooltip. */}
         <PipelineBlockerTooltip
           heading={t("portal.pipelines.builder.blocker.saveHeading")}
-          blockers={blockers}
+          blockers={
+            readOnly && !permissionsLoading
+              ? [t("portal.pipelines.builder.blocker.managerOnly")]
+              : blockers
+          }
         >
           <span className="portal-pipeline-edit-header__save">
             <Button
               size="sm"
               onClick={onSave}
               loading={saving}
-              disabled={!canSave || togglingEnabled}
+              disabled={!canSave || togglingEnabled || readOnly}
             >
               {t("portal.pipelines.composer.save")}
             </Button>

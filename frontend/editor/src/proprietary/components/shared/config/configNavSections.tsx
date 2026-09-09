@@ -28,7 +28,6 @@ import AdminStorageSharingSection from "@app/components/shared/config/configSect
 import AdminFolderAccessSection from "@app/components/shared/config/configSections/AdminFolderAccessSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import AccountSection from "@app/components/shared/config/configSections/AccountSection";
-import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
 
 /**
  * Hook version of proprietary config nav sections with proper i18n support
@@ -58,11 +57,7 @@ export const useConfigNavSections = (
       ? {
           ...section,
           items: [
-            ...section.items.map((item) =>
-              item.key === "general"
-                ? { ...item, component: <GeneralWithLoginLanding hideTitle /> }
-                : item,
-            ),
+            ...section.items,
             ...(loginEnabled
               ? ([
                   {
