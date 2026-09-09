@@ -123,9 +123,13 @@ export interface PolicySetupResult {
   maxRetries: number;
   retryDelayMinutes: number;
   steps: WirePipelineStep[];
-  trigger: WireTriggerConfig | null;
-  outputIds: string[];
-  routingRules: WireRoutingRule[];
+  /**
+   * Source binding, destinations and routing belong to the pipeline builder. The wizard carries
+   * whatever was saved so a save through it preserves them; absent means "nothing stored".
+   */
+  trigger?: WireTriggerConfig | null;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
 }
 
 export interface DecoratedPolicy {
@@ -640,7 +644,7 @@ export function buildWireFromSetup(
       policyKey: entry.category.id,
       sources: result.sources,
       // A wizard save is the one place a policy (re)binds its inputs.
-      inputs: policyInputs(result.sources, result.trigger),
+      inputs: policyInputs(result.sources, result.trigger ?? null),
       runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,
       reviewerEmail: result.reviewerEmail,
@@ -652,9 +656,9 @@ export function buildWireFromSetup(
       maxRetries: result.maxRetries,
       retryDelayMinutes: result.retryDelayMinutes,
       steps: result.steps,
-      trigger: result.trigger,
-      outputIds: result.outputIds,
-      routingRules: result.routingRules,
+      trigger: result.trigger ?? null,
+      outputIds: result.outputIds ?? [],
+      routingRules: result.routingRules ?? [],
     }),
   };
 }

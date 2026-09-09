@@ -1,5 +1,10 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import {
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -182,6 +187,19 @@ function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
  */
 const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
 
+function isClassifyStep(step: WorkingToolStep): boolean {
+  return step.operation === CLASSIFY_OPERATION;
+}
+
+function blankRoutingRule(): WireRoutingRule {
+  return {
+    field: "classification.labels",
+    operator: "matches-any",
+    values: [],
+    outputId: "",
+  };
+}
+
 /** Whether a source can be written to, i.e. offered as a pipeline destination. */
 function isWritableSource(source: SourceView): boolean {
   return (availableOutputModes() as string[]).includes(source.type);
@@ -207,6 +225,8 @@ export function PipelineBuilder() {
       queryClient.invalidateQueries({ queryKey: qk.policyRuns() }),
     ]);
   const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  const preset = searchParams.get("preset");
   const isEdit = Boolean(id);
   const location = useLocation();
   // A Customise hand-off from the simple policy wizard: the in-progress settings as a full pipeline
@@ -418,11 +438,28 @@ export function PipelineBuilder() {
     } else {
       setInput(blankInput());
     }
+    const storedSteps = (policy?.steps ?? []).map((step) =>
+      deserializeToolStep(step, allTools),
+    );
+    const storedRules = seedsEditor ? [] : (policy?.routingRules ?? []);
+    const wantsRoutingPreset = !isEdit && preset === "routing";
     setSteps(
-      (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
+      wantsRoutingPreset && !storedSteps.some(isClassifyStep)
+        ? [
+            deserializeToolStep(
+              { operation: CLASSIFY_OPERATION, parameters: {} },
+              allTools,
+            ),
+            ...storedSteps,
+          ]
+        : storedSteps,
     );
     setOutputIds(seedsEditor ? [] : (policy?.outputIds ?? []));
-    setRoutingRules(seedsEditor ? [] : (policy?.routingRules ?? []));
+    setRoutingRules(
+      wantsRoutingPreset && storedRules.length === 0
+        ? [blankRoutingRule()]
+        : storedRules,
+    );
     setSeeded(true);
   }, [
     isEdit,
@@ -430,6 +467,7 @@ export function PipelineBuilder() {
     policyState.data,
     allTools,
     seeded,
+    preset,
     sourcesState.data,
     sourcesState.error,
   ]);
@@ -762,9 +800,7 @@ export function PipelineBuilder() {
   const inputValid = sourceChosen && scheduleValid;
   // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
   const outputValid = isEditorInput || outputIds.length === 1;
-  const classifies = steps.some(
-    (step) => step.operation === CLASSIFY_OPERATION,
-  );
+  const classifies = steps.some(isClassifyStep);
   // Mirrors PolicyValidator.validateRoutingRules: a rule with nothing to match on, or nowhere to
   // send, would be rejected on save - so it is named here rather than surfaced as a server error.
   const routingValid = routingRules.every(

@@ -116,7 +116,11 @@ export function Pipelines() {
       if (entry.category.requiresAiEngine && !aiEngineEnabled) return;
       if (entry.category.opensBuilder) {
         const saved = entry.policy?.state.backendId;
-        navigate(saved ? `${listPath}/${saved}` : `${listPath}/new`);
+        navigate(
+          saved
+            ? `${listPath}/${saved}`
+            : `${listPath}/new?preset=${entry.category.id}`,
+        );
         return;
       }
       setWizard(entry);
