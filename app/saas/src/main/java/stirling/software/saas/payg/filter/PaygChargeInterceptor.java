@@ -64,9 +64,11 @@ import stirling.software.saas.util.AuthenticationUtils;
  * without multipart inputs short-circuit inside {@code doPreHandle} without touching the charge
  * service.
  *
- * <p>{@code afterCompletion}: branches on HTTP status — 2xx hashes the response body for OUTPUT
- * lineage; 4xx records a step append for audit; 5xx triggers refund-and-close (OPENED) or
- * step-quota return (JOINED). Closes all input temp files and the response wrapper at the end.
+ * <p>{@code afterCompletion}: branches on HTTP status — 2xx meters the process this request OPENED
+ * and hashes the response body for OUTPUT lineage; any error status releases the charge (OPENED) or
+ * returns the step slot (JOINED), since the caller received no document. A step inside an
+ * automation run never meters here: its run settles every process under the run id when it
+ * finishes. Closes all input temp files and the response wrapper at the end.
  *
  * <p>Fail-open everywhere: any unexpected {@link RuntimeException} is swallowed, logged at WARN,
  * and counted on {@code payg.filter.errors}. The customer's tool call always proceeds.
@@ -81,6 +83,7 @@ import stirling.software.saas.util.AuthenticationUtils;
 public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
 
     static final String ATTR_JOB_ID = PaygChargeInterceptor.class.getName() + ".JOB_ID";
+    static final String ATTR_RUN_ID = PaygChargeInterceptor.class.getName() + ".RUN_ID";
     static final String ATTR_DISPOSITION = PaygChargeInterceptor.class.getName() + ".DISPOSITION";
     static final String ATTR_INPUT_TEMP_FILES =
             PaygChargeInterceptor.class.getName() + ".INPUT_TEMP_FILES";
@@ -159,7 +162,8 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                         .register(meterRegistry);
         this.refundsCounter =
                 Counter.builder("payg.filter.refunds")
-                        .description("First-step 5xx refunds applied to shadow rows")
+                        .description(
+                                "Charges released because the request returned an error status")
                         .register(meterRegistry);
         this.preHandleTimer =
                 Timer.builder("payg.filter.duration")
@@ -296,6 +300,9 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
                 (hasAutomationHeader(request) && headerRunId != null && !headerRunId.isBlank())
                         ? headerRunId
                         : null;
+        if (runId != null) {
+            request.setAttribute(ATTR_RUN_ID, runId);
+        }
         ChargeContext ctx =
                 new ChargeContext(
                         currentUser.getId(),
@@ -375,19 +382,17 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             log.debug("appendStep failed for job {}: {}", jobId, e.getMessage());
         }
 
-        if (status >= 500) {
+        // Any error status: the caller received no document, so there is nothing to bill for. A
+        // rejected input (a corrupt PDF, a locked one, the wrong file type) is as unbillable as a
+        // fault of ours — the work either produced what was asked for or it did not. Requests the
+        // entitlement guard refuses never reach here, having opened no charge at all.
+        if (status >= 400) {
             if (disposition == ChargeOutcome.Disposition.OPENED) {
-                chargeService.markFirstStepFailed(jobId, "first-step-5xx:" + status);
+                chargeService.releaseUnmeteredCharge(jobId, "failed-" + status);
                 refundsCounter.increment();
             } else {
                 chargeService.decrementStepCount(jobId);
             }
-            return;
-        }
-        if (status >= 400) {
-            // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
-            // Still a successful-from-billing-standpoint OPENED process — meter it below.
-            meterIfOpened(jobId, disposition);
             return;
         }
 
@@ -395,8 +400,15 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         // Only the OPENED request meters — JOINED follow-up steps (chained tools on the same
         // document) added no units and must not re-meter. The process stays OPEN for further
         // lineage joins; StaleJobCloser closing it later is a no-op at Stripe thanks to the shared
-        // idempotency key. metering is best-effort and must never break the response teardown.
-        meterIfOpened(jobId, disposition);
+        // idempotency key. Metering is best-effort and must never break the response teardown.
+        //
+        // A step inside an automation run is the exception and does not meter on its own: the run
+        // may still fail on a later step, and a meter event cannot be unsent. The run settles every
+        // process under its run id once it knows its outcome (PolicyRunCharges); one that never
+        // reports leaves them to the stale sweep, which bills them as it always has.
+        if (request.getAttribute(ATTR_RUN_ID) == null) {
+            meterIfOpened(jobId, disposition);
+        }
         recordOutputs(request, response, jobId);
     }
 

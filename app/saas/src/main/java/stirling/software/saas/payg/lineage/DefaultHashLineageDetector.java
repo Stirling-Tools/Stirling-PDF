@@ -32,13 +32,22 @@ public class DefaultHashLineageDetector implements HashLineageDetector {
     private final JobLineageStore store;
     private final Duration workflowWindow;
 
+    /**
+     * Window for run-scoped lookups. A run's processes stay open for this long (see {@code
+     * JobService}), so its steps must keep joining for as long, or a slow step spawns a second
+     * process that the run then bills as well.
+     */
+    private final Duration runWindow;
+
     public DefaultHashLineageDetector(
             List<LineageSignatureExtractor> extractors,
             JobLineageStore store,
-            @Value("${payg.lineage.workflow-window:PT5M}") Duration workflowWindow) {
+            @Value("${payg.lineage.workflow-window:PT5M}") Duration workflowWindow,
+            @Value("${payg.lineage.run-window:PT15M}") Duration runWindow) {
         Objects.requireNonNull(extractors, "extractors");
         Objects.requireNonNull(store, "store");
         Objects.requireNonNull(workflowWindow, "workflowWindow");
+        Objects.requireNonNull(runWindow, "runWindow");
         if (extractors.isEmpty()) {
             throw new IllegalStateException(
                     "DefaultHashLineageDetector requires at least one LineageSignatureExtractor"
@@ -51,9 +60,15 @@ public class DefaultHashLineageDetector implements HashLineageDetector {
             throw new IllegalArgumentException(
                     "payg.lineage.workflow-window must be positive, got " + workflowWindow);
         }
+        if (runWindow.compareTo(workflowWindow) < 0) {
+            throw new IllegalArgumentException(
+                    "payg.lineage.run-window must be at least the workflow window, got "
+                            + runWindow);
+        }
         this.extractors = List.copyOf(extractors);
         this.store = store;
         this.workflowWindow = workflowWindow;
+        this.runWindow = runWindow;
     }
 
     @Override
@@ -85,7 +100,7 @@ public class DefaultHashLineageDetector implements HashLineageDetector {
         if (signatures.isEmpty()) {
             return Optional.empty();
         }
-        return store.findOpenJobForSignatures(userId, signatures, workflowWindow, runId);
+        return store.findOpenJobForSignatures(userId, signatures, runWindow, runId);
     }
 
     @Override

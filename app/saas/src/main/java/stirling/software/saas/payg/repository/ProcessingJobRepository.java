@@ -17,10 +17,19 @@ public interface ProcessingJobRepository extends JpaRepository<ProcessingJob, UU
 
     List<ProcessingJob> findByOwnerUserIdAndStatus(Long ownerUserId, JobStatus status);
 
+    List<ProcessingJob> findByRunIdAndStatus(String runId, JobStatus status);
+
     /**
-     * Jobs left {@code OPEN} past the workflow window; the stale-close scheduler picks these up.
+     * Jobs left {@code OPEN} past their window; the stale-close scheduler picks these up. A job
+     * inside an automation run gets the longer {@code runCutoff}: its run settles it on completion,
+     * and one heavy step can outlast the workflow window without the run being over.
      */
-    @Query("SELECT j FROM ProcessingJob j WHERE j.status = :status AND j.lastStepAt < :cutoff")
+    @Query(
+            "SELECT j FROM ProcessingJob j WHERE j.status = :status AND ((j.runId IS NULL AND"
+                    + " j.lastStepAt < :cutoff) OR (j.runId IS NOT NULL AND j.lastStepAt <"
+                    + " :runCutoff))")
     List<ProcessingJob> findStale(
-            @Param("status") JobStatus status, @Param("cutoff") LocalDateTime cutoff);
+            @Param("status") JobStatus status,
+            @Param("cutoff") LocalDateTime cutoff,
+            @Param("runCutoff") LocalDateTime runCutoff);
 }

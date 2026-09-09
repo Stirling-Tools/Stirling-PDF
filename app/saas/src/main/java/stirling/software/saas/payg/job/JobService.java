@@ -53,20 +53,36 @@ public class JobService {
     private final ProcessingJobStepRepository stepRepository;
     private final Duration workflowWindow;
 
+    /**
+     * How long a process inside an automation run stays open with no step touching it. Longer than
+     * the workflow window because a run settles its own processes when it finishes; the sweep is
+     * only for a run that never reports. Must outlast one tool step, or a heavy step gets metered
+     * mid-run and a later failure can no longer release it.
+     */
+    private final Duration runWindow;
+
     public JobService(
             HashLineageDetector detector,
             ProcessingJobRepository jobRepository,
             ProcessingJobStepRepository stepRepository,
-            @Value("${payg.lineage.workflow-window:PT5M}") Duration workflowWindow) {
+            @Value("${payg.lineage.workflow-window:PT5M}") Duration workflowWindow,
+            @Value("${payg.lineage.run-window:PT15M}") Duration runWindow) {
         this.detector = Objects.requireNonNull(detector, "detector");
         this.jobRepository = Objects.requireNonNull(jobRepository, "jobRepository");
         this.stepRepository = Objects.requireNonNull(stepRepository, "stepRepository");
         Objects.requireNonNull(workflowWindow, "workflowWindow");
+        Objects.requireNonNull(runWindow, "runWindow");
         if (workflowWindow.isNegative() || workflowWindow.isZero()) {
             throw new IllegalArgumentException(
                     "payg.lineage.workflow-window must be positive, got " + workflowWindow);
         }
+        if (runWindow.compareTo(workflowWindow) < 0) {
+            throw new IllegalArgumentException(
+                    "payg.lineage.run-window must be at least the workflow window, got "
+                            + runWindow);
+        }
         this.workflowWindow = workflowWindow;
+        this.runWindow = runWindow;
     }
 
     /**
@@ -196,10 +212,15 @@ public class JobService {
         return jobRepository.save(job);
     }
 
-    /** Returns open jobs whose {@code last_step_at} is older than the workflow window. */
+    /**
+     * Open jobs whose {@code last_step_at} is older than their window: the workflow window for a
+     * standalone job, the run window for one inside an automation run.
+     */
     @Transactional(readOnly = true)
     public List<ProcessingJob> findStale() {
-        return jobRepository.findStale(JobStatus.OPEN, LocalDateTime.now().minus(workflowWindow));
+        LocalDateTime now = LocalDateTime.now();
+        return jobRepository.findStale(
+                JobStatus.OPEN, now.minus(workflowWindow), now.minus(runWindow));
     }
 
     /**

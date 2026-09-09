@@ -41,7 +41,7 @@ class DefaultHashLineageDetectorTest {
     void setUp() {
         extractor = new FakeFileSignatureExtractor();
         store = new InMemoryJobLineageStore();
-        detector = new DefaultHashLineageDetector(List.of(extractor), store, WINDOW);
+        detector = new DefaultHashLineageDetector(List.of(extractor), store, WINDOW, WINDOW);
     }
 
     @Test
@@ -187,7 +187,7 @@ class DefaultHashLineageDetectorTest {
                     }
                 };
         DefaultHashLineageDetector composite =
-                new DefaultHashLineageDetector(List.of(throwing, extractor), store, WINDOW);
+                new DefaultHashLineageDetector(List.of(throwing, extractor), store, WINDOW, WINDOW);
         UUID job = openJobForUser(42L, LocalDateTime.now());
 
         Path file = givenFileWithSignatures(tmp, "input.bin", "sha256", "abc");
@@ -202,7 +202,7 @@ class DefaultHashLineageDetectorTest {
 
     @Test
     void constructor_rejectsEmptyExtractorList() {
-        assertThatThrownBy(() -> new DefaultHashLineageDetector(List.of(), store, WINDOW))
+        assertThatThrownBy(() -> new DefaultHashLineageDetector(List.of(), store, WINDOW, WINDOW))
                 .isInstanceOf(IllegalStateException.class);
     }
 
@@ -212,7 +212,7 @@ class DefaultHashLineageDetectorTest {
         assertThatThrownBy(
                         () ->
                                 new DefaultHashLineageDetector(
-                                        List.of(extractor), store, Duration.ZERO))
+                                        List.of(extractor), store, Duration.ZERO, WINDOW))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("must be positive");
 
@@ -221,7 +221,10 @@ class DefaultHashLineageDetectorTest {
         assertThatThrownBy(
                         () ->
                                 new DefaultHashLineageDetector(
-                                        List.of(extractor), store, Duration.ofMinutes(5).negated()))
+                                        List.of(extractor),
+                                        store,
+                                        Duration.ofMinutes(5).negated(),
+                                        WINDOW))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("must be positive");
     }

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.policy.engine;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -15,6 +16,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -25,6 +27,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -58,6 +61,7 @@ import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
+import stirling.software.proprietary.policy.billing.PolicyRunCharges;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -94,6 +98,10 @@ class PolicyEngineTest {
     @Mock private ResourceMonitor resourceMonitor;
     @Mock private JobQueue jobQueue;
     @Mock private PolicyFailureRecorder failureRecorder;
+    @Mock private PolicyRunCharges runCharges;
+
+    /** Null unless a test opts into charging, since most of them are not about billing. */
+    private PolicyRunCharges charging;
 
     @TempDir Path tempDir;
 
@@ -128,7 +136,8 @@ class PolicyEngineTest {
                         outputResolver,
                         resourceMonitor,
                         jobQueue,
-                        new PolicyAssetResolver(new InProcessPolicyAssetStore()));
+                        new PolicyAssetResolver(new InProcessPolicyAssetStore()),
+                        Optional.ofNullable(charging));
 
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.
@@ -175,6 +184,107 @@ class PolicyEngineTest {
         verify(taskManager).setComplete(runId);
         // Progress notes were written for each step.
         verify(taskManager, atLeastOnce()).addNote(eq(runId), anyString());
+    }
+
+    @Test
+    void aSucceededRunIsWhatBillsTheChargesItsStepsOpened() throws Exception {
+        // No step metered on its own, so success here is the billable moment for the whole run.
+        charging = runCharges;
+        setUp();
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new StoredFile("file-1", 4L));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        verify(runCharges).settleBilled(run.getRunId());
+        verify(runCharges, never()).settleUnbilled(anyString(), anyString());
+    }
+
+    @Test
+    void aSettleThatThrowsDoesNotTurnADeliveredRunIntoAFailedOne() throws Exception {
+        charging = runCharges;
+        setUp();
+        doThrow(new IllegalStateException("db down")).when(runCharges).settleBilled(anyString());
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        stubEndpoint(ROTATE, pdf("rotated", "rotated.pdf"));
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenReturn(new StoredFile("file-1", 4L));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        verify(taskManager).setComplete(run.getRunId());
+        verify(runCharges, never()).settleUnbilled(anyString(), anyString());
+    }
+
+    @Test
+    void aFailedRunReleasesItsChargesInsteadOfBillingForNothing() throws Exception {
+        charging = runCharges;
+        setUp();
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
+
+        assertEquals(PolicyRunStatus.FAILED, run.getStatus());
+        verify(runCharges).settleUnbilled(eq(run.getRunId()), anyString());
+        verify(runCharges, never()).settleBilled(anyString());
+    }
+
+    @Test
+    void settlesOnceEvenThoughEveryFailurePathWouldSettle() throws Exception {
+        // Settlement is claimed, not repeated: a second settle would release an already-released
+        // charge.
+        charging = runCharges;
+        setUp();
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        PolicyRun run = handle.completion().get(10, TimeUnit.SECONDS);
+
+        assertThat(run.claimChargeSettlement()).isFalse();
+        verify(runCharges, times(1)).settleUnbilled(anyString(), anyString());
+    }
+
+    @Test
+    void aBuildThatDoesNotChargeSettlesNothing() throws Exception {
+        // charging stays null, as it is for every non-SaaS flavour.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(internalApiClient.post(eq(ROTATE), any())).thenThrow(new RuntimeException("boom"));
+
+        PolicyRunHandle handle =
+                engine.submit(
+                        definition(new PipelineStep(ROTATE, Map.of())),
+                        PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                        PolicyProgressListener.NOOP);
+        handle.completion().get(10, TimeUnit.SECONDS);
+
+        verifyNoInteractions(runCharges);
     }
 
     @Test

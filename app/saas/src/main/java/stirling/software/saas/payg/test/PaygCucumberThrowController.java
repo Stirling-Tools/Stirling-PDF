@@ -20,18 +20,18 @@ import stirling.software.common.enumeration.ResourceWeight;
  * bean never registers in production — only the PAYG cucumber compose stack activates the profile
  * (via {@code SPRING_PROFILES_ACTIVE=saas,payg-cucumber} in {@code docker-compose-saas.yml}).
  *
- * <p>Purpose: drive the PAYG filter+interceptor's 5xx-first-step branch end-to-end. No reliably-
- * 5xx-ing real tool endpoint exists in current Stirling — every malformed input is caught as 4xx by
- * {@code GlobalExceptionHandler}. Without this stub the only way to exercise the refund path was a
- * manual procedure (a temporary throw endpoint added, run, removed) documented in {@code
- * notes/PAYG_DESIGN.md} §7.5.2 M1. This controller replaces that procedure with a profile- gated
- * automated scenario.
+ * <p>Purpose: drive the PAYG filter+interceptor's 5xx release branch end-to-end. No
+ * reliably-5xx-ing real tool endpoint exists in current Stirling — every malformed input is caught
+ * as 4xx by {@code GlobalExceptionHandler}. Without this stub the only way to exercise the 5xx
+ * release path was a manual procedure (a temporary throw endpoint added, run, removed) documented
+ * in {@code notes/PAYG_DESIGN.md} §7.5.2 M1. This controller replaces that procedure with a
+ * profile- gated automated scenario.
  *
  * <p>{@link AutoJobPostMapping} consumes {@code multipart/form-data} so the filter's {@code
  * MultipartHttpServletRequest} cast runs and the input lineage hash is computed before the
  * controller throws. The PAYG filter chain therefore sees: preHandle → openProcess (CHARGED row
- * written) → controller throws → afterCompletion observes status 500 → markFirstStepFailed (row →
- * REFUNDED, job → CLOSED).
+ * written) → controller throws → afterCompletion observes status 500 → releaseUnmeteredCharge (row
+ * → REFUNDED, job → CLOSED).
  *
  * <p>The thrown {@link IllegalStateException} is unwrapped by {@code GlobalExceptionHandler}'s
  * RuntimeException handler — it has no IOException / IllegalArgument / BaseAppException cause, so

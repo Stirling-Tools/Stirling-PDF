@@ -4,9 +4,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 import org.slf4j.MDC;
 import org.springframework.core.io.Resource;
@@ -35,6 +37,7 @@ import stirling.software.common.util.JobContext;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
+import stirling.software.proprietary.policy.billing.PolicyRunCharges;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
@@ -84,6 +87,7 @@ public class PolicyEngine {
     private final ResourceMonitor resourceMonitor;
     private final JobQueue jobQueue;
     private final PolicyAssetResolver assetResolver;
+    private final Optional<PolicyRunCharges> runCharges;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
 
@@ -307,6 +311,7 @@ public class PolicyEngine {
                 taskManager.setMultipleFileResults(runId, outputs);
                 taskManager.setComplete(runId);
                 run.complete(outputs);
+                settleBilled(run);
             } catch (PolicyInputRequiredException e) {
                 // Expected path: suspend rather than fail. Persist intermediates as fileIds so the
                 // run
@@ -377,6 +382,7 @@ public class PolicyEngine {
             log.error("Policy run {} was not admitted: {}", run.getRunId(), ex.getMessage());
             // Transient admission rejection, not a processing failure (see QUEUE_FULL_CODE).
             run.failWithCode(message, QUEUE_FULL_CODE, null);
+            settleUnbilled(run, message);
             taskManager.setError(run.getRunId(), message);
             // No exception to classify here: nothing was thrown by a tool, the run simply was not
             // admitted. Record it explicitly so a run lost to load pressure is still accounted for.
@@ -404,6 +410,7 @@ public class PolicyEngine {
      * the document, and leaving an unattended sweep's failure looking attended.
      */
     private void recordFailure(PolicyRun run, String message, Throwable cause) {
+        settleUnbilled(run, message);
         failureRecorder.recordRunFailure(
                 run.getRunId(),
                 run.getPolicyId(),
@@ -412,6 +419,35 @@ public class PolicyEngine {
                 run.getTriggeringUser(),
                 message,
                 cause);
+    }
+
+    /** The run produced what was asked of it, so the charges its steps opened stand. */
+    private void settleBilled(PolicyRun run) {
+        settleOnce(run, charges -> charges.settleBilled(run.getRunId()));
+    }
+
+    /** The run failed, so its charges are released rather than billed for work nobody received. */
+    private void settleUnbilled(PolicyRun run, String reason) {
+        settleOnce(run, charges -> charges.settleUnbilled(run.getRunId(), reason));
+    }
+
+    /**
+     * Billing never changes a run's outcome: a settle that threw after {@code run.complete} would
+     * otherwise land in the failure handlers and report a delivered run as failed. A build with no
+     * charging does nothing.
+     */
+    private void settleOnce(PolicyRun run, Consumer<PolicyRunCharges> settle) {
+        if (runCharges.isEmpty() || !run.claimChargeSettlement()) {
+            return;
+        }
+        try {
+            settle.accept(runCharges.get());
+        } catch (RuntimeException e) {
+            log.error(
+                    "Policy run {} finished but its charges could not be settled",
+                    run.getRunId(),
+                    e);
+        }
     }
 
     private WaitState suspend(PolicyInputRequiredException e) {
