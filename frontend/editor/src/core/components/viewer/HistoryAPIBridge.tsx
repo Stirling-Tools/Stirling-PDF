@@ -4,7 +4,19 @@ import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { useSignature } from "@app/contexts/SignatureContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { uuidV4, PdfAnnotationSubtype } from "@embedpdf/models";
-import type { HistoryAPI } from "@app/components/viewer/viewerTypes";
+import type { PdfAnnotationObject } from "@embedpdf/models";
+import type {
+  HistoryAPI,
+  AnnotationEvent,
+} from "@app/components/viewer/viewerTypes";
+
+// Signature stamps carry an image data-URL under app-specific fields the
+// installed annotation types don't declare; `object` mirrors the selection
+// wrapper some plugin builds emit on the event.
+type SignatureAnnotation = PdfAnnotationObject & {
+  imageSrc?: string;
+  object?: { pageIndex?: number };
+};
 import {
   ANNOTATION_RECREATION_DELAY_MS,
   ANNOTATION_VERIFICATION_DELAY_MS,
@@ -28,16 +40,17 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(
     useEffect(() => {
       if (!annotationApi || !documentReady) return;
 
-      const handleAnnotationEvent = (event: any) => {
+      const handleAnnotationEvent = (event: AnnotationEvent) => {
+        if (event.type === "loaded") return;
         if (
-          event?.type === "create" ||
-          event?.type === "update" ||
-          event?.type === "delete"
+          event.type === "create" ||
+          event.type === "update" ||
+          event.type === "delete"
         ) {
           navActions?.setHasUnsavedChanges(true);
         }
 
-        const annotation = event.annotation;
+        const annotation: SignatureAnnotation = event.annotation;
 
         // Store image data for all STAMP annotations immediately when created or modified
         if (
@@ -79,11 +92,7 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(
               annotation.pageIndex ??
               annotation.object?.pageIndex ??
               0;
-            const rect =
-              annotation.rect ||
-              annotation.bounds ||
-              annotation.rectangle ||
-              annotation.position;
+            const rect = annotation.rect;
 
             try {
               annotationApi.deleteAnnotation(pageIndex, annotation.id);

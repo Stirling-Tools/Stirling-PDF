@@ -122,9 +122,9 @@ interface LocalEmbedPDFProps {
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
-  signatureApiRef?: React.RefObject<SignatureAPI>;
-  annotationApiRef?: React.RefObject<AnnotationAPI>;
-  historyApiRef?: React.RefObject<HistoryAPI>;
+  signatureApiRef?: React.RefObject<SignatureAPI | null>;
+  annotationApiRef?: React.RefObject<AnnotationAPI | null>;
+  historyApiRef?: React.RefObject<HistoryAPI | null>;
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */
   fileId?: string | null;
