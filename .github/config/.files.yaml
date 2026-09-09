@@ -125,6 +125,7 @@ tauri: &tauri
 engine: &engine
   - *ci
   - engine/**
+  - docker/engine/**
   - app/(common|core|proprietary|saas)/src/main/java/**
   - .github/workflows/ai-engine.yml
   - Taskfile.yml

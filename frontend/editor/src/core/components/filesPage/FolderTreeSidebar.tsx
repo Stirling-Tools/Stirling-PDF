@@ -16,6 +16,7 @@ import { useFolders } from "@app/contexts/FolderContext";
 import { FileId } from "@app/types/file";
 import {
   FolderId,
+  folderKind,
   FolderRecord,
   FolderTreeNode,
   ROOT_FOLDER_ID,
@@ -27,6 +28,7 @@ import {
   serialiseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
+import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 
 /**
  * Hard cap on folder-tree render depth. The backend already enforces an
@@ -62,6 +64,32 @@ interface FolderTreeSidebarProps {
 // anyone re-wired the component into a non-embed surface they'd ship an
 // always-enabled mutation button against a possibly-offline server.
 // Deleted to remove the trap.
+/**
+ * A name that gives way in the middle when the row is too narrow for it, keeping both
+ * ends readable - folder names tend to differ at the end, where a plain end-ellipsis
+ * would cut. The split is fixed; the CSS decides whether the head actually elides.
+ */
+function MiddleTruncated({
+  text,
+  className,
+}: {
+  text: string;
+  className: string;
+}) {
+  const TAIL = 6;
+  if (text.length <= TAIL + 4) {
+    return <span className={className}>{text}</span>;
+  }
+  return (
+    <span className={className} title={text}>
+      <span className="files-page-tree-name-head">
+        {text.slice(0, text.length - TAIL)}
+      </span>
+      <span className="files-page-tree-name-tail">{text.slice(-TAIL)}</span>
+    </span>
+  );
+}
+
 export function FolderTreeSidebar({
   fileCounts,
   onRequestNewFolder,
@@ -70,8 +98,15 @@ export function FolderTreeSidebar({
   onMoveFilesIntoFolder,
 }: FolderTreeSidebarProps) {
   const { t } = useTranslation();
-  const { tree, currentFolderId, setCurrentFolderId } = useFolders();
-  const { currentTab, setCurrentTab, moveFolderTo } = useFilesPage();
+  const { tree, currentFolderId } = useFolders();
+  const openFolder = useOpenFolder();
+  const {
+    currentTab,
+    setCurrentTab,
+    moveFolderTo,
+    originFilter,
+    setOriginFilter,
+  } = useFilesPage();
 
   return (
     <div
@@ -91,15 +126,15 @@ export function FolderTreeSidebar({
           if (currentTab !== "all" && currentTab !== "cloud") {
             setCurrentTab("all");
           }
-          setCurrentFolderId(ROOT_FOLDER_ID);
+          openFolder(ROOT_FOLDER_ID);
         }}
         onDropFiles={(fileIds) =>
           onMoveFilesIntoFolder(ROOT_FOLDER_ID, fileIds)
         }
       />
       <LocalRow
-        isActive={currentTab === "local"}
-        onSelect={() => setCurrentTab("local")}
+        isActive={originFilter === "local"}
+        onSelect={() => setOriginFilter("local")}
       />
       {tree.map((node) => (
         <TreeNodeRow
@@ -114,7 +149,7 @@ export function FolderTreeSidebar({
             if (currentTab !== "all" && currentTab !== "cloud") {
               setCurrentTab("all");
             }
-            setCurrentFolderId(id);
+            openFolder(id);
           }}
           onMoveFolder={async (folderId, newParentId) => {
             // Route through filesPage.moveFolderTo so the cycle case
@@ -197,10 +232,9 @@ interface LocalRowProps {
 }
 
 /**
- * Pinned pseudo-folder row that selects the Local tab. Local files don't
- * belong to a folder (folders are a cloud concept) so this row is not a
- * drop target and has no count badge - the Local view scopes by predicate
- * (`remoteStorageId == null`), not by folderId.
+ * Sets the source filter to local, and nothing else: it narrows whatever view you
+ * are in rather than being a place of its own. Not a drop target and no count
+ * badge - a local file has no folder to be counted under.
  */
 function LocalRow({ isActive, onSelect }: LocalRowProps) {
   const { t } = useTranslation();
@@ -260,6 +294,12 @@ function TreeNodeRow({
 }: TreeNodeRowProps) {
   const { t } = useTranslation();
   const { serverReachable, setError } = useFolders();
+  // Server folders need the server; a virtual folder is browser-owned and a
+  // local one is managed by its directory, so its edit items disable with a
+  // kind-specific hint instead of a wrong "offline" excuse.
+  const kind = folderKind(node.folder);
+  const editsDisabled =
+    kind === "local" || (kind === "server" && !serverReachable);
   const { currentTab } = useFilesPage();
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -396,7 +436,10 @@ function TreeNodeRow({
         <span className="files-page-tree-icon">
           <FolderThumbnail color={node.folder.color} size="tree" />
         </span>
-        <span className="files-page-tree-name">{node.folder.name}</span>
+        <MiddleTruncated
+          className="files-page-tree-name"
+          text={node.folder.name}
+        />
         <span className="files-page-tree-count">
           {fileCounts.get(node.folder.id) ?? 0}
         </span>
@@ -433,8 +476,17 @@ function TreeNodeRow({
                 e.stopPropagation();
                 onRenameFolder(node.folder);
               }}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
+              disabled={editsDisabled}
+              title={
+                kind === "local"
+                  ? t(
+                      "filesPage.localFolderManagedByDisk",
+                      "This folder is managed by its directory on disk.",
+                    )
+                  : editsDisabled
+                    ? offlineHint
+                    : undefined
+              }
             >
               {t("filesPage.treeMenu.rename", "Rename")}
             </Menu.Item>
@@ -444,24 +496,48 @@ function TreeNodeRow({
                 e.stopPropagation();
                 onRequestNewFolder(node.folder.id);
               }}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
+              disabled={editsDisabled}
+              title={
+                kind === "local"
+                  ? t(
+                      "filesPage.localFolderManagedByDisk",
+                      "This folder is managed by its directory on disk.",
+                    )
+                  : editsDisabled
+                    ? offlineHint
+                    : undefined
+              }
             >
               {t("filesPage.treeMenu.newSubfolder", "New subfolder")}
             </Menu.Item>
             <Menu.Divider />
-            <Menu.Item
-              color="red"
-              leftSection={<DeleteOutlineIcon fontSize="small" />}
-              onClick={(e) => {
-                e.stopPropagation();
-                onDeleteFolder(node.folder);
-              }}
-              disabled={!serverReachable}
-              title={!serverReachable ? offlineHint : undefined}
-            >
-              {t("filesPage.treeMenu.delete", "Delete folder")}
-            </Menu.Item>
+            {/* Every kind can be removed except a mount's subdirectory, which
+                is the disk's — the app never deletes directories. A mount
+                root's removal deletes the record and nothing on disk, so only
+                the server kind's reachability gate applies. */}
+            {(kind !== "local" || node.folder.parentFolderId === null) && (
+              <Menu.Item
+                color="red"
+                leftSection={<DeleteOutlineIcon fontSize="small" />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDeleteFolder(node.folder);
+                }}
+                disabled={kind === "server" && !serverReachable}
+                title={
+                  kind === "server" && !serverReachable
+                    ? offlineHint
+                    : undefined
+                }
+              >
+                {kind === "local"
+                  ? t(
+                      "filesPage.removeLocalFolder",
+                      "Remove (files stay on disk)",
+                    )
+                  : t("filesPage.treeMenu.delete", "Delete folder")}
+              </Menu.Item>
+            )}
           </Menu.Dropdown>
         </Menu>
       </div>

@@ -234,7 +234,10 @@ describe("Login", () => {
       );
     };
 
-    afterEach(() => window.history.replaceState({}, "", "/"));
+    afterEach(() => {
+      window.history.replaceState({}, "", "/");
+      sessionStorage.clear();
+    });
 
     it("returns to where the user came from", async () => {
       signedIn();
@@ -245,6 +248,24 @@ describe("Login", () => {
           replace: true,
         });
       });
+    });
+
+    // A full-page 401 redirect drops router state and Spring can strip ?from=,
+    // leaving the return path only in the sessionStorage stash. Without reading
+    // it here a processor user refreshing /editor falls through to the role
+    // router and lands on the processor.
+    it("returns to the stashed path when there is no ?from=", async () => {
+      signedIn();
+      sessionStorage.setItem("stirling_post_login_path", "/compress");
+      renderAtLogin("");
+
+      await waitFor(() => {
+        expect(mockNavigate).toHaveBeenCalledWith("/compress", {
+          replace: true,
+        });
+      });
+      // Consumed, so a later sign-in can't reuse a stale path.
+      expect(sessionStorage.getItem("stirling_post_login_path")).toBeNull();
     });
 
     // Delegated to the shared isSafePostLoginRedirect, so the backslash form

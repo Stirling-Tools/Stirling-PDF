@@ -1,5 +1,7 @@
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Spinner } from "@app/ui";
+import { Banner, Spinner } from "@app/ui";
+import { ConnectDoneSlide } from "@portal/components/account-link/connect/ConnectDoneSlide";
+import "@portal/components/account-link/connect/connect.css";
 
 /** Outcomes of returning from the approval page. */
 export type ConnectCallbackState =
@@ -10,26 +12,39 @@ export type ConnectCallbackState =
   | "rejected"
   | "malformed";
 
-export interface ConnectCallbackViewProps {
+export interface ConnectOutcome {
   state: ConnectCallbackState;
   /** True once the SaaS session landed, regardless of how the link itself went. */
   sessionRestored: boolean;
-  onRetry: () => void;
+  /** Present only while the handshake is still open, so a retry re-claims rather than opening one. */
+  reclaim?: () => void;
+}
+
+export function isRetryableOutcome(state: ConnectCallbackState): boolean {
+  return state !== "linked" && state !== "malformed";
+}
+
+export interface ConnectCallbackViewProps {
+  state: ConnectCallbackState;
+  sessionRestored: boolean;
   onDone: () => void;
 }
 
-/** Presentation for the account-link callback. */
+/**
+ * Five states in one step: a failed link is still step 3 of the flow they started, and a separate
+ * error dialog would discard the progress bar that says where they are. Actions live in the
+ * dialog's footer, not here, so they stay where steps 1 and 2 put them.
+ */
 export function ConnectCallbackView({
   state,
   sessionRestored,
-  onRetry,
   onDone,
 }: ConnectCallbackViewProps) {
   const { t } = useTranslation();
 
   if (state === "working") {
     return (
-      <div className="portal-connect-callback">
+      <div className="portal-connect-callback portal-connect-callback--working">
         <Spinner size="md" />
         <p>
           {t(
@@ -44,21 +59,14 @@ export function ConnectCallbackView({
   if (state === "linked") {
     return (
       <div className="portal-connect-callback">
-        <Banner
-          tone="success"
-          title={t(
-            "portal.accountLink.connect.callback.linked.title",
-            "Server connected",
-          )}
-        >
+        <p className="portal-connect__lede">
           {t(
-            "portal.accountLink.connect.callback.linked.body",
-            "This server is connected to your Stirling account.",
+            "portal.accountLink.connect.done.lede",
+            "This server now runs against your Stirling account.",
           )}
-        </Banner>
-        {/* The inverse of the failure note below: the link took but the sign-in did
-            not, which otherwise only shows up later as "session expired" on a page
-            that gives no hint the two are related. */}
+        </p>
+        {/* Link took, sign-in did not: otherwise this resurfaces later as "session expired" with
+            nothing tying it back here. */}
         {sessionRestored ? null : (
           <p className="portal-connect-callback__note">
             {t(
@@ -67,22 +75,19 @@ export function ConnectCallbackView({
             )}
           </p>
         )}
-        <Button variant="primary" onClick={onDone}>
-          {t("portal.accountLink.connect.callback.continue", "Continue")}
-        </Button>
+        <ConnectDoneSlide onNavigate={onDone} />
       </div>
     );
   }
 
-  const { tone, title, body, retryable } = failure(state, t);
+  const { tone, title, body } = failure(state, t);
   return (
     <div className="portal-connect-callback">
       <Banner tone={tone} title={title}>
         {body}
       </Banner>
-      {/* The SaaS sign-in and the server link are separate outcomes. Say so when
-          one worked and the other did not, or the admin re-runs the whole thing
-          to fix a problem that is already half solved. */}
+      {/* Two separate outcomes: without this the admin re-runs the lot to fix a half-solved
+          problem. */}
       {sessionRestored ? (
         <p className="portal-connect-callback__note">
           {t(
@@ -91,11 +96,6 @@ export function ConnectCallbackView({
           )}
         </p>
       ) : null}
-      <Button variant="primary" onClick={retryable ? onRetry : onDone}>
-        {retryable
-          ? t("portal.accountLink.connect.callback.retry", "Try again")
-          : t("portal.accountLink.connect.callback.continue", "Continue")}
-      </Button>
     </div>
   );
 }
@@ -115,7 +115,6 @@ function failure(state: ConnectCallbackState, t: Translate) {
           "portal.accountLink.connect.callback.expired.body",
           "Connection requests are short lived. Start another one.",
         ),
-        retryable: true,
       };
     case "rejected":
       return {
@@ -128,7 +127,6 @@ function failure(state: ConnectCallbackState, t: Translate) {
           "portal.accountLink.connect.callback.rejected.body",
           "This request was declined or has already been used. Start another one if that was not intended.",
         ),
-        retryable: true,
       };
     case "malformed":
       return {
@@ -141,7 +139,6 @@ function failure(state: ConnectCallbackState, t: Translate) {
           "portal.accountLink.connect.callback.malformed.body",
           "This page was opened without a valid connection response. Start the connection from settings.",
         ),
-        retryable: false,
       };
     default:
       return {
@@ -156,7 +153,6 @@ function failure(state: ConnectCallbackState, t: Translate) {
           "portal.accountLink.connect.callback.unfinished.body",
           "Stirling did not confirm the connection. This is usually temporary.",
         ),
-        retryable: true,
       };
   }
 }

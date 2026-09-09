@@ -1,15 +1,23 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import FilePickerModal from "@app/components/shared/FilePickerModal";
+import type { FileId } from "@app/types/file";
 
 const mockStoredFiles = [
-  { id: "file-1", name: "invoice.pdf", size: 245_000, thumbnail: null },
   {
-    id: "file-2",
+    id: "file-1" as FileId,
+    name: "invoice.pdf",
+    size: 245_000,
+  },
+  {
+    id: "file-2" as FileId,
     name: "contract-draft.pdf",
     size: 1_240_000,
-    thumbnail: null,
   },
-  { id: "file-3", name: "scanned-form.pdf", size: 3_400_000, thumbnail: null },
+  {
+    id: "file-3" as FileId,
+    name: "scanned-form.pdf",
+    size: 3_400_000,
+  },
 ];
 
 const meta = {
