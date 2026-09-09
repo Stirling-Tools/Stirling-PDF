@@ -71,7 +71,7 @@ export interface PolicyConfigDef {
 export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
-  /** Org-mandated policy (see the pipeline `Policy.required`). */
+  /** A policy rather than an ordinary pipeline (see `Policy.required`). */
   required: boolean;
   name?: string;
   icon?: string;
@@ -412,8 +412,8 @@ function decoratePolicy(
   runs: PolicyRunView[],
   isDefault: boolean,
 ): DecoratedPolicy | null {
-  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.categoryId);
-  const config = POLICY_CONFIG[decoded.categoryId];
+  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.policyKey);
+  const config = POLICY_CONFIG[decoded.policyKey];
   if (!category || !config) return null;
 
   const policyRuns = runs.filter((r) => r.policyId === decoded.id);
@@ -475,8 +475,8 @@ export function assemblePolicies(
   >();
   for (const wire of wirePolicies) {
     const decoded = fromWirePolicy(wire);
-    if (decoded.categoryId) {
-      decodedByCategory.set(decoded.categoryId, { decoded, isDefault: false });
+    if (decoded.policyKey) {
+      decodedByCategory.set(decoded.policyKey, { decoded, isDefault: false });
     }
   }
 
@@ -605,7 +605,7 @@ export async function clearProcessedHistory(id: string): Promise<void> {
 // Catalogue policy bodies carry categoryId at the top level so the pipelines
 // mock handler can discriminate them from raw pipeline saves on the shared
 // POST /api/v1/policies endpoint. The real backend ignores unknown fields.
-type CatalogueWireBody = WirePolicy & { categoryId: string };
+type CatalogueWireBody = WirePolicy & { categoryId: string; icon?: string };
 
 /**
  * The persisted policy name derived from its category, e.g. "Security Policy".
@@ -626,15 +626,17 @@ export function buildWireFromSetup(
   t: TFunction,
   enabled = true,
 ): CatalogueWireBody {
+  const stored = entry.policy?.state;
   return {
     categoryId: entry.category.id,
+    icon: stored?.icon,
     ...toWirePolicy({
-      id: entry.policy?.state.backendId ?? "",
-      name: policyDisplayName(entry, t),
+      id: stored?.backendId ?? "",
+      name: stored?.name ?? policyDisplayName(entry, t),
       enabled,
       required: result.required,
       extraOptions: result.extraOptions,
-      categoryId: entry.category.id,
+      policyKey: entry.category.id,
       sources: result.sources,
       runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,

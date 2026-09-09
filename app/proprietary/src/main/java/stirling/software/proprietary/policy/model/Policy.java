@@ -4,21 +4,9 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * A stored automation: ordered tool steps, input bindings, and output destinations.
- *
- * <p>Always runnable on demand. Each {@link PipelineInput} references a persisted {@code Source}
- * connection (resolved live at run time) and carries its own optional {@link TriggerConfig}: the
- * trigger decides when that source is pulled, so one input can be watched while another polls, and
- * a {@code null} trigger makes that input manual-only. An input with no trigger, or a policy with
- * no triggered inputs, still runs when the policy is run on demand; a manual run pulls every input.
- *
- * <p>{@code outputIds} reference the {@code Source} locations (resolved live) a run's files are
- * delivered to - a run is delivered to every one; when empty the inline {@link #output} is used
- * (results returned to the caller), the case for editor and one-off policies.
- *
- * <p>{@code storeId} is the pipeline store listing this policy was installed from, or was published
- * as. It is a link back to the listing and nothing more: the store never reads it, and no update
- * tracking hangs off it. {@code null} for pipelines built here.
+ * A stored automation: ordered tool steps, input bindings, and output destinations. {@code storeId}
+ * links back to the pipeline store listing this policy was installed from or published as; nothing
+ * else reads it and no update tracking hangs off it.
  */
 public record Policy(
         String id,
@@ -65,9 +53,10 @@ public record Policy(
     }
 
     /**
-     * Without the {@code required} flag, {@code icon}, or editor participation: defaults to not
-     * org-required, no icon, and a swept/on-demand policy. Kept for the many callers and tests
-     * written before those fields; the frontend and stores that care use the full constructor.
+     * Without the {@code required} flag, {@code icon}, or editor participation: defaults to an
+     * ordinary (non-blocking) pipeline, no icon, and a swept/on-demand policy. Kept for the many
+     * callers and tests written before those fields; the frontend and stores that care use the full
+     * constructor.
      */
     public Policy(
             String id,
@@ -85,7 +74,7 @@ public record Policy(
     /**
      * Without the {@code required} flag or {@code icon} but with explicit editor participation: the
      * seeded Classification policy runs on the editor, so it must set {@link EditorConfig} even
-     * though it predates the org-required and icon fields.
+     * though it predates the {@code required} and icon fields.
      */
     public Policy(
             String id,

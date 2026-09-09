@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.config.Customizer;
@@ -405,22 +406,33 @@ public class SupabaseSecurityConfig {
                         "X-Stirling-Skipped-Field-Edits-Total"));
         cfg.setAllowCredentials(true);
         cfg.setMaxAge(3600L);
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // Registered ahead of "/**": the source returns the first pattern that matches, not the
-        // most specific one.
+        UrlBasedCorsConfigurationSource allowListed = new UrlBasedCorsConfigurationSource();
+        allowListed.registerCorsConfiguration("/**", cfg);
+
+        // Paths a browser on an origin we do not know may reach: the pipeline store for anyone
+        // (anonymous reads, and writes carrying the signed-in user's bearer token), plus the
+        // linked-instance surface once account linking is on. Same no-credential posture for both.
+        UrlBasedCorsConfigurationSource open = new UrlBasedCorsConfigurationSource();
+        open.registerCorsConfiguration("/api/v1/store/**", storeCors());
         if (accountLinkEnabled) {
-            CorsConfiguration linked = linkedInstanceCors();
+            CorsConfiguration linkedCfg = linkedInstanceCors();
             for (String path : LINKED_INSTANCE_PATHS) {
-                source.registerCorsConfiguration(path, linked);
+                open.registerCorsConfiguration(path, linkedCfg);
             }
         }
-        // The pipeline store is a public catalogue reached from whatever origin a portal runs on:
-        // anonymous reads, and writes that carry the signed-in user's bearer token. Same
-        // no-credential posture as the linked-instance paths, but not gated on account linking,
-        // because browsing is meant to work for anyone.
-        source.registerCorsConfiguration("/api/v1/store/**", storeCors());
-        source.registerCorsConfiguration("/**", cfg);
-        return source;
+        // Split by origin, not by path: our own frontends call these same paths and need the
+        // allow-list policy, which is wider on headers, methods and credentials. Only an origin it
+        // would have rejected falls through to the open config.
+        return request -> {
+            String origin = request.getHeader(HttpHeaders.ORIGIN);
+            // "/**" is registered above unconditionally, so this always resolves.
+            CorsConfiguration known = allowListed.getCorsConfiguration(request);
+            if (origin == null || known.checkOrigin(origin) != null) {
+                return known;
+            }
+            CorsConfiguration fallback = open.getCorsConfiguration(request);
+            return fallback != null ? fallback : known;
+        };
     }
 
     private static CorsConfiguration storeCors() {
@@ -431,7 +443,8 @@ public class SupabaseSecurityConfig {
 
     /**
      * Any-origin CORS for the reads a linked self-hosted instance makes from its own browser, whose
-     * origin cannot be known in advance.
+     * origin cannot be known in advance. Only origins the allow-list rejects ever reach this;
+     * anything already allow-listed keeps the credentialed config.
      *
      * <p>Safe only because it carries no credentials: this chain is bearer-token only and nothing
      * in the SaaS module reads a cookie, so the browser attaches no ambient authority and a hostile

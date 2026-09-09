@@ -19,6 +19,8 @@ export interface AppConfig {
   enablePosthog?: boolean | null;
   enableScarf?: boolean | null;
   enableDesktopInstallSlide?: boolean;
+  /** False strips the hidden novelty features - see useSecretClicks. */
+  enableEasterEggs?: boolean;
   premiumEnabled?: boolean;
   premiumKey?: string;
   paygEnabled?: boolean;
