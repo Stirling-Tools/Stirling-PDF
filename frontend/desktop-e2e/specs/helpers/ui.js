@@ -1,6 +1,6 @@
-// `browser`, `$` and `expect` are injected as globals by WebdriverIO's jasmine
-// framework (injectGlobals defaults to true), so specs and helpers use them
-// without importing.
+// `browser`, `$`, `$$` and `expect` are injected as globals by WebdriverIO's
+// jasmine framework (injectGlobals defaults to true), so specs and helpers use
+// them without importing.
 
 /** Resolves once React has rendered something into #root. */
 export async function waitForAppMount(timeout = 60_000) {
@@ -38,13 +38,7 @@ function countOverlays() {
 export async function dismissStartupModals(maxModals = 6) {
   for (let attempt = 0; attempt < maxModals; attempt += 1) {
     if ((await countOverlays()) === 0) return;
-
-    const close = await $('.mantine-Modal-content [aria-label="Close"]');
-    if (await close.isExisting()) {
-      await close.click().catch(() => {});
-    } else {
-      await browser.keys(["Escape"]);
-    }
+    await closeTopModal();
     await browser.pause(1_000);
   }
 
@@ -53,6 +47,98 @@ export async function dismissStartupModals(maxModals = 6) {
     interval: 500,
     timeoutMsg: `A modal overlay is still blocking the UI after ${maxModals} dismissals.`,
   });
+}
+
+async function closeTopModal() {
+  const close = await $('.mantine-Modal-content [aria-label="Close"]');
+  if (await close.isExisting()) {
+    await close.click().catch(() => {});
+    return;
+  }
+  await browser.keys(["Escape"]);
+}
+
+/**
+ * Names whatever owns the element's in-view centre point, or null when the
+ * element itself does. This is the check WebDriver runs before a click, so it
+ * both predicts "element click intercepted" and identifies the culprit.
+ */
+function obstructionOf(element) {
+  return browser.execute((target) => {
+    const rect = target.getBoundingClientRect();
+    const hit = document.elementFromPoint(
+      rect.left + rect.width / 2,
+      rect.top + rect.height / 2,
+    );
+    if (!hit) return "nothing (its centre point is outside the viewport)";
+    if (hit === target || target.contains(hit)) return null;
+    const id = hit.id ? `#${hit.id}` : "";
+    const classes = String(hit.className || "")
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((name) => `.${name}`)
+      .join("");
+    return `<${hit.tagName.toLowerCase()}${id}${classes}>`;
+  }, element);
+}
+
+/**
+ * Clicks the first match the webview will actually accept a click on.
+ *
+ * Two things defeat a plain `$(selector).click()` in the packaged app. The same
+ * `data-tour` id is rendered by three different tool-list components, so the
+ * first match in DOM order is not necessarily the one on screen. And the app
+ * keeps producing late overlays - the sign-in modal lands once its network call
+ * settles, well after the first-run modals were dismissed - which makes
+ * WebKitWebDriver reject the click outright. So: try every visible match,
+ * clear overlays between rounds, and name what swallowed the click if the
+ * element never takes one.
+ */
+export async function clickFirstClickable(
+  selector,
+  description,
+  timeout = 30_000,
+) {
+  await $(selector).waitForExist({
+    timeout,
+    timeoutMsg: `${description} never appeared.`,
+  });
+
+  let blocker = null;
+  const tryOnce = async () => {
+    blocker = null;
+    for (const candidate of await $$(selector)) {
+      try {
+        if (!(await candidate.isDisplayed())) continue;
+        await candidate.scrollIntoView({ block: "center", inline: "center" });
+
+        const obstruction = await obstructionOf(candidate);
+        if (obstruction) {
+          blocker ??= obstruction;
+          continue;
+        }
+        await candidate.click();
+        return true;
+      } catch (error) {
+        // A re-render between the query and the click is a reason to go round
+        // again, not to fail the spec; anything else is a real fault.
+        if (!/intercepted|stale element/i.test(String(error))) throw error;
+        blocker ??= "an element that moved or was replaced mid-click";
+      }
+    }
+    await closeTopModal();
+    return false;
+  };
+
+  try {
+    await browser.waitUntil(tryOnce, { timeout, interval: 500 });
+  } catch {
+    throw new Error(
+      `${description} never took a click - ` +
+        `${blocker ?? "no visible match was found"} was in the way.`,
+    );
+  }
 }
 
 /**

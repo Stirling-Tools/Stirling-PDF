@@ -4,8 +4,7 @@ name: Desktop E2E
 # bundle *compiles and packages*; nothing there ever runs it. This workflow
 # covers what only shows up at runtime.
 #
-# Two suites, because tauri-driver has no macOS backend (Apple ships no
-# WebDriver for WKWebView):
+# Two suites, because tauri-driver only has a usable backend on Linux:
 #
 #   smoke  - launches the binary, reads the backend port off its stdout, and
 #            runs real tools over HTTP. No webview driver, so it runs on all
@@ -14,7 +13,14 @@ name: Desktop E2E
 #            JPDFium natives not published for this OS/arch.
 #   ui     - drives the real webview through tauri-driver: window opens, the
 #            frontend mounts, and a tool runs end to end from the UI.
-#            Linux + Windows only.
+#            Linux only.
+#
+# Neither of the other two platforms can host the ui suite. macOS has no
+# WebDriver for WKWebView at all - Apple ships none. On Windows msedgedriver
+# does launch the app but never finds the WebView2 it is meant to attach to
+# ("session not created: DevToolsActivePort file doesn't exist"), so every
+# session request times out. Windows keeps the smoke suite, which is where the
+# platform-specific risk sits anyway: the bundled JRE, JAR and JPDFium natives.
 on:
   workflow_call:
     inputs:
@@ -57,16 +63,16 @@ jobs:
         env:
           PLATFORM: ${{ inputs.platform }}
         run: |
-          # `webdriver` gates the UI suite: macOS runs the headless smoke only,
-          # because tauri-driver cannot drive WKWebView. macos-15 runners are
-          # Apple silicon, hence darwin-arm64 natives.
+          # `webdriver` gates the UI suite: Windows and macOS run the headless
+          # smoke only, for the reasons at the top of this file. macos-15
+          # runners are Apple silicon, hence darwin-arm64 natives.
           #
           # ubuntu-24.04, unlike the 22.04 the release bundles are built on:
           # the JPDFium linux-x64 natives the app ships link against
           # GLIBC_2.38, so libpdfium.so cannot even be dlopen'd on 22.04's
           # glibc 2.35 and every native tool fails with UnsatisfiedLinkError.
           LINUX='{"os":"ubuntu-24.04","name":"linux","jpdfium_platforms":"linux-x64","webdriver":true}'
-          WINDOWS='{"os":"windows-latest","name":"windows","jpdfium_platforms":"windows-x64","webdriver":true}'
+          WINDOWS='{"os":"windows-latest","name":"windows","jpdfium_platforms":"windows-x64","webdriver":false}'
           MACOS='{"os":"macos-15","name":"macos","jpdfium_platforms":"darwin-arm64","webdriver":false}'
 
           case "$PLATFORM" in
@@ -186,48 +192,13 @@ jobs:
           CI: true
         run: task desktop:e2e:install
 
-      # msedgedriver must match the installed WebView2/Edge major version. The
-      # runner image ships a driver that usually already matches; fall back to
-      # the exact build from Microsoft's CDN when it has drifted.
-      - name: Resolve Edge WebDriver (Windows)
-        if: matrix.name == 'windows'
-        shell: pwsh
-        run: |
-          $edgeExe = "C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe"
-          if (-not (Test-Path $edgeExe)) { Write-Host "[ERROR] Edge not found"; exit 1 }
-          $edgeVersion = (Get-Item $edgeExe).VersionInfo.ProductVersion
-          Write-Host "Edge version: $edgeVersion"
-
-          $preinstalled = "C:\SeleniumWebDrivers\EdgeDriver\msedgedriver.exe"
-          if (Test-Path $preinstalled) {
-            $driverVersion = (Get-Item $preinstalled).VersionInfo.ProductVersion
-            Write-Host "Preinstalled driver version: $driverVersion"
-            if ($driverVersion.Split('.')[0] -eq $edgeVersion.Split('.')[0]) {
-              Write-Host "Using preinstalled msedgedriver"
-              echo "TAURI_DRIVER_NATIVE=$preinstalled" >> $env:GITHUB_ENV
-              exit 0
-            }
-            Write-Host "Major version mismatch - downloading a matching driver"
-          }
-
-          $dest = Join-Path $env:RUNNER_TEMP "edgedriver"
-          New-Item -ItemType Directory -Force -Path $dest | Out-Null
-          $zip = Join-Path $env:RUNNER_TEMP "edgedriver.zip"
-          Invoke-WebRequest -Uri "https://msedgedriver.microsoft.com/$edgeVersion/edgedriver_win64.zip" -OutFile $zip
-          Expand-Archive -Path $zip -DestinationPath $dest -Force
-          echo "TAURI_DRIVER_NATIVE=$dest\msedgedriver.exe" >> $env:GITHUB_ENV
-
       - name: Run desktop UI E2E (Linux)
-        if: matrix.name == 'linux'
+        if: matrix.webdriver
         env:
           # WebKitGTK's compositing path is unreliable under Xvfb's software
           # GL; the app already disables the DMA-BUF renderer itself.
           WEBKIT_DISABLE_COMPOSITING_MODE: "1"
         run: xvfb-run --auto-servernum --server-args="-screen 0 1280x1024x24" task desktop:e2e
-
-      - name: Run desktop UI E2E (Windows)
-        if: matrix.name == 'windows'
-        run: task desktop:e2e
 
       - name: Upload E2E logs
         if: always()

@@ -9,6 +9,7 @@
 
 import { fixture } from "../lib/app-binary.mjs";
 import {
+  clickFirstClickable,
   dismissStartupModals,
   uploadFile,
   waitForAppMount,
@@ -21,8 +22,10 @@ describe("desktop UI runs a tool against the bundled backend", () => {
 
     await uploadFile(fixture("sample.pdf"));
 
-    const rotateTool = await $('[data-tour="tool-button-rotate"]');
-    await rotateTool.click();
+    await clickFirstClickable(
+      '[data-tour="tool-button-rotate"]',
+      "The Rotate tool button",
+    );
 
     // Rotate needs no configuration beyond its default angle, so the run button
     // enabling is the signal that the tool accepted the uploaded file.
@@ -33,7 +36,10 @@ describe("desktop UI runs a tool against the bundled backend", () => {
         "Rotate's run button never enabled - the uploaded file did not reach " +
         "the tool panel.",
     });
-    await runButton.click();
+    await clickFirstClickable(
+      '[data-tour="run-button"]',
+      "Rotate's run button",
+    );
 
     // The review panel only renders once the backend has returned a result, so
     // this failing means the request never completed: the bundled backend was
