@@ -639,8 +639,8 @@ class PolicyEngineTest {
                                     "test never released the tool call");
                             return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
                         });
-        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
-                .thenReturn(new StoredFile("file-1", 7L));
+        // No storage stub on purpose: a cancelled run must not deliver, so nothing may
+        // reach file storage - if delivery regresses, the missing stub fails this loudly.
 
         PolicyRunHandle handle =
                 engine.submit(

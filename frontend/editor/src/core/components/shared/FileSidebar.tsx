@@ -57,6 +57,7 @@ import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
+import { SidebarProcessingSlot } from "@app/components/shared/SidebarProcessingSlot";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -75,6 +76,7 @@ import {
 } from "@app/components/watchedFolders/watchedFolderDragState";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
+import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import "@app/components/shared/FileSidebar.css";
 
 // Shared with the processor sidebar via tokens, so the two cannot drift.
@@ -834,6 +836,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
 
     const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
+    const eligibleFileIds = useToolEligibleFileIds();
 
     // Render one file row (shared by the flat list and the grouped SaaS layout).
     const renderFileRow = (stub: StirlingFileStub) => {
@@ -885,6 +888,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           : lineageKey;
       return (
         <FileItem
+          isToolSkipped={
+            isInWorkbench &&
+            !isWatchedFoldersActive &&
+            eligibleFileIds !== null &&
+            !eligibleFileIds.has(stub.id)
+          }
           key={rowKey}
           fileId={stub.id}
           name={stub.name}
@@ -1327,6 +1336,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               )}
             </div>
           </NavSurface>
+
+          {/* Offer to process a folder of files (e.g. Downloads), beneath the
+              files section. Empty in builds without a policy engine. */}
+          <SidebarProcessingSlot collapsed={collapsed} />
         </div>
 
         {/* Kebab "Save to cloud" upload modal (one file at a time). */}
