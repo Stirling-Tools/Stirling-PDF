@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { LinkProvider } from "@portal/contexts/LinkContext";
 import { UIProvider } from "@portal/contexts/UIContext";
@@ -31,13 +33,29 @@ function Probe() {
   );
 }
 
-const renderStack = () =>
+const renderStack = (path = "/processor/pipelines/new") =>
   render(
     <PortalTestProviders>
       <LinkProvider initialState="unlinked" statusKnown={false}>
         <UIProvider>
           <AccountLinkProvider>
-            <Probe />
+            <MemoryRouter initialEntries={[path]}>
+              <Probe />
+              <Routes>
+                <Route
+                  path="/processor/pipelines/:id"
+                  element={
+                    <ConnectGuardedRoute fallback="/processor/pipelines">
+                      <h1>Pipeline builder</h1>
+                    </ConnectGuardedRoute>
+                  }
+                />
+                <Route
+                  path="/processor/pipelines"
+                  element={<h1>Pipelines list</h1>}
+                />
+              </Routes>
+            </MemoryRouter>
           </AccountLinkProvider>
         </UIProvider>
       </LinkProvider>
@@ -54,16 +72,19 @@ describe("connect gate and the link status", () => {
     let resolve!: (v: unknown) => void;
     fetchStatus.mockReturnValue(new Promise((r) => (resolve = r)));
     renderStack();
-    await waitFor(() => expect(state()).toContain("avail"));
+    await waitFor(() => expect(state()).toBe("avail:open"));
     expect(state()).toContain("open");
-    resolve({ linked: true, name: "acme" });
+    expect(
+      screen.getByRole("heading", { name: "Pipeline builder" }),
+    ).toBeInTheDocument();
+    await act(async () => resolve({ linked: true, name: "acme" }));
   });
 
   it("stays open once a linked status arrives", async () => {
     configSaysAvailable();
     fetchStatus.mockResolvedValue({ linked: true, name: "acme" });
     renderStack();
-    await waitFor(() => expect(state()).toContain("avail"));
+    await waitFor(() => expect(state()).toBe("avail:open"));
     expect(state()).toContain("open");
   });
 
@@ -73,8 +94,7 @@ describe("connect gate and the link status", () => {
       new Error("401 once the admin session lapsed"),
     );
     renderStack();
-    await waitFor(() => expect(state()).toContain("avail"));
-    await new Promise((r) => setTimeout(r, 10));
+    await waitFor(() => expect(state()).toBe("avail:open"));
     expect(state()).toContain("open");
   });
 
@@ -83,5 +103,38 @@ describe("connect gate and the link status", () => {
     fetchStatus.mockResolvedValue({ linked: false, name: null });
     renderStack();
     await waitFor(() => expect(state()).toBe("avail:gated"));
+    expect(
+      await screen.findByRole("heading", { name: "Pipelines list" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Pipeline builder" }),
+    ).not.toBeInTheDocument();
   });
+});
+
+describe("pipeline routes with unknown link status", () => {
+  it.each([
+    ["/processor/pipelines/new", false],
+    ["/processor/pipelines/plc-1", false],
+    ["/processor/pipelines/new", true],
+    ["/processor/pipelines/plc-1", true],
+  ])(
+    "renders %s after a failed status request (link available: %s)",
+    async (path, accountLinkAvailable) => {
+      json.mockResolvedValue({ accountLinkAvailable });
+      fetchStatus.mockRejectedValue(new Error("Link status unavailable"));
+      renderStack(path);
+      await waitFor(() =>
+        expect(state()).toBe(
+          `${accountLinkAvailable ? "avail" : "unavail"}:open`,
+        ),
+      );
+      expect(
+        await screen.findByRole("heading", { name: "Pipeline builder" }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Pipelines list" }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });
