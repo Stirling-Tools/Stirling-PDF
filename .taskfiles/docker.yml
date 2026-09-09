@@ -5,6 +5,16 @@ vars:
   EMBEDDED_DIR: docker/embedded
 
 tasks:
+  check:
+    desc: "Check Docker runtime user modes"
+    vars:
+      IMAGE: '{{.IMAGE | default "stirling-pdf"}}'
+      PYTHON: '{{.PYTHON | default "python3"}}'
+    cmds:
+      - for script in scripts/init.sh scripts/init-without-ocr.sh scripts/runtime-user.sh; do bash -n "$script" || exit; done
+      - '{{.PYTHON}} testing/docker/test_runtime_user_startup.py --image "{{.IMAGE}}"'
+      - '{{.PYTHON}} testing/docker/test_runtime_users.py --image "{{.IMAGE}}" {{.CLI_ARGS}}'
+
   build:
     desc: "Build standard Docker image"
     cmds:

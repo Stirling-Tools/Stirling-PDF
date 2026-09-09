@@ -116,6 +116,11 @@ COPY app/core/src/main/resources/static/fonts/*.ttf /usr/share/fonts/truetype/
 
 # Permissions and configuration
 RUN set -eux; \
+    groupmod -o -g 1000 stirlingpdfgroup; \
+    usermod -o -u 1000 stirlingpdfuser; \
+    mkdir -p /logs /configs /customFiles /pipeline /storage /tmp/stirling-pdf /tmp/.X11-unix; \
+    chown -R stirlingpdfuser:stirlingpdfgroup /home/stirlingpdfuser /logs /configs /customFiles /pipeline /storage /tmp/stirling-pdf; \
+    chmod 1777 /tmp/.X11-unix; \
     chmod +x /scripts/*; \
     ln -s /logs /app/logs; \
     ln -s /configs /app/configs; \
