@@ -21,6 +21,9 @@ import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.accountlink.EntitlementCache;
+import stirling.software.proprietary.accountlink.EntitlementState;
+import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -40,6 +43,7 @@ class UserLicenseSettingsServiceMoreTest {
     @Mock private UserService userService;
     @Mock private LicenseKeyChecker licenseKeyChecker;
     @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
+    @Mock private ObjectProvider<EntitlementCache> entitlementCacheProvider;
 
     private ApplicationProperties applicationProperties;
     private UserLicenseSettingsService service;
@@ -60,7 +64,8 @@ class UserLicenseSettingsServiceMoreTest {
                         settingsRepository,
                         userService,
                         applicationProperties,
-                        licenseKeyCheckerProvider);
+                        licenseKeyCheckerProvider,
+                        entitlementCacheProvider);
     }
 
     // Saves a freshly initialized + locked settings row with a valid signature.
@@ -77,6 +82,83 @@ class UserLicenseSettingsServiceMoreTest {
         when(userService.getTotalUsersCount()).thenReturn((long) count);
         service.validateSettingsIntegrity();
         return s;
+    }
+
+    /**
+     * A valid licence answers first; SaaS answers when there is none. Team is moving to being sold
+     * with no licence at all, so in the end state only Enterprise holds one and it should outrank
+     * SaaS -- it is contracted and must work offline. These pin that order and the fallbacks
+     * beneath it.
+     */
+    @Nested
+    class LinkedTeamAllowance {
+
+        private void cacheReturns(InstanceEntitlement entitlement) {
+            EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+            when(cache.current()).thenReturn(Optional.ofNullable(entitlement));
+            when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        }
+
+        private InstanceEntitlement withAllowance(Integer licensedUsers) {
+            return new InstanceEntitlement(
+                    true, 0, 0, null, EntitlementState.OK, null, null, null, licensedUsers);
+        }
+
+        @Test
+        @DisplayName("no licence: SaaS states the allowance")
+        void saasAnswersWithoutALicence() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(300));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(300);
+        }
+
+        /**
+         * The precedence decision. A legacy unlimited Server licence keeps what it granted rather
+         * than being silently reduced to the subscription's number; a customer worse off under it
+         * removes the licence.
+         */
+        @Test
+        @DisplayName("a valid licence outranks the SaaS allowance")
+        void licenceOutranksSaas() {
+            lockedSettings(7);
+            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+            cacheReturns(withAllowance(100));
+
+            // A SERVER licence with licenseMaxUsers = 0 is unlimited; it is not lowered to 100.
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(Integer.MAX_VALUE);
+        }
+
+        @Test
+        @DisplayName("not linked: the grandfathered limit answers")
+        void unlinkedFallsBackToGrandfathered() {
+            lockedSettings(7);
+            when(entitlementCacheProvider.getIfAvailable()).thenReturn(null);
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        @Test
+        @DisplayName("linked but SaaS has never answered: the grandfathered limit answers")
+        void neverFetchedFallsBackToGrandfathered() {
+            lockedSettings(7);
+            cacheReturns(null);
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        /**
+         * Null is also what an older SaaS sends and what "no user limit" looks like, and the two
+         * are indistinguishable — so it must fall through rather than cap the instance.
+         */
+        @Test
+        @DisplayName("SaaS states no limit: the grandfathered limit answers")
+        void noLimitFallsBackToGrandfathered() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(null));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
     }
 
     @Nested
