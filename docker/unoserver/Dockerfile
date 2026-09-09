@@ -53,7 +53,7 @@ int main(void) {
     v4.sin_addr.s_addr = htonl(0x7f000001);
     expect("v4_loopback", AF_INET, SOCK_DGRAM, (struct sockaddr *)&v4, sizeof v4, 0);
     expect("v4_short_addrlen", AF_INET, SOCK_DGRAM, (struct sockaddr *)&v4, 4, 1);
-    v4.sin_addr.s_addr = htonl(0x08080808);
+    v4.sin_addr.s_addr = htonl(0xc0000201);
     expect("v4_external", AF_INET, SOCK_DGRAM, (struct sockaddr *)&v4, sizeof v4, 1);
 
     struct sockaddr_in6 v6 = {0};
@@ -62,6 +62,9 @@ int main(void) {
     v6.sin6_addr.s6_addr[15] = 1;
     expect("v6_loopback", AF_INET6, SOCK_DGRAM, (struct sockaddr *)&v6, sizeof v6, 0);
     v6.sin6_addr.s6_addr[0] = 0x20;
+    v6.sin6_addr.s6_addr[1] = 0x01;
+    v6.sin6_addr.s6_addr[2] = 0x0d;
+    v6.sin6_addr.s6_addr[3] = 0xb8;
     expect("v6_external", AF_INET6, SOCK_DGRAM, (struct sockaddr *)&v6, sizeof v6, 1);
 
     struct sockaddr_storage other = {0};
