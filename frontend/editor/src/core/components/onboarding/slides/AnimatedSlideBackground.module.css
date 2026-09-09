@@ -40,7 +40,7 @@
   position: absolute;
   border-radius: 50%;
   pointer-events: none;
-  box-shadow: 0 18px 36px rgba(15, 23, 42, 0.12);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.12);
   animation-name: circleSway;
   animation-timing-function: ease-in-out;
   animation-iteration-count: infinite;

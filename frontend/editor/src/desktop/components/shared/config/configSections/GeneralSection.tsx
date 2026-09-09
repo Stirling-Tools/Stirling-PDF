@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import CoreGeneralSection from "@core/components/shared/config/configSections/GeneralSection";
 import { DefaultAppSettings } from "@app/components/shared/config/configSections/DefaultAppSettings";
 import { useDesktopInstall } from "@app/hooks/useDesktopInstall";
+import { useSaaSMode } from "@app/hooks/useSaaSMode";
 import {
   desktopUpdateService,
   type UpdateMode,
@@ -22,6 +23,9 @@ import {
 const GeneralSection: React.FC = () => {
   const { t } = useTranslation();
   const install = useDesktopInstall();
+  // In SaaS connection mode the cloud owns app versioning — hide the update
+  // section (which also stops the core auto-check from firing).
+  const isSaaSMode = useSaaSMode();
   const [updateModeInfo, setUpdateModeInfo] = useState<UpdateModeInfo>({
     mode: "prompt",
     locked: false,
@@ -93,7 +97,8 @@ const GeneralSection: React.FC = () => {
       )}
       <CoreGeneralSection
         hideUpdateSection={
-          updateModeInfo.mode === "disabled" && updateModeInfo.locked
+          isSaaSMode ||
+          (updateModeInfo.mode === "disabled" && updateModeInfo.locked)
         }
         desktopInstall={{
           state: install.state,

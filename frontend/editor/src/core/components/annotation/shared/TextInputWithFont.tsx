@@ -7,8 +7,8 @@ import {
   useCombobox,
   Group,
   Box,
-  SegmentedControl,
 } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { ColorPicker } from "@app/components/annotation/shared/ColorPicker";
 
@@ -227,7 +227,7 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
                     width: 24,
                     height: 24,
                     backgroundColor: textColor,
-                    border: "1px solid #ccc",
+                    border: "1px solid var(--c-border)",
                     borderRadius: 4,
                     cursor: disabled ? "default" : "pointer",
                   }}
@@ -253,14 +253,14 @@ export const TextInputWithFont: React.FC<TextInputWithFontProps> = ({
 
       {/* Text Alignment */}
       {onTextAlignChange && (
-        <SegmentedControl
+        <SegmentedControl<"left" | "center" | "right">
           value={textAlign}
-          onChange={(value: string) => {
-            onTextAlignChange(value as "left" | "center" | "right");
+          onChange={(value) => {
+            onTextAlignChange(value);
             onAnyChange?.();
           }}
-          disabled={disabled}
-          data={[
+          loading={disabled}
+          options={[
             { label: t("textAlign.left", "Left"), value: "left" },
             { label: t("textAlign.center", "Center"), value: "center" },
             { label: t("textAlign.right", "Right"), value: "right" },

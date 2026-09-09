@@ -30,6 +30,7 @@ interface LoginResponse {
   token: string;
   username: string;
   email: string | null;
+  refresh_token: string | null;
 }
 
 interface OAuthCallbackResult {
@@ -347,11 +348,18 @@ export class AuthService {
         saasServerUrl: STIRLING_SAAS_URL,
       });
 
-      const { token, username: returnedUsername, email } = response;
+      const {
+        token,
+        username: returnedUsername,
+        email,
+        refresh_token: refreshToken,
+      } = response;
 
-      // Save token to all storage locations
+      // Save token to all storage locations. Supabase (SaaS) logins include a
+      // refresh token so the short-lived access token can be renewed; self-hosted
+      // logins return null here and refresh via the current access token instead.
       try {
-        await this.saveTokenEverywhere(token);
+        await this.saveTokenEverywhere(token, refreshToken);
       } catch (error) {
         console.error("[Desktop AuthService] Failed to save token:", error);
         throw new Error("Failed to save authentication token", {

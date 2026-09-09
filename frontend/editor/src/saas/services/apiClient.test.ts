@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Session, AuthError } from "@supabase/supabase-js";
 import { supabase } from "@app/auth/supabase";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 // Mock supabase
 vi.mock("@app/auth/supabase", () => ({
@@ -10,6 +11,15 @@ vi.mock("@app/auth/supabase", () => ({
       refreshSession: vi.fn(),
     },
   },
+}));
+
+// Stub apiClient's heavy UI/util deps so importing it stays cheap. None are
+// exercised here (toast, plan settings and handleHttpError paths aren't hit),
+// and re-importing the real toast graph per test made these tests time out.
+vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
+vi.mock("@app/utils/appSettings", () => ({ openPlanSettings: vi.fn() }));
+vi.mock("@app/services/httpErrorHandler", () => ({
+  handleHttpError: vi.fn().mockResolvedValue(undefined),
 }));
 
 describe("apiClient", () => {
@@ -177,6 +187,7 @@ describe("apiClient", () => {
   });
 
   it("should handle refresh token failure", async () => {
+    expectConsole.error(/\[API Client\] Token refresh failed/);
     const oldToken = "old-token";
 
     const oldSession = {

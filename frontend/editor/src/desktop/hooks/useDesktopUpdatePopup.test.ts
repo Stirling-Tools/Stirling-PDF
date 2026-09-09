@@ -1,5 +1,6 @@
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 // ── Mocks (hoisted by vi.mock) ──────────────────────────────────────────────
 const invokeMock = vi.fn();
@@ -8,6 +9,7 @@ const getVersionMock = vi.fn();
 const getUpdateModeMock = vi.fn();
 const canInstallUpdatesMock = vi.fn();
 const getUpdateSummaryMock = vi.fn();
+const getCurrentModeMock = vi.fn();
 
 vi.mock("@tauri-apps/api/core", () => ({
   invoke: (cmd: string, args?: unknown) => invokeMock(cmd, args),
@@ -35,6 +37,12 @@ vi.mock("@app/services/desktopUpdateService", () => ({
   },
 }));
 
+vi.mock("@app/services/connectionModeService", () => ({
+  connectionModeService: {
+    getCurrentMode: () => getCurrentModeMock(),
+  },
+}));
+
 import { useDesktopUpdatePopup } from "@app/hooks/useDesktopUpdatePopup";
 
 /** Flush pending microtasks so awaited promises settle. */
@@ -46,13 +54,21 @@ async function flushMicrotasks() {
 
 const AUTO_FAILURE_KEY = "stirling-pdf-updater:autoFailedAt";
 
-/** Run the hook through its startup timer + async chain. */
+/**
+ * Run the hook through its startup timer + async chain. The post-render
+ * timer-driven async work is wrapped in act() so the state updates it
+ * triggers don't surface as React "not wrapped in act" warnings.
+ * renderHook already wraps the initial render in act internally, so it
+ * stays outside.
+ */
 async function runStartup() {
   renderHook(() => useDesktopUpdatePopup());
-  await vi.advanceTimersByTimeAsync(16_000);
-  await flushMicrotasks();
-  await vi.advanceTimersByTimeAsync(0);
-  await flushMicrotasks();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(16_000);
+    await flushMicrotasks();
+    await vi.advanceTimersByTimeAsync(0);
+    await flushMicrotasks();
+  });
 }
 
 describe("useDesktopUpdatePopup — auto mode", () => {
@@ -65,8 +81,11 @@ describe("useDesktopUpdatePopup — auto mode", () => {
     getUpdateModeMock.mockReset();
     canInstallUpdatesMock.mockReset();
     getUpdateSummaryMock.mockReset();
+    getCurrentModeMock.mockReset();
 
-    // Defaults: auto mode, update available, install permitted.
+    // Defaults: local (non-SaaS) connection, auto mode, update available,
+    // install permitted.
+    getCurrentModeMock.mockResolvedValue("local");
     getUpdateModeMock.mockResolvedValue("auto");
     getVersionMock.mockResolvedValue("1.0.0");
     getUpdateSummaryMock.mockResolvedValue({ latest_version: "2.0.0" });
@@ -83,6 +102,7 @@ describe("useDesktopUpdatePopup — auto mode", () => {
   });
 
   it("does NOT call restart_app when download_and_install_update fails", async () => {
+    expectConsole.error(/\[useDesktopInstall\] Install failed/);
     invokeMock.mockImplementation((cmd: string) => {
       if (cmd === "check_for_update") {
         return Promise.resolve({
@@ -132,6 +152,9 @@ describe("useDesktopUpdatePopup — auto mode", () => {
   });
 
   it("skips the install entirely when a recent failure is within the backoff window", async () => {
+    expectConsole.warn(
+      /\[DesktopUpdatePopup\] auto-update skipped: recent failure within backoff window/,
+    );
     // Recorded 1 hour ago — well inside the 6-hour backoff.
     const oneHourAgo = Date.now() - 60 * 60 * 1000;
     window.localStorage.setItem(AUTO_FAILURE_KEY, String(oneHourAgo));
@@ -175,5 +198,19 @@ describe("useDesktopUpdatePopup — auto mode", () => {
     const invocations = invokeMock.mock.calls.map((c) => c[0]);
     expect(invocations).toContain("download_and_install_update");
     expect(invocations).toContain("restart_app");
+  });
+
+  it("skips the update check entirely in SaaS connection mode", async () => {
+    // In SaaS mode the cloud owns versioning — the self-hosted update check
+    // must never run: no mode lookup, no external summary fetch, no install.
+    getCurrentModeMock.mockResolvedValue("saas");
+
+    await runStartup();
+
+    expect(getUpdateModeMock).not.toHaveBeenCalled();
+    expect(getUpdateSummaryMock).not.toHaveBeenCalled();
+    const invocations = invokeMock.mock.calls.map((c) => c[0]);
+    expect(invocations).not.toContain("download_and_install_update");
+    expect(invocations).not.toContain("restart_app");
   });
 });

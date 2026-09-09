@@ -1,4 +1,5 @@
-import { Stack, Text, Button, TextInput, NumberInput } from "@mantine/core";
+import { Stack, Text, TextInput, NumberInput } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 
@@ -21,8 +22,8 @@ const SignatureAppearanceSettings = ({
       <Stack gap="sm">
         <div style={{ display: "flex", gap: "4px" }}>
           <Button
-            variant={!parameters.showSignature ? "filled" : "outline"}
-            color={!parameters.showSignature ? "blue" : "var(--text-muted)"}
+            accent={!parameters.showSignature ? "default" : "neutral"}
+            variant={!parameters.showSignature ? "primary" : "secondary"}
             onClick={() => onParameterChange("showSignature", false)}
             disabled={disabled}
             style={{
@@ -43,8 +44,8 @@ const SignatureAppearanceSettings = ({
             </div>
           </Button>
           <Button
-            variant={parameters.showSignature ? "filled" : "outline"}
-            color={parameters.showSignature ? "blue" : "var(--text-muted)"}
+            accent={parameters.showSignature ? "default" : "neutral"}
+            variant={parameters.showSignature ? "primary" : "secondary"}
             onClick={() => onParameterChange("showSignature", true)}
             disabled={disabled}
             style={{
@@ -110,8 +111,8 @@ const SignatureAppearanceSettings = ({
             </Text>
             <div style={{ display: "flex", gap: "4px" }}>
               <Button
-                variant={!parameters.showLogo ? "filled" : "outline"}
-                color={!parameters.showLogo ? "blue" : "var(--text-muted)"}
+                accent={!parameters.showLogo ? "default" : "neutral"}
+                variant={!parameters.showLogo ? "primary" : "secondary"}
                 onClick={() => onParameterChange("showLogo", false)}
                 disabled={disabled}
                 style={{
@@ -132,8 +133,8 @@ const SignatureAppearanceSettings = ({
                 </div>
               </Button>
               <Button
-                variant={parameters.showLogo ? "filled" : "outline"}
-                color={parameters.showLogo ? "blue" : "var(--text-muted)"}
+                accent={parameters.showLogo ? "default" : "neutral"}
+                variant={parameters.showLogo ? "primary" : "secondary"}
                 onClick={() => onParameterChange("showLogo", true)}
                 disabled={disabled}
                 style={{

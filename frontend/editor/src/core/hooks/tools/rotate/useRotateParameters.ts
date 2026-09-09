@@ -25,14 +25,18 @@ export type RotateParametersHook = BaseParametersHook<RotateParameters> & {
   normalizeAngle: (angle: number) => number;
 };
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateRotateParameters(params: RotateParameters): boolean {
+  // Angle must be a multiple of 90
+  return params.angle % 90 === 0;
+}
+
 export const useRotateParameters = (): RotateParametersHook => {
   const baseHook = useBaseParameters({
     defaultParameters,
     endpointName: "rotate-pdf",
-    validateFn: (params) => {
-      // Angle must be a multiple of 90
-      return params.angle % 90 === 0;
-    },
+    validateFn: validateRotateParameters,
   });
 
   // Rotate clockwise by 90 degrees

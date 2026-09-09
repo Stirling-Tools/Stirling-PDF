@@ -47,7 +47,7 @@ const MobileLayout: React.FC = () => {
           flex: 1,
           display: "flex",
           flexDirection: "column",
-          backgroundColor: "var(--bg-file-list)",
+          backgroundColor: "var(--c-surface)",
           borderRadius: "0.5rem",
           border: "1px solid var(--mantine-color-gray-2)",
           overflow: "hidden",

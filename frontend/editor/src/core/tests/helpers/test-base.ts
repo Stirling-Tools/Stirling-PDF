@@ -1,6 +1,7 @@
 import { test as base, expect } from "@playwright/test";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
+import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
 
 /**
  * Custom test fixture that:
@@ -40,6 +41,7 @@ const COVERAGE_DIR = path.resolve(
 
 export const test = base.extend({
   page: async ({ page }, use, testInfo) => {
+    suppressNativeFilePicker(page);
     await page.context().addCookies([
       {
         name: "cc_cookie",

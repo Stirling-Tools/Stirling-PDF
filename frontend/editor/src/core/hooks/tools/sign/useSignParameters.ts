@@ -32,7 +32,7 @@ export const DEFAULT_PARAMETERS: SignParameters = {
   textAlign: "left",
 };
 
-const validateSignParameters = (parameters: SignParameters): boolean => {
+export const validateSignParameters = (parameters: SignParameters): boolean => {
   // Basic validation
   if (!parameters.signatureType) return false;
 

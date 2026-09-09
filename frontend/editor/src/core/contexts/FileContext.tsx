@@ -243,6 +243,8 @@ function FileContextInner({
         skipAutoUnzip?: boolean;
         /** Persist to IDB without dispatching to workspace state. */
         skipWorkspaceDispatch?: boolean;
+        skipUploadTracking?: boolean;
+        derivedFromTool?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -266,10 +268,13 @@ function FileContextInner({
       if (options?.selectFiles && stirlingFiles.length > 0) {
         selectFiles(stirlingFiles);
       }
+      if (stirlingFiles.length > 0) {
+        indexedDB?.bumpRevision?.();
+      }
 
       return stirlingFiles;
     },
-    [enablePersistence, requestConfirmation],
+    [enablePersistence, requestConfirmation, indexedDB],
   );
 
   const addFilesWithOptions = useCallback(
@@ -286,6 +291,7 @@ function FileContextInner({
           fileName: string,
         ) => Promise<boolean>;
         allowDuplicates?: boolean;
+        skipUploadTracking?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -304,9 +310,13 @@ function FileContextInner({
         selectFiles(stirlingFiles);
       }
 
+      if (stirlingFiles.length > 0) {
+        indexedDB?.bumpRevision?.();
+      }
+
       return stirlingFiles;
     },
-    [enablePersistence],
+    [enablePersistence, indexedDB],
   );
 
   const addStirlingFileStubsAction = useCallback(
@@ -343,6 +353,7 @@ function FileContextInner({
       inputFileIds: FileId[],
       outputStirlingFiles: StirlingFile[],
       outputStirlingFileStubs: StirlingFileStub[],
+      options?: { silent?: boolean },
     ): Promise<FileId[]> => {
       return consumeFiles(
         inputFileIds,
@@ -350,6 +361,7 @@ function FileContextInner({
         outputStirlingFileStubs,
         filesRef,
         dispatch,
+        options,
       );
     },
     [],

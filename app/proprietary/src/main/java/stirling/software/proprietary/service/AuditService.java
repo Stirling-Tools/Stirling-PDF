@@ -11,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import org.apache.commons.lang3.StringUtils;
@@ -38,8 +37,11 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.RequestUriUtils;
+import stirling.software.proprietary.accountlink.BillableOperationClassifier;
+import stirling.software.proprietary.audit.AuditContext;
 import stirling.software.proprietary.audit.AuditEventType;
 import stirling.software.proprietary.audit.AuditLevel;
 import stirling.software.proprietary.audit.Audited;
@@ -413,7 +415,7 @@ public class AuditService {
 
                                             return m;
                                         })
-                                .collect(Collectors.toList());
+                                .toList();
 
                 data.put("files", fileInfos);
             }
@@ -467,6 +469,73 @@ public class AuditService {
                         e.getMessage());
             }
         }
+    }
+
+    /**
+     * Merge controller-supplied context into the audit data, read in the aspect's {@code finally}
+     * after the controller body has run. A policy run stamps its name and step endpoints as request
+     * attributes ({@link AuditContext}); the internal loopback dispatch that executes each pipeline
+     * step carries the automation marker header ({@link InternalApiClient#AUTOMATION_HEADER}).
+     * Surfacing these lets the portal label a run as its policy instead of the raw {@code /run}
+     * endpoint, and flag its sub-steps as automation rather than direct user actions.
+     *
+     * @param data The existing audit data map
+     * @param req The current request, or null when not in a web context
+     */
+    public void addAutomationContext(Map<String, Object> data, HttpServletRequest req) {
+        if (req == null) {
+            return;
+        }
+        Object policyName = req.getAttribute(AuditContext.REQ_ATTR_POLICY_NAME);
+        if (policyName == null) {
+            // A pipeline step's loopback dispatch carries its parent policy name as a header, so
+            // the
+            // step audit ties back to the policy that ran it (not a bare direct call).
+            String header = req.getHeader(InternalApiClient.POLICY_NAME_HEADER);
+            if (header != null && !header.isBlank()) {
+                policyName = header;
+            }
+        }
+        if (policyName != null) {
+            // Both sources are caller-controlled (the header is spoofable and, unlike the sender in
+            // InternalApiClient, uncapped); strip newlines and cap before persisting to audit JSON.
+            String safe = capLabel(String.valueOf(policyName));
+            if (!safe.isEmpty()) {
+                data.put("policyName", safe);
+            }
+        }
+        Object steps = req.getAttribute(AuditContext.REQ_ATTR_POLICY_STEPS);
+        if (steps instanceof List<?> list && !list.isEmpty()) {
+            // Caller-supplied and unbounded; cap count and each entry so a crafted run can't
+            // bloat the audit JSON the portal cache loads and parses in bulk.
+            List<String> safeSteps =
+                    list.stream()
+                            .limit(MAX_POLICY_STEPS)
+                            .map(s -> capLabel(String.valueOf(s)))
+                            .filter(s -> !s.isEmpty())
+                            .toList();
+            if (!safeSteps.isEmpty()) {
+                data.put("policySteps", safeSteps);
+            }
+        }
+        if ("true".equalsIgnoreCase(req.getHeader(InternalApiClient.AUTOMATION_HEADER))) {
+            data.put("automation", Boolean.TRUE);
+        }
+    }
+
+    /** Max characters kept for a persisted policy label; mirrors the InternalApiClient send cap. */
+    private static final int MAX_LABEL_LEN = 200;
+
+    /** Max step endpoints kept on a run's audit event; the portal only shows the first few. */
+    private static final int MAX_POLICY_STEPS = 50;
+
+    /** Single-line, length-capped label safe to persist to audit JSON and render in the portal. */
+    private static String capLabel(String value) {
+        if (value == null) {
+            return "";
+        }
+        String safe = value.replaceAll("[\\r\\n]", " ").trim();
+        return safe.length() > MAX_LABEL_LEN ? safe.substring(0, MAX_LABEL_LEN) : safe;
     }
 
     /**
@@ -846,6 +915,39 @@ public class AuditService {
     public String captureCurrentOrigin() {
         String origin = determineOrigin();
         return origin;
+    }
+
+    /**
+     * Refines {@link #determineOrigin()} into an audit {@code source} that isolates genuine
+     * free-editor UI runs from automation/AI traffic that also arrives over the web channel.
+     *
+     * <p>API and SYSTEM origins pass through unchanged. A WEB origin is demoted to "AUTOMATION" or
+     * "AI" when the request carries the automation marker or targets an AI surface; only a manual
+     * interactive tool call ({@code BYPASSED}) stays "WEB". A "WEB" source therefore counts as a
+     * free/BYPASSED UI run. The automation/AI resolution is delegated to {@link
+     * BillableOperationClassifier} so it can't drift from the billing gate's own signal.
+     *
+     * <p>IMPORTANT: like {@link #captureCurrentOrigin()} this must be called on the request thread
+     * before async execution, because it reads the current {@link HttpServletRequest}.
+     *
+     * @return "API", "SYSTEM", "AUTOMATION", "AI", or "WEB"
+     */
+    public String captureCurrentSource() {
+        String origin = determineOrigin();
+        if (!"WEB".equals(origin)) {
+            return origin;
+        }
+
+        HttpServletRequest req = getCurrentRequest();
+        if (req == null) {
+            return "WEB";
+        }
+        // apiKey=false: a WEB origin already means the request is not API-key authenticated.
+        return switch (BillableOperationClassifier.categorize(req, false)) {
+            case AUTOMATION -> "AUTOMATION";
+            case AI -> "AI";
+            default -> "WEB";
+        };
     }
 
     /**

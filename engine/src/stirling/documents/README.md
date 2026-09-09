@@ -54,10 +54,10 @@ everything = RagCapability(runtime.documents)
 Non-secret defaults live in the committed `engine/.env`:
 
 ```
-STIRLING_RAG_BACKEND=sqlite              # or "pgvector"
+STIRLING_DOCUMENTS_BACKEND=sqlite              # or "pgvector"
 STIRLING_RAG_EMBEDDING_MODEL=voyageai:voyage-4
-STIRLING_RAG_STORE_PATH=data/rag.db      # used when backend=sqlite
-STIRLING_RAG_PGVECTOR_DSN=               # used when backend=pgvector
+STIRLING_DOCUMENTS_SQLITE_PATH=data/rag.db      # used when backend=sqlite
+STIRLING_DOCUMENTS_PGVECTOR_DSN=               # used when backend=pgvector
 STIRLING_RAG_CHUNK_SIZE=512
 STIRLING_RAG_CHUNK_OVERLAP=64
 STIRLING_RAG_TOP_K=5
@@ -76,7 +76,7 @@ VOYAGE_API_KEY=your-key
 and self-hosted deployments.
 
 **`pgvector`** - External PostgreSQL with the `vector` extension. Point
-`STIRLING_RAG_PGVECTOR_DSN` at your Postgres instance.
+`STIRLING_DOCUMENTS_PGVECTOR_DSN` at your Postgres instance.
 
 Both backends implement the same `DocumentStore` interface, so agents and the
 service work identically regardless of which you pick.

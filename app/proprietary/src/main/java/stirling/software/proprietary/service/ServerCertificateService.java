@@ -4,7 +4,6 @@ import java.io.*;
 import java.math.BigInteger;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.security.*;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
@@ -23,12 +22,12 @@ import org.bouncycastle.cert.jcajce.JcaX509v3CertificateBuilder;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
+import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.ServerCertificateServiceInterface;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -41,22 +40,22 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     private static final String KEYSTORE_ALIAS = "stirling-pdf-server";
     private static final String DEFAULT_PASSWORD = "stirling-pdf-server-cert";
 
-    @Value("${system.serverCertificate.enabled:false}")
     private boolean enabled;
-
-    @Value("${system.serverCertificate.organizationName:Stirling-PDF}")
     private String organizationName;
-
-    @Value("${system.serverCertificate.validity:365}")
     private int validityDays;
-
-    @Value("${system.serverCertificate.regenerateOnStartup:false}")
     private boolean regenerateOnStartup;
 
     private final LicenseKeyChecker licenseKeyChecker;
 
-    public ServerCertificateService(LicenseKeyChecker licenseKeyChecker) {
+    public ServerCertificateService(
+            LicenseKeyChecker licenseKeyChecker, ApplicationProperties applicationProperties) {
         this.licenseKeyChecker = licenseKeyChecker;
+        ApplicationProperties.System.ServerCertificate config =
+                applicationProperties.getSystem().getServerCertificate();
+        this.enabled = config.isEnabled();
+        this.organizationName = config.getOrganizationName();
+        this.validityDays = config.getValidity();
+        this.regenerateOnStartup = config.isRegenerateOnStartup();
     }
 
     static {
@@ -64,7 +63,7 @@ public class ServerCertificateService implements ServerCertificateServiceInterfa
     }
 
     private Path getKeystorePath() {
-        return Paths.get(InstallationPathConfig.getConfigPath(), KEYSTORE_FILENAME);
+        return Path.of(InstallationPathConfig.getConfigPath(), KEYSTORE_FILENAME);
     }
 
     private boolean hasProOrEnterpriseAccess() {

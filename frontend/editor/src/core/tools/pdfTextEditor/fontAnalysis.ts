@@ -502,21 +502,3 @@ export const getFontStatusColor = (status: FontStatus): string => {
       return "gray";
   }
 };
-
-/**
- * Gets an icon indicator for the font status
- */
-export const getFontStatusIcon = (status: FontStatus): string => {
-  switch (status) {
-    case "perfect":
-      return "✓";
-    case "embedded-subset":
-      return "⚠";
-    case "system-fallback":
-      return "⚠";
-    case "missing":
-      return "✗";
-    case "unknown":
-      return "?";
-  }
-};

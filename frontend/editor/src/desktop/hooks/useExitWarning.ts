@@ -42,10 +42,9 @@ export function useExitWarning() {
         const choice = await message(
           t(
             "confirmCloseUnsavedList",
-            "You have {{count}} file{{plural}} with unsaved changes.\n\n{{fileList}}",
+            "You have {{count}} file(s) with unsaved changes.\n\n{{fileList}}",
             {
               count: dirtyStubs.length,
-              plural: dirtyStubs.length > 1 ? "s" : "",
               fileList,
             },
           ),
@@ -73,10 +72,9 @@ export function useExitWarning() {
             await message(
               t(
                 "confirmCloseSaveFailed",
-                "Saved with errors. {{count}} file{{plural}} could not be saved.",
+                "Saved with errors. {{count}} file(s) could not be saved.",
                 {
                   count: failedCount,
-                  plural: failedCount > 1 ? "s" : "",
                 },
               ),
               {

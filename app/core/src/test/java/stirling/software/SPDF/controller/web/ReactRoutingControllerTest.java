@@ -95,6 +95,38 @@ class ReactRoutingControllerTest {
         assertTrue(body.contains("Stirling PDF"));
     }
 
+    // --- mobile scanner route ---
+
+    @Test
+    void serveMobileScanner_webMode_servesSpaNotUploadPage() {
+        controller.init();
+
+        ResponseEntity<String> response = controller.serveMobileScanner(request);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        String body = response.getBody();
+        assertNotNull(body);
+        assertFalse(body.contains("Take Photo"));
+    }
+
+    @Test
+    void serveMobileScanner_desktopMode_servesStaticUploadPage() {
+        controller.init();
+        System.setProperty("STIRLING_PDF_TAURI_MODE", "true");
+        try {
+            ResponseEntity<String> response = controller.serveMobileScanner(request);
+
+            assertEquals(HttpStatus.OK, response.getStatusCode());
+            assertEquals(MediaType.TEXT_HTML, response.getHeaders().getContentType());
+            String body = response.getBody();
+            assertNotNull(body);
+            assertTrue(body.contains("Mobile Upload"));
+            assertTrue(body.contains("Take Photo"));
+        } finally {
+            System.clearProperty("STIRLING_PDF_TAURI_MODE");
+        }
+    }
+
     // --- tauri auth callback ---
 
     @Test

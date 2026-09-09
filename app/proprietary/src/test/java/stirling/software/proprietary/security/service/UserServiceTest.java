@@ -24,6 +24,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
@@ -63,6 +64,14 @@ class UserServiceTest {
     @Mock private StorageCleanupEntryRepository storageCleanupEntryRepository;
     @Mock private FileShareRepository fileShareRepository;
     @Mock private FileShareAccessRepository fileShareAccessRepository;
+    @Mock private ResourceGrantRepository resourceGrantRepository;
+
+    @Mock
+    private stirling.software.proprietary.integration.repository.IntegrationConfigRepository
+            integrationConfigRepository;
+
+    @Mock private TeamMembershipService teamMembershipService;
+    @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Spy @InjectMocks private UserService userService;
 
@@ -186,6 +195,27 @@ class UserServiceTest {
 
         assertNotNull(updated.getApiKey());
         verify(userRepository).save(user);
+    }
+
+    @Test
+    void addApiKeyToUserRevokesOldMigratedShadowRow() {
+        User user = new User();
+        user.setUsername("user");
+        user.setApiKey("old-secret");
+        when(userRepository.findByUsernameIgnoreCase("user")).thenReturn(Optional.of(user));
+        when(userRepository.findByApiKey(any())).thenReturn(Optional.empty());
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        User updated = userService.addApiKeyToUser("user");
+
+        // Rotating a legacy key must revoke its migrated api_keys shadow row with the OLD secret,
+        // and do so before the new key is generated - otherwise the old secret keeps
+        // authenticating.
+        org.mockito.InOrder inOrder = inOrder(apiKeyAuthenticationService, userRepository);
+        inOrder.verify(apiKeyAuthenticationService).revokeMigratedKey("old-secret");
+        inOrder.verify(userRepository).save(user);
+        assertNotEquals("old-secret", updated.getApiKey());
     }
 
     @Test

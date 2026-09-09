@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.multipdf.Overlay;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -157,7 +158,10 @@ public class PdfOverlayController {
                     PDDocument singlePageDocument = new PDDocument()) {
                 singlePageDocument.addPage(overlayPdf.getPage(pageCountInCurrentOverlay));
                 File tempFile = Files.createTempFile("overlay-page-", ".pdf").toFile();
-                singlePageDocument.save(tempFile);
+                // NO_COMPRESSION: this single-page doc holds a page copied from overlayPdf.
+                // PDFBox 3.0.7's compressed writer (PDFBOX-6203) drops shared resources imported
+                // across documents, corrupting overlay fonts. Revert once on 3.0.8.
+                singlePageDocument.save(tempFile, CompressParameters.NO_COMPRESSION);
 
                 overlayGuide.put(basePageIndex, tempFile.getAbsolutePath());
                 tempFiles.add(tempFile); // Keep track of the temporary file for cleanup

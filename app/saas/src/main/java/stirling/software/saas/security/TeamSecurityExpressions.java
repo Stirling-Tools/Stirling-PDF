@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.common.model.enumeration.TeamRole;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.service.UserService;
-import stirling.software.saas.repository.TeamMembershipRepository;
 
 /**
  * Security expressions for team-based authorization in saas mode. Wired into
@@ -42,6 +42,33 @@ public class TeamSecurityExpressions {
                 .findByTeamIdAndUserId(teamId, currentUser.getId())
                 .map(membership -> membership.getRole() == TeamRole.LEADER)
                 .orElse(false);
+    }
+
+    /** Whether the current authenticated user is a {@code LEADER} of their own team. */
+    public boolean isCurrentUserTeamLeader() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null || currentUser.getTeam() == null) {
+            return false;
+        }
+        return membershipRepository
+                .findByTeamIdAndUserId(currentUser.getTeam().getId(), currentUser.getId())
+                .map(membership -> membership.getRole() == TeamRole.LEADER)
+                .orElse(false);
+    }
+
+    /** The current authenticated user's team id, or {@code null} if unauthenticated / teamless. */
+    public Long currentUserTeamId() {
+        User currentUser = getCurrentUser();
+        if (currentUser == null || currentUser.getTeam() == null) {
+            return null;
+        }
+        return currentUser.getTeam().getId();
+    }
+
+    /** The current authenticated user's id, or {@code null} if unauthenticated. */
+    public Long currentUserId() {
+        User currentUser = getCurrentUser();
+        return currentUser == null ? null : currentUser.getId();
     }
 
     /** Whether the current authenticated user is any kind of member of the given team. */

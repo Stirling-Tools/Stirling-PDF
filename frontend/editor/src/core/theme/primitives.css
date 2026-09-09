@@ -1,0 +1,173 @@
+/* PRIMITIVES — the raw palette (theme-agnostic). The ONE place literal colours live: neutral ramps (gray=light, zinc=dark) + status hues; colors.css and compat.css reference these. */
+
+:root {
+  --p-white: #ffffff;
+  --p-black: #000000;
+  --p-gray-50: #f9fafb;
+  --p-gray-100: #f3f4f6;
+  --p-gray-150: #eef0f2;
+  --p-gray-200: #e5e7eb;
+  --p-gray-250: #e2e8f0;
+  --p-gray-300: #d1d5db;
+  --p-gray-400: #9ca3af;
+  --p-gray-500: #6b7280;
+  --p-gray-600: #4b5563;
+  --p-gray-700: #374151;
+  --p-gray-800: #1f2937;
+  --p-gray-900: #111827;
+  --p-zinc-950: #0f0f10;
+  --p-zinc-900: #101012;
+  --p-zinc-850: #131315;
+  --p-zinc-800: #18181b;
+  --p-zinc-775: #202023;
+  --p-zinc-750: #1f1f23;
+  --p-zinc-700: #27272a;
+  --p-zinc-650: #2a2a2e;
+  --p-zinc-600: #333338;
+  --p-zinc-500: #3f3f46;
+  --p-zinc-400: #52525b;
+  --p-zinc-300: #71717a;
+  --p-zinc-200: #a1a1aa;
+  --p-zinc-100: #f4f4f5;
+  --p-blue-400: #60a5fa;
+  --p-blue-500: #3b82f6;
+  --p-blue-600: #2563eb;
+  --p-blue-700: #1d4ed8;
+  --p-green-500: #22c55e;
+  --p-green-600: #16a34a;
+  --p-green-700: #15803d;
+  --p-amber-400: #fbbf24;
+  --p-amber-500: #f59e0b;
+  --p-amber-600: #d97706;
+  --p-red-400: #f87171;
+  --p-red-500: #ef4444;
+  --p-red-600: #dc2626;
+
+  /* Brand-red + ai-accent scales, consumed by core/ui/accents.css. */
+  --p-brand-red-200: #d9a8a8;
+  --p-brand-red-300: #d98a8a;
+  --p-brand-red-650: #8e3131;
+  --p-brand-red-700: #7a2929;
+  --p-brand-red-900: #5a2424;
+  --p-cyan-400: #22d3ee;
+  --p-indigo-200: #c7d2fe;
+  --p-indigo-300: #a5b4fc;
+  --p-indigo-400: #818cf8;
+  --p-indigo-500: #6366f1;
+  --p-indigo-800: #3730a3;
+
+  /* Extended accent/status/neutral weights referenced by app CSS. */
+  --p-azure-300: #7ab4ff;
+  --p-azure-400: #38bdf8;
+  --p-cyan-500: #06b6d4;
+  --p-green-400: #4ade80;
+  --p-pink-500: #ec4899;
+  --p-purple-500: #6c5ce7;
+  --p-periwinkle-500: #635bff;
+  --p-teal-700: #0f7b6c;
+  --p-gray-450: #868e96;
+  --p-gray-b0: #b0b0b0;
+  --p-gray-mid: #808080;
+
+  /* Brand red (login/auth CTAs) — base + hover, complementing the -200..-900 scale above. */
+  --p-brand-red: #af3434;
+  --p-brand-red-600: #9a2e2e;
+
+  /* Highlight flash (compare / show-JS / signature-report animations). */
+  --p-flash-yellow: #ffeb3b;
+
+  /* Onboarding hero gradient stops (dark decorative navies + light tints). */
+  --p-navy-850: #1a2236;
+  --p-navy-880: #171e30;
+  --p-navy-900: #0f1626;
+  --p-plum-900: #201a28;
+  --p-tint-blue: #eef1fb;
+  --p-tint-violet: #f6f4fc;
+  --p-tint-pink: #fbf4f7;
+
+  /* Notion-style procurement view palette. */
+  --p-notion-blue: #2383e2;
+  --p-notion-blue-strong: #1b6ec2;
+  --p-notion-blue-border: #b8d5f2;
+  --p-notion-ink: #37352f;
+  --p-notion-gray: #9b9a97;
+  --p-notion-gray-strong: #787774;
+  --p-notion-paper: #f5f4f1;
+  --p-notion-paper-2: #f0eee9;
+  --p-notion-border: #e3e1dc;
+  --p-notion-border-2: #eae8e3;
+  --p-notion-border-cool: #d3d1cb;
+
+  /* Vendor status chips (procurement / auth callback). */
+  --p-vendor-red: #ef5350;
+  --p-vendor-red-text: #c62828;
+  --p-vendor-red-soft: #ef9a9a;
+  --p-vendor-red-bg: #ffebee;
+  --p-vendor-red-border: #ffcdd2;
+  --p-vendor-red-bg-dark: #3d2020;
+  --p-vendor-red-border-dark: #5d3030;
+  --p-vendor-green: #66bb6a;
+
+  /* Palette entries migrated from literals in consuming files. */
+  --p-c-0550ae: #0550ae;
+  --p-emerald-600: #059669;
+  --p-code-string: #0a3069;
+  --p-azure-500: #0a8bff;
+  --p-navy-950: #0d1020;
+  --p-c-0f172a: #0f172a;
+  --p-emerald-500: #10b981;
+  --p-navy-700: #16213e;
+  --p-c-1a2332: #1a2332;
+  --p-c-1c2340: #1c2340;
+  --p-c-1e293b: #1e293b;
+  --p-c-1f2328: #1f2328;
+  --p-royal-700: #2040a0;
+  --p-c-2d3560: #2d3560;
+  --p-emerald-400: #34d399;
+  --p-azure-650: #3a7be8;
+  --p-navy-500: #3b4b6e;
+  --p-c-475569: #475569;
+  --p-c-334155: #334155;
+  --p-c-cbd5e1: #cbd5e1;
+  --p-azure-550: #4c8bf5;
+  --p-c-545454: #545454;
+  --p-azure-450: #5b9bf7;
+  --p-c-64748b: #64748b;
+  --p-c-656d76: #656d76;
+  --p-c-6e7781: #6e7781;
+  --p-violet-600: #7c3aed;
+  --p-c-7e7e7e: #7e7e7e;
+  --p-c-8250df: #8250df;
+  --p-violet-500: #8b5cf6;
+  --p-c-8c959f: #8c959f;
+  --p-blue-200: #93c5fd;
+  --p-c-94a3b8: #94a3b8;
+  --p-code-type: #953800;
+  --p-violet-400: #a78bfa;
+  --p-c-acacac: #acacac;
+  --p-c-c084fc: #c084fc;
+  --p-art-red-muted: #c56565;
+  /* Muted category hues for connection-picker marks. */
+  --p-art-blue-muted: #4a7ab5;
+  --p-art-green-muted: #5d8348;
+  --p-art-amber-muted: #ac7a2c;
+  --p-c-cf222e: #cf222e;
+  --p-c-d0d6dc: #d0d6dc;
+  --p-c-d0d7de: #d0d7de;
+  --p-c-d0dbdc: #d0dbdc;
+  --p-c-d3d3d3: #d3d3d3;
+  --p-c-d62626: #d62626;
+  --p-c-e6e6e6: #e6e6e6;
+  --p-c-eaeef2: #eaeef2;
+  --p-c-eef1f4: #eef1f4;
+  --p-c-f1f5f9: #f1f5f9;
+  --p-c-f472b6: #f472b6;
+  --p-c-f6f8fa: #f6f8fa;
+  --p-c-f8fafc: #f8fafc;
+  --p-art-red-soft: #fc9999;
+  --p-art-red-light: #fca5a5;
+  --p-art-red: #ff4b4b;
+  --p-c-ffc107: #ffc107;
+  --p-c-c2c8e0: #c2c8e0;
+  --p-c-4f8ef5: #4f8ef5;
+}

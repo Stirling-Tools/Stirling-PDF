@@ -5,7 +5,8 @@ import React, {
   useCallback,
   ReactNode,
 } from "react";
-import { Modal, Text, Button, Group, Stack } from "@mantine/core";
+import { Modal, Text, Group, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 
 interface UnsavedChangesContextType {
@@ -89,10 +90,10 @@ export function UnsavedChangesProvider({
             )}
           </Text>
           <Group justify="flex-end" gap="sm">
-            <Button variant="default" onClick={handleCancel}>
+            <Button variant="secondary" onClick={handleCancel}>
               {t("admin.settings.unsavedChanges.cancel", "Keep Editing")}
             </Button>
-            <Button color="red" onClick={handleDiscard}>
+            <Button accent="danger" onClick={handleDiscard}>
               {t("admin.settings.unsavedChanges.discard", "Discard Changes")}
             </Button>
           </Group>

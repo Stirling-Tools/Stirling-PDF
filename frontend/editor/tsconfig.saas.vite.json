@@ -2,10 +2,17 @@
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {
-      "@app/*": ["src/saas/*", "src/proprietary/*", "src/core/*"],
-      "@proprietary/*": ["src/proprietary/*"],
-      "@core/*": ["src/core/*"],
-      "@shared/*": ["../shared/*"]
+      "@app/*": [
+        "./src/saas/*",
+        "./src/cloud/*",
+        "./src/proprietary/*",
+        "./src/core/*"
+      ],
+      "@portal/*": ["./src/portal-saas/*", "./src/portal/*"],
+      "@portal-proprietary/*": ["./src/portal/*"],
+      "@cloud/*": ["./src/cloud/*"],
+      "@proprietary/*": ["./src/proprietary/*"],
+      "@core/*": ["./src/core/*"]
     }
   },
   "exclude": [
@@ -13,6 +20,8 @@
     "src/core/**/*.spec.ts*",
     "src/proprietary/**/*.test.ts*",
     "src/proprietary/**/*.spec.ts*",
+    "src/cloud/**/*.test.ts*",
+    "src/cloud/**/*.spec.ts*",
     "src/desktop"
   ]
 }

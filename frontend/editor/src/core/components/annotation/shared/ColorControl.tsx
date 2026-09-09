@@ -1,5 +1,4 @@
 import {
-  ActionIcon,
   Tooltip,
   Popover,
   Stack,
@@ -10,6 +9,7 @@ import {
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import ColorizeIcon from "@mui/icons-material/Colorize";
+import { ActionIcon } from "@app/ui/ActionIcon";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
 // the button is hidden in the UI if the API is not supported.
@@ -66,24 +66,12 @@ export function ColorControl({
       <Popover.Target>
         <Tooltip label={label}>
           <ActionIcon
-            variant="subtle"
-            color="gray"
+            aria-label={label}
+            variant="secondary"
+            accent="neutral"
             size="md"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
-            styles={{
-              root: {
-                flexShrink: 0,
-                backgroundColor: "var(--bg-raised)",
-                border: "1px solid var(--border-default)",
-                color: "var(--text-secondary)",
-                "&:hover": {
-                  backgroundColor: "var(--hover-bg)",
-                  borderColor: "var(--border-strong)",
-                  color: "var(--text-primary)",
-                },
-              },
-            }}
           >
             <ColorSwatch color={localColor} size={18} />
           </ActionIcon>
@@ -117,11 +105,14 @@ export function ColorControl({
                 label={t("color.eyeDropper.tooltip", "Pick colour from screen")}
               >
                 <ActionIcon
-                  variant="subtle"
-                  color="gray"
+                  aria-label={t(
+                    "color.eyeDropper.tooltip",
+                    "Pick colour from screen",
+                  )}
+                  variant="tertiary"
+                  accent="neutral"
                   size="sm"
                   onClick={handleEyeDropper}
-                  style={{ color: "var(--text-primary)" }}
                 >
                   <ColorizeIcon style={{ fontSize: 16 }} />
                 </ActionIcon>

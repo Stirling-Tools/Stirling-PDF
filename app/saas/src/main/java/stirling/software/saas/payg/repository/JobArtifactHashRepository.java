@@ -43,6 +43,29 @@ public interface JobArtifactHashRepository
             @Param("signatures") Collection<String> signatures,
             Limit limit);
 
+    /**
+     * Run-scoped lineage lookup: as {@link #findOpenJobsForSignatures} but additionally requires
+     * {@code j.run_id = :runId}, so only jobs belonging to the same automation run can be joined.
+     */
+    @Query(
+            "SELECT new stirling.software.saas.payg.lineage.LineageMatch("
+                    + " h.id.jobId, h.id.kind, j.lastStepAt)"
+                    + " FROM JobArtifactHash h"
+                    + " JOIN ProcessingJob j ON j.id = h.id.jobId"
+                    + " WHERE j.ownerUserId = :userId"
+                    + " AND j.status = :openStatus"
+                    + " AND j.lastStepAt > :since"
+                    + " AND j.runId = :runId"
+                    + " AND h.id.contentHash IN :signatures"
+                    + " ORDER BY j.lastStepAt DESC")
+    List<LineageMatch> findOpenJobsForSignaturesInRun(
+            @Param("userId") Long userId,
+            @Param("openStatus") JobStatus openStatus,
+            @Param("since") LocalDateTime since,
+            @Param("signatures") Collection<String> signatures,
+            @Param("runId") String runId,
+            Limit limit);
+
     /** Prunes rows older than {@code cutoff}; run from a scheduled task. */
     @Modifying
     @Query("DELETE FROM JobArtifactHash h WHERE h.createdAt < :cutoff")

@@ -5,9 +5,10 @@ import {
   saveRawDocument,
   importPages,
   setPageRotation,
+  degreesToPdfiumRotation,
   addNewPage,
 } from "@app/services/pdfiumService";
-import { downloadFile } from "@app/services/downloadService";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 
 // A4 dimensions in PDF points (72 dpi)
@@ -135,11 +136,12 @@ export class PDFExportService {
         if (page.isBlankPage || page.originalPageNumber === -1) {
           // Insert a blank A4 page
           await addNewPage(destDocPtr, insertIdx, A4_WIDTH, A4_HEIGHT);
-          // Apply rotation
-          const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
-          if (pdfiumRotation !== 0) {
-            await setPageRotation(destDocPtr, insertIdx, pdfiumRotation);
-          }
+          // Set absolute rotation (incl. 0) so editor rotation wins over source.
+          await setPageRotation(
+            destDocPtr,
+            insertIdx,
+            degreesToPdfiumRotation(page.rotation),
+          );
           insertIdx++;
         } else if (page.originalFileId && loadedDocs.has(page.originalFileId)) {
           const srcDocPtr = loadedDocs.get(page.originalFileId)!;
@@ -155,16 +157,17 @@ export class PDFExportService {
               pageRange,
               insertIdx,
             );
-            if (!imported) {
+            if (imported) {
+              // Set absolute rotation (incl. 0) so editor rotation wins over source.
+              await setPageRotation(
+                destDocPtr,
+                insertIdx,
+                degreesToPdfiumRotation(page.rotation),
+              );
+            } else {
               console.warn(
                 `[PDFExport] importPages failed for fileId=${page.originalFileId} pageRange=${pageRange} — page will be missing from output.`,
               );
-            }
-
-            // Apply rotation
-            const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
-            if (pdfiumRotation !== 0) {
-              await setPageRotation(destDocPtr, insertIdx, pdfiumRotation);
             }
             insertIdx++;
           }
@@ -211,10 +214,12 @@ export class PDFExportService {
       for (const page of pages) {
         if (page.isBlankPage || page.originalPageNumber === -1) {
           await addNewPage(destDocPtr, insertIdx, A4_WIDTH, A4_HEIGHT);
-          const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
-          if (pdfiumRotation !== 0) {
-            await setPageRotation(destDocPtr, insertIdx, pdfiumRotation);
-          }
+          // Set absolute rotation (incl. 0) so editor rotation wins over source.
+          await setPageRotation(
+            destDocPtr,
+            insertIdx,
+            degreesToPdfiumRotation(page.rotation),
+          );
           insertIdx++;
         } else {
           const sourcePageIndex = page.originalPageNumber - 1;
@@ -227,15 +232,17 @@ export class PDFExportService {
               pageRange,
               insertIdx,
             );
-            if (!imported) {
+            if (imported) {
+              // Set absolute rotation (incl. 0) so editor rotation wins over source.
+              await setPageRotation(
+                destDocPtr,
+                insertIdx,
+                degreesToPdfiumRotation(page.rotation),
+              );
+            } else {
               console.warn(
                 `[PDFExport] importPages failed for page ${page.originalPageNumber} pageRange=${pageRange} — page will be missing from output.`,
               );
-            }
-
-            const pdfiumRotation = degreesToPdfiumRotation(page.rotation);
-            if (pdfiumRotation !== 0) {
-              await setPageRotation(destDocPtr, insertIdx, pdfiumRotation);
             }
             insertIdx++;
           }
@@ -259,10 +266,10 @@ export class PDFExportService {
   }
 
   /**
-   * Download a single file
+   * Download a single file, applying any export-triggered policy first.
    */
   downloadFile(blob: Blob, filename: string): void {
-    void downloadFile({ data: blob, filename });
+    void downloadFileWithPolicy({ data: blob, filename });
   }
 
   /**
@@ -345,23 +352,6 @@ export class PDFExportService {
     const sizes = ["B", "KB", "MB", "GB"];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
-  }
-}
-
-/**
- * Convert degrees (0, 90, 180, 270) to PDFium rotation enum (0, 1, 2, 3).
- */
-function degreesToPdfiumRotation(degrees: number): number {
-  const normalized = ((degrees % 360) + 360) % 360;
-  switch (normalized) {
-    case 90:
-      return 1;
-    case 180:
-      return 2;
-    case 270:
-      return 3;
-    default:
-      return 0;
   }
 }
 

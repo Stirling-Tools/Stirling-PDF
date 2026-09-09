@@ -3,10 +3,10 @@ from __future__ import annotations
 import logging
 
 from pydantic_ai import Agent
-from pydantic_ai.output import NativeOutput
 
 from stirling.agents.contradiction import ContradictionCapability, ContradictionDetector
 from stirling.agents.math_presentation import MathIntentClassifier, extract_math_verdict
+from stirling.agents.output_mode import output_retries, structured_output
 from stirling.agents.shared import ChunkedReasoner, WholeDocReaderCapability
 from stirling.contracts import (
     AiFile,
@@ -196,9 +196,15 @@ class PdfQuestionAgent:
             files=request.files,
             principals=principals,
         )
+        # Ollama/custom block tool-calling under native json-schema output, so deliver the
+        # structured result via a tool call or the model answers ungrounded. See agents.output_mode.
+        provider = self.runtime.settings.chat_provider
         agent = Agent(
             model=self.runtime.smart_model,
-            output_type=NativeOutput([PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse]),
+            output_type=structured_output(
+                [PdfQuestionAnswerResponse, PdfQuestionNotFoundResponse], chat_provider=provider
+            ),
+            retries=output_retries(provider),
             system_prompt=PDF_QUESTION_SYSTEM_PROMPT,
             # pydantic-ai accepts a list of (string-or-callable) instruction sources;
             # it resolves each at run time and concatenates them for the model.

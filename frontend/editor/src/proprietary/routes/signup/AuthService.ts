@@ -1,4 +1,4 @@
-import { springAuth } from "@app/auth/springAuthClient";
+import { springAuth } from "@app/auth/spring/springAuthClient";
 import { BASE_PATH } from "@app/constants/app";
 
 export const useAuthService = () => {

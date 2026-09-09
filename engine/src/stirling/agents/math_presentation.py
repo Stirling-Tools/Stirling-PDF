@@ -15,6 +15,7 @@ from __future__ import annotations
 from pydantic import Field
 from pydantic_ai import Agent
 
+from stirling.agents.output_mode import output_retries
 from stirling.contracts import (
     MathAuditorToolReportArtifact,
     OrchestratorRequest,
@@ -68,6 +69,9 @@ class MathIntentClassifier:
         self._agent: Agent[None, _MathIntentDecision] = Agent(
             model=runtime.fast_model,
             output_type=_MathIntentDecision,
+            # Local models emit valid structured output only intermittently; extra
+            # retries make this hot-path classifier reliable. No-op for real providers.
+            retries=output_retries(runtime.settings.chat_provider),
             system_prompt=_MATH_INTENT_SYSTEM_PROMPT,
             model_settings=runtime.fast_model_settings,
         )

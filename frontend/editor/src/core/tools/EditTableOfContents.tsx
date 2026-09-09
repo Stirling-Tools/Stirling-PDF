@@ -26,6 +26,7 @@ import {
   useNavigationState,
 } from "@app/contexts/NavigationContext";
 import { useFileSelection } from "@app/contexts/FileContext";
+import { isStirlingFile } from "@app/types/fileContext";
 
 const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
   const formData = new FormData();
@@ -39,7 +40,7 @@ const extractBookmarks = async (file: File): Promise<BookmarkPayload[]> => {
   return response.data as BookmarkPayload[];
 };
 
-const useStableCallback = <T extends (...args: any[]) => any>(
+const useStableCallback = <T extends (...args: never[]) => unknown>(
   callback: T,
 ): T => {
   const callbackRef = useRef(callback);
@@ -112,7 +113,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
         const payload = await extractBookmarks(file);
         const bookmarks = hydrateBookmarkPayload(payload);
         setBookmarks(bookmarks);
-        setLastLoadedFileId((file as any)?.fileId ?? file.name);
+        setLastLoadedFileId(isStirlingFile(file) ? file.fileId : file.name);
 
         if (showToast) {
           alert({
@@ -164,7 +165,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
       return;
     }
 
-    const fileId = (selectedFile as any)?.fileId ?? selectedFile.name;
+    const fileId = selectedFile.fileId;
     if (fileId === lastLoadedFileId) {
       return;
     }
@@ -466,6 +467,7 @@ const EditTableOfContents = (props: BaseToolProps) => {
   });
 };
 
-(EditTableOfContents as any).tool = () => useEditTableOfContentsOperation;
+(EditTableOfContents as ToolComponent).tool = () =>
+  useEditTableOfContentsOperation;
 
 export default EditTableOfContents as ToolComponent;

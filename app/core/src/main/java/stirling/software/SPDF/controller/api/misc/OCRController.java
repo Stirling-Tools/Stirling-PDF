@@ -17,6 +17,7 @@ import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.io.IOUtils;
 import org.apache.pdfbox.multipdf.PDFMergerUtility;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.rendering.PDFRenderer;
@@ -427,7 +428,10 @@ public class OCRController {
                             // Save original page without OCR as fallback
                             try (PDDocument pageDoc = new PDDocument()) {
                                 pageDoc.addPage(page);
-                                pageDoc.save(pageOutputPath);
+                                // NO_COMPRESSION: page is copied from another document;
+                                // PDFBox 3.0.7 compressed writer (PDFBOX-6203) drops shared
+                                // resources, corrupting fonts. Revert once on 3.0.8.
+                                pageDoc.save(pageOutputPath, CompressParameters.NO_COMPRESSION);
                             }
                         }
 
@@ -437,7 +441,10 @@ public class OCRController {
                         // Save original page without OCR
                         try (PDDocument pageDoc = new PDDocument()) {
                             pageDoc.addPage(page);
-                            pageDoc.save(pageOutputPath);
+                            // NO_COMPRESSION: page is copied from another document; PDFBox 3.0.7
+                            // compressed writer (PDFBOX-6203) drops shared resources, corrupting
+                            // fonts on retained text pages. Revert once on 3.0.8.
+                            pageDoc.save(pageOutputPath, CompressParameters.NO_COMPRESSION);
                             merger.addSource(pageOutputPath);
                         }
                     }

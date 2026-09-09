@@ -24,12 +24,18 @@ export const defaultParameters: SanitizeParameters = {
 
 export type SanitizeParametersHook = BaseParametersHook<SanitizeParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings
+ * hook and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateSanitizeParameters(
+  params: SanitizeParameters,
+): boolean {
+  return Object.values(params).some((value) => value === true);
+}
+
 export const useSanitizeParameters = (): SanitizeParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "sanitize-pdf",
-    validateFn: (params) => {
-      return Object.values(params).some((value) => value === true);
-    },
+    validateFn: validateSanitizeParameters,
   });
 };

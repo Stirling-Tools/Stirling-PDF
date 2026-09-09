@@ -523,10 +523,10 @@ export const useComparePanZoom = ({
       };
       el.addEventListener("scroll", onScroll, { passive: true });
       return () => {
-        el.removeEventListener("wheel", onStart as any);
-        el.removeEventListener("mousedown", onStart as any);
-        el.removeEventListener("touchstart", onStart as any);
-        el.removeEventListener("scroll", onScroll as any);
+        el.removeEventListener("wheel", onStart);
+        el.removeEventListener("mousedown", onStart);
+        el.removeEventListener("touchstart", onStart);
+        el.removeEventListener("scroll", onScroll);
         if (timeout != null) window.clearTimeout(timeout);
       };
     };

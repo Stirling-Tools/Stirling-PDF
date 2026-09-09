@@ -60,6 +60,53 @@ class InternalApiClientTest {
     }
 
     @Test
+    void postTagsRequestAsAutomation() throws Exception {
+        // Every InternalApiClient.post() caller is a parent automation flow dispatching a child
+        // tool (pipeline executor, AI workflow, policy runner). Tagging the sub-step here means
+        // the saas PaygChargeInterceptor classifies it as BillingCategory.AUTOMATION regardless of
+        // the dispatched controller's @RequiresFeature — so an AI-OCR step inside a policy run
+        // bills as AUTOMATION, not AI. The header value is the literal string "true" because the
+        // interceptor compares case-insensitively-trimmed against that token.
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("fileInput", namedResource("input.pdf", "data"));
+
+        Path tempPath = Files.createTempFile("internal-api-automation-test", ".tmp");
+        TempFile tempFile = mock(TempFile.class);
+        when(tempFile.getPath()).thenReturn(tempPath);
+        when(tempFile.getFile()).thenReturn(tempPath.toFile());
+        when(tempFileManager.createManagedTempFile("internal-api")).thenReturn(tempFile);
+
+        HttpHeaders[] captured = {null};
+
+        try (var ignored =
+                mockConstruction(
+                        RestTemplate.class,
+                        (rt, ctx) -> {
+                            when(rt.httpEntityCallback(any(), eq(Resource.class)))
+                                    .thenAnswer(
+                                            inv -> {
+                                                HttpEntity<?> entity = inv.getArgument(0);
+                                                captured[0] = entity.getHeaders();
+                                                return (RequestCallback) req -> {};
+                                            });
+                            when(rt.execute(anyString(), eq(HttpMethod.POST), any(), any()))
+                                    .thenAnswer(inv -> fakeOkResponse(inv.getArgument(3)));
+                        })) {
+
+            InternalApiClient mockedClient = newClient();
+            mockedClient.post("/api/v1/general/merge-pdfs", body);
+
+            assertNotNull(captured[0]);
+            assertEquals(
+                    "true",
+                    captured[0].getFirst(InternalApiClient.AUTOMATION_HEADER),
+                    "Sub-step dispatch must carry the automation marker header");
+        } finally {
+            Files.deleteIfExists(tempPath);
+        }
+    }
+
+    @Test
     void postDoesNotForceContentType() throws Exception {
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("fileInput", namedResource("input.pdf", "data"));

@@ -29,4 +29,20 @@ public interface PaygShadowChargeRepository extends JpaRepository<PaygShadowChar
      * defensively if a duplicate ever appears.
      */
     Optional<PaygShadowCharge> findFirstByJobIdOrderByIdAsc(UUID jobId);
+
+    /**
+     * Paid (Stripe-metered) documents for a team in a period: {@code SUM(payg_units −
+     * free_units_consumed)} over CHARGED rows. This is exactly what was reported to Stripe in the
+     * window, so the wallet's "estimated bill so far" is the metered total × rate. REFUNDED rows
+     * are excluded.
+     */
+    @Query(
+            "SELECT COALESCE(SUM(s.paygUnits - s.freeUnitsConsumed), 0) FROM PaygShadowCharge s"
+                    + " WHERE s.teamId = :teamId"
+                    + " AND s.status = stirling.software.saas.payg.model.ShadowChargeStatus.CHARGED"
+                    + " AND s.occurredAt >= :from AND s.occurredAt < :to")
+    long sumPaidUnits(
+            @Param("teamId") Long teamId,
+            @Param("from") LocalDateTime from,
+            @Param("to") LocalDateTime to);
 }

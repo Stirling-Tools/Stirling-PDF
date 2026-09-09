@@ -3,7 +3,7 @@
 ## Overview
 
 The script [`scripts/counter_translation.py`](../scripts/counter_translation.py) checks the translation progress of the property files in the directory `app/core/src/main/resources/`.
-It compares each `messages_*.properties` file with the English reference file `messages_en_GB.properties` and calculates a percentage of completion for each language.
+It compares each `messages_*.properties` file with the English reference file `messages_en_US.properties` and calculates a percentage of completion for each language.
 
 In addition to console output, the script automatically updates the progress badges in the project’s `README.md` and maintains the configuration file [`scripts/ignore_translation.toml`](../scripts/ignore_translation.toml), which lists translation keys to be ignored for each language.
 

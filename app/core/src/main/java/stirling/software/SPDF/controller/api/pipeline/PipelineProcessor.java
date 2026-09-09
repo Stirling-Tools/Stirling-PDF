@@ -5,12 +5,12 @@ import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.UUID;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -28,6 +28,7 @@ import stirling.software.SPDF.model.PipelineConfig;
 import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.ZipExtractionUtils;
@@ -72,6 +73,17 @@ public class PipelineProcessor {
 
     PipelineResult runPipelineAgainstFiles(List<Resource> outputFiles, PipelineConfig config)
             throws Exception {
+        // One pipeline execution = one automation run. Scope a run id so every tool sub-step
+        // dispatched via InternalApiClient groups into a single charge on the SaaS billing side
+        // (see AutomationRunContext); pipeline steps run synchronously on this thread.
+        try (AutomationRunContext.Scope ignored =
+                AutomationRunContext.open(UUID.randomUUID().toString())) {
+            return runPipelineAgainstFilesInternal(outputFiles, config);
+        }
+    }
+
+    private PipelineResult runPipelineAgainstFilesInternal(
+            List<Resource> outputFiles, PipelineConfig config) throws Exception {
         PipelineResult result = new PipelineResult();
 
         ByteArrayOutputStream logStream = new ByteArrayOutputStream();
@@ -326,12 +338,12 @@ public class PipelineProcessor {
         }
         List<Resource> outputFiles = new ArrayList<>();
         for (File file : files) {
-            Path normalizedPath = Paths.get(file.getName()).normalize();
+            Path normalizedPath = Path.of(file.getName()).normalize();
             if (normalizedPath.startsWith("..")) {
                 throw new SecurityException(
                         "Potential path traversal attempt in file name: " + file.getName());
             }
-            Path path = Paths.get(file.getAbsolutePath());
+            Path path = Path.of(file.getAbsolutePath());
             // debug statement
             log.info("Reading file: {}", path);
             if (Files.exists(path)) {

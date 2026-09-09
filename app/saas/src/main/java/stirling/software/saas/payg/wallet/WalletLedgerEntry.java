@@ -22,6 +22,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.LedgerBucket;
 import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.model.ReferenceType;
@@ -73,8 +74,41 @@ public class WalletLedgerEntry implements Serializable {
     @Column(name = "policy_id")
     private Long policyId;
 
+    /**
+     * Number of input files this entry billed (the count dimension, distinct from size-scaled
+     * {@link #amountUnits}). Denormalised from {@code processing_job.doc_count} so usage analytics
+     * — "PDFs processed" — sum one table. Defaults to 1; system/aggregate entries may leave it 1.
+     *
+     * <p>The {@code columnDefinition} default keeps the ddl-auto ADD COLUMN safe on an
+     * already-populated {@code wallet_ledger} (a bare {@code NOT NULL} add is rejected by Postgres
+     * on a non-empty table).
+     */
+    @Column(name = "doc_count", nullable = false, columnDefinition = "integer not null default 1")
+    private Integer docCount = 1;
+
+    /**
+     * SHA-256 of this entry's input file <em>set</em> (the charge's whole input list, sorted).
+     * {@code COUNT(DISTINCT ...)} over a period approximates unique PDFs processed. Exact within a
+     * run (a file's chain/split steps share the run's charge, so one fingerprint), and for the
+     * single-input common case; but the <em>same</em> file reused across different groupings — e.g.
+     * standalone, then later merged as {A,B} — yields different set-fingerprints and is counted
+     * once per grouping. {@code null} for aggregate/system entries (grants, linked-instance sync)
+     * that don't map to a single document set.
+     */
+    @Column(name = "document_fingerprint", length = 64)
+    private String documentFingerprint;
+
     @Column(name = "stripe_event_id", length = 128)
     private String stripeEventId;
+
+    /**
+     * PAYG analytics axis. {@code null} for system entries (grants, resets) and pre-V16 rows; set
+     * by the charge interceptor for billable debits. Stripe pricing never reads this — it's a
+     * single flat meter — so the column stays soft-typed (no NOT NULL, no FK).
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "billing_category", length = 16)
+    private BillingCategory billingCategory;
 
     @CreationTimestamp
     @Column(name = "occurred_at", nullable = false, updatable = false)

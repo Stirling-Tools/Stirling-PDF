@@ -5,10 +5,10 @@ import {
   Text,
   Divider,
   Collapse,
-  Button,
   NumberInput,
   Checkbox,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { BookletImpositionParameters } from "@app/hooks/tools/bookletImposition/useBookletImpositionParameters";
 import ButtonSelector from "@app/components/shared/ButtonSelector";
 
@@ -117,7 +117,7 @@ const BookletImpositionSettings = ({
       {/* Advanced Options */}
       <Stack gap="sm">
         <Button
-          variant="subtle"
+          variant="tertiary"
           onClick={() => setAdvancedOpen(!advancedOpen)}
           disabled={disabled}
         >

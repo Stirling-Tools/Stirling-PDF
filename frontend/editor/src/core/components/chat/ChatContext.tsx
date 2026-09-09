@@ -7,12 +7,11 @@
 export function useChat() {
   return {
     messages: [] as never[],
-    isOpen: false,
     isLoading: false,
     progress: null,
-    toggleOpen: () => {},
-    setOpen: (_open: boolean) => {},
+    progressLog: [] as never[],
     sendMessage: async (_content: string) => {},
+    cancelMessage: () => {},
     clearChat: () => {},
   };
 }

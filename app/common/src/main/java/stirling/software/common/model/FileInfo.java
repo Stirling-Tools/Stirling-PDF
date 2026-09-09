@@ -1,7 +1,6 @@
 package stirling.software.common.model;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Locale;
@@ -24,7 +23,7 @@ public class FileInfo {
 
     // Converts the file path string to a Path object.
     public Path getFilePathAsPath() {
-        return Paths.get(filePath);
+        return Path.of(filePath);
     }
 
     // Formats the file size into a human-readable string.

@@ -50,6 +50,14 @@ public class AdminUserSummary {
     @Schema(description = "Team membership (if any)")
     private TeamSummary team;
 
+    @Schema(description = "Whether the user owns (leads) any team")
+    private boolean teamLead;
+
+    @Schema(
+            description =
+                    "Whether the user may access the portal, per the server-side access policy")
+    private boolean portalAccess;
+
     @Schema(description = "User account creation timestamp")
     private LocalDateTime createdAt;
 

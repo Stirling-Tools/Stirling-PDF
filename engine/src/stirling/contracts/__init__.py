@@ -29,11 +29,24 @@ from .common import (
     format_conversation_history,
     format_file_names,
 )
+from .config import (
+    ConfigApplyResponse,
+    ConfigLimitsSection,
+    ConfigModelsSection,
+    ConfigPushRequest,
+    ConfigRagSection,
+)
 from .contradiction import (
     Claim,
     Contradiction,
     ContradictionReport,
     ContradictionSeverity,
+)
+from .document_classifier import (
+    ClassifyDocumentRequest,
+    ClassifyDocumentResponse,
+    DocumentClassificationResponse,
+    LabelOption,
 )
 from .documents import (
     DeleteDocumentResponse,
@@ -79,6 +92,15 @@ from .pdf_comments import (
     PdfCommentResponse,
     TextChunk,
 )
+from .pdf_create import (
+    DocumentMeta,
+    DocumentSections,
+    PdfCreateCannotDoResponse,
+    PdfCreateOrchestrateResponse,
+    PdfCreateRequest,
+    PdfCreateResponse,
+    PdfCreateSuccessResponse,
+)
 from .pdf_edit import (
     EditCannotDoResponse,
     EditClarificationRequest,
@@ -96,17 +118,6 @@ from .pdf_questions import (
     PdfQuestionTerminalResponse,
 )
 from .pdf_review import PdfReviewOrchestrateResponse
-from .pdf_to_markdown import (
-    LayoutFragment,
-    LayoutLine,
-    PageLayout,
-    PageLayoutArtifact,
-    PageLayoutFileEntry,
-    PdfToMarkdownCannotDoResponse,
-    PdfToMarkdownOrchestrateResponse,
-    PdfToMarkdownRequest,
-    PdfToMarkdownResponse,
-)
 from .progress import (
     ProgressEvent,
     WholeDocCompressionRound,
@@ -130,20 +141,27 @@ __all__ = [
     "AiToolAgentStep",
     "ArtifactKind",
     "CannotContinueExecutionAction",
+    "ClassifyDocumentRequest",
+    "ClassifyDocumentResponse",
     "Claim",
     "CommentSpec",
     "CompletedExecutionAction",
+    "ConfigApplyResponse",
+    "ConfigLimitsSection",
+    "ConfigModelsSection",
+    "ConfigPushRequest",
+    "ConfigRagSection",
     "Contradiction",
     "ContradictionReport",
     "ContradictionSeverity",
     "ConversationMessage",
     "DeleteDocumentResponse",
     "PurgeOwnerResponse",
-    "PdfToMarkdownCannotDoResponse",
-    "PdfToMarkdownOrchestrateResponse",
-    "PdfToMarkdownRequest",
-    "PdfToMarkdownResponse",
     "Discrepancy",
+    "DocumentClassificationResponse",
+    "LabelOption",
+    "DocumentMeta",
+    "DocumentSections",
     "DiscrepancyKind",
     "EditCannotDoResponse",
     "EditClarificationRequest",
@@ -169,12 +187,7 @@ __all__ = [
     "NextExecutionAction",
     "OrchestratorRequest",
     "OrchestratorResponse",
-    "LayoutFragment",
-    "LayoutLine",
     "Page",
-    "PageLayout",
-    "PageLayoutArtifact",
-    "PageLayoutFileEntry",
     "PageRange",
     "PageText",
     "PdfCommentInstruction",
@@ -182,6 +195,11 @@ __all__ = [
     "PdfCommentRequest",
     "PdfCommentResponse",
     "PdfContentType",
+    "PdfCreateCannotDoResponse",
+    "PdfCreateOrchestrateResponse",
+    "PdfCreateRequest",
+    "PdfCreateResponse",
+    "PdfCreateSuccessResponse",
     "PdfEditRequest",
     "PdfEditResponse",
     "PdfEditTerminalResponse",

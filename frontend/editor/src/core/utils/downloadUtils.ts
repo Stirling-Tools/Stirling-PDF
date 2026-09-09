@@ -2,6 +2,8 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { zipFileService } from "@app/services/zipFileService";
 import { downloadFile } from "@app/services/downloadService";
+import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+import { enforceExportPolicies } from "@app/services/policyExport";
 
 /**
  * Downloads a blob as a file using browser download API
@@ -27,10 +29,11 @@ export async function downloadFileFromStorage(
     throw new Error(`File "${file.name}" not found in storage`);
   }
 
-  await downloadFile({
+  await downloadFileWithPolicy({
     data: stirlingFile,
     filename: stirlingFile.name,
     localPath: file.localFilePath,
+    fileId: file.id,
   });
 }
 
@@ -59,21 +62,24 @@ export async function downloadFilesAsZip(
     throw new Error("No files provided for ZIP download");
   }
 
-  // Convert stored files to File objects
+  // Convert stored files to File objects (tracking ids so export policies can
+  // version the in-editor file).
   const filesToZip: File[] = [];
+  const fileIds: (string | undefined)[] = [];
   for (const fileWithUrl of files) {
-    const lookupKey = fileWithUrl.id;
-    const stirlingFile = await fileStorage.getStirlingFile(lookupKey);
-
+    const stirlingFile = await fileStorage.getStirlingFile(fileWithUrl.id);
     if (stirlingFile) {
-      // StirlingFile is already a File object!
       filesToZip.push(stirlingFile);
+      fileIds.push(fileWithUrl.id);
     }
   }
 
   if (filesToZip.length === 0) {
     throw new Error("No valid files found in storage for ZIP download");
   }
+
+  // Enforce any export-triggered policy on each PDF before they're zipped.
+  const enforced = await enforceExportPolicies(filesToZip, fileIds);
 
   // Generate default filename if not provided
   const finalZipFilename =
@@ -82,7 +88,7 @@ export async function downloadFilesAsZip(
 
   // Create and download ZIP
   const { zipFile } = await zipFileService.createZipFromFiles(
-    filesToZip,
+    enforced,
     finalZipFilename,
   );
   await downloadFile({ data: zipFile, filename: finalZipFilename });
@@ -125,7 +131,7 @@ export async function downloadFiles(
  * @param filename - Optional custom filename
  */
 export function downloadFileObject(file: File, filename?: string): void {
-  void downloadFile({ data: file, filename: filename || file.name });
+  void downloadFileWithPolicy({ data: file, filename: filename || file.name });
 }
 
 /**

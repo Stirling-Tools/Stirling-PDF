@@ -1,3 +1,5 @@
+import { accentColor } from "@app/utils/accentColors";
+
 export type FileDocVariant =
   | "pdf"
   | "spreadsheet"
@@ -7,14 +9,15 @@ export type FileDocVariant =
   | "code"
   | "generic";
 
+// Theme-adaptive accent per file type (shared palette; see utils/accentColors.ts).
 export const VARIANT_COLORS: Record<FileDocVariant, string> = {
-  pdf: "#DC2626",
-  spreadsheet: "#16a34a",
-  doc: "#2563eb",
-  image: "#7c3aed",
-  archive: "#ea580c",
-  code: "#0891b2",
-  generic: "#71717a",
+  pdf: accentColor("red"),
+  spreadsheet: accentColor("green"),
+  doc: accentColor("blue"),
+  image: accentColor("violet"),
+  archive: accentColor("orange"),
+  code: accentColor("cyan"),
+  generic: accentColor("gray"),
 };
 
 export function FileDocIcon({
@@ -44,7 +47,7 @@ export function FileDocIcon({
     const row1Y = 11,
       row2Y = 14;
     interior = (
-      <g opacity="0.7" stroke={color} strokeWidth="1" fill="none">
+      <g opacity="0.7" stroke="currentColor" strokeWidth="1" fill="none">
         <rect x={gx1} y={gy1} width={gx2 - gx1} height={gy2 - gy1} rx="0.5" />
         <line x1={colX} y1={gy1} x2={colX} y2={gy2} />
         <line x1={gx1} y1={row1Y} x2={gx2} y2={row1Y} />
@@ -56,7 +59,7 @@ export function FileDocIcon({
       <>
         <polyline
           points="2.5,16 5.5,11.5 8,14 10,12 13.5,16"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.1"
           opacity="0.6"
           fill="none"
@@ -67,7 +70,7 @@ export function FileDocIcon({
           cx="11"
           cy="9.5"
           r="1.3"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1"
           opacity="0.6"
           fill="none"
@@ -79,7 +82,7 @@ export function FileDocIcon({
       <>
         <polyline
           points="6,9.5 3.5,12.5 6,15.5"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.3"
           opacity="0.7"
           fill="none"
@@ -88,7 +91,7 @@ export function FileDocIcon({
         />
         <polyline
           points="10,9.5 12.5,12.5 10,15.5"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.3"
           opacity="0.7"
           fill="none"
@@ -105,7 +108,7 @@ export function FileDocIcon({
           y1="9.5"
           x2="11"
           y2="9.5"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.1"
           opacity="0.6"
           strokeDasharray="2,1.5"
@@ -116,7 +119,7 @@ export function FileDocIcon({
           y1="12"
           x2="11"
           y2="12"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.1"
           opacity="0.6"
           strokeDasharray="2,1.5"
@@ -127,7 +130,7 @@ export function FileDocIcon({
           y1="14.5"
           x2="11"
           y2="14.5"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.1"
           opacity="0.6"
           strokeDasharray="2,1.5"
@@ -144,7 +147,7 @@ export function FileDocIcon({
           y1="9.5"
           x2="12.5"
           y2="9.5"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.1"
           opacity="0.6"
           strokeLinecap="round"
@@ -154,7 +157,7 @@ export function FileDocIcon({
           y1="12"
           x2="12.5"
           y2="12"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.1"
           opacity="0.6"
           strokeLinecap="round"
@@ -164,7 +167,7 @@ export function FileDocIcon({
           y1="14.5"
           x2="8.5"
           y2="14.5"
-          stroke={color}
+          stroke="currentColor"
           strokeWidth="1.1"
           opacity="0.6"
           strokeLinecap="round"
@@ -176,7 +179,9 @@ export function FileDocIcon({
   return (
     <svg
       className={className}
-      style={{ width: 16, height: 20, ...style }}
+      // The accent flows through `color` (var() resolves in CSS, not in SVG
+      // presentation attributes) and the shapes pick it up via currentColor.
+      style={{ width: 16, height: 20, color, ...style }}
       viewBox="0 0 16 20"
       fill="none"
       aria-hidden="true"
@@ -184,7 +189,7 @@ export function FileDocIcon({
       {/* Document outline with top-right page fold */}
       <path
         d={`M 1.5,1 H ${foldX} L 15,${foldY} V 18.5 Q 15,19 14.5,19 H 1.5 Q 1,19 1,18.5 V 1.5 Q 1,1 1.5,1 Z`}
-        stroke={color}
+        stroke="currentColor"
         strokeWidth="1.3"
         fill="none"
         strokeLinejoin="round"
@@ -192,9 +197,9 @@ export function FileDocIcon({
       {/* Fold corner triangle */}
       <path
         d={`M ${foldX},1 L ${foldX},${foldY} L 15,${foldY} Z`}
-        stroke={color}
+        stroke="currentColor"
         strokeWidth="1.3"
-        fill={color}
+        fill="currentColor"
         fillOpacity="0.2"
         strokeLinejoin="round"
       />

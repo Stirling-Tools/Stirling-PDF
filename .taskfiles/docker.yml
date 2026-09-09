@@ -20,6 +20,11 @@ tasks:
     cmds:
       - docker build -t stirling-pdf-ultra-lite -f {{.EMBEDDED_DIR}}/Dockerfile.ultra-lite .
 
+  build:backend:
+    desc: "Build backend-only Docker image (no embedded frontend)"
+    cmds:
+      - docker build -t stirling-pdf-backend -f docker/backend/Dockerfile .
+
   build:frontend:
     desc: "Build frontend-only Docker image"
     cmds:

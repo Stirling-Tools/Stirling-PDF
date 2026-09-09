@@ -197,8 +197,8 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
       <Menu.Dropdown
         className="ph-no-capture"
         style={{
-          backgroundColor: "var(--bg-file-manager)",
-          border: "1px solid var(--border-subtle)",
+          backgroundColor: "var(--c-bg)",
+          border: "1px solid var(--c-border-subtle)",
           borderRadius: "8px",
           boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
           maxHeight: "80vh",
@@ -231,7 +231,7 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
             marginTop: "0.5rem",
             cursor: "pointer",
             backgroundColor: "transparent",
-            borderTop: "1px solid var(--border-subtle)",
+            borderTop: "1px solid var(--c-border-subtle)",
             transition: "background-color 0.15s ease",
           }}
           onMouseEnter={(e) => {

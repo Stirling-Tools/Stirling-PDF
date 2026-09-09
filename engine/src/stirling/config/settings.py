@@ -15,7 +15,7 @@ ENV_FILE = ENGINE_ROOT / ".env"
 ENV_LOCAL_FILE = ENGINE_ROOT / ".env.local"
 
 
-class RagBackend(StrEnum):
+class DocumentsBackend(StrEnum):
     SQLITE = "sqlite"
     PGVECTOR = "pgvector"
 
@@ -25,14 +25,27 @@ class AppSettings(BaseSettings):
 
     smart_model_name: str = Field(validation_alias="STIRLING_SMART_MODEL")
     fast_model_name: str = Field(validation_alias="STIRLING_FAST_MODEL")
+    # Provider backing the active chat models; empty for env/native, 'ollama'/'custom' by push.
+    # Agents read it to pick a tool-compatible output strategy since local models block tools under native json-schema.
+    chat_provider: str = Field(default="")
     smart_model_max_tokens: int = Field(validation_alias="STIRLING_SMART_MODEL_MAX_TOKENS")
     fast_model_max_tokens: int = Field(validation_alias="STIRLING_FAST_MODEL_MAX_TOKENS")
+    # Process-wide ceiling on concurrent model API calls, shared by both model
+    # tiers. Per-request fan-outs (chunked reasoner, contradiction detection)
+    # carry their own per-request caps, but those multiply under concurrent
+    # traffic; this is the global backstop.
+    model_max_concurrency: int = Field(validation_alias="STIRLING_MODEL_MAX_CONCURRENCY")
 
-    # RAG settings — always on; the backend picks between embedded sqlite-vec and external pgvector.
-    rag_backend: RagBackend = Field(validation_alias="STIRLING_RAG_BACKEND")
+    # Document store: the one database holding vector chunks, ordered page
+    # text, and ACL rows - embedded sqlite-vec or external pgvector.
+    documents_backend: DocumentsBackend = Field(validation_alias="STIRLING_DOCUMENTS_BACKEND")
+    documents_sqlite_path: Path = Field(validation_alias="STIRLING_DOCUMENTS_SQLITE_PATH")
+    documents_pgvector_dsn: str = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_DSN")
+    documents_pgvector_pool_min_size: int = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_POOL_MIN_SIZE")
+    documents_pgvector_pool_max_size: int = Field(validation_alias="STIRLING_DOCUMENTS_PGVECTOR_POOL_MAX_SIZE")
+
+    # RAG settings - always on.
     rag_embedding_model: str = Field(validation_alias="STIRLING_RAG_EMBEDDING_MODEL")
-    rag_store_path: Path = Field(validation_alias="STIRLING_RAG_STORE_PATH")
-    rag_pgvector_dsn: str = Field(validation_alias="STIRLING_RAG_PGVECTOR_DSN")
     rag_chunk_size: int = Field(validation_alias="STIRLING_RAG_CHUNK_SIZE")
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
@@ -88,6 +101,12 @@ class AppSettings(BaseSettings):
     max_pages: int = Field(validation_alias="STIRLING_MAX_PAGES")
     max_characters: int = Field(validation_alias="STIRLING_MAX_CHARACTERS")
 
+    # When true, API routes reject requests that lack an X-User-Id header at
+    # the boundary. Self-hosted deployments with security disabled have no
+    # user identity and leave this off; multi-tenant deployments turn it on so
+    # user-scoped work is never processed without a tenant attached.
+    require_user_id: bool = Field(validation_alias="STIRLING_REQUIRE_USER_ID")
+
     log_level: str = Field(default="INFO", validation_alias="STIRLING_LOG_LEVEL")
     log_file: str = Field(default="", validation_alias="STIRLING_LOG_FILE")
     # When true, raises httpx + httpcore logger levels so every outgoing
@@ -101,6 +120,20 @@ class AppSettings(BaseSettings):
     posthog_enabled: bool = Field(validation_alias="STIRLING_POSTHOG_ENABLED")
     posthog_api_key: str = Field(validation_alias="STIRLING_POSTHOG_API_KEY")
     posthog_host: str = Field(validation_alias="STIRLING_POSTHOG_HOST")
+
+    # Shared secret enforced by EngineSharedSecretMiddleware. Empty disables enforcement
+    # unless engine_require_auth is set, in which case the engine fails closed (503).
+    engine_shared_secret: str = Field(default="", validation_alias="STIRLING_ENGINE_SHARED_SECRET")
+    engine_require_auth: bool = Field(default=False, validation_alias="STIRLING_ENGINE_REQUIRE_AUTH")
+
+    # When true, the Java processor may push admin AI settings to POST /api/v1/config at startup.
+    # Turn off in env-driven deployments so the environment is the single source of truth.
+    allow_config_push: bool = Field(default=True, validation_alias="STIRLING_ALLOW_CONFIG_PUSH")
+    # How often each worker polls the shared config cache; bounds how long the pool can disagree on the active model.
+    config_cache_poll_interval_seconds: int = Field(
+        default=15,
+        validation_alias="STIRLING_CONFIG_CACHE_POLL_INTERVAL_SECONDS",
+    )
 
 
 def _configure_logging(level_name: str, log_file: str, http_debug: bool) -> None:

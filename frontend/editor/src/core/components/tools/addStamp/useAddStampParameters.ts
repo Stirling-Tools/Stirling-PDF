@@ -39,16 +39,20 @@ export const defaultParameters: AddStampParameters = {
 
 export type AddStampParametersHook = BaseParametersHook<AddStampParameters>;
 
+export function validateAddStampParameters(
+  params: AddStampParameters,
+): boolean {
+  if (!params.stampType) return false;
+  if (params.stampType === "text") {
+    return params.stampText.trim().length > 0;
+  }
+  return params.stampImage !== undefined;
+}
+
 export const useAddStampParameters = (): AddStampParametersHook => {
   return useBaseParameters<AddStampParameters>({
     defaultParameters,
     endpointName: "add-stamp",
-    validateFn: (params): boolean => {
-      if (!params.stampType) return false;
-      if (params.stampType === "text") {
-        return params.stampText.trim().length > 0;
-      }
-      return params.stampImage !== undefined;
-    },
+    validateFn: validateAddStampParameters,
   });
 };

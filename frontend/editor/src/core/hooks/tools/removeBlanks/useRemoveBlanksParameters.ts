@@ -19,14 +19,23 @@ export const defaultParameters: RemoveBlanksParameters = {
 export type RemoveBlanksParametersHook =
   BaseParametersHook<RemoveBlanksParameters>;
 
+/** Whether these parameters are complete enough to run. Shared by the tool's settings hook
+ * and its operationConfig, so the editor and the pipeline builder agree. */
+export function validateRemoveBlanksParameters(
+  params: RemoveBlanksParameters,
+): boolean {
+  return (
+    params.threshold >= 0 &&
+    params.threshold <= 255 &&
+    params.whitePercent > 0 &&
+    params.whitePercent <= 100
+  );
+}
+
 export const useRemoveBlanksParameters = (): RemoveBlanksParametersHook => {
   return useBaseParameters({
     defaultParameters,
     endpointName: "remove-blanks",
-    validateFn: (p) =>
-      p.threshold >= 0 &&
-      p.threshold <= 255 &&
-      p.whitePercent > 0 &&
-      p.whitePercent <= 100,
+    validateFn: validateRemoveBlanksParameters,
   });
 };

@@ -7,11 +7,9 @@ import React, {
   useState,
 } from "react";
 import {
-  ActionIcon,
   Alert,
   Badge,
   Box,
-  Button,
   Card,
   Divider,
   Group,
@@ -24,6 +22,8 @@ import {
   Text,
   Tooltip,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Dropzone } from "@mantine/dropzone";
 import { useTranslation } from "react-i18next";
 import AutorenewIcon from "@mui/icons-material/Autorenew";
@@ -1553,10 +1553,10 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
       {resizeHandle}
       {activeGroupId === groupId && (
         <ActionIcon
-          size="xs"
-          variant="filled"
-          color="red"
-          radius="xl"
+          aria-label={t("pdfTextEditor.actions.clearText", "Clear text")}
+          size="sm"
+          variant="tertiary"
+          accent="danger"
           style={{
             position: "absolute",
             top: -8,
@@ -2008,7 +2008,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                 </Text>
                 <Group justify="flex-end" gap="sm" mt="xs">
                   <Button
-                    variant="default"
+                    variant="secondary"
                     onClick={handleDismissWelcomeBanner}
                   >
                     {t("pdfTextEditor.welcomeBanner.gotIt", "Got it")}
@@ -2126,8 +2126,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           >
                             <ActionIcon
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.merge",
                                 "Merge selection",
@@ -2147,8 +2146,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           >
                             <ActionIcon
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.ungroup",
                                 "Ungroup selection",
@@ -2168,8 +2166,7 @@ const PdfTextEditorView = ({ data }: PdfTextEditorViewProps) => {
                           <Menu.Target>
                             <ActionIcon
                               size="sm"
-                              variant="light"
-                              color="blue"
+                              variant="secondary"
                               aria-label={t(
                                 "pdfTextEditor.manual.widthMenu",
                                 "Width options",

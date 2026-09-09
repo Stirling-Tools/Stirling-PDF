@@ -1,5 +1,4 @@
-import { Button } from "@mantine/core";
-
+import { Button } from "@app/ui/Button";
 interface NavigationLinkProps {
   onClick: () => void;
   text: string;
@@ -17,7 +16,7 @@ export default function NavigationLink({
         onClick={onClick}
         disabled={isDisabled}
         className="navigation-link-button"
-        variant="subtle"
+        variant="tertiary"
       >
         {text}
       </Button>

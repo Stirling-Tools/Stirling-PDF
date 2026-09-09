@@ -1,5 +1,6 @@
 import React from "react";
-import { Text, Button, Stack } from "@mantine/core";
+import { Text, Stack } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 
 interface ErrorBoundaryState {
   hasError: boolean;
@@ -116,7 +117,7 @@ export default class ErrorBoundary extends React.Component<
                     style={{
                       fontSize: "0.75rem",
                       overflow: "auto",
-                      backgroundColor: "#f5f5f5",
+                      backgroundColor: "var(--c-surface-sunken)",
                       padding: "1rem",
                       borderRadius: "4px",
                       maxHeight: "300px",
@@ -128,7 +129,11 @@ export default class ErrorBoundary extends React.Component<
               )}
             </>
           )}
-          <Button onClick={this.retry} variant="light" mt="md">
+          <Button
+            onClick={this.retry}
+            variant="secondary"
+            style={{ marginTop: "var(--mantine-spacing-md)" }}
+          >
             Try Again
           </Button>
         </Stack>

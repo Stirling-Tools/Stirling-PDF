@@ -1,5 +1,6 @@
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "@app/hooks/useTranslation";
-import "@app/routes/authShared/auth.css";
+import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
 
 interface MagicLinkFormProps {
@@ -24,7 +25,8 @@ export default function MagicLinkForm({
   if (!showMagicLink) {
     return (
       <div className="auth-toggle-wrapper">
-        <button
+        <Button
+          variant="tertiary"
           onClick={() => {
             setShowMagicLink(true);
           }}
@@ -32,7 +34,7 @@ export default function MagicLinkForm({
           className="auth-toggle-link"
         >
           {t("login.useMagicLink")}
-        </button>
+        </Button>
       </div>
     );
   }
@@ -47,13 +49,13 @@ export default function MagicLinkForm({
         onKeyPress={(e) => e.key === "Enter" && !isSubmitting && onSubmit()}
         className="auth-input"
       />
-      <button
+      <Button
         onClick={onSubmit}
         disabled={isSubmitting || !magicLinkEmail}
         className="auth-magic-button"
       >
         {isSubmitting ? t("login.sending") : t("login.sendMagicLink")}
-      </button>
+      </Button>
     </div>
   );
 }

@@ -1,7 +1,6 @@
 import apiClient from "@app/services/apiClient";
 import {
-  ToolType,
-  CustomToolOperationConfig,
+  defineCustomTool,
   CustomProcessorResult,
 } from "@app/hooks/tools/shared/toolOperationTypes";
 import {
@@ -104,10 +103,10 @@ const processPdfCommentAgent = async (
   return { files: [resultFile] };
 };
 
-export const pdfCommentAgentOperationConfig = {
-  toolType: ToolType.custom,
-  operationType: "pdfCommentAgent",
-  endpoint: PDF_COMMENT_AGENT_ENDPOINT,
-  customProcessor: processPdfCommentAgent,
-  defaultParameters,
-} as const satisfies CustomToolOperationConfig<PdfCommentAgentParameters>;
+export const pdfCommentAgentOperationConfig =
+  defineCustomTool<PdfCommentAgentParameters>({
+    operationType: "pdfCommentAgent",
+    endpoint: PDF_COMMENT_AGENT_ENDPOINT,
+    customProcessor: processPdfCommentAgent,
+    defaultParameters,
+  });

@@ -3,6 +3,7 @@ pub mod files;
 pub mod connection;
 pub mod auth;
 pub mod default_app;
+pub mod local_proxy;
 pub mod platform;
 pub mod print;
 pub mod updater;
@@ -40,6 +41,7 @@ pub use auth::{
     start_oauth_login,
 };
 pub use default_app::{is_default_pdf_handler, set_as_default_pdf_handler};
+pub use local_proxy::proxy_local_pdf_request;
 pub use platform::get_desktop_os;
 pub use print::print_pdf_file_native;
 pub use updater::{

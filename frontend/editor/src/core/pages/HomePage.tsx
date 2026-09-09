@@ -4,8 +4,9 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
+import { getToolOgImage } from "@app/data/ogImage";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
-import { useIsMobile } from "@app/hooks/useIsMobile";
+import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
@@ -37,6 +38,7 @@ import { useFileHandler } from "@app/hooks/useFileHandler";
 import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
+import { Button } from "@app/ui/Button";
 import "@app/pages/HomePage.css";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
@@ -84,6 +86,7 @@ export default function HomePage() {
   const navigate = useNavigate();
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
@@ -103,6 +106,19 @@ export default function HomePage() {
     const isSettings = location.pathname.startsWith("/settings");
     setConfigModalOpen(isSettings);
   }, [location.pathname]);
+
+  useEffect(() => {
+    const handler = () => setConfigModalOpen(true);
+    window.addEventListener("appConfig:open", handler);
+    return () => window.removeEventListener("appConfig:open", handler);
+  }, []);
+
+  const handleCloseConfig = useCallback(() => {
+    setConfigModalOpen(false);
+    if (location.pathname.startsWith("/settings")) {
+      navigate("/", { replace: true });
+    }
+  }, [location.pathname, navigate]);
 
   const { activeFiles } = useFileContext();
   const navigationState = useNavigationState();
@@ -293,9 +309,7 @@ export default function HomePage() {
         "app.description",
         "The Free Adobe Acrobat alternative (10M+ Downloads)",
       ),
-    ogImage: selectedToolKey
-      ? `${baseUrl}/og_images/${selectedToolKey}.png`
-      : `${baseUrl}/og_images/home.png`,
+    ogImage: getToolOgImage(baseUrl, selectedToolKey),
     ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl,
   });
 
@@ -352,12 +366,14 @@ export default function HomePage() {
                     {t("home.mobile.workspace", "Workspace")}
                   </button>
                 </div>
-                <span className="mobile-toggle-hint">
-                  {t(
-                    "home.mobile.swipeHint",
-                    "Swipe left or right to switch views",
-                  )}
-                </span>
+                {isTouch && (
+                  <span className="mobile-toggle-hint">
+                    {t(
+                      "home.mobile.swipeHint",
+                      "Swipe left or right to switch views",
+                    )}
+                  </span>
+                )}
               </div>
             )}
             {navigationState.workbench === "myFiles" ? (
@@ -402,7 +418,8 @@ export default function HomePage() {
               </div>
             )}
             <div className="mobile-bottom-bar">
-              <button
+              <Button
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.allTools", "Tools")}
                 onClick={() => {
@@ -416,9 +433,10 @@ export default function HomePage() {
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.allTools", "Tools")}
                 </span>
-              </button>
+              </Button>
               {toolAvailability["automate"]?.available !== false && (
-                <button
+                <Button
+                  variant="tertiary"
                   className="mobile-bottom-button"
                   aria-label={t("quickAccess.automate", "Automate")}
                   onClick={() => {
@@ -436,9 +454,10 @@ export default function HomePage() {
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
-                </button>
+                </Button>
               )}
-              <button
+              <Button
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => navigate("/files")}
@@ -451,8 +470,9 @@ export default function HomePage() {
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.files", "Files")}
                 </span>
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.config", "Config")}
                 onClick={() => setConfigModalOpen(true)}
@@ -465,12 +485,12 @@ export default function HomePage() {
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.config", "Config")}
                 </span>
-              </button>
+              </Button>
             </div>
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
-              onClose={() => setConfigModalOpen(false)}
+              onClose={handleCloseConfig}
             />
           </div>
         ) : (
@@ -483,7 +503,12 @@ export default function HomePage() {
             <MyFilesAwareFileSidebar
               ref={quickAccessRef}
               active={navigationState.workbench === "myFiles"}
-              collapsed={fileSidebarCollapsed}
+              // /files always shows the rail collapsed - force it here so a
+              // deep-link/reload onto /files (no workbench transition) still
+              // collapses, and a manual expand can't stick.
+              collapsed={
+                navigationState.workbench === "myFiles" || fileSidebarCollapsed
+              }
               toggleAriaLabel={
                 navigationState.workbench === "myFiles"
                   ? t("fileSidebar.leaveMyFiles", "Leave My Files")
@@ -514,7 +539,7 @@ export default function HomePage() {
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
-              onClose={() => setConfigModalOpen(false)}
+              onClose={handleCloseConfig}
             />
           </Group>
         )}

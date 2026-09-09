@@ -30,7 +30,7 @@ export function FolderThumbnail({
   size = "thumb",
   iconGlyph,
 }: FolderThumbnailProps) {
-  const accent = color ?? "var(--accent-interactive, #6366f1)";
+  const accent = color ?? "var(--c-primary, #6366f1)";
   const px = SIZE_PX[size];
   const showBadge = size === "thumb" && (fileCount ?? 0) > 0;
   // Per-instance unique ids - `${color}` previously embedded `#` and CSS
@@ -149,7 +149,7 @@ export function FolderThumbnail({
             minWidth: "1.4rem",
             height: "1.4rem",
             borderRadius: "999px",
-            background: "var(--bg-surface, #fff)",
+            background: "var(--c-surface, #fff)",
             border: `1px solid ${accent}`,
             color: accent,
             fontSize: "0.7rem",

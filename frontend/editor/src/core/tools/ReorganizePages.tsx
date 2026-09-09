@@ -34,9 +34,9 @@ const ReorganizePages = ({
       if (operation.files && onComplete) {
         onComplete(operation.files);
       }
-    } catch (error: any) {
+    } catch (error) {
       onError?.(
-        error?.message ||
+        (error instanceof Error ? error.message : undefined) ||
           t("reorganizePages.error.failed", "Failed to reorganize pages"),
       );
     }
@@ -107,6 +107,6 @@ const ReorganizePages = ({
   });
 };
 
-(ReorganizePages as any).tool = () => useReorganizePagesOperation;
+(ReorganizePages as ToolComponent).tool = () => useReorganizePagesOperation;
 
 export default ReorganizePages as ToolComponent;

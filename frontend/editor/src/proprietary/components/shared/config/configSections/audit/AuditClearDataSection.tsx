@@ -4,12 +4,12 @@ import {
   Stack,
   Text,
   PasswordInput,
-  Button,
   Group,
   Alert,
   Code,
   Badge,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import auditService from "@app/services/auditService";
 import LocalIcon from "@app/components/shared/LocalIcon";
@@ -172,11 +172,15 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
             )}
 
             <Group justify="space-between">
-              <Button variant="default" onClick={resetForm} disabled={clearing}>
+              <Button
+                variant="secondary"
+                onClick={resetForm}
+                disabled={clearing}
+              >
                 {t("audit.clearData.cancel", "Cancel")}
               </Button>
               <Button
-                color="red"
+                accent="danger"
                 onClick={handleClearData}
                 loading={clearing}
                 disabled={
@@ -229,7 +233,7 @@ const AuditClearDataSection: React.FC<AuditClearDataSectionProps> = ({
           </Group>
 
           <Button
-            color="red"
+            accent="danger"
             onClick={handleInitiateDeletion}
             disabled={!loginEnabled}
             fullWidth

@@ -1,13 +1,6 @@
-import {
-  Modal,
-  Stack,
-  Button,
-  Text,
-  Group,
-  Box,
-  ActionIcon,
-  UnstyledButton,
-} from "@mantine/core";
+import { Modal, Stack, Text, Group, Box } from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
 import {
   useSavedSignatures,
@@ -136,7 +129,9 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     overflow: "hidden",
                   }}
                 >
-                  <UnstyledButton
+                  <Button
+                    variant="tertiary"
+                    hover={false}
                     onClick={() => {
                       onSignatureSelected(sig);
                       onClose();
@@ -144,10 +139,10 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
                     style={{ flex: 1, padding: "12px" }}
                   >
                     {renderSignaturePreview(sig)}
-                  </UnstyledButton>
+                  </Button>
                   <ActionIcon
-                    color="red"
-                    variant="subtle"
+                    variant="tertiary"
+                    accent="danger"
                     size="sm"
                     onClick={() => removeSignature(sig.id)}
                     aria-label={t(
@@ -177,7 +172,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
 
         <Group grow>
           <Button
-            variant="outline"
+            variant="secondary"
             leftSection={<DrawIcon />}
             onClick={() => {
               onCreateNew("canvas");
@@ -187,7 +182,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             {t("certSign.collab.signRequest.modeTabs.draw", "Draw")}
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             leftSection={<TextFieldsIcon />}
             onClick={() => {
               onCreateNew("text");
@@ -197,7 +192,7 @@ export const SelectSignatureModal: React.FC<SelectSignatureModalProps> = ({
             {t("certSign.collab.signRequest.modeTabs.text", "Type")}
           </Button>
           <Button
-            variant="outline"
+            variant="secondary"
             leftSection={<ImageIcon />}
             onClick={() => {
               onCreateNew("image");

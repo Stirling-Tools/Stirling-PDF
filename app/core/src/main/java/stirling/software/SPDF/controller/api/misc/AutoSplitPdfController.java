@@ -14,6 +14,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.apache.pdfbox.cos.COSName;
+import org.apache.pdfbox.pdfwriter.compress.CompressParameters;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
@@ -357,7 +358,10 @@ public class AutoSplitPdfController {
                 for (int i = 0; i < splitDocuments.size(); i++) {
                     String fileName = filename + "_" + (i + 1) + ".pdf";
                     zipOut.putNextEntry(new ZipEntry(fileName));
-                    splitDocuments.get(i).save(zipOut);
+                    // NO_COMPRESSION: split docs are built by addPage()-ing pages copied from the
+                    // source document. PDFBox 3.0.7's compressed writer (PDFBOX-6203) drops shared
+                    // resources imported across documents, corrupting fonts. Revert once on 3.0.8.
+                    splitDocuments.get(i).save(zipOut, CompressParameters.NO_COMPRESSION);
                     zipOut.closeEntry();
                 }
             }

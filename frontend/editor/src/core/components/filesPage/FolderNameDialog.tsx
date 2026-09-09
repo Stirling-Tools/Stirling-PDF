@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Button, Group, Modal, Stack, TextInput } from "@mantine/core";
+import { Alert, Group, Modal, Stack, TextInput } from "@mantine/core";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutlined";
+
+import { Button } from "@app/ui/Button";
 
 interface FolderNameDialogProps {
   opened: boolean;
@@ -94,7 +96,7 @@ export function FolderNameDialog({
           </Alert>
         )}
         <Group justify="flex-end">
-          <Button variant="default" onClick={onClose}>
+          <Button variant="secondary" onClick={onClose}>
             {t("filesPage.folderName.cancel", "Cancel")}
           </Button>
           <Button

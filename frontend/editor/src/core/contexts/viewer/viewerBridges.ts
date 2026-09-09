@@ -60,6 +60,8 @@ export interface SelectionAPIWrapper {
   copyToClipboard: () => void;
   getSelectedText: () => string | any;
   getFormattedSelection: () => any;
+  selectAll: (totalPages: number) => Promise<boolean>;
+  selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
 }
 
 export interface SpreadAPIWrapper {

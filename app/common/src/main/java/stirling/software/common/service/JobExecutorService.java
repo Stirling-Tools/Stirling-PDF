@@ -89,6 +89,11 @@ public class JobExecutorService {
 
         String jobId = scopedJobKey;
 
+        final String jobOwner =
+                jobOwnershipService != null
+                        ? jobOwnershipService.getCurrentUserId().orElse(null)
+                        : null;
+
         long timeoutToUse = customTimeoutMs > 0 ? customTimeoutMs : effectiveTimeoutMs;
 
         log.debug(
@@ -119,6 +124,7 @@ public class JobExecutorService {
                         try {
                             stirling.software.common.util.JobContext.setJobId(
                                     capturedJobIdForQueue);
+                            stirling.software.common.util.JobContext.setOwner(jobOwner);
                             Object result = work.get();
                             processJobResult(capturedJobIdForQueue, result);
                             return result;
@@ -153,6 +159,7 @@ public class JobExecutorService {
                                     timeoutToUse);
 
                             stirling.software.common.util.JobContext.setJobId(capturedJobId);
+                            stirling.software.common.util.JobContext.setOwner(jobOwner);
                             Object result = executeWithTimeout(() -> work.get(), timeoutToUse);
                             processJobResult(capturedJobId, result);
                         } catch (TimeoutException te) {

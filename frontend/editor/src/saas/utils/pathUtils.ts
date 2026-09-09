@@ -1,6 +1,8 @@
 import { URL_TO_TOOL_MAP } from "@app/utils/urlMapping";
+import { BASE_PATH } from "@app/constants/app";
 
-const SUBPATH = import.meta.env.VITE_RUN_SUBPATH.replace(/^\/|\/$/g, ""); // "app" or ""
+// "bpp" or "" — BASE_PATH without leading slash.
+const SUBPATH = BASE_PATH.replace(/^\//, "");
 
 /**
  * Normalize pathname by stripping subpath prefix and trailing slashes
@@ -23,7 +25,13 @@ export function normalizePath(pathname: string): string {
  */
 export function isAuthRoute(pathname: string): boolean {
   const p = normalizePath(pathname);
-  return p === "/login" || p === "/signup" || p === "/auth/callback";
+  return (
+    p === "/login" ||
+    p === "/signup" ||
+    p === "/auth/callback" ||
+    p === "/auth/reset" ||
+    p === "/oauth/consent"
+  );
 }
 
 /**

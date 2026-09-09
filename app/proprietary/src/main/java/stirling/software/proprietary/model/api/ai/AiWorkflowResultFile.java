@@ -21,4 +21,11 @@ public class AiWorkflowResultFile {
 
     @Schema(description = "MIME type of the file", example = "application/pdf")
     private String contentType;
+
+    @Schema(
+            description =
+                    "Index into the request's fileInputs that this output was derived from, or null"
+                            + " when it has no single source (e.g. a merge, or a generated file)."
+                            + " Lets the client replace that input in place as a new version.")
+    private Integer sourceIndex;
 }

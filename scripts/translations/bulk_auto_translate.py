@@ -37,7 +37,7 @@ def get_all_languages(locales_dir: Path) -> List[str]:
         return []
 
     for lang_dir in sorted(locales_dir.iterdir()):
-        if lang_dir.is_dir() and lang_dir.name != "en-GB":
+        if lang_dir.is_dir() and lang_dir.name != "en-US":
             toml_file = lang_dir / "translation.toml"
             if toml_file.exists():
                 languages.append(lang_dir.name)
@@ -57,10 +57,10 @@ def get_language_completion(locales_dir: Path, language: str) -> Optional[float]
         with open(toml_file, "rb") as f:
             target_data = tomllib.load(f)
 
-        # Load en-GB reference
-        en_gb_file = locales_dir / "en-GB" / "translation.toml"
-        with open(en_gb_file, "rb") as f:
-            en_gb_data = tomllib.load(f)
+        # Load en-US reference
+        en_us_file = locales_dir / "en-US" / "translation.toml"
+        with open(en_us_file, "rb") as f:
+            en_us_data = tomllib.load(f)
 
         # Flatten and count
         def flatten(d, parent=""):
@@ -73,16 +73,16 @@ def get_language_completion(locales_dir: Path, language: str) -> Optional[float]
                     items[key] = v
             return items
 
-        en_gb_flat = flatten(en_gb_data)
+        en_us_flat = flatten(en_us_data)
         target_flat = flatten(target_data)
 
-        # Count translated (not equal to en-GB)
+        # Count translated (not equal to en-US)
         translated = sum(
             1
-            for k in en_gb_flat
-            if k in target_flat and target_flat[k] != en_gb_flat[k]
+            for k in en_us_flat
+            if k in target_flat and target_flat[k] != en_us_flat[k]
         )
-        total = len(en_gb_flat)
+        total = len(en_us_flat)
 
         return (translated / total * 100) if total > 0 else 0.0
 
@@ -98,6 +98,7 @@ def translate_language(
     timeout: int,
     skip_verification: bool,
     include_existing: bool,
+    model: str,
 ) -> Tuple[str, bool, str]:
     """
     Translate a single language.
@@ -115,6 +116,8 @@ def translate_language(
         str(batch_size),
         "--timeout",
         str(timeout),
+        "--model",
+        model,
     ]
 
     if skip_verification:
@@ -139,11 +142,11 @@ def translate_language(
             safe_print(f"[{language}] ✓ Success")
             return (language, True, "Success")
         else:
-            error_msg = (
-                result.stderr.strip() or result.stdout.strip() or "Unknown error"
-            )
-            safe_print(f"[{language}] ✗ Failed: {error_msg[:100]}")
-            return (language, False, error_msg[:200])  # Truncate long errors
+            # Show the actual error (last line of output), not the header
+            output = result.stderr.strip() or result.stdout.strip() or "Unknown error"
+            error_msg = output.splitlines()[-1][:200]
+            safe_print(f"[{language}] ✗ Failed: {error_msg}")
+            return (language, False, error_msg)
 
     except subprocess.TimeoutExpired:
         safe_print(f"[{language}] ✗ Timeout exceeded")
@@ -177,6 +180,11 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
 
     parser.add_argument(
         "--api-key", help="OpenAI API key (or set OPENAI_API_KEY env var)"
+    )
+    parser.add_argument(
+        "--model",
+        default="gpt-5.5",
+        help="OpenAI model (default: gpt-5.5; gpt-5.6-sol/terra/luna if your org has 5.6 access)",
     )
     parser.add_argument(
         "--parallel",
@@ -246,7 +254,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
         print(f"Translating specified languages: {', '.join(languages)}")
     else:
         languages = get_all_languages(locales_dir)
-        print(f"Found {len(languages)} languages (excluding en-GB)")
+        print(f"Found {len(languages)} languages (excluding en-US)")
 
     if not languages:
         print("No languages to translate!")
@@ -277,6 +285,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
     print("Bulk Translation Configuration")
     print(f"{'=' * 60}")
     print(f"Languages to translate: {len(languages)}")
+    print(f"Model: {args.model}")
     print(f"Parallel threads: {args.parallel}")
     print(f"Batch size: {args.batch_size}")
     print(f"Timeout per batch: {args.timeout}s")
@@ -308,6 +317,7 @@ Note: Requires OPENAI_API_KEY environment variable or --api-key argument.
                 args.timeout,
                 args.skip_verification,
                 args.include_existing,
+                args.model,
             ): lang
             for lang in languages
         }

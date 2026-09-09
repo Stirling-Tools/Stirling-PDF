@@ -5,7 +5,7 @@
  * Calculates date from 7 days ago and runs npm update/audit with that date
  */
 
-const { spawn } = require("child_process");
+import { spawn } from "node:child_process";
 
 // Calculate date from 7 days ago in YYYY-MM-DD format
 const date = new Date();

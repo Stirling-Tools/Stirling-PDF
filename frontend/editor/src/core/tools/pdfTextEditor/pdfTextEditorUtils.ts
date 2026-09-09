@@ -1334,42 +1334,6 @@ const rebuildParagraphLineElements = (
   return rebuilt;
 };
 
-export const buildUpdatedDocument = (
-  source: PdfJsonDocument,
-  groupsByPage: TextGroup[][],
-  imagesByPage: PdfJsonImageElement[][],
-): PdfJsonDocument => {
-  const updated = deepCloneDocument(source);
-  const pages = updated.pages ?? [];
-
-  updated.pages = pages.map((page, pageIndex) => {
-    const groups = groupsByPage[pageIndex] ?? [];
-    const images = imagesByPage[pageIndex] ?? [];
-    if (!groups.length) {
-      return {
-        ...page,
-        imageElements: images.map(cloneImageElement),
-      };
-    }
-
-    const updatedElements: PdfJsonTextElement[] = groups.flatMap((group) => {
-      if (group.text === group.originalText) {
-        return group.originalElements.map(cloneTextElement);
-      }
-      return [createMergedElement(group)];
-    });
-
-    return {
-      ...page,
-      textElements: updatedElements,
-      imageElements: images.map(cloneImageElement),
-      contentStreams: page.contentStreams ?? null,
-    };
-  });
-
-  return updated;
-};
-
 export const restoreGlyphElements = (
   source: PdfJsonDocument,
   groupsByPage: TextGroup[][],

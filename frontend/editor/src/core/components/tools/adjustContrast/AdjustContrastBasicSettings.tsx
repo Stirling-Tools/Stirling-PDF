@@ -24,19 +24,19 @@ export default function AdjustContrastBasicSettings({
       <SliderWithInput
         label={t("adjustContrast.contrast", "Contrast")}
         value={parameters.contrast}
-        onChange={(v) => onParameterChange("contrast", v as any)}
+        onChange={(v) => onParameterChange("contrast", v)}
         disabled={disabled}
       />
       <SliderWithInput
         label={t("adjustContrast.brightness", "Brightness")}
         value={parameters.brightness}
-        onChange={(v) => onParameterChange("brightness", v as any)}
+        onChange={(v) => onParameterChange("brightness", v)}
         disabled={disabled}
       />
       <SliderWithInput
         label={t("adjustContrast.saturation", "Saturation")}
         value={parameters.saturation}
-        onChange={(v) => onParameterChange("saturation", v as any)}
+        onChange={(v) => onParameterChange("saturation", v)}
         disabled={disabled}
       />
     </Stack>

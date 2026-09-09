@@ -115,7 +115,8 @@ public class CertificateValidationService {
             log.info("Enabled AIA certificate fetching and revocation checking");
         }
 
-        // Trust only what we explicitly opt into:
+        // Trust only what we explicitly opt into. Desktop follows the same flags as the server -
+        // our own signing cert is trusted via serverAsAnchor, not by force-loading every system CA.
         if (validation.getTrust().isServerAsAnchor()) loadServerCertAsAnchor();
         if (validation.getTrust().isUseSystemTrust()) loadJavaSystemTrustStore();
         if (validation.getTrust().isUseMozillaBundle()) loadBundledMozillaCACerts();

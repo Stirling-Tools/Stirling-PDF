@@ -1,4 +1,5 @@
-import { Button, Stack, Text } from "@mantine/core";
+import { Stack, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import type { FileState } from "@app/types/file";
@@ -49,8 +50,8 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
               <PictureAsPdfIcon
                 sx={{ fontSize: 32, color: "var(--mantine-color-red-6)" }}
               />
-              <div style={{ flex: 1 }}>
-                <Text size="sm" fw={600}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <Text size="sm" fw={600} truncate>
                   {selectedFile?.name}
                 </Text>
                 {selectedFile?.size && (
@@ -63,10 +64,7 @@ export const SelectDocumentStep: React.FC<SelectDocumentStepProps> = ({
           </div>
 
           <Button onClick={onNext} fullWidth>
-            {t(
-              "groupSigning.steps.selectDocument.continue",
-              "Continue to Participant Selection",
-            )}
+            {t("groupSigning.steps.selectDocument.continue", "Continue")}
           </Button>
         </>
       )}

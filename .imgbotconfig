@@ -1,0 +1,5 @@
+{
+  "ignoredFiles": [
+    "frontend/editor/src-tauri/icons/icon.png"
+  ]
+}

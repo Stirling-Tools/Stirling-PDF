@@ -25,6 +25,7 @@ public class AiEngineClient {
 
     private final ApplicationProperties applicationProperties;
     private final HttpClient httpClient;
+    private final String engineSharedSecret;
 
     @Autowired
     public AiEngineClient(ApplicationProperties applicationProperties) {
@@ -39,8 +40,17 @@ public class AiEngineClient {
 
     /** Package-private constructor that accepts an HttpClient directly; intended for tests. */
     AiEngineClient(ApplicationProperties applicationProperties, HttpClient httpClient) {
+        this(applicationProperties, httpClient, System.getenv("STIRLING_ENGINE_SHARED_SECRET"));
+    }
+
+    /** Package-private constructor that also injects the engine shared secret; for tests. */
+    AiEngineClient(
+            ApplicationProperties applicationProperties,
+            HttpClient httpClient,
+            String engineSharedSecret) {
         this.applicationProperties = applicationProperties;
         this.httpClient = httpClient;
+        this.engineSharedSecret = engineSharedSecret;
     }
 
     public String post(String path, String jsonBody, String userId) throws IOException {
@@ -78,6 +88,7 @@ public class AiEngineClient {
                         .timeout(timeout)
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         addUserHeader(builder, userId);
+        addEngineAuthHeader(builder);
         HttpResponse<String> response = sendRequest(builder.build());
 
         log.debug("AI engine responded with status {}", response.statusCode());
@@ -86,10 +97,15 @@ public class AiEngineClient {
     }
 
     /**
-     * Attach the X-User-Id header so the engine can scope per-user storage (RAG documents, search
-     * results) to the caller. Skipped when {@code userId} is blank: the engine treats the request
-     * as anonymous and refuses any route that requires tenancy.
+     * Attach the {@code X-Engine-Auth} shared secret when configured so the engine trusts this
+     * backend request.
      */
+    private void addEngineAuthHeader(HttpRequest.Builder builder) {
+        if (engineSharedSecret != null && !engineSharedSecret.isBlank()) {
+            builder.header("X-Engine-Auth", engineSharedSecret);
+        }
+    }
+
     private static void addUserHeader(HttpRequest.Builder builder, String userId) {
         if (userId != null && !userId.isBlank()) {
             builder.header("X-User-Id", userId);
@@ -129,6 +145,7 @@ public class AiEngineClient {
                         .timeout(timeout)
                         .POST(HttpRequest.BodyPublishers.ofString(jsonBody));
         addUserHeader(builder, userId);
+        addEngineAuthHeader(builder);
         HttpRequest request = builder.build();
 
         HttpResponse<Stream<String>> response;
@@ -184,6 +201,7 @@ public class AiEngineClient {
                         .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
                         .DELETE();
         addUserHeader(builder, userId);
+        addEngineAuthHeader(builder);
         HttpResponse<String> response = sendRequest(builder.build());
 
         log.debug("AI engine responded with status {}", response.statusCode());
@@ -208,6 +226,7 @@ public class AiEngineClient {
                         .timeout(Duration.ofSeconds(config.getTimeoutSeconds()))
                         .GET();
         addUserHeader(builder, userId);
+        addEngineAuthHeader(builder);
         HttpResponse<String> response = sendRequest(builder.build());
 
         log.debug("AI engine responded with status {}", response.statusCode());

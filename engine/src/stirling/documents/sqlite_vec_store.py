@@ -15,6 +15,10 @@ from stirling.documents.store import Document, DocumentStore, SearchResult, Stor
 from stirling.models import OwnerId, PrincipalId
 
 _READ_PERMISSION = "read"
+# SQLite defaults to failing immediately (busy_timeout=0) when it can't grab the
+# write lock. With multiple worker processes opening the same file, they collide on
+# startup schema-init and get "database is locked". Wait for the lock instead.
+_BUSY_TIMEOUT_MS = 5000
 # sqlite stores TIMESTAMP as TEXT. We normalise to UTC ISO 8601 ``YYYY-MM-DD HH:MM:SS``
 # so lexicographic comparison against ``datetime('now')`` matches chronological order.
 _SQLITE_DATETIME_FMT = "%Y-%m-%d %H:%M:%S"
@@ -52,6 +56,8 @@ class SqliteVecStore(DocumentStore):
         # Required so cascade deletes from documents_meta clean up child tables.
         conn.execute("PRAGMA foreign_keys=ON")
         if self._db_path is not None:
+            # Set before the WAL switch below: that pragma also takes the lock.
+            conn.execute(f"PRAGMA busy_timeout={_BUSY_TIMEOUT_MS}")
             conn.execute("PRAGMA journal_mode=WAL")
 
         self._conn = conn

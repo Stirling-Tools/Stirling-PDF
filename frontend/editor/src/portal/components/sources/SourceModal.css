@@ -1,0 +1,160 @@
+.portal-source-modal__catalog {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.portal-source-modal__hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-source-modal__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+  gap: 0.5rem;
+}
+
+.portal-source-modal__soon-title {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-muted);
+}
+
+/* Connector tile: real logo on the card surface, no tinted badge behind it. */
+.portal-source-modal__card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  font: inherit;
+  color: inherit;
+  transition:
+    border-color var(--motion-fast),
+    background var(--motion-fast);
+}
+
+button.portal-source-modal__card:hover {
+  border-color: var(--c-border-strong);
+  background: var(--c-hover);
+}
+
+button.portal-source-modal__card:focus-visible {
+  border-color: var(--c-primary);
+  box-shadow: 0 0 0 2px var(--c-primary-tint);
+  outline: none;
+}
+
+.portal-source-modal__card--soon {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.portal-source-modal__card-icon {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-top: 0.0625rem;
+}
+
+.portal-source-modal__card-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.portal-source-modal__card-name {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.portal-source-modal__card-desc {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--c-text-subtle);
+}
+
+.portal-source-modal__soon-badge {
+  margin-left: 0.375rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: 999px;
+  border: 1px solid var(--c-border);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--c-text-muted);
+  white-space: nowrap;
+}
+
+.portal-source-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.portal-source-modal__loading {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.portal-source-modal__back {
+  align-self: flex-start;
+}
+
+.portal-source-modal__type-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 0.75rem;
+  background: var(--c-surface-sunken);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md);
+}
+
+.portal-source-modal__muted {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}
+
+.portal-source-modal__copy-row {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.portal-source-modal__copy-row > :first-child {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.portal-source-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.portal-source-modal__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}

@@ -20,15 +20,15 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.api.TeamApi;
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.saas.model.TeamInvitation;
-import stirling.software.saas.model.TeamMembership;
 import stirling.software.saas.repository.TeamInvitationRepository;
-import stirling.software.saas.repository.TeamMembershipRepository;
 import stirling.software.saas.security.TeamSecurityExpressions;
 import stirling.software.saas.service.SaasTeamExtensionService;
 import stirling.software.saas.service.SaasTeamService;

@@ -138,7 +138,9 @@ export const defaultParameters: ConvertParameters = {
   smartDetectionType: "none",
 };
 
-const validateParameters = (params: ConvertParameters): boolean => {
+export const validateConvertParameters = (
+  params: ConvertParameters,
+): boolean => {
   const { fromExtension, toExtension } = params;
 
   if (!fromExtension || !toExtension) return false;
@@ -191,7 +193,7 @@ export const useConvertParameters = (): ConvertParametersHook => {
     () => ({
       defaultParameters,
       endpointName: getEndpointName,
-      validateFn: validateParameters,
+      validateFn: validateConvertParameters,
     }),
     [],
   );

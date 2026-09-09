@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Stack, Button, TextInput, Alert, Text } from "@mantine/core";
+import { Stack, TextInput, Alert, Text } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import {
   ServerConfig,
@@ -316,8 +317,8 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
 
         {serverUrl && (
           <div className="navigation-link-container">
-            <button
-              type="button"
+            <Button
+              variant="tertiary"
               className="navigation-link-button"
               disabled={testing || loading}
               onClick={() => {
@@ -331,7 +332,7 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
               {t("setup.server.useLast", "Last used server: {{serverUrl}}", {
                 serverUrl: serverUrl,
               })}
-            </button>
+            </Button>
           </div>
         )}
 
@@ -339,9 +340,11 @@ export const ServerSelection: React.FC<ServerSelectionProps> = ({
           type="submit"
           loading={testing || loading}
           disabled={loading}
-          mt="md"
           fullWidth
-          color="#AF3434"
+          accent="danger"
+          style={{
+            marginTop: "var(--mantine-spacing-md)",
+          }}
         >
           {testing
             ? t("setup.server.testing", "Testing connection...")

@@ -30,7 +30,6 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
 
-import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 import stirling.software.proprietary.security.model.AuthenticationType;
 import stirling.software.proprietary.security.model.User;
@@ -46,9 +45,12 @@ class SupabaseAuthenticationFilterTest {
     @Mock private TeamService teamService;
     @Mock private UserService userService;
     @Mock private SupabaseUserService supabaseUserService;
-    @Mock private stirling.software.saas.service.CreditService creditService;
     @Mock private stirling.software.saas.service.SaasTeamService saasTeamService;
     @Mock private JwtDecoder jwtDecoder;
+
+    @Mock
+    private stirling.software.proprietary.security.service.ApiKeyAuthenticationService
+            apiKeyAuthenticationService;
 
     private SupabaseAuthenticationFilter filter;
     private MockHttpServletRequest request;
@@ -63,9 +65,9 @@ class SupabaseAuthenticationFilterTest {
                         teamService,
                         userService,
                         supabaseUserService,
-                        creditService,
                         saasTeamService,
-                        jwtDecoder);
+                        jwtDecoder,
+                        apiKeyAuthenticationService);
         request = new MockHttpServletRequest();
         response = new MockHttpServletResponse();
         chain = new MockFilterChain();
@@ -92,7 +94,12 @@ class SupabaseAuthenticationFilterTest {
     void apiKeyHeaderPopulatesSecurityContext() throws Exception {
         User user = newUser("alice");
         user.setApiKey("api-key-123");
-        when(userService.getUserByApiKey("api-key-123")).thenReturn(Optional.of(user));
+        when(apiKeyAuthenticationService.authenticate("api-key-123"))
+                .thenReturn(
+                        Optional.of(
+                                new stirling.software.proprietary.security.service
+                                        .ApiKeyAuthenticationService.ApiKeyAuthentication(
+                                        user, null, user.getAuthorities())));
 
         request.setRequestURI("/api/v1/something");
         request.setMethod("POST");
@@ -110,7 +117,7 @@ class SupabaseAuthenticationFilterTest {
 
     @Test
     void invalidApiKeyTriggers401() throws Exception {
-        when(userService.getUserByApiKey("nope")).thenReturn(Optional.empty());
+        when(apiKeyAuthenticationService.authenticate("nope")).thenReturn(Optional.empty());
 
         request.setRequestURI("/api/v1/something");
         request.setMethod("POST");
@@ -161,8 +168,7 @@ class SupabaseAuthenticationFilterTest {
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "bob@example.com", false));
         when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
-        when(userService.saveUser(any())).thenAnswer(inv -> inv.getArgument(0));
+        when(saasTeamService.saveUserWithPersonalTeam(any())).thenAnswer(inv -> inv.getArgument(0));
 
         request.setRequestURI("/api/v1/something");
         request.setMethod("POST");
@@ -170,8 +176,10 @@ class SupabaseAuthenticationFilterTest {
 
         filter.doFilter(request, response, chain);
 
-        verify(userService, times(1)).saveUser(any(User.class));
         verify(supabaseUserService).createSupabaseUser(supabaseId, "bob@example.com", false);
+        // Own personal team, never the shared Default team, written with the user.
+        verify(saasTeamService, times(1)).saveUserWithPersonalTeam(any(User.class));
+        verify(teamService, never()).getOrCreateDefaultTeam();
         assertThat(SecurityContextHolder.getContext().getAuthentication())
                 .isInstanceOf(EnhancedJwtAuthenticationToken.class);
     }
@@ -185,8 +193,7 @@ class SupabaseAuthenticationFilterTest {
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "carol@example.com", false));
         when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
-        when(userService.saveUser(any(User.class)))
+        when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                 .thenAnswer(
                         inv -> {
                             User u = inv.getArgument(0);
@@ -202,7 +209,7 @@ class SupabaseAuthenticationFilterTest {
 
         filter.doFilter(request, response, chain);
 
-        verify(userService, times(1)).saveUser(any(User.class));
+        verify(saasTeamService, times(1)).saveUserWithPersonalTeam(any(User.class));
     }
 
     @Test
@@ -214,8 +221,7 @@ class SupabaseAuthenticationFilterTest {
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "dave@example.com", false));
         when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
-        when(userService.saveUser(any(User.class)))
+        when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                 .thenAnswer(
                         inv -> {
                             User u = inv.getArgument(0);
@@ -231,7 +237,7 @@ class SupabaseAuthenticationFilterTest {
 
         filter.doFilter(request, response, chain);
 
-        verify(userService, times(1)).saveUser(any(User.class));
+        verify(saasTeamService, times(1)).saveUserWithPersonalTeam(any(User.class));
     }
 
     @Test
@@ -243,8 +249,7 @@ class SupabaseAuthenticationFilterTest {
         when(supabaseUserService.getUser(supabaseId))
                 .thenReturn(supabaseUserMatching(supabaseId, "eve@example.com", false));
         when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.empty());
-        when(teamService.getOrCreateDefaultTeam()).thenReturn(new Team());
-        when(userService.saveUser(any(User.class)))
+        when(saasTeamService.saveUserWithPersonalTeam(any(User.class)))
                 .thenAnswer(
                         inv -> {
                             User u = inv.getArgument(0);
@@ -260,7 +265,7 @@ class SupabaseAuthenticationFilterTest {
 
         filter.doFilter(request, response, chain);
 
-        verify(userService, times(1)).saveUser(any(User.class));
+        verify(saasTeamService, times(1)).saveUserWithPersonalTeam(any(User.class));
     }
 
     @Test

@@ -17,17 +17,25 @@ import org.springframework.web.server.ResponseStatusException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.ai.model.AiCreateSession;
 import stirling.software.saas.ai.model.AiCreateSessionStatus;
 import stirling.software.saas.ai.service.AiCreateSessionService;
+import stirling.software.saas.payg.cap.RequiresFeature;
+import stirling.software.saas.payg.model.FeatureGate;
 
 @RestController
 @Profile("saas")
 @RequestMapping("/api/v1/ai/create/internal")
+@Tag(name = "AI")
+@Hidden
 @RequiredArgsConstructor
+@RequiresFeature(FeatureGate.AI_SUPPORT)
 @Slf4j
 public class AiCreateInternalController {
 

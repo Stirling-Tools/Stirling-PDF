@@ -6,13 +6,13 @@ import {
   Text,
   Badge,
   Group,
-  Button,
   Loader,
   Alert,
   TextInput,
   FileInput,
   Select,
 } from "@mantine/core";
+import { Button } from "@app/ui/Button";
 import { useParticipantSession } from "@app/hooks/workflow/useParticipantSession";
 import InfoIcon from "@mui/icons-material/Info";
 import DownloadIcon from "@mui/icons-material/Download";
@@ -314,7 +314,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               size="sm"
               leftSection={<DownloadIcon fontSize="small" />}
               onClick={() => downloadDocument(token)}
-              variant="light"
+              variant="secondary"
             >
               {t("workflow.participant.downloadDocument", "Download Document")}
             </Button>
@@ -489,7 +489,7 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
                 disabled={
                   isSubmitting || certValidation.status === "validating"
                 }
-                color="green"
+                accent="success"
                 data-testid="submit-signature-button"
               >
                 {t("workflow.participant.submitSignature", "Submit Signature")}
@@ -498,8 +498,8 @@ const ParticipantView: React.FC<ParticipantViewProps> = ({ token }) => {
               <Button
                 leftSection={<CancelIcon fontSize="small" />}
                 onClick={handleDecline}
-                color="red"
-                variant="light"
+                variant="secondary"
+                accent="danger"
                 data-testid="decline-button"
               >
                 {t("workflow.participant.decline", "Decline")}

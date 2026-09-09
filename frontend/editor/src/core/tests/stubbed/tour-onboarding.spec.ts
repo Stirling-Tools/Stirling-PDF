@@ -17,7 +17,10 @@ import { uploadFiles, openSettings } from "@app/tests/helpers/ui-helpers";
  *   - whatsNewStepsConfig.ts
  */
 
-const SAMPLE_PDF = path.join(__dirname, "../test-fixtures/sample.pdf");
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 // ---------------------------------------------------------------------------
 // 15.1 Static layout - always visible on the main page

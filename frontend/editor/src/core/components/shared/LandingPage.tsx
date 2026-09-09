@@ -8,7 +8,6 @@ import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { LandingDocumentStack } from "@app/components/shared/LandingDocumentStack";
 import { LandingActions } from "@app/components/shared/LandingActions";
-import { Wordmark } from "@app/components/shared/Wordmark";
 import "@app/components/shared/LandingPage.css";
 
 const LandingPage = () => {
@@ -80,17 +79,9 @@ const LandingPage = () => {
       >
         <LandingDocumentStack />
 
-        <Wordmark
-          alt={t("landing.heroTitle", "Stirling PDF")}
-          className="landing-title"
-        />
-        <p className="landing-subtitle">
-          {t(
-            "landing.heroSubtitle",
-            "Drop in or add an existing PDF to get started.",
-          )}
-        </p>
-
+        <h3 className="landing-title">
+          {t("landing.workbenchEmptyStateHero", "Drop a PDF anywhere")}
+        </h3>
         <LandingActions
           fileInputRef={fileInputRef}
           onUploadClick={() => void handleNativeUploadClick()}

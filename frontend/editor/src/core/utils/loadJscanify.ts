@@ -1,12 +1,58 @@
+import { withBasePath } from "@app/constants/app";
+
+/** A single point in image space, as returned by jscanify corner detection. */
+export interface JscanifyPoint {
+  x: number;
+  y: number;
+}
+
+/** The four detected document corners returned by {@link JscanifyScanner.getCornerPoints}. */
+export interface JscanifyCornerPoints {
+  topLeftCorner: JscanifyPoint;
+  topRightCorner: JscanifyPoint;
+  bottomLeftCorner: JscanifyPoint;
+  bottomRightCorner: JscanifyPoint;
+}
+
+/** Minimal subset of an OpenCV.js `Mat` that this app interacts with directly. */
+export interface OpenCVMat {
+  delete(): void;
+}
+
+/** Minimal subset of the OpenCV.js runtime exposed on `window.cv`. */
+export interface OpenCV {
+  /** Defined only once the WASM runtime has finished initializing. */
+  readonly Mat: unknown;
+  imread(source: HTMLImageElement | HTMLCanvasElement | string): OpenCVMat;
+}
+
+/** The jscanify scanner instance API used by the mobile scanner. */
+export interface JscanifyScanner {
+  findPaperContour(image: OpenCVMat): OpenCVMat | undefined;
+  getCornerPoints(contour: OpenCVMat): JscanifyCornerPoints;
+  extractPaper(
+    image: HTMLCanvasElement,
+    resultWidth: number,
+    resultHeight: number,
+    cornerPoints?: JscanifyCornerPoints,
+  ): HTMLCanvasElement;
+}
+
+/** Constructor for jscanify, exposed on `window.jscanify`. */
+export interface JscanifyConstructor {
+  new (): JscanifyScanner;
+}
+
 declare global {
   interface Window {
-    cv?: any;
-    jscanify?: any;
+    cv?: OpenCV;
+    jscanify?: JscanifyConstructor;
   }
 }
 
-const OPENCV_SRC = "/vendor/jscanify/opencv.js";
-const JSCANIFY_SRC = "/vendor/jscanify/jscanify.js";
+// Served under the app's base path (handles sub-path deploys like /app).
+const OPENCV_SRC = withBasePath("/vendor/jscanify/opencv.js");
+const JSCANIFY_SRC = withBasePath("/vendor/jscanify/jscanify.js");
 
 let loadPromise: Promise<void> | null = null;
 

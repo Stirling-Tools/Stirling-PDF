@@ -39,6 +39,11 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.model.exception.UnsupportedProviderException;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.RegexPatternUtils;
+import stirling.software.proprietary.access.model.PrincipalType;
+import stirling.software.proprietary.access.model.ResourceType;
+import stirling.software.proprietary.access.repository.ResourceGrantRepository;
+import stirling.software.proprietary.integration.model.IntegrationConfig;
+import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.AuthorityRepository;
 import stirling.software.proprietary.security.database.repository.PersistentLoginRepository;
@@ -87,6 +92,10 @@ public class UserService implements UserServiceInterface {
     private final StorageCleanupEntryRepository storageCleanupEntryRepository;
     private final FileShareRepository fileShareRepository;
     private final FileShareAccessRepository fileShareAccessRepository;
+    private final ResourceGrantRepository resourceGrantRepository;
+    private final IntegrationConfigRepository integrationConfigRepository;
+    private final TeamMembershipService teamMembershipService;
+    private final ApiKeyAuthenticationService apiKeyAuthenticationService;
 
     @Transactional
     public void processSSOPostLogin(
@@ -139,15 +148,16 @@ public class UserService implements UserServiceInterface {
     }
 
     public Authentication getAuthentication(String apiKey) {
-        Optional<User> user = getUserByApiKey(apiKey);
-        if (user.isEmpty()) {
-            throw new UsernameNotFoundException("API key is not valid");
-        }
-        // Convert the user into an Authentication object
-        return new UsernamePasswordAuthenticationToken( // principal (typically the user)
-                user, // credentials (we don't expose the password or API key here)
-                null, // user's authorities (roles/permissions)
-                getAuthorities(user.get()));
+        // Resolve through the shared service (multi-key table, then the legacy per-user column).
+        // The key runs as its owner with the owner's authorities.
+        var resolved =
+                apiKeyAuthenticationService
+                        .authenticate(apiKey)
+                        .orElseThrow(() -> new UsernameNotFoundException("API key is not valid"));
+        return new UsernamePasswordAuthenticationToken(
+                resolved.user(), // principal
+                null, // credentials (we don't expose the password or API key here)
+                resolved.authorities()); // the owner's authorities
     }
 
     private Collection<? extends GrantedAuthority> getAuthorities(User user) {
@@ -165,6 +175,9 @@ public class UserService implements UserServiceInterface {
 
     public User addApiKeyToUser(String username) {
         Optional<User> userOpt = findByUsernameIgnoreCase(username);
+        // Rotating/regenerating the legacy key must also revoke its migrated api_keys shadow row,
+        // otherwise the old secret keeps authenticating (it resolves from api_keys first).
+        userOpt.map(User::getApiKey).ifPresent(apiKeyAuthenticationService::revokeMigratedKey);
         User user = saveUser(userOpt, generateApiKey());
         try {
             databaseService.exportDatabase();
@@ -212,7 +225,8 @@ public class UserService implements UserServiceInterface {
     }
 
     public Optional<User> getUserByApiKey(String apiKey) {
-        return userRepository.findByApiKey(apiKey);
+        // Resolves the multi-key api_keys table first, then the legacy per-user column.
+        return apiKeyAuthenticationService.resolveUser(apiKey);
     }
 
     public Optional<User> loadUserByApiKey(String apiKey) {
@@ -248,6 +262,21 @@ public class UserService implements UserServiceInterface {
 
     private void deleteUserRelatedData(User user) {
         log.info("Deleting all associated data for user: {}", user.getUsername());
+
+        // Drop ACL grants held by this user and detach grants they issued
+        resourceGrantRepository.deleteByPrincipalTypeAndPrincipalId(
+                PrincipalType.USER, user.getId());
+        resourceGrantRepository.clearGrantedBy(user);
+
+        // Integration configs owned by this user FK the users row; drop them and their grants
+        for (IntegrationConfig cfg : integrationConfigRepository.findByOwnerUser(user)) {
+            resourceGrantRepository.deleteByResourceTypeAndResourceId(
+                    ResourceType.INTEGRATION_CONFIG, String.valueOf(cfg.getId()));
+        }
+        integrationConfigRepository.deleteByOwnerUser(user);
+
+        // Membership rows and invitation references would dangle once the user row is gone
+        teamMembershipService.deleteAllForUser(user);
 
         // Delete server certificate (non-nullable OneToOne → User)
         userServerCertificateService.deleteUserCertificate(user.getId());
@@ -412,6 +441,7 @@ public class UserService implements UserServiceInterface {
         }
         user.setTeam(team);
         userRepository.save(user);
+        teamMembershipService.syncMembership(user);
         databaseService.exportDatabase();
     }
 
@@ -523,6 +553,7 @@ public class UserService implements UserServiceInterface {
 
         // Save user
         userRepository.save(user);
+        teamMembershipService.syncMembership(user);
 
         // Export database
         databaseService.exportDatabase();

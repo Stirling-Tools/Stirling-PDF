@@ -11,6 +11,7 @@ import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParamet
 import CertificateTypeSettings from "@app/components/tools/certSign/CertificateTypeSettings";
 import CertificateFormatSettings from "@app/components/tools/certSign/CertificateFormatSettings";
 import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
+import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
 import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
 
 interface CertSignAutomationSettingsProps {
@@ -48,6 +49,15 @@ const CertSignAutomationSettings = ({
       {/* Certificate Files - only show for Manual mode */}
       {parameters.signMode === "MANUAL" && (
         <CertificateFilesSettings
+          parameters={parameters}
+          onParameterChange={onParameterChange}
+          disabled={disabled}
+        />
+      )}
+
+      {/* Hardware certificate (Windows store / USB token) - desktop only */}
+      {parameters.signMode === "DEVICE" && (
+        <HardwareCertificateSettings
           parameters={parameters}
           onParameterChange={onParameterChange}
           disabled={disabled}

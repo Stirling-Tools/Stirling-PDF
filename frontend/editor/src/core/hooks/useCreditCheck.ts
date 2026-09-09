@@ -1,7 +1,8 @@
 /**
- * Core stub for credit checking before cloud operations
- * Desktop layer shadows this with the real implementation
- * In web builds, always allows the operation (no credit system)
+ * No-op stub kept only to satisfy useToolOperation's @app/hooks/useCreditCheck
+ * import. There is no pre-flight credit/usage check anymore — PAYG is enforced
+ * server-side (the BE returns 402 FEATURE_DEGRADED / PAYG_LIMIT_REACHED, which
+ * paygErrorInterceptor turns into the usage-limit modal). Always allows.
  */
 export function useCreditCheck(_operationType?: string, _endpoint?: string) {
   return {

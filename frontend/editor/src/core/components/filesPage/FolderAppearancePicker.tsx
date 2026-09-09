@@ -13,6 +13,7 @@ import {
   FOLDER_ICONS,
   FolderIconOption,
 } from "@app/components/filesPage/folderIcons";
+import { Button } from "@app/ui/Button";
 
 interface FolderAppearancePickerProps {
   folder: FolderRecord;
@@ -50,9 +51,9 @@ export function FolderAppearancePicker({
           }}
         >
           {FOLDER_COLOR_PALETTE.map((c) => (
-            <button
+            <Button
               key={c}
-              type="button"
+              variant="secondary"
               disabled={disabled}
               aria-label={t(
                 "filesPage.appearance.useColour",
@@ -69,7 +70,7 @@ export function FolderAppearancePicker({
                 borderRadius: "50%",
                 border:
                   folder.color === c
-                    ? "2px solid var(--text-primary)"
+                    ? "2px solid var(--c-text)"
                     : "2px solid transparent",
                 background: c,
                 cursor: disabled ? "not-allowed" : "pointer",
@@ -122,7 +123,7 @@ function Section({
           fontSize: "0.7rem",
           textTransform: "uppercase",
           letterSpacing: "0.05em",
-          color: "var(--text-muted)",
+          color: "var(--c-text-subtle)",
           fontWeight: 600,
         }}
       >
@@ -146,8 +147,8 @@ function IconButton({
 }) {
   return (
     <Tooltip label={icon.label} withinPortal>
-      <button
-        type="button"
+      <Button
+        variant="tertiary"
         disabled={disabled}
         aria-label={icon.label}
         onClick={(e) => {
@@ -162,17 +163,17 @@ function IconButton({
           justifyContent: "center",
           fontSize: "1.1rem",
           borderRadius: "0.4rem",
-          background: selected ? "var(--hover-bg)" : "transparent",
+          background: selected ? "var(--c-hover)" : "transparent",
           border: selected
-            ? "1px solid var(--accent-interactive, #6366f1)"
+            ? "1px solid var(--c-primary)"
             : "1px solid transparent",
           cursor: disabled ? "not-allowed" : "pointer",
           padding: 0,
-          color: "var(--text-primary)",
+          color: "var(--c-text)",
         }}
       >
         {icon.glyph || "-"}
-      </button>
+      </Button>
     </Tooltip>
   );
 }

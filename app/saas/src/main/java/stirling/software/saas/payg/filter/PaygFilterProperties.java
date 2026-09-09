@@ -38,7 +38,13 @@ public class PaygFilterProperties {
         /** 10 MiB. Tiny responses stay in RAM; large responses spill. */
         private long inMemoryThresholdBytes = 10L * 1024L * 1024L;
 
-        /** Optional ceiling: when set, OUTPUT recording is skipped past this size. */
-        private Long maxBytes;
+        /**
+         * Ceiling for OUTPUT recording. Responses larger than this skip the per-PDF hash + ZIP
+         * unpack — the bytes still flowed through to the client unmodified, only lineage capture is
+         * dropped. Default 500 MiB is generous for the largest realistic Stirling responses (full
+         * split-to-ZIP on a 1000-page document) while preventing pathological cases from tying up
+         * the interceptor for minutes. Set to {@code null} for "no ceiling at all".
+         */
+        private Long maxBytes = 500L * 1024L * 1024L;
     }
 }

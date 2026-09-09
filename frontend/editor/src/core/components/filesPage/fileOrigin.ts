@@ -11,8 +11,6 @@ import { StirlingFileStub } from "@app/types/fileContext";
 
 export type FileOrigin = "local" | "cloud" | "shared-with-me";
 
-export const FILE_ORIGINS: FileOrigin[] = ["local", "cloud", "shared-with-me"];
-
 export function getFileOrigin(file: StirlingFileStub): FileOrigin {
   if (file.remoteSharedViaLink || file.remoteOwnedByCurrentUser === false) {
     return "shared-with-me";

@@ -4,13 +4,12 @@ import {
   Stack,
   ColorPicker as MantineColorPicker,
   Group,
-  Button,
   ColorSwatch,
   Slider,
   Text,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-
+import { Button } from "@app/ui/Button";
 interface ColorPickerProps {
   isOpen: boolean;
   onClose: () => void;

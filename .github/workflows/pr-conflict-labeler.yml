@@ -1,0 +1,159 @@
+name: PR conflict labeler
+
+on:
+  pull_request_target:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - edited
+      - ready_for_review
+  schedule:
+    - cron: "17 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-conflict-labeler-${{ github.event.pull_request.number || 'all-open-prs' }}
+  cancel-in-progress: false
+
+env:
+  CONFLICT_LABEL: "has conflicts"
+
+jobs:
+  label-conflicts:
+    name: Label conflicted PRs
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: read
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        with:
+          egress-policy: audit
+
+      - name: Check out the repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Set up stirling-bot token
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
+        with:
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+
+      - name: Apply conflict label
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          github-token: ${{ steps.setup-bot.outputs.token }}
+          script: |
+            const conflictLabel = process.env.CONFLICT_LABEL;
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const eventPullRequest = context.payload.pull_request;
+
+            async function sleep(ms) {
+              await new Promise((resolve) => setTimeout(resolve, ms));
+            }
+
+            async function getPullRequestWithMergeableState(pullNumber) {
+              for (let attempt = 1; attempt <= 6; attempt += 1) {
+                const { data: pull } = await github.rest.pulls.get({
+                  owner,
+                  repo,
+                  pull_number: pullNumber,
+                });
+
+                if (pull.mergeable !== null) {
+                  return pull;
+                }
+
+                core.info(`PR #${pullNumber}: mergeable is not ready yet (attempt ${attempt}/6).`);
+                await sleep(5000);
+              }
+
+              const { data: pull } = await github.rest.pulls.get({
+                owner,
+                repo,
+                pull_number: pullNumber,
+              });
+              return pull;
+            }
+
+            async function ensureConflictLabel() {
+              try {
+                await github.rest.issues.getLabel({
+                  owner,
+                  repo,
+                  name: conflictLabel,
+                });
+              } catch (error) {
+                if (error.status !== 404) {
+                  throw error;
+                }
+
+                await github.rest.issues.createLabel({
+                  owner,
+                  repo,
+                  name: conflictLabel,
+                  color: 'D93F0B',
+                  description: 'Pull request has merge conflicts with the base branch',
+                });
+                core.info(`Created '${conflictLabel}' label.`);
+              }
+            }
+
+            async function labelPullRequest(pull) {
+              const existingLabels = pull.labels.map((label) => label.name);
+              const hasConflictLabel = existingLabels.includes(conflictLabel);
+              const hasConflicts = pull.mergeable === false && pull.mergeable_state === 'dirty';
+
+              if (hasConflicts && !hasConflictLabel) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: pull.number,
+                  labels: [conflictLabel],
+                });
+                core.info(`Added '${conflictLabel}' to PR #${pull.number}.`);
+                return;
+              }
+
+              if (!hasConflicts && hasConflictLabel) {
+                await github.rest.issues.removeLabel({
+                  owner,
+                  repo,
+                  issue_number: pull.number,
+                  name: conflictLabel,
+                });
+                core.info(`Removed '${conflictLabel}' from PR #${pull.number}.`);
+                return;
+              }
+
+              core.info(`PR #${pull.number}: no label change needed (mergeable=${pull.mergeable}, mergeable_state=${pull.mergeable_state}).`);
+            }
+
+            await ensureConflictLabel();
+
+            let pullNumbers;
+            if (eventPullRequest) {
+              pullNumbers = [eventPullRequest.number];
+            } else {
+              const pulls = await github.paginate(github.rest.pulls.list, {
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+              });
+              pullNumbers = pulls.map((pull) => pull.number);
+              core.info(`Checking ${pullNumbers.length} open PR(s).`);
+            }
+
+            for (const pullNumber of pullNumbers) {
+              const pull = await getPullRequestWithMergeableState(pullNumber);
+              await labelPullRequest(pull);
+            }

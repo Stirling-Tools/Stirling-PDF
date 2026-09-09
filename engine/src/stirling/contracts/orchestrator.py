@@ -23,7 +23,6 @@ from .common import (
 from .execution import NextExecutionAction
 from .pdf_edit import PdfEditTerminalResponse
 from .pdf_questions import PdfQuestionTerminalResponse
-from .pdf_to_markdown import PageLayoutArtifact
 
 
 class ExtractedTextArtifact(ApiModel):
@@ -32,7 +31,7 @@ class ExtractedTextArtifact(ApiModel):
 
 
 WorkflowArtifact = Annotated[
-    ExtractedTextArtifact | PageLayoutArtifact | ToolReportArtifact,
+    ExtractedTextArtifact | ToolReportArtifact,
     Field(discriminator="kind"),
 ]
 

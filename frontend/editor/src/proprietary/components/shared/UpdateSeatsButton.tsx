@@ -1,11 +1,11 @@
 import React from "react";
-import { Button, ButtonProps } from "@mantine/core";
+import { Button, type ButtonProps } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { useUpdateSeats } from "@app/contexts/UpdateSeatsContext";
 
 interface UpdateSeatsButtonProps extends Omit<
   ButtonProps,
-  "onClick" | "loading"
+  "onClick" | "loading" | "onError" | "onSuccess"
 > {
   onSuccess?: () => void;
   onError?: (error: string) => void;
@@ -28,7 +28,7 @@ export const UpdateSeatsButton: React.FC<UpdateSeatsButtonProps> = ({
 
   return (
     <Button
-      variant="outline"
+      variant="secondary"
       onClick={handleClick}
       loading={isLoading}
       {...buttonProps}

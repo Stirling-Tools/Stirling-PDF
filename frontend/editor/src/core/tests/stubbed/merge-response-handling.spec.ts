@@ -13,7 +13,7 @@ import fs from "fs";
 // `result.zip` instead of the merged file. The UI fix uses signature-based
 // detection - %PDF wins regardless of Content-Type.
 
-const FIXTURES_DIR = path.join(__dirname, "../test-fixtures");
+const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 const SAMPLE_PDF_BYTES = fs.readFileSync(SAMPLE_PDF);
 

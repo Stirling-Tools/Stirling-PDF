@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 from pydantic_ai import Embedder
+from pydantic_ai.embeddings.openai import OpenAIEmbeddingModel
+from pydantic_ai.providers.openai import OpenAIProvider
 
 from stirling.documents.chunker import chunk_text
 from stirling.documents.store import Document
@@ -12,6 +14,27 @@ from stirling.documents.store import Document
 DEFAULT_EMBED_BATCH_SIZE = 256
 
 
+def _build_embedder(
+    model_name: str,
+    *,
+    provider: str | None = None,
+    api_key: str | None = None,
+    base_url: str | None = None,
+) -> Embedder:
+    """Construct an :class:`Embedder`; explicit provider/api_key/base_url is the config-push path, else env form."""
+    if not provider and not api_key and not base_url:
+        return Embedder(model_name)
+
+    provider_name = (provider or "").lower()
+    key = api_key or None
+    if provider_name in ("voyageai", "openai"):
+        return Embedder(f"{provider_name}:{model_name}")
+    if provider_name in ("ollama", "custom"):
+        openai_provider = OpenAIProvider(base_url=base_url or None, api_key=key or "ollama")
+        return Embedder(OpenAIEmbeddingModel(model_name, provider=openai_provider))
+    raise ValueError(f"Unsupported embedding provider {provider!r}.")
+
+
 class EmbeddingService:
     """Wraps Pydantic AI's Embedder to provide document chunking and embedding."""
 
@@ -21,8 +44,12 @@ class EmbeddingService:
         chunk_size: int = 512,
         chunk_overlap: int = 64,
         embed_batch_size: int = DEFAULT_EMBED_BATCH_SIZE,
+        *,
+        provider: str | None = None,
+        api_key: str | None = None,
+        base_url: str | None = None,
     ) -> None:
-        self._embedder = Embedder(model_name)
+        self._embedder = _build_embedder(model_name, provider=provider, api_key=api_key, base_url=base_url)
         self._chunk_size = chunk_size
         self._chunk_overlap = chunk_overlap
         self._embed_batch_size = embed_batch_size

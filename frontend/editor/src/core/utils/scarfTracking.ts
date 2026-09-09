@@ -6,8 +6,9 @@
  * injected via setScarfConfig() which should be called from a React hook
  * during app initialization.
  *
- * IMPORTANT: setScarfConfig() must be called before firePixel() will work.
- * The initialization hook (useScarfTracking) is mounted in App.tsx.
+ * firePixel() can be called BEFORE setScarfConfig() runs: pre-config calls
+ * are queued and replayed once setScarfConfig fires, so the initial-page-load
+ * pixel from useUrlSync doesn't race the useScarfTracking init effect.
  *
  * For testing: Use resetScarfConfig() to clear module state between tests.
  */
@@ -19,6 +20,11 @@ let isServiceAccepted: ((service: string, category: string) => boolean) | null =
   null;
 let lastFiredPathname: string | null = null;
 let lastFiredTime = 0;
+// Pathnames passed to firePixel() before setScarfConfig() has run. Drained
+// once configured. Bounded to the most recent few entries since intermediate
+// path changes during a slow init are uninteresting.
+const pendingPaths: string[] = [];
+const PENDING_PATHS_CAP = 8;
 
 /**
  * Configure scarf tracking with app config and consent checker
@@ -34,6 +40,10 @@ export function setScarfConfig(
   configured = true;
   enableScarf = scarfEnabled;
   isServiceAccepted = consentChecker;
+  // Drain anything queued before we were configured. Splice first so a
+  // re-entrant firePixel from inside the drain can't re-queue.
+  const queued = pendingPaths.splice(0);
+  for (const path of queued) firePixel(path);
 }
 
 /**
@@ -47,12 +57,10 @@ export function setScarfConfig(
  * @param pathname - The pathname to track (usually window.location.pathname)
  */
 export function firePixel(pathname: string): void {
-  // Dev-mode warning if called before initialization
+  // Pre-init: queue and bail. setScarfConfig() drains.
   if (!configured) {
-    console.warn(
-      "[scarfTracking] firePixel() called before setScarfConfig(). " +
-        "Ensure useScarfTracking() hook is mounted in App.tsx.",
-    );
+    if (pendingPaths.length >= PENDING_PATHS_CAP) pendingPaths.shift();
+    pendingPaths.push(pathname);
     return;
   }
 
@@ -91,8 +99,10 @@ export function firePixel(pathname: string): void {
  * Useful for testing to ensure clean state between test runs
  */
 export function resetScarfConfig(): void {
+  configured = false;
   enableScarf = null;
   isServiceAccepted = null;
   lastFiredPathname = null;
   lastFiredTime = 0;
+  pendingPaths.length = 0;
 }

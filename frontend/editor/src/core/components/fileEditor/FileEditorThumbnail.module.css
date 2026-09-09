@@ -75,7 +75,7 @@
   box-shadow: var(--shadow-md);
   overflow: hidden;
   position: relative;
-  background: var(--bg-surface);
+  background: var(--c-surface);
   transition:
     box-shadow 0.15s ease,
     transform 0.2s ease;
@@ -91,7 +91,7 @@
   height: 100%;
   object-fit: contain;
   border-radius: 12px;
-  background: var(--bg-surface);
+  background: var(--c-surface);
   display: block;
   position: relative;
   z-index: 1;
@@ -115,7 +115,7 @@
 .fileName {
   font-size: 13px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: var(--c-text);
   line-height: var(--file-name-line-height);
   height: calc(var(--file-name-lines) * var(--file-name-line-height));
   margin: 0;
@@ -123,6 +123,14 @@
   left: 0;
   right: 0;
   bottom: calc(var(--file-meta-line-height) + var(--file-meta-gap));
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
+  overflow: hidden;
+}
+
+.fileNameText {
   display: -webkit-box;
   -webkit-line-clamp: 2;
   line-clamp: 2;
@@ -131,11 +139,17 @@
   text-overflow: ellipsis;
   overflow-wrap: break-word;
   word-break: normal;
+  min-width: 0;
+}
+
+/* Layout-only wrapper for the shared PolicyBadges row in the file-name line. */
+.fileNameBadges {
+  padding-top: 2px;
 }
 
 .fileMeta {
   font-size: 11px;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   line-height: var(--file-meta-line-height);
   height: var(--file-meta-line-height);
   overflow: hidden;
@@ -169,7 +183,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(220, 38, 38, 0.12);
+  background: color-mix(in srgb, var(--c-danger) 12%, transparent);
   border-radius: 12px;
   z-index: 2;
   pointer-events: none;
@@ -177,7 +191,7 @@
 
 .errorPill {
   background: var(--mantine-color-red-6);
-  color: white;
+  color: var(--c-text-on-primary);
   border-radius: 12px;
   padding: 4px 12px;
   font-size: 12px;
@@ -207,6 +221,7 @@
   pointer-events: auto;
 }
 
+/* Policy badges pinned to top-right of thumbnail */
 .statusDot {
   display: inline-block;
   width: 8px;
@@ -218,7 +233,7 @@
 
 .ownershipBadge {
   background: var(--mantine-color-blue-6);
-  color: white;
+  color: var(--c-text-on-primary);
   border-radius: 6px;
   padding: 2px 7px;
   font-size: 10px;
@@ -232,14 +247,14 @@
   padding: 1px 5px;
   font-size: 10px;
   font-weight: 700;
-  color: white;
+  color: var(--c-text-on-primary);
   line-height: 16px;
   white-space: nowrap;
 }
 
 .pinnedBadge {
   background: var(--mantine-color-yellow-6);
-  color: white;
+  color: var(--c-text-on-primary);
   border-radius: 4px;
   padding: 2px 4px;
   display: flex;
@@ -253,7 +268,7 @@
   bottom: 6px;
   right: 6px;
   cursor: grab;
-  color: var(--text-secondary);
+  color: var(--c-text-muted);
   opacity: 0;
   transition: opacity 0.15s ease;
   pointer-events: none;

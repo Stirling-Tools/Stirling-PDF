@@ -30,6 +30,10 @@ import {
   ToolType,
   useToolOperation,
 } from "@app/hooks/tools/shared/useToolOperation";
+import {
+  rotateFromApiParams,
+  rotateToApiParams,
+} from "@app/hooks/tools/rotate/useRotateOperation";
 
 describe("useRotateOperation", () => {
   const mockUseToolOperation = vi.mocked(useToolOperation);
@@ -113,4 +117,31 @@ describe("useRotateOperation", () => {
     const callArgs = getToolConfig();
     expect(callArgs[property]).toBe(expectedValue);
   });
+});
+
+describe("rotate mappers", () => {
+  test.each([
+    { angle: 0, expected: 0 },
+    { angle: 90, expected: 90 },
+    { angle: -90, expected: 270 },
+    { angle: 450, expected: 90 },
+  ])(
+    "toApiParams normalizes angle $angle to $expected",
+    ({ angle, expected }) => {
+      expect(rotateToApiParams({ angle }).angle).toBe(expected);
+    },
+  );
+
+  test("fromApiParams maps the backend angle back to the UI parameter", () => {
+    expect(rotateFromApiParams({ angle: 180 })).toEqual({ angle: 180 });
+  });
+
+  test.each([0, 90, 180, 270] as const)(
+    "round-trips a normalized angle %i",
+    (angle) => {
+      const ui = rotateFromApiParams({ angle });
+      const api = rotateToApiParams({ angle: ui.angle ?? 0 });
+      expect(api).toEqual({ angle });
+    },
+  );
 });

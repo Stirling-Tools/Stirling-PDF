@@ -368,7 +368,7 @@ export const extractContentFromPdf = async (
         const prevX = prev.transform[4];
         const approxLine = Math.max(
           10,
-          Math.abs((curr as any).height ?? 0) * 0.9,
+          Math.abs((curr as { height?: number }).height ?? 0) * 0.9,
         );
         const looksLikeParagraph = dy > approxLine * 1.8;
         const likelySoftWrap = currX < prevX && dy < approxLine * 0.6;

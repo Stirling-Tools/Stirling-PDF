@@ -73,6 +73,14 @@ class RequestUriUtilsTest {
         assertTrue(RequestUriUtils.isStaticResource("/mobile-scanner"));
     }
 
+    @Test
+    void testIsStaticResource_portalShell() {
+        // The admin portal SPA shell (/processor) is served pre-auth so it's directly navigable.
+        assertTrue(RequestUriUtils.isStaticResource("/processor"));
+        assertTrue(RequestUriUtils.isStaticResource("/processor/users"));
+        assertTrue(RequestUriUtils.isStaticResource("/app", "/app/processor"));
+    }
+
     // --- isFrontendRoute tests ---
 
     @Test
@@ -166,6 +174,13 @@ class RequestUriUtilsTest {
     @Test
     void testIsPublicAuthEndpoint_regularApiNotPublic() {
         assertFalse(RequestUriUtils.isPublicAuthEndpoint("/api/v1/convert", ""));
+    }
+
+    @Test
+    void testIsPublicAuthEndpoint_webhookReceiver() {
+        // The webhook source receiver authenticates each delivery by HMAC signature, not a session.
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/api/v1/webhooks/whk_abc123", ""));
+        assertTrue(RequestUriUtils.isPublicAuthEndpoint("/app/api/v1/webhooks/whk_abc123", "/app"));
     }
 
     @Test

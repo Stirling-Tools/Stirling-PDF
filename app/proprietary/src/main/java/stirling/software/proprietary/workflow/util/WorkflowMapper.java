@@ -3,7 +3,6 @@ package stirling.software.proprietary.workflow.util;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -80,12 +79,12 @@ public class WorkflowMapper {
             response.setParticipants(
                     session.getParticipants().stream()
                             .map(p -> toParticipantResponse(p, objectMapper, includeShareTokens))
-                            .collect(Collectors.toList()));
+                            .toList());
         } else {
             response.setParticipants(
                     session.getParticipants().stream()
                             .map(p -> toParticipantResponse(p, includeShareTokens))
-                            .collect(Collectors.toList()));
+                            .toList());
         }
 
         // Calculate participant counts

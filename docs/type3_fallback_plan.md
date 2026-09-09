@@ -132,7 +132,7 @@ Feel free to expand this plan or add notes as the work progresses.
 
 | Stage | Tool / Command | Output |
 | --- | --- | --- |
-| 1. Collect PDFs | `python scripts/download_pdf_collection.py --output scripts/pdf-collection` (or drop your own PDFs anywhere) | Raw PDFs ready for harvesting |
+| 1. Collect PDFs | `python scripts/download_pdf_samples.py --output-dir scripts/pdf-collection` (or drop your own PDFs anywhere) | Raw PDFs ready for harvesting |
 | 2. Harvest signatures | `python scripts/harvest_type3_fonts.py --input scripts/pdf-collection --pretty` | Per-PDF dumps in `docs/type3/signatures/…` + global summary `docs/type3/harvest_report.json` |
 | 3. Summarize backlog | `python scripts/summarize_type3_signatures.py` | `docs/type3/signature_inventory.md` (human checklist of aliases/signatures) |
 | 4. Convert fonts | Either copy the upstream TTF/OTF for the font (DejaVu, CM, STIX, etc.) or run `scripts/type3_to_cff.py` against the harvested glyph JSON to synthesize one offline; store the result under `app/core/src/main/resources/type3/library/fonts/<family>/`. | Canonical font binaries |

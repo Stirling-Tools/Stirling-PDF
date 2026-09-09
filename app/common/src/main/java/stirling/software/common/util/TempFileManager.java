@@ -155,6 +155,7 @@ public class TempFileManager {
         if (directory != null && Files.isDirectory(directory)) {
             try {
                 GeneralUtils.deleteDirectory(directory);
+                registry.unregisterDirectory(directory);
                 log.debug("Deleted temp directory: {}", directory.toString());
             } catch (IOException e) {
                 log.warn("Failed to delete temp directory: {}", directory.toString(), e);

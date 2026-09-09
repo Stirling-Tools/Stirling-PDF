@@ -12,7 +12,7 @@ public class PropSync {
         File folder = new File("C:\\Users\\systo\\git\\Stirling-PDF\\app\\core\\src\\main\\resources");
         File[] files = folder.listFiles((dir, name) -> name.matches("messages_.*\\.properties"));
 
-        List<String> enLines = Files.readAllLines(Paths.get(folder + "\\messages_en_GB.properties"), StandardCharsets.UTF_8);
+        List<String> enLines = Files.readAllLines(Path.of(folder + "\\messages_en_GB.properties"), StandardCharsets.UTF_8);
         Map<String, String> enProps = linesToProps(enLines);
 
         for (File file : files) {

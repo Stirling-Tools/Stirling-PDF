@@ -23,6 +23,7 @@ import {
   isZipBundle,
   loadShareBundleEntries,
   parseContentDispositionFilename,
+  readResponseHeader,
 } from "@app/services/shareBundleUtils";
 
 interface FilesModalContextType {
@@ -184,16 +185,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         skipAuthRedirect: true,
       } as any,
     );
-    const contentType =
-      (response.headers &&
-        (response.headers["content-type"] ||
-          response.headers["Content-Type"])) ||
-      "";
-    const disposition =
-      (response.headers &&
-        (response.headers["content-disposition"] ||
-          response.headers["Content-Disposition"])) ||
-      "";
+    const contentType = readResponseHeader(response.headers, "content-type");
+    const disposition = readResponseHeader(
+      response.headers,
+      "content-disposition",
+    );
     const filename =
       parseContentDispositionFilename(disposition) || "server-file";
     const blob = response.data as Blob;
@@ -210,16 +206,11 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         skipAuthRedirect: true,
       } as any,
     );
-    const contentType =
-      (response.headers &&
-        (response.headers["content-type"] ||
-          response.headers["Content-Type"])) ||
-      "";
-    const disposition =
-      (response.headers &&
-        (response.headers["content-disposition"] ||
-          response.headers["Content-Disposition"])) ||
-      "";
+    const contentType = readResponseHeader(response.headers, "content-type");
+    const disposition = readResponseHeader(
+      response.headers,
+      "content-disposition",
+    );
     const filename =
       parseContentDispositionFilename(disposition) || "shared-file";
     const blob = response.data as Blob;

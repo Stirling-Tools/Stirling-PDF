@@ -34,11 +34,6 @@ pip-compile --allow-unsafe --generate-hashes --upgrade --strip-extras ^
   --output-file=".github\scripts\requirements_dev.txt" ^
   ".github\scripts\requirements_dev.in"
 
-echo Generating .github\scripts\requirements_pre_commit.txt
-pip-compile --generate-hashes --upgrade --strip-extras ^
-  --output-file=".github\scripts\requirements_pre_commit.txt" ^
-  ".github\scripts\requirements_pre_commit.in"
-
 echo Generating .github\scripts\requirements_sync_readme.txt
 pip-compile --generate-hashes --upgrade --strip-extras ^
   --output-file=".github\scripts\requirements_sync_readme.txt" ^

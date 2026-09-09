@@ -21,13 +21,13 @@
 
 @keyframes pageMovedHighlight {
   0% {
-    background-color: rgba(59, 130, 246, 0.32);
+    background-color: color-mix(in srgb, var(--c-primary) 32%, transparent);
   }
   60% {
-    background-color: rgba(59, 130, 246, 0.12);
+    background-color: color-mix(in srgb, var(--c-primary) 12%, transparent);
   }
   100% {
-    background-color: rgba(59, 130, 246, 0);
+    background-color: color-mix(in srgb, var(--c-primary) 0%, transparent);
   }
 }
 
@@ -63,7 +63,7 @@
 
 /* Action styles */
 .actionRow:hover {
-  background: var(--hover-bg);
+  background: var(--c-hover);
 }
 
 .actionDanger {
@@ -72,7 +72,7 @@
 
 .actionsDivider {
   height: 1px;
-  background: var(--border-default);
+  background: var(--c-border);
   margin: 4px 0;
 }
 
@@ -86,7 +86,7 @@
 
 .unsupportedPill {
   margin-left: 1.75rem;
-  background: #6b7280;
+  background: var(--c-text-subtle);
   color: white;
   padding: 4px 8px;
   border-radius: 12px;
