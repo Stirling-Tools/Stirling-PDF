@@ -55,7 +55,7 @@
 }
 
 .attachment-item:hover .attachment-item__download-icon {
-  color: var(--mantine-color-blue-6);
+  color: var(--c-accent-text);
   transform: scale(1.1);
 }
 

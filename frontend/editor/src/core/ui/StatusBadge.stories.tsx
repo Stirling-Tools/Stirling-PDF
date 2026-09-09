@@ -33,7 +33,7 @@ export const AllTones: Story = {
 };
 
 export const Live: Story = {
-  args: { tone: "success", pulse: true, children: "Live" },
+  args: { tone: "success", children: "Live" },
 };
 
 export const Sizes: Story = {

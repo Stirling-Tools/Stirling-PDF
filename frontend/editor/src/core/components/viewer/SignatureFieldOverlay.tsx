@@ -11,6 +11,7 @@
  * For widgets without an appearance stream (unsigned fields, or fields whose
  * PDF writer didn't embed one), we fall back to a translucent badge overlay.
  */
+import { useStaleBakedFieldNames } from "@app/tools/formFill/FormFillContext";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   renderSignatureFieldAppearances,
@@ -114,6 +115,7 @@ function SignatureFieldOverlayInner({
   pageWidth,
   pageHeight,
 }: SignatureFieldOverlayProps) {
+  const staleNames = useStaleBakedFieldNames();
   const [fields, setFields] = useState<ResolvedSignatureField[]>([]);
 
   useEffect(() => {
@@ -135,8 +137,13 @@ function SignatureFieldOverlayInner({
   }, [pdfSource]);
 
   const pageFields = useMemo(
-    () => fields.filter((f) => f.pageIndex === pageIndex),
-    [fields, pageIndex],
+    // A staged move or delete leaves this bitmap stranded at the original rect, on top of the
+    // editor chrome, so it is dropped until the edit is applied and the appearance re-extracted.
+    () =>
+      fields.filter(
+        (f) => f.pageIndex === pageIndex && !staleNames.has(f.fieldName),
+      ),
+    [fields, pageIndex, staleNames],
   );
 
   if (pageFields.length === 0) return null;

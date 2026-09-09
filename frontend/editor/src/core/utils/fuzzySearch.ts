@@ -81,9 +81,14 @@ export function scoreMatch(queryRaw: string, targetRaw: string): number {
   return best;
 }
 
+/** Lowest score any fuzzy match can pass with (see minScoreForQuery). Rankers
+ * that mix fuzzy results with fixed-score entries key off this to stay below
+ * every real match. */
+export const FUZZY_MIN_SCORE = 30;
+
 export function minScoreForQuery(query: string): number {
   const len = normalizeText(query).length;
-  return len <= 3 ? 40 : 30;
+  return len <= 3 ? 40 : FUZZY_MIN_SCORE;
 }
 
 // Decide if a target matches a query based on a threshold

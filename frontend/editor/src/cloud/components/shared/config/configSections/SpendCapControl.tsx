@@ -12,7 +12,7 @@ import {
   DEFAULT_CAP_PRESETS,
   SpendCapControl as SharedSpendCapControl,
 } from "@app/billing";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./SpendCapControl.css";
 
 export { DEFAULT_CAP_PRESETS };

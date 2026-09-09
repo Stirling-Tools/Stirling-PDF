@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import threading
-from collections.abc import Callable, Iterator
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
@@ -31,7 +31,7 @@ def _client(
     settings_factory: Callable[[], AppSettings],
     *,
     client_addr: tuple[str, int] = ("127.0.0.1", 12345),
-) -> Iterator[TestClient]:
+) -> Generator[TestClient]:
     """Enter a TestClient whose lifespan builds app.state from ``settings_factory``."""
     previous = app.dependency_overrides.get(load_settings)
     app.dependency_overrides[load_settings] = settings_factory

@@ -6,7 +6,13 @@
  */
 import { apiClient } from "@portal/api/http";
 
-export type IntegrationType = "S3" | "MCP" | "API" | "PURVIEW" | "CONSIGNO";
+export type IntegrationType =
+  | "S3"
+  | "NETWORK"
+  | "MCP"
+  | "API"
+  | "PURVIEW"
+  | "CONSIGNO";
 export type OwnerScope = "USER" | "TEAM" | "SERVER";
 
 /** Mirrors the backend IntegrationConfigResponse; `config` values are masked. */

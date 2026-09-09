@@ -10,6 +10,7 @@ Feature: API Validation
             | parameter | value       |
             | password  | password123 |
         When I send the API request to the endpoint "/api/v1/security/remove-password"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response file should have size greater than 0
         And the response PDF is not passworded
@@ -31,6 +32,7 @@ Feature: API Validation
     Scenario: Get info
         Given I generate a PDF file as "fileInput"
         When I send the API request to the endpoint "/api/v1/security/get-info-on-pdf"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/json"
         And the response file should have size greater than 100
         And the response status code should be 200
@@ -43,6 +45,7 @@ Feature: API Validation
             | parameter | value       |
             | password  | password123 |
         When I send the API request to the endpoint "/api/v1/security/add-password"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response file should have size greater than 100
         And the response PDF is passworded
@@ -81,6 +84,7 @@ Feature: API Validation
             | alphabet      | roman            |
             | customColor   | #d3d3d3          |
         When I send the API request to the endpoint "/api/v1/security/add-watermark"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response file should have size greater than 100
         And the response status code should be 200
@@ -94,6 +98,7 @@ Feature: API Validation
             | threshold    | 90    |
             | whitePercent | 99.9  |
         When I send the API request to the endpoint "/api/v1/misc/remove-blanks"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/octet-stream"
         And the response file should have extension ".zip"
         And the response ZIP should contain 1 files
@@ -106,6 +111,7 @@ Feature: API Validation
             | parameter        | value |
             | flattenOnlyForms | false |
         When I send the API request to the endpoint "/api/v1/misc/flatten"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response file should have size greater than 0
         And the response status code should be 200
@@ -121,6 +127,7 @@ Feature: API Validation
             | keywords  | sample, test   |
             | producer  | Test Producer  |
         When I send the API request to the endpoint "/api/v1/misc/update-metadata"
+        And this operation is run 5 times in parallel
         Then the response content type should be "application/pdf"
         And the response file should have size greater than 0
         And the response PDF metadata should include "Author" as "John Doe"

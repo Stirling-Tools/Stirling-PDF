@@ -151,7 +151,10 @@ export function FolderThumbnail({
             borderRadius: "999px",
             background: "var(--c-surface, #fff)",
             border: `1px solid ${accent}`,
-            color: accent,
+            // The ring carries the folder's accent; the numeral does not.
+            // Folder colours are user-chosen and many are too light to read
+            // as text on the white pill.
+            color: "var(--c-text)",
             fontSize: "0.7rem",
             fontWeight: 700,
             display: "inline-flex",

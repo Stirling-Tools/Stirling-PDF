@@ -1,3 +1,4 @@
+import { useId } from "react";
 import { Stack, Text, Select, ColorInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddWatermarkParameters } from "@app/hooks/tools/addWatermark/useAddWatermarkParameters";
@@ -19,14 +20,17 @@ const WatermarkTextStyle = ({
   disabled = false,
 }: WatermarkTextStyleProps) => {
   const { t } = useTranslation();
+  const colorLabelId = useId();
+  const alphabetLabelId = useId();
 
   return (
     <Stack gap="sm">
       <Stack gap="xs">
-        <Text size="xs" fw={500}>
+        <Text id={colorLabelId} size="xs" fw={500}>
           {t("watermark.settings.color", "Colour")}
         </Text>
         <ColorInput
+          aria-labelledby={colorLabelId}
           value={parameters.customColor}
           onChange={(value) => onParameterChange("customColor", value)}
           disabled={disabled}
@@ -39,10 +43,11 @@ const WatermarkTextStyle = ({
       </Stack>
 
       <Stack gap="xs">
-        <Text size="xs" fw={500}>
+        <Text id={alphabetLabelId} size="xs" fw={500}>
           {t("watermark.settings.alphabet", "Alphabet")}
         </Text>
         <Select
+          aria-labelledby={alphabetLabelId}
           value={parameters.alphabet}
           onChange={(value) => value && onParameterChange("alphabet", value)}
           data={alphabetOptions}

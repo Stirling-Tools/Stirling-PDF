@@ -22,6 +22,16 @@ const Providers = ({ children }: { children: ReactNode }) => (
 const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, { wrapper: Providers });
 
+vi.mock("@portal/hooks/useConnectGate", () => ({
+  useConnectGate: () => ({
+    gated: false,
+    loading: false,
+    available: false,
+    connect: vi.fn(),
+    guard: (fn: unknown) => fn,
+  }),
+}));
+
 // Deterministic i18n: keys returned verbatim.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -158,14 +168,14 @@ describe("Sources view", () => {
     expect(await screen.findByText("integrations view")).toBeInTheDocument();
   });
 
-  it("hides the KPI strip and shows the empty state when only the editor exists", async () => {
+  it("hides the KPI strip when only the editor exists", async () => {
     fetchSources.mockResolvedValue({
       kpis: RESPONSE.kpis,
       sources: [RESPONSE.sources[0]],
     });
     renderView();
     expect(
-      await screen.findByText("portal.sources.empty.title"),
+      await screen.findByText("portal.sources.types.editor.label"),
     ).toBeInTheDocument();
     expect(screen.queryByText("portal.sources.kpi.total")).toBeNull();
   });

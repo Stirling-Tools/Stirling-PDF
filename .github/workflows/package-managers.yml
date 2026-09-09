@@ -28,7 +28,7 @@ jobs:
       jar_sha256: ${{ steps.hashes.outputs.jar_sha256 }}
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 
@@ -73,13 +73,14 @@ jobs:
           echo "jar_sha256=$JAR_SHA" >> "$GITHUB_OUTPUT"
 
   update-homebrew-and-scoop:
+    environment: package-publish
     needs: get-release-info
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
       - name: Harden Runner
-        uses: step-security/harden-runner@ab7a9404c0f3da075243ca237b5fac12c98deaa5 # v2.19.3
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
           egress-policy: audit
 

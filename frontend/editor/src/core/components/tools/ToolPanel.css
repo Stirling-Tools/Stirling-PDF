@@ -11,11 +11,20 @@
 
 .tool-panel {
   position: relative;
+  background: var(--c-surface);
   transition:
     width 0.3s ease,
     max-width 0.3s ease;
   view-transition-name: tool-rail;
   user-select: none;
+}
+
+/* Flush, with a rule on the workbench side mirroring the file sidebar's. */
+.tool-panel--floating {
+  /* Tracks the frame, which is dvh; vh would cut the bottom off on mobile. */
+  height: 100%;
+  background: var(--c-surface);
+  border-inline-start: 1px solid var(--c-border-subtle);
 }
 
 .tool-panel__collapsed-strip {
@@ -151,17 +160,46 @@
   box-sizing: border-box;
 }
 
-.tool-panel__compact-header .tool-panel__expand-btn {
-  margin-left: auto;
-}
-
-.tool-panel__compact-header-search {
+.tool-panel__compact-title {
   flex: 1 1 auto;
   min-width: 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
 }
 
-.tool-panel__compact-header-search .search-input-container {
-  width: 100%;
+/* On mobile the "Tools" tab sits directly above this panel, so the heading
+   just repeats it. The header stays for its actions, but shrinks to fit them -
+   at the desktop 52px it would read as an empty band once the title is gone. */
+@media (max-width: 64rem) {
+  .tool-panel__compact-title {
+    display: none;
+  }
+  .tool-panel__compact-header {
+    min-height: 44px;
+    padding-top: 0.25rem;
+    padding-bottom: 0.25rem;
+  }
+}
+
+/* In-panel tool filter. Aligned with .tool-picker__compact's inline padding so
+   the field lines up with the tool rows underneath it. */
+.tool-panel__search {
+  flex-shrink: 0;
+  padding: 0.5rem var(--mantine-spacing-sm) 0;
+}
+
+.tool-panel__search .search-input-container {
+  margin: 0;
+}
+
+.tool-panel__compact-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 
 /* Search that separates the Policies section from the Tools list below it. */

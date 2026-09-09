@@ -8,6 +8,7 @@ import {
   usePolicyRuns,
   type PolicyRunRecord,
 } from "@app/components/policies/policyRunStore";
+import { isClassificationPolicy } from "@app/data/classificationPolicy";
 import { PolicyEnforcementOverlay } from "@app/components/viewer/PolicyEnforcementOverlay";
 
 type SignatureOverlayPassThrough = Pick<
@@ -29,6 +30,8 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
     ? allRuns.filter(
         (r: PolicyRunRecord) =>
           r.fileId === activeFileId &&
+          // Classification runs async and must never block the viewer.
+          !isClassificationPolicy(r.policyKey) &&
           (POLICY_IN_FLIGHT_STATUSES.includes(r.status) || r.retrying === true),
       )
     : [];

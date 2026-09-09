@@ -2,7 +2,6 @@
 
 :root {
   /* Auth page colors (light mode) */
-  --auth-bg-color: var(--p-gray-100);
   --auth-card-bg: #ffffff;
   --auth-label-text: var(--p-gray-700);
   --auth-input-border: var(--p-gray-300);
@@ -33,7 +32,6 @@
 }
 
 [data-mantine-color-scheme="dark"] {
-  --auth-bg-color: var(--c-surface-sunken);
   --auth-card-bg: var(--c-surface);
   --auth-label-text: var(--c-text-muted);
   --auth-input-border: var(--c-border);

@@ -16,6 +16,7 @@ import {
   useReducer,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useMemo,
   useState,
@@ -23,7 +24,6 @@ import {
 import {
   FileContextProviderProps,
   FileContextSelectors,
-  FileContextStateValue,
   FileContextActionsValue,
   FileContextActions,
   FileId,
@@ -36,6 +36,7 @@ import {
 import {
   fileContextReducer,
   initialFileContextState,
+  withReducerIdentityGuard,
 } from "@app/contexts/file/FileReducer";
 import { createFileSelectors } from "@app/contexts/file/fileSelectors";
 import {
@@ -49,13 +50,15 @@ import {
 } from "@app/contexts/file/fileActions";
 import { FileLifecycleManager } from "@app/contexts/file/lifecycle";
 import {
-  FileStateContext,
+  FileStoreContext,
   FileActionsContext,
+  type FileStateStore,
 } from "@app/contexts/file/contexts";
 import {
   IndexedDBProvider,
   useIndexedDB,
 } from "@app/contexts/IndexedDBContext";
+import { onRecordUnreadable } from "@app/services/fileStorage";
 import { useZipConfirmation } from "@app/hooks/useZipConfirmation";
 import ZipWarningModal from "@app/components/shared/ZipWarningModal";
 import EncryptedPdfUnlockModal from "@app/components/shared/EncryptedPdfUnlockModal";
@@ -63,7 +66,10 @@ import { useTranslation } from "react-i18next";
 import { alert } from "@app/components/toast";
 import { buildRemovePasswordFormData } from "@app/hooks/tools/removePassword/buildRemovePasswordFormData";
 import type { RemovePasswordParameters } from "@app/hooks/tools/removePassword/useRemovePasswordParameters";
+import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
 import apiClient from "@app/services/apiClient";
+import { reportFilesRemoved } from "@app/services/failureReporting";
+import { setPendingUnlocks } from "@app/services/pendingUnlocks";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -75,10 +81,13 @@ function FileContextInner({
   children,
   enablePersistence = true,
 }: FileContextProviderProps) {
-  const [state, dispatch] = useReducer(
-    fileContextReducer,
-    initialFileContextState,
+  // Guarded in dev: warns if a reducer case reallocates a slice without changing
+  // it, which would silently defeat the selector-subscription bail-out.
+  const guardedReducer = useMemo(
+    () => withReducerIdentityGuard(fileContextReducer),
+    [],
   );
+  const [state, dispatch] = useReducer(guardedReducer, initialFileContextState);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
   // IndexedDB context is only used when enablePersistence is true.
@@ -107,6 +116,7 @@ function FileContextInner({
   }
   const lifecycleManager = lifecycleManagerRef.current;
   const { t } = useTranslation();
+  const continueResolutions = useResolutionContinuation();
 
   const [encryptedQueue, setEncryptedQueue] = useState<FileId[]>([]);
   const [activeEncryptedFileId, setActiveEncryptedFileId] =
@@ -176,10 +186,40 @@ function FileContextInner({
     }
   }, [activeEncryptedFileId, state.files.ids]);
 
+  // Published so an upload policy holds off until the user has answered the prompt: running now
+  // would fail on a document they are about to decrypt, and leave a row about a version that no
+  // longer exists once they have.
+  useEffect(() => {
+    setPendingUnlocks(
+      activeEncryptedFileId
+        ? [activeEncryptedFileId, ...encryptedQueue]
+        : encryptedQueue,
+    );
+  }, [activeEncryptedFileId, encryptedQueue]);
+
+  // The store outlives this provider, and a hold nobody can answer would stall the file's policy
+  // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
+  useEffect(() => () => setPendingUnlocks([]), []);
+
   useEffect(() => {
     setUnlockPassword("");
     setUnlockError(null);
   }, [activeEncryptedFileId]);
+
+  // Storage proved a file's bytes unreadable (WebKit losing a blob's backing
+  // store). Drop it: the viewer would otherwise spin on a document that can
+  // never load. The record stays, so a reload re-tests it.
+  useEffect(
+    () =>
+      onRecordUnreadable((fileId) => {
+        if (!stateRef.current.files.byId[fileId]) return;
+        console.error(
+          `[FileContext] dropping ${fileId} from the workbench: its stored bytes are unreadable`,
+        );
+        lifecycleManager.removeFiles([fileId], stateRef);
+      }),
+    [lifecycleManager],
+  );
 
   const handleUnlockSkip = useCallback(() => {
     if (activeEncryptedFileId) {
@@ -245,6 +285,8 @@ function FileContextInner({
         skipWorkspaceDispatch?: boolean;
         skipUploadTracking?: boolean;
         derivedFromTool?: boolean;
+        /** Folder every added file is born into (see AddFileOptions). */
+        folderId?: string;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
@@ -426,8 +468,17 @@ function FileContextInner({
       );
 
       await consumeFilesWrapper([fileId], [stirlingUnlockedFile], [childStub]);
+
+      // The modal is the remove-password tool by another door, so it resolves the same.
+      continueResolutions({
+        operation: "removePassword",
+        inputFileIds: [fileId],
+        outputs: [
+          { file: unlockedFile, fileId: childStub.id, sourceFileId: fileId },
+        ],
+      });
     },
-    [consumeFilesWrapper, t],
+    [consumeFilesWrapper, continueResolutions, t],
   );
 
   const handleUnlockSubmit = useCallback(async () => {
@@ -589,6 +640,12 @@ function FileContextInner({
         // Remove from memory and cleanup resources
         lifecycleManager.removeFiles(fileIds, stateRef);
 
+        // Only a real delete closes a failure: most callers pass false and mean "take it out of the
+        // workbench", leaving the document, and its failures, very much alive.
+        if (deleteFromStorage !== false) {
+          void reportFilesRemoved(fileIds);
+        }
+
         // Remove from IndexedDB if enabled
         if (indexedDB && enablePersistence && deleteFromStorage !== false) {
           try {
@@ -657,14 +714,28 @@ function FileContextInner({
     ],
   );
 
-  // Split context values to minimize re-renders
-  const stateValue = useMemo<FileContextStateValue>(
+  // Subscription store bridge: the context value is STABLE, so consumers only
+  // re-render when the slice they select (via useFileSelector) changes — not on
+  // every state change. Listeners are notified after each committed state.
+  const listenersRef = useRef<Set<() => void>>(new Set());
+  const store = useMemo<FileStateStore>(
     () => ({
-      state,
+      getState: () => stateRef.current,
+      subscribe: (listener) => {
+        listenersRef.current.add(listener);
+        return () => {
+          listenersRef.current.delete(listener);
+        };
+      },
       selectors,
     }),
-    [state, selectors],
+    [selectors],
   );
+  // Layout effect (not passive): subscribers re-render before the browser
+  // paints, so a state change can never show a frame with stale consumers.
+  useLayoutEffect(() => {
+    for (const listener of listenersRef.current) listener();
+  }, [state]);
 
   const actionsValue = useMemo<FileContextActionsValue>(
     () => ({
@@ -698,7 +769,7 @@ function FileContextInner({
   }, [lifecycleManager]);
 
   return (
-    <FileStateContext.Provider value={stateValue}>
+    <FileStoreContext.Provider value={store}>
       <FileActionsContext.Provider value={actionsValue}>
         {children}
         <ZipWarningModal
@@ -721,7 +792,7 @@ function FileContextInner({
           onSkip={handleUnlockSkip}
         />
       </FileActionsContext.Provider>
-    </FileStateContext.Provider>
+    </FileStoreContext.Provider>
   );
 }
 
@@ -758,6 +829,10 @@ export function FileContextProvider({
 export {
   useFileState,
   useFileActions,
+  useFileSelector,
+  useFileSelectors,
+  useFileIndex,
+  shallowEqual,
   useCurrentFile,
   useFileSelection,
   useFileManagement,

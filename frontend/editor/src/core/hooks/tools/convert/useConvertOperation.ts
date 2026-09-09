@@ -19,6 +19,17 @@ import {
   isWebFormat,
   isOfficeFormat,
 } from "@app/utils/convertUtils";
+import {
+  isToolEndpoint,
+  type ToolApiParams,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
+import {
+  CONVERSION_ENDPOINTS,
+  COLOR_TYPES,
+  OUTPUT_OPTIONS,
+  FIT_OPTIONS,
+} from "@app/constants/convertConstants";
 import { useToolCloudStatus } from "@app/hooks/useToolCloudStatus";
 
 // Static function that can be used by both the hook and automation executor
@@ -40,10 +51,9 @@ export const shouldProcessFilesSeparately = (
       // PDF to image conversions (each PDF should generate its own image file)
       (parameters.fromExtension === "pdf" &&
         isImageFormat(parameters.toExtension)) ||
-      // PDF to PDF/A and PDF/X conversions (each PDF should be processed separately)
+      // PDF to PDF/A, PDF/X and PDF/UA conversions (each PDF should be processed separately)
       (parameters.fromExtension === "pdf" &&
-        (parameters.toExtension === "pdfa" ||
-          parameters.toExtension === "pdfx")) ||
+        ["pdfa", "pdfx", "pdfua"].includes(parameters.toExtension)) ||
       // PDF to text-like/spreadsheet formats should be one output per input
       (parameters.fromExtension === "pdf" &&
         ["txt", "rtf", "csv", "xlsx"].includes(parameters.toExtension)) ||
@@ -88,6 +98,7 @@ export const buildConvertFormData = (
     htmlOptions,
     emailOptions,
     pdfaOptions,
+    pdfUaOptions,
     pdfxOptions,
     cbrOptions,
     pdfToCbrOptions,
@@ -149,6 +160,18 @@ export const buildConvertFormData = (
   } else if (fromExtension === "pdf" && toExtension === "pdfa") {
     formData.append("outputFormat", pdfaOptions.outputFormat);
     formData.append("strict", String(!!pdfaOptions.strict));
+  } else if (fromExtension === "pdf" && toExtension === "pdfua") {
+    formData.append("profile", pdfUaOptions.profile);
+    formData.append("language", pdfUaOptions.language);
+    formData.append("overrideLanguage", String(pdfUaOptions.overrideLanguage));
+    formData.append("embedFonts", String(pdfUaOptions.embedFonts));
+    // Sent only when set, so the backend can fall back to the first heading then the filename.
+    if (pdfUaOptions.title.trim()) {
+      formData.append("title", pdfUaOptions.title.trim());
+    }
+    if (pdfUaOptions.altText.trim()) {
+      formData.append("altText", pdfUaOptions.altText.trim());
+    }
   } else if (fromExtension === "pdf" && toExtension === "pdfx") {
     // Use PDF/A endpoint with PDF/X format parameter
     formData.append("outputFormat", pdfxOptions?.outputFormat || "pdfx");
@@ -210,15 +233,15 @@ export const buildConvertFormData = (
 
 // Static function that can be used by both the hook and automation executor
 export const createFileFromResponse = (
-  responseData: any,
-  headers: any,
+  responseData: Blob,
+  headers: Record<string, unknown>,
   originalFileName: string,
   targetExtension: string,
 ): File => {
   const originalName = originalFileName.split(".")[0];
 
-  // Map both pdfa and pdfx to pdf since they both result in PDF files
-  if (targetExtension == "pdfa" || targetExtension == "pdfx") {
+  // Map pdfa, pdfx and pdfua to pdf since they all result in PDF files
+  if (["pdfa", "pdfx", "pdfua"].includes(targetExtension)) {
     targetExtension = "pdf";
   }
 
@@ -227,11 +250,28 @@ export const createFileFromResponse = (
   return createFileFromApiResponse(responseData, headers, fallbackFilename);
 };
 
-// Static processor that can be used by both the hook and automation executor
-export const convertProcessor = async (
+/**
+ * PDF/UA alt text is keyed by an image's position in one document, so reusing it across files would
+ * describe the wrong image - worse than no description, since the checker still passes. Dropped
+ * rather than misapplied; the UI offers descriptions for a single file, this guards every caller.
+ */
+const withoutCrossFileAltText = (
   parameters: ConvertParameters,
   selectedFiles: File[],
+): ConvertParameters =>
+  selectedFiles.length > 1 && parameters.pdfUaOptions.altText
+    ? {
+        ...parameters,
+        pdfUaOptions: { ...parameters.pdfUaOptions, altText: "" },
+      }
+    : parameters;
+
+// Static processor that can be used by both the hook and automation executor
+export const convertProcessor = async (
+  rawParameters: ConvertParameters,
+  selectedFiles: File[],
 ): Promise<CustomProcessorResult> => {
+  const parameters = withoutCrossFileAltText(rawParameters, selectedFiles);
   const processedFiles: File[] = [];
 
   // Map PDF/X to use PDF/A endpoint
@@ -300,18 +340,265 @@ export const convertProcessor = async (
   };
 };
 
+// Every backend endpoint the Convert tool may resolve to. Declaring the full set lets a stored
+// convert step map back to this tool by endpoint membership (its from/to selectors are
+// frontend-only, recovered from the step's bookkeeping params on deserialize).
+export const CONVERT_AUTOMATION_ENDPOINTS: readonly ToolEndpoint[] = Array.from(
+  new Set(Object.values(CONVERSION_ENDPOINTS)),
+).filter(isToolEndpoint);
+
+/**
+ * The backend endpoint a conversion targets (PDF/X shares the PDF/A endpoint). Undefined until both
+ * formats are chosen, or when the pair maps to no known endpoint. The single place the from/to ->
+ * endpoint mapping lives, shared by the tool config's `endpoint` and the deserialize reader below.
+ */
+export const convertEndpointFor = (
+  fromExtension: string,
+  toExtension: string,
+): ToolEndpoint | undefined => {
+  if (!fromExtension || !toExtension) return undefined;
+  const actualTo = toExtension === "pdfx" ? "pdfa" : toExtension;
+  const url = getEndpointUrl(fromExtension, actualTo);
+  return url && isToolEndpoint(url) ? url : undefined;
+};
+
+/**
+ * A convert step spans many backend endpoints, each with its own request model, so its body can't
+ * be typed as a single generated model. It is built from the same buildConvertFormData the client
+ * runner uses - the one source of truth for each conversion's fields - and cast at this boundary.
+ * `fromExtension`/`toExtension` ride along as bookkeeping: the endpoints ignore them (they are
+ * encoded in the path), but the chosen conversion can't be reconstructed from the body alone, so
+ * they let deserialize recover it. See toolAutomation.serializeToolStep.
+ */
+export const convertToApiParams = (
+  params: ConvertParameters,
+): ToolApiParams[ToolEndpoint] => {
+  const dummy = new File([], "input", { type: "application/octet-stream" });
+  const formData = buildConvertFormData(params, [dummy]);
+  const body: Record<string, string> = {
+    fromExtension: params.fromExtension,
+    toExtension: params.toExtension,
+  };
+  // Keep the scalar fields; the file part (fileInput) is fed separately by the engine.
+  formData.forEach((value, key) => {
+    if (typeof value === "string") body[key] = value;
+  });
+  return body;
+};
+
+/**
+ * The fields a convert endpoint accepts - taken from its generated request model - but valued as the
+ * strings a stored, form-shaped step actually holds. Keying off the model's `keyof` means a reader
+ * can only read a field that endpoint really takes (a typo is a compile error). Values stay strings
+ * because that is what a serialized step carries; and two of these models spell their enum *values*
+ * for the backend rather than for the tool (colorType, fitOption), so values are validated against
+ * the frontend's own sets (asEnum) rather than the model's.
+ */
+type ConvertStepBody<E extends ToolEndpoint> = Partial<
+  Record<keyof ToolApiParams[E], string>
+>;
+
+/** Per-endpoint readers: each is handed exactly its endpoint's fields. */
+type ConvertOptionReaders = {
+  [E in ToolEndpoint]?: (
+    body: ConvertStepBody<E>,
+    toExtension: string,
+  ) => Partial<ConvertParameters>;
+};
+
+// The stored values are strings; these read one back into the typed shape ConvertParameters expects,
+// validating an enum against its allowed set (asEnum) rather than blind-casting an arbitrary string.
+const asFlag = (value: string | undefined): boolean => value === "true";
+const asInt = (value: string | undefined, fallback: number): number =>
+  value !== undefined && value !== "" ? Number(value) : fallback;
+const asEnum = <T extends string>(
+  value: string | undefined,
+  allowed: readonly T[],
+  fallback: T,
+): T => (allowed.includes(value as T) ? (value as T) : fallback);
+
+const COLOR_TYPE_VALUES = [
+  COLOR_TYPES.COLOR,
+  COLOR_TYPES.GRAYSCALE,
+  COLOR_TYPES.BLACK_WHITE,
+] as const;
+const OUTPUT_OPTION_VALUES = [
+  OUTPUT_OPTIONS.SINGLE,
+  OUTPUT_OPTIONS.MULTIPLE,
+] as const;
+const FIT_OPTION_VALUES = [
+  FIT_OPTIONS.FIT_PAGE,
+  FIT_OPTIONS.MAINTAIN_ASPECT,
+  FIT_OPTIONS.FILL_PAGE,
+] as const;
+
+/**
+ * How each convert endpoint's stored options map back into the tool's parameter groups, keyed by the
+ * endpoint the step targets. Only endpoints carrying configurable options appear; the rest are fully
+ * described by their from/to pair. `/api/v1/convert/pdf/pdfa` backs both PDF/A and PDF/X, so its
+ * reader takes the target extension to tell them apart. Groups a reader omits fall back to defaults
+ * via the merge in deserializeToolStep.
+ */
+const CONVERT_OPTION_READERS: ConvertOptionReaders = {
+  "/api/v1/convert/pdf/img": (body) => ({
+    imageOptions: {
+      ...defaultParameters.imageOptions,
+      colorType: asEnum(
+        body.colorType,
+        COLOR_TYPE_VALUES,
+        defaultParameters.imageOptions.colorType,
+      ),
+      dpi: asInt(body.dpi, defaultParameters.imageOptions.dpi),
+      singleOrMultiple: asEnum(
+        body.singleOrMultiple,
+        OUTPUT_OPTION_VALUES,
+        defaultParameters.imageOptions.singleOrMultiple,
+      ),
+    },
+  }),
+  "/api/v1/convert/img/pdf": (body) => ({
+    imageOptions: {
+      ...defaultParameters.imageOptions,
+      fitOption: asEnum(
+        body.fitOption,
+        FIT_OPTION_VALUES,
+        defaultParameters.imageOptions.fitOption,
+      ),
+      colorType: asEnum(
+        body.colorType,
+        COLOR_TYPE_VALUES,
+        defaultParameters.imageOptions.colorType,
+      ),
+      autoRotate: asFlag(body.autoRotate),
+    },
+  }),
+  "/api/v1/convert/svg/pdf": (body) => ({
+    imageOptions: {
+      ...defaultParameters.imageOptions,
+      combineImages: asFlag(body.combineIntoSinglePdf),
+    },
+  }),
+  "/api/v1/convert/html/pdf": (body) => ({
+    htmlOptions: {
+      zoomLevel: asInt(body.zoom, defaultParameters.htmlOptions.zoomLevel),
+    },
+  }),
+  "/api/v1/convert/eml/pdf": (body) => ({
+    emailOptions: {
+      includeAttachments: asFlag(body.includeAttachments),
+      maxAttachmentSizeMB: asInt(
+        body.maxAttachmentSizeMB,
+        defaultParameters.emailOptions.maxAttachmentSizeMB,
+      ),
+      downloadHtml: asFlag(body.downloadHtml),
+      includeAllRecipients: asFlag(body.includeAllRecipients),
+    },
+  }),
+  "/api/v1/convert/pdf/pdfa": (body, toExtension) =>
+    toExtension === "pdfx"
+      ? {
+          pdfxOptions: {
+            outputFormat:
+              body.outputFormat ?? defaultParameters.pdfxOptions.outputFormat,
+          },
+        }
+      : {
+          pdfaOptions: {
+            outputFormat:
+              body.outputFormat ?? defaultParameters.pdfaOptions.outputFormat,
+            strict: asFlag(body.strict),
+          },
+        },
+  "/api/v1/convert/pdf/ua": (body) => ({
+    pdfUaOptions: {
+      profile: body.profile ?? defaultParameters.pdfUaOptions.profile,
+      language: body.language ?? defaultParameters.pdfUaOptions.language,
+      overrideLanguage: asFlag(body.overrideLanguage),
+      title: body.title ?? defaultParameters.pdfUaOptions.title,
+      // Absent means the step predates the field, and embedding is the conforming default.
+      embedFonts:
+        body.embedFonts !== undefined ? asFlag(body.embedFonts) : true,
+      altText: body.altText ?? defaultParameters.pdfUaOptions.altText,
+    },
+  }),
+  "/api/v1/convert/cbr/pdf": (body) => ({
+    cbrOptions: { optimizeForEbook: asFlag(body.optimizeForEbook) },
+  }),
+  "/api/v1/convert/pdf/cbr": (body) => ({
+    pdfToCbrOptions: {
+      dpi: asInt(body.dpi, defaultParameters.pdfToCbrOptions.dpi),
+    },
+  }),
+  "/api/v1/convert/cbz/pdf": (body) => ({
+    cbzOptions: { optimizeForEbook: asFlag(body.optimizeForEbook) },
+  }),
+  "/api/v1/convert/pdf/cbz": (body) => ({
+    cbzOutputOptions: {
+      dpi: asInt(body.dpi, defaultParameters.cbzOutputOptions.dpi),
+    },
+  }),
+  "/api/v1/convert/ebook/pdf": (body) => ({
+    ebookOptions: {
+      embedAllFonts: asFlag(body.embedAllFonts),
+      includeTableOfContents: asFlag(body.includeTableOfContents),
+      includePageNumbers: asFlag(body.includePageNumbers),
+      optimizeForEbook: asFlag(body.optimizeForEbook),
+    },
+  }),
+  "/api/v1/convert/pdf/epub": (body) => {
+    const fallback = defaultParameters.epubOptions;
+    return {
+      epubOptions: {
+        detectChapters:
+          body.detectChapters !== undefined
+            ? asFlag(body.detectChapters)
+            : (fallback?.detectChapters ?? true),
+        targetDevice:
+          body.targetDevice ?? fallback?.targetDevice ?? "TABLET_PHONE_IMAGES",
+        outputFormat: body.outputFormat ?? fallback?.outputFormat ?? "EPUB",
+      },
+    };
+  },
+};
+
+/**
+ * Rebuild the tool's UI parameters from a stored convert step: recover the conversion from the
+ * `fromExtension`/`toExtension` bookkeeping, resolve the endpoint it targeted, then hand its stored
+ * options to that endpoint's reader. Re-opening a saved step shows exactly what was configured (and
+ * re-saving it doesn't reset options to defaults). The generated request models can't type this: a
+ * stored value is always a string, and two convert models (colorType, fitOption) declare the backend
+ * spelling rather than the value the tool sends today - so options are validated against the
+ * frontend's own option sets instead.
+ */
+export const convertFromApiParams = (
+  apiParams: ToolApiParams[ToolEndpoint],
+): Partial<ConvertParameters> => {
+  const body = apiParams as unknown as Record<string, string | undefined>;
+  const fromExtension = body.fromExtension ?? "";
+  const toExtension = body.toExtension ?? "";
+  const endpoint = convertEndpointFor(fromExtension, toExtension);
+  // Each reader reads only its own endpoint's fields; the runtime endpoint is just a string, so
+  // readOptions is looked up per-endpoint (undefined when the pair has no reader).
+  const readOptions = endpoint ? CONVERT_OPTION_READERS[endpoint] : undefined;
+  return {
+    fromExtension,
+    toExtension,
+    ...(readOptions ? readOptions(body, toExtension) : {}),
+  };
+};
+
 // Static configuration object
 export const convertOperationConfig = defineCustomTool({
   validateParams: validateConvertParameters,
   customProcessor: convertProcessor, // Can't use callback version here
   operationType: "convert",
   defaultParameters,
-  endpoint: (params: ConvertParameters): string | undefined => {
-    if (!params.fromExtension || !params.toExtension) return undefined;
-    const actualToExtension =
-      params.toExtension === "pdfx" ? "pdfa" : params.toExtension;
-    return getEndpointUrl(params.fromExtension, actualToExtension) ?? undefined;
-  },
+  endpoint: (params: ConvertParameters): string | undefined =>
+    convertEndpointFor(params.fromExtension, params.toExtension),
+  // Routing set for a dynamic endpoint, so a stored convert step maps back to this tool.
+  endpoints: CONVERT_AUTOMATION_ENDPOINTS,
+  toApiParams: convertToApiParams,
+  fromApiParams: convertFromApiParams,
 });
 
 export const useConvertOperation = (parameters?: ConvertParameters) => {
@@ -345,11 +632,15 @@ export const useConvertOperation = (parameters?: ConvertParameters) => {
     ...convertOperationConfig,
     customProcessor: customConvertProcessor, // Use instance-specific processor for translation support
     getErrorMessage: (error) => {
-      if (error.response?.data && typeof error.response.data === "string") {
-        return error.response.data;
+      const err = error as {
+        response?: { data?: unknown };
+        message?: string;
+      };
+      if (err.response?.data && typeof err.response.data === "string") {
+        return err.response.data;
       }
-      if (error.message) {
-        return error.message;
+      if (err.message) {
+        return err.message;
       }
       return t(
         "convert.errorConversion",

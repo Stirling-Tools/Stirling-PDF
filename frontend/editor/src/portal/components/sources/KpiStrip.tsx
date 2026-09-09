@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { MetricCard, MetricStrip } from "@app/ui";
+import { SourcesIcon } from "@portal/components/icons";
 import type { SourcesResponse } from "@portal/api/sources";
 
 /**
@@ -22,7 +23,7 @@ interface KpiStripProps {
 export function KpiStrip({ data, loading }: KpiStripProps) {
   const { t } = useTranslation();
   return (
-    <MetricStrip>
+    <MetricStrip layout="row" leading={<SourcesIcon size={22} />}>
       {KPI_LABEL_KEYS.map((labelKey, i) => {
         const k = loading ? undefined : data?.kpis[i];
         return (

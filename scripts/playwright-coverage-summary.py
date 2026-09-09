@@ -157,11 +157,7 @@ def main(argv: list[str] | None = None) -> int:
 
     stats = aggregate(args.dump_dir)
     write_vitest_summary(stats, args.out)
-    pct = (
-        100.0 * stats["functions_covered"] / stats["functions_total"]
-        if stats["functions_total"]
-        else 0.0
-    )
+    pct = 100.0 * stats["functions_covered"] / stats["functions_total"] if stats["functions_total"] else 0.0
     print(
         f"Aggregated {stats['tests']} tests / {stats['scripts']} scripts: "
         f"{stats['functions_covered']}/{stats['functions_total']} functions "

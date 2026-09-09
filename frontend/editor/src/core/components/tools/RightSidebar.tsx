@@ -4,7 +4,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
-import ToolSearch from "@app/components/tools/toolPicker/ToolSearch";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
@@ -15,8 +14,7 @@ import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { withViewTransition } from "@app/utils/viewTransition";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
+import { SidebarToggleIcon } from "@app/components/shared/SidebarToggleIcon";
 import CloseIcon from "@mui/icons-material/Close";
 import { ToolId } from "@app/types/toolId";
 import type { ToolRegistryEntry } from "@app/data/toolsTaxonomy";
@@ -43,7 +41,6 @@ export default function RightSidebar() {
   const {
     leftPanelView,
     isPanelVisible,
-    searchQuery,
     filteredTools,
     toolRegistry,
     setSearchQuery,
@@ -96,7 +93,6 @@ export default function RightSidebar() {
   const inToolView = leftPanelView !== "toolPicker";
   // Show X (close) button only when there's somewhere to go back to.
   const showCloseButton = inToolView || allToolsView;
-  const showHeaderSearch = showCloseButton || leftPanelView === "toolPicker";
 
   const handleHeaderBack = () => {
     if (inToolView) {
@@ -110,30 +106,16 @@ export default function RightSidebar() {
     withViewTransition(() => handleToolSelect(id));
   };
 
-  // Typing in the header search while inside a tool exits the tool and lifts the
-  // panel into the all-tools view so the user immediately sees search results.
-  const handleHeaderSearchChange = (value: string) => {
-    if (inToolView) {
-      withViewTransition(() => {
-        handleBackToTools();
-        setAllToolsView(true);
-        setSearchQuery(value);
-      });
-      return;
-    }
-    setSearchQuery(value);
-  };
-
   const activeTool: ToolRegistryEntry | null =
     inToolView && selectedToolKey
-      ? (toolRegistry[selectedToolKey as ToolId] ?? null)
+      ? (toolRegistry[selectedToolKey] ?? null)
       : null;
 
   const expandedWidth = "18.5rem";
 
   const computedWidth = () => {
     if (isMobile) return "100%";
-    if (!isPanelVisible) return "3.5rem";
+    if (!isPanelVisible) return "var(--nav-rail-w)";
     return expandedWidth;
   };
 
@@ -149,7 +131,7 @@ export default function RightSidebar() {
     const items: Array<{ id: ToolId; tool: ToolRegistryEntry }> = [];
     collapsedQuickSection.subcategories.forEach((sc: SubcategoryGroup) =>
       sc.tools.forEach((entry) =>
-        items.push({ id: entry.id as ToolId, tool: entry.tool }),
+        items.push({ id: entry.id, tool: entry.tool }),
       ),
     );
     return items;
@@ -168,7 +150,7 @@ export default function RightSidebar() {
       ref={toolPanelRef}
       data-sidebar="tool-panel"
       data-tour={fullscreenExpanded ? undefined : "tool-panel"}
-      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} bg-[var(--c-bg-raised)] border-l border-[var(--c-border-subtle)] transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : "h-screen"} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
+      className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} ${isMobile || fullscreenExpanded ? "border-l border-[var(--c-border-subtle)]" : "tool-panel--floating"} transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : fullscreenExpanded ? "h-screen" : ""} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
         width: computedWidth(),
         padding: "0",
@@ -188,7 +170,7 @@ export default function RightSidebar() {
               className="tool-panel__expand-btn tool-panel__toggle-vt"
               onClick={handleExpand}
             >
-              <ChevronLeftIcon sx={{ fontSize: "1.1rem" }} />
+              <SidebarToggleIcon size={18} mirrored />
             </ActionIcon>
           </div>
           <div className="tool-panel__collapsed-divider" />
@@ -199,7 +181,8 @@ export default function RightSidebar() {
                 content={tool.name}
                 position="left"
                 arrow
-                delay={300}
+                // No delay: collapsed to icons, the tooltip is the only label.
+                delay={0}
               >
                 <ActionIcon
                   aria-label={tool.name}
@@ -224,7 +207,7 @@ export default function RightSidebar() {
           /* Fixed width matches the expanded panel width so the inner content is
              laid out at its final size from the moment it mounts. The outer
              .tool-panel clips it (overflow-hidden) while it animates from the
-             collapsed 3.5rem width — text/icons stay put and just come into view
+             collapsed rail width — text/icons stay put and just come into view
              instead of jiggling as space becomes available. */
           style={{
             opacity: 1,
@@ -234,6 +217,7 @@ export default function RightSidebar() {
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",
+            position: "relative",
           }}
         >
           <>
@@ -254,54 +238,54 @@ export default function RightSidebar() {
                     : t("toolPanel.goBack", "Go back")
                 }
               />
-            ) : (
+            ) : showCloseButton || !isMobile ? (
+              /* Without a back button this header is just the collapse control,
+                 which has no meaning on mobile - the slider switches panes. Drop
+                 it there so the tool list starts under the tabs. */
               <div className="tool-panel__compact-header">
-                {showHeaderSearch ? (
-                  <div className="tool-panel__compact-header-search">
-                    <ToolSearch
-                      value={searchQuery}
-                      onChange={handleHeaderSearchChange}
-                      toolRegistry={toolRegistry}
-                      mode="filter"
-                      autoFocus={allToolsView && !inToolView}
-                    />
-                  </div>
-                ) : null}
-                {showCloseButton ? (
-                  <ActionIcon
-                    variant="tertiary"
-                    size="md"
-                    shape="circle"
-                    onClick={handleHeaderBack}
-                    aria-label={
-                      inToolView
-                        ? t("toolPanel.backToAllTools", "Back to all tools")
-                        : t("toolPanel.goBack", "Go back")
-                    }
-                    className="tool-panel__expand-btn"
-                  >
-                    <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                  </ActionIcon>
-                ) : (
-                  <ActionIcon
-                    variant="secondary"
-                    size="md"
-                    shape="circle"
-                    onClick={handleCollapse}
-                    aria-label={t("toolPanel.collapse", "Collapse panel")}
-                    className="tool-panel__expand-btn tool-panel__toggle-vt"
-                  >
-                    <ChevronRightIcon sx={{ fontSize: "1.1rem" }} />
-                  </ActionIcon>
-                )}
+                <span className="tool-panel__compact-title">
+                  {t("toolPanel.pdfTools", "PDF Tools")}
+                </span>
+                <div className="tool-panel__compact-header-actions">
+                  {showCloseButton ? (
+                    <ActionIcon
+                      variant="tertiary"
+                      size="md"
+                      shape="circle"
+                      onClick={handleHeaderBack}
+                      aria-label={
+                        inToolView
+                          ? t("toolPanel.backToAllTools", "Back to all tools")
+                          : t("toolPanel.goBack", "Go back")
+                      }
+                      className="tool-panel__expand-btn"
+                    >
+                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                    </ActionIcon>
+                  ) : (
+                    <ActionIcon
+                      variant="secondary"
+                      size="md"
+                      shape="circle"
+                      onClick={handleCollapse}
+                      aria-label={t("toolPanel.collapse", "Collapse panel")}
+                      className="tool-panel__expand-btn tool-panel__toggle-vt"
+                    >
+                      <SidebarToggleIcon size={18} mirrored />
+                    </ActionIcon>
+                  )}
+                </div>
               </div>
-            )}
+            ) : null}
 
             <ToolPanel
               allToolsView={allToolsView}
               onShowAllTools={handleShowAllTools}
               onToolSelect={handleToolSelectWithTransition}
               compact={false}
+              /* Mobile keeps the workbench bar - and with it the super search -
+                 on the other slide, so the list needs its own filter. */
+              showSearch={isMobile}
             />
           </>
         </div>

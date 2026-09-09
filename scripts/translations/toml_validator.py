@@ -12,17 +12,16 @@ Usage:
     python3 toml_validator.py --all-batches ar_AR
 """
 
-import sys
 import argparse
 import glob
-
+import sys
 import tomllib
 
 
 def get_line_context(file_path, line_num, context_lines=3):
     """Get lines around the error for context"""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             lines = f.readlines()
 
         start = max(0, line_num - context_lines - 1)
@@ -41,7 +40,7 @@ def get_line_context(file_path, line_num, context_lines=3):
 def get_character_context(file_path, char_pos, context_chars=100):
     """Get characters around the error position"""
     try:
-        with open(file_path, "r", encoding="utf-8") as f:
+        with open(file_path, encoding="utf-8") as f:
             content = f.read()
 
         start = max(0, char_pos - context_chars)
@@ -144,12 +143,8 @@ def main():
         metavar="LANG",
         help="Validate all batch files for a language (e.g., ar_AR)",
     )
-    parser.add_argument(
-        "--brief", action="store_true", help="Show brief output without context"
-    )
-    parser.add_argument(
-        "--quiet", action="store_true", help="Only show files with errors"
-    )
+    parser.add_argument("--brief", action="store_true", help="Show brief output without context")
+    parser.add_argument("--quiet", action="store_true", help="Only show files with errors")
 
     args = parser.parse_args()
 

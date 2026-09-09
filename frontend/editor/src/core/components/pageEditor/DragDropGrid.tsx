@@ -20,6 +20,7 @@ import {
   DragEndEvent,
   DragStartEvent,
   DragOverlay,
+  DraggableAttributes,
   useSensor,
   useSensors,
   PointerSensor,
@@ -27,6 +28,10 @@ import {
   useDraggable,
   useDroppable,
 } from "@dnd-kit/core";
+
+export type DragHandleProps = DraggableAttributes & {
+  ref: React.RefCallback<HTMLElement>;
+} & Record<string, unknown>;
 
 interface DragDropItem {
   id: string;
@@ -51,7 +56,7 @@ interface DragDropGridProps<T extends DragDropItem> {
     clearBoxSelection: () => void,
     activeDragIds: string[],
     justMoved: boolean,
-    dragHandleProps?: any,
+    dragHandleProps?: DragHandleProps,
     zoomLevel?: number,
   ) => React.ReactNode;
   getThumbnailData?: (
@@ -232,7 +237,7 @@ interface DraggableItemProps<T extends DragDropItem> {
     clearBoxSelection: () => void,
     activeDragIds: string[],
     justMoved: boolean,
-    dragHandleProps?: any,
+    dragHandleProps?: DragHandleProps,
     zoomLevel?: number,
   ) => React.ReactNode;
   zoomLevel: number;
@@ -253,7 +258,7 @@ const DraggableItemInner = <T extends DragDropItem>({
   zoomLevel,
 }: DraggableItemProps<T>) => {
   const isPlaceholder = Boolean(item.isPlaceholder);
-  const pageNumber = (item as any).pageNumber ?? index + 1;
+  const pageNumber = item.pageNumber ?? index + 1;
   const {
     attributes,
     listeners,

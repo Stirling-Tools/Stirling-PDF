@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import {
@@ -23,7 +23,7 @@ import EditableSecretField from "@app/components/shared/EditableSecretField";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
 
-interface MailSettingsData {
+type MailSettingsData = {
   enabled?: boolean;
   enableInvites?: boolean;
   inviteLinkExpiryHours?: number;
@@ -32,7 +32,7 @@ interface MailSettingsData {
   username?: string;
   password?: string;
   from?: string;
-}
+};
 
 interface ApiResponseWithPending<T> {
   _pending?: Partial<T>;
@@ -57,7 +57,6 @@ export default function AdminMailSection() {
     setSettings,
     loading,
     saving,
-    fetchSettings,
     saveSettings,
     isFieldPending,
   } = useAdminSettings<MailSettingsData>({
@@ -77,10 +76,6 @@ export default function AdminMailSection() {
       };
     },
   });
-
-  useEffect(() => {
-    fetchSettings();
-  }, []);
 
   const { isDirty, resetToSnapshot, markSaved } = useSettingsDirty(
     settings,
@@ -168,7 +163,7 @@ export default function AdminMailSection() {
                     "Allow admins to invite users via email with auto-generated passwords",
                   )}
                 </Text>
-                <Text size="xs" c="orange" mt={8} fw={500}>
+                <Text size="xs" c="var(--color-amber-dark)" mt={8} fw={500}>
                   {t(
                     "admin.settings.mail.frontendUrlNote.note",
                     "Note: Requires Frontend URL to be configured. ",
@@ -179,7 +174,7 @@ export default function AdminMailSection() {
                       e.preventDefault();
                       navigate("/settings/adminGeneral#frontendUrl");
                     }}
-                    c="orange"
+                    c="var(--color-amber-dark)"
                     td="underline"
                   >
                     {t(

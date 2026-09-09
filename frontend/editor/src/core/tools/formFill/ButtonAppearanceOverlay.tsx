@@ -8,6 +8,7 @@
  * Uses the same EPDF_RenderAnnotBitmap / FPDF_FFLDraw pipeline as
  * SignatureFieldOverlay to produce the button's native PDF appearance.
  */
+import { useStaleBakedFieldNames } from "@app/tools/formFill/FormFillContext";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   renderButtonFieldAppearances,
@@ -66,6 +67,7 @@ function ButtonAppearanceOverlayInner({
   pageWidth,
   pageHeight,
 }: ButtonAppearanceOverlayProps) {
+  const staleNames = useStaleBakedFieldNames();
   const [appearances, setAppearances] = useState<SignatureFieldAppearance[]>(
     [],
   );
@@ -111,36 +113,38 @@ function ButtonAppearanceOverlayInner({
       }}
       data-button-appearance-page={pageIndex}
     >
-      {pageAppearances.map((btn, idx) => {
-        const sx =
-          btn.sourcePageWidth > 0 ? pageWidth / btn.sourcePageWidth : 1;
-        const sy =
-          btn.sourcePageHeight > 0 ? pageHeight / btn.sourcePageHeight : 1;
-        const left = btn.x * sx;
-        const top = btn.y * sy;
-        const width = btn.width * sx;
-        const height = btn.height * sy;
+      {pageAppearances
+        .filter((btn) => !staleNames.has(btn.fieldName))
+        .map((btn, idx) => {
+          const sx =
+            btn.sourcePageWidth > 0 ? pageWidth / btn.sourcePageWidth : 1;
+          const sy =
+            btn.sourcePageHeight > 0 ? pageHeight / btn.sourcePageHeight : 1;
+          const left = btn.x * sx;
+          const top = btn.y * sy;
+          const width = btn.width * sx;
+          const height = btn.height * sy;
 
-        return (
-          <div
-            key={`btn-appearance-${btn.fieldName}-${idx}`}
-            style={{
-              position: "absolute",
-              left,
-              top,
-              width,
-              height,
-              overflow: "hidden",
-            }}
-          >
-            <ButtonBitmapCanvas
-              imageData={btn.imageData!}
-              cssWidth={width}
-              cssHeight={height}
-            />
-          </div>
-        );
-      })}
+          return (
+            <div
+              key={`btn-appearance-${btn.fieldName}-${idx}`}
+              style={{
+                position: "absolute",
+                left,
+                top,
+                width,
+                height,
+                overflow: "hidden",
+              }}
+            >
+              <ButtonBitmapCanvas
+                imageData={btn.imageData!}
+                cssWidth={width}
+                cssHeight={height}
+              />
+            </div>
+          );
+        })}
     </div>
   );
 }

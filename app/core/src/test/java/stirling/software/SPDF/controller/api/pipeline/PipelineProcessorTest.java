@@ -25,12 +25,15 @@ import stirling.software.SPDF.model.PipelineOperation;
 import stirling.software.SPDF.model.PipelineResult;
 import stirling.software.SPDF.service.ApiDocService;
 import stirling.software.common.service.InternalApiClient;
+import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 
 @ExtendWith(MockitoExtension.class)
 class PipelineProcessorTest {
 
     @Mock ApiDocService apiDocService;
+
+    @Mock ToolMetadataService toolMetadataService;
 
     @Mock InternalApiClient internalApiClient;
 
@@ -41,7 +44,8 @@ class PipelineProcessorTest {
     @BeforeEach
     void setUp() throws Exception {
         pipelineProcessor =
-                new PipelineProcessor(apiDocService, internalApiClient, tempFileManager);
+                new PipelineProcessor(
+                        apiDocService, toolMetadataService, internalApiClient, tempFileManager);
     }
 
     @Test
@@ -55,8 +59,9 @@ class PipelineProcessorTest {
         Resource file = new MyFileByteArrayResource();
         List<Resource> files = List.of(file);
 
-        when(apiDocService.isMultiInput("/api/v1/filter/filter-page-count")).thenReturn(false);
-        when(apiDocService.getExtensionTypes(false, "/api/v1/filter/filter-page-count"))
+        when(toolMetadataService.isMultiInput("/api/v1/filter/filter-page-count"))
+                .thenReturn(false);
+        when(toolMetadataService.getExtensionTypes(false, "/api/v1/filter/filter-page-count"))
                 .thenReturn(List.of("pdf"));
         when(apiDocService.isValidOperation(eq("/api/v1/filter/filter-page-count"), anyMap()))
                 .thenReturn(true);
@@ -99,8 +104,9 @@ class PipelineProcessorTest {
                     }
                 };
 
-        when(apiDocService.isMultiInput(anyString())).thenReturn(false);
-        when(apiDocService.getExtensionTypes(anyBoolean(), anyString())).thenReturn(List.of("pdf"));
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.getExtensionTypes(anyBoolean(), anyString()))
+                .thenReturn(List.of("pdf"));
         when(apiDocService.isValidOperation(anyString(), anyMap())).thenReturn(true);
 
         when(internalApiClient.post(anyString(), any()))

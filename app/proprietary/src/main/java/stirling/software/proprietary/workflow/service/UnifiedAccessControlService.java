@@ -119,20 +119,18 @@ public class UnifiedAccessControlService {
     public ShareAccessRole getEffectiveRole(WorkflowParticipant participant) {
         ParticipantStatus status = participant.getStatus();
 
-        switch (status) {
-            case SIGNED:
-            case DECLINED:
-                // After action completed, downgrade to read-only
-                return ShareAccessRole.VIEWER;
-            case PENDING:
-            case NOTIFIED:
-            case VIEWED:
-                // Active participants retain their assigned role
-                return participant.getAccessRole();
-            default:
+        return switch (status) {
+            case SIGNED, DECLINED ->
+                    // After action completed, downgrade to read-only
+                    ShareAccessRole.VIEWER;
+            case PENDING, NOTIFIED, VIEWED ->
+                    // Active participants retain their assigned role
+                    participant.getAccessRole();
+            default -> {
                 log.warn("Unknown participant status: {}", status);
-                return ShareAccessRole.VIEWER;
-        }
+                yield ShareAccessRole.VIEWER;
+            }
+        };
     }
 
     /** Checks if a user can access a specific file */
