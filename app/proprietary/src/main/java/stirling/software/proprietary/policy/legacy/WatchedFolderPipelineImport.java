@@ -182,27 +182,26 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
         if (archived.isEmpty()) {
             return false;
         }
+        Policy converted =
+                new Policy(
+                                null,
+                                policyName(config, directory),
+                                // No acting principal: tool calls use the internal API user. A
+                                // fabricated name fails every run at API-key lookup.
+                                null,
+                                true,
+                                List.of(
+                                        new PipelineInput(
+                                                input.id(),
+                                                new TriggerConfig(FOLDER_WATCH_TRIGGER, Map.of()))),
+                                steps,
+                                OutputSpec.inline(),
+                                List.of(destination.id()),
+                                teamId)
+                        .withOrigin(Policy.ORIGIN_MIGRATED);
         Policy policy;
         try {
-            policy =
-                    policyStore.save(
-                            new Policy(
-                                    null,
-                                    policyName(config, directory),
-                                    // No acting principal: tool calls use the internal API user.
-                                    // A fabricated name fails every run at API-key lookup.
-                                    null,
-                                    true,
-                                    List.of(
-                                            new PipelineInput(
-                                                    input.id(),
-                                                    new TriggerConfig(
-                                                            FOLDER_WATCH_TRIGGER, Map.of()))),
-                                    steps,
-                                    OutputSpec.inline(),
-                                    List.of(destination.id()),
-                                    teamId,
-                                    Policy.ORIGIN_MIGRATED));
+            policy = policyStore.save(converted);
         } catch (RuntimeException e) {
             restoreConfig(archived.get(), configFile.get());
             throw e;

@@ -59,6 +59,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -209,15 +210,20 @@ public class PolicyController {
             summary = "List the caller's stored-policy runs",
             description =
                     "Returns the caller's in-flight and recently-finished stored-policy runs (within"
-                            + " the run-retention window). The frontend reconciles these on load so a"
-                            + " run started before a refresh/crash is rediscovered and its outputs"
+                            + " the run-retention window), optionally narrowed to one policy via"
+                            + " `policyId` — a client following a single sweep polls this every"
+                            + " second, and the unfiltered list grows with every other policy's"
+                            + " runs. The frontend reconciles the unfiltered list on load so a run"
+                            + " started before a refresh/crash is rediscovered and its outputs"
                             + " collected, rather than orphaned on the backend. Ad-hoc runs (no"
                             + " policy id) are excluded.")
-    public List<PolicyRunView> listRuns() {
+    public List<PolicyRunView> listRuns(
+            @RequestParam(name = "policyId", required = false) String policyId) {
         // Local runs first (they carry live step state); keyed by runId to dedupe shared entries.
         Map<String, PolicyRunView> byRunId = new LinkedHashMap<>();
         runRegistry.all().stream()
                 .filter(run -> run.getPolicyId() != null)
+                .filter(run -> policyId == null || policyId.equals(run.getPolicyId()))
                 .filter(run -> ownedByCurrentUser(run.getRunId()))
                 .forEach(run -> byRunId.put(run.getRunId(), PolicyRunView.of(run)));
         // Then runs from other nodes, read from the shared job store.
@@ -228,6 +234,9 @@ public class PolicyController {
             Map<String, String> meta = entry.resultMeta();
             if (meta == null || !meta.containsKey("policyId")) {
                 continue; // ad-hoc job, not a stored-policy run
+            }
+            if (policyId != null && !policyId.equals(meta.get("policyId"))) {
+                continue;
             }
             if (ownedByCurrentUser(entry.jobId())) {
                 byRunId.put(entry.jobId(), PolicyRunView.ofEntry(entry));
@@ -371,33 +380,49 @@ public class PolicyController {
     }
 
     /**
+     * The policies surface serves only its own records: a processing-folder pair reads as not-found
+     * here even for a caller who could reach it through its own route, so this API can never see,
+     * rewrite, or half-tear-down a pair.
+     */
+    private boolean accessiblePolicySurface(Policy policy) {
+        return Policy.SURFACE_POLICY.equals(policy.surface())
+                && policyAccessGuard.canAccess(policy);
+    }
+
+    /**
      * Assign owner + owning team server-side. Create stamps the current user and their team; update
      * preserves the existing owner and team after verifying the policy belongs to the caller's team
      * — so the client can neither forge ownership/team on create nor reach across teams on update
-     * (a policy in another team reads as not-found).
+     * (a policy in another team reads as not-found). The surface is stamped the same way: this
+     * route writes only policy-surface rows.
      */
     private Policy resolveOwnership(Policy incoming) {
         String id = incoming.id();
         if (id != null && !id.isBlank()) {
             Policy existing = policyStore.get(id).orElse(null);
             if (existing != null) {
-                if (!policyAccessGuard.canAccess(existing)) {
+                if (!accessiblePolicySurface(existing)) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
                 }
-                return withOwnerTeamAndOrigin(
-                        incoming, existing.owner(), existing.teamId(), existing.origin());
+                return withOwnerTeamSurfaceAndOrigin(
+                        incoming,
+                        existing.owner(),
+                        existing.teamId(),
+                        existing.surface(),
+                        existing.origin());
             }
         }
-        return withOwnerTeamAndOrigin(
+        return withOwnerTeamSurfaceAndOrigin(
                 incoming,
                 policyAccessGuard.ownerForNewPolicy(),
                 policyAccessGuard.teamForNewPolicy(),
+                Policy.SURFACE_POLICY,
                 // Anything created through this endpoint was built here, whatever the body claims.
                 null);
     }
 
-    private static Policy withOwnerTeamAndOrigin(
-            Policy policy, String owner, Long teamId, String origin) {
+    private static Policy withOwnerTeamSurfaceAndOrigin(
+            Policy policy, String owner, Long teamId, String surface, String origin) {
         return new Policy(
                 policy.id(),
                 policy.name(),
@@ -411,6 +436,7 @@ public class PolicyController {
                 policy.outputIds(),
                 teamId,
                 policy.editor(),
+                surface,
                 origin);
     }
 
@@ -549,7 +575,7 @@ public class PolicyController {
     public ResponseEntity<Policy> getPolicy(@PathVariable String policyId) {
         return policyStore
                 .get(policyId)
-                .filter(policyAccessGuard::canAccess)
+                .filter(this::accessiblePolicySurface)
                 .map(PolicyController::withMaskedOutputSecrets)
                 .map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
@@ -560,7 +586,8 @@ public class PolicyController {
     public ResponseEntity<Void> deletePolicy(@PathVariable String policyId) {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
-        Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
+        Policy policy =
+                policyStore.get(policyId).filter(this::accessiblePolicySurface).orElse(null);
         if (policy == null) {
             return ResponseEntity.notFound().build();
         }
@@ -585,8 +612,9 @@ public class PolicyController {
     public ResponseEntity<Void> clearProcessedHistory(@PathVariable String policyId) {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
-        Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
-        if (policy == null) {
+        boolean accessible =
+                policyStore.get(policyId).filter(this::accessiblePolicySurface).isPresent();
+        if (!accessible) {
             return ResponseEntity.notFound().build();
         }
         processedLedger.clearPolicy(policyId);
@@ -610,7 +638,7 @@ public class PolicyController {
         Policy policy =
                 policyStore
                         .get(policyId)
-                        .filter(policyAccessGuard::canAccess)
+                        .filter(this::accessiblePolicySurface)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
@@ -643,12 +671,12 @@ public class PolicyController {
         Policy policy =
                 policyStore
                         .get(policyId)
-                        .filter(policyAccessGuard::canAccess)
+                        .filter(this::accessiblePolicySurface)
                         .orElseThrow(
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
-        return ResponseEntity.accepted().body(policyRunner.run(policy));
+        return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.USER));
     }
 
     private static void requireRunnable(PipelineDefinition definition) {
@@ -731,7 +759,7 @@ public class PolicyController {
         }
         return policyStore
                 .get(policyId)
-                .filter(policyAccessGuard::canAccess)
+                .filter(this::accessiblePolicySurface)
                 .map(policy -> assetResolver.resolve(policy, inputs))
                 .orElse(inputs);
     }

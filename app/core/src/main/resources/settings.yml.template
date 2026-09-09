@@ -409,7 +409,10 @@ aiEngine:
 
 policies:
   # Folder automations can read from and write to the directories you allow here, so treat this as a
-  # security boundary. Leave allowedFolderRoots empty (default) to disable folder sources/outputs,
+  # security boundary. On a multi-user server EVERY authenticated user (not only team leaders) can
+  # attach folder processing to directories under these roots - listing their contents and replacing
+  # files in place - so only list directories all users may touch.
+  # Leave allowedFolderRoots empty (default) to disable folder sources/outputs,
   # other than from directories that are always permitted like server file-storage and watched folders.
   # List absolute directories to permit folder access within them.
   # Stirling's own config directory is always off-limits, and folder access is always

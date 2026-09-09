@@ -17,10 +17,9 @@ public record Policy(
         List<String> outputIds,
         Long teamId,
         EditorConfig editor,
+        /** The owning product surface; {@link #SURFACE_POLICY} unless stamped otherwise. */
+        String surface,
         String origin) {
-
-    /** Converted from a legacy watched-folder JSON config that predates the policy engine. */
-    public static final String ORIGIN_MIGRATED = "migrated";
 
     public Policy {
         icon = icon == null ? "" : icon;
@@ -29,7 +28,17 @@ public record Policy(
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
         editor = editor == null ? EditorConfig.disabled() : editor;
+        surface = surface == null || surface.isBlank() ? SURFACE_POLICY : surface;
     }
+
+    /** The record belongs to the org policies surface (the default). */
+    public static final String SURFACE_POLICY = "policy";
+
+    /** The record is a processing-folder pair, served only by its own route. */
+    public static final String SURFACE_PROCESSING_FOLDER = "processing-folder";
+
+    /** Converted from a legacy watched-folder JSON config that predates the policy engine. */
+    public static final String ORIGIN_MIGRATED = "migrated";
 
     /** Without a provenance marker: an ordinary policy created through the UI or a seeder. */
     public Policy(
@@ -44,10 +53,11 @@ public record Policy(
             OutputSpec output,
             List<String> outputIds,
             Long teamId,
-            EditorConfig editor) {
+            EditorConfig editor,
+            String surface) {
         this(
                 id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
-                editor, null);
+                editor, surface, null);
     }
 
     /**
@@ -67,25 +77,20 @@ public record Policy(
             Long teamId,
             EditorConfig editor) {
         this(
-                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId,
-                editor, null);
-    }
-
-    /** Without editor participation: a swept or on-demand policy carrying a provenance marker. */
-    public Policy(
-            String id,
-            String name,
-            String owner,
-            boolean enabled,
-            List<PipelineInput> inputs,
-            List<PipelineStep> steps,
-            OutputSpec output,
-            List<String> outputIds,
-            Long teamId,
-            String origin) {
-        this(
-                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null,
-                origin);
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                SURFACE_POLICY,
+                null);
     }
 
     /**
@@ -105,7 +110,19 @@ public record Policy(
             List<String> outputIds,
             Long teamId) {
         this(
-                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null,
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                null,
+                SURFACE_POLICY,
                 null);
     }
 
@@ -168,14 +185,14 @@ public record Policy(
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
                 id, name, owner, enabled, required, icon, inputs, steps, resolved, outputIds,
-                teamId, editor, origin);
+                teamId, editor, surface, origin);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
         return new Policy(
                 id, name, newOwner, enabled, required, icon, inputs, steps, output, outputIds,
-                teamId, editor, origin);
+                teamId, editor, surface, origin);
     }
 
     /** A copy referencing the given saved output destinations. */
@@ -193,6 +210,43 @@ public record Policy(
                 newOutputIds,
                 teamId,
                 editor,
+                surface,
+                origin);
+    }
+
+    public Policy withEnabled(boolean newEnabled) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                newEnabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                origin);
+    }
+
+    public Policy withSurface(String newSurface) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                newSurface,
                 origin);
     }
 
@@ -200,7 +254,7 @@ public record Policy(
     public Policy withOrigin(String newOrigin) {
         return new Policy(
                 id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
-                editor, newOrigin);
+                editor, surface, newOrigin);
     }
 
     /**

@@ -35,6 +35,7 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
 import stirling.software.saas.payg.billing.TeamBillingContext;
@@ -52,6 +53,7 @@ import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
+import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
 import stirling.software.saas.security.UserTeamResolver;
 
@@ -72,6 +74,7 @@ class PaygWalletControllerTest {
     @Mock private PaygShadowChargeRepository shadowRepo;
     @Mock private UserRepository userRepository;
     @Mock private PrepaidBundleService prepaidBundleService;
+    @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
 
     private PaygWalletController controller;
 
@@ -88,7 +91,8 @@ class PaygWalletControllerTest {
                         shadowRepo,
                         userRepository,
                         prepaidBundleService,
-                        new UserTeamResolver(memberRepo));
+                        new UserTeamResolver(memberRepo),
+                        teamExtensionsRepository);
     }
 
     /**
@@ -143,6 +147,87 @@ class PaygWalletControllerTest {
     // -----------------------------------------------------------------------------------------
     // GET /wallet
     // -----------------------------------------------------------------------------------------
+
+    /**
+     * Team and Credits are independently purchasable, so the snapshot reports them as separate
+     * facts. A free team holds neither; the collapsed status string cannot express that difference.
+     */
+    @Test
+    void getWallet_freeTeam_holdsNeitherProduct() {
+        User user = userWithId(60L, UUID.randomUUID());
+        Team team = teamWithId(60L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 60L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(60L)).thenReturn(3L);
+        when(billingService.forTeam(60L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(60L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(60L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.processor().active()).isFalse();
+        assertThat(body.team().held()).isFalse();
+        // The member count is real, so the capacity meter already has a numerator.
+        assertThat(body.team().usersInUse()).isEqualTo(3);
+        // Cloud has no user limit today, so there is no denominator to report.
+        assertThat(body.team().licensedUsers()).isNull();
+    }
+
+    /** A team carrying a real cap holds Team, and reports it as the meter's denominator. */
+    @Test
+    void getWallet_teamPlan_reportsTheLicensedUsers() {
+        User user = userWithId(62L, UUID.randomUUID());
+        Team team = teamWithId(62L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 62L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(62L)).thenReturn(40L);
+        SaasTeamExtensions ext = new SaasTeamExtensions();
+        ext.setMaxSeats(100);
+        when(teamExtensionsRepository.findByTeamId(62L)).thenReturn(Optional.of(ext));
+        when(billingService.forTeam(62L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(62L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(62L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.team().held()).isTrue();
+        assertThat(body.team().licensedUsers()).isEqualTo(100);
+        assertThat(body.team().usersInUse()).isEqualTo(40);
+        // Team and Processor stay independent: a Team plan says nothing about the meter.
+        assertThat(body.processor().active()).isFalse();
+    }
+
+    /**
+     * A metered subscription switches Credits on and says nothing about Team: the two axes move
+     * independently, which is the whole point of reporting them separately.
+     */
+    @Test
+    void getWallet_subscribedTeam_holdsCreditsButNotTeam() {
+        User user = userWithId(61L, UUID.randomUUID());
+        Team team = teamWithId(61L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 61L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(61L)).thenReturn(8L);
+        when(billingService.forTeam(61L))
+                .thenReturn(subscribedBilling("sub_decoupled", 2500L, 1250L));
+        when(entitlementService.getSnapshot(61L)).thenReturn(snapshot(100L, 1250L));
+        stubEmptyLedgerReads(61L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.processor().active()).isTrue();
+        assertThat(body.team().held()).isFalse();
+        assertThat(body.team().usersInUse()).isEqualTo(8);
+    }
 
     @Test
     void getWallet_freeTier_returnsFreeShape() {
