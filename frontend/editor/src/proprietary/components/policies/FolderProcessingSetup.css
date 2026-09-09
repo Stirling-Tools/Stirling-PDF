@@ -1,0 +1,117 @@
+.folder-setup__title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.folder-setup__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.folder-setup__lead {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--c-text-muted);
+}
+
+.folder-setup__recipes {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+/* A miniature OptionCard: same anatomy (icon tile, title, clamped blurb),
+   sized for a dialog and carrying a selected state the gallery doesn't need. */
+.folder-setup__recipe {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.6rem 0.7rem;
+  background: var(--c-surface-raised);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: var(--radius-md, 8px);
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+  color: var(--c-text);
+}
+
+.folder-setup__recipe.is-selected {
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle, var(--c-surface));
+}
+
+.folder-setup__recipe:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 1px;
+}
+
+.folder-setup__recipe-icon {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: var(--radius-md, 8px);
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-text, var(--c-primary));
+  display: grid;
+  place-items: center;
+}
+
+.folder-setup__recipe-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.folder-setup__recipe-blurb {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--c-text-subtle);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.folder-setup__steps {
+  display: flex;
+  flex-direction: column;
+}
+
+.folder-setup__step {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.5rem 0.15rem;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.folder-setup__step:last-child {
+  border-bottom: 0;
+}
+
+.folder-setup__step-label {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.86rem;
+}
+
+.folder-setup__step-label small {
+  color: var(--c-text-subtle);
+  font-size: 0.75rem;
+}
+
+.folder-setup__error {
+  margin: 0;
+  font-size: 0.82rem;
+  color: var(--c-danger, var(--c-text));
+}
+
+.folder-setup__foot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}

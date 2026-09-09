@@ -57,6 +57,7 @@ import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
+import { SidebarProcessingSlot } from "@app/components/shared/SidebarProcessingSlot";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -1335,6 +1336,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               )}
             </div>
           </NavSurface>
+
+          {/* Offer to process a folder of files (e.g. Downloads), beneath the
+              files section. Empty in builds without a policy engine. */}
+          <SidebarProcessingSlot collapsed={collapsed} />
         </div>
 
         {/* Kebab "Save to cloud" upload modal (one file at a time). */}
