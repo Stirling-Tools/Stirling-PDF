@@ -129,16 +129,16 @@ fn parse_range(header: &str, file_len: u64) -> Option<(u64, u64)> {
 
 fn decode_and_canonicalize(uri: &tauri::http::Uri, app_handle: &tauri::AppHandle) -> Option<std::path::PathBuf> {
   let path_str = urlencoding::decode(uri.path()).unwrap_or(std::borrow::Cow::Borrowed(uri.path())).into_owned();
-  
+
   #[cfg(target_os = "windows")]
   let path_str = if path_str.starts_with('/') && path_str.chars().nth(2) == Some(':') {
       path_str[1..].to_string()
   } else {
       path_str
   };
-  
+
   let raw_path = std::path::Path::new(&path_str);
-  
+
   // Canonicalize the requested path to prevent path traversal (e.g. /../)
   let canonical_path = std::fs::canonicalize(raw_path).ok()?;
 
@@ -173,7 +173,7 @@ fn validated_compressed(
 ) -> Option<std::path::PathBuf> {
     let p = std::fs::canonicalize(compressed).ok()?;
     if !p.is_file() { return None; }
-    
+
     let mut allowed = false;
     if let Some(ref r) = resource_dir {
         if p.starts_with(r) { allowed = true; }
@@ -184,7 +184,7 @@ fn validated_compressed(
     if let Some(ref t) = temp_dir {
         if p.starts_with(t) { allowed = true; }
     }
-    
+
     if allowed {
         Some(p)
     } else {
@@ -309,7 +309,7 @@ pub fn run() {
   tauri::Builder::default()
     .register_asynchronous_uri_scheme_protocol("asset", move |ctx, request, responder| {
       let app_handle = ctx.app_handle().clone();
-      
+
       // Decode and canonicalize path synchronously (cheap)
       let Some(canonical_path) = decode_and_canonicalize(request.uri(), &app_handle) else {
           responder.respond(status_response(404));
