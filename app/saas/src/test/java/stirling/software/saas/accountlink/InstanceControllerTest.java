@@ -36,6 +36,7 @@ import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
+import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 
 /**
  * Pure-Mockito unit tests for {@link InstanceController} — the device-credential entitlement read.
@@ -51,6 +52,7 @@ class InstanceControllerTest {
     @Mock private PricingPolicyService pricingPolicyService;
     @Mock private InstanceUsageIngestService usageIngestService;
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
+    @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
 
     private InstanceController controller() {
         return new InstanceController(
@@ -59,7 +61,8 @@ class InstanceControllerTest {
                 accountLinkService,
                 pricingPolicyService,
                 usageIngestService,
-                linkedInstanceRepository);
+                linkedInstanceRepository,
+                teamExtensionsRepository);
     }
 
     private static PricingPolicy policy() {

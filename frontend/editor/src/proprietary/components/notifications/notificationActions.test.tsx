@@ -337,7 +337,7 @@ describe("useNotificationActions", () => {
     expect(setWorkbench).toHaveBeenCalledWith("viewer");
   });
 
-  it("stays where it is rather than routing through the role-based root", async () => {
+  it("stays where it is rather than routing through the landing root", async () => {
     // "/" lands on a page chosen by the reader's role, which reads as the app reloading.
     await registry().VIEW_FILE?.run(context());
 

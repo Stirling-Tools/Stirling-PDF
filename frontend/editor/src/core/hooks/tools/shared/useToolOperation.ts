@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import { toolAcceptsFile } from "@app/utils/toolIOCompat";
 import { useToolState } from "@app/hooks/tools/shared/useToolState";
 import {
   useToolApiCalls,
@@ -181,6 +182,41 @@ export const useToolOperation = <TParams>(
     [config.operationType, config.toolType, notificationsAvailable],
   );
 
+  const getCompatibleFiles = useCallback(
+    (params: TParams, selectedFiles: StirlingFile[]) => {
+      const endpoint =
+        typeof config.endpoint === "function"
+          ? config.endpoint(params)
+          : config.endpoint;
+      return selectedFiles.filter((file) =>
+        toolAcceptsFile(
+          endpoint ?? undefined,
+          selectors.getStirlingFileStub(file.fileId) ?? file,
+        ),
+      );
+    },
+    [config.endpoint, selectors],
+  );
+
+  const eligibleFilesRef = useRef<StirlingFile[]>([]);
+  const getEligibleFiles = useCallback(
+    (params: TParams, selectedFiles: StirlingFile[]) => {
+      const eligibleFiles = getCompatibleFiles(params, selectedFiles).filter(
+        (file) => file.size > 0,
+      );
+      const previous = eligibleFilesRef.current;
+      if (
+        eligibleFiles.length === previous.length &&
+        eligibleFiles.every((file, index) => file === previous[index])
+      ) {
+        return previous;
+      }
+      eligibleFilesRef.current = eligibleFiles;
+      return eligibleFiles;
+    },
+    [getCompatibleFiles],
+  );
+
   const executeOperation = useCallback(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
       // Validation
@@ -189,8 +225,16 @@ export const useToolOperation = <TParams>(
         return;
       }
 
+      const runtimeEndpoint: string | undefined = config.endpoint
+        ? typeof config.endpoint === "function"
+          ? (config.endpoint(params) ?? undefined)
+          : config.endpoint
+        : undefined;
+
+      const compatibleFiles = getCompatibleFiles(params, selectedFiles);
+
       // Handle zero-byte inputs explicitly: mark as error and continue with others
-      const zeroByteFiles = selectedFiles.filter((file) => file.size === 0);
+      const zeroByteFiles = compatibleFiles.filter((file) => file.size === 0);
       if (zeroByteFiles.length > 0) {
         try {
           for (const f of zeroByteFiles) {
@@ -200,42 +244,13 @@ export const useToolOperation = <TParams>(
           console.log("markFileError", e);
         }
       }
-      const validFiles: StirlingFile[] = selectedFiles.filter(
+      const validFiles: StirlingFile[] = compatibleFiles.filter(
         (file) => file.size > 0,
       );
       if (validFiles.length === 0) {
         actions.setError(t("noValidFiles", "No valid files to process"));
         return;
       }
-
-      // Block encrypted files from being sent to backend tools
-      const encryptedFiles = validFiles.filter((f) => {
-        const stub = selectors.getStirlingFileStub(f.fileId);
-        return stub?.processedFile?.isEncrypted === true;
-      });
-      if (encryptedFiles.length > 0) {
-        for (const ef of encryptedFiles) {
-          fileActions.openEncryptedUnlockPrompt(ef.fileId);
-        }
-        actions.setError(
-          t(
-            "encryptedFilesBlocked",
-            "{{count}} files are password-protected. Unlock them first.",
-            {
-              count: encryptedFiles.length,
-            },
-          ),
-        );
-        return;
-      }
-
-      // Resolve the runtime endpoint from params (static string or function result).
-      // Custom processors may omit endpoint entirely — result is undefined in that case.
-      const runtimeEndpoint: string | undefined = config.endpoint
-        ? typeof config.endpoint === "function"
-          ? (config.endpoint(params) ?? undefined)
-          : config.endpoint
-        : undefined;
 
       // Credit check — no-op in core builds, real check in desktop/SaaS versions.
       // Pass runtime endpoint so the check can determine if this routes locally (no credits needed).
@@ -709,6 +724,8 @@ export const useToolOperation = <TParams>(
       t,
       config,
       actions,
+      selectors,
+      fileActions,
       addFiles,
       consumeFiles,
       navActions,
@@ -722,6 +739,7 @@ export const useToolOperation = <TParams>(
       continueResolutions,
       notificationsAvailable,
       reportFailure,
+      getCompatibleFiles,
     ],
   );
 
@@ -829,6 +847,7 @@ export const useToolOperation = <TParams>(
     willUseCloud,
 
     // Actions
+    getEligibleFiles,
     executeOperation,
     resetResults,
     clearError: actions.clearError,
