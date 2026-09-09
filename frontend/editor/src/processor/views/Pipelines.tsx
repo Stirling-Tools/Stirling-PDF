@@ -26,12 +26,12 @@ import {
 import { qk } from "@processor/queries/keys";
 import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
 import { PipelinesIcon } from "@processor/components/icons";
-import { KpiStrip } from "@processor/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@processor/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@processor/components/pipelines/PipelineTemplateCard";
 import { PolicyDetailPanel } from "@processor/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@processor/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@processor/hooks/useAiEngineEnabled";
+import { useCanManagePolicies } from "@processor/queries/policyPermissions";
 import { useConnectGate } from "@processor/hooks/useConnectGate";
 import "@processor/views/Pipelines.css";
 
@@ -49,7 +49,7 @@ export function Pipelines() {
   const { guard } = useConnectGate();
 
   const listState = usePipelines();
-  const { data: overview, loading: overviewLoading } = listState;
+  const { data: overview } = listState;
   const { isLoading: listLoading } = useSectionFlags(listState);
 
   const catalogueState = usePoliciesOverview();
@@ -57,6 +57,12 @@ export function Pipelines() {
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
+  const {
+    canManage: canManagePolicies,
+    isLoading: permissionsLoading,
+    isError: permissionsError,
+    refetch: retryPermissions,
+  } = useCanManagePolicies();
 
   const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
@@ -153,7 +159,7 @@ export function Pipelines() {
       id: stored?.backendId,
       name: stored?.name ?? wire.name,
       icon: stored?.icon,
-      enabled: wire.enabled,
+      enabled: stored ? stored.status !== "paused" : wire.enabled,
       required: wire.required,
       inputs: [],
       steps: wire.steps,
@@ -172,7 +178,8 @@ export function Pipelines() {
   ) {
     setPageError(null);
     try {
-      await savePolicy(buildWireFromSetup(entry, result, t));
+      const enabled = entry.policy?.state.status !== "paused";
+      await savePolicy(buildWireFromSetup(entry, result, t, enabled));
       setWizard(null);
       setDetail(null);
       refetch();
@@ -258,12 +265,22 @@ export function Pipelines() {
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
+      {permissionsError && (
+        <Banner
+          tone="warning"
+          description={t("processor.pipelines.permissionsUnavailable")}
+          action={
+            <Button size="sm" variant="secondary" onClick={retryPermissions}>
+              {t("processor.pipelines.permissionsRetry")}
+            </Button>
+          }
+        />
+      )}
+
       <section className="processor-pipelines__all">
         <h2 className="processor-pipelines__section-title">
           {t("processor.pipelines.all.title")}
         </h2>
-
-        {hasPipelines && <KpiStrip data={overview} loading={overviewLoading} />}
 
         {listLoading && (
           <div className="processor-pipelines__table-skeleton" aria-hidden>
@@ -323,6 +340,8 @@ export function Pipelines() {
       <PolicyDetailPanel
         policy={detail?.policy ?? null}
         busy={busy}
+        canManagePolicies={canManagePolicies}
+        permissionsLoading={permissionsLoading}
         onClose={() => setDetail(null)}
         onEdit={handleEdit}
         onTogglePause={handleTogglePause}
@@ -332,6 +351,8 @@ export function Pipelines() {
 
       <PolicySetupWizard
         entry={wizard}
+        canManagePolicies={canManagePolicies}
+        permissionsLoading={permissionsLoading}
         onClose={() => setWizard(null)}
         onSubmit={handleSubmit}
         onCustomise={handleCustomise}

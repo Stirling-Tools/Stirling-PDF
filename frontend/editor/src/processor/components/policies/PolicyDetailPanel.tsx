@@ -17,6 +17,13 @@ import "@processor/views/Policies.css";
 interface PolicyDetailPanelProps {
   policy: DecoratedPolicy | null;
   busy?: boolean;
+  /** Whether the user may manage required policies; a required policy is read-only when false. */
+  canManagePolicies?: boolean;
+  /**
+   * The permission check has not resolved yet. Controls stay locked (fail-closed), but the
+   * manager-only note is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
   onClose: () => void;
   onEdit: () => void;
   onTogglePause: () => void;
@@ -99,6 +106,8 @@ function ActivityError({ message }: { message: string }) {
 export function PolicyDetailPanel({
   policy,
   busy = false,
+  canManagePolicies = true,
+  permissionsLoading = false,
   onClose,
   onEdit,
   onTogglePause,
@@ -110,13 +119,14 @@ export function PolicyDetailPanel({
   if (!policy) return null;
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
-  const canDelete = state.isDefault !== true;
+  const readOnly = !canManagePolicies;
+  const canDelete = state.isDefault !== true && !readOnly;
   // Editor participation is its own flag (runsOnEditor), not a source. A legacy policy still carries
   // "editor" in its stored sources until re-saved, so drop it here to count only real watched sources.
   const realSources = state.sources.filter((s) => s !== "editor");
   // Processed history only exists for watched sources; editor uploads are never ledgered.
   const canClearHistory =
-    onClearHistory !== undefined && realSources.length > 0;
+    onClearHistory !== undefined && realSources.length > 0 && !readOnly;
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
   const hasEditorSource = state.runsOnEditor === true;
@@ -138,6 +148,11 @@ export function PolicyDetailPanel({
         title={t(category.label)}
         footer={
           <div className="processor-policies__detail-foot">
+            {readOnly && !permissionsLoading && (
+              <span className="processor-policies__detail-readonly">
+                {t("processor.policies.detail.managerOnly")}
+              </span>
+            )}
             {canDelete && (
               <Button
                 variant="tertiary"
@@ -164,13 +179,13 @@ export function PolicyDetailPanel({
               variant="secondary"
               size="sm"
               onClick={onTogglePause}
-              disabled={busy}
+              disabled={busy || readOnly}
             >
               {isPaused
                 ? t("processor.policies.detail.actions.resume")
                 : t("processor.policies.detail.actions.pause")}
             </Button>
-            <Button size="sm" onClick={onEdit} disabled={busy}>
+            <Button size="sm" onClick={onEdit} disabled={busy || readOnly}>
               {t("processor.policies.detail.actions.editSettings")}
             </Button>
           </div>

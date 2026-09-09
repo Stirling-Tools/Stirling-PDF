@@ -167,16 +167,4 @@ describe("Sources view", () => {
     renderView("/processor/sources?tab=connections");
     expect(await screen.findByText("integrations view")).toBeInTheDocument();
   });
-
-  it("hides the KPI strip when only the editor exists", async () => {
-    fetchSources.mockResolvedValue({
-      kpis: RESPONSE.kpis,
-      sources: [RESPONSE.sources[0]],
-    });
-    renderView();
-    expect(
-      await screen.findByText("processor.sources.types.editor.label"),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("processor.sources.kpi.total")).toBeNull();
-  });
 });

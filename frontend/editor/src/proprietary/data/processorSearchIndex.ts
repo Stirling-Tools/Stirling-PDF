@@ -1,6 +1,9 @@
-import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
-// A static leaf module (its portal import is type-only), so it doesn't pull
-// the lazy portal chunk into the main bundle the way @processor/* values would.
+import {
+  PROCESSOR_BASENAME,
+  PROCESSOR_REVIEW_PATH,
+} from "@app/routes/processorBasename";
+// A static leaf module (its processor import is type-only), so it doesn't pull
+// the lazy processor chunk into the main bundle the way @processor/* values would.
 import { usersCapabilities } from "@app/processor/usersCapabilities";
 import type { ProcessorSearchEntry } from "@core/data/processorSearchIndex";
 import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
@@ -55,6 +58,13 @@ const VIEWS: ProcessorSearchEntry[] = [
     labelFallback: "Documents",
     path: `${PROCESSOR_BASENAME}/documents`,
     keywords: ["audit", "files"],
+  },
+  {
+    id: "review",
+    labelKey: "processor.nav.review",
+    labelFallback: "Review",
+    path: `${PROCESSOR_BASENAME}${PROCESSOR_REVIEW_PATH}`,
+    keywords: ["failures", "errors", "triage", "retry"],
   },
   {
     id: "integrations",

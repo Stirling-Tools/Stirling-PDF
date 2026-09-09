@@ -1,6 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
+import {
+  PROCESSOR_BASENAME,
+  PROCESSOR_REVIEW_PATH,
+} from "@app/routes/processorBasename";
 
 export type ViewId =
   | "home"
@@ -10,6 +13,7 @@ export type ViewId =
   | "policies"
   | "pipelines"
   | "documents"
+  | "review"
   | "infrastructure"
   | "usage"
   | "docs"
@@ -23,6 +27,8 @@ export const VIEW_PATHS: Record<ViewId, string> = {
   policies: "/policies",
   pipelines: "/pipelines",
   documents: "/documents",
+  // Shared with the notification action that deep-links here, which cannot import processor code.
+  review: PROCESSOR_REVIEW_PATH,
   infrastructure: "/infrastructure",
   usage: "/usage",
   docs: "/docs",

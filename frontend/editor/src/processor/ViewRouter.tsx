@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Home } from "@processor/views/Home";
 import { Users } from "@processor/views/Users";
 import { Documents } from "@processor/views/Documents";
+import { Review } from "@processor/views/Review";
 import { Pipelines } from "@processor/views/Pipelines";
 import { PipelineBuilder } from "@processor/views/PipelineBuilder";
 import { Sources } from "@processor/views/Sources";
@@ -81,6 +82,7 @@ export function ViewRouter() {
           path working, preserving its query (e.g. onboarding's ?setup=<category>). */}
       <Route path={rel(VIEW_PATHS.policies)} element={<PoliciesRedirect />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
+      <Route path={rel(VIEW_PATHS.review)} element={<Review />} />
       <Route
         path={rel(VIEW_PATHS.infrastructure)}
         element={<Infrastructure />}

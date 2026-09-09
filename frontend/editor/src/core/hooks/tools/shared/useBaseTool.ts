@@ -85,7 +85,10 @@ export function useBaseTool<
     useEndpointEnabled(params.getEndpointName());
 
   // Standard computed state - defined early so it's available in useEffects
-  const hasFiles = effectiveFiles.length >= minFiles;
+  const selectedFiles =
+    operation.getEligibleFiles?.(params.parameters, effectiveFiles) ??
+    effectiveFiles;
+  const hasFiles = selectedFiles.length >= minFiles;
   const hasResults =
     operation.files.length > 0 || operation.downloadUrl !== null;
   const settingsCollapsed = !hasFiles || hasResults;
@@ -145,6 +148,7 @@ export function useBaseTool<
 
   // Standard handlers
   const handleExecute = useCallback(async () => {
+    if (!hasFiles) return;
     try {
       await operation.executeOperation(params.parameters, effectiveFiles);
       if (operation.files && onComplete) {
@@ -163,6 +167,7 @@ export function useBaseTool<
     operation,
     params.parameters,
     effectiveFiles,
+    hasFiles,
     onComplete,
     onError,
     toolName,
@@ -189,7 +194,7 @@ export function useBaseTool<
 
   return {
     // File management
-    selectedFiles: effectiveFiles,
+    selectedFiles,
 
     // Tool-specific hooks
     params,

@@ -160,6 +160,7 @@ vi.mock("@processor/api/policies", async (importOriginal) => ({
 
 vi.mock("@processor/api/pipelines", () => ({
   fetchPipelines: vi.fn(),
+  fetchPolicyPermissions: () => Promise.resolve({ canManagePolicies: true }),
 }));
 
 vi.mock("@processor/api/sources", () => ({

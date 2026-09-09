@@ -6,26 +6,35 @@
  * a closed row whose actions come back disabled.
  */
 
-import type { FileRunEvent } from "@processor/api/fileRunEvents";
+import type {
+  FailureActionOffer,
+  FileRunEvent,
+} from "@processor/api/fileRunEvents";
 
 const HOUR = 3_600_000;
 
 /** Fixed base so fixtures are stable across renders and snapshots. */
 const NOW = Date.UTC(2026, 6, 31, 12, 0, 0);
 
-function acknowledgeOffer(enabled = true, labelKey?: string) {
+function acknowledgeOffer(enabled = true): FailureActionOffer {
   return {
     id: "ACKNOWLEDGE",
-    labelKey: labelKey ?? "processor.failures.action.acknowledge",
+    labelKey: "processor.failures.action.acknowledge",
+    defaultLabel: "Acknowledge",
+    execution: "SERVER",
+    slot: "SECONDARY",
     enabled,
     disabledReasonKey: enabled ? null : "processor.failures.disabled.closed",
   };
 }
 
-function dismissOffer(enabled = true, labelKey?: string) {
+function dismissOffer(enabled = true): FailureActionOffer {
   return {
     id: "DISMISS",
-    labelKey: labelKey ?? "processor.failures.action.dismiss",
+    labelKey: "processor.failures.action.dismiss",
+    defaultLabel: "Dismiss",
+    execution: "SERVER",
+    slot: "OVERFLOW",
     enabled,
     disabledReasonKey: enabled ? null : "processor.failures.disabled.closed",
   };
@@ -53,10 +62,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     occurrences: 1,
     status: "NEW",
     statusActor: null,
-    actions: [
-      acknowledgeOffer(true, "processor.failures.action.acknowledge"),
-      dismissOffer(true, "processor.failures.action.dismissSkipFile"),
-    ],
+    actions: [acknowledgeOffer(), dismissOffer()],
     createdAt: NOW - HOUR,
     lastSeenAt: NOW - HOUR,
   },
@@ -137,7 +143,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     statusActor: null,
     // A colleague's own upload. Nothing here acts on the document, so triage is just
     // acknowledging or clearing the row.
-    actions: [dismissOffer(true, "processor.failures.action.dismissSkipFile")],
+    actions: [dismissOffer()],
     createdAt: NOW - 4 * HOUR,
     lastSeenAt: NOW - 4 * HOUR,
   },
@@ -164,10 +170,7 @@ export const FILE_RUN_EVENTS: FileRunEvent[] = [
     occurrences: 3,
     status: "DISMISSED",
     statusActor: "ops@example.com",
-    actions: [
-      acknowledgeOffer(false, "processor.failures.action.acknowledge"),
-      dismissOffer(false, "processor.failures.action.dismissSkipFile"),
-    ],
+    actions: [acknowledgeOffer(false), dismissOffer(false)],
     createdAt: NOW - 30 * HOUR,
     lastSeenAt: NOW - 26 * HOUR,
   },

@@ -23,8 +23,8 @@ export const EDITOR_IS_SAME_APP =
  * served under /app) lands on /app/editor rather than the origin root. These
  * CTAs use window.location, which bypasses the router basename, so the base
  * path has to be baked in here. Targeting EDITOR_BASENAME rather than "/" also
- * keeps the switch out of the role-based router, which would bounce a processor
- * user straight back. For dev cross-app navigation to a separately-running
+ * keeps the switch out of the landing router at "/", which would bounce a
+ * processor user straight back. For dev cross-app navigation to a separately-running
  * editor, set VITE_EDITOR_URL in editor/.env.local.
  */
 export const EDITOR_URL = EDITOR_IS_SAME_APP

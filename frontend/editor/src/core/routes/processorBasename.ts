@@ -6,8 +6,5 @@
  */
 export const PROCESSOR_BASENAME = "/processor";
 
-/**
- * The recorded-failures section of the processor's Documents view. Here because whoever links to it and
- * whoever renders it are in different layers.
- */
-export const PROCESSOR_FAILURES_ANCHOR = "failures";
+/** Here because whoever links to the review screen and whoever renders it are in different layers. */
+export const PROCESSOR_REVIEW_PATH = "/review";

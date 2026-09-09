@@ -219,6 +219,13 @@ export const pipelinesHandlers = [
     ]);
   }),
 
+  // Policy-management permission. Mock mode presents the operator as a manager.
+  // Registered before "/:id" so "permissions" isn't read as a policy id.
+  http.get("/api/v1/policies/permissions", async () => {
+    await delay(60);
+    return HttpResponse.json({ canManagePolicies: true });
+  }),
+
   // Supporting files. Registered before the `/policies/:id` matcher so "assets" isn't read as an id.
   http.get("/api/v1/policies/assets", async () => {
     await delay(80);

@@ -13,6 +13,12 @@
   width: 100%;
 }
 
+.processor-policies__detail-readonly {
+  margin-right: auto;
+  color: var(--c-text-muted);
+  font-size: 0.8125rem;
+}
+
 .processor-policies__wizard-banner {
   margin-top: 0.75rem;
 }

@@ -38,6 +38,7 @@ const fetchPipeline = vi.fn();
 vi.mock("@processor/api/pipelines", () => ({
   fetchPipelines: () => fetchPipelines(),
   fetchPipeline: (id: string) => fetchPipeline(id),
+  fetchPolicyPermissions: () => Promise.resolve({ canManagePolicies: true }),
 }));
 
 import { Pipelines } from "@processor/views/Pipelines";

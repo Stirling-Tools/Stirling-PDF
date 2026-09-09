@@ -274,6 +274,18 @@ export async function mockAppApis(
     route.fulfill({ json: [] }),
   );
 
+  await page.route("**/api/v1/processing-folders", (route: Route) =>
+    route.fulfill({ json: [] }),
+  );
+
+  await page.route(
+    "**/api/v1/processing-folders/downloads-suggestion",
+    (route: Route) =>
+      route.fulfill({
+        json: { directory: "", available: false, pdfCount: 0, limit: 0 },
+      }),
+  );
+
   // The bell polls this on load. The hook swallows the failure, but the browser still logs the
   // request, which the console-hygiene guard counts.
   await page.route("**/api/v1/notifications*", (route: Route) =>

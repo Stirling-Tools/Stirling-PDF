@@ -11,7 +11,7 @@ import { ViewerContext } from "@app/contexts/ViewerContext";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
 import {
   PROCESSOR_BASENAME,
-  PROCESSOR_FAILURES_ANCHOR,
+  PROCESSOR_REVIEW_PATH,
 } from "@app/routes/processorBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { fileStorage } from "@app/services/fileStorage";
@@ -60,7 +60,7 @@ export {
 
 const HANDOFF_KEY = "stirling.notifications.pendingSelection";
 
-const FAILURES_DESTINATION = `${PROCESSOR_BASENAME}/documents#${PROCESSOR_FAILURES_ANCHOR}`;
+const REVIEW_DESTINATION = `${PROCESSOR_BASENAME}${PROCESSOR_REVIEW_PATH}`;
 
 /** The document to open on arrival, and the tool to open it into. */
 interface Handoff {
@@ -234,7 +234,7 @@ export function useNotificationActions(): ClientActionRegistry {
     ): Promise<ClientActionOutcome | void> => {
       if (!fileId) return;
 
-      // In place: "/" is the role-based router, which lands the user wherever their role says.
+      // In place: "/" is the landing router, which redirects wherever the account belongs.
       if (canOpenHere) {
         return (await openInWorkbench(fileId)) ? undefined : { ok: false };
       }
@@ -450,10 +450,9 @@ export function useNotificationActions(): ClientActionRegistry {
     };
 
     const viewInProcessor: ClientActionSpec = {
-      // Dev-only until failures get a review screen; processor/views/Documents holds the other half.
-      available: () => import.meta.env.DEV,
+      available: () => true,
       closesPanel: true,
-      run: () => navigate(FAILURES_DESTINATION),
+      run: () => navigate(REVIEW_DESTINATION),
     };
 
     return {
