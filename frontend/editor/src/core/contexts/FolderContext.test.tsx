@@ -72,11 +72,22 @@ vi.mock("@app/auth/UseSession", () => ({
 // Stateful IDB mock - the revision-driven refresh re-reads getAllFolders
 // after every state change, so a stateless [] mock would clobber pull results.
 const { mockIdb } = vi.hoisted(() => ({
-  mockIdb: { folders: [] as { id: string }[] },
+  mockIdb: {
+    folders: [] as { id: string }[],
+    nextReadGate: null as Promise<void> | null,
+    reads: 0,
+  },
 }));
 vi.mock("@app/services/folderStorage", () => ({
   folderStorage: {
-    getAllFolders: vi.fn(() => Promise.resolve([...mockIdb.folders])),
+    getAllFolders: vi.fn(async () => {
+      const snapshot = [...mockIdb.folders];
+      const gate = mockIdb.nextReadGate;
+      mockIdb.nextReadGate = null;
+      mockIdb.reads += 1;
+      if (gate) await gate;
+      return snapshot;
+    }),
     replaceAll: vi.fn((next: { id: string }[]) => {
       mockIdb.folders = [...next];
       return Promise.resolve();
@@ -279,6 +290,8 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     mockDelete.mockReset();
     // Reset the stateful IDB mock so each test starts with an empty cache.
     mockIdb.folders = [];
+    mockIdb.nextReadGate = null;
+    mockIdb.reads = 0;
     // Signed-in, non-anonymous user so pullFromServer runs.
     mockAuth.user = { id: "test-user", is_anonymous: false };
     mockAuth.isAnonymous = false;
@@ -367,6 +380,29 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       expect(screen.getByTestId("count").textContent).toBe("1"),
     );
     expect(screen.getByTestId("reachable").textContent).toBe("true");
+  });
+
+  test("a late initial cache read cannot replace a newer server snapshot", async () => {
+    const folder = makeFolder("server folder");
+    let releaseCacheRead: (() => void) | undefined;
+    mockIdb.nextReadGate = new Promise<void>((resolve) => {
+      releaseCacheRead = resolve;
+    });
+
+    const api = await setupWithFolders([folder]);
+    await waitFor(() => expect(mockIdb.reads).toBeGreaterThanOrEqual(2));
+
+    await act(async () => {
+      releaseCacheRead?.();
+    });
+
+    expect(screen.getByTestId("count").textContent).toBe("1");
+    mockUpdate.mockResolvedValueOnce({ ...folder, name: "renamed" });
+    let renamed: unknown;
+    await act(async () => {
+      renamed = await api.current.rename(folder.id, "renamed");
+    });
+    expect(renamed).toMatchObject({ name: "renamed" });
   });
 
   test("deleteFolder 404 is treated as already-deleted, returns [id], no banner", async () => {

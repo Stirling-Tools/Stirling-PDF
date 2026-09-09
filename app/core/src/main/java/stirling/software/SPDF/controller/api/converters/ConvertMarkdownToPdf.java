@@ -52,6 +52,7 @@ public class ConvertMarkdownToPdf {
     // A ZIP of Markdown plus its images is a first-class input here, not just a bare .md file.
     @ToolIO(
             accepts = {ToolFormat.MARKDOWN, ToolFormat.ZIP},
+            inputExtensions = {"md", "zip"},
             produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert a Markdown file to PDF",

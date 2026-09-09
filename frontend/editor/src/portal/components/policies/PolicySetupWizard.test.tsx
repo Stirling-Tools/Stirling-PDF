@@ -240,4 +240,56 @@ describe("PolicySetupWizard", () => {
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
     expect(result.runOn).toBe("export");
   });
+
+  it("locks the wizard for a non-manager", async () => {
+    // Only a manager (admin / team leader) may create or edit; a non-manager sees it read-only.
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        canManagePolicies={false}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("switch", {
+        name: "portal.pipelines.enforce.label",
+      }),
+    ).toBeDisabled();
+    expect(await screen.findByRole("button", { name: ENABLE })).toBeDisabled();
+  });
+
+  it("defaults a new template to a policy (blocking)", async () => {
+    // A template's failure should block the file, so a new one defaults to required, independent of
+    // who is creating it.
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.required).toBe(true);
+  });
 });
