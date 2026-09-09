@@ -53,4 +53,25 @@ class DownstreamProblemDetailTest {
     void returnsNullWhenThereIsNoBody() {
         assertThat(DownstreamProblemDetail.detailOf(response(null))).isNull();
     }
+
+    @Test
+    void returnsTheErrorCodeBesideTheDetail() {
+        String body =
+                """
+                {"type":"/errors/compliance-not-met","status":422,\
+                "detail":"Document is not PDF/A compliant","errorCode":"E074"}""";
+
+        assertThat(DownstreamProblemDetail.errorCodeOf(response(body))).isEqualTo("E074");
+    }
+
+    @Test
+    void returnsNullWhenTheFailureCarriesNoErrorCode() {
+        assertThat(DownstreamProblemDetail.errorCodeOf(response("{\"detail\":\"boom\"}"))).isNull();
+    }
+
+    @Test
+    void returnsNullErrorCodeWhenTheBodyIsNotJson() {
+        assertThat(DownstreamProblemDetail.errorCodeOf(response("<html>bad gateway</html>")))
+                .isNull();
+    }
 }

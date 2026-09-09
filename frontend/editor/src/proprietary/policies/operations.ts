@@ -4,7 +4,10 @@
  * policy - the catalogue can't reference an untyped operation.
  */
 
-import { describeToolOperation } from "@app/hooks/tools/shared/toolOperationDescriptor";
+import {
+  describeToolOperation,
+  type BidirectionalToolConfig,
+} from "@app/hooks/tools/shared/toolOperationDescriptor";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
 import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
@@ -33,17 +36,10 @@ export type IntegrationPolicyEndpoint =
   | "/api/v1/integration/purview-apply-label"
   | "/api/v1/integration/purview-read-label";
 
-/**
- * Gate steps: `@Hidden` controllers that hand the document back untouched and fail the run when it
- * must not pass. Hidden from OpenAPI, hence outside the generated union.
- */
-export type GatePolicyEndpoint = "/api/v1/security/validate-compliance";
-
 /** An endpoint typed here rather than by the generator. */
 export type UntypedPolicyEndpoint =
   | AiPolicyEndpoint
-  | IntegrationPolicyEndpoint
-  | GatePolicyEndpoint;
+  | IntegrationPolicyEndpoint;
 
 /** A tool usable in a policy whose endpoint isn't in the generated union. */
 export interface AiToolDescriptor<TParams> {
@@ -130,6 +126,34 @@ function oneOf<T extends string>(
     : fallback;
 }
 
+const COMPLIANCE_CHECK_ENDPOINT =
+  "/api/v1/security/validate-compliance" satisfies ToolEndpoint;
+
+// Annotated rather than inferred, as pdfaOperationConfig is: an unannotated object literal widens
+// `endpoint` to string, which no longer satisfies describeToolOperation's `CE extends ToolEndpoint`.
+const complianceCheckOperationConfig: BidirectionalToolConfig<
+  ComplianceCheckParameters,
+  typeof COMPLIANCE_CHECK_ENDPOINT
+> = {
+  endpoint: COMPLIANCE_CHECK_ENDPOINT,
+  defaultParameters: complianceCheckDefaultParameters,
+  toApiParams: (parameters: ComplianceCheckParameters) => ({ ...parameters }),
+  // A stored step may name a standard or verdict this UI does not offer; clamp to the fail-closed
+  // default rather than sending a value the backend rejects.
+  fromApiParams: (apiParams): Partial<ComplianceCheckParameters> => ({
+    standard: oneOf(
+      apiParams.standard,
+      COMPLIANCE_STANDARDS,
+      complianceCheckDefaultParameters.standard,
+    ),
+    onViolation: oneOf(
+      apiParams.onViolation,
+      COMPLIANCE_VIOLATION_ACTIONS,
+      complianceCheckDefaultParameters.onViolation,
+    ),
+  }),
+};
+
 export const POLICY_OPERATIONS = {
   redact: describeToolOperation(
     "/api/v1/security/auto-redact",
@@ -161,25 +185,12 @@ export const POLICY_OPERATIONS = {
   // Long-term archival format: embeds fonts and colour profiles so the document still renders the
   // same decades from now, which is what a retention or archival requirement actually asks for.
   pdfa: describeToolOperation("/api/v1/convert/pdf/pdfa", pdfaOperationConfig),
-  // The gate. Mappers are explicit because the values are a closed set: a stored step naming
+  // The gate. Mappers stay explicit because the values are a closed set: a stored step naming
   // something else is clamped to the default rather than reaching the backend.
-  complianceCheck: {
-    endpoint: "/api/v1/security/validate-compliance",
-    defaultParameters: complianceCheckDefaultParameters,
-    toApi: (params: ComplianceCheckParameters) => ({ ...params }),
-    fromApi: (api: Record<string, unknown>): ComplianceCheckParameters => ({
-      standard: oneOf(
-        api.standard,
-        COMPLIANCE_STANDARDS,
-        complianceCheckDefaultParameters.standard,
-      ),
-      onViolation: oneOf(
-        api.onViolation,
-        COMPLIANCE_VIOLATION_ACTIONS,
-        complianceCheckDefaultParameters.onViolation,
-      ),
-    }),
-  } satisfies AiToolDescriptor<ComplianceCheckParameters>,
+  complianceCheck: describeToolOperation(
+    "/api/v1/security/validate-compliance",
+    complianceCheckOperationConfig,
+  ),
   classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
   purviewApplyLabel: describeIntegrationOperation(
     "/api/v1/integration/purview-apply-label",

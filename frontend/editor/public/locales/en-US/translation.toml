@@ -9196,7 +9196,7 @@ desc = "Runs OCR so scanned pages become selectable, searchable text."
 label = "Make text searchable"
 
 [portal.policies.wizard.capability.pdfa]
-desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now."
+desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
 label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.redact]

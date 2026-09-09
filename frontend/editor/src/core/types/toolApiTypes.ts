@@ -1497,6 +1497,16 @@ export interface UrlToPdfRequest {
    */
   urlInput: string;
 }
+export interface ValidateComplianceRequest {
+  /**
+   * What to do when the document is not compliant: fail stops the run, warn logs and continues
+   */
+  onViolation?: "fail" | "warn";
+  /**
+   * Standard to validate against: auto (whatever the document declares) or pdfa. Anything else is rejected.
+   */
+  standard?: "auto" | "pdfa";
+}
 
 /** Endpoint path for a generated tool operation (the operation identity across languages). */
 export type ToolEndpoint =
@@ -1599,6 +1609,7 @@ export type ToolEndpoint =
   | "/api/v1/security/remove-password"
   | "/api/v1/security/sanitize-pdf"
   | "/api/v1/security/timestamp-pdf"
+  | "/api/v1/security/validate-compliance"
   | "/api/v1/security/validate-signature"
   | "/api/v1/security/verify-pdf";
 
@@ -1703,6 +1714,7 @@ export interface ToolApiParams {
   "/api/v1/security/remove-password": PDFPasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
+  "/api/v1/security/validate-compliance": ValidateComplianceRequest;
   "/api/v1/security/validate-signature": SignatureValidationRequest;
   "/api/v1/security/verify-pdf": PDFVerificationRequest;
 }
@@ -1808,6 +1820,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/remove-password",
   "/api/v1/security/sanitize-pdf",
   "/api/v1/security/timestamp-pdf",
+  "/api/v1/security/validate-compliance",
   "/api/v1/security/validate-signature",
   "/api/v1/security/verify-pdf",
 ] as const satisfies readonly ToolEndpoint[];

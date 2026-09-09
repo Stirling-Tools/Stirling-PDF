@@ -15,7 +15,7 @@ import org.verapdf.core.EncryptedPdfException;
 import org.verapdf.core.ModelParsingException;
 import org.verapdf.core.ValidationException;
 
-import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,9 +31,8 @@ import stirling.software.common.util.WebResponseUtils;
 
 /**
  * Pipeline-shaped sibling of /verify-pdf, whose JSON answer the policy executor reads as "no files"
- * and so empties the chain. Hidden from OpenAPI: an internal policy gate, not a user-facing tool.
+ * and so empties the chain. This one hands the document back, so it composes as a pipeline step.
  */
-@Hidden
 @SecurityApi
 @RequiredArgsConstructor
 @Slf4j
@@ -55,14 +54,20 @@ public class ValidateComplianceController {
 
     @PostMapping(value = "/validate-compliance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ToolIO(produces = ToolFormat.PDF)
+    @Operation(
+            summary = "Check a PDF meets a compliance standard",
+            description =
+                    "Validates the document against a published standard and returns it unchanged"
+                            + " when it holds up. A document that misses the standard fails the"
+                            + " request, so this composes as the last step of a pipeline that must"
+                            + " not deliver a non-compliant file.")
     public ResponseEntity<byte[]> validateCompliance(
             @ModelAttribute ValidateComplianceRequest request) throws IOException {
 
         MultipartFile file = request.getFileInput();
 
         if (file == null || file.isEmpty()) {
-            throw ExceptionUtils.createRuntimeException(
-                    "error.pdfRequired", "PDF file is required", null);
+            throw ExceptionUtils.createPdfFileRequiredException();
         }
 
         String standard = resolveStandard(request.getStandard());
@@ -75,28 +80,14 @@ public class ValidateComplianceController {
             // Read once: the same bytes feed validation and the pass-through response.
             bytes = file.getBytes();
             results = veraPDFService.validatePDF(new ByteArrayInputStream(bytes));
-        } catch (ValidationException e) {
-            log.error("Validation exception for file: {}", filename, e);
-            throw ExceptionUtils.createRuntimeException(
-                    "error.validationFailed", "PDF validation failed: {0}", e, e.getMessage());
-        } catch (ModelParsingException e) {
-            log.error("Model parsing exception for file: {}", filename, e);
-            throw ExceptionUtils.createRuntimeException(
-                    "error.modelParsingFailed", "PDF model parsing failed: {0}", e, e.getMessage());
+        } catch (ValidationException | ModelParsingException e) {
+            // Typed, not a bare RuntimeException: an uncoded one is rendered as "an unexpected
+            // error occurred", losing the sentence that says which document is unreadable.
+            log.error("Could not parse '{}' for compliance validation", filename, e);
+            throw ExceptionUtils.createPdfCorruptedException("during compliance validation", e);
         } catch (EncryptedPdfException e) {
-            log.error("Encrypted PDF exception for file: {}", filename, e);
-            throw ExceptionUtils.createRuntimeException(
-                    "error.encryptedPdf",
-                    "Cannot verify encrypted PDF. Please remove password first: {0}",
-                    e,
-                    e.getMessage());
-        } catch (IOException e) {
-            log.error("IO exception for file: {}", filename, e);
-            throw ExceptionUtils.createRuntimeException(
-                    "error.ioException",
-                    "IO error during PDF verification: {0}",
-                    e,
-                    e.getMessage());
+            log.error("Cannot validate compliance of encrypted file: {}", filename, e);
+            throw ExceptionUtils.createPdfEncryptionException(e);
         }
 
         List<PDFVerificationResult> checked =

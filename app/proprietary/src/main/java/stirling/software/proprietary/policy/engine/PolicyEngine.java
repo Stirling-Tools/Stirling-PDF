@@ -352,7 +352,9 @@ public class PolicyEngine {
                 } else {
                     String message = "Policy run failed: " + downstreamMessage(e);
                     log.error("Policy run {} failed (downstream HTTP error)", runId, e);
-                    run.fail(message);
+                    // Carry the tool's own error code onto the run, so a client sees the same
+                    // code the review surface classifies the failure on.
+                    run.failWithCode(message, DownstreamProblemDetail.errorCodeOf(e), null);
                     taskManager.setError(runId, message);
                     recordFailure(run, message, e);
                 }

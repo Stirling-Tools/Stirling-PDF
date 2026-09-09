@@ -146,7 +146,7 @@ const CAPABILITY_META: Record<
     labelEn: "Convert to PDF/A for archiving",
     descKey: "portal.policies.wizard.capability.pdfa.desc",
     descEn:
-      "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now.",
+      "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures.",
   },
   complianceCheck: {
     labelKey: "portal.policies.wizard.capability.complianceCheck.label",
