@@ -198,9 +198,22 @@ export const useToolOperation = <TParams>(
     [config.endpoint, selectors],
   );
 
+  const eligibleFilesRef = useRef<StirlingFile[]>([]);
   const getEligibleFiles = useCallback(
-    (params: TParams, selectedFiles: StirlingFile[]) =>
-      getCompatibleFiles(params, selectedFiles).filter((file) => file.size > 0),
+    (params: TParams, selectedFiles: StirlingFile[]) => {
+      const eligibleFiles = getCompatibleFiles(params, selectedFiles).filter(
+        (file) => file.size > 0,
+      );
+      const previous = eligibleFilesRef.current;
+      if (
+        eligibleFiles.length === previous.length &&
+        eligibleFiles.every((file, index) => file === previous[index])
+      ) {
+        return previous;
+      }
+      eligibleFilesRef.current = eligibleFiles;
+      return eligibleFiles;
+    },
     [getCompatibleFiles],
   );
 

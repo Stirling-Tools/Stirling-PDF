@@ -1,6 +1,6 @@
 import { createContext, type ReactNode } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, renderHook, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import Compress from "@app/tools/Compress";
@@ -12,6 +12,7 @@ import type { ConvertParameters } from "@app/hooks/tools/convert/useConvertParam
 import type { ToolAutomationSettingsProps } from "@app/hooks/tools/shared/toolOperationTypes";
 import {
   createNewStirlingFileStub,
+  createStirlingFile,
   type StirlingFile,
   type StirlingFileStub,
 } from "@app/types/fileContext";
@@ -23,6 +24,7 @@ import {
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useCompressOperation } from "@app/hooks/tools/compress/useCompressOperation";
+import { defaultParameters as compressParameters } from "@app/hooks/tools/compress/useCompressParameters";
 
 const workspace = {
   files: [] as StirlingFile[],
@@ -36,9 +38,16 @@ const selectors = {
 };
 const loadRecentFiles = vi.fn().mockResolvedValue([]);
 const onFileClick = vi.fn();
+const onPreviewRender = vi.fn();
+
+const pdfWorker = vi.hoisted(() => ({
+  createDocument: vi.fn(),
+  destroyDocument: vi.fn(),
+}));
 
 function FilePreviews() {
   const eligibleFileIds = useToolEligibleFileIds();
+  onPreviewRender();
   return workspace.files.map((file) => (
     <FileItem
       key={file.fileId}
@@ -103,11 +112,8 @@ vi.mock("@app/hooks/useEndpointConfig", () => ({
 vi.mock("@app/hooks/useBackendHealth", () => ({
   useBackendHealth: () => ({ isOnline: true }),
 }));
-vi.mock("@app/hooks/usePdfSignatureDetection", () => ({
-  usePdfSignatureDetection: () => ({
-    hasDigitalSignatures: false,
-    isChecking: false,
-  }),
+vi.mock("@app/services/pdfWorkerManager", () => ({
+  pdfWorkerManager: pdfWorker,
 }));
 vi.mock("react-i18next", () => ({
   initReactI18next: { type: "3rdParty", init: vi.fn() },
@@ -167,6 +173,7 @@ vi.mock("@app/components/tools/convert/ConvertSettings", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  pdfWorker.createDocument.mockResolvedValue({ numPages: 0 });
   viewer.activeFileIndex = 0;
   navigation.workbench = "fileEditor";
   workspace.files = [
@@ -179,6 +186,75 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("eligible selections keep their identity until file objects or order change", () => {
+    const secondPdf = createTestStirlingFile(
+      "second.pdf",
+      "pdf",
+      "application/pdf",
+    );
+    workspace.files.push(secondPdf);
+    workspace.fileStubs.push(
+      createNewStirlingFileStub(secondPdf, secondPdf.fileId),
+    );
+    const { result, rerender } = renderHook(useCompressOperation);
+    const first = result.current.getEligibleFiles?.(
+      compressParameters,
+      workspace.files,
+    );
+    expect(first).toEqual([workspace.files[0], secondPdf]);
+
+    rerender();
+    expect(
+      result.current.getEligibleFiles?.(
+        { ...compressParameters, compressionLevel: 7 },
+        [...workspace.files],
+      ),
+    ).toBe(first);
+
+    const reversed = result.current.getEligibleFiles?.(
+      compressParameters,
+      [...workspace.files].reverse(),
+    );
+    expect(reversed).toEqual([secondPdf, workspace.files[0]]);
+    expect(reversed).not.toBe(first);
+  });
+
+  test("typing Convert settings does not rerender previews or rescan an unchanged PDF", async () => {
+    const renderConvert = () => (
+      <MantineProvider>
+        <ToolFileEligibilityProvider>
+          <FilePreviews />
+          <Convert />
+        </ToolFileEligibilityProvider>
+      </MantineProvider>
+    );
+    const view = render(renderConvert());
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "pdf to pdfua" }));
+    await waitFor(() => expect(pdfWorker.destroyDocument).toHaveBeenCalled());
+    const previewRenders = onPreviewRender.mock.calls.length;
+
+    await user.type(
+      screen.getByRole("textbox", { name: "Document title" }),
+      "Updated title",
+    );
+    expect(pdfWorker.createDocument).toHaveBeenCalledTimes(1);
+    expect(onPreviewRender).toHaveBeenCalledTimes(previewRenders);
+
+    const original = workspace.files[0];
+    workspace.files = [
+      createStirlingFile(
+        new File(["updated pdf"], original.name, { type: original.type }),
+        original.fileId,
+      ),
+      workspace.files[1],
+    ];
+    view.rerender(renderConvert());
+    await waitFor(() =>
+      expect(pdfWorker.destroyDocument).toHaveBeenCalledTimes(2),
+    );
+  });
+
   test("Merge requires two eligible PDFs and follows encryption changes", async () => {
     const renderMerge = () => (
       <MantineProvider>
