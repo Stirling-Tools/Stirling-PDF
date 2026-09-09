@@ -26,33 +26,13 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const loading = authLoading || configLoading || backendProbe.loading;
+  // The probe gates only the signed-out backend-down screen: a session means
+  // /auth/me already answered.
+  const loading = authLoading || configLoading;
+  const probePending = backendProbe.loading;
 
   // The backend-down screen is not the app. Loading is: it resolves in a moment.
   useSuppressQuickNavRail(!session && backendProbe.status !== "up");
-
-  // Debug: Track Landing component lifecycle
-  useEffect(() => {
-    const mountId = Math.random().toString(36).substring(7);
-    console.log(
-      `[Landing:${mountId}] 🔵 Component mounted at ${location.pathname}`,
-    );
-    console.log(`[Landing:${mountId}] Mount state:`, {
-      authLoading,
-      configLoading,
-      backendLoading: backendProbe.loading,
-      hasSession: !!session,
-    });
-    return () => {
-      console.log(`[Landing:${mountId}] 🔴 Component unmounting`);
-    };
-  }, [
-    location.pathname,
-    authLoading,
-    configLoading,
-    backendProbe.loading,
-    session,
-  ]);
 
   // Periodically probe while backend isn't up so the screen can auto-advance when it comes online
   useEffect(() => {
@@ -80,29 +60,8 @@ export default function Landing() {
     refetch,
   ]);
 
-  useEffect(() => {
-    if (backendProbe.status === "up") {
-      void refetch();
-    }
-  }, [backendProbe.status, refetch]);
-
-  console.log("[Landing] ════════════════════════════════════");
-  console.log("[Landing] Render state:", {
-    pathname: location.pathname,
-    loading,
-    authLoading,
-    configLoading,
-    backendLoading: backendProbe.loading,
-    hasSession: !!session,
-    hasConfig: !!config,
-    loginEnabled: config?.enableLogin === true && !backendProbe.loginDisabled,
-    backendStatus: backendProbe.status,
-    timestamp: new Date().toISOString(),
-  });
-  console.log("[Landing] ════════════════════════════════════");
-
   // Show loading while checking auth and config
-  if (loading) {
+  if (loading || (!session && probePending)) {
     return (
       <div
         style={{
@@ -124,7 +83,6 @@ export default function Landing() {
 
   // If login is disabled, show app directly (anonymous mode)
   if (config?.enableLogin === false || backendProbe.loginDisabled) {
-    console.debug("[Landing] Login disabled - showing app in anonymous mode");
     return <HomePage />;
   }
 

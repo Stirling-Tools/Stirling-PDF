@@ -1,4 +1,5 @@
 import apiClient from "@app/services/apiClient";
+import { JWT_STORAGE_KEY } from "@app/auth/spring/springAuthClient";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 
@@ -37,6 +38,19 @@ export async function resolveLandingPath(): Promise<string> {
 }
 
 export async function fetchRootDestination(): Promise<RootDestination> {
+  // No stored token: the /me call would only 401, so skip it. This assumes the
+  // JWT-only model (getSession also yields no session without it); a future
+  // cookie-session flow must revisit this gate or signed-in users misroute.
+  try {
+    if (
+      typeof window !== "undefined" &&
+      !window.localStorage.getItem(JWT_STORAGE_KEY)
+    ) {
+      return "signedOut";
+    }
+  } catch {
+    // Storage blocked: fall through to the network check.
+  }
   let user: MeUser | undefined;
   try {
     const me = await apiClient.get<{ user?: MeUser }>("/api/v1/auth/me", {

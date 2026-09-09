@@ -5472,7 +5472,6 @@ unexpectedError = "Unexpected error: {{message}}"
 updatePassword = "Update password"
 useMagicLink = "Use magic link instead"
 username = "Username"
-youAreLoggedIn = "You are logged in!"
 
 [margin]
 large = "Large"
