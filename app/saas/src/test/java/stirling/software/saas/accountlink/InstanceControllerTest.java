@@ -24,7 +24,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
 import stirling.software.proprietary.billing.UnitCalcPolicy;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.InstanceController.EntitlementResponse;
+import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
@@ -113,6 +115,30 @@ class InstanceControllerTest {
         assertThat(body.freeRemainingUnits()).isEqualTo(500L);
         assertThat(body.periodCapUnits()).isNull();
         assertThat(body.state()).isEqualTo("OK");
+    }
+
+    /**
+     * The bug this closes: users.team_id points at the personal team until an invitation is
+     * accepted, so a solo account's team published a ceiling of 1 and the instance refused every
+     * user creation from then on. Only a purchased allowance reaches the wire.
+     */
+    @Test
+    void entitlement_reportsOnlyAPurchasedAllowance() {
+        Authentication token = new LinkedInstanceAuthenticationToken(4L, 9L);
+        when(billingService.forTeam(9L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(9L))
+                .thenReturn(snapshot(EntitlementState.FULL, 0L, null));
+        when(pricingPolicyService.getEffectivePolicy(9L)).thenReturn(policy());
+
+        SaasTeamExtensions free = new SaasTeamExtensions();
+        free.setMaxSeats(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+        when(teamExtensionsRepository.findByTeamId(9L)).thenReturn(Optional.of(free));
+        assertThat(controller().entitlement(token).getBody().licensedUsers()).isNull();
+
+        SaasTeamExtensions purchased = new SaasTeamExtensions();
+        purchased.setMaxSeats(300);
+        when(teamExtensionsRepository.findByTeamId(9L)).thenReturn(Optional.of(purchased));
+        assertThat(controller().entitlement(token).getBody().licensedUsers()).isEqualTo(300);
     }
 
     @Test

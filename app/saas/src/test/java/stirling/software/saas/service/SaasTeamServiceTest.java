@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
@@ -170,7 +171,13 @@ class SaasTeamServiceTest {
 
             assertThat(result).isSameAs(saved);
             verify(saasTeamExtensionService).setPersonal(saved, true);
-            verify(saasTeamExtensionService).setSeats(saved, 1, 1);
+            // The free allowance, not 1: a linked instance reads this number as its own user
+            // ceiling, and a 1 there refused every user it tried to create.
+            verify(saasTeamExtensionService)
+                    .setSeats(
+                            saved,
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT);
             verify(saasTeamExtensionService).setCreatedByUserId(saved, 1L);
             verify(saasTeamExtensionsRepository).incrementSeatsUsed(50L);
 
@@ -285,7 +292,7 @@ class SaasTeamServiceTest {
         }
 
         @Test
-        @DisplayName("converts a personal team to standard (unlimited seats) on first invitation")
+        @DisplayName("converts a personal team to standard on first invitation")
         void personalTeam_convertedToStandard() {
             Team t = team(teamId, "My Team");
             User inviter = user(1L, "a@x.com", "alice");
@@ -304,7 +311,14 @@ class SaasTeamServiceTest {
             service.inviteUserToTeam(teamId, "b@x.com", inviter);
 
             verify(saasTeamExtensionService).setPersonal(t, false);
-            verify(saasTeamExtensionService).setSeats(t, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            // Converting buys no capacity, so the column keeps stating the free allowance rather
+            // than the unlimited sentinel. Invitations past it still go through: capacity is
+            // short-circuited for standard teams.
+            verify(saasTeamExtensionService)
+                    .setSeats(
+                            t,
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         }
 
         @Test

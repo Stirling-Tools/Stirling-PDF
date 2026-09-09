@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 
@@ -58,8 +59,16 @@ public class SaasTeamExtensionService {
                 .orElse(0);
     }
 
+    /**
+     * Users the team is allowed, raw. A team with no row has bought nothing, so it reads as the
+     * free allowance -- the same value a lazily-created row carries. Callers deciding whether a
+     * team holds a purchased allowance want {@link SaasTeamExtensions#licensedUsers()} instead.
+     */
     public int getMaxSeats(Team team) {
-        return repository.findByTeamId(team.getId()).map(SaasTeamExtensions::getMaxSeats).orElse(1);
+        return repository
+                .findByTeamId(team.getId())
+                .map(SaasTeamExtensions::getMaxSeats)
+                .orElse(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
     }
 
     public Long getCreatedByUserId(Team team) {

@@ -21,6 +21,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
@@ -126,7 +127,13 @@ public class SaasTeamService {
         Team savedTeam = teamRepository.save(team);
 
         saasTeamExtensionService.setPersonal(savedTeam, true);
-        saasTeamExtensionService.setSeats(savedTeam, 1, 1);
+        // The free allowance, not 1. max_seats means "users this team is allowed", and a signup
+        // gets the same free users as any other installation; a linked instance reads this number
+        // as its own ceiling, so a 1 here would refuse every user it tried to create.
+        saasTeamExtensionService.setSeats(
+                savedTeam,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         saasTeamExtensionService.setCreatedByUserId(savedTeam, user.getId());
         saasTeamExtensionsRepository.incrementSeatsUsed(savedTeam.getId());
 
@@ -243,8 +250,14 @@ public class SaasTeamService {
                     team.getName(),
                     inviter.getUsername());
             saasTeamExtensionService.setPersonal(team, false);
-            // Unlimited seats once converted to standard
-            saasTeamExtensionService.setSeats(team, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            // The free allowance, not the unlimited sentinel. Converting does not buy capacity, so
+            // the column keeps stating what the team is allowed; a Team subscription overwrites it
+            // with the real number. Invitations past the allowance still go through, because
+            // capacity is short-circuited for standard teams -- enforcement is a separate change.
+            saasTeamExtensionService.setSeats(
+                    team,
+                    UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                    UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         }
 
         // Validate: team can invite (not personal, has available seats)

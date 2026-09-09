@@ -23,6 +23,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 /**
  * Saas-only sidecar that holds the seat / billing / personal-team metadata for a {@link Team}.
@@ -66,13 +67,18 @@ public class SaasTeamExtensions implements Serializable {
     private Boolean isPersonal = Boolean.FALSE;
 
     @Column(name = "seat_count", nullable = false)
-    private Integer seatCount = 1;
+    private Integer seatCount = UserLicenseSettingsService.DEFAULT_USER_LIMIT;
 
     @Column(name = "seats_used", nullable = false)
     private Integer seatsUsed = 0;
 
+    /**
+     * Users this team is allowed. Rows are created lazily for teams that have bought nothing, so
+     * the default is the free allowance rather than a placeholder: read it through {@link
+     * #licensedUsers()}, which is what tells a purchased allowance from that floor.
+     */
     @Column(name = "max_seats", nullable = false)
-    private Integer maxSeats = 1;
+    private Integer maxSeats = UserLicenseSettingsService.DEFAULT_USER_LIMIT;
 
     @Column(name = "created_by_user_id")
     private Long createdByUserId;
@@ -100,8 +106,8 @@ public class SaasTeamExtensions implements Serializable {
     }
 
     /**
-     * Whether this team has unused seats. Personal teams enforce a 1-seat limit; standard teams are
-     * unlimited.
+     * Whether this team has unused seats. Personal teams are bound by {@code max_seats}; standard
+     * teams are unlimited, because cloud capacity is not enforced yet.
      */
     public boolean hasAvailableSeats() {
         if (isPersonal()) {
@@ -111,10 +117,34 @@ public class SaasTeamExtensions implements Serializable {
     }
 
     /**
-     * Whether this team accepts new invitations. Personal teams (1 seat, owned by one user) never
-     * do; standard teams always do.
+     * Whether this team accepts new invitations. Personal teams (a single user's own team) never
+     * do; standard teams always do. The first invitation converts the team rather than being
+     * refused — see {@code SaasTeamService.inviteUserToTeam}.
      */
     public boolean canInviteMembers() {
         return !isPersonal();
+    }
+
+    /**
+     * Users this team is allowed, or null when {@code max_seats} holds no purchased allowance. The
+     * one place that judgement is made, so the wallet, the linked-instance entitlement and the
+     * Users page cannot disagree about what the column is saying.
+     *
+     * <p>Null covers everything that is not an allowance. Team sells in blocks of 100 and every
+     * team gets {@link UserLicenseSettingsService#DEFAULT_USER_LIMIT} users free, so a value at or
+     * below that was never purchased and could restrict nothing if it were. {@link
+     * Integer#MAX_VALUE} is the historic unlimited sentinel; returning it would let a caller do
+     * arithmetic on it, and no-limit is expressed as absence.
+     *
+     * <p>Enforcement does not go through here: {@link #hasAvailableSeats()} still compares the raw
+     * column, which is deliberate while cloud capacity is unenforced for standard teams.
+     */
+    public Integer licensedUsers() {
+        if (maxSeats == null
+                || maxSeats <= UserLicenseSettingsService.DEFAULT_USER_LIMIT
+                || maxSeats >= Integer.MAX_VALUE) {
+            return null;
+        }
+        return maxSeats;
     }
 }

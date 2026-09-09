@@ -9,6 +9,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 /** Constructor, defaults, accessor, and seat/personal-team branch tests for SaasTeamExtensions. */
 class SaasTeamExtensionsTest {
@@ -19,9 +20,12 @@ class SaasTeamExtensionsTest {
         SaasTeamExtensions ext = new SaasTeamExtensions();
         assertThat(ext.getTeamType()).isEqualTo(SaasTeamExtensions.TEAM_TYPE_STANDARD);
         assertThat(ext.getIsPersonal()).isFalse();
-        assertThat(ext.getSeatCount()).isEqualTo(1);
         assertThat(ext.getSeatsUsed()).isZero();
-        assertThat(ext.getMaxSeats()).isEqualTo(1);
+        // A lazily-created row has bought nothing, so it holds the free allowance rather than a
+        // placeholder -- which licensedUsers() then reports as no allowance.
+        assertThat(ext.getSeatCount()).isEqualTo(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+        assertThat(ext.getMaxSeats()).isEqualTo(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+        assertThat(ext.licensedUsers()).isNull();
         assertThat(ext.isPersonal()).isFalse();
     }
 
@@ -132,6 +136,60 @@ class SaasTeamExtensionsTest {
             SaasTeamExtensions personal = new SaasTeamExtensions();
             personal.setIsPersonal(Boolean.TRUE);
             assertThat(personal.canInviteMembers()).isFalse();
+        }
+    }
+
+    /**
+     * The boundaries that decide whether {@code max_seats} is reporting a purchased allowance. Four
+     * things have written that column, so these pin which values are allowances and which are not.
+     */
+    @Nested
+    @DisplayName("licensedUsers")
+    class LicensedUsers {
+
+        private SaasTeamExtensions withMaxSeats(Integer maxSeats) {
+            SaasTeamExtensions ext = new SaasTeamExtensions();
+            ext.setMaxSeats(maxSeats);
+            return ext;
+        }
+
+        @Test
+        @DisplayName("null column states no allowance")
+        void nullIsNoAllowance() {
+            assertThat(withMaxSeats(null).licensedUsers()).isNull();
+        }
+
+        @Test
+        @DisplayName("the personal-team 1 states no allowance")
+        void personalTeamSentinel() {
+            assertThat(withMaxSeats(1).licensedUsers()).isNull();
+        }
+
+        @Test
+        @DisplayName("exactly the free allowance states no allowance")
+        void freeAllowanceIsNotPurchased() {
+            assertThat(withMaxSeats(UserLicenseSettingsService.DEFAULT_USER_LIMIT).licensedUsers())
+                    .isNull();
+        }
+
+        @Test
+        @DisplayName("one above the free allowance is a real allowance")
+        void justAboveTheFloorCounts() {
+            int justAbove = UserLicenseSettingsService.DEFAULT_USER_LIMIT + 1;
+            assertThat(withMaxSeats(justAbove).licensedUsers()).isEqualTo(justAbove);
+        }
+
+        @Test
+        @DisplayName("a purchased block reports its size")
+        void purchasedBlock() {
+            assertThat(withMaxSeats(300).licensedUsers()).isEqualTo(300);
+        }
+
+        /** Returning it would let a caller add to it; no-limit is expressed as absence. */
+        @Test
+        @DisplayName("the unlimited sentinel states no allowance")
+        void unlimitedSentinel() {
+            assertThat(withMaxSeats(Integer.MAX_VALUE).licensedUsers()).isNull();
         }
     }
 }
