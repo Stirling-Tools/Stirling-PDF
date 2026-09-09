@@ -47,6 +47,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunRegistry;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
@@ -420,7 +421,7 @@ class PolicyControllerTest {
             when(jobOwnershipService.createScopedJobKey("owned")).thenReturn("owned");
             when(jobOwnershipService.createScopedJobKey("other")).thenReturn("scoped-other");
 
-            List<PolicyRunView> views = controller.listRuns();
+            List<PolicyRunView> views = controller.listRuns(null);
 
             assertThat(views).hasSize(1);
             assertThat(views.get(0).runId()).isEqualTo("owned");
@@ -448,6 +449,23 @@ class PolicyControllerTest {
             assertThat(response.getBody().teamId()).isEqualTo(7L);
             verify(policyValidator).validate(any());
             verify(policyTriggerManager).notifyPoliciesChanged();
+        }
+
+        @Test
+        @DisplayName("a client-supplied surface is overwritten server-side")
+        void surfaceIsServerStamped() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+            when(policyAccessGuard.ownerForNewPolicy()).thenReturn("alice");
+            when(policyAccessGuard.teamForNewPolicy()).thenReturn(7L);
+            when(policyStore.save(any())).thenAnswer(i -> i.getArgument(0));
+
+            Policy incoming = policy(null, null).withSurface("processing-folder");
+            ResponseEntity<Policy> response = controller.savePolicy(incoming);
+
+            // A forged folder-surface row would be operable through the folders API yet
+            // invisible to team management.
+            assertThat(response.getBody().surface()).isEqualTo(Policy.SURFACE_POLICY);
         }
 
         @Test
@@ -512,7 +530,8 @@ class PolicyControllerTest {
                             null,
                             List.of(),
                             null,
-                            null);
+                            null,
+                            Policy.SURFACE_POLICY);
 
             assertThatThrownBy(() -> controller.savePolicy(withUnknownSource))
                     .isInstanceOf(ResponseStatusException.class)
@@ -607,6 +626,16 @@ class PolicyControllerTest {
             List<Policy> result = controller.listPolicies();
 
             assertThat(result).hasSize(2);
+        }
+
+        @Test
+        @DisplayName("a processing-folder row is invisible to the policies surface")
+        void getRefusesAProcessingFolderRow() {
+            Policy pair = policy("f", 1L).withSurface(Policy.SURFACE_PROCESSING_FOLDER);
+            when(policyStore.get("f")).thenReturn(Optional.of(pair));
+
+            // Even its owner cannot reach it here; only the folder route serves it.
+            assertThat(controller.getPolicy("f").getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
         }
 
         @Test
@@ -915,8 +944,8 @@ class PolicyControllerTest {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            SweepOutcome outcome = new SweepOutcome(List.of("run-a", "run-b"), 3, 1, 0, 0);
-            when(policyRunner.run(p)).thenReturn(outcome);
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a", "run-b"), 3, 1, 0, 0, 0);
+            when(policyRunner.run(p, SweepKind.USER)).thenReturn(outcome);
 
             ResponseEntity<SweepOutcome> response = controller.trigger("a");
 
@@ -964,8 +993,8 @@ class PolicyControllerTest {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0);
-            when(policyRunner.run(p)).thenReturn(outcome);
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0, 0);
+            when(policyRunner.run(p, SweepKind.USER)).thenReturn(outcome);
 
             ResponseEntity<SweepOutcome> response = controller.trigger("a");
 
@@ -983,8 +1012,8 @@ class PolicyControllerTest {
             Policy p = policy("a", null);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0);
-            when(policyRunner.run(p)).thenReturn(outcome);
+            SweepOutcome outcome = new SweepOutcome(List.of("run-a"), 1, 0, 0, 0, 0);
+            when(policyRunner.run(p, SweepKind.USER)).thenReturn(outcome);
 
             assertThat(controller.trigger("a").getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             verify(policyManagementAuthority, never()).canTriggerPolicies();

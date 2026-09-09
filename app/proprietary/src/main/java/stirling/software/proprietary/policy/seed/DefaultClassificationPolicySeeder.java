@@ -118,6 +118,7 @@ public class DefaultClassificationPolicySeeder {
                 List.of(),
                 teamId,
                 // Classification runs in the editor on every upload.
-                EditorConfig.onUpload());
+                EditorConfig.onUpload(),
+                Policy.SURFACE_POLICY);
     }
 }

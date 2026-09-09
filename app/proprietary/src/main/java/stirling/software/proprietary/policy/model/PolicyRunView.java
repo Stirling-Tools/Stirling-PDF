@@ -21,7 +21,13 @@ public record PolicyRunView(
         Boolean errorSubscribed,
         List<ResultFile> outputs,
         /** When the run was created, epoch millis, so a rediscovered run shows its real age. */
-        long createdAt) {
+        long createdAt,
+        /**
+         * The input document's display name, when the run's source recorded one — a client showing
+         * live runs needs something to call them before any output exists. Null for uploads and
+         * cross-node views, whose identity is not name-shaped.
+         */
+        String fileName) {
 
     public static PolicyRunView of(PolicyRun run) {
         return new PolicyRunView(
@@ -34,7 +40,21 @@ public record PolicyRunView(
                 run.getErrorCode(),
                 run.getErrorSubscribed(),
                 run.getOutputs(),
-                run.getCreatedAt().toEpochMilli());
+                run.getCreatedAt().toEpochMilli(),
+                fileNameOf(run.getFileIdentity()));
+    }
+
+    /**
+     * The trailing path segment of a path-shaped file identity (a folder source's identity is the
+     * document's absolute path). Identities that aren't path-shaped pass through whole — for a
+     * storage source that is still a recognisable reference, and null stays null.
+     */
+    private static String fileNameOf(String fileIdentity) {
+        if (fileIdentity == null || fileIdentity.isBlank()) {
+            return null;
+        }
+        int cut = Math.max(fileIdentity.lastIndexOf('/'), fileIdentity.lastIndexOf('\\'));
+        return cut < 0 ? fileIdentity : fileIdentity.substring(cut + 1);
     }
 
     /** Cross-node view from a shared job-store entry; step cursor is node-local so it reads 0. */
@@ -63,6 +83,7 @@ public record PolicyRunView(
                 null,
                 null,
                 outputs,
-                createdAt);
+                createdAt,
+                null);
     }
 }
