@@ -3,6 +3,8 @@ package stirling.software.proprietary.security.configuration;
 import java.util.Properties;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.mail.autoconfigure.MailProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.mail.javamail.JavaMailSender;
@@ -22,15 +24,13 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 @AllArgsConstructor
 @ConditionalOnProperty(value = "mail.enabled", havingValue = "true", matchIfMissing = false)
+// Declaring a JavaMailSender bean makes MailSenderAutoConfiguration back off, taking its
+// @EnableConfigurationProperties with it, so spring.mail is bound here instead.
+@EnableConfigurationProperties(MailProperties.class)
 public class MailConfig {
 
-    // JavaMail defaults every SMTP timeout to infinite, and the invite endpoints send on the
-    // request thread, so a black-holed mail host would hang an admin request forever.
-    private static final String CONNECTION_TIMEOUT_MS = "10000";
-    private static final String READ_TIMEOUT_MS = "30000";
-    private static final String WRITE_TIMEOUT_MS = "30000";
-
     private final ApplicationProperties applicationProperties;
+    private final MailProperties springMailProperties;
 
     @Bean
     public JavaMailSender javaMailSender() {
@@ -68,9 +68,9 @@ public class MailConfig {
         // Retrieves the JavaMail properties to configure additional SMTP parameters
         Properties props = mailSender.getJavaMailProperties();
 
-        props.put("mail.smtp.connectiontimeout", CONNECTION_TIMEOUT_MS);
-        props.put("mail.smtp.timeout", READ_TIMEOUT_MS);
-        props.put("mail.smtp.writetimeout", WRITE_TIMEOUT_MS);
+        // Everything under spring.mail.properties, so application.properties owns the JavaMail
+        // knobs (the SMTP timeouts among them) rather than this class restating them.
+        props.putAll(springMailProperties.getProperties());
 
         // Only enable SMTP authentication if credentials are provided
         if (hasCredentials) {
