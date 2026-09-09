@@ -115,9 +115,9 @@ function refreshSessionOnce(): ReturnType<typeof supabase.auth.refreshSession> {
 }
 
 // Hard-redirect to /login, carrying where the user was so the login screen can
-// return them there instead of falling through to the role-based landing (which
-// sends processor users to the processor - the "refresh /editor bounces me to
-// the processor" bug). Router-relative, matching what Login reads via `?next=`.
+// return them there instead of falling through to the default landing (which
+// sends opted-in users to the processor - the "refresh /editor bounces me to the
+// processor" bug). Router-relative, matching what Login reads via `?next=`.
 function redirectToLogin(): void {
   const loginPath = withBasePath("/login");
   // Already on the login page: another redirect would just loop.

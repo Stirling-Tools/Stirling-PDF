@@ -56,6 +56,10 @@ interface PolicySetupWizardProps {
   formatError?: (e: unknown) => string;
   /** Whether the org-enforcement choice applies on this surface (it doesn't for folders). */
   enforceControl?: boolean;
+  /** False locks saving and the enforce toggle. Defaults true: only the portal gates on the role. */
+  canManagePolicies?: boolean;
+  /** The role check is still in flight, so the manager-only tooltip is withheld. */
+  permissionsLoading?: boolean;
   /** Frame the form yourself: receives the middle content and submit state, returns the
    *  chrome. Without it the portal's own modal renders. */
   children?: (frame: PolicySetupFrame) => ReactNode;
@@ -210,6 +214,8 @@ export function PolicySetupWizard({
   purviewConfig,
   formatError,
   enforceControl,
+  canManagePolicies,
+  permissionsLoading,
   children,
 }: PolicySetupWizardProps) {
   // Re-key on the opened category so state resets cleanly between categories.
@@ -224,6 +230,8 @@ export function PolicySetupWizard({
       purviewConfig={purviewConfig}
       formatError={formatError}
       enforceControl={enforceControl}
+      canManagePolicies={canManagePolicies}
+      permissionsLoading={permissionsLoading}
     >
       {children}
     </PolicySetupWizardBody>
@@ -239,6 +247,8 @@ function PolicySetupWizardBody({
   purviewConfig,
   formatError,
   enforceControl = true,
+  canManagePolicies = true,
+  permissionsLoading = false,
   children,
 }: {
   entry: CatalogueEntry;
@@ -252,6 +262,8 @@ function PolicySetupWizardBody({
   }) => ReactNode;
   formatError?: (e: unknown) => string;
   enforceControl?: boolean;
+  canManagePolicies?: boolean;
+  permissionsLoading?: boolean;
   children?: (frame: PolicySetupFrame) => ReactNode;
 }) {
   const { t } = useTranslation();
@@ -285,8 +297,10 @@ function PolicySetupWizardBody({
   );
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
-  // A suggested policy is org-required by nature; editing preserves what was saved.
+  // A template is a policy by nature, where a failure blocks the file rather than waving it
+  // through, so a new one defaults to required. Editing preserves what was saved.
   const [required, setRequired] = useState(policy?.state.required ?? true);
+  const readOnly = !canManagePolicies;
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -479,6 +493,8 @@ function PolicySetupWizardBody({
           <EnforceAsPolicyControl
             required={required}
             onRequiredChange={setRequired}
+            disabled={readOnly}
+            permissionsLoading={permissionsLoading}
           />
         </div>
       )}
@@ -532,6 +548,7 @@ function PolicySetupWizardBody({
             style={{ marginLeft: "auto" }}
             onClick={submit}
             loading={submitting}
+            disabled={readOnly}
           >
             {isEdit
               ? t("portal.policies.wizard.actions.saveChanges")

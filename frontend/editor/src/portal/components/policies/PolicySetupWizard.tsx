@@ -13,6 +13,13 @@ import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewCo
 
 interface PolicySetupWizardProps {
   entry: CatalogueEntry | null;
+  /** Whether the user may edit pipelines and policies (a manager); when false the wizard is read-only. */
+  canManagePolicies?: boolean;
+  /**
+   * The permission check is still loading. The enforce toggle stays locked, but the manager-only
+   * tooltip is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
   onClose: () => void;
   onSubmit: (entry: CatalogueEntry, result: PolicySetupResult) => Promise<void>;
   onCustomise: (entry: CatalogueEntry, result: PolicySetupResult) => void;
