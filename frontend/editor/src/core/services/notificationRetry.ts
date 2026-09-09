@@ -5,8 +5,12 @@ import {
   type DatabaseConfig,
 } from "@app/services/indexedDBManager";
 import { zipFileService } from "@app/services/zipFileService";
+import {
+  REMOVE_PASSWORD_ENDPOINT,
+  REPAIR_ENDPOINT,
+} from "@app/constants/toolEndpoints";
 import type { FileId } from "@app/types/file";
-import type { ToolEndpoint } from "@app/types/toolApiTypes";
+import { uploadableFile } from "@app/utils/uploadableFile";
 
 /** What the bell needs to retry a reported failure. The server keeps none of it. */
 export interface RetryPayload {
@@ -18,6 +22,11 @@ export interface RetryPayload {
   multiFile: boolean;
   /** The failure's error code, so a stash can be matched to the row's kind. */
   errorCode: string | null;
+  /**
+   * Whether a password or similar was dropped from `params` on the way in. A re-run without it
+   * is a different run, so a resolution must not perform one automatically.
+   */
+  secretsStripped: boolean;
   recordedAt: number;
 }
 
@@ -70,7 +79,9 @@ interface StoredRetryRecord extends RetryPayload {
 const SECRET_FIELD = /pass(word|phrase)|secret|token|credential/i;
 
 /** Never rejects: a browser refusing IndexedDB costs the retry button, not a second error. */
-export async function stashRetryPayload(payload: RetryPayload): Promise<void> {
+export async function stashRetryPayload(
+  payload: Omit<RetryPayload, "secretsStripped">,
+): Promise<void> {
   try {
     const fileIds = payload.fileIds.filter(isUsableId);
     if (!payload.operation.trim() || fileIds.length === 0) return;
@@ -79,6 +90,7 @@ export async function stashRetryPayload(payload: RetryPayload): Promise<void> {
       ...payload,
       fileIds,
       params: withoutSecrets(payload.params),
+      secretsStripped: containsSecret(payload.params),
     };
 
     await writeRecords(fileIds.map((fileId) => ({ ...record, fileId })));
@@ -109,9 +121,11 @@ export async function loadRetryPayload(
     endpoint: record.endpoint,
     params: record.params ?? {},
     fileIds: record.fileIds ?? [fileId],
-    // Older records predate these fields; both defaults fail closed.
+    // Older records predate these fields; every default fails closed. Assuming a stash lost a
+    // secret only withholds an automatic re-run, which the plain retry still offers by hand.
     multiFile: record.multiFile ?? false,
     errorCode: record.errorCode ?? null,
+    secretsStripped: record.secretsStripped ?? true,
     recordedAt: record.recordedAt,
   };
 }
@@ -158,19 +172,12 @@ export interface RetryOutcome {
   files?: RetryOutputFile[];
 }
 
-/** Checked against the generated endpoints, so a renamed route fails the build here. */
-const UNLOCK_ENDPOINT =
-  "/api/v1/security/remove-password" satisfies ToolEndpoint;
-
-/** Takes one document and answers with one, so a batch is one call per file. */
-const REPAIR_ENDPOINT = "/api/v1/misc/repair" satisfies ToolEndpoint;
-
 /** Unlock a held document for a failure with no stashed operation, e.g. a policy run. */
 export async function unlockLocalDocument(
   fileId: string,
   password: string,
 ): Promise<RetryOutcome> {
-  return postDocuments(UNLOCK_ENDPOINT, {}, [fileId], password);
+  return postDocuments(REMOVE_PASSWORD_ENDPOINT, {}, [fileId], password);
 }
 
 /** The inputs a retry of `payload` would send: the whole batch, or the one document named. */
@@ -237,6 +244,7 @@ export async function repairDocuments(
   }
 
   const repaired: RepairedDocument[] = [];
+  // The endpoint takes one document and answers with one, so a batch is one call per file.
   for (const fileId of usable) {
     const outcome = await postDocuments(REPAIR_ENDPOINT, {}, [fileId], null);
     if (!outcome.ok) {
@@ -282,7 +290,8 @@ async function postDocuments(
     return { ok: false, reason: "fileMissing", message: null };
   }
 
-  return postFiles(endpoint, params, files, password);
+  // Restored from IndexedDB, which WebKit uploads as an empty body unless wrapped.
+  return postFiles(endpoint, params, files.map(uploadableFile), password);
 }
 
 /** The one place any of this reaches the network, so a password has a single path out. */
@@ -389,6 +398,19 @@ function withoutSecrets(
 function withoutSecrets(value: unknown): unknown;
 function withoutSecrets(value: unknown): unknown {
   return prunedBelow(value, 0);
+}
+
+/** Whether {@link withoutSecrets} would drop anything: the same walk, answering rather than pruning. */
+function containsSecret(value: unknown, depth = 0): boolean {
+  if (depth >= MAX_PARAM_DEPTH) return false;
+  if (Array.isArray(value)) {
+    return value.some((item) => containsSecret(item, depth + 1));
+  }
+  if (value === null || typeof value !== "object") return false;
+  return Object.entries(value).some(
+    ([key, nested]) =>
+      SECRET_FIELD.test(key) || containsSecret(nested, depth + 1),
+  );
 }
 
 function prunedBelow(value: unknown, depth: number): unknown {

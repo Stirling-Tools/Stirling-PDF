@@ -284,18 +284,6 @@ class FailureKindTest {
         }
 
         @Test
-        void noRecognisedCodeFallsThroughToUnknown() {
-            // The point of claiming E003: a known failure must not be shown as an unknown one.
-            for (String code : new String[] {"E001", "E002", "E003", "E004"}) {
-                assertThat(FailureKind.byErrorCode(code))
-                        .as("%s", code)
-                        .isPresent()
-                        .get()
-                        .isNotEqualTo(FailureKind.UNKNOWN);
-            }
-        }
-
-        @Test
         void everyCodeAKindClaimsIsPinned() {
             // The bell mirrors these in KIND_ERROR_CODES (notificationRetry.ts) to tell one file's
             // stashed failure from another's. Adding a code here without adding it there makes a

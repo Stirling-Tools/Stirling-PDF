@@ -87,6 +87,7 @@ describe("the retry stash", () => {
       fileIds: ["f-1", "f-2"],
       multiFile: false,
       errorCode: "E004",
+      secretsStripped: false,
       recordedAt: 1_000,
     });
     // Every file in the run gets a record, so the bell can retry from any of them.
@@ -191,10 +192,43 @@ describe("the retry stash", () => {
       /pass(word|phrase)|token/i,
     );
     // The rest survive: without them a retry re-runs a different operation than the one that failed.
-    expect((await loadRetryPayload("f-1"))?.params).toEqual({
+    const loaded = await loadRetryPayload("f-1");
+    expect(loaded?.params).toEqual({
       nested: { keep: "yes" },
       keepThese: ["a", "b"],
     });
+    // And the loss is recorded: a re-run without the password is not the run that failed.
+    expect(loaded?.secretsStripped).toBe(true);
+  });
+
+  it("knows when nothing was dropped, so a faithful re-run stays on offer", async () => {
+    await stashRetryPayload(payload({ params: { level: "5" } }));
+
+    expect((await loadRetryPayload("f-1"))?.secretsStripped).toBe(false);
+  });
+
+  it("assumes a record from before the flag dropped something", async () => {
+    // Fail closed: the only cost is an automatic re-run withheld, and the plain retry remains.
+    const db = await indexedDBManager.openDatabase({
+      name: DB_NAME,
+      version: 1,
+      stores: [{ name: STORE_NAME, keyPath: "fileId" }],
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.objectStore(STORE_NAME).put({
+        fileId: "f-old",
+        operation: "compress",
+        endpoint: "/api/v1/misc/compress-pdf",
+        params: {},
+        fileIds: ["f-old"],
+        recordedAt: 1,
+      });
+    });
+
+    expect((await loadRetryPayload("f-old"))?.secretsStripped).toBe(true);
   });
 
   it("stops descending into a pathologically deep object without exhausting the stack", async () => {
