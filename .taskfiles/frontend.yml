@@ -355,7 +355,7 @@ tasks:
       - node editor/scripts/lint/icon-lint.mjs
 
   lint:unused-icons:
-    desc: "Report registry icons nothing references"
+    desc: "Report icons we draw ourselves that nothing renders"
     deps: [install]
     cmds:
       - node editor/scripts/lint/icon-lint.mjs unused

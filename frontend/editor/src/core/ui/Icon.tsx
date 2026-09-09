@@ -145,7 +145,7 @@ function resolve(name: string): IconEntry {
   if (import.meta.env.DEV && !reported.has(name)) {
     reported.add(name);
     console.error(
-      `Icon: "${name}" is not in the registry, drawing the placeholder instead. Add an svg to src/core/icons/svg/, fix the name, or list it in EXTRA_NAMES.`,
+      `Icon: "${name}" is not in the registry, drawing the placeholder instead. Every lucide name is bundled, so this is a typo or a name from data that no longer exists. Fix the name, or add an svg to src/core/icons/svg/.`,
     );
   }
   return ICONS[MISSING_ICON];

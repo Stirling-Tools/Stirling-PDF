@@ -1,15 +1,11 @@
 #!/usr/bin/env node
-/** Bundles the lucide icons the app references, plus every svg in both icon
- * dirs, into the *.generated.ts registry. `--check` fails instead of writing
- * when the committed output is stale. */
+/** Bundles all of lucide, plus every svg in both icon dirs, into the
+ * *.generated.ts registry. `--check` fails instead of writing when the
+ * committed output is stale. */
 import fs from "node:fs";
 import path from "node:path";
 // oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
-import {
-  EXTRA_NAMES,
-  STROKE_WIDTH,
-  DEFAULT_SIZE,
-} from "../src/core/icons/icons.config.mjs";
+import { STROKE_WIDTH, DEFAULT_SIZE } from "../src/core/icons/icons.config.mjs";
 // oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
 import { inkBounds } from "../src/core/icons/svgInkBounds.mjs";
 
@@ -166,54 +162,6 @@ function readSvgFile(file, name) {
 
 const lucideNodes = JSON.parse(fs.readFileSync(LUCIDE, "utf8"));
 
-/** Every name the app could ask for: source literals, plus json data files. */
-function scanReferencedNames(candidates) {
-  const found = new Set();
-  // Only icon-shaped positions: a bare literal scan would sweep in unrelated
-  // words ("grape" is a Mantine colour, "cat" a language code).
-  const PATTERNS = [
-    /\bname\s*[:=]\s*"([a-z0-9-]+)"/g,
-    /\bname\s*=\s*\{([^}]*)\}/g,
-    /\b\w*icon\w*\s*[:=]\s*"([a-z0-9-]+)"/gi,
-    /\b\w*icon\w*\s*=\s*\{([^}]*)\}/gi,
-  ];
-  const collect = (chunk) => {
-    for (const m of chunk.matchAll(/"([a-z0-9][a-z0-9-]*)"/g))
-      if (candidates.has(m[1])) found.add(m[1]);
-    if (candidates.has(chunk)) found.add(chunk);
-  };
-  const walk = (dir) => {
-    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-      const p = path.join(dir, entry.name);
-      if (entry.isDirectory()) {
-        if (entry.name !== "node_modules") walk(p);
-        continue;
-      }
-      if (!/\.(tsx?|json)$/.test(entry.name)) continue;
-      // Never read our own output: the registry lists every name, so scanning
-      // it would keep every icon bundled forever.
-      if (p.startsWith(ICONS_DIR)) continue;
-      const text = fs.readFileSync(p, "utf8");
-      if (entry.name.endsWith(".json")) {
-        for (const m of text.matchAll(/"icon(?:Name)?"\s*:\s*"([^"]+)"/g))
-          if (candidates.has(m[1])) found.add(m[1]);
-        continue;
-      }
-      // A file that names the IconName type is an icon table (lookup maps,
-      // registries): every literal in it is a candidate. Everything else only
-      // contributes literals sitting in an icon-shaped position.
-      if (text.includes("IconName")) {
-        collect(text);
-        continue;
-      }
-      for (const re of PATTERNS)
-        for (const m of text.matchAll(re)) collect(m[1]);
-    }
-  };
-  walk(SRC);
-  return found;
-}
-
 function lucideVersion() {
   try {
     return JSON.parse(
@@ -286,32 +234,20 @@ function collectCustom(dir, { normalise = false } = {}) {
 const stirling = collectCustom("stirling");
 const thirdParty = collectCustom("third-party", { normalise: true });
 
-// A mapping target is satisfied either by lucide or by one of our own svgs, so
-// custom icons have to be collected before the coverage check can run.
 const customNames = new Set([
   ...Object.keys(stirling),
   ...Object.keys(thirdParty),
 ]);
 
-// Bundle what the app actually asks for. A name it references but nothing
-// provides simply is not in IconName, so the call site fails to compile.
-const candidates = new Set([...Object.keys(lucideNodes), ...customNames]);
-const referenced = scanReferencedNames(candidates);
-for (const name of EXTRA_NAMES) referenced.add(name);
-
-const missingExtras = EXTRA_NAMES.filter((n) => !candidates.has(n));
-if (missingExtras.length) {
-  console.error(
-    `\n✖ EXTRA_NAMES lists ${missingExtras.length} name(s) neither lucide ${lucideVersion()} nor src/core/icons/svg/ provides:\n  ` +
-      missingExtras.join("\n  ") +
-      "\n",
-  );
-  process.exit(1);
-}
-
-const lucideTargets = new Set(
-  [...referenced].filter((n) => !customNames.has(n)),
-);
+// All of lucide, not the subset the app happens to reference today. Subsetting
+// meant grepping source for names, so a name assembled at runtime was absent
+// from the bundle and rendered the placeholder with nothing failing first; the
+// set also churned whenever an unrelated file gained or lost a literal. The
+// whole set is ~65KB brotli in its own chunk, which buys IconName covering
+// every lucide icon: an unknown name is a compile error, everywhere.
+const lucideTargets = Object.keys(lucideNodes)
+  .filter((n) => !customNames.has(n))
+  .sort();
 
 const clash = Object.keys(stirling).filter((n) => n in thirdParty);
 if (clash.length) {
@@ -320,13 +256,19 @@ if (clash.length) {
 }
 const shadowed = [...customNames].filter((n) => lucideNodes[n]);
 
-// The lucide geometry ships in our bundle, and ISC asks for its notice to
-// travel with it, so point at the copy that lives in the repo.
 const HEADER = (from) =>
   `// AUTO-GENERATED by editor/scripts/generate-icon-registry.mjs — do not edit.\n` +
   `// Source: ${from}\n` +
-  `// Regenerate with: task frontend:prepare:icons\n` +
-  `// Lucide icons are ISC; the notice is in src/core/icons/LICENSE-lucide.txt\n\n`;
+  `// Regenerate with: task frontend:prepare:icons\n\n`;
+
+// Lucide's geometry ships inside our bundle, and ISC asks for its notice to
+// travel with the copy. Marked @license so the minifier keeps it: esbuild drops
+// every comment that is not `//!`, `/*!`, @license or @preserve, so a plain
+// `//` line here would be stripped and the bundle would carry the art alone.
+const LUCIDE_NOTICE =
+  `/*! @license Lucide (ISC). Icon geometry below is Lucide's, used under the\n` +
+  ` * ISC licence; the full notice is src/core/icons/LICENSE-lucide.txt, which\n` +
+  ` * must stay in the repo for as long as this file does. */\n\n`;
 
 const fmt = (v) => JSON.stringify(v);
 
@@ -382,7 +324,7 @@ emit(
 );
 
 const lucideEntries = {};
-for (const name of [...lucideTargets].sort()) {
+for (const name of lucideTargets) {
   lucideEntries[name] = {
     viewBox: "0 0 24 24",
     mono: true,
@@ -393,6 +335,7 @@ for (const name of [...lucideTargets].sort()) {
 emit(
   "registry.generated.ts",
   HEADER(`lucide-static ${lucideVersion()} + both svg dirs`) +
+    LUCIDE_NOTICE +
     `import type { IconEntry } from "@app/icons/types";\n` +
     `import { STIRLING_ICONS } from "@app/icons/stirlingIcons.generated";\n` +
     `import { THIRD_PARTY_ICONS } from "@app/icons/thirdPartyIcons.generated";\n\n` +

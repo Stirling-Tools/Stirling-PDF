@@ -10,6 +10,7 @@
     "./**/*",
     "../editor/src/global.d.ts",
     "../editor/src/core/icons/legacyIcons.d.ts",
+    "../editor/src/core/icons/usedIcons.d.ts",
     "../editor/src/**/*.stories.ts",
     "../editor/src/**/*.stories.tsx"
   ]

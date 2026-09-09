@@ -1,8 +1,10 @@
 #!/usr/bin/env node
 /** Keeps the app on one icon system. Each rule explains itself when it fires;
- * pass "unused" to report registry entries nothing references. */
+ * pass "unused" to report svgs of our own that nothing renders. */
 import fs from "node:fs";
 import path from "node:path";
+// oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
+import { registryNames } from "../../src/core/icons/usedIcons.mjs";
 
 const EDITOR = path.join(import.meta.dirname, "..", "..");
 const SRC = path.join(EDITOR, "src");
@@ -144,23 +146,14 @@ const legacy = legacyIconNames();
 const NOT_AN_ICON_POSITION =
   /(?:\b(?:id|key|type|kind|variant|mode|status|action|value|label|className|class|href|path|to|for|role)|data-[\w-]*|aria-[\w-]*|testid)\s*[:=]\s*$/i;
 
-const registry = fs.readFileSync(
-  path.join(ICONS_DIR, "registry.generated.ts"),
-  "utf8",
-);
-const stirling = fs.readFileSync(
+const ourNames = registryNames(
   path.join(ICONS_DIR, "stirlingIcons.generated.ts"),
-  "utf8",
 );
-const thirdParty = fs.readFileSync(
-  path.join(ICONS_DIR, "thirdPartyIcons.generated.ts"),
-  "utf8",
-);
-const known = new Set(
-  [registry, stirling, thirdParty].flatMap((src) =>
-    [...src.matchAll(/^ {2}"([^"]+)": \{ viewBox:/gm)].map((m) => m[1]),
-  ),
-);
+const known = new Set([
+  ...registryNames(path.join(ICONS_DIR, "registry.generated.ts")),
+  ...ourNames,
+  ...registryNames(path.join(ICONS_DIR, "thirdPartyIcons.generated.ts")),
+]);
 
 const referenced = new Set();
 
@@ -278,19 +271,16 @@ for (const file of files) {
 }
 
 if (mode === "unused") {
-  // BrandMark resolves these from a connector type the API returns, so they
-  // never appear as literals.
-  const brandMarks = fs
-    .readdirSync(path.join(ICONS_DIR, "svg/third-party"))
-    .filter((f) => f.endsWith(".svg"))
-    .map((f) => f.replace(/\.svg$/, ""));
-  for (const mark of brandMarks) referenced.add(mark);
-
-  const unused = [...known].filter((n) => !referenced.has(n)).sort();
+  // Only the icons we draw. Lucide's are vendored whole whether or not anything
+  // renders them, so reporting those would be noise; one of ours that nothing
+  // renders is a file in this repo to redraw and keep on style for no reason.
+  // Brand marks are excluded too: they resolve from a connector type the API
+  // returns, so they never appear as a literal and always read as unused.
+  const unused = ourNames.filter((n) => !referenced.has(n)).sort();
   console.log(
     unused.length
-      ? `${unused.length} registry entries nothing references:\n  ${unused.join("\n  ")}`
-      : "✅ every registry entry is referenced",
+      ? `${unused.length} of our own svgs that nothing references:\n  ${unused.join("\n  ")}`
+      : "✅ every svg in svg/stirling is referenced",
   );
   process.exit(0);
 }
