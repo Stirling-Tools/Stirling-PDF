@@ -10,12 +10,19 @@ import static org.mockito.Mockito.when;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.nio.file.Files;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
 
 import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.cos.COSBase;
+import org.apache.pdfbox.cos.COSName;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
+import org.apache.pdfbox.pdmodel.font.PDFontDescriptor;
 import org.apache.pdfbox.pdmodel.font.PDType1Font;
 import org.apache.pdfbox.pdmodel.font.Standard14Fonts;
 import org.junit.jupiter.api.BeforeEach;
@@ -386,6 +393,67 @@ class WatermarkControllerTest {
             ResponseEntity<Resource> response = watermarkController.addWatermark(request);
             assertNotNull(response.getBody());
             assertTrue(drainBody(response).length > 0);
+        }
+
+        @Test
+        @DisplayName("Should embed the watermark font once, not once per page")
+        void testAddTextWatermark_EmbedsFontOnce() throws Exception {
+            int pageCount = 12;
+            byte[] multiPagePdf;
+            try (PDDocument doc = new PDDocument()) {
+                for (int i = 0; i < pageCount; i++) {
+                    doc.addPage(new PDPage(PDRectangle.A4));
+                }
+                ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                doc.save(baos);
+                multiPagePdf = baos.toByteArray();
+            }
+
+            AddWatermarkRequest request = new AddWatermarkRequest();
+            request.setFileInput(
+                    new MockMultipartFile(
+                            "fileInput",
+                            "multi.pdf",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            multiPagePdf));
+            request.setWatermarkType("text");
+            request.setWatermarkText("WATERMARK");
+            request.setAlphabet("roman");
+            request.setFontSize(30);
+            request.setRotation(45);
+            request.setOpacity(0.5f);
+            request.setWidthSpacer(50);
+            request.setHeightSpacer(50);
+            request.setCustomColor("#d3d3d3");
+            request.setConvertPDFToImage(false);
+
+            when(pdfDocumentFactory.load(any(MultipartFile.class)))
+                    .thenAnswer(inv -> Loader.loadPDF(multiPagePdf));
+
+            byte[] watermarked = drainBody(watermarkController.addWatermark(request));
+
+            Set<COSBase> fontPrograms =
+                    Collections.newSetFromMap(new IdentityHashMap<COSBase, Boolean>());
+            try (PDDocument out = Loader.loadPDF(watermarked)) {
+                assertEquals(pageCount, out.getNumberOfPages());
+                for (PDPage page : out.getPages()) {
+                    PDResources resources = page.getResources();
+                    for (COSName fontName : resources.getFontNames()) {
+                        PDFontDescriptor descriptor =
+                                resources.getFont(fontName).getFontDescriptor();
+                        if (descriptor != null && descriptor.getFontFile2() != null) {
+                            fontPrograms.add(descriptor.getFontFile2().getCOSObject());
+                        }
+                    }
+                }
+            }
+
+            // One embedded font program shared by every page. Loading it inside the page
+            // loop embeds a fresh copy per page, which is what OOMs large documents.
+            assertEquals(
+                    1,
+                    fontPrograms.size(),
+                    "watermark font should be embedded once for the whole document");
         }
     }
 

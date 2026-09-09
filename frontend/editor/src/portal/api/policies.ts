@@ -29,15 +29,7 @@ import type {
   WirePolicy,
 } from "@app/policies/types";
 
-export type {
-  PolicyActivityItem,
-  PolicyDecodedState,
-  PolicyRunView,
-  PolicyStats,
-  WireOutputOptions,
-  WireOutputSpec,
-  WirePolicy,
-} from "@app/policies/types";
+export type { PolicyRunView, WirePolicy } from "@app/policies/types";
 
 // Re-export the wire step type under the legacy name components depend on.
 export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
@@ -46,9 +38,7 @@ export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
 /*  Catalogue model — portal-specific                                        */
 /* ──────────────────────────────────────────────────────────────────────── */
 
-export type PolicyStatus = "active" | "paused";
-
-export type PolicyRowStatus = "active" | "paused" | "setup";
+type PolicyStatus = "active" | "paused";
 
 export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
 
@@ -81,7 +71,7 @@ export interface PolicyConfigDef {
 export interface PolicyState {
   configured: boolean;
   status: PolicyStatus;
-  /** Org-mandated policy (see the pipeline `Policy.required`). */
+  /** A policy rather than an ordinary pipeline (see `Policy.required`). */
   required: boolean;
   name?: string;
   icon?: string;
@@ -130,15 +120,7 @@ export interface DecoratedPolicy {
   activity: import("@app/policies/types").PolicyActivityItem[];
 }
 
-export interface PoliciesSummary {
-  active: number;
-  paused: number;
-  categories: number;
-  docsEnforced: number;
-}
-
 export interface PoliciesResponse {
-  summary: PoliciesSummary;
   catalogue: CatalogueEntry[];
 }
 
@@ -156,7 +138,7 @@ export interface CatalogueEntry {
  * i18n keys keyed by endpoint; labels stored steps in the detail view. Mostly
  * {@link ToolEndpoint}s, plus the AI classify endpoint, which isn't part of the generated union.
  */
-export const ENDPOINT_LABELS: Partial<
+const ENDPOINT_LABELS: Partial<
   Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
 > = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
@@ -423,17 +405,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   },
 };
 
-export const POLICY_DOC_TYPES: string[] = [
-  "contracts",
-  "invoices",
-  "taxDocuments",
-  "hrRecords",
-  "insurance",
-  "medicalPhi",
-  "legalFilings",
-  "financialReports",
-];
-
 // ── Client-side catalogue assembly ───────────────────────────────────────────
 
 function decoratePolicy(
@@ -441,8 +412,8 @@ function decoratePolicy(
   runs: PolicyRunView[],
   isDefault: boolean,
 ): DecoratedPolicy | null {
-  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.categoryId);
-  const config = POLICY_CONFIG[decoded.categoryId];
+  const category = POLICY_CATEGORIES.find((c) => c.id === decoded.policyKey);
+  const config = POLICY_CONFIG[decoded.policyKey];
   if (!category || !config) return null;
 
   const policyRuns = runs.filter((r) => r.policyId === decoded.id);
@@ -504,8 +475,8 @@ export function assemblePolicies(
   >();
   for (const wire of wirePolicies) {
     const decoded = fromWirePolicy(wire);
-    if (decoded.categoryId) {
-      decodedByCategory.set(decoded.categoryId, { decoded, isDefault: false });
+    if (decoded.policyKey) {
+      decodedByCategory.set(decoded.policyKey, { decoded, isDefault: false });
     }
   }
 
@@ -517,25 +488,7 @@ export function assemblePolicies(
     return { category, config: POLICY_CONFIG[category.id], policy };
   });
 
-  const active = wirePolicies.filter((p) => p.enabled).length;
-  const paused = wirePolicies.filter((p) => !p.enabled).length;
-  const enabledPolicyIds = new Set(
-    wirePolicies.filter((p) => p.enabled).map((p) => p.id),
-  );
-  const docsEnforced = runs.filter(
-    (r) =>
-      r.status === "COMPLETED" &&
-      r.policyId != null &&
-      enabledPolicyIds.has(r.policyId),
-  ).length;
-  const summary: PoliciesSummary = {
-    active,
-    paused,
-    categories: POLICY_CATEGORIES.length,
-    docsEnforced,
-  };
-
-  return { summary, catalogue };
+  return { catalogue };
 }
 
 /**
@@ -613,13 +566,6 @@ export function parseSimplePolicy(
   };
 }
 
-/** GET /api/v1/policies/{id} — one stored policy's raw record. */
-export async function fetchPolicy(id: string): Promise<WirePolicy> {
-  return apiClient.local.json<WirePolicy>(
-    `/api/v1/policies/${encodeURIComponent(id)}`,
-  );
-}
-
 /**
  * POST /api/v1/policies — create (blank id) or update (matched id). The
  * backend stamps owner + teamId server-side and returns the stored record.
@@ -659,7 +605,7 @@ export async function clearProcessedHistory(id: string): Promise<void> {
 // Catalogue policy bodies carry categoryId at the top level so the pipelines
 // mock handler can discriminate them from raw pipeline saves on the shared
 // POST /api/v1/policies endpoint. The real backend ignores unknown fields.
-type CatalogueWireBody = WirePolicy & { categoryId: string };
+type CatalogueWireBody = WirePolicy & { categoryId: string; icon?: string };
 
 /**
  * The persisted policy name derived from its category, e.g. "Security Policy".
@@ -680,15 +626,17 @@ export function buildWireFromSetup(
   t: TFunction,
   enabled = true,
 ): CatalogueWireBody {
+  const stored = entry.policy?.state;
   return {
     categoryId: entry.category.id,
+    icon: stored?.icon,
     ...toWirePolicy({
-      id: entry.policy?.state.backendId ?? "",
-      name: policyDisplayName(entry, t),
+      id: stored?.backendId ?? "",
+      name: stored?.name ?? policyDisplayName(entry, t),
       enabled,
       required: result.required,
       extraOptions: result.extraOptions,
-      categoryId: entry.category.id,
+      policyKey: entry.category.id,
       sources: result.sources,
       runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,

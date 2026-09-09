@@ -8,8 +8,6 @@ import {
   type ReviewDocument,
 } from "@portal/api/documents";
 import { ReviewQueue } from "@portal/components/documents/ReviewQueue";
-import { FileRunEventList } from "@portal/components/failures/FileRunEventList";
-import "@portal/components/failures/failures.css";
 import "@portal/views/Documents.css";
 
 function DownloadIcon() {
@@ -106,15 +104,6 @@ export function Documents() {
       </header>
 
       <ReviewQueue documents={documents} loading={state.loading} />
-
-      {/* Recorded policy, pipeline and editor failures. DEV ONLY, deliberately: this list is a
-          stand-in until failures get their own review screen, and it is not the surface we want to
-          ship. The endpoints behind it are live and gated, so nothing here is load-bearing.
-
-          Vite folds this to false in a build, so neither the section nor its fetch ships. The bell's
-          "View in processor" action is gated the same way and for the same reason - lift both
-          together when the review screen lands, or that button navigates nowhere. */}
-      {import.meta.env.DEV && <FileRunEventList />}
     </div>
   );
 }
