@@ -2,7 +2,8 @@ import { useEffect, type ReactNode } from "react";
 import { AuthProvider } from "@app/auth";
 import { useAuth } from "@app/auth/context";
 import { Spinner } from "@app/ui";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
+import { rememberPendingDestination } from "@app/services/pendingDestination";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 import { EDITOR_URL } from "@portal/auth/editorUrl";
 
@@ -50,10 +51,20 @@ function SaasPortalGate({ children }: { children: ReactNode }) {
       : isAnonymous || !portalAccess
         ? EDITOR_URL
         : null;
+  const bouncingToLogin = !settling && !session;
 
   useEffect(() => {
-    if (redirectTo) window.location.href = redirectTo;
-  }, [redirectTo]);
+    if (!redirectTo) return;
+    // A full page load, so the attempted path cannot ride along in router state.
+    // Only on the sign-in bounce: an account without portal access is not one
+    // sign-in away from this page.
+    if (bouncingToLogin) {
+      rememberPendingDestination(
+        `${stripBasePath(window.location.pathname)}${window.location.search}${window.location.hash}`,
+      );
+    }
+    window.location.href = redirectTo;
+  }, [redirectTo, bouncingToLogin]);
 
   if (settling || redirectTo) {
     return (
