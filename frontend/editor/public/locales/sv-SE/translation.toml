@@ -34,8 +34,6 @@ downloadUnavailable = "Nedladdning inte tillgänglig för detta objekt"
 edit = "Redigera"
 editSecret = "Redigera detta värde"
 editYourNewFiles = "Redigera dina nya filer"
-encryptedFilesBlocked_one = "Filen är lösenordsskyddad. Lås upp den först."
-encryptedFilesBlocked_other = "{{count}} filer är lösenordsskyddade. Lås upp dem först."
 exportAndContinue = "Exportera och fortsätt"
 false = "Falskt"
 fileNotSavedToDisk = "Inte sparad till disk"
@@ -3038,6 +3036,9 @@ remaining = "Återstår"
 retry = "Försök igen"
 save = "Spara"
 stepOf = "Steg {{current}} av {{total}}"
+clearFilters = "Rensa filter"
+filterEmpty = "Det finns inget att filtrera"
+search = "Sök"
 
 [compare]
 clearSelected = "Rensa valda"
@@ -3886,6 +3887,7 @@ size = "Filstorlek"
 title = "Filer"
 upload = "Ladda upp"
 uploadFiles = "Ladda upp filer"
+notIncludedInToolRun = "Ingår inte i denna verktygskörning"
 
 [fileSelectorPicker]
 empty = "Inga filer tillgängliga"
@@ -4067,6 +4069,9 @@ versionOrigin = "Ursprunglig uppladdning"
 versionsCount = "{{count}} versioner"
 versionShowHidden = "Visa {{count}} tidigare versioner"
 viewVersionHistory = "Versionshistorik ({{count}})"
+unmount = "Avmontera"
+unmountFolderBody = "Avmontera \"{{name}}\"? Mappen och dess filer ligger kvar på disken."
+unmountFolderTitle = "Avmontera från Stirling?"
 
 [filesPage.appearance]
 colour = "Färg"
@@ -4142,6 +4147,12 @@ removeFolderFailed = "Kunde inte ta bort mappen."
 removeFolderFailedDetail = "Kunde inte ta bort mappen: {{message}}"
 uploadFilesFailed = "Kunde inte ladda upp filer."
 uploadFilesFailedDetail = "Kunde inte ladda upp filer: {{message}}"
+retryFailed = "Kunde inte försöka igen med {{name}}."
+retryFailedDetail = "Kunde inte försöka igen med {{name}}: {{message}}"
+revertAllFailed = "Kunde inte återställa originalen."
+revertAllFailedDetail = "Kunde inte återställa originalen: {{message}}"
+revertFailed = "Kunde inte återställa {{name}}."
+revertFailedDetail = "Kunde inte återställa {{name}}: {{message}}"
 
 [filesPage.field]
 added = "Tillagd"
@@ -4248,6 +4259,43 @@ label = "Filtrera efter typ"
 grid = "Rutnätsvy"
 label = "Visningsläge"
 list = "Listvy"
+
+[filesPage.diskState]
+all = "Alla"
+done = "Klar"
+doneHint = "Bearbetad – öppnar resultatet"
+failed = "Misslyckades"
+processing = "Bearbetar"
+processingHint = "Bearbetas – tillgänglig när den är klar"
+retry = "Försök igen"
+retryHint = "Kör filen igen"
+waiting = "Köad"
+
+[filesPage.processing]
+active = "Bearbetar mapp"
+edit = "Redigera bearbetning..."
+nothingToRestore = "Det finns inga original att återställa – dessa filer är redan sina original."
+paused = "Bearbetning pausad"
+remove = "Ta bort bearbetning"
+restore = "Återställ original"
+restoreAll = "Återställ alla original"
+resume = "Återuppta bearbetning"
+revertCancel = "Avbryt"
+revertConfirm = "Återställ och pausa"
+revertConfirmAll = "Återställ alla original i denna mapp? Bearbetningen pausas, och återställda filer visas som köade tills du återupptar den."
+revertConfirmFile = "Återställ \"{{name}}\" till originalet? Bearbetningen för denna mapp pausas, och filen visas som köad tills du återupptar den."
+revertConfirmTitle = "Återställa original?"
+section = "Bearbetning"
+start = "Bearbeta filer i denna mapp..."
+stop = "Pausa bearbetning"
+sweep = "Försök igen med misslyckade filer"
+
+[filesPage.processingSetup]
+back = "Tillbaka"
+cancel = "Avbryt"
+lead = "Allt som läggs till i denna mapp kör dessa steg på plats – varje fil blir sin bearbetade version."
+start = "Starta bearbetning"
+title = "Bearbeta '{{name}}'"
 
 [fileToPDF]
 tags = "transformation,format,dokument,bild,presentation,text,konvertering,kontor,dokument,word,excel,powerpoint"
@@ -7711,116 +7759,24 @@ status = "Status"
 time = "Tid"
 user = "Användare"
 
-[portal.editorAdmin]
-subtitle = "Distribuera Stirling PDF Editor, koppla självhostade instanser till din organisation och hantera den körande miljön — mål, hälsa, autentiseringsuppgifter och offlineaktivering på ett ställe."
-title = "Editor-distribution"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "Aktiva användare"
-host = "Värd"
-lastSeen = "Senast sedd"
-region = "Region"
-status = "Status"
-target = "Mål"
-version = "Version"
-
-[portal.editorAdmin.health.empty]
-description = "Distribuera ett mål och koppla det för att se instanshälsa i realtid här."
-title = "Inga instanser rapporterar"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "Generera offlinepaket"
-lockCopy = "Offline- och lokal aktivering ingår i Enterprise."
-subtitle = "Generera ett signerat aktiveringspaket för en offline- eller lokal installation utan utgående nätverksväg. Överför det till instansen och tillämpa det vid första körningens konfiguration."
-talkToSales = "Kontakta säljteamet"
-title = "Aktivering i isolerad miljö"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "{{file}} är signerat och klart att överföra. Det aktiverar en instans och upphör att gälla om 14 dagar."
-title = "Paketet är klart"
-
-[portal.editorAdmin.pairing]
-generated = "Genererad ✓"
-generateNewCode = "Generera ny kod"
-lockCopy = "IaC-provisionering ingår i Enterprise."
-rotate = "Rotera"
-talkToSales = "Kontakta säljteamet"
-
-[portal.editorAdmin.sections.health]
-sub = "Varje Editor-instans som rapporterar in — version, region, status, senast sedd och aktiva användare."
-title = "Instanshälsa"
-
-[portal.editorAdmin.sections.pairing]
-sub = "Anslut en självhostad redigerare till den här organisationen. Generera en token, lämna över en kort kod eller koppla den via IaC."
-title = "Koppling"
-
-[portal.editorAdmin.sections.targets]
-sub = "Där Editor körs. Kopiera ett utdrag för att starta en självhostad instans, eller använd Managed Cloud utan driftarbete."
-title = "Distributionsmål"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "Aktuell token"
-lastRotated = "Senast roterad"
-rotateButton = "Rotera servicetoken"
-subtitle = "Instanser autentiserar mot organisationen med den här autentiseringsuppgiften. Rotera den enligt schema eller omedelbart efter ett misstänkt läckage."
-title = "Servicetoken"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "En ny token har utfärdats. Uppdatera varje självhostad instans STIRLING_SERVICE_TOKEN inom respitperioden på 24 h, annars kopplas de från."
-title = "Rotera körande instanser"
-
-[portal.editorAdmin.status]
-degraded = "Försämrad"
-healthy = "Frisk"
-offline = "Frånkopplad"
-pairing = "Kopplar"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} instans"
-instanceCount_other = "{{count}} instanser"
-talkToSales = "Kontakta säljteamet"
-upgradePlan = "Uppgradera plan"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "Lokal självhosting och Kubernetes-självhosting ingår i Enterprise."
-paid = "Självhosting med Docker och Kubernetes låses upp med en betalplan."
-
-[portal.editorAdmin.targets.state]
-available = "Tillgänglig"
-locked = "Låst"
-running = "Körs"
-
 [portal.errorBoundary]
 description = "Den här vyn stötte på ett oväntat fel. Försök igen eller välj ett annat avsnitt i sidofältet."
 retry = "Försök igen"
 title = "Något gick fel på den här sidan"
 
 [portal.failures]
-fromSource = "Från källan {{source}}"
 occurrences = "{{count}} förekomster"
-reportedBy = "Rapporterad av {{actor}}"
-runReference = "Körning {{runId}}"
-subtitle = "Fel som registrerats från dina policykörningar och teamets redigerare, med tillgängliga åtgärder."
-title = "Fel"
+closedBySystem = "Stirling"
+noMatches = "Inget matchar de aktuella filtren"
+searchPlaceholder = "Sök efter problem, användare och fel"
 
 [portal.failures.action]
 acknowledge = "Bekräfta"
-confirm = "Är du säker?"
 decrypt = "Dekryptera och försök igen"
 dismiss = "Avfärda"
-dismissSkipFile = "Hoppa över den här filen"
 openInTool = "Försök igen"
 viewFile = "Visa fil"
 viewInProcessor = "Visa i bearbetaren"
-
-[portal.failures.debug]
-copyJson = "Kopiera JSON"
-dismissAll = "Avfärda alla ({{total}})"
-dismissing = "Avfärdar …"
-hideJson = "Dölj rå JSON ({{total}})"
-refresh = "Uppdatera fel"
-showJson = "Visa rå JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "Det här felet är redan stängt."
@@ -7845,12 +7801,46 @@ pipeline = "Arbetsflöde"
 policy = "Policy"
 tool = "Verktygskörning"
 
-[portal.failures.stage]
-blocked = "Blockerad"
-input = "Indata"
-internal = "Internt"
-never_ran = "Aldrig körd"
-output = "Utdata"
+[portal.failures.columns]
+closedBy = "Stängd av"
+date = "Datum"
+failure = "Problem"
+origin = "Rapporterat i"
+outcome = "Utfall"
+source = "Källa"
+user = "Användare"
+
+[portal.failures.emptyClosed]
+description = "Objekt som du avfärdar eller löser behålls här med sitt utfall."
+title = "Inget stängt ännu"
+
+[portal.failures.filters]
+origin = "Rapporterat i"
+source = "Källa"
+type = "Typ"
+user = "Användare"
+
+[portal.failures.log]
+copy = "Kopiera fel"
+view = "Visa fel"
+
+[portal.failures.outcome]
+dismissed = "Avfärdad"
+fileRemoved = "Fil borttagen"
+open = "Öppen"
+resolved = "Löst"
+
+[portal.failures.scope]
+ariaLabel = "Granskningsstatus"
+closed = "Stängd"
+open = "Öppen"
+
+[portal.failures.source]
+editor = "Redigeraren"
+
+[portal.failures.unavailable]
+description = "Denna kö är synlig för teamledare i arbetsytor som kör policyer."
+title = "Inget att granska"
 
 [portal.home.download]
 back = "Tillbaka"
@@ -7928,7 +7918,6 @@ evening = "God kväll"
 morning = "God morgon"
 
 [portal.infrastructure]
-manageEditorDeployment = "Hantera Editor-distribution"
 sectionsAriaLabel = "Infrastrukturavsnitt"
 subtitle = "Distributioner, autentiseringsuppgifter, säkerhetsläge, lagring och granskningsspåret för din Stirling-arbetsyta."
 title = "Infrastruktur"
@@ -8278,6 +8267,7 @@ procurement = "Inköp"
 sources = "Källor"
 usage = "Användning och fakturering"
 users = "Användare"
+review = "Granska"
 
 [portal.nav.section]
 platform = "PDF-plattform"
@@ -8286,6 +8276,8 @@ processor = "PDF-processor"
 [portal.pipelines]
 subtitle = "Varje automatiserad dokumentpipeline på backend: en ordnad kedja av åtgärder över en uppsättning källor, körd vid en trigger. Klicka på en rad för dess steg och källor."
 title = "Arbetsflöden"
+permissionsRetry = "Försök igen"
+permissionsUnavailable = "Det gick inte att kontrollera om du kan hantera policyer, så policyåtgärder är inte tillgängliga för närvarande."
 
 [portal.pipelines.actions]
 newCustomPipeline = "Nytt anpassat arbetsflöde"
@@ -8341,6 +8333,7 @@ saveHeading = "För att spara ändringarna:"
 schedule = "Ange hur ofta den körs"
 setup = "Slutför konfigureringen: {{tools}}"
 source = "Välj en indatakälla"
+managerOnly = "Endast en administratör eller teamledare kan ändra en policy"
 
 [portal.pipelines.builder.diagnostic]
 fan-in = "Kombinerar varje fil från föregående steg"
@@ -8406,6 +8399,7 @@ title = "Inga pipelines ännu"
 desc = "Körs automatiskt; medlemmar kan inte stänga av den"
 info = "Vad det innebär att framtvinga som policy"
 label = "Framtvinga som policy"
+managerOnly = "Endast en administratör eller teamledare kan framtvinga en pipeline som policy"
 
 [portal.pipelines.graph]
 addFirstTool = "Lägg till ett verktyg"
@@ -8437,11 +8431,6 @@ failed_one = "Misslyckades i det enda steget"
 failed_other = "Misslyckades efter {{done}} av {{count}} steg"
 running_one = "Kör det enda steget"
 running_other = "Kör steg {{done}} av {{count}}"
-
-[portal.pipelines.kpi]
-active = "Aktiva"
-paused = "Pausade"
-total = "Arbetsflöden"
 
 [portal.pipelines.run]
 allProcessed_one = "Inget att köra: källans {{count}} dokument har redan bearbetats."
@@ -8618,6 +8607,7 @@ recentActivity = "Senaste aktivitet"
 showLess = "Visa mindre"
 showMore = "Visa mer"
 sources = "Källor"
+managerOnly = "Endast en administratör eller teamledare kan ändra denna policy"
 
 [portal.policies.detail.actions]
 clearHistory = "Rensa bearbetningshistorik"
@@ -8635,6 +8625,13 @@ title = "Rensa bearbetningshistorik?"
 [portal.policies.detail.emptyActivity]
 description = "Dokument visas här när denna policy har körts."
 title = "Ingen aktivitet än"
+
+[portal.policies.detail.delete]
+bodyActive = "\"{{name}}\" är aktiv och tillämpas på dina dokument. Om du tar bort den stoppas detta omedelbart och kan inte ångras. Pausa den i stället om du bara vill att den ska sluta köras."
+bodyPaused = "\"{{name}}\" tas bort för alla. Detta kan inte ångras."
+cancel = "Avbryt"
+confirm = "Ta bort"
+title = "Ta bort denna pipeline?"
 
 [portal.policies.endpoints]
 addWatermark = "Vattenstämpel"
@@ -8854,6 +8851,7 @@ cancel = "Avbryt"
 customise = "Anpassa"
 enablePolicy = "Aktivera policy"
 saveChanges = "Spara ändringar"
+customiseUnavailable = "Den fullständiga byggaren finns i Processorn"
 
 [portal.policies.wizard.capability.classify]
 desc = "Identifierar dokumentets typ utifrån ditt teams etiketter och taggar det, så att det arkiveras och söks efter kategori."
@@ -9263,11 +9261,6 @@ cancel = "Avbryt"
 confirm = "Ta bort"
 title = "Ta bort källa?"
 
-[portal.sources.kpi]
-inUse = "Används"
-total = "Anslutningar"
-unused = "Oanvända"
-
 [portal.sources.networkFields.connection]
 helperText = "Den lagrade anslutningen med serveradressen och inloggningsuppgifterna. Återanvänds av varje källa som refererar till den."
 label = "Anslutning"
@@ -9491,6 +9484,10 @@ summary = "Äger ett team — hanterar dess medlemmars resurser och delade konfi
 [portal.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Obegränsat"
+
+[portal.review]
+subtitle = "Allt från dina policykörningar och teamets redigerare som behöver din uppmärksamhet."
+title = "Granska"
 
 [printFile]
 title = "Skriv ut fil"
@@ -10315,12 +10312,6 @@ dismiss = "Avfärda"
 intro = "Aktivera användarautentisering, teamhantering och arbetsytefunktioner för din organisation."
 learnMore = "Läs mer i dokumentationen"
 title = "För systemadministratörer"
-
-[settings.general.loginLanding]
-description = "Välj vilken app som öppnas när du loggar in på Stirling Cloud."
-editor = "Redigerare"
-processor = "PDF-processor"
-title = "Efter inloggning"
 
 [settings.general.mode]
 fullscreen = "Helskärm"
@@ -12840,3 +12831,65 @@ reader = "Läsare"
 [workbench.sessionRestore]
 none = "Dina tidigare filer lagras inte längre på den här enheten."
 partial = "Återställde {{restored}} av {{total}} filer. Resten lagras inte längre på den här enheten."
+
+[brickGame]
+balls = "Bollar"
+best = "Bästa"
+close = "Stäng spelet"
+effectTimer = "{{label}} {{seconds}} s"
+hint = "Flytta med pekaren eller piltangenterna. Klicka för att fånga pekaren, Esc för att återgå till arbetet."
+hintPointerLocked = "Pekaren är fångad. Esc släpper den, sedan Esc igen för att återgå till arbetet."
+score = "Poäng"
+title = "Dolt spel"
+
+[brickGame.effect]
+fast = "Snabb"
+narrow = "Smal"
+reversed = "Omvänd"
+slow = "Långsam"
+wide = "Bred"
+
+[brickGame.lost]
+detail = "Klicka eller tryck på mellanslag för att försöka igen"
+headline = "Slut på bollar"
+
+[brickGame.ready]
+detail = "Klicka eller tryck på mellanslag för att starta"
+headline = "Klar"
+
+[brickGame.won]
+detail = "Klicka eller tryck på mellanslag för att spela igen"
+headline = "Allt klart"
+
+[processingFolders.downloads]
+approve = "Bearbeta mina hämtningar"
+cancelSweep = "Avbryt"
+capped = "Du har {{found}} PDF:er; de första {{limit}} bearbetas nu och resten följer efter."
+close = "Klar"
+explain_one = "Stirling kan klassificera den {{count}} PDF som redan finns i din hämtningsmapp och öppna resultaten här."
+explain_other = "Stirling kan klassificera de {{count}} PDF:er som redan finns i din hämtningsmapp och öppna resultaten här."
+failed = "Det gick inte att ställa in. Dina filer har inte ändrats."
+finished_one = "Klassificerade {{count}} fil och öppnade {{opened}} av dem här, redo att arbeta med."
+finished_other = "Klassificerade {{count}} filer och öppnade {{opened}} av dem här, redo att arbeta med."
+keepsOriginals = "Filer bearbetas på plats – och varje original behålls, så att du kan återställa det när som helst."
+notNow = "Inte nu"
+nothingNew_one = "Inget nytt att bearbeta – denna {{count}} fil har redan bearbetats."
+nothingNew_other = "Inget nytt att bearbeta – dessa {{count}} filer har redan bearbetats."
+progressCounts = "av {{total}} bearbetade"
+someFailed_one = "{{count}} kunde inte bearbetas och lämnades orörd."
+someFailed_other = "{{count}} kunde inte bearbetas och lämnades orörda."
+stillParked_one = "{{count}} fil misslyckades tidigare och försöktes inte igen – åtgärda orsaken och kör sedan igen."
+stillParked_other = "{{count}} filer misslyckades tidigare och försöktes inte igen – åtgärda orsaken och kör sedan igen."
+stillRunning = "Vissa filer bearbetas fortfarande i bakgrunden."
+title = "Ordna dina hämtningar?"
+trigger_one = "Bearbeta {{count}} PDF i Hämtningar"
+trigger_other = "Bearbeta {{count}} PDF:er i Hämtningar"
+typesFound_one = "{{count}} dokumenttyp hittades"
+typesFound_other = "{{count}} dokumenttyper hittades"
+working = "Bearbetar ..."
+
+[processingFolders.wall]
+done = "Klar"
+failed = "Misslyckades"
+title = "Bearbetar denna mapp"
+waiting = "Köad ..."
