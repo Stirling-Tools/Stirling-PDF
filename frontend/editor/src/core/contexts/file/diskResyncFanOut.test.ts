@@ -53,6 +53,7 @@ function harness(stubs: StirlingFileStub[]) {
   const stateRef = {
     current: {
       files: { byId, ids: stubs.map((s) => s.id) },
+      ui: { hasUnsavedChanges: false },
     } as unknown as FileContextState,
   };
   const updates: { id: FileId; updates: Partial<StirlingFileStub> }[] = [];

@@ -872,7 +872,10 @@ async function resyncRecordFromDisk(
   lifecycleManager: FileLifecycleManager,
 ): Promise<StirlingFileStub | null> {
   const fileId = stub.id;
-  const outcome = await syncLinkedFileFromDisk(stub);
+  const outcome = await syncLinkedFileFromDisk(
+    stub,
+    stateRef.current.ui.hasUnsavedChanges,
+  );
 
   if (outcome.status === "missing") {
     // Never delete what is on screen: cutting the link leaves the document
@@ -935,6 +938,7 @@ async function resyncRecordFromDisk(
     if (
       !latest ||
       latest.isDirty ||
+      stateRef.current.ui.hasUnsavedChanges ||
       latest.localFilePath !== stub.localFilePath
     ) {
       return null;
@@ -1117,7 +1121,10 @@ export async function addStirlingFileStubs(
         );
         // A desktop file only caches disk, so reconcile BEFORE serving it, or
         // external edits stay invisible and deleted files still open.
-        const diskSync = await syncLinkedFileFromDisk(stub);
+        const diskSync = await syncLinkedFileFromDisk(
+          stub,
+          stateRef.current.ui.hasUnsavedChanges,
+        );
         // Only an unedited v1 passthrough holds nothing the disk file did not;
         // anything else is detached below, never deleted.
         const lostPath =
@@ -1138,15 +1145,6 @@ export async function addStirlingFileStubs(
         // for files not yet in filesRef, silently losing the conflict badge.
         const conflictAt =
           diskSync.status === "conflict" ? Date.now() : undefined;
-        if (conflictAt) {
-          requestDiskConflictChoice({
-            fileId,
-            name: stub.name,
-            onUseDisk: () =>
-              void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
-          });
-        }
-
         // Live bytes from disk win over the stored copy.
         const stirlingFile = await (
           diskSync.status === "updated"
@@ -1178,7 +1176,9 @@ export async function addStirlingFileStubs(
 
         // An edit committed while we were reading disk must not be discarded by
         // a decision taken before it existed.
-        const stillClean = !stateRef.current.files.byId[fileId]?.isDirty;
+        const stillClean =
+          !stateRef.current.files.byId[fileId]?.isDirty &&
+          !stateRef.current.ui.hasUnsavedChanges;
 
         // Workbench selectors only see the file once something dispatches; must
         // follow the filesRef write or the update is dropped.
@@ -1222,6 +1222,18 @@ export async function addStirlingFileStubs(
             },
             stateRef,
           );
+        }
+
+        // Asked only once the bytes are in filesRef and the marker is state:
+        // answering against a file that is still being published loses the
+        // answer to the publish that lands after it.
+        if (conflictAt) {
+          requestDiskConflictChoice({
+            fileId,
+            name: stub.name,
+            onUseDisk: () =>
+              void useDiskVersion(stub, stateRef, filesRef, lifecycleManager),
+          });
         }
 
         if (diskSync.status === "too-large") {

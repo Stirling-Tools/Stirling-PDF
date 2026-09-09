@@ -144,8 +144,12 @@ export function __resetSelfWrites(): void {
   selfWrites.clear();
 }
 
+/** @param hasUnsavedWork in-app edits not yet committed to a version. The stub's
+ *  own isDirty only says a tool produced one, so an open page editor, annotation
+ *  or redaction session is invisible to it and disk would silently win. */
 export async function syncLinkedFileFromDisk(
   stub: StirlingFileStub,
+  hasUnsavedWork = false,
 ): Promise<DiskSyncOutcome> {
   if (!desktopFileLinkingSupported || !stub.localFilePath) {
     return { status: "not-linked" };
@@ -161,7 +165,7 @@ export async function syncLinkedFileFromDisk(
     return { status: "unavailable", reason: state.reason };
   }
   if (!hasDiskChanged(stub, state)) return { status: "unchanged" };
-  if (stub.isDirty) return { status: "conflict" };
+  if (stub.isDirty || hasUnsavedWork) return { status: "conflict" };
   if (state.size > AUTO_RELOAD_MAX_BYTES) {
     return { status: "too-large", size: state.size };
   }

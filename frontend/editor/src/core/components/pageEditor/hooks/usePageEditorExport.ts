@@ -317,6 +317,11 @@ export const usePageEditorExport = ({
         if (sourceStub?.localFilePath) {
           actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
             localFilePath: sourceStub.localFilePath,
+            // Applying page edits writes nothing to disk, so the source's
+            // baseline still describes it. Without one, hasDiskChanged reads
+            // the link as changed and the next open claims a false conflict.
+            diskSyncedSize: sourceStub.diskSyncedSize,
+            diskSyncedModifiedMs: sourceStub.diskSyncedModifiedMs,
             isDirty: true,
           });
         }

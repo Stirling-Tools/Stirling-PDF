@@ -83,9 +83,19 @@ fn build_routes(paths: &[String]) -> (Routes, BTreeSet<PathBuf>) {
             .canonicalize()
             .unwrap_or_else(|_| target.parent.clone());
 
-        routes.add(&target.parent, &target.file_name, target.given);
-        if resolved != target.parent {
-            routes.add(&resolved, &target.file_name, target.given);
+        // A case- or normalisation-differing spelling still opens the file on
+        // Windows and macOS, so the frontend can hold one spelling while the OS
+        // reports another and every event misses, silently.
+        let on_disk_name = Path::new(target.given)
+            .canonicalize()
+            .ok()
+            .and_then(|full| full.file_name().map(PathBuf::from));
+
+        for parent in [&target.parent, &resolved] {
+            routes.add(parent, &target.file_name, target.given);
+            if let Some(name) = &on_disk_name {
+                routes.add(parent, name, target.given);
+            }
         }
 
         dirs.insert(target.parent);
