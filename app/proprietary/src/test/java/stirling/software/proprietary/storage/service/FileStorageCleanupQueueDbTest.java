@@ -39,6 +39,7 @@ import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.provider.StoredObject;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
 import stirling.software.proprietary.storage.repository.FileShareRepository;
+import stirling.software.proprietary.storage.repository.FolderRepository;
 import stirling.software.proprietary.storage.repository.StorageCleanupEntryRepository;
 import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
@@ -203,6 +204,7 @@ class FileStorageCleanupQueueDbTest {
         @Bean
         FileStorageService fileStorageService(
                 StoredFileRepository storedFileRepository,
+                FolderRepository folderRepository,
                 FileShareRepository fileShareRepository,
                 FileShareAccessRepository fileShareAccessRepository,
                 UserRepository userRepository,
@@ -211,6 +213,7 @@ class FileStorageCleanupQueueDbTest {
                 StorageCleanupQueue storageCleanupQueue) {
             return new FileStorageService(
                     storedFileRepository,
+                    folderRepository,
                     fileShareRepository,
                     fileShareAccessRepository,
                     userRepository,

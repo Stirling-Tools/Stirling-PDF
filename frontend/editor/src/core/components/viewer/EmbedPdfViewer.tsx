@@ -1240,9 +1240,9 @@ const EmbedPdfViewerContent = ({
               enableFormFill={shouldEnableFormFill}
               formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
-              signatureApiRef={signatureApiRef as React.RefObject<any>}
-              annotationApiRef={annotationApiRef as React.RefObject<any>}
-              historyApiRef={historyApiRef as React.RefObject<any>}
+              signatureApiRef={signatureApiRef}
+              annotationApiRef={annotationApiRef}
+              historyApiRef={historyApiRef}
               redactionTrackerRef={
                 redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>
               }

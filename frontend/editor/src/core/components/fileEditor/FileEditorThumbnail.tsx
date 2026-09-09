@@ -55,6 +55,7 @@ import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbn
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { FileEditorStatusDot } from "@app/components/fileEditor/FileEditorStatusDot";
+import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 
 interface FileEditorThumbnailProps {
   file: StirlingFileStub;
@@ -85,6 +86,12 @@ const FileEditorThumbnail = ({
   policies = [],
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
+  const eligibleFileIds = useToolEligibleFileIds();
+  const isToolSkipped =
+    eligibleFileIds !== null && !eligibleFileIds.has(file.id);
+  const toolSkipReason = isToolSkipped
+    ? t("files.notIncludedInToolRun", "Not included in this tool run")
+    : undefined;
   const { config } = useAppConfig();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
@@ -537,6 +544,9 @@ const FileEditorThumbnail = ({
       data-testid="file-thumbnail"
       data-tour="file-card-checkbox"
       data-supported={isSupported}
+      data-tool-skipped={isToolSkipped}
+      title={toolSkipReason}
+      aria-description={toolSkipReason}
       className={`${styles.card} select-none`}
       style={{ opacity: isDragging ? 0.9 : 1 }}
       tabIndex={0}
