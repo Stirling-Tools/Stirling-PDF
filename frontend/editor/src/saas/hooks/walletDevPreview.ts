@@ -47,6 +47,8 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
   return {
     teamId: null,
     status: subscribed ? "subscribed" : "free",
+    team: { held: false, licensedUsers: null, usersInUse: 1 },
+    processor: { active: subscribed },
     role,
     billingPeriodStart: isoDay(periodStart),
     billingPeriodEnd: isoDay(periodEnd),
