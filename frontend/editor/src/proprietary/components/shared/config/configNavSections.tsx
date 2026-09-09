@@ -27,7 +27,6 @@ import AdminStorageSharingSection from "@app/components/shared/config/configSect
 import AdminFolderAccessSection from "@app/components/shared/config/configSections/AdminFolderAccessSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 import AccountSection from "@app/components/shared/config/configSections/AccountSection";
-import GeneralWithLoginLanding from "@app/components/shared/config/GeneralWithLoginLanding";
 
 /**
  * Hook version of proprietary config nav sections with proper i18n support
@@ -54,21 +53,13 @@ export const useConfigNavSections = (
   const preferencesSection = sections.find((section) =>
     section.items.some((item) => item.key === "general"),
   );
-  if (preferencesSection) {
-    preferencesSection.items = preferencesSection.items.map((item) =>
-      item.key === "general"
-        ? { ...item, component: <GeneralWithLoginLanding hideTitle /> }
-        : item,
-    );
-
-    if (loginEnabled) {
-      preferencesSection.items.push({
-        key: "account",
-        label: t("account.accountSettings", "Account"),
-        icon: "person-rounded",
-        component: <AccountSection />,
-      });
-    }
+  if (preferencesSection && loginEnabled) {
+    preferencesSection.items.push({
+      key: "account",
+      label: t("account.accountSettings", "Account"),
+      icon: "person-rounded",
+      component: <AccountSection />,
+    });
   }
 
   // Add Admin sections for admins. When login is disabled, keep the historical
