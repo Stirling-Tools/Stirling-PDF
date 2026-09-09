@@ -16,7 +16,9 @@ public record Policy(
         OutputSpec output,
         List<String> outputIds,
         Long teamId,
-        EditorConfig editor) {
+        EditorConfig editor,
+        /** The owning product surface; {@link #SURFACE_POLICY} unless stamped otherwise. */
+        String surface) {
 
     public Policy {
         icon = icon == null ? "" : icon;
@@ -25,7 +27,14 @@ public record Policy(
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
         editor = editor == null ? EditorConfig.disabled() : editor;
+        surface = surface == null || surface.isBlank() ? SURFACE_POLICY : surface;
     }
+
+    /** The record belongs to the org policies surface (the default). */
+    public static final String SURFACE_POLICY = "policy";
+
+    /** The record is a processing-folder pair, served only by its own route. */
+    public static final String SURFACE_PROCESSING_FOLDER = "processing-folder";
 
     /**
      * Without the {@code required} flag, {@code icon}, or editor participation: defaults to an
@@ -43,7 +52,20 @@ public record Policy(
             OutputSpec output,
             List<String> outputIds,
             Long teamId) {
-        this(id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null);
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                null,
+                SURFACE_POLICY);
     }
 
     /**
@@ -62,7 +84,20 @@ public record Policy(
             List<String> outputIds,
             Long teamId,
             EditorConfig editor) {
-        this(id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, editor);
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                SURFACE_POLICY);
     }
 
     /**
@@ -124,14 +159,14 @@ public record Policy(
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
                 id, name, owner, enabled, required, icon, inputs, steps, resolved, outputIds,
-                teamId, editor);
+                teamId, editor, surface);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
         return new Policy(
                 id, name, newOwner, enabled, required, icon, inputs, steps, output, outputIds,
-                teamId, editor);
+                teamId, editor, surface);
     }
 
     /** A copy referencing the given saved output destinations. */
@@ -148,7 +183,42 @@ public record Policy(
                 output,
                 newOutputIds,
                 teamId,
-                editor);
+                editor,
+                surface);
+    }
+
+    public Policy withEnabled(boolean newEnabled) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                newEnabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface);
+    }
+
+    public Policy withSurface(String newSurface) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                newSurface);
     }
 
     /**
