@@ -1,3 +1,5 @@
+import type { PDFObject } from "@cantoo/pdf-lib";
+
 export interface LayerInfo {
   id: string;
   name: string;
@@ -249,54 +251,53 @@ export async function applyOCGVisibilityToPdf(
   const context = doc.context;
 
   // Access the catalog via the trailer's Root reference
-  const catalogRef = context.trailerInfo.Root;
-  const catalog = context.lookup(
-    catalogRef,
-  ) as unknown as typeof PDFDict.prototype;
+  const catalog = context.lookup(context.trailerInfo.Root);
+  if (!(catalog instanceof PDFDict)) {
+    return doc.save();
+  }
 
   // Get OCProperties dict (may be a direct dict or an indirect reference)
-  const ocPropsRaw = (catalog as any).lookup(PDFName.of("OCProperties"));
+  const ocPropsRaw = catalog.lookup(PDFName.of("OCProperties"));
   if (!ocPropsRaw) {
     return doc.save();
   }
-  const ocProps = (ocPropsRaw instanceof PDFDict
-    ? ocPropsRaw
-    : context.lookup(ocPropsRaw)) as unknown as typeof PDFDict.prototype;
-
-  // Get the /OCGs array
-  const ocgsRaw = (ocProps as any).lookup(PDFName.of("OCGs"));
-  if (!(ocgsRaw instanceof PDFArray)) {
+  const ocProps =
+    ocPropsRaw instanceof PDFDict ? ocPropsRaw : context.lookup(ocPropsRaw);
+  if (!(ocProps instanceof PDFDict)) {
     return doc.save();
   }
-  const ocgsArray = ocgsRaw as unknown as typeof PDFArray.prototype;
+
+  // Get the /OCGs array
+  const ocgsArray = ocProps.lookup(PDFName.of("OCGs"));
+  if (!(ocgsArray instanceof PDFArray)) {
+    return doc.save();
+  }
 
   // Get or create the /D (default config) dict
-  const dRaw = (ocProps as any).lookup(PDFName.of("D"));
+  const dRaw = ocProps.lookup(PDFName.of("D"));
   if (!dRaw) {
     return doc.save();
   }
-  const dDict = (dRaw instanceof PDFDict
-    ? dRaw
-    : context.lookup(dRaw)) as unknown as typeof PDFDict.prototype;
+  const dDict = dRaw instanceof PDFDict ? dRaw : context.lookup(dRaw);
+  if (!(dDict instanceof PDFDict)) {
+    return doc.save();
+  }
 
   // Collect OCG refs for ON vs OFF based on user visibility settings
-  const onRefs: any[] = [];
-  const offRefs: any[] = [];
+  const onRefs: PDFObject[] = [];
+  const offRefs: PDFObject[] = [];
 
-  const size = (ocgsArray as any).size() as number;
+  const size = ocgsArray.size();
   for (let i = 0; i < size; i++) {
-    const ocgRef = (ocgsArray as any).get(i);
-    const ocgDict = context.lookup(
-      ocgRef,
-    ) as unknown as typeof PDFDict.prototype;
-    if (!ocgDict) continue;
+    const ocgRef = ocgsArray.get(i);
+    const ocgDict = context.lookup(ocgRef);
+    if (!(ocgDict instanceof PDFDict)) continue;
 
     // Get the OCG name
-    const nameRaw = (ocgDict as any).lookup(PDFName.of("Name"));
+    const nameRaw = ocgDict.lookup(PDFName.of("Name"));
     let ocgName = "";
     if (nameRaw instanceof PDFString || nameRaw instanceof PDFHexString) {
-      ocgName =
-        (nameRaw as any).decodeText?.() ?? (nameRaw as any).asString?.() ?? "";
+      ocgName = nameRaw.decodeText();
     } else if (nameRaw) {
       ocgName = String(nameRaw);
     }
@@ -313,25 +314,25 @@ export async function applyOCGVisibilityToPdf(
 
   // Set /BaseState to /OFF so all layers start hidden, then /ON lists visible ones.
   // This is unambiguous and avoids conflicts between /BaseState and /ON//OFF.
-  (dDict as any).set(PDFName.of("BaseState"), PDFName.of("OFF"));
+  dDict.set(PDFName.of("BaseState"), PDFName.of("OFF"));
 
   // Set /ON to only the visible layers
   if (onRefs.length > 0) {
-    (dDict as any).set(PDFName.of("ON"), context.obj(onRefs));
+    dDict.set(PDFName.of("ON"), context.obj(onRefs));
   } else {
-    (dDict as any).delete?.(PDFName.of("ON"));
+    dDict.delete(PDFName.of("ON"));
   }
 
   // Set /OFF to only the hidden layers (for viewers that check it)
   if (offRefs.length > 0) {
-    (dDict as any).set(PDFName.of("OFF"), context.obj(offRefs));
+    dDict.set(PDFName.of("OFF"), context.obj(offRefs));
   } else {
-    (dDict as any).delete?.(PDFName.of("OFF"));
+    dDict.delete(PDFName.of("OFF"));
   }
 
-  // Remove /AS (auto-state) array — it can contain usage-based overrides
+  // Remove /AS (auto-state) array - it can contain usage-based overrides
   // (e.g., print vs view) that conflict with our explicit visibility settings.
-  (dDict as any).delete?.(PDFName.of("AS"));
+  dDict.delete(PDFName.of("AS"));
 
   return doc.save();
 }
