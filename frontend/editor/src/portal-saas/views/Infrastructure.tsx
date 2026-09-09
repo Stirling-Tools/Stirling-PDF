@@ -8,8 +8,7 @@ import "@portal/views/Infrastructure.css";
 
 // SaaS pre-release: only API keys + Audit are shipped. Deployments, Security,
 // Models and Storage are shown as disabled "coming soon" tabs (greyed, to the
-// right of the live ones), and the self-hosted-only "Manage editor deployment"
-// header button is dropped. Selection is never one of the coming-soon keys — the
+// right of the live ones). Selection is never one of the coming-soon keys — the
 // Tabs primitive renders them as native-disabled buttons, so onChange can't fire.
 type InfraTab =
   | "api-keys"

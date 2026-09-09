@@ -8,6 +8,7 @@ import AutomationImportModal from "@app/components/tools/automate/AutomationImpo
 import { useSuggestedAutomations } from "@app/hooks/tools/automate/useSuggestedAutomations";
 import { AutomationConfig, SuggestedAutomation } from "@app/types/automation";
 import { iconMap } from "@app/components/tools/automate/iconMap";
+import { iconKeyForSuggestedAutomation } from "@app/components/tools/automate/suggestedAutomationIcon";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import {
   downloadAutomationConfig,
@@ -153,7 +154,15 @@ export default function AutomationSelection({
                 description={automation.description}
                 badgeIcon={automation.icon}
                 operations={automation.operations.map((op) => op.operation)}
-                onClick={() => onRun(automation)}
+                // Suggested automations carry a component icon for display; the
+                // run path is typed for saved configs, which store an icon by
+                // name, so convert it to keep the icon if the run is saved.
+                onClick={() =>
+                  onRun({
+                    ...automation,
+                    icon: iconKeyForSuggestedAutomation(automation.id),
+                  })
+                }
                 showMenu={true}
                 onCopy={() => onCopyFromSuggested(automation)}
                 toolRegistry={toolRegistry}
