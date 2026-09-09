@@ -74,4 +74,3 @@ opt-level = 3
 strip = "debuginfo"
 codegen-units = 1
 panic = "abort"
-
