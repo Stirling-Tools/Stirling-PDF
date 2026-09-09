@@ -144,41 +144,16 @@ describe("compliance steps", () => {
     }
   });
 
-  test("the compliance gate defaults to failing the run", () => {
-    const step = policyStep("complianceCheck");
-    expect(step.params).toEqual({ standard: "pdfa", onViolation: "fail" });
+  test("the compliance gate carries no options to get wrong", () => {
+    expect(policyStep("complianceCheck").params).toEqual({});
   });
 
-  test("the compliance gate clamps unknown stored values to the fail-closed default", () => {
+  test("the gate drops any stored options a hand-edited step carries", () => {
     const back = policyStepFromWire({
       operation: "/api/v1/security/validate-compliance",
-      parameters: { standard: "pdf-something", onViolation: "ignore" },
+      parameters: { standard: "pdfua", onViolation: "ignore" },
     });
     expect(back?.toolId).toBe("complianceCheck");
-    if (back?.toolId === "complianceCheck") {
-      expect(back.params).toEqual({ standard: "pdfa", onViolation: "fail" });
-    }
-  });
-
-  test("the compliance gate keeps values it does recognise", () => {
-    const back = policyStepFromWire({
-      operation: "/api/v1/security/validate-compliance",
-      parameters: { standard: "auto", onViolation: "warn" },
-    });
-    expect(back?.toolId).toBe("complianceCheck");
-    if (back?.toolId === "complianceCheck") {
-      expect(back.params).toEqual({ standard: "auto", onViolation: "warn" });
-    }
-  });
-
-  test("the gate clamps a stored PDF/UA step: accessibility is not offered yet", () => {
-    const back = policyStepFromWire({
-      operation: "/api/v1/security/validate-compliance",
-      parameters: { standard: "pdfua", onViolation: "fail" },
-    });
-    expect(back?.toolId).toBe("complianceCheck");
-    if (back?.toolId === "complianceCheck") {
-      expect(back.params.standard).toBe("pdfa");
-    }
+    expect(back?.params).toEqual({});
   });
 });

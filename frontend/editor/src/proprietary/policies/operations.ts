@@ -93,65 +93,19 @@ function describeIntegrationOperation<TParams extends Record<string, string>>(
   };
 }
 
-/**
- * What the compliance gate validates the document against.
- *
- * TODO(#7220): add "pdfua" once the product can tag structure for accessibility; a gate pointed at
- * a standard nothing in the chain can produce fails every run.
- */
-export const COMPLIANCE_STANDARDS = ["auto", "pdfa"] as const;
-
-/** What the gate does when the document fails: stop the run, or record it and carry on. */
-export const COMPLIANCE_VIOLATION_ACTIONS = ["fail", "warn"] as const;
-
-export interface ComplianceCheckParameters {
-  standard: (typeof COMPLIANCE_STANDARDS)[number];
-  onViolation: (typeof COMPLIANCE_VIOLATION_ACTIONS)[number];
-}
-
-/** Fail-closed by default: a gate that only logs would let a bad document through unnoticed. */
-export const complianceCheckDefaultParameters: ComplianceCheckParameters = {
-  standard: "pdfa",
-  onViolation: "fail",
-};
-
-function oneOf<T extends string>(
-  value: unknown,
-  allowed: readonly T[],
-  fallback: T,
-): T {
-  return typeof value === "string" &&
-    (allowed as readonly string[]).includes(value)
-    ? (value as T)
-    : fallback;
-}
-
 const COMPLIANCE_CHECK_ENDPOINT =
   "/api/v1/security/validate-compliance" satisfies ToolEndpoint;
 
 // Annotated rather than inferred, as pdfaOperationConfig is: an unannotated object literal widens
 // `endpoint` to string, which no longer satisfies describeToolOperation's `CE extends ToolEndpoint`.
 const complianceCheckOperationConfig: BidirectionalToolConfig<
-  ComplianceCheckParameters,
+  Record<string, never>,
   typeof COMPLIANCE_CHECK_ENDPOINT
 > = {
   endpoint: COMPLIANCE_CHECK_ENDPOINT,
-  defaultParameters: complianceCheckDefaultParameters,
-  toApiParams: (parameters: ComplianceCheckParameters) => ({ ...parameters }),
-  // A stored step may name a standard or verdict this UI does not offer; clamp to the fail-closed
-  // default rather than sending a value the backend rejects.
-  fromApiParams: (apiParams): Partial<ComplianceCheckParameters> => ({
-    standard: oneOf(
-      apiParams.standard,
-      COMPLIANCE_STANDARDS,
-      complianceCheckDefaultParameters.standard,
-    ),
-    onViolation: oneOf(
-      apiParams.onViolation,
-      COMPLIANCE_VIOLATION_ACTIONS,
-      complianceCheckDefaultParameters.onViolation,
-    ),
-  }),
+  defaultParameters: {},
+  toApiParams: () => ({}),
+  fromApiParams: () => ({}),
 };
 
 export const POLICY_OPERATIONS = {
@@ -185,8 +139,7 @@ export const POLICY_OPERATIONS = {
   // Long-term archival format: embeds fonts and colour profiles so the document still renders the
   // same decades from now, which is what a retention or archival requirement actually asks for.
   pdfa: describeToolOperation("/api/v1/convert/pdf/pdfa", pdfaOperationConfig),
-  // The gate. Mappers stay explicit because the values are a closed set: a stored step naming
-  // something else is clamped to the default rather than reaching the backend.
+  // The gate: no options, so a stored step carries nothing that could drift.
   complianceCheck: describeToolOperation(
     "/api/v1/security/validate-compliance",
     complianceCheckOperationConfig,

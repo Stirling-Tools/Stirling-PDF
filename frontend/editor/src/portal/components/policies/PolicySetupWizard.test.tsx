@@ -283,10 +283,5 @@ describe("PolicySetupWizard", () => {
     expect(result.steps[1].parameters).toMatchObject({
       outputFormat: "pdfa-2b",
     });
-    // The gate stops the run by default; a gate that only logged would be decorative.
-    expect(result.steps[2].parameters).toMatchObject({
-      standard: "pdfa",
-      onViolation: "fail",
-    });
   });
 });

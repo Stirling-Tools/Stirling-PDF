@@ -27,7 +27,6 @@ import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig"
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { PolicyPdfaConfig } from "@portal/components/policies/PolicyPdfaConfig";
-import { PolicyComplianceCheckConfig } from "@portal/components/policies/PolicyComplianceCheckConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
 import "@portal/views/Policies.css";
 
@@ -153,7 +152,7 @@ const CAPABILITY_META: Record<
     labelEn: "Check the document meets the standard",
     descKey: "portal.policies.wizard.capability.complianceCheck.desc",
     descEn:
-      "Validates the finished document against the published standard and, unless you choose otherwise, stops the run if it does not hold up.",
+      "Validates the finished document against PDF/A and stops the run if it does not hold up.",
   },
   classify: {
     labelKey: "portal.policies.wizard.capability.classify.label",
@@ -515,14 +514,6 @@ function PolicySetupWizardBody({
                           <PolicyPdfaConfig
                             parameters={tl.params}
                             onChange={(params) => setToolParams("pdfa", params)}
-                          />
-                        )}
-                        {tl.toolId === "complianceCheck" && (
-                          <PolicyComplianceCheckConfig
-                            parameters={tl.params}
-                            onChange={(params) =>
-                              setToolParams("complianceCheck", params)
-                            }
                           />
                         )}
                       </div>

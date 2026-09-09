@@ -21,9 +21,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.SPDF.model.api.security.PDFVerificationResult;
-import stirling.software.SPDF.model.api.security.ValidateComplianceRequest;
 import stirling.software.SPDF.service.VeraPDFService;
 import stirling.software.common.annotations.api.SecurityApi;
+import stirling.software.common.model.api.PDFFile;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.util.ExceptionUtils;
@@ -32,15 +32,15 @@ import stirling.software.common.util.WebResponseUtils;
 /**
  * Pipeline-shaped sibling of /verify-pdf, whose JSON answer the policy executor reads as "no files"
  * and so empties the chain. This one hands the document back, so it composes as a pipeline step.
+ *
+ * <p>Deliberately has no options. Every setting a gate could offer - which standard, whether a
+ * violation stops the run - is a way to turn it off silently, and a run that succeeds while
+ * delivering a non-compliant document is the failure this exists to prevent.
  */
 @SecurityApi
 @RequiredArgsConstructor
 @Slf4j
 public class ValidateComplianceController {
-
-    private static final String STANDARD_AUTO = "auto";
-    private static final String STANDARD_PDFA = "pdfa";
-    private static final String ON_VIOLATION_WARN = "warn";
 
     // veraPDF marks a document without PDF/A identification metadata with this standard id.
     private static final String NOT_PDFA_STANDARD_ID = "not-pdfa";
@@ -55,14 +55,14 @@ public class ValidateComplianceController {
     @PostMapping(value = "/validate-compliance", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ToolIO(produces = ToolFormat.PDF)
     @Operation(
-            summary = "Check a PDF meets a compliance standard",
+            summary = "Check a PDF is PDF/A compliant",
             description =
-                    "Validates the document against a published standard and returns it unchanged"
-                            + " when it holds up. A document that misses the standard fails the"
-                            + " request, so this composes as the last step of a pipeline that must"
-                            + " not deliver a non-compliant file.")
-    public ResponseEntity<byte[]> validateCompliance(
-            @ModelAttribute ValidateComplianceRequest request) throws IOException {
+                    "Validates the document against PDF/A and returns it unchanged when it"
+                            + " conforms. A document that does not - including one that declares no"
+                            + " PDF/A at all - fails the request, so this composes as the last step"
+                            + " of a pipeline that must not deliver a non-compliant file.")
+    public ResponseEntity<byte[]> validateCompliance(@ModelAttribute PDFFile request)
+            throws IOException {
 
         MultipartFile file = request.getFileInput();
 
@@ -70,8 +70,6 @@ public class ValidateComplianceController {
             throw ExceptionUtils.createPdfFileRequiredException();
         }
 
-        String standard = resolveStandard(request.getStandard());
-        String onViolation = normalise(request.getOnViolation());
         String filename = resolveFilename(file.getOriginalFilename());
 
         byte[] bytes;
@@ -93,45 +91,17 @@ public class ValidateComplianceController {
         List<PDFVerificationResult> checked =
                 results == null
                         ? List.of()
-                        : results.stream().filter(r -> matchesStandard(r, standard)).toList();
+                        : results.stream().filter(ValidateComplianceController::isPdfa).toList();
 
-        if (!isCompliant(checked, standard)) {
-            String detail = buildViolationDetail(standard, checked);
-            if (!ON_VIOLATION_WARN.equals(onViolation)) {
-                // Typed, not a bare IOException: only an error-coded response reaches the review
-                // surface as a compliance failure rather than an unrecognised one.
-                throw ExceptionUtils.createComplianceNotMetException(
-                        detail + "; the run was stopped.");
-            }
-            log.warn("{}; continuing because onViolation=warn", detail);
-        } else {
-            log.info(
-                    "Compliance check passed for '{}': {} standard(s) checked against '{}'",
-                    filename,
-                    checked.size(),
-                    standard);
+        if (!isCompliant(checked)) {
+            // Typed, not a bare IOException: only an error-coded response reaches the review
+            // surface as a compliance failure rather than an unrecognised one.
+            throw ExceptionUtils.createComplianceNotMetException(
+                    buildViolationDetail(checked) + "; the run was stopped.");
         }
+        log.info("PDF/A compliance check passed for '{}'", filename);
 
         return WebResponseUtils.bytesToWebResponse(bytes, filename);
-    }
-
-    private static String normalise(String value) {
-        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT);
-    }
-
-    // Fail closed on an unrecognised standard: falling back to auto is the most permissive mode,
-    // so a typo in a policy step would quietly turn the gate off.
-    // TODO(#7220): accept "pdfua" once the product can tag structure for accessibility; nothing in
-    // a chain can produce a conforming document today, so the gate would fail every such run.
-    private static String resolveStandard(String requested) {
-        String standard = normalise(requested);
-        if (standard.isEmpty()) {
-            return STANDARD_AUTO;
-        }
-        if (STANDARD_AUTO.equals(standard) || STANDARD_PDFA.equals(standard)) {
-            return standard;
-        }
-        throw ExceptionUtils.createInvalidArgumentException("standard", requested);
     }
 
     // The pipeline names the next step's input from this filename, and matches the next step's
@@ -142,20 +112,6 @@ public class ValidateComplianceController {
         }
         String filename = originalFilename.trim();
         return filename.toLowerCase(Locale.ROOT).endsWith(".pdf") ? filename : filename + ".pdf";
-    }
-
-    private static boolean matchesStandard(PDFVerificationResult result, String standard) {
-        if (STANDARD_PDFA.equals(standard)) {
-            return isPdfa(result);
-        }
-        // auto: judge only what the document declares, so one declaring nothing passes.
-        return !isUndeclared(result);
-    }
-
-    // veraPDF reports "the document declares no PDF/A" as a result of its own; under auto that is
-    // not a violation, it is the absence of anything to check.
-    private static boolean isUndeclared(PDFVerificationResult result) {
-        return !result.isDeclaredPdfa() && NOT_PDFA_STANDARD_ID.equals(result.getStandard());
     }
 
     // Names carry the display form ("PDF/UA-1"), ids the veraPDF flavour ("ua1"); check both.
@@ -181,23 +137,14 @@ public class ValidateComplianceController {
         return value != null && value.toLowerCase(Locale.ROOT).contains(needle);
     }
 
-    private static boolean isCompliant(List<PDFVerificationResult> checked, String standard) {
-        // Fail closed: a standard the caller asked for but the document never declares is a miss.
-        if (checked.isEmpty()) {
-            return STANDARD_AUTO.equals(standard);
-        }
-        return checked.stream().allMatch(PDFVerificationResult::isCompliant);
+    // Fail closed: a document that never declares PDF/A is a miss, not an absence of evidence.
+    private static boolean isCompliant(List<PDFVerificationResult> checked) {
+        return !checked.isEmpty() && checked.stream().allMatch(PDFVerificationResult::isCompliant);
     }
 
-    private static String buildViolationDetail(
-            String standard, List<PDFVerificationResult> checked) {
-
-        String label = standardLabel(standard);
+    private static String buildViolationDetail(List<PDFVerificationResult> checked) {
         if (checked.isEmpty()) {
-            return "Document is not "
-                    + label
-                    + " compliant: the document does not declare "
-                    + label;
+            return "Document is not PDF/A compliant: the document does not declare PDF/A";
         }
 
         List<PDFVerificationResult> failing =
@@ -213,10 +160,8 @@ public class ValidateComplianceController {
                         .collect(Collectors.joining(", "));
 
         StringBuilder detail =
-                new StringBuilder("Document is not ")
-                        .append(label)
-                        .append(" compliant (")
-                        .append(describeProfile(failing.get(0), label))
+                new StringBuilder("Document is not PDF/A compliant (")
+                        .append(describeProfile(failing.get(0)))
                         .append("): ")
                         .append(totalFailures)
                         .append(" rule(s) failed");
@@ -226,16 +171,12 @@ public class ValidateComplianceController {
         return truncate(detail.toString(), MAX_DETAIL_LENGTH);
     }
 
-    private static String standardLabel(String standard) {
-        return STANDARD_PDFA.equals(standard) ? "PDF/A" : "PDF standards";
-    }
-
     private static List<PDFVerificationResult.ValidationIssue> failuresOf(
             PDFVerificationResult result) {
         return result.getFailures() == null ? List.of() : result.getFailures();
     }
 
-    private static String describeProfile(PDFVerificationResult result, String fallback) {
+    private static String describeProfile(PDFVerificationResult result) {
         if (result.getStandardName() != null && !result.getStandardName().isBlank()) {
             return result.getStandardName();
         }
@@ -246,7 +187,7 @@ public class ValidateComplianceController {
         if (result.getStandard() != null && !result.getStandard().isBlank()) {
             return result.getStandard();
         }
-        return fallback;
+        return "PDF/A";
     }
 
     private static String describeFailure(PDFVerificationResult.ValidationIssue issue) {

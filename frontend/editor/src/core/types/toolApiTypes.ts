@@ -1356,6 +1356,7 @@ export interface SecurityCertSignValidateCertificateRequest {
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
+export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
    * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
@@ -1496,16 +1497,6 @@ export interface UrlToPdfRequest {
    * The input URL to be converted to a PDF file
    */
   urlInput: string;
-}
-export interface ValidateComplianceRequest {
-  /**
-   * What to do when the document is not compliant: fail stops the run, warn logs and continues
-   */
-  onViolation?: "fail" | "warn";
-  /**
-   * Standard to validate against: auto (whatever the document declares) or pdfa. Anything else is rejected.
-   */
-  standard?: "auto" | "pdfa";
 }
 
 /** Endpoint path for a generated tool operation (the operation identity across languages). */
@@ -1714,7 +1705,7 @@ export interface ToolApiParams {
   "/api/v1/security/remove-password": PDFPasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
-  "/api/v1/security/validate-compliance": ValidateComplianceRequest;
+  "/api/v1/security/validate-compliance": SecurityValidateComplianceRequest;
   "/api/v1/security/validate-signature": SignatureValidationRequest;
   "/api/v1/security/verify-pdf": PDFVerificationRequest;
 }
