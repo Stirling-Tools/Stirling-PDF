@@ -110,7 +110,7 @@ public class TsaUrlResolver {
             String path = uri.getPath() == null ? "" : uri.getPath();
             return scheme + "://" + host + (port == -1 ? "" : ":" + port) + path;
         } catch (Exception e) {
-            return url.toLowerCase(Locale.ROOT);
+            return url == null ? "" : url.toLowerCase(Locale.ROOT);
         }
     }
 }
