@@ -651,7 +651,6 @@ public class PolicyController {
                             + " and in-flight counts - so an empty result explains itself. Requires"
                             + " the policy-management role.")
     public ResponseEntity<SweepOutcome> trigger(@PathVariable String policyId) {
-        // A person asked: retry files parked by earlier failures as part of the sweep.
         requirePolicySweepAllowed();
         Policy policy =
                 policyStore

@@ -129,7 +129,7 @@ public class FileReadinessChecker {
         return allowed;
     }
 
-    /** Returns the file age in milliseconds, or {@code null} when the timestamp cannot be read. */
+    /** Milliseconds since the file was last modified; null when the timestamp cannot be read. */
     private Long fileAgeMillis(Path path) {
         try {
             return System.currentTimeMillis() - Files.getLastModifiedTime(path).toMillis();

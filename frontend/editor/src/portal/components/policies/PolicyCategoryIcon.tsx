@@ -1,3 +1,3 @@
-/* Moved to the shared policies layer (as PolicyCategoryBadge, sidestepping a
-   case-insensitive clash with policyCategoryIcon.tsx); re-exported for the portal. */
+/* Shared as PolicyCategoryBadge: the name sidesteps a case-insensitive clash with
+   policyCategoryIcon.tsx, which is why this path's export is named differently. */
 export * from "@app/components/policies/PolicyCategoryBadge";

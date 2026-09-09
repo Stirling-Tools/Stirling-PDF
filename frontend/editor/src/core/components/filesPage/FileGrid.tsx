@@ -219,13 +219,9 @@ interface FileGridActions {
   openFolder: (id: FolderId) => void;
   openFile: (file: StirlingFileStub) => void;
   openDiskFile: (entry: DiskFileEntry) => void;
-  /** Open the processing-setup dialog for a folder (create or edit). */
   startProcessing: (folder: FolderRecord) => void;
-  /** Retry one failed file, by its name in the folder. */
   retryFile: (name: string) => void;
-  /** Restore one file's archived original, by its name in the folder. */
   revertFile: (name: string) => void;
-  /** Ask to restore every original in the folder; confirmation lives upstream. */
   requestRevertAll: (folder: FolderRecord) => void;
   /** Surface a failed folder action's reason the way a failed drop's is. */
   reportError: (err: unknown, label: string) => void;
@@ -1329,7 +1325,6 @@ interface FileCardProps {
   /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   badges: FileItemPolicyRef[];
-  /** The file's place in its folder's pipeline, when one is attached. */
   processingState?: DiskFileState;
   actions: FileGridActions;
 }
@@ -1961,7 +1956,6 @@ interface FileRowProps {
   /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   badges: FileItemPolicyRef[];
-  /** The file's place in its folder's pipeline, when one is attached. */
   processingState?: DiskFileState;
   actions: FileGridActions;
 }
@@ -2150,7 +2144,6 @@ const DiskFileCard = React.memo(function DiskFileCard({
 }: {
   entry: DiskFileEntry;
   state?: DiskFileState;
-  /** An archived pre-processing original exists, so the file can be restored. */
   hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
@@ -2270,7 +2263,6 @@ const DiskFileRow = React.memo(function DiskFileRow({
 }: {
   entry: DiskFileEntry;
   state?: DiskFileState;
-  /** An archived pre-processing original exists, so the file can be restored. */
   hasOriginal?: boolean;
   actions: FileGridActions;
 }) {

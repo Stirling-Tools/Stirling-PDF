@@ -258,8 +258,7 @@ public class FolderOutputSink implements PolicyOutputSink {
      *
      * <p>With the slot already taken the kept original stays canonical and this content goes to
      * {@link #supersededDir}, not to a numbered sibling that a restore would bring back as a file
-     * the folder never held. Which of the two a restore ought to return is an open question; see
-     * the note on {@link #supersededDir}.
+     * the folder never held.
      *
      * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} and
      * needs no atomic visibility, and a plain move survives a cross-device archive dir where {@code

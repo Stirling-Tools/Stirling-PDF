@@ -117,8 +117,6 @@ class FolderOutputSinkTest {
         Path out = tempDir.resolve("out");
         VisibilityAssertingLedger orderedLedger = new VisibilityAssertingLedger();
         ApplicationProperties properties = new ApplicationProperties();
-        // With login off the guard permits the local operator everywhere; these tests
-        // exercise the allowlist, so they opt into login like a hosted install.
         properties.getSecurity().setEnableLogin(true);
         properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
         FolderOutputSink orderedSink =
