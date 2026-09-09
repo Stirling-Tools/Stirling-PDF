@@ -370,12 +370,17 @@ export default defineConfig(async ({ mode, command }) => {
       strictPort: true,
       proxy: backendProxyConfig,
     },
+    // Keep @license blocks (the icon registry carries lucide's ISC notice).
+    esbuild: { legalComments: "eof" },
     build: {
       target: "esnext",
       rollupOptions: {
         output: {
           manualChunks(id) {
-            if (id.includes("material-symbols-icons.json"))
+            if (
+              id.includes("material-symbols-icons.json") ||
+              id.includes("core/icons/registry.generated")
+            )
               return "vendor-iconset";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
