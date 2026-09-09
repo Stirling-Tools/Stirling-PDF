@@ -7122,6 +7122,11 @@ going = "Taking you to stirling.com"
 reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
 title = "Connecting"
 
+[portal.accountLink.gate]
+error = "Couldn't check the Stirling account connection"
+loading = "Checking the Stirling account connection..."
+retry = "Try again"
+
 [portal.accountLink.instances]
 active = "Active"
 revoke = "Revoke"

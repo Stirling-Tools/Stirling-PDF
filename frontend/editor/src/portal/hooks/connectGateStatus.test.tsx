@@ -1,5 +1,11 @@
-import { describe, expect, it, vi } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
@@ -7,9 +13,10 @@ import { LinkProvider } from "@portal/contexts/LinkContext";
 import { UIProvider } from "@portal/contexts/UIContext";
 
 /** Over the real provider stack: pins apart not-yet-known, never-knowable and truly unlinked. */
-const { json, fetchStatus } = vi.hoisted(() => ({
+const { json, fetchStatus, guardedAction } = vi.hoisted(() => ({
   json: vi.fn(),
   fetchStatus: vi.fn(),
+  guardedAction: vi.fn(),
 }));
 vi.mock("@portal/api/http", () => ({
   apiClient: { local: { json } },
@@ -27,9 +34,12 @@ import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 
 function Probe() {
-  const { gated, available } = useConnectGate();
+  const { gated, available, guard } = useConnectGate();
   return (
-    <span data-testid="g">{`${available ? "avail" : "unavail"}:${gated ? "gated" : "open"}`}</span>
+    <>
+      <span data-testid="g">{`${available ? "avail" : "unavail"}:${gated ? "gated" : "open"}`}</span>
+      <button onClick={guard(guardedAction)}>Guarded action</button>
+    </>
   );
 }
 
@@ -66,49 +76,90 @@ const state = () => screen.getByTestId("g").textContent;
 const configSaysAvailable = () =>
   json.mockResolvedValue({ accountLinkAvailable: true });
 
+beforeEach(() => {
+  vi.clearAllMocks();
+  json.mockReset();
+  fetchStatus.mockReset();
+});
+afterEach(() => {
+  sessionStorage.clear();
+  window.history.replaceState({}, "", "/");
+});
+
+const builder = () =>
+  screen.queryByRole("heading", { name: "Pipeline builder" });
+const assertActionBlocked = () => {
+  fireEvent.click(screen.getByRole("button", { name: "Guarded action" }));
+  expect(guardedAction).not.toHaveBeenCalled();
+};
+const retry = () =>
+  fireEvent.click(
+    screen.getByRole("button", { name: "portal.accountLink.gate.retry" }),
+  );
+
 describe("connect gate and the link status", () => {
-  it("stays open while the status is still in flight", async () => {
+  it("waits visibly for status without opening the builder or guarded actions", async () => {
     configSaysAvailable();
     let resolve!: (v: unknown) => void;
     fetchStatus.mockReturnValue(new Promise((r) => (resolve = r)));
     renderStack();
     await waitFor(() => expect(state()).toBe("avail:open"));
-    expect(state()).toContain("open");
     expect(
-      screen.getByRole("heading", { name: "Pipeline builder" }),
+      screen.getByRole("status", { name: "portal.accountLink.gate.loading" }),
     ).toBeInTheDocument();
+    expect(builder()).not.toBeInTheDocument();
+    assertActionBlocked();
     await act(async () => resolve({ linked: true, name: "acme" }));
+    expect(builder()).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Guarded action" }));
+    expect(guardedAction).toHaveBeenCalledTimes(1);
   });
 
-  it("stays open once a linked status arrives", async () => {
-    configSaysAvailable();
-    fetchStatus.mockResolvedValue({ linked: true, name: "acme" });
-    renderStack();
-    await waitFor(() => expect(state()).toBe("avail:open"));
-    expect(state()).toContain("open");
-  });
+  it.each([true, false])(
+    "retries a failed status check and respects linked=%s",
+    async (linked) => {
+      configSaysAvailable();
+      fetchStatus
+        .mockRejectedValueOnce(new Error("Status unavailable"))
+        .mockResolvedValue({ linked, name: linked ? "acme" : null });
+      renderStack();
+      await screen.findByText("portal.accountLink.gate.error");
+      expect(builder()).not.toBeInTheDocument();
+      assertActionBlocked();
+      retry();
+      await screen.findByRole("heading", {
+        name: linked ? "Pipeline builder" : "Pipelines list",
+      });
+      expect(fetchStatus).toHaveBeenCalledTimes(2);
+      expect(
+        screen.queryByText("portal.accountLink.gate.error"),
+      ).not.toBeInTheDocument();
+    },
+  );
 
-  it("stays open when the status call fails, rather than assuming unlinked", async () => {
-    configSaysAvailable();
-    fetchStatus.mockRejectedValue(
-      new Error("401 once the admin session lapsed"),
-    );
-    renderStack();
-    await waitFor(() => expect(state()).toBe("avail:open"));
-    expect(state()).toContain("open");
-  });
-
-  it("still gates once the status says the instance really is unlinked", async () => {
+  it("does not honor the old dev bypass URL or stored flag for an unlinked instance", async () => {
+    window.history.replaceState({}, "", "/processor?bypassConnect=true");
+    sessionStorage.setItem("accountLink::dev-bypass", "true");
     configSaysAvailable();
     fetchStatus.mockResolvedValue({ linked: false, name: null });
     renderStack();
-    await waitFor(() => expect(state()).toBe("avail:gated"));
-    expect(
-      await screen.findByRole("heading", { name: "Pipelines list" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole("heading", { name: "Pipeline builder" }),
-    ).not.toBeInTheDocument();
+    await screen.findByRole("heading", { name: "Pipelines list" });
+    expect(builder()).not.toBeInTheDocument();
+    assertActionBlocked();
+  });
+
+  it("blocks when app configuration fails and retries without assuming linking is disabled", async () => {
+    json
+      .mockRejectedValueOnce(new Error("Configuration unavailable"))
+      .mockResolvedValue({ accountLinkAvailable: false });
+    fetchStatus.mockRejectedValue(new Error("No status endpoint"));
+    renderStack();
+    await screen.findByText("portal.accountLink.gate.error");
+    expect(builder()).not.toBeInTheDocument();
+    assertActionBlocked();
+    retry();
+    await screen.findByRole("heading", { name: "Pipeline builder" });
+    expect(json).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -119,19 +170,20 @@ describe("pipeline routes with unknown link status", () => {
     ["/processor/pipelines/new", true],
     ["/processor/pipelines/plc-1", true],
   ])(
-    "renders %s after a failed status request (link available: %s)",
+    "requires status for %s only when linking is available (%s)",
     async (path, accountLinkAvailable) => {
       json.mockResolvedValue({ accountLinkAvailable });
       fetchStatus.mockRejectedValue(new Error("Link status unavailable"));
       renderStack(path);
-      await waitFor(() =>
-        expect(state()).toBe(
-          `${accountLinkAvailable ? "avail" : "unavail"}:open`,
-        ),
-      );
-      expect(
-        await screen.findByRole("heading", { name: "Pipeline builder" }),
-      ).toBeInTheDocument();
+      if (accountLinkAvailable) {
+        await screen.findByText("portal.accountLink.gate.error");
+        expect(builder()).not.toBeInTheDocument();
+      } else {
+        await screen.findByRole("heading", { name: "Pipeline builder" });
+        expect(
+          screen.queryByText("portal.accountLink.gate.error"),
+        ).not.toBeInTheDocument();
+      }
       expect(
         screen.queryByRole("heading", { name: "Pipelines list" }),
       ).not.toBeInTheDocument();
