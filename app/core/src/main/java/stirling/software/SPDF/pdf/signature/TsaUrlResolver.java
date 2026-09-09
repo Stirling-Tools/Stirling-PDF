@@ -68,13 +68,14 @@ public class TsaUrlResolver {
         }
 
         Set<String> normalizedAllowed =
-                allowedUrls(tsConfig).stream().map(TsaUrlResolver::normalize).collect(Collectors.toSet());
+                allowedUrls(tsConfig).stream()
+                        .map(TsaUrlResolver::normalize)
+                        .collect(Collectors.toSet());
 
         if (!normalizedAllowed.contains(normalize(tsaUrl))) {
             throw new IllegalArgumentException(
                     "TSA URL is not in the allowed list. Contact your administrator to add it"
-                            + " via settings.yml (security.timestamp.defaultTsaUrl or security.timestamp.customTsaUrls)."
-                            );
+                            + " via settings.yml (security.timestamp.defaultTsaUrl or security.timestamp.customTsaUrls).");
         }
 
         return tsaUrl;

@@ -20,6 +20,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
@@ -53,6 +54,9 @@ public class TSAClient {
             new DefaultDigestAlgorithmIdentifierFinder();
     // SecureRandom.getInstanceStrong() would be better, but sometimes blocks on Linux
     private static final Random RANDOM = new SecureRandom();
+    private static final int CONNECT_TIMEOUT_MILLIS = 30_000;
+    private static final int READ_TIMEOUT_MILLIS = 30_000;
+    private static final int MAX_RESPONSE_SIZE = 1024 * 1024;
     private final URL url;
     private final String username;
     private final String password;
@@ -128,6 +132,13 @@ public class TSAClient {
 
         // todo: support proxy servers
         URLConnection connection = url.openConnection();
+        connection.setConnectTimeout(CONNECT_TIMEOUT_MILLIS);
+        connection.setReadTimeout(READ_TIMEOUT_MILLIS);
+        if (connection instanceof HttpURLConnection httpConnection) {
+            // The TSA URL is validated against an allowlist before reaching this client;
+            // without this, a redirect could be used to bypass that allowlist (SSRF-by-redirect).
+            httpConnection.setInstanceFollowRedirects(false);
+        }
         connection.setDoOutput(true);
         connection.setDoInput(true);
         connection.setRequestProperty("Content-Type", "application/timestamp-query");
@@ -161,7 +172,15 @@ public class TSAClient {
 
         byte[] response;
         try (InputStream input = connection.getInputStream()) {
-            response = input.readAllBytes();
+            response = input.readNBytes(MAX_RESPONSE_SIZE);
+            if (input.read() != -1) {
+                throw new IOException(
+                        "Response from "
+                                + url
+                                + " exceeds maximum allowed size of "
+                                + MAX_RESPONSE_SIZE
+                                + " bytes");
+            }
         } catch (IOException ex) {
             LOG.error("Exception when reading from {}", this.url, ex);
             throw ex;

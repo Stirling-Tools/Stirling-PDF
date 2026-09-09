@@ -39,7 +39,7 @@ class SignPDFWithCertRequestBindingTest {
         binder.bind(request);
 
         assertTrue(
-                target.getAddTimestamp(),
+                Boolean.TRUE.equals(target.getAddTimestamp()),
                 "addTimestamp should stay at its default (true) when the request omits it,"
                         + " so existing frontend callers get a timestamp with zero UI changes");
     }
