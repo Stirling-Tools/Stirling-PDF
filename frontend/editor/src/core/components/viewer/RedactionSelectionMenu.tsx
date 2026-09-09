@@ -2,7 +2,6 @@ import {
   useRedaction as useEmbedPdfRedaction,
   RedactionSelectionMenuProps,
 } from "@embedpdf/plugin-redaction/react";
-import { PdfAnnotationSubtype } from "@embedpdf/models";
 import { Tooltip, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -16,7 +15,7 @@ import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId"
 
 export type { RedactionSelectionMenuProps };
 
-export function RedactionSelectionMenu(props: any) {
+export function RedactionSelectionMenu(props: RedactionSelectionMenuProps) {
   const activeDocumentId = useActiveDocumentId();
 
   // Don't render until we have a valid document ID
@@ -35,17 +34,9 @@ function RedactionSelectionMenuInner({
   selected,
   menuWrapperProps,
 }: RedactionSelectionMenuProps & { documentId: string }) {
-  const item =
-    context?.type === "redaction"
-      ? context.item
-      : context?.type === "annotation"
-        ? (context as any).annotation?.object
-        : null;
+  const item = context?.type === "redaction" ? context.item : null;
 
-  const isRedaction =
-    context?.type === "redaction" ||
-    (context?.type === "annotation" &&
-      item?.type === PdfAnnotationSubtype.REDACT);
+  const isRedaction = context?.type === "redaction";
 
   const pageIndex = context?.pageIndex;
   const { t } = useTranslation();
