@@ -67,6 +67,7 @@ import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.model.PolicyPermissions;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
@@ -275,6 +276,12 @@ public class PolicyController {
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
         requirePolicyEditingAllowed();
         Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
+        // Snapshot the previous version before saving so supporting files this edit dropped can
+        // be cleaned up once nothing references them.
+        Policy previous =
+                owned.id() == null || owned.id().isBlank()
+                        ? null
+                        : policyStore.get(owned.id()).orElse(null);
         requireAccessibleSources(owned);
         requireAccessibleOutput(owned);
         try {
@@ -282,12 +289,6 @@ public class PolicyController {
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
-        // Snapshot the previous version before saving so supporting files this edit dropped can
-        // be cleaned up once nothing references them.
-        Policy previous =
-                owned.id() == null || owned.id().isBlank()
-                        ? null
-                        : policyStore.get(owned.id()).orElse(null);
         Policy saved = policyStore.save(owned);
         assetCleaner.cleanupAfterSave(previous, saved);
         // Re-sync trigger registrations now so a new/changed folder-watch policy starts being
@@ -336,6 +337,15 @@ public class PolicyController {
      * nothing to check.
      */
     private void requireAccessibleOutput(Policy policy) {
+        // An editor policy hands its results back to the workspace the file came from. A stored
+        // destination would send the run to a folder or bucket instead, leaving the editor's copy
+        // untouched - and the editor's import would then have nothing to collect.
+        if (policy.editor().allowed() && !policy.outputIds().isEmpty()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "An editor policy delivers back to the editor and can't also have a"
+                            + " destination");
+        }
         for (String outputId : policy.outputIds()) {
             Source destination =
                     sourceStore
@@ -389,11 +399,14 @@ public class PolicyController {
                 policy.name(),
                 owner,
                 policy.enabled(),
+                policy.required(),
+                policy.icon(),
                 policy.inputs(),
                 policy.steps(),
                 policy.output(),
                 policy.outputIds(),
-                teamId);
+                teamId,
+                policy.editor());
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */
@@ -432,15 +445,10 @@ public class PolicyController {
     }
 
     /**
-     * Creating, editing, pausing/resuming, and deleting policies requires the editor role for the
-     * caller's team — a team leader on SaaS (see {@link PolicyManagementAuthority}); the global
-     * admin gets no say on SaaS. Team scoping (which team's policies) is enforced separately by
-     * {@link PolicyAccessGuard}. Every mutation routes through {@link #savePolicy} (pause/resume
-     * re-save with a flipped {@code enabled} flag) or {@link #deletePolicy}, so gating those two
-     * covers them all; runs over the caller's own files ({@code /{id}/run}) stay open to the team,
-     * while source sweeps are gated by {@link #requirePolicySweepAllowed}. Single-user deployments
-     * (login disabled) have no such role, so they trust the local operator. The path allowlist for
-     * folder sources/outputs is enforced separately by {@link PolicyValidator} at validation time.
+     * Creating, editing, pausing, or deleting any pipeline or policy needs the manager role for the
+     * caller's team (see {@link PolicyManagementAuthority}). A team member without it may view and
+     * run the team's pipelines but not change them, so every mutation endpoint ({@link
+     * #savePolicy}, {@link #deletePolicy}, {@link #clearProcessedHistory}) calls this.
      */
     private void requirePolicyEditingAllowed() {
         if (!policyEditingAllowed()) {
@@ -470,8 +478,7 @@ public class PolicyController {
     }
 
     /**
-     * Whether the caller may create/modify policies (a team leader, or any operator when login is
-     * off).
+     * Whether the caller may create/modify policies (a manager, or any operator when login off).
      */
     private boolean policyEditingAllowed() {
         return !applicationProperties.getSecurity().isEnableLogin()
@@ -516,6 +523,17 @@ public class PolicyController {
                 .toList();
     }
 
+    @GetMapping("/permissions")
+    @Operation(
+            summary = "The caller's policy-management permissions",
+            description =
+                    "Whether the caller may create, edit, or delete pipelines and policies, so the UI"
+                            + " can gate those controls; other team members may view but not change"
+                            + " them.")
+    public PolicyPermissions permissions() {
+        return new PolicyPermissions(policyEditingAllowed());
+    }
+
     @GetMapping("/{policyId}")
     @Operation(
             summary = "Get a policy by id",
@@ -538,7 +556,10 @@ public class PolicyController {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
         Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
-        if (policy != null && policyStore.delete(policyId)) {
+        if (policy == null) {
+            return ResponseEntity.notFound().build();
+        }
+        if (policyStore.delete(policyId)) {
             processedLedger.clearPolicy(policyId);
             assetCleaner.cleanupAfterDelete(policy);
             // Cancel any now-orphaned folder watch promptly rather than leaving the WatchKey open
@@ -559,9 +580,8 @@ public class PolicyController {
     public ResponseEntity<Void> clearProcessedHistory(@PathVariable String policyId) {
         requirePolicyEditingAllowed();
         // Scope to the caller's team: a policy in another team reads as not-found.
-        boolean accessible =
-                policyStore.get(policyId).filter(policyAccessGuard::canAccess).isPresent();
-        if (!accessible) {
+        Policy policy = policyStore.get(policyId).filter(policyAccessGuard::canAccess).orElse(null);
+        if (policy == null) {
             return ResponseEntity.notFound().build();
         }
         processedLedger.clearPolicy(policyId);
@@ -576,7 +596,9 @@ public class PolicyController {
                             + " under 'fileInput', supporting files under 'assets[i].key' /"
                             + " 'assets[i].file' - only for bindings the policy does not already"
                             + " store). Runs regardless of the policy's enabled flag, which only"
-                            + " gates automatic triggering. Returns a run id.")
+                            + " gates automatic triggering. A single-document run may also send its"
+                            + " own opaque 'fileId', which is recorded against any failure so the"
+                            + " caller can resolve it back to that document. Returns a run id.")
     public ResponseEntity<JobResponse<Void>> runStoredPolicy(
             @PathVariable String policyId, @Valid @ModelAttribute PolicyRunFiles files)
             throws IOException {
@@ -590,7 +612,14 @@ public class PolicyController {
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
         stampPolicyAudit(policy.toDefinition());
         PolicyInputs inputs = toInputs(files);
-        String runId = policyRunner.runWith(policy, inputs, PolicyProgressListener.NOOP).runId();
+        String runId =
+                policyRunner
+                        .runWith(
+                                policy,
+                                inputs,
+                                PolicyProgressListener.NOOP,
+                                documentReferenceFor(files, inputs))
+                        .runId();
         return ResponseEntity.accepted().body(new JobResponse<>(true, runId, null));
     }
 
@@ -720,6 +749,19 @@ public class PolicyController {
             }
         }
         return new PolicyInputs(primary, supportingFiles);
+    }
+
+    /**
+     * Only for a single-document run: an incident holds one file reference, so naming one of
+     * several would attribute the failure to whichever bound first. Counted off resolved inputs,
+     * not parts.
+     */
+    private static String documentReferenceFor(PolicyRunFiles files, PolicyInputs inputs) {
+        String fileId = files.getFileId();
+        if (fileId == null || fileId.isBlank() || inputs.primary().size() != 1) {
+            return null;
+        }
+        return fileId;
     }
 
     private PolicyProgressListener streamListener(SseEmitter emitter) {

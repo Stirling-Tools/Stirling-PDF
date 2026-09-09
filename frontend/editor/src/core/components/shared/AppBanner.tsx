@@ -11,7 +11,7 @@ export type AppBannerTone = "info" | "promo" | "warning" | "danger";
 /** Tone decides the button too, so the CTA can't drift from the bar it sits on. */
 const TONE_BUTTON = {
   info: { variant: "secondary", accent: "default" },
-  promo: { variant: "primary", accent: "premium" },
+  promo: { variant: "primary", accent: "default" },
   warning: { variant: "primary", accent: "warning" },
   danger: { variant: "primary", accent: "danger" },
 } as const;

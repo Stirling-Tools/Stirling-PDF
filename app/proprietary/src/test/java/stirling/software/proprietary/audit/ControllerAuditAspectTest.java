@@ -76,7 +76,8 @@ class ControllerAuditAspectTest {
         @DisplayName("shouldAudit false proceeds without recording")
         void skipsWhenShouldAuditFalse() throws Throwable {
             ProceedingJoinPoint jp = joinPointFor("getEndpoint");
-            when(auditService.shouldAudit(any(Method.class), eq(auditConfig))).thenReturn(false);
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(false);
             when(jp.proceed()).thenReturn("ok");
 
             Object result = aspect.auditGetMethod(jp);
@@ -102,7 +103,8 @@ class ControllerAuditAspectTest {
         @DisplayName("records success outcome and returns result")
         void recordsSuccess() throws Throwable {
             ProceedingJoinPoint jp = joinPointFor("postEndpoint");
-            when(auditService.shouldAudit(any(Method.class), eq(auditConfig))).thenReturn(true);
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(true);
             when(auditService.captureCurrentPrincipal()).thenReturn("alice");
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
@@ -134,7 +136,8 @@ class ControllerAuditAspectTest {
             MDC.put("auditPrincipal", "fromMdc");
             MDC.put("auditOrigin", "API");
             ProceedingJoinPoint jp = joinPointFor("postEndpoint");
-            when(auditService.shouldAudit(any(Method.class), eq(auditConfig))).thenReturn(true);
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(true);
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
                     .thenReturn(new HashMap<>());
             when(auditService.resolveEventType(
@@ -166,7 +169,8 @@ class ControllerAuditAspectTest {
         @DisplayName("records failure outcome and rethrows")
         void recordsFailureAndRethrows() throws Throwable {
             ProceedingJoinPoint jp = joinPointFor("postEndpoint");
-            when(auditService.shouldAudit(any(Method.class), eq(auditConfig))).thenReturn(true);
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(true);
             when(auditService.captureCurrentPrincipal()).thenReturn("alice");
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
@@ -204,7 +208,8 @@ class ControllerAuditAspectTest {
         @DisplayName("annotated method proceeds without double-auditing")
         void annotatedMethodSkips() throws Throwable {
             ProceedingJoinPoint jp = joinPointFor("annotatedEndpoint");
-            when(auditService.shouldAudit(any(Method.class), eq(auditConfig))).thenReturn(true);
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(true);
             when(auditService.captureCurrentPrincipal()).thenReturn("alice");
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(jp.proceed()).thenReturn("ok");
@@ -232,7 +237,8 @@ class ControllerAuditAspectTest {
         @DisplayName("captures result when enabled and non-UI type")
         void capturesResult() throws Throwable {
             ProceedingJoinPoint jp = joinPointFor("postEndpoint");
-            when(auditService.shouldAudit(any(Method.class), eq(auditConfig))).thenReturn(true);
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(true);
             when(auditService.captureCurrentPrincipal()).thenReturn("alice");
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))
@@ -262,7 +268,8 @@ class ControllerAuditAspectTest {
         @DisplayName("UI_DATA result is not captured")
         void uiDataResultSkipped() throws Throwable {
             ProceedingJoinPoint jp = joinPointFor("getEndpoint");
-            when(auditService.shouldAudit(any(Method.class), eq(auditConfig))).thenReturn(true);
+            when(auditService.shouldAudit(any(), any(Method.class), eq(auditConfig)))
+                    .thenReturn(true);
             when(auditService.captureCurrentPrincipal()).thenReturn("alice");
             when(auditService.captureCurrentOrigin()).thenReturn("WEB");
             when(auditService.createBaseAuditData(eq(jp), any(AuditLevel.class)))

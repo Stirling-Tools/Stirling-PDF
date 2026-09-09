@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Tabs, type TabItem } from "@app/ui";
+import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { ApiKeysTab } from "@portal/components/infrastructure/ApiKeysTab";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
 import "@portal/views/Infrastructure.css";
 
 // SaaS pre-release: only API keys + Audit are shipped. Deployments, Security,
 // Models and Storage are shown as disabled "coming soon" tabs (greyed, to the
-// right of the live ones), and the self-hosted-only "Manage editor deployment"
-// header button is dropped. Selection is never one of the coming-soon keys — the
+// right of the live ones). Selection is never one of the coming-soon keys — the
 // Tabs primitive renders them as native-disabled buttons, so onChange can't fire.
 type InfraTab =
   | "api-keys"
@@ -21,6 +21,8 @@ type InfraTab =
 export function Infrastructure() {
   const { t } = useTranslation();
   const [tab, setTab] = useState<InfraTab>("api-keys");
+  // Audit is Enterprise-only; disabled (greyed, inert) for non-enterprise tenants.
+  const auditEnabled = useEnterpriseEnabled().enabled;
 
   const comingSoon = (labelKey: string) => (
     <>
@@ -33,7 +35,11 @@ export function Infrastructure() {
 
   const tabs: TabItem<InfraTab>[] = [
     { key: "api-keys", label: t("portal.infrastructure.tabs.apiKeys") },
-    { key: "audit", label: t("portal.infrastructure.tabs.audit") },
+    {
+      key: "audit",
+      label: t("portal.infrastructure.tabs.audit"),
+      disabled: !auditEnabled,
+    },
     {
       key: "deployments",
       label: comingSoon("portal.infrastructure.tabs.deployments"),

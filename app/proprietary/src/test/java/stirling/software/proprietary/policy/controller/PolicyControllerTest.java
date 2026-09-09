@@ -29,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -39,6 +40,7 @@ import stirling.software.common.model.job.JobResponse;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.service.JobOwnershipService;
 import stirling.software.common.util.TempFileManager;
+import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
@@ -49,6 +51,7 @@ import stirling.software.proprietary.policy.engine.SweepOutcome;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.PipelineValidation;
 import stirling.software.proprietary.policy.model.Policy;
@@ -87,7 +90,10 @@ class PolicyControllerTest {
 
     @Mock private ProcessedLedger processedLedger;
 
-    @Mock private TempFileManager tempFileManager;
+    // Real, not mocked: the run endpoints spool uploads through it.
+    private final TempFileManager tempFileManager =
+            new TempFileManager(new TempFileRegistry(), new ApplicationProperties());
+
     @Mock private JobOwnershipService jobOwnershipService;
 
     private ApplicationProperties applicationProperties;
@@ -306,10 +312,11 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("does not resolve a policy's stored assets for a caller who cannot edit it")
-        void skipsStoredAssetsForNonEditor() throws Exception {
-            // Gating asset resolution to editors keeps a member from rebinding a policy's stored
-            // asset into an ad-hoc step to read it back.
+        @DisplayName("does not resolve stored assets for a non-manager")
+        void skipsStoredAssetsForNonManager() throws Exception {
+            // The exfiltration guard: only an editor (manager) may resolve a policy's stored asset
+            // bindings, so a member can't rebind one into an ad-hoc step to read it back. Checked
+            // before any lookup, so the store is never even consulted.
             applicationProperties.getSecurity().setEnableLogin(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
             when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
@@ -319,6 +326,23 @@ class PolicyControllerTest {
 
             verify(assetResolver, never()).resolve(any(), any());
             verify(policyStore, never()).get(any());
+        }
+
+        @Test
+        @DisplayName("resolves stored assets for a manager")
+        void resolvesStoredAssetsForManager() throws Exception {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+            Policy p = policy("pol-1", 1L);
+            when(policyStore.get("pol-1")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(assetResolver.resolve(eq(p), any())).thenAnswer(inv -> inv.getArgument(1));
+            when(policyRunner.runAdHoc(any(), any(), eq(PolicyProgressListener.NOOP)))
+                    .thenReturn(handle("run-1"));
+
+            controller.run(definitionWithStep(), "pol-1", new PolicyRunFiles());
+
+            verify(assetResolver).resolve(eq(p), any());
         }
     }
 
@@ -448,11 +472,13 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("forbidden when login enabled and caller cannot edit")
-        void forbidden() {
+        @DisplayName("forbidden when a non-manager saves any pipeline or policy")
+        void forbidsSaveForNonManager() {
             applicationProperties.getSecurity().setEnableLogin(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
 
+            // Editing is manager-only regardless of the Pipeline vs Policy (required) flag, so even
+            // an ordinary pipeline is refused - and the gate runs before any lookup.
             assertThatThrownBy(() -> controller.savePolicy(policy(null, null)))
                     .isInstanceOf(ResponseStatusException.class)
                     .satisfies(
@@ -460,7 +486,42 @@ class PolicyControllerTest {
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.FORBIDDEN));
             verify(policyStore, never()).save(any());
+            verify(policyStore, never()).get(any());
             verify(policyTriggerManager, never()).notifyPoliciesChanged();
+        }
+
+        @Test
+        @DisplayName(
+                "the manager gate runs before validation, so a forbidden save never leaks a 400")
+        void gatePrecedesValidation() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+            // A required policy that also references an unknown source: reaching the source and
+            // validation checks would surface a 400. The 403 must win, so a non-manager can't
+            // probe those errors on a save they're forbidden from performing.
+            Policy withUnknownSource =
+                    new Policy(
+                            null,
+                            "name",
+                            "owner",
+                            true,
+                            true,
+                            "",
+                            List.of(PipelineInput.manual("src-missing")),
+                            List.of(),
+                            null,
+                            List.of(),
+                            null,
+                            null);
+
+            assertThatThrownBy(() -> controller.savePolicy(withUnknownSource))
+                    .isInstanceOf(ResponseStatusException.class)
+                    .satisfies(
+                            e ->
+                                    assertThat(((ResponseStatusException) e).getStatusCode())
+                                            .isEqualTo(HttpStatus.FORBIDDEN));
+            verify(policyValidator, never()).validate(any());
+            verify(policyStore, never()).save(any());
         }
 
         @Test
@@ -635,17 +696,20 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("forbidden when login enabled and caller cannot edit")
-        void forbidden() {
+        @DisplayName("forbidden when a non-manager deletes any pipeline")
+        void forbidsDeleteForNonManager() {
             applicationProperties.getSecurity().setEnableLogin(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
 
+            // The gate runs before any lookup, so a delete by a non-manager is refused outright.
             assertThatThrownBy(() -> controller.deletePolicy("a"))
                     .isInstanceOf(ResponseStatusException.class)
                     .satisfies(
                             e ->
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.FORBIDDEN));
+            verify(policyStore, never()).delete(any());
+            verify(policyStore, never()).get(any());
         }
     }
 
@@ -682,17 +746,52 @@ class PolicyControllerTest {
         }
 
         @Test
-        @DisplayName("forbidden when login enabled and caller cannot edit")
-        void forbidden() {
+        @DisplayName("forbidden when a non-manager clears any pipeline's history")
+        void forbidsClearForNonManager() {
             applicationProperties.getSecurity().setEnableLogin(true);
             when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
 
+            // The gate runs before any lookup, so a clear by a non-manager is refused outright.
             assertThatThrownBy(() -> controller.clearProcessedHistory("a"))
                     .isInstanceOf(ResponseStatusException.class)
                     .satisfies(
                             e ->
                                     assertThat(((ResponseStatusException) e).getStatusCode())
                                             .isEqualTo(HttpStatus.FORBIDDEN));
+            verify(processedLedger, never()).clearPolicy(any());
+            verify(policyStore, never()).get(any());
+        }
+    }
+
+    @Nested
+    @DisplayName("permissions")
+    class Permissions {
+
+        @Test
+        @DisplayName("a manager may manage policies")
+        void managerCanManage() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(true);
+
+            assertThat(controller.permissions().canManagePolicies()).isTrue();
+        }
+
+        @Test
+        @DisplayName("a non-manager may not manage policies")
+        void nonManagerCannotManage() {
+            applicationProperties.getSecurity().setEnableLogin(true);
+            when(policyManagementAuthority.canEditPolicies()).thenReturn(false);
+
+            assertThat(controller.permissions().canManagePolicies()).isFalse();
+        }
+
+        @Test
+        @DisplayName("single-user (login off) may manage policies without a role")
+        void singleUserCanManage() {
+            applicationProperties.getSecurity().setEnableLogin(false);
+
+            assertThat(controller.permissions().canManagePolicies()).isTrue();
+            verify(policyManagementAuthority, never()).canEditPolicies();
         }
     }
 
@@ -700,13 +799,46 @@ class PolicyControllerTest {
     @DisplayName("runStoredPolicy")
     class RunStoredPolicy {
 
+        /** What an editor sends: the documents, plus its own id for a single one of them. */
+        private PolicyRunFiles filesWith(String fileId, int documents) {
+            PolicyRunFiles files = new PolicyRunFiles();
+            files.setFileId(fileId);
+            files.setFileInput(
+                    java.util.stream.IntStream.range(0, documents)
+                            .mapToObj(
+                                    i ->
+                                            (org.springframework.web.multipart.MultipartFile)
+                                                    new MockMultipartFile(
+                                                            "fileInput",
+                                                            "doc" + i + ".pdf",
+                                                            "application/pdf",
+                                                            ("pdf-" + i).getBytes()))
+                            .toList());
+            return files;
+        }
+
+        private String documentReferenceOf(PolicyRunFiles files) throws Exception {
+            Policy p = policy("a", 1L);
+            when(policyStore.get("a")).thenReturn(Optional.of(p));
+            when(policyAccessGuard.canAccess(p)).thenReturn(true);
+            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP), any()))
+                    .thenReturn(handle("run-9"));
+
+            controller.runStoredPolicy("a", files);
+
+            ArgumentCaptor<String> reference = ArgumentCaptor.forClass(String.class);
+            verify(policyRunner)
+                    .runWith(eq(p), any(), eq(PolicyProgressListener.NOOP), reference.capture());
+            return reference.getValue();
+        }
+
         @Test
         @DisplayName("runs a stored, accessible policy")
         void runsStored() throws Exception {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP)))
+            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP), any()))
                     .thenReturn(handle("run-9"));
 
             ResponseEntity<JobResponse<Void>> response =
@@ -714,6 +846,35 @@ class PolicyControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.ACCEPTED);
             assertThat(response.getBody().getJobId()).isEqualTo("run-9");
+        }
+
+        @Test
+        @DisplayName("records the caller's own id for a single-document run")
+        void carriesTheCallersDocumentReference() throws Exception {
+            // The point of the field: a failure names a document the client that started it can
+            // resolve.
+            assertThat(documentReferenceOf(filesWith("editor-file-1", 1)))
+                    .isEqualTo("editor-file-1");
+        }
+
+        @Test
+        @DisplayName("records nothing when the run carries several documents")
+        void refusesToGuessWhichOfSeveralDocumentsItIs() throws Exception {
+            // One incident, one reference: naming one of several would attribute it to whichever
+            // bound first.
+            assertThat(documentReferenceOf(filesWith("editor-file-1", 3))).isNull();
+        }
+
+        @Test
+        @DisplayName("records nothing when the caller sent no id")
+        void toleratesACallerThatSendsNoReference() throws Exception {
+            assertThat(documentReferenceOf(filesWith(null, 1))).isNull();
+        }
+
+        @Test
+        @DisplayName("records nothing for a blank id")
+        void treatsABlankReferenceAsNone() throws Exception {
+            assertThat(documentReferenceOf(filesWith("   ", 1))).isNull();
         }
 
         @Test
@@ -838,7 +999,7 @@ class PolicyControllerTest {
             Policy p = policy("a", 1L);
             when(policyStore.get("a")).thenReturn(Optional.of(p));
             when(policyAccessGuard.canAccess(p)).thenReturn(true);
-            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP)))
+            when(policyRunner.runWith(eq(p), any(), eq(PolicyProgressListener.NOOP), any()))
                     .thenReturn(handle("run-9"));
 
             ResponseEntity<JobResponse<Void>> response =

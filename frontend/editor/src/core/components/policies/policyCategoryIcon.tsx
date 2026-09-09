@@ -27,10 +27,10 @@ const FALLBACK_ICON = LabelOutlinedIcon;
 
 // Defaults to inheriting the surrounding font-size so a wrapping box controls size.
 export function policyCategoryIcon(
-  categoryId: string,
+  policyKey: string,
   sx: SxProps<Theme> = { fontSize: "inherit" },
   className?: string,
 ): ReactNode {
-  const Icon = POLICY_CATEGORY_ICONS[categoryId] ?? FALLBACK_ICON;
+  const Icon = POLICY_CATEGORY_ICONS[policyKey] ?? FALLBACK_ICON;
   return <Icon sx={sx} className={className} />;
 }

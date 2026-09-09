@@ -14,6 +14,7 @@ import {
   getBaseUrl,
   withBasePath,
 } from "@app/constants/app";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
@@ -48,14 +49,14 @@ export default function Login() {
     }
   }, []);
 
-  // Same-origin relative path to return to after login (e.g. the OAuth
-  // consent page). Same sanitization rules as AuthCallback's `next`.
+  // Same-origin router path to return to after login (e.g. the OAuth consent
+  // page, or the editor a 401 bounced the user off). `?next=` is what this app
+  // writes; `?from=` is what the shared core 401 handler writes.
   const nextPath = useMemo(() => {
     try {
-      const next = new URL(window.location.href).searchParams.get("next");
-      return next && next.startsWith("/") && !next.startsWith("//")
-        ? next
-        : null;
+      const params = new URL(window.location.href).searchParams;
+      const candidate = params.get("next") ?? params.get("from");
+      return isSafePostLoginRedirect(candidate) ? candidate : null;
     } catch (_) {
       return null;
     }

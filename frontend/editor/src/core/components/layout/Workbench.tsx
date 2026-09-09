@@ -1,4 +1,4 @@
-import { useState, Suspense, lazy } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
 import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
@@ -15,6 +15,7 @@ import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
 import { useCookieConsent } from "@app/hooks/useCookieConsent";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
@@ -22,6 +23,7 @@ import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSea
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
 import { ChatFAB } from "@app/components/chat/ChatFAB";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -57,10 +59,13 @@ export default function Workbench() {
     setPageEditorFunctions,
     setSidebarsVisible,
     customWorkbenchViews,
+    readerMode,
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
   const { overlay: signingOverlay } = useSigningOverlay();
+  // Below this width the rail, and the bell it carries, is gone.
+  const isPhone = useIsPhone();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -91,8 +96,20 @@ export default function Workbench() {
     !isBaseWorkbench(currentView) ||
     // Shared signing drives the viewer from the sidebar with no file in context.
     (currentView === "viewer" && !!signingOverlay?.file);
-  const showWorkbenchBar = topControlsAvailable && hasWorkbenchContent;
-  const showFloatingSearch = topControlsAvailable && !hasWorkbenchContent;
+  // Reading hides the bar; the rail's Reader entry is the way back.
+  const showWorkbenchBar =
+    topControlsAvailable && hasWorkbenchContent && !readerMode;
+  const showFloatingSearch =
+    topControlsAvailable && !hasWorkbenchContent && !readerMode;
+
+  // On the transition, so reading sets the toolbar's start state without locking it.
+  const prevReaderModeRef = useRef(readerMode);
+  useEffect(() => {
+    if (readerMode !== prevReaderModeRef.current) {
+      setViewerToolbarCollapsed(readerMode);
+      prevReaderModeRef.current = readerMode;
+    }
+  }, [readerMode]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -125,7 +142,7 @@ export default function Workbench() {
       }
     }
 
-    // The "My Files" workbench is available regardless of whether files are
+    // The file-library workbench is available regardless of whether files are
     // currently loaded into the workbench - it lives on top of the IDB store.
     if (currentView === "myFiles") {
       return <FileManagerView />;
@@ -248,6 +265,13 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
+      {/* Phone only: above that the rail carries the bell, and here no bar does. */}
+      {isPhone && !showWorkbenchBar && (
+        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
+          <NotificationBell />
+        </div>
+      )}
+
       {showWorkbenchBar && (
         <div className={styles.workbenchBarShell}>
           <div className={styles.workbenchBarWrapper}>

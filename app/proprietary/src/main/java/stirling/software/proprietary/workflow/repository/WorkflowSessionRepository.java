@@ -19,9 +19,10 @@ public interface WorkflowSessionRepository extends JpaRepository<WorkflowSession
     /** Find workflow session by unique session ID */
     Optional<WorkflowSession> findBySessionId(String sessionId);
 
-    /** Find workflow session by unique session ID with participants eagerly loaded */
+    /** Find workflow session by unique session ID with participants and owner eagerly loaded */
     @Query(
-            "SELECT ws FROM WorkflowSession ws LEFT JOIN FETCH ws.participants WHERE ws.sessionId = :sessionId")
+            "SELECT ws FROM WorkflowSession ws LEFT JOIN FETCH ws.participants LEFT JOIN FETCH"
+                    + " ws.owner WHERE ws.sessionId = :sessionId")
     Optional<WorkflowSession> findBySessionIdWithParticipants(@Param("sessionId") String sessionId);
 
     /** Find all workflow sessions owned by a specific user */

@@ -6,12 +6,14 @@ import {
   normalizeAxiosErrorData,
 } from "@app/services/errorUtils";
 import { showSpecialErrorToast } from "@app/services/specialErrorToasts";
+import axios from "axios";
 import { handleSaaSError } from "@app/services/saasErrorInterceptor";
 import {
   clampText,
   extractAxiosErrorMessage,
 } from "@app/services/httpErrorUtils";
-import { withBasePath } from "@app/constants/app";
+import { stripBasePath, withBasePath } from "@app/constants/app";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -20,26 +22,9 @@ const SPECIAL_SUPPRESS_MS = 1500; // brief window to suppress generic duplicate 
 // Mirrors the key in proprietary/auth/springAuthClient.ts; AuthCallback consumes it.
 const POST_LOGIN_REDIRECT_STORAGE_KEY = "stirling_post_login_path";
 
-function isSafePostLoginPath(path: string): boolean {
-  if (
-    !path.startsWith("/") ||
-    path.startsWith("//") ||
-    path.startsWith("/\\")
-  ) {
-    return false;
-  }
-  const lowered = path.toLowerCase();
-  return (
-    !lowered.startsWith("/login") &&
-    !lowered.startsWith("/auth/") &&
-    !lowered.startsWith("/oauth2") &&
-    !lowered.startsWith("/saml2")
-  );
-}
-
 function stashPostLoginRedirect(path: string): void {
   try {
-    if (typeof window === "undefined" || !isSafePostLoginPath(path)) return;
+    if (typeof window === "undefined" || !isSafePostLoginRedirect(path)) return;
     window.sessionStorage.setItem(POST_LOGIN_REDIRECT_STORAGE_KEY, path);
   } catch {
     // sessionStorage unavailable (private mode) — fail open
@@ -95,15 +80,16 @@ if (typeof window !== "undefined") {
  * Handles HTTP errors with toast notifications and file error broadcasting
  * Returns true if the error should be suppressed (deduplicated), false otherwise
  */
-export async function handleHttpError(error: any): Promise<boolean> {
-  const skipAuthRedirect = error?.config?.skipAuthRedirect === true;
+export async function handleHttpError(error: unknown): Promise<boolean> {
+  const axiosError = axios.isAxiosError(error) ? error : undefined;
+  const skipAuthRedirect = axiosError?.config?.skipAuthRedirect === true;
   // Check if this error should skip the global toast (component will handle it)
-  if (error?.config?.suppressErrorToast === true) {
+  if (axiosError?.config?.suppressErrorToast === true) {
     return false; // Don't show global toast, but continue rejection
   }
 
   // Handle 401 authentication errors
-  const status: number | undefined = error?.response?.status;
+  const status: number | undefined = axiosError?.response?.status;
   if (status === 401) {
     const pathname = window.location.pathname;
 
@@ -114,19 +100,26 @@ export async function handleHttpError(error: any): Promise<boolean> {
       pathname.includes("/auth/") ||
       pathname.includes("/invite/");
 
+    const isPublicMobilePage =
+      pathname.includes("/mobile-scanner") || pathname.includes("/mobile-sign");
+
     // If not on auth page, redirect to login with expired session message
-    if (!isAuthPage && !skipAuthRedirect) {
+    if (!isAuthPage && !isPublicMobilePage && !skipAuthRedirect) {
       if (loginRedirectRecentlyFired()) {
         console.warn(
           "[httpErrorHandler] 401 redirect already fired moments ago — suppressing repeat to avoid a login loop:",
-          error?.config?.url,
+          axiosError?.config?.url,
         );
         return true;
       }
       console.debug("[httpErrorHandler] 401 detected, redirecting to login");
       // Spring 302-strips the ?from= query from /login, so stash the return
       // path in sessionStorage (AuthCallback reads it after SSO round-trip).
-      const currentLocation = window.location.pathname + window.location.search;
+      // Router-relative, not browser-relative: every consumer replays this
+      // through navigate(), which re-applies the basename. Keeping the base
+      // path here yields /app/app/<tool> on a subpath deploy.
+      const currentLocation =
+        stripBasePath(window.location.pathname) + window.location.search;
       stashPostLoginRedirect(currentLocation);
       let hadStoredJwt = false;
       try {
@@ -151,7 +144,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
   const { title, body } = extractAxiosErrorMessage(error);
 
   // Normalize response data ONCE, reuse for both ID extraction and special-toast matching
-  const raw = error?.response?.data as any;
+  const raw = axiosError?.response?.data;
   let normalized: unknown = raw;
   try {
     normalized = await normalizeAxiosErrorData(raw);
@@ -170,7 +163,7 @@ export async function handleHttpError(error: any): Promise<boolean> {
   }
 
   // 2) Generic-vs-special dedupe by endpoint
-  const url: string | undefined = error?.config?.url;
+  const url: string | undefined = axiosError?.config?.url;
   const now = Date.now();
   const isSpecial =
     status === 422 ||

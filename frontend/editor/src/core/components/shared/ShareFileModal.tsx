@@ -165,7 +165,7 @@ const ShareFileModal: React.FC<ShareFileModalProps> = ({
       if (onUploaded) {
         await onUploaded();
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to generate share link:", error);
       setErrorMessage(
         t(

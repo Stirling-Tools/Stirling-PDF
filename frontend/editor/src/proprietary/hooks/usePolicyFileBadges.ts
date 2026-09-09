@@ -4,7 +4,7 @@ import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
-import { isClassificationCategory } from "@app/data/policyCategories";
+import { isClassificationPolicy } from "@app/data/classificationPolicy";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
 
 /** Minimal provenance shape needed to resolve a file's inherited badges. */
@@ -43,15 +43,15 @@ export function buildPolicyBadgeMap(
   // Direct badges: a file that IS a policy run's output.
   const directByFile = new Map<string, FileItemPolicyRef[]>();
   for (const run of runs) {
-    const name = labelById.get(run.categoryId);
+    const name = labelById.get(run.policyKey);
     if (!name) continue;
     for (const fileId of run.outputFileIds ?? []) {
       const list = directByFile.get(fileId) ?? [];
-      if (!list.some((p) => p.id === run.categoryId)) {
+      if (!list.some((p) => p.id === run.policyKey)) {
         list.push({
-          id: run.categoryId,
+          id: run.policyKey,
           name,
-          accentColor: policyAccentVar(run.categoryId),
+          accentColor: policyAccentVar(run.policyKey),
         });
         directByFile.set(fileId, list);
       }
@@ -100,20 +100,20 @@ export function buildPolicyBadgeMap(
     const settled =
       run.imported || run.status === "FAILED" || run.status === "CANCELLED";
     if (settled && !run.retrying) continue;
-    const name = labelById.get(run.categoryId);
+    const name = labelById.get(run.policyKey);
     if (!name) continue;
-    const inFlightFlag = isClassificationCategory(run.categoryId)
+    const inFlightFlag = isClassificationPolicy(run.policyKey)
       ? ("background" as const)
       : ("enforcing" as const);
     const list = result.get(run.fileId) ?? [];
-    const existing = list.find((p) => p.id === run.categoryId);
+    const existing = list.find((p) => p.id === run.policyKey);
     if (existing) {
       existing[inFlightFlag] = true;
     } else {
       list.push({
-        id: run.categoryId,
+        id: run.policyKey,
         name,
-        accentColor: policyAccentVar(run.categoryId),
+        accentColor: policyAccentVar(run.policyKey),
         [inFlightFlag]: true,
       });
       result.set(run.fileId, list);
