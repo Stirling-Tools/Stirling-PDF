@@ -1,0 +1,7 @@
+# Pipeline store blocked-word list. One word or phrase per line; lines starting with # are ignored.
+#
+# Ships empty on purpose: the words are operator data, not source code. To populate it, paste a
+# maintained list here (for example the LDNOOBW "en" list, CC-BY-4.0) or set
+# stirling.store.blocked-words-file to a path outside the jar. Matching is whole-token only after
+# folding case, leetspeak, punctuation and repeated letters, so entries should be plain lower-case
+# words. Known false positives go in allowed-words.txt.

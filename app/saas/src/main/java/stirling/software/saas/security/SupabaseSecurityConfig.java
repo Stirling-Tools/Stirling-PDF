@@ -122,6 +122,12 @@ public class SupabaseSecurityConfig {
                                                 "/api/v1/account-link/connect/request",
                                                 "/api/v1/account-link/connect/claim")
                                         .permitAll()
+                                        // Pipeline store catalogue: browsing needs no account. The
+                                        // JWT filter still runs, so a signed-in viewer's star state
+                                        // rides on the same public response. Every DTO served here
+                                        // is author-free by contract (StoreDtoPrivacyTest).
+                                        .requestMatchers(HttpMethod.GET, "/api/v1/store/public/**")
+                                        .permitAll()
                                         .requestMatchers(
                                                 req ->
                                                         RequestUriUtils.isStaticResource(
@@ -402,18 +408,21 @@ public class SupabaseSecurityConfig {
         cfg.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource allowListed = new UrlBasedCorsConfigurationSource();
         allowListed.registerCorsConfiguration("/**", cfg);
-        if (!accountLinkEnabled) {
-            return allowListed;
-        }
 
-        UrlBasedCorsConfigurationSource linked = new UrlBasedCorsConfigurationSource();
-        CorsConfiguration linkedCfg = linkedInstanceCors();
-        for (String path : LINKED_INSTANCE_PATHS) {
-            linked.registerCorsConfiguration(path, linkedCfg);
+        // Paths a browser on an origin we do not know may reach: the pipeline store for anyone
+        // (anonymous reads, and writes carrying the signed-in user's bearer token), plus the
+        // linked-instance surface once account linking is on. Same no-credential posture for both.
+        UrlBasedCorsConfigurationSource open = new UrlBasedCorsConfigurationSource();
+        open.registerCorsConfiguration("/api/v1/store/**", storeCors());
+        if (accountLinkEnabled) {
+            CorsConfiguration linkedCfg = linkedInstanceCors();
+            for (String path : LINKED_INSTANCE_PATHS) {
+                open.registerCorsConfiguration(path, linkedCfg);
+            }
         }
         // Split by origin, not by path: our own frontends call these same paths and need the
         // allow-list policy, which is wider on headers, methods and credentials. Only an origin it
-        // would have rejected falls through to the linked-instance config.
+        // would have rejected falls through to the open config.
         return request -> {
             String origin = request.getHeader(HttpHeaders.ORIGIN);
             // "/**" is registered above unconditionally, so this always resolves.
@@ -421,9 +430,15 @@ public class SupabaseSecurityConfig {
             if (origin == null || known.checkOrigin(origin) != null) {
                 return known;
             }
-            CorsConfiguration fallback = linked.getCorsConfiguration(request);
+            CorsConfiguration fallback = open.getCorsConfiguration(request);
             return fallback != null ? fallback : known;
         };
+    }
+
+    private static CorsConfiguration storeCors() {
+        CorsConfiguration cfg = linkedInstanceCors();
+        cfg.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        return cfg;
     }
 
     /**

@@ -30,6 +30,8 @@ export interface AppConfig {
    * anything that prompts to link must gate on this first.
    */
   accountLinkAvailable?: boolean;
+  /** Whether this backend serves the Pipeline store (or proxies it over the SaaS link). */
+  storeAvailable?: boolean;
   termsAndConditions?: string;
   privacyPolicy?: string;
   cookiePolicy?: string;

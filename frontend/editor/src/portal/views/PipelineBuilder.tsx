@@ -80,6 +80,9 @@ import { humanizeOperation } from "@portal/components/pipelines/pipelineOperatio
 import { canonicalPipelineIconKey } from "@portal/components/pipelines/pipelineIcon";
 import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreateHeader";
 import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
+import { PublishFlowModal } from "@portal/components/store/PublishFlowModal";
+import { useStoreAvailable } from "@portal/hooks/useStoreAvailable";
+import { alert as showToast } from "@app/components/toast";
 import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
 import { PipelineInspector } from "@portal/components/pipelines/PipelineInspector";
 import { PipelineDefinitionModal } from "@portal/components/pipelines/PipelineDefinitionModal";
@@ -316,6 +319,10 @@ export function PipelineBuilder() {
   const [pendingDelete, setPendingDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [pendingNav, setPendingNav] = useState<string | null>(null);
+  // Publish to store works on the saved record, so it is offered only where the store is reachable
+  // and opens only when nothing is left unsaved (the store copies what the server has).
+  const storeAvailable = useStoreAvailable();
+  const [publishOpen, setPublishOpen] = useState(false);
 
   // Create or edit a source in place, instead of leaving the builder (and its
   // unsaved edits) for the Sources page.
@@ -791,6 +798,17 @@ export function PipelineBuilder() {
   function attemptLeave(destination: string) {
     if (dirty) setPendingNav(destination);
     else navigate(destination);
+  }
+
+  function openPublish() {
+    if (dirty || !policyState.data?.id) {
+      showToast({
+        title: t("portal.store.publish.saveFirst"),
+        alertType: "warning",
+      });
+      return;
+    }
+    setPublishOpen(true);
   }
 
   /**
@@ -1357,6 +1375,8 @@ export function PipelineBuilder() {
           onReprocess={handleReprocessAll}
           reprocessing={reprocessing}
           onDelete={() => setPendingDelete(true)}
+          onPublish={storeAvailable ? openPublish : undefined}
+          storeId={policyState.data?.storeId}
         />
       ) : (
         <PipelineCreateHeader
@@ -1605,6 +1625,14 @@ export function PipelineBuilder() {
         sourceId={sourceModal.sourceId}
         onClose={() => setSourceModal({ open: false, sourceId: null })}
       />
+
+      {policyState.data && (
+        <PublishFlowModal
+          open={publishOpen}
+          onClose={() => setPublishOpen(false)}
+          policy={policyState.data}
+        />
+      )}
     </div>
   );
 }

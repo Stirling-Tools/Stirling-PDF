@@ -59,6 +59,13 @@
   flex: none;
 }
 
+/* The store chip is a link back to the listing; strip the anchor chrome so only the chip shows. */
+.portal-pipeline-edit-header__store-link {
+  display: inline-flex;
+  flex: none;
+  text-decoration: none;
+}
+
 /* Destructive item in the overflow tray: red label and icon, so it reads as the exception among
    the neutral entries above it. */
 .portal-pipeline-edit-header__delete-item .sui-dd__item-label,

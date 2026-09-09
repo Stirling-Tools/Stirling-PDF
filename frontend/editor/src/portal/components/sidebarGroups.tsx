@@ -6,6 +6,7 @@ import {
   SourcesIcon,
   IntegrationsIcon,
   PipelinesIcon,
+  StoreIcon,
   DocumentsIcon,
   ReviewIcon,
   InfrastructureIcon,
@@ -20,6 +21,8 @@ export interface NavEntry {
   externalUrl?: string;
   /** The whole tab is facts about the linked account, so unlinked is asked rather than navigated. */
   requiresLink?: boolean;
+  /** Hidden entirely unless this backend can reach the Pipeline store (see useStoreAvailable). */
+  requiresStore?: boolean;
 }
 
 export interface NavGroup {
@@ -37,6 +40,7 @@ export const GROUP_PROCESSOR: NavEntry[] = [
   { id: "home", icon: <HomeIcon /> },
   { id: "sources", icon: <SourcesIcon /> },
   { id: "pipelines", icon: <PipelinesIcon /> },
+  { id: "store", icon: <StoreIcon />, requiresStore: true },
   { id: "documents", icon: <DocumentsIcon /> },
   { id: "review", icon: <ReviewIcon /> },
 ];

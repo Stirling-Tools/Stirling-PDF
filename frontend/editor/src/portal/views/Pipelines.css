@@ -16,6 +16,13 @@
   gap: 1rem;
 }
 
+.portal-pipelines__head-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
 .portal-pipelines__title {
   margin: 0;
   font-size: 1.375rem;

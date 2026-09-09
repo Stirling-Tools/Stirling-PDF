@@ -1,0 +1,44 @@
+.portal-store__graph {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  max-width: 26rem;
+  margin: 0 auto;
+}
+
+.portal-store__node {
+  width: 100%;
+}
+
+/* A slot the installer fills: same tile, dashed outline, quieter text. */
+.portal-store__node--placeholder {
+  border-style: dashed;
+  background: transparent;
+}
+
+.portal-store__node--placeholder .sui-node-card__title,
+.portal-store__node--placeholder .sui-node-card__detail {
+  color: var(--c-text-subtle);
+}
+
+/* The wire between tiles: a short vertical rule with a dot at its foot. */
+.portal-store__edge {
+  display: block;
+  align-self: center;
+  width: 2px;
+  height: 1.25rem;
+  background: var(--c-border-strong);
+  position: relative;
+}
+
+.portal-store__edge::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -3px;
+  width: 8px;
+  height: 8px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--c-border-strong);
+}

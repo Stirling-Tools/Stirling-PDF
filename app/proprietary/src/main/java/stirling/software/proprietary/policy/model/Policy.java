@@ -3,7 +3,11 @@ package stirling.software.proprietary.policy.model;
 import java.util.List;
 import java.util.Optional;
 
-/** A stored automation: ordered tool steps, input bindings, and output destinations. */
+/**
+ * A stored automation: ordered tool steps, input bindings, and output destinations. {@code storeId}
+ * links back to the pipeline store listing this policy was installed from or published as; nothing
+ * else reads it and no update tracking hangs off it.
+ */
 public record Policy(
         String id,
         String name,
@@ -16,7 +20,8 @@ public record Policy(
         OutputSpec output,
         List<String> outputIds,
         Long teamId,
-        EditorConfig editor) {
+        EditorConfig editor,
+        String storeId) {
 
     public Policy {
         icon = icon == null ? "" : icon;
@@ -25,6 +30,26 @@ public record Policy(
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
         editor = editor == null ? EditorConfig.disabled() : editor;
+        storeId = storeId == null || storeId.isBlank() ? null : storeId;
+    }
+
+    /** Without a store link. Kept for every caller that predates the pipeline store. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            boolean required,
+            String icon,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor) {
+        this(
+                id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
+                editor, null);
     }
 
     /**
@@ -124,14 +149,14 @@ public record Policy(
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
                 id, name, owner, enabled, required, icon, inputs, steps, resolved, outputIds,
-                teamId, editor);
+                teamId, editor, storeId);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
         return new Policy(
                 id, name, newOwner, enabled, required, icon, inputs, steps, output, outputIds,
-                teamId, editor);
+                teamId, editor, storeId);
     }
 
     /** A copy referencing the given saved output destinations. */
@@ -148,7 +173,26 @@ public record Policy(
                 output,
                 newOutputIds,
                 teamId,
-                editor);
+                editor,
+                storeId);
+    }
+
+    /** A copy linked to the given store listing (set when published to, or installed from, it). */
+    public Policy withStoreId(String newStoreId) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                newStoreId);
     }
 
     /**
