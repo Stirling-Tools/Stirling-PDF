@@ -5748,8 +5748,8 @@ title = "Senaste debiterbara aktivitet"
 [payg.cap]
 amount = "Beloppsgräns"
 custom = "Anpassad"
-docsEstimate = "≈ {{docs}} processed PDFs / month"
-docsRate = "at {{rate}} / PDF"
+docsEstimate = "≈ {{docs}} bearbetade PDF:er per månad"
+docsRate = "vid {{rate}} per PDF"
 noCapDesc = "Användning debiteras utan övre gräns. Du kan återaktivera en gräns när som helst."
 noCapLabel = "Ingen gräns"
 noneShort = "Ingen gräns"
@@ -5811,7 +5811,7 @@ freeTitle = "Obegränsad PDF-redigering"
 
 [payg.free.hero]
 barAria = "Kostnadsfria PDF-filer kvar"
-capSuffix = "/ {{limit}} free PDFs"
+capSuffix = "/ {{limit}} kostnadsfria PDF:er"
 metaCategories = "Automatisering · AI · API-begäranden"
 
 [payg.free.member]
@@ -5996,7 +5996,7 @@ yearly = "Årsvis"
 continue = "Fortsätt"
 description = "Vi använder den för att skicka din licensnyckel och kvitton."
 emailLabel = "E-postadress"
-emailPlaceholder = "your@email.com"
+emailPlaceholder = "din@epost.se"
 modalTitle = "Kom igång - {{planName}}"
 
 [payment.paymentStage]
