@@ -152,13 +152,15 @@ public class ProcessingFolderController {
     public DownloadsSuggestion downloadsSuggestion() {
         currentUserOrNull();
         Path downloads = Path.of(System.getProperty("user.home", ""), "Downloads");
+        // Only return the path when the offer is available: it is the server's home directory
+        // (hence the OS username) and must not leak to a caller who cannot use the folder.
         if (!Files.isDirectory(downloads)) {
-            return new DownloadsSuggestion(downloads.toString(), false, 0, DISK_SWEEP_LIMIT);
+            return new DownloadsSuggestion("", false, 0, DISK_SWEEP_LIMIT);
         }
         try {
             folderAccessGuard.requirePermitted(downloads);
         } catch (RuntimeException notPermitted) {
-            return new DownloadsSuggestion(downloads.toString(), false, 0, DISK_SWEEP_LIMIT);
+            return new DownloadsSuggestion("", false, 0, DISK_SWEEP_LIMIT);
         }
         int pdfCount = 0;
         try (Stream<Path> entries = Files.list(downloads)) {
@@ -530,9 +532,9 @@ public class ProcessingFolderController {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "'" + name + "' has no failure to retry");
         }
-        // LIGHT, not USER: only this file's parked failure is forgotten; every other parked
-        // failure stays parked.
-        return ResponseEntity.accepted().body(policyRunner.run(policy, SweepKind.LIGHT));
+        // Scoped to this identity: only this file's parked failure was forgotten, and claiming
+        // any other file would process work nobody asked to retry.
+        return ResponseEntity.accepted().body(policyRunner.runFile(policy, identity));
     }
 
     /** Restore request: the file's name within the folder. */
@@ -879,7 +881,10 @@ public class ProcessingFolderController {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
         if (folder != null) {
-            options.putIfAbsent("folderId", folder.getId().toString());
+            // Force the output to the caller-owned source folder: the storage sink only checks a
+            // folderId exists, not that the caller owns it, so honouring a request-supplied one
+            // would write output into another tenant's folder. Processing is in place anyway.
+            options.put("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);
         }
         options.put("directory", request.directory().trim());

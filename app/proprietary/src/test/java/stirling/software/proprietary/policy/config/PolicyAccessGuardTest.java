@@ -122,6 +122,13 @@ class PolicyAccessGuardTest {
         assertTrue(guard(false).canAccess(folderPair(1L, "bob"))); // local operator
     }
 
+    @Test
+    void aNullOwnerProcessingFolderIsNotReachableUnderLogin() {
+        // Nobody, not every authenticated user. The null-owner short-circuit returns false
+        // without reading the current user, so there is no username to stub.
+        assertFalse(guard(true).canAccess(folderPair(1L, null)));
+    }
+
     private static Policy folderPair(Long teamId, String owner) {
         return new Policy(
                         null,

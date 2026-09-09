@@ -634,8 +634,11 @@ export default function FileManagerView() {
   const { listFiles, retryFile, revertFile } = processingApi;
   useEffect(() => {
     if (!processingView || !processingRecordId) {
-      setFileStates(new Map());
-      setRevertables(new Set());
+      // Keep the empty value when it is already empty: a fresh Map/Set is never Object.is
+      // equal, so setting one unconditionally re-renders, and this effect runs on every
+      // render of a folder that has no processing.
+      setFileStates((prev) => (prev.size === 0 ? prev : new Map()));
+      setRevertables((prev) => (prev.size === 0 ? prev : new Set()));
       return;
     }
     let cancelled = false;
@@ -756,7 +759,7 @@ export default function FileManagerView() {
             folders.setError(
               t(
                 "filesPage.processing.nothingToRestore",
-                "No originals to restore — these files are already their originals.",
+                "No originals to restore - these files are already their originals.",
               ),
             );
           }
@@ -1689,7 +1692,7 @@ export default function FileManagerView() {
                   <Tooltip
                     label={t(
                       "filesPage.processing.start",
-                      "Process files in this folder…",
+                      "Process files in this folder...",
                     )}
                     withinPortal
                   >
@@ -1699,7 +1702,7 @@ export default function FileManagerView() {
                       onClick={() => setProcessingSetupFolder(currentFolder)}
                       aria-label={t(
                         "filesPage.processing.start",
-                        "Process files in this folder…",
+                        "Process files in this folder...",
                       )}
                     >
                       <AutoModeIcon fontSize="small" />
@@ -1788,7 +1791,10 @@ export default function FileManagerView() {
                       </Tooltip>
                     )}
                     <Tooltip
-                      label={t("filesPage.processing.edit", "Edit processing…")}
+                      label={t(
+                        "filesPage.processing.edit",
+                        "Edit processing...",
+                      )}
                       withinPortal
                     >
                       <ActionIcon
@@ -1797,7 +1803,7 @@ export default function FileManagerView() {
                         onClick={() => setProcessingSetupFolder(currentFolder)}
                         aria-label={t(
                           "filesPage.processing.edit",
-                          "Edit processing…",
+                          "Edit processing...",
                         )}
                       >
                         <TuneIcon fontSize="small" />

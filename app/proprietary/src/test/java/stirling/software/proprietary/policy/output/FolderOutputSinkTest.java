@@ -209,6 +209,86 @@ class FolderOutputSinkTest {
     }
 
     @Test
+    void archiveFailureAbortsTheReplaceInsteadOfDestroyingTheOriginal() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out.resolve(".stirling"));
+        Files.writeString(out.resolve("a.pdf"), "original");
+        // Block the originals dir by occupying its path with a regular file, so archiving throws
+        // exactly as an unwritable/locked/full originals dir would in the field.
+        Files.writeString(out.resolve(".stirling").resolve("originals"), "blocker");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        assertThrows(
+                IOException.class,
+                () -> sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "v1")), replace));
+
+        assertEquals("original", Files.readString(out.resolve("a.pdf")));
+    }
+
+    @Test
+    void aReDroppedSameNameFileKeepsItsOwnOriginalRatherThanLosingIt() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "first-original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed1")), replace);
+        // The user drops a genuinely different document under the same name; it is reprocessed.
+        Files.writeString(out.resolve("a.pdf"), "second-original");
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
+
+        assertEquals("processed2", Files.readString(out.resolve("a.pdf")));
+        Path originals = out.resolve(".stirling").resolve("originals");
+        assertEquals("first-original", Files.readString(originals.resolve("a.pdf")));
+        // The second original was preserved, not overwritten away.
+        boolean kept;
+        try (Stream<Path> archived = Files.walk(originals)) {
+            kept =
+                    archived.filter(Files::isRegularFile)
+                            .anyMatch(
+                                    p -> {
+                                        try {
+                                            return "second-original".equals(Files.readString(p));
+                                        } catch (IOException e) {
+                                            return false;
+                                        }
+                                    });
+        }
+        assertTrue(kept, "the re-dropped original must be preserved, never silently lost");
+    }
+
+    @Test
+    void aSupersededOriginalIsKeptOutOfTheRestoreNamespace() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "first-original");
+        OutputSpec replace =
+                new OutputSpec("folder", Map.of("directory", out.toString(), "replace", true));
+
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed1")), replace);
+        Files.writeString(out.resolve("a.pdf"), "second-original");
+        sink.deliver(inPlaceRun("a.pdf"), List.of(named("a.pdf", "processed2")), replace);
+
+        // A restore brings back every regular file directly under originals/, so only the
+        // canonical original may sit there; a sibling would be restored as a file the folder
+        // never held. The superseded one is kept, one level down.
+        Path originals = out.resolve(".stirling").resolve("originals");
+        List<String> restorable;
+        try (Stream<Path> entries = Files.list(originals)) {
+            restorable =
+                    entries.filter(Files::isRegularFile)
+                            .map(entry -> entry.getFileName().toString())
+                            .toList();
+        }
+        assertEquals(List.of("a.pdf"), restorable);
+        assertEquals(
+                "second-original",
+                Files.readString(originals.resolve("superseded").resolve("a.pdf")));
+    }
+
+    @Test
     void aBrandNewNameArchivesNothing() throws IOException {
         Path out = tempDir.resolve("out");
         OutputSpec replace =

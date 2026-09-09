@@ -165,8 +165,8 @@ public class FolderOutputSink implements PolicyOutputSink {
             throws IOException {
         if (replace) {
             Path target = dir.resolve(name);
-            // Archive before the ledger row flips DONE: a restore that reads DONE must find
-            // the original already safe in the archive, never mid-move.
+            // Archive before the ledger row flips DONE, so a restore that reads DONE finds the
+            // original safe, never mid-move.
             Path archived = archiveOriginal(dir, target);
             try {
                 if (delivery.policyId() != null) {
@@ -220,6 +220,21 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
+     * Where a same-name re-drop's original is kept once the canonical slot is taken. A
+     * subdirectory, not a numbered sibling: a restore brings back every regular file directly under
+     * {@link #originalsDir}, so a numbered sibling there would be restored as a file the watched
+     * folder never held.
+     *
+     * <p>Canonical stays with the first original, which is right when a file is reprocessed and
+     * wrong when the user replaced it with a different document of the same name - restoring then
+     * returns the earlier document. Telling those apart needs the previous output's content hash,
+     * which the next claim clears from the ledger row, so it is not decidable here today.
+     */
+    private static Path supersededDir(Path dir) {
+        return originalsDir(dir).resolve("superseded");
+    }
+
+    /**
      * The folder's workspace root, created hidden: a dot prefix for POSIX and the app's own
      * listings, the DOS attribute for Explorer. Best-effort — a filesystem without DOS attributes
      * keeps just the dot.
@@ -236,28 +251,37 @@ public class FolderOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * Keep the true original before a replace stamps over it: the watched file moves into {@code
-     * .stirling/originals} once — a re-run never overwrites the archived first version. No file at
-     * the target or a failed rename is not fatal; there is just nothing to revert to.
+     * Move the target into {@code .stirling/originals} before a replace overwrites it, returning
+     * the archived path, or null when nothing is at the target. Throws if an existing target cannot
+     * be archived, so the caller aborts before overwriting and never destroys an unpreserved
+     * original.
+     *
+     * <p>With the slot already taken the kept original stays canonical and this content goes to
+     * {@link #supersededDir}, not to a numbered sibling that a restore would bring back as a file
+     * the folder never held. Which of the two a restore ought to return is an open question; see
+     * the note on {@link #supersededDir}.
+     *
+     * <p>Plain move, not {@code ATOMIC_MOVE}: the archive is hidden under {@code .stirling} and
+     * needs no atomic visibility, and a plain move survives a cross-device archive dir where {@code
+     * ATOMIC_MOVE} would throw.
      */
-    private static Path archiveOriginal(Path dir, Path target) {
+    private static Path archiveOriginal(Path dir, Path target) throws IOException {
         if (!Files.exists(target)) {
             return null;
         }
-        try {
-            stirlingDir(dir);
-            Path originals = originalsDir(dir);
-            Files.createDirectories(originals);
-            Path archived = originals.resolve(target.getFileName().toString());
-            if (Files.exists(archived)) {
-                return null; // the pre-first-processing original is already kept
-            }
-            Files.move(target, archived, StandardCopyOption.ATOMIC_MOVE);
-            return archived;
-        } catch (IOException e) {
-            log.debug("Could not archive original {}: {}", target, e.getMessage());
-            return null;
+        stirlingDir(dir);
+        Path originals = originalsDir(dir);
+        Files.createDirectories(originals);
+        String name = target.getFileName().toString();
+        Path archived = originals.resolve(name);
+        if (Files.exists(archived)) {
+            // Kept aside, so the overwrite cannot destroy this content either.
+            Path superseded = supersededDir(dir);
+            Files.createDirectories(superseded);
+            archived = uniqueTarget(superseded, name);
         }
+        Files.move(target, archived);
+        return archived;
     }
 
     /** Best-effort removal of staging leftovers from crashed deliveries. */

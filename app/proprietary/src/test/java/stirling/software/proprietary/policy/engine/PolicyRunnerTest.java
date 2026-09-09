@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -30,6 +31,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
@@ -74,7 +78,8 @@ class PolicyRunnerTest {
                         sourceStore,
                         docCounter,
                         processedLedger,
-                        new ApplicationProperties());
+                        new ApplicationProperties(),
+                        reachableOwners());
     }
 
     @Test
@@ -103,7 +108,8 @@ class PolicyRunnerTest {
                         sourceStore,
                         new InProcessSourceDocCounter(),
                         ledger,
-                        new ApplicationProperties());
+                        new ApplicationProperties(),
+                        reachableOwners());
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         // One file already processed at its current version, one parked by a failed run.
@@ -367,6 +373,59 @@ class PolicyRunnerTest {
 
         String key = EditorSource.counterKey(7L);
         assertEquals(2, docCounter.statsFor(List.of(key)).get(key).total());
+    }
+
+    @Test
+    void anOwnerlessProcessingFolderIsNotSweptUnderLogin() {
+        // Created while login was disabled, so stamped with no owner; enabling login strands it
+        // where no user can list, pause, revert, or delete it. Sweeping it anyway would keep
+        // replacing files in place in a folder nobody can reach.
+        assertNotSwept(policy(List.of()).withOwner(null));
+    }
+
+    @Test
+    void aProcessingFolderWhoseOwnerNoLongerExistsIsNotSwept() {
+        // Renaming or deleting the owner strands the folder the same way a null owner does: the
+        // stamped name matches no user, so the owner check fails for everyone.
+        assertNotSwept(policy(List.of()).withOwner("renamed-away"));
+    }
+
+    /** Asserts the engine refuses this processing folder under login, and starts no run. */
+    private void assertNotSwept(Policy stranded) {
+        ApplicationProperties loginOn = new ApplicationProperties();
+        loginOn.getSecurity().setEnableLogin(true);
+        PolicyRunner enforced =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        loginOn,
+                        guardOver(loginOn, noUsers()));
+
+        SweepOutcome outcome = enforced.run(stranded.withSurface(Policy.SURFACE_PROCESSING_FOLDER));
+
+        assertTrue(outcome.runIds().isEmpty());
+        verifyNoInteractions(policyEngine);
+    }
+
+    /** A guard with login off, so it reports no orphans and never reads a user. */
+    private static PolicyAccessGuard reachableOwners() {
+        return guardOver(new ApplicationProperties(), mock(UserServiceInterface.class));
+    }
+
+    /** A user service with an empty users table: every stamped owner reads as gone. */
+    private static UserServiceInterface noUsers() {
+        UserServiceInterface users = mock(UserServiceInterface.class);
+        // lenient: a null owner is stranded without the guard ever reaching the lookup.
+        lenient().when(users.usernameExists(any())).thenReturn(false);
+        return users;
+    }
+
+    private static PolicyAccessGuard guardOver(
+            ApplicationProperties properties, UserServiceInterface users) {
+        return new PolicyAccessGuard(users, properties, mock(PolicyManagementAuthority.class));
     }
 
     /** Persists each spec as a source and returns a policy referencing them by id. */

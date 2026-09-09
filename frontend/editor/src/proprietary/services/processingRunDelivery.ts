@@ -99,13 +99,131 @@ async function mapBounded<T, R>(
 }
 
 /**
- * Poll `policyId`'s runs until they have settled, opening each completed
- * run's outputs into the workbench via `addFiles`. With a known `expected`
- * count it stops exactly there; with null (the sweep runs behind the create
- * response, so no count exists up front) it stops once every observed run is
- * terminal and stable, or once a grace period passes with no runs at all.
+ * In-flight delivery per policy id. A second callback-less trigger for a folder
+ * joins the running loop rather than starting its own. Distinct folders run in
+ * parallel.
  */
-export async function deliverSweepResults(
+const deliveriesInFlight = new Map<string, Promise<SweepDeliveryProgress>>();
+
+/**
+ * Runs whose outputs are already in the workbench, per folder, held for as long as
+ * any delivery for that folder is live.
+ *
+ * Joining is not enough on its own: a caller that passes callbacks must run its own
+ * loop to receive them, so a resume's delivery and a sweep's overlap by design and
+ * both see the same settled run in the feed. The workbench cannot dedup the result
+ * away - a disk output File has no stable lastModified, so its
+ * `name|size|lastModified` key differs on each fetch - which would open every result
+ * twice. Callbacks still fire for both loops; only the opening is claimed once.
+ */
+const openedRuns = new Map<string, Set<string>>();
+
+/** Live deliveries per folder; the last one out releases that folder's opened set. */
+const liveDeliveries = new Map<string, number>();
+
+function enterDelivery(policyId: string): void {
+  liveDeliveries.set(policyId, (liveDeliveries.get(policyId) ?? 0) + 1);
+}
+
+function leaveDelivery(policyId: string): void {
+  const remaining = (liveDeliveries.get(policyId) ?? 1) - 1;
+  if (remaining > 0) {
+    liveDeliveries.set(policyId, remaining);
+    return;
+  }
+  // Released with the last delivery, so a later sweep of the same folder is free to
+  // open its results again rather than being suppressed by a stale set.
+  liveDeliveries.delete(policyId);
+  openedRuns.delete(policyId);
+}
+
+/** True for the first delivery to claim this run's outputs, false for any other. */
+function claimRunForOpening(policyId: string, runId: string): boolean {
+  let opened = openedRuns.get(policyId);
+  if (!opened) {
+    opened = new Set();
+    openedRuns.set(policyId, opened);
+  }
+  if (opened.has(runId)) {
+    return false;
+  }
+  opened.add(runId);
+  return true;
+}
+
+/**
+ * Poll `policyId`'s runs until they settle, opening each completed run's outputs
+ * into the workbench via `addFiles`. A numeric `expected` stops there; `null` is
+ * for callers with no count yet, the sweep running behind the create response,
+ * and stops once every observed run is terminal and stable, or after a grace
+ * period with no runs.
+ *
+ * A callback-less caller joins a delivery already running for the folder (see
+ * {@link deliveriesInFlight}) rather than starting a second. A caller that
+ * passes callbacks runs its own delivery, so its onProgress/onRuns/onSettled
+ * always fire.
+ */
+export function deliverSweepResults(
+  policyId: string,
+  expected: number | null,
+  addFiles: (
+    files: File[],
+    options?: { selectFiles?: boolean },
+  ) => Promise<unknown>,
+  callbacks?:
+    | SweepDeliveryCallbacks
+    | ((progress: SweepDeliveryProgress) => void),
+): Promise<SweepDeliveryProgress> {
+  if (callbacks) {
+    return deliverSweepResultsUntracked(
+      policyId,
+      expected,
+      addFiles,
+      callbacks,
+    );
+  }
+  const running = deliveriesInFlight.get(policyId);
+  if (running) {
+    return running;
+  }
+  const started = deliverSweepResultsUntracked(
+    policyId,
+    expected,
+    addFiles,
+  ).finally(() => {
+    if (deliveriesInFlight.get(policyId) === started) {
+      deliveriesInFlight.delete(policyId);
+    }
+  });
+  deliveriesInFlight.set(policyId, started);
+  return started;
+}
+
+async function deliverSweepResultsUntracked(
+  policyId: string,
+  expected: number | null,
+  addFiles: (
+    files: File[],
+    options?: { selectFiles?: boolean },
+  ) => Promise<unknown>,
+  callbacks?:
+    | SweepDeliveryCallbacks
+    | ((progress: SweepDeliveryProgress) => void),
+): Promise<SweepDeliveryProgress> {
+  enterDelivery(policyId);
+  try {
+    return await deliverSweepResultsLoop(
+      policyId,
+      expected,
+      addFiles,
+      callbacks,
+    );
+  } finally {
+    leaveDelivery(policyId);
+  }
+}
+
+async function deliverSweepResultsLoop(
   policyId: string,
   expected: number | null,
   addFiles: (
@@ -175,7 +293,11 @@ export async function deliverSweepResults(
     for (const run of fresh) {
       const failed = run.status !== "COMPLETED";
       const files = failed ? [] : await fetchRunFiles(run.outputs ?? []);
-      opened.push(...files);
+      // Fetched either way so this loop's onSettled still carries the result; only
+      // the first delivery to claim the run puts it into the workbench.
+      if (claimRunForOpening(policyId, run.runId!)) {
+        opened.push(...files);
+      }
       onSettled?.({
         runId: run.runId!,
         fileName: run.fileName ?? null,

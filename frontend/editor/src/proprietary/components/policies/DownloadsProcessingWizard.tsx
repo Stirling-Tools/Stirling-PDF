@@ -71,12 +71,15 @@ export function DownloadsProcessingWizard({
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
 
-  // Only offer where it can work: Downloads must exist, be permitted, and hold something.
+  // Only offer where it can work: this build must be able to read a file that lives on disk,
+  // and Downloads must exist, be permitted, and hold something. Without canListDirectory the
+  // results are unreadable here (fetchRunOutputFile throws), so the offer would rewrite the
+  // server's own Downloads in place and never show the user a single result.
   // Asked repeatedly because the window can open before the bundled backend is reachable —
   // a single attempt would fail on every desktop cold start. Gives up after a bounded wait
   // so a genuine "no" stops asking.
   useEffect(() => {
-    if (!active) return;
+    if (!active || !canListDirectory) return;
     let cancelled = false;
     let attempts = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -303,7 +306,7 @@ export function DownloadsProcessingWizard({
                 {t("processingFolders.downloads.cancelSweep", "Cancel")}
               </Button>
               <Button size="sm" disabled loading>
-                {t("processingFolders.downloads.working", "Processing…")}
+                {t("processingFolders.downloads.working", "Processing...")}
               </Button>
             </>
           )}
@@ -329,7 +332,7 @@ export function DownloadsProcessingWizard({
             <li>
               {t(
                 "processingFolders.downloads.keepsOriginals",
-                "Files are processed in place — and each original is kept, so you can restore it any time.",
+                "Files are processed in place - and each original is kept, so you can restore it any time.",
               )}
             </li>
             {capped && (
@@ -391,12 +394,12 @@ export function DownloadsProcessingWizard({
                 ? t("processingFolders.downloads.stillParked", {
                     count: summary?.failed ?? 0,
                     defaultValue:
-                      "{{count}} files failed earlier and were not retried — fix the cause, then run again.",
+                      "{{count}} files failed earlier and were not retried - fix the cause, then run again.",
                   })
                 : t("processingFolders.downloads.nothingNew", {
                     count: summary?.done ?? 0,
                     defaultValue:
-                      "Nothing new to process — these {{count}} files have already been through.",
+                      "Nothing new to process - these {{count}} files have already been through.",
                   })
               : t("processingFolders.downloads.finished", {
                   count: processed,

@@ -13,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
@@ -46,6 +47,7 @@ public class PolicyRunner {
     private final SourceDocCounter docCounter;
     private final ProcessedLedger processedLedger;
     private final ApplicationProperties applicationProperties;
+    private final PolicyAccessGuard policyAccessGuard;
 
     /**
      * One admission gate per sweep: every run is visible immediately, but only this many execute at
@@ -76,17 +78,39 @@ public class PolicyRunner {
     }
 
     /**
+     * Run one named file of the policy and nothing else: a per-file retry, where claiming the
+     * folder's other files would process work the user did not ask for - including an original they
+     * just restored, whose ledger row the restore deliberately forgot.
+     */
+    public SweepOutcome runFile(Policy policy, String identity) {
+        return run(policy, policy.inputs(), SweepKind.LIGHT, identity);
+    }
+
+    /** Sweep every one of the given inputs, claiming whatever each source offers. */
+    public SweepOutcome run(Policy policy, List<PipelineInput> inputs, SweepKind sweep) {
+        return run(policy, inputs, sweep, null);
+    }
+
+    /**
      * Core sweep: pulls each of the given inputs' sources; each yielded unit becomes its own run so
      * one failure does not affect the others. No inputs means one run with no input (generator
      * pipeline). Missing or disabled sources are skipped so one broken reference does not stop the
      * rest. Presence cleanup only runs when the sweep covered every input of the policy - a
-     * single-binding fire cannot reconcile the whole policy's ledger. Returns the ids of the runs
-     * it started plus what the sweep skipped, so a manual trigger can report which runs to follow
-     * or why nothing ran.
+     * single-binding fire cannot reconcile the whole policy's ledger. A non-null {@code target}
+     * narrows the sweep to that one ledger identity. Returns the ids of the runs it started plus
+     * what the sweep skipped, so a manual trigger can report which runs to follow or why nothing
+     * ran.
      */
-    public SweepOutcome run(Policy policy, List<PipelineInput> inputs, SweepKind sweep) {
+    private SweepOutcome run(
+            Policy policy, List<PipelineInput> inputs, SweepKind sweep, String target) {
+        if (policyAccessGuard.isOrphaned(policy)) {
+            // Reachable by nobody, so nobody could stop it: running would replace files in place
+            // in a folder no user can list, pause, revert, or delete.
+            log.warn("Processing folder {} has no reachable owner; not sweeping it", policy.id());
+            return new SweepOutcome(List.of(), 0, 0, 0, 0, 0);
+        }
         long sweepStart = System.currentTimeMillis();
-        PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger);
+        PolicySweep context = new PolicySweep(policy.id(), sweep, processedLedger, target);
         Semaphore admission = sweepAdmission();
         List<String> runIds = new ArrayList<>();
         if (inputs.isEmpty()) {

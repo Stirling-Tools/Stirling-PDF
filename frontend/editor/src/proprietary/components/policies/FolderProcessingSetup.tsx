@@ -166,7 +166,7 @@ export function FolderProcessingSetup({
             open
             onClose={submitting ? () => {} : close}
             width="lg"
-            title={t("filesPage.processingSetup.title", "Process “{{name}}”", {
+            title={t("filesPage.processingSetup.title", "Process '{{name}}'", {
               name: folder.name,
             })}
             subtitle={t(wizardEntry.category.label, wizardEntry.category.id)}
@@ -206,14 +206,14 @@ export function FolderProcessingSetup({
       open
       onClose={close}
       width="lg"
-      title={t("filesPage.processingSetup.title", "Process “{{name}}”", {
+      title={t("filesPage.processingSetup.title", "Process '{{name}}'", {
         name: folder.name,
       })}
     >
       <p className="folder-setup__lead">
         {t(
           "filesPage.processingSetup.lead",
-          "Anything added to this folder runs these steps, in place — each file becomes its processed version.",
+          "Anything added to this folder runs these steps, in place - each file becomes its processed version.",
         )}
       </p>
       <CardRail itemWidth="16rem" itemHeight="10.75rem">

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -199,6 +200,32 @@ class ProcessingFolderControllerTest {
         assertThat(source.type()).isEqualTo("storage-folder");
         assertThat(source.options()).containsEntry("folderId", FOLDER_ID.toString());
         verify(policyRunner, timeout(2000)).run(stored, SweepKind.USER);
+    }
+
+    @Test
+    void aForeignOutputFolderIdIsOverriddenWithTheOwnedSourceFolder() {
+        // The caller owns FOLDER_ID but points output at someone else's folder.
+        String foreign = "00000000-0000-0000-0000-0000000000ff";
+        var view =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        List.of(
+                                                new PipelineStep(
+                                                        "/api/v1/misc/flatten",
+                                                        Map.of("flattenOnlyForms", false),
+                                                        Map.of())),
+                                        Map.of("mode", "new_file", "folderId", foreign)))
+                        .getBody();
+
+        Policy stored = policyStore.get(view.id()).orElseThrow();
+        assertThat(stored.output().options())
+                .containsEntry("folderId", FOLDER_ID.toString())
+                .doesNotContainValue(foreign);
     }
 
     @Test
@@ -387,7 +414,7 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void retryForgetsOneFailureAndRunsALightSweep() {
+    void retryRunsOnlyTheNamedFile() {
         var view = controller.save(request(null, "new_version")).getBody();
         StoredFile doc = storedFile(11L, "doc.pdf");
         when(storedFileRepository.findAllByFolderId(FOLDER_ID)).thenReturn(List.of(doc));
@@ -396,9 +423,9 @@ class ProcessingFolderControllerTest {
         controller.retryFile(view.id(), new ProcessingFolderController.RetryFileRequest("doc.pdf"));
 
         Policy stored = policyStore.get(view.id()).orElseThrow();
-        // Light, not user-invoked: only the forgotten file may run again; other parked
-        // failures stay parked.
-        verify(policyRunner).run(stored, SweepKind.LIGHT);
+        // Scoped to the one file: a whole-folder sweep would also claim every file with no
+        // ledger row, including an original a restore just brought back.
+        verify(policyRunner).runFile(stored, "storage:11");
     }
 
     @Test
@@ -483,6 +510,36 @@ class ProcessingFolderControllerTest {
         verify(policyRunner).awaitQuiesce(eq(view.id()), any());
         // Failed rows go too: the reset leaves every file reading as waiting.
         verify(processedLedger).clearPolicy(view.id());
+    }
+
+    @Test
+    void revertAllIgnoresNestedArchivesSoItRestoresOnlyTheFolderSOwnFiles() throws Exception {
+        lenient()
+                .when(folderAccessGuard.requirePermitted(any(Path.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+        var view = controller.save(diskRequest()).getBody();
+        Path originals = tempDir.resolve(".stirling").resolve("originals");
+        // The consumer half of the superseded layout: a same-name re-drop displaces the original
+        // it replaces one level down, and revert-all must leave it there. Restoring it as a
+        // sibling would leave the user a second "doc.pdf" their folder never held. The write half
+        // - that only the canonical name ever lands in this namespace - is pinned by
+        // FolderOutputSinkTest.aSupersededOriginalIsKeptOutOfTheRestoreNamespace.
+        Path superseded = originals.resolve("superseded");
+        Files.createDirectories(superseded);
+        Files.writeString(tempDir.resolve("doc.pdf"), "processed");
+        Files.writeString(originals.resolve("doc.pdf"), "the-original");
+        Files.writeString(superseded.resolve("doc.pdf"), "displaced-original");
+
+        var outcome = controller.revertAllFiles(view.id());
+
+        assertThat(outcome.restored()).isEqualTo(1);
+        assertThat(Files.readString(tempDir.resolve("doc.pdf"))).isEqualTo("the-original");
+        try (Stream<Path> entries = Files.list(tempDir)) {
+            assertThat(entries.filter(Files::isRegularFile).map(f -> f.getFileName().toString()))
+                    .containsExactly("doc.pdf");
+        }
+        // Still preserved, just not restored over anything.
+        assertThat(Files.readString(superseded.resolve("doc.pdf"))).isEqualTo("displaced-original");
     }
 
     @Test

@@ -55,10 +55,33 @@ public class PolicyAccessGuard {
         return Objects.equals(policy.teamId(), policyManagementAuthority.currentUserTeamId());
     }
 
-    /** Owner match for personal records; a legacy row with no stamped owner is anyone's. */
+    /**
+     * Owner match for a personal record, fail-closed: a row with no stamped owner belongs to nobody
+     * under login. Treating a null owner as anyone's would expose a legacy or mis-stamped folder to
+     * every authenticated user, since this surface is owner-scoped, not team-scoped. The rows this
+     * rejects are {@link #isOrphaned orphaned}, and the engine must refuse to run them.
+     */
     private boolean ownedByCurrentUser(Policy policy) {
-        return policy.owner() == null
-                || Objects.equals(policy.owner(), userService.getCurrentUsername());
+        return policy.owner() != null
+                && Objects.equals(policy.owner(), userService.getCurrentUsername());
+    }
+
+    /**
+     * Whether owner scoping leaves this processing folder reachable by nobody, so the engine can
+     * refuse to run it rather than replace files in place in a folder no one can list, pause,
+     * revert or delete.
+     *
+     * <p>Two ways in, and the rule has to cover both: a folder created while login was disabled is
+     * stamped with no owner, and enabling login later strands it; a folder whose owner was renamed
+     * or deleted is stamped with a name that no longer resolves. Owner match is by exact name, so
+     * existence is read the same way - a name that would not satisfy {@link #ownedByCurrentUser}
+     * for anyone is not reachable, whatever the users table holds under a different case.
+     */
+    public boolean isOrphaned(Policy policy) {
+        if (!enforced() || !Policy.SURFACE_PROCESSING_FOLDER.equals(policy.surface())) {
+            return false;
+        }
+        return policy.owner() == null || !userService.usernameExists(policy.owner());
     }
 
     /**
