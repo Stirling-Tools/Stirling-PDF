@@ -8972,6 +8972,13 @@ cancel = "Cancel"
 confirm = "Clear history"
 title = "Clear processed history?"
 
+[portal.policies.detail.delete]
+bodyActive = "\"{{name}}\" is active and enforcing on your documents. Deleting it stops that immediately and cannot be undone. Pause it instead if you only want it to stop running."
+bodyPaused = "\"{{name}}\" will be removed for everyone. This cannot be undone."
+cancel = "Cancel"
+confirm = "Delete"
+title = "Delete this pipeline?"
+
 [portal.policies.detail.emptyActivity]
 description = "Documents will appear here once this pipeline runs."
 title = "No activity yet"
