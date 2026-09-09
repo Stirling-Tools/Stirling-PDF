@@ -52,6 +52,7 @@ export function decodedToState(
     name: decoded.name,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,
+    required: decoded.required,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,

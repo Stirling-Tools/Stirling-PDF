@@ -64,6 +64,9 @@ vi.mock("@app/contexts/AppConfigContext", () => ({
   useAppConfig: () => ({ config: {}, loading: false }),
 }));
 vi.mock("@app/contexts/FileContext", () => ({
+  useFileSelector: (
+    selector: (s: { ui: { policyBlocks: Record<string, string> } }) => unknown,
+  ) => selector({ ui: { policyBlocks: {} } }),
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
   useFileManagement: () => ({
     addFiles: mocks.addFiles,

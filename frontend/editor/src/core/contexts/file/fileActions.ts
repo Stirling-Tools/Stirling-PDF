@@ -968,6 +968,10 @@ export const createFileActions = (
   clearFileError: (fileId: FileId) =>
     dispatch({ type: "CLEAR_FILE_ERROR", payload: { fileId } }),
   clearAllFileErrors: () => dispatch({ type: "CLEAR_ALL_FILE_ERRORS" }),
+  markPolicyBlocked: (fileId: FileId, policyKey: string) =>
+    dispatch({ type: "MARK_POLICY_BLOCKED", payload: { fileId, policyKey } }),
+  clearPolicyBlock: (fileId: FileId) =>
+    dispatch({ type: "CLEAR_POLICY_BLOCK", payload: { fileId } }),
   updateStirlingFileStub: (
     fileId: FileId,
     updates: Partial<StirlingFileStub>,

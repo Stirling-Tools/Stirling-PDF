@@ -47,6 +47,11 @@ export interface PolicyState {
   name?: string;
   /** Whether the policy runs in the editor as each file passes through (resolved at decode). */
   runsOnEditor?: boolean;
+  /**
+   * A policy (blocking) rather than an ordinary pipeline: when it fails on an editor file the file
+   * is blocked (unusable), whereas a pipeline failure only warns. See the pipeline `Policy.required`.
+   */
+  required?: boolean;
   /** When non-empty, narrows the policy to these document types. */
   scopeTypes: string[];
   /** Email that low-confidence enforcements are routed to. */

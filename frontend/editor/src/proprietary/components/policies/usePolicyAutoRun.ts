@@ -14,6 +14,7 @@ import {
   useAllFiles,
   useFileManagement,
   useFileContext,
+  useFileSelector,
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
@@ -131,7 +132,10 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
-  const { addFiles, updateStirlingFileStub } = useFileManagement();
+  const { addFiles, updateStirlingFileStub, markPolicyBlocked } =
+    useFileManagement();
+  // Files blocked by a failed Policy: skip all further passes on them (any policy failure blocks).
+  const policyBlocks = useFileSelector((s) => s.ui.policyBlocks);
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
@@ -224,14 +228,21 @@ export function usePolicyAutoRun(): void {
         );
       }
       // Read now rather than leaving them a poll interval to hear about their own upload.
-      if (view.status === "FAILED") refreshNotificationsNow();
+      if (view.status === "FAILED") {
+        refreshNotificationsNow();
+        // A failed Policy (required) blocks its file - unusable until the policy re-runs clean; a
+        // failed ordinary pipeline only warns (the notification above), leaving the file usable.
+        if (finished && policiesRef.current[finished.policyKey]?.required) {
+          markPolicyBlocked(finished.fileId as FileId, finished.policyKey);
+        }
+      }
       const code = view.errorCode;
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
       if (firedLimitModal.current.has(view.runId)) return;
       firedLimitModal.current.add(view.runId);
       dispatchPaygLimitReached(view.errorSubscribed ?? null);
     },
-    [scheduleQueueRetry],
+    [scheduleQueueRetry, markPolicyBlocked],
   );
 
   // Fire only the FIRST upload policy per file; the chaining effect below runs the rest
@@ -245,6 +256,8 @@ export function usePolicyAutoRun(): void {
       // Input-mode policies cover uploads only; tool-produced files are left to
       // export-mode policies at export time.
       if (stub.derivedFromTool) continue;
+      // A file a Policy already blocked takes no further passes (any policy failure blocks it).
+      if (policyBlocks[stub.id]) continue;
       // Held while the unlock prompt is open: the run would fail on a document the user is
       // about to decrypt, bill for it, and leave a row about a version soon replaced. Skipping
       // the prompt releases it, so a document nobody unlocks still records its failure.
@@ -264,7 +277,13 @@ export function usePolicyAutoRun(): void {
         })
         .finally(() => dispatching.current.delete(key));
     }
-  }, [fileStubs, policies, orderedUploadPolicyKeys, unlocksVersion]);
+  }, [
+    fileStubs,
+    policies,
+    orderedUploadPolicyKeys,
+    unlocksVersion,
+    policyBlocks,
+  ]);
 
   // Once a run's output lands, fire the next upload policy on it - success only, once per
   // run. isDispatched guards re-dispatch across reloads.

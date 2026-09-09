@@ -6,7 +6,11 @@
  */
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
+import {
+  useAllFiles,
+  useFileManagement,
+  useFileSelector,
+} from "@app/contexts/FileContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIndexedDB } from "@app/contexts/IndexedDBContext";
 import { fileStorage } from "@app/services/fileStorage";
@@ -35,6 +39,8 @@ interface ActivePass {
 export function usePolicyLocalPasses(): void {
   const { fileStubs } = useAllFiles();
   const { updateStirlingFileStub } = useFileManagement();
+  // A file a Policy already blocked takes no further passes.
+  const policyBlocks = useFileSelector((s) => s.ui.policyBlocks);
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
   const aiEnabled = useAiEngineEnabled();
@@ -79,6 +85,7 @@ export function usePolicyLocalPasses(): void {
     outer: for (const active of passes) {
       for (const stub of fileStubs) {
         if (batch.length >= LOCAL_PASS_BATCH) break outer;
+        if (policyBlocks[stub.id]) continue;
         if (!active.pass.eligible(stub)) continue;
         if (claimed.current.has(claimKey(active.policyKey, stub))) continue;
         batch.push({ active, stub });
@@ -140,5 +147,6 @@ export function usePolicyLocalPasses(): void {
     updateStirlingFileStub,
     bumpRevision,
     tick,
+    policyBlocks,
   ]);
 }

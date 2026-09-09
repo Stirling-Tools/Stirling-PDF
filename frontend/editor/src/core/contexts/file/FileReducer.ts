@@ -23,6 +23,7 @@ export const initialFileContextState: FileContextState = {
     processingProgress: 0,
     hasUnsavedChanges: false,
     errorFileIds: [],
+    policyBlocks: {},
   },
 };
 
@@ -344,6 +345,25 @@ export function fileContextReducer(
         ...state,
         ui: { ...state.ui, errorFileIds: [] },
       };
+    }
+
+    case "MARK_POLICY_BLOCKED": {
+      const { fileId, policyKey } = action.payload;
+      if (state.ui.policyBlocks[fileId] === policyKey) return state;
+      return {
+        ...state,
+        ui: {
+          ...state.ui,
+          policyBlocks: { ...state.ui.policyBlocks, [fileId]: policyKey },
+        },
+      };
+    }
+
+    case "CLEAR_POLICY_BLOCK": {
+      const { fileId } = action.payload;
+      if (!(fileId in state.ui.policyBlocks)) return state;
+      const { [fileId]: _removed, ...rest } = state.ui.policyBlocks;
+      return { ...state, ui: { ...state.ui, policyBlocks: rest } };
     }
 
     case "PIN_FILE": {

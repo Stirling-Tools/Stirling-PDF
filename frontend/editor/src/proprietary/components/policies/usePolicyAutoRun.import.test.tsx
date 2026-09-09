@@ -22,6 +22,9 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@app/contexts/FileContext", () => ({
+  useFileSelector: (
+    selector: (s: { ui: { policyBlocks: Record<string, string> } }) => unknown,
+  ) => selector({ ui: { policyBlocks: {} } }),
   useAllFiles: () => ({ fileStubs: mocks.fileStubs }),
   useFileManagement: () => ({
     addFiles: mocks.addFiles,

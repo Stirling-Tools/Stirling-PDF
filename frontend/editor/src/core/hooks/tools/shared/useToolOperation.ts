@@ -225,6 +225,22 @@ export const useToolOperation = <TParams>(
         return;
       }
 
+      // A file blocked by a failed Policy is unusable until that policy re-runs clean; no tool may
+      // run over it (format-agnostic, unlike the tool-compatibility filter below).
+      const policyBlockedFiles = selectedFiles.filter((file) =>
+        selectors.getPolicyBlock(file.fileId),
+      );
+      if (policyBlockedFiles.length > 0) {
+        actions.setError(
+          t(
+            "policyBlockedFilesBlocked",
+            "{{count}} file(s) are blocked by a policy that failed to run. Re-run the policy or remove them.",
+            { count: policyBlockedFiles.length },
+          ),
+        );
+        return;
+      }
+
       const runtimeEndpoint: string | undefined = config.endpoint
         ? typeof config.endpoint === "function"
           ? (config.endpoint(params) ?? undefined)

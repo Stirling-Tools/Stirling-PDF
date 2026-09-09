@@ -340,3 +340,20 @@ describe("fileContextReducer — REMOVE_FILES", () => {
     expect(next.ui.selectedFileIds).toEqual([]);
   });
 });
+
+describe("fileContextReducer — policy blocks", () => {
+  it("marks a file blocked by a policy, then clears it", () => {
+    const fileId = "f1" as FileId;
+    const blocked = fileContextReducer(initialFileContextState, {
+      type: "MARK_POLICY_BLOCKED",
+      payload: { fileId, policyKey: "security" },
+    });
+    expect(blocked.ui.policyBlocks[fileId]).toBe("security");
+
+    const cleared = fileContextReducer(blocked, {
+      type: "CLEAR_POLICY_BLOCK",
+      payload: { fileId },
+    });
+    expect(cleared.ui.policyBlocks[fileId]).toBeUndefined();
+  });
+});
