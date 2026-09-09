@@ -105,7 +105,11 @@ export function createToolFlow<TParams = unknown>(
   return (
     <Stack gap="sm" p="sm">
       <ToolFileEligibility
-        files={config.review.isVisible ? null : config.files.selectedFiles}
+        files={
+          config.files.isVisible === false || config.review.isVisible
+            ? null
+            : config.files.selectedFiles
+        }
       />
       {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>

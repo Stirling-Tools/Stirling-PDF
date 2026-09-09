@@ -20,6 +20,8 @@ import {
   useToolEligibleFileIds,
 } from "@app/contexts/ToolFileEligibilityContext";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
+import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
+import { useCompressOperation } from "@app/hooks/tools/compress/useCompressOperation";
 
 const workspace = {
   files: [] as StirlingFile[],
@@ -51,6 +53,15 @@ function FilePreviews() {
       onEyeClick={vi.fn()}
     />
   ));
+}
+
+function EmptyFileSelectionTool({ filesVisible }: { filesVisible: boolean }) {
+  const operation = useCompressOperation();
+  return createToolFlow({
+    files: { selectedFiles: [], isVisible: filesVisible },
+    steps: [],
+    review: { isVisible: false, operation, title: "Results" },
+  });
 }
 
 vi.mock("@app/hooks/useLazyThumbnail", () => ({
@@ -166,6 +177,36 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("hidden Files steps leave previews undimmed even with an empty selection", () => {
+    const renderFlow = (filesVisible: boolean) => (
+      <MantineProvider>
+        <ToolFileEligibilityProvider>
+          <FilePreviews />
+          <EmptyFileSelectionTool filesVisible={filesVisible} />
+        </ToolFileEligibilityProvider>
+      </MantineProvider>
+    );
+    const view = render(renderFlow(false));
+    const previews = [
+      screen.getByRole("button", { name: /report.pdf/ }),
+      screen.getByRole("button", { name: /photo.png/ }),
+    ];
+    for (const preview of previews) {
+      expect(preview).toHaveAttribute("data-tool-skipped", "false");
+    }
+
+    view.rerender(renderFlow(true));
+    for (const preview of previews) {
+      expect(preview).toHaveAttribute("data-tool-skipped", "true");
+    }
+
+    view.rerender(renderFlow(false));
+    for (const preview of previews) {
+      expect(preview).toHaveAttribute("data-tool-skipped", "false");
+      expect(preview).not.toHaveAttribute("aria-description");
+    }
+  });
+
   test("previews dim with the current tool settings and recover when the tool closes", async () => {
     const renderTool = (tool: ReactNode) => (
       <MantineProvider>
