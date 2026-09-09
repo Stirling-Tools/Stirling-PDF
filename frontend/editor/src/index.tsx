@@ -23,24 +23,6 @@ import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 applyDevWorktreeLabel();
 startEagerWasmCompilation();
 if (typeof window !== "undefined") {
-  try {
-    const protoDescriptor =
-      Object.getOwnPropertyDescriptor(Window.prototype, "devicePixelRatio") ||
-      Object.getOwnPropertyDescriptor(window, "devicePixelRatio");
-    const fallbackDPR = window.devicePixelRatio;
-    Object.defineProperty(window, "devicePixelRatio", {
-      get() {
-        const currentDPR = protoDescriptor?.get
-          ? protoDescriptor.get.call(window)
-          : fallbackDPR;
-        return Math.min(currentDPR || 1, 1.5);
-      },
-      configurable: true,
-    });
-  } catch (error) {
-    console.warn("Failed to override window.devicePixelRatio:", error);
-  }
-
   const scheduleCompilation = () =>
     requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
 
