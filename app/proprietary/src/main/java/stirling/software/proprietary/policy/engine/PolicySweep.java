@@ -24,6 +24,10 @@ final class PolicySweep implements ResolveContext {
     private final String policyId;
     private final SweepKind kind;
     private final ProcessedLedger ledger;
+
+    /** When set, the only identity this sweep may claim; null sweeps the whole policy. */
+    private final String target;
+
     private final Set<String> present = new HashSet<>();
     // Claim states loaded in bulk at reportPresent; a claim outside the prefetch falls back to a
     // single lookup. A stale entry cannot double-claim (the ledger re-checks every transition),
@@ -31,19 +35,39 @@ final class PolicySweep implements ResolveContext {
     private final Map<String, ClaimState> prefetched = new HashMap<>();
     private final Set<String> prefetchedIdentities = new HashSet<>();
     private boolean cleanupVetoed;
+    private int retried;
 
-    PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger) {
+    PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger, String target) {
         this.policyId = policyId;
         this.kind = kind;
         this.ledger = ledger;
+        this.target = target;
     }
 
     @Override
     public synchronized boolean claim(String identity, String gate, Supplier<String> contentHash) {
+        // Refused here rather than after resolve: the sources still list normally, but a capped
+        // listing would otherwise spend its whole budget claiming other files and never reach the
+        // one file that was asked for.
+        if (target != null && !target.equals(identity)) {
+            return false;
+        }
         ClaimState observed =
                 prefetchedIdentities.contains(identity)
                         ? prefetched.get(identity)
                         : ledger.statesFor(policyId, List.of(identity)).get(identity);
+        // A user-invoked sweep retries parked failures: the click usually follows fixing
+        // whatever failed them, and only the unattended watcher owes a poison file caution.
+        if (kind == SweepKind.USER
+                && observed != null
+                && observed.status() == ProcessedFileStatus.ERROR
+                && gate.equals(observed.gate())
+                && ledger.reclaimFailed(policyId, identity, gate)) {
+            retried++;
+            prefetchedIdentities.add(identity);
+            prefetched.put(identity, new ClaimState(ProcessedFileStatus.PROCESSING, gate, null));
+            return true;
+        }
         boolean claimed = ledger.claim(policyId, identity, gate, contentHash, observed);
         if (claimed) {
             // A nested source surfacing the same file later in this sweep sees it in flight
@@ -68,7 +92,7 @@ final class PolicySweep implements ResolveContext {
 
     @Override
     public synchronized void reportPresent(Collection<String> identities) {
-        if (kind == SweepKind.FULL) {
+        if (kind != SweepKind.LIGHT) {
             present.addAll(identities);
         }
         prefetched.putAll(ledger.statesFor(policyId, identities));
@@ -80,7 +104,7 @@ final class PolicySweep implements ResolveContext {
     }
 
     synchronized boolean cleanupAllowed() {
-        return kind == SweepKind.FULL && !cleanupVetoed;
+        return kind != SweepKind.LIGHT && !cleanupVetoed;
     }
 
     synchronized Set<String> presentIdentities() {
@@ -112,6 +136,7 @@ final class PolicySweep implements ResolveContext {
                 present.size(),
                 alreadyProcessed,
                 parked,
-                Math.max(0, processing - runIds.size()));
+                Math.max(0, processing - runIds.size()),
+                retried);
     }
 }
