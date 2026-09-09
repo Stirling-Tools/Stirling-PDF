@@ -6,7 +6,7 @@ import {
   type PdfaOutputFormat,
   type PdfaPolicyParameters,
 } from "@app/policies/pdfaOperation";
-import "@portal/views/Policies.css";
+import "@app/components/policies/PolicySetupWizard.css";
 
 /**
  * Configures the PDF/A step: which archival profile, and whether a conversion that falls short

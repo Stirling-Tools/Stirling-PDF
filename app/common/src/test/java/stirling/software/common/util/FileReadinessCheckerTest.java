@@ -208,6 +208,21 @@ class FileReadinessCheckerTest {
     class SizeStability {
 
         @Test
+        @DisplayName("a long-settled file skips the size-stability wait")
+        void oldFileSkipsStabilityWait() throws IOException {
+            config.setSettleTimeMillis(1_000);
+            config.setSizeCheckDelayMillis(5_000); // would dominate a backlog scan
+            Path file = realFile("old.pdf", "content");
+            setLastModifiedInPast(file, 60_000);
+
+            long start = System.currentTimeMillis();
+            assertTrue(checker.isReady(file));
+            assertTrue(
+                    System.currentTimeMillis() - start < 2_000,
+                    "the per-file stability wait was paid for a long-settled file");
+        }
+
+        @Test
         @DisplayName("size unchanged between two reads → ready")
         void sizeStable_ready() throws IOException {
             config.setSizeCheckDelayMillis(1);
@@ -220,8 +235,11 @@ class FileReadinessCheckerTest {
         @DisplayName("size changes between two reads → not ready")
         void sizeChanging_notReady() throws IOException {
             config.setSizeCheckDelayMillis(1);
+            // Inside the copy window (settled, but recently enough that a paused
+            // mid-copy is plausible), so the stability check actually runs.
+            config.setSettleTimeMillis(1_000);
             Path file = realFile("growing.pdf", "initial");
-            setLastModifiedInPast(file, 60_000);
+            setLastModifiedInPast(file, 1_500);
 
             // Use MockedStatic to control what Files.size() returns on each call
             // while leaving all other Files.* methods intact.

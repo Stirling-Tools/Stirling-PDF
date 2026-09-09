@@ -1,13 +1,13 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { PolicyPdfaConfig } from "@portal/components/policies/PolicyPdfaConfig";
+import { PolicyPdfaConfig } from "@app/components/policies/PolicyPdfaConfig";
 import {
   pdfaDefaultParameters,
   type PdfaPolicyParameters,
 } from "@app/policies/pdfaOperation";
 
 const meta: Meta<typeof PolicyPdfaConfig> = {
-  title: "Portal/Policies/PolicyPdfaConfig",
+  title: "Policies/PolicyPdfaConfig",
   component: PolicyPdfaConfig,
   parameters: { layout: "padded" },
 };
