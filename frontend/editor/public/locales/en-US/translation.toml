@@ -3939,8 +3939,10 @@ body = "\"{{name}}\" has been deleted or moved on disk, so it has been removed f
 title = "File no longer exists"
 
 [desktopFileLink.openDeleted]
-body = "{{label}} no longer exists on disk. It is still open here - saving will ask you for a new location."
-title = "File deleted on disk"
+body_one = "\"{{name}}\" no longer exists on disk. It is still open here - saving will ask you for a new location."
+body_other = "{{count}} files no longer exist on disk. They are still open here - saving each one will ask you for a new location."
+title_one = "File deleted on disk"
+title_other = "Files deleted on disk"
 
 [desktopFileLink.reloaded]
 body = "\"{{name}}\" changed on disk and has been reloaded."

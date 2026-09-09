@@ -324,7 +324,7 @@ function isTranslator(value: unknown): value is Translator {
 function translate(
   key: string,
   defaultValue: string,
-  params?: Record<string, string>,
+  params?: Record<string, string | number>,
 ): string {
   try {
     const i18next = (globalThis as Record<string, unknown>).i18next;
@@ -376,16 +376,18 @@ export function notifyOpenFileDeleted(
   onSaveAs?: () => void,
 ): void {
   const single = names.length === 1;
-  const label = single ? `"${names[0]}"` : `${names.length} files`;
   toast({
     title: translate(
       "desktopFileLink.openDeleted.title",
-      "File deleted on disk",
+      single ? "File deleted on disk" : "Files deleted on disk",
+      { count: names.length },
     ),
     body: translate(
       "desktopFileLink.openDeleted.body",
-      `${label} no longer exists on disk. It is still open here - saving will ask you for a new location.`,
-      { label },
+      single
+        ? `"${names[0]}" no longer exists on disk. It is still open here - saving will ask you for a new location.`
+        : `${names.length} files no longer exist on disk. They are still open here - saving each one will ask you for a new location.`,
+      { count: names.length, name: names[0] },
     ),
     isPersistentPopup: true,
     ...(onSaveAs && single
