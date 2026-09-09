@@ -54,18 +54,27 @@ public class TsaUrlResolver {
 
         String tsaUrl =
                 (requestedUrl != null && !requestedUrl.isBlank())
-                        ? requestedUrl
+                        ? requestedUrl.trim()
                         : tsConfig.getDefaultTsaUrl();
 
+        if (tsaUrl == null || tsaUrl.isBlank()) {
+            throw new IllegalArgumentException(
+                    "No default TSA URL is configured (security.timestamp.defaultTsaUrl)."
+                            + " Contact your administrator to configure one.");
+        }
+
+        if (!isValidTsaUrlProtocol(tsaUrl)) {
+            throw new IllegalArgumentException("TSA URL must start with http:// or https://");
+        }
+
         Set<String> normalizedAllowed =
-                allowedUrls(tsConfig).stream()
-                        .map(TsaUrlResolver::normalize)
-                        .collect(Collectors.toSet());
+                allowedUrls(tsConfig).stream().map(TsaUrlResolver::normalize).collect(Collectors.toSet());
 
         if (!normalizedAllowed.contains(normalize(tsaUrl))) {
             throw new IllegalArgumentException(
                     "TSA URL is not in the allowed list. Contact your administrator to add it"
-                            + " via settings.yml (security.timestamp.customTsaUrls).");
+                            + " via settings.yml (security.timestamp.defaultTsaUrl or security.timestamp.customTsaUrls)."
+                            );
         }
 
         return tsaUrl;
