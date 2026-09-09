@@ -30,6 +30,9 @@ class MailConfigTest {
         when(mailProps.getSslEnable()).thenReturn(null);
         when(mailProps.getSslTrust()).thenReturn(null);
         when(mailProps.getSslCheckServerIdentity()).thenReturn(null);
+        when(mailProps.getConnectionTimeoutMs()).thenReturn(10_000);
+        when(mailProps.getReadTimeoutMs()).thenReturn(30_000);
+        when(mailProps.getWriteTimeoutMs()).thenReturn(30_000);
     }
 
     @Test
@@ -84,5 +87,38 @@ class MailConfigTest {
                 () -> assertEquals("true", props.getProperty("mail.smtp.ssl.enable")),
                 () -> assertEquals("*", props.getProperty("mail.smtp.ssl.trust")),
                 () -> assertEquals("true", props.getProperty("mail.smtp.ssl.checkserveridentity")));
+    }
+
+    @Test
+    void smtpTimeoutsComeFromSettings() {
+        // A slow corporate relay is a real configuration, so the operator's numbers must win.
+        when(mailProps.getConnectionTimeoutMs()).thenReturn(45_000);
+        when(mailProps.getReadTimeoutMs()).thenReturn(90_000);
+        when(mailProps.getWriteTimeoutMs()).thenReturn(120_000);
+        ApplicationProperties appProps = mock(ApplicationProperties.class);
+        when(appProps.getMail()).thenReturn(mailProps);
+
+        Properties props =
+                ((JavaMailSenderImpl) new MailConfig(appProps).javaMailSender())
+                        .getJavaMailProperties();
+
+        assertAll(
+                "operator-set SMTP timeouts",
+                () -> assertEquals("45000", props.getProperty("mail.smtp.connectiontimeout")),
+                () -> assertEquals("90000", props.getProperty("mail.smtp.timeout")),
+                () -> assertEquals("120000", props.getProperty("mail.smtp.writetimeout")));
+    }
+
+    @Test
+    void smtpTimeoutDefaultsAreFinite() {
+        // The point of the change: unset must not mean infinite. Asserted on a real settings object
+        // so a silently-changed default cannot pass through the mocks above.
+        ApplicationProperties.Mail defaults = new ApplicationProperties.Mail();
+
+        assertAll(
+                "shipped defaults",
+                () -> assertEquals(10_000, defaults.getConnectionTimeoutMs()),
+                () -> assertEquals(30_000, defaults.getReadTimeoutMs()),
+                () -> assertEquals(30_000, defaults.getWriteTimeoutMs()));
     }
 }

@@ -65,11 +65,13 @@ public class MailConfig {
         // JavaMail defaults every one of these to infinite, so an SMTP server that accepts the
         // connection and then stops responding parks the calling thread for good. Mail is sent
         // synchronously from request threads (backup notifications, invites), so an unreachable or
-        // wedged relay is a thread leak rather than a failed send. Generous enough not to fail a
-        // slow relay, finite so a dead one cannot hold a thread.
-        props.put("mail.smtp.connectiontimeout", "10000");
-        props.put("mail.smtp.timeout", "30000");
-        props.put("mail.smtp.writetimeout", "30000");
+        // wedged relay is a thread leak rather than a failed send. The values are settings, since
+        // what counts as too long belongs to the operator's relay rather than to this code.
+        props.put(
+                "mail.smtp.connectiontimeout",
+                String.valueOf(mailProperties.getConnectionTimeoutMs()));
+        props.put("mail.smtp.timeout", String.valueOf(mailProperties.getReadTimeoutMs()));
+        props.put("mail.smtp.writetimeout", String.valueOf(mailProperties.getWriteTimeoutMs()));
 
         // Only enable SMTP authentication if credentials are provided
         if (hasCredentials) {
