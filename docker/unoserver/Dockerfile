@@ -52,7 +52,7 @@ int main(void) {
     v4.sin_port = htons(9);
     v4.sin_addr.s_addr = htonl(0x7f000001);
     expect("v4_loopback", AF_INET, SOCK_DGRAM, (struct sockaddr *)&v4, sizeof v4, 0);
-    expect("v4_short_addrlen", AF_INET, SOCK_DGRAM, (struct sockaddr *)&v4, 4, 1);
+    expect("v4_short_addrlen", AF_INET, SOCK_DGRAM, (struct sockaddr *)&v4, 12, 1);
     v4.sin_addr.s_addr = htonl(0xc0000201);
     expect("v4_external", AF_INET, SOCK_DGRAM, (struct sockaddr *)&v4, sizeof v4, 1);
 
