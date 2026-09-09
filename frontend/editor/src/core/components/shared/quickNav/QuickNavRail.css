@@ -41,7 +41,6 @@
   width: 1.125rem;
   height: 1.125rem;
   color: inherit;
-  fill: currentColor;
 }
 
 /* Taller than wide (71x79), so height drives the width. */
