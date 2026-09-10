@@ -6,12 +6,31 @@
       "id": "invoice",
       "phrases": [
         { "text": "fatura", "weight": 24, "where": "title" },
-        { "text": "imposto sobre o valor acrescentado", "weight": 8 }
+        { "text": "imposto sobre o valor acrescentado", "weight": 8 },
+        { "text": "número da fatura", "weight": 22, "where": "first" },
+        { "text": "data de emissão", "weight": 16, "where": "first" },
+        { "text": "nota fiscal", "weight": 24, "where": "title" },
+        { "text": "data de vencimento", "weight": 16 },
+        { "text": "valor total", "weight": 16 },
+        { "text": "total a pagar", "weight": 18 },
+        { "text": "forma de pagamento", "weight": 8 },
+        { "text": "nif", "weight": 10 },
+        { "text": "cnpj", "weight": 12 }
+      ],
+      "negatives": [
+        { "text": "guia de remessa", "weight": 14 },
+        { "text": "orçamento", "weight": 14 },
+        { "text": "extrato bancário", "weight": 12 }
       ]
     },
     {
       "id": "receipt",
-      "phrases": [{ "text": "nota fiscal", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "nota fiscal", "weight": 22, "where": "title" },
+        { "text": "comprovante de pagamento", "weight": 22, "where": "title" },
+        { "text": "pagamento recebido", "weight": 16 },
+        { "text": "obrigado pela sua compra", "weight": 16 }
+      ]
     },
     {
       "id": "credit-note",
@@ -23,13 +42,25 @@
     },
     {
       "id": "bank-statement",
-      "phrases": [{ "text": "extrato", "weight": 24, "where": "title" }]
+      "phrases": [
+        { "text": "extrato", "weight": 24, "where": "title" },
+        { "text": "extrato bancário", "weight": 28, "where": "title" },
+        { "text": "extrato de conta", "weight": 26, "where": "title" },
+        { "text": "saldo anterior", "weight": 18 },
+        { "text": "saldo final", "weight": 18 },
+        { "text": "data valor", "weight": 16 },
+        { "text": "número da conta", "weight": 12 }
+      ]
     },
     {
       "id": "payslip",
       "phrases": [
         { "text": "holerite", "weight": 22, "where": "title" },
-        { "text": "folha de pagamento", "weight": 14, "where": "title" }
+        { "text": "folha de pagamento", "weight": 14, "where": "title" },
+        { "text": "recibo de vencimento", "weight": 28, "where": "title" },
+        { "text": "salário bruto", "weight": 18 },
+        { "text": "descontos", "weight": 12 },
+        { "text": "inss", "weight": 16 }
       ]
     },
     {
@@ -45,35 +76,61 @@
     },
     {
       "id": "contract",
-      "phrases": [{ "text": "contrato", "weight": 12, "where": "title" }]
+      "phrases": [
+        { "text": "contrato", "weight": 12, "where": "title" },
+        { "text": "as partes", "weight": 14 },
+        { "text": "as partes acordam", "weight": 16 },
+        { "text": "prazo do contrato", "weight": 14 },
+        { "text": "rescisão", "weight": 12 }
+      ]
     },
     {
       "id": "employment-contract",
       "phrases": [
-        { "text": "contrato de trabalho", "weight": 24, "where": "title" }
+        { "text": "contrato de trabalho", "weight": 24, "where": "title" },
+        { "text": "período experimental", "weight": 18 },
+        { "text": "férias", "weight": 12 }
       ]
     },
     {
       "id": "lease-agreement",
       "phrases": [
         { "text": "arrendamento", "weight": 18, "where": "title" },
-        { "text": "senhorio", "weight": 8 }
+        { "text": "senhorio", "weight": 8 },
+        { "text": "contrato de arrendamento", "weight": 28, "where": "title" },
+        { "text": "contrato de aluguel", "weight": 28, "where": "title" },
+        { "text": "caução", "weight": 18 },
+        { "text": "locador", "weight": 14 },
+        { "text": "inquilino", "weight": 12 }
       ]
     },
     {
       "id": "nda",
       "phrases": [
-        { "text": "acordo de não-divulgação", "weight": 24, "where": "title" }
+        { "text": "acordo de não-divulgação", "weight": 24, "where": "title" },
+        {
+          "text": "acordo de confidencialidade",
+          "weight": 30,
+          "where": "title"
+        },
+        { "text": "informação confidencial", "weight": 12 }
       ]
     },
     {
       "id": "terms-and-conditions",
-      "phrases": [{ "text": "termos de uso", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "termos de uso", "weight": 22, "where": "title" },
+        { "text": "termos e condições", "weight": 26, "where": "title" },
+        { "text": "condições gerais", "weight": 26, "where": "title" }
+      ]
     },
     {
       "id": "privacy-policy",
       "phrases": [
-        { "text": "política de privacidade", "weight": 24, "where": "title" }
+        { "text": "política de privacidade", "weight": 24, "where": "title" },
+        { "text": "lgpd", "weight": 16 },
+        { "text": "rgpd", "weight": 14 },
+        { "text": "dados pessoais", "weight": 12 }
       ]
     },
     {
@@ -92,20 +149,34 @@
     },
     {
       "id": "insurance-policy",
-      "phrases": [{ "text": "apólice", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "apólice", "weight": 22, "where": "title" },
+        { "text": "apólice de seguro", "weight": 28, "where": "title" },
+        { "text": "número da apólice", "weight": 16 },
+        { "text": "cobertura", "weight": 12 },
+        { "text": "franquia", "weight": 14 },
+        { "text": "prémio", "weight": 10 }
+      ]
     },
     {
       "id": "resume",
       "phrases": [
         { "text": "curriculum vitæ", "weight": 24, "where": "title" },
-        { "text": "resumo curricular", "weight": 20, "where": "title" }
+        { "text": "resumo curricular", "weight": 20, "where": "title" },
+        { "text": "curriculum vitae", "weight": 24, "where": "title" },
+        { "text": "experiência profissional", "weight": 20 },
+        { "text": "formação académica", "weight": 16 },
+        { "text": "competências", "weight": 12 }
       ]
     },
     {
       "id": "cover-letter",
       "phrases": [
-        { "text": "carta de apresentação", "weight": 20, "where": "title" }
-      ]
+        { "text": "carta de apresentação", "weight": 20, "where": "title" },
+        { "text": "venho por este meio", "weight": 18 },
+        { "text": "atenciosamente", "weight": 10 }
+      ],
+      "negatives": [{ "text": "experiência profissional", "weight": 12 }]
     },
     {
       "id": "certificate",
@@ -129,13 +200,17 @@
       "id": "prescription",
       "phrases": [
         { "text": "prescrição médica", "weight": 20, "where": "title" },
-        { "text": "farmácia", "weight": 10 }
+        { "text": "farmácia", "weight": 10 },
+        { "text": "receita médica", "weight": 24, "where": "title" },
+        { "text": "posologia", "weight": 18 }
       ]
     },
     {
       "id": "medical-report",
       "phrases": [
-        { "text": "prontuário médico", "weight": 18, "where": "title" }
+        { "text": "prontuário médico", "weight": 18, "where": "title" },
+        { "text": "relatório médico", "weight": 24, "where": "title" },
+        { "text": "diagnóstico", "weight": 12 }
       ]
     },
     {
@@ -184,7 +259,10 @@
     },
     {
       "id": "meeting-minutes",
-      "phrases": [{ "text": "ata de reunião", "weight": 18, "where": "title" }]
+      "phrases": [
+        { "text": "ata de reunião", "weight": 18, "where": "title" },
+        { "text": "presentes", "weight": 10 }
+      ]
     },
     {
       "id": "memo",
@@ -192,7 +270,11 @@
     },
     {
       "id": "ticket",
-      "phrases": [{ "text": "ingresso", "weight": 18, "where": "title" }]
+      "phrases": [
+        { "text": "ingresso", "weight": 18, "where": "title" },
+        { "text": "cartão de embarque", "weight": 26, "where": "title" },
+        { "text": "bilhete", "weight": 18, "where": "title" }
+      ]
     },
     {
       "id": "visa-document",
@@ -200,7 +282,13 @@
     },
     {
       "id": "utility-bill",
-      "phrases": [{ "text": "medidor de energia elétrica", "weight": 12 }]
+      "phrases": [
+        { "text": "medidor de energia elétrica", "weight": 12 },
+        { "text": "fatura de eletricidade", "weight": 26, "where": "title" },
+        { "text": "leitura do contador", "weight": 20 },
+        { "text": "consumo", "weight": 12 },
+        { "text": "kwh", "weight": 12 }
+      ]
     },
     {
       "id": "menu",
@@ -411,10 +499,86 @@
     {
       "id": "assignment-brief",
       "phrases": [{ "text": "lição de casa", "weight": 12 }]
+    },
+    {
+      "id": "quote",
+      "phrases": [
+        { "text": "orçamento", "weight": 26, "where": "title" },
+        { "text": "proposta comercial", "weight": 22, "where": "title" },
+        { "text": "válido até", "weight": 16 }
+      ],
+      "negatives": [{ "text": "número da fatura", "weight": 14 }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [
+        { "text": "ordem de compra", "weight": 26, "where": "title" },
+        { "text": "número do pedido", "weight": 18 }
+      ]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [
+        { "text": "confirmação de pedido", "weight": 26, "where": "title" },
+        { "text": "obrigado pelo seu pedido", "weight": 16 }
+      ]
+    },
+    {
+      "id": "delivery-note",
+      "phrases": [
+        { "text": "guia de remessa", "weight": 28, "where": "title" },
+        { "text": "nota de entrega", "weight": 24, "where": "title" },
+        { "text": "endereço de entrega", "weight": 10 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [
+        { "text": "declaração de irs", "weight": 26, "where": "title" },
+        { "text": "imposto de renda", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "booking-confirmation",
+      "phrases": [
+        { "text": "confirmação de reserva", "weight": 26, "where": "title" },
+        { "text": "número da reserva", "weight": 18 }
+      ]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [
+        { "text": "ordem de trabalhos", "weight": 20, "where": "title" }
+      ]
     }
   ],
   "patterns": {
-    "toc": [{ "pattern": "índice\\ de\\ conteúdo" }],
-    "signature": [{ "pattern": "assinatura" }]
+    "toc": [{ "pattern": "[íi]ndice" }],
+    "signature": [{ "pattern": "\\\\b(assinatura|assinado)\\\\b" }],
+    "signature_form": [
+      {
+        "pattern": "_{6,}\\\\s*\\\\n\\\\s*(data|nome|assinatura)",
+        "flags": "i"
+      }
+    ],
+    "references": [{ "pattern": "\\\\b(bibliografia|refer[êe]ncias)\\\\b" }],
+    "email_from": [
+      {
+        "pattern": "\\\\bde\\\\s?:\\\\s.+\\\\n(.*\\\\n){0,3}?\\\\s*(para|enviado|data)\\\\s?:\\\\s",
+        "flags": "i"
+      }
+    ],
+    "email_subject": [{ "pattern": "assunto\\\\s?:\\\\s" }],
+    "currency": [
+      {
+        "pattern": "\\\\d[\\\\d .,]*\\\\s?(eur|brl|€|r\\\\$)|(€|r\\\\$)\\\\s?\\\\d"
+      }
+    ],
+    "form_label": [
+      {
+        "pattern": "^[A-Za-zÁÂÃÀÇÉÊÍÓÔÕÚáâãàçéêíóôõú][A-Za-zÁÂÃÀÇÉÊÍÓÔÕÚáâãàçéêíóôõú /()&'.-]{2,30}\\\\s?:\\\\s*$",
+        "flags": "m"
+      }
+    ]
   }
 }

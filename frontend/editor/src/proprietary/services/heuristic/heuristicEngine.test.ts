@@ -113,12 +113,12 @@ describe("heuristic engine port fidelity", () => {
     const r = await classify("CONTRATO DE ARRENDAMIENTO", body);
     expect(r.language).toBe("es");
     expect(r.packs).toEqual(["es"]);
-    // The Spanish pack carries the document-type terms and nothing more, so it
-    // reaches "contract" rather than the narrower "lease-agreement", and stays at
-    // medium - a plausible label that the AI engine still gets to refine. That is
-    // what a sourced pack buys before a native speaker adds field vocabulary.
-    expect(r.labels[0]).toBe("contract");
-    expect(r.confidence).not.toBe("high");
+    // arrendador, arrendatario and renta mensual are the field vocabulary that
+    // separates a lease from any other contract. With only the document-type term
+    // this reached "contract" at medium; with them it is the narrower label, and
+    // trusted enough to skip the AI engine.
+    expect(r.labels[0]).toBe("lease-agreement");
+    expect(r.confidence).toBe("high");
   });
 
   it("detects English prose", async () => {

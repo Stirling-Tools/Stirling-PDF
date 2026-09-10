@@ -6,9 +6,9 @@ maths and the language detector; every word it matches on lives here.
 ```
 core.json            shared by every language — the label vocabulary and
                      everything that carries no language
-packs/en.json        English words, hand-authored and corpus-tuned
-packs/de.json        German words, hand-authored
-packs/*.json         36 more, generated from sourced terms — see Provenance
+packs/en.json        English, hand-authored and corpus-tuned
+packs/{de,fr,es,it,pt,nl,pl}.json   hand-authored field vocabulary
+packs/*.json         30 more, generated from sourced terms — see Provenance
 languages.json       how the detector names a document's language
 index.ts             registry: language tag → pack loader
 tools/               corpus fetch, profile derivation, accuracy measurement
@@ -17,11 +17,32 @@ tools/               corpus fetch, profile derivation, accuracy measurement
 All 38 locales we ship have a pack. They are not of equal depth, and the
 difference matters when reading a verdict:
 
-| pack | provenance | labels | phrases | gzipped |
+| pack | provenance | labels | rules | gzipped |
 | --- | --- | --- | --- | --- |
-| `en` | hand-authored, years of corpus tuning | 139 | 2,139 | 52 KB |
-| `de` | hand-authored | 55 | 262 | 4 KB |
-| the other 36 | generated from sourced terms | 6–104 | 6–117 | 0.3–3 KB |
+| `en` | hand-authored, years of corpus tuning | 139 | 3,397 | 52 KB |
+| `de` | hand-authored | 55 | 291 | 4 KB |
+| `fr` `es` `it` `pt` `nl` `pl` | sourced terms + hand-authored field vocabulary | 93–104 | 173–186 | 3 KB |
+| the other 30 | generated from sourced terms | 6–104 | 6–117 | 0.3–3 KB |
+
+### Why field vocabulary is the whole game
+
+`high` confidence needs **three distinct signals**. A pack holding only the
+document's name has one, so it is capped at `medium` however certain that one term
+is — and `medium` still costs an AI engine run. Adding the words printed *on* the
+document (invoice number, due date, gross salary, opening balance) is what crosses
+the bar.
+
+Measured on the same 19 specimens across those six languages
+(`packs/authored.corpus.test.ts`), sourced-terms-only against sourced-plus-authored:
+
+| | no label | wrong label | right, `medium` | right, `high` |
+| --- | --- | --- | --- | --- |
+| document-type terms only | 6 | 1 | 9 | 3 |
+| plus field vocabulary | 0 | 0 | 9 | **10** |
+
+Ten documents moved from "ask the engine" to "decided here", and six from "no
+verdict" to a correct one. That is the difference ~80 hand-written phrases per
+language buys, and it is the work a native speaker should do for the remaining 30.
 
 A document is scored against **core plus the pack(s) for the language it is
 written in** — the language of the PDF's own text, never the user's UI locale. A

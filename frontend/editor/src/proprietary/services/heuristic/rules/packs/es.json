@@ -6,16 +6,40 @@
       "id": "invoice",
       "phrases": [
         { "text": "factura", "weight": 24, "where": "title" },
-        { "text": "impuesto al valor agregado", "weight": 8 }
+        { "text": "impuesto al valor agregado", "weight": 8 },
+        { "text": "número de factura", "weight": 22, "where": "first" },
+        { "text": "fecha de factura", "weight": 16, "where": "first" },
+        { "text": "fecha de vencimiento", "weight": 16 },
+        { "text": "base imponible", "weight": 18 },
+        { "text": "total a pagar", "weight": 18 },
+        { "text": "importe total", "weight": 14 },
+        { "text": "forma de pago", "weight": 8 },
+        { "text": "iva", "weight": 10 },
+        { "text": "nif", "weight": 10 },
+        { "text": "cif", "weight": 10 }
+      ],
+      "negatives": [
+        { "text": "albarán", "weight": 14 },
+        { "text": "presupuesto", "weight": 14 },
+        { "text": "extracto bancario", "weight": 12 }
       ]
     },
     {
       "id": "receipt",
-      "phrases": [{ "text": "recibo", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "recibo", "weight": 22, "where": "title" },
+        { "text": "justificante de pago", "weight": 20 },
+        { "text": "pago recibido", "weight": 16 },
+        { "text": "gracias por su compra", "weight": 16 },
+        { "text": "ticket de compra", "weight": 20, "where": "title" }
+      ]
     },
     {
       "id": "purchase-order",
-      "phrases": [{ "text": "orden de compra", "weight": 20, "where": "title" }]
+      "phrases": [
+        { "text": "orden de compra", "weight": 20, "where": "title" },
+        { "text": "número de pedido", "weight": 18 }
+      ]
     },
     {
       "id": "packing-slip",
@@ -23,7 +47,14 @@
     },
     {
       "id": "payslip",
-      "phrases": [{ "text": "nómina", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "nómina", "weight": 22, "where": "title" },
+        { "text": "salario bruto", "weight": 18 },
+        { "text": "líquido a percibir", "weight": 20 },
+        { "text": "seguridad social", "weight": 14 },
+        { "text": "irpf", "weight": 18 },
+        { "text": "devengos", "weight": 16 }
+      ]
     },
     {
       "id": "expense-report",
@@ -50,7 +81,14 @@
     },
     {
       "id": "contract",
-      "phrases": [{ "text": "contrato", "weight": 12, "where": "title" }]
+      "phrases": [
+        { "text": "contrato", "weight": 12, "where": "title" },
+        { "text": "las partes", "weight": 14 },
+        { "text": "ambas partes acuerdan", "weight": 16 },
+        { "text": "duración del contrato", "weight": 14 },
+        { "text": "rescisión", "weight": 12 },
+        { "text": "firmado en", "weight": 10 }
+      ]
     },
     {
       "id": "employment-contract",
@@ -59,12 +97,22 @@
           "text": "contrato individual de trabajo",
           "weight": 24,
           "where": "title"
-        }
+        },
+        { "text": "contrato de trabajo", "weight": 30, "where": "title" },
+        { "text": "periodo de prueba", "weight": 18 },
+        { "text": "vacaciones", "weight": 12 },
+        { "text": "convenio colectivo", "weight": 14 }
       ]
     },
     {
       "id": "lease-agreement",
-      "phrases": [{ "text": "fianza", "weight": 10 }]
+      "phrases": [
+        { "text": "fianza", "weight": 10 },
+        { "text": "contrato de arrendamiento", "weight": 30, "where": "title" },
+        { "text": "arrendador", "weight": 14 },
+        { "text": "arrendatario", "weight": 12 },
+        { "text": "renta mensual", "weight": 16 }
+      ]
     },
     {
       "id": "nda",
@@ -73,7 +121,8 @@
           "text": "acuerdo de confidencialidad",
           "weight": 24,
           "where": "title"
-        }
+        },
+        { "text": "información confidencial", "weight": 12 }
       ]
     },
     {
@@ -83,13 +132,18 @@
           "text": "términos y condiciones de uso",
           "weight": 22,
           "where": "title"
-        }
+        },
+        { "text": "condiciones generales", "weight": 26, "where": "title" },
+        { "text": "términos y condiciones", "weight": 26, "where": "title" }
       ]
     },
     {
       "id": "privacy-policy",
       "phrases": [
-        { "text": "política de privacidad", "weight": 24, "where": "title" }
+        { "text": "política de privacidad", "weight": 24, "where": "title" },
+        { "text": "rgpd", "weight": 14 },
+        { "text": "datos personales", "weight": 12 },
+        { "text": "responsable del tratamiento", "weight": 18 }
       ]
     },
     {
@@ -114,21 +168,34 @@
     },
     {
       "id": "insurance-policy",
-      "phrases": [{ "text": "deducible", "weight": 8 }]
+      "phrases": [
+        { "text": "deducible", "weight": 8 },
+        { "text": "póliza de seguro", "weight": 28, "where": "title" },
+        { "text": "número de póliza", "weight": 16 },
+        { "text": "cobertura", "weight": 12 },
+        { "text": "franquicia", "weight": 14 },
+        { "text": "prima", "weight": 10 }
+      ]
     },
     {
       "id": "resume",
       "phrases": [
         { "text": "résumé", "weight": 20, "where": "title" },
         { "text": "currículum vitae", "weight": 24, "where": "title" },
-        { "text": "currículum", "weight": 20, "where": "title" }
+        { "text": "currículum", "weight": 20, "where": "title" },
+        { "text": "experiencia profesional", "weight": 20 },
+        { "text": "datos personales", "weight": 10 },
+        { "text": "idiomas", "weight": 12 }
       ]
     },
     {
       "id": "cover-letter",
       "phrases": [
-        { "text": "carta de presentación", "weight": 20, "where": "title" }
-      ]
+        { "text": "carta de presentación", "weight": 20, "where": "title" },
+        { "text": "me dirijo a ustedes", "weight": 18 },
+        { "text": "atentamente", "weight": 10 }
+      ],
+      "negatives": [{ "text": "experiencia profesional", "weight": 12 }]
     },
     {
       "id": "reference-letter",
@@ -152,14 +219,17 @@
       "id": "prescription",
       "phrases": [
         { "text": "receta médica", "weight": 20, "where": "title" },
-        { "text": "farmacia", "weight": 10 }
+        { "text": "farmacia", "weight": 10 },
+        { "text": "posología", "weight": 18 }
       ]
     },
     {
       "id": "medical-report",
       "phrases": [
         { "text": "historia clínica", "weight": 18, "where": "title" },
-        { "text": "diagnóstico", "weight": 10 }
+        { "text": "diagnóstico", "weight": 10 },
+        { "text": "informe médico", "weight": 24, "where": "title" },
+        { "text": "anamnesis", "weight": 18 }
       ]
     },
     {
@@ -221,12 +291,17 @@
     {
       "id": "meeting-minutes",
       "phrases": [
-        { "text": "acta de una reunión", "weight": 18, "where": "title" }
+        { "text": "acta de una reunión", "weight": 18, "where": "title" },
+        { "text": "acta de la reunión", "weight": 26, "where": "title" },
+        { "text": "asistentes", "weight": 10 }
       ]
     },
     {
       "id": "meeting-agenda",
-      "phrases": [{ "text": "agenda", "weight": 16, "where": "title" }]
+      "phrases": [
+        { "text": "agenda", "weight": 16, "where": "title" },
+        { "text": "orden del día", "weight": 20, "where": "title" }
+      ]
     },
     {
       "id": "memo",
@@ -234,7 +309,10 @@
     },
     {
       "id": "ticket",
-      "phrases": [{ "text": "billete", "weight": 18, "where": "title" }]
+      "phrases": [
+        { "text": "billete", "weight": 18, "where": "title" },
+        { "text": "tarjeta de embarque", "weight": 26, "where": "title" }
+      ]
     },
     {
       "id": "waybill",
@@ -248,7 +326,13 @@
     },
     {
       "id": "utility-bill",
-      "phrases": [{ "text": "medidor de consumo eléctrico", "weight": 12 }]
+      "phrases": [
+        { "text": "medidor de consumo eléctrico", "weight": 12 },
+        { "text": "factura de la luz", "weight": 26, "where": "title" },
+        { "text": "lectura del contador", "weight": 20 },
+        { "text": "consumo", "weight": 12 },
+        { "text": "kwh", "weight": 12 }
+      ]
     },
     {
       "id": "menu",
@@ -495,11 +579,70 @@
     {
       "id": "assignment-brief",
       "phrases": [{ "text": "trabajo escolar", "weight": 12 }]
+    },
+    {
+      "id": "quote",
+      "phrases": [
+        { "text": "presupuesto", "weight": 26, "where": "title" },
+        { "text": "número de presupuesto", "weight": 20 },
+        { "text": "válido hasta", "weight": 16 }
+      ],
+      "negatives": [{ "text": "número de factura", "weight": 14 }]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [
+        { "text": "confirmación de pedido", "weight": 26, "where": "title" },
+        { "text": "gracias por su pedido", "weight": 16 }
+      ]
+    },
+    {
+      "id": "delivery-note",
+      "phrases": [
+        { "text": "albarán de entrega", "weight": 28, "where": "title" },
+        { "text": "albarán", "weight": 24, "where": "title" },
+        { "text": "dirección de entrega", "weight": 10 }
+      ]
+    },
+    {
+      "id": "bank-statement",
+      "phrases": [
+        { "text": "extracto bancario", "weight": 28, "where": "title" },
+        { "text": "extracto de cuenta", "weight": 26, "where": "title" },
+        { "text": "saldo anterior", "weight": 18 },
+        { "text": "saldo actual", "weight": 18 },
+        { "text": "fecha valor", "weight": 16 },
+        { "text": "número de cuenta", "weight": 12 }
+      ]
+    },
+    {
+      "id": "booking-confirmation",
+      "phrases": [
+        { "text": "confirmación de reserva", "weight": 26, "where": "title" },
+        { "text": "número de reserva", "weight": 18 }
+      ]
     }
   ],
   "patterns": {
-    "toc": [{ "pattern": "sumario" }],
-    "references": [{ "pattern": "bibliografía" }],
-    "signature": [{ "pattern": "firma" }]
+    "toc": [{ "pattern": "[íi]ndice" }],
+    "references": [{ "pattern": "\\\\b(bibliograf[íi]a|referencias)\\\\b" }],
+    "signature": [{ "pattern": "\\\\b(firma|firmado|fdo)\\\\b" }],
+    "signature_form": [
+      { "pattern": "_{6,}\\\\s*\\\\n\\\\s*(fecha|nombre|firma)", "flags": "i" }
+    ],
+    "email_from": [
+      {
+        "pattern": "\\\\bde\\\\s?:\\\\s.+\\\\n(.*\\\\n){0,3}?\\\\s*(para|enviado|fecha)\\\\s?:\\\\s",
+        "flags": "i"
+      }
+    ],
+    "email_subject": [{ "pattern": "asunto\\\\s?:\\\\s" }],
+    "currency": [{ "pattern": "\\\\d[\\\\d .,]*\\\\s?(eur|€)|€\\\\s?\\\\d" }],
+    "form_label": [
+      {
+        "pattern": "^[A-Za-zÁÉÍÓÚÜÑáéíóúüñ][A-Za-zÁÉÍÓÚÜÑáéíóúüñ /()&'.-]{2,30}\\\\s?:\\\\s*$",
+        "flags": "m"
+      }
+    ]
   }
 }

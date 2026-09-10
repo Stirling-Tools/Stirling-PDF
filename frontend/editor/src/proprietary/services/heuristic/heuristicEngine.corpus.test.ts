@@ -1146,10 +1146,8 @@ const CASES: Case[] = [
     ],
   },
   {
-    // Spanish, and the es pack now reaches "contract" - the general term rather
-    // than the narrower lease-agreement, because the pack carries document-type
-    // names and not yet the field vocabulary that would separate them.
-    expect: "contract",
+    // Spanish: the es pack's lease vocabulary reaches the narrow label.
+    expect: "lease-agreement",
     file: "contrato.pdf",
     title: "CONTRATO DE ARRENDAMIENTO",
     body: [

@@ -13,7 +13,8 @@ ISOS = [l.split("\t")[0].strip()
         for l in open(os.path.join(HERE, "languages.tsv"), encoding="utf8")
         if l.strip() and not l.startswith(("#", "tag"))]
 TERMS = json.load(open(os.path.join(HERE, "terms.json"), encoding="utf8"))
-SKIP = {"en", "de"}          # hand-authored already
+# Hand-authored: the generator must not overwrite them.
+SKIP = {"en", "de", "fr", "es", "it", "pt", "nl", "pl"}
 OUT = os.path.join(HERE, "..", "packs")
 
 PAREN = re.compile(r"\s*\([^)]*\)\s*$")

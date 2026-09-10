@@ -6,12 +6,35 @@
       "id": "invoice",
       "phrases": [
         { "text": "facture", "weight": 24, "where": "title" },
-        { "text": "taxe sur la valeur ajoutée", "weight": 8 }
+        { "text": "taxe sur la valeur ajoutée", "weight": 8 },
+        { "text": "numéro de facture", "weight": 22, "where": "first" },
+        { "text": "facture n", "weight": 18, "where": "first" },
+        { "text": "date de facture", "weight": 16, "where": "first" },
+        { "text": "date d'échéance", "weight": 16 },
+        { "text": "total ttc", "weight": 18 },
+        { "text": "total ht", "weight": 18 },
+        { "text": "net à payer", "weight": 18 },
+        { "text": "montant total", "weight": 12 },
+        { "text": "conditions de paiement", "weight": 8 },
+        { "text": "règlement à réception", "weight": 16 },
+        { "text": "tva", "weight": 10 }
+      ],
+      "negatives": [
+        { "text": "bon de livraison", "weight": 14 },
+        { "text": "devis", "weight": 14 },
+        { "text": "relevé de compte", "weight": 12 },
+        { "text": "avoir", "weight": 10 }
       ]
     },
     {
       "id": "receipt",
-      "phrases": [{ "text": "reçu", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "reçu", "weight": 22, "where": "title" },
+        { "text": "ticket de caisse", "weight": 22, "where": "title" },
+        { "text": "justificatif de paiement", "weight": 20 },
+        { "text": "paiement reçu", "weight": 16 },
+        { "text": "merci de votre achat", "weight": 16 }
+      ]
     },
     {
       "id": "credit-note",
@@ -24,13 +47,23 @@
     {
       "id": "bank-statement",
       "phrases": [
-        { "text": "relevé de compte", "weight": 24, "where": "title" }
+        { "text": "relevé de compte", "weight": 24, "where": "title" },
+        { "text": "relevé bancaire", "weight": 26, "where": "title" },
+        { "text": "solde précédent", "weight": 18 },
+        { "text": "nouveau solde", "weight": 18 },
+        { "text": "date de valeur", "weight": 16 },
+        { "text": "numéro de compte", "weight": 12 }
       ]
     },
     {
       "id": "payslip",
       "phrases": [
-        { "text": "bulletin de salaire", "weight": 22, "where": "title" }
+        { "text": "bulletin de salaire", "weight": 22, "where": "title" },
+        { "text": "bulletin de paie", "weight": 28, "where": "title" },
+        { "text": "salaire brut", "weight": 18 },
+        { "text": "net imposable", "weight": 18 },
+        { "text": "cotisations sociales", "weight": 16 },
+        { "text": "urssaf", "weight": 18 }
       ]
     },
     {
@@ -43,7 +76,8 @@
     {
       "id": "tax-return",
       "phrases": [
-        { "text": "déclaration de revenus", "weight": 22, "where": "title" }
+        { "text": "déclaration de revenus", "weight": 22, "where": "title" },
+        { "text": "avis d'imposition", "weight": 24, "where": "title" }
       ]
     },
     {
@@ -54,25 +88,43 @@
     },
     {
       "id": "contract",
-      "phrases": [{ "text": "contrat", "weight": 12, "where": "title" }]
+      "phrases": [
+        { "text": "contrat", "weight": 12, "where": "title" },
+        { "text": "entre les parties", "weight": 16 },
+        { "text": "les parties conviennent", "weight": 16 },
+        { "text": "durée du contrat", "weight": 14 },
+        { "text": "résiliation", "weight": 12 },
+        { "text": "fait à", "weight": 10 }
+      ]
     },
     {
       "id": "employment-contract",
       "phrases": [
-        { "text": "contrat de travail", "weight": 24, "where": "title" }
+        { "text": "contrat de travail", "weight": 24, "where": "title" },
+        { "text": "période d'essai", "weight": 18 },
+        { "text": "congés payés", "weight": 14 },
+        { "text": "rémunération", "weight": 12 }
       ]
     },
     {
       "id": "lease-agreement",
       "phrases": [
         { "text": "bail à rente", "weight": 18, "where": "title" },
-        { "text": "landlord", "weight": 8 }
+        { "text": "landlord", "weight": 8 },
+        { "text": "contrat de bail", "weight": 30, "where": "title" },
+        { "text": "bail d'habitation", "weight": 26, "where": "title" },
+        { "text": "dépôt de garantie", "weight": 18 },
+        { "text": "loyer", "weight": 16 },
+        { "text": "bailleur", "weight": 14 },
+        { "text": "locataire", "weight": 12 }
       ]
     },
     {
       "id": "nda",
       "phrases": [
-        { "text": "accord de non-divulgation", "weight": 24, "where": "title" }
+        { "text": "accord de non-divulgation", "weight": 24, "where": "title" },
+        { "text": "accord de confidentialité", "weight": 30, "where": "title" },
+        { "text": "clause de confidentialité", "weight": 20 }
       ]
     },
     {
@@ -82,7 +134,9 @@
           "text": "politique de confidentialité",
           "weight": 24,
           "where": "title"
-        }
+        },
+        { "text": "rgpd", "weight": 14 },
+        { "text": "données personnelles", "weight": 12 }
       ]
     },
     {
@@ -105,18 +159,30 @@
       "id": "insurance-policy",
       "phrases": [
         { "text": "police d'assurance", "weight": 22, "where": "title" },
-        { "text": "franchise", "weight": 8 }
+        { "text": "franchise", "weight": 8 },
+        { "text": "contrat d'assurance", "weight": 26, "where": "title" },
+        { "text": "garanties", "weight": 12 },
+        { "text": "numéro de contrat", "weight": 12 }
       ]
     },
     {
       "id": "resume",
-      "phrases": [{ "text": "curriculum vitæ", "weight": 24, "where": "title" }]
+      "phrases": [
+        { "text": "curriculum vitæ", "weight": 24, "where": "title" },
+        { "text": "expérience professionnelle", "weight": 20 },
+        { "text": "compétences", "weight": 12 },
+        { "text": "formation", "weight": 10 }
+      ]
     },
     {
       "id": "cover-letter",
       "phrases": [
-        { "text": "lettre de motivation", "weight": 20, "where": "title" }
-      ]
+        { "text": "lettre de motivation", "weight": 20, "where": "title" },
+        { "text": "candidature au poste", "weight": 20 },
+        { "text": "je vous prie d'agréer", "weight": 16 },
+        { "text": "madame, monsieur", "weight": 12 }
+      ],
+      "negatives": [{ "text": "expérience professionnelle", "weight": 12 }]
     },
     {
       "id": "certificate",
@@ -136,12 +202,18 @@
       "id": "prescription",
       "phrases": [
         { "text": "prescription", "weight": 20, "where": "title" },
-        { "text": "pharmacie", "weight": 10 }
+        { "text": "pharmacie", "weight": 10 },
+        { "text": "ordonnance", "weight": 22, "where": "title" },
+        { "text": "posologie", "weight": 18 }
       ]
     },
     {
       "id": "medical-report",
-      "phrases": [{ "text": "dossier médical", "weight": 18, "where": "title" }]
+      "phrases": [
+        { "text": "dossier médical", "weight": 18, "where": "title" },
+        { "text": "compte rendu médical", "weight": 24, "where": "title" },
+        { "text": "diagnostic", "weight": 12 }
+      ]
     },
     {
       "id": "immunization-record",
@@ -198,7 +270,9 @@
     {
       "id": "meeting-minutes",
       "phrases": [
-        { "text": "compte rendu de réunion", "weight": 18, "where": "title" }
+        { "text": "compte rendu de réunion", "weight": 18, "where": "title" },
+        { "text": "procès-verbal", "weight": 24, "where": "title" },
+        { "text": "présents", "weight": 10 }
       ]
     },
     {
@@ -208,7 +282,9 @@
     {
       "id": "ticket",
       "phrases": [
-        { "text": "place de spectacle", "weight": 18, "where": "title" }
+        { "text": "place de spectacle", "weight": 18, "where": "title" },
+        { "text": "carte d'embarquement", "weight": 26, "where": "title" },
+        { "text": "billet", "weight": 18, "where": "title" }
       ]
     },
     {
@@ -223,7 +299,14 @@
     },
     {
       "id": "utility-bill",
-      "phrases": [{ "text": "compteur électrique", "weight": 12 }]
+      "phrases": [
+        { "text": "compteur électrique", "weight": 12 },
+        { "text": "facture d'électricité", "weight": 26, "where": "title" },
+        { "text": "facture de gaz", "weight": 26, "where": "title" },
+        { "text": "relevé de compteur", "weight": 20 },
+        { "text": "consommation", "weight": 12 },
+        { "text": "kwh", "weight": 12 }
+      ]
     },
     {
       "id": "menu",
@@ -472,11 +555,88 @@
     {
       "id": "assignment-brief",
       "phrases": [{ "text": "devoir à la maison", "weight": 12 }]
+    },
+    {
+      "id": "quote",
+      "phrases": [
+        { "text": "devis", "weight": 26, "where": "title" },
+        { "text": "numéro de devis", "weight": 20 },
+        { "text": "valable jusqu'au", "weight": 16 },
+        { "text": "devis gratuit", "weight": 14 }
+      ],
+      "negatives": [{ "text": "numéro de facture", "weight": 14 }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [
+        { "text": "bon de commande", "weight": 26, "where": "title" },
+        { "text": "numéro de commande", "weight": 18 }
+      ]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [
+        { "text": "confirmation de commande", "weight": 26, "where": "title" },
+        { "text": "accusé de réception de commande", "weight": 20 },
+        { "text": "merci pour votre commande", "weight": 16 }
+      ]
+    },
+    {
+      "id": "delivery-note",
+      "phrases": [
+        { "text": "bon de livraison", "weight": 28, "where": "title" },
+        { "text": "adresse de livraison", "weight": 10 }
+      ]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [
+        {
+          "text": "conditions générales de vente",
+          "weight": 30,
+          "where": "title"
+        },
+        { "text": "cgv", "weight": 16 }
+      ]
+    },
+    {
+      "id": "booking-confirmation",
+      "phrases": [
+        {
+          "text": "confirmation de réservation",
+          "weight": 26,
+          "where": "title"
+        },
+        { "text": "numéro de réservation", "weight": 18 }
+      ]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "ordre du jour", "weight": 20, "where": "title" }]
     }
   ],
   "patterns": {
-    "toc": [{ "pattern": "sommaire" }],
-    "references": [{ "pattern": "bibliographie" }],
-    "signature": [{ "pattern": "signature" }]
+    "toc": [{ "pattern": "table des mati[èe]res" }],
+    "references": [{ "pattern": "\\\\b(bibliographie|r[ée]f[ée]rences)\\\\b" }],
+    "signature": [
+      { "pattern": "\\\\b(signature|sign[ée]|lu et approuv[ée])\\\\b" }
+    ],
+    "signature_form": [
+      { "pattern": "_{6,}\\\\s*\\\\n\\\\s*(date|nom|signature)", "flags": "i" }
+    ],
+    "email_from": [
+      {
+        "pattern": "\\\\bde\\\\s?:\\\\s.+\\\\n(.*\\\\n){0,3}?\\\\s*(à|envoy[ée]|date)\\\\s?:\\\\s",
+        "flags": "i"
+      }
+    ],
+    "email_subject": [{ "pattern": "objet\\\\s?:\\\\s" }],
+    "currency": [{ "pattern": "\\\\d[\\\\d .,]*\\\\s?(eur|€)|€\\\\s?\\\\d" }],
+    "form_label": [
+      {
+        "pattern": "^[A-Za-zÀ-ÿ][A-Za-zÀ-ÿ /()&'.-]{2,30}\\\\s?:\\\\s*$",
+        "flags": "m"
+      }
+    ]
   }
 }

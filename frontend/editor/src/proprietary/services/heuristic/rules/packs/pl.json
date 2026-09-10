@@ -6,12 +6,32 @@
       "id": "invoice",
       "phrases": [
         { "text": "faktura", "weight": 24, "where": "title" },
-        { "text": "podatek od towarów i usług", "weight": 8 }
+        { "text": "podatek od towarów i usług", "weight": 8 },
+        { "text": "faktura vat", "weight": 26, "where": "title" },
+        { "text": "numer faktury", "weight": 22, "where": "first" },
+        { "text": "data wystawienia", "weight": 16, "where": "first" },
+        { "text": "termin płatności", "weight": 18 },
+        { "text": "do zapłaty", "weight": 18 },
+        { "text": "razem do zapłaty", "weight": 20 },
+        { "text": "nip", "weight": 12 },
+        { "text": "nabywca", "weight": 12 },
+        { "text": "sprzedawca", "weight": 12 },
+        { "text": "sposób płatności", "weight": 8 }
+      ],
+      "negatives": [
+        { "text": "wydanie zewnętrzne", "weight": 14 },
+        { "text": "oferta", "weight": 12 },
+        { "text": "wyciąg bankowy", "weight": 12 }
       ]
     },
     {
       "id": "receipt",
-      "phrases": [{ "text": "paragon", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "paragon", "weight": 22, "where": "title" },
+        { "text": "paragon fiskalny", "weight": 24, "where": "title" },
+        { "text": "potwierdzenie zapłaty", "weight": 20, "where": "title" },
+        { "text": "dziękujemy za zakupy", "weight": 16 }
+      ]
     },
     {
       "id": "credit-note",
@@ -23,11 +43,23 @@
     },
     {
       "id": "bank-statement",
-      "phrases": [{ "text": "wyciąg bankowy", "weight": 24, "where": "title" }]
+      "phrases": [
+        { "text": "wyciąg bankowy", "weight": 24, "where": "title" },
+        { "text": "saldo początkowe", "weight": 18 },
+        { "text": "saldo końcowe", "weight": 18 },
+        { "text": "data księgowania", "weight": 16 },
+        { "text": "numer rachunku", "weight": 12 }
+      ]
     },
     {
       "id": "payslip",
-      "phrases": [{ "text": "lista płac", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "lista płac", "weight": 22, "where": "title" },
+        { "text": "pasek wynagrodzeń", "weight": 26, "where": "title" },
+        { "text": "wynagrodzenie brutto", "weight": 18 },
+        { "text": "do wypłaty", "weight": 18 },
+        { "text": "zus", "weight": 16 }
+      ]
     },
     {
       "id": "expense-report",
@@ -43,7 +75,9 @@
     {
       "id": "tax-return",
       "phrases": [
-        { "text": "deklaracja podatkowa", "weight": 22, "where": "title" }
+        { "text": "deklaracja podatkowa", "weight": 22, "where": "title" },
+        { "text": "zeznanie podatkowe", "weight": 26, "where": "title" },
+        { "text": "deklaracja pit", "weight": 24, "where": "title" }
       ]
     },
     {
@@ -54,11 +88,21 @@
     },
     {
       "id": "contract",
-      "phrases": [{ "text": "umowa", "weight": 12, "where": "title" }]
+      "phrases": [
+        { "text": "umowa", "weight": 12, "where": "title" },
+        { "text": "strony umowy", "weight": 16 },
+        { "text": "strony ustalają", "weight": 16 },
+        { "text": "okres obowiązywania", "weight": 14 },
+        { "text": "wypowiedzenie", "weight": 12 }
+      ]
     },
     {
       "id": "employment-contract",
-      "phrases": [{ "text": "umowa o pracę", "weight": 24, "where": "title" }]
+      "phrases": [
+        { "text": "umowa o pracę", "weight": 24, "where": "title" },
+        { "text": "okres próbny", "weight": 18 },
+        { "text": "urlop wypoczynkowy", "weight": 14 }
+      ]
     },
     {
       "id": "nda",
@@ -67,14 +111,18 @@
           "text": "umowa o zachowaniu poufności",
           "weight": 24,
           "where": "title"
-        }
+        },
+        { "text": "informacje poufne", "weight": 12 }
       ]
     },
     {
       "id": "privacy-policy",
       "phrases": [
         { "text": "polityka prywatności", "weight": 24, "where": "title" },
-        { "text": "ogólne rozporządzenie o ochronie danych", "weight": 10 }
+        { "text": "ogólne rozporządzenie o ochronie danych", "weight": 10 },
+        { "text": "rodo", "weight": 16 },
+        { "text": "dane osobowe", "weight": 12 },
+        { "text": "administrator danych", "weight": 18 }
       ]
     },
     {
@@ -91,18 +139,30 @@
       "id": "insurance-policy",
       "phrases": [
         { "text": "polisa", "weight": 22, "where": "title" },
-        { "text": "franszyza", "weight": 8 }
+        { "text": "franszyza", "weight": 8 },
+        { "text": "polisa ubezpieczeniowa", "weight": 28, "where": "title" },
+        { "text": "numer polisy", "weight": 16 },
+        { "text": "suma ubezpieczenia", "weight": 16 },
+        { "text": "składka", "weight": 12 }
       ]
     },
     {
       "id": "resume",
-      "phrases": [{ "text": "życiorys", "weight": 20, "where": "title" }]
+      "phrases": [
+        { "text": "życiorys", "weight": 20, "where": "title" },
+        { "text": "doświadczenie zawodowe", "weight": 20 },
+        { "text": "wykształcenie", "weight": 12 },
+        { "text": "umiejętności", "weight": 12 }
+      ]
     },
     {
       "id": "cover-letter",
       "phrases": [
-        { "text": "list motywacyjny", "weight": 20, "where": "title" }
-      ]
+        { "text": "list motywacyjny", "weight": 20, "where": "title" },
+        { "text": "szanowni państwo", "weight": 12 },
+        { "text": "z poważaniem", "weight": 10 }
+      ],
+      "negatives": [{ "text": "doświadczenie zawodowe", "weight": 12 }]
     },
     {
       "id": "reference-letter",
@@ -132,7 +192,9 @@
       "id": "prescription",
       "phrases": [
         { "text": "recepta", "weight": 20, "where": "title" },
-        { "text": "farmacja", "weight": 10 }
+        { "text": "farmacja", "weight": 10 },
+        { "text": "dawkowanie", "weight": 18 },
+        { "text": "apteka", "weight": 12 }
       ]
     },
     {
@@ -195,7 +257,10 @@
     },
     {
       "id": "ticket",
-      "phrases": [{ "text": "bilet", "weight": 18, "where": "title" }]
+      "phrases": [
+        { "text": "bilet", "weight": 18, "where": "title" },
+        { "text": "karta pokładowa", "weight": 26, "where": "title" }
+      ]
     },
     {
       "id": "customs-declaration",
@@ -209,7 +274,13 @@
     },
     {
       "id": "utility-bill",
-      "phrases": [{ "text": "licznik energii elektrycznej", "weight": 12 }]
+      "phrases": [
+        { "text": "licznik energii elektrycznej", "weight": 12 },
+        { "text": "faktura za energię", "weight": 26, "where": "title" },
+        { "text": "odczyt licznika", "weight": 20 },
+        { "text": "zużycie", "weight": 12 },
+        { "text": "kwh", "weight": 12 }
+      ]
     },
     {
       "id": "menu",
@@ -420,11 +491,101 @@
     {
       "id": "assignment-brief",
       "phrases": [{ "text": "praca domowa", "weight": 12 }]
+    },
+    {
+      "id": "quote",
+      "phrases": [
+        { "text": "oferta handlowa", "weight": 26, "where": "title" },
+        { "text": "wycena", "weight": 22, "where": "title" },
+        { "text": "ważna do", "weight": 16 }
+      ],
+      "negatives": [{ "text": "numer faktury", "weight": 14 }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [
+        { "text": "zamówienie", "weight": 22, "where": "title" },
+        { "text": "numer zamówienia", "weight": 18 }
+      ]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [
+        { "text": "potwierdzenie zamówienia", "weight": 28, "where": "title" },
+        { "text": "dziękujemy za zamówienie", "weight": 16 }
+      ]
+    },
+    {
+      "id": "delivery-note",
+      "phrases": [
+        { "text": "wydanie zewnętrzne", "weight": 26, "where": "title" },
+        { "text": "dokument wz", "weight": 24, "where": "title" },
+        { "text": "adres dostawy", "weight": 10 }
+      ]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [
+        { "text": "umowa najmu", "weight": 30, "where": "title" },
+        { "text": "czynsz", "weight": 18 },
+        { "text": "kaucja", "weight": 18 },
+        { "text": "wynajmujący", "weight": 14 },
+        { "text": "najemca", "weight": 12 }
+      ]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [
+        { "text": "regulamin", "weight": 22, "where": "title" },
+        { "text": "ogólne warunki", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [
+        { "text": "opis badania", "weight": 22, "where": "title" },
+        { "text": "rozpoznanie", "weight": 16 }
+      ]
+    },
+    {
+      "id": "booking-confirmation",
+      "phrases": [
+        { "text": "potwierdzenie rezerwacji", "weight": 28, "where": "title" },
+        { "text": "numer rezerwacji", "weight": 18 }
+      ]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [
+        { "text": "protokół ze spotkania", "weight": 26, "where": "title" },
+        { "text": "obecni", "weight": 10 }
+      ]
+    },
+    {
+      "id": "meeting-agenda",
+      "phrases": [{ "text": "porządek obrad", "weight": 20, "where": "title" }]
     }
   ],
   "patterns": {
-    "toc": [{ "pattern": "spis\\ treści" }],
-    "references": [{ "pattern": "bibliografia" }],
-    "signature": [{ "pattern": "podpis" }]
+    "toc": [{ "pattern": "spis tre[śs]ci" }],
+    "references": [{ "pattern": "\\\\b(bibliografia|literatura)\\\\b" }],
+    "signature": [{ "pattern": "\\\\b(podpis|podpisano)\\\\b" }],
+    "signature_form": [
+      { "pattern": "_{6,}\\\\s*\\\\n\\\\s*(data|imi[ęe]|podpis)", "flags": "i" }
+    ],
+    "email_from": [
+      {
+        "pattern": "\\\\bod\\\\s?:\\\\s.+\\\\n(.*\\\\n){0,3}?\\\\s*(do|wys[łl]ano|data)\\\\s?:\\\\s",
+        "flags": "i"
+      }
+    ],
+    "email_subject": [{ "pattern": "temat\\\\s?:\\\\s" }],
+    "currency": [{ "pattern": "\\\\d[\\\\d .,]*\\\\s?(pln|z[łl])" }],
+    "form_label": [
+      {
+        "pattern": "^[A-Za-ząćęłńóśźż][A-Za-ząćęłńóśźż /()&'.-]{2,30}\\\\s?:\\\\s*$",
+        "flags": "m"
+      }
+    ]
   }
 }

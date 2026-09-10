@@ -6,12 +6,32 @@
       "id": "invoice",
       "phrases": [
         { "text": "factuur", "weight": 24, "where": "title" },
-        { "text": "omzetbelasting", "weight": 8 }
+        { "text": "omzetbelasting", "weight": 8 },
+        { "text": "factuurnummer", "weight": 22, "where": "first" },
+        { "text": "factuurdatum", "weight": 16, "where": "first" },
+        { "text": "vervaldatum", "weight": 16 },
+        { "text": "totaalbedrag", "weight": 16 },
+        { "text": "te betalen", "weight": 16 },
+        { "text": "btw-nummer", "weight": 14 },
+        { "text": "btw", "weight": 10 },
+        { "text": "betalingstermijn", "weight": 8 },
+        { "text": "bedrag excl", "weight": 14 }
+      ],
+      "negatives": [
+        { "text": "pakbon", "weight": 14 },
+        { "text": "offerte", "weight": 14 },
+        { "text": "rekeningafschrift", "weight": 12 }
       ]
     },
     {
       "id": "receipt",
-      "phrases": [{ "text": "kwitantie", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "kwitantie", "weight": 22, "where": "title" },
+        { "text": "kassabon", "weight": 24, "where": "title" },
+        { "text": "betalingsbewijs", "weight": 20, "where": "title" },
+        { "text": "betaling ontvangen", "weight": 16 },
+        { "text": "bedankt voor uw aankoop", "weight": 16 }
+      ]
     },
     {
       "id": "credit-note",
@@ -24,12 +44,24 @@
     {
       "id": "bank-statement",
       "phrases": [
-        { "text": "rekeningafschrift", "weight": 24, "where": "title" }
+        { "text": "rekeningafschrift", "weight": 24, "where": "title" },
+        { "text": "bankafschrift", "weight": 26, "where": "title" },
+        { "text": "beginsaldo", "weight": 18 },
+        { "text": "eindsaldo", "weight": 18 },
+        { "text": "valutadatum", "weight": 16 },
+        { "text": "rekeningnummer", "weight": 12 }
       ]
     },
     {
       "id": "payslip",
-      "phrases": [{ "text": "loonstrook", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "loonstrook", "weight": 22, "where": "title" },
+        { "text": "salarisstrook", "weight": 26, "where": "title" },
+        { "text": "brutoloon", "weight": 18 },
+        { "text": "nettoloon", "weight": 18 },
+        { "text": "loonheffing", "weight": 18 },
+        { "text": "vakantiegeld", "weight": 14 }
+      ]
     },
     {
       "id": "expense-report",
@@ -44,7 +76,15 @@
     },
     {
       "id": "tax-return",
-      "phrases": [{ "text": "aangiftebiljet", "weight": 22, "where": "title" }]
+      "phrases": [
+        { "text": "aangiftebiljet", "weight": 22, "where": "title" },
+        { "text": "belastingaangifte", "weight": 26, "where": "title" },
+        {
+          "text": "aangifte inkomstenbelasting",
+          "weight": 26,
+          "where": "title"
+        }
+      ]
     },
     {
       "id": "tax-form",
@@ -52,37 +92,62 @@
     },
     {
       "id": "contract",
-      "phrases": [{ "text": "overeenkomst", "weight": 12, "where": "title" }]
+      "phrases": [
+        { "text": "overeenkomst", "weight": 12, "where": "title" },
+        { "text": "de partijen", "weight": 14 },
+        { "text": "partijen komen overeen", "weight": 16 },
+        { "text": "looptijd", "weight": 12 },
+        { "text": "opzegtermijn", "weight": 14 }
+      ]
     },
     {
       "id": "employment-contract",
       "phrases": [
-        { "text": "arbeidsovereenkomst", "weight": 24, "where": "title" }
+        { "text": "arbeidsovereenkomst", "weight": 24, "where": "title" },
+        { "text": "proeftijd", "weight": 18 },
+        { "text": "vakantiedagen", "weight": 14 },
+        { "text": "cao", "weight": 12 }
       ]
     },
     {
       "id": "lease-agreement",
       "phrases": [
         { "text": "pacht", "weight": 18, "where": "title" },
-        { "text": "huisbaas", "weight": 8 }
+        { "text": "huisbaas", "weight": 8 },
+        { "text": "huurovereenkomst", "weight": 30, "where": "title" },
+        { "text": "huurprijs", "weight": 18 },
+        { "text": "waarborgsom", "weight": 18 },
+        { "text": "verhuurder", "weight": 14 },
+        { "text": "huurder", "weight": 12 }
       ]
     },
     {
       "id": "nda",
       "phrases": [
-        { "text": "geheimhoudingsverklaring", "weight": 24, "where": "title" }
+        { "text": "geheimhoudingsverklaring", "weight": 24, "where": "title" },
+        {
+          "text": "geheimhoudingsovereenkomst",
+          "weight": 30,
+          "where": "title"
+        },
+        { "text": "vertrouwelijke informatie", "weight": 12 }
       ]
     },
     {
       "id": "terms-and-conditions",
       "phrases": [
-        { "text": "gebruiksvoorwaarden", "weight": 22, "where": "title" }
+        { "text": "gebruiksvoorwaarden", "weight": 22, "where": "title" },
+        { "text": "algemene voorwaarden", "weight": 30, "where": "title" }
       ]
     },
     {
       "id": "privacy-policy",
       "phrases": [
-        { "text": "algemene verordening gegevensbescherming", "weight": 10 }
+        { "text": "algemene verordening gegevensbescherming", "weight": 10 },
+        { "text": "privacyverklaring", "weight": 28, "where": "title" },
+        { "text": "avg", "weight": 12 },
+        { "text": "persoonsgegevens", "weight": 12 },
+        { "text": "verwerkingsverantwoordelijke", "weight": 18 }
       ]
     },
     {
@@ -99,20 +164,30 @@
       "id": "insurance-policy",
       "phrases": [
         { "text": "verzekeringspolis", "weight": 22, "where": "title" },
-        { "text": "eigen risico", "weight": 8 }
+        { "text": "eigen risico", "weight": 8 },
+        { "text": "polisblad", "weight": 26, "where": "title" },
+        { "text": "polisnummer", "weight": 16 },
+        { "text": "dekking", "weight": 12 },
+        { "text": "premie", "weight": 10 }
       ]
     },
     {
       "id": "resume",
       "phrases": [
-        { "text": "curriculum vitae", "weight": 24, "where": "title" }
+        { "text": "curriculum vitae", "weight": 24, "where": "title" },
+        { "text": "werkervaring", "weight": 20 },
+        { "text": "opleiding", "weight": 12 },
+        { "text": "vaardigheden", "weight": 12 }
       ]
     },
     {
       "id": "cover-letter",
       "phrases": [
-        { "text": "sollicitatiebrief", "weight": 20, "where": "title" }
-      ]
+        { "text": "sollicitatiebrief", "weight": 20, "where": "title" },
+        { "text": "solliciteer ik", "weight": 18 },
+        { "text": "met vriendelijke groet", "weight": 10 }
+      ],
+      "negatives": [{ "text": "werkervaring", "weight": 12 }]
     },
     {
       "id": "reference-letter",
@@ -144,12 +219,19 @@
       "id": "prescription",
       "phrases": [
         { "text": "doktersrecept", "weight": 20, "where": "title" },
-        { "text": "farmacie", "weight": 10 }
+        { "text": "farmacie", "weight": 10 },
+        { "text": "recept", "weight": 20, "where": "title" },
+        { "text": "dosering", "weight": 18 },
+        { "text": "apotheek", "weight": 12 }
       ]
     },
     {
       "id": "medical-report",
-      "phrases": [{ "text": "medisch dossier", "weight": 18, "where": "title" }]
+      "phrases": [
+        { "text": "medisch dossier", "weight": 18, "where": "title" },
+        { "text": "medisch verslag", "weight": 24, "where": "title" },
+        { "text": "diagnose", "weight": 12 }
+      ]
     },
     {
       "id": "immunization-record",
@@ -207,7 +289,10 @@
     },
     {
       "id": "meeting-minutes",
-      "phrases": [{ "text": "notulen", "weight": 18, "where": "title" }]
+      "phrases": [
+        { "text": "notulen", "weight": 18, "where": "title" },
+        { "text": "aanwezig", "weight": 10 }
+      ]
     },
     {
       "id": "meeting-agenda",
@@ -219,7 +304,11 @@
     },
     {
       "id": "ticket",
-      "phrases": [{ "text": "toegangsbewijs", "weight": 18, "where": "title" }]
+      "phrases": [
+        { "text": "toegangsbewijs", "weight": 18, "where": "title" },
+        { "text": "instapkaart", "weight": 26, "where": "title" },
+        { "text": "vervoersbewijs", "weight": 22, "where": "title" }
+      ]
     },
     {
       "id": "waybill",
@@ -231,7 +320,13 @@
     },
     {
       "id": "utility-bill",
-      "phrases": [{ "text": "kilowattuurmeter", "weight": 12 }]
+      "phrases": [
+        { "text": "kilowattuurmeter", "weight": 12 },
+        { "text": "energierekening", "weight": 26, "where": "title" },
+        { "text": "meterstand", "weight": 20 },
+        { "text": "verbruik", "weight": 12 },
+        { "text": "kwh", "weight": 12 }
+      ]
     },
     {
       "id": "menu",
@@ -436,11 +531,70 @@
     {
       "id": "assignment-brief",
       "phrases": [{ "text": "huiswerk", "weight": 12 }]
+    },
+    {
+      "id": "quote",
+      "phrases": [
+        { "text": "offerte", "weight": 26, "where": "title" },
+        { "text": "prijsopgave", "weight": 24, "where": "title" },
+        { "text": "geldig tot", "weight": 16 }
+      ],
+      "negatives": [{ "text": "factuurnummer", "weight": 14 }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [
+        { "text": "inkooporder", "weight": 26, "where": "title" },
+        { "text": "bestelnummer", "weight": 18 }
+      ]
+    },
+    {
+      "id": "order-confirmation",
+      "phrases": [
+        { "text": "orderbevestiging", "weight": 28, "where": "title" },
+        { "text": "bedankt voor uw bestelling", "weight": 16 }
+      ]
+    },
+    {
+      "id": "delivery-note",
+      "phrases": [
+        { "text": "pakbon", "weight": 28, "where": "title" },
+        { "text": "afleveradres", "weight": 12 }
+      ]
+    },
+    {
+      "id": "booking-confirmation",
+      "phrases": [
+        { "text": "boekingsbevestiging", "weight": 28, "where": "title" },
+        { "text": "boekingsnummer", "weight": 18 }
+      ]
     }
   ],
   "patterns": {
     "toc": [{ "pattern": "inhoudsopgave" }],
-    "references": [{ "pattern": "bibliografie" }],
-    "signature": [{ "pattern": "handtekening" }]
+    "references": [{ "pattern": "\\\\b(bibliografie|literatuurlijst)\\\\b" }],
+    "signature": [
+      { "pattern": "\\\\b(handtekening|ondertekend|getekend)\\\\b" }
+    ],
+    "signature_form": [
+      {
+        "pattern": "_{6,}\\\\s*\\\\n\\\\s*(datum|naam|handtekening)",
+        "flags": "i"
+      }
+    ],
+    "email_from": [
+      {
+        "pattern": "\\\\bvan\\\\s?:\\\\s.+\\\\n(.*\\\\n){0,3}?\\\\s*(aan|verzonden|datum)\\\\s?:\\\\s",
+        "flags": "i"
+      }
+    ],
+    "email_subject": [{ "pattern": "betreft\\\\s?:\\\\s" }],
+    "currency": [{ "pattern": "\\\\d[\\\\d .,]*\\\\s?(eur|€)|€\\\\s?\\\\d" }],
+    "form_label": [
+      {
+        "pattern": "^[A-Za-zëéïöü][A-Za-zëéïöü /()&'.-]{2,30}\\\\s?:\\\\s*$",
+        "flags": "m"
+      }
+    ]
   }
 }
