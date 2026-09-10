@@ -70,6 +70,7 @@ import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolution
 import apiClient from "@app/services/apiClient";
 import { reportFilesRemoved } from "@app/services/failureReporting";
 import { setPendingUnlocks } from "@app/services/pendingUnlocks";
+import { setBlockedFileIds } from "@app/services/policyBlockRegistry";
 import { processResponse } from "@app/utils/toolResponseProcessor";
 import { ToolOperation } from "@app/types/file";
 import { handlePasswordError } from "@app/utils/toolErrorHandler";
@@ -200,6 +201,13 @@ function FileContextInner({
   // The store outlives this provider, and a hold nobody can answer would stall the file's policy
   // for the rest of the session. Its own effect, so a change of prompt does not clear and re-set.
   useEffect(() => () => setPendingUnlocks([]), []);
+
+  // Published so the export path refuses a blocked file through any download/print route, not just
+  // the file-card menu - those callers are plain utils with no FileContext access.
+  useEffect(() => {
+    setBlockedFileIds(Object.keys(state.ui.policyBlocks));
+  }, [state.ui.policyBlocks]);
+  useEffect(() => () => setBlockedFileIds([]), []);
 
   useEffect(() => {
     setUnlockPassword("");

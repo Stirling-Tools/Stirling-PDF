@@ -40,6 +40,11 @@ vi.mock("@app/components/toast", () => ({
 }));
 vi.mock("@app/i18n", () => ({ default: { t: (key: string) => key } }));
 
+const isFileBlocked = vi.fn((_id: string) => false);
+vi.mock("@app/services/policyBlockRegistry", () => ({
+  isFileBlocked: (id: string) => isFileBlocked(id),
+}));
+
 const { enforceExportPolicies } = await import("@app/services/policyExport");
 
 /** An active export-time policy as the local store holds it. */
@@ -175,5 +180,34 @@ describe("export enforcement on failure", () => {
 
     expect(result.blocked).toEqual([]);
     expect(result.files[0].name).toBe("doc.pdf");
+  });
+});
+
+describe("export refuses a file blocked at upload", () => {
+  beforeEach(() => {
+    runStoredPolicy.mockClear();
+    isFileBlocked.mockReturnValue(false);
+  });
+
+  it("refuses the export without running any export policy", async () => {
+    isFileBlocked.mockImplementation((id) => id === "file-1");
+    // An export policy is configured, but the upload block short-circuits before it can run.
+    loadPolicies.mockReturnValue({
+      "builder-1": exportPolicy({ runsOnEditor: true, backendId: "backend-1" }),
+    } as unknown as PoliciesByKey);
+
+    const result = await enforceExportPolicies([pdf()], ["file-1"]);
+
+    expect(result.blocked).toEqual(["doc.pdf"]);
+    expect(runStoredPolicy).not.toHaveBeenCalled();
+  });
+
+  it("refuses even when no export policy is configured", async () => {
+    isFileBlocked.mockImplementation((id) => id === "file-1");
+    loadPolicies.mockReturnValue({} as unknown as PoliciesByKey);
+
+    const result = await enforceExportPolicies([pdf()], ["file-1"]);
+
+    expect(result.blocked).toEqual(["doc.pdf"]);
   });
 });

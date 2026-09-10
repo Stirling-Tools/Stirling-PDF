@@ -29,6 +29,7 @@ import {
 } from "@app/components/policies/enforcementQueue";
 import { ROW_ACCENT } from "@app/components/policies/policyStatus";
 import { alert, updateToast, dismissToast } from "@app/components/toast";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 import i18n from "@app/i18n";
 
 /** Poll cadence + cap for a single export run (≈2.5 min worst case). */
@@ -165,6 +166,25 @@ export async function enforceExportPolicies(
   fileIds?: (string | undefined)[],
   trigger: EnforcementTrigger = "export",
 ): Promise<ExportEnforcementResult> {
+  // A file a required policy blocked at upload is unusable, so it must never leave the editor.
+  // Refuse the whole export before running any export policy - even with none configured. The
+  // gated file-card menu can't cover programmatic download/print routes; this catches them.
+  const uploadBlocked = files.flatMap((f, i) => {
+    const id = fileIds?.[i];
+    return id && isFileBlocked(id) ? [f.name] : [];
+  });
+  if (uploadBlocked.length > 0) {
+    alert({
+      alertType: "error",
+      title: i18n.t("policies.enforcement.blockedTitle"),
+      body: i18n.t("policies.enforcement.blockedBody", {
+        files: enforcedFilesSummary(uploadBlocked),
+      }),
+      expandable: false,
+    });
+    return { files, blocked: uploadBlocked };
+  }
+
   const active = activeExportPolicies();
   const targets = files.flatMap((f, i) => (isPdf(f) ? [i] : []));
   if (!active.length || targets.length === 0) return { files, blocked: [] };
