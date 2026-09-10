@@ -3,10 +3,13 @@
  * and the editor's folder-processing setup both read it.
  */
 
-import type { WireRoutingRule, WireTriggerConfig } from "@app/policies/types";
 import { policyStep, type PolicyToolStep } from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
-import type { WirePipelineStep } from "@app/policies/types";
+import type {
+  WirePipelineStep,
+  WireRoutingRule,
+  WireTriggerConfig,
+} from "@app/policies/types";
 
 export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
 
@@ -29,6 +32,11 @@ export interface PolicyCategory {
   desc: string;
   providesClassification?: boolean;
   comingSoon?: boolean;
+  /**
+   * The category binds its own source and destinations (routing's Watch and routes). A surface that
+   * supplies the folder itself, and has no destination UI, cannot host one.
+   */
+  bindsOwnSource?: boolean;
   requiresAiEngine?: boolean;
 }
 
@@ -174,7 +182,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.routing.label",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
-    comingSoon: true,
+    bindsOwnSource: true,
   },
   {
     id: "retention",

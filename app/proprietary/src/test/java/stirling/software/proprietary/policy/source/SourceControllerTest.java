@@ -300,7 +300,7 @@ class SourceControllerTest {
                 List.of(),
                 null,
                 null,
-                null,
+                Policy.SURFACE_POLICY,
                 List.of(
                         new RoutingRule(
                                 "classification.labels",
