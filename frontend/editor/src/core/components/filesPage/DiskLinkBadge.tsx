@@ -5,7 +5,7 @@ import SyncProblemIcon from "@mui/icons-material/SyncProblem";
 import CloudOffIcon from "@mui/icons-material/CloudOff";
 
 import { StirlingFileStub } from "@app/types/fileContext";
-import { diskLinkState } from "@app/services/diskFileSync";
+import { diskLinkState } from "@app/services/diskLinkState";
 
 /** Keeps a lost or diverged disk link on screen, where only a transient toast said so.
  *  Silent when healthy or never from disk, so it always means trouble. */

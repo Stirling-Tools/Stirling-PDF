@@ -9,7 +9,10 @@ import {
   StirlingFileStub,
   ProcessedFilePage,
 } from "@app/types/fileContext";
-import { cancelDiskConflict } from "@app/services/diskConflictPrompt";
+import {
+  forgetFile,
+  noteFileSaved,
+} from "@app/contexts/file/storedFileReconciler";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -70,7 +73,7 @@ export class FileLifecycleManager {
     fileId: FileId,
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
-    cancelDiskConflict(fileId);
+    forgetFile(fileId);
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
@@ -149,9 +152,7 @@ export class FileLifecycleManager {
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
     fileIds.forEach((fileId) => {
-      // A queued conflict for a file that is gone would name it in a blocking
-      // modal whose Use-disk button then no-ops against the filesRef guard.
-      cancelDiskConflict(fileId);
+      forgetFile(fileId);
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
     });
@@ -260,29 +261,12 @@ export class FileLifecycleManager {
         );
     }
 
-    // A save just made disk and app agree, so re-baseline against the file we
-    // wrote. Without this the next open reads it back as an external change.
-    if (updates.isDirty === false && updates.localFilePath) {
-      const path = updates.localFilePath;
-      void import("@app/services/diskFileSync")
-        .then(({ refreshDiskBaselineAfterSave }) =>
-          refreshDiskBaselineAfterSave(fileId, path),
-        )
-        .then((baseline) => {
-          if (baseline) {
-            this.dispatch({
-              type: "UPDATE_FILE_RECORD",
-              payload: { id: fileId, updates: baseline },
-            });
-          }
-        })
-        .catch((error) =>
-          console.error(
-            `[Lifecycle] Failed to re-baseline ${fileId} after save:`,
-            error,
-          ),
-        );
-    }
+    noteFileSaved(fileId, updates, (patch) =>
+      this.dispatch({
+        type: "UPDATE_FILE_RECORD",
+        payload: { id: fileId, updates: patch },
+      }),
+    );
   };
 
   /**
