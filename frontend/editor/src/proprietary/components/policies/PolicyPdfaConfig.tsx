@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { FormField, Select, ToggleSwitch } from "@app/ui";
-import { SettingsRow } from "@app/ui/SettingsRow";
+import { FormField, Select } from "@app/ui";
 import {
   PDFA_OUTPUT_FORMATS,
   type PdfaOutputFormat,
@@ -8,10 +7,7 @@ import {
 } from "@app/policies/pdfaOperation";
 import "@app/components/policies/PolicySetupWizard.css";
 
-/**
- * Configures the PDF/A step: which archival profile, and whether a conversion that falls short
- * stops the run rather than delivering a file that only claims to be archival.
- */
+/** Configures the PDF/A step: which archival profile to convert to. */
 interface PolicyPdfaConfigProps {
   parameters: PdfaPolicyParameters;
   onChange: (parameters: PdfaPolicyParameters) => void;
@@ -45,19 +41,6 @@ export function PolicyPdfaConfig({
           }
         />
       </FormField>
-
-      <SettingsRow
-        label={t("portal.policies.config.pdfa.fields.strict.label")}
-        description={t("portal.policies.config.pdfa.fields.strict.help")}
-        control={
-          <ToggleSwitch
-            size="sm"
-            checked={parameters.strict}
-            onChange={(checked) => onChange({ ...parameters, strict: checked })}
-            aria-label={t("portal.policies.config.pdfa.fields.strict.label")}
-          />
-        }
-      />
     </div>
   );
 }

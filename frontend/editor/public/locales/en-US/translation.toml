@@ -8897,10 +8897,6 @@ minConfidence = "Min confidence"
 help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
 label = "Archival profile"
 
-[portal.policies.config.pdfa.fields.strict]
-help = "Some documents cannot be made fully compliant. Stop the run rather than deliver a file that only claims to be archival."
-label = "Stop if conversion falls short"
-
 [portal.policies.config.purview]
 label = "Apply a Microsoft Purview sensitivity label"
 

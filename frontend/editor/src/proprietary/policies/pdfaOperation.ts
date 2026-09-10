@@ -23,14 +23,11 @@ export type PdfaOutputFormat = (typeof PDFA_OUTPUT_FORMATS)[number];
 
 export interface PdfaPolicyParameters {
   outputFormat: PdfaOutputFormat;
-  /** Fail the run when the converted file still is not compliant, instead of delivering it. */
-  strict: boolean;
 }
 
 /** PDF/A-2b: the widest-supported archival profile, and what most retention policies ask for. */
 export const pdfaDefaultParameters: PdfaPolicyParameters = {
   outputFormat: "pdfa-2b",
-  strict: false,
 };
 
 function toOutputFormat(value: unknown): PdfaOutputFormat {
@@ -47,14 +44,15 @@ export const pdfaOperationConfig: BidirectionalToolConfig<
 > = {
   endpoint: ENDPOINT,
   defaultParameters: pdfaDefaultParameters,
+  // `strict` is left unset: it re-runs the same veraPDF check the compliance gate runs on the
+  // finished document, so asking for it here would only duplicate that verdict with a worse one -
+  // an uncoded 400 rather than the gate's classified failure.
   toApiParams: (parameters: PdfaPolicyParameters): PdfaApiParams => ({
     outputFormat: parameters.outputFormat,
-    strict: parameters.strict,
   }),
   // A stored step may name a profile this policy UI no longer offers (or nothing at all); clamp to
   // a known archival profile rather than re-sending a value the picker cannot render.
   fromApiParams: (apiParams: PdfaApiParams): Partial<PdfaPolicyParameters> => ({
     outputFormat: toOutputFormat(apiParams.outputFormat),
-    strict: apiParams.strict ?? pdfaDefaultParameters.strict,
   }),
 };

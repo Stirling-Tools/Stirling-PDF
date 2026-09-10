@@ -25,9 +25,7 @@ export const Default: Story = {
   render: () => <Controlled parameters={pdfaDefaultParameters} />,
 };
 
-/** The strictest setup: PDF/A-1b, and a conversion that falls short stops the run. */
-export const Strict: Story = {
-  render: () => (
-    <Controlled parameters={{ outputFormat: "pdfa-1", strict: true }} />
-  ),
+/** The strictest archival profile. */
+export const StrictestProfile: Story = {
+  render: () => <Controlled parameters={{ outputFormat: "pdfa-1" }} />,
 };

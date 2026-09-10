@@ -125,10 +125,10 @@ describe("wire conversion", () => {
 describe("compliance steps", () => {
   test("pdfa sends the archival profile the backend expects", () => {
     const wire = policyStepToWire(
-      policyStep("pdfa", { outputFormat: "pdfa-3b", strict: true }),
+      policyStep("pdfa", { outputFormat: "pdfa-3b" }),
     );
     expect(wire.operation).toBe("/api/v1/convert/pdf/pdfa");
-    expect(wire.parameters).toEqual({ outputFormat: "pdfa-3b", strict: true });
+    expect(wire.parameters).toEqual({ outputFormat: "pdfa-3b" });
   });
 
   test("pdfa clamps a stored profile this policy UI no longer offers", () => {
@@ -136,7 +136,7 @@ describe("compliance steps", () => {
     // step naming it must not round-trip back into the archival picker.
     const back = policyStepFromWire({
       operation: "/api/v1/convert/pdf/pdfa",
-      parameters: { outputFormat: "pdfx", strict: false },
+      parameters: { outputFormat: "pdfx" },
     });
     expect(back?.toolId).toBe("pdfa");
     if (back?.toolId === "pdfa") {
