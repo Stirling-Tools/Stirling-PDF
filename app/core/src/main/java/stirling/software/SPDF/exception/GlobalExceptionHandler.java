@@ -382,30 +382,6 @@ public class GlobalExceptionHandler {
      * @param request the HTTP servlet request
      * @return ProblemDetail with HTTP 503 SERVICE_UNAVAILABLE
      */
-    /**
-     * Handle PDF/A conversion asked for on a host without Ghostscript.
-     *
-     * @param ex the GhostscriptRequiredException
-     * @param request the HTTP servlet request
-     * @return ProblemDetail with HTTP 503 SERVICE_UNAVAILABLE (missing system dependency)
-     */
-    @ExceptionHandler(GhostscriptRequiredException.class)
-    public ResponseEntity<ProblemDetail> handleGhostscriptRequired(
-            GhostscriptRequiredException ex, HttpServletRequest request) {
-        logException("error", "Ghostscript Required", request, ex, ex.getErrorCode());
-
-        String title =
-                getLocalizedMessage(
-                        "error.ghostscriptRequired.title",
-                        ErrorTitles.GHOSTSCRIPT_REQUIRED_DEFAULT);
-        return createProblemDetailResponse(
-                ex,
-                HttpStatus.SERVICE_UNAVAILABLE,
-                ErrorTypes.GHOSTSCRIPT_REQUIRED,
-                title,
-                request);
-    }
-
     @ExceptionHandler(FfmpegRequiredException.class)
     public ResponseEntity<ProblemDetail> handleFfmpegRequired(
             FfmpegRequiredException ex, HttpServletRequest request) {
@@ -1184,8 +1160,6 @@ public class GlobalExceptionHandler {
                 return handlePdfAndDpiExceptions(appEx, request);
             } else if (appEx instanceof GhostscriptException) {
                 return handleGhostscriptException((GhostscriptException) appEx, request);
-            } else if (appEx instanceof GhostscriptRequiredException ghostscriptEx) {
-                return handleGhostscriptRequired(ghostscriptEx, request);
             } else if (appEx instanceof FfmpegRequiredException) {
                 return handleFfmpegRequired((FfmpegRequiredException) appEx, request);
             } else {
@@ -1488,7 +1462,6 @@ public class GlobalExceptionHandler {
         static final String PDF_PASSWORD = "/errors/pdf-password";
         static final String GHOSTSCRIPT = "/errors/ghostscript";
         static final String FFMPEG_REQUIRED = "/errors/ffmpeg-required";
-        static final String GHOSTSCRIPT_REQUIRED = "/errors/ghostscript-required";
         static final String OUT_OF_MEMORY_DPI = "/errors/out-of-memory-dpi";
         static final String PDF_CORRUPTED = "/errors/pdf-corrupted";
         static final String PDF_ENCRYPTION = "/errors/pdf-encryption";
@@ -1517,7 +1490,6 @@ public class GlobalExceptionHandler {
         static final String PDF_PASSWORD_DEFAULT = "PDF Password Required";
         static final String GHOSTSCRIPT_DEFAULT = "Ghostscript Processing Error";
         static final String FFMPEG_REQUIRED_DEFAULT = "FFmpeg Required";
-        static final String GHOSTSCRIPT_REQUIRED_DEFAULT = "Ghostscript Required";
         static final String OUT_OF_MEMORY_DPI_DEFAULT = "Insufficient Memory for Image Rendering";
         static final String PDF_CORRUPTED_DEFAULT = "PDF File Corrupted";
         static final String PDF_ENCRYPTION_DEFAULT = "PDF Encryption Error";

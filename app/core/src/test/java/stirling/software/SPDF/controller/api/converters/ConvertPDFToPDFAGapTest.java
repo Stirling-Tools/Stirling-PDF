@@ -382,6 +382,34 @@ class ConvertPDFToPDFAGapTest {
 
     // =======================================================================================
     @Nested
+    @DisplayName("findUnembeddedFontNames")
+    class UnembeddedFontDetection {
+
+        @Test
+        @DisplayName("standard 14 fonts (not embedded) are reported as missing")
+        void detectsStandardFontAsUnembedded() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                Set<String> missing = invokeStatic("findUnembeddedFontNames", document);
+                assertThat(missing).isNotNull();
+                assertThat(missing).anyMatch(name -> name.contains("Helvetica"));
+            }
+        }
+
+        @Test
+        @DisplayName("page with no resources reports no missing fonts")
+        void pageWithoutResources() throws Exception {
+            try (PDDocument document = new PDDocument()) {
+                PDPage page = new PDPage(PDRectangle.A4);
+                page.setResources(new PDResources());
+                document.addPage(page);
+                Set<String> missing = invokeStatic("findUnembeddedFontNames", document);
+                assertThat(missing).isEmpty();
+            }
+        }
+    }
+
+    // =======================================================================================
+    @Nested
     @DisplayName("detectTransparentXObjects")
     class TransparentXObjectDetection {
 
@@ -592,6 +620,30 @@ class ConvertPDFToPDFAGapTest {
                                                 "ensureEmbeddedFileCompliance",
                                                 document))
                         .doesNotThrowAnyException();
+            }
+        }
+
+        @Test
+        @DisplayName("addICCProfileIfNotPresent adds an sRGB output intent")
+        void addsIccOutputIntent() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                assertThat(document.getDocumentCatalog().getOutputIntents()).isEmpty();
+
+                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
+
+                assertThat(document.getDocumentCatalog().getOutputIntents()).hasSize(1);
+                assertThat(document.getDocumentCatalog().getOutputIntents().get(0).getInfo())
+                        .contains("sRGB");
+            }
+        }
+
+        @Test
+        @DisplayName("addICCProfileIfNotPresent does not add a second intent when one exists")
+        void doesNotDuplicateIntent() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
+                invokeInstance(newController(), "addICCProfileIfNotPresent", document);
+                assertThat(document.getDocumentCatalog().getOutputIntents()).hasSize(1);
             }
         }
     }
@@ -851,6 +903,15 @@ class ConvertPDFToPDFAGapTest {
     @Nested
     @DisplayName("ensureEmbeddedFilesAFRelationship / isTransparencyGroup")
     class StaticEdgeCases {
+
+        @Test
+        @DisplayName("ensureEmbeddedFilesAFRelationship is a no-op when no names dictionary")
+        void afRelationshipNoNames() throws Exception {
+            try (PDDocument document = simplePdf()) {
+                assertThatCode(() -> invokeStatic("ensureEmbeddedFilesAFRelationship", document))
+                        .doesNotThrowAnyException();
+            }
+        }
 
         @Test
         @DisplayName("isTransparencyGroup true only for /S /Transparency group dictionaries")

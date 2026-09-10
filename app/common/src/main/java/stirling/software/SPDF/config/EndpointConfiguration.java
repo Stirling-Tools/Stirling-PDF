@@ -483,6 +483,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("LibreOffice", "pdf-to-rtf");
         addEndpointToGroup("LibreOffice", "pdf-to-html");
         addEndpointToGroup("LibreOffice", "pdf-to-xml");
+        addEndpointToGroup("LibreOffice", "pdf-to-pdfa");
 
         // Unoconvert
         addEndpointToGroup("Unoconvert", "file-to-pdf");
@@ -567,7 +568,6 @@ public class EndpointConfiguration {
         addEndpointToGroup("Ghostscript", "crop");
         addEndpointToGroup("Ghostscript", "replace-invert-pdf");
         addEndpointToGroup("Ghostscript", "scanner-effect");
-        addEndpointToGroup("Ghostscript", "pdf-to-pdfa");
         addEndpointToGroup("Ghostscript", "pdf-to-vector");
         addEndpointToGroup("Ghostscript", "vector-to-pdf");
 
