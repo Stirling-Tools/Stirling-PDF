@@ -1,5 +1,8 @@
 import { useCallback } from "react";
-import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
+import {
+  useApplyLinkFacts,
+  useLinkOptional,
+} from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
@@ -19,8 +22,9 @@ import type { Wallet } from "@portal/api/billing";
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
   const { openLinkModal } = useUI();
-  const { gated, loading } = useConnectGate();
+  const { loading } = useConnectGate();
   const isAdmin = usePortalAdmin();
+  const link = useLinkOptional();
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
@@ -35,6 +39,10 @@ export function PortalBillingGate() {
   // Neither page while the answer is unknown: showing the local meter to a linked instance would
   // present a dormant ledger as its live one.
   if (loading) return null;
-  if (gated) return <FreeTierPlanView />;
+  // The cloud wallet needs a link we positively know about. Anything else is this instance's own
+  // ledger, including the two cases that are not "gated": linking turned off, and a status check
+  // that failed. Falling through to the wallet there asked a self-hosted instance to read a SaaS
+  // it may have no address for.
+  if (!link?.isLinked) return <FreeTierPlanView />;
   return <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />;
 }

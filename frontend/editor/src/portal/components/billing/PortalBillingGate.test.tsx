@@ -10,6 +10,7 @@ import { MemoryRouter } from "react-router-dom";
 const gate = { gated: false, loading: false, available: true };
 // Administrator by default: the page is theirs, and one case below is the member.
 const admin = { is: true };
+const link = { is: false };
 const connect = vi.fn();
 const applyLinkFacts = vi.fn();
 
@@ -18,6 +19,7 @@ vi.mock("@portal/hooks/useConnectGate", () => ({
 }));
 vi.mock("@portal/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => applyLinkFacts,
+  useLinkOptional: () => ({ isLinked: link.is }),
 }));
 vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
@@ -47,6 +49,7 @@ const renderGate = () =>
 describe("PortalBillingGate — self-hosted", () => {
   beforeEach(() => {
     admin.is = true;
+    link.is = false;
     connect.mockReset();
     applyLinkFacts.mockReset();
     gate.gated = false;
@@ -81,10 +84,22 @@ describe("PortalBillingGate — self-hosted", () => {
   });
 
   it("renders the wallet page, unchanged, once linked", () => {
+    link.is = true;
     renderGate();
     expect(screen.getByTestId("usage")).toBeInTheDocument();
     expect(screen.queryByTestId("free-tier")).toBeNull();
     expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
+  });
+
+  it("keeps an unlinked instance off the wallet even when nothing gates it", () => {
+    // Linking turned off, or a status check that failed: neither is "gated", and both used to fall
+    // through to a SaaS read this instance may have no address for.
+    gate.gated = false;
+    renderGate();
+
+    expect(screen.getByTestId("free-tier")).toBeInTheDocument();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 
   it("gives a member no page at all, whatever the link state", async () => {
