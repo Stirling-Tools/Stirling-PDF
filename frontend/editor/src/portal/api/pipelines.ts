@@ -3,6 +3,11 @@ import {
   type SupportingFileBindings,
   type ToolApiStep,
 } from "@app/hooks/tools/shared/toolAutomation";
+import type {
+  PolicyRunView,
+  PolicyRunStatus,
+  RunOutputFile,
+} from "@app/policies/types";
 
 /**
  * Pipelines service layer: the backend contract.
@@ -57,11 +62,7 @@ export interface Policy {
   name: string;
   owner?: string | null;
   enabled: boolean;
-  /**
-   * Org-mandated ("this is a policy your organisation requires"). First-class, independent of the
-   * trigger: a required pipeline can't be paused, disabled, or deleted by an ordinary member, and
-   * enforces on their documents when its trigger targets the editor. Admin-only to set.
-   */
+  /** Whether this is a policy (blocking) rather than an ordinary pipeline. */
   required?: boolean;
   /** Row icon key (see pipelineIcon); chosen in the builder. Empty falls back to the category glyph. */
   icon?: string;
@@ -97,7 +98,7 @@ export interface PipelineView {
   id: string;
   name: string;
   enabled: boolean;
-  /** Org-mandated policy (see {@link Policy.required}); surfaced as a "Required" badge in the list. */
+  /** Whether this is a policy - blocking on failure (see {@link Policy.required}); badged in the list. */
   required: boolean;
   /** Icon key for the list row (see pipelineIcon). Empty when none set; may be a category id. */
   icon: string;
@@ -132,37 +133,10 @@ export interface TriggerInfo {
   supportedSourceTypes: string[];
 }
 
-export type PolicyRunStatus =
-  | "PENDING"
-  | "RUNNING"
-  | "WAITING_FOR_INPUT"
-  | "COMPLETED"
-  | "FAILED"
-  | "CANCELLED";
-
-/** One file a run produced, downloadable via /api/v1/general/files/{fileId}. */
-export interface RunOutputFile {
-  fileId: string;
-  fileName: string | null;
-}
-
-/** A run's current state. Mirrors the backend `PolicyRunView`. */
-export interface PolicyRunView {
-  runId: string;
-  policyId: string | null;
-  status: PolicyRunStatus;
-  currentStep: number;
-  stepCount: number;
-  /** Human-readable failure message; set when status is FAILED. */
-  error: string | null;
-  errorCode: string | null;
-  /**
-   * Files the run produced, present once it completes. Whole-run, not per step: the backend keeps
-   * one flat list, so nothing here can be attributed to an individual step.
-   */
-  outputs?: RunOutputFile[] | null;
-  createdAt: number;
-}
+// One run view for the whole app: the builder test-run poll and the catalogue runs list read the
+// same backend PolicyRunView, so the type is defined once in the codec (imported above) and
+// re-exported here for callers that reach it through the pipelines API.
+export type { PolicyRunView, PolicyRunStatus, RunOutputFile };
 
 /** GET /api/v1/policies/overview: KPI strip + one row per policy for the admin. */
 export async function fetchPipelines(): Promise<PipelinesOverviewResponse> {
@@ -199,6 +173,21 @@ export async function deletePipeline(id: string): Promise<void> {
 /** GET /api/v1/policies/triggers: available triggers + their source compatibility. */
 export async function fetchTriggers(): Promise<TriggerInfo[]> {
   return apiClient.local.json<TriggerInfo[]>("/api/v1/policies/triggers");
+}
+
+/**
+ * The caller's policy-management capability, mirroring the backend gate: whether they may create,
+ * edit, or delete pipelines and policies (a manager). Others view but can't change them.
+ */
+export interface PolicyPermissions {
+  canManagePolicies: boolean;
+}
+
+/** GET /api/v1/policies/permissions: whether the caller may create/edit/delete pipelines & policies. */
+export async function fetchPolicyPermissions(): Promise<PolicyPermissions> {
+  return apiClient.local.json<PolicyPermissions>(
+    "/api/v1/policies/permissions",
+  );
 }
 
 /**

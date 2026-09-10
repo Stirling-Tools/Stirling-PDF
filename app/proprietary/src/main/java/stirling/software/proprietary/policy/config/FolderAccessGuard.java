@@ -23,6 +23,9 @@ import stirling.software.proprietary.policy.source.SourceStore;
  *   <li>denied entirely under the {@code saas} profile;
  *   <li>Stirling's own config dir always rejected, even if an allowed root were misconfigured to
  *       contain it;
+ *   <li>with login disabled (desktop, single-user self-host) everything else is permitted: the
+ *       local operator picking a directory is the authorization, the same trust the role checks
+ *       extend them — an allowlist would only gate the operator from their own machine;
  *   <li>Stirling-owned "implied" roots are always permitted (even with none configured): the local
  *       server file-storage directory when that storage provider is enabled, and the pipeline
  *       watched-folder directories, so automations use them without the admin listing them;
@@ -46,6 +49,7 @@ public class FolderAccessGuard {
     public record ImpliedRoot(Path path, String reason) {}
 
     private final boolean saasActive;
+    private final boolean desktopOperator;
     private final List<Path> allowedRoots;
     private final List<ImpliedRoot> impliedRoots;
     private final List<Path> protectedRoots;
@@ -57,11 +61,26 @@ public class FolderAccessGuard {
             Environment environment,
             SourceStore sourceStore) {
         this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
+        this.desktopOperator =
+                isDesktopBundle() && !applicationProperties.getSecurity().isEnableLogin();
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.impliedRoots = impliedRoots(applicationProperties.getStorage(), runtimePathConfig);
         this.protectedRoots = List.of(normalize(Path.of(InstallationPathConfig.getConfigPath())));
         this.sourceStore = sourceStore;
+    }
+
+    /**
+     * True only in the bundled desktop app, whose sidecar launches the jar with {@code
+     * -DSTIRLING_PDF_TAURI_MODE=true}. Read from the JVM's own system properties so a server cannot
+     * inherit it from the environment or settings.yml, and absent means "not desktop", which is the
+     * safe side: a self-hosted server with login off is exactly the case this must not open up.
+     *
+     * <p>Unlike {@code HardwareKeyStoreService.isDesktop()} a {@code Client-*} machine type is not
+     * accepted, because that only reflects {@code BROWSER_OPEN}, which any server can set.
+     */
+    private static boolean isDesktopBundle() {
+        return Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
     }
 
     /** Returns the normalised absolute path; throws if not permitted. */
@@ -76,6 +95,11 @@ public class FolderAccessGuard {
                 throw new IllegalArgumentException(
                         "folder may not point inside a protected Stirling directory");
             }
+        }
+        // The desktop operator's own choice is the authorization on their own machine; only the
+        // SaaS refusal and the protected config dir above outrank it.
+        if (desktopOperator) {
+            return normalized;
         }
         // Stirling-owned implied roots are always permitted, even with no configured roots, so
         // automations work against them out of the box.

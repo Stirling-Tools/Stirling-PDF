@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
+import { errorMessage } from "@portal/api/http";
 import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
 import { fetchStatus, unlinkInstance, type LinkStatus } from "@portal/api/link";
-import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
+import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
 
 /** Reads and clears THIS instance's link status. */
 
@@ -12,6 +13,8 @@ export interface UseAccountLink {
   loginConfigured: boolean;
   /** Linked / Not-linked status for this instance; null while first loading. */
   status: LinkStatus | null;
+  /** Failure to read status, separate from an unlink failure. */
+  statusError: string | null;
   phase: LinkPhase;
   error: string | null;
   /** Unlink this instance. */
@@ -22,20 +25,25 @@ export interface UseAccountLink {
 
 export function useAccountLink(): UseAccountLink {
   const applyLinkFacts = useApplyLinkFacts();
+  const { markStatusKnown } = useLink();
   const [status, setStatus] = useState<LinkStatus | null>(null);
+  const [statusError, setStatusError] = useState<string | null>(null);
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
+    setStatusError(null);
     try {
       const s = await fetchStatus();
       setStatus(s);
       // A linked instance is at least linked-free; subscription comes from the wallet.
       if (s.linked) applyLinkFacts(true, false);
-    } catch {
-      setStatus({ linked: false, name: null });
+      // Success only: marking this in the catch would read "could not ask" as "not linked".
+      markStatusKnown();
+    } catch (e) {
+      setStatusError(errorMessage(e));
     }
-  }, [applyLinkFacts]);
+  }, [applyLinkFacts, markStatusKnown]);
 
   useEffect(() => {
     void refresh();
@@ -58,6 +66,7 @@ export function useAccountLink(): UseAccountLink {
   return {
     loginConfigured: isSaasSupabaseConfigured,
     status,
+    statusError,
     phase,
     error,
     unlink,

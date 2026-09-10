@@ -30,7 +30,7 @@ function LinkModalHost() {
 /** Self-hosted provider stack. */
 export function PortalProviders() {
   return (
-    <LinkProvider initialState="unlinked">
+    <LinkProvider initialState="unlinked" statusKnown={false}>
       <TierProvider>
         <UIProvider>
           <AccountLinkProvider>

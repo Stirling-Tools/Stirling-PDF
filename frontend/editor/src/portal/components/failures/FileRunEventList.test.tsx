@@ -1,26 +1,36 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render as baseRender, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import type { FileRunEvent } from "@portal/api/fileRunEvents";
+import type {
+  FailureActionOffer,
+  FileRunEvent,
+} from "@portal/api/fileRunEvents";
 
-/**
- * Tests for the list: the states it survives (loading, empty, no registry, refused),
- * plus replacing a row in place after acting, re-reading when the server refuses, and
- * bringing itself into view when a notification links to it.
- */
-
-// jsdom does no layout and so implements no scrollIntoView.
-const scrollIntoView = vi.fn();
-Element.prototype.scrollIntoView = scrollIntoView;
+/** The review table: its states, its copy, faceted filtering, and acting on a row. */
 
 const fetchFileRunEvents = vi.fn();
 const applyFileRunEventAction = vi.fn();
 
-vi.mock("@portal/api/fileRunEvents", () => ({
+// Spread the real module: the queries layer also reads its status helpers.
+vi.mock("@portal/api/fileRunEvents", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@portal/api/fileRunEvents")>()),
   fetchFileRunEvents: (...args: unknown[]) => fetchFileRunEvents(...args),
   applyFileRunEventAction: (...args: unknown[]) =>
     applyFileRunEventAction(...args),
+}));
+
+// The sources list only exists to turn source ids into display names.
+const sourcesData = vi.fn<
+  () => { sources: { id: string; name: string }[] } | null
+>(() => null);
+vi.mock("@portal/queries/sources", () => ({
+  useSources: () => ({ data: sourcesData(), loading: false, error: null }),
 }));
 
 vi.mock("react-i18next", () => ({
@@ -38,20 +48,20 @@ vi.mock("react-i18next", () => ({
       const known: Record<string, string> = {
         "portal.failures.kind.inputPasswordProtected.title":
           "Password-protected document",
+        "portal.failures.kind.inputPasswordProtected.description":
+          "Your file is password protected, so the run could not read it.",
+        "portal.failures.kind.unknown.title": "Unrecognised failure",
         "portal.failures.action.acknowledge": "Acknowledge",
-        "portal.failures.empty.title": "No failures recorded",
+        "portal.failures.action.dismiss": "Dismiss",
+        "portal.failures.empty.title": "Nothing needs your attention",
         "portal.failures.occurrences": "occurrences",
-        "portal.failures.runReference": "Run r1",
-        "portal.failures.stage.input": "Input",
-        "portal.failures.origin.tool": "Tool run",
-        "portal.failures.origin.policy": "Policy",
+        "portal.failures.scope.open": "Open",
+        "portal.failures.scope.closed": "Closed",
+        "portal.failures.outcome.dismissed": "Dismissed",
+        "portal.failures.outcome.fileRemoved": "File deleted",
+        "portal.failures.origin.tool": "Editor tool",
+        "portal.failures.origin.policy": "Policy run",
       };
-      if (key === "portal.failures.fromSource") {
-        return `From source ${(options as { source?: string })?.source ?? ""}`;
-      }
-      if (key === "portal.failures.reportedBy") {
-        return `Hit by ${(options as { actor?: string })?.actor ?? ""}`;
-      }
       if (known[key]) return known[key];
       if ((options as { defaultValue?: string })?.defaultValue) {
         return (options as { defaultValue: string }).defaultValue;
@@ -61,22 +71,31 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
-// The list reads through the shared query hooks, @app/ui needs Mantine, and the section reads
-// the location to know whether it was linked to.
-const render = (
-  ui: Parameters<typeof baseRender>[0],
-  at = "/processor/documents",
-) =>
+// The table reads through the shared query hooks and @app/ui needs Mantine.
+const render = (ui: Parameters<typeof baseRender>[0]) =>
   baseRender(ui, {
     wrapper: ({ children }) => (
       <PortalTestProviders>
-        <MemoryRouter initialEntries={[at]}>{children}</MemoryRouter>
+        <MemoryRouter>{children}</MemoryRouter>
       </PortalTestProviders>
     ),
   });
 
 const { FileRunEventList } =
   await import("@portal/components/failures/FileRunEventList");
+
+function offer(overrides: Partial<FailureActionOffer>): FailureActionOffer {
+  return {
+    id: "ACKNOWLEDGE",
+    labelKey: "portal.failures.action.acknowledge",
+    defaultLabel: "Acknowledge",
+    execution: "SERVER",
+    slot: "SECONDARY",
+    enabled: true,
+    disabledReasonKey: null,
+    ...overrides,
+  };
+}
 
 function event(overrides: Partial<FileRunEvent> = {}): FileRunEvent {
   return {
@@ -99,54 +118,71 @@ function event(overrides: Partial<FileRunEvent> = {}): FileRunEvent {
     occurrences: 1,
     status: "NEW",
     statusActor: null,
-    actions: [
-      {
-        id: "ACKNOWLEDGE",
-        labelKey: "portal.failures.action.acknowledge",
-        enabled: true,
-        disabledReasonKey: null,
-      },
-    ],
+    actions: [offer({})],
     createdAt: 0,
     lastSeenAt: 0,
     ...overrides,
   };
 }
 
+/** Distinguished from the sort header of the same name by its aria-expanded state. */
+const userFacetTrigger = () =>
+  screen.getByRole("button", { name: "User", expanded: false });
+
 describe("FileRunEventList", () => {
   beforeEach(() => {
     fetchFileRunEvents.mockReset();
     applyFileRunEventAction.mockReset();
-    scrollIntoView.mockReset();
-    // The dev-panel test stubs import.meta.env.DEV, which would otherwise persist
-    // into every test after it.
-    vi.unstubAllEnvs();
+    sourcesData.mockReturnValue(null);
   });
 
-  it("renders a row's title, run reference and raw detail, but no document name", async () => {
+  it("shows the kind's title alone: no second line, no raw error, no document name", async () => {
     fetchFileRunEvents.mockResolvedValue([event()]);
 
     render(<FileRunEventList />);
 
     expect(await screen.findByText("Password-protected document")).toBeTruthy();
-    // A run reference, not a document name: the record holds no file identity.
-    expect(screen.getByText("Run r1")).toBeTruthy();
-    // The raw message is shown, not swallowed: for an unclassified failure it is
-    // the only diagnostic available.
-    expect(screen.getByText("The PDF Document is passworded")).toBeTruthy();
+    // The kind's sentence only repeats its title, so the row does not carry one.
+    expect(
+      screen.queryByText(
+        "Your file is password protected, so the run could not read it.",
+      ),
+    ).toBeNull();
+    expect(screen.queryByText("The PDF Document is passworded")).toBeNull();
+    // No file identity either; the record deliberately holds none.
+    expect(screen.queryByText("f-1")).toBeNull();
   });
 
-  it("names the person whose editor hit it, and marks it a tool run", async () => {
-    // The point of reporting editor failures: a reviewer needs the person, since a
-    // run reference means nothing for a failure that never had a run.
+  it("opens the raw error in a modal from the row's own action", async () => {
+    fetchFileRunEvents.mockResolvedValue([event()]);
+
+    render(<FileRunEventList />);
+    await screen.findByText("Password-protected document");
+
+    fireEvent.click(screen.getByRole("button", { name: "View error" }));
+
+    expect(screen.getByText("The PDF Document is passworded")).toBeTruthy();
+    expect(screen.getAllByText("Copy error").length).toBeGreaterThan(0);
+  });
+
+  it("offers no View error on a row with no diagnostic to show", async () => {
+    fetchFileRunEvents.mockResolvedValue([event({ detail: null })]);
+
+    render(<FileRunEventList />);
+    await screen.findByText("Password-protected document");
+
+    expect(screen.queryByRole("button", { name: "View error" })).toBeNull();
+  });
+
+  it("names the person whose editor hit it, and where it failed", async () => {
     fetchFileRunEvents.mockResolvedValue([
       event({ origin: "TOOL", actor: "dana@example.com", runId: null }),
     ]);
 
     render(<FileRunEventList />);
 
-    expect(await screen.findByText("Tool run")).toBeTruthy();
-    expect(screen.getByText("Hit by dana@example.com")).toBeTruthy();
+    expect(await screen.findByText("Editor tool")).toBeTruthy();
+    expect(screen.getByText("dana@example.com")).toBeTruthy();
   });
 
   it("names the source when no user was involved, since that is the only attribution", async () => {
@@ -156,13 +192,27 @@ describe("FileRunEventList", () => {
 
     render(<FileRunEventList />);
 
-    expect(await screen.findByText("From source src-s3-invoices")).toBeTruthy();
+    expect(await screen.findByText("src-s3-invoices")).toBeTruthy();
+  });
+
+  it("shows the source's display name once the sources list resolves it", async () => {
+    sourcesData.mockReturnValue({
+      sources: [{ id: "src-s3-invoices", name: "Invoice bucket" }],
+    });
+    fetchFileRunEvents.mockResolvedValue([
+      event({ origin: "POLICY", actor: null, sourceId: "src-s3-invoices" }),
+    ]);
+
+    render(<FileRunEventList />);
+
+    expect(await screen.findByText("Invoice bucket")).toBeTruthy();
+    expect(screen.queryByText("src-s3-invoices")).toBeNull();
   });
 
   it("shows the occurrence count only once a failure has repeated", async () => {
     fetchFileRunEvents.mockResolvedValue([event({ occurrences: 1 })]);
     const { unmount } = render(<FileRunEventList />);
-    await screen.findByText("Run r1");
+    await screen.findByText("Password-protected document");
     expect(screen.queryByText(/occurrences/)).toBeNull();
     unmount();
 
@@ -171,42 +221,128 @@ describe("FileRunEventList", () => {
     expect(await screen.findByText(/occurrences/)).toBeTruthy();
   });
 
-  it("shows an empty state when there is nothing to triage", async () => {
+  it("narrows to the picked value and restores on clear", async () => {
+    fetchFileRunEvents.mockResolvedValue([
+      event(),
+      event({
+        id: "fre-2",
+        actor: "lee@example.com",
+        kindId: "UNKNOWN",
+        titleKey: "portal.failures.kind.unknown.title",
+        descriptionKey: "portal.failures.kind.unknown.description",
+        defaultTitle: "Unrecognised failure",
+      }),
+    ]);
+
+    render(<FileRunEventList />);
+    await screen.findByText("Unrecognised failure");
+
+    fireEvent.click(userFacetTrigger());
+    fireEvent.click(
+      screen.getByRole("menuitemcheckbox", { name: /dana@example.com/ }),
+    );
+
+    // Only dana's failure survives the pick.
+    expect(screen.queryByText("Unrecognised failure")).toBeNull();
+    expect(screen.getByText("Password-protected document")).toBeTruthy();
+
+    // The pick surfaced the clear affordance; clearing restores the row.
+    fireEvent.click(screen.getByRole("button", { name: "Clear filters" }));
+    expect(await screen.findByText("Unrecognised failure")).toBeTruthy();
+  });
+
+  it("chains facets: a second pick narrows within the first", async () => {
+    fetchFileRunEvents.mockResolvedValue([
+      event(),
+      event({ id: "fre-2", origin: "TOOL" }),
+      event({
+        id: "fre-3",
+        actor: "lee@example.com",
+        kindId: "UNKNOWN",
+        titleKey: "portal.failures.kind.unknown.title",
+        descriptionKey: "portal.failures.kind.unknown.description",
+        defaultTitle: "Unrecognised failure",
+      }),
+    ]);
+
+    render(<FileRunEventList />);
+    await screen.findByText("Unrecognised failure");
+
+    // First facet: dana only (drops lee's row).
+    fireEvent.click(userFacetTrigger());
+    fireEvent.click(
+      screen.getByRole("menuitemcheckbox", { name: /dana@example.com/ }),
+    );
+    expect(screen.queryByText("Unrecognised failure")).toBeNull();
+    expect(screen.getAllByText("Password-protected document")).toHaveLength(2);
+
+    // Second facet chains on top: dana AND raised-in-policy.
+    fireEvent.click(
+      screen.getByRole("button", { name: "Raised in", expanded: false }),
+    );
+    fireEvent.click(
+      screen.getByRole("menuitemcheckbox", { name: /Policy run/ }),
+    );
+    expect(screen.getAllByText("Password-protected document")).toHaveLength(1);
+  });
+
+  it("matches the search text against the raw diagnostic", async () => {
+    fetchFileRunEvents.mockResolvedValue([
+      event(),
+      event({
+        id: "fre-2",
+        detail: "AI engine returned error: 502",
+        kindId: "UNKNOWN",
+        titleKey: "portal.failures.kind.unknown.title",
+        descriptionKey: "portal.failures.kind.unknown.description",
+        defaultTitle: "Unrecognised failure",
+      }),
+    ]);
+
+    render(<FileRunEventList />);
+    await screen.findByText("Unrecognised failure");
+
+    fireEvent.change(
+      screen.getByRole("textbox", {
+        name: "Search issues, users and errors",
+      }),
+      {
+        target: { value: "502" },
+      },
+    );
+
+    expect(screen.queryByText("Password-protected document")).toBeNull();
+    expect(screen.getByText("Unrecognised failure")).toBeTruthy();
+  });
+
+  it("says nothing needs attention, not that no errors exist", async () => {
     fetchFileRunEvents.mockResolvedValue([]);
 
     render(<FileRunEventList />);
 
-    expect(await screen.findByText("No failures recorded")).toBeTruthy();
+    expect(
+      await screen.findByText("Nothing needs your attention"),
+    ).toBeTruthy();
   });
 
-  it("renders nothing when the server has no failure registry", async () => {
-    // A core-only build has no such route, which is not worth showing a reviewer as
-    // an error, so the section stays silent.
+  it("explains itself rather than erroring when the server has no failure registry", async () => {
+    // A core-only build has no such route, which is no reviewer's problem.
     fetchFileRunEvents.mockRejectedValue(new Error("404"));
 
-    const { container } = render(<FileRunEventList />);
+    render(<FileRunEventList />);
 
-    await waitFor(() => {
-      expect(container.querySelector(".portal-failures__list")).toBeNull();
-    });
-    expect(screen.queryByText("No failures recorded")).toBeNull();
+    expect(await screen.findByText("Nothing to review")).toBeTruthy();
+    expect(screen.queryByText("Nothing needs your attention")).toBeNull();
   });
 
-  it("renders no heading at all for a caller the server refuses", async () => {
-    // Reviewing is leader-only, so a member's read returns 403. With no dev panel to
-    // frame, the whole section goes rather than leaving a bare heading.
-    vi.stubEnv("DEV", false);
+  it("says so for a caller the server refuses", async () => {
+    // Leader-only, so a member's read 403s; a whole screen must say why it is empty.
     fetchFileRunEvents.mockRejectedValue(new Error("403"));
 
     const { container } = render(<FileRunEventList />);
 
-    await waitFor(() => {
-      expect(container.querySelector(".portal-failures")).toBeNull();
-    });
-    // No section, and specifically no heading: Mantine puts its <style> tags in
-    // the container, so "renders nothing" is asserted on our own output.
-    expect(screen.queryByRole("heading")).toBeNull();
-    expect(container.querySelector(".portal-failures__debug")).toBeNull();
+    expect(await screen.findByText("Nothing to review")).toBeTruthy();
+    expect(container.querySelector(".sui-datatable")).toBeNull();
   });
 
   it("replaces the acted-on row in place using the server's response", async () => {
@@ -216,10 +352,9 @@ describe("FileRunEventList", () => {
     );
 
     render(<FileRunEventList />);
-    const button = await screen.findByRole("button", {
-      name: "Acknowledge",
-    });
-    button.click();
+    await screen.findByText("Password-protected document");
+    fireEvent.click(screen.getByRole("button", { name: "More options" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Acknowledge" }));
 
     await waitFor(() => {
       expect(applyFileRunEventAction).toHaveBeenCalledWith(
@@ -232,22 +367,106 @@ describe("FileRunEventList", () => {
     expect(fetchFileRunEvents).toHaveBeenCalledTimes(1);
   });
 
-  it("brings itself into view when a notification links to it", async () => {
-    // It sits below the review queue, so landing on the page is not the same as seeing it.
-    fetchFileRunEvents.mockResolvedValue([event()]);
+  it("keeps Dismiss as every row's second button", async () => {
+    fetchFileRunEvents.mockResolvedValue([
+      event({
+        actions: [
+          offer({}),
+          offer({
+            id: "DISMISS",
+            labelKey: "portal.failures.action.dismiss",
+            defaultLabel: "Dismiss",
+            slot: "OVERFLOW",
+          }),
+        ],
+      }),
+    ]);
+    applyFileRunEventAction.mockResolvedValue(
+      event({ status: "DISMISSED", statusActor: "me@example.com" }),
+    );
 
-    render(<FileRunEventList />, "/processor/documents#failures");
+    render(<FileRunEventList />);
+    await screen.findByText("Password-protected document");
 
-    await waitFor(() => expect(scrollIntoView).toHaveBeenCalled());
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    await waitFor(() => {
+      expect(applyFileRunEventAction).toHaveBeenCalledWith("fre-1", "DISMISS");
+    });
   });
 
-  it("stays where it is on an ordinary visit to the page", async () => {
+  it("reads the closed queue when the reader switches scope", async () => {
     fetchFileRunEvents.mockResolvedValue([event()]);
 
     render(<FileRunEventList />);
-
     await screen.findByText("Password-protected document");
-    expect(scrollIntoView).not.toHaveBeenCalled();
+    expect(fetchFileRunEvents).toHaveBeenLastCalledWith(
+      expect.objectContaining({ closed: false }),
+    );
+
+    fetchFileRunEvents.mockResolvedValue([
+      event({ status: "DISMISSED", statusActor: "ops@example.com" }),
+    ]);
+    fireEvent.click(screen.getByRole("radio", { name: "Closed" }));
+
+    await waitFor(() =>
+      expect(fetchFileRunEvents).toHaveBeenLastCalledWith(
+        expect.objectContaining({ closed: true }),
+      ),
+    );
+  });
+
+  it("shows how a closed failure was settled, and by whom", async () => {
+    fetchFileRunEvents.mockResolvedValueOnce([]);
+    fetchFileRunEvents.mockResolvedValue([
+      event({ status: "DISMISSED", statusActor: "ops@example.com" }),
+      event({ id: "fre-2", status: "FILE_REMOVED", statusActor: null }),
+    ]);
+
+    render(<FileRunEventList />);
+    fireEvent.click(screen.getByRole("radio", { name: "Closed" }));
+
+    expect(await screen.findByText("Dismissed")).toBeTruthy();
+    expect(screen.getByText("File deleted")).toBeTruthy();
+    expect(screen.getByText("ops@example.com")).toBeTruthy();
+    // Nobody closed it by hand, so the actor column names the system instead.
+    expect(screen.getByText("Stirling")).toBeTruthy();
+  });
+
+  it("offers no outcome column while the open queue is showing", async () => {
+    fetchFileRunEvents.mockResolvedValue([event()]);
+
+    render(<FileRunEventList />);
+    await screen.findByText("Password-protected document");
+
+    expect(screen.queryByRole("columnheader", { name: /outcome/i })).toBeNull();
+  });
+
+  it("takes a dismissed row out of the open queue rather than greying it in place", async () => {
+    fetchFileRunEvents.mockResolvedValue([
+      event({
+        actions: [
+          offer({
+            id: "DISMISS",
+            labelKey: "portal.failures.action.dismiss",
+            defaultLabel: "Dismiss",
+            slot: "OVERFLOW",
+          }),
+        ],
+      }),
+    ]);
+    applyFileRunEventAction.mockResolvedValue(
+      event({ status: "DISMISSED", statusActor: "me@example.com" }),
+    );
+
+    render(<FileRunEventList />);
+    await screen.findByText("Password-protected document");
+    fireEvent.click(screen.getByRole("button", { name: "Dismiss" }));
+
+    // It belongs to the closed queue now, so the open one must stop listing it.
+    await waitFor(() =>
+      expect(screen.queryByText("Password-protected document")).toBeNull(),
+    );
   });
 
   it("re-reads from the server when an action is refused", async () => {
@@ -256,10 +475,9 @@ describe("FileRunEventList", () => {
     applyFileRunEventAction.mockRejectedValue(new Error("409"));
 
     render(<FileRunEventList />);
-    const button = await screen.findByRole("button", {
-      name: "Acknowledge",
-    });
-    button.click();
+    await screen.findByText("Password-protected document");
+    fireEvent.click(screen.getByRole("button", { name: "More options" }));
+    fireEvent.click(screen.getByRole("menuitem", { name: "Acknowledge" }));
 
     await waitFor(() => {
       expect(fetchFileRunEvents).toHaveBeenCalledTimes(2);

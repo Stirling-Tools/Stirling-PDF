@@ -323,7 +323,10 @@ export function FolderProvider({ children }: FolderProviderProps) {
     };
   }, []);
 
+  const serverSnapshotVersion = useRef(0);
+
   const refresh = useCallback(async () => {
+    const versionAtStart = serverSnapshotVersion.current;
     setLoading(true);
     try {
       // Three systems of record behind one list; kind says which rules a row follows.
@@ -333,7 +336,15 @@ export function FolderProvider({ children }: FolderProviderProps) {
         localFolderStorage.getAllFolders(),
       ]);
       if (!mountedRef.current) return;
-      setFolders([...server, ...virtual, ...local]);
+      setFolders((current) =>
+        serverSnapshotVersion.current === versionAtStart
+          ? [...server, ...virtual, ...local]
+          : [
+              ...current.filter((folder) => folderKind(folder) === "server"),
+              ...virtual,
+              ...local,
+            ],
+      );
     } catch (err) {
       console.error("[FolderContext] cache read failed", err);
       if (mountedRef.current) {
@@ -404,6 +415,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         console.warn("[FolderContext] cache replace failed", cacheErr);
       }
       if (mountedRef.current) {
+        serverSnapshotVersion.current += 1;
         // Server-wins is for server rows: the other kinds have no server copy.
         setFolders((prev) => [
           ...remote,
@@ -971,15 +983,21 @@ export function FolderProvider({ children }: FolderProviderProps) {
         additions.push([parentId, record]);
         parentId = record.id;
       }
+      // The rebuilt chain has to end at the id asked for: a path that normalises to
+      // a different one registers nothing the caller can find, leaving it to ask
+      // again on every folder change.
+      if (parentId !== id) return false;
       setDiskSubfolders((prev) => {
-        const next = new Map(prev);
+        let next: typeof prev | null = null;
         for (const [parent, record] of additions) {
-          const siblings = next.get(parent) ?? [];
-          if (!siblings.some((f) => f.id === record.id)) {
-            next.set(parent, [...siblings, record]);
-          }
+          const siblings = (next ?? prev).get(parent) ?? [];
+          if (siblings.some((f) => f.id === record.id)) continue;
+          next = next ?? new Map(prev);
+          next.set(parent, [...siblings, record]);
         }
-        return next;
+        // Unchanged has to mean unchanged: a fresh Map rebuilds `folders`, which
+        // re-runs the effects that resolve a path - straight back into here.
+        return next ?? prev;
       });
       return true;
     },

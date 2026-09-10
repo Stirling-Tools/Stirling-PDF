@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { AutomationConfig } from "@app/services/automationStorage";
 import { SuggestedAutomation } from "@app/types/automation";
+import { iconKeyForSuggestedAutomation } from "@app/components/tools/automate/suggestedAutomationIcon";
 
 export interface SavedAutomation extends AutomationConfig {}
 
@@ -59,27 +60,11 @@ export function useSavedAutomations() {
         const { automationStorage } =
           await import("@app/services/automationStorage");
 
-        // Map suggested automation icons to MUI icon keys
-        const getIconKey = (_suggestedIcon: { id: string }): string => {
-          // Check the automation ID or name to determine the appropriate icon
-          switch (suggestedAutomation.id) {
-            case "secure-pdf-ingestion":
-            case "secure-workflow":
-              return "SecurityIcon"; // Security icon for security workflows
-            case "email-preparation":
-              return "CompressIcon"; // Compression icon
-            case "process-images":
-              return "StarIcon"; // Star icon for process images
-            default:
-              return "SettingsIcon"; // Default fallback
-          }
-        };
-
         // Convert suggested automation to saved automation format
         const savedAutomation = {
           name: suggestedAutomation.name,
           description: suggestedAutomation.description,
-          icon: getIconKey(suggestedAutomation.icon),
+          icon: iconKeyForSuggestedAutomation(suggestedAutomation.id),
           operations: suggestedAutomation.operations,
         };
 

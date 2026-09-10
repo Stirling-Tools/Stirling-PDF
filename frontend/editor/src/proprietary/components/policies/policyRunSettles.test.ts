@@ -9,7 +9,7 @@ import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
  */
 const run = (overrides: Partial<PolicyRunRecord> = {}): PolicyRunRecord => ({
   runId: "r",
-  categoryId: "security",
+  policyKey: "security",
   fileId: "f",
   fileName: "f.pdf",
   fileSize: 1,
@@ -44,7 +44,7 @@ describe("finishedWithNothingToDeliver", () => {
 
   it("leaves classification alone - it settles via its own label path", () => {
     expect(
-      finishedWithNothingToDeliver(run({ categoryId: "classification" })),
+      finishedWithNothingToDeliver(run({ policyKey: "classification" })),
     ).toBe(false);
   });
 });
