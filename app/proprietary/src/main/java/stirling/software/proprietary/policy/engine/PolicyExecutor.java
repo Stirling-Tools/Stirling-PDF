@@ -19,6 +19,7 @@ import org.springframework.util.MultiValueMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
@@ -130,8 +131,11 @@ public class PolicyExecutor {
         if (toolMetadataService.isMultiInput(step.operation())) {
             // One call over all inputs. The outputs derive from a single input only when exactly
             // one entered; otherwise (a genuine merge) there is no single source.
-            ToolResult r = callEndpoint(step, inputFiles, supportingFiles);
             Integer origin = inputOrigins.size() == 1 ? inputOrigins.getFirst() : null;
+            ToolResult r;
+            try (AutomationRunContext.Scope doc = documentScope(origin)) {
+                r = callEndpoint(step, inputFiles, supportingFiles);
+            }
             for (Resource file : r.files()) {
                 files.add(file);
                 origins.add(origin);
@@ -150,7 +154,10 @@ public class PolicyExecutor {
             // same source.
             for (int k = 0; k < inputFiles.size(); k++) {
                 Integer origin = inputOrigins.get(k);
-                ToolResult r = callEndpoint(step, List.of(inputFiles.get(k)), supportingFiles);
+                ToolResult r;
+                try (AutomationRunContext.Scope doc = documentScope(origin)) {
+                    r = callEndpoint(step, List.of(inputFiles.get(k)), supportingFiles);
+                }
                 for (Resource file : r.files()) {
                     files.add(file);
                     origins.add(origin);
@@ -161,6 +168,20 @@ public class PolicyExecutor {
             }
         }
         return new StepOutput(files, origins, report);
+    }
+
+    /**
+     * Per-document scope for one dispatch so a linked instance bills each source document once
+     * within a multi-document run (its transform chain shares this key and collapses). No-op with
+     * no single origin (a genuine merge) or outside a run - those fall back to run-level or
+     * per-call metering. The id is run-scoped so it never collides across runs.
+     */
+    private static AutomationRunContext.Scope documentScope(Integer origin) {
+        String runId = AutomationRunContext.current();
+        if (runId == null || origin == null) {
+            return () -> {};
+        }
+        return AutomationRunContext.openDocument(runId + ":" + origin);
     }
 
     /**

@@ -306,6 +306,39 @@ class InstanceEntitlementInterceptorTest {
         verify(meter).accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull());
     }
 
+    @Test
+    void multiDocumentRunChargesPerDocumentNotPerRun() throws Exception {
+        // Two source documents in one run carry distinct document ids, so each accrues under its
+        // own
+        // key: the meter collapses a document's steps but bills the documents separately (matching
+        // SaaS per-document lineage), rather than collapsing the whole run to a single charge.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        for (String docId : List.of("run-1:0", "run-1:0", "run-1:1")) {
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            req.addHeader("X-Stirling-Automation", "true");
+            req.addHeader("X-Stirling-Run-Id", "run-1");
+            req.addHeader("X-Stirling-Document-Id", docId);
+            MockHttpServletResponse resp = new MockHttpServletResponse();
+            interceptor.preHandle(req, resp, new Object());
+            interceptor.afterCompletion(req, resp, new Object(), null);
+        }
+
+        // Keyed on the document id, not the run id: document run-1:0's two steps both accrue under
+        // it (the meter dedups them), and run-1:1 accrues under its own key.
+        verify(meter, times(2))
+                .accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1:0"));
+        verify(meter).accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1:1"));
+    }
+
     private static void authenticateWithApiKey() {
         ApiKeyAuthenticationToken token =
                 new ApiKeyAuthenticationToken(

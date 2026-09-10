@@ -150,6 +150,20 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         return runId != null && !runId.isBlank() ? runId : null;
     }
 
+    /**
+     * The per-document id ({@link AutomationRunContext#DOCUMENT_ID_HEADER}) on a genuine internal
+     * dispatch, else {@code null} - same automation-header trust boundary as {@link
+     * #automationRunId}. Present only on a multi-document run's per-file dispatch, so each source
+     * document bills once while distinct documents in the run bill separately.
+     */
+    private static String automationDocumentId(HttpServletRequest request) {
+        if (request.getHeader(InternalApiClient.AUTOMATION_HEADER) == null) {
+            return null;
+        }
+        String documentId = request.getHeader(AutomationRunContext.DOCUMENT_ID_HEADER);
+        return documentId != null && !documentId.isBlank() ? documentId : null;
+    }
+
     @Override
     public void afterCompletion(
             HttpServletRequest request,
@@ -192,12 +206,17 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             InstanceEntitlement ent,
             UsageMeterService meter) {
         UnitCalcPolicy policy = ent.unitCalcPolicy();
-        String runId = automationRunId(request);
+        // Prefer the per-document key so each source document in a multi-document run bills once;
+        // fall back to the whole-run key for automation sub-steps that carry no document id.
+        String runKey = automationDocumentId(request);
+        if (runKey == null) {
+            runKey = automationRunId(request);
+        }
         MultipartHttpServletRequest mreq =
                 WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
         if (mreq == null) {
             long fileless = DocumentUnitCalculator.unitsForFile(0, 0, policy);
-            meter.accrue(ent.periodStart(), category, fileless, runId);
+            meter.accrue(ent.periodStart(), category, fileless, runKey);
             return;
         }
         List<TempFile> temps = new ArrayList<>();
@@ -242,8 +261,8 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             // every
             // input hashed, since a partial signature could collide with a different input set.
             String dedupKey =
-                    runId != null
-                            ? runId
+                    runKey != null
+                            ? runKey
                             : (fileCount > 0 && hashes.size() == fileCount
                                     ? opSignature(hashes)
                                     : null);
