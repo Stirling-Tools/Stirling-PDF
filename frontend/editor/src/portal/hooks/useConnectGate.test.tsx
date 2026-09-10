@@ -44,7 +44,22 @@ const settled = async (expected: string) =>
   waitFor(() => expect(screen.getByTestId("state").textContent).toBe(expected));
 
 describe("useConnectGate", () => {
-  beforeEach(() => json.mockReset());
+  beforeEach(() => {
+    json.mockReset();
+  });
+
+  it("does not require an instance status or configuration check on SaaS", async () => {
+    json.mockRejectedValue(new Error("No local instance"));
+    render(
+      <PortalTestProviders>
+        <UIProvider>
+          <Probe />
+        </UIProvider>
+      </PortalTestProviders>,
+    );
+    await settled("unavailable:open");
+    expect(json).not.toHaveBeenCalled();
+  });
 
   it("gates an unlinked instance that can link", async () => {
     json.mockResolvedValue({ accountLinkAvailable: true });
