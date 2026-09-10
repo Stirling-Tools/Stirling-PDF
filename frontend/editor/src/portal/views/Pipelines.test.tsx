@@ -62,6 +62,7 @@ vi.mock("@portal/api/policies", async (importOriginal) => {
 // pipelines list.
 vi.mock("@portal/queries/policies", () => ({
   usePoliciesOverview: () => ({ data: null, loading: false, error: null }),
+  usePolicyRuns: () => ({ data: [], loading: false, error: null }),
 }));
 
 const RESPONSE: PipelinesOverviewResponse = {

@@ -163,7 +163,7 @@ function isOrderedSubset<T>(inner: T[], outer: T[]): boolean {
  */
 export function parseSimplePolicy(
   policy: Policy,
-  runs: PolicyRunView[] = [],
+  runs: PolicyRunView[],
 ): CatalogueEntry | null {
   const rawCategory = policy.output?.options?.categoryId;
   const categoryId = typeof rawCategory === "string" ? rawCategory : "";

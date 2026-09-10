@@ -7,7 +7,7 @@ import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { useSectionFlags } from "@portal/hooks/useAsync";
 import { usePipelines } from "@portal/queries/pipelines";
-import { usePoliciesOverview } from "@portal/queries/policies";
+import { usePoliciesOverview, usePolicyRuns } from "@portal/queries/policies";
 import {
   fetchPipeline,
   savePipeline,
@@ -50,6 +50,8 @@ export function Pipelines() {
   const { isLoading: listLoading } = useSectionFlags(listState);
 
   const catalogueState = usePoliciesOverview();
+  // Shares the cache entry the catalogue already fills, so opening a row costs no fetch.
+  const runsState = usePolicyRuns();
   const { data: catalogueData } = catalogueState;
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
@@ -122,7 +124,7 @@ export function Pipelines() {
     setPageError(null);
     try {
       const policy = await fetchPipeline(view.id);
-      const entry = parseSimplePolicy(policy);
+      const entry = parseSimplePolicy(policy, runsState.data ?? []);
       if (entry) setDetail(entry);
       else navigate(`${listPath}/${view.id}`);
     } catch (e) {

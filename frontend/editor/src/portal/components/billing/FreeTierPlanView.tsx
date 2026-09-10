@@ -126,9 +126,6 @@ function FreeTierMeter({ balance }: { balance: FreeTierBalance }) {
     <Card padding="loose">
       <div className="portal-billing__subscription-head">
         <div>
-          <span className="portal-billing__eyebrow">
-            {t("portal.usage.freeTier.eyebrow", "This server")}
-          </span>
           <h2 className="portal-billing__meter-title">
             {t(
               "portal.usage.freeTier.title",
@@ -139,12 +136,6 @@ function FreeTierMeter({ balance }: { balance: FreeTierBalance }) {
               },
             )}
           </h2>
-          <p className="portal-billing__section-sub">
-            {t(
-              "portal.usage.freeTier.sub",
-              "Metered here on the server, with no Stirling account involved. Connect one for a further monthly allowance and more users.",
-            )}
-          </p>
         </div>
       </div>
       <div className="portal-billing__trial-meter">
