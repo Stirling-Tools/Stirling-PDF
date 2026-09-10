@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Semaphore;
 
 import org.slf4j.MDC;
 import org.springframework.core.io.Resource;
@@ -79,7 +80,7 @@ public class PolicyEngine {
 
     // errorCode marking a run that was never admitted (job queue full under load). Transient: the
     // client treats it as "busy" and retries, rather than as a terminal processing failure.
-    private static final String QUEUE_FULL_CODE = "POLICY_QUEUE_FULL";
+    static final String QUEUE_FULL_CODE = "POLICY_QUEUE_FULL";
 
     private final PolicyExecutor stepExecutor;
     private final TaskManager taskManager;
@@ -135,11 +136,8 @@ public class PolicyEngine {
             PolicyInputs inputs,
             PolicyProgressListener listener,
             String policyId) {
-        // Ad-hoc run (no stored policy): bill whoever kicked it off and own the outputs as them
-        // too.
-        // Capture the principal on this (request) thread — it does not survive the hop onto the
-        // async
-        // worker.
+        // Ad-hoc run (no stored policy): bill whoever kicked it off and own its outputs as them.
+        // Captured on this request thread, which the async worker does not inherit.
         String principal = currentActingPrincipal();
         return submitForPrincipal(
                 principal,
@@ -149,6 +147,7 @@ public class PolicyEngine {
                 definition,
                 inputs,
                 listener,
+                null,
                 null,
                 null);
     }
@@ -172,6 +171,20 @@ public class PolicyEngine {
             PolicyProgressListener listener,
             String sourceId,
             String fileIdentity) {
+        return runPolicy(policy, inputs, listener, sourceId, fileIdentity, null);
+    }
+
+    /**
+     * As above, pacing execution through {@code admission}: runs register immediately (pending) but
+     * execute only while holding a permit. Null means ungated.
+     */
+    public PolicyRunHandle runPolicy(
+            Policy policy,
+            PolicyInputs inputs,
+            PolicyProgressListener listener,
+            String sourceId,
+            String fileIdentity,
+            Semaphore admission) {
         // Bill the policy owner: trigger-fired runs have no security context, and the async worker
         // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
         // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
@@ -208,7 +221,8 @@ public class PolicyEngine {
                 resolved,
                 listener,
                 sourceId,
-                fileIdentity);
+                fileIdentity,
+                admission);
     }
 
     private PolicyRunHandle submitForPrincipal(
@@ -220,7 +234,8 @@ public class PolicyEngine {
             PolicyInputs inputs,
             PolicyProgressListener listener,
             String sourceId,
-            String fileIdentity) {
+            String fileIdentity,
+            Semaphore admission) {
         // Scope the run id to the current user (this request thread) so the file-download
         // ownership check passes. No-op when security is off.
         String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
@@ -245,7 +260,27 @@ public class PolicyEngine {
                                 billingPrincipal,
                                 fileOwner,
                                 definition.name(),
-                                () -> runToCompletion(run, inputs, tracking, completion));
+                                () -> {
+                                    // Pacing gate: park (cheap on a virtual thread, and the run
+                                    // honestly reads as pending) until a slot frees up.
+                                    if (admission != null) {
+                                        try {
+                                            admission.acquire();
+                                        } catch (InterruptedException e) {
+                                            // Shutdown while parked: never ran, never will.
+                                            Thread.currentThread().interrupt();
+                                            completion.completeExceptionally(e);
+                                            return;
+                                        }
+                                    }
+                                    try {
+                                        runToCompletion(run, inputs, tracking, completion);
+                                    } finally {
+                                        if (admission != null) {
+                                            admission.release();
+                                        }
+                                    }
+                                });
 
         // One admission unit per run; steps run synchronously within it, so this gates heavy work
         // without the pool-within-pool risk of queueing each tool call.
@@ -285,6 +320,28 @@ public class PolicyEngine {
         return cancelled;
     }
 
+    /**
+     * Cancel every non-terminal run of one policy; returns how many transitioned. Pending runs die
+     * before starting; one inside a tool call finishes that call, then settles as cancelled.
+     */
+    public int cancelAllFor(String policyId) {
+        int cancelled = 0;
+        for (PolicyRun run : registry.all()) {
+            if (policyId.equals(run.getPolicyId()) && run.cancel()) {
+                taskManager.addNote(run.getRunId(), "Run cancelled by revert");
+                cancelled++;
+            }
+        }
+        return cancelled;
+    }
+
+    /** Whether any run of this policy has not yet reached a terminal state. */
+    public boolean hasActiveRuns(String policyId) {
+        return registry.all().stream()
+                .anyMatch(
+                        run -> policyId.equals(run.getPolicyId()) && !run.getStatus().isTerminal());
+    }
+
     /** Resume a run paused in {@code WAITING_FOR_INPUT}. Not yet implemented. */
     public String resume(String runId, List<Resource> additionalInputs) {
         throw new UnsupportedOperationException("Pause/resume is not yet implemented");
@@ -301,10 +358,19 @@ public class PolicyEngine {
         // a single charge, and two separate policy runs on the same document stay distinct charges.
         try (AutomationRunContext.Scope runScope = AutomationRunContext.open(runId)) {
             try {
-                run.markRunning();
+                if (!run.markRunning()) {
+                    // Cancelled before it started: nothing runs, nothing delivers.
+                    return;
+                }
                 PolicyExecutionResult result =
                         stepExecutor.execute(run.getDefinition(), inputs, listener);
-                List<ResultFile> outputs = deliver(run, runId, result.files());
+                if (!run.beginDelivery()) {
+                    // Cancelled while the steps ran: discard the produced files —
+                    // delivering would stamp results over files being restored right now.
+                    taskManager.addNote(runId, "Cancelled before delivery; results discarded");
+                    return;
+                }
+                List<ResultFile> outputs = deliver(run, runId, inputs, result.files());
                 taskManager.setMultipleFileResults(runId, outputs);
                 taskManager.setComplete(runId);
                 run.complete(outputs);
@@ -461,9 +527,10 @@ public class PolicyEngine {
      * destination that claims it (a file no rule claims falls back to the run's outputs). Files are
      * grouped by destination so a sink - which sets up a connection per call - is called once each.
      */
-    private List<ResultFile> deliver(PolicyRun run, String runId, List<Resource> files)
+    private List<ResultFile> deliver(
+            PolicyRun run, String runId, PolicyInputs inputs, List<Resource> files)
             throws IOException {
-        OutputDelivery delivery = new OutputDelivery(runId, run.getPolicyId());
+        OutputDelivery delivery = new OutputDelivery(runId, run.getPolicyId(), inputs);
         List<OutputSpec> fallback = run.getDefinition().outputs();
         if (fallback.isEmpty()) {
             // No destinations means inline delivery (results returned to the caller), preserving
@@ -536,7 +603,7 @@ public class PolicyEngine {
      * controller audit aspect on request threads). We reuse it to carry the billing identity onto
      * the policy worker thread.
      */
-    private static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
+    public static final String AUDIT_PRINCIPAL_MDC_KEY = "auditPrincipal";
 
     /**
      * The username to bill an ad-hoc run to, captured on the submitting (request) thread. Prefers

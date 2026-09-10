@@ -403,6 +403,7 @@ class PolicyValidatorTest {
                 List.of(),
                 null,
                 null,
+                null,
                 List.of(rules));
     }
 

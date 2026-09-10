@@ -18,6 +18,8 @@ public record Policy(
         List<String> outputIds,
         Long teamId,
         EditorConfig editor,
+        /** The owning product surface; {@link #SURFACE_POLICY} unless stamped otherwise. */
+        String surface,
         List<RoutingRule> routingRules) {
 
     public Policy {
@@ -27,8 +29,15 @@ public record Policy(
         output = output == null ? OutputSpec.inline() : output;
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
         editor = editor == null ? EditorConfig.disabled() : editor;
+        surface = surface == null || surface.isBlank() ? SURFACE_POLICY : surface;
         routingRules = routingRules == null ? List.of() : List.copyOf(routingRules);
     }
+
+    /** The record belongs to the org policies surface (the default). */
+    public static final String SURFACE_POLICY = "policy";
+
+    /** The record is a processing-folder pair, served only by its own route. */
+    public static final String SURFACE_PROCESSING_FOLDER = "processing-folder";
 
     /**
      * Without the {@code required} flag, {@code icon}, or editor participation: defaults to an
@@ -47,7 +56,19 @@ public record Policy(
             List<String> outputIds,
             Long teamId) {
         this(
-                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId, null,
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                null,
+                SURFACE_POLICY,
                 List.of());
     }
 
@@ -68,8 +89,20 @@ public record Policy(
             Long teamId,
             EditorConfig editor) {
         this(
-                id, name, owner, enabled, false, "", inputs, steps, output, outputIds, teamId,
-                editor, List.of());
+                id,
+                name,
+                owner,
+                enabled,
+                false,
+                "",
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                SURFACE_POLICY,
+                List.of());
     }
 
     /**
@@ -142,6 +175,7 @@ public record Policy(
                 outputIds,
                 teamId,
                 editor,
+                surface,
                 routingRules);
     }
 
@@ -160,6 +194,7 @@ public record Policy(
                 outputIds,
                 teamId,
                 editor,
+                surface,
                 routingRules);
     }
 
@@ -178,10 +213,28 @@ public record Policy(
                 newOutputIds,
                 teamId,
                 editor,
+                surface,
                 routingRules);
     }
 
-    /** A copy with different steps (e.g. classification prepended for a routing policy). */
+    public Policy withEnabled(boolean newEnabled) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                newEnabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules);
+    }
+
     public Policy withSteps(List<PipelineStep> newSteps) {
         return new Policy(
                 id,
@@ -196,6 +249,7 @@ public record Policy(
                 outputIds,
                 teamId,
                 editor,
+                surface,
                 routingRules);
     }
 
@@ -205,9 +259,27 @@ public record Policy(
      */
     public List<String> allOutputIds() {
         return Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
-                .filter(id -> id != null && !id.isBlank())
+                .filter(outputId -> outputId != null && !outputId.isBlank())
                 .distinct()
                 .toList();
+    }
+
+    public Policy withSurface(String newSurface) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                newSurface,
+                routingRules);
     }
 
     /**

@@ -32,6 +32,7 @@ class ClassificationStepPlannerTest {
                 List.of(),
                 null,
                 null,
+                null,
                 List.of(rules));
     }
 

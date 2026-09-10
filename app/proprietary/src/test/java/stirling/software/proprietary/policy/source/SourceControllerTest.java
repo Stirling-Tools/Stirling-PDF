@@ -300,6 +300,7 @@ class SourceControllerTest {
                 List.of(),
                 null,
                 null,
+                null,
                 List.of(
                         new RoutingRule(
                                 "classification.labels",
