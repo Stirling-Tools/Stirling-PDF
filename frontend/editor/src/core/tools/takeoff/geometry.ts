@@ -4,6 +4,7 @@ import type {
   TakeoffMaterial,
   TakeoffPageScale,
   TakeoffPoint,
+  TakeoffViewport,
 } from "@app/tools/takeoff/types";
 
 export function distance(a: TakeoffPoint, b: TakeoffPoint): number {
@@ -53,6 +54,33 @@ function unitsPerPoint(scale: TakeoffPageScale): number {
   return scale.real / scale.pointsSpan;
 }
 
+function pointInRect(pt: TakeoffPoint, rect: TakeoffViewport["rect"]): boolean {
+  return (
+    pt.x >= rect.x &&
+    pt.x <= rect.x + rect.width &&
+    pt.y >= rect.y &&
+    pt.y <= rect.y + rect.height
+  );
+}
+
+// A viewport calibrates its own rectangular region of a page to a different
+// scale than the rest of the sheet (e.g. a 1:10 detail blow-up next to a
+// 1:50 elevation). Anything measured with a point inside a viewport's rect
+// uses that viewport's scale; everything else falls back to the page's own
+// scale, if any.
+export function resolveScale(
+  page: number,
+  point: TakeoffPoint,
+  pageScales: Record<number, TakeoffPageScale>,
+  viewports: TakeoffViewport[],
+): TakeoffPageScale | null {
+  const viewport = viewports.find(
+    (v) => v.page === page && pointInRect(point, v.rect),
+  );
+  if (viewport) return viewport.scale;
+  return pageScales[page] ?? null;
+}
+
 /** Reads the type of geometry a material owns, or null if it owns none. */
 export function ownAnnotationType(
   materialId: string,
@@ -78,12 +106,13 @@ function sumFlatArea(
   materialId: string,
   annotations: TakeoffAnnotation[],
   pageScales: Record<number, TakeoffPageScale>,
+  viewports: TakeoffViewport[],
   type: "area" | "volume" = "area",
 ): number {
   return annotations
     .filter((a) => a.materialId === materialId && a.type === type)
     .reduce((sum, a) => {
-      const scale = pageScales[a.page];
+      const scale = resolveScale(a.page, a.points[0], pageScales, viewports);
       if (!scale) return sum;
       const upp = unitsPerPoint(scale);
       return sum + polygonArea(a.points) * upp * upp;
@@ -109,6 +138,7 @@ export function computeValue(
   materials: TakeoffMaterial[],
   annotations: TakeoffAnnotation[],
   pageScales: Record<number, TakeoffPageScale>,
+  viewports: TakeoffViewport[],
 ): number | null {
   const own = annotations.filter((a) => a.materialId === material.id);
   const first = own[0];
@@ -117,12 +147,19 @@ export function computeValue(
   if (first.type === "count") return own.length;
 
   if (first.type === "area") {
-    const flat = sumFlatArea(material.id, annotations, pageScales, "area");
+    const flat = sumFlatArea(
+      material.id,
+      annotations,
+      pageScales,
+      viewports,
+      "area",
+    );
 
     const deducted = materials
       .filter((m) => m.deductsFromMaterialId === material.id)
       .reduce(
-        (sum, m) => sum + sumFlatArea(m.id, annotations, pageScales, "area"),
+        (sum, m) =>
+          sum + sumFlatArea(m.id, annotations, pageScales, viewports, "area"),
         0,
       );
 
@@ -137,7 +174,13 @@ export function computeValue(
   // volume: flat footprint area (no pitch/deduction — those are roof/opening
   // concepts specific to 'area' rows) x a per-row depth/height.
   if (first.type === "volume") {
-    const flat = sumFlatArea(material.id, annotations, pageScales, "volume");
+    const flat = sumFlatArea(
+      material.id,
+      annotations,
+      pageScales,
+      viewports,
+      "volume",
+    );
     return flat * (material.depthValue ?? 0);
   }
 
@@ -145,7 +188,7 @@ export function computeValue(
     return own
       .filter((a) => a.type === "perimeter" && a.points.length >= 2)
       .reduce((sum, a) => {
-        const scale = pageScales[a.page];
+        const scale = resolveScale(a.page, a.points[0], pageScales, viewports);
         if (!scale) return sum;
         return sum + polygonPerimeter(a.points) * unitsPerPoint(scale);
       }, 0);
@@ -173,7 +216,7 @@ export function computeValue(
         a.points.length >= 2,
     )
     .reduce((sum, a) => {
-      const scale = pageScales[a.page];
+      const scale = resolveScale(a.page, a.points[0], pageScales, viewports);
       if (!scale) return sum;
       return sum + distance(a.points[0], a.points[1]) * unitsPerPoint(scale);
     }, 0);

@@ -9,6 +9,8 @@ import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
 import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
+import CropOutlinedIcon from "@mui/icons-material/CropOutlined";
+import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -44,6 +46,8 @@ const Takeoff = (_props: BaseToolProps) => {
     numPages,
     zoom,
     currentScale,
+    pageViewports,
+    definingViewport,
     armedMaterialId,
     armedTool,
     selectedMaterialId,
@@ -52,6 +56,8 @@ const Takeoff = (_props: BaseToolProps) => {
     goToPage,
     changeZoom,
     armCalibration,
+    armViewport,
+    removeViewport,
     armTool,
     addMaterial,
     updateMaterial,
@@ -150,6 +156,53 @@ const Takeoff = (_props: BaseToolProps) => {
                 : t("takeoff.scaleNotSet", "Scale not set")}
           </Button>
         </Tooltip>
+
+        <Tooltip
+          multiline
+          w={260}
+          label={t(
+            "takeoff.viewportTooltip",
+            "Draw a rectangle around a detail that's printed at a different scale than the rest of the page, then calibrate a known length inside it — measurements inside that rectangle will use its own scale.",
+          )}
+        >
+          <Button
+            size="sm"
+            variant="quiet"
+            fullWidth
+            leftSection={<CropOutlinedIcon fontSize="small" />}
+            onClick={armViewport}
+          >
+            {definingViewport
+              ? t("takeoff.dragViewportRect", "Drag a rectangle…")
+              : t("takeoff.newViewport", "New viewport (different scale)")}
+          </Button>
+        </Tooltip>
+
+        {pageViewports.length > 0 && (
+          <Stack gap={2}>
+            {pageViewports.map((v) => (
+              <Group key={v.id} justify="space-between" gap="xs" wrap="nowrap">
+                <Text size="xs" c="dimmed" truncate>
+                  {t("takeoff.viewportRatio", "Viewport (≈1:{{ratio}})", {
+                    ratio: (() => {
+                      const ratio = estimateArchitecturalRatio(v.scale);
+                      return ratio ? Math.round(ratio) : "?";
+                    })(),
+                  })}
+                </Text>
+                <ActionIcon
+                  variant="quiet"
+                  accent="danger"
+                  size="sm"
+                  aria-label={t("takeoff.removeViewport", "Remove viewport")}
+                  onClick={() => removeViewport(v.id)}
+                >
+                  <DeleteOutlineOutlinedIcon fontSize="small" />
+                </ActionIcon>
+              </Group>
+            ))}
+          </Stack>
+        )}
 
         <Group justify="space-between" gap="xs">
           <Group gap={4}>

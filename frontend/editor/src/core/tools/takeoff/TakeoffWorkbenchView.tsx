@@ -8,6 +8,7 @@ import {
   distance,
   polygonArea,
   polygonPerimeter,
+  resolveScale,
 } from "@app/tools/takeoff/geometry";
 import type { TakeoffAnnotation, TakeoffPoint } from "@app/tools/takeoff/types";
 import { useTakeoffContext } from "@app/tools/takeoff/TakeoffContext";
@@ -207,6 +208,9 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
     calibrationValue,
     calibrationUnit,
     pageScales,
+    pageViewports,
+    definingViewport,
+    pendingViewportRect,
     selectedMaterialId,
     setSelectedMaterialId,
     setCalibrationValue,
@@ -282,11 +286,17 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
   const dragTooltipText = useMemo(() => {
     if (!dragState) return "";
     const pointsSpan = distance(dragState.start, dragState.current);
-    if (dragState.kind === "calibrate") return `${pointsSpan.toFixed(0)} pt`;
-    const scale = pageScales[pageIndex];
+    if (dragState.kind === "calibrate" || dragState.kind === "viewport-rect")
+      return `${pointsSpan.toFixed(0)} pt`;
+    const scale = resolveScale(
+      pageIndex,
+      dragState.start,
+      pageScales,
+      pageViewports,
+    );
     if (!scale) return t("takeoff.setScale", "set scale");
     return `${(pointsSpan * (scale.real / scale.pointsSpan)).toFixed(2)} ${scale.unit}`;
-  }, [dragState, pageScales, pageIndex, t]);
+  }, [dragState, pageScales, pageViewports, pageIndex, t]);
 
   const polygonTooltipText = useMemo(() => {
     if (inProgress.length === 0) return "";
@@ -297,7 +307,7 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
       return `${angleBetween(pts[0], pts[1], pts[2]).toFixed(1)}°`;
     }
     if (pts.length < 3) return `${pts.length} pt${pts.length === 1 ? "" : "s"}`;
-    const scale = pageScales[pageIndex];
+    const scale = resolveScale(pageIndex, pts[0], pageScales, pageViewports);
     if (!scale) return t("takeoff.setScale", "set scale");
     const upp = scale.real / scale.pointsSpan;
     if (armedTool === "perimeter") {
@@ -306,7 +316,15 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
     // area and volume both preview as an enclosed area — volume's depth
     // multiplier only applies once the shape is closed.
     return `${(polygonArea(pts) * upp * upp).toFixed(2)} ${scale.unit}²`;
-  }, [inProgress, hoverPoint, pageScales, pageIndex, t, armedTool]);
+  }, [
+    inProgress,
+    hoverPoint,
+    pageScales,
+    pageViewports,
+    pageIndex,
+    t,
+    armedTool,
+  ]);
 
   const tooltipAnchor = dragState
     ? dragState.current
@@ -342,7 +360,10 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
               style={{
                 position: "absolute",
                 inset: 0,
-                cursor: calibrating || armedMaterial ? "crosshair" : "default",
+                cursor:
+                  calibrating || definingViewport || armedMaterial
+                    ? "crosshair"
+                    : "default",
               }}
               onMouseDown={(e) => onCanvasMouseDown(eventToPagePoint(e))}
               onMouseMove={(e) => onCanvasMouseMove(eventToPagePoint(e))}
@@ -350,6 +371,20 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
               onClick={(e) => onCanvasClick(eventToPagePoint(e))}
               onDoubleClick={onCanvasDoubleClick}
             >
+              {pageViewports.map((v) => (
+                <rect
+                  key={v.id}
+                  x={v.rect.x * zoom}
+                  y={v.rect.y * zoom}
+                  width={v.rect.width * zoom}
+                  height={v.rect.height * zoom}
+                  fill="none"
+                  stroke="var(--c-text-muted)"
+                  strokeDasharray="8 4"
+                  strokeWidth={1.5}
+                />
+              ))}
+
               {visibleAnnotations.map((a) => (
                 <AnnotationShape
                   key={a.id}
@@ -374,7 +409,24 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
                 />
               )}
 
-              {dragState && (
+              {dragState && dragState.kind === "viewport-rect" && (
+                <rect
+                  x={Math.min(dragState.start.x, dragState.current.x) * zoom}
+                  y={Math.min(dragState.start.y, dragState.current.y) * zoom}
+                  width={
+                    Math.abs(dragState.current.x - dragState.start.x) * zoom
+                  }
+                  height={
+                    Math.abs(dragState.current.y - dragState.start.y) * zoom
+                  }
+                  fill="color-mix(in srgb, var(--c-primary) 10%, transparent)"
+                  stroke="var(--c-primary)"
+                  strokeDasharray="8 4"
+                  strokeWidth={2}
+                />
+              )}
+
+              {dragState && dragState.kind !== "viewport-rect" && (
                 <line
                   x1={dragState.start.x * zoom}
                   y1={dragState.start.y * zoom}
@@ -427,6 +479,11 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
               width: 320,
             }}
           >
+            {pendingViewportRect && (
+              <Text size="xs" c="dimmed" mb={2}>
+                {t("takeoff.viewportCalibrateHint", "For this viewport only")}
+              </Text>
+            )}
             <Text size="sm" fw={600} mb="xs">
               {t("takeoff.calibrateTitle", "What is this length in real life?")}
             </Text>

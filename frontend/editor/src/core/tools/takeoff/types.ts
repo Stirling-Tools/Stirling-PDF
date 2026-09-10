@@ -44,6 +44,25 @@ export interface TakeoffPageScale {
   source?: "manual" | "auto";
 }
 
+export interface TakeoffRect {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+// A rectangular region of one page calibrated to its own scale, independent
+// of that page's scale — for sheets that mix a detail at a different scale
+// (e.g. a 1:10 blow-up) alongside the main drawing. Any measurement whose
+// point falls inside a viewport's rect uses the viewport's scale instead of
+// the page's (see resolveScale in geometry.ts).
+export interface TakeoffViewport {
+  id: string;
+  page: number;
+  rect: TakeoffRect;
+  scale: TakeoffPageScale;
+}
+
 // A row is both a cost line and the on-plan measurement trigger — clicking
 // its Ruler/Area/Count button arms that row so the next draw on the plan
 // belongs to it.

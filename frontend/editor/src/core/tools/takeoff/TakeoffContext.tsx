@@ -30,6 +30,8 @@ import type {
   TakeoffMaterial,
   TakeoffPageScale,
   TakeoffPoint,
+  TakeoffRect,
+  TakeoffViewport,
 } from "@app/tools/takeoff/types";
 
 const DEFAULT_ZOOM = 1.2;
@@ -61,10 +63,19 @@ export function estimateArchitecturalRatio(
 }
 
 export type TakeoffDragState = {
-  kind: "length" | "radius" | "diameter" | "calibrate";
+  kind: "length" | "radius" | "diameter" | "calibrate" | "viewport-rect";
   start: TakeoffPoint;
   current: TakeoffPoint;
 };
+
+function rectFromCorners(start: TakeoffPoint, end: TakeoffPoint): TakeoffRect {
+  return {
+    x: Math.min(start.x, end.x),
+    y: Math.min(start.y, end.y),
+    width: Math.abs(end.x - start.x),
+    height: Math.abs(end.y - start.y),
+  };
+}
 
 // Tools drawn as a closed multi-point shape via click-to-add-point +
 // double-click-to-finish (as opposed to a single drag, or angle's
@@ -96,14 +107,16 @@ function recomputeIds(
   materials: TakeoffMaterial[],
   annotations: TakeoffAnnotation[],
   pageScales: Record<number, TakeoffPageScale>,
+  viewports: TakeoffViewport[],
 ): TakeoffMaterial[] {
   return materials.map((m) =>
     ids.has(m.id)
       ? {
           ...m,
           quantity:
-            roundTo2(computeValue(m, materials, annotations, pageScales)) ??
-            m.quantity,
+            roundTo2(
+              computeValue(m, materials, annotations, pageScales, viewports),
+            ) ?? m.quantity,
         }
       : m,
   );
@@ -129,6 +142,10 @@ interface TakeoffContextValue {
   visibleAnnotations: TakeoffAnnotation[];
   pageScales: Record<number, TakeoffPageScale>;
   currentScale: TakeoffPageScale | null;
+  viewports: TakeoffViewport[];
+  pageViewports: TakeoffViewport[];
+  definingViewport: boolean;
+  pendingViewportRect: TakeoffRect | null;
   pdfDoc: PDFDocumentProxy | null;
   pageIndex: number;
   numPages: number;
@@ -153,6 +170,8 @@ interface TakeoffContextValue {
 
   armTool: (materialId: string, tool: TakeoffAnnotationType) => void;
   armCalibration: () => void;
+  armViewport: () => void;
+  removeViewport: (id: string) => void;
   addMaterial: () => void;
   updateMaterial: (id: string, patch: Partial<TakeoffMaterial>) => void;
   removeMaterial: (id: string) => void;
@@ -206,6 +225,10 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
   const [pageScales, setPageScales] = useState<
     Record<number, TakeoffPageScale>
   >({});
+  const [viewports, setViewports] = useState<TakeoffViewport[]>([]);
+  const [definingViewport, setDefiningViewport] = useState(false);
+  const [pendingViewportRect, setPendingViewportRect] =
+    useState<TakeoffRect | null>(null);
 
   const [pdfDoc, setPdfDoc] = useState<PDFDocumentProxy | null>(null);
   const [pageIndex, setPageIndexRaw] = useState(0);
@@ -246,6 +269,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     setMaterials([]);
     setAnnotations([]);
     setPageScales({});
+    setViewports([]);
     setPageIndexRaw(0);
     setArmedMaterialId(null);
     setArmedTool(null);
@@ -296,6 +320,10 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     annotationsRef.current = annotations;
   }, [annotations]);
+  const viewportsRef = useRef(viewports);
+  useEffect(() => {
+    viewportsRef.current = viewports;
+  }, [viewports]);
 
   // Auto-detect this page's printed scale note (e.g. "1:100" or
   // '1/4" = 1'-0"') so most sheets never need a manual calibration drag.
@@ -322,6 +350,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
           materialsRef.current,
           annotationsRef.current,
           nextPageScales,
+          viewportsRef.current,
         ),
       );
     })();
@@ -334,6 +363,10 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     ? (materials.find((m) => m.id === armedMaterialId) ?? null)
     : null;
   const currentScale = pageScales[pageIndex] ?? null;
+  const pageViewports = useMemo(
+    () => viewports.filter((v) => v.page === pageIndex),
+    [viewports, pageIndex],
+  );
 
   const totalCost = useMemo(
     () =>
@@ -366,6 +399,8 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     setCalibrating(false);
     setCalibrationPrompt(null);
     setCalibrationValue("");
+    setDefiningViewport(false);
+    setPendingViewportRect(null);
   }
 
   function armTool(materialId: string, tool: TakeoffAnnotationType) {
@@ -374,7 +409,9 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
       return;
     }
     const needsScale = tool !== "count" && tool !== "angle";
-    if (needsScale && !pageScales[pageIndex]) {
+    const hasScale =
+      !!pageScales[pageIndex] || viewports.some((v) => v.page === pageIndex);
+    if (needsScale && !hasScale) {
       window.alert(
         t(
           "takeoff.setScaleFirst",
@@ -403,8 +440,31 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     setCalibrating(true);
   }
 
+  function armViewport() {
+    disarmAllTools();
+    setDefiningViewport(true);
+  }
+
+  function removeViewport(id: string) {
+    const nextViewports = viewports.filter((v) => v.id !== id);
+    setViewports(nextViewports);
+    setMaterials((prev) =>
+      recomputeIds(
+        new Set(prev.map((m) => m.id)),
+        prev,
+        annotations,
+        pageScales,
+        nextViewports,
+      ),
+    );
+  }
+
   function onCanvasMouseDown(pt: TakeoffPoint) {
     if (calibrationPrompt) return;
+    if (definingViewport) {
+      setDragStateRaw({ kind: "viewport-rect", start: pt, current: pt });
+      return;
+    }
     if (calibrating) {
       setDragStateRaw({ kind: "calibrate", start: pt, current: pt });
       return;
@@ -438,6 +498,17 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     if (!dragState) return;
     const { kind, start, current } = dragState;
     setDragStateRaw(null);
+    if (kind === "viewport-rect") {
+      const rect = rectFromCorners(start, current);
+      // A stray click-without-drag isn't a real rectangle — ignore it and
+      // stay in "defining viewport" mode rather than opening a calibration
+      // prompt for a zero-size region.
+      if (rect.width < 4 || rect.height < 4) return;
+      setDefiningViewport(false);
+      setPendingViewportRect(rect);
+      setCalibrating(true);
+      return;
+    }
     const pointsSpan = distance(start, current);
     // A stray click-without-drag isn't a real segment — ignore it and stay
     // armed (same as a failed calibration drag) rather than kicking the user
@@ -467,6 +538,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
         syncDefaultUnit(prev, armedMaterial.id, "lm"),
         nextAnnotations,
         pageScales,
+        viewports,
       ),
     );
     // Deliberately stays armed — matches Count, which already lets you place
@@ -495,6 +567,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
           syncDefaultUnit(prev, armedMaterial.id, "ea"),
           nextAnnotations,
           pageScales,
+          viewports,
         ),
       );
       return;
@@ -520,6 +593,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
           syncDefaultUnit(prev, armedMaterial.id, "°"),
           nextAnnotations,
           pageScales,
+          viewports,
         ),
       );
       setInProgress([]);
@@ -562,6 +636,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
         ),
         nextAnnotations,
         pageScales,
+        viewports,
       ),
     );
     setInProgress([]);
@@ -577,23 +652,48 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
         unit: calibrationUnit,
         source: "manual",
       };
-      const nextPageScales = { ...pageScales, [pageIndex]: nextScale };
-      setPageScales(nextPageScales);
-      setMaterials((prev) =>
-        recomputeIds(
-          new Set(prev.map((m) => m.id)),
-          prev,
-          annotations,
-          nextPageScales,
-        ),
-      );
+      if (pendingViewportRect) {
+        const nextViewports = [
+          ...viewports,
+          {
+            id: generateId(),
+            page: pageIndex,
+            rect: pendingViewportRect,
+            scale: nextScale,
+          },
+        ];
+        setViewports(nextViewports);
+        setMaterials((prev) =>
+          recomputeIds(
+            new Set(prev.map((m) => m.id)),
+            prev,
+            annotations,
+            pageScales,
+            nextViewports,
+          ),
+        );
+      } else {
+        const nextPageScales = { ...pageScales, [pageIndex]: nextScale };
+        setPageScales(nextPageScales);
+        setMaterials((prev) =>
+          recomputeIds(
+            new Set(prev.map((m) => m.id)),
+            prev,
+            annotations,
+            nextPageScales,
+            viewports,
+          ),
+        );
+      }
     }
+    setPendingViewportRect(null);
     setCalibrationPrompt(null);
     setCalibrationValue("");
     setCalibrating(false);
   }
 
   function cancelCalibration() {
+    setPendingViewportRect(null);
     setCalibrationPrompt(null);
     setCalibrationValue("");
     setCalibrating(false);
@@ -618,7 +718,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
         if (patch.deductsFromMaterialId) ids.add(patch.deductsFromMaterialId);
       }
       if (ids.size === 0) return next;
-      return recomputeIds(ids, next, annotations, pageScales);
+      return recomputeIds(ids, next, annotations, pageScales, viewports);
     });
   }
 
@@ -640,6 +740,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
         filtered,
         nextAnnotations,
         pageScales,
+        viewports,
       );
     });
     if (armedMaterialId === id) disarmAllTools();
@@ -656,6 +757,10 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     visibleAnnotations,
     pageScales,
     currentScale,
+    viewports,
+    pageViewports,
+    definingViewport,
+    pendingViewportRect,
     pdfDoc,
     pageIndex,
     numPages,
@@ -678,6 +783,8 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     setCalibrationUnit,
     armTool,
     armCalibration,
+    armViewport,
+    removeViewport,
     addMaterial,
     updateMaterial,
     removeMaterial,
