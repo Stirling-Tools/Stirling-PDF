@@ -6411,8 +6411,8 @@ renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing
 subheading = "Covers everyone you invite, in blocks of {{users}} users."
 subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
 userDelta = "+{{users}} users"
-userTotal = "{{users}} users"
 usersLabel = "Users"
+userTotal = "{{users}} users"
 
 [payment.emailStage]
 continue = "Continue"
@@ -6429,9 +6429,9 @@ billedYearly = "Billed yearly at {{currency}}{{amount}}"
 modalTitle = "Select Billing Period - {{planName}}"
 savePercent = "Save {{percent}}%"
 savingsAmount = "You save {{amount}}"
+selectedMonthly = "Monthly"
 selectMonthly = "Select Monthly"
 selectYearly = "Select Yearly"
-selectedMonthly = "Monthly"
 
 [payment.upgradeTeam]
 title = "Upgrade to Team"
@@ -7358,9 +7358,9 @@ viewAriaLabel = "View invoice {{number}} in Stripe"
 viewLink = "View ↗"
 
 [portal.billing.payment]
+billedTo = "Billed to"
 card = "{{brand}} ending {{last4}}"
 cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
-billedTo = "Billed to"
 invoicesTo = "Invoices go to"
 method = "Payment method"
 nextInvoice = "Next invoice"
