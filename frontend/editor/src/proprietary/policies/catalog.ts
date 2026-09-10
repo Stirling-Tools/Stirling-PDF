@@ -252,7 +252,8 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
     ],
     scopeLabel: "portal.policies.config.scopeAll",
     // Gate last, so it judges the document that actually ships. No flatten step: it rasterises
-    // whole pages, and an archive without a text layer is not an archive.
+    // whole pages, and an archive without a text layer is not an archive. Nothing writes to the
+    // document between the conversion and the gate, so what the gate passes is what was converted.
     defaultOperations: [
       // Hidden data is the usual disclosure route: strip scripts, attachments and both metadata
       // streams. Fonts stay - PDF/A requires them embedded.
@@ -261,7 +262,6 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
         removeXMPMetadata: true,
       }),
       policyStep("pdfa"),
-      policyStep("purviewApplyLabel"),
       policyStep("complianceCheck"),
     ],
     // No policy-level settings: what this policy does is the step chain, and nothing on the

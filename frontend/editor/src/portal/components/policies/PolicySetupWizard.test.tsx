@@ -45,8 +45,6 @@ const securityConfig = POLICY_CONFIG.security;
 const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
 const complianceConfig = POLICY_CONFIG.compliance;
 
-const PURVIEW_LABEL = "Apply a Microsoft Purview sensitivity label";
-
 function editEntry(steps: PipelineStep[]): CatalogueEntry {
   const policy: DecoratedPolicy = {
     category: security,
@@ -139,53 +137,6 @@ describe("PolicySetupWizard", () => {
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
     expect(result.sources).toEqual(["src-contracts"]);
     expect(result.extraOptions).toEqual({ automation: { name: "x" } });
-  });
-
-  it("hides the Purview step when no Purview tenant is connected", async () => {
-    fetchIntegrations.mockResolvedValue([]);
-    const entry: CatalogueEntry = {
-      category: compliance,
-      config: complianceConfig,
-      policy: null,
-    };
-
-    render(
-      <PolicySetupWizard
-        entry={entry}
-        onClose={vi.fn()}
-        onSubmit={vi.fn()}
-        onCustomise={vi.fn()}
-      />,
-    );
-
-    // Sanitize is in the same chain and always shows, so once it renders the chain has loaded.
-    await screen.findByText("Strip active content");
-    // The Purview option can only fail without a connection, so it is not offered at all.
-    expect(screen.queryByText(PURVIEW_LABEL)).toBeNull();
-  });
-
-  it("offers the Purview step once a Purview connection exists", async () => {
-    fetchIntegrations.mockResolvedValue([
-      { id: 1, name: "Corp Purview", integrationType: "PURVIEW", config: {} },
-    ]);
-    const entry: CatalogueEntry = {
-      category: compliance,
-      config: complianceConfig,
-      policy: null,
-    };
-
-    render(
-      <PolicySetupWizard
-        entry={entry}
-        onClose={vi.fn()}
-        onSubmit={vi.fn()}
-        onCustomise={vi.fn()}
-      />,
-    );
-
-    await waitFor(() =>
-      expect(screen.getByText(PURVIEW_LABEL)).toBeInTheDocument(),
-    );
   });
 
   it("seeds the preset chain for a new policy (redact + sanitize on, watermark off)", async () => {
@@ -319,8 +270,7 @@ describe("PolicySetupWizard", () => {
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
-    // Purview is absent: no tenant is connected in this test, so it is never offered. Flatten is
-    // absent too: it rasterises pages, which would leave the archive without a text layer.
+    // Flatten is absent: it rasterises pages, which would leave the archive without a text layer.
     expect(result.steps.map((s) => s.operation)).toEqual([
       "/api/v1/security/sanitize-pdf",
       "/api/v1/convert/pdf/pdfa",
