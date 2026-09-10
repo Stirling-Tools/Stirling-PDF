@@ -24,7 +24,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
@@ -222,8 +221,11 @@ class PaygBillingParityTest {
         InstanceEntitlementInterceptor selfHosted =
                 new InstanceEntitlementInterceptor(
                         gate, cache, meterProviderOf(meter), mock(TempFileManager.class));
-        MockHttpServletRequest shReq =
-                new MockHttpServletRequest("POST", "/api/v1/security/add-password");
+        MockMultipartHttpServletRequest shReq = new MockMultipartHttpServletRequest();
+        shReq.setRequestURI("/api/v1/security/add-password");
+        shReq.addFile(
+                new MockMultipartFile(
+                        "fileInput", "doc.bin", "application/octet-stream", "x".getBytes()));
         shReq.addHeader("X-Stirling-Automation", "true");
         shReq.addHeader("X-Stirling-Run-Id", runId);
         MockHttpServletResponse shResp = new MockHttpServletResponse();
@@ -320,7 +322,11 @@ class PaygBillingParityTest {
                                     List.of(new SimpleGrantedAuthority("ROLE_API"))));
         }
 
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", op.uri());
+        MockMultipartHttpServletRequest req = new MockMultipartHttpServletRequest();
+        req.setRequestURI(op.uri());
+        req.addFile(
+                new MockMultipartFile(
+                        "fileInput", "doc.bin", "application/octet-stream", "x".getBytes()));
         if (op.automationHeader()) {
             req.addHeader("X-Stirling-Automation", "true");
         }

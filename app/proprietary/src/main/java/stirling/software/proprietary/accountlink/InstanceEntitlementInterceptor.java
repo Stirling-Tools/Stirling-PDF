@@ -201,34 +201,33 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             InstanceEntitlement ent,
             UsageMeterService meter) {
         UnitCalcPolicy policy = ent.unitCalcPolicy();
-        // Prefer the per-document key so each source document in a multi-document run bills once;
-        // fall back to the whole-run key for automation sub-steps that carry no document id.
-        String runKey = automationDocumentId(request);
-        if (runKey == null) {
-            runKey = automationRunId(request);
-        }
         MultipartHttpServletRequest mreq =
                 WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
         if (mreq == null) {
-            long fileless = DocumentUnitCalculator.unitsForFile(0, 0, policy);
-            meter.accrue(ent.periodStart(), category, fileless, runKey);
-            return;
+            return; // a fileless op has no document to charge for - matching SaaS, which skips it
         }
         List<TempFile> temps = new ArrayList<>();
         try {
             List<FileSize> sizes = new ArrayList<>();
             for (List<MultipartFile> files : mreq.getMultiFileMap().values()) {
                 for (MultipartFile f : files) {
+                    if (f.getSize() <= 0) {
+                        continue; // skip empty parts, matching SaaS's non-empty input filter
+                    }
                     sizes.add(new FileSize(pageCount(f, temps), f.getSize()));
                 }
             }
-            long units =
-                    sizes.isEmpty()
-                            ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
-                            : DocumentUnitCalculator.unitsForGroup(sizes, policy);
-            // A run's sub-steps share a document/run key, so keying on it collapses them to one
-            // charge. A standalone op has no run key (null) and always accrues - each call is its
-            // own charge, matching SaaS, which never groups a call outside a run.
+            if (sizes.isEmpty()) {
+                return; // no non-empty input, so nothing billable - matching SaaS
+            }
+            // Prefer the per-document key so each source document in a multi-document run bills
+            // once; fall back to the whole-run key for automation sub-steps with no document id. A
+            // standalone op has no key (null) and always accrues - each call is its own charge.
+            String runKey = automationDocumentId(request);
+            if (runKey == null) {
+                runKey = automationRunId(request);
+            }
+            long units = DocumentUnitCalculator.unitsForGroup(sizes, policy);
             meter.accrue(ent.periodStart(), category, units, runKey);
         } finally {
             for (TempFile temp : temps) {

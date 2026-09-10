@@ -119,13 +119,34 @@ class InstanceEntitlementInterceptorTest {
         when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object()); // stashes AI category
         interceptor.afterCompletion(req, resp, new Object(), null);
 
-        // No uploaded files → bytes axis → the 1-unit floor; no input identity → null signature.
+        // A tiny non-PDF input bills the 1-unit byte floor; a standalone op has a null key.
         verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(1L), isNull());
+    }
+
+    @Test
+    void doesNotMeterFilelessBillableOp() throws Exception {
+        // A billable op with no document (no multipart file) is not metered - matching SaaS, which
+        // short-circuits a request that carries no file.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verify(meter, never()).accrue(any(), any(), anyLong(), any());
     }
 
     @Test
@@ -173,8 +194,7 @@ class InstanceEntitlementInterceptorTest {
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         for (int call = 0; call < 2; call++) {
-            MockHttpServletRequest req =
-                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
             MockHttpServletResponse resp = new MockHttpServletResponse();
             interceptor.preHandle(req, resp, toolHandler());
             interceptor.afterCompletion(req, resp, toolHandler(), null);
@@ -248,7 +268,7 @@ class InstanceEntitlementInterceptorTest {
         authenticateWithApiKey();
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/merge");
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, toolHandler());
         interceptor.afterCompletion(req, resp, toolHandler(), null);
@@ -293,8 +313,7 @@ class InstanceEntitlementInterceptorTest {
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         for (int step = 0; step < 3; step++) {
-            MockHttpServletRequest req =
-                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
             req.addHeader("X-Stirling-Automation", "true");
             req.addHeader("X-Stirling-Run-Id", "run-1");
             MockHttpServletResponse resp = new MockHttpServletResponse();
@@ -311,7 +330,7 @@ class InstanceEntitlementInterceptorTest {
         // A raw API-key caller that sets X-Stirling-Run-Id but not the automation header must not
         // be
         // able to group its separate calls into one charge: the run id keys the meter only on a
-        // genuine internal dispatch, so here the op falls back to its input key (null, fileless).
+        // genuine internal dispatch, so here the op falls back to its standalone null key.
         when(gate.evaluate(anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
@@ -322,7 +341,7 @@ class InstanceEntitlementInterceptorTest {
         authenticateWithApiKey();
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/merge");
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
         req.addHeader("X-Stirling-Run-Id", "forged");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, toolHandler());
@@ -347,8 +366,7 @@ class InstanceEntitlementInterceptorTest {
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         for (String docId : List.of("run-1:0", "run-1:0", "run-1:1")) {
-            MockHttpServletRequest req =
-                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
             req.addHeader("X-Stirling-Automation", "true");
             req.addHeader("X-Stirling-Run-Id", "run-1");
             req.addHeader("X-Stirling-Document-Id", docId);
@@ -362,6 +380,16 @@ class InstanceEntitlementInterceptorTest {
         verify(meter, times(2))
                 .accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1:0"));
         verify(meter).accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1:1"));
+    }
+
+    private static MockMultipartHttpServletRequest fileRequest(String uri) {
+        MockMultipartHttpServletRequest req = new MockMultipartHttpServletRequest();
+        req.setRequestURI(uri);
+        // A tiny non-PDF part: no page-count temp needed, and it bills the 1-unit byte floor.
+        req.addFile(
+                new MockMultipartFile(
+                        "fileInput", "doc.bin", "application/octet-stream", "x".getBytes()));
+        return req;
     }
 
     private static void authenticateWithApiKey() {
