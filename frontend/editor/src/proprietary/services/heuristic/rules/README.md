@@ -116,13 +116,39 @@ too few function words to prove any language, and English field labels are the
 likeliest to still match. That assumption is reported as `assumed: true`, and it
 is what makes the runner-up pack worth loading.
 
-### Two packs at once
+### More than one pack at once
 
-When the runner-up language scores within `SECOND_PACK_BAR` of the winner, both
-packs load and are merged. Packs share one label vocabulary, so a second pack
-cannot contradict the first — its rules either match (bilingual Swiss and
-Canadian invoices, confusable pairs like es/pt) or sit inert. Loading one
-needlessly costs bytes; missing the right one costs a billed AI engine run.
+When the runner-up scores within `SECOND_PACK_BAR` of the winner, both packs load
+and are merged. Packs share one label vocabulary, so a second pack cannot
+contradict the first — its rules either match (a bilingual Swiss or Canadian
+invoice, a confusable pair like es/pt) or sit inert. Forcing *every* available pack
+onto all 182 corpus cases changed no label and no confidence, and left the
+false-positive rate identical at 3.7% labelled / 0 trusted.
+
+How many to load is a function of how unsure the call is, because the payoff and
+the cost move in opposite directions. Measured containment of the true language:
+
+| | top 1 | top 2 | top 3 | top 5 |
+| --- | --- | --- | --- | --- |
+| 20-word document | 66% | 84% | 90% | **95%** |
+| 40-word document | 84% | 94% | 96% | 98% |
+| 200-word document | 96% | 98% | 99% | 99% |
+
+Depth is worth a lot on a short document and almost nothing on a long one — and a
+short document is the cheap one to score, since cost is rule count times text
+length. So the cap is `MAX_PACKS_UNSURE` (5) for an uncertain document under
+`UNSURE_MAX_CHARS`, and `MAX_PACKS_CONFIDENT` (2) otherwise. The size condition
+exists for the one expensive combination: a data-dense 50-page statement reaches
+the uncertain branch, and five mature packs over that much text is the only case
+that would cost real time.
+
+Only `en` and `de` exist today, so the wider cap never binds; `packsFor` is
+exported and tested directly because the request is the decision, not the result.
+Before relying on the wider cap, one thing still needs measuring that two packs
+cannot show: **cognate interference**. English and German share little, so "a wrong
+pack is inert" held perfectly. Five Romance packs on a Spanish document is the real
+test — `factura`, `fattura`, `fatura` and `facture` are one word apart — and that
+needs those packs to exist first.
 
 ### What a second pack costs
 

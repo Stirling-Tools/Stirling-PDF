@@ -57,8 +57,24 @@ const SEC_MAX = 4;
  * two scales are only comparable in the middle of their ranges.
  */
 const SECOND_PACK_BAR = 0.75;
-/** Hard cap on packs per document: a third adds bytes for negligible evidence. */
-const MAX_PACKS = 2;
+/**
+ * Cap on packs per document, which rises when the call is uncertain. Measured
+ * containment of the true language on 20-word documents: 66% in the top
+ * candidate, 84% in the top two, 90% in three, 95% in five. On 200-word documents
+ * the same widening moves 98% to 99%, so the depth is only worth paying for while
+ * the document is short — which is also when it is cheapest, because scoring cost
+ * is rule count times text length. Uncertainty and size pull in opposite
+ * directions, so widening here is close to free.
+ */
+const MAX_PACKS_CONFIDENT = 2;
+const MAX_PACKS_UNSURE = 5;
+/**
+ * Above this much extracted text the cap stays at the confident value however
+ * unsure the detector is. A data-dense 50-page statement can reach the uncertain
+ * branch, and five mature packs over that much text is the one combination that
+ * would actually cost something.
+ */
+const UNSURE_MAX_CHARS = 20000;
 /** Below this, confidence is capped so the verdict still reaches the AI engine. */
 const NO_PACK_CONFIDENCE_CAP: HeuristicConfidence = "medium";
 
@@ -695,11 +711,14 @@ function rankLanguages(
  * vocabulary is the better evidence. Hedging costs one chunk; guessing English
  * costs the verdict.
  *
- * <p>Short text needs no special case: when there is little to go on the scores
- * bunch up, so the bar admits the runner-up on its own. Forcing the hedge below 30
- * words was measured and moved the right-pack rate by under a point.
+ * <p>The bar is not what limits breadth — when there is little to go on the scores
+ * bunch up and the bar admits the runner-up on its own. The cap is the limit, so
+ * it is the cap that widens on an uncertain short document.
  */
-function packsFor(detection: LanguageDetection): string[] {
+export function packsFor(
+  detection: LanguageDetection,
+  chars: number,
+): string[] {
   const ranked =
     detection.candidates.length > 0
       ? detection.candidates
@@ -707,10 +726,13 @@ function packsFor(detection: LanguageDetection): string[] {
         ? [{ language: detection.language, score: 1 }]
         : [];
   const best = ranked[0]?.score ?? 0;
+  const unsure =
+    (detection.assumed || detection.lowText) && chars <= UNSURE_MAX_CHARS;
+  const max = unsure ? MAX_PACKS_UNSURE : MAX_PACKS_CONFIDENT;
   const bar = detection.assumed ? 0 : best * SECOND_PACK_BAR;
   const out: string[] = [];
   for (const candidate of ranked) {
-    if (out.length >= MAX_PACKS) break;
+    if (out.length >= max) break;
     // The bar applies from the first candidate, so a confidently-detected
     // language with no pack scores against core alone rather than falling
     // through to whatever pack happens to be next on the list.
@@ -775,7 +797,7 @@ export async function classifyHeuristic(
   opts?: { explain?: boolean },
 ): Promise<HeuristicResult> {
   const detection = detectLanguage(doc.allZone);
-  const wanted = packsFor(detection);
+  const wanted = packsFor(detection, nz(doc.allZone).length);
   const core = await loadCore();
   await Promise.all(wanted.map((l) => loadPack(l)));
   const loaded = wanted.filter((l) => PACKS.has(l));

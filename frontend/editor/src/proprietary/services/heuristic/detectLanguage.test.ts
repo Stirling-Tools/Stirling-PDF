@@ -4,7 +4,10 @@
 // against vocabulary it is not written in. These cases pin both.
 
 import { describe, expect, it } from "vitest";
-import { detectLanguage } from "@app/services/heuristic/heuristicEngine";
+import {
+  detectLanguage,
+  packsFor,
+} from "@app/services/heuristic/heuristicEngine";
 
 const prose = {
   en: `This agreement is made between the parties and shall be governed by the
@@ -160,6 +163,53 @@ describe("detectLanguage", () => {
       const tags = d.candidates.slice(0, 2).map((c) => c.language);
       expect(tags).toContain("de");
       expect(tags).toContain("fr");
+    });
+  });
+
+  describe("pack dispatch", () => {
+    it("asks for one pack when the language is obvious", () => {
+      const d = detectLanguage(prose.de);
+      expect(d.language).toBe("de");
+      expect(packsFor(d, prose.de.length)).toEqual(["de"]);
+    });
+
+    it("asks for both when a document carries two languages it has packs for", () => {
+      const mixed =
+        "Die Vertragsparteien vereinbaren, dass die Leistungen für den genannten " +
+        "Zeitraum abgerechnet werden und der Betrag ist innerhalb von dreißig " +
+        "Tagen nach Erhalt dieser Rechnung zu zahlen. Der Rechnungsempfänger " +
+        "wird nicht von den Bedingungen ausgenommen. This agreement is made " +
+        "between the parties and shall be governed by the laws of England.";
+      const asked = packsFor(detectLanguage(mixed), mixed.length);
+      expect(asked).toContain("de");
+      expect(asked).toContain("en");
+    });
+
+    it("asks for nothing when the winning language has no pack", () => {
+      // A Spanish lease: es leads, es has no pack, and nothing else is within the
+      // bar - so core scores it alone and the AI engine rules on it.
+      expect(packsFor(detectLanguage(prose.es), prose.es.length)).toEqual([]);
+    });
+
+    it("widens the search on a short uncertain document", () => {
+      // Measured containment of the true language on 20-word documents is 84% in
+      // the top two candidates and 95% in the top five, so an uncertain short
+      // document is worth asking more of. Only en and de have packs today, so
+      // this asserts the request, which is the decision under test.
+      const terse =
+        "Kontoauszug 07/2024 Buchungstag Wertstellung Betrag 1.248,00";
+      const d = detectLanguage(terse);
+      expect(d.lowText || d.assumed).toBe(true);
+      expect(packsFor(d, terse.length).length).toBeGreaterThan(1);
+    });
+
+    it("stays narrow on a long document however unsure it is", () => {
+      // Five mature packs over 50 pages is the one combination that would cost
+      // real time, and a document that long is rarely the uncertain one.
+      const terse =
+        "Kontoauszug 07/2024 Buchungstag Wertstellung Betrag 1.248,00";
+      const d = detectLanguage(terse);
+      expect(packsFor(d, 50000).length).toBeLessThanOrEqual(2);
     });
   });
 });
