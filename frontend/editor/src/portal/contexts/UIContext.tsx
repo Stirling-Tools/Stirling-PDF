@@ -7,6 +7,20 @@ import {
 } from "react";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 
+/**
+ * Why the account-link dialog is open. All three run the same handshake; the mode only chooses the
+ * pitch.
+ *
+ * <ul>
+ *   <li>{@code link} — an admin asked to connect. The general pitch.
+ *   <li>{@code reauth} — the instance is already linked and only the browser session lapsed. It
+ *       must NOT re-register, which would mint a duplicate device credential.
+ *   <li>{@code exhausted} — this month's local free grant is spent, so the pitch leads with the
+ *       further allowance linking adds rather than with the feature set (which already works).
+ * </ul>
+ */
+export type LinkModalMode = "link" | "reauth" | "exhausted";
+
 interface UIContextValue {
   /** Off-canvas sidebar drawer on small screens (no-op chrome on desktop). */
   mobileNavOpen: boolean;
@@ -39,13 +53,8 @@ interface UIContextValue {
    * login modal closes, so the admin returns to where they were.
    */
   linkModalOpen: boolean;
-  /**
-   * "link" registers this instance (the normal first-time flow); "reauth" only
-   * refreshes an expired SaaS session for attended reads — it must NOT re-register
-   * (that would mint a duplicate device credential).
-   */
-  linkModalMode: "link" | "reauth";
-  openLinkModal: (mode?: "link" | "reauth") => void;
+  linkModalMode: LinkModalMode;
+  openLinkModal: (mode?: LinkModalMode) => void;
   closeLinkModal: () => void;
   /**
    * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
@@ -98,7 +107,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
-  const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
+  const [linkModalMode, setLinkModalMode] = useState<LinkModalMode>("link");
   const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
     null,
   );
@@ -147,7 +156,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       linkModalOpen,
       linkModalMode,
-      openLinkModal: (mode: "link" | "reauth" = "link") => {
+      openLinkModal: (mode: LinkModalMode = "link") => {
         setMobileNavOpen(false);
         setLinkModalMode(mode);
         // Never stack on Settings: close it first, and remember to reopen it on

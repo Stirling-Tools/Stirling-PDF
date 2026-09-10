@@ -17,6 +17,24 @@ export interface LocalUsage {
   totalUnsyncedUnits: number;
 }
 
+/**
+ * This instance's own monthly free grant (GET /api/v1/account-link/free-tier) — what an unlinked
+ * instance meters itself against, so the free tier needs no Stirling account.
+ *
+ * <p>{@code remainingUnits} is floored at 0 and is the figure the gate enforces; {@code periodEnd}
+ * is exclusive. Reported whether or not the instance is linked, but dormant while it is: a linked
+ * instance's cloud wallet is authoritative instead.
+ */
+export interface FreeTierBalance {
+  grantUnits: number;
+  usedUnits: number;
+  remainingUnits: number;
+  /** ISO local timestamp, inclusive. */
+  periodStart: string;
+  /** ISO local timestamp, exclusive — when the grant resets. */
+  periodEnd: string;
+}
+
 /** A linked instance row (GET /api/v1/account-link/instances). */
 export interface LinkedInstanceRow {
   instanceId: number;
@@ -43,6 +61,17 @@ export async function fetchStatus(): Promise<LinkStatus> {
  */
 export async function fetchLocalUsage(): Promise<LocalUsage> {
   return apiClient.local.json<LocalUsage>(`${BASE}/usage`);
+}
+
+/**
+ * This instance's local free-grant figures.
+ *
+ * <p>Admin-only server-side, the allowance being a property of the whole instance rather than of
+ * the caller, so this rejects 403 for a non-admin holding a portal grant. A caller must render that
+ * as figures it may not see, not as a fault.
+ */
+export async function fetchFreeTier(): Promise<FreeTierBalance> {
+  return apiClient.local.json<FreeTierBalance>(`${BASE}/free-tier`);
 }
 
 /** Drop this instance's link. */
