@@ -18,6 +18,7 @@ import {
 import type { SelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import type { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
+import { modShortcut } from "@app/utils/hotkeys";
 
 export type InspectorController = ReturnType<typeof useToolbarController>;
 
@@ -150,10 +151,11 @@ function ParagraphSection({
         <Tooltip
           label={
             canGroup
-              ? t(
-                  "pdfTextEditor.sidebar.groupTooltip",
-                  "Merge selected runs into one paragraph (Ctrl+M)",
-                )
+              ? t("pdfTextEditor.sidebar.groupTooltip", {
+                  defaultValue:
+                    "Merge selected runs into one paragraph ({{shortcut}})",
+                  shortcut: modShortcut("M"),
+                })
               : t(
                   "pdfTextEditor.sidebar.groupTooltipDisabled",
                   "Select 2+ runs to merge",
