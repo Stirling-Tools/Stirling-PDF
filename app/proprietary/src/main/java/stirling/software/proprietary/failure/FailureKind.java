@@ -77,6 +77,107 @@ public enum FailureKind {
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
+    /**
+     * The format checks a tool runs before it reads anything: a PDF tool handed a .docx, a comic
+     * reader handed something that is not the archive it names.
+     */
+    INPUT_WRONG_TYPE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E006", "E014", "E018", "E061"),
+            fallback("This document is not a format the step can open, so it could not be read."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * The file is the type it claims and still will not open: an unopenable RAR or ZIP, an EML that
+     * will not parse, image bytes no decoder accepts.
+     *
+     * <p>Deliberately does not offer REPAIR despite reading like {@link #INPUT_CORRUPTED}. Repair
+     * is a PDF tool and none of these codes comes from a PDF.
+     */
+    INPUT_UNREADABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E010", "E015", "E021", "E034"),
+            fallback("This document could not be opened, so the pipeline could not read it."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /** Opened fine and holds nothing to work on: no pages, no images, no bytes. */
+    INPUT_EMPTY(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.PERMANENT,
+            FailureScope.FILE,
+            errorCodes("E005", "E012", "E016", "E020", "E032"),
+            fallback("This document has no content in it, so there was nothing to work on."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * The run never got hold of the document: the id resolves to nothing, or the upload arrived
+     * with no name to address it by.
+     */
+    INPUT_UNAVAILABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.PERMANENT,
+            FailureScope.FILE,
+            errorCodes("E030", "E033"),
+            fallback("The document behind this run could not be reached, so it was not processed."),
+            // No VIEW_FILE and no OPEN_IN_TOOL: both would open a tool on a document that is not
+            // there, which is the failure itself.
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * A binary the step shells out to is absent from this deployment. Scoped to the server, not the
+     * file, because it fails every run that reaches the step and one incident says that better than
+     * one per document.
+     */
+    TOOL_NOT_INSTALLED(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_SERVER_FIX,
+            FailureScope.SERVER,
+            errorCodes("E042", "E062", "E063", "E080"),
+            fallback("This server is missing software the step needs, so it could not be run."),
+            // Nothing for an owner to press: their document is fine, and a retry fails the same
+            // way until someone installs the binary.
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, SECONDARY),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * Ghostscript reached a page it could not draw, which its output names.
+     *
+     * <p>Only the recognised page-drawing failure belongs here. E051 is the bucket {@code
+     * ExceptionUtils.analyzeGhostscriptOutput} falls back to for output it does not recognise, so
+     * it also carries killed processes and full disks, which a retry does clear.
+     */
+    STEP_CANNOT_RENDER_PAGE(
+            FailureStage.INTERNAL,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E054"),
+            fallback(
+                    "A page in this document could not be drawn, so the pipeline could not finish."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
     UNKNOWN(
             FailureStage.INTERNAL,
             FailureSeverity.ERROR,
