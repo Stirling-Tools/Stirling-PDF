@@ -21,6 +21,7 @@ function baseState(): FileContextState {
       processingProgress: 0,
       hasUnsavedChanges: false,
       errorFileIds: [],
+      policyBlocks: {},
     },
   };
 }
