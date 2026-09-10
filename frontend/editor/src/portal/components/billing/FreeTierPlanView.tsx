@@ -113,7 +113,6 @@ export function FreeTierPlanView() {
   );
 }
 
-/** The local grant as a meter: what is left of it, what has gone, and when it resets. */
 function FreeTierMeter({ balance }: { balance: FreeTierBalance }) {
   const { t } = useTranslation();
   const { state, pct } = remainingMeter(

@@ -16,8 +16,8 @@ import type { Wallet } from "@portal/api/billing";
  * <p>Two sources, never one. Unlinked reads the instance's own free-grant meter and asserts nothing
  * about linkage; linked reads the cloud wallet. Keeping them apart is what keeps {@link
  * onWalletLoaded} honest — it reports {@code linked} as a fact, and the browser can hold a SaaS
- * session with no link to this server, so routing the unlinked page through the wallet flipped the
- * whole portal to linked.
+ * session with no link to this server, so routing the unlinked page through the wallet would flip
+ * the whole portal to linked.
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
@@ -41,7 +41,7 @@ export function PortalBillingGate() {
   if (loading) return null;
   // The cloud wallet needs a link we positively know about. Anything else is this instance's own
   // ledger, including the two cases that are not "gated": linking turned off, and a status check
-  // that failed. Falling through to the wallet there asked a self-hosted instance to read a SaaS
+  // that failed. Falling through to the wallet there asks a self-hosted instance to read a SaaS
   // it may have no address for.
   if (!link?.isLinked) return <FreeTierPlanView />;
   return <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />;

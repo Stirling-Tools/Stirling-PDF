@@ -73,8 +73,6 @@ public class InstanceEntitlementGate {
             return GateDecision.allow(GateDecision.Reason.MANUAL_FREE);
         }
         boolean linked = credentialStore.isLinked();
-        // Only the unlinked path reads the local grant, which keeps "the cloud wallet is
-        // authoritative while linked" structural instead of a rule to remember.
         long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();
         Optional<InstanceEntitlement> entitlement =
                 linked ? entitlementCache.current() : Optional.empty();

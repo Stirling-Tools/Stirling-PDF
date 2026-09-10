@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Persistence for the local free-tier usage counters. */
 public interface FreeTierUsageCounterRepository extends JpaRepository<FreeTierUsageCounter, Long> {
 
     /**
@@ -29,11 +28,9 @@ public interface FreeTierUsageCounterRepository extends JpaRepository<FreeTierUs
             @Param("now") LocalDateTime now);
 
     /**
-     * Units spent in one period, per category, as {@code [category, units]} rows.
-     *
-     * <p>Which meter spent the grant is the first question asked of any figure that looks wrong,
-     * and a total cannot answer it: an AI-surface policy step and an automation sub-step are both
-     * just units once summed.
+     * {@code [category, units]} rows. Which meter spent the grant is the first question asked of a
+     * figure that looks wrong, and a total cannot answer it: an AI-surface policy step and an
+     * automation sub-step are both just units once summed.
      */
     @Query(
             "SELECT c.category, SUM(c.cumulativeUnits) FROM FreeTierUsageCounter c"
