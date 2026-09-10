@@ -48,7 +48,7 @@ tasks:
     cmds:
       # Both sets while the migration is in flight: unmigrated call sites still use material-symbols.
       - node editor/scripts/generate-icons.js
-      - node editor/scripts/generate-icon-registry.mjs
+      - npx tsx editor/scripts/generate-icon-registry.mts
 
   prepare:og:
     internal: true
@@ -351,13 +351,13 @@ tasks:
     desc: "Enforce one icon system - no inline svg, no retired icon libraries"
     deps: [install]
     cmds:
-      - node editor/scripts/lint/icon-lint.mjs
+      - npx tsx editor/scripts/lint/icon-lint.mts
 
   lint:unused-icons:
     desc: "Report icons we draw ourselves that nothing renders"
     deps: [install]
     cmds:
-      - node editor/scripts/lint/icon-lint.mjs unused
+      - npx tsx editor/scripts/lint/icon-lint.mts unused
 
   lint:css:
     desc: "Lint stylesheets for duplicate selectors"
@@ -525,7 +525,7 @@ tasks:
     desc: "Fail if the committed icon registry is out of date"
     deps: [install]
     cmds:
-      - node editor/scripts/generate-icon-registry.mjs --check
+      - npx tsx editor/scripts/generate-icon-registry.mts --check
 
   check:all:
     desc: "Full CI quality gate"

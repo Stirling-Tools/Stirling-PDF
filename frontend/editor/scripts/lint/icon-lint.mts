@@ -2,8 +2,8 @@
 /** Keeps the app on one icon system; pass "unused" to report svgs of our own that nothing renders. */
 import fs from "node:fs";
 import path from "node:path";
-// oxlint-disable-next-line no-restricted-imports -- build script; no alias covers scripts/
-import { registryNames } from "../../src/core/icons/usedIcons.mjs";
+// oxlint-disable-next-line no-restricted-imports -- sibling build script; no alias covers scripts/
+import { registryNames } from "../icons/usedIcons.mts";
 
 const EDITOR = path.join(import.meta.dirname, "..", "..");
 const SRC = path.join(EDITOR, "src");
@@ -32,10 +32,10 @@ const SVG_ALLOWED = [
 const OPT_OUT = /icon-lint-disable/;
 
 const mode = process.argv[2];
-const problems = [];
-const files = [];
+const problems: string[] = [];
+const files: string[] = [];
 
-(function walk(dir) {
+(function walk(dir: string) {
   for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
     const p = path.join(dir, entry.name);
     if (entry.isDirectory()) {
@@ -46,7 +46,7 @@ const files = [];
   }
 })(SRC);
 
-const rel = (f) => path.relative(EDITOR, f);
+const rel = (f: string) => path.relative(EDITOR, f);
 
 // An svg citing the vendored notice is only safe to trust while that notice is still here.
 const licenceFile = path.join(ICONS_DIR, "LICENSE-lucide.txt");
@@ -66,9 +66,9 @@ if (citing.length && !fs.existsSync(licenceFile)) {
 }
 
 // Reused lucide geometry has to declare itself; primitives are excluded, since nobody can claim `M4 12h16`.
-const lucidePath = new Map();
+const lucidePath = new Map<string, string>();
 try {
-  const nodes = JSON.parse(
+  const nodes: Record<string, [string, Record<string, string>][]> = JSON.parse(
     fs.readFileSync(
       path.join(EDITOR, "../node_modules/lucide-static/icon-nodes.json"),
       "utf8",
@@ -106,9 +106,9 @@ if (lucidePath.size) {
 }
 
 // Every Material Symbols name, so a leftover is caught wherever it sits, not only in `<Icon name>`.
-function legacyIconNames() {
+function legacyIconNames(): Set<string> {
   try {
-    const set = JSON.parse(
+    const set: { icons: Record<string, unknown> } = JSON.parse(
       fs.readFileSync(
         path.join(
           EDITOR,
@@ -120,7 +120,7 @@ function legacyIconNames() {
     return new Set(Object.keys(set.icons));
   } catch {
     try {
-      const map = JSON.parse(
+      const map: { materialSymbols?: Record<string, string> } = JSON.parse(
         fs.readFileSync(path.join(ICONS_DIR, "icon-map.json"), "utf8"),
       );
       return new Set(Object.keys(map.materialSymbols ?? {}));
@@ -144,7 +144,7 @@ const known = new Set([
   ...registryNames(path.join(ICONS_DIR, "thirdPartyIcons.generated.ts")),
 ]);
 
-const referenced = new Set();
+const referenced = new Set<string>();
 
 for (const file of files) {
   const isCode = /\.tsx?$/.test(file);

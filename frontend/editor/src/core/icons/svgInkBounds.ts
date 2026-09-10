@@ -1,10 +1,24 @@
 /** Bounding box of what a parsed svg fragment paints, so a mark scales by its ink and not its exported viewBox. */
+// oxlint-disable-next-line no-restricted-imports -- the generator imports this file from node, where @app/* does not resolve
+import type { IconNode } from "./types.js";
+
+/** 2x3 affine matrix [a, b, c, d, e, f], as an svg `transform` carries it. */
+export type Matrix = readonly number[];
+
+export type Point = [number, number];
+
+export interface InkBox {
+  minX: number;
+  minY: number;
+  maxX: number;
+  maxY: number;
+}
 
 const CURVE_SAMPLES = 32;
 
-const IDENTITY = [1, 0, 0, 1, 0, 0];
+const IDENTITY: Matrix = [1, 0, 0, 1, 0, 0];
 
-function multiply(m, n) {
+function multiply(m: Matrix, n: Matrix): Matrix {
   return [
     m[0] * n[0] + m[2] * n[1],
     m[1] * n[0] + m[3] * n[1],
@@ -15,24 +29,24 @@ function multiply(m, n) {
   ];
 }
 
-function apply(m, [x, y]) {
+function apply(m: Matrix, [x, y]: Point): Point {
   return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
 }
 
 /** Uniform-scale factor of a matrix, used to scale stroke widths. */
-function scaleOf(m) {
+function scaleOf(m: Matrix): number {
   return Math.sqrt(Math.abs(m[0] * m[3] - m[1] * m[2]));
 }
 
-const numbers = (s) =>
+const numbers = (s: string): number[] =>
   (s.match(/-?\d*\.?\d+(?:e[-+]?\d+)?/gi) ?? []).map(Number);
 
-export function parseTransform(src) {
+export function parseTransform(src?: string): Matrix {
   let m = IDENTITY;
   if (!src) return m;
   for (const [, fn, args] of src.matchAll(/(\w+)\s*\(([^)]*)\)/g)) {
     const a = numbers(args);
-    let t;
+    let t: Matrix;
     switch (fn) {
       case "translate":
         t = [1, 0, 0, 1, a[0] ?? 0, a[1] ?? 0];
@@ -71,8 +85,15 @@ export function parseTransform(src) {
   return m;
 }
 
-function ellipsePoints(cx, cy, rx, ry, from = 0, to = 2 * Math.PI) {
-  const pts = [];
+function ellipsePoints(
+  cx: number,
+  cy: number,
+  rx: number,
+  ry: number,
+  from = 0,
+  to = 2 * Math.PI,
+): Point[] {
+  const pts: Point[] = [];
   for (let i = 0; i <= CURVE_SAMPLES; i++) {
     const t = from + ((to - from) * i) / CURVE_SAMPLES;
     pts.push([cx + rx * Math.cos(t), cy + ry * Math.sin(t)]);
@@ -80,8 +101,8 @@ function ellipsePoints(cx, cy, rx, ry, from = 0, to = 2 * Math.PI) {
   return pts;
 }
 
-function cubicPoints(p0, p1, p2, p3) {
-  const pts = [];
+function cubicPoints(p0: Point, p1: Point, p2: Point, p3: Point): Point[] {
+  const pts: Point[] = [];
   for (let i = 0; i <= CURVE_SAMPLES; i++) {
     const t = i / CURVE_SAMPLES;
     const u = 1 - t;
@@ -100,7 +121,15 @@ function cubicPoints(p0, p1, p2, p3) {
 }
 
 /** SVG arc sampled along its sweep, per F.6.5; radii too small for the chord are scaled up as a renderer would. */
-function arcPoints(p0, rx, ry, rotDeg, large, sweep, p1) {
+function arcPoints(
+  p0: Point,
+  rx: number,
+  ry: number,
+  rotDeg: number,
+  large: boolean,
+  sweep: boolean,
+  p1: Point,
+): Point[] {
   // F.6.2 omits an arc between identical endpoints; measuring one divides by zero and NaNs the whole mark.
   if (p0[0] === p1[0] && p0[1] === p1[1]) return [p0];
   if (rx === 0 || ry === 0) return [p0, p1];
@@ -125,7 +154,7 @@ function arcPoints(p0, rx, ry, rotDeg, large, sweep, p1) {
   const cy1 = (-coef * ry * x1) / rx;
   const cx = cosPhi * cx1 - sinPhi * cy1 + (p0[0] + p1[0]) / 2;
   const cy = sinPhi * cx1 + cosPhi * cy1 + (p0[1] + p1[1]) / 2;
-  const angle = (ux, uy, vx, vy) => {
+  const angle = (ux: number, uy: number, vx: number, vy: number): number => {
     const dot = ux * vx + uy * vy;
     const len = Math.hypot(ux, uy) * Math.hypot(vx, vy);
     let a = Math.acos(Math.min(1, Math.max(-1, dot / len)));
@@ -141,7 +170,7 @@ function arcPoints(p0, rx, ry, rotDeg, large, sweep, p1) {
   );
   if (!sweep && delta > 0) delta -= 2 * Math.PI;
   else if (sweep && delta < 0) delta += 2 * Math.PI;
-  const pts = [];
+  const pts: Point[] = [];
   for (let i = 0; i <= CURVE_SAMPLES; i++) {
     const t = theta1 + (delta * i) / CURVE_SAMPLES;
     const ex = rx * Math.cos(t);
@@ -151,11 +180,13 @@ function arcPoints(p0, rx, ry, rotDeg, large, sweep, p1) {
   return pts;
 }
 
+type PathToken = string | number;
+
 /** Tokenises a path's `d`, splitting glued arc flags out ("0 0112 4" is two flags, then 12 and 4). */
-function tokenisePath(d) {
-  const tokens = [];
+function tokenisePath(d: string): PathToken[] {
+  const tokens: PathToken[] = [];
   const re = /[MmLlHhVvCcSsQqTtAaZz]|-?\d*\.?\d+(?:e[-+]?\d+)?/gi;
-  let cmd = null;
+  let cmd: string | null = null;
   let argIndex = 0;
   let i = 0;
   while (i < d.length) {
@@ -186,14 +217,25 @@ function tokenisePath(d) {
   return tokens;
 }
 
-const ARGS = { M: 2, L: 2, H: 1, V: 1, C: 6, S: 4, Q: 4, T: 2, A: 7, Z: 0 };
+const ARGS: Record<string, number> = {
+  M: 2,
+  L: 2,
+  H: 1,
+  V: 1,
+  C: 6,
+  S: 4,
+  Q: 4,
+  T: 2,
+  A: 7,
+  Z: 0,
+};
 
-function pathPoints(d) {
+function pathPoints(d: string): Point[] {
   const tokens = tokenisePath(d);
-  const pts = [];
-  let cur = [0, 0];
-  let start = [0, 0];
-  let prevCtrl = null;
+  const pts: Point[] = [];
+  let cur: Point = [0, 0];
+  let start: Point = [0, 0];
+  let prevCtrl: Point | null = null;
   let prevCmd = "";
   let k = 0;
   while (k < tokens.length) {
@@ -208,9 +250,10 @@ function pathPoints(d) {
       const a = tokens.slice(k, k + n);
       if (a.length < n || a.some((v) => typeof v !== "number"))
         throw new Error(`path command ${cmd} is short of arguments in "${d}"`);
+      const args = a as number[];
       k += n;
-      const ax = (i) => (rel ? cur[0] + a[i] : a[i]);
-      const ay = (i) => (rel ? cur[1] + a[i] : a[i]);
+      const ax = (i: number) => (rel ? cur[0] + args[i] : args[i]);
+      const ay = (i: number) => (rel ? cur[1] + args[i] : args[i]);
       switch (upper) {
         case "M":
           cur = [ax(0), ay(1)];
@@ -231,49 +274,57 @@ function pathPoints(d) {
           pts.push(cur);
           break;
         case "C": {
-          const p1 = [ax(0), ay(1)];
-          const p2 = [ax(2), ay(3)];
-          const p3 = [ax(4), ay(5)];
+          const p1: Point = [ax(0), ay(1)];
+          const p2: Point = [ax(2), ay(3)];
+          const p3: Point = [ax(4), ay(5)];
           pts.push(...cubicPoints(cur, p1, p2, p3));
           prevCtrl = p2;
           cur = p3;
           break;
         }
         case "S": {
-          const reflect =
+          const reflect: Point =
             /[CS]/i.test(prevCmd) && prevCtrl
               ? [2 * cur[0] - prevCtrl[0], 2 * cur[1] - prevCtrl[1]]
               : cur;
-          const p2 = [ax(0), ay(1)];
-          const p3 = [ax(2), ay(3)];
+          const p2: Point = [ax(0), ay(1)];
+          const p3: Point = [ax(2), ay(3)];
           pts.push(...cubicPoints(cur, reflect, p2, p3));
           prevCtrl = p2;
           cur = p3;
           break;
         }
         case "Q": {
-          const q = [ax(0), ay(1)];
-          const p3 = [ax(2), ay(3)];
+          const q: Point = [ax(0), ay(1)];
+          const p3: Point = [ax(2), ay(3)];
           pts.push(...cubicPoints(cur, lerpCtrl(cur, q), lerpCtrl(p3, q), p3));
           prevCtrl = q;
           cur = p3;
           break;
         }
         case "T": {
-          const q =
+          const q: Point =
             /[QT]/i.test(prevCmd) && prevCtrl
               ? [2 * cur[0] - prevCtrl[0], 2 * cur[1] - prevCtrl[1]]
               : cur;
-          const p3 = [ax(0), ay(1)];
+          const p3: Point = [ax(0), ay(1)];
           pts.push(...cubicPoints(cur, lerpCtrl(cur, q), lerpCtrl(p3, q), p3));
           prevCtrl = q;
           cur = p3;
           break;
         }
         case "A": {
-          const p1 = [ax(5), ay(6)];
+          const p1: Point = [ax(5), ay(6)];
           pts.push(
-            ...arcPoints(cur, a[0], a[1], a[2], a[3] !== 0, a[4] !== 0, p1),
+            ...arcPoints(
+              cur,
+              args[0],
+              args[1],
+              args[2],
+              args[3] !== 0,
+              args[4] !== 0,
+              p1,
+            ),
           );
           cur = p1;
           break;
@@ -292,11 +343,18 @@ function pathPoints(d) {
 }
 
 /** Quadratic control point lifted to the equivalent cubic. */
-function lerpCtrl(p, q) {
+function lerpCtrl(p: Point, q: Point): Point {
   return [p[0] + (2 / 3) * (q[0] - p[0]), p[1] + (2 / 3) * (q[1] - p[1])];
 }
 
-function roundedRectPoints(x, y, w, h, rx, ry) {
+function roundedRectPoints(
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  rx: number,
+  ry: number,
+): Point[] {
   rx = Math.min(rx, w / 2);
   ry = Math.min(ry, h / 2);
   if (rx <= 0 || ry <= 0)
@@ -315,8 +373,11 @@ function roundedRectPoints(x, y, w, h, rx, ry) {
   ];
 }
 
-function shapePoints(tag, a) {
-  const num = (k, d = 0) => (a[k] === undefined ? d : Number(a[k]));
+function shapePoints(
+  tag: string,
+  a: Readonly<Record<string, string>>,
+): Point[] {
+  const num = (k: string, d = 0) => (a[k] === undefined ? d : Number(a[k]));
   switch (tag) {
     case "path":
       return a.d ? pathPoints(a.d) : [];
@@ -344,7 +405,7 @@ function shapePoints(tag, a) {
     case "polygon":
     case "polyline": {
       const v = numbers(a.points ?? "");
-      const pts = [];
+      const pts: Point[] = [];
       for (let i = 0; i + 1 < v.length; i += 2) pts.push([v[i], v[i + 1]]);
       return pts;
     }
@@ -374,14 +435,26 @@ const UNPAINTED = new Set([
   "metadata",
 ]);
 
+interface InheritedPaint {
+  stroke?: string;
+  strokeWidth?: string;
+}
+
 /** Bounds in the fragment's own units, strokes included unless `{ stroke: false }`; null if nothing is drawn. */
-export function inkBounds(nodes, { stroke = true } = {}) {
-  let box = null;
-  const visit = (list, ctm, inherited) => {
+export function inkBounds(
+  nodes: readonly IconNode[],
+  { stroke = true }: { stroke?: boolean } = {},
+): InkBox | null {
+  let box: InkBox | null = null;
+  const visit = (
+    list: readonly IconNode[],
+    ctm: Matrix,
+    inherited: InheritedPaint,
+  ): void => {
     for (const [tag, attrs, children] of list) {
       if (UNPAINTED.has(tag)) continue;
       const m = multiply(ctm, parseTransform(attrs.transform));
-      const paint = {
+      const paint: InheritedPaint = {
         stroke: attrs.stroke ?? inherited.stroke,
         strokeWidth: attrs.strokeWidth ?? inherited.strokeWidth,
       };
@@ -392,7 +465,7 @@ export function inkBounds(nodes, { stroke = true } = {}) {
           : 0;
         for (const p of shapePoints(tag, attrs)) {
           const [x, y] = apply(m, p);
-          if (!box) box = { minX: x, minY: y, maxX: x, maxY: y };
+          box ??= { minX: x, minY: y, maxX: x, maxY: y };
           box.minX = Math.min(box.minX, x - pad);
           box.minY = Math.min(box.minY, y - pad);
           box.maxX = Math.max(box.maxX, x + pad);

@@ -5,6 +5,8 @@
   // The per-layer typecheck projects also cover story files, but each resolves
   // @app/* its own way - not the way the single Storybook build renders them.
   "extends": "../editor/tsconfig.proprietary.vite.json",
+  // main.ts loads the icon Vite plugins from editor/scripts by their real .mts paths.
+  "compilerOptions": { "allowImportingTsExtensions": true, "noEmit": true },
   "exclude": [],
   "include": [
     "./**/*",

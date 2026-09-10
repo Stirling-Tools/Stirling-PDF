@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { inkBounds, parseTransform } from "@app/icons/svgInkBounds.mjs";
+import { inkBounds, parseTransform } from "@app/icons/svgInkBounds";
 import type { IconNode } from "@app/icons/types";
 
 const close = (box: ReturnType<typeof inkBounds>, expected: number[]) => {

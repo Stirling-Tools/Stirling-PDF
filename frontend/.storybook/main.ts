@@ -2,12 +2,10 @@ import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 // By path, not @app/*: this file runs in node, before the aliases exist.
-// @ts-expect-error -- plain .mjs helper, no types
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
-import { legacyIconsPlugin } from "../editor/src/core/icons/legacyIcons.vite.mjs";
-// @ts-expect-error -- plain .mjs helper, no types
+import { legacyIconsPlugin } from "../editor/scripts/icons/legacyIcons.vite.mts";
 // oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
-import { usedIconsPlugin } from "../editor/src/core/icons/usedIcons.vite.mjs";
+import { usedIconsPlugin } from "../editor/scripts/icons/usedIcons.vite.mts";
 
 /**
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the

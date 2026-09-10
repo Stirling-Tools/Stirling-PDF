@@ -11,22 +11,25 @@ const PATTERNS = [
 ];
 
 /** Icon names declared in one *.generated.ts registry file. */
-export function registryNames(file) {
+export function registryNames(file: string): string[] {
   const src = fs.readFileSync(file, "utf8");
   return [...src.matchAll(/^ {2}"([^"]+)": \{ viewBox:/gm)].map((m) => m[1]);
 }
 
 /** The members of `known` that anything under `srcDir` references. */
-export function scanUsedIcons(srcDir, known) {
-  const found = new Set();
+export function scanUsedIcons(
+  srcDir: string,
+  known: ReadonlySet<string>,
+): Set<string> {
+  const found = new Set<string>();
   // core/icons writes every name down, so reading it back reports the whole set as used.
   const iconsDir = path.join(srcDir, "core/icons");
-  const collect = (chunk) => {
+  const collect = (chunk: string): void => {
     for (const m of chunk.matchAll(/"([a-z0-9][a-z0-9-]*)"/g))
       if (known.has(m[1])) found.add(m[1]);
     if (known.has(chunk)) found.add(chunk);
   };
-  const walk = (dir) => {
+  const walk = (dir: string): void => {
     for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
       const p = path.join(dir, entry.name);
       if (entry.isDirectory()) {
