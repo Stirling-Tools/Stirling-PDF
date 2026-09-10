@@ -10119,6 +10119,16 @@ title = "Layers"
 [viewer.link]
 delete = "Delete link"
 
+[viewer.markupsList]
+allTypes = "All types"
+closeSidebar = "Close markups list"
+exportCsv = "Export CSV"
+hint = "Every highlight, shape, and note you add will be listed here by page."
+nMarkups = "{{count}} markups"
+noMatch = "No markups match"
+searchPlaceholder = "Search markups"
+title = "Markups"
+
 [viewer.nonPdf]
 columnDefault = "Column {{index}}"
 convertToPdf = "Convert to PDF"
@@ -10497,6 +10507,7 @@ toggleAttachments = "Toggle Attachments"
 toggleBookmarks = "Toggle Bookmarks"
 toggleComments = "Comments"
 toggleLayers = "Toggle Layers"
+toggleMarkupsList = "Markups"
 toggleSidebar = "Toggle Sidebar"
 viewer = "Viewer"
 

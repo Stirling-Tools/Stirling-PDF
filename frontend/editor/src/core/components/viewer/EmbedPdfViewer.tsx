@@ -92,6 +92,7 @@ const EmbedPdfViewerContent = ({
     isLayerSidebarVisible,
     setHasLayers,
     isCommentsSidebarVisible,
+    isMarkupsListVisible,
     isSearchInterfaceVisible,
     searchInterfaceActions,
     zoomActions,
@@ -1134,12 +1135,14 @@ const EmbedPdfViewerContent = ({
 
   const sidebarWidthRem = 15;
   const commentsSidebarWidthRem = 15;
+  const markupsListWidthRem = 15;
   const totalRightMargin =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
     (isAttachmentSidebarVisible ? sidebarWidthRem : 0) +
     (isLayerSidebarVisible ? sidebarWidthRem : 0) +
-    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0);
+    (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0) +
+    (isMarkupsListVisible ? markupsListWidthRem : 0);
 
   return (
     <Box
@@ -1247,6 +1250,8 @@ const EmbedPdfViewerContent = ({
               fileId={currentFileId}
               isCommentsSidebarVisible={isCommentsSidebarVisible}
               commentsSidebarRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0)}rem`}
+              isMarkupsListVisible={isMarkupsListVisible}
+              markupsListRightOffset={`${(isThumbnailSidebarVisible ? sidebarWidthRem : 0) + (isBookmarkSidebarVisible ? sidebarWidthRem : 0) + (isAttachmentSidebarVisible ? sidebarWidthRem : 0) + (isLayerSidebarVisible ? sidebarWidthRem : 0) + (isCommentsSidebarVisible ? commentsSidebarWidthRem : 0)}rem`}
               onSignatureAdded={() => {
                 // Handle signature added - for debugging, enable console logs as needed
                 // Future: Handle signature completion

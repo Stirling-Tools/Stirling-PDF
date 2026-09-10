@@ -104,6 +104,7 @@ import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
+import { MarkupsListSidebar } from "@app/components/viewer/MarkupsListSidebar";
 import { CommentAuthorProvider } from "@app/contexts/CommentAuthorContext";
 import { accountService } from "@app/services/accountService";
 
@@ -126,6 +127,9 @@ interface LocalEmbedPDFProps {
   /** Comments sidebar visibility and offset (from EmbedPdfViewer) */
   isCommentsSidebarVisible?: boolean;
   commentsSidebarRightOffset?: string;
+  /** Markups List sidebar visibility and offset (from EmbedPdfViewer) */
+  isMarkupsListVisible?: boolean;
+  markupsListRightOffset?: string;
   /** When true, blocks the general ink/pen annotation tool (sign tool context). */
   isSignMode?: boolean;
   /** Controls CSS filter applied only to rendered PDF canvas tiles */
@@ -217,6 +221,8 @@ export function LocalEmbedPDF({
   fileId,
   isCommentsSidebarVisible = false,
   commentsSidebarRightOffset = "0rem",
+  isMarkupsListVisible = false,
+  markupsListRightOffset = "0rem",
   isSignMode = false,
   pdfRenderMode = "normal",
   signaturePreviews,
@@ -1232,6 +1238,13 @@ export function LocalEmbedPDF({
                         rightOffset={commentsSidebarRightOffset}
                       />
                     </CommentAuthorProvider>
+                  )}
+                  {enableAnnotations && (
+                    <MarkupsListSidebar
+                      documentId={documentId}
+                      visible={isMarkupsListVisible}
+                      rightOffset={markupsListRightOffset}
+                    />
                   )}
                 </>
               )}

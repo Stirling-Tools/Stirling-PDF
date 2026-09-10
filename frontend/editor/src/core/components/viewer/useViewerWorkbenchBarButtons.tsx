@@ -50,6 +50,8 @@ export function useViewerWorkbenchBarButtons(
     hasLayers,
     isCommentsSidebarVisible,
     toggleCommentsSidebar,
+    isMarkupsListVisible,
+    toggleMarkupsListSidebar,
     isSearchInterfaceVisible,
     registerImmediatePanUpdate,
   } = viewer;
@@ -123,6 +125,7 @@ export function useViewerWorkbenchBarButtons(
   );
   const layersLabel = t("workbenchBar.toggleLayers", "Toggle Layers");
   const commentsLabel = t("workbenchBar.toggleComments", "Comments");
+  const markupsListLabel = t("workbenchBar.toggleMarkupsList", "Markups");
   const annotationsLabel = t("workbenchBar.annotations", "Annotations");
   const formFillLabel = t("workbenchBar.formFill", "Fill Form");
   const rulerLabel = t("workbenchBar.ruler", "Ruler / Measure");
@@ -393,6 +396,18 @@ export function useViewerWorkbenchBarButtons(
         active: isCommentsSidebarVisible,
         onClick: () => {
           toggleCommentsSidebar();
+        },
+      },
+      {
+        id: "viewer-toggle-markups-list",
+        icon: <LocalIcon icon="list-alt" width="1rem" height="1rem" />,
+        tooltip: markupsListLabel,
+        ariaLabel: markupsListLabel,
+        section: "top" as const,
+        order: 56.6,
+        active: isMarkupsListVisible,
+        onClick: () => {
+          toggleMarkupsListSidebar();
         },
       },
       {

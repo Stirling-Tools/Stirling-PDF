@@ -108,6 +108,8 @@ export interface ViewerContextType {
   isCommentsSidebarVisible: boolean;
   setCommentsSidebarVisible: (visible: boolean) => void;
   toggleCommentsSidebar: () => void;
+  isMarkupsListVisible: boolean;
+  toggleMarkupsListSidebar: () => void;
 
   /** Request focus or highlight of a comment card in the sidebar (opens sidebar, then scrolls + flashes or focuses input). */
   highlightCommentRequest: {
@@ -240,6 +242,7 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
   const [hasLayers, setHasLayers] = useState(false);
   const [isCommentsSidebarVisible, setIsCommentsSidebarVisible] =
     useState(false);
+  const [isMarkupsListVisible, setIsMarkupsListVisible] = useState(false);
   const [highlightCommentRequest, setHighlightCommentRequest] = useState<{
     documentId: string;
     pageIndex: number;
@@ -386,6 +389,10 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
 
   const toggleCommentsSidebar = () => {
     setIsCommentsSidebarVisible((prev) => !prev);
+  };
+
+  const toggleMarkupsListSidebar = () => {
+    setIsMarkupsListVisible((prev) => !prev);
   };
 
   const requestCommentFocus = useCallback(
@@ -611,6 +618,8 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
     isCommentsSidebarVisible,
     setCommentsSidebarVisible,
     toggleCommentsSidebar,
+    isMarkupsListVisible,
+    toggleMarkupsListSidebar,
     highlightCommentRequest,
     requestCommentFocus,
     clearHighlightCommentRequest,
