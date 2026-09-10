@@ -48,8 +48,6 @@ export function TeamPlanRow({
     : undefined;
   const name = t("portal.billing.team.rowName", "Users");
 
-  // Without a Team plan the cap is the backend's free allowance, which it is already enforcing.
-  // Preferring the wallet once a plan is held keeps one number in charge at a time.
   // Without a Team plan the cap is the free allowance the server enforces, which the wallet
   // carries. Preferring the plan's own limit once one is held keeps one number in charge at a time.
   const limit = held
