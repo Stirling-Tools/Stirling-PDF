@@ -694,6 +694,10 @@ function rankLanguages(
  * carry too few function words to prove any language, so for those the pack's own
  * vocabulary is the better evidence. Hedging costs one chunk; guessing English
  * costs the verdict.
+ *
+ * <p>Short text needs no special case: when there is little to go on the scores
+ * bunch up, so the bar admits the runner-up on its own. Forcing the hedge below 30
+ * words was measured and moved the right-pack rate by under a point.
  */
 function packsFor(detection: LanguageDetection): string[] {
   const ranked =

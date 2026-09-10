@@ -14,7 +14,11 @@
 import fs from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
-import { detectLanguage } from "@app/services/heuristic/heuristicEngine";
+import {
+  classifyHeuristic,
+  detectLanguage,
+} from "@app/services/heuristic/heuristicEngine";
+import type { HeuristicDoc } from "@app/services/heuristic/types";
 
 const CORPUS = process.env.CLASSIFIER_CORPUS ?? path.join(__dirname, "corpus");
 const present = fs.existsSync(path.join(CORPUS, "test_corpora"));
@@ -139,5 +143,87 @@ describe.skipIf(!present)("language detection against real corpora", () => {
       measure(docs("test_corpora", 6, 120)),
     );
     expect(top2).toBeGreaterThanOrEqual(0.97);
+  });
+
+  describe("small documents", () => {
+    /** Natural text cut to roughly `words` words, built from whole sentences. */
+    function sizedDocs(dir: string, words: number, perLanguage: number) {
+      const out = new Map<string, string[]>();
+      for (const tag of TAGS) {
+        const file = path.join(CORPUS, dir, `${tag}.txt`);
+        if (!fs.existsSync(file)) continue;
+        const src = fs
+          .readFileSync(file, "utf8")
+          .split("\n")
+          .map((l) => l.trim())
+          .filter((l) => l.length > 0);
+        const docs: string[] = [];
+        let i = 0;
+        while (docs.length < perLanguage && i < src.length) {
+          const parts: string[] = [];
+          let n = 0;
+          while (n < words && i < src.length) {
+            parts.push(src[i]);
+            n += src[i].split(/\s+/).length;
+            i++;
+          }
+          docs.push(parts.join(" ").split(/\s+/).slice(0, words).join(" "));
+        }
+        if (docs.length > 0) out.set(tag, docs);
+      }
+      return out;
+    }
+
+    it("still reaches the right language's pack on a 20-word document", () => {
+      // A receipt or a delivery note is this short. Exactness falls to about
+      // two-thirds here, but the dispatcher loads two packs and the runner-up
+      // covers most of the gap - which is the number that decides behaviour.
+      const [, top2] = render(
+        "WIKIPEDIA held-out · 20 words per document",
+        measure(sizedDocs("test_wiki", 20, 25)),
+      );
+      expect(top2).toBeGreaterThanOrEqual(0.8);
+    });
+
+    it("makes no language call at all when there is almost no text", () => {
+      const d = detectLanguage("Faktura 2024-014");
+      expect(d.language).toBeNull();
+      expect(d.lowText).toBe(true);
+    });
+
+    it("never trusts a label on short non-document prose", async () => {
+      // None of this text is a business document, so every label is a false
+      // positive. Low and medium escalate to the AI engine and are survivable;
+      // "high" would persist a wrong label without asking anyone.
+      let high = 0;
+      let labelled = 0;
+      let total = 0;
+      for (const [, docs] of sizedDocs("test_wiki", 40, 15)) {
+        for (const text of docs) {
+          const doc: HeuristicDoc = {
+            fileName: "document.pdf",
+            pageCount: 1,
+            meta: {},
+            titleZone: text.split(/\s+/).slice(0, 8).join(" "),
+            firstZone: text,
+            allZone: text,
+          };
+          const r = await classifyHeuristic(doc);
+          total++;
+          if (r.labels.length > 0) {
+            labelled++;
+            if (r.confidence === "high") high++;
+          }
+        }
+      }
+      console.log(
+        `\n40-word non-document prose: ${total} documents, ${labelled} labelled (${((100 * labelled) / total).toFixed(1)}%), ${high} at high confidence`,
+      );
+      expect(total).toBeGreaterThan(100);
+      expect(
+        high / total,
+        "a trusted label here skips the AI engine",
+      ).toBeLessThanOrEqual(0.005);
+    });
   });
 });

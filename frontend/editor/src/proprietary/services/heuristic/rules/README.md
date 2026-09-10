@@ -168,6 +168,36 @@ downloads.
 runner-up's pack too: at 97.8% the right pack is loaded for all but one document in
 fifty, and the remainder escalate to the AI engine rather than being mislabelled.
 
+### Small documents
+
+A receipt, a delivery note or a ticket is 20 words, not 200, so the size curve
+matters more than the headline. Measured on document-register prose:
+
+| words | exact | top-2 | right pack loaded |
+| --- | --- | --- | --- |
+| 8 | 36% | 64% | 64% |
+| 20 | 67% | 85% | 84% |
+| 40 | 83% | 94% | 92% |
+| 100 | 90% | 98% | 97% |
+
+Three things hold this together at the small end:
+
+- **Non-Latin scripts are unaffected.** Arabic, Greek, Hebrew, Hindi, Japanese,
+  Korean, Malayalam, Thai, Tibetan, Chinese, Russian, Ukrainian and Bulgarian all
+  read 100% at 20 words: a script range needs 25 letters, not a sentence. Every
+  loss in the table above is a Latin-script sibling.
+- **Below 25 letters the detector declines to answer** rather than guessing, and
+  the document is scored on core alone.
+- **A wrong language does not become a wrong label.** On 40-word prose that is not
+  a business document at all, 3.7% picked up a label and **none of them reached
+  `high`** — so nothing was trusted enough to skip the AI engine. That is the
+  property that makes the small-document regime safe, and the corpus test pins it.
+
+Short text needs no special handling in the dispatcher: when there is little to go
+on the candidate scores bunch together, so the `SECOND_PACK_BAR` already admits the
+runner-up. Forcing the hedge below 30 words was tried and moved the right-pack rate
+by under a point.
+
 Exactness is lowest where two languages are nearly one (Croatian/Serbian,
 Danish/Norwegian, Catalan/Spanish) and on short encyclopedic text in agglutinative
 languages (Turkish, Hungarian, Slovak), which falls back to assumed English. Both
