@@ -8,6 +8,8 @@ import { MemoryRouter } from "react-router-dom";
  * with no link to this server, so loading a wallet there flipped the whole portal to linked.
  */
 const gate = { gated: false, loading: false, available: true };
+// Administrator by default: the page is theirs, and one case below is the member.
+const admin = { is: true };
 const connect = vi.fn();
 const applyLinkFacts = vi.fn();
 
@@ -19,6 +21,9 @@ vi.mock("@portal/contexts/LinkContext", () => ({
 }));
 vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
+}));
+vi.mock("@portal/hooks/usePortalAdmin", () => ({
+  usePortalAdmin: () => admin.is,
 }));
 vi.mock("@portal/views/Usage", () => ({
   Usage: ({ onWalletLoaded }: { onWalletLoaded?: (w: unknown) => void }) => {
@@ -41,6 +46,7 @@ const renderGate = () =>
 
 describe("PortalBillingGate — self-hosted", () => {
   beforeEach(() => {
+    admin.is = true;
     connect.mockReset();
     applyLinkFacts.mockReset();
     gate.gated = false;
@@ -79,5 +85,15 @@ describe("PortalBillingGate — self-hosted", () => {
     expect(screen.getByTestId("usage")).toBeInTheDocument();
     expect(screen.queryByTestId("free-tier")).toBeNull();
     expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
+  });
+
+  it("gives a member no page at all, whatever the link state", async () => {
+    admin.is = false;
+    gate.gated = true;
+    renderGate();
+
+    expect(screen.queryByTestId("free-tier")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("usage")).not.toBeInTheDocument();
+    expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 });
