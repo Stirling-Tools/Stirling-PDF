@@ -86,31 +86,6 @@
       "title": "Annotate - Stirling PDF",
       "description": "Highlight, draw, add notes, and shapes directly in the viewer"
     },
-    "annotateHighlight": {
-      "image": "/og_images/home.png",
-      "title": "Highlight & Markup - Stirling PDF",
-      "description": "Highlight, underline, strike through, or squiggly-underline text"
-    },
-    "annotateDraw": {
-      "image": "/og_images/home.png",
-      "title": "Draw - Stirling PDF",
-      "description": "Freehand pen and highlighter drawing directly on the PDF"
-    },
-    "annotateShapes": {
-      "image": "/og_images/home.png",
-      "title": "Shapes - Stirling PDF",
-      "description": "Draw rectangles, circles, lines, and polygons on the PDF"
-    },
-    "annotateComments": {
-      "image": "/og_images/home.png",
-      "title": "Comments - Stirling PDF",
-      "description": "Add review comments, inserted text, or replacement text markup"
-    },
-    "annotateStamps": {
-      "image": "/og_images/home.png",
-      "title": "Notes & Stamps - Stirling PDF",
-      "description": "Add text boxes, sticky notes, or image stamps to the PDF"
-    },
     "takeoff": {
       "image": "/og_images/home.png",
       "title": "Take Off - Stirling PDF",
@@ -481,11 +456,6 @@
     "/rotate": "rotate",
     "/auto-rotate": "autoRotate",
     "/annotate": "annotate",
-    "/annotate-highlight": "annotateHighlight",
-    "/annotate-draw": "annotateDraw",
-    "/annotate-shapes": "annotateShapes",
-    "/annotate-comments": "annotateComments",
-    "/annotate-stamps": "annotateStamps",
     "/takeoff": "takeoff",
     "/scanner-effect": "scannerEffect",
     "/page-layout": "pageLayout",

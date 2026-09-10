@@ -3801,31 +3801,6 @@ desc = "Highlight, draw, add notes and shapes in the viewer"
 tags = "annotate,highlight,draw,markup,comment,notes,review,redline,feedback,markup tools,sticky notes,shapes,arrows,text box,freehand"
 title = "Annotate"
 
-[home.annotateComments]
-desc = "Add review comments, inserted text, or replacement text markup"
-tags = "comment,comments,review,textComment,insert text,replace text,feedback,markup"
-title = "Comments"
-
-[home.annotateDraw]
-desc = "Freehand pen and highlighter drawing directly on the PDF"
-tags = "draw,pen,ink,freehand,highlighter,sketch,markup"
-title = "Draw"
-
-[home.annotateHighlight]
-desc = "Highlight, underline, strike through, or squiggly-underline text"
-tags = "highlight,underline,strikeout,squiggly,markup,text markup"
-title = "Highlight & Markup"
-
-[home.annotateShapes]
-desc = "Draw rectangles, circles, lines, and polygons on the PDF"
-tags = "shapes,rectangle,circle,line,polygon,square,markup"
-title = "Shapes"
-
-[home.annotateStamps]
-desc = "Add text boxes, sticky notes, or image stamps to the PDF"
-tags = "stamp,note,sticky note,text box,markup"
-title = "Notes & Stamps"
-
 [home.autoRotate]
 desc = "Detect each page's orientation and rotate it upright automatically."
 tags = "auto rotate,fix orientation,upside down,sideways,straighten,orient,detect orientation,correct rotation,auto orient,scanned,OSD"

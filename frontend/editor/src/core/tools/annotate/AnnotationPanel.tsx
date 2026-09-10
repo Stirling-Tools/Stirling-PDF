@@ -357,27 +357,37 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
     }
   };
 
-  const renderToolButtons = (
+  // A named cluster of icon buttons — several of these sit side by side in a
+  // single wrapping toolbar row (see the layout below), each one a compact
+  // chip rather than a full-width labeled section, so the whole tool set
+  // reads as one continuous toolbar instead of a long stack of headings.
+  const renderToolGroup = (
+    groupLabel: string,
     tools: { id: AnnotationToolId; label: string; icon: string }[],
   ) => (
-    <Group gap="xs">
-      {tools.map((tool) => (
-        <MantineTooltip key={tool.id} label={tool.label} withArrow>
-          <ActionIcon
-            variant={
-              activeTool === tool.id && annotationsVisible
-                ? "primary"
-                : "tertiary"
-            }
-            onClick={() => activateAnnotationTool(tool.id)}
-            disabled={!annotationsVisible}
-            aria-label={tool.label}
-          >
-            <LocalIcon icon={tool.icon} width="1.25rem" height="1.25rem" />
-          </ActionIcon>
-        </MantineTooltip>
-      ))}
-    </Group>
+    <Paper withBorder radius="sm" p={4}>
+      <Text size="10px" fw={600} tt="uppercase" c="dimmed" mb={2} px={2}>
+        {groupLabel}
+      </Text>
+      <Group gap={2} wrap="nowrap">
+        {tools.map((tool) => (
+          <MantineTooltip key={tool.id} label={tool.label} withArrow>
+            <ActionIcon
+              variant={
+                activeTool === tool.id && annotationsVisible
+                  ? "primary"
+                  : "tertiary"
+              }
+              onClick={() => activateAnnotationTool(tool.id)}
+              disabled={!annotationsVisible}
+              aria-label={tool.label}
+            >
+              <LocalIcon icon={tool.icon} width="1.25rem" height="1.25rem" />
+            </ActionIcon>
+          </MantineTooltip>
+        ))}
+      </Group>
+    </Paper>
   );
 
   const defaultStyleControls = (
@@ -1242,40 +1252,22 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         />
       </Group>
 
-      <Box>
-        <Text size="sm" fw={600} mb="xs">
-          {t("annotation.textMarkup", "Text Markup")}
-        </Text>
-        {renderToolButtons(textMarkupTools)}
-      </Box>
-
-      <Box>
-        <Text size="sm" fw={600} mb="xs">
-          {t("annotation.drawing", "Drawing")}
-        </Text>
-        {renderToolButtons(drawingTools)}
-      </Box>
-
-      <Box>
-        <Text size="sm" fw={600} mb="xs">
-          {t("annotation.shapes", "Shapes")}
-        </Text>
-        {renderToolButtons(shapeTools)}
-      </Box>
-
-      <Box>
-        <Text size="sm" fw={600} mb="xs">
-          {t("annotation.comments", "Comments")}
-        </Text>
-        {renderToolButtons(commentTools)}
-      </Box>
-
-      <Box>
-        <Text size="sm" fw={600} mb="xs">
-          {t("annotation.notesStamps", "Notes & Stamps")}
-        </Text>
-        {renderToolButtons(otherTools)}
-      </Box>
+      {/* One continuous, wrapping toolbar of named tool clusters — mirrors
+          Bluebeam Revu's docked Shapes/Sketch/Text/Measure toolbars sitting
+          side by side, rather than a long stack of full-width sections. */}
+      <Group gap={6} align="flex-start" wrap="wrap">
+        {renderToolGroup(
+          t("annotation.textMarkup", "Text Markup"),
+          textMarkupTools,
+        )}
+        {renderToolGroup(t("annotation.drawing", "Drawing"), drawingTools)}
+        {renderToolGroup(t("annotation.shapes", "Shapes"), shapeTools)}
+        {renderToolGroup(t("annotation.comments", "Comments"), commentTools)}
+        {renderToolGroup(
+          t("annotation.notesStamps", "Notes & Stamps"),
+          otherTools,
+        )}
+      </Group>
 
       {activeTool === "stamp" && defaultStyleControls}
 

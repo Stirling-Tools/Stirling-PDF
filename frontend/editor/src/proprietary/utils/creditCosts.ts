@@ -53,11 +53,6 @@ export const TOOL_CREDIT_COSTS: Partial<Record<ToolId, number>> = {
   removeCertSign: CREDIT_COSTS.MEDIUM,
   scannerEffect: CREDIT_COSTS.MEDIUM,
   annotate: CREDIT_COSTS.MEDIUM,
-  annotateHighlight: CREDIT_COSTS.MEDIUM,
-  annotateDraw: CREDIT_COSTS.MEDIUM,
-  annotateShapes: CREDIT_COSTS.MEDIUM,
-  annotateComments: CREDIT_COSTS.MEDIUM,
-  annotateStamps: CREDIT_COSTS.MEDIUM,
   formFill: CREDIT_COSTS.MEDIUM,
 
   // Large operations (5 credits)
