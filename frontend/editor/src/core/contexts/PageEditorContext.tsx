@@ -234,7 +234,20 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       .join(",");
   }, [state.files.ids, state.files.byId]);
 
+  // Bytes can be replaced under an unchanged id and version - reconciling a
+  // record with its source does exactly that - and the laid-out document would
+  // then describe pages that no longer exist.
+  const fileContentSignature = useMemo(() => {
+    return state.files.ids
+      .map((id) => {
+        const stub = state.files.byId[id];
+        return `${id}:${stub?.size ?? 0}:${stub?.lastModified ?? 0}`;
+      })
+      .join(",");
+  }, [state.files.ids, state.files.byId]);
+
   const prevFileContextSignature = useRef<string | null>(null);
+  const prevFileContentSignature = useRef<string | null>(null);
   const haveFileIdSetsChanged = (prevIds: FileId[], currentIds: FileId[]) => {
     if (prevIds.length !== currentIds.length) {
       return true;
@@ -251,9 +264,14 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const currentFileIds = state.files.ids;
     const prevFileIds = prevFileContextIdsRef.current;
     const idsChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
+    const contentChanged =
+      prevFileContentSignature.current !== null &&
+      prevFileContentSignature.current !== fileContentSignature;
+    prevFileContentSignature.current = fileContentSignature;
 
     if (
       !idsChanged &&
+      !contentChanged &&
       prevFileContextSignature.current === fileContextSignature
     ) {
       return;
@@ -262,20 +280,26 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const previousSignature = prevFileContextSignature.current;
     prevFileContextSignature.current = fileContextSignature;
 
-    if (!idsChanged) {
+    if (!idsChanged && !contentChanged) {
       // Signature changed due to metadata/version updates but file set is unchanged.
       return;
     }
 
     console.log(
-      "[PageEditorContext] File signature changed (IDs/versions changed), clearing persisted document:",
+      "[PageEditorContext] Files changed, clearing persisted document:",
       {
+        reason: idsChanged ? "file set" : "content",
         prev: previousSignature?.substring(0, 50),
         current: fileContextSignature.substring(0, 50),
       },
     );
     clearPersistedDocument();
-  }, [fileContextSignature, clearPersistedDocument, state.files.ids]);
+  }, [
+    fileContextSignature,
+    fileContentSignature,
+    clearPersistedDocument,
+    state.files.ids,
+  ]);
 
   // Keep a ref to always read latest state in stable callbacks
   const stateRef = useRef(state);
