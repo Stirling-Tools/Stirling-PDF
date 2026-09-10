@@ -13,11 +13,9 @@ import type { Wallet } from "@portal/api/billing";
 /**
  * The seam the SaaS build shadows: picks which usage page this instance has one of.
  *
- * <p>Two sources, never one. Unlinked reads the instance's own free-grant meter and asserts nothing
- * about linkage; linked reads the cloud wallet. Keeping them apart is what keeps {@link
- * onWalletLoaded} honest — it reports {@code linked} as a fact, and the browser can hold a SaaS
- * session with no link to this server, so routing the unlinked page through the wallet would flip
- * the whole portal to linked.
+ * <p>Two sources, never one: {@link onWalletLoaded} reports {@code linked} as a fact, and a
+ * browser can hold a SaaS session with no link to this server, so routing the unlinked page through
+ * the wallet would flip the whole portal to linked.
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
@@ -32,17 +30,14 @@ export function PortalBillingGate() {
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
 
-  // Administrators only for now. Both pages report figures for the whole instance, and the
-  // endpoints behind them are ADMIN-gated, so a member would get a page explaining itself away.
-  // The nav hides the entry to match; this is the backstop for a typed URL.
+  // Administrators only: the figures are instance-wide and the endpoints ADMIN-gated. The nav
+  // hides the entry to match, so this is the backstop for a typed URL.
   if (!isAdmin) return null;
   // Neither page while the answer is unknown: showing the local meter to a linked instance would
   // present a dormant ledger as its live one.
   if (loading) return null;
-  // The cloud wallet needs a link we positively know about. Anything else is this instance's own
-  // ledger, including the two cases that are not "gated": linking turned off, and a status check
-  // that failed. Falling through to the wallet there asks a self-hosted instance to read a SaaS
-  // it may have no address for.
+  // A positively known link, not merely "not gated": linking turned off and a failed status
+  // check are neither, and must not reach a SaaS this instance has no address for.
   if (!link?.isLinked) return <FreeTierPlanView />;
   return <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />;
 }

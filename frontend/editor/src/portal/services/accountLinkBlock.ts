@@ -1,25 +1,18 @@
 /**
- * The self-hosted instance's `402 ACCOUNT_LINK_REQUIRED` sentinel, turned into a prompt.
+ * The `402 ACCOUNT_LINK_REQUIRED` sentinel, turned into a prompt.
  *
- * <p>Reactive by design. The free tier works with no Stirling account, so the UI cannot know in
- * advance whether an action is affordable, and it must not ask on the chance that it isn't: it runs
- * the action and lets the server's answer raise the dialog. The balance is not readable here either
- * way, since {@code GET /api/v1/account-link/free-tier} is admin-only and the portal is reachable
- * by a non-admin holding a PORTAL grant.
+ * <p>Reactive, not predictive: the free tier needs no account, so the UI cannot know whether an
+ * action is affordable, and the balance endpoint is admin-only anyway. It runs the action and lets
+ * the answer raise the dialog.
  *
- * <p>Only {@code FREE_TIER_EXHAUSTED} is acted on. It is the one reason that belongs to an unlinked
- * instance, so linking is a real answer to it; the others ({@code OVER_LIMIT}, {@code REVOKED},
- * {@code GRACE_EXPIRED}) mean a linked team's cloud wallet is the problem, and offering to link an
- * already-linked instance would be nonsense. Those fall through to the caller's own error handling.
+ * <p>Only {@code FREE_TIER_EXHAUSTED} is acted on. The others mean a linked team's cloud wallet is
+ * the problem, where offering to link would be nonsense, so they fall through to the caller.
  */
 
-/** Bridge event to the always-mounted host in PortalProviders. Not part of the public API. */
+/** Bridge to the always-mounted host in PortalProviders. */
 export const FREE_TIER_EXHAUSTED_EVENT = "stirling:portal-free-tier-exhausted";
 
-/**
- * Block reasons the instance entitlement gate returns alongside the sentinel. Mirrors the
- * backend {@code GateDecision.Reason} blocking arm.
- */
+/** Mirrors the backend {@code GateDecision.Reason} blocking arm. */
 export type AccountLinkBlockReason =
   | "FREE_TIER_EXHAUSTED"
   | "OVER_LIMIT"
@@ -36,9 +29,8 @@ const BLOCK_REASONS: readonly string[] = [
 /**
  * The gate's block reason, or null when this is not the account-link sentinel.
  *
- * <p>Strict on both the status and the `error` sentinel, so an incidental 402 from anywhere else is
- * not hijacked into a link prompt. Reads {@link HttpError}'s shape structurally rather than by
- * {@code instanceof}, which keeps this off the import cycle with the client that reports to it.
+ * <p>Strict on the status and the sentinel both, so an incidental 402 is not hijacked. Reads
+ * {@link HttpError} structurally to stay off the import cycle with the client that throws it.
  */
 export function classifyAccountLinkBlock(
   error: unknown,
@@ -57,10 +49,8 @@ export function classifyAccountLinkBlock(
 }
 
 /**
- * Raises the "allowance spent" prompt if {@code error} is a spent free grant. Returns whether it
- * did, so a caller can leave its own error surface alone when the dialog has taken over.
- *
- * <p>Safe to call on any error and any number of times: the dialog dedupes on its own open state.
+ * Raises the prompt if {@code error} is a spent free grant, returning whether it did so a caller
+ * can leave its own error surface alone. Safe on any error, any number of times.
  */
 export function reportAccountLinkBlock(error: unknown): boolean {
   if (classifyAccountLinkBlock(error) !== "FREE_TIER_EXHAUSTED") return false;

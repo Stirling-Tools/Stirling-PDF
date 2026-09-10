@@ -43,17 +43,9 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
  * automation) work once the applicable allowance is spent; manual tools pass through. {@code
  * afterCompletion} costs the op and accrues it.
  *
- * <p>Which ledger it accrues to follows the gate's own reason, so the interceptor never re-derives
- * linked-ness and the two can't disagree: {@code FREE_TIER} means the instance is unlinked and
- * spending its own monthly grant, anything else means a linked team's cloud ledger. The free-tier
- * path costs documents with {@link UnitCalcPolicy#DEFAULT} because an unlinked instance has no
- * policy from SaaS.
- *
- * <p>Blocking responds {@code 402}; the {@code reason} in the body is what tells the FE whether to
- * offer linking as more allowance or report a linked team over its limit. Fail-open and flag-off
- * both let the request continue. Only the cloud ledger is gated behind {@code …metering.enabled}
- * via {@link ObjectProvider}: with it off the {@link UsageMeterService} bean is absent and a linked
- * instance accrues nothing, while the free tier still meters and holds.
+ * <p>The ledger follows the gate's own reason rather than re-deriving linked-ness, so the two
+ * cannot disagree. Only the cloud one sits behind {@code …metering.enabled}: with it off a linked
+ * instance accrues nothing while the free tier still meters and holds.
  */
 @Slf4j
 @Component
@@ -166,14 +158,13 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         }
     }
 
-    /** What one request costs, and the key that dedups it; {@code opSignature} null = no dedup. */
+    /** {@code opSignature} null = no dedup. */
     private record MeteredOp(long units, String opSignature) {}
 
     /**
-     * Costs the request's inputs in doc-units (page + byte axes) and derives its input-set
-     * signature. The instance is authoritative for units (SaaS bills the delta and never sees the
-     * file), so a page-heavy but small PDF must be page-counted or it under-bills. A fileless op
-     * has no input identity — null signature, billed the 1-unit floor each time.
+     * Costs the inputs on both the page and byte axes: the instance is authoritative for units and
+     * SaaS never sees the file, so a page-heavy but small PDF would otherwise under-bill. A
+     * fileless op has no input identity, so no signature and the 1-unit floor each time.
      */
     private MeteredOp measure(HttpServletRequest request, UnitCalcPolicy policy) {
         MultipartHttpServletRequest mreq =

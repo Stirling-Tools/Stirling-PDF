@@ -7,10 +7,7 @@ import { HttpError } from "@portal/api/http";
 import { useUI } from "@portal/contexts/UIContext";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 
-/**
- * {@code forbidden} is its own outcome, not a failure: the meter is an instance-wide figure behind
- * an admin-only endpoint, and a non-admin can hold a portal grant and land here.
- */
+/** {@code forbidden} is an outcome, not a failure: the endpoint is admin-only. */
 type Load =
   | { state: "loading" }
   | { state: "ready"; balance: FreeTierBalance }
@@ -18,19 +15,14 @@ type Load =
   | { state: "failed" };
 
 /**
- * Usage & billing for an instance with no Stirling account: the local free grant it meters itself
- * against, and the offer of a further allowance.
- *
- * <p>Deliberately not a wallet renderer. {@code Usage} reports {@code linked} as a fact of having
- * loaded a wallet, and a browser can hold a SaaS session with no link to this server, so an
- * unlinked page routed through the wallet would flip the whole portal to linked. This reads the
- * local endpoint only and asserts nothing about linkage.
+ * Usage & billing for an instance with no Stirling account. Reads the local endpoint only: loading
+ * a wallet here would assert linkage the browser's SaaS session cannot vouch for.
  */
 export function FreeTierPlanView() {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
-  // Held as an outcome rather than a rendered message so the fetch effect owes nothing to `t`,
-  // whose identity is not guaranteed stable across renders.
+  // An outcome, not a rendered message: the effect must not depend on `t`, whose identity is
+  // not stable across renders.
   const [load, setLoad] = useState<Load>({ state: "loading" });
 
   useEffect(() => {

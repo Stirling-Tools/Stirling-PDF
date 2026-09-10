@@ -19,18 +19,11 @@ import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.ContentHasher;
 
 /**
- * The whole local free-tier ledger: the instance's own monthly period, the units spent against the
- * grant in it, and the accrual that spends them. This is what an instance that has never linked to
- * a Stirling account meters itself against, so no account is needed to use the free tier.
+ * The local free-tier ledger an unlinked instance meters itself against.
  *
- * <p>Independent of the cloud wallet by construction. It reads and writes only {@link
- * FreeTierUsageCounter} / {@link FreeTierPeriod}, which {@link UsageSyncService} never touches, so
- * local usage is never reported to SaaS and survives a link/unlink cycle untouched — relinking
- * cannot mint a fresh grant. While the instance is linked the cloud wallet is authoritative and
- * this ledger simply stops being written or read (see {@link InstanceEntitlementGate#evaluate}).
- *
- * <p>The balance is derived from the counters, never stored, so a new period reads as a full grant
- * with nothing to zero.
+ * <p>Touches only {@link FreeTierUsageCounter} / {@link FreeTierPeriod}, which {@link
+ * UsageSyncService} never reads, so local usage never reaches SaaS and a link/unlink cycle cannot
+ * mint a fresh grant.
  */
 @Slf4j
 @Service
@@ -41,11 +34,7 @@ import stirling.software.proprietary.billing.ContentHasher;
         matchIfMissing = true)
 public class FreeTierUsageService {
 
-    /**
-     * Keeps the shared {@link MeteredInputSignature} keyspace disjoint from the cloud meter's: the
-     * two period starts can be the same timestamp, and a claim made before linking must not
-     * suppress a charge after it.
-     */
+    /** Disjoint from the cloud meter's keyspace: the two period starts can collide. */
     private static final String SIGNATURE_NAMESPACE = "free-tier\n";
 
     private final FreeTierPeriodRepository periods;
@@ -63,7 +52,7 @@ public class FreeTierUsageService {
         this(periods, counters, signatures, properties, LocalDateTime::now);
     }
 
-    /** Package-private: lets tests drive the period boundary instead of waiting a month for it. */
+    /** Lets tests drive the period boundary rather than wait a month. */
     FreeTierUsageService(
             FreeTierPeriodRepository periods,
             FreeTierUsageCounterRepository counters,
@@ -78,20 +67,15 @@ public class FreeTierUsageService {
         this.clock = clock;
     }
 
-    /**
-     * What the instance may still spend for free this month. {@code remainingUnits} is floored at 0
-     * and is the number the gate enforces; {@code periodEnd} is exclusive.
-     */
+    /** {@code remainingUnits} is floored at 0 and is what the gate enforces; end is exclusive. */
     public record FreeTierBalance(
             long grantUnits,
             long usedUnits,
             long remainingUnits,
             LocalDateTime periodStart,
             LocalDateTime periodEnd,
-            /** So a surprising total can be attributed. */
             Map<String, Long> usedByCategory) {
 
-        /** Without a breakdown, for callers that only weigh the remainder against the grant. */
         public FreeTierBalance(
                 long grantUnits,
                 long usedUnits,
@@ -121,9 +105,8 @@ public class FreeTierUsageService {
     }
 
     /**
-     * Spends {@code units} of the grant against the current period, unless {@code opSignature} was
-     * already metered inside the workflow window. No-ops for non-billable categories or
-     * non-positive units. Best-effort: callers need not handle persistence errors.
+     * Spends against the current period unless {@code opSignature} was already charged inside the
+     * workflow window. Best-effort: callers need not handle persistence errors.
      */
     public void accrue(BillingCategory category, long units, String opSignature) {
         if (category == null || category == BillingCategory.BYPASSED || units <= 0) {
@@ -133,9 +116,8 @@ public class FreeTierUsageService {
         try {
             period = currentPeriodStart();
         } catch (RuntimeException e) {
-            // No period means no key to accrue under. Dropping the accrual is the safe direction:
-            // the same fault would make the gate fail open, so the two agree on erring toward the
-            // user rather than charging work that was never gated.
+            // No period, no key to accrue under. The same fault fails the gate open, so both
+            // err toward the user rather than charging ungated work.
             log.debug("Free-tier period unavailable; skipping accrual: {}", e.getMessage());
             return;
         }
@@ -146,9 +128,8 @@ public class FreeTierUsageService {
     }
 
     /**
-     * The period in force, creating the anchor on first use and rolling the stored stamp forward
-     * when the boundary has passed. Every start is a whole number of months from the immutable
-     * anchor, so the stamp can be recomputed at any time and cannot drift.
+     * The period in force, anchoring on first use and rolling the stamp when the boundary has
+     * passed. Every start is a whole month count from the immutable anchor, so it cannot drift.
      */
     LocalDateTime currentPeriodStart() {
         LocalDateTime now = clock.get();
@@ -165,13 +146,11 @@ public class FreeTierUsageService {
     }
 
     /**
-     * Whole periods elapsed: the largest {@code n} with {@code anchor.plusMonths(n) <= now}.
+     * Largest {@code n} with {@code anchor.plusMonths(n) <= now}.
      *
-     * <p>{@link ChronoUnit#MONTHS} alone is not that number, because it disagrees with {@link
-     * LocalDateTime#plusMonths} whenever the anchor day has to be clamped into a shorter month — a
-     * 31st anchor reads as 0 months elapsed well after {@code plusMonths(1)} has already passed,
-     * which would strand such an instance in its first period. The correction is bounded: the clamp
-     * costs at most one month, so neither loop runs more than once.
+     * <p>{@link ChronoUnit#MONTHS} alone is not that number: it disagrees with {@code plusMonths}
+     * when the anchor day clamps into a shorter month, so a 31st anchor reads as 0 elapsed long
+     * after the first period ended. The clamp costs at most a month, so neither loop repeats.
      */
     private static long periodsElapsed(LocalDateTime anchor, LocalDateTime now) {
         long n = Math.max(0, ChronoUnit.MONTHS.between(anchor, now));

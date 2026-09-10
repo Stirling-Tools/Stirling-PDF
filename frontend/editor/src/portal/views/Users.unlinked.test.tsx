@@ -4,10 +4,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PortalViewProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * An unlinked instance has users of its own — the grandfathered licence limit, five by default — so
- * inviting one is a free-tier feature and neither the button nor the `?invite` deep link asks for a
- * Stirling account. Linking replaces that limit with the linked team's larger allowance; running
- * out of seats is the invite endpoint's own answer, not something to pre-empt here.
+ * An unlinked instance has its own user limit, so inviting is a free-tier feature and nothing here
+ * asks for an account. Running out of seats is the invite endpoint's answer, not a pre-emption.
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 

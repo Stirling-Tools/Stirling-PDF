@@ -23,9 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Same-origin account-link surface on the self-hosted instance (combined billing).
  *
- * <p>Admin-only, class-wide: everything here is server-scoped rather than per-user, and that
- * includes the free-tier meter, which reports the whole instance's allowance. A non-admin who runs
- * into the wall learns it from the {@code reason} on the 402, not from here.
+ * <p>Admin-only class-wide: everything here is server-scoped, the free-tier meter included. A
+ * non-admin learns of the wall from the {@code reason} on the 402, not from here.
  */
 @Slf4j
 @Hidden
@@ -168,10 +167,8 @@ public class AccountLinkController {
     }
 
     /**
-     * The instance's own monthly free grant: units spent, the grant, and when the period rolls.
-     * Reported whether or not the instance is linked — while linked the cloud wallet is
-     * authoritative and these figures are dormant, but they are exactly what unlinking would resume
-     * on, so the portal can show both without a second shape.
+     * The instance's own monthly grant. Reported even while linked, where it is dormant but is what
+     * unlinking resumes on.
      */
     @GetMapping("/free-tier")
     public ResponseEntity<FreeTierUsageService.FreeTierBalance> freeTier() {

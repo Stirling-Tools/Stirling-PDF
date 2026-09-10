@@ -18,11 +18,7 @@ export interface LocalUsage {
 }
 
 /**
- * This instance's own monthly free grant (GET /api/v1/account-link/free-tier) — what an unlinked
- * instance meters itself against, so the free tier needs no Stirling account.
- *
- * <p>{@code remainingUnits} is floored at 0. Dormant while the instance is linked, its cloud
- * wallet being authoritative instead.
+ * The instance's own monthly grant. {@code remainingUnits} is floored at 0; dormant while linked.
  */
 export interface FreeTierBalance {
   grantUnits: number;
@@ -63,11 +59,8 @@ export async function fetchLocalUsage(): Promise<LocalUsage> {
 }
 
 /**
- * This instance's local free-grant figures.
- *
- * <p>Admin-only server-side, the allowance being a property of the whole instance rather than of
- * the caller, so this rejects 403 for a non-admin holding a portal grant. A caller must render that
- * as figures it may not see, not as a fault.
+ * Admin-only server-side, the allowance being instance-wide: a caller must render a 403 as figures
+ * it may not see, not as a fault.
  */
 export async function fetchFreeTier(): Promise<FreeTierBalance> {
   return apiClient.local.json<FreeTierBalance>(`${BASE}/free-tier`);

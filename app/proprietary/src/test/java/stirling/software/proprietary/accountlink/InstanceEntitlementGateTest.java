@@ -18,10 +18,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import stirling.software.proprietary.accountlink.GateDecision.Reason;
 
 /**
- * Covers the gate decision matrix: flag-off, manual-free, the unlinked free tier, fail-open,
- * grace-expired, linked-free, and over-limit. The pure {@link InstanceEntitlementGate#decide} cases
- * need no Spring; the grace-window reference computation and the ledger the gate reads per link
- * state are exercised through {@link InstanceEntitlementGate#evaluate} with mocked collaborators.
+ * The gate decision matrix. {@link InstanceEntitlementGate#decide} is pure; the grace window and
+ * the ledger picked per link state go through {@link InstanceEntitlementGate#evaluate}.
  */
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementGateTest {
@@ -32,7 +30,6 @@ class InstanceEntitlementGateTest {
     @Mock private LocalUsageService localUsageService;
     @Mock private FreeTierUsageService freeTierUsageService;
 
-    /** Local grant with {@code remaining} units left of 500, in an arbitrary current period. */
     private static FreeTierUsageService.FreeTierBalance grant(long remaining) {
         LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
         return new FreeTierUsageService.FreeTierBalance(
@@ -90,8 +87,7 @@ class InstanceEntitlementGateTest {
 
     @Test
     void billable_notLinked_grantSpent_blocksWithoutAskingForAnAccount() {
-        // The terminal reason has to be distinguishable from an over-limit linked team: linking
-        // buys more allowance here, it is not what switches the feature on.
+        // Must be distinguishable from an over-limit linked team: here linking buys more.
         GateDecision d =
                 InstanceEntitlementGate.decide(true, true, false, Optional.empty(), false, 0L, 0L);
         assertFalse(d.allowed());
@@ -100,8 +96,7 @@ class InstanceEntitlementGateTest {
 
     @Test
     void billable_notLinked_grantOverspent_blocks() {
-        // A single op may overshoot (the gate checks before the meter charges), so a negative
-        // balance must read as exhausted rather than wrapping back into "units remain".
+        // A negative balance must read as exhausted, not wrap back into "units remain".
         GateDecision d =
                 InstanceEntitlementGate.decide(
                         true, true, false, Optional.empty(), false, 0L, -20L);
@@ -366,8 +361,7 @@ class InstanceEntitlementGateTest {
 
     @Test
     void evaluate_linked_ignoresTheLocalGrantEntirely() {
-        // A pre-link grant that is fully spent must not block a linked team, and a linked team's
-        // limits must not be relieved by a grant that still has units: the ledgers are separate.
+        // The ledgers are separate in both directions.
         when(credentialStore.isLinked()).thenReturn(true);
         when(entitlementCache.current()).thenReturn(Optional.of(free()));
         when(localUsageService.currentPeriodUnsynced())

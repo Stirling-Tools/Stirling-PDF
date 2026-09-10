@@ -4,9 +4,8 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PortalViewProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * An instance with no Stirling account still runs pipelines, on its own monthly grant, so nothing
- * here asks for one up front. The wall is the server's 402 once the grant is spent, not a locked
- * button before the first run.
+ * An unlinked instance still runs pipelines on its own grant, so nothing asks for an account up
+ * front. The wall is the server's 402, not a locked button.
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
 
@@ -25,8 +24,8 @@ vi.mock("@portal/hooks/useConnectGate", () => ({
   }),
 }));
 
-// Deterministic i18n: keys returned verbatim. initReactI18next/Trans are exported too because the
-// unified page pulls in modules (the policy wizard/catalogue) that reference them at import time.
+// Keys verbatim. initReactI18next/Trans are exported because modules this page imports
+// reference them at import time.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,

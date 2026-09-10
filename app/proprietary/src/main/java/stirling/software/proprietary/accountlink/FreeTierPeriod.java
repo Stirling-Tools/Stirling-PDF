@@ -12,17 +12,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Singleton row anchoring this instance's own monthly free-tier period. A self-hosted instance that
- * has never linked has no subscription to borrow a billing cycle from, so it owns its period
- * outright: anchored at first use and rolling every month from there.
+ * Singleton row anchoring an unlinked instance's own monthly period. Written only by {@link
+ * FreeTierUsageService}.
  *
- * <p>{@link #anchorAt} is written once and never moves, which is what keeps the roll drift-free —
- * deriving each start by adding a month to the <em>previous</em> start would walk a 31st anchor
- * permanently down to the 28th. {@link #periodStart} is the stamp {@link FreeTierUsageCounter} rows
- * are keyed by, rolled lazily when a read or write notices the boundary has passed, so no scheduler
- * is involved.
- *
- * <p>Written only by {@link FreeTierUsageService}.
+ * <p>{@link #anchorAt} never moves: deriving each start from the <em>previous</em> one would walk a
+ * 31st anchor permanently down to the 28th.
  */
 @Entity
 @Table(name = "account_link_free_tier_period")
@@ -34,11 +28,10 @@ public class FreeTierPeriod {
 
     @Id private Long id;
 
-    /** Immutable origin of every period boundary; set when the instance first meters anything. */
     @Column(name = "anchor_at", nullable = false)
     private LocalDateTime anchorAt;
 
-    /** Inclusive start of the period in force, always {@code anchorAt} plus a whole month count. */
+    /** Inclusive, always {@code anchorAt} plus a whole month count. */
     @Column(name = "period_start", nullable = false)
     private LocalDateTime periodStart;
 

@@ -15,14 +15,11 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Durable per-(free-tier period, category) usage counter for the instance's own monthly grant.
+ * Per-(period, category) counter for the local grant. Written only by {@link FreeTierUsageService}.
  *
- * <p>A separate table from {@link UsageCounter}, not a scoped column on it: {@link
+ * <p>A separate table from {@link UsageCounter} rather than a scoped column: {@link
  * UsageSyncService} reads only that one, so pre-link accrual cannot leak into the first cloud sync,
- * and a locally-anchored period start can collide with a Stripe one on the same timestamp. Hence no
- * {@code last_synced_units} twin either, local usage never being reported.
- *
- * <p>Written only by {@link FreeTierUsageService}.
+ * and the two period starts can collide on a timestamp.
  */
 @Entity
 @Table(

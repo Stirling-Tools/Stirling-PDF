@@ -15,9 +15,8 @@ import org.springframework.stereotype.Service;
  * <ol>
  *   <li>Flag off → always allow (feature inert).
  *   <li>Manual tool → always allow (manual tools are free, never metered).
- *   <li>Billable + not linked → spend the instance's own monthly grant: allow with {@code
- *       FREE_TIER} while units remain, else block with {@code FREE_TIER_EXHAUSTED}. Linking buys a
- *       further grant; it is not what activates the feature.
+ *   <li>Billable + not linked → {@code FREE_TIER} while units remain, else {@code
+ *       FREE_TIER_EXHAUSTED}. Linking buys a further grant, it does not activate the feature.
  *   <li>Billable + linked + entitlement unknown (unreachable) → <b>fail open</b>, allow — unless
  *       metering is on and SaaS has been unreachable past the grace window, then block with {@code
  *       GRACE_EXPIRED} so the fail-open can't grant unbounded free/unbilled work forever.
@@ -26,13 +25,11 @@ import org.springframework.stereotype.Service;
  *   <li>Billable + linked + over limit → block with {@code OVER_LIMIT}.
  * </ol>
  *
- * <p>The two ledgers never mix: the local grant is consulted only when unlinked, and a linked
- * instance's cloud wallet is authoritative even though its pre-link local counters are still
- * sitting there — they are what it resumes on if it ever unlinks.
+ * <p>The local grant is read only when unlinked; a linked instance's pre-link counters sit
+ * untouched, and are what it resumes on if it unlinks.
  *
  * <p>The decision logic is the pure static {@link #decide}; the Spring wrapper supplies the live
- * flag / linked-state / entitlement / balances and computes whether the grace window has expired.
- * This is the unit-tested core.
+ * flag / linked-state / entitlement / balances and resolves the grace window.
  */
 @Service
 @Profile("!saas")
@@ -102,10 +99,8 @@ public class InstanceEntitlementGate {
      *     free grant (unsubscribed) or the spend cap (capped subscription) in real time so the gate
      *     stops without waiting for the next sync (0 for uncapped-subscribed / unknown-entitlement
      *     cases, where it has no effect).
-     * @param freeTierRemainingUnits units left in the instance's own monthly grant; consulted only
-     *     when unlinked, where it is the sole ceiling. 0 blocks, so a caller unable to read the
-     *     local ledger must throw rather than pass 0 — the interceptor turns a throw into a
-     *     fail-open, whereas 0 reads as a deliberately empty grant.
+     * @param freeTierRemainingUnits the sole ceiling when unlinked. 0 blocks, so a caller that
+     *     cannot read the local ledger must throw instead: a throw fails open, 0 reads as empty.
      */
     public static GateDecision decide(
             boolean flagEnabled,

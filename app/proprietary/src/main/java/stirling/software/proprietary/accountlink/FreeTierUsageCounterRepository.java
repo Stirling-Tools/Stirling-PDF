@@ -11,9 +11,8 @@ import org.springframework.transaction.annotation.Transactional;
 public interface FreeTierUsageCounterRepository extends JpaRepository<FreeTierUsageCounter, Long> {
 
     /**
-     * Atomically adds {@code delta} to an existing counter row, returning the rows updated (0 when
-     * the row doesn't exist yet — the caller then inserts). Doing the add in SQL avoids a
-     * read-modify-write race between concurrent billable requests.
+     * Adds in SQL to avoid a read-modify-write race. Returns 0 when no row exists yet, which the
+     * caller then inserts.
      */
     @Modifying
     @Transactional
@@ -27,17 +26,13 @@ public interface FreeTierUsageCounterRepository extends JpaRepository<FreeTierUs
             @Param("delta") long delta,
             @Param("now") LocalDateTime now);
 
-    /**
-     * {@code [category, units]} rows. Which meter spent the grant is the first question asked of a
-     * figure that looks wrong, and a total cannot answer it: an AI-surface policy step and an
-     * automation sub-step are both just units once summed.
-     */
+    /** {@code [category, units]} rows: a total cannot say which meter spent the grant. */
     @Query(
             "SELECT c.category, SUM(c.cumulativeUnits) FROM FreeTierUsageCounter c"
                     + " WHERE c.periodStart = :periodStart GROUP BY c.category")
     java.util.List<Object[]> sumUnitsByCategory(@Param("periodStart") LocalDateTime periodStart);
 
-    /** Units spent against the grant in one period, across categories; {@code null} if none. */
+    /** {@code null} when the period has no rows. */
     @Query(
             "SELECT SUM(c.cumulativeUnits) FROM FreeTierUsageCounter c"
                     + " WHERE c.periodStart = :periodStart")

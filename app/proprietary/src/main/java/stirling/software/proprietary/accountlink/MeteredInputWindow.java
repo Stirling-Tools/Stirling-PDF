@@ -8,14 +8,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * The workflow-window dedup rule, shared by both meters so an operation costs the same whichever
- * ledger it lands in. An identical input set re-submitted within {@code metering.workflow-window}
- * is treated as chaining and not re-charged; the same inputs run again after the window are billed
- * afresh — matching the cloud's open-job lineage window.
+ * The workflow-window dedup rule, shared by both meters so an op costs the same either way. An
+ * identical input set inside {@code metering.workflow-window} is chaining, not a new charge.
  *
- * <p>Plain object, not a bean: each meter constructs one so the rule can't be switched on for one
- * ledger and off for the other. Callers namespace their own signatures ({@link
- * MeteredInputSignature} rows are shared), and must pass their own period stamp.
+ * <p>Not a bean: each meter constructs one, so the rule cannot be on for one ledger and off for the
+ * other. {@link MeteredInputSignature} rows are shared, so callers namespace their own.
  */
 @Slf4j
 class MeteredInputWindow {
@@ -29,9 +26,8 @@ class MeteredInputWindow {
     }
 
     /**
-     * True when this input set should be charged: unseen this period, or last seen outside the
-     * window. Records a first sighting (an atomic insert-as-claim under concurrency) and slides the
-     * window on a repeat. Fails toward charging so a store hiccup never drops a charge.
+     * Charge when unseen this period, or last seen outside the window. Records a first sighting as
+     * an atomic insert-as-claim, and fails toward charging so a store hiccup drops nothing.
      */
     boolean shouldCharge(LocalDateTime periodStart, String opSignature) {
         LocalDateTime now = LocalDateTime.now();

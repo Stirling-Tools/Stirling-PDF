@@ -2,10 +2,8 @@ package stirling.software.proprietary.accountlink;
 
 /**
  * Outcome of {@link InstanceEntitlementGate}. {@link #allowed} is what the interceptor enforces;
- * {@link #reason} carries the machine-readable signal the FE maps to a prompt, and is the only
- * thing that distinguishes "your monthly allowance is spent, linking buys more" from "your linked
- * team is over its limit". Manual-tool, free-tier and fail-open allows carry an informational
- * reason but never block.
+ * {@link #reason} is the only thing distinguishing "your grant is spent, linking buys more" from
+ * "your linked team is over its limit". Allows carry one too, informationally.
  */
 public record GateDecision(boolean allowed, Reason reason) {
 
@@ -16,7 +14,6 @@ public record GateDecision(boolean allowed, Reason reason) {
         MANUAL_FREE,
         /** Linked + within entitlement — billable work allowed. */
         ENTITLED,
-        /** Unlinked + inside the instance's own monthly grant — allowed, metered locally. */
         FREE_TIER,
         /** Entitlement source unreachable — fail open, allow. */
         FAIL_OPEN,
@@ -26,9 +23,8 @@ public record GateDecision(boolean allowed, Reason reason) {
          */
         GRACE_EXPIRED,
         /**
-         * Unlinked and the instance's monthly grant is spent — block until the period rolls. The FE
-         * must offer linking as the way to get <em>more</em>, not as the way to switch the feature
-         * on: nothing here needed an account to work.
+         * Blocked until the period rolls. The FE must offer linking as <em>more</em> allowance, not
+         * as what switches the feature on: nothing here needed an account.
          */
         FREE_TIER_EXHAUSTED,
         /** Linked but over the limit / no subscription — block billable work. */

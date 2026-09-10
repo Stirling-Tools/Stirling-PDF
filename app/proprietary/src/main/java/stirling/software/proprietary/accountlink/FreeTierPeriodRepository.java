@@ -8,7 +8,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Persistence for the singleton free-tier period anchor. */
 public interface FreeTierPeriodRepository extends JpaRepository<FreeTierPeriod, Long> {
 
     /**

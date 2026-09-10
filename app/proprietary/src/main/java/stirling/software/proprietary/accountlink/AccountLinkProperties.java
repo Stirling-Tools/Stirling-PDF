@@ -9,12 +9,9 @@ import lombok.Getter;
 import lombok.Setter;
 
 /**
- * Self-hosted side of combined billing: the instance's own free tier, plus the optional link to a
- * SaaS team that buys more.
+ * Self-hosted side of combined billing: the instance's own free tier, plus the optional link.
  *
- * <p>A plain {@code @Component} with no condition of its own, so the settings stay readable even
- * with {@link #enabled} off — which is what lets the free-tier grant size be read before any of the
- * gated beans exist.
+ * <p>Unconditional, so the grant size is readable before any gated bean exists.
  */
 @Getter
 @Setter
@@ -23,9 +20,8 @@ import lombok.Setter;
 public class AccountLinkProperties {
 
     /**
-     * Kill switch for combined billing as a whole, free tier included. On by default because the
-     * free tier is the instance's own allowance and is not something an operator opts into; off
-     * returns the instance to running every billable operation unmetered and unlimited.
+     * Kill switch for combined billing, free tier included. On by default: the free tier is the
+     * instance's own allowance, not an opt-in. Off runs every billable op unmetered.
      */
     private boolean enabled = true;
 
@@ -39,9 +35,8 @@ public class AccountLinkProperties {
     private int requestTimeoutSeconds = 10;
 
     /**
-     * Units the instance grants itself each month while unlinked. Matches the grant SaaS seeds on
-     * its default pricing policy, so linking raises the allowance rather than introducing one; 0
-     * means no free tier, and billable work then needs a link.
+     * Units granted each month while unlinked. Matches the SaaS default policy, so linking raises
+     * the allowance rather than introducing one. 0 means billable work needs a link.
      */
     private long freeTierUnits = 500;
 
@@ -49,9 +44,8 @@ public class AccountLinkProperties {
     private final Metering metering = new Metering();
 
     /**
-     * Governs the <em>cloud</em> ledger only: costing a linked team's usage and pushing it to SaaS.
-     * Separate from {@link #enabled} so linking can be exercised without billing anything. Local
-     * free-tier accrual is not gated here, or the grant could not be enforced.
+     * The <em>cloud</em> ledger only. Local free-tier accrual is deliberately not gated here, or
+     * the grant could not be enforced.
      */
     @Getter
     @Setter

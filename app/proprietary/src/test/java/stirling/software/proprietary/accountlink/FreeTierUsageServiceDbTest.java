@@ -18,12 +18,8 @@ import jakarta.persistence.PersistenceContext;
 import stirling.software.proprietary.billing.BillingCategory;
 
 /**
- * Exercises the local free-tier ledger against a real (H2) database, so the increment-or-insert
- * upsert, the {@code SUM} balance and the guarded period roll are actually run rather than asserted
- * against a mock. A moveable clock stands in for waiting out a month.
- *
- * <p>Also pins the property the whole design rests on: the cloud ledger's sync query cannot see
- * free-tier rows, so pre-link usage neither reaches SaaS nor is disturbed by a link/unlink cycle.
+ * The local ledger against a real database, so the upsert, the {@code SUM} and the guarded roll
+ * actually run. A moveable clock stands in for waiting out a month.
  */
 @DataJpaTest
 class FreeTierUsageServiceDbTest {
@@ -82,8 +78,7 @@ class FreeTierUsageServiceDbTest {
 
     @Test
     void overshootingTheGrantFloorsAtZeroRatherThanGoingNegative() {
-        // The gate allows before the meter charges, so the final op of a period can exceed the
-        // grant. remainingUnits is what the gate compares against and must never read as credit.
+        // The gate allows before the meter charges, so the last op of a period can overshoot.
         FreeTierUsageService service = service(100);
 
         service.accrue(BillingCategory.API, 140, null);
@@ -115,8 +110,7 @@ class FreeTierUsageServiceDbTest {
         assertThat(rolled.periodStart()).isEqualTo(T0.plusMonths(1));
         assertThat(rolled.usedUnits()).isZero();
         assertThat(rolled.remainingUnits()).isEqualTo(500);
-        // The roll is persisted, and the spent period's counter is kept rather than zeroed.
-        // Cleared first: rollTo is a bulk update, so the loaded row would otherwise answer stale.
+        // rollTo is a bulk update, so a loaded row would answer stale.
         em.clear();
         assertThat(periods.findById(FreeTierPeriod.SINGLETON_ID).orElseThrow().getPeriodStart())
                 .isEqualTo(T0.plusMonths(1));
@@ -135,8 +129,7 @@ class FreeTierUsageServiceDbTest {
 
     @Test
     void theAnchorDayDoesNotDriftDownShortMonths() {
-        // T0 is a 31st. Rolling by adding a month to the previous start would pin the anchor to the
-        // 28th from February on; rolling from the immutable anchor keeps landing on the 31st.
+        // T0 is a 31st: rolling from the previous start would pin it to the 28th after February.
         FreeTierUsageService service = service(500);
         service.accrue(BillingCategory.API, 1, null);
 
@@ -172,14 +165,12 @@ class FreeTierUsageServiceDbTest {
         FreeTierUsageService service = service(500);
         service.accrue(BillingCategory.API, 120, null);
 
-        // Linking: the cloud ledger takes over and accrues under its own period, which here is
-        // deliberately the same timestamp the free tier anchored on — a collision a shared table
-        // would have suffered.
+        // Deliberately the same timestamp the free tier anchored on: the collision a shared
+        // table would suffer.
         cloudCounters.saveAndFlush(new UsageCounter(T0, "API", 90, now.get()));
         List<LocalDateTime> pending = cloudCounters.findPeriodsWithUnsyncedUsage();
         cloudCounters.markSynced(T0, "API", 90);
 
-        // Unlinking: nothing touches the local rows, so the grant resumes exactly where it was.
         FreeTierUsageService.FreeTierBalance after = service.balance();
 
         assertThat(pending).containsExactly(T0); // the sync only ever saw its own 90 cloud units
@@ -191,7 +182,6 @@ class FreeTierUsageServiceDbTest {
 
     @Test
     void aZeroGrantLeavesNothingToSpend() {
-        // The configured 0 is a deliberate "no free tier", which the gate reads as a hard block.
         assertThat(service(0).balance().remainingUnits()).isZero();
     }
 
