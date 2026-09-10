@@ -89,7 +89,7 @@ export function QuickNavRailHost() {
       ) : (
         <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
       ),
-      current: !inPortal,
+      current: !inPortal && !host?.readerMode,
       onClick: () => {
         if (!inPortal) {
           returnHome();
@@ -114,7 +114,7 @@ export function QuickNavRailHost() {
           height={SIZE}
         />
       ),
-      pressed: Boolean(host?.readerMode),
+      current: !inPortal && Boolean(host?.readerMode),
       // From the processor there is no editor to toggle - see pendingReaderMode.
       onClick: () => {
         const setMode = host?.actions.current?.setReaderMode;
