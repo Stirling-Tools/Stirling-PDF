@@ -69,8 +69,9 @@ function pickedUpFields(
   };
 }
 
-// Stamped long after the record was stored, so updates to them are mirrored
-// into IndexedDB - in memory only, the link dies on reload.
+// A record's link to its disk original is stamped long after the record was
+// stored, so a change to any of these fields is mirrored back into IndexedDB.
+// In memory only, the link would die on reload.
 const DISK_LINK_FIELDS = [
   "localFilePath",
   "isDirty",
