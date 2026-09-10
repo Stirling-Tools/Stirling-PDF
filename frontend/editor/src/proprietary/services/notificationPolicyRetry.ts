@@ -30,6 +30,19 @@ export type PolicyRerunOutcome =
   /** The server refused the run. `message` is its own, or null when it gave nothing usable. */
   | { ok: false; reason: "rejected"; message: string | null };
 
+/**
+ * Whether this browser still holds the policy the failure names. A run has to be filed against a
+ * local policy for {@code usePolicyAutoRun} to poll it and collect what it makes, so a run
+ * submitted without one is billed, produces output nobody here receives, and leaves the row open
+ * to be pressed and billed again. Callers gate the offer on this rather than discovering it after
+ * the run has gone.
+ *
+ * <p>False after a team switch, or against a cache written before the policy was renamed.
+ */
+export function canPlacePolicy(policyId: string): boolean {
+  return policyKeyForBackendId(policyId) !== undefined;
+}
+
 /** Re-run on the document still in this browser's storage, under the reference the failure named. */
 export async function rerunPolicy(
   target: PolicyRetryTarget,

@@ -28,7 +28,9 @@ vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
 
 const rerunPolicy = vi.fn();
 const rechainPolicyOnDocument = vi.fn();
+const canPlacePolicy = vi.fn();
 vi.mock("@app/services/notificationPolicyRetry", () => ({
+  canPlacePolicy: (...args: unknown[]) => canPlacePolicy(...args),
   rerunPolicy: (...args: unknown[]) => rerunPolicy(...args),
   rechainPolicyOnDocument: (...args: unknown[]) =>
     rechainPolicyOnDocument(...args),
@@ -189,6 +191,8 @@ beforeEach(() => {
     ok: true,
     tracked: true,
   });
+  // Placeable by default: the browser still holds the policy the failure names.
+  canPlacePolicy.mockReset().mockReturnValue(true);
   window.sessionStorage.clear();
   window.history.pushState({}, "", "/");
 });
@@ -451,6 +455,21 @@ describe("retrying an attended policy run", () => {
     expect(outcome).toEqual({ ok: true });
     // Nothing was stashed for this row, so nothing may be read from one either.
     expect(retryWithPassword).not.toHaveBeenCalled();
+  });
+
+  it("submits nothing when the policy cannot be placed, so an unresolvable row stops billing", async () => {
+    // Same leak as the resolutions, reached through the plain retry: the run is chargeable and
+    // its output is uncollectable, and the row it fails to close keeps the button on offer.
+    canPlacePolicy.mockReturnValue(false);
+    const row = policyContext();
+
+    expect(registry().OPEN_IN_TOOL?.available?.(row)).toBe(false);
+
+    expect(await registry().OPEN_IN_TOOL?.run(row)).toEqual({
+      ok: false,
+      message: "This document can no longer be retried from this browser.",
+    });
+    expect(rerunPolicy).not.toHaveBeenCalled();
   });
 
   it("re-runs the policy rather than reopening a tool, even where a stash happens to exist", async () => {

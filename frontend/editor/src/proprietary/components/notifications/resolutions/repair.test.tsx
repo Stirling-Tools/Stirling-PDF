@@ -27,7 +27,9 @@ vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
 
 const rerunPolicy = vi.fn();
 const rechainPolicyOnDocument = vi.fn();
+const canPlacePolicy = vi.fn();
 vi.mock("@app/services/notificationPolicyRetry", () => ({
+  canPlacePolicy: (...args: unknown[]) => canPlacePolicy(...args),
   rerunPolicy: (...args: unknown[]) => rerunPolicy(...args),
   rechainPolicyOnDocument: (...args: unknown[]) =>
     rechainPolicyOnDocument(...args),
@@ -188,6 +190,8 @@ beforeEach(() => {
     ok: true,
     tracked: true,
   });
+  // Placeable by default: the browser still holds the policy the failure names.
+  canPlacePolicy.mockReset().mockReturnValue(true);
   window.sessionStorage.clear();
   window.history.pushState({}, "", "/");
 });
@@ -204,6 +208,22 @@ describe("REPAIR", () => {
     expect(rechainPolicyOnDocument).toHaveBeenCalled();
     expect(outcome).toEqual({ ok: true });
     expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1");
+  });
+
+  it("is not offered when the policy cannot be placed, and spends nothing if pressed", async () => {
+    // The run would go to the server and bill, but nothing here could file it, so its output
+    // would never arrive and the row would stay open to be pressed again.
+    canPlacePolicy.mockReturnValue(false);
+    const row = policyContext({ kindId: "INPUT_CORRUPTED" });
+
+    expect(registry().REPAIR?.available?.(row)).toBe(false);
+
+    expect(await registry().REPAIR?.run(row)).toEqual({
+      ok: false,
+      message: "This document can no longer be retried from this browser.",
+    });
+    expect(repairDocuments).not.toHaveBeenCalled();
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
   });
 
   it("re-runs the stashed operation over the repaired bytes, not the original", async () => {

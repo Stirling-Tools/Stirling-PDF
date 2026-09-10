@@ -26,7 +26,9 @@ vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
 
 const rerunPolicy = vi.fn();
 const rechainPolicyOnDocument = vi.fn();
+const canPlacePolicy = vi.fn();
 vi.mock("@app/services/notificationPolicyRetry", () => ({
+  canPlacePolicy: (...args: unknown[]) => canPlacePolicy(...args),
   rerunPolicy: (...args: unknown[]) => rerunPolicy(...args),
   rechainPolicyOnDocument: (...args: unknown[]) =>
     rechainPolicyOnDocument(...args),
@@ -187,6 +189,8 @@ beforeEach(() => {
     ok: true,
     tracked: true,
   });
+  // Placeable by default: the browser still holds the policy the failure names.
+  canPlacePolicy.mockReset().mockReturnValue(true);
   window.sessionStorage.clear();
   window.history.pushState({}, "", "/");
 });

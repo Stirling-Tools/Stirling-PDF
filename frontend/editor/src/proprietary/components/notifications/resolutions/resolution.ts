@@ -14,6 +14,7 @@ import {
   type RetryPayload,
 } from "@app/services/notificationRetry";
 import {
+  canPlacePolicy,
   rechainPolicyOnDocument,
   type PolicyRerunOutcome,
   type PolicyRetryTarget,
@@ -98,10 +99,17 @@ export function retryTargetOf(
   // The policy shape wins where it applies, being the more specific claim.
   const attended = (notification.sourceId ?? null) === null;
   if (attended && notification.policyId && notification.fileId) {
-    return {
-      kind: "policy",
-      policy: { policyId: notification.policyId, fileId: notification.fileId },
-    };
+    // No target at all when the policy cannot be placed, rather than one that submits a run
+    // whose output never arrives: the row would stay open and bill again on the next press.
+    return canPlacePolicy(notification.policyId)
+      ? {
+          kind: "policy",
+          policy: {
+            policyId: notification.policyId,
+            fileId: notification.fileId,
+          },
+        }
+      : null;
   }
 
   // One stash per file, but one incident per kind per file, so the stash may be another row's.
