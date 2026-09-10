@@ -19,6 +19,7 @@ import { useIsPhone } from "@app/hooks/useIsMobile";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
+import { useWorkbenchTakeover } from "@app/components/layout/WorkbenchTakeover";
 import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
@@ -41,6 +42,9 @@ const FileManagerView = lazy(
 // No props needed - component uses contexts directly
 export default function Workbench() {
   const { config } = useAppConfig();
+  // A flow that owns the canvas outright (desktop onboarding's Downloads sweep).
+  // Null in every other case, which is every case in core.
+  const takeover = useWorkbenchTakeover();
 
   // The consent banner used to be initialised by the footer; the legal links
   // now live in Settings → Legal, so the workbench owns the banner lifecycle.
@@ -96,11 +100,12 @@ export default function Workbench() {
     !isBaseWorkbench(currentView) ||
     // Shared signing drives the viewer from the sidebar with no file in context.
     (currentView === "viewer" && !!signingOverlay?.file);
-  // Reading hides the bar; the rail's Reader entry is the way back.
+  // Reading hides the bar; the rail's Reader entry is the way back. A takeover hides
+  // the switcher and search too: both navigate away from a flow that must finish.
   const showWorkbenchBar =
-    topControlsAvailable && hasWorkbenchContent && !readerMode;
+    topControlsAvailable && hasWorkbenchContent && !readerMode && !takeover;
   const showFloatingSearch =
-    topControlsAvailable && !hasWorkbenchContent && !readerMode;
+    topControlsAvailable && !hasWorkbenchContent && !readerMode && !takeover;
 
   // On the transition, so reading sets the toolbar's start state without locking it.
   const prevReaderModeRef = useRef(readerMode);
@@ -130,6 +135,10 @@ export default function Workbench() {
   };
 
   const renderMainContent = () => {
+    // Ahead of every view check: a takeover replaces the canvas whatever the current
+    // workbench happens to be, so navigation underneath it cannot surface.
+    if (takeover) return takeover;
+
     // Check if we're showing a custom workbench first
     // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
     if (!isBaseWorkbench(currentView)) {

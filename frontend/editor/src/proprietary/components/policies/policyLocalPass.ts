@@ -27,6 +27,26 @@ export interface LocalPass {
   run(fileId: FileId, stub: StirlingFileStub): Promise<LocalPassResult | null>;
 }
 
+/**
+ * A file id proven safe to dispatch. {@link runPolicyOnFile} accepts nothing else, so a
+ * new dispatch site cannot reach the AI without going through {@link dispatchableFileId}.
+ */
+export type DispatchableFileId = FileId & {
+  readonly __policyDispatchable: unique symbol;
+};
+
+/**
+ * The file's id, or null when a policy may not touch it. A locked classification came from
+ * outside the policy system — the classification demo's sweep — and must never be recomputed or
+ * escalated to the AI.
+ */
+export function dispatchableFileId(
+  stub: StirlingFileStub,
+): DispatchableFileId | null {
+  if (stub.classificationLocked === true) return null;
+  return stub.id as DispatchableFileId;
+}
+
 /** The local fast path a policy declares, if any. The default (most policies) is none. */
 export function localPassFor(policyKey: string): LocalPass | undefined {
   if (policyKey === CLASSIFICATION_POLICY_KEY) return classificationLocalPass;

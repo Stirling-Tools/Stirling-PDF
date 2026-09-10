@@ -49,7 +49,10 @@ vi.mock("@app/services/policyApi", () => ({
   resolvePolicyRunTarget: () => "saas",
 }));
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
+  fileStorage: {
+    getStirlingFile: vi.fn(),
+    getStirlingFileStub: vi.fn().mockResolvedValue(null),
+  },
 }));
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),

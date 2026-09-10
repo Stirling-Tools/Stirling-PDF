@@ -8,6 +8,9 @@ import { resolvePolicyRunTarget } from "@app/services/policyApi";
 interface ClassifyMeterPayload {
   /** Policy name for the audit-trail label; defaults to "Classification" server-side. */
   policyName?: string;
+  /** Which flow ran the classification. The server prices sources separately, so this
+   *  decides billing — unlike policyName, which is only an audit label. */
+  source?: "onboarding";
   /** Documents covered by this meter call (defaults to 1 server-side). */
   documentCount?: number;
   /** Resolved labels, carried for the audit record. */
