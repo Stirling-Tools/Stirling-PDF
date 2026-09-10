@@ -8626,6 +8626,8 @@ heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
 managerOnly = "Only an admin or team leader can modify a policy"
 name = "Give the pipeline a name"
+routing = "Give every route document types and a destination"
+routingNeedsClassify = "Add a Classify step, or turn off routing by document type"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
 setup = "Finish setting up: {{tools}}"
@@ -8641,6 +8643,17 @@ undeclared-operation = "Can't check what this step accepts"
 
 [portal.pipelines.builder.icon]
 label = "Change icon"
+
+[portal.pipelines.builder.routing]
+addRule = "Add a route"
+fallback = "Everything else goes to"
+heading = "Routes"
+needsClassify = "Add a Classify step to the pipeline first - routes read the document type it works out."
+nodeSummary_one = "1 route, then a fallback"
+nodeSummary_other = "{{count}} routes, then a fallback"
+toggle = "Send document types to different places"
+toggleOff = "Every document goes to the destination below."
+toggleOn = "Documents are routed by the type the Classify step works out."
 
 [portal.pipelines.composer]
 addTool = "Add a tool"
@@ -8874,11 +8887,6 @@ keepFor = "Keep for"
 
 [portal.policies.config.routing]
 summary = "Routes documents to the right destination based on type and classification."
-
-[portal.policies.config.routing.fields]
-destination = "Destination"
-notify = "Notify on route"
-webhookUrl = "Webhook URL"
 
 [portal.policies.config.routing.rules]
 0 = "Auto-classify"
@@ -9186,8 +9194,24 @@ description = "Every uploaded document is classified against the built-in labels
 labelsHeading = "Classification labels"
 
 [portal.policies.wizard.errors]
-noTools = "Enable at least one tool in the workflow first."
+noTools = "Enable at least one action."
 saveFailed = "Couldn't save the pipeline. Please try again."
+
+[portal.policies.wizard.routing]
+chooseDestination = "Choose a destination"
+chooseSource = "Choose what to watch"
+description = "Each document is classified first, then delivered to the first rule it matches. Anything matching none goes to the destination below."
+destinationAria = "Destination"
+labelAria = "Document types"
+labelPlaceholder = "Choose document types"
+needsDestination = "Add a destination below first - a rule needs somewhere to send documents to."
+needsSource = "Connect a folder, bucket or webhook for this policy to watch."
+remove = "Remove rule"
+sourceDescription = "Documents arriving here are classified, then sent on by the rules below."
+sourceHeading = "Watch"
+
+[portal.policies.wizard.sources]
+connect = "Connect a source"
 
 [portal.policies.wizard.title]
 edit = "Edit {{category}} pipeline"

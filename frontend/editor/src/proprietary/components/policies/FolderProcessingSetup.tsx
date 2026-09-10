@@ -47,13 +47,15 @@ export function FolderProcessingSetup({
   const { recordFor } = useProcessingFolders();
   const [wizardEntry, setWizardEntry] = useState<CatalogueEntry | null>(null);
 
-  // The same catalogue Processor's gallery assembles, with no saved-policy
-  // decoration: a folder setup always starts from the template.
+  // The catalogue Processor's gallery assembles, with no saved-policy decoration: a folder setup
+  // always starts from the template. A category that binds its own source and destinations is left
+  // out - this surface supplies the folder itself and has no destination UI to bind them with.
   const entries = useMemo<CatalogueEntry[]>(
     () =>
       POLICY_CATEGORIES.flatMap((category) => {
         const config = POLICY_CONFIG[category.id];
-        return config ? [{ category, config, policy: null }] : [];
+        if (!config || category.bindsOwnSource === true) return [];
+        return [{ category, config, policy: null }];
       }),
     [],
   );

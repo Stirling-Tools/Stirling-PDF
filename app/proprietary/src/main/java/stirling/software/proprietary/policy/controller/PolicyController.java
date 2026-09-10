@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -72,9 +73,11 @@ import stirling.software.proprietary.policy.model.PolicyPermissions;
 import stirling.software.proprietary.policy.model.PolicyRun;
 import stirling.software.proprietary.policy.model.PolicyRunStatus;
 import stirling.software.proprietary.policy.model.PolicyRunView;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.overview.PoliciesOverviewResponse;
 import stirling.software.proprietary.policy.overview.PolicyOverviewService;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.routing.ClassificationStepPlanner;
 import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceAccessGuard;
@@ -284,7 +287,9 @@ public class PolicyController {
                             + " assigned; returns the stored policy with its id.")
     public ResponseEntity<Policy> savePolicy(@RequestBody Policy policy) {
         requirePolicyEditingAllowed();
-        Policy owned = withStoredOutputSecrets(resolveOwnership(policy));
+        Policy owned =
+                ClassificationStepPlanner.ensureClassificationFirst(
+                        withStoredOutputSecrets(resolveOwnership(policy)));
         // Snapshot the previous version before saving so supporting files this edit dropped can
         // be cleaned up once nothing references them.
         Policy previous =
@@ -355,27 +360,34 @@ public class PolicyController {
                     "An editor policy delivers back to the editor and can't also have a"
                             + " destination");
         }
-        for (String outputId : policy.outputIds()) {
-            Source destination =
-                    sourceStore
-                            .get(outputId)
-                            .filter(sourceAccessGuard::canAccess)
-                            .orElseThrow(
-                                    () ->
-                                            new ResponseStatusException(
-                                                    HttpStatus.BAD_REQUEST,
-                                                    "Unknown or inaccessible output source: "
-                                                            + outputId));
-            if (EditorSource.TYPE.equals(destination.type())) {
-                throw new ResponseStatusException(
-                        HttpStatus.BAD_REQUEST,
-                        "The editor can't be used as an output destination");
-            }
-            try {
-                policyValidator.validateOutput(destination.toOutputSpec());
-            } catch (IllegalArgumentException e) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-            }
+        // A routing rule's destination is checked on exactly the same terms as a plain output: it
+        // must resolve, be accessible, and not be the editor.
+        Stream.concat(
+                        policy.outputIds().stream(),
+                        policy.routingRules().stream().map(RoutingRule::outputId))
+                .distinct()
+                .forEach(this::requireAccessibleDestination);
+    }
+
+    private void requireAccessibleDestination(String outputId) {
+        Source destination =
+                sourceStore
+                        .get(outputId)
+                        .filter(sourceAccessGuard::canAccess)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.BAD_REQUEST,
+                                                "Unknown or inaccessible output source: "
+                                                        + outputId));
+        if (EditorSource.TYPE.equals(destination.type())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
+        }
+        try {
+            policyValidator.validateOutput(destination.toOutputSpec());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
     }
 
@@ -430,7 +442,8 @@ public class PolicyController {
                 policy.outputIds(),
                 teamId,
                 policy.editor(),
-                surface);
+                surface,
+                policy.routingRules());
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */

@@ -1,3 +1,4 @@
+import { classificationCondition } from "@app/data/classificationConditions";
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -19,6 +20,7 @@ import {
   type PolicyToolStep,
 } from "@app/policies/operations";
 import { resolveRunOn } from "@app/policies/runOn";
+import type { WireRoutingRule, WireTriggerConfig } from "@app/policies/types";
 import { PolicyCategoryBadge } from "@app/components/policies/PolicyCategoryBadge";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
@@ -35,6 +37,14 @@ export interface PolicySetupFrame {
   canSubmit: boolean;
 }
 
+/** What the routing category binds: where documents come from, where each type goes. */
+export interface RoutingSetup {
+  sourceId: string;
+  trigger: WireTriggerConfig | null;
+  outputIds: string[];
+  routingRules: WireRoutingRule[];
+}
+
 interface PolicySetupWizardProps {
   /** The category being configured, or null when closed. */
   entry: CatalogueEntry | null;
@@ -47,6 +57,14 @@ interface PolicySetupWizardProps {
   onCustomise?: (entry: CatalogueEntry, result: PolicySetupResult) => void;
   /** Whether a Purview tenant is connected; gates the Purview-backed steps. */
   hasPurviewConnection?: boolean;
+  /**
+   * Renders the routing category's source, routes and fallback destination. Portal-only: it reads
+   * the saved Sources. Without it a routing policy shows its steps and nothing to route with.
+   */
+  routingConfig?: (props: {
+    value: RoutingSetup;
+    onChange: (next: RoutingSetup) => void;
+  }) => ReactNode;
   /** Renders the Purview step's inline config. Portal-only; without it the step shows bare. */
   purviewConfig?: (props: {
     parameters: PolicyParams<"purviewApplyLabel">;
@@ -212,6 +230,7 @@ export function PolicySetupWizard({
   onCustomise,
   hasPurviewConnection,
   purviewConfig,
+  routingConfig,
   formatError,
   enforceControl,
   canManagePolicies,
@@ -228,6 +247,7 @@ export function PolicySetupWizard({
       onCustomise={onCustomise}
       hasPurviewConnection={hasPurviewConnection}
       purviewConfig={purviewConfig}
+      routingConfig={routingConfig}
       formatError={formatError}
       enforceControl={enforceControl}
       canManagePolicies={canManagePolicies}
@@ -245,6 +265,7 @@ function PolicySetupWizardBody({
   onCustomise,
   hasPurviewConnection = false,
   purviewConfig,
+  routingConfig,
   formatError,
   enforceControl = true,
   canManagePolicies = true,
@@ -260,6 +281,10 @@ function PolicySetupWizardBody({
     parameters: PolicyParams<"purviewApplyLabel">;
     onChange: (params: PolicyParams<"purviewApplyLabel">) => void;
   }) => ReactNode;
+  routingConfig?: (props: {
+    value: RoutingSetup;
+    onChange: (next: RoutingSetup) => void;
+  }) => ReactNode;
   formatError?: (e: unknown) => string;
   enforceControl?: boolean;
   canManagePolicies?: boolean;
@@ -271,6 +296,20 @@ function PolicySetupWizardBody({
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
+  const isRouting = category.id === "routing";
+  const [routing, setRouting] = useState<RoutingSetup>(() => ({
+    sourceId: policy?.state.sources?.[0] ?? "",
+    trigger: null,
+    outputIds: (policy?.state.outputIds ?? []).slice(0, 1),
+    // One blank route so the form and the saved result agree: an empty list would render a route
+    // the user could fill in and then submit as none.
+    routingRules: policy?.state.routingRules ?? [
+      {
+        condition: classificationCondition(),
+        outputId: "",
+      },
+    ],
+  }));
 
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
@@ -349,7 +388,7 @@ function PolicySetupWizardBody({
       // Preserve stored options this wizard has no UI for rather than wiping them on save;
       // the builder is where those are edited.
       extraOptions: policy?.state.extraOptions,
-      runsOnEditor: true,
+      runsOnEditor: !isRouting,
       fieldValues,
       sources: policy?.state.sources ?? [],
       scopeTypes,
@@ -361,6 +400,14 @@ function PolicySetupWizardBody({
       maxRetries,
       retryDelayMinutes,
       steps,
+      ...(isRouting
+        ? {
+            sources: routing.sourceId ? [routing.sourceId] : [],
+            trigger: routing.trigger,
+            outputIds: routing.outputIds,
+            routingRules: routing.routingRules,
+          }
+        : {}),
     };
   }
 
@@ -415,6 +462,8 @@ function PolicySetupWizardBody({
           <ClassificationLabelsSection />
         </div>
       )}
+
+      {isRouting && routingConfig?.({ value: routing, onChange: setRouting })}
 
       {!isClassification && (
         <div className="portal-policies__wizard-section">

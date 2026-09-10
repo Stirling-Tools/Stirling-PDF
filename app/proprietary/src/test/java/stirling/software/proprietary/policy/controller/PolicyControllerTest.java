@@ -531,7 +531,8 @@ class PolicyControllerTest {
                             List.of(),
                             null,
                             null,
-                            Policy.SURFACE_POLICY);
+                            Policy.SURFACE_POLICY,
+                            List.of());
 
             assertThatThrownBy(() -> controller.savePolicy(withUnknownSource))
                     .isInstanceOf(ResponseStatusException.class)

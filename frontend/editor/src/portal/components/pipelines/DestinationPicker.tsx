@@ -25,6 +25,8 @@ interface DestinationPickerProps {
   onCreateNew: () => void;
   /** Edit the chosen destination's own settings (opens the source modal on it). */
   onEdit: (sourceId: string) => void;
+  /** Overrides the field label; routing renames this picker to the fallback it becomes. */
+  label?: string;
 }
 
 export function DestinationPicker({
@@ -33,6 +35,7 @@ export function DestinationPicker({
   onChange,
   onCreateNew,
   onEdit,
+  label,
 }: DestinationPickerProps) {
   const { t } = useTranslation();
   const chosen = value[0] ?? "";
@@ -43,7 +46,7 @@ export function DestinationPicker({
   return (
     <>
       {hasSources && (
-        <FormField label={t("portal.pipelines.composer.output")}>
+        <FormField label={label ?? t("portal.pipelines.composer.output")}>
           <div className="portal-builder__input-row">
             <div className="portal-builder__input-field">
               <Select

@@ -11,7 +11,11 @@
 
 import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
-import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
+import {
+  fromWirePolicy,
+  policyInputs,
+  toWirePolicy,
+} from "@app/policies/codec";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
 import {
   policyStepFromWire,
@@ -180,7 +184,9 @@ export function parseSimplePolicy(
     name: policy.name,
     enabled: policy.enabled,
     required: policy.required,
-    trigger: null,
+    inputs: policy.inputs ?? [],
+    outputIds: policy.outputIds ?? [],
+    routingRules: policy.routingRules ?? [],
     steps: policy.steps as WirePipelineStep[],
     // The options bag is untyped on the pipeline record; the codec reads it defensively.
     output: {
@@ -274,6 +280,10 @@ export function buildWireFromSetup(
       required: result.required,
       extraOptions: result.extraOptions,
       policyKey: entry.category.id,
+      inputs: policyInputs(result.sources, result.trigger ?? null),
+      trigger: result.trigger ?? null,
+      outputIds: result.outputIds ?? stored?.outputIds ?? [],
+      routingRules: result.routingRules ?? stored?.routingRules ?? [],
       sources: result.sources,
       runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,

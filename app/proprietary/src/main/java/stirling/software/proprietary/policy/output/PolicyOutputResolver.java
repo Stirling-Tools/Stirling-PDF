@@ -10,6 +10,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutedDestination;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 
@@ -49,5 +51,28 @@ public class PolicyOutputResolver {
                                             outputId));
         }
         return resolved.isEmpty() ? List.of(policy.output()) : resolved;
+    }
+
+    /**
+     * Resolve each routing rule's destination live, dropping a rule whose destination no longer
+     * resolves (rather than silently sending its documents to the fallback under a stale rule). The
+     * result is what the engine matches documents against; rule order is preserved.
+     */
+    public List<RoutedDestination> resolveRouting(Policy policy) {
+        List<RoutedDestination> resolved = new ArrayList<>();
+        for (RoutingRule rule : policy.routingRules()) {
+            sourceStore
+                    .get(rule.outputId())
+                    .map(Source::toOutputSpec)
+                    .ifPresentOrElse(
+                            spec -> resolved.add(new RoutedDestination(rule, spec)),
+                            () ->
+                                    log.warn(
+                                            "Policy {} routing rule references missing source {};"
+                                                    + " skipping that rule",
+                                            policy.id(),
+                                            rule.outputId()));
+        }
+        return resolved;
     }
 }

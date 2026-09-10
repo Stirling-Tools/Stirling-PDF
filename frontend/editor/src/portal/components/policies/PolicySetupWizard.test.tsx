@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { t } from "i18next";
 import {
   fireEvent,
   render as baseRender,
@@ -7,9 +8,11 @@ import {
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
+import { PolicySetupWizard as SharedPolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
+  buildWireFromSetup,
   type CatalogueEntry,
   type DecoratedPolicy,
   type PolicySetupResult,
@@ -37,10 +40,19 @@ vi.mock("@portal/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
 }));
 
+const fetchSources = vi.fn();
+vi.mock("@portal/api/sources", () => ({
+  fetchSources: () => fetchSources(),
+}));
+
+vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+
 const SAVE_CHANGES = "portal.policies.wizard.actions.saveChanges";
 const ENABLE = "portal.policies.wizard.actions.enablePolicy";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
+const routing = POLICY_CATEGORIES.find((c) => c.id === "routing")!;
+const routingConfig = POLICY_CONFIG.routing;
 const securityConfig = POLICY_CONFIG.security;
 const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
 const complianceConfig = POLICY_CONFIG.compliance;
@@ -80,9 +92,16 @@ async function submitWizard(saveLabel: string) {
   fireEvent.click(await screen.findByRole("button", { name: saveLabel }));
 }
 
+const routingEntry: CatalogueEntry = {
+  category: routing,
+  config: routingConfig,
+  policy: null,
+};
+
 describe("PolicySetupWizard", () => {
   beforeEach(() => {
     fetchIntegrations.mockResolvedValue([]);
+    fetchSources.mockResolvedValue({ kpis: [], sources: [] });
   });
 
   it("round-trips a saved step's backend params on edit", async () => {
@@ -218,6 +237,67 @@ describe("PolicySetupWizard", () => {
     expect(redact.listOfText).toBeTruthy();
   });
 
+  it("submits configured routing destinations without editor participation", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <SharedPolicySetupWizard
+        entry={routingEntry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        routingConfig={({ onChange }) => (
+          <button
+            onClick={() =>
+              onChange({
+                sourceId: "inbox",
+                trigger: { type: "folder-watch", options: {} },
+                outputIds: ["archive"],
+                routingRules: [
+                  {
+                    condition: {
+                      input: {
+                        source: "document",
+                        field: "classification.labels",
+                      },
+                      operator: "matches-any",
+                      values: ["invoice"],
+                    },
+                    outputId: "finance",
+                  },
+                ],
+              })
+            }
+          >
+            Configure routing
+          </button>
+        )}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Configure routing" }));
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.steps.map((step) => step.operation)).toEqual([
+      "/api/v1/ai/tools/classify-and-label",
+    ]);
+    const wire = buildWireFromSetup(routingEntry, result, t);
+    expect(wire.editor?.allowed).toBe(false);
+    expect(wire.inputs).toEqual([
+      { sourceId: "inbox", trigger: { type: "folder-watch", options: {} } },
+    ]);
+    expect(wire.outputIds).toEqual(["archive"]);
+    expect(wire.routingRules).toEqual([
+      {
+        condition: {
+          input: { source: "document", field: "classification.labels" },
+          operator: "matches-any",
+          values: ["invoice"],
+        },
+        outputId: "finance",
+      },
+    ]);
+  });
+
   it("defaults a new security policy to enforcing on export", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const entry: CatalogueEntry = {
@@ -239,6 +319,7 @@ describe("PolicySetupWizard", () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
     expect(result.runOn).toBe("export");
+    expect(result.runsOnEditor).toBe(true);
   });
 
   it("locks the wizard for a non-manager", async () => {

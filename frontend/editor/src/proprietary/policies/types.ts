@@ -4,10 +4,12 @@
  *
  * The backend stores all portal-level metadata (categoryId, sources, scope,
  * reviewer, fieldValues, runOn, output settings) inside `output.options` — the
- * same "options bag" the editor uses. `trigger` is always null for
- * portal/editor-authored policies; the editor fires runs on upload/export via
- * `/run`, so there is no server-side trigger.
+ * same "options bag" the editor uses. Real backend sources ride in `inputs`,
+ * each paired with the trigger that pulls it; an editor-only policy has no
+ * inputs and fires on upload/export via `/run`.
  */
+
+import type { Condition } from "@app/conditions/types";
 
 // ── Wire types (match Policy.java / PipelineStep.java / PolicyRunView.java) ──
 
@@ -41,6 +43,31 @@ export interface WireOutputSpec {
   options: Partial<WireOutputOptions>;
 }
 
+/** When a policy fires automatically. `type` keys a backend trigger bean. */
+export interface WireTriggerConfig {
+  type: string;
+  options: Record<string, unknown>;
+}
+
+/**
+ * One input: a persisted source paired with the trigger that pulls it. Mirrors
+ * `PipelineInput.java`; a null trigger makes the input manual-only.
+ */
+export interface WirePipelineInput {
+  sourceId: string;
+  trigger: WireTriggerConfig | null;
+}
+
+/**
+ * One routing rule: when `condition` matches, the document is delivered
+ * to `outputId` instead of the policy's fallback destinations. Mirrors `RoutingRule.java`; rules
+ * are tried in order, first match wins.
+ */
+export interface WireRoutingRule {
+  condition: Condition;
+  outputId: string;
+}
+
 /**
  * Mirrors `EditorConfig.java`. Absent only on records that never went through the
  * backend (hand-built fixtures); a stored policy always carries it, derived from
@@ -58,9 +85,14 @@ export interface WirePolicy {
   enabled: boolean;
   /** A policy (blocking on failure) rather than an ordinary pipeline (see `Policy.required`). */
   required?: boolean;
-  trigger: null;
+  /** Sources pulled from (never the virtual editor); the backend allows at most one. */
+  inputs: WirePipelineInput[];
   steps: WirePipelineStep[];
   output: WireOutputSpec;
+  /** Saved sources used as write targets; empty means the inline output. */
+  outputIds?: string[];
+  /** Per-document destinations: first matching rule wins, else the outputIds fallback. */
+  routingRules?: WireRoutingRule[];
   editor?: WireEditorConfig;
   teamId?: string;
 }
@@ -105,7 +137,10 @@ export interface PolicyDecodedState {
   /** A policy (blocking on failure) rather than an ordinary pipeline; first-class, not in options. */
   required: boolean;
   policyKey: string;
+  /** Display selection, editor included; may exceed what the backend binds. */
   sources: string[];
+  /** The bound inputs exactly as stored; only a wizard save rebinds these. */
+  inputs: WirePipelineInput[];
   /**
    * Whether the editor runs this policy per file. Its own field, not derived from
    * `sources`: the seeded Classification policy is editor-run with empty sources,
@@ -127,6 +162,12 @@ export interface PolicyDecodedState {
    */
   extraOptions?: Record<string, unknown>;
   steps: WirePipelineStep[];
+  /** Read view of the bound input's trigger; encoding takes it from `inputs`. */
+  trigger: WireTriggerConfig | null;
+  /** Saved sources the output is also delivered to (write targets). */
+  outputIds: string[];
+  /** Per-document routing rules; empty for a plain deliver-to-all policy. */
+  routingRules: WireRoutingRule[];
 }
 
 // ── Display types (returned by runs.ts derivations) ───────────────────────────

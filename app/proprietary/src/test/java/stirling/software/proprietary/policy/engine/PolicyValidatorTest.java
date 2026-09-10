@@ -23,6 +23,8 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAsset;
 import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
@@ -33,6 +35,7 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
@@ -320,6 +323,89 @@ class PolicyValidatorTest {
         IllegalArgumentException ex =
                 assertThrows(IllegalArgumentException.class, () -> validator.validate(twoOutputs));
         assertTrue(ex.getMessage().contains("at most one output"));
+    }
+
+    // A routing rule that can never fire is worse than no rule: its documents go to the fallback
+    // destination while the policy still reads as if it routed them, so each way of writing one is
+    // rejected at save time.
+
+    @Test
+    void acceptsARoutingRuleWhoseDestinationResolves() {
+        when(outputSink.supports(any())).thenReturn(true);
+        String destinationId = folderSourceId();
+
+        validator.validate(routingPolicy(rule("classification.labels", "invoice", destinationId)));
+
+        verify(outputSink).validate(sourceStore.get(destinationId).orElseThrow().toOutputSpec());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoField() {
+        Policy policy = routingPolicy(rule(" ", "invoice", folderSourceId()));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("must name a field"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoCondition() {
+        Policy policy = routingPolicy(new RoutingRule(null, "dest"));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("a condition is required"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNothingToMatchAgainst() {
+        Policy policy = routingPolicy(rule("classification.labels", " ", folderSourceId()));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("nothing to match against"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoDestination() {
+        Policy policy = routingPolicy(rule("classification.labels", "invoice", ""));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("no destination"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWhoseDestinationIsNotAStoredSource() {
+        Policy policy = routingPolicy(rule("classification.labels", "invoice", "src-deleted"));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("unknown routing destination"), ex.getMessage());
+    }
+
+    private static RoutingRule rule(String field, String value, String destinationId) {
+        return new RoutingRule(
+                new Condition.MatchesAny(new ConditionInput.DocumentField(field), List.of(value)),
+                destinationId);
+    }
+
+    private static Policy routingPolicy(RoutingRule... rules) {
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                false,
+                "",
+                List.of(),
+                List.of(),
+                OutputSpec.inline(),
+                List.of(),
+                null,
+                null,
+                null,
+                List.of(rules));
     }
 
     @Test
