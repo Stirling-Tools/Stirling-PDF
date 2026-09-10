@@ -35,7 +35,10 @@ export interface Member {
   portalGrantId?: number;
   /** Relative-time string, e.g. "4m ago". Invited members read "—". */
   lastActive: string;
-  /** Optional avatar image; falls back to initials when absent. */
+  /**
+   * Optional avatar image; falls back to initials when absent. Self-hosted supplies a data URL (the
+   * bearer-token transport rules out a plain image URL); SaaS has none yet.
+   */
   avatarUrl?: string;
   /** Backend linkage for row actions (absent on pure fixtures). */
   username?: string;
@@ -226,6 +229,7 @@ interface AdminUserSummaryDto {
   authenticationType?: string;
   /** Authoritative server-side portal access (honors the configured default policy). */
   portalAccess?: boolean;
+  hasProfilePicture?: boolean;
 }
 
 interface AdminSettingsDto {
@@ -275,6 +279,42 @@ function normalizeSeatLimit(max: number | undefined): number | null {
   return max;
 }
 
+/** Ids per avatar batch request; see fetchAvatarThumbnails. */
+const AVATAR_BATCH_SIZE = 200;
+
+/**
+ * Roster avatars as data URLs, keyed by user id. Data URLs because the portal authenticates with a
+ * bearer token, which an `<img src>` request would not carry. Avatars are decoration, so a failure
+ * degrades to initials rather than failing the roster. Kept on the portal's own transport rather
+ * than reusing the editor's service, which would pull the editor apiClient into this bundle.
+ */
+async function fetchAvatarThumbnails(
+  userIds: string[],
+): Promise<Record<string, string>> {
+  const ids = Array.from(new Set(userIds)).filter(Boolean);
+  if (ids.length === 0) return {};
+  // Chunked: the ids ride in the query string, and a few thousand overflow nginx's default 8KB
+  // request line, which 414s and wipes every avatar. Also stays under the server's 500-id cap.
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += AVATAR_BATCH_SIZE) {
+    chunks.push(ids.slice(i, i + AVATAR_BATCH_SIZE));
+  }
+  const results = await Promise.all(
+    chunks.map(async (chunk) => {
+      try {
+        return (
+          (await apiClient.local.json<Record<string, string>>(
+            `/api/v1/user/profile-pictures?userIds=${encodeURIComponent(chunk.join(","))}`,
+          )) ?? {}
+        );
+      } catch {
+        return {};
+      }
+    }),
+  );
+  return Object.assign({}, ...results);
+}
+
 /**
  * GET /api/v1/proprietary/ui-data/admin-settings adapted onto the portal's
  * UsersResponse. Role = stored authority + team leadership; the role
@@ -303,6 +343,16 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     authType: u.authenticationType,
     authority: u.rolesAsString,
   }));
+  const avatars = await fetchAvatarThumbnails(
+    (data.users ?? [])
+      .filter((u) => u.hasProfilePicture)
+      .map((u) => String(u.id)),
+  );
+  for (const member of members) {
+    const avatarUrl = avatars[member.id];
+    if (avatarUrl) member.avatarUrl = avatarUrl;
+  }
+
   const seatLimit = normalizeSeatLimit(data.maxAllowedUsers);
   const seatsUsed = data.totalUsers ?? members.length;
   return {

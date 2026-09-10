@@ -58,6 +58,9 @@ public class AdminUserSummary {
                     "Whether the user may access the portal, per the server-side access policy")
     private boolean portalAccess;
 
+    @Schema(description = "Whether the user has uploaded a profile picture")
+    private boolean hasProfilePicture;
+
     @Schema(description = "User account creation timestamp")
     private LocalDateTime createdAt;
 

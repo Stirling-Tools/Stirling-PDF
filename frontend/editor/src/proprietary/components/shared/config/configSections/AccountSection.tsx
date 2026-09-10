@@ -21,6 +21,7 @@ import { QRCodeSVG } from "qrcode.react";
 import { useAccountLogout } from "@app/extensions/accountLogout";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
+import ProfilePictureCard from "@app/components/shared/config/ProfilePictureCard";
 
 const AccountSection: React.FC = () => {
   const { t } = useTranslation();
@@ -411,6 +412,8 @@ const AccountSection: React.FC = () => {
           </Stack>
         </Stack>
       </Paper>
+
+      <ProfilePictureCard displayName={userIdentifier} />
 
       <Paper withBorder p="md" radius="md">
         <Stack gap="sm">

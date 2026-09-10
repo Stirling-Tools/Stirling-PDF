@@ -64,9 +64,10 @@ export function Avatar({
     .join(" ");
 
   const content = showImage ? (
+    // The wrapper already carries the accessible name, so the image is decorative.
     <img
       src={src}
-      alt={ariaLabel ?? name}
+      alt=""
       className="sui-avatar__img"
       onError={() => setSrcFailed(true)}
     />

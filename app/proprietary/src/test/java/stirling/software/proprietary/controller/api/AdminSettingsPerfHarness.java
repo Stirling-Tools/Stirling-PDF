@@ -45,6 +45,7 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
+import stirling.software.proprietary.security.service.ProfilePictureService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -224,6 +225,7 @@ class AdminSettingsPerfHarness {
                 mock(MfaService.class),
                 loginAttemptService,
                 resourceAccessService,
+                mock(ProfilePictureService.class),
                 mock(InviteTokenRepository.class));
     }
 

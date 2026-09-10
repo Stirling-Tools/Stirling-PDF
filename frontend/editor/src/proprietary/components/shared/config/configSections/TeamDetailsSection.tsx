@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Stack,
@@ -25,6 +25,7 @@ import {
 } from "@app/services/userManagementService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
+import { useProfilePictureThumbnails } from "@app/hooks/useProfilePictureThumbnails";
 import {
   useAdminUsers,
   useTeamDetails,
@@ -51,9 +52,22 @@ export default function TeamDetailsSection({
 
   const loading = details.isPending || admin.isPending;
   const team = details.data?.team ?? null;
-  const teamUsers = Array.isArray(details.data?.teamUsers)
-    ? details.data.teamUsers
-    : [];
+  // The team endpoint returns raw user rows, which carry no avatar flag; the
+  // admin roster does, so borrow it from there rather than widening the payload.
+  const teamUsers = useMemo<User[]>(() => {
+    const rows = Array.isArray(details.data?.teamUsers)
+      ? details.data.teamUsers
+      : [];
+    const withPicture = new Set(
+      (admin.data?.users ?? [])
+        .filter((user) => user.hasProfilePicture)
+        .map((user) => user.id),
+    );
+    return rows.map((user) => ({
+      ...user,
+      hasProfilePicture: withPicture.has(user.id),
+    }));
+  }, [details.data, admin.data]);
   const availableUsers = Array.isArray(details.data?.availableUsers)
     ? details.data.availableUsers
     : [];
@@ -77,6 +91,13 @@ export default function TeamDetailsSection({
     : [];
 
   const isLockedUser = (user: User) => lockedUsers.includes(user.username);
+
+  const avatarIds = useMemo(
+    () =>
+      teamUsers.filter((user) => user.hasProfilePicture).map((user) => user.id),
+    [teamUsers],
+  );
+  const avatars = useProfilePictureThumbnails(avatarIds);
 
   // A failed load leaves nothing to show, so the view hands back to the list.
   const loadFailed = details.isLoadingError || admin.isLoadingError;
@@ -394,6 +415,7 @@ User: ${user.username}`)
                         <Avatar
                           size={32}
                           color={user.enabled ? "blue" : "gray"}
+                          src={avatars[String(user.id)]}
                           styles={{
                             root: {
                               border: isActive

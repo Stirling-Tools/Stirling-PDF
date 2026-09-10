@@ -180,7 +180,12 @@ export function UsersDirectory({
         key: "person",
         header: t("users.columns.person", "Person"),
         icon: (m) => (
-          <Avatar name={m.name} size="sm" tone={avatarToneForMember(m)} />
+          <Avatar
+            src={m.avatarUrl}
+            name={m.name}
+            size="sm"
+            tone={avatarToneForMember(m)}
+          />
         ),
         primary: (m) => m.name,
         suffix: (m) => (m.isSelf ? t("users.you", "(you)") : undefined),
