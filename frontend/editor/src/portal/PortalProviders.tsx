@@ -6,6 +6,8 @@ import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
 import { ConnectCallbackHost } from "@portal/components/account-link/ConnectCallbackHost";
 import { PortalChrome } from "@portal/components/PortalChrome";
 import { useConnectPrompt } from "@portal/hooks/useConnectPrompt";
+import { AccountLinkSessionBoundary } from "@portal/components/account-link/AccountLinkSessionBoundary";
+import { SaasSessionBanner } from "@portal/components/account-link/SaasSessionBanner";
 
 /** The one and only account-link modal, whichever step it is on. */
 function LinkModalHost() {
@@ -32,13 +34,15 @@ export function PortalProviders() {
   return (
     <LinkProvider initialState="unlinked" statusKnown={false}>
       <TierProvider>
-        <UIProvider>
-          <AccountLinkProvider>
-            <PortalChrome />
-            <LinkModalHost />
-            <ConnectCallbackHost />
-          </AccountLinkProvider>
-        </UIProvider>
+        <AccountLinkSessionBoundary>
+          <UIProvider>
+            <AccountLinkProvider>
+              <PortalChrome banner={<SaasSessionBanner />} />
+              <LinkModalHost />
+              <ConnectCallbackHost />
+            </AccountLinkProvider>
+          </UIProvider>
+        </AccountLinkSessionBoundary>
       </TierProvider>
     </LinkProvider>
   );

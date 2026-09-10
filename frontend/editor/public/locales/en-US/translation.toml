@@ -7176,6 +7176,16 @@ later = "Not now"
 sub = "Unlocks teams, PDF processor, pipelines, and policies. PDF editing stays free."
 title = "Connect your Stirling account"
 
+[portal.accountLink.renewal]
+expired = "This sign-in request expired. Try again to renew billing access; your server is still connected."
+incomplete = "This server is still connected, but we could not restore billing access in this browser. Try signing in again."
+malformed = "We could not verify this sign-in response. Start again from Usage & billing; your server is still connected."
+rejected = "This sign-in request was declined or has already been used. Try again to renew billing access."
+retry = "Stirling could not finish renewing billing access. Try again in a moment; your server is still connected."
+success = "Your billing access has been renewed. This server is still connected to the same Stirling account."
+title = "Renew billing access"
+working = "Restoring billing access."
+
 [portal.accountLink.state]
 free = "Editor plan"
 subscribed = "Processor plan"

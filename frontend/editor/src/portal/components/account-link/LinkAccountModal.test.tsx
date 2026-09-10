@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { UIProvider } from "@portal/contexts/UIContext";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
@@ -40,13 +41,15 @@ function renderModal(
 ) {
   return render(
     <PortalTestProviders>
-      <MemoryRouter>
-        <LinkAccountModal
-          open
-          onClose={() => {}}
-          mode={mode}
-          outcome={outcome}
-        />
+      <MemoryRouter initialEntries={["/processor/usage"]}>
+        <UIProvider>
+          <LinkAccountModal
+            open
+            onClose={() => {}}
+            mode={mode}
+            outcome={outcome}
+          />
+        </UIProvider>
       </MemoryRouter>
     </PortalTestProviders>,
   );
@@ -68,6 +71,7 @@ describe("LinkAccountModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.setItem("stirling.portalSaasOwner", "owner");
     fetchWallet.mockResolvedValue(freeWallet);
     startConnect.mockResolvedValue({
       phase: "PENDING",
@@ -103,6 +107,22 @@ describe("LinkAccountModal", () => {
     expect(startConnect).not.toHaveBeenCalled();
   });
 
+  it("does not redirect if the renewal dialog closes while the request is pending", async () => {
+    let resolve!: (value: unknown) => void;
+    startReauth.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      }),
+    );
+    const view = renderModal("reauth");
+    click(/Sign in again/);
+    view.unmount();
+    await act(async () => {
+      resolve({ phase: "PENDING", authorizeUrl: AUTHORIZE });
+    });
+    expect(assign).not.toHaveBeenCalled();
+  });
+
   it("offers no sign-in form, because a sign-in started here cannot complete", () => {
     const { container } = renderModal();
     click(CONNECT);
@@ -122,7 +142,9 @@ describe("LinkAccountModal", () => {
     // The backend checks this against the request's Origin header.
     expect(startConnect).toHaveBeenCalledWith(
       "localhost",
-      "http://localhost:5173/account-link/callback",
+      expect.stringMatching(
+        /^http:\/\/localhost:5173\/account-link\/callback\?state=/,
+      ),
     );
     await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
     expect(startReauth).not.toHaveBeenCalled();
@@ -140,7 +162,9 @@ describe("LinkAccountModal", () => {
     // A different endpoint: reauth presents the credential, so the team is pinned server-side.
     await waitFor(() =>
       expect(startReauth).toHaveBeenCalledWith(
-        "http://localhost:5173/account-link/callback",
+        expect.stringMatching(
+          /^http:\/\/localhost:5173\/account-link\/callback\?state=/,
+        ),
       ),
     );
     expect(startConnect).not.toHaveBeenCalled();
@@ -211,6 +235,29 @@ describe("LinkAccountModal", () => {
   });
 
   describe("resuming after the round trip", () => {
+    it("keeps a renewal success to one step without the link onboarding", async () => {
+      renderModal("reauth", {
+        mode: "reauth",
+        state: "linked",
+        sessionRestored: true,
+      });
+      expect(
+        await screen.findByText(/billing access has been renewed/),
+      ).toBeTruthy();
+      expect(screen.queryByText("Invite your team")).toBeNull();
+      expect(filledSteps()).toBe(0);
+    });
+
+    it("retries expired renewal with reauth rather than registering again", async () => {
+      renderModal("reauth", {
+        mode: "reauth",
+        state: "expired",
+        sessionRestored: false,
+      });
+      click(/Try again/);
+      await waitFor(() => expect(startReauth).toHaveBeenCalledTimes(1));
+      expect(startConnect).not.toHaveBeenCalled();
+    });
     it("lands on step 3 rather than restarting the pitch", async () => {
       renderModal("link", { state: "linked", sessionRestored: true });
 

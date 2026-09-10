@@ -35,7 +35,15 @@ const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
 beforeEach(() => {
   invoke.mockReset();
   rpc.mockReset();
-  getClient.mockReset().mockReturnValue({ functions: { invoke }, rpc });
+  getClient.mockReset().mockReturnValue({
+    functions: { invoke },
+    rpc,
+    auth: {
+      getSession: async () => ({
+        data: { session: { access_token: "billing-token" } },
+      }),
+    },
+  });
 });
 afterEach(() => vi.restoreAllMocks());
 

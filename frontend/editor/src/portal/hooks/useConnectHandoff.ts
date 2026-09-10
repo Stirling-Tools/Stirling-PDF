@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import { withBasePath } from "@app/constants/app";
 import { startConnect, startReauth } from "@portal/api/link";
+import { rememberConnect } from "@portal/auth/pendingConnect";
+import { useUI } from "@portal/contexts/UIContext";
 
 interface ConnectHandoff {
   /** Stays true through a successful hand-off: the page is leaving, so nothing resolves. */
@@ -12,31 +15,57 @@ interface ConnectHandoff {
 
 export function useConnectHandoff(reauth: boolean): ConnectHandoff {
   const { t } = useTranslation();
+  const location = useLocation();
+  const { linkReturnSection } = useUI();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const mounted = useRef(false);
+  const inFlight = useRef(false);
 
   useEffect(() => {
+    mounted.current = true;
     // Back from Stirling can restore this page with its heap intact, leaving busy stuck on and the
     // dialog pinned to the ghost step. Being shown at all means we are not mid-navigation.
-    const shown = () => setBusy(false);
+    const shown = () => {
+      inFlight.current = false;
+      setBusy(false);
+    };
     window.addEventListener("pageshow", shown);
-    return () => window.removeEventListener("pageshow", shown);
+    return () => {
+      mounted.current = false;
+      window.removeEventListener("pageshow", shown);
+    };
   }, []);
 
   const begin = useCallback(() => {
+    if (inFlight.current) return;
+    inFlight.current = true;
     setBusy(true);
     setError(null);
     void (async () => {
       try {
+        const ownerId = localStorage.getItem("stirling.portalSaasOwner");
+        if (!ownerId) throw new Error("A local organization owner is required");
         // Stated, not inferred: only the frontend knows its own base path.
-        const callbackUrl = new URL(
+        const browserState = crypto.randomUUID();
+        const callback = new URL(
           withBasePath("/account-link/callback"),
           window.location.origin,
-        ).toString();
+        );
+        callback.searchParams.set("state", browserState);
+        const callbackUrl = callback.toString();
         const status = reauth
           ? await startReauth(callbackUrl)
           : await startConnect(window.location.hostname, callbackUrl);
+        if (!mounted.current) return;
         if (status.authorizeUrl) {
+          rememberConnect({
+            ownerId,
+            mode: reauth ? "reauth" : "link",
+            returnTo: `${location.pathname}${location.search}`,
+            settingsSection: linkReturnSection,
+            browserState,
+          });
           window.location.assign(status.authorizeUrl);
           return;
         }
@@ -48,7 +77,9 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
           ),
         );
         setBusy(false);
+        inFlight.current = false;
       } catch {
+        if (!mounted.current) return;
         setError(
           t(
             "portal.accountLink.modal.startFailed",
@@ -56,9 +87,10 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
           ),
         );
         setBusy(false);
+        inFlight.current = false;
       }
     })();
-  }, [reauth, t]);
+  }, [reauth, t, location.pathname, location.search, linkReturnSection]);
 
   return { busy, error, begin };
 }

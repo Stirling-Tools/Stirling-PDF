@@ -3,6 +3,7 @@ import { errorMessage } from "@portal/api/http";
 import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
 import { fetchStatus, unlinkInstance, type LinkStatus } from "@portal/api/link";
 import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
+import { clearAccountLinkSession } from "@portal/auth/accountLinkSession";
 
 /** Reads and clears THIS instance's link status. */
 
@@ -54,6 +55,7 @@ export function useAccountLink(): UseAccountLink {
     setError(null);
     try {
       await unlinkInstance();
+      clearAccountLinkSession();
       setStatus({ linked: false, name: null });
       setPhase("idle");
       applyLinkFacts(false, false);

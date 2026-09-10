@@ -240,6 +240,30 @@ class ConnectServiceTest {
     }
 
     @Test
+    void complete_withoutAnOpenHandshakeRejectsEvenWhenTheInstanceIsLinked() {
+        assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.REJECTED);
+        verifyNoInteractions(credentialStore, client);
+    }
+
+    @Test
+    void configuredCallbackPreservesTheBrowserCorrelator() {
+        applicationProperties.getSystem().setFrontendUrl("https://pdf.example.com/base");
+        String callback = "https://pdf.example.com/base/account-link/callback?state=browser-state";
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        callback, "https://pdf.example.com", null)))
+                .isEqualTo(callback);
+        assertThat(
+                        service.resolveCallbackUrl(
+                                new ConnectService.CallbackHint(
+                                        "https://other.example.com/account-link/callback?state=wrong",
+                                        null,
+                                        null)))
+                .isEqualTo("https://pdf.example.com/base/account-link/callback");
+    }
+
+    @Test
     void complete_whenSaaSHasNotCommittedTheApprovalKeepsTheHandshake() {
         when(stateRepo.findById(ConnectState.SINGLETON_ID))
                 .thenReturn(Optional.of(openHandshake()));

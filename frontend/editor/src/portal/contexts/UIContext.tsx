@@ -6,6 +6,7 @@ import {
   type ReactNode,
 } from "react";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
+import { clearPendingConnect } from "@portal/auth/pendingConnect";
 
 interface UIContextValue {
   /** Off-canvas sidebar drawer on small screens (no-op chrome on desktop). */
@@ -45,6 +46,7 @@ interface UIContextValue {
    * (that would mint a duplicate device credential).
    */
   linkModalMode: "link" | "reauth";
+  linkReturnSection: string | null;
   openLinkModal: (mode?: "link" | "reauth") => void;
   closeLinkModal: () => void;
   /**
@@ -147,13 +149,15 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       linkModalOpen,
       linkModalMode,
+      linkReturnSection: reopenSettingsAfterLink,
       openLinkModal: (mode: "link" | "reauth" = "link") => {
         setMobileNavOpen(false);
         setLinkModalMode(mode);
+        setConnectOutcome(null);
         // Never stack on Settings: close it first, and remember to reopen it on
         // the account-link section once the login modal closes.
         if (settingsOpen) {
-          setReopenSettingsAfterLink("account-link");
+          setReopenSettingsAfterLink(settingsInitialSection ?? "account-link");
           setSettingsOpen(false);
           setSettingsInitialSection(null);
           setSettingsInitialFocus(null);
@@ -170,11 +174,15 @@ export function UIProvider({ children }: { children: ReactNode }) {
       publishConnectOutcome: (outcome: ConnectOutcome) => {
         setMobileNavOpen(false);
         setConnectOutcome(outcome);
-        setLinkModalMode("link");
+        setLinkModalMode(outcome.mode ?? "link");
+        if (outcome.settingsSection)
+          setReopenSettingsAfterLink(outcome.settingsSection);
         setLinkModalOpen(true);
       },
       clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
+        connectOutcome?.cancel?.();
+        clearPendingConnect();
         setLinkModalOpen(false);
         setLinkModalMode("link");
         // A reopen from a CTA is a fresh flow, not a handshake already dismissed.

@@ -1,7 +1,7 @@
 import { apiClient } from "@portal/api/http";
 import { resolveDemoResponse } from "@portal/api/demoData";
 import { saasApiBase } from "@portal/api/saasApiBase";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
+import { invokeSaasFunction } from "@portal/auth/saasFunctions";
 
 /*
  * Procurement models the enterprise commercial journey: trial → quote → agreement → payment →
@@ -367,9 +367,7 @@ async function demoEdgeResponse(
 async function invokeEdge<T>(fn: string, quoteId: number): Promise<T> {
   const demo = await demoEdgeResponse(fn, quoteId);
   if (demo) return (await demo.json()) as T;
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error("No SaaS session");
-  const { data, error } = await supabase.functions.invoke<T>(fn, {
+  const { data, error } = await invokeSaasFunction<T>(fn, {
     body: { quote_id: quoteId },
   });
   if (error) throw error;
@@ -391,11 +389,10 @@ export function acceptQuote(quoteId: number): Promise<AcceptResult> {
 export async function fetchQuotePdf(quoteId: number): Promise<Blob> {
   const demo = await demoEdgeResponse("get-procurement-quote-pdf", quoteId);
   if (demo) return await demo.blob();
-  const supabase = getSupabaseClient();
-  if (!supabase) throw new Error("No SaaS session");
-  const { data, error } = await supabase.functions.invoke<Blob>(
+  const { data, error } = await invokeSaasFunction<Blob>(
     "get-procurement-quote-pdf",
     { body: { quote_id: quoteId } },
+    true,
   );
   if (error) throw error;
   if (!data) throw new Error("No PDF returned");

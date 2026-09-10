@@ -26,7 +26,11 @@ export function PortalBillingGate() {
 
   return (
     <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.home)}>
-      <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />
+      <Usage
+        onWalletLoaded={onWalletLoaded}
+        onReauth={onReauth}
+        sessionRecoveryInShell
+      />
     </ConnectGuardedRoute>
   );
 }

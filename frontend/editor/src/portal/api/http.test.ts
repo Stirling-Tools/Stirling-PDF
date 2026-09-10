@@ -7,14 +7,15 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
  * base with the Supabase bearer) is covered in api/link.test.ts; here we pin the
  * error/edge branches that gate the billing UI's error surface.
  */
-const { getSession, getStoredTokenMock } = vi.hoisted(() => ({
+const { getSession, refreshSession, getStoredTokenMock } = vi.hoisted(() => ({
   getSession: vi.fn(),
+  refreshSession: vi.fn(),
   getStoredTokenMock: vi.fn(),
 }));
 
 vi.mock("@app/auth", () => ({ getStoredToken: getStoredTokenMock }));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
-  getSupabaseClient: () => ({ auth: { getSession } }),
+  getSupabaseClient: () => ({ auth: { getSession, refreshSession } }),
   configureSupabase: vi.fn(),
 }));
 vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
@@ -25,6 +26,7 @@ import {
   SaasNotLinkedError,
   SaasUnconfiguredError,
 } from "@portal/api/http";
+import { resetPortalSaasSessionState } from "@portal/auth/portalSaasSession";
 
 const fetchMock = vi.fn();
 
@@ -32,6 +34,8 @@ beforeEach(() => {
   vi.stubGlobal("fetch", fetchMock);
   fetchMock.mockReset();
   getSession.mockReset();
+  refreshSession.mockReset();
+  resetPortalSaasSessionState();
   getStoredTokenMock.mockReset();
 });
 
@@ -48,6 +52,45 @@ function ok(body: unknown): Response {
 }
 
 describe("apiClient.saas", () => {
+  it.each(["json", "text", "blob"] as const)(
+    "renews and retries a %s read once after 401",
+    async (format) => {
+      vi.stubEnv("VITE_SAAS_API_URL", "https://saas.test.local");
+      getSession.mockResolvedValue({
+        data: { session: { access_token: "expired" } },
+      });
+      refreshSession.mockResolvedValue({
+        data: { session: { access_token: "renewed" } },
+      });
+      fetchMock
+        .mockResolvedValueOnce(new Response(null, { status: 401 }))
+        .mockResolvedValueOnce(ok({ valid: true }));
+      await apiClient.saas[format]("/read", {
+        headers: { Authorization: "stale-override" },
+      });
+      expect(refreshSession).toHaveBeenCalledTimes(1);
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe(
+        "Bearer renewed",
+      );
+    },
+  );
+
+  it("does not repeat a purchase after a 401", async () => {
+    vi.stubEnv("VITE_SAAS_API_URL", "https://saas.test.local");
+    getSession.mockResolvedValue({
+      data: { session: { access_token: "expired" } },
+    });
+    fetchMock.mockResolvedValue(new Response(null, { status: 401 }));
+    await expect(
+      apiClient.saas.json("/purchase", {
+        method: "POST",
+        body: { quantity: 3 },
+      }),
+    ).rejects.toBeInstanceOf(SaasNotLinkedError);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(refreshSession).not.toHaveBeenCalled();
+  });
   it("throws SaasUnconfiguredError when VITE_SAAS_API_URL is unset", async () => {
     vi.stubEnv("VITE_SAAS_API_URL", "");
     await expect(

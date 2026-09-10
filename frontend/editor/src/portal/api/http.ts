@@ -41,7 +41,11 @@
  * entitlement calls. It never enters the portal — the browser is the human
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
-import { getPortalSaasToken } from "@portal/auth/portalSaasSession";
+import { withPortalSaasSession } from "@portal/auth/portalSaasSession";
+export {
+  SaasSessionRequiredError,
+  SaasSessionRequiredError as SaasNotLinkedError,
+} from "@portal/auth/portalSaasSession";
 import { resolveDemoResponse } from "@portal/api/demoData";
 import { saasApiBase } from "@portal/api/saasApiBase";
 import {
@@ -87,16 +91,6 @@ export class SaasUnconfiguredError extends Error {
       "SaaS API not configured — set VITE_SAAS_API_URL to enable portal→SaaS reads.",
     );
     this.name = "SaasUnconfiguredError";
-  }
-}
-
-/** Thrown by apiClient.saas.* when the admin has no SaaS session yet. */
-export class SaasNotLinkedError extends Error {
-  constructor() {
-    super(
-      "No SaaS session — admin must link an account before attended SaaS reads.",
-    );
-    this.name = "SaasNotLinkedError";
   }
 }
 
@@ -245,21 +239,25 @@ async function saasJson<T>(
   const base = saasBaseUrl();
   // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
   if (base === null) throw new SaasUnconfiguredError();
-  const token = await getPortalSaasToken();
-  if (!token) throw new SaasNotLinkedError();
-  const res = await fetch(`${base}${path}`, {
-    method: options.method ?? "GET",
-    headers: {
-      Accept: "application/json",
-      Authorization: `Bearer ${token}`,
-      ...(options.body !== undefined
-        ? { "Content-Type": "application/json" }
-        : {}),
-      ...options.headers,
-    },
-    body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
-    signal: options.signal,
-  });
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: {
+          Accept: "application/json",
+          ...(options.body !== undefined
+            ? { "Content-Type": "application/json" }
+            : {}),
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        },
+        body:
+          options.body !== undefined ? JSON.stringify(options.body) : undefined,
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
   return unwrap<T>(res);
 }
 
@@ -271,19 +269,22 @@ async function saasText(
   const base = saasBaseUrl();
   // null = unset (self-hosted, no VITE_SAAS_API_URL). "" is same-origin (SaaS) — valid.
   if (base === null) throw new SaasUnconfiguredError();
-  const token = await getPortalSaasToken();
-  if (!token) throw new SaasNotLinkedError();
-  const res = await fetch(`${base}${path}`, {
-    method: options.method ?? "GET",
-    headers: {
-      Accept: "text/plain",
-      Authorization: `Bearer ${token}`,
-      ...options.headers,
-    },
-    signal: options.signal,
-  });
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: {
+          Accept: "text/plain",
+          ...options.headers,
+          Authorization: `Bearer ${token}`,
+        },
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
   if (!res.ok) {
-    throw new Error(`SaaS request failed (${res.status})`);
+    throw new HttpError(res.status, res.statusText, null);
   }
   return res.text();
 }
@@ -296,13 +297,16 @@ async function saasBlob(
   const base = saasBaseUrl();
   // Same-origin SaaS resolves to "" (falsy); only null means unconfigured.
   if (base === null) throw new SaasUnconfiguredError();
-  const token = await getPortalSaasToken();
-  if (!token) throw new SaasNotLinkedError();
-  const res = await fetch(`${base}${path}`, {
-    method: options.method ?? "GET",
-    headers: { Authorization: `Bearer ${token}`, ...options.headers },
-    signal: options.signal,
-  });
+  const res = await withPortalSaasSession(
+    (token) =>
+      fetch(`${base}${path}`, {
+        method: options.method ?? "GET",
+        headers: { ...options.headers, Authorization: `Bearer ${token}` },
+        signal: options.signal,
+      }),
+    (response) => response.status === 401,
+    !options.method || options.method === "GET",
+  );
   if (!res.ok) throw new HttpError(res.status, res.statusText, null);
   return res.blob();
 }
