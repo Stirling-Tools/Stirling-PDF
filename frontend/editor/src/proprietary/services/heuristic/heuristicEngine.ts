@@ -98,84 +98,69 @@ const LIGATURE_FL = /ﬂ/g;
 
 // --- language profiles (compiled once from rules/languages.json) ---
 
-interface ScriptSplit {
-  language: string;
-  re: RegExp;
-  minCount: number;
-  absent: RegExp | null;
-}
-interface ScriptProfile {
+interface ScriptGroup {
   id: string;
   range: RegExp;
-  fallback: string;
-  splits: ScriptSplit[];
+  /** Languages this writing system can hold, in the file's order. */
+  languages: string[];
 }
-interface LatinProfile {
+/** One language's evidence: its function words and the letters peculiar to it. */
+interface LanguageProfile {
   language: string;
   words: Set<string>;
-  dia: RegExp | null;
+  chars: RegExp | null;
 }
 
 interface RawScript {
   id?: unknown;
   range?: unknown;
-  default?: unknown;
-  split?: {
-    language?: unknown;
-    pattern?: unknown;
-    minCount?: unknown;
-    absent?: unknown;
-  }[];
+  languages?: unknown;
 }
-interface RawLatin {
+interface RawProfile {
   language?: unknown;
   words?: unknown;
-  diacritics?: unknown;
+  chars?: unknown;
 }
 interface LanguagesFile {
   english?: { words?: unknown };
   scripts?: RawScript[];
-  latin?: RawLatin[];
+  latin?: { languages?: unknown };
+  profiles?: RawProfile[];
 }
 
 const languages = LANGUAGE_DATA as LanguagesFile;
 
-// Profile words are authored as they are spelled; folding them here is what lets
+// Profile words carry their natural spelling; folding them here is what lets
 // "fur" in a diacritic-stripped PDF still count as German "für".
-const ENGLISH_WORDS = new Set<string>(strings(languages.english?.words));
+const ENGLISH_WORDS = new Set<string>(
+  strings(languages.english?.words).map((w) => fold(w.toLowerCase())),
+);
 
-const SCRIPTS: ScriptProfile[] = (languages.scripts ?? []).flatMap((s) => {
+const SCRIPTS: ScriptGroup[] = (languages.scripts ?? []).flatMap((s) => {
   const range = compileRegex(str(s.range), "g");
-  const fallback = str(s.default);
-  if (range == null || fallback == null) return [];
-  const splits: ScriptSplit[] = (s.split ?? []).flatMap((sp) => {
-    const re = compileRegex(str(sp.pattern), "g");
-    const language = str(sp.language);
-    if (re == null || language == null) return [];
-    const min = num(sp.minCount);
-    return [
-      {
-        language,
-        re,
-        minCount: min > 0 ? min : 1,
-        absent: compileRegex(str(sp.absent), "g"),
-      },
-    ];
-  });
-  return [{ id: str(s.id) ?? fallback, range, fallback, splits }];
+  const langs = strings(s.languages);
+  if (range == null || langs.length === 0) return [];
+  return [{ id: str(s.id) ?? langs[0], range, languages: langs }];
 });
 
-const LATIN_PROFILES: LatinProfile[] = (languages.latin ?? []).flatMap((p) => {
-  const language = str(p.language);
-  if (language == null) return [];
-  return [
-    {
-      language,
-      words: new Set(strings(p.words).map((w) => fold(w.toLowerCase()))),
-      dia: compileRegex(str(p.diacritics), "g"),
-    },
-  ];
-});
+const LATIN_LANGUAGES: string[] = strings(languages.latin?.languages);
+
+const PROFILES = new Map<string, LanguageProfile>(
+  (languages.profiles ?? []).flatMap((p) => {
+    const language = str(p.language);
+    if (language == null) return [];
+    return [
+      [
+        language,
+        {
+          language,
+          words: new Set(strings(p.words).map((w) => fold(w.toLowerCase()))),
+          chars: compileRegex(str(p.chars), "g"),
+        },
+      ] as const,
+    ];
+  }),
+);
 
 // --- prepared rule model ---
 interface Phrase {
@@ -533,19 +518,26 @@ export function compileRegex(
 /** Minimum words before foreign-language evidence is trusted over English. */
 const MIN_WORDS_FOR_FOREIGN = 12;
 /**
- * Diacritics below this count score nothing. The density term is worth up to 0.9
- * — far more than English prose scores on function words — so without a floor a
- * German sign-off on an English invoice outweighs the whole English document.
+ * Distinctive letters below this count score nothing. The density term is worth
+ * up to 0.9 — far more than English prose scores on function words — so without a
+ * floor a German sign-off on an English invoice outweighs the whole document.
  */
-const MIN_DIACRITICS = 3;
+const MIN_DISTINCTIVE_CHARS = 3;
 /** Dominance a script range needs over all letters to decide the writing system. */
 const SCRIPT_SHARE = 0.25;
 
 /**
- * Name the language a document is written in. English is the assumption of last
- * resort (`assumed: true`) because data-dense documents — tickets, itineraries,
- * prescriptions — carry too few function words to prove any language, and the
- * English pack is the one most likely to still match their field labels.
+ * Name the language a document is written in.
+ *
+ * <p>One mechanism for every writing system: a script range narrows the
+ * candidates, and where a range holds more than one language — Japanese and
+ * Chinese, Russian and Ukrainian and Bulgarian, Arabic and Persian — the same
+ * function-word profiles that separate the Latin languages separate those too.
+ *
+ * <p>English is the assumption of last resort (`assumed: true`) because
+ * data-dense documents — tickets, itineraries, payslips — carry too few function
+ * words to prove any language, and the English pack is the one most likely to
+ * still match their field labels.
  *
  * <p>`candidates` is ranked best-first and is what the pack dispatch reads;
  * `language` is its head.
@@ -563,74 +555,68 @@ export function detectLanguage(text: string): LanguageDetection {
     };
   }
 
+  const words = allMatches(WORD, normalize(raw));
+  const totalWords = Math.max(words.length, 1);
+
   for (const script of SCRIPTS) {
     if (countAll(script.range, raw) / letters <= SCRIPT_SHARE) continue;
-    const language = resolveScript(script, raw);
+    if (script.languages.length === 1) {
+      const only = script.languages[0];
+      return {
+        language: only,
+        script: script.id,
+        candidates: [{ language: only, score: 1 }],
+        assumed: false,
+        lowText: false,
+      };
+    }
+    const candidates = rankLanguages(raw, words, totalWords, script.languages);
     return {
-      language,
+      language: candidates[0]?.language ?? script.languages[0],
       script: script.id,
-      candidates: [{ language, score: 1 }],
+      candidates,
       assumed: false,
       lowText: false,
     };
   }
 
-  const latinRatio = countAll(LATIN_LETTER, raw) / letters;
-  const words = allMatches(WORD, normalize(raw));
-  const totalWords = Math.max(words.length, 1);
+  // Folded before counting: Vietnamese ơ, Turkish ı and Polish ł are Latin
+  // letters, and an ASCII test throws those documents out of the Latin branch.
+  const latinRatio = countAll(LATIN_LETTER, fold(raw)) / letters;
   const lowText = totalWords < 30;
 
   let englishHits = 0;
   for (const w of words) if (ENGLISH_WORDS.has(w)) englishHits++;
   const englishScore = englishHits / totalWords;
 
-  const candidates: LanguageCandidate[] = [];
+  const candidates = rankLanguages(raw, words, totalWords, LATIN_LANGUAGES);
+  const best = candidates[0];
+  const bestProfile = best == null ? null : PROFILES.get(best.language);
   let bestDistinct = 0;
-  let bestDia = 0;
-  let bestRatio = 0;
-  let bestScore = 0;
-  for (const profile of LATIN_PROFILES) {
-    let hits = 0;
-    const distinct = new Set<string>();
-    for (const w of words) {
-      if (profile.words.has(w)) {
-        hits++;
-        distinct.add(w);
-      }
-    }
-    const diaCount = profile.dia == null ? 0 : countAll(profile.dia, raw);
-    const diaEvidence = diaCount >= MIN_DIACRITICS ? diaCount : 0;
-    const ratio = hits / totalWords;
-    const score = ratio + Math.min(diaEvidence / totalWords, 0.15) * 6;
-    // Zero-scoring profiles stay on the list: they are what the assumed-English
-    // hedge falls back to, and a positive English score filters them out anyway.
-    candidates.push({ language: profile.language, score });
-    if (score > bestScore) {
-      bestScore = score;
-      bestRatio = ratio;
-      bestDistinct = distinct.size;
-      bestDia = diaCount;
-    }
+  if (bestProfile != null) {
+    const seen = new Set<string>();
+    for (const w of words) if (bestProfile.words.has(w)) seen.add(w);
+    bestDistinct = seen.size;
   }
+  const bestChars =
+    bestProfile?.chars == null ? 0 : countAll(bestProfile.chars, raw);
+  const bestRatio =
+    bestProfile == null ? 0 : countWords(words, bestProfile) / totalWords;
 
   // Affirmative evidence of a specific other language, not merely an absence of
   // English: a shared function word or stray accent must not unseat English.
-  const foreignEvidence = bestDistinct >= 3 || bestDia >= 6;
+  const foreignEvidence = bestDistinct >= 3 || bestChars >= 6;
   const foreignWins =
     latinRatio >= 0.7 &&
     totalWords >= MIN_WORDS_FOR_FOREIGN &&
     foreignEvidence &&
-    (bestDia >= 3 || bestRatio >= 0.1) &&
-    bestScore > englishScore * 1.2 &&
+    (bestChars >= 3 || bestRatio >= 0.1) &&
+    (best?.score ?? 0) > englishScore * 1.2 &&
     (englishScore < 0.04 || bestRatio > englishScore * 1.5);
-
-  if (englishScore > 0)
-    candidates.push({ language: "en", score: englishScore });
-  candidates.sort((a, b) => b.score - a.score);
 
   if (foreignWins) {
     return {
-      language: candidates[0]?.language ?? null,
+      language: best?.language ?? null,
       script: "latin",
       candidates,
       assumed: false,
@@ -655,22 +641,46 @@ export function detectLanguage(text: string): LanguageDetection {
   return {
     language: "en",
     script: "latin",
-    candidates: [
-      { language: "en", score: englishScore },
-      ...candidates.filter((c) => c.language !== "en"),
-    ],
+    candidates: [{ language: "en", score: englishScore }, ...candidates],
     assumed: !englishProven,
     lowText,
   };
 }
 
-function resolveScript(script: ScriptProfile, raw: string): string {
-  for (const split of script.splits) {
-    if (countAll(split.re, raw) < split.minCount) continue;
-    if (split.absent != null && countAll(split.absent, raw) > 0) continue;
-    return split.language;
+function countWords(words: string[], profile: LanguageProfile): number {
+  let hits = 0;
+  for (const w of words) if (profile.words.has(w)) hits++;
+  return hits;
+}
+
+/**
+ * Score the given languages against the text, best first. Function-word share
+ * plus distinctive-letter density, the two signals that survive a document being
+ * mostly nouns and numbers.
+ *
+ * <p>Zero-scoring languages stay on the list: they are what the assumed-English
+ * hedge falls back to, and any positive English score filters them out anyway.
+ */
+function rankLanguages(
+  raw: string,
+  words: string[],
+  totalWords: number,
+  candidates: readonly string[],
+): LanguageCandidate[] {
+  const out: LanguageCandidate[] = [];
+  for (const language of candidates) {
+    const profile = PROFILES.get(language);
+    if (profile == null) continue;
+    const chars = profile.chars == null ? 0 : countAll(profile.chars, raw);
+    const charEvidence = chars >= MIN_DISTINCTIVE_CHARS ? chars : 0;
+    const ratio = countWords(words, profile) / totalWords;
+    out.push({
+      language,
+      score: ratio + Math.min(charEvidence / totalWords, 0.15) * 6,
+    });
   }
-  return script.fallback;
+  out.sort((a, b) => b.score - a.score);
+  return out;
 }
 
 /**

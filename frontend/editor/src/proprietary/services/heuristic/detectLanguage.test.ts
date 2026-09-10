@@ -38,6 +38,9 @@ const scripts = {
   zh: "发票 发票号码 2024-014 开票日期 2024年5月3日 付款期限为收到发票后三十天内。合计金额 1,200元 请在期限内付款。",
   ru: "Договор оказания услуг. Настоящий договор заключён между сторонами, указанными ниже, на оказание описанных услуг. Оплата производится в течение тридцати дней.",
   uk: "Договір про надання послуг. Цей договір укладено між сторонами, які зазначені нижче. Оплата здійснюється протягом тридцяти днів із дати рахунку.",
+  ar: "فاتورة. يجب أن يتم الدفع في غضون ثلاثين يوما من تاريخ هذه الفاتورة. يتم احتساب الخدمات للفترة المذكورة هنا وهذا المبلغ مستحق الدفع على الحساب.",
+  bg: "Фактура. Плащането се дължи в срок от тридесет дни от датата на фактурата. Услугите се начисляват за посочения период и трябва да бъдат платени.",
+  fa: "صورتحساب. پرداخت باید در مدت سی روز از تاریخ این صورتحساب انجام شود. خدمات برای دوره ذکر شده محاسبه می شود و این مبلغ قابل پرداخت است.",
   el: "Τιμολόγιο. Η πληρωμή οφείλεται εντός τριάντα ημερών από την ημερομηνία του τιμολογίου. Οι υπηρεσίες χρεώνονται για την αναφερόμενη περίοδο.",
   th: "ใบแจ้งหนี้ เลขที่ใบแจ้งหนี้ 2024-014 กำหนดชำระเงินภายในสามสิบวันนับจากวันที่ได้รับใบแจ้งหนี้ ยอดรวมทั้งสิ้น 1,200 บาท",
   ko: "세금계산서 계산서 번호 2024-014 발행일 2024년 5월 3일 대금은 계산서 수령 후 삼십일 이내에 지급하여야 합니다. 합계 금액",
@@ -67,9 +70,19 @@ describe("detectLanguage", () => {
     expect(detectLanguage(scripts.zh).language).toBe("zh");
   });
 
-  it("separates Ukrainian from Russian on і ї є ґ", () => {
+  it("separates the three Cyrillic languages from each other", () => {
     expect(detectLanguage(scripts.ru).language).toBe("ru");
     expect(detectLanguage(scripts.uk).language).toBe("uk");
+    expect(detectLanguage(scripts.bg).language).toBe("bg");
+    for (const tag of ["ru", "uk", "bg"] as const) {
+      expect(detectLanguage(scripts[tag]).script).toBe("cyrillic");
+    }
+  });
+
+  it("separates Persian from Arabic", () => {
+    expect(detectLanguage(scripts.ar).language).toBe("ar");
+    expect(detectLanguage(scripts.fa).language).toBe("fa");
+    expect(detectLanguage(scripts.fa).script).toBe("arabic");
   });
 
   it("leaves a decisive winner far enough clear to dispatch one pack", () => {

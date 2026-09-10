@@ -10,6 +10,7 @@ packs/en.json        English words
 packs/de.json        German words
 languages.json       how the detector names a document's language
 index.ts             registry: language tag → pack loader
+tools/               corpus fetch, profile derivation, accuracy measurement
 ```
 
 A document is scored against **core plus the pack(s) for the language it is
@@ -87,21 +88,33 @@ Nothing in `heuristicEngine.ts` changes.
 
 ### Detection profiles
 
-`languages.json` is the detector's data:
+`languages.json` is the detector's data, and one mechanism covers every writing
+system:
 
-- `scripts` — a writing system, its Unicode range, the language it means by
-  default, and `split` rules for the ones that share a script. Japanese is Kana
-  presence; Ukrainian is `і ї є ґ`; Persian is `پ چ ژ گ`; Bulgarian is frequent
-  `ъ` with no `ы`/`э`.
-- `latin` — function words plus the diacritic set, for languages a script range
-  cannot separate. Function words are the signal because they are the most
-  frequent tokens in any text and domain vocabulary cannot drown them out.
-- `english` — the same list, used as the baseline every other profile competes
-  against.
+- `scripts` — a writing system, its Unicode range, and the languages it can hold.
+  A range with one language answers outright (Greek, Thai, Korean, Malayalam,
+  Tibetan, Hindi). A range with several narrows the field and then profiles decide.
+- `latin` — the languages Latin-script text can be, all 24 of them.
+- `profiles` — per language, the function words it uses and the letters peculiar
+  to it. Function words are the signal because they are the most frequent tokens
+  in any text and domain vocabulary cannot drown them out; `chars` is a density
+  term for the letters nothing else uses (`ß`, `ñ`, `ə`, `ъ`, `ы`, Kana).
+- `english` — the stopword list every other profile competes against.
+
+Earlier versions separated scripts with hand-written character rules. Measurement
+killed that: "frequent `ъ` and no `ы`/`э`" identified Bulgarian in 0.8% of real
+sentences, and the Persian letter rule in 16%. Profiles carry both languages in
+those pairs at ~100%.
+
+A profile's word list deliberately holds two kinds of word. The frequent ones give
+it the mass to beat English; the rare ones give it an edge over its siblings.
+Danish and Norwegian share "jeg er ikke", so mass alone leaves them tied, and edge
+alone scores too low to register as foreign at all — with both, each reads at 100%.
 
 English is the assumption of last resort: a boarding pass or an itinerary carries
 too few function words to prove any language, and English field labels are the
-likeliest to still match. That assumption is reported as `assumed: true`.
+likeliest to still match. That assumption is reported as `assumed: true`, and it
+is what makes the runner-up pack worth loading.
 
 ### Two packs at once
 
@@ -117,6 +130,51 @@ The document is still scored, against core alone — filename, producer brand an
 document shape are often enough to suggest a label — but its confidence is capped
 below `high`, so the AI engine still rules on it. This is why a half-finished
 language list is a correct state rather than a broken one.
+
+## Tools
+
+The profiles are not hand-guessed; they are derived from corpora and measured on
+held-out text, and both steps are reproducible:
+
+```bash
+rules/tools/fetch-corpus.sh                  # ~100 MB, not committed
+python3 rules/tools/derive-profiles.py       # rewrites the profiles
+CLASSIFIER_CORPUS=rules/tools/corpus npx vitest run detectLanguage.corpus
+```
+
+Two corpora in deliberately different registers: Tatoeba sentences
+(conversational) and Wikipedia prose (third-person, much closer to the documents
+the classifier sees). Profiles come from the training half of both; the accuracy
+test reads the held-out half, so its score is generalisation rather than recall.
+Training on one register alone overfits it — Tatoeba-only profiles fill up with
+words like `lütfen` and `misin` that no Turkish invoice contains, and Turkish
+detection on encyclopedic prose falls to 23%.
+
+`detectLanguage.corpus.test.ts` skips unless the corpus is present, so it never
+runs in CI. `detectLanguage.test.ts` is the committed regression test and needs no
+downloads.
+
+### Measured
+
+7,157 held-out documents across all 38 languages:
+
+| set | documents | exact | in top 2 |
+| --- | --- | --- | --- |
+| Tatoeba, ~25 sentences per document | 2,121 | 98.7% | 100.0% |
+| Tatoeba, ~6 sentences per document | 4,396 | 93.4% | 98.6% |
+| Wikipedia prose | 640 | 89.4% | 97.8% |
+
+**Top-2 is the number that decides behaviour**, because the dispatcher loads the
+runner-up's pack too: at 97.8% the right pack is loaded for all but one document in
+fifty, and the remainder escalate to the AI engine rather than being mislabelled.
+
+Exactness is lowest where two languages are nearly one (Croatian/Serbian,
+Danish/Norwegian, Catalan/Spanish) and on short encyclopedic text in agglutinative
+languages (Turkish, Hungarian, Slovak), which falls back to assumed English. Both
+are the intended failure: the sibling's pack is loaded anyway, and assumed English
+hedges with the runner-up. The Wikipedia figures for pt, el, id, ja and pl rest on
+fewer than ten documents each — the API rate-limited the fetch — so treat those
+rows as indicative, not measured.
 
 ## Debugging
 

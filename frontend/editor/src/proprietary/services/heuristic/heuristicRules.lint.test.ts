@@ -314,69 +314,87 @@ describe.each(PACK_LANGUAGES)("language pack: %s", (language) => {
 
 interface LanguagesFile {
   english: { words: string[] };
-  scripts: {
-    id: string;
-    range: string;
-    default: string;
-    split?: { language: string; pattern: string; absent?: string }[];
-  }[];
-  latin: { language: string; words: string[]; diacritics: string | null }[];
+  scripts: { id: string; range: string; languages: string[] }[];
+  latin: { languages: string[] };
+  profiles: { language: string; words: string[]; chars: string | null }[];
 }
 
 describe("language profiles", () => {
   const data = languages as LanguagesFile;
+  const profileFor = new Map(data.profiles.map((p) => [p.language, p]));
 
-  it("compiles every script range and split pattern", () => {
+  it("compiles every script range and distinctive-letter class", () => {
     const broken: string[] = [];
     for (const s of data.scripts) {
       if (compileRegex(s.range, "g") == null) broken.push(`${s.id} range`);
-      for (const sp of s.split ?? []) {
-        if (compileRegex(sp.pattern, "g") == null) {
-          broken.push(`${s.id} split ${sp.language}`);
-        }
-        if (sp.absent != null && compileRegex(sp.absent, "g") == null) {
-          broken.push(`${s.id} absent ${sp.language}`);
-        }
+    }
+    for (const p of data.profiles) {
+      if (p.chars != null && compileRegex(p.chars, "g") == null) {
+        broken.push(`${p.language} chars`);
       }
     }
     expect(broken).toEqual([]);
   });
 
-  it("compiles every diacritic class and gives every profile words", () => {
+  it("gives every profile lower-case words", () => {
     const bad: string[] = [];
-    for (const p of data.latin) {
-      if (p.diacritics != null && compileRegex(p.diacritics, "g") == null) {
-        bad.push(`${p.language} diacritics`);
-      }
+    for (const p of data.profiles) {
       if (p.words.length === 0) bad.push(`${p.language} has no words`);
       const upper = p.words.filter((w) => w !== w.toLowerCase());
-      if (upper.length > 0)
-        bad.push(`${p.language} upper-case words: ${upper}`);
+      if (upper.length > 0) bad.push(`${p.language}: ${upper.join(" ")}`);
     }
-    expect(bad).toEqual([]);
+    expect(bad, "the engine lower-cases before matching").toEqual([]);
   });
 
   it("tags every language with a region-free ISO 639-1 code", () => {
     const tags = [
-      ...data.latin.map((p) => p.language),
-      ...data.scripts.map((s) => s.default),
-      ...data.scripts.flatMap((s) => (s.split ?? []).map((sp) => sp.language)),
+      ...data.latin.languages,
+      ...data.scripts.flatMap((s) => s.languages),
+      ...data.profiles.map((p) => p.language),
     ];
     expect(tags.filter((t) => !/^[a-z]{2}$/.test(t))).toEqual([]);
   });
 
-  it("declares each language once", () => {
-    const tags = data.latin.map((p) => p.language);
-    expect(new Set(tags).size).toBe(tags.length);
+  it("declares each language in exactly one group", () => {
+    const all = [
+      ...data.latin.languages,
+      ...data.scripts.flatMap((s) => s.languages),
+    ];
+    const dupes = all.filter((t, i) => all.indexOf(t) !== i);
+    expect(
+      dupes,
+      "a language in two groups is scored by whichever range wins",
+    ).toEqual([]);
+  });
+
+  it("gives a profile to every language that has to be told apart from a sibling", () => {
+    const needs = [
+      ...data.latin.languages,
+      ...data.scripts
+        .filter((s) => s.languages.length > 1)
+        .flatMap((s) => s.languages),
+    ];
+    expect(
+      needs.filter((l) => !profileFor.has(l)),
+      "a language sharing its group with another can only be reached by profile",
+    ).toEqual([]);
+  });
+
+  it("has no profile for a language nothing can dispatch to", () => {
+    const reachable = new Set([
+      ...data.latin.languages,
+      ...data.scripts.flatMap((s) => s.languages),
+    ]);
+    expect(
+      data.profiles.map((p) => p.language).filter((l) => !reachable.has(l)),
+    ).toEqual([]);
   });
 
   it("can dispatch to every registered pack", () => {
     const detectable = new Set<string>(["en"]);
-    for (const p of data.latin) detectable.add(p.language);
-    for (const s of data.scripts) {
-      detectable.add(s.default);
-      for (const sp of s.split ?? []) detectable.add(sp.language);
-    }
+    for (const l of data.latin.languages) detectable.add(l);
+    for (const s of data.scripts)
+      for (const l of s.languages) detectable.add(l);
     expect(
       PACK_LANGUAGES.filter((l) => !detectable.has(l)),
       "a pack the detector can never name is dead weight in the bundle",
