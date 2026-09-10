@@ -55,7 +55,8 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  const apps: QuickNavEntry[] = [
+  // Switching between the two apps, which only means anything where both exist.
+  const appSwitcher: QuickNavEntry[] = [
     {
       id: "processor",
       label: t("quickNav.processor", "Processor"),
@@ -100,15 +101,9 @@ export function QuickNavRailHost() {
     },
   ];
 
-  const within: QuickNavEntry[] = [
-    {
-      id: "files",
-      label: t("fileSidebar.myFiles", "File library"),
-      icon: (
-        <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
-      ),
-      onClick: () => go("/files"),
-    },
+  /** The surfaces you can be on. Reading is one of them, not a tool inside the editor. */
+  const surfaces: QuickNavEntry[] = [
+    ...(HAS_PORTAL ? appSwitcher : []),
     {
       id: "reader",
       label: t("quickNav.reader", "Reader"),
@@ -130,6 +125,17 @@ export function QuickNavRailHost() {
         requestReaderMode();
         go(EDITOR_BASENAME);
       },
+    },
+  ];
+
+  const within: QuickNavEntry[] = [
+    {
+      id: "files",
+      label: t("fileSidebar.myFiles", "File library"),
+      icon: (
+        <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
+      ),
+      onClick: () => go("/files"),
     },
     {
       id: "automate",
@@ -163,7 +169,7 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={HAS_PORTAL ? [apps, within] : [within]}
+      groups={[surfaces, within]}
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
       onOpenSettings={host?.hasSettings ? openSettings : undefined}
