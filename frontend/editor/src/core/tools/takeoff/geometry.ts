@@ -1,5 +1,6 @@
 import type {
   TakeoffAnnotation,
+  TakeoffAnnotationType,
   TakeoffMaterial,
   TakeoffPageScale,
   TakeoffPoint,
@@ -19,21 +20,68 @@ export function polygonArea(points: TakeoffPoint[]): number {
   return Math.abs(sum) / 2;
 }
 
+// Boundary length of a closed shape — same edge set as polygonArea (wraps
+// back from the last point to the first), just summed as distances instead
+// of the shoelace formula.
+export function polygonPerimeter(points: TakeoffPoint[]): number {
+  if (points.length < 2) return 0;
+  let sum = 0;
+  for (let i = 0; i < points.length; i++) {
+    const j = (i + 1) % points.length;
+    sum += distance(points[i], points[j]);
+  }
+  return sum;
+}
+
+// Interior angle at `vertex` between rays to `a` and `b`, in degrees.
+// Scale-invariant (an angle on the page is the same angle in reality), so
+// callers never need to convert this through a page's calibrated scale.
+export function angleBetween(
+  vertex: TakeoffPoint,
+  a: TakeoffPoint,
+  b: TakeoffPoint,
+): number {
+  const v1 = { x: a.x - vertex.x, y: a.y - vertex.y };
+  const v2 = { x: b.x - vertex.x, y: b.y - vertex.y };
+  const mag = Math.hypot(v1.x, v1.y) * Math.hypot(v2.x, v2.y);
+  if (mag === 0) return 0;
+  const cos = Math.min(1, Math.max(-1, (v1.x * v2.x + v1.y * v2.y) / mag));
+  return (Math.acos(cos) * 180) / Math.PI;
+}
+
 function unitsPerPoint(scale: TakeoffPageScale): number {
   return scale.real / scale.pointsSpan;
 }
 
-// Flat (unpitched) area of every 'area' annotation a material owns, summed
-// across however many shapes/pages it was drawn on. A segment on a page with
-// no calibrated scale contributes 0 rather than voiding the whole total —
-// see the comment on computeValue for why.
+/** Reads the type of geometry a material owns, or null if it owns none. */
+export function ownAnnotationType(
+  materialId: string,
+  annotations: TakeoffAnnotation[],
+): TakeoffAnnotationType | null {
+  return annotations.find((a) => a.materialId === materialId)?.type ?? null;
+}
+
+export function ownSegmentCount(
+  materialId: string,
+  annotations: TakeoffAnnotation[],
+): number {
+  return annotations.filter((a) => a.materialId === materialId).length;
+}
+
+// Flat (unpitched) area of every annotation of `type` a material owns,
+// summed across however many shapes/pages it was drawn on. A segment on a
+// page with no calibrated scale contributes 0 rather than voiding the whole
+// total — see the comment on computeValue for why. Shared by 'area' (used
+// directly) and 'volume' (flat area x depth) since both are drawn as the
+// same closed-polygon shape.
 function sumFlatArea(
   materialId: string,
   annotations: TakeoffAnnotation[],
   pageScales: Record<number, TakeoffPageScale>,
+  type: "area" | "volume" = "area",
 ): number {
   return annotations
-    .filter((a) => a.materialId === materialId && a.type === "area")
+    .filter((a) => a.materialId === materialId && a.type === type)
     .reduce((sum, a) => {
       const scale = pageScales[a.page];
       if (!scale) return sum;
@@ -69,11 +117,14 @@ export function computeValue(
   if (first.type === "count") return own.length;
 
   if (first.type === "area") {
-    const flat = sumFlatArea(material.id, annotations, pageScales);
+    const flat = sumFlatArea(material.id, annotations, pageScales, "area");
 
     const deducted = materials
       .filter((m) => m.deductsFromMaterialId === material.id)
-      .reduce((sum, m) => sum + sumFlatArea(m.id, annotations, pageScales), 0);
+      .reduce(
+        (sum, m) => sum + sumFlatArea(m.id, annotations, pageScales, "area"),
+        0,
+      );
 
     const net = Math.max(0, flat - deducted);
     if (material.pitchDegrees) {
@@ -83,9 +134,44 @@ export function computeValue(
     return net;
   }
 
-  // length
+  // volume: flat footprint area (no pitch/deduction — those are roof/opening
+  // concepts specific to 'area' rows) x a per-row depth/height.
+  if (first.type === "volume") {
+    const flat = sumFlatArea(material.id, annotations, pageScales, "volume");
+    return flat * (material.depthValue ?? 0);
+  }
+
+  if (first.type === "perimeter") {
+    return own
+      .filter((a) => a.type === "perimeter" && a.points.length >= 2)
+      .reduce((sum, a) => {
+        const scale = pageScales[a.page];
+        if (!scale) return sum;
+        return sum + polygonPerimeter(a.points) * unitsPerPoint(scale);
+      }, 0);
+  }
+
+  // Angle is scale-invariant and doesn't accumulate the way a length/area
+  // does — summing "45deg + 30deg" isn't a meaningful quantity — so a row
+  // that ends up with several angle annotations is averaged instead.
+  if (first.type === "angle") {
+    const angles = own
+      .filter((a) => a.type === "angle" && a.points.length >= 3)
+      .map((a) => angleBetween(a.points[0], a.points[1], a.points[2]));
+    if (angles.length === 0) return null;
+    return angles.reduce((sum, v) => sum + v, 0) / angles.length;
+  }
+
+  // length / radius / diameter: all plain two-point distances through the
+  // page's calibrated scale — a radius annotation's points are
+  // [center, edge] and a diameter's are [edge, edge], so the same distance
+  // formula already produces the right value for each.
   return own
-    .filter((a) => a.type === "length" && a.points.length >= 2)
+    .filter(
+      (a) =>
+        (a.type === "length" || a.type === "radius" || a.type === "diameter") &&
+        a.points.length >= 2,
+    )
     .reduce((sum, a) => {
       const scale = pageScales[a.page];
       if (!scale) return sum;

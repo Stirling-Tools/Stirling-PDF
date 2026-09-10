@@ -8,7 +8,15 @@ export interface TakeoffPoint {
   y: number;
 }
 
-export type TakeoffAnnotationType = "length" | "area" | "count";
+export type TakeoffAnnotationType =
+  | "length"
+  | "area"
+  | "count"
+  | "perimeter"
+  | "volume"
+  | "radius"
+  | "diameter"
+  | "angle";
 
 // Geometry drawn on the plan, owned by exactly one TakeoffMaterial row via
 // materialId. A row can own several of these — one per drawn segment/shape/
@@ -50,4 +58,8 @@ export interface TakeoffMaterial {
   // 'area' rows only: another area row's id whose area nets against this one
   // (e.g. door/window openings deducted from a wall).
   deductsFromMaterialId?: string;
+  // 'volume' rows only: multiplies the flat footprint area by this
+  // depth/height to get a volume (e.g. a concrete slab's area x its
+  // thickness).
+  depthValue?: number;
 }

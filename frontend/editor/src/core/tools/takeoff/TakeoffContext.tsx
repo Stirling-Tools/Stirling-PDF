@@ -61,10 +61,25 @@ export function estimateArchitecturalRatio(
 }
 
 export type TakeoffDragState = {
-  kind: "length" | "calibrate";
+  kind: "length" | "radius" | "diameter" | "calibrate";
   start: TakeoffPoint;
   current: TakeoffPoint;
 };
+
+// Tools drawn as a closed multi-point shape via click-to-add-point +
+// double-click-to-finish (as opposed to a single drag, or angle's
+// auto-finishing 3-click sequence).
+const CLOSED_SHAPE_TOOLS: TakeoffAnnotationType[] = [
+  "area",
+  "perimeter",
+  "volume",
+];
+
+function closedShapeDefaultUnit(tool: TakeoffAnnotationType): string {
+  if (tool === "volume") return "m3";
+  if (tool === "perimeter") return "lm";
+  return "m2";
+}
 
 function affectedIds(
   materialId: string,
@@ -94,7 +109,7 @@ function recomputeIds(
   );
 }
 
-const AUTO_UNITS = ["lm", "m2", "ea"];
+const AUTO_UNITS = ["lm", "m2", "ea", "m3", "°"];
 function syncDefaultUnit(
   materials: TakeoffMaterial[],
   materialId: string,
@@ -358,7 +373,8 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
       disarmAllTools();
       return;
     }
-    if ((tool === "length" || tool === "area") && !pageScales[pageIndex]) {
+    const needsScale = tool !== "count" && tool !== "angle";
+    if (needsScale && !pageScales[pageIndex]) {
       window.alert(
         t(
           "takeoff.setScaleFirst",
@@ -393,8 +409,13 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
       setDragStateRaw({ kind: "calibrate", start: pt, current: pt });
       return;
     }
-    if (armedMaterial && armedTool === "length") {
-      setDragStateRaw({ kind: "length", start: pt, current: pt });
+    if (
+      armedMaterial &&
+      (armedTool === "length" ||
+        armedTool === "radius" ||
+        armedTool === "diameter")
+    ) {
+      setDragStateRaw({ kind: armedTool, start: pt, current: pt });
     }
   }
 
@@ -403,7 +424,12 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
       setDragStateRaw((prev) => (prev ? { ...prev, current: pt } : prev));
       return;
     }
-    if (armedMaterial && armedTool === "area" && inProgress.length > 0) {
+    if (
+      armedMaterial &&
+      armedTool &&
+      (CLOSED_SHAPE_TOOLS.includes(armedTool) || armedTool === "angle") &&
+      inProgress.length > 0
+    ) {
       setHoverPoint(pt);
     }
   }
@@ -426,13 +452,13 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     const newAnnotation: TakeoffAnnotation = {
       id: generateId(),
       materialId: armedMaterial.id,
-      type: "length",
+      type: kind,
       page: pageIndex,
       points: [start, current],
     };
-    // Append rather than replace: a row can own several length segments,
-    // so drawing another one — even on a different page — adds to the
-    // row's total instead of overwriting its previous segment.
+    // Append rather than replace: a row can own several segments, so
+    // drawing another one — even on a different page — adds to the row's
+    // total instead of overwriting its previous segment.
     const nextAnnotations = [...annotations, newAnnotation];
     setAnnotations(nextAnnotations);
     setMaterials((prev) =>
@@ -473,13 +499,41 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
       );
       return;
     }
-    if (armedTool === "area") {
+    if (armedTool === "angle") {
+      const next = [...inProgress, pt];
+      if (next.length < 3) {
+        setInProgress(next);
+        return;
+      }
+      const newAnnotation: TakeoffAnnotation = {
+        id: generateId(),
+        materialId: armedMaterial.id,
+        type: "angle",
+        page: pageIndex,
+        points: next,
+      };
+      const nextAnnotations = [...annotations, newAnnotation];
+      setAnnotations(nextAnnotations);
+      setMaterials((prev) =>
+        recomputeIds(
+          new Set([armedMaterial.id]),
+          syncDefaultUnit(prev, armedMaterial.id, "°"),
+          nextAnnotations,
+          pageScales,
+        ),
+      );
+      setInProgress([]);
+      setHoverPoint(null);
+      return;
+    }
+    if (armedTool && CLOSED_SHAPE_TOOLS.includes(armedTool)) {
       setInProgress((prev) => [...prev, pt]);
     }
   }
 
   function onCanvasDoubleClick() {
-    if (!armedMaterial || armedTool !== "area") return;
+    if (!armedMaterial || !armedTool || !CLOSED_SHAPE_TOOLS.includes(armedTool))
+      return;
     if (inProgress.length < 3) {
       window.alert(
         t(
@@ -492,7 +546,7 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     const newAnnotation: TakeoffAnnotation = {
       id: generateId(),
       materialId: armedMaterial.id,
-      type: "area",
+      type: armedTool,
       page: pageIndex,
       points: inProgress,
     };
@@ -501,7 +555,11 @@ export function TakeoffProvider({ children }: { children: ReactNode }) {
     setMaterials((prev) =>
       recomputeIds(
         affectedIds(armedMaterial.id, prev),
-        syncDefaultUnit(prev, armedMaterial.id, "m2"),
+        syncDefaultUnit(
+          prev,
+          armedMaterial.id,
+          closedShapeDefaultUnit(armedTool),
+        ),
         nextAnnotations,
         pageScales,
       ),

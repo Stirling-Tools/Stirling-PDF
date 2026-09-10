@@ -8,15 +8,26 @@ import ZoomOutIcon from "@mui/icons-material/ZoomOut";
 import AddOutlinedIcon from "@mui/icons-material/AddOutlined";
 import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
 import ErrorOutlinedIcon from "@mui/icons-material/ErrorOutlined";
+import DownloadOutlinedIcon from "@mui/icons-material/DownloadOutlined";
 
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
 import TakeoffRow from "@app/components/tools/takeoff/TakeoffRow";
+import { ownAnnotationType } from "@app/tools/takeoff/geometry";
 import {
   estimateArchitecturalRatio,
   useTakeoffContext,
 } from "@app/tools/takeoff/TakeoffContext";
+import { downloadTextAsFile } from "@app/utils/downloadUtils";
+
+/** Wraps a CSV field in quotes and escapes embedded quotes if it needs it. */
+function csvField(value: string): string {
+  if (/[",\n]/.test(value)) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
 
 // Take Off's sidebar panel: the scale/page/zoom toolbar, the materials list
 // (each row arms its own length/area/count tool), and the running total.
@@ -48,6 +59,34 @@ const Takeoff = (_props: BaseToolProps) => {
     setSelectedMaterialId,
     handleBack,
   } = useTakeoffContext();
+
+  const handleExportCsv = () => {
+    const header = [
+      "Name",
+      "Type",
+      "Unit",
+      "Quantity",
+      "Unit price",
+      "Line total",
+    ];
+    const lines = [header.map(csvField).join(",")];
+    for (const m of materials) {
+      const lineTotal = (m.quantity ?? 0) * (m.unitPrice ?? 0);
+      lines.push(
+        [
+          m.name,
+          ownAnnotationType(m.id, annotations) ?? "",
+          m.unit,
+          String(m.quantity ?? 0),
+          String(m.unitPrice ?? 0),
+          lineTotal.toFixed(2),
+        ]
+          .map(csvField)
+          .join(","),
+      );
+    }
+    downloadTextAsFile(lines.join("\r\n"), "takeoff.csv", "text/csv");
+  };
 
   return (
     <Box style={{ display: "flex", flexDirection: "column", height: "100%" }}>
@@ -166,14 +205,28 @@ const Takeoff = (_props: BaseToolProps) => {
         <Text size="xs" fw={600} tt="uppercase" c="dimmed">
           {t("takeoff.materials", "Takeoffs")}
         </Text>
-        <Button
-          size="sm"
-          variant="quiet"
-          leftSection={<AddOutlinedIcon fontSize="small" />}
-          onClick={addMaterial}
-        >
-          {t("takeoff.addRow", "Add")}
-        </Button>
+        <Group gap={4}>
+          {materials.length > 0 && (
+            <Tooltip label={t("takeoff.exportCsv", "Export CSV")}>
+              <ActionIcon
+                variant="quiet"
+                size="sm"
+                aria-label={t("takeoff.exportCsv", "Export CSV")}
+                onClick={handleExportCsv}
+              >
+                <DownloadOutlinedIcon fontSize="small" />
+              </ActionIcon>
+            </Tooltip>
+          )}
+          <Button
+            size="sm"
+            variant="quiet"
+            leftSection={<AddOutlinedIcon fontSize="small" />}
+            onClick={addMaterial}
+          >
+            {t("takeoff.addRow", "Add")}
+          </Button>
+        </Group>
       </Group>
 
       <ScrollArea style={{ flex: 1 }}>

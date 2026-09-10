@@ -3,7 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Box, Group, Select, Text, TextInput } from "@mantine/core";
 
 import { Button } from "@app/ui/Button";
-import { distance, polygonArea } from "@app/tools/takeoff/geometry";
+import {
+  angleBetween,
+  distance,
+  polygonArea,
+  polygonPerimeter,
+} from "@app/tools/takeoff/geometry";
 import type { TakeoffAnnotation, TakeoffPoint } from "@app/tools/takeoff/types";
 import { useTakeoffContext } from "@app/tools/takeoff/TakeoffContext";
 
@@ -63,6 +68,109 @@ function AnnotationShape({
     );
   }
 
+  if (annotation.type === "volume") {
+    return (
+      <polygon
+        points={pts.map((p) => `${p.x},${p.y}`).join(" ")}
+        fill="color-mix(in srgb, var(--c-danger) 25%, transparent)"
+        stroke={selected ? "var(--c-danger-solid)" : "var(--c-danger)"}
+        strokeWidth={selected ? 3 : 2}
+        strokeDasharray="6 3"
+        onClick={handleClick}
+        style={{ cursor: "pointer" }}
+      />
+    );
+  }
+
+  if (annotation.type === "perimeter") {
+    return (
+      <polygon
+        points={pts.map((p) => `${p.x},${p.y}`).join(" ")}
+        fill="none"
+        stroke={selected ? "var(--c-primary-hover)" : "var(--c-primary)"}
+        strokeWidth={selected ? 3 : 2}
+        strokeDasharray="6 3"
+        onClick={handleClick}
+        style={{ cursor: "pointer" }}
+      />
+    );
+  }
+
+  if (annotation.type === "radius" || annotation.type === "diameter") {
+    const [p1, p2] = pts;
+    if (!p1 || !p2) return null;
+    const center =
+      annotation.type === "radius"
+        ? p1
+        : { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 };
+    const radius =
+      annotation.type === "radius"
+        ? Math.hypot(p2.x - p1.x, p2.y - p1.y)
+        : Math.hypot(p2.x - p1.x, p2.y - p1.y) / 2;
+    const stroke = selected ? "var(--c-primary-hover)" : "var(--c-primary)";
+    return (
+      <g onClick={handleClick} style={{ cursor: "pointer" }}>
+        <circle
+          cx={center.x}
+          cy={center.y}
+          r={radius}
+          fill="none"
+          stroke={stroke}
+          strokeWidth={selected ? 3 : 2}
+        />
+        <line
+          x1={p1.x}
+          y1={p1.y}
+          x2={p2.x}
+          y2={p2.y}
+          stroke={stroke}
+          strokeWidth={1}
+          strokeDasharray="4 3"
+        />
+      </g>
+    );
+  }
+
+  if (annotation.type === "angle") {
+    const [vertex, rayA, rayB] = pts;
+    if (!vertex || !rayA || !rayB) return null;
+    const stroke = selected ? "var(--c-primary-hover)" : "var(--c-primary)";
+    const deg = angleBetween(
+      annotation.points[0],
+      annotation.points[1],
+      annotation.points[2],
+    );
+    return (
+      <g onClick={handleClick} style={{ cursor: "pointer" }}>
+        <line
+          x1={vertex.x}
+          y1={vertex.y}
+          x2={rayA.x}
+          y2={rayA.y}
+          stroke={stroke}
+          strokeWidth={selected ? 3 : 2}
+        />
+        <line
+          x1={vertex.x}
+          y1={vertex.y}
+          x2={rayB.x}
+          y2={rayB.y}
+          stroke={stroke}
+          strokeWidth={selected ? 3 : 2}
+        />
+        <text
+          x={vertex.x + 10}
+          y={vertex.y - 10}
+          fontSize={12}
+          fill="var(--c-text)"
+        >
+          {deg.toFixed(1)}°
+        </text>
+      </g>
+    );
+  }
+
+  // length
   const [a, b] = pts;
   if (!a || !b) return null;
   return (
@@ -89,6 +197,7 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
     pageIndex,
     zoom,
     armedMaterialId,
+    armedTool,
     visibleAnnotations,
     inProgress,
     hoverPoint,
@@ -182,12 +291,22 @@ const TakeoffWorkbenchView = (_props: { data: TakeoffWorkbenchData }) => {
   const polygonTooltipText = useMemo(() => {
     if (inProgress.length === 0) return "";
     const pts = hoverPoint ? [...inProgress, hoverPoint] : inProgress;
+    if (armedTool === "angle") {
+      if (pts.length < 3)
+        return `${pts.length} pt${pts.length === 1 ? "" : "s"}`;
+      return `${angleBetween(pts[0], pts[1], pts[2]).toFixed(1)}°`;
+    }
     if (pts.length < 3) return `${pts.length} pt${pts.length === 1 ? "" : "s"}`;
     const scale = pageScales[pageIndex];
     if (!scale) return t("takeoff.setScale", "set scale");
     const upp = scale.real / scale.pointsSpan;
+    if (armedTool === "perimeter") {
+      return `${(polygonPerimeter(pts) * upp).toFixed(2)} ${scale.unit}`;
+    }
+    // area and volume both preview as an enclosed area — volume's depth
+    // multiplier only applies once the shape is closed.
     return `${(polygonArea(pts) * upp * upp).toFixed(2)} ${scale.unit}²`;
-  }, [inProgress, hoverPoint, pageScales, pageIndex, t]);
+  }, [inProgress, hoverPoint, pageScales, pageIndex, t, armedTool]);
 
   const tooltipAnchor = dragState
     ? dragState.current

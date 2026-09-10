@@ -10,8 +10,17 @@ import { useTranslation } from "react-i18next";
 import StraightenOutlinedIcon from "@mui/icons-material/StraightenOutlined";
 import CropSquareOutlinedIcon from "@mui/icons-material/CropSquareOutlined";
 import NumbersOutlinedIcon from "@mui/icons-material/NumbersOutlined";
+import CropFreeOutlinedIcon from "@mui/icons-material/CropFreeOutlined";
+import ViewInArOutlinedIcon from "@mui/icons-material/ViewInArOutlined";
+import AdjustOutlinedIcon from "@mui/icons-material/AdjustOutlined";
+import RadioButtonUncheckedOutlinedIcon from "@mui/icons-material/RadioButtonUncheckedOutlined";
+import ArchitectureOutlinedIcon from "@mui/icons-material/ArchitectureOutlined";
 import DeleteOutlineOutlinedIcon from "@mui/icons-material/DeleteOutlineOutlined";
 import { ActionIcon } from "@app/ui/ActionIcon";
+import {
+  ownAnnotationType,
+  ownSegmentCount,
+} from "@app/tools/takeoff/geometry";
 import type {
   TakeoffAnnotation,
   TakeoffAnnotationType,
@@ -30,20 +39,6 @@ interface TakeoffRowProps {
   onSelect: () => void;
 }
 
-function ownAnnotationType(
-  materialId: string,
-  annotations: TakeoffAnnotation[],
-): TakeoffAnnotationType | null {
-  return annotations.find((a) => a.materialId === materialId)?.type ?? null;
-}
-
-function ownSegmentCount(
-  materialId: string,
-  annotations: TakeoffAnnotation[],
-): number {
-  return annotations.filter((a) => a.materialId === materialId).length;
-}
-
 const TOOL_BUTTONS: {
   tool: TakeoffAnnotationType;
   Icon: typeof StraightenOutlinedIcon;
@@ -51,6 +46,11 @@ const TOOL_BUTTONS: {
   { tool: "length", Icon: StraightenOutlinedIcon },
   { tool: "area", Icon: CropSquareOutlinedIcon },
   { tool: "count", Icon: NumbersOutlinedIcon },
+  { tool: "perimeter", Icon: CropFreeOutlinedIcon },
+  { tool: "volume", Icon: ViewInArOutlinedIcon },
+  { tool: "radius", Icon: AdjustOutlinedIcon },
+  { tool: "diameter", Icon: RadioButtonUncheckedOutlinedIcon },
+  { tool: "angle", Icon: ArchitectureOutlinedIcon },
 ];
 
 export default function TakeoffRow({
@@ -81,11 +81,12 @@ export default function TakeoffRow({
       : t(`takeoff.row.measuredAs.${ownType}`, ownType)
     : t("takeoff.row.notMeasured", "not measured");
 
+  // Deducting only makes sense between two flat-area shapes (e.g. a window
+  // opening netted out of a wall), so candidates are limited to other area
+  // rows rather than every non-length/count row.
   const deductCandidates = materials.filter(
     (m) =>
-      m.id !== material.id &&
-      ownAnnotationType(m.id, annotations) !== "length" &&
-      ownAnnotationType(m.id, annotations) !== "count",
+      m.id !== material.id && ownAnnotationType(m.id, annotations) === "area",
   );
 
   return (
@@ -140,7 +141,7 @@ export default function TakeoffRow({
 
       <Group
         gap={6}
-        mb={ownType === "area" ? 6 : 0}
+        mb={ownType === "area" || ownType === "volume" ? 6 : 0}
         onClick={(e) => e.stopPropagation()}
       >
         <TextInput
@@ -211,6 +212,23 @@ export default function TakeoffRow({
             size="xs"
             clearable
             style={{ flex: 1 }}
+          />
+        </Group>
+      )}
+
+      {ownType === "volume" && (
+        <Group gap={6} onClick={(e) => e.stopPropagation()}>
+          <NumberInput
+            aria-label={t("takeoff.row.depth", "Depth/height")}
+            placeholder={t("takeoff.row.depthPlaceholder", "depth")}
+            value={material.depthValue ?? ""}
+            onChange={(v) =>
+              onChange({ depthValue: v === "" ? undefined : Number(v) })
+            }
+            size="xs"
+            hideControls
+            min={0}
+            style={{ width: 84 }}
           />
         </Group>
       )}
