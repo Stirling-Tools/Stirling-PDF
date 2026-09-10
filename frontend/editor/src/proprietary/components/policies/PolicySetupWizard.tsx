@@ -388,7 +388,7 @@ function PolicySetupWizardBody({
       // Preserve stored options this wizard has no UI for rather than wiping them on save;
       // the builder is where those are edited.
       extraOptions: policy?.state.extraOptions,
-      runsOnEditor: true,
+      runsOnEditor: !isRouting,
       fieldValues,
       sources: policy?.state.sources ?? [],
       scopeTypes,

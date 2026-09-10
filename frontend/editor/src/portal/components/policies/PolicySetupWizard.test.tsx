@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { t } from "i18next";
 import {
   fireEvent,
   render as baseRender,
@@ -7,9 +8,11 @@ import {
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
+import { PolicySetupWizard as SharedPolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
+  buildWireFromSetup,
   type CatalogueEntry,
   type DecoratedPolicy,
   type PolicySetupResult,
@@ -234,17 +237,42 @@ describe("PolicySetupWizard", () => {
     expect(redact.listOfText).toBeTruthy();
   });
 
-  it("seeds routing with the classify step it routes on", async () => {
+  it("submits configured routing destinations without editor participation", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
-
     render(
-      <PolicySetupWizard
+      <SharedPolicySetupWizard
         entry={routingEntry}
         onClose={vi.fn()}
         onSubmit={onSubmit}
-        onCustomise={vi.fn()}
+        routingConfig={({ onChange }) => (
+          <button
+            onClick={() =>
+              onChange({
+                sourceId: "inbox",
+                trigger: { type: "folder-watch", options: {} },
+                outputIds: ["archive"],
+                routingRules: [
+                  {
+                    condition: {
+                      input: {
+                        source: "document",
+                        field: "classification.labels",
+                      },
+                      operator: "matches-any",
+                      values: ["invoice"],
+                    },
+                    outputId: "finance",
+                  },
+                ],
+              })
+            }
+          >
+            Configure routing
+          </button>
+        )}
       />,
     );
+    fireEvent.click(screen.getByRole("button", { name: "Configure routing" }));
     await submitWizard(ENABLE);
 
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
@@ -252,8 +280,22 @@ describe("PolicySetupWizard", () => {
     expect(result.steps.map((step) => step.operation)).toEqual([
       "/api/v1/ai/tools/classify-and-label",
     ]);
-    // A route with nothing filled in yet is carried through; the backend validator is the gate.
-    expect(result.routingRules).toHaveLength(1);
+    const wire = buildWireFromSetup(routingEntry, result, t);
+    expect(wire.editor?.allowed).toBe(false);
+    expect(wire.inputs).toEqual([
+      { sourceId: "inbox", trigger: { type: "folder-watch", options: {} } },
+    ]);
+    expect(wire.outputIds).toEqual(["archive"]);
+    expect(wire.routingRules).toEqual([
+      {
+        condition: {
+          input: { source: "document", field: "classification.labels" },
+          operator: "matches-any",
+          values: ["invoice"],
+        },
+        outputId: "finance",
+      },
+    ]);
   });
 
   it("defaults a new security policy to enforcing on export", async () => {
@@ -277,6 +319,7 @@ describe("PolicySetupWizard", () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
     expect(result.runOn).toBe("export");
+    expect(result.runsOnEditor).toBe(true);
   });
 
   it("locks the wizard for a non-manager", async () => {
