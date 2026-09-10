@@ -130,14 +130,14 @@ public class SaasTeamExtensions implements Serializable {
      * one place that judgement is made, so the wallet, the linked-instance entitlement and the
      * Users page cannot disagree about what the column is saying.
      *
-     * <p>Null covers everything that is not an allowance. Team sells in blocks of 100 and every
-     * team gets {@link UserLicenseSettingsService#DEFAULT_USER_LIMIT} users free, so a value at or
-     * below that was never purchased and could restrict nothing if it were. {@link
-     * Integer#MAX_VALUE} is the historic unlimited sentinel; returning it would let a caller do
-     * arithmetic on it, and no-limit is expressed as absence.
+     * <p>Team sells in blocks of 100 and every team gets {@link
+     * UserLicenseSettingsService#DEFAULT_USER_LIMIT} users free, so a value at or below that was
+     * never purchased and could restrict nothing if it were. {@link Integer#MAX_VALUE} is the
+     * historic unlimited sentinel; returning it would let a caller do arithmetic on it, and
+     * no-limit is expressed as absence.
      *
      * <p>Enforcement does not go through here: {@link #hasAvailableSeats()} still compares the raw
-     * column, which is deliberate while cloud capacity is unenforced for standard teams.
+     * column while cloud capacity is unenforced for standard teams.
      */
     public Integer licensedUsers() {
         if (maxSeats == null

@@ -127,9 +127,8 @@ public class SaasTeamService {
         Team savedTeam = teamRepository.save(team);
 
         saasTeamExtensionService.setPersonal(savedTeam, true);
-        // The free allowance, not 1. max_seats means "users this team is allowed", and a signup
-        // gets the same free users as any other installation; a linked instance reads this number
-        // as its own ceiling, so a 1 here would refuse every user it tried to create.
+        // The free allowance, not 1: a linked instance reads this number as its own ceiling, so
+        // a 1 here would refuse every user it tried to create.
         saasTeamExtensionService.setSeats(
                 savedTeam,
                 UserLicenseSettingsService.DEFAULT_USER_LIMIT,

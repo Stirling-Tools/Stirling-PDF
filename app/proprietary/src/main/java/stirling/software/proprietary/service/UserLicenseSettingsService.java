@@ -338,10 +338,9 @@ public class UserLicenseSettingsService {
         if (!hasPaidLicense()) {
             Integer fromSaas = linkedTeamAllowance();
             if (fromSaas != null) {
-                // Floored at the grandfathered limit, so linking an account can only ever raise
-                // the ceiling. Otherwise a solo cloud account -- whose team the instance binds to
-                // before any invitation is accepted -- would hand back its own seat count and
-                // refuse every user creation from then on.
+                // Floored at the grandfathered limit, so linking can only raise the ceiling.
+                // Otherwise a solo cloud account, whose team the instance binds to before any
+                // invitation is accepted, hands back its own seat count and refuses every user.
                 int allowed = Math.max(grandfatheredLimit, fromSaas);
                 log.debug(
                         "No licence; linked team allowance {} against grandfathered {}: {} users",

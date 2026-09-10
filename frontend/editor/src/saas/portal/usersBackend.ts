@@ -64,9 +64,8 @@ const FREE_USER_ALLOWANCE = 5;
 
 /**
  * Users the team is allowed, or null when `maxSeats` holds no purchased allowance. Must agree with
- * `SaasTeamExtensions.licensedUsers()`, which the wallet and the linked-instance entitlement both
- * answer through: a team on the free allowance has no limit to show, and the unlimited sentinel is
- * never a number.
+ * `SaasTeamExtensions.licensedUsers()`: a team on the free allowance has no limit to show, and the
+ * unlimited sentinel is never a number.
  */
 function normalizeSeatLimit(max: number | undefined): number | null {
   if (!max || max <= FREE_USER_ALLOWANCE || max >= 2147483647) return null;

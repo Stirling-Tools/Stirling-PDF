@@ -205,9 +205,8 @@ class PaygWalletControllerTest {
     }
 
     /**
-     * Every team's row now holds a real number, so the free allowance is what an unpurchased row
-     * carries. It is not a Team holding, and reporting it as the meter's denominator would show a
-     * ceiling nobody bought.
+     * An unpurchased row carries the free allowance, which is not a Team holding: reporting it as
+     * the meter's denominator would show a ceiling nobody bought.
      */
     @Test
     void getWallet_freeAllowanceRow_holdsNoTeam() {
