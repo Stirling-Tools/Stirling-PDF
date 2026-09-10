@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -248,6 +249,61 @@ class InstanceEntitlementInterceptorTest {
         interceptor.afterCompletion(req, resp, plainHandler(), null);
 
         verify(meter, never()).accrue(any(), any(), anyLong(), any());
+    }
+
+    @Test
+    void policyRunSubStepsAccrueUnderTheSharedRunId() throws Exception {
+        // Every sub-step of one policy run carries the same X-Stirling-Run-Id, so each accrues
+        // under
+        // that key and the meter collapses them to a single charge (the collapse itself is
+        // UsageMeterServiceTest.skipsRepeatWithinWorkflowWindow). Without this, each transforming
+        // step has a different input signature and is billed separately.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        for (int step = 0; step < 3; step++) {
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            req.addHeader("X-Stirling-Automation", "true");
+            req.addHeader("X-Stirling-Run-Id", "run-1");
+            MockHttpServletResponse resp = new MockHttpServletResponse();
+            interceptor.preHandle(req, resp, new Object());
+            interceptor.afterCompletion(req, resp, new Object(), null);
+        }
+
+        verify(meter, times(3))
+                .accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1"));
+    }
+
+    @Test
+    void forgedRunIdWithoutAutomationHeaderIsIgnored() throws Exception {
+        // A raw API-key caller that sets X-Stirling-Run-Id but not the automation header must not
+        // be
+        // able to group its separate calls into one charge: the run id keys the meter only on a
+        // genuine internal dispatch, so here the op falls back to its input key (null, fileless).
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+        authenticateWithApiKey();
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/general/merge");
+        req.addHeader("X-Stirling-Run-Id", "forged");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, toolHandler());
+        interceptor.afterCompletion(req, resp, toolHandler(), null);
+
+        verify(meter).accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull());
     }
 
     private static void authenticateWithApiKey() {

@@ -30,6 +30,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.service.AutomationRunContext;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
@@ -134,6 +136,20 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                         != null;
     }
 
+    /**
+     * The automation run id ({@link AutomationRunContext#RUN_ID_HEADER}) when this is a genuine
+     * internal dispatch (carries {@link InternalApiClient#AUTOMATION_HEADER}); {@code null}
+     * otherwise. Gated on the automation header so a raw caller can't pin a run id to collapse its
+     * separate calls into one charge - the same trust boundary the SaaS interceptor applies.
+     */
+    private static String automationRunId(HttpServletRequest request) {
+        if (request.getHeader(InternalApiClient.AUTOMATION_HEADER) == null) {
+            return null;
+        }
+        String runId = request.getHeader(AutomationRunContext.RUN_ID_HEADER);
+        return runId != null && !runId.isBlank() ? runId : null;
+    }
+
     @Override
     public void afterCompletion(
             HttpServletRequest request,
@@ -166,10 +182,9 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
     }
 
     /**
-     * Computes doc-units (page + byte axes) and the input-set signature, then accrues. The instance
-     * is authoritative for units (SaaS bills the delta and never sees the file), so a page-heavy
-     * but small PDF must be page-counted or it under-bills. A fileless op has no input identity —
-     * null signature (no dedup), billed the 1-unit floor each time.
+     * Computes doc-units (page + byte axes) and the dedup key, then accrues. The instance is
+     * authoritative for units (SaaS bills the delta and never sees the file), so a page-heavy but
+     * small PDF must be page-counted or it under-bills.
      */
     private void meterRequest(
             HttpServletRequest request,
@@ -177,11 +192,12 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             InstanceEntitlement ent,
             UsageMeterService meter) {
         UnitCalcPolicy policy = ent.unitCalcPolicy();
+        String runId = automationRunId(request);
         MultipartHttpServletRequest mreq =
                 WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
         if (mreq == null) {
             long fileless = DocumentUnitCalculator.unitsForFile(0, 0, policy);
-            meter.accrue(ent.periodStart(), category, fileless, null);
+            meter.accrue(ent.periodStart(), category, fileless, runId);
             return;
         }
         List<TempFile> temps = new ArrayList<>();
@@ -221,11 +237,17 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                     sizes.isEmpty()
                             ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
                             : DocumentUnitCalculator.unitsForGroup(sizes, policy);
-            // Only dedup when every input hashed; a partial signature could collide with a
-            // different input set, so fall back to no-dedup (bill it) if any file failed.
-            String opSignature =
-                    fileCount > 0 && hashes.size() == fileCount ? opSignature(hashes) : null;
-            meter.accrue(ent.periodStart(), category, units, opSignature);
+            // A run's sub-steps share the run id, so keying on it collapses them to one charge.
+            // Outside a run, dedup identical inputs by their content signature - but only when
+            // every
+            // input hashed, since a partial signature could collide with a different input set.
+            String dedupKey =
+                    runId != null
+                            ? runId
+                            : (fileCount > 0 && hashes.size() == fileCount
+                                    ? opSignature(hashes)
+                                    : null);
+            meter.accrue(ent.periodStart(), category, units, dedupKey);
         } finally {
             for (TempFile temp : temps) {
                 try {

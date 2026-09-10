@@ -19,6 +19,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.mockito.ArgumentCaptor;
@@ -162,6 +163,78 @@ class PaygBillingParityTest {
         assertSaas(op);
         SecurityContextHolder.clearContext();
         assertSelfHosted(op);
+    }
+
+    @Test
+    void aPolicyRunCarriesOneRunIdIntoBothDeploymentsGrouping() throws Exception {
+        // A policy's sub-steps share X-Stirling-Run-Id; both deployments key their charge grouping
+        // on it so the whole run is one charge, not one-per-step. The collapse itself lives in each
+        // grouping engine - SaaS JobService.joinOrOpen (JobServiceTest), self-hosted
+        // UsageMeterService dedup (UsageMeterServiceTest.skipsRepeatWithinWorkflowWindow); here we
+        // assert the shared key reaches both.
+        String runId = "run-parity";
+
+        // SaaS: the run id flows onto the ChargeContext that JobService groups by.
+        JobChargeService chargeService = mock(JobChargeService.class);
+        UserRepository userRepo = mock(UserRepository.class);
+        PaygChargeInterceptor saas =
+                new PaygChargeInterceptor(
+                        chargeService,
+                        mock(JobService.class),
+                        userRepo,
+                        new TempFileManager(new TempFileRegistry(), new ApplicationProperties()),
+                        mock(PaygOutputExtractor.class),
+                        new PaygFilterProperties(),
+                        new SimpleMeterRegistry());
+        when(chargeService.openProcess(any(), anyList()))
+                .thenReturn(
+                        new ChargeOutcome(UUID.randomUUID(), 1, ChargeOutcome.Disposition.OPENED));
+        User user = makeUser();
+        String supabaseId = UUID.randomUUID().toString();
+        SecurityContextHolder.getContext()
+                .setAuthentication(
+                        new UsernamePasswordAuthenticationToken(
+                                supabaseId,
+                                null,
+                                List.of(new SimpleGrantedAuthority("ROLE_USER"))));
+        when(userRepo.findBySupabaseId(UUID.fromString(supabaseId))).thenReturn(Optional.of(user));
+        MockMultipartHttpServletRequest saasReq = new MockMultipartHttpServletRequest();
+        saasReq.setRequestURI("/api/v1/security/add-password");
+        saasReq.addFile(
+                new MockMultipartFile("fileInput", "x.pdf", "application/pdf", "abc".getBytes()));
+        saasReq.addHeader("X-Stirling-Automation", "true");
+        saasReq.addHeader("X-Stirling-Run-Id", runId);
+        saas.preHandle(saasReq, new MockHttpServletResponse(), handler(Handler.TOOL));
+        SecurityContextHolder.clearContext();
+        ArgumentCaptor<ChargeContext> ctx = ArgumentCaptor.forClass(ChargeContext.class);
+        verify(chargeService).openProcess(ctx.capture(), anyList());
+        assertThat(ctx.getValue().runId()).isEqualTo(runId);
+
+        // Self-hosted: the run id is the meter's dedup key, so the sub-steps collapse.
+        InstanceEntitlementGate gate = mock(InstanceEntitlementGate.class);
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        EntitlementCache cache = mock(EntitlementCache.class);
+        UsageMeterService meter = mock(UsageMeterService.class);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(cache.current()).thenReturn(Optional.of(entitled(policy, period)));
+        InstanceEntitlementInterceptor selfHosted =
+                new InstanceEntitlementInterceptor(
+                        gate, cache, meterProviderOf(meter), mock(TempFileManager.class));
+        MockHttpServletRequest shReq =
+                new MockHttpServletRequest("POST", "/api/v1/security/add-password");
+        shReq.addHeader("X-Stirling-Automation", "true");
+        shReq.addHeader("X-Stirling-Run-Id", runId);
+        MockHttpServletResponse shResp = new MockHttpServletResponse();
+        selfHosted.preHandle(shReq, shResp, handler(Handler.TOOL));
+        selfHosted.afterCompletion(shReq, shResp, handler(Handler.TOOL), null);
+        verify(meter)
+                .accrue(
+                        eq(period),
+                        eq(stirling.software.proprietary.billing.BillingCategory.AUTOMATION),
+                        anyLong(),
+                        eq(runId));
     }
 
     private void assertSaas(Op op) throws Exception {
