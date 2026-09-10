@@ -124,6 +124,37 @@ cannot contradict the first — its rules either match (bilingual Swiss and
 Canadian invoices, confusable pairs like es/pt) or sit inert. Loading one
 needlessly costs bytes; missing the right one costs a billed AI engine run.
 
+### What a second pack costs
+
+The extractor reads the first five and last two pages at 8,000 characters each, so
+the engine never sees more than **56,000 characters** however large the PDF is.
+That ceiling is what bounds the whole question. Milliseconds per document, measured
+on an Apple Silicon laptop:
+
+| extracted text | core only | core + en | core + en + de | second pack |
+| --- | --- | --- | --- | --- |
+| 150 chars (receipt) | 0.1 | 0.5 | — | — |
+| 1,800 (one page) | 0.4 | 3.5 | 4.1 | +17% |
+| 16,000 (three pages) | 2.2 | 19.8 | 21.1 | +7% |
+| 56,000 (the ceiling) | 7.4 | 61.1 | 63.5 | **+4%** |
+
+Cost tracks rule count × text length, because every phrase scans the text whether
+it matches or not. So the percentage depends entirely on how big the second pack
+is: `de` is a 291-rule seed against English's 3,397, which is why it adds 4%. A
+second pack as large as English would add nearer **50-90%** — about 90-115 ms at
+the ceiling, still on the same order.
+
+Two one-off costs land on the first document of a session: the pack chunk
+(`en` 54 KB gzipped, `de` 4 KB) and compiling its rules (~50 ms for English, ~6 ms
+for German). Both are paid once per pack, not per document.
+
+No slow machine was tested. Scoring is single-threaded string scanning, so it
+scales with single-core speed; a low-end laptop or mid-range phone is typically
+three to six times slower. At 5×, the ceiling case is roughly 300 ms for one pack
+and 320 ms for two, against an AI engine round trip measured in seconds and billed
+per run. The second pack is not the thing to worry about — document length is, and
+the extractor already caps it.
+
 ### No pack for the language
 
 The document is still scored, against core alone — filename, producer brand and
