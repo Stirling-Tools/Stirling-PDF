@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useApplyLinkFacts } from "@portal/contexts/LinkContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
+import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
 import { FreeTierPlanView } from "@portal/components/billing/FreeTierPlanView";
 import { Usage } from "@portal/views/Usage";
 import type { Wallet } from "@portal/api/billing";
@@ -19,6 +20,7 @@ export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
   const { openLinkModal } = useUI();
   const { gated, loading } = useConnectGate();
+  const isAdmin = usePortalAdmin();
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
@@ -26,6 +28,10 @@ export function PortalBillingGate() {
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
 
+  // Administrators only for now. Both pages report figures for the whole instance, and the
+  // endpoints behind them are ADMIN-gated, so a member would get a page explaining itself away.
+  // The nav hides the entry to match; this is the backstop for a typed URL.
+  if (!isAdmin) return null;
   // Neither page while the answer is unknown: showing the local meter to a linked instance would
   // present a dormant ledger as its live one.
   if (loading) return null;

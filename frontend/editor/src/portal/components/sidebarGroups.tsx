@@ -18,6 +18,8 @@ export interface NavEntry {
   icon: ReactNode;
   /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
   externalUrl?: string;
+  /** Hidden from a member. The view reports instance-wide figures behind ADMIN-gated endpoints. */
+  requiresAdmin?: boolean;
 }
 
 export interface NavGroup {
@@ -44,6 +46,6 @@ export const GROUP_PLATFORM: NavEntry[] = [
   { id: "users", icon: <UsersIcon /> },
   { id: "integrations", icon: <IntegrationsIcon /> },
   { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon /> },
+  { id: "usage", icon: <UsageIcon />, requiresAdmin: true },
   { id: "docs", icon: <DocsIcon /> },
 ];

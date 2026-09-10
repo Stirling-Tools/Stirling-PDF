@@ -6,6 +6,7 @@ import { Logo } from "@app/ui/Logo";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
+import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
 import { useOpenPlan } from "@portal/hooks/useOpenPlan";
 import { useTranslation } from "react-i18next";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
@@ -42,6 +43,7 @@ export function Sidebar() {
   });
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const credits = useFreeCreditsSummary();
+  const isAdmin = usePortalAdmin();
   const openPlan = useOpenPlan();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
@@ -52,35 +54,37 @@ export function Sidebar() {
   // a takeover modal (matching the marketing prototype).
 
   function renderGroup(entries: NavEntry[]) {
-    return entries.map((entry) => {
-      const label = t(`portal.nav.${entry.id}`);
-      const item = (
-        <NavItem
-          key={entry.id}
-          id={entry.id}
-          label={label}
-          icon={entry.icon}
-          isActive={activeView === entry.id}
-          onClick={(id) => {
-            // Route changes also close the drawer (AppShell), but re-selecting the
-            // active view or opening an external tab changes no route — close here.
-            closeMobileNav();
-            if (entry.externalUrl) {
-              window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
-            } else {
-              setActiveView(id as ViewId);
-            }
-          }}
-        />
-      );
-      return collapsed ? (
-        <Tooltip key={entry.id} label={label} position="right" withinPortal>
-          <div className="portal-sidebar__navtip">{item}</div>
-        </Tooltip>
-      ) : (
-        item
-      );
-    });
+    return entries
+      .filter((entry) => isAdmin || !entry.requiresAdmin)
+      .map((entry) => {
+        const label = t(`portal.nav.${entry.id}`);
+        const item = (
+          <NavItem
+            key={entry.id}
+            id={entry.id}
+            label={label}
+            icon={entry.icon}
+            isActive={activeView === entry.id}
+            onClick={(id) => {
+              // Route changes also close the drawer (AppShell), but re-selecting the
+              // active view or opening an external tab changes no route — close here.
+              closeMobileNav();
+              if (entry.externalUrl) {
+                window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
+              } else {
+                setActiveView(id as ViewId);
+              }
+            }}
+          />
+        );
+        return collapsed ? (
+          <Tooltip key={entry.id} label={label} position="right" withinPortal>
+            <div className="portal-sidebar__navtip">{item}</div>
+          </Tooltip>
+        ) : (
+          item
+        );
+      });
   }
 
   return (
