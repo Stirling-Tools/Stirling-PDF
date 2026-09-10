@@ -10057,6 +10057,15 @@ reader = "Reader"
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 
+[reader.rail]
+label = "Reading tools"
+sign = "Sign"
+
+[reader.sign]
+noneBody = "Create one and it will be one press away here."
+noneTitle = "No saved signature"
+openTool = "Create a signature"
+
 [redact]
 submit = "Redact"
 tags = "Redact,Hide,black out,black,marker,hidden,auto redact,manual redact"

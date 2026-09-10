@@ -30,6 +30,7 @@ import AppsIcon from "@mui/icons-material/AppsRounded";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
 import RightSidebar from "@app/components/tools/RightSidebar";
+import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
@@ -658,7 +659,9 @@ export default function HomePage() {
             )}
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
-            {!hideToolPanel && <RightSidebar />}
+            {/* Reading gets its own rail in the slot the tool panel holds otherwise:
+                the panel's controls are the editor's, and reading wants the viewer's. */}
+            {readerMode ? <ReaderRail /> : !hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
               opened={configModalOpen}
