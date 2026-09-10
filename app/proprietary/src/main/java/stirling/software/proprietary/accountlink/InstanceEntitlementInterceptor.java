@@ -2,13 +2,9 @@ package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -36,7 +32,6 @@ import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.proprietary.billing.BillingCategory;
-import stirling.software.proprietary.billing.ContentHasher;
 import stirling.software.proprietary.billing.DocumentUnitCalculator;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
@@ -222,51 +217,19 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         List<TempFile> temps = new ArrayList<>();
         try {
             List<FileSize> sizes = new ArrayList<>();
-            List<String> hashes = new ArrayList<>();
-            int fileCount = 0;
             for (List<MultipartFile> files : mreq.getMultiFileMap().values()) {
                 for (MultipartFile f : files) {
-                    fileCount++;
-                    try {
-                        TempFile temp = tempFileManager.createManagedTempFile(".bin");
-                        temps.add(temp);
-                        // Hash in the same pass that writes the temp file — one read of the upload,
-                        // not a second full read just to fingerprint it.
-                        MessageDigest digest = ContentHasher.newSha256();
-                        try (InputStream in = f.getInputStream();
-                                DigestOutputStream out =
-                                        new DigestOutputStream(
-                                                Files.newOutputStream(temp.getPath()), digest)) {
-                            in.transferTo(out);
-                        }
-                        sizes.add(new FileSize(pageCount(temp.getPath(), f), f.getSize()));
-                        hashes.add(ContentHasher.toHex(digest.digest()));
-                    } catch (IOException | RuntimeException perFile) {
-                        // Couldn't materialise/hash this input — bill on bytes only and, by leaving
-                        // it out of `hashes`, drop dedup for the whole op rather than risk a
-                        // mismatch.
-                        log.debug(
-                                "Metering materialise/hash failed for {}; bytes-only",
-                                f.getOriginalFilename());
-                        sizes.add(new FileSize(0, f.getSize()));
-                    }
+                    sizes.add(new FileSize(pageCount(f, temps), f.getSize()));
                 }
             }
             long units =
                     sizes.isEmpty()
                             ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
                             : DocumentUnitCalculator.unitsForGroup(sizes, policy);
-            // A run's sub-steps share the run id, so keying on it collapses them to one charge.
-            // Outside a run, dedup identical inputs by their content signature - but only when
-            // every
-            // input hashed, since a partial signature could collide with a different input set.
-            String dedupKey =
-                    runKey != null
-                            ? runKey
-                            : (fileCount > 0 && hashes.size() == fileCount
-                                    ? opSignature(hashes)
-                                    : null);
-            meter.accrue(ent.periodStart(), category, units, dedupKey);
+            // A run's sub-steps share a document/run key, so keying on it collapses them to one
+            // charge. A standalone op has no run key (null) and always accrues - each call is its
+            // own charge, matching SaaS, which never groups a call outside a run.
+            meter.accrue(ent.periodStart(), category, units, runKey);
         } finally {
             for (TempFile temp : temps) {
                 try {
@@ -278,27 +241,32 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         }
     }
 
-    /** Page count via jpdfium (parser-identical to SaaS); 0 for non-PDF / unreadable inputs. */
-    private static int pageCount(Path path, MultipartFile file) {
+    /**
+     * Page count via jpdfium (parser-identical to SaaS); 0 for a non-PDF or unreadable input. A PDF
+     * is materialised to a managed temp file (added to {@code temps} for the caller to close) so
+     * jpdfium can read it; a non-PDF needs no temp.
+     */
+    private int pageCount(MultipartFile file, List<TempFile> temps) {
         if (!isPdf(file)) {
             return 0;
         }
-        try (PdfDocument doc = PdfDocument.open(path)) {
-            return doc.pageCount();
-        } catch (RuntimeException e) {
-            // Malformed / encrypted → byte axis only, matching the SaaS classifier.
+        try {
+            TempFile temp = tempFileManager.createManagedTempFile(".bin");
+            temps.add(temp);
+            try (InputStream in = file.getInputStream();
+                    OutputStream out = Files.newOutputStream(temp.getPath())) {
+                in.transferTo(out);
+            }
+            try (PdfDocument doc = PdfDocument.open(temp.getPath())) {
+                return doc.pageCount();
+            }
+        } catch (IOException | RuntimeException e) {
+            // Malformed / encrypted / unreadable -> byte axis only, matching the SaaS classifier.
             log.debug(
                     "Page count unavailable for {}; metering on bytes only",
                     file.getOriginalFilename());
             return 0;
         }
-    }
-
-    /** Order-independent signature of the input set: sorted per-file hashes, hashed together. */
-    private static String opSignature(List<String> hashes) {
-        List<String> sorted = new ArrayList<>(hashes);
-        Collections.sort(sorted);
-        return ContentHasher.sha256(String.join("\n", sorted).getBytes(StandardCharsets.UTF_8));
     }
 
     private static boolean isPdf(MultipartFile file) {

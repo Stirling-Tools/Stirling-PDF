@@ -8,7 +8,6 @@ import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -140,8 +139,8 @@ class InstanceEntitlementInterceptorTest {
         UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
         LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
         when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
-        // Materialise to a real path under @TempDir; the interceptor writes the upload there and
-        // jpdfium + the hasher read it back.
+        // Materialise to a real path under @TempDir; the interceptor writes the PDF there so
+        // jpdfium can read its page count back.
         TempFile temp = mock(TempFile.class);
         when(temp.getPath()).thenReturn(tmp.resolve("input.bin"));
         when(tempFileManager.createManagedTempFile(any())).thenReturn(temp);
@@ -154,8 +153,34 @@ class InstanceEntitlementInterceptorTest {
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
 
-        // 5 pages + a non-null input-set signature (file ops carry a dedup key).
-        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(5L), notNull());
+        // 5 pages, and a null key: a standalone op (no run) is its own charge - never deduped.
+        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(5L), isNull());
+    }
+
+    @Test
+    void repeatedStandaloneOpsEachCharge() throws Exception {
+        // A standalone op (no run id) has a null key, so identical calls each accrue - matching
+        // SaaS, which never groups a call outside a run ("charge per API call"). The old
+        // input-signature window wrongly collapsed these on the instance.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+        authenticateWithApiKey();
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        for (int call = 0; call < 2; call++) {
+            MockHttpServletRequest req =
+                    new MockHttpServletRequest("POST", "/api/v1/general/merge");
+            MockHttpServletResponse resp = new MockHttpServletResponse();
+            interceptor.preHandle(req, resp, toolHandler());
+            interceptor.afterCompletion(req, resp, toolHandler(), null);
+        }
+
+        verify(meter, times(2)).accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull());
     }
 
     @Test
