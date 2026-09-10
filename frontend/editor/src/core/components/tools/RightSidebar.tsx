@@ -71,10 +71,6 @@ export default function RightSidebar() {
     });
   };
 
-  const handleCollapse = () => {
-    withViewTransition(() => setLeftPanelView("hidden"));
-  };
-
   const [allToolsView, setAllToolsView] = useState(false);
 
   const handleShowAllTools = () => {
@@ -240,42 +236,28 @@ export default function RightSidebar() {
                     : t("toolPanel.goBack", "Go back")
                 }
               />
-            ) : showCloseButton || !isMobile ? (
-              /* Without a back button this header is just the collapse control,
-                 which has no meaning on mobile - the slider switches panes. Drop
-                 it there so the tool list starts under the tabs. */
+            ) : showCloseButton ? (
+              /* Closing a tool, not the panel: the panel itself is fixed open, so
+                 with nothing to leave there is no header to show. */
               <div className="tool-panel__compact-header">
                 <span className="tool-panel__compact-title">
                   {t("toolPanel.pdfTools", "PDF Tools")}
                 </span>
                 <div className="tool-panel__compact-header-actions">
-                  {showCloseButton ? (
-                    <ActionIcon
-                      variant="tertiary"
-                      size="md"
-                      shape="circle"
-                      onClick={handleHeaderBack}
-                      aria-label={
-                        inToolView
-                          ? t("toolPanel.backToAllTools", "Back to all tools")
-                          : t("toolPanel.goBack", "Go back")
-                      }
-                      className="tool-panel__expand-btn"
-                    >
-                      <CloseIcon sx={{ fontSize: "1.1rem" }} />
-                    </ActionIcon>
-                  ) : (
-                    <ActionIcon
-                      variant="secondary"
-                      size="md"
-                      shape="circle"
-                      onClick={handleCollapse}
-                      aria-label={t("toolPanel.collapse", "Collapse panel")}
-                      className="tool-panel__expand-btn tool-panel__toggle-vt"
-                    >
-                      <SidebarToggleIcon size={18} mirrored />
-                    </ActionIcon>
-                  )}
+                  <ActionIcon
+                    variant="tertiary"
+                    size="md"
+                    shape="circle"
+                    onClick={handleHeaderBack}
+                    aria-label={
+                      inToolView
+                        ? t("toolPanel.backToAllTools", "Back to all tools")
+                        : t("toolPanel.goBack", "Go back")
+                    }
+                    className="tool-panel__expand-btn"
+                  >
+                    <CloseIcon sx={{ fontSize: "1.1rem" }} />
+                  </ActionIcon>
                 </div>
               </div>
             ) : null}

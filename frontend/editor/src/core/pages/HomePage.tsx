@@ -27,7 +27,6 @@ import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
 import RightSidebar from "@app/components/tools/RightSidebar";
@@ -67,7 +66,6 @@ import { Button } from "@app/ui/Button";
 import "@app/components/layout/WorkspaceFrame.css";
 import "@app/pages/HomePage.css";
 
-const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
 
 function readSwipeHintSeen(): boolean {
@@ -75,27 +73,6 @@ function readSwipeHintSeen(): boolean {
     return window.localStorage.getItem(SWIPE_HINT_SEEN_STORAGE_KEY) === "true";
   } catch {
     return true;
-  }
-}
-
-function readPersistedSidebarCollapsed(): boolean {
-  try {
-    return (
-      window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true"
-    );
-  } catch {
-    return false;
-  }
-}
-
-function writePersistedSidebarCollapsed(collapsed: boolean): void {
-  try {
-    window.localStorage.setItem(
-      SIDEBAR_COLLAPSED_STORAGE_KEY,
-      String(collapsed),
-    );
-  } catch {
-    // private mode / quota: silently no-op
   }
 }
 
@@ -130,14 +107,6 @@ export default function HomePage() {
   const [configModalOpen, setConfigModalOpen] = useState(false);
   const otherApp = useOtherAppSwitch();
   const location = useLocation();
-  // Persisted user preference for the FileSidebar collapsed state. Auto-
-  // collapse on /files is layered on top in the transition effect below and
-  // doesn't write to storage, so deep-linking to /files won't overwrite what
-  // the user actually chose last time.
-  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
-    readPersistedSidebarCollapsed,
-  );
-
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
   // tour's openConfigModal action which navigates to /settings/overview).
   useEffect(() => {
@@ -261,32 +230,6 @@ export default function HomePage() {
     activeFiles.length,
   ]);
 
-  // Auto-collapse the FileSidebar while on /files; restore the user's persisted
-  // preference on leave. Auto-collapse doesn't write to storage so deep-linking
-  // to /files won't overwrite what the user actually chose.
-  const prevWorkbenchRef = useRef(navigationState.workbench);
-  useEffect(() => {
-    const prev = prevWorkbenchRef.current;
-    const curr = navigationState.workbench;
-    if (curr === "myFiles" && prev !== "myFiles") {
-      if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
-    } else if (curr !== "myFiles" && prev === "myFiles") {
-      setFileSidebarCollapsed(readPersistedSidebarCollapsed());
-    }
-    prevWorkbenchRef.current = curr;
-    // fileSidebarCollapsed read as snapshot on transition only.
-  }, [navigationState.workbench]);
-  // Imperative, so the toggle still works while reading. Never persisted: not a preference.
-  const prevReaderModeRef = useRef(readerMode);
-  useEffect(() => {
-    if (readerMode !== prevReaderModeRef.current) {
-      setFileSidebarCollapsed(
-        readerMode ? true : readPersistedSidebarCollapsed(),
-      );
-      prevReaderModeRef.current = readerMode;
-    }
-  }, [readerMode]);
-
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
 
@@ -353,19 +296,6 @@ export default function HomePage() {
     }
     return reasons;
   }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
-
-  // Shared with the sidebar's own toggle. On /files it leaves rather than collapses.
-  const handleSidebarToggle = useCallback(() => {
-    if (navigationState.workbench === "myFiles") {
-      navigate(EDITOR_BASENAME);
-      return;
-    }
-    setFileSidebarCollapsed((c) => {
-      const next = !c;
-      writePersistedSidebarCollapsed(next);
-      return next;
-    });
-  }, [navigationState.workbench, navigate]);
 
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
@@ -713,30 +643,19 @@ export default function HomePage() {
             className="flex-nowrap flex"
             bg="var(--c-bg)"
           >
-            <div className="workspace-frame">
-              <MyFilesAwareFileSidebar
-                ref={quickAccessRef}
-                accountHoisted
-                toggleAriaLabel={
-                  navigationState.workbench === "myFiles"
-                    ? t("fileSidebar.leaveMyFiles", "Leave File library")
-                    : undefined
-                }
-                toggleIcon={
-                  navigationState.workbench === "myFiles" ? (
-                    <ArrowBackIcon />
-                  ) : undefined
-                }
-                active={navigationState.workbench === "myFiles"}
-                // Forced: a deep link to /files has no transition to collapse on.
-                collapsed={
-                  navigationState.workbench === "myFiles" ||
-                  fileSidebarCollapsed
-                }
-                onToggleCollapse={handleSidebarToggle}
-                onOpenSettings={() => setConfigModalOpen(true)}
-              />
-            </div>
+            {/* Reading is a surface of its own: the document and nothing beside it,
+                so the wing goes rather than shrinking to a rail. Everywhere else it
+                is fixed open - see FileSidebar. */}
+            {!readerMode && (
+              <div className="workspace-frame">
+                <MyFilesAwareFileSidebar
+                  ref={quickAccessRef}
+                  accountHoisted
+                  active={navigationState.workbench === "myFiles"}
+                  onOpenSettings={() => setConfigModalOpen(true)}
+                />
+              </div>
+            )}
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}

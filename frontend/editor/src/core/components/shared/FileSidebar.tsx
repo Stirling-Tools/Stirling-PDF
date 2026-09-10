@@ -102,10 +102,6 @@ export interface FileSidebarProps {
   onOpenSettings?: () => void;
   /** The quick nav rail owns the account control, so the footer drops its own row. */
   accountHoisted?: boolean;
-  /** Accessible name override for the collapse toggle. */
-  toggleAriaLabel?: string;
-  /** Icon override for the collapse toggle (e.g. back-arrow on /files). */
-  toggleIcon?: React.ReactNode;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Override the Google Drive handler. */
@@ -160,8 +156,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onToggleCollapse,
       onOpenSettings,
       accountHoisted = false,
-      toggleAriaLabel,
-      toggleIcon,
       onUploadFiles,
       onPickGoogleDriveFiles,
       extraAction,
@@ -959,12 +953,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           </div>
         )}
         <div className="file-sidebar-inner">
-          <SidebarHeader
-            collapsed={collapsed}
-            onToggleCollapse={onToggleCollapse}
-            toggleAriaLabel={toggleAriaLabel}
-            toggleIcon={toggleIcon}
-          />
+          <SidebarHeader />
 
           {/* Box 1 — top controls (open / my files / cloud). No title. File
               search lives in the global super search (top bar), not here. */}
