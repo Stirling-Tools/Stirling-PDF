@@ -3,6 +3,8 @@ package stirling.software.proprietary.accountlink;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,14 +89,37 @@ public class FreeTierUsageService {
             long usedUnits,
             long remainingUnits,
             LocalDateTime periodStart,
-            LocalDateTime periodEnd) {}
+            LocalDateTime periodEnd,
+            /** Units per billing category, so a surprising total can be attributed. */
+            Map<String, Long> usedByCategory) {
+
+        /** Without a breakdown, for callers that only weigh the remainder against the grant. */
+        public FreeTierBalance(
+                long grantUnits,
+                long usedUnits,
+                long remainingUnits,
+                LocalDateTime periodStart,
+                LocalDateTime periodEnd) {
+            this(grantUnits, usedUnits, remainingUnits, periodStart, periodEnd, Map.of());
+        }
+    }
 
     public FreeTierBalance balance() {
         LocalDateTime start = currentPeriodStart();
-        Long used = counters.sumUnits(start);
-        long spent = used != null ? used : 0L;
+        Map<String, Long> byCategory = new LinkedHashMap<>();
+        long spent = 0;
+        for (Object[] row : counters.sumUnitsByCategory(start)) {
+            long units = row[1] == null ? 0L : ((Number) row[1]).longValue();
+            byCategory.put(String.valueOf(row[0]), units);
+            spent += units;
+        }
         return new FreeTierBalance(
-                grantUnits, spent, Math.max(0, grantUnits - spent), start, start.plusMonths(1));
+                grantUnits,
+                spent,
+                Math.max(0, grantUnits - spent),
+                start,
+                start.plusMonths(1),
+                Map.copyOf(byCategory));
     }
 
     /**
