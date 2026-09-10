@@ -171,8 +171,7 @@ class SaasTeamServiceTest {
 
             assertThat(result).isSameAs(saved);
             verify(saasTeamExtensionService).setPersonal(saved, true);
-            // The free allowance, not 1: a linked instance reads this number as its own user
-            // ceiling, and a 1 there refused every user it tried to create.
+            // The free allowance, not 1: a linked instance reads this as its own ceiling.
             verify(saasTeamExtensionService)
                     .setSeats(
                             saved,

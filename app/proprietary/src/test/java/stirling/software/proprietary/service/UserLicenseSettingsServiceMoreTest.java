@@ -161,9 +161,8 @@ class UserLicenseSettingsServiceMoreTest {
         }
 
         /**
-         * The bug this closes: users.team_id points at the personal team until an invitation is
-         * accepted, so a solo cloud account used to publish a ceiling of its own team size and the
-         * instance then refused every user creation.
+         * users.team_id points at the personal team until an invitation is accepted, so a solo
+         * cloud account's own team size must not become the instance's ceiling.
          */
         @Test
         @DisplayName("a SaaS allowance below the grandfathered limit does not lower it")

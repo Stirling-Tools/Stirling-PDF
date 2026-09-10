@@ -72,11 +72,7 @@ public class SaasTeamExtensions implements Serializable {
     @Column(name = "seats_used", nullable = false)
     private Integer seatsUsed = 0;
 
-    /**
-     * Users this team is allowed. Rows are created lazily for teams that have bought nothing, so
-     * the default is the free allowance rather than a placeholder: read it through {@link
-     * #licensedUsers()}, which is what tells a purchased allowance from that floor.
-     */
+    /** Defaults to the free allowance, rows being created before anything is bought. */
     @Column(name = "max_seats", nullable = false)
     private Integer maxSeats = UserLicenseSettingsService.DEFAULT_USER_LIMIT;
 

@@ -117,11 +117,7 @@ class InstanceControllerTest {
         assertThat(body.state()).isEqualTo("OK");
     }
 
-    /**
-     * The bug this closes: users.team_id points at the personal team until an invitation is
-     * accepted, so a solo account's team published a ceiling of 1 and the instance refused every
-     * user creation from then on. Only a purchased allowance reaches the wire.
-     */
+    /** Only a purchased allowance reaches the wire: a solo account's team is not a ceiling. */
     @Test
     void entitlement_reportsOnlyAPurchasedAllowance() {
         Authentication token = new LinkedInstanceAuthenticationToken(4L, 9L);

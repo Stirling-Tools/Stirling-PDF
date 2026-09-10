@@ -60,9 +60,8 @@ public class SaasTeamExtensionService {
     }
 
     /**
-     * Users the team is allowed, raw. A team with no row has bought nothing, so it reads as the
-     * free allowance -- the same value a lazily-created row carries. Callers deciding whether a
-     * team holds a purchased allowance want {@link SaasTeamExtensions#licensedUsers()} instead.
+     * The raw column; a missing row reads as the free allowance. Callers asking whether a team
+     * bought anything want {@link SaasTeamExtensions#licensedUsers()}.
      */
     public int getMaxSeats(Team team) {
         return repository

@@ -21,8 +21,7 @@ class SaasTeamExtensionsTest {
         assertThat(ext.getTeamType()).isEqualTo(SaasTeamExtensions.TEAM_TYPE_STANDARD);
         assertThat(ext.getIsPersonal()).isFalse();
         assertThat(ext.getSeatsUsed()).isZero();
-        // A lazily-created row has bought nothing, so it holds the free allowance rather than a
-        // placeholder -- which licensedUsers() then reports as no allowance.
+        // A lazily-created row has bought nothing, so licensedUsers() reports no allowance.
         assertThat(ext.getSeatCount()).isEqualTo(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         assertThat(ext.getMaxSeats()).isEqualTo(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         assertThat(ext.licensedUsers()).isNull();
@@ -139,10 +138,7 @@ class SaasTeamExtensionsTest {
         }
     }
 
-    /**
-     * The boundaries that decide whether {@code max_seats} is reporting a purchased allowance. Four
-     * things have written that column, so these pin which values are allowances and which are not.
-     */
+    /** Which values of {@code max_seats} are a purchased allowance, and which are not. */
     @Nested
     @DisplayName("licensedUsers")
     class LicensedUsers {
