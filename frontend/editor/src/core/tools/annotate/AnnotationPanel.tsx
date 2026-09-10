@@ -1269,7 +1269,12 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
         )}
       </Group>
 
-      {activeTool === "stamp" && defaultStyleControls}
+      {/* defaultStyleControls already branches on every tool (ink, highlight,
+          underline, strikeout, squiggly, shapes, text, note, stamp) to show
+          its color swatch / opacity / width controls — it was only ever
+          mounted for "stamp" here, so every other markup tool had no way to
+          change its color or opacity even though the controls existed. */}
+      {activeTool !== "select" && defaultStyleControls}
 
       {colorPickerComponent}
 
