@@ -26,12 +26,12 @@ import {
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { PipelinesIcon } from "@portal/components/icons";
-import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
+import { useCanManagePolicies } from "@portal/queries/policyPermissions";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Pipelines.css";
 
@@ -46,10 +46,10 @@ export function Pipelines() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   // Building and editing a pipeline both need a linked account, so both ask for one first (#7581).
-  const { guard } = useConnectGate();
+  const { guard, error: connectError, retry: retryConnect } = useConnectGate();
 
   const listState = usePipelines();
-  const { data: overview, loading: overviewLoading } = listState;
+  const { data: overview } = listState;
   const { isLoading: listLoading } = useSectionFlags(listState);
 
   const catalogueState = usePoliciesOverview();
@@ -57,6 +57,12 @@ export function Pipelines() {
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
+  const {
+    canManage: canManagePolicies,
+    isLoading: permissionsLoading,
+    isError: permissionsError,
+    refetch: retryPermissions,
+  } = useCanManagePolicies();
 
   const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
@@ -153,7 +159,7 @@ export function Pipelines() {
       id: stored?.backendId,
       name: stored?.name ?? wire.name,
       icon: stored?.icon,
-      enabled: wire.enabled,
+      enabled: stored ? stored.status !== "paused" : wire.enabled,
       required: wire.required,
       inputs: [],
       steps: wire.steps,
@@ -172,7 +178,8 @@ export function Pipelines() {
   ) {
     setPageError(null);
     try {
-      await savePolicy(buildWireFromSetup(entry, result, t));
+      const enabled = entry.policy?.state.status !== "paused";
+      await savePolicy(buildWireFromSetup(entry, result, t, enabled));
       setWizard(null);
       setDetail(null);
       refetch();
@@ -256,14 +263,37 @@ export function Pipelines() {
         </Button>
       </header>
 
+      {connectError && (
+        <Banner
+          tone="danger"
+          title={t("portal.accountLink.gate.error")}
+          description={connectError}
+          action={
+            <Button onClick={retryConnect}>
+              {t("portal.accountLink.gate.retry")}
+            </Button>
+          }
+        />
+      )}
+
       {pageError && <Banner tone="danger" description={pageError} />}
+
+      {permissionsError && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.permissionsUnavailable")}
+          action={
+            <Button size="sm" variant="secondary" onClick={retryPermissions}>
+              {t("portal.pipelines.permissionsRetry")}
+            </Button>
+          }
+        />
+      )}
 
       <section className="portal-pipelines__all">
         <h2 className="portal-pipelines__section-title">
           {t("portal.pipelines.all.title")}
         </h2>
-
-        {hasPipelines && <KpiStrip data={overview} loading={overviewLoading} />}
 
         {listLoading && (
           <div className="portal-pipelines__table-skeleton" aria-hidden>
@@ -323,6 +353,8 @@ export function Pipelines() {
       <PolicyDetailPanel
         policy={detail?.policy ?? null}
         busy={busy}
+        canManagePolicies={canManagePolicies}
+        permissionsLoading={permissionsLoading}
         onClose={() => setDetail(null)}
         onEdit={handleEdit}
         onTogglePause={handleTogglePause}
@@ -332,6 +364,8 @@ export function Pipelines() {
 
       <PolicySetupWizard
         entry={wizard}
+        canManagePolicies={canManagePolicies}
+        permissionsLoading={permissionsLoading}
         onClose={() => setWizard(null)}
         onSubmit={handleSubmit}
         onCustomise={handleCustomise}
