@@ -29,10 +29,8 @@ import stirling.software.proprietary.billing.ContentHasher;
  * cannot mint a fresh grant. While the instance is linked the cloud wallet is authoritative and
  * this ledger simply stops being written or read (see {@link InstanceEntitlementGate#evaluate}).
  *
- * <p>The balance is derived from the counters rather than stored: the counters already hold the
- * period's authoritative total, a second number would be free to drift from them, and derivation is
- * what makes the monthly reset free — a new period has no counter rows, so it reads as a full grant
- * with nothing to zero. Unlike the cloud there is no refund path to credit back.
+ * <p>The balance is derived from the counters, never stored, so a new period reads as a full grant
+ * with nothing to zero.
  */
 @Slf4j
 @Service
@@ -44,9 +42,9 @@ import stirling.software.proprietary.billing.ContentHasher;
 public class FreeTierUsageService {
 
     /**
-     * Keeps the shared {@link MeteredInputSignature} keyspace disjoint from the cloud meter's, so a
-     * signature claimed before linking can never suppress a charge after it (a locally-anchored
-     * period start and a Stripe one can be the same timestamp).
+     * Keeps the shared {@link MeteredInputSignature} keyspace disjoint from the cloud meter's: the
+     * two period starts can be the same timestamp, and a claim made before linking must not
+     * suppress a charge after it.
      */
     private static final String SIGNATURE_NAMESPACE = "free-tier\n";
 
@@ -90,7 +88,7 @@ public class FreeTierUsageService {
             long remainingUnits,
             LocalDateTime periodStart,
             LocalDateTime periodEnd,
-            /** Units per billing category, so a surprising total can be attributed. */
+            /** So a surprising total can be attributed. */
             Map<String, Long> usedByCategory) {
 
         /** Without a breakdown, for callers that only weigh the remainder against the grant. */

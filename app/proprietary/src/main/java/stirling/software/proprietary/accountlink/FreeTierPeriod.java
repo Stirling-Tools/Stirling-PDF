@@ -22,8 +22,7 @@ import lombok.NoArgsConstructor;
  * are keyed by, rolled lazily when a read or write notices the boundary has passed, so no scheduler
  * is involved.
  *
- * <p>Auto-created by Hibernate ({@code ddl-auto=update}); written only by {@link
- * FreeTierUsageService}.
+ * <p>Written only by {@link FreeTierUsageService}.
  */
 @Entity
 @Table(name = "account_link_free_tier_period")
@@ -31,7 +30,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class FreeTierPeriod {
 
-    /** One instance meters one free tier → one anchor row. */
     public static final long SINGLETON_ID = 1L;
 
     @Id private Long id;

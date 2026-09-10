@@ -12,7 +12,7 @@ import type { ConnectOutcome } from "@portal/components/account-link/ConnectCall
  * pitch.
  *
  * <ul>
- *   <li>{@code link} — an admin asked to connect. The general pitch.
+ *   <li>{@code link} — an admin asked to connect.
  *   <li>{@code reauth} — the instance is already linked and only the browser session lapsed. It
  *       must NOT re-register, which would mint a duplicate device credential.
  *   <li>{@code exhausted} — this month's local free grant is spent, so the pitch leads with the

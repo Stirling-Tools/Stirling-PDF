@@ -21,9 +21,8 @@ export interface LocalUsage {
  * This instance's own monthly free grant (GET /api/v1/account-link/free-tier) — what an unlinked
  * instance meters itself against, so the free tier needs no Stirling account.
  *
- * <p>{@code remainingUnits} is floored at 0 and is the figure the gate enforces; {@code periodEnd}
- * is exclusive. Reported whether or not the instance is linked, but dormant while it is: a linked
- * instance's cloud wallet is authoritative instead.
+ * <p>{@code remainingUnits} is floored at 0. Dormant while the instance is linked, its cloud
+ * wallet being authoritative instead.
  */
 export interface FreeTierBalance {
   grantUnits: number;

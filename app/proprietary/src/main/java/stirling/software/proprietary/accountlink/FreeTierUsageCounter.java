@@ -17,19 +17,12 @@ import lombok.NoArgsConstructor;
 /**
  * Durable per-(free-tier period, category) usage counter for the instance's own monthly grant.
  *
- * <p>Deliberately a separate table from {@link UsageCounter} rather than a scoped column on it: the
- * local grant and a linked team's cloud wallet are independent ledgers, and separating them at the
- * table keeps that structural instead of conditional — {@link UsageSyncService} reads only {@link
- * UsageCounter}, so pre-link free-tier accrual cannot leak into the first cloud sync, and no
- * bookkeeping has to be run over these rows when the instance links or unlinks. It also avoids the
- * key collision a shared table would allow, since a locally-anchored period start and a Stripe
- * period start can land on the same timestamp.
+ * <p>A separate table from {@link UsageCounter}, not a scoped column on it: {@link
+ * UsageSyncService} reads only that one, so pre-link accrual cannot leak into the first cloud sync,
+ * and a locally-anchored period start can collide with a Stripe one on the same timestamp. Hence no
+ * {@code last_synced_units} twin either, local usage never being reported.
  *
- * <p>There is no {@code last_synced_units} twin of {@link UsageCounter}'s: local free-tier usage is
- * never reported to SaaS.
- *
- * <p>Auto-created by Hibernate ({@code ddl-auto=update}); written only by {@link
- * FreeTierUsageService}.
+ * <p>Written only by {@link FreeTierUsageService}.
  */
 @Entity
 @Table(
@@ -46,7 +39,7 @@ public class FreeTierUsageCounter {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Inclusive start of the free-tier period this counter belongs to. */
+    /** Inclusive. */
     @Column(name = "period_start", nullable = false)
     private LocalDateTime periodStart;
 
@@ -54,7 +47,6 @@ public class FreeTierUsageCounter {
     @Column(name = "category", nullable = false, length = 32)
     private String category;
 
-    /** Running total of units spent against the grant in this period+category. */
     @Column(name = "cumulative_units", nullable = false)
     private long cumulativeUnits;
 

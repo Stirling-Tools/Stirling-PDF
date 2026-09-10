@@ -12,7 +12,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
-/** Verifies the gate is registered everywhere except a desktop bundle. */
 class AccountLinkWebMvcConfigTest {
 
     private static final String TAURI_MODE = "STIRLING_PDF_TAURI_MODE";

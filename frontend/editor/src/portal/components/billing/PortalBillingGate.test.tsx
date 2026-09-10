@@ -5,7 +5,7 @@ import { MemoryRouter } from "react-router-dom";
 /**
  * Which usage page this instance has one of. The unlinked half must not go anywhere near the
  * wallet: {@code onWalletLoaded} reports `linked` as a fact, and a browser can hold a SaaS session
- * with no link to this server, so loading a wallet there flipped the whole portal to linked.
+ * with no link to this server, so loading a wallet there would flip the whole portal to linked.
  */
 const gate = { gated: false, loading: false, available: true };
 // Administrator by default: the page is theirs, and one case below is the member.
@@ -92,8 +92,8 @@ describe("PortalBillingGate — self-hosted", () => {
   });
 
   it("keeps an unlinked instance off the wallet even when nothing gates it", () => {
-    // Linking turned off, or a status check that failed: neither is "gated", and both used to fall
-    // through to a SaaS read this instance may have no address for.
+    // Linking turned off, or a status check that failed: neither is "gated", and neither may
+    // reach a SaaS this instance has no address for.
     gate.gated = false;
     renderGate();
 

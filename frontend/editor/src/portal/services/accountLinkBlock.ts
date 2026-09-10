@@ -11,8 +11,6 @@
  * instance, so linking is a real answer to it; the others ({@code OVER_LIMIT}, {@code REVOKED},
  * {@code GRACE_EXPIRED}) mean a linked team's cloud wallet is the problem, and offering to link an
  * already-linked instance would be nonsense. Those fall through to the caller's own error handling.
- *
- * <p>Classifier and dispatcher are separate so the parsing can be tested without the modal.
  */
 
 /** Bridge event to the always-mounted host in PortalProviders. Not part of the public API. */
