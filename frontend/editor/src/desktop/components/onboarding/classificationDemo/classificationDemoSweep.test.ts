@@ -374,8 +374,8 @@ describe("settling swept documents locally", () => {
 
     await runClassificationDemoSweep("/downloads", d);
 
-    for (const call of d.addFiles.mock.calls) {
-      expect(call[1].presetClassification).toBeDefined();
+    for (const call of vi.mocked(d.addFiles).mock.calls) {
+      expect(call[1]?.presetClassification).toBeDefined();
     }
   });
 

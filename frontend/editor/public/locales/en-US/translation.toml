@@ -3316,6 +3316,58 @@ will = "Will"
 work-instruction = "Work instruction"
 work-order = "Work order"
 
+[classificationDemo.buttons]
+done = "Done"
+notNow = "Not now"
+skip = "Skip"
+stop = "Stop"
+
+[classificationDemo.chart]
+centre = "documents"
+hint = "Select a slice to see the document types behind it."
+label = "Documents by type: {{summary}}"
+noTypes = "These documents did not match a known type."
+
+[classificationDemo.defaultApp]
+body = "Make Stirling your default PDF app. Every PDF you open, from email, your browser, or your desktop, lands here, ready to read or edit. You can change this any time in Settings."
+cta = "Make Stirling my default"
+title = "Open every PDF in Stirling"
+
+[classificationDemo.followUp]
+batchCta = "Process another {{count}}"
+free = "They are all covered by your remaining free allowance."
+partial = "{{count}} of them are covered by your remaining free allowance."
+restCta = "Process the rest"
+title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
+
+[classificationDemo.groups]
+other = "Other"
+
+[classificationDemo.offer]
+body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
+cta = "Process my Downloads folder"
+privacy = "Everything stays on this device and you can stop anytime."
+title = "See what Stirling can do with a whole folder"
+
+[classificationDemo.phase]
+finishing = "Finishing up..."
+gathering = "Gathering PDF files..."
+processing = "Processing file {{done}}/{{total}}..."
+reading = "Reading Downloads folder..."
+
+[classificationDemo.processing]
+counts = "of {{total}} PDFs processed"
+
+[classificationDemo.results]
+documentCount_one = "{{count}} PDF"
+documentCount_other = "{{count}} PDFs"
+failedBody = "Stirling could not read your Downloads folder. Nothing on your computer was changed."
+failedTitle = "That did not finish"
+heading = "Your Downloads, sorted"
+summary = "Stirling read {{documents}} and sorted them into {{types}}."
+typeCount_one = "{{count}} type"
+typeCount_other = "{{count}} types"
+
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
@@ -5474,58 +5526,6 @@ useMagicLink = "Use magic link instead"
 username = "Username"
 youAreLoggedIn = "You are logged in!"
 
-[classificationDemo.buttons]
-done = "Done"
-notNow = "Not now"
-skip = "Skip"
-stop = "Stop"
-
-[classificationDemo.chart]
-centre = "documents"
-hint = "Select a slice to see the document types behind it."
-label = "Documents by type: {{summary}}"
-noTypes = "These documents did not match a known type."
-
-[classificationDemo.defaultApp]
-body = "Make Stirling your default PDF app. Every PDF you open, from email, your browser, or your desktop, lands here, ready to read or edit. You can change this any time in Settings."
-cta = "Make Stirling my default"
-title = "Open every PDF in Stirling"
-
-[classificationDemo.followUp]
-batchCta = "Process another {{count}}"
-free = "They are all covered by your remaining free allowance."
-partial = "{{count}} of them are covered by your remaining free allowance."
-restCta = "Process the rest"
-title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
-
-[classificationDemo.groups]
-other = "Other"
-
-[classificationDemo.offer]
-body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
-cta = "Process my Downloads folder"
-privacy = "Everything stays on this device and you can stop anytime."
-title = "See what Stirling can do with a whole folder"
-
-[classificationDemo.phase]
-finishing = "Finishing up..."
-gathering = "Gathering PDF files..."
-processing = "Processing file {{done}}/{{total}}..."
-reading = "Reading Downloads folder..."
-
-[classificationDemo.processing]
-counts = "of {{total}} PDFs processed"
-
-[classificationDemo.results]
-failedBody = "Stirling could not read your Downloads folder. Nothing on your computer was changed."
-failedTitle = "That did not finish"
-heading = "Your Downloads, sorted"
-documentCount_one = "{{count}} PDF"
-documentCount_other = "{{count}} PDFs"
-summary = "Stirling read {{documents}} and sorted them into {{types}}."
-typeCount_one = "{{count}} type"
-typeCount_other = "{{count}} types"
-
 [margin]
 large = "Large"
 medium = "Medium"
@@ -5869,16 +5869,16 @@ title = "Share anonymous usage data"
 description = "See how Stirling works in a quick walkthrough"
 title = "Take the tour"
 
-[onboarding.desktopWelcome]
-body = "There's a whole host of new changes to explore, including <strong>Agent Chat</strong>, automatic document <strong>classification</strong>, and more."
-freeLine = "The editor is now <free>completely free</free>."
-title = "Welcome to Stirling <product>Desktop</product>"
-
 [onboarding.desktopInstall]
 body = "Stirling works best as a desktop app. You can use it offline, access documents faster, and make edits locally on your computer."
 selectOs = "Select operating system"
 title = "Download"
 titleWithOs = "Download for {{osLabel}}"
+
+[onboarding.desktopWelcome]
+body = "There's a whole host of new changes to explore, including <strong>Agent Chat</strong>, automatic document <strong>classification</strong>, and more."
+freeLine = "The editor is now <free>completely free</free>."
+title = "Welcome to Stirling <product>Desktop</product>"
 
 [onboarding.mfa]
 authenticationCode = "Authentication code"
