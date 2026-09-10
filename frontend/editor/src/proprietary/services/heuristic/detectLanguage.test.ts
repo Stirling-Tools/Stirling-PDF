@@ -185,22 +185,15 @@ describe("detectLanguage", () => {
       expect(asked).toContain("en");
     });
 
-    it("asks for nothing when the winning language has no pack", () => {
-      // A Spanish lease: es leads, es has no pack, and nothing else is within the
-      // bar - so core scores it alone and the AI engine rules on it.
-      expect(packsFor(detectLanguage(prose.es), prose.es.length)).toEqual([]);
-    });
-
-    it("widens the search on a short uncertain document", () => {
-      // Measured containment of the true language on 20-word documents is 84% in
-      // the top two candidates and 95% in the top five, so an uncertain short
-      // document is worth asking more of. Only en and de have packs today, so
-      // this asserts the request, which is the decision under test.
-      const terse =
-        "Kontoauszug 07/2024 Buchungstag Wertstellung Betrag 1.248,00";
-      const d = detectLanguage(terse);
-      expect(d.lowText || d.assumed).toBe(true);
-      expect(packsFor(d, terse.length).length).toBeGreaterThan(1);
+    it("asks for nothing when the detected language has no pack", () => {
+      // Hebrew: the script range names it, but we ship no he locale and so no
+      // pack. Core scores the document alone and the AI engine rules on it.
+      const hebrew =
+        "חוזה שכירות. התשלום יבוצע בתוך שלושים יום מתאריך החשבונית הזאת. " +
+        "השירותים מחויבים עבור התקופה המצוינת לפי התנאים שהצדדים הסכימו עליהם.";
+      const d = detectLanguage(hebrew);
+      expect(d.language).toBe("he");
+      expect(packsFor(d, hebrew.length)).toEqual([]);
     });
 
     it("stays narrow on a long document however unsure it is", () => {

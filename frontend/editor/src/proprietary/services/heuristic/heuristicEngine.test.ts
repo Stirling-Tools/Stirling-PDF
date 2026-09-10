@@ -101,7 +101,7 @@ describe("heuristic engine port fidelity", () => {
     expect(r.labels[0]).toBe("nda");
   });
 
-  it("does not classify a non-English (Spanish) document", async () => {
+  it("classifies a Spanish document with the Spanish pack", async () => {
     const body = [
       "CONTRATO DE ARRENDAMIENTO DE VIVIENDA",
       "Este contrato de arrendamiento se celebra entre el arrendador y el",
@@ -112,10 +112,13 @@ describe("heuristic engine port fidelity", () => {
     ].join("\n");
     const r = await classify("CONTRATO DE ARRENDAMIENTO", body);
     expect(r.language).toBe("es");
-    // No Spanish pack yet, so core alone scores it: nothing clears the floor and
-    // the document escalates to the AI engine exactly as it did before.
-    expect(r.packs).toEqual([]);
-    expect(r.labels).toHaveLength(0);
+    expect(r.packs).toEqual(["es"]);
+    // The Spanish pack carries the document-type terms and nothing more, so it
+    // reaches "contract" rather than the narrower "lease-agreement", and stays at
+    // medium - a plausible label that the AI engine still gets to refine. That is
+    // what a sourced pack buys before a native speaker adds field vocabulary.
+    expect(r.labels[0]).toBe("contract");
+    expect(r.confidence).not.toBe("high");
   });
 
   it("detects English prose", async () => {

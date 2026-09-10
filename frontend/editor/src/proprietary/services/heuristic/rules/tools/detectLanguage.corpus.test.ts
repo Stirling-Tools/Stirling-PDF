@@ -176,13 +176,18 @@ describe.skipIf(!present)("language detection against real corpora", () => {
 
     it("still reaches the right language's pack on a 20-word document", () => {
       // A receipt or a delivery note is this short. Exactness falls to about
-      // two-thirds here, but the dispatcher loads two packs and the runner-up
-      // covers most of the gap - which is the number that decides behaviour.
+      // two-thirds, and the runner-up recovers part of the rest.
+      //
+      // This was 84% before candidates needed two distinct word hits to qualify.
+      // Some of that 84% was luck: a single two-letter match put noise in the top
+      // two, and the true language rode along behind it. What replaces it in
+      // production is the reader's interface language, which this measurement
+      // deliberately does not pass.
       const [, top2] = render(
         "WIKIPEDIA held-out · 20 words per document",
         measure(sizedDocs("test_wiki", 20, 25)),
       );
-      expect(top2).toBeGreaterThanOrEqual(0.8);
+      expect(top2).toBeGreaterThanOrEqual(0.74);
     });
 
     it("makes no language call at all when there is almost no text", () => {

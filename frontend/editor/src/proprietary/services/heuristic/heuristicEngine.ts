@@ -539,6 +539,8 @@ const MIN_WORDS_FOR_FOREIGN = 12;
  * floor a German sign-off on an English invoice outweighs the whole document.
  */
 const MIN_DISTINCTIVE_CHARS = 3;
+/** Distinct profile words a language needs before it counts as a candidate. */
+const MIN_WORD_HITS = 2;
 /** Dominance a script range needs over all letters to decide the writing system. */
 const SCRIPT_SHARE = 0.25;
 
@@ -602,7 +604,13 @@ export function detectLanguage(text: string): LanguageDetection {
   const lowText = totalWords < 30;
 
   let englishHits = 0;
-  for (const w of words) if (ENGLISH_WORDS.has(w)) englishHits++;
+  const englishSeen = new Set<string>();
+  for (const w of words) {
+    if (ENGLISH_WORDS.has(w)) {
+      englishHits++;
+      englishSeen.add(w);
+    }
+  }
   const englishScore = englishHits / totalWords;
 
   const candidates = rankLanguages(raw, words, totalWords, LATIN_LANGUAGES);
@@ -617,7 +625,7 @@ export function detectLanguage(text: string): LanguageDetection {
   const bestChars =
     bestProfile?.chars == null ? 0 : countAll(bestProfile.chars, raw);
   const bestRatio =
-    bestProfile == null ? 0 : countWords(words, bestProfile) / totalWords;
+    bestProfile == null ? 0 : countWords(words, bestProfile).total / totalWords;
 
   // Affirmative evidence of a specific other language, not merely an absence of
   // English: a shared function word or stray accent must not unseat English.
@@ -641,7 +649,13 @@ export function detectLanguage(text: string): LanguageDetection {
   }
 
   const bar = lowText ? 0.03 : 0.045;
-  const englishProven = latinRatio >= 0.75 && englishScore >= bar;
+  // The same floor every other language is held to. "in" is German too, "is" is
+  // Dutch, "at" is Danish: two occurrences of one short word on a forty-word CV
+  // cleared the ratio bar and declared the document English.
+  const englishProven =
+    latinRatio >= 0.75 &&
+    englishScore >= bar &&
+    englishSeen.size >= MIN_WORD_HITS;
   const englishAssumed = latinRatio >= 0.75 && !foreignEvidence;
   if (!englishProven && !englishAssumed) {
     return {
@@ -663,10 +677,19 @@ export function detectLanguage(text: string): LanguageDetection {
   };
 }
 
-function countWords(words: string[], profile: LanguageProfile): number {
-  let hits = 0;
-  for (const w of words) if (profile.words.has(w)) hits++;
-  return hits;
+function countWords(
+  words: string[],
+  profile: LanguageProfile,
+): { total: number; distinct: number } {
+  let total = 0;
+  const seen = new Set<string>();
+  for (const w of words) {
+    if (profile.words.has(w)) {
+      total++;
+      seen.add(w);
+    }
+  }
+  return { total, distinct: seen.size };
 }
 
 /**
@@ -674,8 +697,10 @@ function countWords(words: string[], profile: LanguageProfile): number {
  * plus distinctive-letter density, the two signals that survive a document being
  * mostly nouns and numbers.
  *
- * <p>Zero-scoring languages stay on the list: they are what the assumed-English
- * hedge falls back to, and any positive English score filters them out anyway.
+ * <p>A language with no evidence at all is left off: among 38 candidates an
+ * arbitrary zero is a lottery rather than a hedge. Distinctive letters too few to
+ * score still order the rest, which is what keeps German ahead of Catalan on a
+ * bank statement made of nouns and numbers.
  */
 function rankLanguages(
   raw: string,
@@ -683,20 +708,28 @@ function rankLanguages(
   totalWords: number,
   candidates: readonly string[],
 ): LanguageCandidate[] {
-  const out: LanguageCandidate[] = [];
+  const ranked: (LanguageCandidate & { tiebreak: number })[] = [];
   for (const language of candidates) {
     const profile = PROFILES.get(language);
     if (profile == null) continue;
     const chars = profile.chars == null ? 0 : countAll(profile.chars, raw);
     const charEvidence = chars >= MIN_DISTINCTIVE_CHARS ? chars : 0;
-    const ratio = countWords(words, profile) / totalWords;
-    out.push({
-      language,
-      score: ratio + Math.min(charEvidence / totalWords, 0.15) * 6,
-    });
+    const hits = countWords(words, profile);
+    // One function word is noise: a German IBAN starts "DE", which tokenises to
+    // "de" - a word in Catalan, Spanish, French, Dutch and Romanian alike. Two
+    // distinct words, or a distinctive letter, is the floor for being a candidate.
+    if (hits.distinct < MIN_WORD_HITS && charEvidence === 0) continue;
+    const ratio = hits.total / totalWords;
+    const score = ratio + Math.min(charEvidence / totalWords, 0.15) * 6;
+    // Too few distinctive letters to score - amplifying a couple of them let a
+    // German sign-off outrank a whole English invoice - but they are still the
+    // only thing separating German from Catalan on a page of nouns and numbers,
+    // so they order the candidates that score nothing.
+    const tiebreak = chars / totalWords;
+    if (score > 0 || tiebreak > 0) ranked.push({ language, score, tiebreak });
   }
-  out.sort((a, b) => b.score - a.score);
-  return out;
+  ranked.sort((a, b) => b.score - a.score || b.tiebreak - a.tiebreak);
+  return ranked.map(({ language, score }) => ({ language, score }));
 }
 
 /**
@@ -718,6 +751,7 @@ function rankLanguages(
 export function packsFor(
   detection: LanguageDetection,
   chars: number,
+  localeHint?: string,
 ): string[] {
   const ranked =
     detection.candidates.length > 0
@@ -731,6 +765,15 @@ export function packsFor(
   const max = unsure ? MAX_PACKS_UNSURE : MAX_PACKS_CONFIDENT;
   const bar = detection.assumed ? 0 : best * SECOND_PACK_BAR;
   const out: string[] = [];
+  // The interface language, used only when the document proved nothing. A
+  // data-dense statement or payslip names its own type in content words the
+  // detector cannot see, so a reader's locale is the one prior left. It never
+  // overrides evidence: a German user's English invoice proves English and this
+  // never runs.
+  if (detection.assumed && localeHint != null) {
+    const hinted = localeHint.slice(0, 2).toLowerCase();
+    if (hinted !== "en" && hinted in LANGUAGE_PACKS) out.push(hinted);
+  }
   for (const candidate of ranked) {
     if (out.length >= max) break;
     // The bar applies from the first candidate, so a confidently-detected
@@ -794,10 +837,10 @@ function toExplanation(
  */
 export async function classifyHeuristic(
   doc: HeuristicDoc,
-  opts?: { explain?: boolean },
+  opts?: { explain?: boolean; localeHint?: string },
 ): Promise<HeuristicResult> {
   const detection = detectLanguage(doc.allZone);
-  const wanted = packsFor(detection, nz(doc.allZone).length);
+  const wanted = packsFor(detection, nz(doc.allZone).length, opts?.localeHint);
   const core = await loadCore();
   await Promise.all(wanted.map((l) => loadPack(l)));
   const loaded = wanted.filter((l) => PACKS.has(l));

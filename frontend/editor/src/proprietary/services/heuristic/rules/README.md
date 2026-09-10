@@ -6,12 +6,22 @@ maths and the language detector; every word it matches on lives here.
 ```
 core.json            shared by every language — the label vocabulary and
                      everything that carries no language
-packs/en.json        English words
-packs/de.json        German words
+packs/en.json        English words, hand-authored and corpus-tuned
+packs/de.json        German words, hand-authored
+packs/*.json         36 more, generated from sourced terms — see Provenance
 languages.json       how the detector names a document's language
 index.ts             registry: language tag → pack loader
 tools/               corpus fetch, profile derivation, accuracy measurement
 ```
+
+All 38 locales we ship have a pack. They are not of equal depth, and the
+difference matters when reading a verdict:
+
+| pack | provenance | labels | phrases | gzipped |
+| --- | --- | --- | --- | --- |
+| `en` | hand-authored, years of corpus tuning | 139 | 2,139 | 52 KB |
+| `de` | hand-authored | 55 | 262 | 4 KB |
+| the other 36 | generated from sourced terms | 6–104 | 6–117 | 0.3–3 KB |
 
 A document is scored against **core plus the pack(s) for the language it is
 written in** — the language of the PDF's own text, never the user's UI locale. A
@@ -45,6 +55,36 @@ A pack holds words:
 
 `heuristicRules.lint.test.ts` enforces this split: core with phrases in it, or a
 pack with structural weights in it, fails the build.
+
+## Provenance of the generated packs
+
+The 36 generated packs carry one thing per label: **that language's own name for
+the document type**, which is the single most diagnostic rule a pack can have.
+Those terms are sourced, not invented — `tools/fetch-wikipedia.py` reads the
+interlanguage links of a fixed list of English Wikipedia articles, so the French
+term for an invoice is whatever fr.wikipedia calls that article, and nobody had to
+guess it. `tools/concepts.py` holds the label → article mapping and the weights.
+
+What they do **not** carry is field vocabulary: the words for *invoice number*,
+*due date*, *total*, *account holder*. That is what takes a pack from "names the
+document type" to "names it confidently", because `high` confidence needs three
+distinct signals and a document-type term is one. In practice a generated pack
+produces a plausible label at `medium`, the AI engine still rules on it, and the
+label shows immediately instead of after a round trip. That is a real improvement
+over nothing and a long way short of the English pack.
+
+Three honest caveats:
+
+- **Most of the terms are unverified.** A reader checked the ones they could read —
+  every term in the table printed by `tools/genpacks.py` for fr, es, it, pt, nl, sv,
+  da, no, pl, cs, ro, tr, ru, uk, el, ja, zh, ar, id, hu, vi — and the corrections
+  live in `OVERRIDES` in `tools/concepts.py` so re-running the generator keeps them.
+  Wikipedia's ja link for "Invoice" resolves to 送り状, a delivery slip; that is the
+  kind of error to expect elsewhere in the languages nobody has read yet.
+- **Coverage is uneven** because it follows Wikipedia. Chinese and Arabic reach 100+
+  labels; Irish 16 and Tibetan 6, because those wikis have fewer of these articles.
+- **A generated pack is a floor to build on.** Replacing one with hand-authored
+  vocabulary is strictly an improvement and needs no engine change.
 
 ## Adding a language
 
@@ -218,8 +258,8 @@ downloads.
 | set | documents | exact | in top 2 |
 | --- | --- | --- | --- |
 | Tatoeba, ~25 sentences per document | 2,121 | 98.7% | 100.0% |
-| Tatoeba, ~6 sentences per document | 4,396 | 93.4% | 98.6% |
-| Wikipedia prose | 640 | 89.4% | 97.8% |
+| Tatoeba, ~6 sentences per document | 4,396 | 93.4% | 98.5% |
+| Wikipedia prose | 640 | 89.2% | 97.7% |
 
 **Top-2 is the number that decides behaviour**, because the dispatcher loads the
 runner-up's pack too: at 97.8% the right pack is loaded for all but one document in
@@ -230,12 +270,13 @@ fifty, and the remainder escalate to the AI engine rather than being mislabelled
 A receipt, a delivery note or a ticket is 20 words, not 200, so the size curve
 matters more than the headline. Measured on document-register prose:
 
-| words | exact | top-2 | right pack loaded |
-| --- | --- | --- | --- |
-| 8 | 36% | 64% | 64% |
-| 20 | 67% | 85% | 84% |
-| 40 | 83% | 94% | 92% |
-| 100 | 90% | 98% | 97% |
+| words | exact | top-2 |
+| --- | --- | --- |
+| 20 | 64% | 76% |
+| 40 | 83% | 94% |
+| 100 | 90% | 98% |
+
+The 20-word row is measured without the locale hint, which production passes.
 
 Three things hold this together at the small end:
 
@@ -246,9 +287,11 @@ Three things hold this together at the small end:
 - **Below 25 letters the detector declines to answer** rather than guessing, and
   the document is scored on core alone.
 - **A wrong language does not become a wrong label.** On 40-word prose that is not
-  a business document at all, 3.7% picked up a label and **none of them reached
-  `high`** — so nothing was trusted enough to skip the AI engine. That is the
-  property that makes the small-document regime safe, and the corpus test pins it.
+  a business document at all, 7.2% picked up a label and **none of them reached
+  `high`** — so nothing was trusted enough to skip the AI engine. (It was 3.7% with
+  two packs; 38 packs mean more phrases and more near-misses, all of them below the
+  trust bar.) That is the property that makes the small-document regime safe, and
+  the corpus test pins it.
 
 Short text needs no special handling in the dispatcher: when there is little to go
 on the candidate scores bunch together, so the `SECOND_PACK_BAR` already admits the

@@ -38,7 +38,9 @@ const run = async (c: Case) => {
     firstZone: body,
     allZone: body,
   };
-  return classifyHeuristic(doc);
+  // The app passes the reader's interface language; several of these specimens
+  // are data-dense enough that it is the only thing naming German.
+  return classifyHeuristic(doc, { localeHint: "de-DE" });
 };
 
 const CASES: Case[] = [

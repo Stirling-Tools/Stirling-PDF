@@ -1,0 +1,425 @@
+{
+  "version": 2,
+  "language": "it",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "fattura", "weight": 24, "where": "title" },
+        { "text": "imposta sul valore aggiunto", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "quietanza", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "quietanza", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [{ "text": "busta paga", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "bilancio d'esercizio", "weight": 20, "where": "title" },
+        { "text": "stato patrimoniale", "weight": 12 }
+      ]
+    },
+    {
+      "id": "tax-return",
+      "phrases": [
+        { "text": "dichiarazione dei redditi", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "tax-form",
+      "phrases": [
+        { "text": "dichiarazione dei redditi", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "contratto", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [
+        { "text": "contratto di lavoro", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [
+        { "text": "leasing", "weight": 18, "where": "title" },
+        { "text": "locatore", "weight": 8 }
+      ]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        {
+          "text": "accordo di non divulgazione",
+          "weight": 24,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [
+        { "text": "termini di servizio", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "affidavit",
+      "phrases": [{ "text": "affidavit", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "testamento", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "deed",
+      "phrases": [{ "text": "deed", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "insurance-policy",
+      "phrases": [
+        { "text": "polizza", "weight": 22, "where": "title" },
+        { "text": "franchigia", "weight": 8 }
+      ]
+    },
+    {
+      "id": "resume",
+      "phrases": [
+        { "text": "curriculum vitae", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [
+        { "text": "lettera di candidatura", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "job-description",
+      "phrases": [
+        { "text": "descrizione di posizione", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "certificate",
+      "phrases": [{ "text": "diploma", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "thesis",
+      "phrases": [{ "text": "tesi di laurea", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "research-paper",
+      "phrases": [{ "text": "editoria accademica", "weight": 10 }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "brevetto", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "ricetta", "weight": 20, "where": "title" },
+        { "text": "farmacia", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [
+        { "text": "cartella clinica", "weight": 18, "where": "title" },
+        { "text": "diagnosi", "weight": 10 }
+      ]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "vaccinazione", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "questionario", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "warranty-document",
+      "phrases": [{ "text": "garanzia", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "scheda di sicurezza", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "disegno tecnico", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "bill-of-materials",
+      "phrases": [{ "text": "distinta base", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [
+        { "text": "comunicato stampa", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "newsletter", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "opuscolo", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "libro bianco", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "meeting-minutes",
+      "phrases": [{ "text": "verbale", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "memo",
+      "phrases": [{ "text": "memorandum", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "biglietto", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "waybill",
+      "phrases": [
+        { "text": "documento di trasporto", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [
+        { "text": "visto d'ingresso", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "contatore elettrico", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "menù", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "ricetta", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "presentazione", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "report",
+      "phrases": [{ "text": "relazione", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "lettera", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "licenza", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "audit-report",
+      "phrases": [{ "text": "audit", "weight": 12 }]
+    },
+    {
+      "id": "risk-assessment",
+      "phrases": [
+        { "text": "valutazione del rischio", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "bene immobile", "weight": 8 }]
+    },
+    {
+      "id": "tender-document",
+      "phrases": [
+        { "text": "evidenza pubblica", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "abbonamento", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "posta elettronica", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "indice", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "rivista", "weight": 10 }]
+    },
+    {
+      "id": "performance-review",
+      "phrases": [
+        { "text": "valutazione del personale", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "selezione del personale", "weight": 8 }]
+    },
+    {
+      "id": "service-agreement",
+      "phrases": [
+        { "text": "service level agreement", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [{ "text": "compravendita", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "loan-agreement",
+      "phrases": [{ "text": "mutuo", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "shareholder-agreement",
+      "phrases": [
+        { "text": "patti parasociali", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "subpoena",
+      "phrases": [{ "text": "sub poena", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "consent-form",
+      "phrases": [
+        { "text": "consenso informato", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "laboratorio di analisi", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "assicurazione", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "regulatory-filing",
+      "phrases": [{ "text": "compliance normativa", "weight": 10 }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "controllo della qualità", "weight": 10 }]
+    },
+    {
+      "id": "test-report",
+      "phrases": [{ "text": "taratura", "weight": 12 }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "salute e sicurezza sul lavoro", "weight": 10 }]
+    },
+    {
+      "id": "datasheet",
+      "phrases": [{ "text": "datasheet", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "technical-specification",
+      "phrases": [
+        { "text": "specifica tecnica", "weight": 16, "where": "title" }
+      ]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "application programming interface", "weight": 8 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [{ "text": "eula", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "budget", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "registration-form",
+      "phrases": [
+        {
+          "text": "università della nuova zelanda",
+          "weight": 18,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "gift-certificate",
+      "phrases": [{ "text": "buono regalo", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "organization-chart",
+      "phrases": [{ "text": "organigramma", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "caso di studio", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "consiglio di amministrazione", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "investimento", "weight": 8 }]
+    },
+    {
+      "id": "letter-of-intent",
+      "phrases": [
+        { "text": "lettera di intenti", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "appraisal-report",
+      "phrases": [
+        {
+          "text": "valore di stima immobiliare",
+          "weight": 18,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "benefits-summary",
+      "phrases": [{ "text": "fringe benefit", "weight": 14 }]
+    },
+    {
+      "id": "grade-report",
+      "phrases": [{ "text": "pagella", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "compiti a casa", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "indice" }],
+    "references": [{ "pattern": "bibliografia" }],
+    "signature": [{ "pattern": "firma" }]
+  }
+}
