@@ -21,6 +21,8 @@ import tools.jackson.databind.node.StringNode;
  */
 final class Placeholders {
 
+    private static final int MAX_TREE_DEPTH = 64;
+
     private static final Pattern PLACEHOLDER = Pattern.compile("\\{\\{\\s*([\\w.]+)\\s*}}");
 
     /** How a resolved value is escaped for the position it lands in. */
@@ -68,15 +70,24 @@ final class Placeholders {
      * documents[0].data} as readily as a flat field - without a connector per vendor.
      */
     static JsonNode resolveTree(JsonNode node, JsonNode context) {
+        return resolveTree(node, context, 0);
+    }
+
+    private static JsonNode resolveTree(JsonNode node, JsonNode context, int depth) {
+        // Deeply nested JSON is left untouched rather than recursed into, so a
+        // pathological template cannot overflow the stack.
+        if (depth > MAX_TREE_DEPTH) {
+            return node;
+        }
         if (node instanceof ObjectNode object) {
             for (String name : new java.util.ArrayList<>(object.propertyNames())) {
-                object.set(name, resolveTree(object.get(name), context));
+                object.set(name, resolveTree(object.get(name), context, depth + 1));
             }
             return object;
         }
         if (node instanceof ArrayNode array) {
             for (int i = 0; i < array.size(); i++) {
-                array.set(i, resolveTree(array.get(i), context));
+                array.set(i, resolveTree(array.get(i), context, depth + 1));
             }
             return array;
         }

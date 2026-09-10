@@ -351,11 +351,12 @@ describe("FolderContext stale-folder 404 cleanup", () => {
         </FolderProvider>
       </MemoryRouter>,
     );
-    await waitFor(() =>
+    await waitFor(() => {
       expect(screen.getByTestId("count").textContent).toBe(
         String(initial.length),
-      ),
-    );
+      );
+      expect(apiRef.current?.folderCount).toBe(initial.length);
+    });
     if (!apiRef.current) throw new Error("ApiProbe never reported ready");
     return apiRef as { current: ProbeApi };
   }
@@ -523,9 +524,10 @@ describe("FolderContext disk subfolder resolution", () => {
         </FolderProvider>
       </MemoryRouter>,
     );
-    await waitFor(() =>
-      expect(screen.getByTestId("count").textContent).toBe("1"),
-    );
+    await waitFor(() => {
+      expect(screen.getByTestId("count").textContent).toBe("1");
+      expect(apiRef.current?.knows(mountRecord().id)).toBe(true);
+    });
     if (!apiRef.current) throw new Error("DiskProbe never reported ready");
     return apiRef as { current: DiskProbeApi };
   }

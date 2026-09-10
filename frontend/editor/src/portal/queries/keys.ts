@@ -13,6 +13,7 @@ export const qk = {
   // Tier-independent
   policiesList: () => ["portal", "policies", "list"] as const,
   policyRuns: () => ["portal", "policies", "runs"] as const,
+  integrations: () => ["portal", "integrations"] as const,
   sources: () => ["portal", "sources"] as const,
   pipelines: () => ["portal", "pipelines"] as const,
   policyPermissions: () => ["portal", "policies", "permissions"] as const,

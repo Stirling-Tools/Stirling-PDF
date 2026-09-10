@@ -120,6 +120,7 @@ public class ExternalApiCallController {
             @RequestParam(value = "headers", required = false) String headers,
             @RequestParam(value = "includeContext", defaultValue = "false") boolean includeContext,
             @RequestParam(value = "includeFile", defaultValue = "true") boolean includeFile,
+            @RequestParam(value = "maxRequestBytes", defaultValue = "0") long maxRequestBytes,
             @RequestHeader(value = InternalApiClient.POLICY_NAME_HEADER, required = false)
                     String policyName,
             @RequestHeader(value = AutomationRunContext.RUN_ID_HEADER, required = false)
@@ -142,6 +143,17 @@ public class ExternalApiCallController {
                         ? MediaType.APPLICATION_OCTET_STREAM_VALUE
                         : fileInput.getContentType();
         byte[] content = fileInput.getBytes();
+
+        // Some destinations cap uploads (Discord's varies with Nitro tier), so the operator
+        // sets the limit; we fail clearly here rather than on an opaque vendor rejection.
+        if (maxRequestBytes > 0 && content.length > maxRequestBytes) {
+            throw new IllegalArgumentException(
+                    "The document is "
+                            + megabytes(content.length)
+                            + " MB, over the "
+                            + megabytes(maxRequestBytes)
+                            + " MB limit set for this step.");
+        }
 
         ObjectNode context =
                 DocumentContext.build(fileInput, content, policyName, runId, objectMapper);
@@ -548,6 +560,11 @@ public class ExternalApiCallController {
         return oneLine.length() <= MAX_REPORT_BODY_CHARS
                 ? oneLine
                 : oneLine.substring(0, MAX_REPORT_BODY_CHARS) + "…";
+    }
+
+    /** Bytes as MB to one decimal, for a size message an operator reads in the units they set. */
+    private static String megabytes(long bytes) {
+        return String.format(Locale.ROOT, "%.1f", bytes / (1024.0 * 1024.0));
     }
 
     private static String safeFileName(String originalFilename) {
