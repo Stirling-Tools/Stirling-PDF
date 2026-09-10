@@ -17,6 +17,8 @@ import PushPinIcon from "@mui/icons-material/PushPin";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import GppBadOutlinedIcon from "@mui/icons-material/GppBadOutlined";
+import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import {
   draggable,
   dropTargetForElements,
@@ -48,6 +50,7 @@ import ShareFileModal from "@app/components/shared/ShareFileModal";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileThumbnail } from "@app/hooks/useFileThumbnail";
+import { usePolicyRecovery } from "@app/hooks/usePolicyRecovery";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 import { truncateCenter } from "@app/utils/textUtils";
@@ -307,6 +310,11 @@ const FileEditorThumbnail = ({
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const policyEnforcing = policies.some((p) => p.enforcing);
+  // A required policy failed on this file: it's blocked (unusable) until the
+  // policy re-runs clean or the file is closed. Gates the same actions enforcing
+  // does, but offers recovery instead of a "please wait".
+  const policyBlocked = policies.some((p) => p.blocked);
+  const { reRunPolicy } = usePolicyRecovery();
   // The overlay swallows clicks, so a run that never settles would leave the card
   // unusable with no way out. Dismissible, like the viewer's; resets per run.
   const [enforcingDismissed, setEnforcingDismissed] = useState(false);
@@ -337,6 +345,31 @@ const FileEditorThumbnail = ({
         <Loader size="xs" />
       </Stack>
     );
+    const blockedTooltip = (action: string): React.ReactNode => (
+      <Stack gap={4} py={2} w={200}>
+        <Group gap={6} wrap="nowrap">
+          <GppBadOutlinedIcon
+            style={{ fontSize: 13, color: "var(--c-danger)" }}
+          />
+          <Text size="xs" fw={600}>
+            {t(
+              "policy.blockedAction",
+              "{{action}} blocked: a required policy failed. Re-run the policy or close the file.",
+              { action },
+            )}
+          </Text>
+        </Group>
+      </Stack>
+    );
+    // A blocked file gates the same actions as an enforcing one, but the file
+    // isn't going to unblock on its own - the tooltip points to recovery.
+    const gated = policyEnforcing || policyBlocked;
+    const gatedTooltip = (action: string): React.ReactNode =>
+      policyBlocked
+        ? blockedTooltip(action)
+        : policyEnforcing
+          ? enforcingTooltip(action)
+          : undefined;
     return [
       {
         id: "view",
@@ -381,10 +414,8 @@ const FileEditorThumbnail = ({
         id: "download",
         icon: <DownloadOutlinedIcon style={{ fontSize: 20 }} />,
         label: terminology.download,
-        disabled: policyEnforcing,
-        tooltip: policyEnforcing
-          ? enforcingTooltip(terminology.download)
-          : undefined,
+        disabled: gated,
+        tooltip: gatedTooltip(terminology.download),
         onClick: (e) => {
           e.stopPropagation();
           onDownloadFile(file.id);
@@ -396,10 +427,8 @@ const FileEditorThumbnail = ({
               id: "upload",
               icon: <CloudUploadIcon style={{ fontSize: 20 }} />,
               label: uploadLabel,
-              disabled: policyEnforcing,
-              tooltip: policyEnforcing
-                ? enforcingTooltip(uploadLabel)
-                : undefined,
+              disabled: gated,
+              tooltip: gatedTooltip(uploadLabel),
               onClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
                 setShowUploadModal(true);
@@ -413,10 +442,8 @@ const FileEditorThumbnail = ({
               id: "share",
               icon: <LinkIcon style={{ fontSize: 20 }} />,
               label: t("fileManager.share", "Share"),
-              disabled: policyEnforcing,
-              tooltip: policyEnforcing
-                ? enforcingTooltip(t("fileManager.share", "Share"))
-                : undefined,
+              disabled: gated,
+              tooltip: gatedTooltip(t("fileManager.share", "Share")),
               onClick: (e: React.MouseEvent) => {
                 e.stopPropagation();
                 setShowShareModal(true);
@@ -453,6 +480,16 @@ const FileEditorThumbnail = ({
         hidden: (file.versionNumber ?? 1) <= 1,
       },
       {
+        id: "rerunPolicy",
+        icon: <RestartAltIcon style={{ fontSize: 20 }} />,
+        label: t("policy.blockedReRun", "Re-run policy"),
+        onClick: (e) => {
+          e.stopPropagation();
+          reRunPolicy(file.id);
+        },
+        hidden: !policyBlocked,
+      },
+      {
         id: "close",
         icon: <CloseIcon style={{ fontSize: 20 }} />,
         label: t("close", "Close"),
@@ -480,6 +517,8 @@ const FileEditorThumbnail = ({
     onUnzipFile,
     handleCloseWithConfirmation,
     policyEnforcing,
+    policyBlocked,
+    reRunPolicy,
     canUpload,
     canShare,
     isUploaded,

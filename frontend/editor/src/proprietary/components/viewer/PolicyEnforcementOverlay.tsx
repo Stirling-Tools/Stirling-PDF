@@ -8,13 +8,17 @@ import {
 } from "@app/components/policies/policyRunStore";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
 import { PolicyEnforcingOverlay } from "@app/components/shared/PolicyEnforcingOverlay";
+import { PolicyBlockedOverlay } from "@app/components/shared/PolicyBlockedOverlay";
+import type { FileId } from "@app/types/file";
 import "@app/components/shared/PolicyBadges.css";
 
 interface Props {
   runs: PolicyRunRecord[];
+  /** The viewed file, when a required policy has blocked it (ui.policyBlocks). */
+  blockedFileId?: FileId;
 }
 
-export function PolicyEnforcementOverlay({ runs }: Props) {
+export function PolicyEnforcementOverlay({ runs, blockedFileId }: Props) {
   const { t } = useTranslation();
   const [dismissed, setDismissed] = useState(false);
   const prevRunId = useRef<string | undefined>(undefined);
@@ -30,7 +34,12 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
     prevRunId.current = inFlight?.runId;
   }, [inFlight]);
 
-  if (!inFlight) return null;
+  // A blocked file with no run in flight shows the terminal recovery panel; once
+  // a re-run starts, the in-flight branch below takes over.
+  if (!inFlight)
+    return blockedFileId ? (
+      <PolicyBlockedOverlay fileId={blockedFileId} zIndex={1100} />
+    ) : null;
 
   const progress =
     inFlight.currentStep != null && inFlight.stepCount

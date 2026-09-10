@@ -132,10 +132,17 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
-  const { addFiles, updateStirlingFileStub, markPolicyBlocked } =
-    useFileManagement();
+  const {
+    addFiles,
+    updateStirlingFileStub,
+    markPolicyBlocked,
+    clearPolicyBlock,
+  } = useFileManagement();
   // Files blocked by a failed Policy: skip all further passes on them (any policy failure blocks).
   const policyBlocks = useFileSelector((s) => s.ui.policyBlocks);
+  // Read from the stable terminal callback (which has no reactive deps) to lift a block on re-run.
+  const policyBlocksRef = useRef(policyBlocks);
+  policyBlocksRef.current = policyBlocks;
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
@@ -236,13 +243,23 @@ export function usePolicyAutoRun(): void {
           markPolicyBlocked(finished.fileId as FileId, finished.policyKey);
         }
       }
+      // A blocked file's policy that now passes lifts its block (recovery re-run); the clean output
+      // replaces it. Only the blocking policy clears the block - another run leaves it standing.
+      if (
+        view.status === "COMPLETED" &&
+        finished &&
+        policyBlocksRef.current[finished.fileId as FileId] ===
+          finished.policyKey
+      ) {
+        clearPolicyBlock(finished.fileId as FileId);
+      }
       const code = view.errorCode;
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
       if (firedLimitModal.current.has(view.runId)) return;
       firedLimitModal.current.add(view.runId);
       dispatchPaygLimitReached(view.errorSubscribed ?? null);
     },
-    [scheduleQueueRetry, markPolicyBlocked],
+    [scheduleQueueRetry, markPolicyBlocked, clearPolicyBlock],
   );
 
   // Fire only the FIRST upload policy per file; the chaining effect below runs the rest
