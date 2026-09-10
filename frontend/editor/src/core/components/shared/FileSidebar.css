@@ -90,7 +90,8 @@
 /* Collapsed rail: the file tree isn't rendered, so hide its (empty) box and
    let the boxes stack at the top — controls, then the settings footer right
    after — instead of the files box stretching to fill. */
-.file-sidebar[data-collapsed="true"] .file-sidebar-controls {
+.file-sidebar[data-collapsed="true"][data-collapse-mode="rail"]
+  .file-sidebar-controls {
   padding: 0.25rem;
 }
 .file-sidebar[data-collapsed="true"] .file-sidebar-files-box {
@@ -106,6 +107,18 @@
   justify-content: center;
   padding-inline: 0;
   margin: 0;
+}
+
+/* Collapsed to nothing: no strip of icons left behind next to the quick nav
+   rail, which would read as a second one. The width still animates, so the
+   panel is hidden rather than unmounted — visibility takes its contents out of
+   the tab order and reaches the checklist slot, which floats out of the clip.
+   The native file input stays clickable from the rail regardless. */
+.file-sidebar[data-collapsed="true"][data-collapse-mode="hidden"] {
+  padding: 0;
+  border-inline-end: 0;
+  overflow: hidden;
+  visibility: hidden;
 }
 
 /* ---- Native file drag-and-drop ---- */
@@ -444,6 +457,11 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--c-text);
+  /* A longer translation truncates rather than wrapping the row onto two lines. */
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* Slim "Adding files… X/Y" progress row shown during a bulk drop's pre-scan,
@@ -480,12 +498,16 @@
   color: var(--c-text-subtle);
 }
 
-.file-sidebar-section-btn {
+/* Chained to the Mantine class to beat its inline `--ai-size` sizing (36px for
+   `md`): four controls that wide leave no room for the section label. */
+.file-sidebar-section-btn.mantine-ActionIcon-root {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 24px;
   height: 24px;
+  min-width: 24px;
+  min-height: 24px;
   border: none;
   background: transparent;
   border-radius: 4px;
@@ -499,12 +521,12 @@
     opacity 0.12s ease;
 }
 
-.file-sidebar-section-btn:focus-visible {
+.file-sidebar-section-btn.mantine-ActionIcon-root:focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: 1px;
 }
 
-.file-sidebar-section-btn:hover {
+.file-sidebar-section-btn.mantine-ActionIcon-root:hover {
   background-color: var(--c-hover);
   color: var(--c-text);
 }
@@ -519,8 +541,14 @@
   pointer-events: auto;
 }
 
+/* Whichever add control comes first takes the gap, so the pair stays together
+   at the end of the header row. */
+.file-sidebar-section-btn-drive,
 .file-sidebar-section-btn-add {
   margin-left: auto;
+}
+.file-sidebar-section-btn-drive + .file-sidebar-section-btn-add {
+  margin-left: 0;
 }
 
 /* ---- Sidebar content fade (for collapsed state) ---- */

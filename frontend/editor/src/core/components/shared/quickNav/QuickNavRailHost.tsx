@@ -101,12 +101,30 @@ export function QuickNavRailHost() {
   ];
 
   const within: QuickNavEntry[] = [
+    ...(!host?.hasOpenFromComputer
+      ? []
+      : [
+          {
+            id: "openFromComputer",
+            label: t("fileSidebar.openFromComputer", "Open from computer"),
+            icon: (
+              <LocalIcon
+                icon="upload-file-outline-rounded"
+                width={SIZE}
+                height={SIZE}
+              />
+            ),
+            testId: "quicknav-open-from-computer",
+            onClick: () => host?.actions.current?.openFromComputer?.(),
+          },
+        ]),
     {
       id: "files",
       label: t("fileSidebar.myFiles", "File library"),
       icon: (
         <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
       ),
+      testId: "my-files-button",
       onClick: () => go("/files"),
     },
     {

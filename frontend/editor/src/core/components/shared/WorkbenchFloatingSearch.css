@@ -1,6 +1,7 @@
 /* Unpainted floating search for the empty workbench. Height + top margin match
    the WorkbenchBar's band so opening a file swaps it in without a shift. */
 .workbench-floating-search {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -8,6 +9,15 @@
   margin-top: var(--nav-gutter);
   padding: 0 1rem;
   flex-shrink: 0;
+}
+
+/* Out of the flow so the search stays centred on the band, not pushed off it. */
+.workbench-floating-search-lead {
+  position: absolute;
+  inset-inline-start: 0.75rem;
+  inset-block: 0;
+  display: flex;
+  align-items: center;
 }
 
 .workbench-floating-search .super-search {
