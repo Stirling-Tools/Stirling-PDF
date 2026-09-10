@@ -65,6 +65,9 @@ type AnnotationDefaults =
       borderWidth: number;
       strokeWidth: number;
       lineWidth: number;
+      // Cloud is a Polygon with a scalloped /BE border effect, not its own
+      // PDF annotation subtype — see the "cloud" tool builder below.
+      cloudyBorderIntensity?: number;
       customData?: Record<string, unknown>;
     }
   | {
@@ -197,6 +200,17 @@ const buildInkDefaults = (
     lineWidth: options?.thickness ?? (opacityOverride ? 6 : 2),
     ...withCustomData(options),
   };
+};
+
+// "cloud" isn't registered as its own interaction tool in the EmbedPDF
+// annotation plugin — it's a Polygon drawn with a scalloped /BE border
+// effect (cloudyBorderIntensity), so it reuses the polygon tool's pointer
+// handler at the library level. Our own AnnotationToolId keeps "cloud" as a
+// distinct id (for UI state and for customData.toolId on the created
+// annotation) — only the actual activateTool/setToolDefaults calls need to
+// target the library's "polygon" id.
+const LIBRARY_TOOL_ID: Partial<Record<AnnotationToolId, AnnotationToolId>> = {
+  cloud: "polygon",
 };
 
 const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
@@ -341,6 +355,19 @@ const TOOL_DEFAULT_BUILDERS: Record<AnnotationToolId, ToolDefaultsBuilder> = {
     lineWidth: options?.borderWidth ?? 1,
     ...withCustomData(options),
   }),
+  cloud: (options) => ({
+    type: PdfAnnotationSubtype.POLYGON,
+    color: options?.color ?? DEFAULTS.shapeFill,
+    strokeColor: options?.strokeColor ?? DEFAULTS.shapeStroke,
+    opacity: options?.opacity ?? DEFAULTS.shapeOpacity,
+    fillOpacity: options?.fillOpacity ?? DEFAULTS.shapeOpacity,
+    strokeOpacity: options?.strokeOpacity ?? DEFAULTS.shapeOpacity,
+    borderWidth: options?.borderWidth ?? 1,
+    strokeWidth: options?.borderWidth ?? 1,
+    lineWidth: options?.borderWidth ?? 1,
+    cloudyBorderIntensity: options?.cloudyBorderIntensity ?? 2,
+    ...withCustomData(options),
+  }),
   stamp: buildStampDefaults,
   signatureStamp: buildStampDefaults,
   signatureInk: (options) => buildInkDefaults(options),
@@ -384,15 +411,16 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
         if (!api?.setActiveTool) return;
 
         const defaults = buildAnnotationDefaults(toolId, options);
+        const libraryToolId = LIBRARY_TOOL_ID[toolId] ?? toolId;
 
         // Reset tool first, then activate (like SignatureAPIBridge does)
         api.setActiveTool(null);
-        api.setActiveTool(toolId === "select" ? null : toolId);
+        api.setActiveTool(libraryToolId === "select" ? null : libraryToolId);
 
         // Verify tool was activated before setting defaults (like SignatureAPIBridge does)
         const activeTool = api.getActiveTool?.();
-        if (activeTool && activeTool.id === toolId && defaults) {
-          api.setToolDefaults?.(toolId, defaults);
+        if (activeTool && activeTool.id === libraryToolId && defaults) {
+          api.setToolDefaults?.(libraryToolId, defaults);
         }
       },
       [annotationApi, buildAnnotationDefaults],
@@ -417,7 +445,7 @@ export const AnnotationAPIBridge = forwardRef<AnnotationAPI>(
             | AnnotationApiSurface
             | undefined;
           if (defaults && api?.setToolDefaults) {
-            api.setToolDefaults(toolId, defaults);
+            api.setToolDefaults(LIBRARY_TOOL_ID[toolId] ?? toolId, defaults);
           }
         },
         getSelectedAnnotation: () => {

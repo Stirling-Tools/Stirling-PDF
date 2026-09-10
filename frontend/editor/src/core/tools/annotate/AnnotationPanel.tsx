@@ -281,6 +281,11 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
       label: t("annotation.polygon", "Polygon"),
       icon: "change-history",
     },
+    {
+      id: "cloud",
+      label: t("annotation.cloud", "Cloud"),
+      icon: "cloud-outline",
+    },
   ];
 
   const commentTools: { id: AnnotationToolId; label: string; icon: string }[] =
@@ -503,7 +508,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             <Group gap="md">
               <Stack gap={4} align="center">
                 <Text size="xs" c="dimmed">
-                  {["square", "circle", "polygon"].includes(activeTool)
+                  {["square", "circle", "polygon", "cloud"].includes(activeTool)
                     ? t("annotation.strokeColor", "Stroke Color")
                     : t("annotation.color", "Color")}
                 </Text>
@@ -525,6 +530,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                                     "circle",
                                     "line",
                                     "polygon",
+                                    "cloud",
                                   ].includes(activeTool)
                                 ? shapeStrokeColor
                                 : textColor
@@ -548,6 +554,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                                       "circle",
                                       "line",
                                       "polygon",
+                                      "cloud",
                                     ].includes(activeTool)
                                   ? "shapeStroke"
                                   : "text";
@@ -556,7 +563,9 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
                   }}
                 />
               </Stack>
-              {["square", "circle", "polygon"].includes(activeTool) && (
+              {["square", "circle", "polygon", "cloud"].includes(
+                activeTool,
+              ) && (
                 <Stack gap={4} align="center">
                   <Text size="xs" c="dimmed">
                     {t("annotation.fillColor", "Fill Color")}
@@ -785,7 +794,9 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
               </Box>
             )}
 
-            {["square", "circle", "line", "polygon"].includes(activeTool) && (
+            {["square", "circle", "line", "polygon", "cloud"].includes(
+              activeTool,
+            ) && (
               <>
                 <Box>
                   <Text size="xs" c="dimmed" mb={4}>
@@ -958,6 +969,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             "square",
             "circle",
             "polygon",
+            "cloud",
           ] as AnnotationToolId[];
           if (shapeToolsList.includes(activeTool)) {
             annotationApiRef?.current?.setAnnotationStyle?.(
@@ -971,6 +983,7 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
             "square",
             "circle",
             "polygon",
+            "cloud",
           ] as AnnotationToolId[];
           if (fillShapeTools.includes(activeTool)) {
             annotationApiRef?.current?.setAnnotationStyle?.(
@@ -1129,11 +1142,13 @@ export function AnnotationPanel(props: AnnotationPanelProps) {
           "lineArrow",
           "polyline",
           "polygon",
+          "cloud",
         ] as AnnotationToolId[];
         const fillShapeTools = [
           "square",
           "circle",
           "polygon",
+          "cloud",
         ] as AnnotationToolId[];
 
         if (colorPickerTarget === "shapeStroke") {

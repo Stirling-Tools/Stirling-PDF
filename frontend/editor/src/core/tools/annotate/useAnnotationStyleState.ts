@@ -173,6 +173,7 @@ export const useAnnotationStyleState = (
         case "square":
         case "circle":
         case "polygon":
+        case "cloud":
           return {
             color: shapeFillColor,
             strokeColor: shapeStrokeColor,

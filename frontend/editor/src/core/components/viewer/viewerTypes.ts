@@ -136,6 +136,7 @@ export type AnnotationToolId =
   | "lineArrow"
   | "polyline"
   | "polygon"
+  | "cloud"
   | "stamp"
   | "signatureStamp"
   | "signatureInk";
@@ -194,6 +195,9 @@ export interface AnnotationToolOptions {
   fillOpacity?: number;
   thickness?: number;
   borderWidth?: number;
+  /** Square/Circle/Polygon only — draws the /BE border effect as a scalloped
+   * "cloud" edge instead of a straight one. Higher = bigger scallops. */
+  cloudyBorderIntensity?: number;
   fontSize?: number;
   fontFamily?: string;
   textAlign?: number; // 0 = Left, 1 = Center, 2 = Right
