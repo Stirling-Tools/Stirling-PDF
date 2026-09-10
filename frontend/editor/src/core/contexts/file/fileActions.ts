@@ -41,6 +41,7 @@ import {
 import { isPristineLocalPassthrough } from "@app/services/pruneMissingRecentFiles";
 import { getDiskFileState } from "@app/services/desktopFileLink";
 import { requestDiskConflictChoice } from "@app/services/diskConflictPrompt";
+import { hasUnsavedWork } from "@app/services/unsavedWork";
 const DEBUG = process.env.NODE_ENV === "development";
 /** How long a file may sit unhydrated before the console says so. Reporting only:
  *  the read is never abandoned, because large files legitimately take time. */
@@ -872,10 +873,7 @@ async function resyncRecordFromDisk(
   lifecycleManager: FileLifecycleManager,
 ): Promise<StirlingFileStub | null> {
   const fileId = stub.id;
-  const outcome = await syncLinkedFileFromDisk(
-    stub,
-    stateRef.current.ui.hasUnsavedChanges,
-  );
+  const outcome = await syncLinkedFileFromDisk(stub, hasUnsavedWork());
 
   if (outcome.status === "missing") {
     // Never delete what is on screen: cutting the link leaves the document
@@ -904,6 +902,10 @@ async function resyncRecordFromDisk(
       stateRef,
     );
   }
+
+  // Nothing to reconcile: the change on disk is the child that superseded this
+  // version, and its bytes are not ours to replace.
+  if (outcome.status === "superseded") return null;
 
   if (outcome.status === "too-large") {
     notifyDiskTooLarge(
@@ -938,7 +940,7 @@ async function resyncRecordFromDisk(
     if (
       !latest ||
       latest.isDirty ||
-      stateRef.current.ui.hasUnsavedChanges ||
+      hasUnsavedWork() ||
       latest.localFilePath !== stub.localFilePath
     ) {
       return null;
@@ -1121,10 +1123,7 @@ export async function addStirlingFileStubs(
         );
         // A desktop file only caches disk, so reconcile BEFORE serving it, or
         // external edits stay invisible and deleted files still open.
-        const diskSync = await syncLinkedFileFromDisk(
-          stub,
-          stateRef.current.ui.hasUnsavedChanges,
-        );
+        const diskSync = await syncLinkedFileFromDisk(stub, hasUnsavedWork());
         // Only an unedited v1 passthrough holds nothing the disk file did not;
         // anything else is detached below, never deleted.
         const lostPath =
@@ -1177,8 +1176,7 @@ export async function addStirlingFileStubs(
         // An edit committed while we were reading disk must not be discarded by
         // a decision taken before it existed.
         const stillClean =
-          !stateRef.current.files.byId[fileId]?.isDirty &&
-          !stateRef.current.ui.hasUnsavedChanges;
+          !stateRef.current.files.byId[fileId]?.isDirty && !hasUnsavedWork();
 
         // Workbench selectors only see the file once something dispatches; must
         // follow the filesRef write or the update is dropped.

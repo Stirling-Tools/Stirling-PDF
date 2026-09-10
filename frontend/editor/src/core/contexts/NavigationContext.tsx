@@ -9,6 +9,7 @@ import React, {
 import { WorkbenchType, getDefaultWorkbench } from "@app/types/workbench";
 import { ToolId, isValidToolId } from "@app/types/toolId";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { registerUnsavedWorkChecker } from "@app/services/unsavedWork";
 
 /**
  * NavigationContext - Complete navigation management system
@@ -275,6 +276,19 @@ export const NavigationProvider: React.FC<{
   const setHasUnsavedChanges = useCallback((hasChanges: boolean) => {
     dispatch({ type: "SET_UNSAVED_CHANGES", payload: { hasChanges } });
   }, []);
+
+  // Same answer the navigation guard uses, published where the disk reconciliation
+  // can reach it: without this an external edit replaces the bytes under an open
+  // page editor, annotation or redaction session with no conflict prompt.
+  React.useEffect(
+    () =>
+      registerUnsavedWorkChecker(
+        () =>
+          unsavedChangesCheckerRef.current?.() === true ||
+          state.hasUnsavedChanges,
+      ),
+    [state.hasUnsavedChanges],
+  );
 
   const registerUnsavedChangesChecker = useCallback(
     (checker: () => boolean) => {

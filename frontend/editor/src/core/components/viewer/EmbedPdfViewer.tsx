@@ -33,7 +33,11 @@ import type {
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import {
+  isStirlingFile,
+  getFormFillFileId,
+  type StirlingFile,
+} from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
@@ -66,6 +70,13 @@ export interface EmbedPdfViewerProps {
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
 }
+
+/** Cache identity of a document, not of the file holding it: a disk reload
+ *  replaces the bytes under an unchanged fileId, and an outline cached under the
+ *  id alone would then describe a document nobody is looking at. Preload keys are
+ *  matched against this, so both call sites must derive it the same way. */
+const documentCacheKey = (file: StirlingFile): string =>
+  `${file.fileId}|${file.quickKey}`;
 
 const EmbedPdfViewerContent = ({
   sidebarsVisible: _sidebarsVisible,
@@ -282,16 +293,19 @@ const EmbedPdfViewerContent = ({
     return null;
   }, [previewFile, activeFiles, activeFileId]);
 
-  // Namespaced identifier for form-fill state; keep this aligned with FormFill.
+  // Identity of the bytes: the viewer's mount key, its blob URL and form-fill
+  // state all have to turn over when a disk reload swaps the file under an
+  // unchanged fileId. Keep aligned with FormFill.
   const currentFileId = React.useMemo(
     () => getFormFillFileId(currentFile),
     [currentFile],
   );
 
-  // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
+  // The workbench record to act on. Bare id, not the content key above: the
+  // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
-  const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
+  const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
@@ -315,7 +329,7 @@ const EmbedPdfViewerContent = ({
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
-      return currentFile.fileId;
+      return documentCacheKey(currentFile);
     }
 
     if (previewFile) {
@@ -342,12 +356,9 @@ const EmbedPdfViewerContent = ({
     }
 
     return activeFiles
-      .map((file) => {
-        if (isStirlingFile(file)) {
-          return file.fileId;
-        }
-        return undefined;
-      })
+      .map((file) =>
+        isStirlingFile(file) ? documentCacheKey(file) : undefined,
+      )
       .filter(Boolean) as string[];
   }, [activeFiles, previewFile, bookmarkCacheKey]);
 

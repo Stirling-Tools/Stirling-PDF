@@ -16,6 +16,9 @@ import { fileStorage } from "@app/services/fileStorage";
 export type DiskSyncOutcome =
   /** Not a desktop-linked file: the stored copy is the only truth. */
   | { status: "not-linked" }
+  /** A superseded version. It inherited the path but no longer represents it,
+   *  and its stored bytes are the only copy of that version. */
+  | { status: "superseded" }
   | { status: "missing" }
   | { status: "unavailable"; reason: DiskUnavailableReason }
   /** Disk matches what we last read; the stored copy is current. */
@@ -165,6 +168,14 @@ export async function syncLinkedFileFromDisk(
     return { status: "unavailable", reason: state.reason };
   }
   if (!hasDiskChanged(stub, state)) return { status: "unchanged" };
+  // Deliberately below the missing and unavailable checks: a superseded version
+  // still wants its link state reported, it just must never be replaced.
+  // createChildStub copies the parent's path onto the child, so every version in
+  // a chain claims the same file while only the leaf still answers for it. The
+  // rest hold the sole copy of their bytes against a baseline that predates the
+  // child's write, so "changed" here means the child was saved - and reloading
+  // would overwrite that version for good.
+  if (stub.isLeaf === false) return { status: "superseded" };
   if (stub.isDirty || hasUnsavedWork) return { status: "conflict" };
   if (state.size > AUTO_RELOAD_MAX_BYTES) {
     return { status: "too-large", size: state.size };

@@ -213,6 +213,40 @@ describe("syncLinkedFileFromDisk", () => {
     expect(result.status).toBe("conflict");
   });
 
+  it("keeps an open editor's edits, which no stub flag records", async () => {
+    // A page editor, annotation or redaction session is dirty long before any
+    // version exists to set isDirty, so disk must not simply win.
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
+    const result = await syncLinkedFileFromDisk(stub({ isDirty: false }), true);
+    expect(result.status).toBe("conflict");
+  });
+
+  it("never replaces a superseded version from disk", async () => {
+    // Its child was saved over the path, so disk reads as changed while these
+    // are the only bytes that version has.
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
+    const result = await syncLinkedFileFromDisk(
+      stub({ isLeaf: false, versionNumber: 1 }),
+    );
+    expect(result.status).toBe("superseded");
+  });
+
+  it("still reloads the leaf that does answer for the path", async () => {
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
+    const result = await syncLinkedFileFromDisk(
+      stub({ isLeaf: true, versionNumber: 2 }),
+    );
+    expect(result.status).toBe("updated");
+  });
+
+  it("treats a record predating the leaf flag as the live one", async () => {
+    diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
+    const result = await syncLinkedFileFromDisk(
+      stub({ isLeaf: undefined as unknown as boolean }),
+    );
+    expect(result.status).toBe("updated");
+  });
+
   it("keeps the stored copy when the disk file cannot be read", async () => {
     diskState.state = { availability: "present", size: 3, modifiedMs: 9000 };
     diskState.bytes = null;
