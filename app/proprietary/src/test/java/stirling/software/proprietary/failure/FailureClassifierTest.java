@@ -79,10 +79,27 @@ class FailureClassifierTest {
 
         @Test
         void withAnUnclaimedErrorCodeFallsBackToUnknown() {
-            // E005 (no pages) is a real code that no kind has adopted yet. It must land in
-            // UNKNOWN rather than being force-fitted to the nearest kind.
-            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E005")))
+            // E031 (a step failed on the file, with nothing more specific to say) is a real code
+            // that no kind has adopted. It must land in UNKNOWN rather than being force-fitted to
+            // the nearest kind.
+            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E031")))
                     .isEqualTo(FailureKind.UNKNOWN);
+        }
+
+        @Test
+        void withACodeForAFileNoOneCanFixClassifiesToItsKind() {
+            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E006")))
+                    .isEqualTo(FailureKind.INPUT_WRONG_TYPE);
+            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E005")))
+                    .isEqualTo(FailureKind.INPUT_EMPTY);
+            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E010")))
+                    .isEqualTo(FailureKind.INPUT_UNREADABLE);
+            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E030")))
+                    .isEqualTo(FailureKind.INPUT_UNAVAILABLE);
+            assertThat(classifier.classify(problemDetail(HttpStatus.SERVICE_UNAVAILABLE, "E063")))
+                    .isEqualTo(FailureKind.TOOL_NOT_INSTALLED);
+            assertThat(classifier.classify(problemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "E054")))
+                    .isEqualTo(FailureKind.STEP_CANNOT_RENDER_PAGE);
         }
 
         @Test

@@ -493,13 +493,25 @@ describe("stashMatchesKind", () => {
   });
 
   it("gives an unclaimed code to UNKNOWN, and a claimed one never", async () => {
-    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E005" }))).toBe(
+    // E031 is the step's catch-all, left unclaimed because nothing more specific is known.
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E031" }))).toBe(
       true,
     );
     expect(stashMatchesKind("UNKNOWN", payload({ errorCode: null }))).toBe(
       true,
     );
     expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E001" }))).toBe(
+      false,
+    );
+  });
+
+  it("matches a kind with no resolution, so its stash is not offered to UNKNOWN", async () => {
+    // These kinds run nothing, but the stash still decides which row a file's failure belongs
+    // to, so a wrong-type failure must not read as the unrecognised one.
+    expect(
+      stashMatchesKind("INPUT_WRONG_TYPE", payload({ errorCode: "E061" })),
+    ).toBe(true);
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E061" }))).toBe(
       false,
     );
   });
