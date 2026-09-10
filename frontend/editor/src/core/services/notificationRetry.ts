@@ -31,11 +31,14 @@ export interface RetryPayload {
 }
 
 /**
- * Mirrors the codes each {@code FailureKind} claims, server-side. Pinned there by
- * `FailureKindTest#everyCodeAKindClaimsIsPinned`, which fails if a kind's codes change without
- * this moving with them.
+ * Mirrors the codes each `FailureKind` claims, server-side. Both copies are asserted against
+ * `testing/failure-kind-codes.json`, here and in `FailureKindTest`, so a code added to one side
+ * alone fails on the other.
+ *
+ * Exported for that conformance test: nothing else should read it, since a kind the server sends
+ * is an open string and `stashMatchesKind` already answers the only question worth asking.
  */
-const KIND_ERROR_CODES: Record<string, readonly string[]> = {
+export const KIND_ERROR_CODES: Record<string, readonly string[]> = {
   INPUT_PASSWORD_PROTECTED: ["E004"],
   INPUT_CORRUPTED: ["E001", "E002", "E003"],
 };

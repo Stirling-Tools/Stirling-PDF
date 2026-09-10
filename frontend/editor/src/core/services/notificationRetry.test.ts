@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "fake-indexeddb/auto";
 import { indexedDBManager } from "@app/services/indexedDBManager";
@@ -21,6 +24,7 @@ vi.mock("@app/services/apiClient", () => ({
 }));
 
 const {
+  KIND_ERROR_CODES,
   stashRetryPayload,
   clearRetryPayload,
   loadRetryPayload,
@@ -407,6 +411,35 @@ describe("unlockLocalDocument", () => {
 });
 
 /** The stash is per file, but a file can carry only one; these say which row may claim it. */
+/** The codes each server-side kind claims, which both sides assert against. */
+function sharedFixtureCodes(): Record<string, string[]> {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const fixture = resolve(
+    here,
+    "../../../../../testing/failure-kind-codes.json",
+  );
+  return JSON.parse(readFileSync(fixture, "utf8")).kinds;
+}
+
+describe("the mirrored error codes", () => {
+  it("claim exactly what the server claims", () => {
+    // A Java test cannot read this file, so the shared fixture is the tie between them: adding
+    // a code to the server without adding it here would match a stash to the wrong row.
+    expect(KIND_ERROR_CODES).toEqual(sharedFixtureCodes());
+  });
+
+  it("route every fixture code to its kind, and away from UNKNOWN", () => {
+    // The equality above compares the table; this proves the lookup built from it agrees, so a
+    // table that is right but read wrongly still fails.
+    for (const [kindId, codes] of Object.entries(sharedFixtureCodes())) {
+      for (const errorCode of codes) {
+        expect(stashMatchesKind(kindId, payload({ errorCode }))).toBe(true);
+        expect(stashMatchesKind("UNKNOWN", payload({ errorCode }))).toBe(false);
+      }
+    }
+  });
+});
+
 describe("stashMatchesKind", () => {
   it("matches a kind against every code it claims, not just the first", async () => {
     // E001 and E002 are both INPUT_CORRUPTED: a merge reports the second, a single load the first.

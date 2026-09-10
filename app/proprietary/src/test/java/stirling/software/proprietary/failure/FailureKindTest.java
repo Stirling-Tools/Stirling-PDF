@@ -15,7 +15,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,12 +30,28 @@ import org.junit.jupiter.params.provider.EnumSource;
 
 import stirling.software.common.util.ExceptionUtils;
 
+import tools.jackson.core.JacksonException;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
+
 /**
  * Tests for {@link FailureKind}. Mostly invariants over the whole enum rather than assertions about
  * individual members, so a kind added later cannot be malformed in a way that only shows up as a
  * button that fails at runtime.
  */
 class FailureKindTest {
+
+    /** Located by walking up, so a test does not depend on the directory Gradle runs it in. */
+    private static Path repoFile(String relative) {
+        for (Path dir = Path.of("").toAbsolutePath(); dir != null; dir = dir.getParent()) {
+            Path candidate = dir.resolve(relative);
+            if (Files.isRegularFile(candidate)) {
+                return candidate;
+            }
+        }
+        throw new IllegalStateException(
+                "No " + relative + " above " + Path.of("").toAbsolutePath());
+    }
 
     /** In full, so a declaration pairing the right action with the wrong audience cannot pass. */
     private static FailureKind.OfferedAction offered(
@@ -206,21 +224,13 @@ class FailureKindTest {
         }
 
         private static List<String> readTranslations() {
-            // Located by walking up, so the test does not depend on the directory Gradle runs it
-            // in.
-            Path relative = Path.of("frontend/editor/public/locales/en-US/translation.toml");
-            for (Path dir = Path.of("").toAbsolutePath(); dir != null; dir = dir.getParent()) {
-                Path candidate = dir.resolve(relative);
-                if (Files.isRegularFile(candidate)) {
-                    try {
-                        return Files.readAllLines(candidate, StandardCharsets.UTF_8);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
-                    }
-                }
+            try {
+                return Files.readAllLines(
+                        repoFile("frontend/editor/public/locales/en-US/translation.toml"),
+                        StandardCharsets.UTF_8);
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-            throw new IllegalStateException(
-                    "No " + relative + " above " + Path.of("").toAbsolutePath());
         }
     }
 
@@ -284,15 +294,49 @@ class FailureKindTest {
         }
 
         @Test
-        void everyCodeAKindClaimsIsPinned() {
+        void everyCodeAKindClaimsMatchesTheSharedFixture() {
             // The bell mirrors these in KIND_ERROR_CODES (notificationRetry.ts) to tell one file's
-            // stashed failure from another's. Adding a code here without adding it there makes a
-            // retry match the wrong incident, so this fails until both move together.
-            assertThat(FailureKind.INPUT_PASSWORD_PROTECTED.getErrorCodes())
-                    .containsExactly("E004");
-            assertThat(FailureKind.INPUT_CORRUPTED.getErrorCodes())
-                    .containsExactly("E001", "E002", "E003");
-            assertThat(FailureKind.UNKNOWN.getErrorCodes()).isEmpty();
+            // stashed failure from another's, and a Java test cannot read a TypeScript file. Both
+            // sides assert against testing/failure-kind-codes.json instead, so a code added to one
+            // and not the other fails on whichever side was not updated.
+            assertThat(claimedErrorCodes()).isEqualTo(sharedFixtureCodes());
+        }
+
+        /** Kinds claiming nothing are left out, matching what the fixture records. */
+        private static Map<String, List<String>> claimedErrorCodes() {
+            return Stream.of(FailureKind.values())
+                    .filter(kind -> !kind.getErrorCodes().isEmpty())
+                    .collect(
+                            Collectors.toMap(
+                                    FailureKind::getId,
+                                    FailureKind::getErrorCodes,
+                                    (first, second) -> first,
+                                    LinkedHashMap::new));
+        }
+
+        private static Map<String, List<String>> sharedFixtureCodes() {
+            JsonNode kinds;
+            try {
+                kinds =
+                        JsonMapper.builder()
+                                .build()
+                                .readTree(repoFile("testing/failure-kind-codes.json").toFile())
+                                .get("kinds");
+            } catch (JacksonException e) {
+                throw new IllegalStateException("testing/failure-kind-codes.json is not JSON", e);
+            }
+
+            Map<String, List<String>> codes = new LinkedHashMap<>();
+            kinds.propertyStream()
+                    .forEach(
+                            entry ->
+                                    codes.put(
+                                            entry.getKey(),
+                                            entry.getValue()
+                                                    .valueStream()
+                                                    .map(JsonNode::asString)
+                                                    .toList()));
+            return codes;
         }
 
         @Test

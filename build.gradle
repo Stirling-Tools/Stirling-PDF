@@ -305,6 +305,14 @@ subprojects {
         systemProperty 'java.awt.headless', 'true'
         systemProperty 'apple.awt.UIElement', 'true'
 
+        // Conformance fixtures a test reads by walking up to the repo root. Without these the
+        // task is up-to-date when only a fixture changed, so a conformance failure is reported
+        // on the next unrelated Java edit instead of on the edit that caused it.
+        inputs.files(
+            rootProject.fileTree('testing') { include '*.json' },
+            rootProject.file('frontend/editor/public/locales/en-US/translation.toml')
+        ).withPropertyName('sharedConformanceFixtures').optional()
+
         testLogging {
             events "skipped", "failed"
             showExceptions = true

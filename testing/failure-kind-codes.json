@@ -1,0 +1,13 @@
+{
+  "$comment": [
+    "The ErrorCodes each FailureKind claims. Read by Java (FailureKindTest) and the frontend",
+    "(notificationRetry.test.ts) against their own copies, which must agree.",
+    "The bell matches a file's one stashed failure to a row by these codes, so a list that drifts",
+    "offers the wrong retry: a repair for a password prompt, or no offer at all.",
+    "Kinds claiming no codes are omitted; they are reached only through the classifier's fallback."
+  ],
+  "kinds": {
+    "INPUT_PASSWORD_PROTECTED": ["E004"],
+    "INPUT_CORRUPTED": ["E001", "E002", "E003"]
+  }
+}
