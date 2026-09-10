@@ -128,6 +128,38 @@ function isTerminal(status: PolicyRunStatus): boolean {
   );
 }
 
+/**
+ * The files a required policy currently blocks, keyed to the blocking policy key. Derived from the
+ * run store so a block survives a reload or a trip out of the editor (the store outlives the
+ * session, the imperative FileContext state does not). A file is blocked iff the latest SETTLED run
+ * of a required policy on it FAILED and it's still in the workspace; an in-flight re-run is ignored,
+ * so the block stands until that re-run settles (clean -> cleared, failed -> stays).
+ */
+export function derivePolicyBlocks(
+  runs: ReadonlyArray<PolicyRunRecord>,
+  liveFileIds: ReadonlySet<string>,
+  policies: PoliciesByKey,
+): Map<string, string> {
+  const latestSettled = new Map<string, PolicyRunRecord>();
+  for (const run of runs) {
+    if (!run.fileId || !isTerminal(run.status)) continue;
+    const key = dispatchKey(run.policyKey, run.fileId);
+    const prev = latestSettled.get(key);
+    if (!prev || run.startedAt > prev.startedAt) latestSettled.set(key, run);
+  }
+  const blocked = new Map<string, string>();
+  for (const run of latestSettled.values()) {
+    if (
+      run.status === "FAILED" &&
+      liveFileIds.has(run.fileId) &&
+      policies[run.policyKey]?.required
+    ) {
+      blocked.set(run.fileId, run.policyKey);
+    }
+  }
+  return blocked;
+}
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function usePolicyAutoRun(): void {
@@ -140,9 +172,6 @@ export function usePolicyAutoRun(): void {
   } = useFileManagement();
   // Files blocked by a failed Policy: skip all further passes on them (any policy failure blocks).
   const policyBlocks = useFileSelector((s) => s.ui.policyBlocks);
-  // Read from the stable terminal callback (which has no reactive deps) to lift a block on re-run.
-  const policyBlocksRef = useRef(policyBlocks);
-  policyBlocksRef.current = policyBlocks;
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
@@ -234,32 +263,17 @@ export function usePolicyAutoRun(): void {
           dispatchKey(finished.policyKey, finished.fileId),
         );
       }
-      // Read now rather than leaving them a poll interval to hear about their own upload.
-      if (view.status === "FAILED") {
-        refreshNotificationsNow();
-        // A failed Policy (required) blocks its file - unusable until the policy re-runs clean; a
-        // failed ordinary pipeline only warns (the notification above), leaving the file usable.
-        if (finished && policiesRef.current[finished.policyKey]?.required) {
-          markPolicyBlocked(finished.fileId as FileId, finished.policyKey);
-        }
-      }
-      // A blocked file's policy that now passes lifts its block (recovery re-run); the clean output
-      // replaces it. Only the blocking policy clears the block - another run leaves it standing.
-      if (
-        view.status === "COMPLETED" &&
-        finished &&
-        policyBlocksRef.current[finished.fileId as FileId] ===
-          finished.policyKey
-      ) {
-        clearPolicyBlock(finished.fileId as FileId);
-      }
+      // Read now rather than leaving them a poll interval to hear about their own upload. The block
+      // that a failed Policy imposes is derived from the run store (see the reconcile effect below),
+      // not set here, so it survives a reload or a trip out of the editor.
+      if (view.status === "FAILED") refreshNotificationsNow();
       const code = view.errorCode;
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
       if (firedLimitModal.current.has(view.runId)) return;
       firedLimitModal.current.add(view.runId);
       dispatchPaygLimitReached(view.errorSubscribed ?? null);
     },
-    [scheduleQueueRetry, markPolicyBlocked, clearPolicyBlock],
+    [scheduleQueueRetry],
   );
 
   // Fire only the FIRST upload policy per file; the chaining effect below runs the rest
@@ -421,6 +435,33 @@ export function usePolicyAutoRun(): void {
     reconciled.current = true;
     void reconcileServerRuns(policies);
   }, [policies]);
+
+  // Keep ui.policyBlocks in sync with what the run store implies (see derivePolicyBlocks): the block
+  // is derived, not set imperatively, so it survives a reload or a trip out of the editor - where
+  // onRunFinished would never re-fire for an already-terminal run. Idempotent: the guards dispatch
+  // only on a real change, so this converges rather than looping.
+  useEffect(() => {
+    const shouldBlock = derivePolicyBlocks(
+      runs,
+      new Set(fileStubs.map((s) => s.id as string)),
+      policies,
+    );
+    for (const [fileId, policyKey] of shouldBlock) {
+      if (policyBlocks[fileId as FileId] !== policyKey) {
+        markPolicyBlocked(fileId as FileId, policyKey);
+      }
+    }
+    for (const fileId of Object.keys(policyBlocks)) {
+      if (!shouldBlock.has(fileId)) clearPolicyBlock(fileId as FileId);
+    }
+  }, [
+    runs,
+    fileStubs,
+    policies,
+    policyBlocks,
+    markPolicyBlocked,
+    clearPolicyBlock,
+  ]);
 }
 
 interface ImportContext {

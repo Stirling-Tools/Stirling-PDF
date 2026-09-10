@@ -10,9 +10,16 @@ vi.mock("@app/components/policies/policyRunStore", async (orig) => ({
   updateRun: vi.fn(),
 }));
 
-import { poll } from "@app/components/policies/usePolicyAutoRun";
+import {
+  poll,
+  derivePolicyBlocks,
+} from "@app/components/policies/usePolicyAutoRun";
 import { getPolicyRun } from "@app/services/policyApi";
-import { updateRun } from "@app/components/policies/policyRunStore";
+import {
+  updateRun,
+  type PolicyRunRecord,
+} from "@app/components/policies/policyRunStore";
+import type { PoliciesByKey } from "@app/types/policies";
 
 const getRun = vi.mocked(getPolicyRun);
 const update = vi.mocked(updateRun);
@@ -156,5 +163,75 @@ describe("policy run poll loop", () => {
       "r1",
       expect.objectContaining({ status: "FAILED" }),
     );
+  });
+});
+
+describe("derivePolicyBlocks - a block survives because it's derived from the run store", () => {
+  const run = (over: Partial<PolicyRunRecord>): PolicyRunRecord => ({
+    runId: "r",
+    policyKey: "security",
+    fileId: "f1",
+    fileName: "f1.pdf",
+    fileSize: 1,
+    target: "saas",
+    status: "FAILED",
+    outputs: [],
+    error: null,
+    startedAt: 0,
+    ...over,
+  });
+  const policies = (required: boolean): PoliciesByKey =>
+    ({ security: { required } }) as unknown as PoliciesByKey;
+  const live = (...ids: string[]) => new Set(ids);
+
+  it("blocks a live file whose latest required-policy run failed", () => {
+    const blocks = derivePolicyBlocks([run({})], live("f1"), policies(true));
+    expect(blocks.get("f1")).toBe("security");
+  });
+
+  it("does not block when the policy isn't required (soft failure)", () => {
+    const blocks = derivePolicyBlocks([run({})], live("f1"), policies(false));
+    expect(blocks.has("f1")).toBe(false);
+  });
+
+  it("does not block a file that has left the workspace", () => {
+    const blocks = derivePolicyBlocks([run({})], live("other"), policies(true));
+    expect(blocks.has("f1")).toBe(false);
+  });
+
+  it("clears once a later run of the same policy completes clean", () => {
+    const blocks = derivePolicyBlocks(
+      [
+        run({ runId: "a", status: "FAILED", startedAt: 1 }),
+        run({ runId: "b", status: "COMPLETED", startedAt: 2 }),
+      ],
+      live("f1"),
+      policies(true),
+    );
+    expect(blocks.has("f1")).toBe(false);
+  });
+
+  it("keeps the block while a re-run is only in flight (not yet settled)", () => {
+    const blocks = derivePolicyBlocks(
+      [
+        run({ runId: "a", status: "FAILED", startedAt: 1 }),
+        run({ runId: "b", status: "RUNNING", startedAt: 2 }),
+      ],
+      live("f1"),
+      policies(true),
+    );
+    expect(blocks.get("f1")).toBe("security");
+  });
+
+  it("re-blocks when the latest settled run failed again", () => {
+    const blocks = derivePolicyBlocks(
+      [
+        run({ runId: "a", status: "COMPLETED", startedAt: 1 }),
+        run({ runId: "b", status: "FAILED", startedAt: 2 }),
+      ],
+      live("f1"),
+      policies(true),
+    );
+    expect(blocks.get("f1")).toBe("security");
   });
 });
