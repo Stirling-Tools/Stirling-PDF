@@ -2,9 +2,25 @@ import { useCallback } from "react";
 import licenseService, { PlanTier } from "@app/services/licenseService";
 import { resyncExistingLicense } from "@app/utils/licenseCheckoutUtils";
 import {
+  createServerPlanCheckoutSession,
+  type ServerPlanCheckoutRequest,
+  type ServerPlanCheckoutSession,
+} from "@app/services/serverPlanCheckout";
+import { getCheckoutMode } from "@app/utils/protocolDetection";
+import { absoluteWithBasePath } from "@app/constants/app";
+import {
   CheckoutState,
   PollingStatus,
 } from "@app/components/shared/stripeCheckout/types/checkout";
+
+/**
+ * Mints the Stripe session a plan purchase is paid through. Injectable so a test can drive the
+ * stages without a Supabase client, and so the transport stays one named thing rather than a
+ * hard-coded import in the middle of the stage machine.
+ */
+export type CheckoutSessionCreator = (
+  request: ServerPlanCheckoutRequest,
+) => Promise<ServerPlanCheckoutSession>;
 
 /**
  * Checkout session creation and payment handling hook
@@ -29,6 +45,7 @@ export const useCheckoutSession = (
     maxUsers: number;
     hasKey: boolean;
   }) => void,
+  createSession: CheckoutSessionCreator = createServerPlanCheckoutSession,
 ) => {
   const createCheckoutSession = useCallback(async () => {
     if (!selectedPlan) {
@@ -71,29 +88,37 @@ export const useCheckoutSession = (
         );
       }
 
-      const response = await licenseService.createCheckoutSession({
-        lookup_key: selectedPlan.lookupKey,
-        installation_id: fetchedInstallationId,
-        current_license_key: existingLicenseKey,
-        requires_seats: selectedPlan.requiresSeats,
-        seat_count: Math.max(1, Math.min(minimumSeats || 1, 10000)),
-        server_quantity: Math.max(1, serverQuantity || 1),
-        email: state.email, // Pass collected email from Stage 1
+      // Stripe's embedded iframe needs a secure context, so a plain-HTTP instance sends the buyer
+      // to Stripe's own page and needs the two return URLs up front.
+      const uiMode = getCheckoutMode();
+      const returnTo = absoluteWithBasePath("/settings/adminPlan");
+      const response = await createSession({
+        lookupKey: selectedPlan.lookupKey,
+        serverQuantity: Math.max(1, serverQuantity || 1),
+        requiresSeats: selectedPlan.requiresSeats,
+        seatCount: Math.max(1, Math.min(minimumSeats || 1, 10000)),
+        installationId: fetchedInstallationId ?? undefined,
+        currentLicenseKey: existingLicenseKey,
+        uiMode,
+        successUrl:
+          uiMode === "hosted"
+            ? `${returnTo}?session_id={CHECKOUT_SESSION_ID}&payment_status=success`
+            : undefined,
+        cancelUrl:
+          uiMode === "hosted"
+            ? `${returnTo}?payment_status=canceled`
+            : undefined,
       });
 
-      // Check if we got a redirect URL (hosted checkout for HTTP)
       if (response.url) {
-        console.log("Redirecting to Stripe hosted checkout:", response.url);
-        // Redirect to Stripe's hosted checkout page
         window.location.href = response.url;
         return;
       }
 
-      // Otherwise, use embedded checkout (HTTPS)
       setState((prev) => ({
         ...prev,
-        clientSecret: response.clientSecret,
-        sessionId: response.sessionId,
+        clientSecret: response.clientSecret ?? undefined,
+        sessionId: response.sessionId ?? undefined,
         loading: false,
       }));
     } catch (err) {
@@ -110,10 +135,10 @@ export const useCheckoutSession = (
     }
   }, [
     selectedPlan,
-    state.email,
     installationId,
     minimumSeats,
     serverQuantity,
+    createSession,
     setState,
     setInstallationId,
     setCurrentLicenseKey,

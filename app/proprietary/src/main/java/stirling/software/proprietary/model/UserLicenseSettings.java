@@ -51,6 +51,17 @@ public class UserLicenseSettings implements Serializable {
     private int licenseMaxUsers = 0;
 
     /**
+     * Users the linked cloud team has bought a Team plan for; null when it has bought none.
+     *
+     * <p>Mirrored here from the SaaS entitlement, which lives only in memory: an instance that
+     * boots offline, or before the first entitlement round trip finishes, would otherwise not know
+     * it is entitled at all. Rewritten on every licence sync, so SaaS stays the authority and a
+     * lapsed plan clears it.
+     */
+    @Column(name = "linked_team_users")
+    private Integer linkedTeamUsers;
+
+    /**
      * Random salt used when generating signatures. Makes it harder to recompute the signature when
      * manually editing the table.
      */
