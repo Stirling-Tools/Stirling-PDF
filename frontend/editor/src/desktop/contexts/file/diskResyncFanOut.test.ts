@@ -25,7 +25,7 @@ vi.mock("@app/services/fileStorage", () => ({
 }));
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
 
-import { resyncDiskPaths } from "@app/contexts/file/fileActions";
+import { reconcileOpenFilesAt } from "@app/contexts/file/fileActions";
 
 const SHARED = "/Users/x/Documents/report.pdf";
 
@@ -67,7 +67,7 @@ function harness(stubs: StirlingFileStub[]) {
     stateRef,
     updates,
     run: (paths: string[]) =>
-      resyncDiskPaths(
+      reconcileOpenFilesAt(
         paths,
         stateRef as never,
         { current: new Map<FileId, File>() },

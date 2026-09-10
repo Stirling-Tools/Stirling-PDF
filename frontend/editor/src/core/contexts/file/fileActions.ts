@@ -806,14 +806,14 @@ function reconcilePort(
 }
 
 /** Tell the reconciler that something changed at these source locations. */
-export async function resyncDiskPaths(
-  paths: string[],
+export async function reconcileOpenFilesAt(
+  locations: string[],
   stateRef: React.MutableRefObject<FileContextState>,
   filesRef: React.MutableRefObject<Map<FileId, File>>,
   lifecycleManager: FileLifecycleManager,
 ): Promise<void> {
   await reconcileOpenFiles(
-    paths,
+    locations,
     reconcilePort(stateRef, filesRef, lifecycleManager),
   );
 }
@@ -922,8 +922,8 @@ export async function addStirlingFileStubs(
           STALLED_LOAD_MS,
         );
         // A record can be a cache of something outside the app, so settle it
-        // BEFORE serving it: on desktop an external edit would otherwise stay
-        // invisible and a deleted file would still open.
+        // BEFORE serving it, or an edit made out there stays invisible and a
+        // file deleted out there still opens.
         const port = reconcilePort(stateRef, filesRef, lifecycleManager);
         const decision = await reconcileBeforeOpen(stub, port);
         if (decision.drop) {

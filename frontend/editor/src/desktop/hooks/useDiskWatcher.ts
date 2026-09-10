@@ -44,7 +44,7 @@ export function useDiskWatcher(): void {
       timer = undefined;
       const changed = [...pending];
       pending.clear();
-      if (changed.length > 0) void actions.resyncDiskPaths(changed);
+      if (changed.length > 0) void actions.reconcileOpenFiles(changed);
     };
 
     void onDiskFilesChanged((changed) => {
@@ -77,7 +77,7 @@ export function useDiskWatcher(): void {
   useEffect(() => {
     const recheck = () => {
       if (unavailableRef.current.length > 0) {
-        void actions.resyncDiskPaths(unavailableRef.current);
+        void actions.reconcileOpenFiles(unavailableRef.current);
       }
     };
     window.addEventListener("focus", recheck);

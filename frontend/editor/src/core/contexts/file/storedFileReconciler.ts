@@ -31,6 +31,23 @@ export interface OpenDecision {
   afterPublish?: () => void;
 }
 
+/** Of a stub update, the fields worth mirroring into storage because they
+ *  describe the record's source rather than its content. Null where a record
+ *  has no source and the stored copy is written whole. */
+export function persistedSourceFields(
+  _updates: Partial<StirlingFileStub>,
+): Partial<StirlingFileStub> | null {
+  return null;
+}
+
+/** Source-link fields a derived file inherits from the file it was made from,
+ *  given that deriving it wrote nothing back to that source. */
+export function inheritedSourceLink(
+  _sourceStub: StirlingFileStub,
+): Partial<StirlingFileStub> {
+  return {};
+}
+
 /** Fields recording the source a newly added file was read from, keyed by the
  *  quickKey the open dialog registered it under. Empty where files have no
  *  source outside the app. */

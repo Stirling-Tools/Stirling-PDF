@@ -6,6 +6,7 @@ import { pdfExportService } from "@app/services/pdfExportService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
 import { FileId } from "@app/types/file";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
+import { inheritedSourceLink } from "@app/contexts/file/storedFileReconciler";
 
 type FileActions = ReturnType<typeof useFileActions>["actions"];
 type FileSelectors = ReturnType<typeof useFileState>["selectors"];
@@ -314,14 +315,10 @@ export const usePageEditorExport = ({
 
       if (sourceFileIds.length === 1 && newStirlingFiles.length === 1) {
         const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
-        if (sourceStub?.localFilePath) {
+        const inherited = sourceStub ? inheritedSourceLink(sourceStub) : {};
+        if (Object.keys(inherited).length > 0) {
           actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
-            localFilePath: sourceStub.localFilePath,
-            // Applying page edits writes nothing to disk, so the source's
-            // baseline still describes it. Without one, hasDiskChanged reads
-            // the link as changed and the next open claims a false conflict.
-            diskSyncedSize: sourceStub.diskSyncedSize,
-            diskSyncedModifiedMs: sourceStub.diskSyncedModifiedMs,
+            ...inherited,
             isDirty: true,
           });
         }

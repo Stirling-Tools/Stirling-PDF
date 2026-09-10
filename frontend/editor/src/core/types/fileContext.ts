@@ -400,7 +400,9 @@ export interface FileContextActions {
     id: FileId,
     updates: Partial<StirlingFileStub>,
   ) => void;
-  resyncDiskPaths: (paths: string[]) => Promise<void>;
+  /** Something changed at these source locations; settle any open record
+   *  that came from one of them. */
+  reconcileOpenFiles: (locations: string[]) => Promise<void>;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;

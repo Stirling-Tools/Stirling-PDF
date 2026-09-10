@@ -112,8 +112,8 @@ export const useFileManager = () => {
 
       // Load only leaf files metadata (processed files that haven't been used as input for other tools)
       const storedStubs = await fileStorage.getLeafStirlingFileStubs();
-      // On desktop a file deleted outside the app must not be offered here, so
-      // reconcile against disk before the list is built.
+      // A file deleted outside the app must not be offered here, so reconcile
+      // before the list is built.
       const stirlingFileStubs = await pruneMissingRecentFiles(storedStubs, {
         openFileIds: new Set(openFileIdsRef.current),
         onOpenFilesDetached,

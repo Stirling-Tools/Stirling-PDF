@@ -12,36 +12,10 @@ import {
 import {
   forgetFile,
   noteFileSaved,
+  persistedSourceFields,
 } from "@app/contexts/file/storedFileReconciler";
 
 const DEBUG = process.env.NODE_ENV === "development";
-
-// Disk-link fields are stamped long after the record was stored, so updates to
-// them are mirrored into IndexedDB - in memory only, the link dies on reload.
-const DISK_LINK_FIELDS = [
-  "localFilePath",
-  "isDirty",
-  "diskSyncedSize",
-  "diskSyncedModifiedMs",
-  "orphanedFilePath",
-  "diskConflictAt",
-  "diskReloadedAt",
-] as const satisfies readonly (keyof StirlingFileStub)[];
-
-function diskLinkUpdates(
-  updates: Partial<StirlingFileStub>,
-): Partial<StirlingFileStub> | null {
-  const persisted: Partial<StirlingFileStub> = {};
-  let found = false;
-  for (const field of DISK_LINK_FIELDS) {
-    if (field in updates) {
-      // Object.assign-style copy keeps each field's own type.
-      (persisted as Record<string, unknown>)[field] = updates[field];
-      found = true;
-    }
-  }
-  return found ? persisted : null;
-}
 
 /**
  * Resource tracking and cleanup utilities
@@ -247,7 +221,7 @@ export class FileLifecycleManager {
 
     // Fire-and-forget: the dispatch above is what the UI reads, and a storage
     // hiccup must not stall it. Worst case the link reverts to its stored value.
-    const linkUpdates = diskLinkUpdates(updates);
+    const linkUpdates = persistedSourceFields(updates);
     if (linkUpdates) {
       void import("@app/services/fileStorage")
         .then(({ fileStorage }) =>

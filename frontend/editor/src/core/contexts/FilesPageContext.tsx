@@ -182,10 +182,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const localStubs = await fileStorage.getAllStirlingFileStubs();
       // Bail if a newer refresh started while IDB was reading.
       if (gen !== refreshGenRef.current) return;
-      // On desktop a file the user deleted outside the app must not be offered
-      // here, so reconcile against disk before anything is rendered. Leaves
-      // only: every version behind them shares a path, and stating all of them
-      // multiplies the disk work by the length of the history.
+      // A file the user deleted outside the app must not be offered here, so
+      // reconcile before anything is rendered. Leaves only: every version behind
+      // them shares a source, and checking all of them multiplies the work by
+      // the length of the history.
       const localLeaf = await pruneMissingRecentFiles(
         localStubs.filter((s) => s.isLeaf !== false),
         {

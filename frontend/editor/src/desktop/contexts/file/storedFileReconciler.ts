@@ -69,6 +69,47 @@ function pickedUpFields(
   };
 }
 
+// Stamped long after the record was stored, so updates to them are mirrored
+// into IndexedDB - in memory only, the link dies on reload.
+const DISK_LINK_FIELDS = [
+  "localFilePath",
+  "isDirty",
+  "diskSyncedSize",
+  "diskSyncedModifiedMs",
+  "orphanedFilePath",
+  "diskConflictAt",
+  "diskReloadedAt",
+] as const satisfies readonly (keyof StirlingFileStub)[];
+
+export function persistedSourceFields(
+  updates: Partial<StirlingFileStub>,
+): Partial<StirlingFileStub> | null {
+  const persisted: Partial<StirlingFileStub> = {};
+  let found = false;
+  for (const field of DISK_LINK_FIELDS) {
+    if (field in updates) {
+      // Object.assign-style copy keeps each field's own type.
+      (persisted as Record<string, unknown>)[field] = updates[field];
+      found = true;
+    }
+  }
+  return found ? persisted : null;
+}
+
+export function inheritedSourceLink(
+  sourceStub: StirlingFileStub,
+): Partial<StirlingFileStub> {
+  if (!sourceStub.localFilePath) return {};
+  return {
+    localFilePath: sourceStub.localFilePath,
+    // Deriving the file wrote nothing to disk, so the source's baseline still
+    // describes it. Without one, the next open reads the link as changed and
+    // claims a false conflict.
+    diskSyncedSize: sourceStub.diskSyncedSize,
+    diskSyncedModifiedMs: sourceStub.diskSyncedModifiedMs,
+  };
+}
+
 export async function sourceLinkForNewFile(
   quickKey: string,
 ): Promise<Partial<StirlingFileStub>> {
