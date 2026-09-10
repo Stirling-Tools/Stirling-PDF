@@ -60,6 +60,7 @@ class UserLicenseSettingsServiceTest {
         when(settingsRepository.save(any(UserLicenseSettings.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
         when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(licenseKeyChecker);
 
         // Create service with overridden validateSettingsIntegrity to bypass signature validation
@@ -83,6 +84,7 @@ class UserLicenseSettingsServiceTest {
         // No license active
         when(premium.isEnabled()).thenReturn(false);
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         int result = service.calculateMaxAllowedUsers();
 
@@ -94,6 +96,7 @@ class UserLicenseSettingsServiceTest {
         // SERVER license with users=0
         when(premium.isEnabled()).thenReturn(true);
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         mockSettings.setLicenseMaxUsers(0);
 
         int result = service.calculateMaxAllowedUsers();
@@ -106,6 +109,7 @@ class UserLicenseSettingsServiceTest {
         // ENTERPRISE license with 5 seats
         when(premium.isEnabled()).thenReturn(true);
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(5);
 
         int result = service.calculateMaxAllowedUsers();
@@ -121,6 +125,7 @@ class UserLicenseSettingsServiceTest {
         // ENTERPRISE with 20 seats, grandfathered was 80
         when(premium.isEnabled()).thenReturn(true);
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(20);
         mockSettings.setGrandfatheredUserCount(80); // This should be ignored
 
@@ -149,6 +154,7 @@ class UserLicenseSettingsServiceTest {
         mockSettings.setGrandfatheredUserCount(5);
         when(premium.isEnabled()).thenReturn(true);
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         mockSettings.setLicenseMaxUsers(0);
 
         int result = service.calculateMaxAllowedUsers();
@@ -165,6 +171,7 @@ class UserLicenseSettingsServiceTest {
         mockSettings.setGrandfatheredUserCount(5);
         when(premium.isEnabled()).thenReturn(true);
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(10);
 
         int result = service.calculateMaxAllowedUsers();
@@ -190,6 +197,7 @@ class UserLicenseSettingsServiceTest {
         mockSettings.setGrandfatheredUserCount(80);
         when(premium.isEnabled()).thenReturn(true);
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(5);
 
         int result = service.calculateMaxAllowedUsers();
@@ -286,6 +294,7 @@ class UserLicenseSettingsServiceTest {
         user.setOauthGrandfathered(true);
 
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isOAuthEligible(user);
 
@@ -301,6 +310,7 @@ class UserLicenseSettingsServiceTest {
         user.setOauthGrandfathered(false);
 
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isOAuthEligible(user);
 
@@ -316,6 +326,7 @@ class UserLicenseSettingsServiceTest {
         user.setOauthGrandfathered(false);
 
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
         boolean result = service.isOAuthEligible(user);
 
@@ -332,6 +343,7 @@ class UserLicenseSettingsServiceTest {
         user.setOauthGrandfathered(false);
 
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isOAuthEligible(user);
 
@@ -345,6 +357,7 @@ class UserLicenseSettingsServiceTest {
     void isOAuthEligible_newUserWithServerLicense_returnsTrue() {
         // New user (null) with SERVER license should be eligible for auto-creation
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isOAuthEligible(null);
 
@@ -356,6 +369,7 @@ class UserLicenseSettingsServiceTest {
     void isOAuthEligible_newUserWithNoLicense_returnsFalse() {
         // New user (null) without license should NOT be eligible
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isOAuthEligible(null);
 
@@ -392,6 +406,7 @@ class UserLicenseSettingsServiceTest {
         user.setOauthGrandfathered(true);
 
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isSamlEligible(user);
 
@@ -407,6 +422,7 @@ class UserLicenseSettingsServiceTest {
         user.setOauthGrandfathered(false);
 
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
         boolean result = service.isSamlEligible(user);
 
@@ -425,6 +441,7 @@ class UserLicenseSettingsServiceTest {
         user.setOauthGrandfathered(false);
 
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isSamlEligible(user);
 
@@ -443,6 +460,7 @@ class UserLicenseSettingsServiceTest {
         user.setOauthGrandfathered(false);
 
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isSamlEligible(user);
 
@@ -456,6 +474,7 @@ class UserLicenseSettingsServiceTest {
     void isSamlEligible_newUserWithEnterpriseLicense_returnsTrue() {
         // New user (null) with ENTERPRISE license should be eligible for auto-creation
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
         boolean result = service.isSamlEligible(null);
 
@@ -469,6 +488,7 @@ class UserLicenseSettingsServiceTest {
     void isSamlEligible_newUserWithServerLicense_returnsFalse() {
         // New user (null) with SERVER license should NOT be eligible for SAML
         when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isSamlEligible(null);
 
