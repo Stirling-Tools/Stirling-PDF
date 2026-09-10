@@ -1,3 +1,5 @@
+import { requiresClassification } from "@app/data/classificationConditions";
+import { isConditionComplete } from "@app/conditions/validation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -770,11 +772,13 @@ export function PipelineBuilder() {
   // Mirrors PolicyValidator.validateRoutingRules: a rule with nothing to match on, or nowhere to
   // send, would be rejected on save - so it is named here rather than surfaced as a server error.
   const routingValid = routingRules.every(
-    (rule) => rule.values.length > 0 && rule.outputId !== "",
+    (rule) => isConditionComplete(rule.condition) && rule.outputId !== "",
   );
   // Rules outliving the step that feeds them: the classify step was removed after they were set.
   // Every document would fall through to the fallback, so this is named rather than left to run.
-  const routingHasVerdict = routingRules.length === 0 || classifies;
+  const routingHasVerdict = routingRules.every(
+    (rule) => !requiresClassification(rule.condition) || classifies,
+  );
 
   // The single source of truth for "can this be committed": every reason it can't be, in the order
   // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.

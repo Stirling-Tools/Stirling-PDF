@@ -23,13 +23,14 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAsset;
 import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
-import stirling.software.proprietary.policy.model.MatchOperator;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -348,14 +349,12 @@ class PolicyValidatorTest {
     }
 
     @Test
-    void rejectsARoutingRuleWithNoOperator() {
-        Policy policy =
-                routingPolicy(
-                        new RoutingRule("classification.labels", null, List.of("invoice"), "dest"));
+    void rejectsARoutingRuleWithNoCondition() {
+        Policy policy = routingPolicy(new RoutingRule(null, "dest"));
 
         IllegalArgumentException ex =
                 assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
-        assertTrue(ex.getMessage().contains("no operator"), ex.getMessage());
+        assertTrue(ex.getMessage().contains("a condition is required"), ex.getMessage());
     }
 
     @Test
@@ -386,7 +385,9 @@ class PolicyValidatorTest {
     }
 
     private static RoutingRule rule(String field, String value, String destinationId) {
-        return new RoutingRule(field, MatchOperator.MATCHES_ANY, List.of(value), destinationId);
+        return new RoutingRule(
+                new Condition.MatchesAny(new ConditionInput.DocumentField(field), List.of(value)),
+                destinationId);
     }
 
     private static Policy routingPolicy(RoutingRule... rules) {

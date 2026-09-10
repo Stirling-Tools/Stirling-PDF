@@ -4,8 +4,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import stirling.software.proprietary.document.conditions.Condition;
 
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
@@ -35,6 +38,14 @@ class PortalWirePolicyContractTest {
         assertThat(policy.triggerTypes()).containsExactly("schedule");
         assertThat(policy.inputs().get(0).trigger().options()).containsKey("schedule");
         assertThat(policy.outputIds()).containsExactly("src-archive");
+        assertThat(policy.routingRules()).hasSize(1);
+        assertThat(policy.routingRules().getFirst().outputId()).isEqualTo("src-finance");
+        assertThat(policy.routingRules().getFirst().condition())
+                .isEqualTo(
+                        new Condition.MatchesAny(
+                                new stirling.software.proprietary.document.conditions.ConditionInput
+                                        .DocumentField("classification.labels"),
+                                List.of("invoice", "receipt")));
         assertThat(policy.steps()).hasSize(1);
         assertThat(policy.steps().get(0).operation()).isEqualTo("/api/v1/misc/compress-pdf");
         assertThat(policy.steps().get(0).parameters()).containsEntry("optimizeLevel", 5);

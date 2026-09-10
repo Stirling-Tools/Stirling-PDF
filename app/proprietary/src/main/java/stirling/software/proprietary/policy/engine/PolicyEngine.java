@@ -36,6 +36,7 @@ import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
 import stirling.software.proprietary.document.DocumentFacts;
+import stirling.software.proprietary.document.conditions.ConditionEvaluator;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
@@ -50,7 +51,6 @@ import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
-import stirling.software.proprietary.policy.routing.RoutingRuleMatcher;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
 
 import tools.jackson.databind.JsonNode;
@@ -554,7 +554,7 @@ public class PolicyEngine {
     private static List<OutputSpec> destinationsFor(
             List<RoutedDestination> routing, List<OutputSpec> fallback, JsonNode facts) {
         for (RoutedDestination routed : routing) {
-            if (RoutingRuleMatcher.matches(routed.rule(), facts)) {
+            if (ConditionEvaluator.matches(routed.rule().condition(), facts)) {
                 return List.of(routed.destination());
             }
         }

@@ -6,21 +6,20 @@ import {
   Banner,
   Button,
   Card,
-  MultiSelect,
   Select,
   ToggleSwitch,
 } from "@app/ui";
-import { LABEL_FAMILIES } from "@app/data/classificationLabels";
+import { ClassificationConditionEditor } from "@app/components/conditions/ClassificationConditionEditor";
+import {
+  classificationCondition,
+  requiresClassification,
+} from "@app/data/classificationConditions";
 import type { WireRoutingRule } from "@app/policies/types";
 import "@portal/components/policies/RoutingRules.css";
 
-const CLASSIFICATION_LABELS_FIELD = "classification.labels";
-
 export function blankRoutingRule(destinationId = ""): WireRoutingRule {
   return {
-    field: CLASSIFICATION_LABELS_FIELD,
-    operator: "matches-any",
-    values: [],
+    condition: classificationCondition(),
     outputId: destinationId,
   };
 }
@@ -58,14 +57,6 @@ export function RoutingRules({
     );
   }
 
-  const labelData = LABEL_FAMILIES.map((family) => ({
-    group: family.name,
-    items: family.labels.map((label) => ({
-      value: label.id,
-      label: t(`classification.labels.${label.id}`, label.name),
-    })),
-  }));
-
   if (destinations.length === 0) {
     return onCreateDestination ? (
       <Button
@@ -94,28 +85,9 @@ export function RoutingRules({
           {rules.map((rule, index) => (
             <div key={index} className="portal-routing__rule">
               <div className="portal-routing__row">
-                <MultiSelect
-                  inputSize="sm"
-                  aria-label={t(
-                    "portal.policies.wizard.routing.labelAria",
-                    "Document types",
-                  )}
-                  placeholder={
-                    rule.values.length === 0
-                      ? t(
-                          "portal.policies.wizard.routing.labelPlaceholder",
-                          "Choose document types",
-                        )
-                      : undefined
-                  }
-                  data={labelData}
-                  value={rule.values}
-                  onChange={(values) => update(index, { values })}
-                  invalid={rule.values.length === 0}
-                  searchable
-                  clearable
-                  maxDropdownHeight={280}
-                  comboboxProps={{ withinPortal: true }}
+                <ClassificationConditionEditor
+                  condition={rule.condition}
+                  onChange={(condition) => update(index, { condition })}
                 />
                 <Select
                   inputSize="sm"
@@ -182,6 +154,10 @@ interface RoutingSectionProps extends RoutingRulesProps {
 export function RoutingSection({ canClassify, ...rules }: RoutingSectionProps) {
   const { t } = useTranslation();
   const enabled = rules.rules.length > 0;
+  const needsClassification = enabled
+    ? rules.rules.some((rule) => requiresClassification(rule.condition))
+    : requiresClassification(classificationCondition());
+  const missingClassification = needsClassification && !canClassify;
 
   return (
     <>
@@ -191,7 +167,7 @@ export function RoutingSection({ canClassify, ...rules }: RoutingSectionProps) {
           checked={enabled}
           // Always switchable off, so a pipeline whose classify step was removed can be put
           // right from here rather than only by putting the step back.
-          disabled={!canClassify && !enabled}
+          disabled={missingClassification && !enabled}
           onChange={(next) =>
             rules.onChange(
               next ? [blankRoutingRule(rules.destinations[0]?.id ?? "")] : [],
@@ -202,7 +178,7 @@ export function RoutingSection({ canClassify, ...rules }: RoutingSectionProps) {
             "Send document types to different places",
           )}
           description={
-            !canClassify
+            missingClassification
               ? t(
                   "portal.pipelines.builder.routing.needsClassify",
                   "Add a Classify step to the pipeline first - routes read the document type it works out.",

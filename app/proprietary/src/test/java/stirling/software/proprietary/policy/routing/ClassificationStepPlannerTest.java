@@ -7,7 +7,8 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
-import stirling.software.proprietary.policy.model.MatchOperator;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
@@ -38,7 +39,10 @@ class ClassificationStepPlannerTest {
 
     private static RoutingRule classificationRule() {
         return new RoutingRule(
-                "classification.labels", MatchOperator.MATCHES_ANY, List.of("invoice"), "dest");
+                new Condition.MatchesAny(
+                        new ConditionInput.DocumentField("classification.labels"),
+                        List.of("invoice")),
+                "dest");
     }
 
     @Test
@@ -62,7 +66,10 @@ class ClassificationStepPlannerTest {
     void leavesAPolicyThatDoesNotRouteOnClassificationAlone() {
         RoutingRule bySize =
                 new RoutingRule(
-                        "document.pageCount", MatchOperator.MATCHES_ANY, List.of("1"), "dest");
+                        new Condition.MatchesAny(
+                                new ConditionInput.DocumentField("document.pageCount"),
+                                List.of("1")),
+                        "dest");
         Policy original = policyWith(List.of(new PipelineStep(COMPRESS, Map.of())), bySize);
 
         assertThat(ClassificationStepPlanner.ensureClassificationFirst(original))

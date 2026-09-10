@@ -25,11 +25,12 @@ import org.springframework.web.server.ResponseStatusException;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.common.util.FileReadinessChecker;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.WebhookInputSource;
-import stirling.software.proprietary.policy.model.MatchOperator;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
@@ -303,9 +304,9 @@ class SourceControllerTest {
                 Policy.SURFACE_POLICY,
                 List.of(
                         new RoutingRule(
-                                "classification.labels",
-                                MatchOperator.MATCHES_ANY,
-                                List.of("confidential"),
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("classification.labels"),
+                                        List.of("confidential")),
                                 destinationId)));
     }
 

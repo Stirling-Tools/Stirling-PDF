@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.proprietary.document.conditions.ConditionValidator;
 import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
 import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
@@ -97,24 +98,9 @@ public class PolicyValidator {
                     "a policy supports at most " + MAX_ROUTING_RULES + " routing rules");
         }
         for (RoutingRule rule : policy.routingRules()) {
-            if (rule.field() == null || rule.field().isBlank()) {
-                throw new IllegalArgumentException("a routing rule must name a field to match on");
-            }
-            if (rule.operator() == null) {
-                throw new IllegalArgumentException(
-                        "routing rule on '" + rule.field() + "' has no operator");
-            }
-            // Blank values are rejected rather than ignored: a blank can never equal a real fact,
-            // so the rule would be dead on arrival.
-            if (rule.values().stream().allMatch(value -> value == null || value.isBlank())) {
-                throw new IllegalArgumentException(
-                        "routing rule on '"
-                                + rule.field()
-                                + "' has nothing to match against; give it at least one value");
-            }
+            ConditionValidator.validate(rule.condition());
             if (rule.outputId() == null || rule.outputId().isBlank()) {
-                throw new IllegalArgumentException(
-                        "routing rule on '" + rule.field() + "' has no destination");
+                throw new IllegalArgumentException("a routing rule has no destination");
             }
             Source destination =
                     sourceStore

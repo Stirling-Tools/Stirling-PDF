@@ -1,3 +1,6 @@
+import { classificationCondition } from "@app/data/classificationConditions";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { describe, it, expect } from "vitest";
 import {
   toWirePolicy,
@@ -5,7 +8,7 @@ import {
   policyInputs,
   EDITOR_SOURCE_ID,
 } from "@app/policies/codec";
-import type { PolicyDecodedState } from "@app/policies/types";
+import type { PolicyDecodedState, WirePolicy } from "@app/policies/types";
 
 const FULL_STATE: PolicyDecodedState = {
   id: "pol_123",
@@ -92,6 +95,28 @@ describe("toWirePolicy", () => {
 });
 
 describe("fromWirePolicy → round-trip", () => {
+  it("round-trips the same nested conditions the backend contract fixture binds", () => {
+    const fixture: WirePolicy = JSON.parse(
+      readFileSync(
+        resolve(
+          __dirname,
+          "../../../../../app/proprietary/src/test/resources/policy/portal-wire-policy.json",
+        ),
+        "utf8",
+      ),
+    );
+    const saved = toWirePolicy(fromWirePolicy(fixture));
+
+    expect(saved.routingRules).toEqual([
+      {
+        condition: classificationCondition(["invoice", "receipt"]),
+        outputId: "src-finance",
+      },
+    ]);
+    expect(saved.routingRules).toEqual(fixture.routingRules);
+    expect(saved.outputIds).toEqual(fixture.outputIds);
+  });
+
   it("recovers all fields after encode→decode", () => {
     const wire = toWirePolicy(FULL_STATE);
     const decoded = fromWirePolicy(wire);
@@ -117,9 +142,7 @@ describe("fromWirePolicy → round-trip", () => {
   it("round-trips routing rules", () => {
     const rules = [
       {
-        field: "classification.labels",
-        operator: "matches-any" as const,
-        values: ["invoice", "receipt"],
+        condition: classificationCondition(["invoice", "receipt"]),
         outputId: "src-finance",
       },
     ];

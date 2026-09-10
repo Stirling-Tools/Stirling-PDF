@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import stirling.software.proprietary.classification.ClassificationConditions;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.RoutingRule;
@@ -50,7 +51,9 @@ public final class ClassificationStepPlanner {
      */
     public static Policy ensureClassificationFirst(Policy policy) {
         boolean routesOnClassification =
-                policy.routingRules().stream().anyMatch(RoutingRule::needsClassification);
+                policy.routingRules().stream()
+                        .map(RoutingRule::condition)
+                        .anyMatch(ClassificationConditions::requiresClassification);
         if (!routesOnClassification) {
             return policy;
         }

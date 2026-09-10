@@ -34,10 +34,11 @@ import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
-import stirling.software.proprietary.policy.model.MatchOperator;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -105,7 +106,7 @@ class PolicyEngineRoutingTest {
 
     @Test
     void routesEachDocumentToItsFirstMatchingRuleAndTheRestToTheFallback() throws Exception {
-        Resource invoice = classifiedPdf("invoice.pdf", "invoice");
+        Resource invoice = classifiedPdf("invoice.pdf", "invoice", "contract");
         Resource contract = classifiedPdf("contract.pdf", "contract");
         Resource unlabelled = classifiedPdf("misc.pdf");
 
@@ -128,6 +129,35 @@ class PolicyEngineRoutingTest {
         assertThat(sink.deliveries())
                 .containsExactlyInAnyOrder(
                         "finance:invoice.pdf", "legal:contract.pdf", "fallback:misc.pdf");
+    }
+
+    @Test
+    void noConditionsStillDeliversEveryFileToEveryDestination() throws Exception {
+        Resource invoice = classifiedPdf("invoice.pdf", "invoice");
+        Resource unlabelled = classifiedPdf("misc.pdf");
+        PipelineDefinition definition =
+                new PipelineDefinition(
+                        "copy",
+                        List.of(),
+                        List.of(
+                                new OutputSpec("record", java.util.Map.of("dest", "first")),
+                                new OutputSpec("record", java.util.Map.of("dest", "second"))));
+
+        PolicyRun run =
+                engine.submit(
+                                definition,
+                                PolicyInputs.of(List.of(invoice, unlabelled)),
+                                PolicyProgressListener.NOOP)
+                        .completion()
+                        .get(20, TimeUnit.SECONDS);
+
+        assertThat(run.getStatus()).isEqualTo(PolicyRunStatus.COMPLETED);
+        assertThat(sink.deliveries())
+                .containsExactlyInAnyOrder(
+                        "first:invoice.pdf",
+                        "first:misc.pdf",
+                        "second:invoice.pdf",
+                        "second:misc.pdf");
     }
 
     @Test
@@ -162,7 +192,10 @@ class PolicyEngineRoutingTest {
     private static RoutedDestination routed(String label, String dest) {
         return new RoutedDestination(
                 new RoutingRule(
-                        "classification.labels", MatchOperator.MATCHES_ANY, List.of(label), dest),
+                        new Condition.MatchesAny(
+                                new ConditionInput.DocumentField("classification.labels"),
+                                List.of(label)),
+                        dest),
                 new OutputSpec("record", java.util.Map.of("dest", dest)));
     }
 

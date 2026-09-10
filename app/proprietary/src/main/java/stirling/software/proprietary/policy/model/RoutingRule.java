@@ -2,32 +2,41 @@ package stirling.software.proprietary.policy.model;
 
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
+
 /**
- * One routing decision: when {@code field} satisfies {@code operator} against {@code values}, the
- * document is delivered to the {@code Source} referenced by {@code outputId}.
+ * Delivers a document satisfying {@code condition} to the source referenced by {@code outputId}.
  *
  * <p>Rules are evaluated in order and the first match wins, so a policy reads top-to-bottom like
  * the mail rules it stands in for. A document matching no rule falls back to the policy's {@code
  * outputIds}, and a policy with neither keeps its inline output.
- *
- * <p>{@code field} is a dotted path into the facts the engine already knows about a document - the
- * same namespace the external-API step exposes as placeholders - so {@code classification.labels}
- * routes on the classifier's verdict with no new plumbing. See {@code DocumentFacts}.
  */
-public record RoutingRule(
-        String field, MatchOperator operator, List<String> values, String outputId) {
-
-    /** The fact namespace holding the classifier's verdict. */
-    public static final String CLASSIFICATION_PREFIX = "classification.";
-
-    public RoutingRule {
-        values = values == null ? List.of() : List.copyOf(values);
-    }
+public record RoutingRule(Condition condition, String outputId) {
 
     /**
-     * Whether this rule reads the classifier's verdict, and so needs classification to have run.
+     * Reads both the nested condition and legacy flat rules from stored policies or API callers.
+     * Serialization emits only the nested shape; an explicit condition takes precedence.
      */
-    public boolean needsClassification() {
-        return field != null && field.startsWith(CLASSIFICATION_PREFIX);
+    @JsonCreator
+    public static RoutingRule fromJson(
+            @JsonProperty("condition") Condition condition,
+            @JsonProperty("outputId") String outputId,
+            @JsonProperty("field") String field,
+            @JsonProperty("operator") String operator,
+            @JsonProperty("values") List<String> values) {
+        if (condition != null) {
+            return new RoutingRule(condition, outputId);
+        }
+        if (!"matches-any".equals(operator)) {
+            throw new IllegalArgumentException(
+                    "Unknown or missing condition operator: " + operator);
+        }
+        return new RoutingRule(
+                new Condition.MatchesAny(new ConditionInput.DocumentField(field), values),
+                outputId);
     }
 }

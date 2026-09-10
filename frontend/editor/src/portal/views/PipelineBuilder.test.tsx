@@ -1,3 +1,4 @@
+import { classificationCondition } from "@app/data/classificationConditions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fireEvent,
@@ -266,9 +267,7 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
 });
 
 const routingRule = (values: string[]) => ({
-  field: "classification.labels",
-  operator: "matches-any" as const,
-  values,
+  condition: classificationCondition(values),
   outputId: "src-1",
 });
 

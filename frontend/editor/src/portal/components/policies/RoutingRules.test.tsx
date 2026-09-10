@@ -1,3 +1,4 @@
+import { classificationCondition } from "@app/data/classificationConditions";
 import { describe, expect, it, vi } from "vitest";
 import {
   fireEvent,
@@ -52,13 +53,39 @@ function setupBare(rules: WireRoutingRule[]) {
 }
 
 const rule = (values: string[], outputId: string): WireRoutingRule => ({
-  field: "classification.labels",
-  operator: "matches-any",
-  values,
+  condition: classificationCondition(values),
   outputId,
 });
 
 describe("RoutingRules", () => {
+  it("edits classification values without changing the destination or other routes", () => {
+    const first = rule(["invoice"], "src-finance");
+    const second = rule(["contract"], "src-legal");
+    const onChange = setupBare([first, second]);
+
+    fireEvent.click(
+      screen.getAllByRole("textbox", { name: "Document types" })[0],
+    );
+    fireEvent.click(screen.getByRole("option", { name: "Receipt" }));
+
+    expect(onChange).toHaveBeenCalledWith([
+      rule(["invoice", "receipt"], "src-finance"),
+      second,
+    ]);
+  });
+
+  it("edits a destination without changing its condition", () => {
+    const original = rule(["invoice", "receipt"], "src-finance");
+    const onChange = setupBare([original]);
+
+    fireEvent.click(screen.getByRole("textbox", { name: "Destination" }));
+    fireEvent.click(screen.getByRole("option", { name: "Legal review" }));
+
+    expect(onChange).toHaveBeenCalledWith([
+      { ...original, outputId: "src-legal" },
+    ]);
+  });
+
   it("renders the routes with no toggle when the surface is routing-only", () => {
     setupBare([rule(["invoice"], "src-finance")]);
 

@@ -1,3 +1,4 @@
+import { classificationCondition } from "@app/data/classificationConditions";
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -304,9 +305,7 @@ function PolicySetupWizardBody({
     // the user could fill in and then submit as none.
     routingRules: policy?.state.routingRules ?? [
       {
-        field: "classification.labels",
-        operator: "matches-any",
-        values: [],
+        condition: classificationCondition(),
         outputId: "",
       },
     ],

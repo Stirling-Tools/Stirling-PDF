@@ -9,6 +9,8 @@
  * inputs and fires on upload/export via `/run`.
  */
 
+import type { Condition } from "@app/conditions/types";
+
 // ── Wire types (match Policy.java / PipelineStep.java / PolicyRunView.java) ──
 
 export interface WirePipelineStep {
@@ -56,18 +58,13 @@ export interface WirePipelineInput {
   trigger: WireTriggerConfig | null;
 }
 
-/** How a routing rule compares a document fact against its values. Mirrors `MatchOperator.java`. */
-export type WireMatchOperator = "matches-any";
-
 /**
- * One routing rule: when `field` satisfies `operator` against `values`, the document is delivered
+ * One routing rule: when `condition` matches, the document is delivered
  * to `outputId` instead of the policy's fallback destinations. Mirrors `RoutingRule.java`; rules
  * are tried in order, first match wins.
  */
 export interface WireRoutingRule {
-  field: string;
-  operator: WireMatchOperator;
-  values: string[];
+  condition: Condition;
   outputId: string;
 }
 

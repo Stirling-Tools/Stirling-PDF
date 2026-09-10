@@ -37,5 +37,15 @@
       "fieldValues": {}
     }
   },
-  "outputIds": ["src-archive"]
+  "outputIds": ["src-archive"],
+  "routingRules": [
+    {
+      "condition": {
+        "input": { "source": "document", "field": "classification.labels" },
+        "operator": "matches-any",
+        "values": ["invoice", "receipt"]
+      },
+      "outputId": "src-finance"
+    }
+  ]
 }
