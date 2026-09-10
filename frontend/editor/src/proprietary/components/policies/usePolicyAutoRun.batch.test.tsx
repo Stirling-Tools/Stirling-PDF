@@ -206,7 +206,8 @@ beforeEach(() => {
   mocks.classify.mockResolvedValue({
     labels: ["Invoice"],
     confidence: "high",
-    isEnglish: true,
+    language: "en",
+    packs: ["en"],
     score: 5,
   });
   // Apply stub updates to the shared workspace, as the real reducer does.

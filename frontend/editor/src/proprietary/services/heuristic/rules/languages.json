@@ -1,0 +1,347 @@
+{
+  "version": 2,
+  "english": {
+    "words": [
+      "the",
+      "and",
+      "of",
+      "to",
+      "in",
+      "is",
+      "that",
+      "for",
+      "on",
+      "with",
+      "as",
+      "are",
+      "this",
+      "be",
+      "by",
+      "at",
+      "from",
+      "or",
+      "an",
+      "not",
+      "your",
+      "you",
+      "we",
+      "has",
+      "have",
+      "will",
+      "was",
+      "were",
+      "been",
+      "their",
+      "they",
+      "which",
+      "any",
+      "all",
+      "may",
+      "shall",
+      "if",
+      "can",
+      "our",
+      "its",
+      "it",
+      "no",
+      "but",
+      "other",
+      "than",
+      "these",
+      "such",
+      "must",
+      "each",
+      "per",
+      "under",
+      "more",
+      "when",
+      "also",
+      "into",
+      "only",
+      "should",
+      "would"
+    ]
+  },
+  "scripts": [
+    {
+      "id": "cjk",
+      "range": "[\\u4E00-\\u9FFF\\u3040-\\u30FF]",
+      "default": "zh",
+      "split": [
+        {
+          "language": "ja",
+          "pattern": "[\\u3040-\\u309F\\u30A0-\\u30FF]",
+          "minCount": 2
+        }
+      ]
+    },
+    {
+      "id": "hangul",
+      "range": "[\\uAC00-\\uD7AF\\u1100-\\u11FF]",
+      "default": "ko"
+    },
+    {
+      "id": "cyrillic",
+      "range": "[\\u0400-\\u052F]",
+      "default": "ru",
+      "split": [
+        { "language": "uk", "pattern": "[іїєґІЇЄҐ]", "minCount": 2 },
+        { "language": "bg", "pattern": "ъ", "minCount": 3, "absent": "[ыэЫЭ]" }
+      ]
+    },
+    {
+      "id": "arabic",
+      "range": "[\\u0600-\\u06FF\\u0750-\\u077F]",
+      "default": "ar",
+      "split": [{ "language": "fa", "pattern": "[پچژگ]", "minCount": 2 }]
+    },
+    { "id": "greek", "range": "[\\u0370-\\u03FF]", "default": "el" },
+    { "id": "devanagari", "range": "[\\u0900-\\u097F]", "default": "hi" },
+    { "id": "hebrew", "range": "[\\u0590-\\u05FF]", "default": "he" },
+    { "id": "thai", "range": "[\\u0E00-\\u0E7F]", "default": "th" },
+    { "id": "malayalam", "range": "[\\u0D00-\\u0D7F]", "default": "ml" },
+    { "id": "tibetan", "range": "[\\u0F00-\\u0FFF]", "default": "bo" }
+  ],
+  "latin": [
+    {
+      "language": "es",
+      "words": [
+        "el",
+        "los",
+        "las",
+        "que",
+        "para",
+        "una",
+        "por",
+        "según",
+        "más"
+      ],
+      "diacritics": "[áéíóúñ¿¡]"
+    },
+    {
+      "language": "fr",
+      "words": [
+        "le",
+        "les",
+        "des",
+        "une",
+        "est",
+        "pour",
+        "avec",
+        "dans",
+        "vous",
+        "votre",
+        "être",
+        "nous",
+        "cette",
+        "sont",
+        "été"
+      ],
+      "diacritics": "[àâçèéêëîïôùûœ]"
+    },
+    {
+      "language": "de",
+      "words": [
+        "der",
+        "die",
+        "das",
+        "und",
+        "ist",
+        "für",
+        "mit",
+        "von",
+        "nicht",
+        "ein",
+        "eine",
+        "werden",
+        "wird",
+        "bei",
+        "sind",
+        "dem"
+      ],
+      "diacritics": "[äöüß]"
+    },
+    {
+      "language": "it",
+      "words": [
+        "il",
+        "di",
+        "che",
+        "per",
+        "con",
+        "una",
+        "del",
+        "della",
+        "sono",
+        "questo",
+        "essere",
+        "più",
+        "nel",
+        "anche",
+        "gli"
+      ],
+      "diacritics": "[àèéìòù]"
+    },
+    {
+      "language": "pt",
+      "words": [
+        "os",
+        "as",
+        "que",
+        "para",
+        "com",
+        "uma",
+        "por",
+        "são",
+        "não",
+        "você",
+        "está",
+        "mais"
+      ],
+      "diacritics": "[ãõçáéíóúâêô]"
+    },
+    {
+      "language": "nl",
+      "words": [
+        "het",
+        "een",
+        "van",
+        "voor",
+        "met",
+        "aan",
+        "niet",
+        "zijn",
+        "wordt",
+        "deze",
+        "als",
+        "bij",
+        "ook",
+        "naar"
+      ],
+      "diacritics": null
+    },
+    {
+      "language": "sv",
+      "words": [
+        "och",
+        "att",
+        "det",
+        "som",
+        "på",
+        "är",
+        "av",
+        "för",
+        "med",
+        "den",
+        "till",
+        "inte",
+        "har",
+        "ett",
+        "du"
+      ],
+      "diacritics": "[åäö]"
+    },
+    {
+      "language": "da",
+      "words": [
+        "og",
+        "af",
+        "ikke",
+        "jeg",
+        "hvis",
+        "eller",
+        "mellem",
+        "været",
+        "skal",
+        "kan",
+        "som",
+        "det",
+        "der",
+        "ved",
+        "efter",
+        "til"
+      ],
+      "diacritics": "[æøå]"
+    },
+    {
+      "language": "no",
+      "words": [
+        "og",
+        "av",
+        "ikke",
+        "jeg",
+        "hvis",
+        "eller",
+        "mellom",
+        "vært",
+        "skal",
+        "kan",
+        "som",
+        "det",
+        "der",
+        "ved",
+        "etter",
+        "til"
+      ],
+      "diacritics": "[æøå]"
+    },
+    {
+      "language": "cs",
+      "words": [
+        "je",
+        "se",
+        "na",
+        "že",
+        "pro",
+        "není",
+        "nebo",
+        "být",
+        "může",
+        "při",
+        "jak",
+        "které",
+        "této",
+        "podle",
+        "také"
+      ],
+      "diacritics": "[áčďéěíňóřšťúůýž]"
+    },
+    {
+      "language": "pl",
+      "words": [
+        "nie",
+        "jest",
+        "się",
+        "że",
+        "oraz",
+        "dla",
+        "przez",
+        "lub",
+        "być",
+        "może",
+        "przy",
+        "jak"
+      ],
+      "diacritics": "[ąćęłńśźż]"
+    },
+    {
+      "language": "tr",
+      "words": [
+        "ve",
+        "bir",
+        "bu",
+        "için",
+        "ile",
+        "olarak",
+        "olan",
+        "gibi",
+        "daha",
+        "çok",
+        "her",
+        "kadar",
+        "sonra"
+      ],
+      "diacritics": "[çğışöü]"
+    }
+  ]
+}

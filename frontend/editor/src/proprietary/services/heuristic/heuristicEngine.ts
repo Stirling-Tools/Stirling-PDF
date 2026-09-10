@@ -1,11 +1,26 @@
 // Heuristic (non-AI) document classifier: string/regex/structural scoring over
-// extracted text, filename and metadata. Rules lazy-load as a separate chunk.
+// extracted text, filename and metadata.
+//
+// This file owns three things and deliberately owns no vocabulary of its own:
+//  - language identification, from the profiles in `rules/languages.json`;
+//  - assembling a rule set for the detected language (core + pack(s), merged);
+//  - the scoring pass and the confidence thresholds.
+//
+// Every word the classifier matches on lives in `rules/` as data. A new language
+// is a new pack file plus a registry line — see `rules/README.md`.
 
+import LANGUAGE_DATA from "@app/services/heuristic/rules/languages.json";
+import {
+  LANGUAGE_PACKS,
+  loadCoreRules,
+} from "@app/services/heuristic/rules/index";
 import type {
   HeuristicConfidence,
   HeuristicDoc,
   HeuristicExplanation,
   HeuristicResult,
+  LanguageCandidate,
+  LanguageDetection,
 } from "@app/services/heuristic/types";
 
 export type {
@@ -13,6 +28,7 @@ export type {
   HeuristicDoc,
   HeuristicExplanation,
   HeuristicResult,
+  LanguageDetection,
 };
 
 // --- scoring constants ---
@@ -28,285 +44,138 @@ const SEC_FRAC = 0.5;
 const SEC_SIGNALS = 2;
 const SEC_MAX = 4;
 
-const STOPWORDS = new Set<string>([
-  "the",
-  "and",
-  "of",
-  "to",
-  "in",
-  "is",
-  "that",
-  "for",
-  "on",
-  "with",
-  "as",
-  "are",
-  "this",
-  "be",
-  "by",
-  "at",
-  "from",
-  "or",
-  "an",
-  "not",
-  "your",
-  "you",
-  "we",
-  "has",
-  "have",
-  "will",
-  "was",
-  "were",
-  "been",
-  "their",
-  "they",
-  "which",
-  "any",
-  "all",
-  "may",
-  "shall",
-  "if",
-  "can",
-  "our",
-  "its",
-  "it",
-  "no",
-  "but",
-  "other",
-  "than",
-  "these",
-  "such",
-  "must",
-  "each",
-  "per",
-  "under",
-  "more",
-  "when",
-  "also",
-  "into",
-  "only",
-  "should",
-  "would",
-]);
+// --- dispatch constants ---
+/**
+ * A runner-up language this close to the winner gets its pack loaded too.
+ * Packs share one label vocabulary, so a second pack cannot contradict the
+ * first — its rules either match the document (bilingual invoices, confusable
+ * pairs like es/pt) or sit inert. The cost of loading one needlessly is bytes;
+ * the cost of missing the right one is a billed AI run, so the bar is generous.
+ *
+ * <p>Hazard when tuning: English scores on stopword ratio alone (~0.15-0.37 for
+ * prose) while the Latin profiles add a diacritic term worth up to 0.9, so the
+ * two scales are only comparable in the middle of their ranges.
+ */
+const SECOND_PACK_BAR = 0.75;
+/** Hard cap on packs per document: a third adds bytes for negligible evidence. */
+const MAX_PACKS = 2;
+/** Below this, confidence is capped so the verdict still reaches the AI engine. */
+const NO_PACK_CONFIDENCE_CAP: HeuristicConfidence = "medium";
 
-// Non-Latin scripts end English classification outright when they dominate.
-const SCRIPT_RANGES: RegExp[] = [
-  /[一-鿿぀-ヿ]/g, // CJK + Kana
-  /[가-힯ᄀ-ᇿ]/g, // Hangul
-  /[Ѐ-ӿ]/g, // Cyrillic
-  /[؀-ۿݐ-ݿ]/g, // Arabic
-  /[Ͱ-Ϳ]/g, // Greek
-  /[ऀ-ॿ]/g, // Devanagari
-  /[֐-׿]/g, // Hebrew
-  /[฀-๿]/g, // Thai
-];
+// Language-neutral structural patterns. Anything with a word in it lives in
+// `rules/`; these are digits, punctuation and glyph shapes.
+const NUMERIC_TOKEN = new RegExp("^[\\d$£€.,%-]+$");
+const DIGIT = /\d/;
+const UNDERSCORE4 = /_{4,}/;
+const CHECKBOX = /[☐☑□■]\s/;
+const DOT_LEADER = /\.{5,}\s*\d+\s*$/;
+const BULLET = /^[•▪◦*-]\s+\S/;
+const URL = /https?:\/\/|www\./gi;
+const CITATION = /\[\d{1,3}\]|\(\d{4}\)/;
 
-interface LatinProfile {
-  words: Set<string>;
-  dia: RegExp | null;
-}
-
-// Function-word and diacritic profiles for common Latin-script languages.
-const LATIN_PROFILES: LatinProfile[] = [
-  {
-    words: new Set([
-      "el",
-      "los",
-      "las",
-      "que",
-      "para",
-      "una",
-      "por",
-      "según",
-      "más",
-    ]),
-    dia: /[áéíóúñ¿¡]/g,
-  },
-  {
-    words: new Set([
-      "le",
-      "les",
-      "des",
-      "une",
-      "est",
-      "pour",
-      "avec",
-      "dans",
-      "vous",
-      "votre",
-      "être",
-      "nous",
-      "cette",
-      "sont",
-      "été",
-    ]),
-    dia: /[àâçèéêëîïôùûœ]/g,
-  },
-  {
-    words: new Set([
-      "der",
-      "die",
-      "das",
-      "und",
-      "ist",
-      "für",
-      "mit",
-      "von",
-      "nicht",
-      "ein",
-      "eine",
-      "werden",
-      "wird",
-      "bei",
-      "sind",
-      "dem",
-    ]),
-    dia: /[äöüß]/g,
-  },
-  {
-    words: new Set([
-      "il",
-      "di",
-      "che",
-      "per",
-      "con",
-      "una",
-      "del",
-      "della",
-      "sono",
-      "questo",
-      "essere",
-      "più",
-      "nel",
-      "anche",
-      "gli",
-    ]),
-    dia: /[àèéìòù]/g,
-  },
-  {
-    words: new Set([
-      "os",
-      "as",
-      "que",
-      "para",
-      "com",
-      "uma",
-      "por",
-      "são",
-      "não",
-      "você",
-      "está",
-      "mais",
-    ]),
-    dia: /[ãõçáéíóúâêô]/g,
-  },
-  {
-    words: new Set([
-      "het",
-      "een",
-      "van",
-      "voor",
-      "met",
-      "aan",
-      "niet",
-      "zijn",
-      "wordt",
-      "deze",
-      "als",
-      "bij",
-      "ook",
-      "naar",
-    ]),
-    dia: null,
-  },
-  {
-    words: new Set([
-      "och",
-      "att",
-      "det",
-      "som",
-      "på",
-      "är",
-      "av",
-      "för",
-      "med",
-      "den",
-      "till",
-      "inte",
-      "har",
-      "ett",
-      "du",
-    ]),
-    dia: /[åäö]/g,
-  },
-  {
-    words: new Set([
-      "nie",
-      "jest",
-      "się",
-      "że",
-      "oraz",
-      "dla",
-      "przez",
-      "lub",
-      "być",
-      "może",
-      "przy",
-      "jak",
-    ]),
-    dia: /[ąćęłńśźż]/g,
-  },
-  {
-    words: new Set([
-      "ve",
-      "bir",
-      "bu",
-      "için",
-      "ile",
-      "olarak",
-      "olan",
-      "gibi",
-      "daha",
-      "çok",
-      "her",
-      "kadar",
-      "sonra",
-    ]),
-    dia: /[çğışöü]/g,
-  },
-];
-
-// detectEnglish helper patterns (global for counting; \p{L} needs the u flag).
 const LETTERS = /\p{L}/gu;
 const LATIN_LETTER = /[a-z]/gi;
 const WORD = /[\p{L}']+/gu;
 
 // ASCII whitespace plus the no-break spaces pdf.js extraction commonly emits.
 // oxlint-disable-next-line no-control-regex -- vertical tab is intentional ASCII whitespace
-const WHITESPACE = /[\t\n\x0B\f\r \u00A0\u2007\u202F]+/g;
+const WHITESPACE = /[\t\n\x0B\f\r    ]+/g;
+const CURLY_APOSTROPHE = /[‘’]/g;
+const COMBINING_MARKS = /[\u0300-\u036F]/g;
+// Letters NFD leaves alone, so folding has to name them.
+const FOLD_PAIRS: [RegExp, string][] = [
+  [/ß/g, "ss"],
+  [/æ/g, "ae"],
+  [/œ/g, "oe"],
+  [/ø/g, "o"],
+  [/ł/g, "l"],
+  [/đ|ð/g, "d"],
+  [/ı/g, "i"],
+  [/þ/g, "th"],
+];
+const LIGATURE_FI = /ﬁ/g;
+const LIGATURE_FL = /ﬂ/g;
 
-// Structural signal patterns. Boolean-presence ones stay non-global (safe .test()),
-// counting ones are global (used via countAll). Currency symbols are \u-escaped.
-const CURRENCY = new RegExp(
-  "[$£€]\\s?\\d[\\d,.]*|\\d[\\d,.]*\\s?(usd|gbp|eur)\\b",
-  "gi",
-);
-const NUMERIC_TOKEN = new RegExp("^[\\d$£€.,%-]+$");
-const DIGIT = /\d/;
-const FORM_LABEL = /^[A-Za-z][A-Za-z /()&']{2,30}:\s*$/;
-const UNDERSCORE4 = /_{4,}/;
-const CHECKBOX = /[☐☑□■]\s/;
-const DOT_LEADER = /\.{5,}\s*\d+\s*$/;
-const BULLET = /^[•▪◦*-]\s+\S/;
-const URL = /https?:\/\/|www\./gi;
-const TOC = /table of contents/i;
-const SIG1 = /\b(signature|signed by|authorized signature|\/s\/)\b/i;
-const SIG2 = /_{6,}\s*\n\s*(date|name|sign)/i;
-const REF1 = /\b(references|bibliography)\b/i;
-const REF2 = /\[\d{1,3}\]|\(\d{4}\)/;
-const EMAIL_FROM = /\bfrom:\s.+\n(.*\n){0,3}?\s*(to|sent|date):\s/i;
-const EMAIL_SUBJ = /subject:\s/i;
-const ADDRESS = /\b\d{5}(-\d{4})?\b|\b[A-Z]{1,2}\d{1,2}[A-Z]?\s?\d[A-Z]{2}\b/g;
+// --- language profiles (compiled once from rules/languages.json) ---
+
+interface ScriptSplit {
+  language: string;
+  re: RegExp;
+  minCount: number;
+  absent: RegExp | null;
+}
+interface ScriptProfile {
+  id: string;
+  range: RegExp;
+  fallback: string;
+  splits: ScriptSplit[];
+}
+interface LatinProfile {
+  language: string;
+  words: Set<string>;
+  dia: RegExp | null;
+}
+
+interface RawScript {
+  id?: unknown;
+  range?: unknown;
+  default?: unknown;
+  split?: {
+    language?: unknown;
+    pattern?: unknown;
+    minCount?: unknown;
+    absent?: unknown;
+  }[];
+}
+interface RawLatin {
+  language?: unknown;
+  words?: unknown;
+  diacritics?: unknown;
+}
+interface LanguagesFile {
+  english?: { words?: unknown };
+  scripts?: RawScript[];
+  latin?: RawLatin[];
+}
+
+const languages = LANGUAGE_DATA as LanguagesFile;
+
+// Profile words are authored as they are spelled; folding them here is what lets
+// "fur" in a diacritic-stripped PDF still count as German "für".
+const ENGLISH_WORDS = new Set<string>(strings(languages.english?.words));
+
+const SCRIPTS: ScriptProfile[] = (languages.scripts ?? []).flatMap((s) => {
+  const range = compileRegex(str(s.range), "g");
+  const fallback = str(s.default);
+  if (range == null || fallback == null) return [];
+  const splits: ScriptSplit[] = (s.split ?? []).flatMap((sp) => {
+    const re = compileRegex(str(sp.pattern), "g");
+    const language = str(sp.language);
+    if (re == null || language == null) return [];
+    const min = num(sp.minCount);
+    return [
+      {
+        language,
+        re,
+        minCount: min > 0 ? min : 1,
+        absent: compileRegex(str(sp.absent), "g"),
+      },
+    ];
+  });
+  return [{ id: str(s.id) ?? fallback, range, fallback, splits }];
+});
+
+const LATIN_PROFILES: LatinProfile[] = (languages.latin ?? []).flatMap((p) => {
+  const language = str(p.language);
+  if (language == null) return [];
+  return [
+    {
+      language,
+      words: new Set(strings(p.words).map((w) => fold(w.toLowerCase()))),
+      dia: compileRegex(str(p.diacritics), "g"),
+    },
+  ];
+});
 
 // --- prepared rule model ---
 interface Phrase {
@@ -352,7 +221,19 @@ interface Prior {
   max: number | null;
 }
 
-// Raw JSON shapes (loose - the pack is authored by hand).
+/** Compiled signal pattern groups, keyed by the group names computeStructural reads. */
+type SignalPatterns = Map<string, RegExp[]>;
+
+/** A scorable rule set: core merged with zero or more language packs. */
+interface PreparedSet {
+  labels: PreparedLabel[];
+  priors: Map<string, Prior>;
+  signals: SignalPatterns;
+  /** Packs merged in, in load order; empty for a core-only set. */
+  packs: string[];
+}
+
+// Raw JSON shapes (the rule files are authored by hand).
 interface RawRule {
   text?: unknown;
   pattern?: unknown;
@@ -372,36 +253,162 @@ interface RawLabel {
   negatives?: RawRule[];
   structural?: RawRule[];
 }
-interface RulesFile {
+interface RawRules {
   labels?: RawLabel[];
   priors?: Record<string, unknown>;
+  patterns?: Record<string, RawRule[]>;
 }
 
-let PREPARED: PreparedLabel[] | null = null;
-let PRIORS: Map<string, Prior> | null = null;
-let loadPromise: Promise<void> | null = null;
+const RULE_KINDS = [
+  "phrases",
+  "regexes",
+  "filenames",
+  "metadata",
+  "negatives",
+  "structural",
+] as const;
 
-/** Load and prepare the rules pack once. Must resolve before classifyHeuristic. */
-export async function ensureRulesLoaded(): Promise<void> {
-  if (PREPARED && PRIORS) return;
-  if (!loadPromise) {
-    loadPromise = import("@app/services/heuristic/heuristicRules.json").then(
+// --- loading ---
+
+let CORE: RawRules | null = null;
+let corePromise: Promise<RawRules> | null = null;
+const PACKS = new Map<string, RawRules>();
+const packPromises = new Map<string, Promise<RawRules>>();
+/** Prepared sets by pack key ("" = core only, "de" , "en+fr" ...). */
+const SETS = new Map<string, PreparedSet>();
+
+function unwrap(mod: unknown): RawRules {
+  const withDefault = mod as { default?: RawRules };
+  return withDefault.default ?? (mod as RawRules);
+}
+
+function loadCore(): Promise<RawRules> {
+  if (CORE != null) return Promise.resolve(CORE);
+  if (corePromise == null) {
+    corePromise = loadCoreRules().then(
       (mod) => {
-        const root = (mod as { default?: RulesFile }).default ?? mod;
-        PREPARED = prepare(root.labels ?? []);
-        PRIORS = loadPriors(root.priors ?? {});
+        CORE = unwrap(mod);
+        return CORE;
       },
       (err) => {
         // A failed chunk load (flaky network) must not poison later attempts.
-        loadPromise = null;
+        corePromise = null;
         throw err;
       },
     );
   }
-  await loadPromise;
+  return corePromise;
 }
 
-// --- Preparation ---
+function loadPack(language: string): Promise<RawRules | null> {
+  const existing = PACKS.get(language);
+  if (existing != null) return Promise.resolve(existing);
+  const loader = LANGUAGE_PACKS[language];
+  if (loader == null) return Promise.resolve(null);
+  let pending = packPromises.get(language);
+  if (pending == null) {
+    pending = loader().then(
+      (mod) => {
+        const pack = unwrap(mod);
+        PACKS.set(language, pack);
+        return pack;
+      },
+      (err) => {
+        packPromises.delete(language);
+        throw err;
+      },
+    );
+    packPromises.set(language, pending);
+  }
+  return pending;
+}
+
+/**
+ * Fetch core plus the given language packs and keep them for the session.
+ * Languages without a pack are ignored rather than rejected. Safe to call
+ * repeatedly; each chunk is fetched once.
+ */
+export async function ensureRulesLoaded(
+  langs: readonly string[] = ["en"],
+): Promise<void> {
+  await Promise.all([loadCore(), ...langs.map((l) => loadPack(l))]);
+}
+
+// --- merging and preparation ---
+
+function mergeRaw(core: RawRules, packs: RawRules[]): RawRules {
+  if (packs.length === 0) return core;
+
+  const byId = new Map<string, RawLabel>();
+  const order: string[] = [];
+  for (const label of core.labels ?? []) {
+    const id = str(label.id);
+    if (id == null) continue;
+    byId.set(id, { ...label });
+    order.push(id);
+  }
+
+  for (const pack of packs) {
+    for (const label of pack.labels ?? []) {
+      const id = str(label.id);
+      // A pack label the core set does not declare would score to an id the UI
+      // cannot render; the pack lint test rejects it, so drop it here.
+      const target = id == null ? undefined : byId.get(id);
+      if (target == null) continue;
+      for (const kind of RULE_KINDS) {
+        const extra = label[kind];
+        if (extra == null || extra.length === 0) continue;
+        target[kind] = [...(target[kind] ?? []), ...extra];
+      }
+    }
+  }
+
+  const patterns: Record<string, RawRule[]> = {};
+  for (const source of [core, ...packs]) {
+    for (const [group, rules] of Object.entries(source.patterns ?? {})) {
+      patterns[group] = [...(patterns[group] ?? []), ...rules];
+    }
+  }
+
+  return {
+    labels: order.map((id) => byId.get(id)!),
+    priors: core.priors,
+    patterns,
+  };
+}
+
+function buildSet(core: RawRules, langs: string[]): PreparedSet {
+  const key = langs.join("+");
+  const cached = SETS.get(key);
+  if (cached != null) return cached;
+
+  const packs = langs.flatMap((l) => {
+    const pack = PACKS.get(l);
+    return pack == null ? [] : [pack];
+  });
+  const merged = mergeRaw(core, packs);
+  const set: PreparedSet = {
+    labels: prepare(merged.labels ?? []),
+    priors: loadPriors(merged.priors ?? {}),
+    signals: prepareSignals(merged.patterns ?? {}),
+    packs: langs,
+  };
+  SETS.set(key, set);
+  return set;
+}
+
+function prepareSignals(groups: Record<string, RawRule[]>): SignalPatterns {
+  const out: SignalPatterns = new Map();
+  for (const [group, rules] of Object.entries(groups)) {
+    const compiled: RegExp[] = [];
+    for (const rule of rules) {
+      const re = compileRegex(str(rule.pattern), flags(rule));
+      if (re != null) compiled.push(re);
+    }
+    if (compiled.length > 0) out.set(group, compiled);
+  }
+  return out;
+}
 
 function prepare(labels: RawLabel[]): PreparedLabel[] {
   const out: PreparedLabel[] = [];
@@ -521,6 +528,185 @@ export function compileRegex(
   }
 }
 
+// --- language identification ---
+
+/** Minimum words before foreign-language evidence is trusted over English. */
+const MIN_WORDS_FOR_FOREIGN = 12;
+/**
+ * Diacritics below this count score nothing. The density term is worth up to 0.9
+ * — far more than English prose scores on function words — so without a floor a
+ * German sign-off on an English invoice outweighs the whole English document.
+ */
+const MIN_DIACRITICS = 3;
+/** Dominance a script range needs over all letters to decide the writing system. */
+const SCRIPT_SHARE = 0.25;
+
+/**
+ * Name the language a document is written in. English is the assumption of last
+ * resort (`assumed: true`) because data-dense documents — tickets, itineraries,
+ * prescriptions — carry too few function words to prove any language, and the
+ * English pack is the one most likely to still match their field labels.
+ *
+ * <p>`candidates` is ranked best-first and is what the pack dispatch reads;
+ * `language` is its head.
+ */
+export function detectLanguage(text: string): LanguageDetection {
+  const raw = nz(text);
+  const letters = countAll(LETTERS, raw);
+  if (letters < 25) {
+    return {
+      language: null,
+      script: null,
+      candidates: [],
+      assumed: false,
+      lowText: true,
+    };
+  }
+
+  for (const script of SCRIPTS) {
+    if (countAll(script.range, raw) / letters <= SCRIPT_SHARE) continue;
+    const language = resolveScript(script, raw);
+    return {
+      language,
+      script: script.id,
+      candidates: [{ language, score: 1 }],
+      assumed: false,
+      lowText: false,
+    };
+  }
+
+  const latinRatio = countAll(LATIN_LETTER, raw) / letters;
+  const words = allMatches(WORD, normalize(raw));
+  const totalWords = Math.max(words.length, 1);
+  const lowText = totalWords < 30;
+
+  let englishHits = 0;
+  for (const w of words) if (ENGLISH_WORDS.has(w)) englishHits++;
+  const englishScore = englishHits / totalWords;
+
+  const candidates: LanguageCandidate[] = [];
+  let bestDistinct = 0;
+  let bestDia = 0;
+  let bestRatio = 0;
+  let bestScore = 0;
+  for (const profile of LATIN_PROFILES) {
+    let hits = 0;
+    const distinct = new Set<string>();
+    for (const w of words) {
+      if (profile.words.has(w)) {
+        hits++;
+        distinct.add(w);
+      }
+    }
+    const diaCount = profile.dia == null ? 0 : countAll(profile.dia, raw);
+    const diaEvidence = diaCount >= MIN_DIACRITICS ? diaCount : 0;
+    const ratio = hits / totalWords;
+    const score = ratio + Math.min(diaEvidence / totalWords, 0.15) * 6;
+    // Zero-scoring profiles stay on the list: they are what the assumed-English
+    // hedge falls back to, and a positive English score filters them out anyway.
+    candidates.push({ language: profile.language, score });
+    if (score > bestScore) {
+      bestScore = score;
+      bestRatio = ratio;
+      bestDistinct = distinct.size;
+      bestDia = diaCount;
+    }
+  }
+
+  // Affirmative evidence of a specific other language, not merely an absence of
+  // English: a shared function word or stray accent must not unseat English.
+  const foreignEvidence = bestDistinct >= 3 || bestDia >= 6;
+  const foreignWins =
+    latinRatio >= 0.7 &&
+    totalWords >= MIN_WORDS_FOR_FOREIGN &&
+    foreignEvidence &&
+    (bestDia >= 3 || bestRatio >= 0.1) &&
+    bestScore > englishScore * 1.2 &&
+    (englishScore < 0.04 || bestRatio > englishScore * 1.5);
+
+  if (englishScore > 0)
+    candidates.push({ language: "en", score: englishScore });
+  candidates.sort((a, b) => b.score - a.score);
+
+  if (foreignWins) {
+    return {
+      language: candidates[0]?.language ?? null,
+      script: "latin",
+      candidates,
+      assumed: false,
+      lowText,
+    };
+  }
+
+  const bar = lowText ? 0.03 : 0.045;
+  const englishProven = latinRatio >= 0.75 && englishScore >= bar;
+  const englishAssumed = latinRatio >= 0.75 && !foreignEvidence;
+  if (!englishProven && !englishAssumed) {
+    return {
+      language: null,
+      script: latinRatio >= 0.7 ? "latin" : null,
+      candidates,
+      assumed: false,
+      lowText,
+    };
+  }
+  // English leads, but the alternatives stay on the list: when English is only
+  // assumed, the runner-up is how a data-dense foreign document is still reached.
+  return {
+    language: "en",
+    script: "latin",
+    candidates: [
+      { language: "en", score: englishScore },
+      ...candidates.filter((c) => c.language !== "en"),
+    ],
+    assumed: !englishProven,
+    lowText,
+  };
+}
+
+function resolveScript(script: ScriptProfile, raw: string): string {
+  for (const split of script.splits) {
+    if (countAll(split.re, raw) < split.minCount) continue;
+    if (split.absent != null && countAll(split.absent, raw) > 0) continue;
+    return split.language;
+  }
+  return script.fallback;
+}
+
+/**
+ * Packs to score a document against: the detected language, plus a runner-up
+ * within {@link SECOND_PACK_BAR} of it. Languages with no authored pack drop
+ * out, so the result is often shorter than the candidate list and may be empty.
+ *
+ * <p>When English was only assumed, the bar drops to zero and the best
+ * alternative with a pack rides along unconditionally. Data-dense documents — a
+ * bank statement, a payslip, a delivery note — are mostly nouns and numbers and
+ * carry too few function words to prove any language, so for those the pack's own
+ * vocabulary is the better evidence. Hedging costs one chunk; guessing English
+ * costs the verdict.
+ */
+function packsFor(detection: LanguageDetection): string[] {
+  const ranked =
+    detection.candidates.length > 0
+      ? detection.candidates
+      : detection.language != null
+        ? [{ language: detection.language, score: 1 }]
+        : [];
+  const best = ranked[0]?.score ?? 0;
+  const bar = detection.assumed ? 0 : best * SECOND_PACK_BAR;
+  const out: string[] = [];
+  for (const candidate of ranked) {
+    if (out.length >= MAX_PACKS) break;
+    // The bar applies from the first candidate, so a confidently-detected
+    // language with no pack scores against core alone rather than falling
+    // through to whatever pack happens to be next on the list.
+    if (candidate.score < bar) break;
+    if (!(candidate.language in LANGUAGE_PACKS)) continue;
+    if (!out.includes(candidate.language)) out.push(candidate.language);
+  }
+  return out;
+}
+
 // --- Public API ---
 
 interface ScoredLabel {
@@ -538,12 +724,20 @@ const EXPLAIN_SIGNALS = 12;
 const fmt = (n: number) => Math.round(n * 10) / 10;
 
 function toExplanation(
-  en: { isEnglish: boolean; lowText: boolean },
+  detection: LanguageDetection,
+  packs: string[],
   scored: ScoredLabel[],
 ): HeuristicExplanation {
   return {
-    isEnglish: en.isEnglish,
-    lowText: en.lowText,
+    language: detection.language,
+    script: detection.script,
+    assumed: detection.assumed,
+    lowText: detection.lowText,
+    packs,
+    languageCandidates: detection.candidates.map((c) => ({
+      language: c.language,
+      score: fmt(c.score * 100) / 100,
+    })),
     candidates: scored.slice(0, EXPLAIN_CANDIDATES).map((s) => ({
       id: s.label.id,
       emit: s.label.emit,
@@ -554,30 +748,33 @@ function toExplanation(
   };
 }
 
-/** Classify a document; returns emitted label ids (primary + secondaries, capped at 5). */
-export function classifyHeuristic(
+/**
+ * Classify a document: identify its language, fetch the rules for it, and score.
+ * Returns emitted label ids (primary + secondaries, capped at 5).
+ *
+ * <p>A document in a language with no authored pack is still scored, against the
+ * language-neutral core alone, but its confidence is capped at
+ * {@link NO_PACK_CONFIDENCE_CAP} so the AI engine still gets to rule on it.
+ */
+export async function classifyHeuristic(
   doc: HeuristicDoc,
   opts?: { explain?: boolean },
+): Promise<HeuristicResult> {
+  const detection = detectLanguage(doc.allZone);
+  const wanted = packsFor(detection);
+  const core = await loadCore();
+  await Promise.all(wanted.map((l) => loadPack(l)));
+  const loaded = wanted.filter((l) => PACKS.has(l));
+  return score(doc, buildSet(core, loaded), detection, opts);
+}
+
+function score(
+  doc: HeuristicDoc,
+  set: PreparedSet,
+  detection: LanguageDetection,
+  opts?: { explain?: boolean },
 ): HeuristicResult {
-  if (!PREPARED || !PRIORS) {
-    throw new Error(
-      "Heuristic rules not loaded; await ensureRulesLoaded() before classifyHeuristic().",
-    );
-  }
   const explain = opts?.explain === true;
-
-  const en = detectEnglish(doc.allZone);
-  // Non-English with real text: honestly out of scope for the English heuristics.
-  if (!en.isEnglish && !en.lowText) {
-    return {
-      labels: [],
-      confidence: "none",
-      score: 0,
-      isEnglish: false,
-      ...(explain ? { explain: toExplanation(en, []) } : {}),
-    };
-  }
-
   const titleRaw = nz(doc.titleZone);
   const firstRaw = nz(doc.firstZone);
   const anyRaw = nz(doc.allZone);
@@ -587,10 +784,10 @@ export function classifyHeuristic(
   const fileNameLower = nz(doc.fileName).toLowerCase();
   const meta = doc.meta ?? {};
   const metaAll = Object.values(meta).join(" \n ");
-  const struct = computeStructural(doc);
+  const struct = computeStructural(doc, set.signals);
 
   const scored: ScoredLabel[] = [];
-  for (const label of PREPARED) {
+  for (const label of set.labels) {
     let score = 0;
     let distinct = 0;
     const sig: string[] | null = explain ? [] : null;
@@ -679,7 +876,7 @@ export function classifyHeuristic(
     }
 
     if (score > 0) {
-      const prior = pagePriorMultiplier(label.id, doc.pageCount);
+      const prior = pagePriorMultiplier(set.priors, label.id, doc.pageCount);
       if (prior !== 1) sig?.push(`page-prior x${fmt(prior)}`);
       score *= prior;
       scored.push({ label, score, distinct, signals: sig });
@@ -709,28 +906,28 @@ export function classifyHeuristic(
       confidence = "low";
     }
   }
+  // Core alone is filenames, producer brands and document shape — enough to
+  // suggest a label, never enough to stand in for the engine's verdict.
+  if (set.packs.length === 0 && confidence === "high") {
+    confidence = NO_PACK_CONFIDENCE_CAP;
+  }
 
   const roundedScore = Math.round(s1);
-  const explanation = explain ? { explain: toExplanation(en, scored) } : {};
+  const explanation = explain
+    ? { explain: toExplanation(detection, set.packs, scored) }
+    : {};
+  const base = {
+    confidence,
+    score: roundedScore,
+    language: detection.language,
+    packs: set.packs,
+    ...explanation,
+  };
   if (top == null || confidence === "none") {
-    return {
-      labels: [],
-      confidence: "none",
-      score: roundedScore,
-      isEnglish: en.isEnglish,
-      ...explanation,
-    };
+    return { ...base, labels: [], confidence: "none" };
   }
   // Internal-only winner (book, menu...): suppress output rather than mislabel.
-  if (!top.label.emit) {
-    return {
-      labels: [],
-      confidence,
-      score: roundedScore,
-      isEnglish: en.isEnglish,
-      ...explanation,
-    };
-  }
+  if (!top.label.emit) return { ...base, labels: [] };
 
   const labels: string[] = [top.label.id];
   for (let i = 1; i < scored.length && labels.length < 5; i++) {
@@ -745,13 +942,7 @@ export function classifyHeuristic(
       labels.push(s.label.id);
     }
   }
-  return {
-    labels,
-    confidence,
-    score: roundedScore,
-    isEnglish: en.isEnglish,
-    ...explanation,
-  };
+  return { ...base, labels };
 }
 
 /** True when the top match cleared the high-confidence bar. */
@@ -764,77 +955,35 @@ export function isDefinitive(r: HeuristicResult): boolean {
   return isHighConfidence(r) && r.labels.length > 0;
 }
 
-// --- English detection ---
-
-interface EnglishResult {
-  isEnglish: boolean;
-  lowText: boolean;
-}
-
-export function detectEnglish(text: string): EnglishResult {
-  const raw = nz(text);
-  const letters = countAll(LETTERS, raw);
-  if (letters < 25) return { isEnglish: false, lowText: true };
-
-  for (const re of SCRIPT_RANGES) {
-    const hits = countAll(re, raw);
-    if (hits / letters > 0.25) return { isEnglish: false, lowText: false };
-  }
-
-  const latinRatio = countAll(LATIN_LETTER, raw) / letters;
-  const words = allMatches(WORD, normalize(raw));
-  const totalWords = Math.max(words.length, 1);
-  let enHits = 0;
-  for (const w of words) if (STOPWORDS.has(w)) enHits++;
-  const stopRatio = enHits / totalWords;
-
-  let bestScore = 0;
-  let bestRatio = 0;
-  let bestDistinct = 0;
-  let bestDia = 0;
-  for (const profile of LATIN_PROFILES) {
-    let hits = 0;
-    const distinct = new Set<string>();
-    for (const w of words) {
-      if (profile.words.has(w)) {
-        hits++;
-        distinct.add(w);
-      }
-    }
-    const diaCount = profile.dia == null ? 0 : countAll(profile.dia, raw);
-    const ratio = hits / totalWords;
-    const score = ratio + Math.min(diaCount / totalWords, 0.15) * 6;
-    if (score > bestScore) {
-      bestScore = score;
-      bestRatio = ratio;
-      bestDistinct = distinct.size;
-      bestDia = diaCount;
-    }
-  }
-
-  const lowText = totalWords < 30;
-  const nonEnglish =
-    latinRatio >= 0.7 &&
-    totalWords >= 12 &&
-    (bestDistinct >= 3 || bestDia >= 6) &&
-    (bestDia >= 3 || bestRatio >= 0.1) &&
-    bestScore > stopRatio * 1.2 &&
-    (stopRatio < 0.04 || bestRatio > stopRatio * 1.5);
-  if (nonEnglish) return { isEnglish: false, lowText };
-
-  const bar = lowText ? 0.03 : 0.045;
-  // Data-dense docs (tickets, itineraries, prescriptions) are mostly names and numbers with few
-  // function words in ANY language; reject stop-poor text only on affirmative foreign evidence.
-  const foreignEvidence = bestDistinct >= 3 || bestDia >= 6;
-  return {
-    isEnglish: latinRatio >= 0.75 && (stopRatio >= bar || !foreignEvidence),
-    lowText,
-  };
-}
-
 // --- Structural signals ---
 
-function computeStructural(doc: HeuristicDoc): Record<string, number> {
+function anyMatch(
+  signals: SignalPatterns,
+  group: string,
+  hay: string,
+): boolean {
+  const patterns = signals.get(group);
+  if (patterns == null) return false;
+  for (const re of patterns) if (countRegex(re, hay) > 0) return true;
+  return false;
+}
+
+function countGroup(
+  signals: SignalPatterns,
+  group: string,
+  hay: string,
+): number {
+  const patterns = signals.get(group);
+  if (patterns == null) return 0;
+  let total = 0;
+  for (const re of patterns) total += countAll(re, hay);
+  return total;
+}
+
+function computeStructural(
+  doc: HeuristicDoc,
+  signals: SignalPatterns,
+): Record<string, number> {
   const all = nz(doc.allZone);
   const lines: string[] = [];
   for (const l of all.split("\n")) {
@@ -847,15 +996,21 @@ function computeStructural(doc: HeuristicDoc): Record<string, number> {
   }
   const totalTokens = Math.max(tokens.length, 1);
 
-  const currency = countAll(CURRENCY, all);
+  const currency = countGroup(signals, "currency", all);
   let numericTokens = 0;
   for (const t of tokens) {
     if (NUMERIC_TOKEN.test(t) && DIGIT.test(t)) numericTokens++;
   }
+  const formLabels = signals.get("form_label") ?? [];
   let formLines = 0;
   for (const l of lines) {
-    if (FORM_LABEL.test(l) || UNDERSCORE4.test(l) || CHECKBOX.test(l))
+    if (
+      UNDERSCORE4.test(l) ||
+      CHECKBOX.test(l) ||
+      formLabels.some((re) => countRegex(re, l) > 0)
+    ) {
       formLines++;
+    }
   }
   let dotLeaders = 0;
   for (const l of lines) if (DOT_LEADER.test(l)) dotLeaders++;
@@ -869,21 +1024,35 @@ function computeStructural(doc: HeuristicDoc): Record<string, number> {
   s["currency_heavy"] = currency >= 8 ? 1.0 : Math.min(currency / 8.0, 1.0);
   s["number_table"] = numericTokens / totalTokens >= 0.22 ? 1.0 : 0.0;
   s["form_like"] = formLines >= 6 ? 1.0 : formLines >= 3 ? 0.5 : 0.0;
-  s["toc"] = TOC.test(all) || dotLeaders >= 5 ? 1.0 : 0.0;
-  s["signature_block"] = SIG1.test(tail) || SIG2.test(tail) ? 1.0 : 0.0;
+  s["toc"] = anyMatch(signals, "toc", all) || dotLeaders >= 5 ? 1.0 : 0.0;
+  s["signature_block"] =
+    anyMatch(signals, "signature", tail) ||
+    anyMatch(signals, "signature_form", tail)
+      ? 1.0
+      : 0.0;
   s["references_section"] =
-    REF1.test(last4000) && REF2.test(last4000) ? 1.0 : 0.0;
+    anyMatch(signals, "references", last4000) && CITATION.test(last4000)
+      ? 1.0
+      : 0.0;
   s["short_doc"] = doc.pageCount > 0 && doc.pageCount <= 2 ? 1.0 : 0.0;
   s["long_doc"] = doc.pageCount >= 40 ? 1.0 : 0.0;
   s["bullet_heavy"] = bullets >= 12 ? 1.0 : bullets >= 6 ? 0.5 : 0.0;
-  s["email_headers"] = EMAIL_FROM.test(all) && EMAIL_SUBJ.test(all) ? 1.0 : 0.0;
+  s["email_headers"] =
+    anyMatch(signals, "email_from", all) &&
+    anyMatch(signals, "email_subject", all)
+      ? 1.0
+      : 0.0;
   s["url_heavy"] = urls >= 6 ? 1.0 : 0.0;
-  s["address_block"] = countAll(ADDRESS, all) >= 2 ? 1.0 : 0.0;
+  s["address_block"] = countGroup(signals, "address", all) >= 2 ? 1.0 : 0.0;
   return s;
 }
 
-function pagePriorMultiplier(labelId: string, pageCount: number): number {
-  const prior = PRIORS!.get(labelId);
+function pagePriorMultiplier(
+  priors: Map<string, Prior>,
+  labelId: string,
+  pageCount: number,
+): number {
+  const prior = priors.get(labelId);
   if (prior == null || pageCount < 1) return 1;
   if (prior.max != null && pageCount > prior.max) {
     return Math.max(0.3, prior.max / pageCount);
@@ -903,22 +1072,40 @@ function num(v: unknown): number {
 }
 
 function str(v: unknown): string | null {
-  return typeof v === "string" ? v : null;
+  return typeof v === "string" && v.length > 0 ? v : null;
 }
 
-// Curly apostrophes and fi/fl ligatures survive pdf.js extraction in many PDFs;
-// fold them to ASCII so rule phrases authored with ' / fi / fl still match.
-const CURLY_APOSTROPHE = /[\u2018\u2019]/g;
-const LIGATURE_FI = /\uFB01/g;
-const LIGATURE_FL = /\uFB02/g;
+function strings(v: unknown): string[] {
+  return Array.isArray(v)
+    ? v.filter((x): x is string => typeof x === "string")
+    : [];
+}
 
+/**
+ * Lower-case, fold diacritics, and flatten the ligatures and no-break spaces
+ * pdf.js emits. Phrase text and document text both come through here, so a rule
+ * written "zahlbar bis Fälligkeit" still matches a PDF whose text layer lost the
+ * umlaut — common in scans and in older generators, and the difference between a
+ * pack working on real documents and only on clean ones.
+ *
+ * <p>Regex rules are matched against raw text instead, so a pattern that needs
+ * an accented letter must spell both forms.
+ */
 function normalize(text: string | null | undefined): string {
-  return nz(text)
-    .toLowerCase()
-    .replace(CURLY_APOSTROPHE, "'")
-    .replace(LIGATURE_FI, "fi")
-    .replace(LIGATURE_FL, "fl")
-    .replace(WHITESPACE, " ");
+  return fold(
+    nz(text)
+      .toLowerCase()
+      .replace(CURLY_APOSTROPHE, "'")
+      .replace(LIGATURE_FI, "fi")
+      .replace(LIGATURE_FL, "fl")
+      .replace(WHITESPACE, " "),
+  );
+}
+
+function fold(text: string): string {
+  let out = text.normalize("NFD").replace(COMBINING_MARKS, "");
+  for (const [re, to] of FOLD_PAIRS) out = out.replace(re, to);
+  return out;
 }
 
 function damp(count: number): number {
@@ -929,23 +1116,25 @@ function damp(count: number): number {
 function countOccurrences(haystack: string, needle: string | null): number {
   if (needle == null || needle.length === 0) return 0;
   let count = 0;
-  let idx = haystack.indexOf(needle);
-  while (idx !== -1 && count < 12) {
+  let from = 0;
+  for (;;) {
+    const at = haystack.indexOf(needle, from);
+    if (at < 0) break;
     count++;
-    idx = haystack.indexOf(needle, idx + needle.length);
+    from = at + needle.length;
   }
   return count;
 }
 
-// Non-overlapping matches capped at 12.
 function countRegex(re: RegExp | null, text: string | null): number {
   if (re == null || text == null || text.length === 0) return 0;
   re.lastIndex = 0;
   let count = 0;
-  let m: RegExpExecArray | null;
-  while (count < 12 && (m = re.exec(text)) !== null) {
+  for (;;) {
+    const m = re.exec(text);
+    if (m == null) break;
     count++;
-    if (m.index === re.lastIndex) re.lastIndex++; // advance past zero-width match
+    if (m.index === re.lastIndex) re.lastIndex++;
   }
   return count;
 }
@@ -954,8 +1143,9 @@ function countAll(re: RegExp, text: string | null): number {
   if (text == null || text.length === 0) return 0;
   re.lastIndex = 0;
   let count = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
+  for (;;) {
+    const m = re.exec(text);
+    if (m == null) break;
     count++;
     if (m.index === re.lastIndex) re.lastIndex++;
   }
@@ -963,11 +1153,12 @@ function countAll(re: RegExp, text: string | null): number {
 }
 
 function allMatches(re: RegExp, text: string | null): string[] {
-  const out: string[] = [];
-  if (text == null || text.length === 0) return out;
+  if (text == null || text.length === 0) return [];
   re.lastIndex = 0;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(text)) !== null) {
+  const out: string[] = [];
+  for (;;) {
+    const m = re.exec(text);
+    if (m == null) break;
     out.push(m[0]);
     if (m.index === re.lastIndex) re.lastIndex++;
   }
