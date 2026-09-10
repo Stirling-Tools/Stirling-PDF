@@ -34,6 +34,9 @@ export async function installTauri(page: Page) {
     w.__saveDisk = () =>
       sessionStorage.setItem("__disk", JSON.stringify(w.__disk));
     w.__callbacks = {};
+    // Lets a spec tell a build that reconciles against disk from one that
+    // stubs it out: only the former ever asks for a file's disk state.
+    w.__invoked = [];
     w.__listeners = {};
     let nextCb = 1;
 
@@ -67,6 +70,7 @@ export async function installTauri(page: Page) {
       },
       unregisterListener() {},
       async invoke(cmd: string, args: any = {}) {
+        w.__invoked.push(cmd);
         switch (cmd) {
           case "file_disk_state":
             return stat(args.path);
@@ -267,8 +271,19 @@ export async function seedFiles(page: Page, files: SeedFile[]) {
 /** The desktop profile opens onto a welcome carousel and a sign-in prompt. */
 
 export async function dismissModals(page: Page) {
-  for (let i = 0; i < 6; i++) {
-    const close = page.locator('[aria-label="Close"]:visible').first();
+  for (let i = 0; i < 8; i++) {
+    // Dialog-scoped first, and deliberately not by aria-label: the welcome
+    // carousel's close button carries none, so an attribute match lands on the
+    // window chrome's Close - which is earlier in the DOM and does nothing -
+    // and the carousel's overlay then eats every click that follows.
+    const inDialog = page
+      .getByRole("dialog")
+      .getByRole("button", { name: "Close" })
+      .first();
+    const close =
+      (await inDialog.count()) > 0
+        ? inDialog
+        : page.locator('[aria-label="Close"]:visible').first();
     if ((await close.count()) === 0) break;
     await close.click({ timeout: 2000 }).catch(() => {});
     await page.waitForTimeout(250);

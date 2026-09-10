@@ -4,6 +4,7 @@ import {
   type DiskEntry,
   type SeedFile,
   installTauri,
+  deleteOnDisk,
   dismissModals,
   editOnDisk,
   emitWatch,
@@ -44,6 +45,49 @@ const report = (over: Partial<SeedFile> = {}): SeedFile => ({
   ...over,
 });
 
+/** Every assertion below describes a build that reconciles records against
+ *  disk. A core or proprietary bundle stubs that out, so the whole file would
+ *  be checking that nothing happened - skip rather than fail such a run.
+ *  Call after staging: listing the files is what first asks disk anything. */
+async function requireDiskLinking(page: Page) {
+  const invoked = await page.evaluate(
+    () => (window as unknown as { __invoked?: string[] }).__invoked ?? [],
+  );
+  test.skip(
+    !invoked.includes("file_disk_state"),
+    "needs `vite --mode desktop`; this build has no disk linking",
+  );
+}
+
+/** Pages the page editor has laid out - it renders the whole document, so this
+ *  is a straight count of what the editor is working on. */
+function editorPages(page: Page) {
+  return page.locator("[data-page-id]");
+}
+
+/** Open the file, dirty it in the page editor, then move the file on disk.
+ *  Leaves the conflict modal on screen. */
+async function conflictInPageEditor(page: Page) {
+  await installTauri(page);
+  await gotoFiles(page);
+  await stage(page, onDisk(), [report()]);
+  await dismissModals(page);
+  await requireDiskLinking(page);
+  await openCard(page, "quarterly-report.pdf");
+
+  await page.getByText("PDF Multi Tool", { exact: true }).first().click();
+  const firstPage = editorPages(page).first();
+  await firstPage.waitFor({ state: "visible", timeout: 30_000 });
+  await firstPage.hover();
+  await firstPage.getByRole("button", { name: "Rotate Right" }).click();
+
+  await editOnDisk(page, REPORT, PDF_8_PAGES);
+  await emitWatch(page, [REPORT]);
+  await expect(
+    page.getByRole("button", { name: /Keep my changes/i }),
+  ).toBeVisible({ timeout: 20_000 });
+}
+
 /** The viewer's own page count. Not the mounted [data-page-index] elements:
  *  the viewer virtualises, so those count what is scrolled into view. */
 function viewerPageCount(page: Page, pages: number) {
@@ -51,22 +95,6 @@ function viewerPageCount(page: Page, pages: number) {
 }
 
 test.use({ autoGoto: false, viewport: { width: 2076, height: 1096 } });
-
-/** The welcome carousel's close button carries no aria-label, so the shared
- *  dismissal walks past it and its overlay then eats every card click. Scoped to
- *  the dialog so it cannot reach the window chrome's Close, which shares a name.
- *  The conflict modal is deliberately close-button-less, so this never eats it. */
-async function dismissOnboarding(page: Page) {
-  for (let i = 0; i < 6; i++) {
-    const close = page
-      .getByRole("dialog")
-      .getByRole("button", { name: "Close" })
-      .first();
-    if ((await close.count()) === 0) break;
-    await close.click({ timeout: 2000 }).catch(() => {});
-    await page.waitForTimeout(300);
-  }
-}
 
 test.describe.configure({ mode: "serial", timeout: 180_000 });
 
@@ -78,7 +106,7 @@ test.describe("an external edit never silently costs the user work", () => {
     await gotoFiles(page);
     await stage(page, onDisk(), [report()]);
     await dismissModals(page);
-    await dismissOnboarding(page);
+    await requireDiskLinking(page);
     await openCard(page, "quarterly-report.pdf");
 
     await expect(viewerPageCount(page, 1)).toBeVisible({ timeout: 30_000 });
@@ -104,7 +132,7 @@ test.describe("an external edit never silently costs the user work", () => {
     await gotoFiles(page);
     await stage(page, onDisk(), [report()]);
     await dismissModals(page);
-    await dismissOnboarding(page);
+    await requireDiskLinking(page);
     await openCard(page, "quarterly-report.pdf");
 
     await page.getByText("PDF Multi Tool", { exact: true }).first().click();
@@ -142,7 +170,7 @@ test.describe("an external edit never silently costs the user work", () => {
       }),
     ]);
     await dismissModals(page);
-    await dismissOnboarding(page);
+    await requireDiskLinking(page);
     await editOnDisk(page, REPORT, PDF_8_PAGES);
 
     const card = page.locator(".files-page-card").first();
@@ -195,5 +223,86 @@ test.describe("an external edit never silently costs the user work", () => {
     // The data loss this pins: reconciliation reloaded the path and wrote
     // today's bytes over the only copy that version had.
     expect(storedSize).toBe(PDF_1_PAGE.length);
+  });
+
+  test("taking the disk version replaces what the editor is showing", async ({
+    page,
+  }) => {
+    await conflictInPageEditor(page);
+    await expect(editorPages(page)).toHaveCount(1);
+
+    await page.getByRole("button", { name: /Use the disk version/i }).click();
+
+    // Resolving towards disk has to reach the open editor, not just storage.
+    await expect(editorPages(page)).toHaveCount(8, { timeout: 30_000 });
+    await expect(
+      page.getByRole("button", { name: /Keep my changes/i }),
+    ).toHaveCount(0);
+  });
+
+  test("keeping my changes leaves the document alone and flags the file", async ({
+    page,
+  }) => {
+    await conflictInPageEditor(page);
+
+    await page.getByRole("button", { name: /Keep my changes/i }).click();
+    await expect(
+      page.getByRole("button", { name: /Keep my changes/i }),
+    ).toHaveCount(0);
+    await expect(editorPages(page)).toHaveCount(1);
+
+    // The decision outlives the modal: the list has to say the two still differ.
+    await gotoFiles(page);
+    await dismissModals(page);
+    await expect(
+      page.getByRole("img", { name: /Disk changed/i }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+  });
+
+  test("a file deleted on disk stays open and says saving will relocate it", async ({
+    page,
+  }) => {
+    await installTauri(page);
+    await gotoFiles(page);
+    await stage(page, onDisk(), [report()]);
+    await dismissModals(page);
+    await requireDiskLinking(page);
+    await openCard(page, "quarterly-report.pdf");
+
+    await deleteOnDisk(page, REPORT);
+    await emitWatch(page, [REPORT]);
+
+    await expect(
+      page.getByText(/no longer exists on disk/i).first(),
+    ).toBeVisible({ timeout: 20_000 });
+    // Never deleted from under the user: the document is the only copy now.
+    await expect(viewerPageCount(page, 1)).toBeVisible();
+
+    await gotoFiles(page);
+    await dismissModals(page);
+    await expect(
+      page.getByRole("img", { name: /Not on disk/i }).first(),
+    ).toBeVisible({ timeout: 20_000 });
+  });
+
+  test("a conflict raised at open time still shows the stored document", async ({
+    page,
+  }) => {
+    await installTauri(page);
+    await gotoFiles(page);
+    // Already dirty from a previous session, and disk moved on while the app
+    // was closed: the conflict is raised by the open itself, not the watcher.
+    await stage(page, onDisk(), [report({ isDirty: true })]);
+    await dismissModals(page);
+    await requireDiskLinking(page);
+    await editOnDisk(page, REPORT, PDF_8_PAGES);
+    await openCard(page, "quarterly-report.pdf");
+
+    await expect(
+      page.getByRole("button", { name: /Keep my changes/i }),
+    ).toBeVisible({ timeout: 20_000 });
+    // Asking the user to choose over a blank viewer gives them nothing to
+    // choose between: their own version has to be on screen behind the modal.
+    await expect(viewerPageCount(page, 1)).toBeVisible({ timeout: 20_000 });
   });
 });
