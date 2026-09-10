@@ -64,12 +64,6 @@ export interface PolicyCategory {
   providesClassification?: boolean;
   comingSoon?: boolean;
   requiresAiEngine?: boolean;
-  /**
-   * Opens the pipeline builder rather than the setup wizard. For a category whose whole subject is
-   * the source-to-destination wiring, the wizard's tool toggles are the wrong question: the builder
-   * is where a source, a trigger and a destination are bound together.
-   */
-  opensBuilder?: boolean;
 }
 
 export interface PolicyConfigDef {
@@ -229,7 +223,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.routing.label",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
-    opensBuilder: true,
   },
   {
     id: "retention",
@@ -363,9 +356,7 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.routing.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    // Kept for the catalogue card's summary; routing itself is built in the pipeline builder
-    // (see PolicyCategory.opensBuilder), which is where its source and destinations are bound.
-    defaultOperations: [],
+    defaultOperations: [policyStep("classify")],
     fields: [],
   },
   retention: {

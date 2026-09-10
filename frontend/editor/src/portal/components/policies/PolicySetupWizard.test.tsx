@@ -37,6 +37,13 @@ vi.mock("@portal/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
 }));
 
+const fetchSources = vi.fn();
+vi.mock("@portal/api/sources", () => ({
+  fetchSources: () => fetchSources(),
+}));
+
+vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+
 const SAVE_CHANGES = "portal.policies.wizard.actions.saveChanges";
 const ENABLE = "portal.policies.wizard.actions.enablePolicy";
 
@@ -91,6 +98,7 @@ const routingEntry: CatalogueEntry = {
 describe("PolicySetupWizard", () => {
   beforeEach(() => {
     fetchIntegrations.mockResolvedValue([]);
+    fetchSources.mockResolvedValue({ kpis: [], sources: [] });
   });
 
   it("round-trips a saved step's backend params on edit", async () => {
@@ -226,7 +234,7 @@ describe("PolicySetupWizard", () => {
     expect(redact.listOfText).toBeTruthy();
   });
 
-  it("blocks a routing policy with no tools enabled", async () => {
+  it("seeds routing with the classify step it routes on", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
 
     render(
@@ -239,10 +247,13 @@ describe("PolicySetupWizard", () => {
     );
     await submitWizard(ENABLE);
 
-    expect(
-      await screen.findByText("portal.policies.wizard.errors.noTools"),
-    ).toBeInTheDocument();
-    expect(onSubmit).not.toHaveBeenCalled();
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.steps.map((step) => step.operation)).toEqual([
+      "/api/v1/ai/tools/classify-and-label",
+    ]);
+    // A route with nothing filled in yet is carried through; the backend validator is the gate.
+    expect(result.routingRules).toHaveLength(1);
   });
 
   it("defaults a new security policy to enforcing on export", async () => {

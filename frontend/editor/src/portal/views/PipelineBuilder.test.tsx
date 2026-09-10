@@ -931,25 +931,6 @@ describe("PipelineBuilder", () => {
     await waitFor(() => expect(savePipeline).not.toHaveBeenCalled());
   });
 
-  it("arrives from the Routing template already set up to route", async () => {
-    renderBuilder("/processor/pipelines/new?preset=routing");
-
-    await screen.findByRole("textbox", {
-      name: "portal.pipelines.composer.name",
-    });
-    // Seeded as an ordinary step, so it can be moved or removed like any other.
-    expect(screen.getByText("Classify And Label")).toBeInTheDocument();
-  });
-
-  it("leaves a plain new pipeline untouched by the routing preset", async () => {
-    renderBuilder("/processor/pipelines/new");
-
-    await screen.findByRole("textbox", {
-      name: "portal.pipelines.composer.name",
-    });
-    expect(screen.queryByText("Classify And Label")).not.toBeInTheDocument();
-  });
-
   it("runs an existing pipeline and reports success", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 

@@ -1,7 +1,8 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
-import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
+import { Banner, Button, Card, Modal, Select, ToggleSwitch } from "@app/ui";
 import { SettingsRow } from "@app/ui/SettingsRow";
 import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
 import {
@@ -27,6 +28,14 @@ import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig"
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
 import { ClassificationLabelsSection } from "@portal/components/policies/ClassificationLabelsSection";
+import {
+  RoutingRules,
+  blankRoutingRule,
+} from "@portal/components/policies/RoutingRules";
+import { useSources } from "@portal/queries/sources";
+import { availableOutputModes } from "@portal/components/pipelines/outputModes";
+import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import type { WireRoutingRule, WireTriggerConfig } from "@app/policies/types";
 import "@portal/views/Policies.css";
 
 interface PolicySetupWizardProps {
@@ -247,6 +256,7 @@ function PolicySetupWizardBody({
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
+  const isRouting = category.id === "routing";
 
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
@@ -278,6 +288,47 @@ function PolicySetupWizardBody({
   // new one defaults to required (blocking). Editing preserves whatever was saved.
   const [required, setRequired] = useState(policy?.state.required ?? true);
   const readOnly = !canManagePolicies;
+
+  const [routingSourceId, setRoutingSourceId] = useState(
+    () => policy?.state.sources?.[0] ?? "",
+  );
+  const [outputIds, setOutputIds] = useState<string[]>(() =>
+    (policy?.state.outputIds ?? []).slice(0, 1),
+  );
+  const [routingRules, setRoutingRules] = useState<WireRoutingRule[]>(
+    () => policy?.state.routingRules ?? [blankRoutingRule()],
+  );
+
+  const navigate = useNavigate();
+  const sourcesAsync = useSources();
+  const allSources = useMemo(
+    () =>
+      (sourcesAsync.data?.sources ?? []).filter(
+        (src) => src.status !== "disabled" && src.type !== "editor",
+      ),
+    [sourcesAsync.data],
+  );
+  const writableSources = useMemo(
+    () =>
+      allSources.filter((src) =>
+        (availableOutputModes() as string[]).includes(src.type),
+      ),
+    [allSources],
+  );
+  const routingTrigger: WireTriggerConfig | null = useMemo(() => {
+    const type = allSources.find((src) => src.id === routingSourceId)?.type;
+    if (!type) return null;
+    if (type === "folder") return { type: "folder-watch", options: {} };
+    if (type === "webhook") return { type: "webhook", options: {} };
+    return {
+      type: "schedule",
+      options: { schedule: { every: 1, unit: "HOURS" } },
+    };
+  }, [allSources, routingSourceId]);
+  function connectSource() {
+    onClose();
+    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`);
+  }
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -338,7 +389,11 @@ function PolicySetupWizardBody({
       extraOptions: policy?.state.extraOptions,
       runsOnEditor: true,
       fieldValues,
-      sources: policy?.state.sources ?? [],
+      sources: isRouting
+        ? routingSourceId
+          ? [routingSourceId]
+          : []
+        : (policy?.state.sources ?? []),
       scopeTypes,
       reviewerEmail,
       outputMode,
@@ -348,11 +403,13 @@ function PolicySetupWizardBody({
       maxRetries,
       retryDelayMinutes,
       steps,
-      // Destinations, sources and routing belong to the pipeline builder, which binds them
-      // together; the wizard preserves what was saved rather than editing it.
-      outputIds: policy?.state.outputIds ?? [],
-      trigger: null,
-      routingRules: policy?.state.routingRules ?? [],
+      outputIds: isRouting ? outputIds : (policy?.state.outputIds ?? []),
+      // A watched folder is what makes routing run without anyone pressing anything; every other
+      // category is fired by the editor on upload/export.
+      trigger: isRouting && routingSourceId ? routingTrigger : null,
+      routingRules: isRouting
+        ? routingRules
+        : (policy?.state.routingRules ?? []),
     };
   }
 
@@ -524,6 +581,90 @@ function PolicySetupWizardBody({
               })}
             </div>
           </Card>
+        </div>
+      )}
+
+      {isRouting && (
+        <div className="portal-policies__wizard-section">
+          <h3 className="portal-policies__wizard-heading">
+            {t("portal.policies.wizard.routing.sourceHeading", "Watch")}
+          </h3>
+          <p className="portal-policies__wizard-desc">
+            {t(
+              "portal.policies.wizard.routing.sourceDescription",
+              "Documents arriving here are classified, then sent on by the rules below.",
+            )}
+          </p>
+          {allSources.length === 0 ? (
+            <Banner
+              tone="info"
+              description={t(
+                "portal.policies.wizard.routing.needsSource",
+                "Connect a folder, bucket or webhook for this policy to watch.",
+              )}
+              action={
+                <Button variant="secondary" size="sm" onClick={connectSource}>
+                  {t("portal.policies.wizard.sources.connect")}
+                </Button>
+              }
+            />
+          ) : (
+            <Select
+              inputSize="sm"
+              aria-label={t("portal.policies.wizard.routing.sourceHeading")}
+              placeholder={t(
+                "portal.policies.wizard.routing.chooseSource",
+                "Choose what to watch",
+              )}
+              value={routingSourceId || null}
+              invalid={routingSourceId === ""}
+              onChange={(value) => setRoutingSourceId(value ?? "")}
+              options={allSources.map((src) => ({
+                value: src.id,
+                label: src.name,
+              }))}
+              comboboxProps={{ withinPortal: true }}
+            />
+          )}
+
+          <h3 className="portal-policies__wizard-heading">
+            {t("portal.pipelines.builder.routing.heading", "Routes")}
+          </h3>
+          <p className="portal-policies__wizard-desc">
+            {t(
+              "portal.policies.wizard.routing.description",
+              "Each document is classified first, then delivered to the first rule it matches. Anything matching none goes to the destination below.",
+            )}
+          </p>
+          <RoutingRules
+            rules={routingRules}
+            onChange={setRoutingRules}
+            destinations={writableSources.map((src) => ({
+              id: src.id,
+              name: src.name,
+            }))}
+            onCreateDestination={connectSource}
+          />
+
+          <h3 className="portal-policies__wizard-heading">
+            {t(
+              "portal.pipelines.builder.routing.fallback",
+              "Everything else goes to",
+            )}
+          </h3>
+          <Select
+            inputSize="sm"
+            aria-label={t("portal.pipelines.builder.routing.fallback")}
+            placeholder={t("portal.policies.wizard.routing.chooseDestination")}
+            value={outputIds[0] ?? null}
+            invalid={outputIds.length !== 1}
+            onChange={(value) => setOutputIds(value ? [value] : [])}
+            options={writableSources.map((src) => ({
+              value: src.id,
+              label: src.name,
+            }))}
+            comboboxProps={{ withinPortal: true }}
+          />
         </div>
       )}
 

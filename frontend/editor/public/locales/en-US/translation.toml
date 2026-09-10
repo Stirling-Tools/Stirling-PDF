@@ -9199,11 +9199,16 @@ saveFailed = "Couldn't save the pipeline. Please try again."
 
 [portal.policies.wizard.routing]
 chooseDestination = "Choose a destination"
+chooseSource = "Choose what to watch"
+description = "Each document is classified first, then delivered to the first rule it matches. Anything matching none goes to the destination below."
 destinationAria = "Destination"
 labelAria = "Document types"
 labelPlaceholder = "Choose document types"
 needsDestination = "Add a destination below first - a rule needs somewhere to send documents to."
+needsSource = "Connect a folder, bucket or webhook for this policy to watch."
 remove = "Remove rule"
+sourceDescription = "Documents arriving here are classified, then sent on by the rules below."
+sourceHeading = "Watch"
 
 [portal.policies.wizard.sources]
 connect = "Connect a source"

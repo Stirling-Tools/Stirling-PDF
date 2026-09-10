@@ -114,18 +114,9 @@ export function Pipelines() {
     (entry: CatalogueEntry) => {
       if (entry.category.comingSoon) return;
       if (entry.category.requiresAiEngine && !aiEngineEnabled) return;
-      if (entry.category.opensBuilder) {
-        const saved = entry.policy?.state.backendId;
-        navigate(
-          saved
-            ? `${listPath}/${saved}`
-            : `${listPath}/new?preset=${entry.category.id}`,
-        );
-        return;
-      }
       setWizard(entry);
     },
-    [aiEngineEnabled, listPath, navigate],
+    [aiEngineEnabled],
   );
 
   // A list row routes by representability: a policy that still fits its template opens the simple

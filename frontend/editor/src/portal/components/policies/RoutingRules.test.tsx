@@ -5,7 +5,10 @@ import {
   screen,
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { RoutingRules } from "@portal/components/policies/RoutingRules";
+import {
+  RoutingRules,
+  RoutingSection,
+} from "@portal/components/policies/RoutingRules";
 import type { WireRoutingRule } from "@app/policies/types";
 
 vi.mock("react-i18next", () => ({
@@ -20,14 +23,28 @@ const DESTINATIONS = [
   { id: "src-legal", name: "Legal review" },
 ];
 
+// The builder wraps the routes in the opt-in toggle; the wizard renders them bare.
 function setup(rules: WireRoutingRule[], canClassify = true) {
+  const onChange = vi.fn();
+  baseRender(
+    <RoutingSection
+      rules={rules}
+      onChange={onChange}
+      destinations={DESTINATIONS}
+      canClassify={canClassify}
+    />,
+    { wrapper: PortalTestProviders },
+  );
+  return onChange;
+}
+
+function setupBare(rules: WireRoutingRule[]) {
   const onChange = vi.fn();
   baseRender(
     <RoutingRules
       rules={rules}
       onChange={onChange}
       destinations={DESTINATIONS}
-      canClassify={canClassify}
     />,
     { wrapper: PortalTestProviders },
   );
@@ -42,6 +59,13 @@ const rule = (values: string[], outputId: string): WireRoutingRule => ({
 });
 
 describe("RoutingRules", () => {
+  it("renders the routes with no toggle when the surface is routing-only", () => {
+    setupBare([rule(["invoice"], "src-finance")]);
+
+    expect(screen.queryByTestId("routing-toggle")).not.toBeInTheDocument();
+    expect(screen.getByText("Add a route")).toBeInTheDocument();
+  });
+
   it("offers no rule editor until routing is switched on", () => {
     setup([]);
 
