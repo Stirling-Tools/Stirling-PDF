@@ -46,7 +46,7 @@ export function Pipelines() {
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   // Building and editing a pipeline both need a linked account, so both ask for one first (#7581).
-  const { guard } = useConnectGate();
+  const { guard, error: connectError, retry: retryConnect } = useConnectGate();
 
   const listState = usePipelines();
   const { data: overview } = listState;
@@ -262,6 +262,19 @@ export function Pipelines() {
           {t("portal.pipelines.actions.newCustomPipeline")}
         </Button>
       </header>
+
+      {connectError && (
+        <Banner
+          tone="danger"
+          title={t("portal.accountLink.gate.error")}
+          description={connectError}
+          action={
+            <Button onClick={retryConnect}>
+              {t("portal.accountLink.gate.retry")}
+            </Button>
+          }
+        />
+      )}
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
