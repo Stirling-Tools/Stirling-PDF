@@ -56,7 +56,7 @@ function payloadFor(kindId: string): RetryPayload {
       fileIds: ["f-1"],
       multiFile: false,
       errorCode: "E001",
-      secretsStripped: false,
+      replayUnfaithful: false,
       recordedAt: 0,
     };
   }
@@ -67,7 +67,7 @@ function payloadFor(kindId: string): RetryPayload {
     fileIds: ["f-1"],
     multiFile: false,
     errorCode: "E004",
-    secretsStripped: false,
+    replayUnfaithful: false,
     recordedAt: 0,
   };
 }

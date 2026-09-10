@@ -16,6 +16,12 @@ import { uploadableFile } from "@app/utils/uploadableFile";
 export interface RetryPayload {
   operation: string;
   endpoint: string;
+  /**
+   * The request body as the tool would post it, not the tool's own parameter model. A tool's UI
+   * names its settings for the user and maps them to the API's names on the way out, so the two
+   * differ freely: compress offers a compression level and posts an optimise level. Replaying
+   * the UI shape would send fields the server ignores and silently run the defaults instead.
+   */
   params: Record<string, unknown>;
   fileIds: string[];
   /** Whether the endpoint takes the whole batch in one call, or one file per call. */
@@ -23,10 +29,11 @@ export interface RetryPayload {
   /** The failure's error code, so a stash can be matched to the row's kind. */
   errorCode: string | null;
   /**
-   * Whether a password or similar was dropped from `params` on the way in. A re-run without it
-   * is a different run, so a resolution must not perform one automatically.
+   * Whether replaying this stash would run something other than what failed, because a secret
+   * was dropped from it or because the tool exposes no mapping to its request body. A resolution
+   * must not re-run on those terms; the plain retry, which opens the tool, still can.
    */
-  secretsStripped: boolean;
+  replayUnfaithful: boolean;
   recordedAt: number;
 }
 
@@ -81,19 +88,26 @@ interface StoredRetryRecord extends RetryPayload {
 /** Stripped on the way in: remove-password submits its password as a parameter. */
 const SECRET_FIELD = /pass(word|phrase)|secret|token|credential/i;
 
-/** Never rejects: a browser refusing IndexedDB costs the retry button, not a second error. */
+/**
+ * Never rejects: a browser refusing IndexedDB costs the retry button, not a second error.
+ *
+ * `paramsMapped` says whether `params` is the tool's request body or merely its UI model, which
+ * the caller knows and this cannot infer. False marks the stash unfaithful rather than refusing
+ * it, so the row keeps the plain retry even where nothing may re-run on its behalf.
+ */
 export async function stashRetryPayload(
-  payload: Omit<RetryPayload, "secretsStripped">,
+  payload: Omit<RetryPayload, "replayUnfaithful"> & { paramsMapped: boolean },
 ): Promise<void> {
   try {
     const fileIds = payload.fileIds.filter(isUsableId);
     if (!payload.operation.trim() || fileIds.length === 0) return;
 
+    const { paramsMapped, ...rest } = payload;
     const record = {
-      ...payload,
+      ...rest,
       fileIds,
       params: withoutSecrets(payload.params),
-      secretsStripped: containsSecret(payload.params),
+      replayUnfaithful: !paramsMapped || containsSecret(payload.params),
     };
 
     await writeRecords(fileIds.map((fileId) => ({ ...record, fileId })));
@@ -124,11 +138,12 @@ export async function loadRetryPayload(
     endpoint: record.endpoint,
     params: record.params ?? {},
     fileIds: record.fileIds ?? [fileId],
-    // Older records predate these fields; every default fails closed. Assuming a stash lost a
-    // secret only withholds an automatic re-run, which the plain retry still offers by hand.
+    // Older records predate these fields; every default fails closed. A record written before
+    // params were mapped holds the UI shape, so assuming it unfaithful is not merely cautious:
+    // it is what those records are. Only the automatic re-run is withheld, not the plain retry.
     multiFile: record.multiFile ?? false,
     errorCode: record.errorCode ?? null,
-    secretsStripped: record.secretsStripped ?? true,
+    replayUnfaithful: record.replayUnfaithful ?? true,
     recordedAt: record.recordedAt,
   };
 }

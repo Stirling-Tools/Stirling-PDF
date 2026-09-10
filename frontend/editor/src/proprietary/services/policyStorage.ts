@@ -10,6 +10,21 @@ import { defaultRunOn } from "@app/policies/runOn";
 import type { PoliciesByKey, PolicyState } from "@app/types/policies";
 
 const STORAGE_KEY = "stirling-policies-state";
+
+/**
+ * The stored policies as written, before parsing or reconciling against the catalogue. A cheap
+ * identity for callers that cache a derivation of {@link loadPolicies} and need to know whether
+ * it is still current.
+ */
+export function rawStoredPolicies(): string | null {
+  try {
+    return typeof localStorage !== "undefined"
+      ? localStorage.getItem(STORAGE_KEY)
+      : null;
+  } catch {
+    return null;
+  }
+}
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
 function defaultState(policyKey: string): PolicyState {

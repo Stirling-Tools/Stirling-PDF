@@ -129,8 +129,10 @@ export function canRetry(
 }
 
 /**
- * The stash forgets passwords on purpose, so a tool re-run without them would produce the wrong
- * file and call it fixed. Such a row keeps its plain retry, which opens the tool instead.
+ * A stash that cannot reproduce the run it describes, because a secret was dropped from it or
+ * because the tool exposes no mapping to its request body. Re-running it would produce a file
+ * from different settings and then call the row fixed. Such a row keeps its plain retry, which
+ * opens the tool and lets the reader see the settings first.
  */
 function toolRerunWouldBeWrong(
   resolution: Resolution,
@@ -139,7 +141,7 @@ function toolRerunWouldBeWrong(
   return (
     target?.kind === "tool" &&
     resolution.toolRerun !== undefined &&
-    target.payload.secretsStripped
+    target.payload.replayUnfaithful
   );
 }
 

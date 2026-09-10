@@ -10,7 +10,10 @@ import {
   loadRetryPayload,
   stashMatchesKind,
 } from "@app/services/notificationRetry";
-import { rechainPolicyOnDocument } from "@app/services/notificationPolicyRetry";
+import {
+  canPlacePolicy,
+  rechainPolicyOnDocument,
+} from "@app/services/notificationPolicyRetry";
 import {
   isResolvingTool,
   resolvingToolFor,
@@ -70,6 +73,9 @@ async function continueRow(
   // Same precedence as the bell's retry target: the policy shape is the more specific claim.
   const attended = (row.sourceId ?? null) === null;
   if (attended && row.policyId && row.fileId) {
+    // As the bell does: a policy this browser cannot place would be submitted, billed, and
+    // collected by nobody. Arriving by a manual run rather than a button does not change that.
+    if (!canPlacePolicy(row.policyId)) return false;
     // The server names the fix; the client only knows which tool performs it.
     const resolution = row.actions.find((a) => a.slot === "RESOLUTION");
     if (!resolution || resolvingToolFor(resolution.id) !== run.operation) {

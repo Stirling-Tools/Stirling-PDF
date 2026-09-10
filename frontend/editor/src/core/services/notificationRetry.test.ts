@@ -50,9 +50,15 @@ function payload(overrides: Partial<Record<string, unknown>> = {}) {
     multiFile: false,
     errorCode: "E004",
     recordedAt: 1_000,
-    secretsStripped: false,
+    replayUnfaithful: false,
     ...overrides,
   } as RetryPayload;
+}
+
+/** What a tool hands the stash: the request body it posted, plus whether it could map one. */
+function stashable(overrides: Partial<Record<string, unknown>> = {}) {
+  const { replayUnfaithful: _flag, ...rest } = payload(overrides);
+  return { ...rest, paramsMapped: true, ...overrides };
 }
 
 /** Reads records straight out of IndexedDB, bypassing the service's own mapping. */
@@ -83,7 +89,7 @@ beforeEach(async () => {
 describe("the retry stash", () => {
   it("gives back what was stashed, keyed on the file the failure was filed against", async () => {
     await stashRetryPayload(
-      payload({ params: { onlyPages: "1-3" }, fileIds: ["f-1", "f-2"] }),
+      stashable({ params: { onlyPages: "1-3" }, fileIds: ["f-1", "f-2"] }),
     );
 
     await expect(loadRetryPayload("f-1")).resolves.toEqual({
@@ -93,7 +99,7 @@ describe("the retry stash", () => {
       fileIds: ["f-1", "f-2"],
       multiFile: false,
       errorCode: "E004",
-      secretsStripped: false,
+      replayUnfaithful: false,
       recordedAt: 1_000,
     });
     // Every file in the run gets a record, so the bell can retry from any of them.
@@ -103,7 +109,7 @@ describe("the retry stash", () => {
   });
 
   it("has nothing for a file it never saw, or for no file at all", async () => {
-    await stashRetryPayload(payload());
+    await stashRetryPayload(stashable());
 
     await expect(loadRetryPayload("f-other")).resolves.toBeNull();
     await expect(loadRetryPayload(null)).resolves.toBeNull();
@@ -112,10 +118,16 @@ describe("the retry stash", () => {
 
   it("keeps the most recent operation that failed on a file, matching the server's one-incident-per-file dedup", async () => {
     await stashRetryPayload(
-      payload({ operation: "compress", endpoint: "/api/v1/misc/compress-pdf" }),
+      stashable({
+        operation: "compress",
+        endpoint: "/api/v1/misc/compress-pdf",
+      }),
     );
     await stashRetryPayload(
-      payload({ operation: "rotate", endpoint: "/api/v1/general/rotate-pdf" }),
+      stashable({
+        operation: "rotate",
+        endpoint: "/api/v1/general/rotate-pdf",
+      }),
     );
 
     await expect(loadRetryPayload("f-1")).resolves.toMatchObject({
@@ -128,7 +140,9 @@ describe("the retry stash", () => {
   it("evicts the oldest once it is full, so it cannot grow for the lifetime of the origin", async () => {
     // One past the cap: the first failure stashed is the one that goes.
     for (let i = 0; i < 26; i += 1) {
-      await stashRetryPayload(payload({ fileIds: [`f-${i}`], recordedAt: i }));
+      await stashRetryPayload(
+        stashable({ fileIds: [`f-${i}`], recordedAt: i }),
+      );
     }
 
     expect(await storedRecords()).toHaveLength(25);
@@ -142,7 +156,7 @@ describe("the retry stash", () => {
     // One failed multi-file run writes a record per file under one recordedAt, so evicting by
     // time alone would keep an arbitrary 25 of them and offer no retry for the rest.
     const batch = Array.from({ length: 30 }, (_, i) => `b-${i}`);
-    await stashRetryPayload(payload({ fileIds: batch, recordedAt: 100 }));
+    await stashRetryPayload(stashable({ fileIds: batch, recordedAt: 100 }));
 
     expect(await storedRecords()).toHaveLength(30);
     for (const fileId of [batch[0], batch[15], batch[29]]) {
@@ -153,10 +167,10 @@ describe("the retry stash", () => {
   });
 
   it("evicts earlier failures before the batch that just landed", async () => {
-    await stashRetryPayload(payload({ fileIds: ["old"], recordedAt: 1 }));
+    await stashRetryPayload(stashable({ fileIds: ["old"], recordedAt: 1 }));
     const batch = Array.from({ length: 25 }, (_, i) => `n-${i}`);
 
-    await stashRetryPayload(payload({ fileIds: batch, recordedAt: 2 }));
+    await stashRetryPayload(stashable({ fileIds: batch, recordedAt: 2 }));
 
     // The row on screen is the new one, so it is the older unrelated stash that goes.
     await expect(loadRetryPayload("old")).resolves.toBeNull();
@@ -166,7 +180,7 @@ describe("the retry stash", () => {
   });
 
   it("forgets a file's stash once its failure is resolved", async () => {
-    await stashRetryPayload(payload({ fileIds: ["f-1", "f-2"] }));
+    await stashRetryPayload(stashable({ fileIds: ["f-1", "f-2"] }));
 
     await clearRetryPayload("f-1");
 
@@ -179,7 +193,7 @@ describe("the retry stash", () => {
 
   it("stores no password, whichever field the tool submitted it in", async () => {
     await stashRetryPayload(
-      payload({
+      stashable({
         params: {
           password: "hunter2",
           newOwnerPassword: "hunter2",
@@ -204,13 +218,24 @@ describe("the retry stash", () => {
       keepThese: ["a", "b"],
     });
     // And the loss is recorded: a re-run without the password is not the run that failed.
-    expect(loaded?.secretsStripped).toBe(true);
+    expect(loaded?.replayUnfaithful).toBe(true);
+  });
+
+  it("marks a stash unfaithful when the tool could not map its request body", async () => {
+    // A tool whose UI settings have no mapping to the API's own names would replay under the
+    // wrong field names, run the server's defaults, and then be reported as the fix. Only the
+    // automatic re-run is withheld; the plain retry still opens the tool with its settings.
+    await stashRetryPayload(
+      stashable({ params: { compressionLevel: "5" }, paramsMapped: false }),
+    );
+
+    expect((await loadRetryPayload("f-1"))?.replayUnfaithful).toBe(true);
   });
 
   it("knows when nothing was dropped, so a faithful re-run stays on offer", async () => {
-    await stashRetryPayload(payload({ params: { level: "5" } }));
+    await stashRetryPayload(stashable({ params: { level: "5" } }));
 
-    expect((await loadRetryPayload("f-1"))?.secretsStripped).toBe(false);
+    expect((await loadRetryPayload("f-1"))?.replayUnfaithful).toBe(false);
   });
 
   it("assumes a record from before the flag dropped something", async () => {
@@ -234,7 +259,7 @@ describe("the retry stash", () => {
       });
     });
 
-    expect((await loadRetryPayload("f-old"))?.secretsStripped).toBe(true);
+    expect((await loadRetryPayload("f-old"))?.replayUnfaithful).toBe(true);
   });
 
   it("stops descending into a pathologically deep object without exhausting the stack", async () => {
@@ -243,7 +268,7 @@ describe("the retry stash", () => {
     for (let i = 0; i < 5000; i++) deep = { down: deep };
 
     await expect(
-      stashRetryPayload(payload({ params: { deep } })),
+      stashRetryPayload(stashable({ params: { deep } })),
     ).resolves.toBeUndefined();
     expect(await loadRetryPayload("f-1")).not.toBeNull();
   });
@@ -253,7 +278,7 @@ describe("the retry stash", () => {
     let past: Record<string, unknown> = { password: "hunter2" };
     for (let i = 0; i < 25; i++) past = { down: past };
 
-    await stashRetryPayload(payload({ params: { past } }));
+    await stashRetryPayload(stashable({ params: { past } }));
 
     // Where the walk gives up it must not hand back a subtree it never examined.
     expect(JSON.stringify(await storedRecords())).not.toContain("hunter2");
@@ -265,7 +290,7 @@ describe("the retry stash", () => {
     cyclic.self = cyclic;
 
     await expect(
-      stashRetryPayload(payload({ params: { cyclic } })),
+      stashRetryPayload(stashable({ params: { cyclic } })),
     ).resolves.toBeUndefined();
     expect(await loadRetryPayload("f-1")).not.toBeNull();
   });
@@ -410,7 +435,6 @@ describe("unlockLocalDocument", () => {
   });
 });
 
-/** The stash is per file, but a file can carry only one; these say which row may claim it. */
 /** The codes each server-side kind claims, which both sides assert against. */
 function sharedFixtureCodes(): Record<string, string[]> {
   const here = dirname(fileURLToPath(import.meta.url));
@@ -440,6 +464,7 @@ describe("the mirrored error codes", () => {
   });
 });
 
+/** The stash is per file, but a file can carry only one; these say which row may claim it. */
 describe("stashMatchesKind", () => {
   it("matches a kind against every code it claims, not just the first", async () => {
     // E001 and E002 are both INPUT_CORRUPTED: a merge reports the second, a single load the first.

@@ -4,7 +4,7 @@ import {
 } from "@app/components/policies/policyRunStore";
 import { orderedRewritingPolicies } from "@app/data/classificationPolicy";
 import { fileStorage } from "@app/services/fileStorage";
-import { loadPolicies } from "@app/services/policyStorage";
+import { loadPolicies, rawStoredPolicies } from "@app/services/policyStorage";
 import {
   resolvePolicyRunTarget,
   runStoredPolicy,
@@ -40,7 +40,34 @@ export type PolicyRerunOutcome =
  * <p>False after a team switch, or against a cache written before the policy was renamed.
  */
 export function canPlacePolicy(policyId: string): boolean {
-  return policyKeyForBackendId(policyId) !== undefined;
+  return placeableBackendIds().has(policyId);
+}
+
+/**
+ * The placeable ids, rebuilt only when the stored policies actually change. Every notification
+ * row asks this while rendering, and the underlying read parses storage and reconciles it
+ * against the catalogue, which is far too much to repeat per row per render.
+ */
+let placeableCache: { raw: string | null; ids: Set<string> } | null = null;
+
+function placeableBackendIds(): Set<string> {
+  const raw = rawStoredPolicies();
+  if (placeableCache && placeableCache.raw === raw) {
+    return placeableCache.ids;
+  }
+
+  let ids = new Set<string>();
+  try {
+    ids = new Set(
+      Object.values(loadPolicies())
+        .map((state) => state.backendId)
+        .filter((backendId): backendId is string => backendId !== undefined),
+    );
+  } catch {
+    // Unreadable storage places nothing, which withholds the offer rather than misplacing it.
+  }
+  placeableCache = { raw, ids };
+  return ids;
 }
 
 /** Re-run on the document still in this browser's storage, under the reference the failure named. */

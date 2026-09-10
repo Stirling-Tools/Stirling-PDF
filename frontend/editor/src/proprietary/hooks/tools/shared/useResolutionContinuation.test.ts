@@ -29,7 +29,9 @@ vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
 }));
 
 const rechainPolicyOnDocument = vi.fn();
+const canPlacePolicy = vi.fn();
 vi.mock("@app/services/notificationPolicyRetry", () => ({
+  canPlacePolicy: (...args: unknown[]) => canPlacePolicy(...args),
   rechainPolicyOnDocument: (...args: unknown[]) =>
     rechainPolicyOnDocument(...args),
 }));
@@ -132,6 +134,8 @@ beforeEach(() => {
   rechainPolicyOnDocument
     .mockReset()
     .mockResolvedValue({ ok: true, tracked: true });
+  // Placeable by default: the browser still holds the policy the failure names.
+  canPlacePolicy.mockReset().mockReturnValue(true);
 });
 
 describe("useResolutionContinuation", () => {
@@ -247,6 +251,22 @@ describe("useResolutionContinuation", () => {
     await waitFor(() => expect(rechainPolicyOnDocument).toHaveBeenCalled());
     expect(reportNotificationResolved).not.toHaveBeenCalled();
     expect(refreshNotificationsNow).not.toHaveBeenCalled();
+  });
+
+  it("submits nothing when the policy cannot be placed, however the fix arrived", async () => {
+    // The buttons are gated on this, and a manual run reaches the same submission, so without
+    // the same guard here the billed-but-uncollectable run is simply one route further along.
+    fetchNotifications.mockResolvedValue({
+      notifications: [policyRow()],
+      viewerReviewsTeam: false,
+    });
+    canPlacePolicy.mockReturnValue(false);
+
+    continuation()(unlockRun());
+
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
 
   it("leaves the row open when the server refuses the re-run", async () => {

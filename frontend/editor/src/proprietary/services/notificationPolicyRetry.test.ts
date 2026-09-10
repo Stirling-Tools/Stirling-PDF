@@ -34,6 +34,9 @@ const policies = vi.hoisted(() => ({
 }));
 vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => policies.value,
+  // Derived from the same fixture, so swapping it invalidates the placeability cache exactly as
+  // a real write to storage would.
+  rawStoredPolicies: () => JSON.stringify(policies.value ?? null),
 }));
 
 // The REAL run store: a mock would assert the call and prove nothing about the record.
