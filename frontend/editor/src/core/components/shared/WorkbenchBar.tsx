@@ -52,7 +52,6 @@ import {
 } from "@app/types/workbenchBar";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
-import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
 import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/WorkbenchBarMobileActions";
 import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
@@ -440,11 +439,6 @@ export default function WorkbenchBar({
       label: t("workbenchBar.activeFiles", "Active Files"),
       icon: <FolderOutlinedIcon fontSize="small" />,
     },
-    {
-      value: "myFiles",
-      label: t("fileSidebar.myFiles", "File library"),
-      icon: <FolderOpenOutlinedIcon fontSize="small" />,
-    },
     ...(selectedTool === "multiTool"
       ? [
           {
@@ -551,7 +545,9 @@ export default function WorkbenchBar({
             <div className="workbench-bar-divider" />
           </>
         )}
-        {(hasFiles || isCustomView || currentView === "myFiles") && (
+        {/* Not in the library: it browses files rather than showing one, and the
+            rail is what moves between surfaces. */}
+        {currentView !== "myFiles" && (hasFiles || isCustomView) && (
           <SegmentedControl<WorkbenchType>
             className="workbench-bar-views"
             size="sm"
