@@ -7,7 +7,6 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
-import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
@@ -22,8 +21,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // final filename into every `new URL(..., import.meta.url)` reference itself.
 // Shared by the main build and Vite's worker sub-builds, which do not inherit
 // the main build's output options.
-const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
-  assetInfo.names.some((name) => name.endsWith(".mjs"))
+const mjsToJsAssetFileNames = (assetInfo: { names: string[] }) =>
+  assetInfo.names.length > 0 && assetInfo.names.every((name) => name.endsWith(".mjs"))
     ? "assets/[name]-[hash].js"
     : "assets/[name]-[hash][extname]";
 
