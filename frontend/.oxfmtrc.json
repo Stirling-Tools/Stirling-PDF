@@ -15,6 +15,7 @@
     "editor/public/og-metadata.json",
     "editor/public/og-metadata.saas.json",
     "editor/src/core/data/ogImageMap.json",
+    "editor/src/core/data/urlSeoOverrides.json",
     "editor/src/portal/generated/docsManifest.json",
     "editor/public/pdfjs*/",
     "editor/public/js/thirdParty/",

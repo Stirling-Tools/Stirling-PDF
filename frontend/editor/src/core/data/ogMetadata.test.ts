@@ -1,14 +1,21 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { getToolOgImage } from "@app/data/ogImage";
+import { CORE_LINK_TOOL_IDS } from "@app/types/toolId";
 // Build tooling (plain ESM, node:fs only) - import the helpers for coverage.
 // oxlint-disable-next-line no-restricted-imports -- build script lives outside the @app alias root
 import {
+  buildBodyContent,
+  buildJsonLd,
   buildOgTags,
+  buildSitemap,
+  injectBody,
   injectOg,
   prerenderOg,
+  resolveDeployBases,
 } from "../../../scripts/og-prerender.mjs";
 
 const TEMPLATE = `<!doctype html>
@@ -103,6 +110,29 @@ describe("injectOg (build-time prerender)", () => {
     expect(tags).toContain("A &quot;B&quot; &amp; &lt;C&gt;");
   });
 
+  it("hangs asset URLs off the deploy root exactly as given", () => {
+    // The caller folds any sub-path into ogBase, because only it knows whether
+    // an origin serves the app at the sub-path or at its own root.
+    const subpath = buildOgTags(entry, {
+      ogBase: "https://stirling.com/app",
+      pageUrlPath: "/compress",
+    });
+    expect(subpath).toContain(
+      '<meta property="og:image" content="https://stirling.com/app/og_images/compress.png" />',
+    );
+    expect(subpath).toContain(
+      '<meta name="twitter:image" content="https://stirling.com/app/og_images/compress.png" />',
+    );
+
+    const originRoot = buildOgTags(entry, {
+      ogBase: "https://abc123.stirling-pdf.pages.dev",
+      pageUrlPath: "/compress",
+    });
+    expect(originRoot).toContain(
+      '<meta property="og:image" content="https://abc123.stirling-pdf.pages.dev/og_images/compress.png" />',
+    );
+  });
+
   it("uses ogTitle for the social card but title for the <title> tag", () => {
     const out = injectOg(
       TEMPLATE,
@@ -123,6 +153,309 @@ describe("injectOg (build-time prerender)", () => {
     expect(out).toContain(
       '<meta name="twitter:title" content="Edit any PDF. Govern every PDF." />',
     );
+  });
+});
+
+describe("injectOg SEO extras (robots, canonical, JSON-LD)", () => {
+  const entry = {
+    image: "/og_images/compress.png",
+    title: "Compress - Stirling PDF",
+    description: "Compress PDFs to reduce their file size.",
+  };
+
+  it("always emits a robots directive, indexable by default", () => {
+    const out = injectOg(TEMPLATE, entry, {});
+    expect(out).toContain('<meta name="robots" content="index, follow" />');
+  });
+
+  it("emits noindex when the entry is flagged", () => {
+    const out = injectOg(TEMPLATE, entry, { noindex: true });
+    expect(out).toContain('<meta name="robots" content="noindex, follow" />');
+  });
+
+  it("omits canonical + JSON-LD when no canonical origin is known", () => {
+    const out = injectOg(TEMPLATE, entry, { ogBase: "", pageUrlPath: "/x" });
+    expect(out).not.toContain('rel="canonical"');
+    expect(out).not.toContain("application/ld+json");
+  });
+
+  it("emits an absolute self-canonical and WebApplication JSON-LD with a base", () => {
+    const out = injectOg(TEMPLATE, entry, {
+      ogBase: "https://stirling.com",
+      canonicalBase: "https://stirling.com",
+      pageUrlPath: "/compress",
+      canonicalPath: "/compress",
+    });
+    expect(out).toContain(
+      '<link rel="canonical" href="https://stirling.com/compress" />',
+    );
+    expect(out).toContain('<script type="application/ld+json">');
+    expect(out).toContain('"@type":"WebApplication"');
+    expect(out).toContain('"@type":"BreadcrumbList"');
+  });
+
+  it("omits the price-0 Offer when the entry opts out (metered surfaces)", () => {
+    const opts = {
+      siteRoot: "https://stirling.com/",
+      pageUrl: "https://stirling.com/processor",
+      isHome: false,
+    };
+    expect(buildJsonLd(entry, opts)).toContain('"price":"0"');
+    expect(buildJsonLd({ ...entry, noOffer: true }, opts)).not.toContain(
+      '"offers"',
+    );
+  });
+
+  it("escapes '<' inside JSON-LD so a value cannot close the script early", () => {
+    const out = injectOg(
+      TEMPLATE,
+      { ...entry, title: "A <script> B - Stirling PDF" },
+      {
+        ogBase: "https://stirling.com",
+        canonicalBase: "https://stirling.com",
+        pageUrlPath: "/x",
+      },
+    );
+    const ldStart = out.indexOf("application/ld+json");
+    const ld = out.slice(ldStart, out.indexOf("</script>", ldStart));
+    // '<' is escaped (breakout-proof); '>' need not be.
+    expect(ld).not.toContain("<script");
+    expect(ld).toContain("\\u003cscript");
+  });
+
+  it("canonical can point somewhere other than the page URL (alias dedupe)", () => {
+    const out = injectOg(TEMPLATE, entry, {
+      ogBase: "https://stirling.com",
+      canonicalBase: "https://stirling.com",
+      pageUrlPath: "/compress-pdf",
+      canonicalPath: "/compress",
+    });
+    expect(out).toContain(
+      '<link rel="canonical" href="https://stirling.com/compress" />',
+    );
+  });
+});
+
+describe("buildSitemap", () => {
+  const manifest = {
+    default: {
+      image: "/og_images/home.png",
+      title: "Stirling PDF",
+      description: "d",
+    },
+    byTool: {
+      compress: {
+        image: "/og_images/compress.png",
+        title: "Compress - Stirling PDF",
+        description: "c",
+      },
+      "/settings/people": {
+        image: "/og_images/home.png",
+        title: "People Settings - Stirling PDF",
+        description: "p",
+        noindex: true,
+      },
+    },
+    byPath: {
+      "/compress": "compress",
+      "/compress-pdf": "compress",
+      "/settings/people": "/settings/people",
+    },
+    canonicalByPath: { "/compress-pdf": "/compress" },
+  };
+
+  it("returns null without a canonical origin (sitemaps need absolute URLs)", () => {
+    expect(buildSitemap(manifest, { canonicalBase: "" })).toBeNull();
+  });
+
+  it("lists indexable routes as absolute URLs and excludes noindex ones", () => {
+    const xml = buildSitemap(manifest, {
+      canonicalBase: "https://stirling.com",
+    });
+    expect(xml).toContain("<loc>https://stirling.com/</loc>");
+    expect(xml).toContain("<loc>https://stirling.com/compress</loc>");
+    expect(xml).not.toContain("/settings/people");
+    expect(xml).toContain('<?xml version="1.0" encoding="UTF-8"?>');
+    expect(xml).toContain("<urlset");
+  });
+
+  it("keeps the sub-path the canonical base carries", () => {
+    const xml = buildSitemap(manifest, {
+      canonicalBase: "https://stirling.com/app",
+    });
+    expect(xml).toContain("<loc>https://stirling.com/app/</loc>");
+    expect(xml).toContain("<loc>https://stirling.com/app/compress</loc>");
+  });
+
+  it("omits aliases that canonicalise to another URL (no duplicate content)", () => {
+    const xml = buildSitemap(manifest, {
+      canonicalBase: "https://stirling.com",
+    });
+    expect(xml).not.toContain("/compress-pdf");
+    expect(xml).toContain("<loc>https://stirling.com/compress</loc>");
+  });
+});
+
+describe("buildBodyContent + injectBody (crawlable landing content)", () => {
+  const entry = {
+    image: "/og_images/compress.png",
+    title: "PDF to Word Converter - Stirling PDF",
+    description: "Convert PDF files into editable Word documents.",
+  };
+  const navLinks = [
+    { path: "/compress", label: "Compress" },
+    { path: "/merge", label: "Merge" },
+  ];
+
+  it("emits an H1 (keyword, suffix stripped), the description, and relative tool links", () => {
+    const body = buildBodyContent(entry, { navLinks });
+    expect(body).toContain("<h1>PDF to Word Converter</h1>");
+    expect(body).toContain(
+      "<p>Convert PDF files into editable Word documents.</p>",
+    );
+    // links are relative (no leading slash) so they resolve against <base href>
+    expect(body).toContain('<a href="compress">Compress</a>');
+    expect(body).toContain('<a href="merge">Merge</a>');
+    expect(body).not.toContain('href="/compress"');
+  });
+
+  it("uses an explicit heading override for the H1 when given", () => {
+    const body = buildBodyContent(entry, {
+      navLinks,
+      heading: "Free Online PDF Tools",
+    });
+    expect(body).toContain("<h1>Free Online PDF Tools</h1>");
+    expect(body).not.toContain("<h1>PDF to Word Converter</h1>");
+  });
+
+  it("escapes HTML in the H1/description", () => {
+    const body = buildBodyContent(
+      { ...entry, title: "A & <B>", description: 'x "y"' },
+      { navLinks: [] },
+    );
+    expect(body).toContain("<h1>A &amp; &lt;B&gt;</h1>");
+    expect(body).toContain("x &quot;y&quot;");
+  });
+
+  it("injectBody fills the empty React mount point", () => {
+    const out = injectBody(
+      '<body><div id="root"></div><script></script></body>',
+      "<h1>hi</h1>",
+    );
+    expect(out).toContain('<div id="root"><h1>hi</h1></div>');
+  });
+
+  it("prerenderOg injects landing content on indexable pages but not noindex ones", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-body-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "home",
+      },
+      byTool: {
+        compress: {
+          image: "/og_images/compress.png",
+          title: "Compress - Stirling PDF",
+          description: "c",
+        },
+        "/settings/people": {
+          image: "/og_images/home.png",
+          title: "People Settings - Stirling PDF",
+          description: "p",
+          noindex: true,
+        },
+      },
+      byPath: {
+        "/compress": "compress",
+        "/settings/people": "/settings/people",
+      },
+      navLinks: [{ path: "/compress", label: "Compress" }],
+    };
+
+    await prerenderOg({
+      distDir: dir,
+      manifest,
+      ogBase: "",
+      baseHref: "/",
+      injectLanding: true,
+    });
+
+    const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
+    expect(compress).toContain('<div id="root"><div class="spdf-seo">');
+    expect(compress).toContain("<h1>Compress</h1>");
+
+    const settings = await fs.readFile(
+      path.join(dir, "settings", "people.html"),
+      "utf8",
+    );
+    expect(settings).toContain('<div id="root"></div>'); // noindex: bare shell
+
+    const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
+    expect(home).toContain("spdf-seo");
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("leaves the mount point empty when landing content is off (self-hosted)", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-nobody-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "home",
+      },
+      byTool: {
+        compress: {
+          image: "/og_images/compress.png",
+          title: "Compress - Stirling PDF",
+          description: "c",
+        },
+      },
+      byPath: { "/compress": "compress" },
+      navLinks: [{ path: "/compress", label: "Compress" }],
+    };
+
+    await prerenderOg({ distDir: dir, manifest, ogBase: "", baseHref: "/" });
+
+    const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
+    expect(compress).toContain('<div id="root"></div>');
+    expect(compress).not.toContain("spdf-seo");
+    // OG/title metadata is still baked in - only the visible body is skipped.
+    expect(compress).toContain("<title>Compress - Stirling PDF</title>");
+
+    const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
+    expect(home).not.toContain("spdf-seo");
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("refuses to bake landing content from a manifest with no navLinks", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-nonav-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "home",
+      },
+      byTool: {},
+      byPath: {},
+    };
+
+    await expect(
+      prerenderOg({
+        distDir: dir,
+        manifest,
+        ogBase: "https://stirling.com",
+        baseHref: "/",
+        injectLanding: true,
+      }),
+    ).rejects.toThrow(/navLinks/);
+
+    await fs.rm(dir, { recursive: true, force: true });
   });
 });
 
@@ -176,5 +509,350 @@ describe("prerenderOg (flat + nested route files)", () => {
     expect(nested).toContain('<base href="/"'); // nested base rewritten to absolute
 
     await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("canonicalises alias routes at their primary URL", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-alias-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "d",
+      },
+      byTool: {
+        compress: {
+          image: "/og_images/compress.png",
+          title: "Compress - Stirling PDF",
+          description: "c",
+        },
+      },
+      byPath: { "/compress": "compress", "/compress-pdf": "compress" },
+      canonicalByPath: { "/compress-pdf": "/compress" },
+    };
+
+    await prerenderOg({
+      distDir: dir,
+      manifest,
+      ogBase: "https://stirling.com",
+      canonicalBase: "https://stirling.com",
+      baseHref: "/",
+    });
+
+    const alias = await fs.readFile(
+      path.join(dir, "compress-pdf.html"),
+      "utf8",
+    );
+    expect(alias).toContain(
+      '<link rel="canonical" href="https://stirling.com/compress" />',
+    );
+    // og:url still names the page itself, only the canonical dedupes.
+    expect(alias).toContain(
+      '<meta property="og:url" content="https://stirling.com/compress-pdf" />',
+    );
+
+    const primary = await fs.readFile(path.join(dir, "compress.html"), "utf8");
+    expect(primary).toContain(
+      '<link rel="canonical" href="https://stirling.com/compress" />',
+    );
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+
+  it("gives the home shell WebSite JSON-LD and flags noindex routes with a base", async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-prerender-"));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "home",
+      },
+      byTool: {
+        "/login": {
+          image: "/og_images/home.png",
+          title: "Sign In - Stirling PDF",
+          description: "l",
+          noindex: true,
+        },
+      },
+      byPath: { "/login": "/login" },
+    };
+
+    await prerenderOg({
+      distDir: dir,
+      manifest,
+      ogBase: "https://stirling.com",
+      canonicalBase: "https://stirling.com",
+      baseHref: "/",
+    });
+
+    const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
+    expect(home).toContain('"@type":"WebSite"');
+    expect(home).toContain(
+      '<link rel="canonical" href="https://stirling.com/"',
+    );
+
+    const login = await fs.readFile(path.join(dir, "login.html"), "utf8");
+    expect(login).toContain('content="noindex, follow"');
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+});
+
+describe("resolveDeployBases (which origin may be published)", () => {
+  it("prefixes only the canonical origin with the deploy sub-path", () => {
+    expect(
+      resolveDeployBases({
+        canonicalOrigin: "https://stirling.com/",
+        deployOrigin: "https://abc123.stirling-pdf.pages.dev",
+        baseHref: "/app/",
+      }),
+    ).toEqual({
+      ogBase: "https://stirling.com/app",
+      canonicalBase: "https://stirling.com/app",
+    });
+  });
+
+  it("serves a per-deployment origin from its own root and never canonicalises there", () => {
+    expect(
+      resolveDeployBases({
+        deployOrigin: "https://abc123.stirling-pdf.pages.dev/",
+        baseHref: "/app/",
+      }),
+    ).toEqual({
+      ogBase: "https://abc123.stirling-pdf.pages.dev",
+      canonicalBase: "",
+    });
+  });
+
+  it("has no absolute base at all when neither origin is set (self-hosted)", () => {
+    expect(resolveDeployBases({ baseHref: "/" })).toEqual({
+      ogBase: "",
+      canonicalBase: "",
+    });
+  });
+});
+
+describe("prerenderOg on a sub-path deploy", () => {
+  const manifest = {
+    default: {
+      image: "/og_images/home.png",
+      title: "Stirling PDF",
+      description: "home",
+    },
+    byTool: {
+      compress: {
+        image: "/og_images/compress.png",
+        title: "Compress - Stirling PDF",
+        description: "c",
+      },
+    },
+    byPath: { "/compress": "compress" },
+    navLinks: [{ path: "/compress", label: "Compress" }],
+  };
+
+  const run = async (
+    env: Parameters<typeof resolveDeployBases>[0],
+    prefix: string,
+  ) => {
+    const bases = resolveDeployBases(env);
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
+    await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+    await prerenderOg({
+      distDir: dir,
+      manifest,
+      ogBase: bases.ogBase,
+      canonicalBase: bases.canonicalBase,
+      baseHref: env.baseHref,
+      injectLanding: true,
+    });
+    const html = await fs.readFile(path.join(dir, "compress.html"), "utf8");
+    await fs.rm(dir, { recursive: true, force: true });
+    return { html, bases };
+  };
+
+  it("keeps assets at the deployment's own root and publishes no indexing signal", async () => {
+    const { html, bases } = await run(
+      {
+        deployOrigin: "https://abc123.stirling-pdf.pages.dev",
+        baseHref: "/app/",
+      },
+      "og-preview-",
+    );
+    expect(html).toContain(
+      '<meta property="og:image" content="https://abc123.stirling-pdf.pages.dev/og_images/compress.png" />',
+    );
+    expect(html).not.toContain("/app/og_images");
+    expect(html).not.toContain('rel="canonical"');
+    expect(html).not.toContain("application/ld+json");
+    expect(buildSitemap(manifest, bases)).toBeNull();
+  });
+
+  it("weaves the sub-path in once the public origin is configured", async () => {
+    const { html, bases } = await run(
+      {
+        canonicalOrigin: "https://stirling.com",
+        deployOrigin: "https://abc123.stirling-pdf.pages.dev",
+        baseHref: "/app/",
+      },
+      "og-canonical-",
+    );
+    expect(html).toContain(
+      '<meta property="og:image" content="https://stirling.com/app/og_images/compress.png" />',
+    );
+    expect(html).toContain(
+      '<link rel="canonical" href="https://stirling.com/app/compress" />',
+    );
+    expect(html).toContain('"logo":"https://stirling.com/app/modern-logo');
+    expect(html).not.toContain("stirling-pdf.pages.dev");
+    expect(buildSitemap(manifest, bases)).toContain(
+      "<loc>https://stirling.com/app/compress</loc>",
+    );
+  });
+});
+
+describe("prerender refuses a drifted HTML shell", () => {
+  const entry = {
+    image: "/og_images/compress.png",
+    title: "Compress - Stirling PDF",
+    description: "c",
+  };
+
+  it("throws instead of silently shipping the shell's own metadata", () => {
+    expect(() =>
+      injectOg("<html><head><title>x</title></head></html>", entry, {}),
+    ).toThrow(/description/);
+    expect(() =>
+      injectOg(
+        '<html><head><meta name="description" content="x" /></head></html>',
+        entry,
+        {},
+      ),
+    ).toThrow(/title/);
+  });
+
+  it("throws when the React mount point is gone", () => {
+    expect(() =>
+      injectBody("<body><main></main></body>", "<h1>x</h1>"),
+    ).toThrow(/root/);
+  });
+
+  it("prerenders the shipped editor/index.html, not just the test fixture", async () => {
+    const here = import.meta.url;
+    const shell = await fs.readFile(
+      fileURLToPath(new URL("../../../index.html", here)),
+      "utf8",
+    );
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-real-shell-"));
+    await fs.writeFile(path.join(dir, "index.html"), shell);
+    const manifest = {
+      default: {
+        image: "/og_images/home.png",
+        title: "Stirling PDF",
+        description: "home",
+      },
+      byTool: {
+        compress: {
+          image: "/og_images/compress.png",
+          title: "Compress - Stirling PDF",
+          description: "c",
+        },
+      },
+      byPath: { "/compress": "compress" },
+      navLinks: [{ path: "/compress", label: "Compress" }],
+    };
+
+    await prerenderOg({
+      distDir: dir,
+      manifest,
+      ogBase: "https://stirling.com",
+      canonicalBase: "https://stirling.com",
+      baseHref: "/",
+      injectLanding: true,
+    });
+
+    const html = await fs.readFile(path.join(dir, "compress.html"), "utf8");
+    expect(html).toContain("<title>Compress - Stirling PDF</title>");
+    expect(html).toContain('<meta name="description" content="c" />');
+    expect(html).toContain(
+      '<link rel="canonical" href="https://stirling.com/compress" />',
+    );
+    expect(html).toContain('<div id="root"><div class="spdf-seo">');
+
+    await fs.rm(dir, { recursive: true, force: true });
+  });
+});
+
+// Contract over the committed generator output, which the fixture-based suites
+// above cannot see. Regenerate with `node scripts/generate-og-metadata.mjs`.
+describe("shipped OG manifests", () => {
+  // Read import.meta.url via a variable: inlined, vite rewrites the
+  // `new URL(..., import.meta.url)` asset pattern and the path resolves wrong.
+  const here = import.meta.url;
+  const load = async (name: string) =>
+    JSON.parse(
+      await fs.readFile(
+        fileURLToPath(new URL(`../../../public/${name}`, here)),
+        "utf8",
+      ),
+    );
+
+  it.each(["og-metadata.json", "og-metadata.saas.json"])(
+    "%s marks every link tool noindex and keeps it out of the sitemap",
+    async (name) => {
+      const manifest = await load(name);
+      const linkIds: readonly string[] = CORE_LINK_TOOL_IDS;
+      for (const id of linkIds)
+        expect(manifest.byTool[id]?.noindex, id).toBe(true);
+
+      const linkPaths = Object.entries(manifest.byPath)
+        .filter(([, id]) => linkIds.includes(id as string))
+        .map(([routePath]) => routePath);
+      expect(linkPaths.length).toBeGreaterThanOrEqual(linkIds.length);
+
+      const xml = buildSitemap(manifest, {
+        canonicalBase: "https://stirling.com",
+      });
+      for (const routePath of linkPaths)
+        expect(xml).not.toContain(
+          `<loc>https://stirling.com${routePath}</loc>`,
+        );
+    },
+  );
+
+  it.each(["og-metadata.json", "og-metadata.saas.json"])(
+    "%s canonicalises every alias at a primary that is itself in the sitemap",
+    async (name) => {
+      const manifest = await load(name);
+      const canonicalByPath: Record<string, string> =
+        manifest.canonicalByPath ?? {};
+      const xml = buildSitemap(manifest, {
+        canonicalBase: "https://stirling.com",
+      });
+      for (const [alias, primary] of Object.entries(canonicalByPath)) {
+        expect(alias, `${alias} canonicalises to itself`).not.toBe(primary);
+        // A chain (alias -> alias -> primary) drops the target from the sitemap
+        // as well, leaving the whole group unindexed.
+        expect(canonicalByPath[primary], `${alias} -> ${primary}`).toBe(
+          undefined,
+        );
+        expect(
+          manifest.byPath[primary],
+          `${alias} -> ${primary}`,
+        ).toBeDefined();
+        const entry = manifest.byTool[manifest.byPath[primary]];
+        if (!entry?.noindex)
+          expect(xml, `${alias} -> ${primary}`).toContain(
+            `<loc>https://stirling.com${primary}</loc>`,
+          );
+      }
+    },
+  );
+
+  it("opts the metered /processor out of the price-0 Offer, not /editor", async () => {
+    const manifest = await load("og-metadata.saas.json");
+    expect(manifest.byTool["/processor"].noOffer).toBe(true);
+    expect(manifest.byTool["/editor"].noOffer).toBeUndefined();
   });
 });
