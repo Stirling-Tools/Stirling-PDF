@@ -23,7 +23,10 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class EntitlementCache {
 
     private final DeviceCredentialStore credentialStore;
