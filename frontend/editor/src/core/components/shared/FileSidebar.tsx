@@ -33,7 +33,6 @@ import {
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
@@ -98,6 +97,13 @@ const BULK_ADD_INDICATOR_MIN = 8;
 
 export interface FileSidebarProps {
   collapsed?: boolean;
+  /**
+   * What `collapsed` looks like: "hidden" takes the sidebar off the layout
+   * entirely, "rail" leaves the action icons behind as a narrow strip. Only
+   * use "rail" where those actions are the surface's only route to them —
+   * beside the quick nav rail it just reads as a second one.
+   */
+  collapseMode?: "hidden" | "rail";
   onToggleCollapse?: () => void;
   onOpenSettings?: () => void;
   /** The quick nav rail owns the account control, so the footer drops its own row. */
@@ -108,6 +114,11 @@ export interface FileSidebarProps {
   toggleIcon?: React.ReactNode;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
+  /**
+   * Publishes the native picker so a control outside the sidebar (the quick nav
+   * rail) opens the same one, ingest path included. Called with null on unmount.
+   */
+  onRegisterOpenFromComputer?: (open: (() => void) | null) => void;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
   /** Extra action row inserted under Open-from-computer (e.g. New folder). */
@@ -157,6 +168,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
     {
       collapsed = false,
+      collapseMode = "hidden",
       onToggleCollapse,
       onOpenSettings,
       accountHoisted = false,
@@ -164,6 +176,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       toggleIcon,
       onUploadFiles,
       onPickGoogleDriveFiles,
+      onRegisterOpenFromComputer,
       extraAction,
     },
     ref,
@@ -786,6 +799,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [ingestFiles],
     );
 
+    useEffect(() => {
+      if (!onRegisterOpenFromComputer) return;
+      onRegisterOpenFromComputer(() => nativeFileInputRef.current?.click());
+      return () => onRegisterOpenFromComputer(null);
+    }, [onRegisterOpenFromComputer]);
+
     // Native OS file drop onto the sidebar - mirrors the workbench drop zone.
     // Only react to OS file drags ("Files" type); internal element drags (e.g.
     // watched-folder file moves) set their own dataTransfer keys and must pass
@@ -835,7 +854,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const shouldHideGoogleDrive =
       !isGoogleDriveEnabled && config?.hideDisabledToolsGoogleDrive;
 
-    const width = collapsed ? COLLAPSED_WIDTH : EXPANDED_WIDTH;
+    const width = !collapsed
+      ? EXPANDED_WIDTH
+      : collapseMode === "rail"
+        ? COLLAPSED_WIDTH
+        : "0px";
     const eligibleFileIds = useToolEligibleFileIds();
 
     // Render one file row (shared by the flat list and the grouped SaaS layout).
@@ -940,6 +963,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
         className="file-sidebar"
         style={{ width, minWidth: width, maxWidth: width }}
         data-collapsed={collapsed}
+        data-collapse-mode={collapseMode}
         data-sidebar="file-sidebar"
         data-tour="quick-access-bar"
         data-file-drag-over={isFileDragOver || undefined}
@@ -966,175 +990,121 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             toggleIcon={toggleIcon}
           />
 
-          {/* Box 1 — top controls (open / my files / cloud). No title. File
-              search lives in the global super search (top bar), not here. */}
-          <NavSurface className="file-sidebar-controls">
-            {/* Hidden native file input - kept outside the !collapsed gate so
-                the "Open from computer" row below (always rendered) can fire
-                it in either sidebar state without a silent no-op. */}
-            <input
-              ref={nativeFileInputRef}
-              type="file"
-              multiple
-              // No `accept` filter - this picker feeds the global workspace,
-              // not a specific tool, so users may legitimately upload PNGs,
-              // ZIPs, etc. for the convert/merge/extract tools to handle.
-              style={{ display: "none" }}
-              onChange={handleNativeFilePick}
-              data-testid="file-input"
-            />
-            {/* Open from Computer + My Files + Google Drive */}
-            {/* Tooltips only fire when collapsed - when expanded the visible
-                text label below already identifies each row, so a tooltip
-                would just flash a duplicate. Distinct icons (UploadFile for
-                "Open from computer" vs FolderOpen for "File library") so the
-                collapsed rail isn't two identical folder icons either. */}
-            <Tooltip
-              label={t("fileSidebar.openFromComputer", "Open from computer")}
-              position="right"
-              withinPortal
-              disabled={!collapsed}
-            >
-              <div
-                className="file-sidebar-action-row"
-                // `files-button` is the long-standing upload entry-point
-                // testid: click + setInputFiles on `file-input` above. Tour
-                // anchor lives here too - the tour now spotlights the native
-                // picker shortcut rather than the old modal.
-                data-testid="files-button"
-                data-tour="files-button"
-                onClick={() => {
-                  // "Open from computer" goes straight to the native OS file
-                  // picker. The full file manager (recent + drives + folders)
-                  // is reachable via "File library" below.
-                  nativeFileInputRef.current?.click();
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={t(
-                  "fileSidebar.openFromComputer",
-                  "Open from computer",
-                )}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    nativeFileInputRef.current?.click();
-                  }
-                }}
-              >
-                <UploadFileIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.openFromComputer", "Open from computer")}
-                  </span>
-                )}
-              </div>
-            </Tooltip>
+          {/* Outside the rail below, which the editor never renders: the
+              library header's add button and the quick nav rail both fire this
+              picker, in either sidebar state. */}
+          <input
+            ref={nativeFileInputRef}
+            type="file"
+            multiple
+            // No `accept` filter - this picker feeds the global workspace,
+            // not a specific tool, so users may legitimately upload PNGs,
+            // ZIPs, etc. for the convert/merge/extract tools to handle.
+            style={{ display: "none" }}
+            onChange={handleNativeFilePick}
+            data-testid="file-input"
+          />
 
-            {extraAction && (
+          {/* Actions for a surface with no library header to hang them off.
+              Tooltips carry the labels the narrow rail has no room for. */}
+          {collapseMode === "rail" && (
+            <NavSurface className="file-sidebar-controls">
               <Tooltip
-                label={extraAction.disabledTooltip ?? extraAction.label}
-                position="right"
-                withinPortal
-                // Only force a wide multiline box when the long disabled
-                // reason is shown; the short label fits one line.
-                multiline={Boolean(
-                  extraAction.disabled && extraAction.disabledTooltip,
-                )}
-                w={
-                  extraAction.disabled && extraAction.disabledTooltip
-                    ? 220
-                    : undefined
-                }
-                disabled={
-                  !collapsed &&
-                  !(extraAction.disabled && extraAction.disabledTooltip)
-                }
-              >
-                <div
-                  className={`file-sidebar-action-row${extraAction.disabled ? " disabled" : ""}`}
-                  data-testid={extraAction.testId}
-                  onClick={() => {
-                    if (extraAction.disabled) return;
-                    extraAction.onClick();
-                  }}
-                  role="button"
-                  tabIndex={extraAction.disabled ? -1 : 0}
-                  aria-disabled={extraAction.disabled}
-                  aria-label={extraAction.label}
-                  onKeyDown={(e) => {
-                    if (extraAction.disabled) return;
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      extraAction.onClick();
-                    }
-                  }}
-                >
-                  <span className="file-sidebar-action-icon">
-                    {extraAction.icon}
-                  </span>
-                  {!collapsed && (
-                    <span className="file-sidebar-action-label sidebar-content-fade">
-                      {extraAction.label}
-                    </span>
-                  )}
-                </div>
-              </Tooltip>
-            )}
-
-            <Tooltip
-              label={t("fileSidebar.myFiles", "File library")}
-              position="right"
-              withinPortal
-              disabled={!collapsed}
-            >
-              <div
-                className="file-sidebar-action-row"
-                data-testid="my-files-button"
-                onClick={() => {
-                  if (collapsed && onToggleCollapse) onToggleCollapse();
-                  navigate("/files");
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={t("fileSidebar.myFiles", "File library")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    navigate("/files");
-                  }
-                }}
-              >
-                <FolderOpenIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.myFiles", "File library")}
-                  </span>
-                )}
-              </div>
-            </Tooltip>
-
-            {!shouldHideGoogleDrive && (
-              <Tooltip
-                label={
-                  !isGoogleDriveEnabled
-                    ? t(
-                        "fileSidebar.googleDriveDisabled",
-                        "Google Drive is not configured",
-                      )
-                    : t("fileSidebar.googleDrive", "Open from Google Drive")
-                }
+                label={t("fileSidebar.openFromComputer", "Open from computer")}
                 position="right"
                 withinPortal
                 disabled={!collapsed}
               >
                 <div
-                  className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
-                  onClick={handleGoogleDriveClick}
+                  className="file-sidebar-action-row"
+                  // `files-button` is the long-standing upload entry-point
+                  // testid: click + setInputFiles on `file-input` above. Tour
+                  // anchor lives here too - the tour now spotlights the native
+                  // picker shortcut rather than the old modal.
+                  data-testid="files-button"
+                  data-tour="files-button"
+                  onClick={() => {
+                    // "Open from computer" goes straight to the native OS file
+                    // picker. The full file manager (recent + drives + folders)
+                    // is reachable via "File library" below.
+                    nativeFileInputRef.current?.click();
+                  }}
                   role="button"
-                  tabIndex={isGoogleDriveEnabled ? 0 : -1}
-                  aria-disabled={!isGoogleDriveEnabled}
-                  aria-label={
+                  tabIndex={0}
+                  aria-label={t(
+                    "fileSidebar.openFromComputer",
+                    "Open from computer",
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      nativeFileInputRef.current?.click();
+                    }
+                  }}
+                >
+                  <UploadFileIcon className="file-sidebar-action-icon" />
+                  {!collapsed && (
+                    <span className="file-sidebar-action-label sidebar-content-fade">
+                      {t("fileSidebar.openFromComputer", "Open from computer")}
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
+
+              {extraAction && (
+                <Tooltip
+                  label={extraAction.disabledTooltip ?? extraAction.label}
+                  position="right"
+                  withinPortal
+                  // Only force a wide multiline box when the long disabled
+                  // reason is shown; the short label fits one line.
+                  multiline={Boolean(
+                    extraAction.disabled && extraAction.disabledTooltip,
+                  )}
+                  w={
+                    extraAction.disabled && extraAction.disabledTooltip
+                      ? 220
+                      : undefined
+                  }
+                  disabled={
+                    !collapsed &&
+                    !(extraAction.disabled && extraAction.disabledTooltip)
+                  }
+                >
+                  <div
+                    className={`file-sidebar-action-row${extraAction.disabled ? " disabled" : ""}`}
+                    data-testid={extraAction.testId}
+                    onClick={() => {
+                      if (extraAction.disabled) return;
+                      extraAction.onClick();
+                    }}
+                    role="button"
+                    tabIndex={extraAction.disabled ? -1 : 0}
+                    aria-disabled={extraAction.disabled}
+                    aria-label={extraAction.label}
+                    onKeyDown={(e) => {
+                      if (extraAction.disabled) return;
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        extraAction.onClick();
+                      }
+                    }}
+                  >
+                    <span className="file-sidebar-action-icon">
+                      {extraAction.icon}
+                    </span>
+                    {!collapsed && (
+                      <span className="file-sidebar-action-label sidebar-content-fade">
+                        {extraAction.label}
+                      </span>
+                    )}
+                  </div>
+                </Tooltip>
+              )}
+
+              {!shouldHideGoogleDrive && (
+                <Tooltip
+                  label={
                     !isGoogleDriveEnabled
                       ? t(
                           "fileSidebar.googleDriveDisabled",
@@ -1142,54 +1112,76 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                         )
                       : t("fileSidebar.googleDrive", "Open from Google Drive")
                   }
+                  position="right"
+                  withinPortal
+                  disabled={!collapsed}
                 >
-                  <div className="file-sidebar-cloud-icon-wrapper">
-                    <GoogleDriveIcon
-                      className="file-sidebar-cloud-icon-gray"
-                      style={{ color: "var(--c-text-muted)" }}
-                    />
-                    {isGoogleDriveEnabled && (
+                  <div
+                    className={`file-sidebar-cloud-row${!isGoogleDriveEnabled ? " disabled" : ""}`}
+                    onClick={handleGoogleDriveClick}
+                    role="button"
+                    tabIndex={isGoogleDriveEnabled ? 0 : -1}
+                    aria-disabled={!isGoogleDriveEnabled}
+                    aria-label={
+                      !isGoogleDriveEnabled
+                        ? t(
+                            "fileSidebar.googleDriveDisabled",
+                            "Google Drive is not configured",
+                          )
+                        : t("fileSidebar.googleDrive", "Open from Google Drive")
+                    }
+                  >
+                    <div className="file-sidebar-cloud-icon-wrapper">
                       <GoogleDriveIcon
-                        colored
-                        className="file-sidebar-cloud-icon-color"
+                        className="file-sidebar-cloud-icon-gray"
+                        style={{ color: "var(--c-text-muted)" }}
                       />
+                      {isGoogleDriveEnabled && (
+                        <GoogleDriveIcon
+                          colored
+                          className="file-sidebar-cloud-icon-color"
+                        />
+                      )}
+                    </div>
+                    {!collapsed && (
+                      <span className="file-sidebar-action-label sidebar-content-fade">
+                        {t("fileSidebar.googleDrive", "Google Drive")}
+                      </span>
                     )}
                   </div>
+                </Tooltip>
+              )}
+
+              {/* Watched Folders entry */}
+              {WATCHED_FOLDERS_ENABLED && (
+                <div
+                  className="file-sidebar-action-row"
+                  data-testid="watchedFolders-button"
+                  data-active={isWatchedFoldersActive}
+                  onClick={openWatchedFolders}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && openWatchedFolders()}
+                  aria-label={t(
+                    "watchedFolders.sidebarTitle",
+                    "Watched Folders",
+                  )}
+                  style={
+                    isWatchedFoldersActive
+                      ? { backgroundColor: "var(--c-active)" }
+                      : undefined
+                  }
+                >
+                  <FolderSpecialIcon className="file-sidebar-action-icon" />
                   {!collapsed && (
                     <span className="file-sidebar-action-label sidebar-content-fade">
-                      {t("fileSidebar.googleDrive", "Google Drive")}
+                      {t("watchedFolders.sidebarTitle", "Watched Folders")}
                     </span>
                   )}
                 </div>
-              </Tooltip>
-            )}
-
-            {/* Watched Folders entry */}
-            {WATCHED_FOLDERS_ENABLED && (
-              <div
-                className="file-sidebar-action-row"
-                data-testid="watchedFolders-button"
-                data-active={isWatchedFoldersActive}
-                onClick={openWatchedFolders}
-                role="button"
-                tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && openWatchedFolders()}
-                aria-label={t("watchedFolders.sidebarTitle", "Watched Folders")}
-                style={
-                  isWatchedFoldersActive
-                    ? { backgroundColor: "var(--c-active)" }
-                    : undefined
-                }
-              >
-                <FolderSpecialIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("watchedFolders.sidebarTitle", "Watched Folders")}
-                  </span>
-                )}
-              </div>
-            )}
-          </NavSurface>
+              )}
+            </NavSurface>
+          )}
 
           {/* Box 2 — the file tree (this box scrolls). */}
           <NavSurface className="file-sidebar-files-box">
@@ -1218,9 +1210,32 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     >
                       <OpenInFullIcon sx={{ fontSize: "1rem" }} />
                     </ActionIcon>
+                    {isGoogleDriveEnabled && (
+                      <ActionIcon
+                        variant="quiet"
+                        className="file-sidebar-section-btn file-sidebar-section-btn-drive"
+                        onClick={handleGoogleDriveClick}
+                        title={t(
+                          "fileSidebar.googleDrive",
+                          "Open from Google Drive",
+                        )}
+                        aria-label={t(
+                          "fileSidebar.googleDrive",
+                          "Open from Google Drive",
+                        )}
+                        data-testid="google-drive-button"
+                      >
+                        <GoogleDriveIcon colored width={16} height={16} />
+                      </ActionIcon>
+                    )}
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-add"
+                      // `files-button` is the long-standing upload entry-point
+                      // testid: click, then setInputFiles on `file-input`. The
+                      // tour anchors here too, on the native picker shortcut.
+                      data-testid="files-button"
+                      data-tour="files-button"
                       onClick={() => nativeFileInputRef.current?.click()}
                       title={t("fileSidebar.addFiles", "Add files")}
                       aria-label={t("fileSidebar.addFiles", "Add files")}

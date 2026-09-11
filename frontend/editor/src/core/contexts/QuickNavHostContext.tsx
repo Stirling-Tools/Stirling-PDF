@@ -31,6 +31,8 @@ export interface QuickNavHostData {
   toolReasons: QuickNavToolReasons;
   /** Mirrors `openSettings`, which lives in a ref and so cannot trigger a render. */
   hasSettings: boolean;
+  /** Mirrors `openFromComputer`, which lives in a ref and so cannot trigger a render. */
+  hasOpenFromComputer: boolean;
 }
 
 export interface QuickNavHostActions {
@@ -41,6 +43,7 @@ export interface QuickNavHostActions {
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
   requestNavigation?: (go: () => void) => void;
+  openFromComputer?: () => void;
   /**
    * Absent unless the app says the hidden novelty features are enabled, which
    * is the only gate the rail gets - see useBrandFlourish. `originRect` is the
@@ -71,6 +74,7 @@ const EMPTY_DATA: QuickNavHostData = {
   activeTool: null,
   notificationsOpen: false,
   hasSettings: false,
+  hasOpenFromComputer: false,
 };
 
 function sameReasons(
@@ -101,6 +105,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.activeTool === prev.activeTool &&
         merged.notificationsOpen === prev.notificationsOpen &&
         merged.hasSettings === prev.hasSettings &&
+        merged.hasOpenFromComputer === prev.hasOpenFromComputer &&
         merged.identity?.displayName === prev.identity?.displayName &&
         merged.identity?.profilePictureUrl ===
           prev.identity?.profilePictureUrl &&
@@ -157,6 +162,7 @@ export function useRegisterQuickNavHost(
     toolReasons,
   } = data;
   const hasSettings = Boolean(actions.openSettings);
+  const hasOpenFromComputer = Boolean(actions.openFromComputer);
 
   useEffect(() => {
     host?.setData({
@@ -171,6 +177,7 @@ export function useRegisterQuickNavHost(
       // Omitted when unknown, so the last answer survives a re-fetch.
       ...(toolReasons ? { toolReasons } : {}),
       hasSettings,
+      hasOpenFromComputer,
     });
     // By field: identity is rebuilt every render.
   }, [
@@ -184,6 +191,7 @@ export function useRegisterQuickNavHost(
     notificationsOpen,
     toolReasons,
     hasSettings,
+    hasOpenFromComputer,
   ]);
 
   const setActions = host?.setActions;

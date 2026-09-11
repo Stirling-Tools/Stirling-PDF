@@ -32,7 +32,7 @@ export function SidebarToggleIcon({
       className={className}
       aria-hidden="true"
     >
-      <rect x="3" y="4" width="18" height="16" rx="2.5" />
+      <rect x="3" y="4" width="18" height="16" rx="2.5" fill="none" />
       <line x1={dividerX} y1="4" x2={dividerX} y2="20" />
     </svg>
   );

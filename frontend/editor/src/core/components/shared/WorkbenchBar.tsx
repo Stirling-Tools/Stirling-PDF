@@ -55,6 +55,8 @@ import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
 import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/WorkbenchBarMobileActions";
 import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
+import WorkbenchBarFileMenuToggle from "@app/components/shared/workbenchBar/WorkbenchBarFileMenuToggle";
+import { useFileMenu } from "@app/contexts/FileMenuContext";
 import { renderWithTooltip } from "@app/components/shared/workbenchBar/workbenchBarTooltip";
 import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
 import { useIsMobile, useIsPhone } from "@app/hooks/useIsMobile";
@@ -109,6 +111,7 @@ export default function WorkbenchBar({
   } = useToolWorkflow();
   const { selectedTool } = useNavigationState();
   const isCustomView = !isBaseWorkbench(currentView);
+  const fileMenu = useFileMenu();
   const isViewer = currentView === "viewer";
   const disableForFullscreen =
     toolPanelMode === "fullscreen" && leftPanelView === "toolPicker";
@@ -495,8 +498,16 @@ export default function WorkbenchBar({
       data-wrapped="false"
       data-tour="workbench-bar"
     >
-      {/* Left: optional "Back to File library" + view switcher */}
+      {/* Left: optional file-menu toggle + "Back to File library" + view switcher */}
       <div className="workbench-bar-views" data-tour="view-switcher">
+        {fileMenu?.hidden && (
+          <>
+            <WorkbenchBarFileMenuToggle onExpand={fileMenu.expand} />
+            {(hasFiles || isCustomView) && (
+              <div className="workbench-bar-divider" />
+            )}
+          </>
+        )}
         {returnRoute && hasFiles && (
           <>
             <Button

@@ -33,6 +33,7 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
+import { FileMenuProvider } from "@app/contexts/FileMenuContext";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
@@ -367,6 +368,34 @@ export default function HomePage() {
     });
   }, [navigationState.workbench, navigate]);
 
+  // The sidebar owns the native picker; the rail fires the same one so uploads
+  // take one ingest path whether or not the sidebar is on screen.
+  const openFromComputerRef = useRef<(() => void) | null>(null);
+  const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
+    openFromComputerRef.current = open;
+  }, []);
+  const openFromComputer = useCallback(() => {
+    openFromComputerRef.current?.();
+  }, []);
+
+  // Collapsed the file menu takes no width at all, so its own toggle goes with
+  // it and the workbench bar hosts one until it is back.
+  const fileMenu = useMemo(
+    () => ({
+      hidden:
+        !isMobile &&
+        fileSidebarCollapsed &&
+        navigationState.workbench !== "myFiles",
+      expand: handleSidebarToggle,
+    }),
+    [
+      isMobile,
+      fileSidebarCollapsed,
+      navigationState.workbench,
+      handleSidebarToggle,
+    ],
+  );
+
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
   );
@@ -530,6 +559,10 @@ export default function HomePage() {
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         toolReasons={quickNavToolReasons}
+        // Omitted on /files, where the sidebar stays a rail carrying its own copy.
+        onOpenFromComputer={
+          navigationState.workbench === "myFiles" ? undefined : openFromComputer
+        }
       />
       <FilesPageProvider>
         {isMobile ? (
@@ -538,9 +571,9 @@ export default function HomePage() {
             data-files-mode={navigationState.workbench === "myFiles"}
           >
             {/* On /files the FileManagerView already has its own Back +
-              breadcrumb + tabs chrome - the tools/workspace toggle would
-              just duplicate vertical space. Keep the toggle on every
-              other route. */}
+            breadcrumb + tabs chrome - the tools/workspace toggle would
+            just duplicate vertical space. Keep the toggle on every
+            other route. */}
             {navigationState.workbench !== "myFiles" && (
               <div className="mobile-toggle">
                 <div className="mobile-brand">
@@ -578,9 +611,9 @@ export default function HomePage() {
             )}
             {navigationState.workbench === "myFiles" ? (
               /* /files takes the whole viewport. Skipping the slider keeps
-                the FileManagerView from being trapped inside a 100vw
-                horizontal-scroll container (which truncated buttons and
-                created a stray side-scroll surface on touch). */
+              the FileManagerView from being trapped inside a 100vw
+              horizontal-scroll container (which truncated buttons and
+              created a stray side-scroll surface on touch). */
               <div className="mobile-files-full">
                 <div className="flex-1 min-h-0 flex" style={{ minWidth: 0 }}>
                   <Workbench />
@@ -735,10 +768,13 @@ export default function HomePage() {
                 }
                 onToggleCollapse={handleSidebarToggle}
                 onOpenSettings={() => setConfigModalOpen(true)}
+                onRegisterOpenFromComputer={registerOpenFromComputer}
               />
             </div>
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
-            <Workbench />
+            <FileMenuProvider value={fileMenu}>
+              <Workbench />
+            </FileMenuProvider>
             {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
             <AppConfigModal
@@ -810,6 +846,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       <FileSidebar
         ref={ref}
         {...props}
+        collapseMode="rail"
         onUploadFiles={handleUpload}
         onPickGoogleDriveFiles={handleUpload}
         extraAction={{

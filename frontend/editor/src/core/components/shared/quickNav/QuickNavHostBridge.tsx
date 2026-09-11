@@ -27,6 +27,8 @@ export interface QuickNavHostBridgeProps {
   activeTool?: ToolId | null;
   /** Merged over the reasons worked out here, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
+  /** Absent where there is no file workspace to open into, which drops the rail entry. */
+  onOpenFromComputer?: () => void;
 }
 
 /** Registers with the rail what only the app can see, and owns the notifications panel. */
@@ -40,6 +42,7 @@ export function QuickNavHostBridge({
   activeTool = null,
   onGoToDefaultState,
   toolReasons,
+  onOpenFromComputer,
 }: QuickNavHostBridgeProps) {
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const signingBadge = useSigningBadgeCount();
@@ -76,6 +79,7 @@ export function QuickNavHostBridge({
       selectTool: onSelectTool,
       setReaderMode: onSetReaderMode,
       goToDefaultState: onGoToDefaultState,
+      openFromComputer: onOpenFromComputer,
       toggleNotifications: () => setNotificationsOpen((open) => !open),
       onBrandFlourish: brandFlourish.trigger,
     },
