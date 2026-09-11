@@ -123,6 +123,7 @@ export function FreePlanView({
         <StripeCheckoutModal
           open={step === "payg"}
           onClose={closeModals}
+          onBack={() => setStep("choose")}
           teamId={wallet.teamId}
           currency={currency}
           pricePerDocMinor={wallet.pricePerDocMinor}
@@ -141,6 +142,7 @@ export function FreePlanView({
         <BundleCheckoutModal
           open={step === "prepay"}
           onClose={closeModals}
+          onBack={() => setStep("choose")}
           wallet={wallet}
           onComplete={() => {
             closeModals();

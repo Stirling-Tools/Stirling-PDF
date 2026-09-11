@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLicense } from "@app/contexts/LicenseContext";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
 import { KvRow } from "@app/billing/KvRow";
 import { Banner, Button, Spinner } from "@app/ui";
@@ -10,6 +11,7 @@ import { Modal } from "@app/ui/Modal";
 export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
   const { t } = useTranslation();
   const { licenseInfo, loading, error, refetchLicense } = useLicense();
+  const { error: configError, refetch: refetchConfig } = useAppConfig();
   const [dialog, setDialog] = useState<"view" | "update" | null>(null);
   const storedKey = licenseInfo?.licenseKey?.trim();
   const licenseKey =
@@ -24,32 +26,45 @@ export function ServerLicenseSection({ onSaved }: { onSaved: () => void }) {
     ? t("portal.billing.license.update", "Update")
     : t("portal.billing.license.add", "Add");
 
-  if (loading && !licenseInfo)
-    return <Spinner label={t("loading", "Loading...")} />;
-  if (error)
+  const loadError = configError ?? error;
+  if (loadError)
     return (
       <Banner
         tone="danger"
         title={t("admin.error", "Error")}
-        description={error}
+        description={loadError}
         action={
-          <Button onClick={() => void refetchLicense()}>
+          <Button
+            onClick={() => {
+              void (configError ? refetchConfig() : refetchLicense()).catch(
+                () => {},
+              );
+            }}
+          >
             {t("portal.accountLink.gate.retry", "Try again")}
           </Button>
         }
       />
     );
+  if (loading && !licenseInfo)
+    return <Spinner label={t("loading", "Loading...")} />;
 
   return (
     <>
       <KvRow
         label={label}
         value={
-          licenseKey
-            ? certificate
-              ? certificate.split(/[\\/]/).pop()
-              : "••••••••••••••••"
-            : t("portal.billing.license.empty", "No license installed")
+          licenseKey ? (
+            certificate ? (
+              <span className="billing-license__value">
+                {certificate.split(/[\\/]/).pop()}
+              </span>
+            ) : (
+              "••••••••••••••••"
+            )
+          ) : (
+            t("portal.billing.license.empty", "No license installed")
+          )
         }
         door={
           <span className="billing-license__actions">

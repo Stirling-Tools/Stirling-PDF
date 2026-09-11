@@ -115,4 +115,20 @@ describe("PortalProviders license loading", () => {
     expect(await screen.findByText("No license installed")).toBeInTheDocument();
     expect(getLicenseInfo).toHaveBeenCalledTimes(2);
   });
+
+  it("reports a failed config read instead of claiming no license is installed", async () => {
+    fetchAppConfig.mockRejectedValueOnce(new Error("Config request failed"));
+    renderPortal();
+    expect(
+      await screen.findByText("Config request failed"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("No license installed")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Add" }),
+    ).not.toBeInTheDocument();
+    expect(getLicenseInfo).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole("button", { name: "Try again" }));
+    expect(await screen.findByText("No license installed")).toBeInTheDocument();
+    expect(getLicenseInfo).toHaveBeenCalledOnce();
+  });
 });

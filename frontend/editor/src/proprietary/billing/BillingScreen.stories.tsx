@@ -111,6 +111,30 @@ export const SelfHostedCertificate: Story = {
   },
 };
 
+export const SelfHostedLongCertificate: Story = {
+  ...SelfHostedCertificate,
+  render: (args) => (
+    <div style={{ maxWidth: 375 }}>
+      <BillingScreen {...args} />
+    </div>
+  ),
+  parameters: {
+    msw: {
+      handlers: [
+        http.get("*/api/v1/admin/license-info", () =>
+          HttpResponse.json({
+            licenseType: "ENTERPRISE",
+            enabled: true,
+            maxUsers: 100,
+            licenseKey:
+              "file:/licenses/01a09086ef667363b2d99f773dc4755aenterprise.lic",
+          }),
+        ),
+      ],
+    },
+  },
+};
+
 /** Stand-ins for the host's sections, so the chip row and section rhythm can be reviewed. */
 const payment = (
   <>
