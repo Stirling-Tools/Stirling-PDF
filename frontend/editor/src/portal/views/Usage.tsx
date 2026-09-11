@@ -17,7 +17,6 @@ import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { PaymentSection } from "@portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
 import { fetchFleetStats } from "@portal/api/fleetStats";
-import { fetchAdminEmail } from "@portal/api/users";
 import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
@@ -75,8 +74,6 @@ export function Usage({
   const [editorsDeployed, setEditorsDeployed] = useState<number | null>(null);
   // A team never billed has none, and the section and its chip then drop out.
   const [hasInvoices, setHasInvoices] = useState(true);
-  // Email only: this endpoint is admin-only, so nothing both editions need may come from it.
-  const [adminEmail, setAdminEmail] = useState<string | null>(null);
   // Held here, not in the detail views that own the flows, so the product rows can start them.
   const [activationStep, setActivationStep] = useState<
     "choose" | "payg" | "prepay" | null
@@ -100,13 +97,6 @@ export function Usage({
     setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
-    fetchAdminEmail()
-      .then((e) => {
-        if (!cancelled) setAdminEmail(e);
-      })
-      .catch(() => {
-        if (!cancelled) setAdminEmail(null);
-      });
     fetchFleetStats()
       .then((f) => {
         if (!cancelled) setEditorsDeployed(f.editorsDeployed);
@@ -166,13 +156,14 @@ export function Usage({
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
   const usersInUse = wallet?.team?.usersInUse;
   const addCapacity = useCallback(() => {
+    // No email: the only one this instance holds is its local admin record, which is a Spring
+    // username and not an address the buyer owns. The checkout asks for one instead.
     void checkout?.openCheckout("server", {
-      email: adminEmail ?? undefined,
       currentLimit: heldLimit,
       minimumSeats: usersInUse,
       onSuccess: () => setRefreshKey((k) => k + 1),
     });
-  }, [checkout, adminEmail, heldLimit, usersInUse]);
+  }, [checkout, heldLimit, usersInUse]);
 
   const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
