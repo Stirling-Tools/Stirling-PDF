@@ -40,7 +40,7 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
 
   // Ensure EmbedPDF exits redaction mode whenever we are not in redact tool mode
   useEffect(() => {
-    if (selectedTool !== "redact" && !isRedactionModeActive) {
+    if (selectedTool !== "redact") {
       if (redactionProvides?.isRedactActive?.()) {
         redactionProvides.endRedact();
       }

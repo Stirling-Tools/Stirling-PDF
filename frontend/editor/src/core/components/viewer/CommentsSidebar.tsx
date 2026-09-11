@@ -1030,17 +1030,21 @@ export function CommentsSidebar({
                             </Group>
 
                             {!hasMainContent || isEditingMain ? (
-                              <Group gap="xs" wrap="nowrap" align="center">
-                                <TextInput
+                              <Group gap="xs" wrap="nowrap" align="flex-end">
+                                <Textarea
                                   placeholder={t(
                                     "viewer.comments.addCommentPlaceholder",
                                     "Add comment...",
                                   )}
                                   size="sm"
+                                  autosize
+                                  minRows={1}
+                                  maxRows={6}
                                   value={draft ?? ""}
                                   onKeyDown={(e) => {
                                     if (
                                       e.key === "Enter" &&
+                                      !e.shiftKey &&
                                       (draft ?? "").trim()
                                     ) {
                                       e.preventDefault();
@@ -1069,8 +1073,6 @@ export function CommentsSidebar({
                                     input: {
                                       borderColor:
                                         "var(--mantine-color-blue-3)",
-                                      height: "36px",
-                                      minHeight: "36px",
                                     },
                                   }}
                                   autoFocus
