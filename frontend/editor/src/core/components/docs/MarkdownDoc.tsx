@@ -5,7 +5,7 @@ import ReactMarkdown, {
 } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { Button } from "@app/ui";
-import { makeSlugger } from "@portal/docs/headings";
+import { makeSlugger } from "@app/docs/headings";
 
 /** Flatten a heading's React children to plain text for its anchor id. */
 function childText(node: ReactNode): string {

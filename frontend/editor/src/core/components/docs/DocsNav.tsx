@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, Skeleton, StatusBadge } from "@app/ui";
 import { useTranslation } from "react-i18next";
-import type { DocsNavSection } from "@portal/api/docs";
+import type { DocsNavSection } from "@app/docs/manifest/transform";
 
 /**
  * Left-hand documentation nav: a hierarchical accordion. Section ids encode their

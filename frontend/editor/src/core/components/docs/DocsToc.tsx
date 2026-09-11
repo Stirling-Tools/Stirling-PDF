@@ -1,6 +1,6 @@
 import { useEffect, useState, type RefObject } from "react";
 import { useTranslation } from "react-i18next";
-import type { Heading } from "@portal/docs/headings";
+import type { Heading } from "@app/docs/headings";
 
 /**
  * "On this page" table of contents. Lists the current doc's H2/H3 headings,

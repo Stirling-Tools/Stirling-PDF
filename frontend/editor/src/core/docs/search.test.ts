@@ -5,7 +5,7 @@ import {
   searchDocs,
   toPlainText,
   type SearchDoc,
-} from "@portal/docs/search";
+} from "@app/docs/search";
 
 const DOCS: SearchDoc[] = [
   {

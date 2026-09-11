@@ -32,8 +32,8 @@ import {
 import type { Tier } from "@portal/contexts/TierContext";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { DOCS_PATH } from "@app/routes/docsRoute";
-import { allDocs, loadDocsNav } from "@portal/docs/manifest/registry";
-import { searchDocs, toPlainText, type SearchDoc } from "@portal/docs/search";
+import { allDocs, loadDocsNav } from "@core/docs/manifest/registry";
+import { searchDocs, toPlainText, type SearchDoc } from "@core/docs/search";
 
 /**
  * The Processor's entity search: users, policies, pipelines and sources,

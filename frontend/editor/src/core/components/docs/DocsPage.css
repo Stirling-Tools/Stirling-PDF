@@ -4,4 +4,34 @@
   height: 100%;
   min-height: 0;
   background: var(--c-surface);
+  color: var(--c-text-muted);
+  font-family: var(--font-sans);
+}
+
+/* The view was authored inside the portal's scoped reset, so it assumes these
+   rather than setting them per component. Kept at bare-element weight with
+   :where() so component classes still win, and scoped to this page so nothing
+   leaks into the editor that hosts the route. */
+:where(.docs-page) *,
+:where(.docs-page) *::before,
+:where(.docs-page) *::after {
+  box-sizing: border-box;
+}
+
+:where(.docs-page) button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+:where(.docs-page) a {
+  color: var(--c-accent-text);
+  text-decoration: none;
+}
+
+:where(.docs-page) a:hover {
+  text-decoration: underline;
 }

@@ -14,7 +14,7 @@ import {
   stripRedundantH1,
   type CategoryMap,
   type RawDoc,
-} from "@portal/docs/manifest/transform";
+} from "@app/docs/manifest/transform";
 
 const OPTS = {
   repo: "Owner/Repo",

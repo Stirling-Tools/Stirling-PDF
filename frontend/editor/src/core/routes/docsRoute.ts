@@ -2,8 +2,8 @@
 export const DOCS_PATH = "/docs";
 
 /**
- * Whether this build ships the bundled documentation manifest. Shadowed per
- * build: the manifest travels with the portal chunk, so builds without it
- * (core, desktop) must never resolve the docs page.
+ * Whether this build ships the documentation browser. Every build does: the
+ * manifest and the view live in core, so no edition has to resolve another
+ * tree to render them.
  */
-export const HAS_DOCS = false;
+export const HAS_DOCS = true;

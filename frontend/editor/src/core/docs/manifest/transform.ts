@@ -13,7 +13,7 @@
  */
 
 /* ──────────────────────────────────────────────────────────────────────── */
-/*  Manifest shape (mirrored structurally by @portal/api/docs)               */
+/*  Manifest shape (mirrored structurally by the portal API types)               */
 /* ──────────────────────────────────────────────────────────────────────── */
 
 export interface DocsNavItem {
