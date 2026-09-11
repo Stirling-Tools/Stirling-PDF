@@ -3,7 +3,11 @@
  * and the editor's folder-processing setup both read it.
  */
 
-import { policyStep, type PolicyToolStep } from "@app/policies/operations";
+import {
+  policyStep,
+  type PolicyToolStep,
+  type UntypedPolicyEndpoint,
+} from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
 
@@ -102,7 +106,7 @@ export interface CatalogueEntry {
 }
 
 const ENDPOINT_LABELS: Partial<
-  Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
+  Record<ToolEndpoint | UntypedPolicyEndpoint, string>
 > = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
   "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
@@ -110,6 +114,9 @@ const ENDPOINT_LABELS: Partial<
   "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
   "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
   "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
+  "/api/v1/convert/pdf/pdfa": "portal.policies.endpoints.pdfa",
+  "/api/v1/security/validate-compliance":
+    "portal.policies.endpoints.validateCompliance",
   "/api/v1/ai/tools/classify-and-label":
     "portal.policies.endpoints.classifyAndLabel",
 };
@@ -159,7 +166,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.compliance.label",
     tone: "amber",
     desc: "portal.policies.categories.compliance.desc",
-    comingSoon: true,
   },
   {
     id: "routing",
@@ -245,44 +251,22 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
+    // Gate last, so it judges the document that actually ships. No flatten step: it rasterises
+    // whole pages, and an archive without a text layer is not an archive. Nothing writes to the
+    // document between the conversion and the gate, so what the gate passes is what was converted.
     defaultOperations: [
-      policyStep("sanitize"),
-      policyStep("flatten"),
-      policyStep("purviewApplyLabel"),
+      // Hidden data is the usual disclosure route: strip scripts, attachments and both metadata
+      // streams. Fonts stay - PDF/A requires them embedded.
+      policyStep("sanitize", {
+        removeMetadata: true,
+        removeXMPMetadata: true,
+      }),
+      policyStep("pdfa"),
+      policyStep("complianceCheck"),
     ],
-    fields: [
-      {
-        label: "portal.policies.config.compliance.fields.frameworks",
-        key: "frameworks",
-        type: "chips",
-        value: ["hipaa"],
-        options: ["hipaa", "gdpr", "soc2", "fedramp", "pciDss", "iso27001"],
-      },
-      {
-        label: "portal.policies.config.compliance.fields.onViolation",
-        key: "onViolation",
-        type: "select",
-        value: "flagForReview",
-        options: [
-          "flagForReview",
-          "blockExport",
-          "autoRedactPhi",
-          "quarantineDocument",
-        ],
-      },
-      {
-        label: "portal.policies.config.compliance.fields.auditTrail",
-        key: "auditTrail",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "portal.policies.config.compliance.fields.accessLog",
-        key: "accessLog",
-        type: "toggle",
-        value: true,
-      },
-    ],
+    // No policy-level settings: what this policy does is the step chain, and nothing on the
+    // backend reads fieldValues, so a framework picker here could only ever be decoration.
+    fields: [],
   },
   routing: {
     summary: "portal.policies.config.routing.summary",

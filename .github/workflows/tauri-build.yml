@@ -203,12 +203,20 @@ jobs:
         if: matrix.platform == 'macos-15'
         run: echo "X64_JAVA_HOME=$JAVA_HOME" >> "$GITHUB_ENV"
 
-      # Temurin has no windows-aarch64 JDK 25 yet; Microsoft OpenJDK does.
       - name: Set up JDK 25
+        if: matrix.platform != 'windows-11-arm'
         uses: ./.github/actions/java
         with:
           java-version: "25"
-          distribution: ${{ matrix.platform == 'windows-11-arm' && 'microsoft' || 'temurin' }}
+
+      # Windows ARM64 runners have no preinstalled JDK 25; Microsoft provides an ARM64 build.
+      - name: Set up JDK 25 (Windows ARM64)
+        if: matrix.platform == 'windows-11-arm'
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
+        with:
+          java-version: "25"
+          distribution: "microsoft"
+          architecture: "arm64"
 
       - name: Setup Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0

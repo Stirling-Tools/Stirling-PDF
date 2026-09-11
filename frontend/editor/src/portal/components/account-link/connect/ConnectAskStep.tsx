@@ -7,11 +7,16 @@ import "@portal/components/account-link/connect/connect.css";
 interface Props {
   /** Re-auth says why it is being asked; a first link is pitched instead. */
   reauth: boolean;
+  /**
+   * Reached by spending this month's local free grant. Leads with the allowance connecting adds,
+   * because whatever the caller was doing already works without an account.
+   */
+  exhausted?: boolean;
   /** A hand-off that failed to start drops back here, so this is where its reason belongs. */
   error?: string | null;
 }
 
-export function ConnectAskStep({ reauth, error }: Props) {
+export function ConnectAskStep({ reauth, exhausted = false, error }: Props) {
   const { t } = useTranslation();
 
   return (
@@ -24,7 +29,17 @@ export function ConnectAskStep({ reauth, error }: Props) {
           )}
         </p>
       ) : (
-        <ConnectBenefitsSlide />
+        <>
+          {exhausted && (
+            <p className="portal-connect__lede">
+              {t(
+                "portal.accountLink.connect.exhaustedLede",
+                "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top.",
+              )}
+            </p>
+          )}
+          <ConnectBenefitsSlide />
+        </>
       )}
 
       {!isSaasSupabaseConfigured && (
