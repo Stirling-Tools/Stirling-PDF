@@ -48,6 +48,7 @@ export interface RetryPayload {
 export const KIND_ERROR_CODES: Record<string, readonly string[]> = {
   INPUT_PASSWORD_PROTECTED: ["E004"],
   INPUT_CORRUPTED: ["E001", "E002", "E003"],
+  COMPLIANCE_NOT_MET: ["E074"],
 };
 
 /** Every code any kind claims, so an unclaimed one can be recognised as belonging to UNKNOWN. */

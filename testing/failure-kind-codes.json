@@ -8,6 +8,7 @@
   ],
   "kinds": {
     "INPUT_PASSWORD_PROTECTED": ["E004"],
-    "INPUT_CORRUPTED": ["E001", "E002", "E003"]
+    "INPUT_CORRUPTED": ["E001", "E002", "E003"],
+    "COMPLIANCE_NOT_MET": ["E074"]
   }
 }
