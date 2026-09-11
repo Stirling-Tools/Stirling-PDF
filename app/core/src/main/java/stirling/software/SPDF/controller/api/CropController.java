@@ -180,7 +180,8 @@ public class CropController {
 
                 for (int i = 0; i < sourceDocument.getNumberOfPages(); i++) {
                     if (!pagesToCrop.get(i)) {
-                        newDocument.importPage(sourceDocument.getPage(i));
+                        PDPage imported = newDocument.importPage(sourceDocument.getPage(i));
+                        imported.setResources(sourceDocument.getPage(i).getResources());
                         continue;
                     }
 
@@ -239,7 +240,8 @@ public class CropController {
 
                 for (int i = 0; i < totalPages; i++) {
                     if (!pagesToCrop.get(i)) {
-                        newDocument.importPage(sourceDocument.getPage(i));
+                        PDPage imported = newDocument.importPage(sourceDocument.getPage(i));
+                        imported.setResources(sourceDocument.getPage(i).getResources());
                         continue;
                     }
 
