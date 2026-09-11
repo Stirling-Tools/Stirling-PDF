@@ -21,8 +21,7 @@ import auditService, {
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import { useAuditFilters } from "@app/hooks/useAuditFilters";
 import AuditFiltersForm from "@app/components/shared/config/configSections/audit/AuditFiltersForm";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { Icon } from "@app/ui/Icon";
 interface AuditEventsTableProps {
   loginEnabled?: boolean;
   captureFileHash?: boolean;
@@ -162,8 +161,8 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
   const getSortIcon = (
     key: "timestamp" | "eventType" | "username" | "ipAddress",
   ) => {
-    if (sortKey !== key) return "unfold-more";
-    return sortDir === "asc" ? "expand-less" : "expand-more";
+    if (sortKey !== key) return "chevrons-up-down";
+    return sortDir === "asc" ? "chevron-up" : "chevron-down";
   };
 
   // Event type colors
@@ -287,11 +286,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                         }}
                       >
                         {t("audit.events.timestamp", "Timestamp")}
-                        <LocalIcon
-                          icon={getSortIcon("timestamp")}
-                          width="0.9rem"
-                          height="0.9rem"
-                        />
+                        <Icon name={getSortIcon("timestamp")} size="0.9rem" />
                       </Button>
                     </Table.Th>
                     <Table.Th
@@ -316,11 +311,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                         }}
                       >
                         {t("audit.events.type", "Type")}
-                        <LocalIcon
-                          icon={getSortIcon("eventType")}
-                          width="0.9rem"
-                          height="0.9rem"
-                        />
+                        <Icon name={getSortIcon("eventType")} size="0.9rem" />
                       </Button>
                     </Table.Th>
                     <Table.Th
@@ -345,11 +336,7 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                         }}
                       >
                         {t("audit.events.user", "User")}
-                        <LocalIcon
-                          icon={getSortIcon("username")}
-                          width="0.9rem"
-                          height="0.9rem"
-                        />
+                        <Icon name={getSortIcon("username")} size="0.9rem" />
                       </Button>
                     </Table.Th>
                     <Table.Th
@@ -401,10 +388,9 @@ const AuditEventsTable: React.FC<AuditEventsTableProps> = ({
                       <Table.Td colSpan={totalColumns}>
                         <Group justify="center" py="xl">
                           <Stack align="center" gap={0}>
-                            <LocalIcon
-                              icon="search"
-                              width="2rem"
-                              height="2rem"
+                            <Icon
+                              name="search"
+                              size="2rem"
                               style={{ opacity: 0.4 }}
                             />
                             <Text ta="center" c="dimmed" size="sm">

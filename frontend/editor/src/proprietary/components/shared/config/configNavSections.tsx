@@ -57,7 +57,7 @@ export const useConfigNavSections = (
     preferencesSection.items.push({
       key: "account",
       label: t("account.accountSettings", "Account"),
-      icon: "person-rounded",
+      icon: "user",
       component: <AccountSection />,
     });
   }
@@ -78,7 +78,7 @@ export const useConfigNavSections = (
         {
           key: "people",
           label: t("settings.workspace.people", "People"),
-          icon: "group-rounded",
+          icon: "users",
           component: <PeopleSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -86,7 +86,7 @@ export const useConfigNavSections = (
         {
           key: "teams",
           label: t("settings.workspace.teams", "Teams"),
-          icon: "groups-rounded",
+          icon: "users",
           component: <TeamsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -101,7 +101,7 @@ export const useConfigNavSections = (
         {
           key: "adminGeneral",
           label: t("settings.configuration.systemSettings", "System Settings"),
-          icon: "settings-rounded",
+          icon: "settings",
           component: <AdminGeneralSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -109,7 +109,7 @@ export const useConfigNavSections = (
         {
           key: "adminFeatures",
           label: t("settings.configuration.features", "Features"),
-          icon: "extension-rounded",
+          icon: "puzzle",
           component: <AdminFeaturesSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -120,7 +120,7 @@ export const useConfigNavSections = (
             "settings.configuration.storageSharing",
             "File Storage & Sharing",
           ),
-          icon: "storage-rounded",
+          icon: "server",
           component: <AdminStorageSharingSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -130,7 +130,7 @@ export const useConfigNavSections = (
         {
           key: "adminFolderAccess",
           label: t("settings.configuration.folderAccess", "Folder Access"),
-          icon: "folder-rounded",
+          icon: "folder",
           component: <AdminFolderAccessSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -138,7 +138,7 @@ export const useConfigNavSections = (
         {
           key: "adminEndpoints",
           label: t("settings.configuration.endpoints", "Endpoints"),
-          icon: "api-rounded",
+          icon: "api",
           component: <AdminEndpointsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -146,7 +146,7 @@ export const useConfigNavSections = (
         {
           key: "adminMcp",
           label: t("settings.configuration.mcp", "MCP Server"),
-          icon: "smart-toy-rounded",
+          icon: "bot",
           component: <AdminMcpSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -154,7 +154,7 @@ export const useConfigNavSections = (
         {
           key: "adminDatabase",
           label: t("settings.configuration.database", "Database"),
-          icon: "storage-rounded",
+          icon: "server",
           component: <AdminDatabaseSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -162,7 +162,7 @@ export const useConfigNavSections = (
         {
           key: "adminAdvanced",
           label: t("settings.configuration.advanced", "Advanced"),
-          icon: "tune-rounded",
+          icon: "sliders-horizontal",
           component: <AdminAdvancedSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -177,7 +177,7 @@ export const useConfigNavSections = (
         {
           key: "adminAiGeneral",
           label: t("settings.ai.general", "General"),
-          icon: "smart-toy-rounded",
+          icon: "bot",
           component: <AdminAiGeneralSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -185,7 +185,7 @@ export const useConfigNavSections = (
         {
           key: "adminAiModels",
           label: t("settings.ai.models", "Models & Providers"),
-          icon: "psychology",
+          icon: "brain",
           component: <AdminAiModelsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -193,7 +193,7 @@ export const useConfigNavSections = (
         {
           key: "adminAiDocuments",
           label: t("settings.ai.documents", "Documents & RAG"),
-          icon: "description",
+          icon: "file-text",
           component: <AdminAiDocumentsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -201,7 +201,7 @@ export const useConfigNavSections = (
         {
           key: "adminAiLimits",
           label: t("settings.ai.limits", "Limits & Performance"),
-          icon: "speed",
+          icon: "gauge",
           component: <AdminAiLimitsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -216,7 +216,7 @@ export const useConfigNavSections = (
         {
           key: "adminSecurity",
           label: t("settings.securityAuth.security", "Security"),
-          icon: "shield-rounded",
+          icon: "shield",
           component: <AdminSecuritySection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -224,7 +224,7 @@ export const useConfigNavSections = (
         {
           key: "adminConnections",
           label: t("settings.securityAuth.connections", "Connections"),
-          icon: "link-rounded",
+          icon: "link",
           component: <AdminConnectionsSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -239,7 +239,7 @@ export const useConfigNavSections = (
         {
           key: "adminPlan",
           label: t("settings.licensingAnalytics.plan", "Plan"),
-          icon: "star-rounded",
+          icon: "star",
           component: <AdminPlanSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -247,7 +247,7 @@ export const useConfigNavSections = (
         {
           key: "adminAudit",
           label: t("settings.licensingAnalytics.audit", "Audit"),
-          icon: "fact-check-rounded",
+          icon: "clipboard-check",
           component: <AdminAuditSection />,
           // Non-Enterprise users can still click in: AdminAuditSection
           // renders a demo preview when `!hasEnterpriseLicense`.
@@ -260,7 +260,7 @@ export const useConfigNavSections = (
             "settings.licensingAnalytics.usageAnalytics",
             "Usage Analytics",
           ),
-          icon: "analytics-rounded",
+          icon: "chart-column",
           component: <AdminUsageSection />,
           // Same demo-preview story as adminAudit above.
           disabled: requiresLogin,
@@ -276,7 +276,7 @@ export const useConfigNavSections = (
         {
           key: "adminLegal",
           label: t("settings.policiesPrivacy.legal", "Legal"),
-          icon: "gavel-rounded",
+          icon: "gavel",
           component: <AdminLegalSection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -284,7 +284,7 @@ export const useConfigNavSections = (
         {
           key: "adminPrivacy",
           label: t("settings.policiesPrivacy.privacy", "Privacy"),
-          icon: "visibility-rounded",
+          icon: "eye",
           component: <AdminPrivacySection />,
           disabled: requiresLogin,
           disabledTooltip: requiresLogin ? enableLoginTooltip : undefined,
@@ -301,7 +301,7 @@ export const useConfigNavSections = (
         {
           key: "api-keys",
           label: t("settings.developer.apiKeys", "API Keys"),
-          icon: "key-rounded",
+          icon: "key",
           component: <ApiKeys />,
         },
       ],

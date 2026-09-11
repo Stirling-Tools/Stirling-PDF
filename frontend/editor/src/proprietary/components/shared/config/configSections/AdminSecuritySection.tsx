@@ -16,7 +16,7 @@ import {
   Textarea,
 } from "@mantine/core";
 import { alert } from "@app/components/toast";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
 import { useAdminSettings } from "@app/hooks/useAdminSettings";
@@ -491,7 +491,7 @@ export default function AdminSecuritySection() {
             "admin.settings.security.ssoNotice.title",
             "Looking for SSO/SAML settings?",
           )}
-          icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+          icon={<Icon name="info" size="1rem" />}
         >
           <Text size="sm">
             {t(
@@ -855,7 +855,7 @@ export default function AdminSecuritySection() {
 
             <Alert
               color="yellow"
-              icon={<LocalIcon icon="info" />}
+              icon={<Icon name="info" size="1em" />}
               title={t(
                 "admin.settings.security.audit.advancedOptions.title",
                 "Advanced Options",
