@@ -213,8 +213,8 @@ export default function HomePage() {
 
   // The library is a view like the viewer and the file editor: which view is on screen
   // is state, the path says which folder you are in. Each side moves the other on a
-  // transition only - asserting either every render is what let the path re-impose
-  // "myFiles" a render after anything else had set a view.
+  // transition only: asserting either on every render lets the path re-impose
+  // "myFiles" a render after anything else has set a view.
 
   // Path moved, so the path is the cause: arrival, back/forward, or a deliberate
   // navigate. Mount included, which is what seeds a deep link.

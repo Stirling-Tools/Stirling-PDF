@@ -281,12 +281,11 @@
   margin-top: 4px;
 }
 
-/* Folder navigation shares the column with the file list above it: it takes only
-   the height its rows need, up to a third of the sidebar, and scrolls past that so
-   a deep tree can never push the open files out of view. */
+/* Folder navigation fills the box the file list would: in the library it is what the
+   sidebar is for, and a deep tree scrolls within it. */
 .file-sidebar-folders-section {
-  flex: 0 0 auto;
-  max-height: 33%;
+  flex: 1;
+  min-height: 0;
   display: flex;
   flex-direction: column;
   overflow-y: auto;

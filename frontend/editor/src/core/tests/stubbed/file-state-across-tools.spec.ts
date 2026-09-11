@@ -26,8 +26,8 @@ test.describe("File state persists across tool navigation", () => {
       .getByRole("navigation", { name: /Quick navigation/i })
       .getByRole("button", { name: /^File library$/i })
       .click();
-    // The library's grid, which loads its own listing: the sidebar no longer
-    // carries a file list to answer this sooner.
+    // The library's grid, which loads its own listing: in the library the sidebar
+    // shows folders, not files, so nothing answers this sooner.
     await expect(
       page.locator(".files-page-card").filter({ hasText: /sample\.pdf/i }),
     ).toBeVisible({ timeout: 15_000 });
@@ -41,8 +41,8 @@ test.describe("File state persists across tool navigation", () => {
       .getByRole("navigation", { name: /Quick navigation/i })
       .getByRole("button", { name: /^File library$/i })
       .click();
-    // The library's grid, which loads its own listing: the sidebar no longer
-    // carries a file list to answer this sooner.
+    // The library's grid, which loads its own listing: in the library the sidebar
+    // shows folders, not files, so nothing answers this sooner.
     await expect(
       page.locator(".files-page-card").filter({ hasText: /sample\.pdf/i }),
     ).toBeVisible({ timeout: 15_000 });

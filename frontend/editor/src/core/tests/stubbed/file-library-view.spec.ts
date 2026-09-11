@@ -3,11 +3,10 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 /**
  * The file library is a view, not a route: which view is on screen is state, and the
  * path follows it. These pin the direction of that, because the reverse - the path
- * imposing the view on every render - used to make anything else set on /files
- * revert a render later.
+ * imposing the view on every render - makes anything else set on /files revert a
+ * render later.
  */
 test.describe("The file library behaves like the other views", () => {
-  // Scoped to the rail: the file sidebar carries a button of the same name.
   const railButton = (page: import("@playwright/test").Page, name: RegExp) =>
     page
       .getByRole("navigation", { name: /Quick navigation/i })

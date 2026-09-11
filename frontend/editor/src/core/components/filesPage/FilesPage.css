@@ -8,9 +8,9 @@
   overflow: hidden;
 }
 
-/* The library's own row: tabs, then the folder path, then its actions. Everything
-   the library brings sits here rather than in the shared bar above, which carries
-   only what every view has. */
+/* The library's own row: the tabs, then the folder path. What the library brings
+   sits here rather than in the shared bar above, which carries only what every view
+   has. */
 .files-page-tabs-row {
   display: flex;
   align-items: center;
@@ -26,11 +26,10 @@
   overflow: hidden;
 }
 
-/* The folder path, in the workbench bar beside the view switcher. Sized and
-   coloured like .workbench-bar-view-btn so it reads as part of the bar rather than
-   as something the library brought with it. Fixed height and no wrapping: the bar
-   reflows by content width, and a deep trail would otherwise push it a row taller.
-   Depth is handled by showing fewer crumbs - see the overflow menu. */
+/* The folder path. Sized and coloured like the bar's own controls, since on mobile
+   that is where it renders. Fixed height and no wrapping: a deep trail would
+   otherwise push its row taller, so depth is handled by showing fewer crumbs - see
+   the overflow menu. */
 .files-page-breadcrumbs {
   display: flex;
   align-items: center;
@@ -88,36 +87,6 @@
   min-height: 0;
   overflow: hidden;
 }
-
-.files-page-tree {
-  width: 17rem;
-  flex-shrink: 0;
-  border-right: 1px solid var(--c-border-subtle);
-  background: var(--c-bg-raised);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.files-page-tree[data-collapsed="true"] {
-  width: 3.25rem;
-}
-
-.files-page-tree-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 0.75rem 0.5rem;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--c-text-subtle);
-}
-
-/* Tree node styles moved to FolderTreePanel.css - that's where the
-   .files-page-tree-* elements actually render (the slide-out panel from
-   HomePage), so the styles need to load whether or not the standalone
-   /files route is mounted. */
 
 .files-page-main {
   flex: 1;
@@ -270,20 +239,17 @@
 }
 
 .files-page-tree-list,
-.folder-tree-panel-inner,
 .files-page-details-body {
   scrollbar-width: thin;
   scrollbar-color: var(--c-border-subtle) transparent;
 }
 
 .files-page-tree-list::-webkit-scrollbar,
-.folder-tree-panel-inner::-webkit-scrollbar,
 .files-page-details-body::-webkit-scrollbar {
   width: 0.4rem;
 }
 
 .files-page-tree-list::-webkit-scrollbar-thumb,
-.folder-tree-panel-inner::-webkit-scrollbar-thumb,
 .files-page-details-body::-webkit-scrollbar-thumb {
   background: var(--c-border-subtle);
   border-radius: 999px;
@@ -1452,24 +1418,15 @@
 }
 
 @media (max-width: 1024px) {
-  .files-page-tree {
-    width: 14rem;
-  }
   .files-page-details {
     width: 18rem;
   }
 }
 
 @media (max-width: 800px) {
-  /* Tree slot inside the inline layout can't fit at this width - the
-     tree itself is still reachable via the FolderTreePanel slide-out.
-     Details panel visibility is controlled by JSX (conditional Drawer)
-     at this width, not CSS, so we don't blanket-hide .files-page-details
-     here - that would also hide it when it lives inside the Drawer's
-     portaled overlay tree. */
-  .files-page-tree {
-    display: none;
-  }
+  /* Details panel visibility is controlled by JSX (conditional Drawer) at this
+     width, not CSS: blanket-hiding .files-page-details would also hide it when it
+     lives inside the Drawer's portaled overlay tree. */
   .files-page-content {
     padding: 0.75rem;
   }

@@ -1376,8 +1376,6 @@ export default function FileManagerView() {
   const { addLocalFolder } = useNewFolderFlow();
 
   // null = New folder actionable; string = disabled tooltip reason.
-  // Lifted out of the header that used to render it: the workbench bar owns these
-  // controls now, and a handler defined inside JSX cannot be handed to it.
   const { refreshing, refresh: handleRefresh } = useLibraryRefresh();
 
   const newFolderDisabledReason: string | null = useMemo(() => {
