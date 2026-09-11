@@ -32,7 +32,6 @@ import {
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
@@ -1083,38 +1082,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 )}
               </React.Fragment>
             ))}
-
-            <Tooltip
-              label={t("fileSidebar.myFiles", "File library")}
-              position="right"
-              withinPortal
-              disabled={!collapsed}
-            >
-              <div
-                className="file-sidebar-action-row"
-                data-testid="my-files-button"
-                onClick={() => {
-                  if (collapsed && onToggleCollapse) onToggleCollapse();
-                  navActions.setWorkbench("myFiles");
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={t("fileSidebar.myFiles", "File library")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    navActions.setWorkbench("myFiles");
-                  }
-                }}
-              >
-                <FolderOpenIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.myFiles", "File library")}
-                  </span>
-                )}
-              </div>
-            </Tooltip>
 
             {!shouldHideGoogleDrive && (
               <Tooltip

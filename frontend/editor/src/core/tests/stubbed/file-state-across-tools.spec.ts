@@ -22,20 +22,30 @@ test.describe("File state persists across tool navigation", () => {
     await uploadFiles(page, SAMPLE_PDF);
 
     // Sanity: My Files page lists the upload
-    await page.getByTestId("my-files-button").click();
-    await expect(page.getByText(/sample\.pdf/i).first()).toBeVisible({
-      timeout: 5_000,
-    });
+    await page
+      .getByRole("navigation", { name: /Quick navigation/i })
+      .getByRole("button", { name: /^File library$/i })
+      .click();
+    // The library's grid, which loads its own listing: the sidebar no longer
+    // carries a file list to answer this sooner.
+    await expect(
+      page.locator(".files-page-card").filter({ hasText: /sample\.pdf/i }),
+    ).toBeVisible({ timeout: 15_000 });
 
     // Navigate to /split
     await page.goto("/split");
     await page.waitForLoadState("domcontentloaded");
 
     // Re-open My Files - sample.pdf must still be there (persisted across tools)
-    await page.getByTestId("my-files-button").click();
-    await expect(page.getByText(/sample\.pdf/i).first()).toBeVisible({
-      timeout: 5_000,
-    });
+    await page
+      .getByRole("navigation", { name: /Quick navigation/i })
+      .getByRole("button", { name: /^File library$/i })
+      .click();
+    // The library's grid, which loads its own listing: the sidebar no longer
+    // carries a file list to answer this sooner.
+    await expect(
+      page.locator(".files-page-card").filter({ hasText: /sample\.pdf/i }),
+    ).toBeVisible({ timeout: 15_000 });
   });
 
   test("file uploaded on /merge survives an in-app tool-link navigation", async ({
@@ -65,9 +75,12 @@ test.describe("File state persists across tool navigation", () => {
 
     // The upload must still be listed after the tool switch. A "no files"
     // empty state here would mean the client-side nav silently dropped it.
-    await page.getByTestId("my-files-button").click();
-    await expect(page.getByText(/sample\.pdf/i).first()).toBeVisible({
-      timeout: 10_000,
-    });
+    await page
+      .getByRole("navigation", { name: /Quick navigation/i })
+      .getByRole("button", { name: /^File library$/i })
+      .click();
+    await expect(
+      page.locator(".files-page-card").filter({ hasText: /sample\.pdf/i }),
+    ).toBeVisible({ timeout: 15_000 });
   });
 });
