@@ -902,41 +902,6 @@ test.describe("Files page", () => {
     });
   });
 
-  test.describe("Folder tree panel resize", () => {
-    test.use({ autoGoto: false });
-
-    test("Resize handle is present and keyboard-adjustable", async ({
-      page,
-    }) => {
-      await stubStorageApis(page);
-      await seedFiles(page, [
-        { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
-      ]);
-      await gotoFilesPage(page);
-      const handle = page.locator(".folder-tree-panel-resizer").first();
-      await expect(handle).toBeVisible();
-      const before = await page.evaluate(() => {
-        const el = document.querySelector(
-          ".folder-tree-panel[data-active='true']",
-        ) as HTMLElement | null;
-        return el?.getBoundingClientRect().width ?? 0;
-      });
-      await handle.focus();
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      const after = await page.evaluate(() => {
-        const el = document.querySelector(
-          ".folder-tree-panel[data-active='true']",
-        ) as HTMLElement | null;
-        return el?.getBoundingClientRect().width ?? 0;
-      });
-      // Four 8px steps = +32px.
-      expect(after).toBeGreaterThanOrEqual(before + 24);
-    });
-  });
-
   test.describe("Folder chrome stability", () => {
     const CHROME_FOLDER = "11111111-2222-4333-8444-555555555561";
     test.use({ autoGoto: false });

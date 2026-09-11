@@ -27,7 +27,6 @@ import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppsIcon from "@mui/icons-material/AppsRounded";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
 import RightSidebar from "@app/components/tools/RightSidebar";
@@ -59,7 +58,6 @@ import { folderKind } from "@app/types/folder";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
@@ -244,21 +242,6 @@ export default function HomePage() {
     }
   }, [navigationState.workbench, location.pathname, navigate]);
 
-  // Auto-collapse the FileSidebar while on /files; restore the user's persisted
-  // preference on leave. Auto-collapse doesn't write to storage so deep-linking
-  // to /files won't overwrite what the user actually chose.
-  const prevWorkbenchRef = useRef(navigationState.workbench);
-  useEffect(() => {
-    const prev = prevWorkbenchRef.current;
-    const curr = navigationState.workbench;
-    if (curr === "myFiles" && prev !== "myFiles") {
-      if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
-    } else if (curr !== "myFiles" && prev === "myFiles") {
-      setFileSidebarCollapsed(readPersistedSidebarCollapsed());
-    }
-    prevWorkbenchRef.current = curr;
-    // fileSidebarCollapsed read as snapshot on transition only.
-  }, [navigationState.workbench]);
   // Imperative, so the toggle still works while reading. Never persisted: not a preference.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
@@ -697,27 +680,12 @@ export default function HomePage() {
               <MyFilesAwareFileSidebar
                 ref={quickAccessRef}
                 accountHoisted
-                toggleAriaLabel={
-                  navigationState.workbench === "myFiles"
-                    ? t("fileSidebar.leaveMyFiles", "Leave File library")
-                    : undefined
-                }
-                toggleIcon={
-                  navigationState.workbench === "myFiles" ? (
-                    <ArrowBackIcon />
-                  ) : undefined
-                }
                 active={navigationState.workbench === "myFiles"}
-                // Forced: a deep link to /files has no transition to collapse on.
-                collapsed={
-                  navigationState.workbench === "myFiles" ||
-                  fileSidebarCollapsed
-                }
+                collapsed={fileSidebarCollapsed}
                 onToggleCollapse={handleSidebarToggle}
                 onOpenSettings={openSettings}
               />
             </div>
-            <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />

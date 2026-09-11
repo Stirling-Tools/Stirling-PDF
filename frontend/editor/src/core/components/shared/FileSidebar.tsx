@@ -74,6 +74,9 @@ import {
   clearWatchedFolderDraggedFileIds,
 } from "@app/components/watchedFolders/watchedFolderDragState";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
+import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import "@app/components/shared/FileSidebar.css";
@@ -101,10 +104,6 @@ export interface FileSidebarProps {
   onOpenSettings?: () => void;
   /** The quick nav rail owns the account control, so the footer drops its own row. */
   accountHoisted?: boolean;
-  /** Accessible name override for the collapse toggle. */
-  toggleAriaLabel?: string;
-  /** Icon override for the collapse toggle (e.g. back-arrow on /files). */
-  toggleIcon?: React.ReactNode;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Override the Google Drive handler. */
@@ -159,8 +158,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onToggleCollapse,
       onOpenSettings,
       accountHoisted = false,
-      toggleAriaLabel,
-      toggleIcon,
       onUploadFiles,
       onPickGoogleDriveFiles,
       extraAction,
@@ -187,6 +184,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
+    const filesPage = useFilesPage();
     const { setCustomWorkbenchViewData, customWorkbenchViews } =
       useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
@@ -960,8 +958,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           <SidebarHeader
             collapsed={collapsed}
             onToggleCollapse={onToggleCollapse}
-            toggleAriaLabel={toggleAriaLabel}
-            toggleIcon={toggleIcon}
           />
 
           {/* Box 1 — top controls (open / my files / cloud). No title. File
@@ -1192,8 +1188,36 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           {/* Box 2 — the file tree (this box scrolls). */}
           <NavSurface className="file-sidebar-files-box">
             <div className="file-sidebar-scroll">
-              {/* Files section - always visible when expanded */}
-              {!collapsed && (
+              {/* The library browses folders, so there the box carries the tree the
+                  file list would otherwise fill: one sidebar, its contents following
+                  the view rather than a column of its own beside it. */}
+              {!collapsed && currentWorkbench === "myFiles" && (
+                <div className="file-sidebar-folders-section sidebar-content-fade">
+                  <div className="file-sidebar-section-header">
+                    <span className="file-sidebar-section-label">
+                      {t("fileSidebar.folders", "Folders")}
+                    </span>
+                  </div>
+                  <FolderTreeSidebar
+                    fileCounts={filesPage.fileCountsByFolder}
+                    onRequestNewFolder={filesPage.openNewFolderDialog}
+                    onRenameFolder={(folder: FolderRecord) =>
+                      filesPage.openRenameFolderDialog(folder)
+                    }
+                    onDeleteFolder={filesPage.promptDeleteFolder}
+                    onMoveFilesIntoFolder={async (
+                      targetId: FolderId | null,
+                      fileIds: FileId[],
+                    ) => {
+                      if (fileIds.length === 0) return;
+                      await filesPage.moveFilesTo(fileIds, targetId);
+                    }}
+                  />
+                </div>
+              )}
+
+              {/* Files section - visible when expanded, outside the library */}
+              {!collapsed && currentWorkbench !== "myFiles" && (
                 <div className="file-sidebar-files-section sidebar-content-fade">
                   <div className="file-sidebar-section-header">
                     <span className="file-sidebar-section-label">
