@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationContext;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
@@ -20,6 +21,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.DisableReason;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
+import stirling.software.SPDF.config.ExternalAppDepConfig;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.interfaces.ShowAdminInterface;
 import stirling.software.common.model.ApplicationProperties;
@@ -53,6 +55,56 @@ class ConfigControllerTest {
                         showAdmin,
                         licenseService,
                         mock(stirling.software.SPDF.config.ExternalAppDepConfig.class));
+    }
+
+    @Test
+    void getAppConfig_includesConfiguredDefaultLayoutSettings() {
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getUi().setDefaultToolPanelMode("fullscreen");
+        properties.getUi().setDefaultStartupView("read");
+
+        ResponseEntity<Map<String, Object>> response =
+                createConfigController(properties).getAppConfig();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+        assertFalse(body.containsKey("error"));
+        assertEquals("fullscreen", body.get("defaultToolPanelMode"));
+        assertEquals("read", body.get("defaultStartupView"));
+        assertEquals(false, body.get("defaultHideUnavailableTools"));
+        assertEquals(false, body.get("defaultHideUnavailableConversions"));
+    }
+
+    @Test
+    void getAppConfig_includesDefaultLayoutFallbacks() {
+        ResponseEntity<Map<String, Object>> response =
+                createConfigController(new ApplicationProperties()).getAppConfig();
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        Map<String, Object> body = response.getBody();
+        assertNotNull(body);
+        assertFalse(body.containsKey("error"));
+        assertEquals("sidebar", body.get("defaultToolPanelMode"));
+        assertEquals("tools", body.get("defaultStartupView"));
+    }
+
+    private ConfigController createConfigController(ApplicationProperties properties) {
+        ApplicationContext context = mock(ApplicationContext.class);
+        ExternalAppDepConfig externalAppDepConfig = mock(ExternalAppDepConfig.class);
+        AppConfig appConfig = new AppConfig(mock(Environment.class), properties);
+
+        when(context.getBean(AppConfig.class)).thenReturn(appConfig);
+        when(externalAppDepConfig.isDependenciesChecked()).thenReturn(true);
+
+        return new ConfigController(
+                properties,
+                context,
+                endpointConfiguration,
+                serverCertificateService,
+                userService,
+                licenseService,
+                externalAppDepConfig);
     }
 
     @Test
