@@ -41,7 +41,7 @@ import {
   getDefaultWorkbenchForFileCount,
 } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { stripBasePath } from "@app/constants/app";
+import { isInSettings } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
@@ -140,9 +140,18 @@ export default function HomePage() {
 
   // Open the config modal whenever the URL is /settings/* (e.g. from the admin
   // tour's openConfigModal action which navigates to /settings/overview).
+  //
+  // Both halves read the live URL rather than `location.pathname`, and popstate
+  // is subscribed to directly: react-router defers location updates through a
+  // transition, so `location` can still hold the pre-navigation path. Deriving
+  // from it re-opens a modal the user just closed, and depending on it alone
+  // misses Back entirely when the push it should have committed never landed.
   useEffect(() => {
-    const isSettings = location.pathname.startsWith("/settings");
-    setConfigModalOpen(isSettings);
+    const syncFromUrl = () => setConfigModalOpen(isInSettings());
+    syncFromUrl();
+    window.addEventListener("popstate", syncFromUrl);
+    return () => window.removeEventListener("popstate", syncFromUrl);
+    // location.pathname is a trigger only - it marks a router commit.
   }, [location.pathname]);
 
   useEffect(() => {
@@ -155,22 +164,30 @@ export default function HomePage() {
   // when opened directly on a /settings URL (deep link) - close falls back to
   // the editor root.
   const settingsOriginRef = useRef<string | null>(null);
+  // Last route outside /settings. Super search pushes /settings/* through the
+  // router, so the app is already in settings when the modal opens.
+  const lastNonSettingsPathRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!location.pathname.startsWith("/settings")) {
+      lastNonSettingsPathRef.current = location.pathname;
+    }
+  }, [location.pathname]);
   const wasConfigOpenRef = useRef(false);
   useEffect(() => {
     if (configModalOpen && !wasConfigOpenRef.current) {
-      settingsOriginRef.current = location.pathname.startsWith("/settings")
-        ? null
-        : location.pathname;
+      // One clock only: location.pathname can still hold a stale /settings
+      // path here, and storing it makes the next close re-open the modal.
+      settingsOriginRef.current = lastNonSettingsPathRef.current;
     }
     wasConfigOpenRef.current = configModalOpen;
   }, [configModalOpen, location.pathname]);
 
   const handleCloseConfig = useCallback(() => {
     // Restore the URL before clearing the flag, or a late /settings commit
-    // re-opens the modal. Read window.location, not useLocation: a tab switch
-    // updates the URL synchronously while the router's commit lags. Replace to
-    // the origin rather than navigate(-1), which webkit can drop.
-    if (stripBasePath(window.location.pathname).startsWith("/settings")) {
+    // re-opens the modal. Read the live URL, not `location`: a tab switch
+    // updates the address bar synchronously while the router's commit lags.
+    // Replace to the origin rather than navigate(-1), which webkit can drop.
+    if (isInSettings()) {
       navigate(settingsOriginRef.current ?? EDITOR_BASENAME, { replace: true });
     }
     setConfigModalOpen(false);
