@@ -56,11 +56,12 @@ class InstanceEntitlementInterceptorTest {
     @Mock private InstanceEntitlementGate gate;
     @Mock private EntitlementCache entitlementCache;
     @Mock private ObjectProvider<UsageMeterService> meterProvider;
+    @Mock private FreeTierUsageService freeTierUsageService;
     @Mock private TempFileManager tempFileManager;
 
     private InstanceEntitlementInterceptor interceptor() {
         return new InstanceEntitlementInterceptor(
-                gate, entitlementCache, meterProvider, tempFileManager);
+                gate, entitlementCache, meterProvider, freeTierUsageService, tempFileManager);
     }
 
     @AfterEach
@@ -87,16 +88,93 @@ class InstanceEntitlementInterceptorTest {
     }
 
     @Test
-    void blocksWith402AndLinkSignalWhenGateBlocks() throws Exception {
+    void blocksWith402AndTheTerminalReasonWhenGateBlocks() throws Exception {
         when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.block(GateDecision.Reason.NOT_LINKED));
+                .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
         MockHttpServletResponse response = new MockHttpServletResponse();
 
         assertFalse(preHandle(response));
         assertEquals(HttpStatus.PAYMENT_REQUIRED.value(), response.getStatus());
         assertEquals("application/json", response.getContentType());
         assertTrue(response.getContentAsString().contains("ACCOUNT_LINK_REQUIRED"));
-        assertTrue(response.getContentAsString().contains("NOT_LINKED"));
+        assertTrue(response.getContentAsString().contains("FREE_TIER_EXHAUSTED"));
+    }
+
+    @Test
+    void metersTheFreeTierLedgerWhenUnlinked() throws Exception {
+        // FREE_TIER is the gate saying "unlinked, inside the grant", so the op must land on the
+        // local ledger with the compiled-in policy and never touch the cloud one.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verify(freeTierUsageService).accrue(eq(BillingCategory.AI), eq(1L), isNull());
+        verifyNoInteractions(entitlementCache, meterProvider);
+    }
+
+    @Test
+    void freeTierAutomationUsesTheSourceDocumentKey() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/rotate-pdf");
+        req.addHeader("X-Stirling-Automation", "true");
+        req.addHeader("X-Stirling-Run-Id", "run-1");
+        req.addHeader("X-Stirling-Document-Id", "run-1:0");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verify(freeTierUsageService).accrue(BillingCategory.AUTOMATION, 1L, "run-1:0");
+        verifyNoInteractions(entitlementCache, meterProvider);
+    }
+
+    @Test
+    void freeTierDoesNotMeterFilelessWork() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verifyNoInteractions(freeTierUsageService, entitlementCache, meterProvider);
+    }
+
+    @Test
+    void manualToolNeverReachesEitherLedger() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.MANUAL_FREE));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/rotate-pdf");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verifyNoInteractions(freeTierUsageService, entitlementCache, meterProvider);
+    }
+
+    @Test
+    void blockedFreeTierRequestAccruesNothing() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verifyNoInteractions(freeTierUsageService, entitlementCache, meterProvider);
     }
 
     @Test
@@ -225,9 +303,9 @@ class InstanceEntitlementInterceptorTest {
     @Test
     void gatesPolicyRunUpFrontEvenWithoutAutomationHeader() throws Exception {
         // The policy /run call carries no automation header, but must be blocked up front (not
-        // after its first tool) when the instance is unlinked.
+        // after its first tool) when the allowance is spent.
         when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.block(GateDecision.Reason.NOT_LINKED));
+                .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockHttpServletRequest req =
@@ -246,8 +324,6 @@ class InstanceEntitlementInterceptorTest {
         // here), so the /run request itself never accrues usage.
         when(gate.evaluate(anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
-        UsageMeterService meter = mock(UsageMeterService.class);
-        when(meterProvider.getIfAvailable()).thenReturn(meter);
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockHttpServletRequest req =
@@ -256,7 +332,7 @@ class InstanceEntitlementInterceptorTest {
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
 
-        verifyNoInteractions(meter);
+        verifyNoInteractions(meterProvider, freeTierUsageService);
     }
 
     @Test
@@ -285,8 +361,6 @@ class InstanceEntitlementInterceptorTest {
         // billed. Only tool operations count as API usage.
         when(gate.evaluate(anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
-        UsageMeterService meter = mock(UsageMeterService.class);
-        when(meterProvider.getIfAvailable()).thenReturn(meter);
         authenticateWithApiKey();
 
         InstanceEntitlementInterceptor interceptor = interceptor();
@@ -296,7 +370,7 @@ class InstanceEntitlementInterceptorTest {
         interceptor.preHandle(req, resp, plainHandler());
         interceptor.afterCompletion(req, resp, plainHandler(), null);
 
-        verify(meter, never()).accrue(any(), any(), anyLong(), any(), eq(10));
+        verifyNoInteractions(meterProvider, freeTierUsageService);
     }
 
     @Test

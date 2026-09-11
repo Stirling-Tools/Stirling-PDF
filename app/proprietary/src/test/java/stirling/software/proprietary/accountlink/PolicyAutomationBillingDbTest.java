@@ -73,6 +73,7 @@ class PolicyAutomationBillingDbTest {
     @Mock private InternalApiClient internalApiClient;
     @Mock private ToolMetadataService metadata;
     @Mock private InstanceEntitlementGate gate;
+    @Mock private FreeTierUsageService freeTierUsageService;
     @Mock private EntitlementCache entitlementCache;
     @Mock private ObjectProvider<UsageMeterService> meterProvider;
     @TempDir Path tempDir;
@@ -90,7 +91,7 @@ class PolicyAutomationBillingDbTest {
                         internalApiClient, metadata, tempFiles, JsonMapper.builder().build());
         interceptor =
                 new InstanceEntitlementInterceptor(
-                        gate, entitlementCache, meterProvider, tempFiles);
+                        gate, entitlementCache, meterProvider, freeTierUsageService, tempFiles);
         when(gate.evaluate(anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         when(meterProvider.getIfAvailable())

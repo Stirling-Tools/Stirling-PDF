@@ -13,10 +13,16 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
  *
  * <p>Whole config is gated behind {@code stirling.billing.account-link.enabled} +
  * {@code @Profile("!saas")}; absent when off, so no interceptor is registered.
+ *
+ * <p>A desktop bundle registers nothing either: desktop work belongs to the server it connects to,
+ * not to the backend Tauri runs in-process.
  */
 @Configuration
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AccountLinkWebMvcConfig implements WebMvcConfigurer {
 
     private final InstanceEntitlementInterceptor gateInterceptor;
@@ -27,6 +33,9 @@ public class AccountLinkWebMvcConfig implements WebMvcConfigurer {
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        if (isDesktopBundle()) {
+            return;
+        }
         // AI surface is always billable; the broad /api/v1/** catch lets automation-marked manual
         // calls be gated too, while the interceptor lets genuine manual tools through.
         registry.addInterceptor(gateInterceptor)
@@ -36,5 +45,13 @@ public class AccountLinkWebMvcConfig implements WebMvcConfigurer {
                         "/api/v1/config/**",
                         "/api/v1/info/**",
                         "/api/v1/admin/**");
+    }
+
+    /**
+     * Matches {@code FolderAccessGuard.isDesktopBundle()}: only the Tauri build sets this, and a
+     * {@code Client-*} machine type is not accepted because any server can present one.
+     */
+    private static boolean isDesktopBundle() {
+        return Boolean.parseBoolean(System.getProperty("STIRLING_PDF_TAURI_MODE", "false"));
     }
 }

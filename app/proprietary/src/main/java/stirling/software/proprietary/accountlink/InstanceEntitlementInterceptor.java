@@ -40,36 +40,43 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 
 /**
  * Request-time gate + meter for combined billing. {@code preHandle} blocks billable (API / AI /
- * automation) work when the instance is unlinked or over its limit; manual tools pass through.
- * {@code afterCompletion} meters a successful billable op into the per-period cumulative counter.
+ * automation) work once the applicable allowance is spent; manual tools pass through. {@code
+ * afterCompletion} costs the op and accrues it.
  *
- * <p>Blocking responds {@code 402} with a machine-readable body the FE maps to a "link to activate"
- * prompt; fail-open and flag-off both let the request continue. Metering is separately gated behind
- * {@code …metering.enabled} via {@link ObjectProvider} — switch off means the {@link
- * UsageMeterService} bean is absent and nothing accrues, while the gate still works.
+ * <p>The ledger follows the gate's own reason rather than re-deriving linked-ness, so the two
+ * cannot disagree. Only the cloud one sits behind {@code …metering.enabled}: with it off a linked
+ * instance accrues nothing while the free tier still meters and holds.
  */
 @Slf4j
 @Component
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class InstanceEntitlementInterceptor implements HandlerInterceptor {
 
     private static final String ATTR_CATEGORY =
             InstanceEntitlementInterceptor.class.getName() + ".category";
+    private static final String ATTR_REASON =
+            InstanceEntitlementInterceptor.class.getName() + ".reason";
 
     private final InstanceEntitlementGate gate;
     private final EntitlementCache entitlementCache;
     private final ObjectProvider<UsageMeterService> meterProvider;
+    private final FreeTierUsageService freeTierUsageService;
     private final TempFileManager tempFileManager;
 
     public InstanceEntitlementInterceptor(
             InstanceEntitlementGate gate,
             EntitlementCache entitlementCache,
             ObjectProvider<UsageMeterService> meterProvider,
+            FreeTierUsageService freeTierUsageService,
             TempFileManager tempFileManager) {
         this.gate = gate;
         this.entitlementCache = entitlementCache;
         this.meterProvider = meterProvider;
+        this.freeTierUsageService = freeTierUsageService;
         this.tempFileManager = tempFileManager;
     }
 
@@ -104,6 +111,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             return true;
         }
         if (decision.allowed()) {
+            request.setAttribute(ATTR_REASON, decision.reason());
             return true;
         }
 
@@ -168,42 +176,53 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         if (ex != null || response.getStatus() >= 400) {
             return;
         }
-        UsageMeterService meter = meterProvider.getIfAvailable();
-        if (meter == null) {
-            return; // metering switch off
-        }
         if (!(request.getAttribute(ATTR_CATEGORY) instanceof BillingCategory category)
                 || category == BillingCategory.BYPASSED) {
             return;
         }
         try {
+            if (request.getAttribute(ATTR_REASON) == GateDecision.Reason.FREE_TIER) {
+                MeteredOp op = measure(request, UnitCalcPolicy.DEFAULT);
+                if (op != null) {
+                    freeTierUsageService.accrue(category, op.units(), op.dedupKey());
+                }
+                return;
+            }
+            UsageMeterService meter = meterProvider.getIfAvailable();
+            if (meter == null) {
+                return; // cloud metering switch off
+            }
             InstanceEntitlement ent = entitlementCache.current().orElse(null);
             if (ent == null || ent.unitCalcPolicy() == null || ent.periodStart() == null) {
                 // Not yet synced (no policy/period) — can't compute units; skip until next sync.
                 return;
             }
-            meterRequest(request, category, ent, meter);
+            MeteredOp op = measure(request, ent.unitCalcPolicy());
+            if (op != null) {
+                meter.accrue(
+                        ent.periodStart(),
+                        category,
+                        op.units(),
+                        op.dedupKey(),
+                        ent.automationStepLimit());
+            }
         } catch (RuntimeException e) {
             // Metering must never affect the response that already completed.
             log.debug("Usage metering failed for {}", request.getRequestURI(), e);
         }
     }
 
+    private record MeteredOp(long units, String dedupKey) {}
+
     /**
-     * Computes doc-units (page + byte axes) and the dedup key, then accrues. The instance is
-     * authoritative for units (SaaS bills the delta and never sees the file), so a page-heavy but
-     * small PDF must be page-counted or it under-bills.
+     * The instance is authoritative for units: SaaS never sees the file, so small page-heavy PDFs
+     * must be page-counted to avoid underbilling. No non-empty inputs means no charge.
      */
-    private void meterRequest(
-            HttpServletRequest request,
-            BillingCategory category,
-            InstanceEntitlement ent,
-            UsageMeterService meter) {
-        UnitCalcPolicy policy = ent.unitCalcPolicy();
+    private MeteredOp measure(HttpServletRequest request, UnitCalcPolicy policy) {
         MultipartHttpServletRequest mreq =
                 WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
         if (mreq == null) {
-            return; // a fileless op has no document to charge for - matching SaaS, which skips it
+            return null;
         }
         List<TempFile> temps = new ArrayList<>();
         try {
@@ -217,7 +236,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 }
             }
             if (sizes.isEmpty()) {
-                return; // no non-empty input, so nothing billable - matching SaaS
+                return null;
             }
             // Prefer the per-document key so each source document has its own step allowance;
             // fall back to the whole-run key for automation sub-steps with no document id. A
@@ -227,7 +246,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 runKey = automationRunId(request);
             }
             long units = DocumentUnitCalculator.unitsForGroup(sizes, policy);
-            meter.accrue(ent.periodStart(), category, units, runKey, ent.automationStepLimit());
+            return new MeteredOp(units, runKey);
         } finally {
             for (TempFile temp : temps) {
                 try {

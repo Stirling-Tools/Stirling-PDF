@@ -1,6 +1,5 @@
 package stirling.software.proprietary.accountlink;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -14,8 +13,9 @@ import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.BillingStepLimit;
 
 /**
- * Accrues metered usage into the durable per-(period, category) {@link UsageCounter}; the daily
- * sync later reports the cumulative totals to SaaS.
+ * Accrues a linked team's metered usage into the durable per-(period, category) {@link
+ * UsageCounter}; the daily sync later reports the cumulative totals to SaaS. The cloud ledger only
+ * — an unlinked instance meters its own grant through {@link FreeTierUsageService}.
  *
  * <p>A run/document key groups successful sub-steps until the configured step limit or workflow
  * window is reached. Standalone calls have no key and always accrue. Persistence failures are
@@ -30,16 +30,15 @@ import stirling.software.proprietary.billing.BillingStepLimit;
 public class UsageMeterService {
 
     private final UsageCounterRepository repo;
-    private final MeteredInputSignatureRepository signatureRepo;
-    private final Duration workflowWindow;
+    private final MeteredInputWindow inputWindow;
 
     public UsageMeterService(
             UsageCounterRepository repo,
             MeteredInputSignatureRepository signatureRepo,
             AccountLinkProperties properties) {
         this.repo = repo;
-        this.signatureRepo = signatureRepo;
-        this.workflowWindow = properties.getMetering().getWorkflowWindow();
+        this.inputWindow =
+                new MeteredInputWindow(signatureRepo, properties.getMetering().getWorkflowWindow());
     }
 
     /**
@@ -70,44 +69,11 @@ public class UsageMeterService {
             return;
         }
         if (dedupKey != null
-                && !shouldCharge(periodStart, dedupKey, BillingStepLimit.resolve(stepLimit))) {
+                && !inputWindow.shouldCharge(
+                        periodStart, dedupKey, BillingStepLimit.resolve(stepLimit))) {
             return;
         }
         incrementOrInsert(periodStart, category.name(), units);
-    }
-
-    private boolean shouldCharge(LocalDateTime periodStart, String dedupKey, int stepLimit) {
-        LocalDateTime now = LocalDateTime.now();
-        LocalDateTime cutoff = now.minus(workflowWindow);
-        try {
-            while (true) {
-                if (signatureRepo.restartIfFullOrExpired(
-                                periodStart, dedupKey, now, cutoff, stepLimit)
-                        > 0) {
-                    return true;
-                }
-                if (signatureRepo.joinIfWithinLimit(periodStart, dedupKey, now, cutoff, stepLimit)
-                        > 0) {
-                    return false;
-                }
-                try {
-                    signatureRepo.saveAndFlush(
-                            new MeteredInputSignature(periodStart, dedupKey, now));
-                    return true;
-                } catch (DataIntegrityViolationException raced) {
-                    // Another completion inserted or filled this key between the conditional
-                    // updates. Retry so this successful step still counts toward the limit.
-                    if (signatureRepo
-                            .findByPeriodStartAndSignature(periodStart, dedupKey)
-                            .isEmpty()) {
-                        throw raced;
-                    }
-                }
-            }
-        } catch (RuntimeException e) {
-            log.debug("Step counting failed for {}: {}", periodStart, e.getMessage());
-            return true;
-        }
     }
 
     private void incrementOrInsert(LocalDateTime periodStart, String category, long units) {

@@ -40,6 +40,7 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.accountlink.EntitlementCache;
 import stirling.software.proprietary.accountlink.EntitlementState;
+import stirling.software.proprietary.accountlink.FreeTierUsageService;
 import stirling.software.proprietary.accountlink.GateDecision;
 import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.accountlink.InstanceEntitlementGate;
@@ -220,7 +221,11 @@ class PaygBillingParityTest {
         when(cache.current()).thenReturn(Optional.of(entitled(policy, period)));
         InstanceEntitlementInterceptor selfHosted =
                 new InstanceEntitlementInterceptor(
-                        gate, cache, meterProviderOf(meter), mock(TempFileManager.class));
+                        gate,
+                        cache,
+                        meterProviderOf(meter),
+                        mock(FreeTierUsageService.class),
+                        mock(TempFileManager.class));
         MockMultipartHttpServletRequest shReq = new MockMultipartHttpServletRequest();
         shReq.setRequestURI("/api/v1/security/add-password");
         shReq.addFile(
@@ -312,7 +317,11 @@ class PaygBillingParityTest {
         when(cache.current()).thenReturn(Optional.of(entitled(policy, period)));
         InstanceEntitlementInterceptor interceptor =
                 new InstanceEntitlementInterceptor(
-                        gate, cache, meterProviderOf(meter), mock(TempFileManager.class));
+                        gate,
+                        cache,
+                        meterProviderOf(meter),
+                        mock(FreeTierUsageService.class),
+                        mock(TempFileManager.class));
 
         if (op.apiKey()) {
             SecurityContextHolder.getContext()
