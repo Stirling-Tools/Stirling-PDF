@@ -41,7 +41,11 @@ export interface CheckoutOptions {
   currency?: string; // Optional currency override (auto-detected from locale)
   onSuccess?: (sessionId: string) => void; // Callback after successful payment
   onError?: (error: string) => void; // Callback on error
-  /** Supplying it skips the email step rather than asking for an address we already hold. */
+  /**
+   * Supplying it skips the email step and opens the combined choose page. No caller does today:
+   * the only address a self-hosted instance holds is its Spring username. #7945 removes the step
+   * instead, by buying as the signed-in account.
+   */
   email?: string;
   /** Users the current plan covers. Its presence is what makes this "add capacity", not a first
    * upgrade, so the capacity step states the delta. */
