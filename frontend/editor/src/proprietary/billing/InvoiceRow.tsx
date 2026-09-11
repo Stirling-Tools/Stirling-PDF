@@ -10,11 +10,8 @@ const TONE: Record<InvoiceRowState, StatusTone> = {
 };
 
 /**
- * One invoice, in the paper-trail section's grammar: when, what for, how much, what state, and the
- * door to the document itself.
- *
- * <p>The door is a real anchor rather than a scripted open, so it keeps middle-click, right-click
- * and "open in new tab", and it is omitted when Stripe has no hosted document to point at.
+ * One invoice row. The door is a real anchor rather than a scripted open, so middle-click,
+ * right-click and "open in new tab" all still work.
  */
 export function InvoiceRow({
   date,
@@ -26,7 +23,7 @@ export function InvoiceRow({
   viewLabel,
 }: {
   date: string;
-  /** What the invoice was for, e.g. "Team · 100 users". Muted beside the date. */
+  /** What the invoice was for, e.g. "Team · 100 users". */
   description?: string | null;
   amount: string;
   state: InvoiceRowState;

@@ -1,10 +1,7 @@
 import { PlanTierGroup } from "@app/services/licenseService";
 
 export interface StripeCheckoutProps {
-  /**
-   * The buyer's billing email when the caller already holds it. Supplying it skips the email step
-   * and opens on the combined choose page, which is page 1 of 2.
-   */
+  /** Supplying it skips the email step and opens on the combined choose page. */
   initialEmail?: string;
   /** Users the current plan covers, or null when there is none. Drives the add-capacity face. */
   currentLimit?: number | null;
@@ -29,10 +26,8 @@ export interface StripeCheckoutProps {
 export type CheckoutStage =
   | "email"
   /**
-   * Billing period and capacity on one page. The design puts both choices in front of the buyer at
-   * once, so this is page 1 of 2 wherever the email is already known; the separate
-   * {@code plan-selection} and {@code capacity} stages remain for the flows that still walk them
-   * one at a time.
+   * Billing period and capacity on one page. The separate {@code plan-selection} and {@code
+   * capacity} stages remain for the flows that still walk them one at a time.
    */
   | "choose"
   | "plan-selection"

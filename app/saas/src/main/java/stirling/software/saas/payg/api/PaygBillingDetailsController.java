@@ -26,24 +26,15 @@ import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
- * Read-only billing-details surface for the Usage &amp; Billing page's Payment section.
+ * {@code GET /api/v1/payg/billing-details}: who the team is billed to and where its invoices go.
+ * The team is resolved from the authenticated principal, never from the request, as {@link
+ * PaygPaymentMethodController} and {@link PaygInvoicesController} also do.
  *
- * <p>{@code GET /api/v1/payg/billing-details} returns who the team is billed to and where its
- * invoices go, sourced from {@code stripe.customers}. The caller's team is resolved from the
- * authenticated principal — never trusted from the request — exactly as {@link
- * PaygPaymentMethodController} and {@link PaygInvoicesController} do.
+ * <p>Read-only by design; Stripe's hosted portal is the one writer. Next-invoice timing is not
+ * served here either, since the wallet already carries the period end.
  *
- * <p>There is no write path, and that is deliberate rather than unfinished: the Stripe schema is a
- * one-way mirror, so updating these would mean calling Stripe and waiting for the change to sync
- * back. Stripe's hosted customer portal already edits them, and the page's Update doors open it,
- * which keeps one writer for data Stripe owns.
- *
- * <p>Next-invoice timing is not served here. The wallet already carries the billing period end, and
- * a second source for the same date could only disagree with the first.
- *
- * <p>Defensive throughout: no team, no {@code stripe_customer_id} (free / pre-checkout), or the
- * customer simply not in the mirror all degrade to {@code 200 present=false} rather than an error,
- * so the section renders without these rows instead of failing the page.
+ * <p>No team, no {@code stripe_customer_id}, or a customer absent from the mirror all degrade to
+ * {@code 200 present=false}, so the section loses rows rather than failing the page.
  */
 @Slf4j
 @Hidden

@@ -5,22 +5,19 @@ export type MeterRowTone = "free" | "paid" | "warn";
 export interface MeterRowProps {
   /** The product's name on a measuring surface: "Users", "Processor". */
   name: string;
-  /**
-   * The middle line. Deliberately never re-prices what the plan identity already carries: each
-   * fact is printed once on this screen, and the identity is where the plan's price lives.
-   */
+  /** The middle line. Never re-prices what the plan identity above already carries. */
   mid: ReactNode;
-  /** The right-hand fact, e.g. "34 of 100 users". Tabular so rows align down the column. */
+  /** The right-hand fact, e.g. "34 of 100 users". Tabular, so rows align down the column. */
   fact: ReactNode;
   /** 0-100. Ignored when {@link showTrack} is false. */
   pct?: number;
   tone?: MeterRowTone;
   /**
-   * Hidden when there is nothing to meter against. A track with no denominator would draw either
-   * full or empty, and both are claims about headroom that an absent limit cannot support.
+   * False when there is no denominator: a track would then draw full or empty, and both claim
+   * headroom that an absent limit cannot support.
    */
   showTrack?: boolean;
-  /** The door at the row's right. A text link: this row's whole job is a fact with its door. */
+  /** The door at the row's right. */
   door?: ReactNode;
   onDoor?: () => void;
   /** Tooltip on the middle line, for a fact that needs one qualifier and no more. */
@@ -28,16 +25,10 @@ export interface MeterRowProps {
 }
 
 /**
- * One product, as a row.
+ * One product, as a row: a fact with its door at the right, which is how this screen sells.
  *
- * <p>The design's central move on this screen: the meters ARE the upgrade. A row is a fact with
- * its door at the right, which is the shape that actually sold capacity, so separate upgrade rows
- * and card footer buttons are both gone. Users sells Team capacity; Processor sells activation
- * while off and governs spend while on.
- *
- * <p>The door is a link rather than a button because a button here reads as the retired upgrade
- * pattern. It is still a real {@code <button>} element, so it keeps keyboard and screen-reader
- * behaviour that a styled span would lose.
+ * <p>The door is styled as a link but is a real {@code <button>}, so it keeps the keyboard and
+ * screen-reader behaviour a styled span would lose.
  */
 export function MeterRow({
   name,

@@ -16,8 +16,8 @@ function LinkModalHost() {
   // Ask once a session while the instance is unlinked, rather than waiting to be found.
   useConnectPrompt();
 
-  // Mounted only while open, so closing discards the flow. Kept mounted, an interrupted hand-off
-  // stays flagged and every later open resumes on the ghost step with no way forward.
+  // Mounted only while open: kept mounted, an interrupted hand-off stays flagged and every
+  // later open resumes on a ghost step with no way forward.
   if (!linkModalOpen) return null;
   return (
     <LinkAccountModal
@@ -30,13 +30,10 @@ function LinkModalHost() {
 }
 
 /**
- * Self-hosted provider stack.
- *
- * <p>The checkout providers are mounted here rather than inherited: the portal is a route-set of
- * its own, mounted before the editor's catch-all and so outside {@code AppProviders}, which is
- * where the editor keeps its copy. Without these, any portal surface calling {@code useCheckout}
- * throws. {@code LicenseProvider} comes with it because the checkout reads the licence to decide
- * what it is selling.
+ * Self-hosted provider stack. Checkout is mounted here rather than inherited: the portal is its
+ * own route-set, outside the {@code AppProviders} where the editor keeps its copy.
+ * {@code LicenseProvider} comes with it, since the checkout reads the licence to know what it
+ * is selling.
  */
 export function PortalProviders() {
   return (

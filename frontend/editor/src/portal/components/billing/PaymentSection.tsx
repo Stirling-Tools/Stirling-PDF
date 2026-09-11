@@ -10,20 +10,17 @@ import {
 } from "@portal/api/billing";
 
 /**
- * The Payment section's contents for the portal host.
+ * The Payment section for the portal host, read off the Stripe mirror.
  *
- * <p>Reads the default card off the Stripe mirror. {@code present: false} means the mirror carries
- * no card, which is the same shape as "not synced yet", so the row says the card is missing rather
- * than inventing a brand.
- *
- * <p>Card edits happen in Stripe's own portal, so the door opens that rather than a form here.
+ * <p>{@code present: false} is indistinguishable from "not synced yet", so the row reports the
+ * card as missing rather than inventing a brand.
  */
 export function PaymentSection({
   wallet,
   onManage,
   managing = false,
 }: {
-  /** Supplies the next-invoice date and estimate, which are already on the wallet. */
+  /** Supplies the next-invoice date and estimate. */
   wallet: Wallet;
   /** Opens the Stripe customer portal, which is where all of these are edited. */
   onManage?: () => void;
@@ -35,8 +32,7 @@ export function PaymentSection({
 
   useEffect(() => {
     let cancelled = false;
-    // Best-effort: a failed read leaves the row on its "no card" copy rather than breaking the
-    // section, because the rest of the screen does not depend on it.
+    // Best-effort: a failed read leaves the "no card" copy rather than breaking the section.
     fetchPaymentMethod()
       .then((m) => {
         if (!cancelled) setPm(m);
@@ -75,8 +71,7 @@ export function PaymentSection({
           })
       : t("portal.billing.payment.noCard", "No card on file");
 
-  // Every one of these is Stripe's to edit, so they share one door into its hosted portal rather
-  // than each growing a form against a mirror that cannot be written.
+  // The mirror cannot be written, so every row shares one door into Stripe's hosted portal.
   const update = onManage ? (
     <button type="button" onClick={onManage} disabled={managing}>
       {t("portal.billing.payment.update", "Update")}

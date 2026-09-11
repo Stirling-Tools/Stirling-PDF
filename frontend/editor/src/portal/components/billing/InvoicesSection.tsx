@@ -11,11 +11,8 @@ import { fetchInvoices, type Invoice } from "@portal/api/billing";
 const LIMIT = 6;
 
 /**
- * Stripe's invoice statuses, mapped to the four states the row can show.
- *
- * <p>{@code open} is an issued but unpaid invoice, which is the one a customer thinks of as
- * current. It is deliberately NOT a draft: the backend filters drafts out, matching Stripe's own
- * portal, because a draft has no hosted document to open.
+ * Stripe's invoice statuses, mapped to the four states a row can show. {@code open} is issued but
+ * unpaid, not a draft: the backend filters drafts out, since a draft has no document to open.
  */
 function rowState(status: string): InvoiceRowState {
   switch (status) {
@@ -32,10 +29,8 @@ function rowState(status: string): InvoiceRowState {
 }
 
 /**
- * The Invoices section's contents for the portal host: the recent paper trail, newest first.
- *
- * <p>Renders nothing at all when there are no invoices, so the host can leave the section and its
- * chip out entirely rather than showing an empty heading.
+ * The Invoices section for the portal host, newest first. Renders nothing when there are none, so
+ * the host can drop the section and its chip.
  */
 export function InvoicesSection({
   onEmpty,

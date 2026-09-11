@@ -42,34 +42,19 @@ export interface UsageProps {
    * is owned by the app, so this path never triggers).
    */
   onReauth?: () => void;
-  /**
-   * Opens the enterprise conversation. A prop rather than a hook for the same reason as
-   * {@link onReauth}: navigation belongs to the host, and reaching for its router here would make
-   * this view unrenderable anywhere one is absent.
-   */
+  /** A prop rather than a hook, as {@link onReauth} is: reaching for a router here would make
+   * this view unrenderable wherever one is absent. */
   onEnterpriseQuote?: () => void;
 }
 
 /**
- * Billing & usage page — a flavor-agnostic wallet renderer. Whether it should be
- * shown at all (self-hosted only renders it once the instance is linked) is
- * decided upstream by the billing gate; this component always loads the wallet
- * and dispatches on {@code wallet.status}:
+ * The portal's host for {@link BillingScreen}: it owns the data loading, session handling and
+ * Stripe portal action, and passes its own detail sections through {@code extras}. Whether the
+ * page is shown at all is the billing gate's decision, upstream.
  *
- *   free       → FreePlanView (free meter + PAYG explainer)
- *   subscribed → SubscribedPlanView (period meter, cap, members, invoices)
- *
- * Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas). After a
- * checkout / cancel, the refresh re-reads and the view re-dispatches on status.
- *
- * <p>This is now a HOST for {@link BillingScreen} rather than a page in its own right: it owns
- * the portal's data loading, session handling and Stripe portal action, and hands them to the one
- * screen every edition renders. The two products come from the screen's own cards, so what remains
- * in {@code extras} is only the portal's detail sections and modal flows.
- *
- * <p>The {@code status} branch survives inside that slot alone, and only because those sections
- * still key off it. Team and the Processor no longer do: they render from their own reported
- * holdings, which is what a single free/subscribed axis could never express.
+ * <p>Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas); a checkout or cancel
+ * re-reads it. Only the {@code extras} sections still branch on {@code wallet.status} — the two
+ * products render from their own holdings, which that axis cannot express.
  */
 export function Usage({
   onWalletLoaded,
@@ -86,17 +71,13 @@ export function Usage({
   // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
   const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  // Editors deployed comes from the fleet-stats endpoint, not the wallet. Null when the backend
-  // cannot compute it, in which case the screen omits the row rather than showing a false zero.
+  // From fleet-stats, not the wallet. Null when the backend cannot compute it, which omits the row.
   const [editorsDeployed, setEditorsDeployed] = useState<number | null>(null);
-  // Stripe returns no invoices for a team that has never been billed. The section and its chip
-  // drop out in that case rather than rendering an empty heading.
+  // A team never billed has none, and the section and its chip then drop out.
   const [hasInvoices, setHasInvoices] = useState(true);
-  // Only the buyer's email is read here. The user allowance is on the wallet, where both editions
-  // can see it; this endpoint is admin-only and a cloud team lead cannot call it.
+  // Email only: this endpoint is admin-only, so nothing both editions need may come from it.
   const [adminEmail, setAdminEmail] = useState<string | null>(null);
-  // The detail views below own these flows; the host holds their open state so the product rows'
-  // own doors can start them, which is where the design puts the action.
+  // Held here, not in the detail views that own the flows, so the product rows can start them.
   const [activationStep, setActivationStep] = useState<
     "choose" | "payg" | "prepay" | null
   >(null);
@@ -179,10 +160,8 @@ export function Usage({
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
   const onInvoicesEmpty = useCallback(() => setHasInvoices(false), []);
 
-  // Team capacity is sold by the same flow the settings plan section uses, so there is one
-  // purchase implementation rather than a second to keep in step. Passing the held limit is what
-  // makes it the "add capacity" face instead of a first upgrade.
-  // Optional on purpose: a build that mounts no checkout provider must lose the door, not the page.
+  // The same flow the settings plan section uses, so there is one purchase implementation.
+  // Optional on purpose: a build that mounts no provider must lose the door, not the page.
   const checkout = useCheckoutOptional();
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
   const usersInUse = wallet?.team?.usersInUse;

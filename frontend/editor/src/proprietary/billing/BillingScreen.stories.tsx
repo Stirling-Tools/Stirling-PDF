@@ -13,10 +13,7 @@ const meta: Meta<typeof BillingScreen> = {
 export default meta;
 type Story = StoryObj<typeof BillingScreen>;
 
-/**
- * Stand-ins for the host's own sections, in the grammar the card expects. They exist so the chip
- * row and the section rhythm can be reviewed; the real contents are the host's.
- */
+/** Stand-ins for the host's sections, so the chip row and section rhythm can be reviewed. */
 const payment = (
   <>
     <KvRow
@@ -73,7 +70,7 @@ const invoices = (
   </>
 );
 
-/** Nothing bought. Both rows sell, and the free grant is the Processor's whole story. */
+/** Nothing bought, so both rows sell. */
 export const Free: Story = {
   args: {
     wallet: {
@@ -105,10 +102,7 @@ export const TeamOnly: Story = {
   },
 };
 
-/**
- * Both products. The identity carries the base, so the Users row says "included" instead of
- * re-pricing it, and the Processor row governs rather than sells.
- */
+/** Both products: the identity carries the base, so Users says "included" and Processor governs. */
 export const TeamAndProcessor: Story = {
   args: {
     wallet: {
@@ -186,7 +180,6 @@ export const NoLimits: Story = {
   },
 };
 
-/** While the wallet loads. */
 export const Loading: Story = {
   args: { wallet: null, loading: true },
 };

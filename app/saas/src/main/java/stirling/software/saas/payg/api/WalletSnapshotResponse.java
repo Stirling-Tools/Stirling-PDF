@@ -79,10 +79,8 @@ public record WalletSnapshotResponse(
         Integer billableLimit,
         int freeAllowance,
         int freeRemaining,
-        // Users a team may have before it needs a Team plan, alongside the credits grant above.
-        // Sent so no surface has to restate a number the server enforces, and so both editions read
-        // the same one: self-hosted was reading it from an admin-only endpoint a team lead cannot
-        // call, which is why cloud showed no user limit at all.
+        // Sent so both editions read one server-enforced number rather than restating it; the
+        // admin-only endpoint that also carries it is not callable by a cloud team lead.
         int freeUserAllowance,
         BigDecimal pricePerDocMinor,
         String currency,

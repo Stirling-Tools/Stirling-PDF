@@ -1,6 +1,6 @@
 import type { Wallet } from "@app/billing/types";
 
-/** Linked, on the free monthly grant — leader view. Override per story. */
+/** Free monthly grant, leader view. Override per story. */
 export const freeWallet: Wallet = {
   teamId: 42,
   status: "free",
@@ -35,7 +35,7 @@ export const freeWallet: Wallet = {
   recent: [],
 };
 
-/** Linked + subscribed (Processor plan), capped, leader view with members. */
+/** Subscribed and capped, leader view with members. */
 export const subscribedWallet: Wallet = {
   teamId: 42,
   status: "subscribed",
@@ -83,11 +83,7 @@ export const subscribedWallet: Wallet = {
   recent: [],
 };
 
-/**
- * Subscribed team currently drawing on a prepaid bundle — {@code billingMode:
- * "prepaid"} with a mid-drawn pool (78k of 120k left) expiring in-term. Drives the
- * prepaid-capacity card + the "Prepaid year" chip.
- */
+/** Mid-drawn prepaid pool expiring in-term, for the prepaid-capacity card. */
 export const prepaidWallet: Wallet = {
   ...subscribedWallet,
   billingMode: "prepaid",

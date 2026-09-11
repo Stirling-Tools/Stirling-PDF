@@ -15,10 +15,7 @@ export interface BillingScreenProps {
   loading?: boolean;
   /** Self-hosted phrases its free tier differently. */
   selfHosted?: boolean;
-  /**
-   * Units a linked instance has accrued that the cloud has not billed yet. A plain number rather
-   * than any host's usage record, so this screen does not depend on how one edition models it.
-   */
+  /** Units a linked instance has accrued that the cloud has not billed yet. */
   pendingUnits?: number;
   /** Leader-only: sells Team capacity from the Users row. */
   onAddCapacity?: () => void;
@@ -30,17 +27,11 @@ export interface BillingScreenProps {
   governLabel?: ReactNode;
   /** Banners above the card: a lapsed session, a failed wallet read. Host-owned. */
   notices?: ReactNode;
-  /**
-   * The Payment section's contents. Omit where the edition has no payment surface: the chip and
-   * the section both drop out, because an empty section is a lie.
-   */
+  /** Omit where the edition has no payment surface; the chip drops out with the section. */
   paymentSection?: ReactNode;
-  /** The Invoices section's contents. Omit where there are no invoices, for the same reason. */
+  /** Omit where there are no invoices, for the same reason. */
   invoicesSection?: ReactNode;
-  /**
-   * Editors this team has deployed, from the fleet-stats endpoint. Null when the backend cannot
-   * compute it (auditing off), in which case the row is omitted rather than showing a false zero.
-   */
+  /** Null when the backend cannot compute it, which omits the row rather than showing a zero. */
   editorsDeployed?: number | null;
   /** The enterprise door. Omitted for a team already on an agreement. */
   onEnterpriseQuote?: () => void;
@@ -63,28 +54,14 @@ function cycleDay(
 }
 
 /**
- * The billing screen. One view for every edition, so what a customer pays for is described the
- * same way on the cloud, self-hosted, or the desktop app.
+ * The billing screen, one view for every edition.
  *
- * <p>It wears the sectioned-card grammar: one card at page width, a jump-chip row on its top, and
- * sections stacked inside as hairline blocks, ordered identity then money then how you pay then
- * the paper trail. Chips navigate the page rather than switching panes, and a chip exists only
- * where its section does, because an empty section is a lie.
+ * <p>Nothing here reaches for a router, an API client or a modal stack: the wallet, the actions
+ * and the payment and invoice sections all arrive as props and slots. That is what lets one
+ * component serve the cloud, self-hosted and the desktop app, and it makes a member's read-only
+ * screen a matter of passing no callbacks rather than a role check.
  *
- * <p>The products are rows inside the plan section, not cards. That is the screen's central move:
- * the meters ARE the upgrade, a fact with its door at the right, which is the shape that actually
- * sold capacity. Separate upgrade rows and card footer buttons are both retired.
- *
- * <p>Each fact prints once. The identity prices the plan, so a row never re-prices what the
- * identity already carries.
- *
- * <p>Edition differences are seams, not forks. Wallet loading, actions and the payment and invoice
- * sections arrive as props and slots, so a host supplies what it has and omits what it does not.
- * Nothing here reaches for a router, an API client or a modal stack, which is what lets one
- * component serve all of them; a member passes no action callbacks and gets a read-only screen by
- * construction rather than by a role check.
- *
- * <p>Enterprise is its own band below the card, never a rung on this ladder.
+ * <p>A chip exists only where its section does, so an omitted slot removes both.
  */
 export function BillingScreen({
   wallet,
@@ -125,7 +102,6 @@ export function BillingScreen({
     return out;
   }, [paymentSection, invoicesSection, t]);
 
-  // The plan's identity: what the customer holds, named once, priced once.
   const identity = useMemo(() => {
     if (!wallet) return null;
     const rate = wallet.pricePerDocMinor;
@@ -331,8 +307,6 @@ export function BillingScreen({
                         )
                       : undefined
                   }
-                  // The note carries the units and the rate, so the value is what they cost. Same
-                  // number twice would be a row that says nothing on its right-hand side.
                   value={
                     wallet.pricePerDocMinor != null
                       ? formatMinor(

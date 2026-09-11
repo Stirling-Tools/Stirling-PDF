@@ -1,11 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * A cycle fact, as a key-value row. One row per fact, so a row cannot smuggle a second claim in
- * beside the first.
- *
- * <p>{@link note} is separated from the value by real whitespace rather than by margin alone, so
- * text extraction and screen readers do not run the two together as "100 users$99.00".
+ * A cycle fact, as a key-value row. {@link note} is separated from the value by real whitespace
+ * rather than margin, so screen readers do not run the two together as "100 users$99.00".
  */
 export function KvRow({
   label,
@@ -17,7 +14,7 @@ export function KvRow({
   value: ReactNode;
   /** A muted qualifier before the value: "392,906 · 1c each", "flat · no meter running". */
   note?: string;
-  /** A door at the row's right, e.g. "Update". Rendered after the value. */
+  /** A door at the row's right, e.g. "Update". */
   door?: ReactNode;
 }) {
   return (

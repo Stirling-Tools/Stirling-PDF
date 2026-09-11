@@ -3,19 +3,13 @@ import { MeterRow } from "@app/billing/MeterRow";
 import type { Wallet } from "@app/billing/types";
 
 /**
- * The Team product, as a row: users measured against the capacity the plan covers.
+ * The Team product, as a row: users against the capacity the plan covers.
  *
- * <p>Reads {@code wallet.team} rather than {@code wallet.status}, so a team holding Team without
- * the Processor renders correctly instead of being described by an axis that covers only one of
- * the two products.
- *
- * <p>The middle line follows the screen's copy razor: each fact is printed once, and the plan
- * identity above is where the plan's price lives. So the row prices Team only when the identity
- * does not, and says "included" once the Processor identity has already carried the base.
+ * <p>Reads {@code wallet.team}, not {@code wallet.status}: that axis covers one product, so a team
+ * holding Team without the Processor would be described wrongly by it.
  *
  * <p>{@code licensedUsers} is null for "no limit" and never a sentinel, so there is nothing to
- * divide by. That case drops the track rather than drawing it full or empty, both of which would
- * be claims about headroom that an absent limit cannot support.
+ * divide by.
  */
 export function TeamPlanRow({
   wallet,
@@ -23,7 +17,7 @@ export function TeamPlanRow({
   onAddCapacity,
 }: {
   wallet: Wallet;
-  /** Self-hosted phrases its free tier differently, because that allowance is its own. */
+  /** Self-hosted phrases its free tier differently: that allowance is its own. */
   selfHosted?: boolean;
   /** Leader-only: the door that sells Team capacity. Omit for members. */
   onAddCapacity?: () => void;
@@ -48,8 +42,8 @@ export function TeamPlanRow({
     : undefined;
   const name = t("portal.billing.team.rowName", "Users");
 
-  // Without a Team plan the cap is the free allowance the server enforces, which the wallet
-  // carries. Preferring the plan's own limit once one is held keeps one number in charge at a time.
+  // One number in charge at a time: the server's free allowance until a plan is held, the
+  // plan's own limit after.
   const limit = held
     ? licensedUsers
     : (licensedUsers ?? wallet.freeUserAllowance ?? null);
@@ -71,8 +65,7 @@ export function TeamPlanRow({
   }
 
   const pct = (usersInUse / limit) * 100;
-  // Amber is for capacity that is actually paid for. A free tier filling up is the product working
-  // as intended, not a warning.
+  // A free tier filling up is the product working, not a warning, so amber is for paid capacity.
   const tone = held ? (pct >= 90 ? "warn" : "paid") : "free";
 
   return (

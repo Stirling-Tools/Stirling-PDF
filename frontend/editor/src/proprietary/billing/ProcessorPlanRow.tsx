@@ -5,16 +5,12 @@ import { MeterRow } from "@app/billing/MeterRow";
 import type { Wallet } from "@app/billing/types";
 
 /**
- * The Processor product, as a row. Two jobs, depending on whether it is held.
+ * The Processor product, as a row: the free grant draining towards activation while off, spend
+ * against the limit while on.
  *
- * <p>While off the row SELLS: the free grant drains towards the activation door. While on it
- * GOVERNS instead, metering spend against the limit, because there is nothing left to sell and the
- * useful action becomes raising the ceiling.
- *
- * <p>Money arrives in two scales and they are not mixed: the estimate is minor units and the limit
- * is major, so the comparison converts once, here, rather than leaving a factor of a hundred for a
- * caller to get wrong. An unknown rate yields a null estimate, reported as unknown rather than as
- * zero, because zero spend and unknown spend are different facts.
+ * <p>Money arrives in two scales. The estimate is minor units and the limit is major, so the
+ * comparison converts once here rather than leaving a factor of a hundred to a caller. An unknown
+ * rate reports as unknown, never as zero.
  */
 export function ProcessorPlanRow({
   wallet,
@@ -24,10 +20,7 @@ export function ProcessorPlanRow({
   governLabel,
 }: {
   wallet: Wallet;
-  /**
-   * Units a linked instance has accrued that the cloud has not billed yet. They draw down the same
-   * grant, so they are subtracted from it rather than reported beside it.
-   */
+  /** Pending units draw down the same grant, so they are subtracted rather than shown beside it. */
   pendingUnits?: number;
   /** Leader-only, while off: the activation door. Omit for members. */
   onActivate?: () => void;
