@@ -58,6 +58,7 @@ class AccountLinkAuthorizationTest {
                                 service,
                                 connectService,
                                 mock(LocalUsageService.class),
+                                mock(FreeTierUsageService.class),
                                 context.getBeanProvider(UsageSyncService.class)));
         context.refresh();
         controller = context.getBean(AccountLinkController.class);
