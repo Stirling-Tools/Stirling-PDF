@@ -21,7 +21,6 @@ import {
 import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
 import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
@@ -47,7 +46,6 @@ interface Confirm {
  */
 export function Users() {
   const { t } = useTranslation();
-  const { guard, gated, connect } = useConnectGate();
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
 
@@ -65,19 +63,13 @@ export function Users() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Ref so the effect does not loop: it writes the param back, which would re-run it.
-  const connectRef = useRef(connect);
-  connectRef.current = connect;
-
-  // Sets the modal directly, so it needs the gate in its own right.
   useEffect(() => {
     if (searchParams.get("invite") === null) return;
-    if (gated) connectRef.current();
-    else setInviteOpen(true);
+    setInviteOpen(true);
     const next = new URLSearchParams(searchParams);
     next.delete("invite");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams, gated]);
+  }, [searchParams, setSearchParams]);
 
   // Scroll to and flash the row for ?member=<id> (deep link from the super
   // search), once the roster has rendered; then strip the param. Scoped to the
@@ -203,12 +195,13 @@ export function Users() {
     if (!grant) return;
     run(() => revokeGrant(grant.id));
   }
-  // Teams need a linked account, so inviting or creating one asks for the connection first.
-  const openInvite = guard((teamId: number | null) => {
+  function openInvite(teamId: number | null) {
     setInviteTeamId(teamId);
     setInviteOpen(true);
-  });
-  const openNewTeam = guard(() => setNewTeamOpen(true));
+  }
+  function openNewTeam() {
+    setNewTeamOpen(true);
+  }
 
   // Kebab actions
   function toggleEnabled(member: Member) {
