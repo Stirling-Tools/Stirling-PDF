@@ -24,6 +24,7 @@ import {
   type LocalUsage,
 } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
+import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { PaymentSection } from "@portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
@@ -78,6 +79,10 @@ export function Usage({
   const [searchParams, setSearchParams] = useSearchParams();
   const handledProcurementRequest = useRef(false);
   const canManageProcurement = wallet?.role === "leader";
+  const bundleFlow = useBundleFlowState(
+    wallet?.teamId,
+    canManageProcurement && wallet?.status === "free",
+  );
 
   useEffect(() => {
     const requested =
@@ -361,8 +366,18 @@ export function Usage({
       }
       onActivateProcessor={
         wallet?.role === "leader" && !wallet?.processor?.active
-          ? () => setActivationStep("choose")
+          ? () =>
+              setActivationStep(
+                bundleFlow.status === "none" ? "choose" : "prepay",
+              )
           : undefined
+      }
+      activateLabel={
+        bundleFlow.status === "invoice"
+          ? t("portal.billing.freePlan.payInvoice", "Pay invoice to complete")
+          : bundleFlow.status === "quote"
+            ? t("portal.billing.freePlan.viewQuote", "View quote")
+            : undefined
       }
       onGovernSpend={
         wallet?.role === "leader" && wallet?.processor?.active
@@ -409,6 +424,7 @@ export function Usage({
               step={activationStep}
               onStepChange={setActivationStep}
               onSubscribed={confirmSubscription}
+              onActivationClosed={bundleFlow.refresh}
             />
           )}
 

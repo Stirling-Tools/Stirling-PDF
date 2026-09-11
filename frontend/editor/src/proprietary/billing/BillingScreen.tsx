@@ -25,6 +25,8 @@ export interface BillingScreenProps {
   onAddCapacity?: () => void;
   /** Leader-only: switches the Processor on from its row. */
   onActivateProcessor?: () => void;
+  /** Overrides activation with a quote or invoice resume action. */
+  activateLabel?: ReactNode;
   /** Leader-only: opens the spend limit from the Processor row once it is on. */
   onGovernSpend?: () => void;
   /** Overrides the governing door's label, e.g. "Top up" for a prepaid team. */
@@ -78,6 +80,7 @@ export function BillingScreen({
   pendingUnits = 0,
   onAddCapacity,
   onActivateProcessor,
+  activateLabel,
   onGovernSpend,
   governLabel,
   notices,
@@ -279,6 +282,7 @@ export function BillingScreen({
                         wallet={wallet}
                         pendingUnits={pendingUnits}
                         onActivate={onActivateProcessor}
+                        activateLabel={activateLabel}
                         onGovern={onGovernSpend}
                         governLabel={governLabel}
                       />

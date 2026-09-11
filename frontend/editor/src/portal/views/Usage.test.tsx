@@ -44,6 +44,10 @@ vi.mock("react-i18next", () => ({
 
 const fetchWallet = vi.fn();
 const refreshWalletCache = vi.fn();
+const bundleFlow = { status: "none", refresh: vi.fn() };
+vi.mock("@portal/hooks/useBundleFlowState", () => ({
+  useBundleFlowState: () => bundleFlow,
+}));
 const procurement = {
   isLinked: true,
   loading: false,
@@ -92,7 +96,19 @@ vi.mock("@portal/hooks/useStripePortal", () => ({
 }));
 // Stub the plan views so the test doesn't depend on the full wallet shape.
 vi.mock("@portal/components/billing/FreePlanView", () => ({
-  FreePlanView: () => null,
+  FreePlanView: ({
+    step,
+    onActivationClosed,
+  }: {
+    step?: string | null;
+    onActivationClosed?: () => void;
+  }) =>
+    step ? (
+      <div data-testid="activation-step">
+        {step}
+        <button onClick={onActivationClosed}>Close activation</button>
+      </div>
+    ) : null,
 }));
 vi.mock("@portal/components/billing/SubscribedPlanView", () => ({
   SubscribedPlanView: () => null,
@@ -122,6 +138,8 @@ describe("Usage — link-free wallet renderer", () => {
   });
 
   beforeEach(() => {
+    bundleFlow.status = "none";
+    bundleFlow.refresh.mockReset();
     fetchWallet.mockReset();
     refreshWalletCache.mockReset();
     procurement.loading = false;
@@ -205,6 +223,41 @@ describe("Usage — link-free wallet renderer", () => {
         (chip) => chip.textContent,
       ),
     ).toEqual(["Plan", "Usage", "Payment", "Invoices", "License Key"]);
+  });
+
+  it.each([
+    ["none", "Switch on the Processor", "choose"],
+    ["quote", "View quote", "prepay"],
+    ["invoice", "Pay invoice to complete", "prepay"],
+  ])("uses the Processor row to resume %s", async (status, label, step) => {
+    bundleFlow.status = status;
+    fetchWallet.mockResolvedValue({
+      ...walletOf("free"),
+      role: "leader",
+      teamId: 42,
+    });
+    renderUsage(<Usage />);
+    const action = await screen.findByRole("button", { name: label });
+    expect(action.closest(".billing-meter")).toHaveTextContent("Processor");
+    expect(screen.getAllByRole("button", { name: label })).toHaveLength(1);
+    if (status !== "none")
+      expect(
+        screen.queryByRole("button", { name: "Switch on the Processor" }),
+      ).not.toBeInTheDocument();
+    fireEvent.click(action);
+    expect(screen.getByTestId("activation-step")).toHaveTextContent(step);
+    fireEvent.click(screen.getByRole("button", { name: "Close activation" }));
+    expect(bundleFlow.refresh).toHaveBeenCalledTimes(1);
+  });
+
+  it("withholds a quote resume action from members", async () => {
+    bundleFlow.status = "quote";
+    fetchWallet.mockResolvedValue(walletOf("free"));
+    renderUsage(<Usage />);
+    await screen.findByText("This cycle");
+    expect(
+      screen.queryByRole("button", { name: "View quote" }),
+    ).not.toBeInTheDocument();
   });
 
   it("keeps local license management available when the cloud wallet cannot load", async () => {
