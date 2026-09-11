@@ -57,6 +57,8 @@ import { useFolders } from "@app/contexts/FolderContext";
 import { folderKind } from "@app/types/folder";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
+import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
+import { canPickDirectory } from "@app/services/directoryPicker";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
@@ -718,7 +720,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const filesPage = useFilesPage();
     const folders = useFolders();
     const { addFiles } = useFileHandler();
-    const { createFolderHere, createFolderHereBlockedReason } =
+    const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
       useNewFolderFlow();
 
     const handleUpload = useCallback(
@@ -763,6 +765,22 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
           disabled: newFolderDisabledReason !== null,
           disabledTooltip: newFolderDisabledReason ?? undefined,
           testId: "files-rail-new-folder",
+          // The same control the library's own chrome uses, so one row cannot
+          // offer less than the other: where a folder can go decides its shape.
+          render: ({ collapsed }) => (
+            <NewFolderButton
+              trigger="row"
+              collapsed={collapsed}
+              testId="files-rail-new-folder"
+              label={t("filesPage.newFolder", "New folder")}
+              disabledReason={newFolderDisabledReason}
+              serverDisabledReason={serverFolderBlock ?? undefined}
+              currentFolderId={folders.currentFolderId}
+              canAddLocalFolder={canPickDirectory}
+              onAddLocalFolder={() => void addLocalFolder()}
+              onOpenDialog={filesPage.openNewFolderDialog}
+            />
+          ),
         }}
       />
     );

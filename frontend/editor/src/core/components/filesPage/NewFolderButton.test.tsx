@@ -49,3 +49,47 @@ describe("NewFolderButton", () => {
     expect(onOpenDialog).toHaveBeenCalledWith(null, "server");
   });
 });
+
+describe("NewFolderButton in the sidebar", () => {
+  it("offers both destinations from the row where a directory can be mounted", async () => {
+    const onAddLocalFolder = vi.fn();
+    render(
+      <MantineProvider>
+        <NewFolderButton
+          label="New folder"
+          trigger="row"
+          currentFolderId={null}
+          canAddLocalFolder
+          onAddLocalFolder={onAddLocalFolder}
+          onOpenDialog={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    await userEvent.click(screen.getByRole("button", { name: "New folder" }));
+    await userEvent.click(await screen.findByText("Add local folder"));
+
+    expect(onAddLocalFolder).toHaveBeenCalled();
+  });
+
+  it("marks the row disabled with its reason", () => {
+    render(
+      <MantineProvider>
+        <NewFolderButton
+          label="New folder"
+          trigger="row"
+          disabledReason="Sign in to use cloud storage."
+          currentFolderId={null}
+          canAddLocalFolder
+          onAddLocalFolder={vi.fn()}
+          onOpenDialog={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    expect(screen.getByRole("button", { name: "New folder" })).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+  });
+});

@@ -13,8 +13,12 @@ import type { FolderId, FolderKind } from "@app/types/folder";
 export interface NewFolderButtonProps {
   label: string;
   size?: "sm" | "md";
-  /** "icon" matches the workbench bar's controls, which carry no labels. */
-  trigger?: "labelled" | "icon";
+  /** "icon" matches the workbench bar's controls; "row" the file sidebar's. */
+  trigger?: "labelled" | "icon" | "row";
+  /** Row trigger only: the sidebar is a rail, so the label goes. */
+  collapsed?: boolean;
+  /** Row trigger only, for the tests and callers that look the row up. */
+  testId?: string;
   /** Set when a folder cannot be created here at all; also the tooltip. */
   disabledReason?: string | null;
   /** Set when only the server destination is unavailable; also its tooltip. */
@@ -36,6 +40,8 @@ export function NewFolderButton({
   label,
   size = "sm",
   trigger = "labelled",
+  collapsed = false,
+  testId,
   disabledReason,
   serverDisabledReason,
   currentFolderId,
@@ -45,13 +51,51 @@ export function NewFolderButton({
 }: NewFolderButtonProps): ReactNode {
   const { t } = useTranslation();
   const iconOnly = trigger === "icon";
+  const asRow = trigger === "row";
+
+  /** The sidebar's own action-row markup, so the row reads as one of its own. */
+  const row = (onClick?: () => void) => (
+    <div
+      className={`file-sidebar-action-row${disabledReason ? " disabled" : ""}`}
+      data-testid={testId}
+      role="button"
+      tabIndex={disabledReason ? -1 : 0}
+      aria-disabled={Boolean(disabledReason)}
+      aria-label={label}
+      onClick={disabledReason ? undefined : onClick}
+      onKeyDown={(e) => {
+        if (disabledReason || !onClick) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          onClick();
+        }
+      }}
+    >
+      <span className="file-sidebar-action-icon">
+        <CreateNewFolderIcon />
+      </span>
+      {!collapsed && (
+        <span className="file-sidebar-action-label sidebar-content-fade">
+          {label}
+        </span>
+      )}
+    </div>
+  );
 
   if (disabledReason) {
     return (
-      <Tooltip label={disabledReason} withinPortal multiline w={260}>
+      <Tooltip
+        label={disabledReason}
+        withinPortal
+        multiline
+        w={260}
+        position={asRow ? "right" : undefined}
+      >
         {/* Wrapped so the tooltip still opens while the button is disabled. */}
-        <span style={{ display: "inline-flex" }}>
-          {iconOnly ? (
+        <span style={{ display: asRow ? "block" : "inline-flex" }}>
+          {asRow ? (
+            row()
+          ) : iconOnly ? (
             <ActionIcon
               variant="tertiary"
               size="sm"
@@ -82,6 +126,18 @@ export function NewFolderButton({
   if (currentFolderId !== null || !canAddLocalFolder) {
     const open = () =>
       currentFolderId !== null ? onOpenDialog() : onOpenDialog(null, "server");
+    if (asRow) {
+      return (
+        <Tooltip
+          label={label}
+          position="right"
+          withinPortal
+          disabled={!collapsed}
+        >
+          {row(open)}
+        </Tooltip>
+      );
+    }
     if (iconOnly) {
       return (
         <Tooltip label={label} withinPortal>
@@ -115,7 +171,9 @@ export function NewFolderButton({
   return (
     <Menu shadow="md" position="bottom-end" withinPortal>
       <Menu.Target>
-        {iconOnly ? (
+        {asRow ? (
+          row()
+        ) : iconOnly ? (
           <ActionIcon variant="tertiary" size="sm" aria-label={label}>
             <CreateNewFolderIcon fontSize="small" />
           </ActionIcon>

@@ -108,7 +108,9 @@ export interface FileSidebarProps {
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
-  /** Extra action row inserted under Open-from-computer (e.g. New folder). */
+  /** Extra action row inserted under Open-from-computer (e.g. New folder). A
+   *  control with more than one destination renders itself instead, given the
+   *  collapse state the row would have used. */
   extraAction?: {
     icon: React.ReactNode;
     label: string;
@@ -116,6 +118,7 @@ export interface FileSidebarProps {
     disabled?: boolean;
     disabledTooltip?: string;
     testId?: string;
+    render?: (ctx: { collapsed: boolean }) => React.ReactNode;
   };
 }
 
@@ -1025,7 +1028,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               </div>
             </Tooltip>
 
-            {extraAction && (
+            {extraAction?.render && extraAction.render({ collapsed })}
+            {extraAction && !extraAction.render && (
               <Tooltip
                 label={extraAction.disabledTooltip ?? extraAction.label}
                 position="right"
