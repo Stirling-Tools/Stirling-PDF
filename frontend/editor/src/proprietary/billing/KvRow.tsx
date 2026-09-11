@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
 
 /**
- * A cycle fact, as a key-value row.
- *
- * <p>What the usage section is made of. The dot-sentence that used to carry these facts is gone:
- * a row per fact is readable at a glance and cannot smuggle a second claim in beside the first.
+ * A cycle fact, as a key-value row. One row per fact, so a row cannot smuggle a second claim in
+ * beside the first.
  *
  * <p>{@link note} is separated from the value by real whitespace rather than by margin alone, so
  * text extraction and screen readers do not run the two together as "100 users$99.00".

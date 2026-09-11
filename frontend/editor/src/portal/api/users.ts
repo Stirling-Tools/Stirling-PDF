@@ -580,11 +580,10 @@ export async function inviteMember(
  * The signed-in admin's own email, so a purchase flow never asks for an address we already hold.
  *
  * <p>Deliberately narrow. This reads an ADMIN-only endpoint, which a cloud team lead cannot call,
- * so nothing that both editions need may depend on it. The user cap used to be read here too and
- * is now on the wallet, where both editions can see it.
+ * so nothing both editions need may depend on it. The user cap is on the wallet for that reason.
  *
  * <p>Temporary: once the capacity checkout runs through the SaaS lane, the edge function resolves
- * the team leader's email server-side and this call goes away entirely.
+ * the team leader's email server-side and this call goes away.
  */
 export async function fetchAdminEmail(): Promise<string | null> {
   const data = await apiClient.local.json<AdminSettingsDto>(
