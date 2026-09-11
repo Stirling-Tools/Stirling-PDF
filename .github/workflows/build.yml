@@ -62,6 +62,7 @@ jobs:
           filters: .github/config/.files.yaml
 
   gradle-cache-prime:
+    if: needs.files-changed.outputs.backend == 'true'
     needs: [files-changed]
     uses: ./.github/workflows/gradle-cache-prime.yml
     secrets: inherit
@@ -166,7 +167,7 @@ jobs:
 
   test-build-docker-images:
     if: |
-      always() &&
+      !cancelled() &&
       github.event_name == 'pull_request' &&
       needs.files-changed.outputs.project == 'true' &&
       contains(fromJSON('["success", "skipped"]'), needs.gradle-cache-prime.result) &&
@@ -254,7 +255,7 @@ jobs:
   # for whatever did record. Advisory only - intentionally NOT in
   # all-checks-passed, so a flaky aggregate run never blocks merging.
   coverage-aggregate:
-    if: always()
+    if: ${{!cancelled()}}
     needs:
       - build
       - playwright-e2e-live

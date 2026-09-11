@@ -1,4 +1,7 @@
-import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
+import {
+  RolledBackError,
+  type Command,
+} from "@app/tools/pdfTextEditor/commands/Command";
 import { CompositeCommand } from "@app/tools/pdfTextEditor/commands/CompositeCommand";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 
@@ -12,12 +15,14 @@ const COALESCE_WINDOW_MS = 600;
 export class HistoryStepError extends Error {
   readonly phase: "apply" | "revert";
   readonly cause: unknown;
+  readonly documentIntact: boolean;
 
   constructor(phase: "apply" | "revert", cause: unknown) {
     super(`Command failed to ${phase}`);
     this.name = "HistoryStepError";
     this.phase = phase;
-    this.cause = cause;
+    this.documentIntact = cause instanceof RolledBackError;
+    this.cause = cause instanceof RolledBackError ? cause.cause : cause;
   }
 }
 
@@ -59,7 +64,12 @@ export class HistoryStack {
     // Read the clock BEFORE apply: the window is meant to measure the user's
     // idle time between edits.
     const startedAt = Date.now();
-    cmd.apply(doc);
+    try {
+      cmd.apply(doc);
+    } catch (err) {
+      this.lastCoalesceKey = null;
+      throw new HistoryStepError("apply", err);
+    }
     const key = cmd.coalesceKey?.() ?? null;
     const top = this.undoStack[this.undoStack.length - 1];
     // The command a merge would join. Unwrap a group to its most recent
@@ -97,10 +107,15 @@ export class HistoryStack {
     try {
       cmd.revert(doc);
     } catch (err) {
-      // The command is already popped and the document is in an unknown
+      const failure = new HistoryStepError("revert", err);
+      // A rolled-back revert left the document exactly as it was, so the step
+      // is still applied and still the next thing to undo. Leaving it popped
+      // would strand a real edit outside history and report the document clean.
+      // A revert that did NOT roll back leaves the document in an unknown
       // state, so the caller has to rebuild rather than keep undoing.
+      if (failure.documentIntact) this.undoStack.push(cmd);
       this.lastCoalesceKey = null;
-      throw new HistoryStepError("revert", err);
+      throw failure;
     }
     this.redoStack.push(cmd);
     // End the coalescing burst - a later edit starts a fresh undo step.
@@ -114,8 +129,10 @@ export class HistoryStack {
     try {
       cmd.apply(doc);
     } catch (err) {
+      const failure = new HistoryStepError("apply", err);
+      if (failure.documentIntact) this.redoStack.push(cmd);
       this.lastCoalesceKey = null;
-      throw new HistoryStepError("apply", err);
+      throw failure;
     }
     this.undoStack.push(cmd);
     this.lastCoalesceKey = null;
