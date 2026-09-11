@@ -113,9 +113,11 @@ updates:
           - "i18next"
           - "i18next-*"
           - "react-i18next"
+      lucide:
+        patterns:
+          - "lucide-static"
       iconify:
         patterns:
-          - "@iconify/*"
           - "@iconify-json/*"
       stripe:
         patterns:

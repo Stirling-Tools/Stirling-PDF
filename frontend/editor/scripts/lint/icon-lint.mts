@@ -9,9 +9,6 @@ const EDITOR = path.join(import.meta.dirname, "..", "..");
 const SRC = path.join(EDITOR, "src");
 const ICONS_DIR = path.join(SRC, "core/icons");
 
-// The four rules it gates only hold once every call site renders through <Icon>, so the last migration PR flips it.
-const MIGRATION_COMPLETE = false;
-
 const BANNED_IMPORTS = [
   "@mui/icons-material",
   "@iconify/react",
@@ -160,11 +157,7 @@ for (const file of files) {
   }
 
   // A stylesheet fill beats <Icon>'s fill="none" attribute and solidifies every stroke icon in scope.
-  if (
-    MIGRATION_COMPLETE &&
-    file.endsWith(".css") &&
-    !file.startsWith(ICONS_DIR)
-  ) {
+  if (file.endsWith(".css") && !file.startsWith(ICONS_DIR)) {
     const css = fs.readFileSync(file, "utf8");
     for (const m of css.matchAll(/([^{}]*svg[^{}]*)\{([^}]*)\}/g)) {
       const decl = /(^|[;\s])fill\s*:\s*(?!none|transparent)/.test(m[2]);
@@ -187,7 +180,7 @@ for (const file of files) {
 
   lines.forEach((line, i) => {
     // No inline svg outside core/icons
-    if (MIGRATION_COMPLETE && /<svg[\s>]/.test(line) && !inIconsDir) {
+    if (/<svg[\s>]/.test(line) && !inIconsDir) {
       const context = lines.slice(Math.max(0, i - 6), i + 1).join("\n");
       if (!OPT_OUT.test(context)) {
         problems.push(
@@ -200,7 +193,6 @@ for (const file of files) {
 
     // Leftovers the type system cannot see: ReactNode admits any string, and an unchecked `?? fallback`.
     for (const m of line.matchAll(/"([a-z0-9]+(?:-[a-z0-9]+)+)"/g)) {
-      if (!MIGRATION_COMPLETE) break;
       const name = m[1];
       const isLegacy =
         /-(?:rounded|outlined|sharp|twotone)$/.test(name) || legacy.has(name);
@@ -215,10 +207,7 @@ for (const file of files) {
     }
 
     // No retired icon library
-    if (
-      MIGRATION_COMPLETE &&
-      (/^\s*(import|export)\b/.test(line) || /\brequire\(/.test(line))
-    ) {
+    if (/^\s*(import|export)\b/.test(line) || /\brequire\(/.test(line)) {
       for (const banned of BANNED_IMPORTS) {
         if (
           line.includes(banned) &&
@@ -270,8 +259,4 @@ if (problems.length) {
   process.exit(1);
 }
 
-console.log(
-  MIGRATION_COMPLETE
-    ? `✅ icon-lint: ${known.size} icons, one system, no inline svg`
-    : `✅ icon-lint: ${known.size} icons; migration in progress, so the retired-library, inline-svg, legacy-name and css-fill rules are still off`,
-);
+console.log(`✅ icon-lint: ${known.size} icons, one system, no inline svg`);

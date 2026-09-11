@@ -46,8 +46,6 @@ tasks:
     run: once
     deps: [install]
     cmds:
-      # Both sets while the migration is in flight: unmigrated call sites still use material-symbols.
-      - node editor/scripts/generate-icons.js
       - npx tsx editor/scripts/generate-icon-registry.mts
 
   prepare:og:
@@ -530,8 +528,9 @@ tasks:
   check:all:
     desc: "Full CI quality gate"
     cmds:
-      # Runs first, before prepare regenerates: guards the committed og-metadata.json /
-      # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
+      # Run first, before prepare regenerates: guard the committed og-metadata.json /
+      # ogImageMap.json and icon registry that the Cloudflare Pages (plain `vite build`)
+      # deploy relies on.
       - task: og:check
       - task: icons:check
       - task: typecheck:all
