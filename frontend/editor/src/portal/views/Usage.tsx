@@ -159,6 +159,7 @@ export function Usage({
     // No email: the only one this instance holds is its local admin record, which is a Spring
     // username and not an address the buyer owns. The checkout asks for one instead.
     void checkout?.openCheckout("server", {
+      combinedChoose: true,
       currentLimit: heldLimit,
       minimumSeats: usersInUse,
       onSuccess: () => setRefreshKey((k) => k + 1),

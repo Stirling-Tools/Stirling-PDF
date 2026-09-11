@@ -6,7 +6,10 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import licenseService from "@app/services/licenseService";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { StripeCheckoutProps } from "@app/components/shared/stripeCheckout/types/checkout";
+import {
+  CheckoutStage,
+  StripeCheckoutProps,
+} from "@app/components/shared/stripeCheckout/types/checkout";
 import { StepModalHeader } from "@app/components/shared/StepModalHeader";
 import {
   validateEmail,
@@ -49,6 +52,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   planGroup,
   minimumSeats = 1,
   initialEmail,
+  combinedChoose = false,
   currentLimit = null,
   onSuccess,
   onError,
@@ -106,7 +110,16 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         ...prev,
         email: checkoutState.emailInput,
       }));
-      navigation.goToStage("plan-selection");
+      if (combinedChoose) {
+        // Arrive on the capacity an installation already needs rather than on a blocked minimum,
+        // the same seeding the separate walk does when a period is picked.
+        if (sellsCapacity) {
+          checkoutState.setServerQuantity(blocksForUsers(minimumSeats));
+        }
+        navigation.goToStage("choose");
+      } else {
+        navigation.goToStage("plan-selection");
+      }
     } else {
       checkoutState.setEmailError(validation.error);
     }
@@ -185,7 +198,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           checkoutState.setState((prev) => ({
             ...prev,
             email: initialEmail,
-            currentStage: "choose",
+            currentStage: combinedChoose ? "choose" : "plan-selection",
             loading: false,
           }));
           return;
@@ -342,21 +355,27 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   };
 
   const canGoBack = checkoutState.stageHistory.length > 0;
-  // The 2-page flow (a caller that already holds the email) wears the stepped chrome. The longer
-  // walk keeps its own title, because "Step 1 of 2" would be a lie about how many pages it has.
-  const twoPageStep =
-    checkoutState.state.currentStage === "choose"
-      ? 1
-      : initialEmail && checkoutState.state.currentStage === "payment"
-        ? 2
-        : null;
+  // The combined flow wears the stepped chrome, counting the pages it actually walks: the email
+  // page only when the caller supplied no address. The separate walk keeps its own title, because
+  // a step count would be a lie about how many pages it has.
+  const steppedPath: CheckoutStage[] | null = combinedChoose
+    ? [
+        ...(initialEmail ? [] : (["email"] as CheckoutStage[])),
+        "choose",
+        "payment",
+      ]
+    : null;
+  const steppedIndex = steppedPath
+    ? steppedPath.indexOf(checkoutState.state.currentStage)
+    : -1;
+  const steppedStep = steppedIndex >= 0 ? steppedIndex + 1 : null;
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
       title={
-        twoPageStep ? undefined : (
+        steppedStep ? undefined : (
           <Group gap="sm" wrap="nowrap">
             {canGoBack && (
               <ActionIcon
@@ -381,7 +400,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       size={isMobile ? "100%" : 980}
       centered
       radius="lg"
-      withCloseButton={!twoPageStep}
+      withCloseButton={!steppedStep}
       closeOnEscape={true}
       closeOnClickOutside={false}
       fullScreen={isMobile}
@@ -393,7 +412,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         },
       }}
     >
-      {twoPageStep && (
+      {steppedStep && (
         <StepModalHeader
           title={
             currentLimit != null
@@ -409,10 +428,11 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
                 )
               : undefined
           }
-          step={twoPageStep}
-          total={2}
-          stepLabel={t("payment.stepOf", "Step {{n}} of 2", {
-            n: twoPageStep,
+          step={steppedStep}
+          total={steppedPath?.length ?? 0}
+          stepLabel={t("payment.stepOf", "Step {{n}} of {{total}}", {
+            n: steppedStep,
+            total: steppedPath?.length ?? 0,
           })}
           onClose={handleClose}
         />

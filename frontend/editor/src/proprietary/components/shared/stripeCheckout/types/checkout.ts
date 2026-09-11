@@ -1,8 +1,14 @@
 import { PlanTierGroup } from "@app/services/licenseService";
 
 export interface StripeCheckoutProps {
-  /** Supplying it skips the email step and opens on the combined choose page. */
+  /** Supplying it skips the email step. */
   initialEmail?: string;
+  /**
+   * Put the period and capacity choices on one page instead of walking them separately. Independent
+   * of {@link initialEmail}: a buyer who still has to type an address gets the email page in front
+   * of the combined one rather than the long walk behind it.
+   */
+  combinedChoose?: boolean;
   /** Users the current plan covers, or null when there is none. Drives the add-capacity face. */
   currentLimit?: number | null;
   opened: boolean;
