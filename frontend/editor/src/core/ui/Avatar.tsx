@@ -56,7 +56,10 @@ export function Avatar({
   const classes = [
     "sui-avatar",
     `sui-avatar--${size}`,
-    `sui-avatar--${tone}`,
+    // The tone is the ground the initials sit on, so it is theirs alone: painted
+    // under a picture it shows through every transparent pixel of an uploaded
+    // logo, which reads as a coloured disc nobody asked for.
+    showImage ? "sui-avatar--image" : `sui-avatar--${tone}`,
     onClick ? "sui-avatar--interactive" : "",
     className ?? "",
   ]
