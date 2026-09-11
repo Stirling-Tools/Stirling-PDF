@@ -33,6 +33,7 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
+import stirling.software.proprietary.failure.DownstreamProblemDetail;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
@@ -419,9 +420,11 @@ public class PolicyEngine {
                     taskManager.setError(runId, message);
                     recordFailure(run, message, e);
                 } else {
-                    String message = "Policy run failed: " + e.getMessage();
+                    String message = "Policy run failed: " + downstreamMessage(e);
                     log.error("Policy run {} failed (downstream HTTP error)", runId, e);
-                    run.fail(message);
+                    // Carry the tool's own error code onto the run, so a client sees the same
+                    // code the review surface classifies the failure on.
+                    run.failWithCode(message, DownstreamProblemDetail.errorCodeOf(e), null);
                     taskManager.setError(runId, message);
                     recordFailure(run, message, e);
                 }
@@ -462,6 +465,15 @@ public class PolicyEngine {
             completion.complete(run);
         }
         return null;
+    }
+
+    /**
+     * What a downstream tool said, preferring its Problem Details {@code detail} over the raw
+     * exception text, which buries that sentence inside the serialised body.
+     */
+    private static String downstreamMessage(RestClientResponseException e) {
+        String detail = DownstreamProblemDetail.detailOf(e);
+        return detail != null ? detail : e.getMessage();
     }
 
     /**

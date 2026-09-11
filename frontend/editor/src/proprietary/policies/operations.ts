@@ -4,7 +4,10 @@
  * policy - the catalogue can't reference an untyped operation.
  */
 
-import { describeToolOperation } from "@app/hooks/tools/shared/toolOperationDescriptor";
+import {
+  describeToolOperation,
+  type BidirectionalToolConfig,
+} from "@app/hooks/tools/shared/toolOperationDescriptor";
 import { redactOperationConfig } from "@app/hooks/tools/redact/useRedactOperation";
 import { sanitizeOperationConfig } from "@app/hooks/tools/sanitize/useSanitizeOperation";
 import { timestampPdfOperationConfig } from "@app/hooks/tools/timestampPdf/useTimestampPdfOperation";
@@ -12,6 +15,7 @@ import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAd
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
+import { pdfaOperationConfig } from "@app/policies/pdfaOperation";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
 
@@ -89,6 +93,21 @@ function describeIntegrationOperation<TParams extends Record<string, string>>(
   };
 }
 
+const COMPLIANCE_CHECK_ENDPOINT =
+  "/api/v1/security/validate-compliance" satisfies ToolEndpoint;
+
+// Annotated rather than inferred, as pdfaOperationConfig is: an unannotated object literal widens
+// `endpoint` to string, which no longer satisfies describeToolOperation's `CE extends ToolEndpoint`.
+const complianceCheckOperationConfig: BidirectionalToolConfig<
+  Record<string, never>,
+  typeof COMPLIANCE_CHECK_ENDPOINT
+> = {
+  endpoint: COMPLIANCE_CHECK_ENDPOINT,
+  defaultParameters: {},
+  toApiParams: () => ({}),
+  fromApiParams: () => ({}),
+};
+
 export const POLICY_OPERATIONS = {
   redact: describeToolOperation(
     "/api/v1/security/auto-redact",
@@ -116,6 +135,14 @@ export const POLICY_OPERATIONS = {
   compress: describeToolOperation(
     "/api/v1/misc/compress-pdf",
     compressOperationConfig,
+  ),
+  // Long-term archival format: embeds fonts and colour profiles so the document still renders the
+  // same decades from now, which is what a retention or archival requirement actually asks for.
+  pdfa: describeToolOperation("/api/v1/convert/pdf/pdfa", pdfaOperationConfig),
+  // The gate: no options, so a stored step carries nothing that could drift.
+  complianceCheck: describeToolOperation(
+    "/api/v1/security/validate-compliance",
+    complianceCheckOperationConfig,
   ),
   classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
   purviewApplyLabel: describeIntegrationOperation(
