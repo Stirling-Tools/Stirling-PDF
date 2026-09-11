@@ -236,6 +236,9 @@ public class ProcessExecutor {
             if (workingDirectory != null) {
                 processBuilder.directory(workingDirectory);
             }
+            if (processType == Processes.LIBRE_OFFICE) {
+                signalUnoServerDemand();
+            }
             Process process = processBuilder.start();
 
             // Read the error stream and standard output stream concurrently
@@ -295,8 +298,32 @@ public class ProcessExecutor {
             errorReaderThread.start();
             outputReaderThread.start();
 
+            Thread unoHeartbeat = null;
+            if (processType == Processes.LIBRE_OFFICE) {
+                unoHeartbeat =
+                        Thread.ofVirtual()
+                                .unstarted(
+                                        () -> {
+                                            while (!Thread.currentThread().isInterrupted()
+                                                    && process.isAlive()) {
+                                                try {
+                                                    Thread.sleep(30_000);
+                                                } catch (InterruptedException e) {
+                                                    Thread.currentThread().interrupt();
+                                                    break;
+                                                }
+                                                signalUnoServerDemand();
+                                            }
+                                        });
+                unoHeartbeat.start();
+            }
+
             // Wait for the conversion process to complete
             boolean finished = process.waitFor(timeoutDuration, TimeUnit.MINUTES);
+
+            if (unoHeartbeat != null) {
+                unoHeartbeat.interrupt();
+            }
 
             if (!finished) {
                 // Kill the entire process tree (descendants first, then the process itself)

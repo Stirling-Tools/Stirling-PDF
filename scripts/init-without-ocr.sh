@@ -552,11 +552,6 @@ stop_unoserver_pool_now() {
     fi
   done
 
-  # Also kill any orphaned soffice processes
-  pkill -f 'soffice\.bin' 2>/dev/null || true
-  sleep 1
-  pkill -9 -f 'soffice\.bin' 2>/dev/null || true
-
   stop_xvfb
 
   UNOSERVER_PIDS=()
@@ -614,6 +609,10 @@ start_unoserver_demand_manager() {
 
         if [ -z "$pid" ] || ! kill -0 "$pid" 2>/dev/null; then
           log "unoserver PID ${pid} died for port ${port}, restarting"
+          start_unoserver_instance "$port" "$uno_port"
+          UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
+        elif ! check_unoserver_port_ready "$port" "silent"; then
+          log "unoserver port ${port} unhealthy, restarting"
           start_unoserver_instance "$port" "$uno_port"
           UNOSERVER_PIDS[$i]=$LAST_UNOSERVER_PID
         fi
@@ -987,9 +986,13 @@ else
 fi
 
 if [ -z "${JAVA_BASE_OPTS:-}" ]; then
+  if [ -n "${STIRLING_JVM_PROFILE:-}" ]; then
+    log "STIRLING_JVM_PROFILE is deprecated; use _JVM_OPTS or JAVA_BASE_OPTS instead"
+  fi
   if [ -n "${_JVM_OPTS:-}" ]; then
-    JAVA_BASE_OPTS="${_JVM_OPTS} -XX:ConcGCThreads=${CONC_GC_THREADS}"
-    log "Using JVM options: Shenandoah generational GC (ConcGCThreads=${CONC_GC_THREADS})"
+    STRIPPED_JVM_OPTS=$(echo "$_JVM_OPTS" | sed -E 's/-XX:ConcGCThreads=[^ ]*//g')
+    JAVA_BASE_OPTS="${STRIPPED_JVM_OPTS} -XX:ConcGCThreads=${CONC_GC_THREADS}"
+    log "Using _JVM_OPTS (ConcGCThreads=${CONC_GC_THREADS})"
   else
     log "JAVA_BASE_OPTS and _JVM_OPTS unset; applying fallback defaults."
     JAVA_BASE_OPTS="-XX:+ExitOnOutOfMemoryError -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/tmp/stirling-pdf/heap_dumps -XX:+UnlockExperimentalVMOptions -XX:+UseShenandoahGC -XX:ShenandoahGCMode=generational -XX:ShenandoahGCHeuristics=adaptive -XX:ShenandoahUncommitDelay=1000 -XX:ShenandoahGuaranteedYoungGCInterval=10000 -XX:ShenandoahGuaranteedOldGCInterval=30000 -XX:+UseCompactObjectHeaders -XX:+UseStringDeduplication -XX:+ExplicitGCInvokesConcurrent -XX:ConcGCThreads=${CONC_GC_THREADS} -XX:ReservedCodeCacheSize=96m -Xss256k -XX:CICompilerCount=2 -Djdk.virtualThreadScheduler.maxPoolSize=4 -Dspring.threads.virtual.enabled=true -Djava.awt.headless=true"
