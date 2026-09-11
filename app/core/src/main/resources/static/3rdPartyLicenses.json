@@ -1626,13 +1626,13 @@
         },
         {
             "moduleName": "org.commonmark:commonmark",
-            "moduleVersion": "0.28.0",
+            "moduleVersion": "0.30.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
         {
             "moduleName": "org.commonmark:commonmark-ext-gfm-tables",
-            "moduleVersion": "0.28.0",
+            "moduleVersion": "0.30.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
