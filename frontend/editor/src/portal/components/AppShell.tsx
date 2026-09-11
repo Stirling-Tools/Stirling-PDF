@@ -83,7 +83,9 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, [mobileNavOpen, closeMobileNav]);
 
   return (
-    <div className="portal-shell">
+    // data-app-shell: the switch transition holds the outgoing app on its last
+    // frame until this appears - see waitForShell in AppSwitchProvider.
+    <div className="portal-shell" data-app-shell="processor">
       {/* portalAccess: being here is proof the processor is available. */}
       <QuickNavHostBridge portalAccess onOpenSettings={() => openSettings()} />
       <div className="workspace-frame">

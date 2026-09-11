@@ -15,6 +15,7 @@ import ReactDOM from "react-dom/client";
 import { ColorSchemeScript } from "@mantine/core";
 import { BrowserRouter } from "react-router-dom";
 import App from "@app/App";
+import { AppSwitchProvider } from "@app/components/shared/AppSwitchProvider";
 import "@app/i18n"; // Initialize i18next
 import { BASE_PATH } from "@app/constants/app";
 import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
@@ -44,7 +45,11 @@ root.render(
   <React.StrictMode>
     <ColorSchemeScript />
     <BrowserRouter basename={BASE_PATH}>
-      <App />
+      {/* Wraps the whole app so crossing between the editor and the processor
+          animates instead of hard-cutting. Inert in builds with one app. */}
+      <AppSwitchProvider>
+        <App />
+      </AppSwitchProvider>
     </BrowserRouter>
   </React.StrictMode>,
 );

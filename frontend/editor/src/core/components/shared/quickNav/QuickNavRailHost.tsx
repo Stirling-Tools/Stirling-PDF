@@ -5,6 +5,11 @@ import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavR
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 import type { ToolId } from "@app/types/toolId";
 import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
+import {
+  useAppSwitchShortcut,
+  type AppSwitchTarget,
+} from "@app/components/shared/AppSwitch";
+import { useAppSwitch } from "@app/components/shared/AppSwitchProvider";
 import { requestReaderMode } from "@app/utils/pendingReaderMode";
 import {
   saveEditorReturnPath,
@@ -22,6 +27,7 @@ export function QuickNavRailHost() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
+  const { switchToApp } = useAppSwitch();
 
   const appMounted = Boolean(host?.appMounted);
 
@@ -40,6 +46,32 @@ export function QuickNavRailHost() {
     if (guard) guard(() => navigate(to));
     else navigate(to);
   };
+
+  // Crossing between apps plays the switch transition; everything else is a
+  // plain navigation. Guarded where the app supplies a guard, same as `go`.
+  const switchApp = (target: AppSwitchTarget, path?: string) => {
+    const run = () => switchToApp(target, path);
+    const guard = host?.actions.current?.requestNavigation;
+    if (guard) guard(run);
+    else run();
+  };
+
+  const openProcessor = () => {
+    saveEditorReturnPath();
+    switchApp("processor");
+  };
+
+  // Back to where you left the editor, not its front door.
+  const openEditor = () =>
+    switchApp("editor", takeEditorReturnPath() ?? EDITOR_BASENAME);
+
+  // Armed only where the switch is actually offered, so the key never lands on
+  // an auth gate. The rail mounts in both apps, which is why it owns the key.
+  useAppSwitchShortcut(
+    inPortal ? "processor" : "editor",
+    (target) => (target === "processor" ? openProcessor() : openEditor()),
+    appMounted && HAS_PORTAL && (inPortal || Boolean(host?.portalAccess)),
+  );
 
   // Through the app where possible: its route only selects a tool on a fresh mount.
   const openTool = (toolId: ToolId, route: string) => {
@@ -76,8 +108,7 @@ export function QuickNavRailHost() {
           returnHome();
           return;
         }
-        saveEditorReturnPath();
-        go(PORTAL_BASENAME);
+        openProcessor();
       },
     },
     {
@@ -94,8 +125,7 @@ export function QuickNavRailHost() {
           returnHome();
           return;
         }
-        // Back to where you left the editor, not its front door.
-        navigate(takeEditorReturnPath() ?? EDITOR_BASENAME);
+        openEditor();
       },
     },
   ];

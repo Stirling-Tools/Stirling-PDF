@@ -34,6 +34,7 @@ import {
 import { fetchPipelines } from "@portal/api/pipelines";
 import { fetchSources } from "@portal/api/sources";
 import { EDITOR_IS_SAME_APP, EDITOR_URL } from "@portal/auth/editorUrl";
+import { useAppSwitch } from "@app/components/shared/AppSwitchProvider";
 import { useTier } from "@portal/contexts/TierContext";
 import { useUI } from "@portal/contexts/UIContext";
 import { qk } from "@portal/queries/keys";
@@ -127,6 +128,7 @@ export function usePortalSearchResults(
 ): UseSuperSearchResult {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { switchToApp } = useAppSwitch();
   const { openSettings } = useUI();
   const { allTools } = useToolRegistry();
   const { config } = useAppConfig();
@@ -214,15 +216,16 @@ export function usePortalSearchResults(
       }
       const path = getToolUrlPath(id);
       if (EDITOR_IS_SAME_APP) {
-        // One SPA: swap route-sets through the router. The portal tree
+        // One SPA: swap route-sets through the router, playing the same
+        // cross-app transition the brand switcher does. The portal tree
         // unmounts and the editor mounts fresh at the tool URL, so its
         // URL-driven tool init runs exactly as it does on a cold load.
-        navigate(path);
+        switchToApp("editor", path);
       } else {
         assignLocation(externalEditorHref(path));
       }
     },
-    [allTools, navigate],
+    [allTools, switchToApp],
   );
 
   const openSettingsSection = useCallback(
