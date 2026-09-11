@@ -400,4 +400,31 @@ describe("settling swept documents locally", () => {
       }),
     );
   });
+
+  test("meters the label ids it actually saw, not the display roll-ups", async () => {
+    // Regression: the set was built but never added to, so every batch reported an empty
+    // label list. Families (and the synthetic "other") are a display concern.
+    classifyFileHeuristically
+      .mockResolvedValueOnce({
+        labels: ["invoice"],
+        confidence: "high",
+        score: 9,
+        isEnglish: true,
+      })
+      .mockResolvedValueOnce({
+        labels: ["contract"],
+        confidence: "high",
+        score: 9,
+        isEnglish: true,
+      });
+
+    await runClassificationDemoSweep("/downloads", deps());
+
+    const payload = vi.mocked(meterClassificationRun).mock.calls.at(-1)?.[0];
+    expect(payload?.labels).toEqual(
+      expect.arrayContaining(["invoice", "contract"]),
+    );
+    expect(payload?.labels).not.toContain("finance");
+    expect(payload?.labels).not.toContain("other");
+  });
 });

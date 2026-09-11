@@ -297,6 +297,7 @@ export async function runClassificationDemoSweep(
       if (labels) {
         processed += 1;
         countVerdict(counts, labels, unclassifiedName);
+        for (const label of labels) metered.add(label);
       }
     }
     report("processing", total);
