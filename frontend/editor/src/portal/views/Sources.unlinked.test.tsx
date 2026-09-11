@@ -4,27 +4,24 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PortalViewProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * The deep link into the create flow, which the gate has to cover in its own right.
- *
- * `?new=1` opens the modal from an effect rather than through the click handler, so guarding
- * openCreate does nothing for it. Both the Documents review queue and the pipelines empty state
- * arrive here that way, so each is a way past the gate unless the deep link is guarded too.
+ * Connecting a source needs no Stirling account: the source is stored on this instance, and the
+ * processing it feeds runs against the instance's own monthly grant. So neither the button nor the
+ * `?new=1` deep link (how the Documents queue and the pipelines empty state arrive) asks for one.
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
-const gate = { gated: true };
 
 vi.mock("@portal/hooks/useConnectGate", () => ({
   useConnectGate: () => ({
-    gated: gate.gated,
+    gated: true,
     loading: false,
     available: true,
     connect,
+    // Faithful to the real hook while gated, so re-guarding any of these actions fails the test
+    // rather than passing through it.
     guard:
-      <A extends unknown[]>(action: (...args: A) => void) =>
-      (...args: A) => {
-        if (gate.gated) connect();
-        else action(...args);
-      },
+      <A extends unknown[]>(_action: (...args: A) => void) =>
+      () =>
+        connect(),
   }),
 }));
 
@@ -76,10 +73,9 @@ const renderAt = (initial: string) =>
     </PortalViewProviders>,
   );
 
-describe("Sources deep link when the account is not connected", () => {
+describe("Sources on an instance with no Stirling account", () => {
   beforeEach(() => {
     connect.mockReset();
-    gate.gated = true;
     fetchSources.mockReset();
     fetchSources.mockResolvedValue({ kpis: [], sources: [EDITOR_ROW] });
   });
@@ -88,24 +84,16 @@ describe("Sources deep link when the account is not connected", () => {
   const LIST = "portal.sources.table.source";
   const MODAL = "portal.sources.builder.createTitle";
 
-  it("asks to connect instead of opening the create modal", async () => {
+  it("honours the create deep link rather than asking for an account", async () => {
     renderAt("/processor/sources?new=1");
     expect(await screen.findByText(LIST)).toBeInTheDocument();
-    expect(connect).toHaveBeenCalled();
-    expect(screen.queryByText(MODAL)).toBeNull();
+    expect(await screen.findByText(MODAL)).toBeInTheDocument();
+    expect(connect).not.toHaveBeenCalled();
   });
 
   it("leaves the page looking exactly as it always does", async () => {
     renderAt("/processor/sources");
     expect(await screen.findByText(LIST)).toBeInTheDocument();
     expect(connect).not.toHaveBeenCalled();
-  });
-
-  it("still honours the deep link once connected", async () => {
-    gate.gated = false;
-    renderAt("/processor/sources?new=1");
-    expect(await screen.findByText(LIST)).toBeInTheDocument();
-    expect(connect).not.toHaveBeenCalled();
-    expect(await screen.findByText(MODAL)).toBeInTheDocument();
   });
 });

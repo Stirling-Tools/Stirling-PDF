@@ -724,6 +724,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/security/validate-compliance": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/security/validate-signature": {
     accepts: ["PDF"],
     produces: "JSON",
