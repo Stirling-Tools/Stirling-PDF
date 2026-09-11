@@ -168,6 +168,11 @@ export function BillingScreen({
     };
   }, [wallet, paying, teamHeld, t]);
 
+  // A linked instance's locally-accrued units are real spend the cloud has not billed yet, so the
+  // credit count includes them. The estimate above stays the server's own figure, which is what
+  // "the meter settles at close" is telling the reader.
+  const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
+
   const cycle = wallet
     ? cycleDay(wallet.billingPeriodStart, wallet.billingPeriodEnd)
     : null;
@@ -298,26 +303,39 @@ export function BillingScreen({
                   label={t("portal.billing.cycle.credits", "Credits")}
                   note={
                     wallet.pricePerDocMinor != null
-                      ? t(
-                          "portal.billing.cycle.creditsNote",
-                          "{{units}} · {{rate}} each",
-                          {
-                            units: wallet.spendUnitsThisPeriod.toLocaleString(),
-                            rate: formatMinor(
-                              wallet.pricePerDocMinor,
-                              wallet.currency,
-                            ),
-                          },
-                        )
+                      ? pendingUnits > 0
+                        ? t(
+                            "portal.billing.cycle.creditsNotePending",
+                            "{{units}} · {{rate}} each · {{pending}} pending sync",
+                            {
+                              units: creditUnits.toLocaleString(),
+                              rate: formatMinor(
+                                wallet.pricePerDocMinor,
+                                wallet.currency,
+                              ),
+                              pending: pendingUnits.toLocaleString(),
+                            },
+                          )
+                        : t(
+                            "portal.billing.cycle.creditsNote",
+                            "{{units}} · {{rate}} each",
+                            {
+                              units: creditUnits.toLocaleString(),
+                              rate: formatMinor(
+                                wallet.pricePerDocMinor,
+                                wallet.currency,
+                              ),
+                            },
+                          )
                       : undefined
                   }
                   value={
                     wallet.pricePerDocMinor != null
                       ? formatMinor(
-                          wallet.spendUnitsThisPeriod * wallet.pricePerDocMinor,
+                          creditUnits * wallet.pricePerDocMinor,
                           wallet.currency,
                         )
-                      : wallet.spendUnitsThisPeriod.toLocaleString()
+                      : creditUnits.toLocaleString()
                   }
                 />
               )}
