@@ -68,10 +68,20 @@ class FailureClassifierTest {
         }
 
         @Test
+        void everyUnreadableDocumentIsTheSameKind() {
+            // E003 included on purpose: a known code must classify, never fall to UNKNOWN.
+            for (String code : new String[] {"E001", "E002", "E003"}) {
+                assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, code)))
+                        .as("%s", code)
+                        .isEqualTo(FailureKind.INPUT_CORRUPTED);
+            }
+        }
+
+        @Test
         void withAnUnclaimedErrorCodeFallsBackToUnknown() {
-            // E001 (corrupted PDF) is a real code that no kind has adopted yet. It must land in
+            // E005 (no pages) is a real code that no kind has adopted yet. It must land in
             // UNKNOWN rather than being force-fitted to the nearest kind.
-            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E001")))
+            assertThat(classifier.classify(problemDetail(HttpStatus.BAD_REQUEST, "E005")))
                     .isEqualTo(FailureKind.UNKNOWN);
         }
 

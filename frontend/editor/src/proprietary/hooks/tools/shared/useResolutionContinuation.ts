@@ -10,20 +10,20 @@ import {
   loadRetryPayload,
   stashMatchesKind,
 } from "@app/services/notificationRetry";
-import { rechainPolicyOnDocument } from "@app/services/notificationPolicyRetry";
+import {
+  canPlacePolicy,
+  rechainPolicyOnDocument,
+} from "@app/services/notificationPolicyRetry";
+import {
+  isResolvingTool,
+  resolvingToolFor,
+} from "@app/components/notifications/resolutions";
 import type {
   SucceededToolRun,
   ToolRunOutput,
 } from "@core/hooks/tools/shared/useResolutionContinuation";
 
 export type { SucceededToolRun, ToolRunOutput };
-
-// "Decrypt and retry" is just the remove-password tool, so reaching it directly asks the same.
-
-/** Which tool's success counts as a kind's resolution. The server still decides WHO may fix it. */
-const RESOLUTION_TOOLS: Record<string, string> = {
-  INPUT_PASSWORD_PROTECTED: "removePassword",
-};
 
 export function useResolutionContinuation(): (run: SucceededToolRun) => void {
   return useCallback((run: SucceededToolRun) => {
@@ -57,7 +57,7 @@ async function continueResolutions(run: SucceededToolRun): Promise<void> {
 
 /** Answered from local state alone, so an ordinary successful run costs no round-trip. */
 async function couldResolveAnything(run: SucceededToolRun): Promise<boolean> {
-  if (Object.values(RESOLUTION_TOOLS).includes(run.operation)) return true;
+  if (isResolvingTool(run.operation)) return true;
   for (const fileId of run.inputFileIds) {
     const stash = await loadRetryPayload(fileId);
     if (stash?.operation === run.operation) return true;
@@ -73,11 +73,16 @@ async function continueRow(
   // Same precedence as the bell's retry target: the policy shape is the more specific claim.
   const attended = (row.sourceId ?? null) === null;
   if (attended && row.policyId && row.fileId) {
-    if (RESOLUTION_TOOLS[row.kindId] !== run.operation) return false;
-    // The fix is still this reader's to make; it has simply arrived by other means.
-    if (!row.actions.some((a) => a.enabled && a.slot === "RESOLUTION")) {
+    // As the bell does: a policy this browser cannot place would be submitted, billed, and
+    // collected by nobody. Arriving by a manual run rather than a button does not change that.
+    if (!canPlacePolicy(row.policyId)) return false;
+    // The server names the fix; the client only knows which tool performs it.
+    const resolution = row.actions.find((a) => a.slot === "RESOLUTION");
+    if (!resolution || resolvingToolFor(resolution.id) !== run.operation) {
       return false;
     }
+    // The fix is still this reader's to make; it has simply arrived by other means.
+    if (!resolution.enabled) return false;
     const output = outputFor(row.fileId, run);
     if (!output) return false;
 

@@ -167,11 +167,16 @@ export const useToolOperation = <TParams>(
       ) {
         return;
       }
+      // The request body, not TParams: buildFormData posts what toApiParams returns, and the two
+      // shapes are free to disagree. A tool with no mapper stashes its UI shape and says so, so
+      // the row keeps its plain retry without anything re-running those parameters unattended.
+      const apiParams = config.toApiParams?.(params);
       void errorCodeOf(error).then((errorCode) =>
         stashRetryPayload({
           operation: config.operationType,
           endpoint: runtimeEndpoint,
-          params: params as Record<string, unknown>,
+          params: (apiParams ?? params) as Record<string, unknown>,
+          paramsMapped: apiParams !== undefined,
           fileIds,
           multiFile: config.toolType === ToolType.multiFile,
           errorCode,
@@ -179,7 +184,7 @@ export const useToolOperation = <TParams>(
         }),
       );
     },
-    [config.operationType, config.toolType, notificationsAvailable],
+    [config, notificationsAvailable],
   );
 
   const getCompatibleFiles = useCallback(
