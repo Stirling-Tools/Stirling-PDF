@@ -107,6 +107,27 @@ describe("LinkAccountModal", () => {
     expect(startConnect).not.toHaveBeenCalled();
   });
 
+  it("[US14] starts renewal on HTTP hosts without crypto.randomUUID", async () => {
+    const original = crypto.randomUUID;
+    Object.defineProperty(crypto, "randomUUID", {
+      configurable: true,
+      value: undefined,
+    });
+    try {
+      renderModal("reauth");
+      click(/Sign in again/);
+      await waitFor(() => expect(startReauth).toHaveBeenCalled(), {
+        timeout: 500,
+      });
+      expect(startReauth.mock.calls[0][0]).toMatch(/state=.+/);
+    } finally {
+      Object.defineProperty(crypto, "randomUUID", {
+        configurable: true,
+        value: original,
+      });
+    }
+  });
+
   it("does not redirect if the renewal dialog closes while the request is pending", async () => {
     let resolve!: (value: unknown) => void;
     startReauth.mockReturnValue(

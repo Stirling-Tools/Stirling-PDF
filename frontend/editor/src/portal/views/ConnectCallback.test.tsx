@@ -5,6 +5,7 @@ import { MantineProvider } from "@mantine/core";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 import { rememberConnect } from "@portal/auth/pendingConnect";
+import { AuthApiError } from "@supabase/supabase-js";
 
 /** A live session token rides in the fragment: strip it at once, refuse what cannot be verified. */
 const { completeConnect, startConnect, setSession, refresh, client } =
@@ -328,5 +329,31 @@ describe("account-link callback", () => {
     await waitFor(() => expect(lastOutcome()?.sessionRestored).toBe(true));
     expect(completeConnect).toHaveBeenCalledTimes(1);
     expect(setSession).toHaveBeenCalledTimes(2);
+  });
+
+  it("[US06] offers a fresh sign-in when callback credentials are permanently rejected", async () => {
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=revoked`);
+    setSession.mockResolvedValue({
+      error: new AuthApiError("revoked", 400, "refresh_token_not_found"),
+    });
+    renderFlow();
+    await waitFor(() => expect(setSession).toHaveBeenCalledOnce());
+    await waitFor(() => expect(lastOutcome()?.state).not.toBe("working"));
+    expect(completeConnect).toHaveBeenCalledOnce();
+    expect(lastOutcome()?.sessionRestored).toBe(false);
+    expect(lastOutcome()?.reclaim).toBeUndefined();
+  });
+
+  it("[US07] refuses a callback with a mismatched tab correlator", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      `/account-link/callback?state=wrong#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`,
+    );
+    renderFlow();
+    await waitFor(() => expect(lastOutcome()?.state).toBe("malformed"));
+    expect(completeConnect).not.toHaveBeenCalled();
+    expect(setSession).not.toHaveBeenCalled();
+    expect(window.location.hash).toBe("");
   });
 });
