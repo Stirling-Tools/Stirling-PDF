@@ -5,6 +5,7 @@
 import { PageOperation } from "@app/types/pageEditor";
 import { FileId, BaseFileMetadata } from "@app/types/file";
 import { generateId } from "@app/utils/generateId";
+import type { DiskUnavailableReason } from "@app/services/desktopFileLink";
 
 // Re-export FileId for convenience
 export type { FileId };
@@ -53,6 +54,20 @@ export interface StirlingFileStub extends BaseFileMetadata {
   thumbnailUrl?: string; // Generated thumbnail blob URL for visual display
   blobUrl?: string; // File access blob URL for downloads/processing
   localFilePath?: string; // Original local filesystem path (desktop app only)
+  // Size/mtime of the disk file the last time we read it. An external edit moves
+  // one of them, which is how a stale stored copy is spotted without hashing.
+  diskSyncedSize?: number;
+  diskSyncedModifiedMs?: number;
+  // Disk path whose original is deleted, kept so the badge keeps saying "not on
+  // disk" long after the toast has gone.
+  orphanedFilePath?: string;
+  // Epoch ms of an unresolved divergence: disk moved on while we held unsaved
+  // edits, so two real versions exist and the user has not picked one yet.
+  diskConflictAt?: number;
+  // Epoch ms of the last pickup of an external edit, so the user can tell whose
+  // version is on screen instead of having to catch a toast.
+  diskReloadedAt?: number;
+  diskUnavailableReason?: DiskUnavailableReason;
   processedFile?: ProcessedFileMetadata; // PDF page data and processing results
   insertAfterPageId?: string; // Page ID after which this file should be inserted
   isPinned?: boolean; // Protected from tool consumption (replace/remove)
@@ -115,9 +130,11 @@ export function isStirlingFile(file: File | Blob): file is StirlingFile {
 }
 
 /**
- * Generate a unique identifier for form fill state tracking.
- * This ensures that form widgets/values are correctly isolated between files
- * even if they have the same name or are re-scanned.
+ * Identity of the bytes on screen, for state that must not outlive them: form
+ * widgets and values, and the viewer's document mount.
+ *
+ * <p>Keyed on content, not on the file: a disk reload swaps the bytes under an
+ * unchanged fileId, and an id-only key leaves the previous document mounted.
  */
 export function getFormFillFileId(
   file: File | Blob | null | undefined,
@@ -125,7 +142,7 @@ export function getFormFillFileId(
   if (!file) return null;
 
   if (isStirlingFile(file)) {
-    return `stirling-${file.fileId}`;
+    return `stirling-${file.fileId}-${file.quickKey}`;
   }
 
   if (file instanceof File) {
@@ -383,6 +400,9 @@ export interface FileContextActions {
     id: FileId,
     updates: Partial<StirlingFileStub>,
   ) => void;
+  /** Something changed at these source locations; settle any open record
+   *  that came from one of them. */
+  reconcileOpenFiles: (locations: string[]) => Promise<void>;
   reorderFiles: (orderedFileIds: FileId[]) => void;
   clearAllFiles: () => Promise<void>;
   clearAllData: () => Promise<void>;

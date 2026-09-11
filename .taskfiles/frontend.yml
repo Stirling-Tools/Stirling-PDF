@@ -239,6 +239,14 @@ tasks:
     cmds:
       - npx vite build editor --mode desktop
 
+  build:desktop:e2e:
+    desc: "Desktop build in its own outDir, for the disk-link E2E project"
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
+    cmds:
+      - npx vite build editor --mode desktop --outDir dist-desktop
+
   build:prototypes:
     desc: "Build for prototypes mode"
     deps: [prepare]

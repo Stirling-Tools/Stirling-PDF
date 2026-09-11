@@ -25,6 +25,7 @@ import { writeIntoMount } from "@app/services/mountWrites";
 import { folderSyncService } from "@app/services/folderSyncService";
 import { uploadHistoryChain } from "@app/services/serverStorageUpload";
 import { reconcileServerFiles } from "@app/services/fileSyncService";
+import { pruneMissingRecentFiles } from "@app/services/pruneMissingRecentFiles";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -34,6 +35,7 @@ import {
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
+import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
@@ -157,6 +159,10 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { config: appConfig } = useAppConfig();
   const { isAnonymous } = useAuth();
 
+  // Refs inside, so refresh isn't recreated (and re-run) every time the
+  // workbench changes - it only needs whichever files are open when it runs.
+  const { openFileIdsRef, onOpenFilesDetached } = useDiskLinkReconcile();
+
   const [allFiles, setAllFiles] = useState<StirlingFileStub[]>([]);
   const [loading, setLoading] = useState(true);
   // Generation counter to drop stale reconcile results when a second refresh
@@ -176,7 +182,18 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       const localStubs = await fileStorage.getAllStirlingFileStubs();
       // Bail if a newer refresh started while IDB was reading.
       if (gen !== refreshGenRef.current) return;
-      const localLeaf = localStubs.filter((s) => s.isLeaf !== false);
+      // A file the user deleted outside the app must not be offered here, so
+      // reconcile before anything is rendered. Leaves only: every version behind
+      // them shares a source, and checking all of them multiplies the work by
+      // the length of the history.
+      const localLeaf = await pruneMissingRecentFiles(
+        localStubs.filter((s) => s.isLeaf !== false),
+        {
+          openFileIds: new Set(openFileIdsRef.current),
+          onOpenFilesDetached,
+        },
+      );
+      if (gen !== refreshGenRef.current) return;
       // Render the cache immediately while the server fetch is in flight.
       setAllFiles(localLeaf);
       const merged = await reconcileServerFiles(localLeaf, {
@@ -198,7 +215,14 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       // Only the latest refresh should clear the loading state.
       if (gen === refreshGenRef.current) setLoading(false);
     }
-  }, [setFoldersError, storageEnabled, shareLinksEnabled, isAnonymous]);
+  }, [
+    setFoldersError,
+    storageEnabled,
+    shareLinksEnabled,
+    isAnonymous,
+    openFileIdsRef,
+    onOpenFilesDetached,
+  ]);
 
   useEffect(() => {
     void refresh();
