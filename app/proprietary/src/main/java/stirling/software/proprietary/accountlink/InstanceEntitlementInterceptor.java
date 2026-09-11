@@ -2,21 +2,19 @@ package stirling.software.proprietary.accountlink;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.io.OutputStream;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.security.DigestOutputStream;
-import java.security.MessageDigest;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -27,11 +25,13 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
+import stirling.software.common.service.AutomationRunContext;
+import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.jpdfium.PdfDocument;
 import stirling.software.proprietary.billing.BillingCategory;
-import stirling.software.proprietary.billing.ContentHasher;
 import stirling.software.proprietary.billing.DocumentUnitCalculator;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
@@ -91,6 +91,11 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                     SecurityContextHolder.getContext().getAuthentication()
                             instanceof ApiKeyAuthenticationToken;
             BillingCategory category = BillableOperationClassifier.categorize(request, apiKey);
+            // API bills only for actual tool endpoints (@AutoJobPostMapping), matching the SaaS
+            // scope gate; a non-tool API-key call (info / config / download) is not billed.
+            if (category == BillingCategory.API && !isToolEndpoint(handler)) {
+                category = BillingCategory.BYPASSED;
+            }
             request.setAttribute(ATTR_CATEGORY, category);
             // A policy run kicks off billable automation, so block it up front when unentitled
             // rather than after its first tool. It carries no automation header itself (category
@@ -121,6 +126,46 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         return false;
     }
 
+    /**
+     * True when the handler is a tool endpoint - carries {@link AutoJobPostMapping} on the method
+     * or its controller. Mirrors the SaaS scope gate so API-key calls bill only on tool endpoints.
+     */
+    private static boolean isToolEndpoint(Object handler) {
+        if (!(handler instanceof HandlerMethod hm)) {
+            return false;
+        }
+        return AnnotationUtils.findAnnotation(hm.getMethod(), AutoJobPostMapping.class) != null
+                || AnnotationUtils.findAnnotation(hm.getBeanType(), AutoJobPostMapping.class)
+                        != null;
+    }
+
+    /**
+     * The automation run id ({@link AutomationRunContext#RUN_ID_HEADER}) when this is a genuine
+     * internal dispatch (carries {@link InternalApiClient#AUTOMATION_HEADER}); {@code null}
+     * otherwise. Gated on the automation header so a raw caller can't pin a run id to collapse its
+     * separate calls into one charge - the same trust boundary the SaaS interceptor applies.
+     */
+    private static String automationRunId(HttpServletRequest request) {
+        if (request.getHeader(InternalApiClient.AUTOMATION_HEADER) == null) {
+            return null;
+        }
+        String runId = request.getHeader(AutomationRunContext.RUN_ID_HEADER);
+        return runId != null && !runId.isBlank() ? runId : null;
+    }
+
+    /**
+     * The per-document id ({@link AutomationRunContext#DOCUMENT_ID_HEADER}) on a genuine internal
+     * dispatch, else {@code null} - same automation-header trust boundary as {@link
+     * #automationRunId}. Each source document gets its own charge grouping and step allowance.
+     */
+    private static String automationDocumentId(HttpServletRequest request) {
+        if (request.getHeader(InternalApiClient.AUTOMATION_HEADER) == null) {
+            return null;
+        }
+        String documentId = request.getHeader(AutomationRunContext.DOCUMENT_ID_HEADER);
+        return documentId != null && !documentId.isBlank() ? documentId : null;
+    }
+
     @Override
     public void afterCompletion(
             HttpServletRequest request,
@@ -138,7 +183,9 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         try {
             if (request.getAttribute(ATTR_REASON) == GateDecision.Reason.FREE_TIER) {
                 MeteredOp op = measure(request, UnitCalcPolicy.DEFAULT);
-                freeTierUsageService.accrue(category, op.units(), op.opSignature());
+                if (op != null) {
+                    freeTierUsageService.accrue(category, op.units(), op.dedupKey());
+                }
                 return;
             }
             UsageMeterService meter = meterProvider.getIfAvailable();
@@ -151,69 +198,55 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 return;
             }
             MeteredOp op = measure(request, ent.unitCalcPolicy());
-            meter.accrue(ent.periodStart(), category, op.units(), op.opSignature());
+            if (op != null) {
+                meter.accrue(
+                        ent.periodStart(),
+                        category,
+                        op.units(),
+                        op.dedupKey(),
+                        ent.automationStepLimit());
+            }
         } catch (RuntimeException e) {
             // Metering must never affect the response that already completed.
             log.debug("Usage metering failed for {}", request.getRequestURI(), e);
         }
     }
 
-    /** {@code opSignature} null = no dedup. */
-    private record MeteredOp(long units, String opSignature) {}
+    private record MeteredOp(long units, String dedupKey) {}
 
     /**
-     * Costs the inputs on both the page and byte axes: the instance is authoritative for units and
-     * SaaS never sees the file, so a page-heavy but small PDF would otherwise under-bill. A
-     * fileless op has no input identity, so no signature and the 1-unit floor each time.
+     * The instance is authoritative for units: SaaS never sees the file, so small page-heavy PDFs
+     * must be page-counted to avoid underbilling. No non-empty inputs means no charge.
      */
     private MeteredOp measure(HttpServletRequest request, UnitCalcPolicy policy) {
         MultipartHttpServletRequest mreq =
                 WebUtils.getNativeRequest(request, MultipartHttpServletRequest.class);
         if (mreq == null) {
-            return new MeteredOp(DocumentUnitCalculator.unitsForFile(0, 0, policy), null);
+            return null;
         }
         List<TempFile> temps = new ArrayList<>();
         try {
             List<FileSize> sizes = new ArrayList<>();
-            List<String> hashes = new ArrayList<>();
-            int fileCount = 0;
             for (List<MultipartFile> files : mreq.getMultiFileMap().values()) {
                 for (MultipartFile f : files) {
-                    fileCount++;
-                    try {
-                        TempFile temp = tempFileManager.createManagedTempFile(".bin");
-                        temps.add(temp);
-                        // Hash in the same pass that writes the temp file — one read of the upload,
-                        // not a second full read just to fingerprint it.
-                        MessageDigest digest = ContentHasher.newSha256();
-                        try (InputStream in = f.getInputStream();
-                                DigestOutputStream out =
-                                        new DigestOutputStream(
-                                                Files.newOutputStream(temp.getPath()), digest)) {
-                            in.transferTo(out);
-                        }
-                        sizes.add(new FileSize(pageCount(temp.getPath(), f), f.getSize()));
-                        hashes.add(ContentHasher.toHex(digest.digest()));
-                    } catch (IOException | RuntimeException perFile) {
-                        // Couldn't materialise/hash this input — bill on bytes only and, by leaving
-                        // it out of `hashes`, drop dedup for the whole op rather than risk a
-                        // mismatch.
-                        log.debug(
-                                "Metering materialise/hash failed for {}; bytes-only",
-                                f.getOriginalFilename());
-                        sizes.add(new FileSize(0, f.getSize()));
+                    if (f.getSize() <= 0) {
+                        continue; // skip empty parts, matching SaaS's non-empty input filter
                     }
+                    sizes.add(new FileSize(pageCount(f, temps), f.getSize()));
                 }
             }
-            long units =
-                    sizes.isEmpty()
-                            ? DocumentUnitCalculator.unitsForFile(0, 0, policy)
-                            : DocumentUnitCalculator.unitsForGroup(sizes, policy);
-            // Only dedup when every input hashed; a partial signature could collide with a
-            // different input set, so fall back to no-dedup (bill it) if any file failed.
-            String opSignature =
-                    fileCount > 0 && hashes.size() == fileCount ? opSignature(hashes) : null;
-            return new MeteredOp(units, opSignature);
+            if (sizes.isEmpty()) {
+                return null;
+            }
+            // Prefer the per-document key so each source document has its own step allowance;
+            // fall back to the whole-run key for automation sub-steps with no document id. A
+            // standalone op has no key (null) and always accrues - each call is its own charge.
+            String runKey = automationDocumentId(request);
+            if (runKey == null) {
+                runKey = automationRunId(request);
+            }
+            long units = DocumentUnitCalculator.unitsForGroup(sizes, policy);
+            return new MeteredOp(units, runKey);
         } finally {
             for (TempFile temp : temps) {
                 try {
@@ -225,27 +258,32 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         }
     }
 
-    /** Page count via jpdfium (parser-identical to SaaS); 0 for non-PDF / unreadable inputs. */
-    private static int pageCount(Path path, MultipartFile file) {
+    /**
+     * Page count via jpdfium (parser-identical to SaaS); 0 for a non-PDF or unreadable input. A PDF
+     * is materialised to a managed temp file (added to {@code temps} for the caller to close) so
+     * jpdfium can read it; a non-PDF needs no temp.
+     */
+    private int pageCount(MultipartFile file, List<TempFile> temps) {
         if (!isPdf(file)) {
             return 0;
         }
-        try (PdfDocument doc = PdfDocument.open(path)) {
-            return doc.pageCount();
-        } catch (RuntimeException e) {
-            // Malformed / encrypted → byte axis only, matching the SaaS classifier.
+        try {
+            TempFile temp = tempFileManager.createManagedTempFile(".bin");
+            temps.add(temp);
+            try (InputStream in = file.getInputStream();
+                    OutputStream out = Files.newOutputStream(temp.getPath())) {
+                in.transferTo(out);
+            }
+            try (PdfDocument doc = PdfDocument.open(temp.getPath())) {
+                return doc.pageCount();
+            }
+        } catch (IOException | RuntimeException e) {
+            // Malformed / encrypted / unreadable -> byte axis only, matching the SaaS classifier.
             log.debug(
                     "Page count unavailable for {}; metering on bytes only",
                     file.getOriginalFilename());
             return 0;
         }
-    }
-
-    /** Order-independent signature of the input set: sorted per-file hashes, hashed together. */
-    private static String opSignature(List<String> hashes) {
-        List<String> sorted = new ArrayList<>(hashes);
-        Collections.sort(sorted);
-        return ContentHasher.sha256(String.join("\n", sorted).getBytes(StandardCharsets.UTF_8));
     }
 
     private static boolean isPdf(MultipartFile file) {

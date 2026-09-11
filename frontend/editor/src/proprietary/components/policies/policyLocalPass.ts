@@ -15,6 +15,8 @@ export interface LocalPassResult {
   stubUpdates: Partial<StirlingFileStub>;
   /** Whether the policy's server run should still be dispatched after this pass. */
   needsServerRun: boolean;
+  /** Charge this local pass as the billable run. */
+  meter?: () => void;
 }
 
 export interface LocalPass {

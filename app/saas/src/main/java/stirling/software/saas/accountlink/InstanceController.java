@@ -29,6 +29,7 @@ import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.instance.InstanceUsageIngestService;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.EntitlementState;
+import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
@@ -102,7 +103,8 @@ public class InstanceController {
             // counters on the [periodStart, periodEnd) boundary.
             UnitCalcPolicy unitCalcPolicy,
             LocalDateTime periodStart,
-            LocalDateTime periodEnd) {}
+            LocalDateTime periodEnd,
+            int automationStepLimit) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -227,7 +229,8 @@ public class InstanceController {
                         policy.getMinChargeUnits(),
                         policy.getFileUnitCap()),
                 snap.periodStart(),
-                snap.periodEnd());
+                snap.periodEnd(),
+                policy.resolveStepLimit(JobSource.PIPELINE));
     }
 
     /**

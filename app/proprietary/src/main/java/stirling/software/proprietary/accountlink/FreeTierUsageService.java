@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.billing.BillingCategory;
+import stirling.software.proprietary.billing.BillingStepLimit;
 import stirling.software.proprietary.billing.ContentHasher;
 
 /**
@@ -105,10 +106,11 @@ public class FreeTierUsageService {
     }
 
     /**
-     * Spends against the current period unless {@code opSignature} was already charged inside the
-     * workflow window. Best-effort: callers need not handle persistence errors.
+     * Records successful work against the local grant using the default step limit. A null key
+     * always charges; a run/document key shares its allowance within the workflow window.
+     * Best-effort: callers need not handle persistence errors.
      */
-    public void accrue(BillingCategory category, long units, String opSignature) {
+    public void accrue(BillingCategory category, long units, String dedupKey) {
         if (category == null || category == BillingCategory.BYPASSED || units <= 0) {
             return;
         }
@@ -121,7 +123,9 @@ public class FreeTierUsageService {
             log.debug("Free-tier period unavailable; skipping accrual: {}", e.getMessage());
             return;
         }
-        if (opSignature != null && !inputWindow.shouldCharge(period, namespaced(opSignature))) {
+        if (dedupKey != null
+                && !inputWindow.shouldCharge(
+                        period, namespaced(dedupKey), BillingStepLimit.resolve(null))) {
             return;
         }
         incrementOrInsert(period, category.name(), units);
@@ -206,9 +210,9 @@ public class FreeTierUsageService {
         }
     }
 
-    private static String namespaced(String opSignature) {
+    private static String namespaced(String dedupKey) {
         // Re-hashed rather than prefixed: the signature column holds exactly one SHA-256 hex.
         return ContentHasher.sha256(
-                (SIGNATURE_NAMESPACE + opSignature).getBytes(StandardCharsets.UTF_8));
+                (SIGNATURE_NAMESPACE + dedupKey).getBytes(StandardCharsets.UTF_8));
     }
 }

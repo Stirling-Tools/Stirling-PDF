@@ -121,6 +121,10 @@ export function usePolicyLocalPasses(): void {
             ).catch(() => {
               // Backstop: runPolicyOnFile handles its own failures.
             });
+          } else {
+            // No server run follows (verdict stands, or the AI engine is off so nothing can
+            // escalate): this local pass is the billable run, so charge it here.
+            result.meter?.();
           }
         }
         if (wrote) bumpRevision();
