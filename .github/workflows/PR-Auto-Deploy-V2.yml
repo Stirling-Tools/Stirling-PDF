@@ -409,7 +409,7 @@ jobs:
           VPS_USER: ${{ secrets.NEW_VPS_USERNAME }}
         run: |
           set -euo pipefail
-          # `prepare` generates the icon set stories import (not committed).
+          # `prepare` runs the env, icon-registry and OG-metadata generators the stories rely on.
           task frontend:prepare
           task frontend:storybook:build
           PR=${{ needs.check-pr.outputs.pr_number }}

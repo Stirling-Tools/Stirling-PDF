@@ -26,15 +26,11 @@ import {
 import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import AppsIcon from "@mui/icons-material/AppsRounded";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-
+import { Icon } from "@app/ui/Icon";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import {
   getStartupNavigationAction,
@@ -640,7 +636,7 @@ export default function HomePage() {
                   }
                 }}
               >
-                <AppsIcon sx={{ fontSize: "1.5rem" }} />
+                <Icon name="layout-grid" size={"1.5rem"} />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.allTools", "Tools")}
                 </span>
@@ -658,11 +654,7 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <LocalIcon
-                    icon="automation-outline"
-                    width="1.5rem"
-                    height="1.5rem"
-                  />
+                  <Icon name="workflow" size="1.5rem" />
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
@@ -674,11 +666,7 @@ export default function HomePage() {
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => navigate("/files")}
               >
-                <LocalIcon
-                  icon="folder-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <Icon name="folder" size="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.files", "Files")}
                 </span>
@@ -689,11 +677,7 @@ export default function HomePage() {
                 aria-label={t("quickAccess.config", "Config")}
                 onClick={() => setConfigModalOpen(true)}
               >
-                <LocalIcon
-                  icon="settings-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <Icon name="settings" size="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.config", "Config")}
                 </span>
@@ -724,7 +708,7 @@ export default function HomePage() {
                 }
                 toggleIcon={
                   navigationState.workbench === "myFiles" ? (
-                    <ArrowBackIcon />
+                    <Icon name="arrow-left" />
                   ) : undefined
                 }
                 active={navigationState.workbench === "myFiles"}
@@ -813,7 +797,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
         onUploadFiles={handleUpload}
         onPickGoogleDriveFiles={handleUpload}
         extraAction={{
-          icon: <CreateNewFolderIcon />,
+          icon: <Icon name="folder-plus" />,
           label: t("filesPage.newFolder", "New folder"),
           onClick: createFolderHere,
           disabled: newFolderDisabledReason !== null,
