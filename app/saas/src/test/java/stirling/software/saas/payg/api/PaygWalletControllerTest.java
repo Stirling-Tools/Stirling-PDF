@@ -35,6 +35,8 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
+import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
 import stirling.software.saas.payg.billing.TeamBillingContext;
@@ -52,7 +54,9 @@ import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletPolicy;
+import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
+import stirling.software.saas.security.UserTeamResolver;
 
 /**
  * Pure-Mockito unit tests for {@link PaygWalletController}. Covers the documented role / state
@@ -71,6 +75,7 @@ class PaygWalletControllerTest {
     @Mock private PaygShadowChargeRepository shadowRepo;
     @Mock private UserRepository userRepository;
     @Mock private PrepaidBundleService prepaidBundleService;
+    @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
 
     private PaygWalletController controller;
 
@@ -86,7 +91,9 @@ class PaygWalletControllerTest {
                         ledgerRepo,
                         shadowRepo,
                         userRepository,
-                        prepaidBundleService);
+                        prepaidBundleService,
+                        new UserTeamResolver(memberRepo),
+                        teamExtensionsRepository);
     }
 
     /**
@@ -142,13 +149,123 @@ class PaygWalletControllerTest {
     // GET /wallet
     // -----------------------------------------------------------------------------------------
 
+    /**
+     * Team and Credits are independently purchasable, so the snapshot reports them as separate
+     * facts. A free team holds neither; the collapsed status string cannot express that difference.
+     */
+    @Test
+    void getWallet_freeTeam_holdsNeitherProduct() {
+        User user = userWithId(60L, UUID.randomUUID());
+        Team team = teamWithId(60L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 60L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(60L)).thenReturn(3L);
+        when(billingService.forTeam(60L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(60L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(60L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.processor().active()).isFalse();
+        assertThat(body.team().held()).isFalse();
+        // The member count is real, so the capacity meter already has a numerator.
+        assertThat(body.team().usersInUse()).isEqualTo(3);
+        // Cloud has no user limit today, so there is no denominator to report.
+        assertThat(body.team().licensedUsers()).isNull();
+    }
+
+    /** A team carrying a real cap holds Team, and reports it as the meter's denominator. */
+    @Test
+    void getWallet_teamPlan_reportsTheLicensedUsers() {
+        User user = userWithId(62L, UUID.randomUUID());
+        Team team = teamWithId(62L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 62L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(62L)).thenReturn(40L);
+        SaasTeamExtensions ext = new SaasTeamExtensions();
+        ext.setMaxSeats(100);
+        when(teamExtensionsRepository.findByTeamId(62L)).thenReturn(Optional.of(ext));
+        when(billingService.forTeam(62L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(62L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(62L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.team().held()).isTrue();
+        assertThat(body.team().licensedUsers()).isEqualTo(100);
+        assertThat(body.team().usersInUse()).isEqualTo(40);
+        // Team and Processor stay independent: a Team plan says nothing about the meter.
+        assertThat(body.processor().active()).isFalse();
+    }
+
+    /**
+     * An unpurchased row carries the free allowance, which is not a Team holding: reporting it as
+     * the meter's denominator would show a ceiling nobody bought.
+     */
+    @Test
+    void getWallet_freeAllowanceRow_holdsNoTeam() {
+        User user = userWithId(63L, UUID.randomUUID());
+        Team team = teamWithId(63L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 63L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(63L)).thenReturn(2L);
+        SaasTeamExtensions ext = new SaasTeamExtensions();
+        ext.setMaxSeats(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+        when(teamExtensionsRepository.findByTeamId(63L)).thenReturn(Optional.of(ext));
+        when(billingService.forTeam(63L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(63L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(63L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.team().held()).isFalse();
+        assertThat(body.team().licensedUsers()).isNull();
+        assertThat(body.team().usersInUse()).isEqualTo(2);
+    }
+
+    /**
+     * A metered subscription switches Credits on and says nothing about Team: the two axes move
+     * independently, which is the whole point of reporting them separately.
+     */
+    @Test
+    void getWallet_subscribedTeam_holdsCreditsButNotTeam() {
+        User user = userWithId(61L, UUID.randomUUID());
+        Team team = teamWithId(61L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 61L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(61L)).thenReturn(8L);
+        when(billingService.forTeam(61L))
+                .thenReturn(subscribedBilling("sub_decoupled", 2500L, 1250L));
+        when(entitlementService.getSnapshot(61L)).thenReturn(snapshot(100L, 1250L));
+        stubEmptyLedgerReads(61L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.processor().active()).isTrue();
+        assertThat(body.team().held()).isFalse();
+        assertThat(body.team().usersInUse()).isEqualTo(8);
+    }
+
     @Test
     void getWallet_freeTier_returnsFreeShape() {
         User user = userWithId(7L, UUID.randomUUID());
         Team team = teamWithId(42L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(7L))
-                .thenReturn(List.of(membership(team, user, TeamRole.MEMBER)));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 7L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
         when(billingService.forTeam(42L)).thenReturn(freeBilling(500L));
         when(entitlementService.getSnapshot(42L)).thenReturn(snapshot(0L, 500L));
         stubEmptyLedgerReads(42L);
@@ -182,8 +299,9 @@ class PaygWalletControllerTest {
         User user = userWithId(8L, UUID.randomUUID());
         Team team = teamWithId(99L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(8L))
-                .thenReturn(List.of(membership(team, user, TeamRole.MEMBER)));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 8L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
         // $25 cap (2500 minor) at $0.02/doc → 1250 paid docs/month (the one-time grant is a
         // separate pool, not added to the cap).
         when(billingService.forTeam(99L))
@@ -241,8 +359,9 @@ class PaygWalletControllerTest {
         User user = userWithId(9L, UUID.randomUUID());
         Team team = teamWithId(11L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(9L))
-                .thenReturn(List.of(membership(team, user, TeamRole.LEADER)));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 9L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.LEADER)));
         when(billingService.forTeam(11L)).thenReturn(subscribedBilling("sub_nocap", null, null));
         when(entitlementService.getSnapshot(11L)).thenReturn(snapshot(50L, null));
         stubEmptyLedgerReads(11L);
@@ -271,7 +390,9 @@ class PaygWalletControllerTest {
         TeamMembership memberRow = membership(team, member, TeamRole.MEMBER);
 
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
-        when(memberRepo.findPrimaryMembership(10L)).thenReturn(List.of(leaderRow));
+        leader.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 10L))
+                .thenReturn(Optional.of(leaderRow));
         when(billingService.forTeam(77L)).thenReturn(freeBilling(500L));
         when(entitlementService.getSnapshot(77L)).thenReturn(snapshot(0L, 500L));
         stubEmptyLedgerReads(77L);
@@ -315,7 +436,6 @@ class PaygWalletControllerTest {
     void getWallet_authenticatedNoTeam_returnsEmptyFreeShape() {
         User user = userWithId(12L, UUID.randomUUID());
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(12L)).thenReturn(List.of());
 
         ResponseEntity<WalletSnapshotResponse> resp =
                 controller.getWallet(jwtAuth(user.getSupabaseId()));
@@ -336,8 +456,9 @@ class PaygWalletControllerTest {
         User leader = userWithId(20L, UUID.randomUUID());
         Team team = teamWithId(33L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
-        when(memberRepo.findPrimaryMembership(20L))
-                .thenReturn(List.of(membership(team, leader, TeamRole.LEADER)));
+        leader.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 20L))
+                .thenReturn(Optional.of(membership(team, leader, TeamRole.LEADER)));
         when(policyRepo.findByTeamId(33L)).thenReturn(Optional.empty());
 
         ResponseEntity<Void> resp =
@@ -359,8 +480,9 @@ class PaygWalletControllerTest {
         User leader = userWithId(24L, UUID.randomUUID());
         Team team = teamWithId(36L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
-        when(memberRepo.findPrimaryMembership(24L))
-                .thenReturn(List.of(membership(team, leader, TeamRole.LEADER)));
+        leader.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 24L))
+                .thenReturn(Optional.of(membership(team, leader, TeamRole.LEADER)));
         when(policyRepo.findByTeamId(36L)).thenReturn(Optional.empty());
         TeamBillingContext billing = subscribedBilling("sub_36", null, null);
         when(billingService.forTeam(36L)).thenReturn(billing);
@@ -384,8 +506,9 @@ class PaygWalletControllerTest {
         User leader = userWithId(21L, UUID.randomUUID());
         Team team = teamWithId(34L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(leader));
-        when(memberRepo.findPrimaryMembership(21L))
-                .thenReturn(List.of(membership(team, leader, TeamRole.LEADER)));
+        leader.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 21L))
+                .thenReturn(Optional.of(membership(team, leader, TeamRole.LEADER)));
         WalletPolicy existing = new WalletPolicy();
         existing.setTeamId(34L);
         existing.setCapUnits(1000L);
@@ -409,8 +532,9 @@ class PaygWalletControllerTest {
         User member = userWithId(22L, UUID.randomUUID());
         Team team = teamWithId(35L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(member));
-        when(memberRepo.findPrimaryMembership(22L))
-                .thenReturn(List.of(membership(team, member, TeamRole.MEMBER)));
+        member.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 22L))
+                .thenReturn(Optional.of(membership(team, member, TeamRole.MEMBER)));
 
         ResponseEntity<Void> resp =
                 controller.updateCap(
@@ -425,7 +549,6 @@ class PaygWalletControllerTest {
     void updateCap_noTeam_isForbidden() {
         User user = userWithId(23L, UUID.randomUUID());
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(23L)).thenReturn(List.of());
 
         ResponseEntity<Void> resp =
                 controller.updateCap(
@@ -458,8 +581,7 @@ class PaygWalletControllerTest {
         User user = userWithId(30L, UUID.randomUUID());
         Team team = teamWithId(70L);
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(30L))
-                .thenReturn(List.of(membership(team, user, TeamRole.MEMBER)));
+        user.setTeam(team);
 
         ResponseEntity<Void> resp = controller.refreshWallet(jwtAuth(user.getSupabaseId()));
 
@@ -473,7 +595,6 @@ class PaygWalletControllerTest {
     void refreshWallet_noTeam_isNoOpButOk() {
         User user = userWithId(31L, UUID.randomUUID());
         when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
-        when(memberRepo.findPrimaryMembership(31L)).thenReturn(List.of());
 
         ResponseEntity<Void> resp = controller.refreshWallet(jwtAuth(user.getSupabaseId()));
 

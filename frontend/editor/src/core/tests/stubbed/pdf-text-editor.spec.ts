@@ -2810,13 +2810,8 @@ test.describe("PDF text editor - multi-page", () => {
       timeout: 30_000,
     });
 
-    // Pick the first text run on page 2 (index 2). Skip if it has none.
     const runs = page.locator('[data-testid^="pdf-editor-run-p2-"]');
-    const count = await runs.count();
-    if (count === 0) {
-      test.skip(true, "Multi-page fixture page 2 has no editable text runs");
-      return;
-    }
+    await expect(runs.first()).toBeAttached({ timeout: 30_000 });
 
     const target = runs.first();
     const runTestId = (await target.getAttribute("data-testid")) ?? "";
@@ -3738,11 +3733,9 @@ test.describe("PDF text editor - dirty state", () => {
     await gotoEditor(page);
     await loadSamplePdf(page);
 
-    // Save state lives beside the top-bar filename; the sidebar no longer
-    // repeats it. Clean on load.
     const filename = page.getByTestId("pdf-editor-filename");
     await expect(filename).toBeVisible();
-    await expect(filename).not.toContainText("unsaved");
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toHaveCount(0);
 
     const firstRunTestId = await page
       .locator('[data-testid^="pdf-editor-run-p0-"]')
@@ -3750,7 +3743,7 @@ test.describe("PDF text editor - dirty state", () => {
       .getAttribute("data-testid");
     await typeIntoRun(page, firstRunTestId!, "X");
 
-    await expect(filename).toContainText("unsaved");
+    await expect(page.getByTestId("pdf-editor-dirty-dot")).toBeVisible();
   });
 });
 

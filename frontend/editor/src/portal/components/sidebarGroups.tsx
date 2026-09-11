@@ -7,6 +7,7 @@ import {
   IntegrationsIcon,
   PipelinesIcon,
   DocumentsIcon,
+  ReviewIcon,
   InfrastructureIcon,
   UsageIcon,
   DocsIcon,
@@ -17,8 +18,8 @@ export interface NavEntry {
   icon: ReactNode;
   /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
   externalUrl?: string;
-  /** The whole tab is facts about the linked account, so unlinked is asked rather than navigated. */
-  requiresLink?: boolean;
+  /** Hidden from a member. The view reports instance-wide figures behind ADMIN-gated endpoints. */
+  requiresAdmin?: boolean;
 }
 
 export interface NavGroup {
@@ -37,6 +38,7 @@ export const GROUP_PROCESSOR: NavEntry[] = [
   { id: "sources", icon: <SourcesIcon /> },
   { id: "pipelines", icon: <PipelinesIcon /> },
   { id: "documents", icon: <DocumentsIcon /> },
+  { id: "review", icon: <ReviewIcon /> },
 ];
 
 // The wider platform around the processor: people, connections, infra, billing, docs.
@@ -44,6 +46,6 @@ export const GROUP_PLATFORM: NavEntry[] = [
   { id: "users", icon: <UsersIcon /> },
   { id: "integrations", icon: <IntegrationsIcon /> },
   { id: "infrastructure", icon: <InfrastructureIcon /> },
-  { id: "usage", icon: <UsageIcon />, requiresLink: true },
+  { id: "usage", icon: <UsageIcon />, requiresAdmin: true },
   { id: "docs", icon: <DocsIcon /> },
 ];

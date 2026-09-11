@@ -13,6 +13,12 @@
   width: 100%;
 }
 
+.portal-policies__detail-readonly {
+  margin-right: auto;
+  color: var(--c-text-muted);
+  font-size: 0.8125rem;
+}
+
 .portal-policies__wizard-banner {
   margin-top: 0.75rem;
 }
@@ -85,6 +91,15 @@
   border-top: 1px dashed var(--c-border);
   padding-top: 0.75rem;
   margin-top: 0.75rem;
+}
+
+/* A capability's revealed settings. Neither FormField nor SettingsRow carries an
+ * outer margin, so without this the controls butt straight into each other. */
+.portal-policies__capability-config,
+.portal-policies__capability-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
 }
 
 .portal-policies__link {

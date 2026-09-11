@@ -7,7 +7,7 @@ import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { useSectionFlags } from "@portal/hooks/useAsync";
 import { usePipelines } from "@portal/queries/pipelines";
-import { usePoliciesOverview } from "@portal/queries/policies";
+import { usePoliciesOverview, usePolicyRuns } from "@portal/queries/policies";
 import {
   fetchPipeline,
   savePipeline,
@@ -26,13 +26,12 @@ import {
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { PipelinesIcon } from "@portal/components/icons";
-import { KpiStrip } from "@portal/components/pipelines/KpiStrip";
 import { PipelinesTable } from "@portal/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
 import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
+import { useCanManagePolicies } from "@portal/queries/policyPermissions";
 import "@portal/views/Pipelines.css";
 
 /**
@@ -45,18 +44,24 @@ export function Pipelines() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  // Building and editing a pipeline both need a linked account, so both ask for one first (#7581).
-  const { guard } = useConnectGate();
 
   const listState = usePipelines();
-  const { data: overview, loading: overviewLoading } = listState;
+  const { data: overview } = listState;
   const { isLoading: listLoading } = useSectionFlags(listState);
 
   const catalogueState = usePoliciesOverview();
+  // Shares the cache entry the catalogue already fills, so opening a row costs no fetch.
+  const runsState = usePolicyRuns();
   const { data: catalogueData } = catalogueState;
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
     useAiEngineEnabled();
+  const {
+    canManage: canManagePolicies,
+    isLoading: permissionsLoading,
+    isError: permissionsError,
+    refetch: retryPermissions,
+  } = useCanManagePolicies();
 
   const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
@@ -97,10 +102,9 @@ export function Pipelines() {
     queryClient.invalidateQueries({ queryKey: qk.policyRuns() });
   }, [queryClient]);
 
-  const openCreate = guard(() => navigate(`${listPath}/new`));
-  const connectSource = guard(() =>
-    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`),
-  );
+  const openCreate = () => navigate(`${listPath}/new`);
+  const connectSource = () =>
+    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`);
 
   // Open a suggested template in the simple wizard (a fresh policy). AI-gated templates stay closed
   // until the engine is confirmed on, so a click during the app-config load can't open a disabled one.
@@ -116,17 +120,17 @@ export function Pipelines() {
   // A list row routes by representability: a policy that still fits its template opens the simple
   // detail panel (edit/pause/delete there); anything else opens the full builder. The full record is
   // fetched on click so parseSimplePolicy - the single authority - decides on real data.
-  const openListRow = guard(async (view: PipelineView) => {
+  const openListRow = async (view: PipelineView) => {
     setPageError(null);
     try {
       const policy = await fetchPipeline(view.id);
-      const entry = parseSimplePolicy(policy);
+      const entry = parseSimplePolicy(policy, runsState.data ?? []);
       if (entry) setDetail(entry);
       else navigate(`${listPath}/${view.id}`);
     } catch (e) {
       setPageError(errorMessage(e));
     }
-  });
+  };
 
   // ?setup=<categoryId> deep link (onboarding): open the wizard for that suggested policy, then
   // strip the param so back/reload doesn't re-open it.
@@ -153,7 +157,7 @@ export function Pipelines() {
       id: stored?.backendId,
       name: stored?.name ?? wire.name,
       icon: stored?.icon,
-      enabled: wire.enabled,
+      enabled: stored ? stored.status !== "paused" : wire.enabled,
       required: wire.required,
       inputs: [],
       steps: wire.steps,
@@ -172,7 +176,8 @@ export function Pipelines() {
   ) {
     setPageError(null);
     try {
-      await savePolicy(buildWireFromSetup(entry, result, t));
+      const enabled = entry.policy?.state.status !== "paused";
+      await savePolicy(buildWireFromSetup(entry, result, t, enabled));
       setWizard(null);
       setDetail(null);
       refetch();
@@ -258,12 +263,22 @@ export function Pipelines() {
 
       {pageError && <Banner tone="danger" description={pageError} />}
 
+      {permissionsError && (
+        <Banner
+          tone="warning"
+          description={t("portal.pipelines.permissionsUnavailable")}
+          action={
+            <Button size="sm" variant="secondary" onClick={retryPermissions}>
+              {t("portal.pipelines.permissionsRetry")}
+            </Button>
+          }
+        />
+      )}
+
       <section className="portal-pipelines__all">
         <h2 className="portal-pipelines__section-title">
           {t("portal.pipelines.all.title")}
         </h2>
-
-        {hasPipelines && <KpiStrip data={overview} loading={overviewLoading} />}
 
         {listLoading && (
           <div className="portal-pipelines__table-skeleton" aria-hidden>
@@ -323,6 +338,8 @@ export function Pipelines() {
       <PolicyDetailPanel
         policy={detail?.policy ?? null}
         busy={busy}
+        canManagePolicies={canManagePolicies}
+        permissionsLoading={permissionsLoading}
         onClose={() => setDetail(null)}
         onEdit={handleEdit}
         onTogglePause={handleTogglePause}
@@ -332,6 +349,8 @@ export function Pipelines() {
 
       <PolicySetupWizard
         entry={wizard}
+        canManagePolicies={canManagePolicies}
+        permissionsLoading={permissionsLoading}
         onClose={() => setWizard(null)}
         onSubmit={handleSubmit}
         onCustomise={handleCustomise}

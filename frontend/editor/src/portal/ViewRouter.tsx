@@ -1,16 +1,23 @@
-import { lazy, Suspense } from "react";
-import { Navigate, Route, Routes, useLocation } from "react-router-dom";
+import { lazy, Suspense, useEffect } from "react";
+import {
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Home } from "@portal/views/Home";
 import { Users } from "@portal/views/Users";
 import { Documents } from "@portal/views/Documents";
+import { Review } from "@portal/views/Review";
 import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
 import { Integrations } from "@portal/views/Integrations";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
-import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { useUI } from "@portal/contexts/UIContext";
 
 // Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
 const DeveloperDocs = lazy(() =>
@@ -24,6 +31,21 @@ const DeveloperDocs = lazy(() =>
 // logical VIEW_PATHS, and home is the index route. Redirects use toPortalPath
 // so they resolve to the portal, not the editor root.
 const rel = (viewPath: string) => viewPath.replace(/^\//, "");
+
+/**
+ * Procurement is not a surface of its own: the deal lives on Home, so this raises
+ * the trial-setup step and bounces there. Raised imperatively rather than by
+ * rendering <Navigate>, so the signal is set before the navigation, not racing it.
+ */
+function ProcurementRedirect() {
+  const { requestTrialSetup } = useUI();
+  const navigate = useNavigate();
+  useEffect(() => {
+    requestTrialSetup();
+    navigate(toPortalPath(VIEW_PATHS.home), { replace: true });
+  }, [requestTrialSetup, navigate]);
+  return null;
+}
 
 /** Redirect the retired Policies path to the unified Pipelines page, carrying any query string. */
 function PoliciesRedirect() {
@@ -42,24 +64,13 @@ export function ViewRouter() {
       <Route index element={<Home />} />
       <Route path={rel(VIEW_PATHS.users)} element={<Users />} />
       <Route path={rel(VIEW_PATHS.pipelines)} element={<Pipelines />} />
-      {/* Building and editing need a linked account. Gated at the route so every way in is
-          covered: the list, the Documents review queue, the Connect flow's next steps, and a
-          typed URL. */}
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/new`}
-        element={
-          <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.pipelines)}>
-            <PipelineBuilder />
-          </ConnectGuardedRoute>
-        }
+        element={<PipelineBuilder />}
       />
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/:id`}
-        element={
-          <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.pipelines)}>
-            <PipelineBuilder />
-          </ConnectGuardedRoute>
-        }
+        element={<PipelineBuilder />}
       />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
       {/* Source create/edit is a modal on the list now; old deep links land there. */}
@@ -78,6 +89,7 @@ export function ViewRouter() {
           path working, preserving its query (e.g. onboarding's ?setup=<category>). */}
       <Route path={rel(VIEW_PATHS.policies)} element={<PoliciesRedirect />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
+      <Route path={rel(VIEW_PATHS.review)} element={<Review />} />
       <Route
         path={rel(VIEW_PATHS.infrastructure)}
         element={<Infrastructure />}
@@ -91,6 +103,8 @@ export function ViewRouter() {
           </Suspense>
         }
       />
+      {/* A bare path, not a VIEW_PATHS entry: nothing should list it as a view. */}
+      <Route path="procurement" element={<ProcurementRedirect />} />
       {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
       <Route
         path="account-link"
