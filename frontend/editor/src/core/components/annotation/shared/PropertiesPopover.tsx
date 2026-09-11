@@ -6,11 +6,7 @@ import { useState } from "react";
 import type { TrackedAnnotation } from "@embedpdf/plugin-annotation";
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import type { AnnotationPatch } from "@app/components/viewer/viewerTypes";
-import TuneIcon from "@mui/icons-material/Tune";
-import FormatAlignLeftIcon from "@mui/icons-material/FormatAlignLeft";
-import FormatAlignCenterIcon from "@mui/icons-material/FormatAlignCenter";
-import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
-
+import { Icon } from "@app/ui/Icon";
 export type PropertiesAnnotationType = "text" | "note" | "shape";
 
 interface PropertiesPopoverProps {
@@ -104,7 +100,7 @@ export function PropertiesPopover({
             onClick={() => onUpdate({ textAlign: 0 })}
             size="md"
           >
-            <FormatAlignLeftIcon style={{ fontSize: 18 }} />
+            <Icon name="text-align-start" size={18} />
           </ActionIcon>
           <ActionIcon
             aria-label={t("annotation.alignCenter", "Align center")}
@@ -112,7 +108,7 @@ export function PropertiesPopover({
             onClick={() => onUpdate({ textAlign: 1 })}
             size="md"
           >
-            <FormatAlignCenterIcon style={{ fontSize: 18 }} />
+            <Icon name="text-align-center" size={18} />
           </ActionIcon>
           <ActionIcon
             aria-label={t("annotation.alignRight", "Align right")}
@@ -120,7 +116,7 @@ export function PropertiesPopover({
             onClick={() => onUpdate({ textAlign: 2 })}
             size="md"
           >
-            <FormatAlignRightIcon style={{ fontSize: 18 }} />
+            <Icon name="text-align-end" size={18} />
           </ActionIcon>
         </Group>
       </div>
@@ -204,7 +200,7 @@ export function PropertiesPopover({
             onClick={() => setOpened(!opened)}
             disabled={disabled}
           >
-            <TuneIcon style={{ fontSize: 18 }} />
+            <Icon name="sliders-horizontal" size={18} />
           </ActionIcon>
         </Tooltip>
       </Popover.Target>

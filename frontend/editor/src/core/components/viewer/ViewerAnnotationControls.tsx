@@ -1,6 +1,5 @@
 import React, { useCallback } from "react";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { ViewerContext } from "@app/contexts/ViewerContext";
@@ -24,6 +23,7 @@ import {
 } from "@app/hooks/tools/redact/useRedactParameters";
 import { RedactionMode } from "@embedpdf/plugin-redaction";
 
+import { Icon } from "@app/ui/Icon";
 interface ViewerAnnotationControlsProps {
   currentView: string;
   disabled?: boolean;
@@ -196,11 +196,7 @@ export default function ViewerAnnotationControls({
               : t("workbenchBar.redact", "Redact")
           }
         >
-          <LocalIcon
-            icon="scan-delete-rounded"
-            width="1.25rem"
-            height="1.25rem"
-          />
+          <Icon name="file-x" size="1.25rem" />
         </ActionIcon>
       </Tooltip>
 
@@ -231,14 +227,9 @@ export default function ViewerAnnotationControls({
             "Toggle Annotations Visibility",
           )}
         >
-          <LocalIcon
-            icon={
-              viewerContext?.isAnnotationsVisible
-                ? "visibility"
-                : "preview-off-rounded"
-            }
-            width="1.25rem"
-            height="1.25rem"
+          <Icon
+            name={viewerContext?.isAnnotationsVisible ? "eye" : "eye-off"}
+            size="1.25rem"
           />
         </ActionIcon>
       </Tooltip>
