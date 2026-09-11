@@ -620,7 +620,8 @@ const EmbedPdfViewerContent = ({
 
       if (hadPendingRedactions) {
         console.log("[Viewer] Committing pending redactions before export");
-        await redactionTrackerRef.current?.commitAllPending();
+        redactionTrackerRef.current?.commitAllPending();
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Step 1: Export PDF with annotations using EmbedPDF

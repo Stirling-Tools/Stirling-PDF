@@ -18,6 +18,7 @@ describe("pdfiumFontFallback", () => {
       "NotoSansTC-Regular.ttf",
     );
     expect(config.fonts[FontCharset.ARABIC]).toBe("NotoSansArabic-Regular.ttf");
+    expect(config.fonts[FontCharset.HEBREW]).toBe("NotoSansHebrew-Regular.ttf");
     expect(config.fonts[FontCharset.THAI]).toBe("NotoSansThai-Regular.ttf");
 
     expect(config.baseUrl).not.toContain("jsdelivr");

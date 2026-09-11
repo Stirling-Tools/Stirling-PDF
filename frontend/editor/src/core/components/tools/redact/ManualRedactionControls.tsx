@@ -126,6 +126,8 @@ export default function ManualRedactionControls({
       setIsSaving(true);
       try {
         await applyChanges();
+      } catch {
+        // Viewer reports save failure to user.
       } finally {
         setIsSaving(false);
       }

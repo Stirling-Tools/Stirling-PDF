@@ -17,6 +17,7 @@ export function getLocalFontFallbackConfig(): FontFallbackConfig {
       [FontCharset.VIETNAMESE]: "NotoSans-Regular.ttf",
       [FontCharset.EASTERNEUROPEAN]: "NotoSans-Regular.ttf",
       [FontCharset.ARABIC]: "NotoSansArabic-Regular.ttf",
+      [FontCharset.HEBREW]: "NotoSansHebrew-Regular.ttf",
       [FontCharset.THAI]: "NotoSansThai-Regular.ttf",
       [FontCharset.SHIFTJIS]: "NotoSansJP-Regular.ttf",
       [FontCharset.HANGEUL]: "NotoSansKR-Regular.ttf",

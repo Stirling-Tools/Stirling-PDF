@@ -328,6 +328,7 @@ export function LocalEmbedPDF({
   // receives the document data via buffer rather than failing to fetch partitioned blob URLs.
   useEffect(() => {
     let cancelled = false;
+    setPdfBuffer(null);
     if (file && typeof (file as Blob).arrayBuffer === "function") {
       (file as Blob)
         .arrayBuffer()
