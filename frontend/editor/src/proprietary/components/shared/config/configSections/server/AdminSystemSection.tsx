@@ -587,6 +587,10 @@ export default function AdminSystemSection() {
         <SettingsCard
           id="adminFormDetection"
           title={t("admin.formDetection.title", "AI Form Detection")}
+          description={t(
+            "admin.formDetection.description",
+            "Detects text fields, checkboxes and signature areas in a PDF and turns them into fillable form fields. Detection runs on this server with the model you install below.",
+          )}
         >
           <AdminFormDetectionSection />
         </SettingsCard>

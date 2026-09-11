@@ -47,11 +47,10 @@ import AdminUsageSection from "@app/components/shared/config/configSections/Admi
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 
 /**
- * Self-hosted settings, grouped by who reaches for them: you, then the people
- * and money of the workspace, then the server itself, its security, AI, and
- * finally the knobs almost nobody turns (folded by default) and the small
- * print. Admin groups appear for admins, and as a read-only preview when login
- * is off and system.showSettingsWhenNoLogin allows it.
+ * Self-hosted settings, grouped by who reaches for them: your own settings and
+ * keys, then the people and money of the workspace, then everything that
+ * configures the server. Admin groups appear for admins, and as a read-only
+ * preview when login is off and system.showSettingsWhenNoLogin allows it.
  */
 export const useConfigNavSections = (
   isAdmin: boolean = false,
@@ -88,6 +87,20 @@ export const useConfigNavSections = (
           }
         : item,
     );
+    // Keys belong to you, not to the server, so they sit with your own
+    // settings rather than alone under a heading of their own.
+    if (loginEnabled) {
+      preferences.items.push({
+        key: "api-keys",
+        label: t("settings.developer.apiKeys", "API Keys"),
+        description: t(
+          "settings.developer.apiKeysDescription",
+          "Personal keys for calling the Stirling API from scripts and integrations.",
+        ),
+        icon: "key-rounded",
+        component: <ApiKeys />,
+      });
+    }
   }
 
   const showAdmin = isAdmin || (!loginEnabled && showSettingsWhenNoLogin);
@@ -143,198 +156,140 @@ export const useConfigNavSections = (
     });
   }
 
-  if (loginEnabled) {
+  if (showAdmin) {
     sections.push({
-      id: "developer",
-      title: t("settings.developer.title", "Developer"),
+      id: "server",
+      title: t("settings.server.title", "Server"),
       items: [
         {
-          key: "api-keys",
-          label: t("settings.developer.apiKeys", "API Keys"),
+          key: "adminGeneral",
+          label: t("settings.server.system", "System"),
           description: t(
-            "settings.developer.apiKeysDescription",
-            "Personal keys for calling the Stirling API from scripts and integrations.",
+            "admin.settings.general.description",
+            "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
           ),
-          icon: "key-rounded",
-          component: <ApiKeys />,
+          icon: "settings-rounded",
+          component: (
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminSystemSection />
+            </Suspense>
+          ),
+          ...gated,
+        },
+        {
+          key: "adminSecurity",
+          label: t("settings.securityAuth.security", "Sign-in & security"),
+          description: t(
+            "admin.settings.security.description",
+            "How people sign in, how sessions are held, and what this server discloses about itself.",
+          ),
+          icon: "shield-rounded",
+          component: (
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminSecurityPage />
+            </Suspense>
+          ),
+          ...gated,
+        },
+        {
+          key: "adminConnections",
+          label: t("settings.configuration.integrations", "Integrations"),
+          description: t(
+            "admin.settings.connections.description",
+            "Mail, Telegram, Drive, and uploading from a phone.",
+          ),
+          icon: "hub-rounded",
+          component: (
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminIntegrationsPage />
+            </Suspense>
+          ),
+          ...gated,
+        },
+        {
+          key: "adminAi",
+          label: t("settings.ai.general", "AI Engine"),
+          description: t(
+            "admin.settings.ai.description",
+            "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under.",
+          ),
+          icon: "smart-toy-rounded",
+          component: (
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminAiSection />
+            </Suspense>
+          ),
+          ...gated,
+        },
+        {
+          key: "adminDatabase",
+          label: t("settings.configuration.database", "Database"),
+          description: t(
+            "admin.settings.database.description",
+            "Connect a custom database, and back up or restore the one in use.",
+          ),
+          icon: "database-rounded",
+          component: (
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminDatabasePage />
+            </Suspense>
+          ),
+          ...gated,
+        },
+        {
+          key: "adminAdvanced",
+          label: t("settings.configuration.advanced", "Advanced"),
+          description: t(
+            "admin.settings.advanced.description",
+            "Feature flags, processing limits, temp files and the database. Set once at install, if ever.",
+          ),
+          icon: "tune-rounded",
+          component: (
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminAdvancedPage />
+            </Suspense>
+          ),
+          ...gated,
+        },
+        {
+          key: "adminUsage",
+          label: t("settings.licensingAnalytics.usage", "Usage Analytics"),
+          description: t(
+            "settings.licensingAnalytics.usageDescription",
+            "Endpoint usage and activity for this server.",
+          ),
+          icon: "monitoring",
+          component: <AdminUsageSection />,
+          ...gated,
+        },
+        {
+          key: "adminAudit",
+          label: t("settings.licensingAnalytics.audit", "Audit log"),
+          description: t(
+            "settings.licensingAnalytics.auditDescription",
+            "Who did what on this server, and how long that record is kept.",
+          ),
+          icon: "fact-check-rounded",
+          component: <AdminAuditSection />,
+          ...gated,
+        },
+        {
+          key: "adminLegal",
+          label: t("settings.policiesPrivacy.title", "Legal & privacy"),
+          description: t(
+            "admin.settings.legal.description",
+            "Configure links to legal documents and policies.",
+          ),
+          icon: "gavel-rounded",
+          component: (
+            <Suspense fallback={<LoadingFallback />}>
+              <AdminLegalPrivacyPage />
+            </Suspense>
+          ),
+          ...gated,
         },
       ],
     });
-  }
-
-  if (showAdmin) {
-    sections.push(
-      {
-        id: "server",
-        title: t("settings.server.title", "Server"),
-        items: [
-          {
-            key: "adminGeneral",
-            label: t("settings.server.system", "System"),
-            description: t(
-              "admin.settings.general.description",
-              "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
-            ),
-            icon: "settings-rounded",
-            component: (
-              <Suspense fallback={<LoadingFallback />}>
-                <AdminSystemSection />
-              </Suspense>
-            ),
-            ...gated,
-          },
-          {
-            key: "adminDatabase",
-            label: t("settings.configuration.database", "Database"),
-            description: t(
-              "admin.settings.database.description",
-              "Connect a custom database, and back up or restore the one in use.",
-            ),
-            icon: "database-rounded",
-            component: (
-              <Suspense fallback={<LoadingFallback />}>
-                <AdminDatabasePage />
-              </Suspense>
-            ),
-            ...gated,
-          },
-          {
-            key: "adminUsage",
-            label: t("settings.licensingAnalytics.usage", "Usage Analytics"),
-            description: t(
-              "settings.licensingAnalytics.usageDescription",
-              "Endpoint usage and activity for this server.",
-            ),
-            icon: "monitoring",
-            component: <AdminUsageSection />,
-            ...gated,
-          },
-        ],
-      },
-      {
-        id: "security",
-        title: t("settings.securityAuth.security", "Sign-in & security"),
-        items: [
-          {
-            key: "adminSecurity",
-            label: t("settings.securityAuth.security", "Sign-in & security"),
-            description: t(
-              "admin.settings.security.description",
-              "How people sign in, how sessions are held, and what this server discloses about itself.",
-            ),
-            icon: "shield-rounded",
-            component: (
-              <Suspense fallback={<LoadingFallback />}>
-                <AdminSecurityPage />
-              </Suspense>
-            ),
-            ...gated,
-          },
-        ],
-      },
-      {
-        id: "audit",
-        title: t("settings.licensingAnalytics.audit", "Audit log"),
-        items: [
-          {
-            key: "adminAudit",
-            label: t("settings.licensingAnalytics.audit", "Audit log"),
-            description: t(
-              "settings.licensingAnalytics.auditDescription",
-              "Who did what on this server, and how long that record is kept.",
-            ),
-            icon: "fact-check-rounded",
-            component: <AdminAuditSection />,
-            ...gated,
-          },
-        ],
-      },
-      {
-        id: "integrations",
-        title: t("settings.configuration.integrations", "Integrations"),
-        items: [
-          {
-            key: "adminConnections",
-            label: t("settings.configuration.integrations", "Integrations"),
-            description: t(
-              "admin.settings.connections.description",
-              "Mail, Telegram, Drive, and uploading from a phone.",
-            ),
-            icon: "hub-rounded",
-            component: (
-              <Suspense fallback={<LoadingFallback />}>
-                <AdminIntegrationsPage />
-              </Suspense>
-            ),
-            ...gated,
-          },
-        ],
-      },
-      {
-        id: "legal",
-        title: t("settings.policiesPrivacy.title", "Legal & privacy"),
-        items: [
-          {
-            key: "adminLegal",
-            label: t("settings.policiesPrivacy.title", "Legal & privacy"),
-            description: t(
-              "admin.settings.legal.description",
-              "Configure links to legal documents and policies.",
-            ),
-            icon: "gavel-rounded",
-            component: (
-              <Suspense fallback={<LoadingFallback />}>
-                <AdminLegalPrivacyPage />
-              </Suspense>
-            ),
-            ...gated,
-          },
-        ],
-      },
-      {
-        id: "ai",
-        title: t("settings.ai.title", "AI"),
-        items: [
-          {
-            key: "adminAi",
-            label: t("settings.ai.general", "AI Engine"),
-            description: t(
-              "admin.settings.ai.description",
-              "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under.",
-            ),
-            icon: "smart-toy-rounded",
-            component: (
-              <Suspense fallback={<LoadingFallback />}>
-                <AdminAiSection />
-              </Suspense>
-            ),
-            ...gated,
-          },
-        ],
-      },
-      // Changed once at install time, if ever: folded so the list stays short.
-      {
-        id: "advanced",
-        title: t("settings.configuration.advanced", "Advanced"),
-        items: [
-          {
-            key: "adminAdvanced",
-            label: t("settings.configuration.advanced", "Advanced"),
-            description: t(
-              "admin.settings.advanced.description",
-              "Feature flags, processing limits, temp files and the database. Set once at install, if ever.",
-            ),
-            icon: "tune-rounded",
-            component: (
-              <Suspense fallback={<LoadingFallback />}>
-                <AdminAdvancedPage />
-              </Suspense>
-            ),
-            ...gated,
-          },
-        ],
-      },
-    );
   }
 
   return [...sections, ...about];

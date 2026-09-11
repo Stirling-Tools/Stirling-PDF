@@ -33,8 +33,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "API Keys",
     keywords: ["api", "token", "developer", "key"],
     requiresLogin: true,
-    groupLabelKey: "settings.developer.title",
-    groupLabelFallback: "Developer",
+    groupLabelKey: "settings.preferences.title",
+    groupLabelFallback: "Preferences",
   },
   // --- Workspace ---
   {
@@ -92,8 +92,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Advanced",
     keywords: ["advanced", "expert", "database", "db", "backup"],
     adminArea: true,
-    groupLabelKey: "settings.configuration.advanced",
-    groupLabelFallback: "Advanced",
+    groupLabelKey: "settings.server.title",
+    groupLabelFallback: "Server",
   },
   // --- AI ---
   {
@@ -119,8 +119,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
       "performance",
     ],
     adminArea: true,
-    groupLabelKey: "settings.ai.title",
-    groupLabelFallback: "AI",
+    groupLabelKey: "settings.server.title",
+    groupLabelFallback: "Server",
   },
   // --- Security & Authentication ---
   {
@@ -145,8 +145,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
       "agreement",
     ],
     adminArea: true,
-    groupLabelKey: "settings.securityAuth.title",
-    groupLabelFallback: "Security & sign-in",
+    groupLabelKey: "settings.server.title",
+    groupLabelFallback: "Server",
   },
   // --- Licensing & Analytics ---
   {
@@ -164,8 +164,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Audit",
     keywords: ["audit", "logs", "events", "history"],
     adminArea: true,
-    groupLabelKey: "settings.securityAuth.title",
-    groupLabelFallback: "Security & sign-in",
+    groupLabelKey: "settings.server.title",
+    groupLabelFallback: "Server",
   },
   {
     key: "adminUsage",

@@ -49,7 +49,7 @@ const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
  * @param includeAccountLink self-hosted links the instance to a Stirling
  *   account; SaaS has nothing to link, so it passes false.
  * @param includeAudit SaaS has no other audit surface; self-hosted has the
- *   admin one under Security & sign-in and passes false.
+ *   admin one under Server and passes false.
  * @param includeEncryption encryption at rest is deployment-wide server
  *   configuration, so only a self-hosted admin can act on it. SaaS operates
  *   the storage itself and passes false for every user.
@@ -117,9 +117,11 @@ export function buildPortalSettingsSections(
       title: t("settings.workspace.title", "Workspace"),
       items: workspace,
     },
+    // Keys belong to you, not to the server, so they join your own settings
+    // rather than standing alone under a heading of their own.
     {
-      id: "developer",
-      title: t("settings.developer.title", "Developer"),
+      id: "preferences",
+      title: t("settings.preferences.title", "Preferences"),
       items: [
         {
           key: "api-keys",

@@ -312,13 +312,10 @@ async function shootCard(
   dialog: ReturnType<Page["locator"]>,
   name: string,
 ) {
-  const paper = dialog
-    .locator(".mantine-Paper-root")
-    .filter({ hasText: "AI Form Detection" })
-    .last();
-  await paper.scrollIntoViewIfNeeded();
+  const card = dialog.locator("section.settings-card:has(#adminFormDetection)");
+  await card.scrollIntoViewIfNeeded();
   await settle(page);
-  await paper.screenshot({ path: shot(name) });
+  await card.screenshot({ path: shot(name) });
 }
 
 test.describe("admin", () => {
