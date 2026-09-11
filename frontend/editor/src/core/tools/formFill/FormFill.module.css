@@ -70,7 +70,6 @@
 }
 
 .modeTabIcon {
-  font-size: 1rem !important;
   flex-shrink: 0;
 }
 
@@ -271,7 +270,6 @@
 }
 
 .emptyStateIcon {
-  font-size: 2.5rem !important;
   opacity: 0.2;
 }
 

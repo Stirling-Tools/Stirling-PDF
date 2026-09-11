@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Stack, Text, Box, Group, Center, Checkbox } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import RestartAltIcon from "@mui/icons-material/RestartAlt";
+import { Icon } from "@app/ui/Icon";
 import { CropParametersHook } from "@app/hooks/tools/crop/useCropParameters";
 import {
   useViewScopedFiles,
@@ -181,7 +181,7 @@ const CropSettings = ({ parameters, disabled = false }: CropSettingsProps) => {
               title={t("crop.reset", "Reset to full PDF")}
               aria-label={t("crop.reset", "Reset to full PDF")}
             >
-              <RestartAltIcon style={{ fontSize: "1rem" }} />
+              <Icon name="rotate-ccw" size={"1rem"} />
             </ActionIcon>
           </Group>
 

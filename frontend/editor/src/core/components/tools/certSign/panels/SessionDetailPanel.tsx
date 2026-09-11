@@ -3,8 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Stack, Text, Group, Badge, Divider, Modal } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { alert } from "@app/components/toast";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import DeleteIcon from "@mui/icons-material/Delete";
+import { Icon } from "@app/ui/Icon";
 import { ParticipantListPanel } from "@app/components/tools/certSign/panels/ParticipantListPanel";
 import { SessionActionsPanel } from "@app/components/tools/certSign/panels/SessionActionsPanel";
 import { AddParticipantsFlow } from "@app/components/tools/certSign/modals/AddParticipantsFlow";
@@ -151,7 +150,7 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
   return (
     <Stack gap="md" p="md" h="100%" style={{ minHeight: 0 }}>
       <Button
-        leftSection={<ArrowBackIcon fontSize="small" />}
+        leftSection={<Icon name="arrow-left" size={20} />}
         variant="tertiary"
         size="sm"
         onClick={onBack}
@@ -211,7 +210,7 @@ export const SessionDetailPanel = ({ data }: SessionDetailPanelProps) => {
 
       {!session.finalized && (
         <Button
-          leftSection={<DeleteIcon fontSize="small" />}
+          leftSection={<Icon name="trash" size={20} />}
           accent="danger"
           variant="tertiary"
           fullWidth

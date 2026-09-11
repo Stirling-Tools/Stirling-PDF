@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Card, Divider, Group, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { BookmarkNode } from "@app/utils/editTableOfContents";
 import ErrorNotification from "@app/components/tools/shared/ErrorNotification";
 import ResultsPreview from "@app/components/tools/shared/ResultsPreview";
@@ -150,7 +150,7 @@ const EditTableOfContentsWorkbenchView = ({
             <Divider />
             <Group justify="flex-end">
               <Button
-                leftSection={<LocalIcon icon="menu-book-rounded" />}
+                leftSection={<Icon name="book-open" size="1em" />}
                 onClick={onExecute}
                 disabled={isExecuteDisabled}
                 loading={isExecuting}
@@ -201,7 +201,7 @@ const EditTableOfContentsWorkbenchView = ({
               <Group justify="flex-end" gap="sm">
                 {downloadUrl && (
                   <Button
-                    leftSection={<LocalIcon icon="download-rounded" />}
+                    leftSection={<Icon name="download" size="1em" />}
                     onClick={() =>
                       downloadFromUrl(
                         downloadUrl,
@@ -214,7 +214,7 @@ const EditTableOfContentsWorkbenchView = ({
                 )}
                 <Button
                   variant="secondary"
-                  leftSection={<LocalIcon icon="rotate-left" />}
+                  leftSection={<Icon name="rotate-ccw" size="1em" />}
                   onClick={onUndo}
                   disabled={isExecuting}
                 >
