@@ -1,5 +1,5 @@
 import { Menu } from "@mantine/core";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
@@ -23,7 +23,7 @@ export function OpenInNewWindowMenuItem({
 
   return (
     <Menu.Item
-      leftSection={<OpenInNewIcon fontSize="small" />}
+      leftSection={<Icon name="external-link" size={20} />}
       onClick={(e) => {
         e.stopPropagation();
         openInNewWindow(file);

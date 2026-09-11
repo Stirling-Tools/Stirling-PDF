@@ -1,9 +1,6 @@
 import type { ReactNode } from "react";
 import { Menu, Text, Tooltip } from "@mantine/core";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import CloudIcon from "@mui/icons-material/Cloud";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 
 import { Button } from "@app/ui/Button";
@@ -49,7 +46,7 @@ export function NewFolderButton({
           <Button
             variant="secondary"
             size={size}
-            leftSection={<CreateNewFolderIcon fontSize="small" />}
+            leftSection={<Icon name="folder-plus" size={20} />}
             disabled
             style={{ pointerEvents: "auto" }}
           >
@@ -67,7 +64,7 @@ export function NewFolderButton({
       <Button
         variant="secondary"
         size={size}
-        leftSection={<CreateNewFolderIcon fontSize="small" />}
+        leftSection={<Icon name="folder-plus" size={20} />}
         onClick={() =>
           currentFolderId !== null
             ? onOpenDialog()
@@ -85,8 +82,8 @@ export function NewFolderButton({
         <Button
           variant="secondary"
           size={size}
-          leftSection={<CreateNewFolderIcon fontSize="small" />}
-          rightSection={<ArrowDropDownIcon fontSize="small" />}
+          leftSection={<Icon name="folder-plus" size={20} />}
+          rightSection={<Icon name="chevron-down" size={20} />}
         >
           {label}
         </Button>
@@ -94,8 +91,9 @@ export function NewFolderButton({
       <Menu.Dropdown>
         <Menu.Item
           leftSection={
-            <DriveFolderUploadIcon
-              fontSize="small"
+            <Icon
+              name="folder-up"
+              size={20}
               style={{ marginRight: "0.3rem" }}
             />
           }
@@ -105,7 +103,7 @@ export function NewFolderButton({
         </Menu.Item>
         <Menu.Item
           className="files-page-new-folder-option"
-          leftSection={<CloudIcon fontSize="small" />}
+          leftSection={<Icon name="cloud" size={20} />}
           disabled={Boolean(serverDisabledReason)}
           onClick={() => onOpenDialog(null, "server")}
         >

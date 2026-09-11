@@ -3,34 +3,31 @@
 // definitions and the portal's catalogue cards, summaries, and setup wizard.
 
 import type { ReactNode } from "react";
-import type { SxProps, Theme } from "@mui/material";
-import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import LabelOutlinedIcon from "@mui/icons-material/LabelOutlined";
-import CheckCircleOutlinedIcon from "@mui/icons-material/CheckCircleOutlined";
-import AltRouteOutlinedIcon from "@mui/icons-material/AltRouteOutlined";
-import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
-
-type MuiIcon = React.ComponentType<{ sx?: SxProps<Theme>; className?: string }>;
+import { Icon, type IconName } from "@app/ui/Icon";
 
 /** Policy category id → outline glyph. */
-const POLICY_CATEGORY_ICONS: Record<string, MuiIcon> = {
-  ingestion: LayersOutlinedIcon,
-  security: ShieldOutlinedIcon,
-  classification: LabelOutlinedIcon,
-  compliance: CheckCircleOutlinedIcon,
-  routing: AltRouteOutlinedIcon,
-  retention: ScheduleOutlinedIcon,
+const POLICY_CATEGORY_ICONS: Record<string, IconName> = {
+  ingestion: "layers",
+  security: "shield",
+  classification: "tag",
+  compliance: "circle-check",
+  routing: "git-fork",
+  retention: "clock",
 };
 
-const FALLBACK_ICON = LabelOutlinedIcon;
+const FALLBACK_ICON: IconName = "tag";
 
 // Defaults to inheriting the surrounding font-size so a wrapping box controls size.
 export function policyCategoryIcon(
   policyKey: string,
-  sx: SxProps<Theme> = { fontSize: "inherit" },
+  size: number | string = "1em",
   className?: string,
 ): ReactNode {
-  const Icon = POLICY_CATEGORY_ICONS[policyKey] ?? FALLBACK_ICON;
-  return <Icon sx={sx} className={className} />;
+  return (
+    <Icon
+      name={POLICY_CATEGORY_ICONS[policyKey] ?? FALLBACK_ICON}
+      size={size}
+      className={className}
+    />
+  );
 }

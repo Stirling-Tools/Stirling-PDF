@@ -2,7 +2,7 @@ import React from "react";
 import { Group, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
@@ -33,9 +33,7 @@ export function LandingActions({
       <Group gap="sm" justify="center" wrap="wrap" mb="xs">
         <Button
           fat
-          leftSection={
-            <LocalIcon icon={icons.uploadIconName} width="1rem" height="1rem" />
-          }
+          leftSection={<Icon name={icons.upload} size="1rem" />}
           onClick={(e) => {
             e.stopPropagation();
             onUploadClick();
@@ -47,7 +45,7 @@ export function LandingActions({
         <Button
           variant="secondary"
           fat
-          leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
+          leftSection={<Icon name="plus" size="1rem" />}
           onClick={(e) => {
             e.stopPropagation();
             openFilesModal();
@@ -68,11 +66,7 @@ export function LandingActions({
                 onMobileUploadClick();
               }}
             >
-              <LocalIcon
-                icon="qr-code-rounded"
-                width="1.25rem"
-                height="1.25rem"
-              />
+              <Icon name="qr-code" size="1.25rem" />
             </ActionIcon>
           </Tooltip>
         )}
