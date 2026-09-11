@@ -87,4 +87,11 @@ export interface ConfigNavSection {
   id?: string;
   title: string;
   items: ConfigNavItem[];
+  /**
+   * Where this group's items land when it merges into a group that already
+   * exists (see mergeSettingsGroups). "lead" (the default) is for items that
+   * stand in for superseded ones and should hold their place; "append" is for
+   * additions, and for replacements of something that sat at the bottom.
+   */
+  mergeAt?: "lead" | "append";
 }

@@ -2,8 +2,9 @@ import type { ConfigNavSection } from "@app/components/shared/config/types";
 
 /**
  * Folds another layer's settings groups into the build's own. Groups with a
- * matching `id` merge - the incoming items lead, since they replace the ones
- * listed in `superseded` - and unmatched groups slot in after Workspace (or
+ * matching `id` merge - the incoming items lead by default, since they usually
+ * replace the ones listed in `superseded` and should hold their place, unless
+ * the group asks to `append` - and unmatched groups slot in after Workspace (or
  * after the first group when there is none), so the order stays readable
  * whichever layer contributed what.
  */
@@ -25,7 +26,10 @@ export function mergeSettingsGroups(
       ? merged.find((section) => section.id === group.id)
       : undefined;
     if (target) {
-      target.items = [...group.items, ...target.items];
+      target.items =
+        group.mergeAt === "append"
+          ? [...target.items, ...group.items]
+          : [...group.items, ...target.items];
       continue;
     }
     const workspace = merged.findIndex((section) => section.id === "workspace");

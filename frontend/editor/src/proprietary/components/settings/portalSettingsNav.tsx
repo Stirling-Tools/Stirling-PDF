@@ -122,6 +122,7 @@ export function buildPortalSettingsSections(
     {
       id: "preferences",
       title: t("settings.preferences.title", "Preferences"),
+      mergeAt: "append",
       items: [
         {
           key: "api-keys",
@@ -141,6 +142,7 @@ export function buildPortalSettingsSections(
     groups.push({
       id: "server",
       title: t("settings.server.title", "Server"),
+      mergeAt: "append",
       items: [
         {
           key: "storage",
@@ -163,6 +165,7 @@ export function buildPortalSettingsSections(
     groups.push({
       id: "monitoring",
       title: t("settings.monitoring.title", "Monitoring"),
+      mergeAt: "append",
       items: [
         {
           key: "audit",
