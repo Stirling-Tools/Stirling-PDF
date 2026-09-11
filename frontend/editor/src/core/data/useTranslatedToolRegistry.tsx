@@ -845,6 +845,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "add-attachments",
           "batch-process-attachments",
           "list-attachments",
+          "extract-single-attachment",
         ],
         operationConfig: asRegistryConfig(addAttachmentsOperationConfig),
         automationSettings: lazySettings(

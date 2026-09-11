@@ -27,8 +27,12 @@ const AddAttachments = ({
   const params = useAddAttachmentsParameters();
   const operation = useAddAttachmentsOperation();
 
-  const { enabled: endpointEnabled, loading: endpointLoading } =
+  const { enabled: addEndpointEnabled, loading: endpointLoading } =
     useEndpointEnabled("add-attachments");
+  const { enabled: batchEndpointEnabled } = useEndpointEnabled(
+    "batch-process-attachments",
+  );
+  const endpointEnabled = addEndpointEnabled && batchEndpointEnabled;
 
   useEffect(() => {
     operation.resetResults();

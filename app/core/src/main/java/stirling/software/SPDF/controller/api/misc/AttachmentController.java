@@ -328,6 +328,10 @@ public class AttachmentController {
         List<MultipartFile> additions = request.getAttachments();
         boolean convertToPdfA3b = request.isConvertToPdfA3b();
 
+        if (additions != null && !additions.isEmpty()) {
+            validateAttachmentRequest(additions);
+        }
+
         BatchOpsData opsData = null;
         if (opsJson != null && !opsJson.isBlank()) {
             opsData = objectMapper.readValue(opsJson, BatchOpsData.class);
