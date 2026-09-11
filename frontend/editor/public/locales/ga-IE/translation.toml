@@ -34,8 +34,6 @@ downloadUnavailable = "Níl íoslódáil ar fáil don mhír seo"
 edit = "Cuir in eagar"
 editSecret = "Cuir an luach seo in eagar"
 editYourNewFiles = "Cuir do chomhad(aí) nua in eagar"
-encryptedFilesBlocked_one = "Tá an comhad cosanta le pasfhocal. Díghlasáil é ar dtús."
-encryptedFilesBlocked_other = "Tá {{count}} comhad cosanta le pasfhocal. Díghlasáil iad ar dtús."
 exportAndContinue = "Easpórtáil & Lean ar aghaidh"
 false = "Bréagach"
 fileNotSavedToDisk = "Gan sábháil ar an diosca"
@@ -559,6 +557,47 @@ close = "Dún"
 error = "Earráid"
 expand = "Leathnaigh"
 
+[admin.formDetection]
+confirmUninstall = "Click to confirm"
+description = "Detects text fields, checkboxes and signature areas in a PDF and turns them into fillable form fields. Detection runs on this server with the model you install below."
+downloadingNote = "{{percent}}% of {{size}}"
+enableFeature = "Enable feature"
+engineUnavailable = "This build does not include the detection engine, so the tool stays unavailable even with a model installed."
+errorTitle = "Something went wrong"
+install = "Install"
+installFailed = "Install failed"
+licenseLabel = "Licence"
+modelsLabel = "Detection model"
+notAvailable = "No download URL/checksum configured yet, so this model cannot be installed."
+notWritable = "The model directory is not writable; check the configs volume mount."
+saveFailed = "Failed to save setting"
+sizeUnknown = "size unknown"
+switch = "Use this model"
+title = "AI Form Detection"
+uninstall = "Uninstall"
+uninstallFailed = "Uninstall failed"
+verifyingNote = "Verifying SHA-256 checksum..."
+
+[admin.formDetection.airgap]
+intro = "No internet on the server? Download the model elsewhere, verify it, and copy it into the model directory. It is picked up on restart."
+noSha = "(checksum not set)"
+show = "Offline / air-gapped install"
+step1 = "1. Download on a machine with internet:"
+step2 = "2. Check the SHA-256 checksum matches:"
+step3 = "3. Copy it into the model directory on this server:"
+step4 = "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed."
+
+[admin.formDetection.badge]
+active = "Active"
+installed = "Installed"
+
+[admin.formDetection.state]
+downloading = "Downloading..."
+failed = "Failed"
+notInstalled = "No model installed"
+ready = "Ready"
+verifying = "Verifying..."
+
 [admin.settings]
 discard = "Cuir i leataobh"
 error = "Theip ar shábháil na socruithe"
@@ -688,6 +727,9 @@ manualLinks = "Íoslódálacha láimhe: cliceáil ar na naisc agus cuir na comha
 noLanguages = "Níor aimsíodh teangacha tessdata sa chomhadlann chumraithe."
 permissionNotice = "Níl cosán an tessdata inscríofa. Osclófar íoslódálacha sa bhrabhsálaí; sábháil na comhaid .traineddata de láimh sa chomhadlann tessdata le do thoil."
 
+[admin.settings.ai]
+description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+
 [admin.settings.ai.documents]
 description = "Cumraigh an tsamhail leabaithe agus na socruithe aisghabhála a úsáidtear chun ceisteanna faoi dhoiciméid a fhreagairt. Cuirtear i bhfeidhm ar an inneall AI nuair a shábháiltear iad."
 title = "Doiciméid & RAG"
@@ -727,6 +769,7 @@ description = "Líon na míreanna is ábhartha a aisghabhtar in aghaidh an chuar
 label = "Top K"
 
 [admin.settings.ai.general]
+connection = "Connection"
 description = "Ceangail Stirling leis an inneall Python AI agus roghnaigh cé na cumais AI atá le nochtadh. Cuirtear athruithe i bhfeidhm ar atosú."
 title = "Inneall AI"
 
@@ -818,6 +861,7 @@ openai = "OpenAI API key"
 setPlaceholder = "Sábháilte - fág bán é chun an eochair reatha a choinneáil"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "Use a context window of at least 16,384 tokens. Smaller windows silently drop part of the prompt. Ollama defaults to 4,096 - raise OLLAMA_CONTEXT_LENGTH."
 description = "Base URL an chríochphointe OpenAI-comhoiriúnach / Ollama, m.sh. http://ollama:11434/v1."
 label = "Provider base URL"
 warning = "Caithfidh an base URL pointeáil chuig críochphointe inmheánach iontaofa. Déanfaidh an t-inneall iarratais taobh an fhreastalaí chuige, mar sin tá luach neamhiontaofa íogair do SSRF."
@@ -852,6 +896,7 @@ clickToUpgrade = "Cliceáil chun sonraí an phlean a fheiceáil"
 
 [admin.settings.connections]
 connect = "Ceangail"
+connectedServicesDescription = "Services this server is wired up to. Sign-in providers live under Sign-in & security."
 description = "Cumraigh soláthraithe fíordheimhnithe seachtracha cosúil le OAuth2 agus SAML."
 disconnect = "Dícheangail"
 disconnected = "Dícheanglaíodh an soláthraí go rathúil"
@@ -974,6 +1019,8 @@ configuration = "Cumraíocht Bunachair Sonraí"
 confirmCodeLabel = "Iontráil an cód dearbhaithe chun dul ar aghaidh"
 confirmImport = "Deimhnigh an iompórtáil"
 confirmImportTitle = "Deimhnigh iompórtáil an bhunachair sonraí"
+connection = "Connection"
+connectionDescription = "Point Stirling at an external database instead of the embedded one."
 createBackup = "Cruthaigh cúltaca"
 created = "Cruthaithe"
 delete = "Scrios"
@@ -1114,6 +1161,7 @@ placeholder = "/data/inbox"
 remove = "Bain fréamh fillteáin"
 
 [admin.settings.general]
+branding = "Branding & appearance"
 description = "Cumraigh socruithe feidhmchláir ar leibhéal an chórais lena n‑áirítear brandaíocht agus iompar réamhshocraithe."
 system = "Córas"
 title = "Socruithe Córais"
@@ -1235,6 +1283,7 @@ label = "Taispeáin Nuashonruithe d’Riarthóirí Amháin"
 
 [admin.settings.legal]
 description = "Cumraigh naisc le doiciméid agus polasaithe dlíthiúla."
+documentsDescription = "Links users are shown for terms, privacy, cookies and the impressum."
 title = "Doiciméid Dhlíthiúla"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1488,8 +1537,7 @@ label = "Logáil Iniúchta"
 showDetails = "Taispeáin sonraí leibhéil iniúchta"
 
 [admin.settings.security.audit.advancedOptions]
-description = "Méadaíonn na roghanna seo am próiseála agus úsáid cuimhne. Ná cumasaigh ach má tá gá fíor leo."
-title = "Ardroghanna"
+cost = "Now increasing processing time and memory usage on every operation."
 
 [admin.settings.security.audit.captureFileHash]
 description = "Bain hais SHA-256 as comhaid PDF uaslódáilte chun sláine a fhíorú. Neamhspleách ar leibhéal iniúchta."
@@ -2060,6 +2108,50 @@ bullet2 = "Cruthaíonn sé ainm comhaid glan, bailí ón teideal aimsithe"
 bullet3 = "Coinníonn sé an t-ainm bunaidh mura bhfaightear teideal oiriúnach"
 title = "Athainmniú Cliste"
 
+[autoFormDetection]
+loading = "Detecting form fields..."
+submit = "Detect form fields"
+
+[autoFormDetection.detects]
+checkboxes = "Checkboxes"
+label = "Finds and makes fillable"
+signatures = "Signatures"
+text = "Text fields"
+
+[autoFormDetection.error]
+failed = "An error occurred while detecting form fields."
+
+[autoFormDetection.progress]
+detecting = "Analyzing your document..."
+
+[autoFormDetection.results]
+title = "Review fillable PDF"
+
+[autoFormDetection.sensitivity]
+balanced = "Balanced"
+balancedHint = "Recommended for most forms."
+high = "Thorough"
+highHint = "Finds more fields, but may add some where none belong."
+label = "Detection sensitivity"
+low = "Strict"
+lowHint = "Only very confident matches - fewer fields, fewer mistakes."
+
+[autoFormDetection.settings]
+title = "Settings"
+
+[autoFormDetection.summary]
+checkboxes = "Checkboxes"
+noneBody = "The document may not contain form-like areas. Undo, switch sensitivity to \"Thorough\", and run again to look harder."
+noneTitle = "No form fields found"
+pages_one = "Across {{count}} page."
+pages_other = "Across {{count}} pages."
+radioButtons = "Radio buttons"
+signatures = "Signatures"
+stepTitle = "Detection results"
+textFields = "Text fields"
+title_one = "{{count}} fillable field added"
+title_other = "{{count}} fillable fields added"
+
 [automate]
 copyToSaved = "Cóipeáil chuig Sábháilte"
 desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a shlabhrú le chéile. Foirfe do thascanna athfhillteacha."
@@ -2369,6 +2461,35 @@ bullet3 = "Grádaigh nó ceangail feadh an droma fhillte"
 bullet4 = "I gcás printéirí imeall gearr: Cumasaigh an rogha 'Flip ar an imeall gearr'"
 text = "Lean na céimeanna seo le haghaidh leabhrán foirfe:"
 title = "Conas a Chlódófar & a Chruaifear"
+
+[brickGame]
+balls = "Balls"
+best = "Best"
+close = "Close game"
+effectTimer = "{{label}} {{seconds}}s"
+hint = "Move with the pointer or the arrow keys. Click to capture the pointer, Esc to get back to work."
+hintPointerLocked = "Pointer captured. Esc releases it, then Esc again to get back to work."
+score = "Score"
+title = "Hidden game"
+
+[brickGame.effect]
+fast = "Fast"
+narrow = "Narrow"
+reversed = "Reversed"
+slow = "Slow"
+wide = "Wide"
+
+[brickGame.lost]
+detail = "Click or press Space to try again"
+headline = "Out of balls"
+
+[brickGame.ready]
+detail = "Click or press Space to serve"
+headline = "Ready"
+
+[brickGame.won]
+detail = "Click or press Space to play again"
+headline = "All clear"
 
 [bulkSelection]
 syntaxError = "Tá fadhb le comhréir. Féach leideanna Roghnaithe Leathanach le cabhair."
@@ -3001,6 +3122,293 @@ summary_one = "Rith 1 uirlis"
 summary_other = "Rith {{count}} uirlisí"
 unknownTool = "Uirlis anaithnid"
 
+[classification.families]
+correspondence = "Correspondence"
+education = "Education"
+engineering = "Engineering"
+finance = "Financial"
+forms = "Forms"
+government = "Government"
+health = "Medical"
+hr = "HR"
+legal = "Legal"
+operations = "Operations"
+projects = "Projects"
+property = "Property"
+reports = "Reports"
+sales = "Marketing"
+travel = "Travel"
+
+[classification.labels]
+academic-record = "Academic record"
+action-plan = "Action plan"
+addendum = "Addendum"
+advertisement = "Advertisement"
+affidavit = "Affidavit"
+agenda = "Agenda"
+amendment = "Amendment"
+analytics-report = "Analytics report"
+announcement = "Announcement"
+annual-report = "Annual report"
+api-documentation = "API documentation"
+application-form = "Application form"
+appraisal-report = "Appraisal report"
+architecture-document = "Architecture document"
+articles-of-incorporation = "Articles of incorporation"
+assignment-brief = "Assignment brief"
+audit-report = "Audit report"
+balance-sheet = "Balance sheet"
+bank-statement = "Bank statement"
+benefits-summary = "Benefits summary"
+bill-of-lading = "Bill of lading"
+bill-of-materials = "Bill of materials"
+blueprint = "Blueprint"
+board-report = "Board report"
+board-resolution = "Board resolution"
+booking-confirmation = "Booking confirmation"
+brochure = "Brochure"
+budget = "Budget"
+business-plan = "Business plan"
+business-proposal = "Business proposal"
+bylaws = "Bylaws"
+campaign-brief = "Campaign brief"
+case-study = "Case study"
+cash-flow-statement = "Cash flow statement"
+catalog = "Catalog"
+cease-and-desist = "Cease and desist"
+certificate = "Certificate"
+certificate-of-completion = "Certificate of completion"
+change-log = "Change log"
+checklist = "Checklist"
+claim-form = "Claim form"
+closing-statement = "Closing statement"
+complaint-letter = "Complaint letter"
+compliance-document = "Compliance document"
+confirmation-letter = "Confirmation letter"
+consent-form = "Consent form"
+contract = "Contract"
+course-syllabus = "Course syllabus"
+court-filing = "Court filing"
+cover-letter = "Cover letter"
+credit-note = "Credit note"
+customs-declaration = "Customs declaration"
+customs-form = "Customs form"
+cv = "CV"
+datasheet = "Datasheet"
+debit-note = "Debit note"
+deed = "Deed"
+delivery-note = "Delivery note"
+demand-letter = "Demand letter"
+design-document = "Design document"
+diploma = "Diploma"
+discharge-summary = "Discharge summary"
+dissertation = "Dissertation"
+donation-receipt = "Donation receipt"
+dunning-letter = "Dunning letter"
+email-thread = "Email thread"
+employee-handbook = "Employee handbook"
+employment-contract = "Employment contract"
+estimate = "Estimate"
+event-agenda = "Event agenda"
+event-program = "Event program"
+eviction-notice = "Eviction notice"
+exam-paper = "Exam paper"
+expense-report = "Expense report"
+expense-summary = "Expense summary"
+explanation-of-benefits = "Explanation of benefits"
+fact-sheet = "Fact sheet"
+faq-document = "FAQ document"
+feasibility-study = "Feasibility study"
+feedback-form = "Feedback form"
+financial-forecast = "Financial forecast"
+financial-statement = "Financial statement"
+floor-plan = "Floor plan"
+flyer = "Flyer"
+form = "Form"
+franchise-agreement = "Franchise agreement"
+freight-document = "Freight document"
+gift-certificate = "Gift certificate"
+glossary = "Glossary"
+government-notice = "Government notice"
+grade-report = "Grade report"
+grant-agreement = "Grant agreement"
+grant-application = "Grant application"
+hoa-document = "HOA document"
+home-inspection-report = "Home inspection report"
+hr-memo = "HR memo"
+hr-policy = "HR policy"
+immigration-document = "Immigration document"
+immunization-record = "Immunization record"
+incident-report = "Incident report"
+income-statement = "Income statement"
+index = "Index"
+inspection-report = "Inspection report"
+insurance-certificate = "Insurance certificate"
+insurance-claim = "Insurance claim"
+insurance-policy = "Insurance policy"
+intake-form = "Intake form"
+inventory-list = "Inventory list"
+investment-summary = "Investment summary"
+invitation = "Invitation"
+invoice = "Invoice"
+itinerary = "Itinerary"
+job-application = "Job application"
+job-description = "Job description"
+lab-report = "Lab report"
+lease-agreement = "Lease agreement"
+leave-request = "Leave request"
+legal-brief = "Legal brief"
+legal-filing = "Legal filing"
+legal-notice = "Legal notice"
+legal-opinion = "Legal opinion"
+lesson-plan = "Lesson plan"
+letter = "Letter"
+letter-of-intent = "Letter of intent"
+license = "License"
+license-agreement = "License agreement"
+loan-agreement = "Loan agreement"
+loan-document = "Loan document"
+maintenance-log = "Maintenance log"
+manual = "Manual"
+market-research = "Market research"
+marketing-plan = "Marketing plan"
+media-kit = "Media kit"
+medical-invoice = "Medical invoice"
+medical-report = "Medical report"
+meeting-agenda = "Meeting agenda"
+meeting-minutes = "Meeting minutes"
+meeting-notes = "Meeting notes"
+membership-document = "Membership document"
+memo = "Memo"
+memorandum-of-understanding = "Memorandum of understanding"
+mortgage-document = "Mortgage document"
+nda = "NDA"
+newsletter = "Newsletter"
+non-compete-agreement = "Non-compete agreement"
+notice = "Notice"
+offer-letter = "Offer letter"
+onboarding-document = "Onboarding document"
+order-confirmation = "Order confirmation"
+order-form = "Order form"
+organization-chart = "Organization chart"
+packing-slip = "Packing slip"
+partnership-agreement = "Partnership agreement"
+patent = "Patent"
+pathology-report = "Pathology report"
+payment-reminder = "Payment reminder"
+payroll-document = "Payroll document"
+payslip = "Payslip"
+performance-review = "Performance review"
+permit = "Permit"
+petition = "Petition"
+pitch-deck = "Pitch deck"
+power-of-attorney = "Power of attorney"
+prescription = "Prescription"
+presentation = "Presentation"
+press-release = "Press release"
+price-list = "Price list"
+pricing-sheet = "Pricing sheet"
+privacy-policy = "Privacy policy"
+product-sheet = "Product sheet"
+proforma-invoice = "Proforma invoice"
+progress-report = "Progress report"
+project-charter = "Project charter"
+project-plan = "Project plan"
+promotional-material = "Promotional material"
+property-listing = "Property listing"
+proposal = "Proposal"
+public-notice = "Public notice"
+purchase-agreement = "Purchase agreement"
+purchase-order = "Purchase order"
+quality-report = "Quality report"
+quarterly-report = "Quarterly report"
+questionnaire = "Questionnaire"
+quick-start-guide = "Quick start guide"
+quote = "Quote"
+radiology-report = "Radiology report"
+receipt = "Receipt"
+recommendation-letter = "Recommendation letter"
+reference-letter = "Reference letter"
+referral-letter = "Referral letter"
+registration-confirmation = "Registration confirmation"
+registration-form = "Registration form"
+regulatory-filing = "Regulatory filing"
+release-notes = "Release notes"
+remittance-advice = "Remittance advice"
+rental-agreement = "Rental agreement"
+report = "Report"
+request-for-proposal = "Request for proposal"
+request-for-quotation = "Request for quotation"
+requirements-document = "Requirements document"
+research-abstract = "Research abstract"
+research-paper = "Research paper"
+reservation = "Reservation"
+resignation-letter = "Resignation letter"
+resume = "Resume"
+retrospective = "Retrospective"
+return-authorization = "Return authorization"
+risk-assessment = "Risk assessment"
+roadmap = "Roadmap"
+safety-data-sheet = "Safety data sheet"
+safety-procedure = "Safety procedure"
+sales-proposal = "Sales proposal"
+sales-report = "Sales report"
+schematic = "Schematic"
+scope-of-work = "Scope of work"
+service-agreement = "Service agreement"
+service-report = "Service report"
+settlement-agreement = "Settlement agreement"
+shareholder-agreement = "Shareholder agreement"
+shipping-confirmation = "Shipping confirmation"
+specification = "Specification"
+sponsorship-agreement = "Sponsorship agreement"
+standard-operating-procedure = "Standard operating procedure"
+statement-of-account = "Statement of account"
+statement-of-work = "Statement of work"
+status-report = "Status report"
+stock-report = "Stock report"
+study-guide = "Study guide"
+subpoena = "Subpoena"
+subscription-confirmation = "Subscription confirmation"
+supply-order = "Supply order"
+survey-form = "Survey form"
+survey-results = "Survey results"
+sustainability-report = "Sustainability report"
+table-of-contents = "Table of contents"
+tax-form = "Tax form"
+tax-return = "Tax return"
+tax-statement = "Tax statement"
+technical-drawing = "Technical drawing"
+technical-specification = "Technical specification"
+tenancy-agreement = "Tenancy agreement"
+tender-document = "Tender document"
+termination-letter = "Termination letter"
+terms-and-conditions = "Terms and conditions"
+terms-of-service = "Terms of service"
+test-plan = "Test plan"
+test-report = "Test report"
+thesis = "Thesis"
+ticket = "Ticket"
+timeline = "Timeline"
+timesheet = "Timesheet"
+title-document = "Title document"
+training-material = "Training material"
+transcript = "Transcript"
+travel-itinerary = "Travel itinerary"
+trust-document = "Trust document"
+user-guide = "User guide"
+utility-bill = "Utility bill"
+vendor-agreement = "Vendor agreement"
+visa-document = "Visa document"
+waiver = "Waiver"
+warehouse-receipt = "Warehouse receipt"
+warranty-document = "Warranty document"
+waybill = "Waybill"
+white-paper = "White paper"
+will = "Will"
+work-instruction = "Work instruction"
+work-order = "Work order"
+
 [cloudBadge]
 tooltip = "Úsáidfidh an oibríocht seo do chreidmheasanna scamall"
 
@@ -3016,6 +3424,7 @@ title = "Roghnaigh dath"
 actions = "Actions"
 back = "Siar"
 cancel = "Cealaigh"
+clearFilters = "Clear filters"
 close = "Dún"
 codeSample = "Code sample"
 collapse = "Fill"
@@ -3027,6 +3436,7 @@ done = "Déanta"
 enterValue = "Enter value"
 error = "Earráid"
 expand = "Leathnaigh"
+filterEmpty = "Nothing to filter on"
 loading = "Á lódáil..."
 next = "Ar Aghaidh"
 open = "Open"
@@ -3036,6 +3446,7 @@ refresh = "Athnuaigh"
 remaining = "Fágtha"
 retry = "Bain triail eile as"
 save = "Sábháil"
+search = "Search"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3227,7 +3638,9 @@ tags = "squish, beag, beag bídeach"
 
 [config]
 plan = "Plean"
+planDescription = "Your plan, credits and spend limit, and the invoices behind them."
 team = "Team"
+teamDescription = "Who shares this workspace, and invitations still waiting on an answer."
 
 [config.account.overview]
 confirmDelete = "Scrios Mo Chuntas"
@@ -3319,7 +3732,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -3350,6 +3762,40 @@ basic = "Cumraíocht Bhunúsach"
 integration = "Cumraíocht Chomhtháthaithe"
 security = "Cumraíocht Slándála"
 system = "Cumraíocht Córais"
+
+[connect]
+loading = "Checking this request."
+redirecting = "Returning you to your server."
+step = "Step {{current}} of {{total}}"
+
+[connect.confirm]
+acknowledge = "I recognise this address and want to connect it to my team"
+approve = "Connect server"
+deny = "Decline"
+lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
+originLabel = "Address"
+signedInAs = "Signed in as"
+switchAccount = "Use a different account"
+title = "Connect this server?"
+unknownAccount = "an unknown account"
+
+[connect.confirm.insecure]
+body = "This address does not use HTTPS, so your sign-in will be sent over an unencrypted connection. Only approve it on a network you trust."
+label = "Not an encrypted address"
+
+[connect.declined]
+body = "Nothing was connected. You can close this page."
+title = "Request declined"
+
+[connect.error]
+failed = "That did not go through. Only a team owner can connect a server."
+
+[connect.meta]
+title = "Connect a server"
+
+[connect.notFound]
+body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
+title = "Request not valid"
 
 [convert]
 autoRotate = "Rothlú Uathoibríoch"
@@ -3820,7 +4266,6 @@ mobileShort = "Soghluaiste"
 mobileUpload = "Uaslódáil Soghluaiste"
 mobileUploadNotAvailable = "Níl uaslódáil soghluaiste cumasaithe"
 moreOptions = "Tuilleadh roghanna"
-myFiles = "Mo Chomhaid"
 nextFile = "An chéad chomhad eile"
 noFiles = "Níl comhaid ar fáil"
 noFilesFound = "Níor aimsíodh comhaid a mheaitseálann do chuardach"
@@ -3880,6 +4325,7 @@ versionHistory = "Version history"
 [files]
 addFiles = "Cuir comhaid leis"
 created = "Cruthaithe"
+notIncludedInToolRun = "Not included in this tool run"
 selectFromWorkbench = "Roghnaigh comhaid ón mbinse oibre nó "
 selectMultipleFromWorkbench = "Roghnaigh ar a laghad {{count}} comhad ón mbinse oibre nó "
 size = "Méid Comhaid"
@@ -3968,6 +4414,7 @@ back = "Ar ais"
 backToFolder = "Ar ais go {{folder}}"
 backToMyFiles = "Ar ais go Mo Chomhaid"
 breadcrumbs = "Conair an fhillteáin"
+breadcrumbsOverflow = "Show parent folders"
 bulkActions = "Gníomhartha"
 cancel = "Cealaigh"
 classification = "Aicmiú"
@@ -4002,6 +4449,7 @@ downloadAll = "Íoslódáil gach ceann"
 downloadVersion = "Íoslódáil an leagan seo"
 dropOverlay = "Scaoil comhaid chun uaslódáil"
 dropOverlaySub = "Tosaíonn comhaid san Áitiúil. Úsáid 'Bog go' nó 'Sábháil sa scamall' chun iad a eagrú i bhfillteán."
+dropOverlaySubFolder = "They'll be added to this folder."
 duplicate = "Duplicate"
 file = "Comhad"
 fileInfo = "File info"
@@ -4014,11 +4462,17 @@ inPath = "i {{path}}"
 inWorkspace = "Oscail"
 inWorkspaceAria = "Cheana féin sa spás oibre"
 loading = "Á lódáil…"
-localFoldersUnavailable = "Is sa scamall amháin atá fillteáin - sábháil comhad sa scamall chun é a eagrú."
+localFolderManagedByDisk = "This folder is managed by its directory on disk."
+moveAcrossKindsBlocked = "These folders live in different places, so one can't go inside the other."
+moveIntoMountCloudSkipped_one = "{{count}} server file stayed in your files. It lives on the server, not on this disk."
+moveIntoMountCloudSkipped_other = "{{count}} server files stayed in your files. They live on the server, not on this disk."
+moveIntoMountFailed_one = "{{count}} file could not be written into the folder."
+moveIntoMountFailed_other = "{{count}} files could not be written into the folder."
+moveIntoVirtualCloudSkipped_one = "{{count}} server file was left in place. Server files can't live in browser-only folders."
+moveIntoVirtualCloudSkipped_other = "{{count}} server files were left in place. Server files can't live in browser-only folders."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Bog go…"
-myFiles = "Mo Chomhaid"
 newFolder = "Fillteán nua"
 newFolderStorageDisabled = "Níl stóráil fillteán an fhreastalaí cumasaithe. Iarr ar do riarthóir é a chasadh air."
 newFolderTabUnavailable = "Aistrigh go Gach rud nó go Scamall chun fillteáin a chruthú."
@@ -4028,6 +4482,7 @@ openVersionInWorkspace = "Oscail sa spás oibre"
 originFilter = "Scag de réir fhoinse"
 refresh = "Athnuaigh ón bhfreastalaí"
 remove = "Scrios"
+removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Bain an leagan seo"
 rename = "Athainmnigh"
 renamed = "Athainmnithe"
@@ -4040,6 +4495,7 @@ selectAll = "Roghnaigh gach rud"
 selectAllHint = "Cliceáil chun gach rud a roghnú. Leid: coinnigh Ctrl (nó Cmd) síos chun comhaid a chur leis ceann ar cheann, Shift chun raon a roghnú."
 selectedCount = "Roghnaithe: {{count}}"
 selectFile = "Roghnaigh an comhad {{name}}"
+serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
 shareDisabledHint = "Níl comhroinnt comhad cumasaithe ar an bhfreastalaí seo. Iarr ar do riarthóir é a chumasú."
 shareManage = "Bainistigh comhroinnt"
 showDetails = "Taispeáin sonraí"
@@ -4047,8 +4503,10 @@ signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "Fillteáin"
+unmount = "Unmount"
+unmountFolderBody = "Unmount \"{{name}}\"? The folder and its files stay on your disk."
+unmountFolderTitle = "Unmount from Stirling?"
 upload = "Uaslódáil"
-uploadedToLocal = "Tosaíonn comhaid uaslódáilte san Áitiúil. Úsáid 'Sábháil sa scamall' chun iad a chur i bhfillteán."
 uploadFromMobile = "Uaslódáil ón bhfón póca"
 versionActions = "Gníomhartha leagain"
 versionCollapse = "Fill lárleaganacha"
@@ -4079,9 +4537,19 @@ deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
 
+[filesPage.diskState]
+all = "All"
+done = "Ready"
+doneHint = "Processed - opens the result"
+failed = "Failed"
+processing = "Processing"
+processingHint = "Processing - available when it finishes"
+retry = "Retry"
+retryHint = "Run this file again"
+waiting = "Queued"
+
 [filesPage.empty]
 hint = "Scaoil PDFanna áit ar bith ar an leathanach seo chun iad a uaslódáil, nó bain úsáid as an gcnaipe Fillteán nua chun do chuid comhad a eagrú."
-newFolderCta = "Cruthaigh fillteán"
 title = "Tá an fillteán seo folamh"
 uploadCta = "Uaslódáil comhaid"
 
@@ -4090,10 +4558,6 @@ hint = "Uaslódáil comhad le tosú, nó cruthaigh fillteán chun eagrú."
 offlineHint = "Ceangail arís chun do leabharlann scamaill a lódáil."
 offlineTitle = "Níl aon chomhaid scamaill taisceáilte"
 title = "Níl aon chomhaid scamaill fós"
-
-[filesPage.empty.local]
-hint = "Fanann comhaid a sábháladh gan uaslódáil anseo. Scaoil comhad chun ceann a chur leis."
-title = "Níl aon chomhad áitiúil amháin"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -4114,6 +4578,8 @@ title = "Níor roinn tú aon chomhad fós"
 [filesPage.error]
 actionFailed = "Níorbh fhéidir {{action}}."
 actionFailedDetail = "Níorbh fhéidir {{action}}: {{message}}"
+addFolderFailed = "Could not add the folder."
+addFolderFailedDetail = "Could not add the folder: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Níorbh fhéidir an fillteán a scriosadh."
@@ -4126,8 +4592,20 @@ moveFilesFailed = "Níorbh fhéidir comhaid a bhogadh."
 moveFilesFailedDetail = "Níorbh fhéidir comhaid a bhogadh: {{message}}"
 moveFolderFailed = "Níorbh fhéidir fillteán a bhogadh."
 moveFolderFailedDetail = "Níorbh fhéidir fillteán a bhogadh: {{message}}"
+openDiskFileFailed = "Could not open {{name}}."
+openDiskFileFailedDetail = "Could not open {{name}}: {{message}}"
+readFolderFailed = "Could not read the folder."
+readFolderFailedDetail = "Could not read the folder: {{message}}"
 removeFilesFailed = "Níorbh fhéidir comhaid a bhaint."
 removeFilesFailedDetail = "Níorbh fhéidir comhaid a bhaint: {{message}}"
+removeFolderFailed = "Could not remove folder."
+removeFolderFailedDetail = "Could not remove folder: {{message}}"
+retryFailed = "Could not retry {{name}}."
+retryFailedDetail = "Could not retry {{name}}: {{message}}"
+revertAllFailed = "Could not restore originals."
+revertAllFailedDetail = "Could not restore originals: {{message}}"
+revertFailed = "Could not restore {{name}}."
+revertFailedDetail = "Could not restore {{name}}: {{message}}"
 uploadFilesFailed = "Níorbh fhéidir comhaid a uaslódáil."
 uploadFilesFailedDetail = "Níorbh fhéidir comhaid a uaslódáil: {{message}}"
 
@@ -4147,11 +4625,20 @@ activeCount = "Tá {{count}} scagaire gníomhach"
 clearAll = "Glan scagairí"
 label = "Scagairí"
 
+[filesPage.folderKind]
+local = "Local folder"
+virtual = "Browser folder"
+
 [filesPage.folderName]
 cancel = "Cealaigh"
 error = "Níorbh fhéidir an fillteán a shábháil. Bain triail eile as."
 label = "Ainm an fhillteáin"
 placeholder = "Ainm an fhillteáin"
+
+[filesPage.folderOrigin]
+diskHint = "A folder mounted from a directory on your disk"
+serverHint = "A folder stored on the Stirling server"
+virtualHint = "A folder that lives only in this browser"
 
 [filesPage.moveDialog]
 cancel = "Cealaigh"
@@ -4166,14 +4653,46 @@ newFolderPlaceholder = "Ainm an fhillteáin"
 newFolderToggle = "Cruthaigh fillteán nua…"
 title = "Bog go fillteán"
 
+[filesPage.newFolderMenu]
+addExisting = "Add local folder"
+server = "New folder on the server"
+serverHint = "Synced to your account, available wherever you sign in."
+
 [filesPage.origin]
 all = "Gach foinse"
 cloud = "Scamall"
 cloudHint = "Stóráilte ar fhreastalaí Stirling"
+diskHint = "A file in the mounted folder on your disk"
 local = "Áitiúil"
 localHint = "Stóráilte sa bhrabhsálaí seo amháin"
 shared = "Roinnte"
 sharedHint = "Roinnte leat trí nasc"
+
+[filesPage.processing]
+active = "Processing folder"
+edit = "Edit processing..."
+nothingToRestore = "No originals to restore - these files are already their originals."
+paused = "Processing paused"
+remove = "Remove processing"
+restore = "Restore original"
+restoreAll = "Restore all originals"
+resume = "Resume processing"
+revertCancel = "Cancel"
+revertConfirm = "Restore and pause"
+revertConfirmAll = "Restore every original in this folder? Processing will be paused, and restored files show as queued until you resume."
+revertConfirmFile = "Restore \"{{name}}\" to its original? Processing for this folder will be paused, and the file shows as queued until you resume."
+revertConfirmTitle = "Restore originals?"
+section = "Processing"
+start = "Process files in this folder..."
+stop = "Pause processing"
+sweep = "Retry failed files"
+
+[filesPage.processingSetup]
+back = "Back"
+cancel = "Cancel"
+lead = "Anything added to this folder runs these steps, in place - each file becomes its processed version."
+start = "Start processing"
+title = "Process '{{name}}'"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -4625,6 +5144,12 @@ title = "Coigeartaigh Dathanna/Codarsnacht"
 desc = "Cuireann síniú le PDF trí líníocht, téacs nó íomhá"
 tags = "anótáil, aibhsigh, tarraing"
 title = "Comhartha"
+
+[home.autoFormDetection]
+desc = "Automatically detect form fields with AI and make your PDF fillable."
+tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
+title = "Auto Form Detection"
+unavailable = "Needs the AI detection model, which isn't installed on this server. An administrator can add it under Settings > Features > AI Form Detection."
 
 [home.automate]
 desc = "Tóg sreafaí oibre ilchéime trí ghníomhartha PDF a nascadh le chéile. Foirfe do thascanna athfhillteacha."
@@ -5097,39 +5622,45 @@ sort = "Sórtáil"
 title = "Forbhreathnú ar Shocruithe Cumaisc"
 
 [mobileScanner]
-addToBatch = "Cuir le Baisc"
+addMore = "Add More"
 back = "Ar ais"
-batchImages = "Baisc"
 camera = "Ceamara"
 cameraAccessDenied = "Diúltaíodh rochtain ceamara. Cumasaigh rochtain ceamara le do thoil."
 cameraDescription = "Scan doiciméid ag baint úsáide as ceamara do ghléis le braiteadh imeall uathoibríoch"
 capture = "Gabh Grianghraf"
 chooseMethod = "Roghnaigh Modh Uaslódála"
 chooseMethodDescription = "Roghnaigh conas is mian leat doiciméid a scanadh agus a uaslódáil"
-clearBatch = "Glan"
+clearAll = "Clear All"
+closeTabHint = "You can close this tab now."
+dismiss = "Dismiss"
 edgeDetection = "Braith Imeall"
 fileDescription = "Uaslódáil grianghraif nó doiciméid atá ann cheana féin ó do ghléas"
+fileReadFailed = "Could not read that file."
 fileUpload = "Uaslódáil Comhad"
-flash = "Splanc"
 flashlight = "Splanc"
 httpsRequired = "Éilíonn rochtain ceamara HTTPS nó localhost. Bain úsáid as HTTPS nó rochtain trí localhost."
-noSession = "Seisiún Neamhbhailí"
+imageCount_one = "{{count}} image"
+imageCount_other = "{{count}} images"
+imagePosition = "Image {{index}} of {{total}}"
+invalidFileType = "Please choose an image file."
 noSessionMessage = "Scanáil cód QR bailí le do thoil chun rochtain a fháil ar an leathanach seo."
 processing = "Ag Próiseáil..."
+remove = "Remove"
 retake = "Athghlac"
+scanAnother = "Scan another"
 selectFilesPrompt = "Roghnaigh comhaid le huaslódáil"
-selectImage = "Roghnaigh Íomhá"
+selectImages = "Select Images"
 sessionExpired = "Tá an seisiún seo imithe in éag. Athnuachan agus déan iarracht arís."
 sessionInvalid = "Earráid Seisiúin"
 sessionNotFound = "Níor aimsíodh an seisiún. Athnuachan agus déan iarracht arís."
 sessionValidationError = "Ní féidir an seisiún a fhíorú. Déan iarracht arís."
+startingCamera = "Starting camera…"
 title = "Scanóir Soghluaiste"
-upload = "Uaslódáil"
-uploadAll = "Uaslódáil Gach Rud"
 uploadFailed = "Theip ar an uaslódáil. Déan iarracht arís."
 uploading = "Ag uaslódáil..."
 uploadSuccess = "Uaslódáil Rathúil!"
 uploadSuccessMessage = "Tá do chuid íomhánna aistrithe."
+uploadWithCount = "Upload ({{total}})"
 validating = "Ag bailíochtú an tseisiúin..."
 
 [mobileSign]
@@ -5187,24 +5718,27 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
+adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
 empty = "Níl aon rud le tuairisciú."
 handoffUnavailable = "Ní ligfidh an brabhsálaí seo don phróiseálaí an doiciméad a chur ar aghaidh chuig an eagarthóir. Oscail ón eagarthóir ina ionad sin é."
 noDocumentLinked = "Níl an teip seo nasctha le doiciméad ar leith, mar sin níl aon rud le hoscailt anseo."
 notOnThisDevice = "Níl an doiciméad seo ar an ngléas seo, mar sin ní féidir é a oscailt anseo."
 occurrences = "{{count}} uair"
 open = "Fógraí"
+rerunRejected = "The policy could not be run again just now. Try again in a moment."
+rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
+retryUnavailable = "This document can no longer be retried from this browser."
 title = "Fógraí"
+unlockedNotRerun = "The document was unlocked and opened here, but the policy could not be run on it again."
+unlockedRerunUndelivered = "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
 unread = "Gan léamh"
 
 [notifications.action]
+copiedLog = "Copied"
+copyLog = "Copy log"
 failed = "Níor oibrigh sé sin. Bain triail eile as ar ball."
+more = "More options"
 unavailable = "Níl sé ar fáil don fhógra seo."
-
-[notifications.detail]
-copied = "Cóipeáilte"
-copy = "Cóipeáil an earráid"
-less = "Taispeáin níos lú"
-more = "Taispeáin an teachtaireacht iomlán"
 
 [notifications.section]
 earlier = "Níos luaithe"
@@ -5956,6 +6490,23 @@ upgradeSuccess = "D’éirigh leis an íocaíocht! Uasghrádaíodh do shíntiús
 upgradeTitle = "Uasghrádaigh go {{planName}}"
 yearly = "Bliantúil"
 
+[payment.capacityStage]
+continue = "Continue to payment"
+customHint = "Rounded up to the next block of {{users}}."
+customLabel = "Number of users"
+dueToday = "Due today"
+enterpriseQuote = "Get an enterprise quote"
+lineItem = "Team · {{price}}{{period}} per {{block}} users"
+minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at least {{minimum}}."
+modalTitle = "Upgrade to {{planName}}"
+other = "Other"
+perMonth = "/mo"
+perYear = "/yr"
+renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
+subheading = "Covers everyone you invite, in blocks of {{users}} users."
+usersLabel = "Users"
+userTotal = "{{users}} users"
+
 [payment.emailStage]
 continue = "Lean ar aghaidh"
 description = "Úsáidfimid é seo chun d’eochair cheadúnais agus admhálacha a sheoladh."
@@ -6025,99 +6576,271 @@ REVERSE_ORDER = "Cas an cháipéis bunoscionn ionas go n‑éireoidh an leathana
 SIDE_STITCH_BOOKLET_SORT = "Socraigh leathanaigh le haghaidh priontála leabhráin le fuáil ar an taobh (optamaithe do cheangal ar an taobh)."
 
 [pdfTextEditor]
-conversionFailed = "Theip ar thiontú PDF. Bain triail eile as."
-converting = "PDF á thiontú go formáid in-eagarthóireachta..."
-currentFile = "Comhad reatha: {{name}}"
-imageLabel = "Íomhá curtha"
-noTextOnPage = "Níor braitheadh aon téacs in-eagarthóireachta ar an leathanach seo."
-pagePreviewAlt = "Réamhamharc leathanaigh"
-pageSummary = "Leathanach {{number}} as {{total}}"
+download = "Download"
+downloadTooltip = "Save and download the edited PDF"
+save = "Save PDF"
+saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Eagarthóir PDF JSON"
-viewLabel = "Eagarthóir PDF"
+unsaved = "(unsaved)"
+workbenchLabel = "Editor"
 
-[pdfTextEditor.actions]
-applyChanges = "Cuir Athruithe i bhFeidhm"
-clearText = "Glan téacs"
-downloadCopy = "Íoslódáil Cóip"
-moreOptions = "Tuilleadh roghanna"
-reset = "Athshocraigh Athruithe"
+[pdfTextEditor.annotations]
+freetext = "Annotation text - not page text, so it can't be edited here"
+stamp = "Stamp annotation - not page text, so it can't be edited here"
+widget = "Form field - not page text, so it can't be edited here"
 
-[pdfTextEditor.badges]
-earlyAccess = "Rochtain Luath"
-modified = "Athraithe"
+[pdfTextEditor.discard]
+body = "Opening {{name}} closes the document you are editing. Your unsaved changes will be lost."
+cancel = "Cancel"
+confirm = "Discard and open"
+hint = "Cancel, then Save PDF to keep them in your workspace first."
+title = "Discard unsaved changes?"
 
-[pdfTextEditor.empty]
-dropzone = "Tarraing agus scaoil comhad PDF nó JSON anseo, nó cliceáil chun brabhsáil"
-dropzoneWithFiles = "Roghnaigh comhad ón gcluaisín Comhaid, nó tarraing agus scaoil comhad PDF nó JSON anseo, nó cliceáil chun brabhsáil"
-title = "Níl aon cháipéis luchtaithe"
+[pdfTextEditor.drop]
+hint = "Releases on the editor stage replace any open document."
+title = "Drop a PDF to open"
 
-[pdfTextEditor.errors]
-invalidJson = "Ní féidir an comhad JSON a léamh. Cinntigh gur gineadh é leis an uirlis PDF go JSON."
-pdfConversion = "Ní féidir an JSON curtha in eagar a thiontú ar ais go PDF."
+[pdfTextEditor.error]
+decodeImage = "Could not decode the selected image."
+insertImage = "Could not insert the selected image."
 
-[pdfTextEditor.fontAnalysis]
-allFonts = "Gach cló"
-currentPageFonts = "Clónna ar an leathanach seo"
-details = "Sonraí Cló"
-embedded = "Leabaithe"
-fallback = "cúltaca"
-infoMessage = "Eolas faoi atáirgeadh clónna ar fáil."
-missing = "ar iarraidh"
-perfect = "foirfe"
-perfectMessage = "Is féidir gach cló a atáirgeadh go foirfe."
-subset = "fo-thacar"
-suggestions = "Nótaí"
-type = "Cineál"
-warningMessage = "D’fhéadfadh roinnt clónna gan rindreáil i gceart."
-warnings = "Rabhaidh"
-webFormat = "Formáid Gréasáin"
+[pdfTextEditor.find]
+close = "Close find bar"
+count = "{{current}} of {{total}}"
+findPlaceholder = "Find"
+ignoreAccents = "Ignore accents"
+matchCase = "Match case"
+next = "Next match"
+noMatches = "No matches"
+previous = "Previous match"
+replace = "Replace"
+replaceAll = "Replace all"
+replaced = "{{count}} replaced"
+replacePlaceholder = "Replace with"
+wholeWord = "Whole word"
 
-[pdfTextEditor.groupingMode]
-auto = "Uathoibríoch"
-paragraph = "Mír"
-singleLine = "Líne Aonair"
+[pdfTextEditor.fontPicker]
+builtInGroup = "Built-in fonts"
+deviceFontsNone = "No extra device fonts were found."
+deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still work."
+deviceGroup = "Device fonts"
+documentGroup = "Document font"
+label = "Font family"
+mixed = "Mixed"
+noMatch = "No matching font"
+placeholder = "Font family"
+useDeviceFonts = "Use device fonts"
 
-[pdfTextEditor.manual]
-expandWidth = "Leathnaigh go himill an leathanaigh"
-merge = "Cumaisc an roghnú"
-mergeTooltip = "Cumaisc na boscaí roghnaithe"
-resetWidth = "Athshocraigh an leithead"
-resizeHandle = "Coigeartaigh leithead an téacs"
-ungroup = "Díghrúpáil an roghnúchán"
-ungroupTooltip = "Roinn an mhír ar ais ina línte"
-widthMenu = "Roghanna leithead"
+[pdfTextEditor.fonts]
+allPresent = "All letters & numbers present"
+missing = "Missing: {{glyphs}}"
+title = "Fonts"
 
-[pdfTextEditor.modeChange]
-cancel = "Cealaigh"
-confirm = "Athshocraigh agus Athraigh an Mód"
-title = "Deimhnigh Athrú Móid"
-warning = "Athshocróidh athrú ar mhód grúpála téacs gach athrú gan sábháil. An bhfuil tú cinnte gur mian leat leanúint ar aghaidh?"
+[pdfTextEditor.fonts.compat]
+info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
+ok = "Every font includes the full alphabet and digits - type freely."
+warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
 
-[pdfTextEditor.options.advanced]
-title = "Socruithe Ardleibhéil"
+[pdfTextEditor.fonts.pill]
+info = "Embedded"
+ok = "All glyphs"
+warn = "{{count}} with gaps"
 
-[pdfTextEditor.options.autoScaleText]
-description = "Scálaíonn sé téacs go cothrománach go huathoibríoch chun feistiú dá bhosca teorann bunaidh nuair a bhíonn rindreáil cló difriúil ón PDF."
-title = "Scálaigh téacs go huathoibríoch chun boscaí a fheistiú"
+[pdfTextEditor.fonts.status.embedded]
+label = "Embedded"
 
-[pdfTextEditor.options.forceSingleElement]
-description = "Nuair atá cumasaithe, easpórtálann an t-eagarthóir gach bosca téacs curtha in eagar mar eilimint téacs PDF amháin chun glifaí forluiteacha nó clónna measctha a sheachaint."
-title = "Glasáil téacs curtha in eagar le heilimint PDF aonair"
+[pdfTextEditor.fonts.status.standard]
+label = "Standard"
 
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Aimsíonn sé go huathoibríoch cineál leathanaigh agus grúpálann sé téacs mar is cuí."
-paragraphDescription = "Grúpálann sé línte ailínithe i mboscaí téacs míre il-líne."
-singleLineDescription = "Coinníonn sé gach líne téacs PDF mar bhosca téacs ar leith."
-title = "Mód Grúpála Téacs"
+[pdfTextEditor.fonts.status.subset]
+label = "Subset"
 
-[pdfTextEditor.pageType]
-paragraph = "Leathanach míre"
-sparse = "Téacs scaipthe"
+[pdfTextEditor.help]
+ariaLabel = "Keyboard shortcuts"
+title = "Keyboard shortcuts"
+tooltip = "Keyboard shortcuts (?)"
 
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
+[pdfTextEditor.help.clipboard]
+copyDesc = "Copy selected text"
+cutDesc = "Cut selected (copy + delete)"
+heading = "Clipboard"
+pasteDesc = "Paste clipboard text as new run"
+pastePlainDesc = "Paste as plain text"
+
+[pdfTextEditor.help.document]
+escDesc = "Clear selection / close find / close help"
+heading = "Document"
+helpDesc = "This help"
+saveDesc = "Save to your workspace"
+
+[pdfTextEditor.help.editing]
+deleteDesc = "Remove selected"
+duplicateDesc = "Duplicate selected"
+groupDesc = "Group selected runs into one paragraph"
+heading = "Editing"
+marqueeDesc = "Marquee multi-select"
+moveDesc = "Move text run"
+selectAllDesc = "Select all"
+shiftClickDesc = "Add / remove a run from selection"
+undoRedoDesc = "Undo / Redo"
+
+[pdfTextEditor.help.find]
+heading = "Find & replace"
+nextDesc = "Next match (add Shift for previous)"
+openDesc = "Open find bar (and replace)"
+
+[pdfTextEditor.help.navigation]
+firstLastDesc = "First / last page"
+heading = "Navigation"
+pageDesc = "Previous / next page"
+zoomDesc = "Zoom in / out"
+
+[pdfTextEditor.inspector]
+document = "Document"
+fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
+fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica."
+geometry = "Position & size"
+height = "Height"
+heightHint = "A text box's height follows its type size and line count."
+image = "Image"
+images = "Images"
+manyImages = "{{count}} images"
+manyText = "Text · {{count}} boxes"
+mixed = "{{count}} objects"
+multiGeometry = "Select a single object to edit its position and size."
+nothingSelected = "Nothing selected"
+nothingSelectedHint = "Click any text or image on the page to edit it here."
+oneImage = "Image"
+oneText = "Text"
+pages = "Pages"
+tabDocument = "Document"
+tabSelected = "Selected"
+textBoxes = "Text boxes"
+width = "Width"
+widthHint = "A text box's width follows its content and wrapping."
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
+cancel = "Cancel"
+incorrect = "Incorrect password - try again."
+label = "Password"
+open = "Open"
+protected = "This PDF is password-protected."
+protectedNamed = "\"{{fileName}}\" is password-protected."
+title = "Password required"
+
+[pdfTextEditor.rulers]
+guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
+hint = "Drag from a ruler to add an alignment guide"
+horizontal = "Horizontal ruler"
+unit = "pt"
+vertical = "Vertical ruler"
+
+[pdfTextEditor.run]
+lockedTitle = "Locked - use the Unlock button to edit"
+
+[pdfTextEditor.saveRisk]
+cancel = "Cancel"
+intro = "Saving the edited copy changes the file. That means:"
+note = "Your edits are kept. The changes listed above are unavoidable when saving the edited copy."
+saveAnyway = "Save anyway"
+title = "Saving will change this PDF"
+
+[pdfTextEditor.settings]
+advanced = "Advanced"
+find = "Find in document"
+findTooltip = "Find ({{shortcut}})"
+view = "View"
+
+[pdfTextEditor.sidebar]
+addImage = "Add image"
+addText = "Add text"
+clickPageToAddText = "Click page to add text"
+document = "Document"
+group = "Group"
+groupingAuto = "Auto"
+groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
+groupingLine = "Line"
+groupTooltip = "Merge selected runs into one paragraph ({{shortcut}})"
+groupTooltipDisabled = "Select 2+ runs to merge"
+noFile = "No file loaded"
+noFileHint = "Pick a PDF from the Files panel on the left, or drop one in. The editor will open it automatically."
+opening = "Opening document..."
+paragraph = "Paragraph"
+rulers = "Rulers and guides"
+textBoxWidth = "New text box width"
+textGrouping = "Text grouping"
+ungroup = "Ungroup"
+ungroupTooltip = "Split this paragraph into one run per line"
+ungroupTooltipDisabled = "Select a multi-line paragraph to ungroup"
+widthGrow = "Grow"
+widthGrowHint = "Grow widens a box as you type; Wrap keeps its width and flows onto new lines."
+widthWrap = "Wrap"
+
+[pdfTextEditor.spellcheck]
+auto = "Automatic"
+enable = "Check spelling as you type"
+language = "Dictionary language"
+
+[pdfTextEditor.stage]
+loadingDocument = "Loading document"
+loadingProgress = "Loading progress"
+noDocument = "No document loaded."
+pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
+renderingPreview = "Rendering preview"
+
+[pdfTextEditor.toolbar]
+addTextTooltip = "Add a text box - then click the page"
+advancedColour = "Advanced colour"
+advancedColourTooltip = "Advanced colour (glyph outline)"
+alignBottom = "Align bottom"
+alignCentre = "Align centre"
+alignLabel = "Align · needs 2+ objects"
+alignLeft = "Align left"
+alignMiddle = "Align middle"
+alignRight = "Align right"
+alignTop = "Align top"
+arrange = "Arrange"
+bringForward = "Bring forward"
+bringToFront = "Bring to front"
+caseLower = "lowercase"
+caseSentence = "Sentence case"
+caseTitle = "Title Case"
+caseUpper = "UPPERCASE"
+changeCase = "Change case"
+changeCaseTooltip = "Change case (text runs only)"
+delete = "Delete selected"
+deleteTooltip = "Delete (Del)"
+distributeHorizontally = "Distribute horizontally"
+distributeLabel = "Distribute · needs 3+ objects"
+distributeVertically = "Distribute vertically"
+editImageExternally = "Edit in another app"
+flipHorizontal = "Flip horizontal"
+flipVertical = "Flip vertical"
+fontColour = "Font colour"
+fontSize = "Font size"
+formatting = "Text formatting"
+italic = "Italic"
+italicUnavailable = "This font has no italic version. Load your device fonts or pick another font family."
+lock = "Lock selection"
+lockTooltip = "Lock selection - prevents accidental edits"
+more = "More actions"
+order = "Order"
+outlineColour = "Outline colour"
+outlineWidth = "Outline width (0 = none)"
+redo = "Redo"
+redoTooltip = "Redo ({{shortcut}})"
+replaceImage = "Replace, keeping placement"
+rotateLeft = "Rotate 90° left"
+rotateRight = "Rotate 90° right"
+sendBackward = "Send backward"
+sendToBack = "Send to back"
+undo = "Undo"
+undoTooltip = "Undo ({{shortcut}})"
+unlock = "Unlock selection"
+unlockTooltip = "Unlock selection - makes it editable again"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Tá an breathnóir alfa seo fós ag forbairt—d’fhéadfadh clónna, dathanna, éifeachtaí trédhearcachta agus sonraí leagan amach áirithe athrú beagán. Déan seiceáil dhúbailte ar an PDF ginte sula roinneann tú é."
@@ -6134,31 +6857,12 @@ title = "Réamhamharc ar an Éagsúlacht"
 text = "Díríonn an spás oibre seo ar théacs a chur in eagar agus íomhánna leabaithe a athshuíomh. Coinnítear saothar ealaíne leathanaigh casta, giuirléidí foirmeacha, agus grafaicí srathacha le haghaidh onnmhairithe ach ní féidir iad a chur in eagar go hiomlán anseo."
 title = "Fócas Téacs agus Íomhá"
 
-[pdfTextEditor.welcomeBanner]
-bestFor = "Is fearr a oibríonn le:"
-bestFor1 = "PDFanna simplí a bhfuil téacs agus íomhánna iontu den chuid is mó"
-bestFor2 = "Cáipéisí le formáidiú caighdeánach míreanna"
-bestFor3 = "Litreacha, aistí, tuairiscí agus doiciméid bhunúsacha"
-dontShowAgain = "Ná taispeáin arís"
-experimental = "Is gné thurgnamhach í seo atá i mbun forbartha. Bí ag súil le heaspa cobhsaíochta agus le fadhbanna áirithe le linn úsáide."
-feedback = "Is gné rochtana luaithe í seo. Tabhair tuairisc ar aon fhadhb a mbuaileann tú léi chun cabhrú linn feabhsú!"
-gotIt = "Tuigim"
-howItWorks = "Tiontaíonn an uirlis seo do PDF go formáid in-eagarthóireachta ina féidir leat ábhar téacs a mhodhnú agus íomhánna a athshuíomh. Sábháiltear na hathruithe ar ais mar PDF nua."
-issue1 = "Níl dath an téacs caomhnaithe faoi láthair (cuirfear leis go luath é)"
-issue2 = "Tá níos mó saincheisteanna ailínithe agus spásála i Mód Míre — moltar Mód Líne Aonair"
-issue3 = "Tá an réamhamharc difriúil ón PDF easpórtáilte — tá PDFanna easpórtáilte níos gaire don bhunleagan"
-issue4 = "D’fhéadfadh go mbeadh coigeartú láimhe de dhíth ar ailíniú téacs rothlaithe"
-issue5 = "D’fhéadfadh éifeachtaí trédhearcachta agus sraithe a bheith éagsúil ón mbunleagan"
-knownIssues = "Fadhbanna Aitheanta (Á Réiteach):"
-limitation1 = "Féadfaidh rindreáil cló a bheith beagán difriúil ón PDF bunaidh"
-limitation2 = "Coinnítear grafaicí casta, réimsí foirme agus nótaí ach ní féidir iad a chur in eagar"
-limitation3 = "D’fhéadfadh sé go dtógfadh sé tamall comhaid mhóra a thiontú agus a phróiseáil"
-limitations = "Teorainneacha Reatha:"
-notIdealFor = "Ní oiriúnach do:"
-notIdealFor1 = "PDFanna le formáidiú speisialta ar nós pointí liosta, táblaí, nó leagan amach ilcholúin"
-notIdealFor2 = "Irisí, bróisiúir, nó doiciméid le dearadh trom"
-notIdealFor3 = "Lámhleabhair treoracha le leagan amach casta"
-title = "Fáilte go dtí Eagarthóir Téacs PDF (Rochtain Luath)"
+[pdfTextEditor.zoom]
+fit = "Fit"
+fitToWidth = "Fit to width"
+in = "Zoom in"
+out = "Zoom out"
+reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "Ó CSV go PDF"
@@ -6298,10 +7002,10 @@ saml = "SAML"
 secureLoginSupport = "Tacaíocht logála isteach slán"
 selfHostedDeployment = "Imlonnú féin‑óstáilte"
 sso = "SSO"
-unlimitedUsers = "Úsáideoirí gan teorainn"
 upToFiveUsers = "Suas le 5 úsáideoir"
 upToFiveUsersLowercase = "suas le 5 úsáideoir"
 usageTracking = "Rianú úsáide"
+usersIncluded = "100 users included"
 usersLimitedToSeats = "Úsáideoirí teoranta do shuíocháin"
 
 [plan.free]
@@ -6330,9 +7034,9 @@ saveWithAnnualBilling = "Sábháil le billeáil bhliantúil"
 selfHosted = "Féin‑óstáilte"
 selfHostedOnInfrastructure = "Féin‑óstáilte ar d’infreastruchtúr"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "Úsáideoirí gan teorainn"
 upToFiveUsers = "Suas le 5 úsáideoir"
 usageTrackingPrometheus = "Rianú úsáide & Prometheus"
+usersIncluded = "100 users included"
 
 [plan.licenseWarning]
 body = "Tá {{total}} úsáideoir agat ach ní thacaíonn an sraith saor in aisce ach le {{limit}} in aghaidh an fhreastalaí. Uasghrádaigh chun Stirling PDF a choinneáil ag rith go réidh."
@@ -6378,6 +7082,10 @@ instructions = "Comhlánaigh do cheannachán sa chluaisín Stripe. Nuair a bheid
 keyDescription = "Greamaigh an eochair cheadúnais ó do ríomhphost"
 success = "Ceadúnas Gníomhachtaithe!"
 successMessage = "Tá do cheadúnas gníomhachtaithe go rathúil. Is féidir leat an fhuinneog seo a dhúnadh anois."
+
+[plan.team]
+maxUsers = "100 users"
+name = "Team"
 
 [policies.activity]
 outputsUnavailable = "Níl aschuir na beartais ar fáil le híoslódáil a thuilleadh."
@@ -6426,46 +7134,9 @@ enforcingTitle = "Polasaí á chur i bhfeidhm..."
 viewAnyway = "Amharc ar chomhad (polasaí fós á chur i bhfeidhm)"
 
 [policyOption]
-autoRedactPhi = "Ceil PHI go huathoibríoch"
-blockExport = "Blocáil easpórtáil"
-ccpa = "CCPA"
-contracts = "Conarthaí"
-documents = "Doiciméid"
-fedramp = "FedRAMP"
-financialReports = "Tuarascálacha airgeadais"
-flagForReview = "Marcáil le hathbhreithniú"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "Coinnigh"
-hrRecords = "Taifid AD"
-indefinite = "Gan teorainn"
-insurance = "Árachas"
-invoices = "Sonraisc"
-iso27001 = "ISO 27001"
-legalFilings = "Comhdúcháin dlí"
-medicalPhi = "Leighis / PHI"
-never = "Riamh"
-ninetyDays = "90 lá"
-oneYear = "1 bhliain"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "Cuir doiciméad i gcoraintín"
-routeToBucket = "Ródaigh chuig bucket"
-s3Bucket = "S3 bucket"
-sevenYears = "7 mbliana"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "Doiciméid chánach"
-thirtyDays = "30 lá"
-threeYears = "3 bliana"
-webhook = "Webhook"
-
-[portal]
-comingSoon = "Ag teacht go luath"
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
 billingNote = "Billeálann próiseáil gan freastal ar sparán d’eagraíochta."
@@ -6486,11 +7157,60 @@ after = "chun nascadh cuntais leis an gcuntas Stirling óstáilte a chumasú. In
 before = "Socraigh"
 title = "Níl logáil isteach SaaS cumraithe"
 
-[portal.accountLink.gate]
-action = "Nasc cuntas"
-description = "Nasc cuntas Stirling na heagraíochta seo chun gnéithe inbhilleáilte a úsáid."
-title = "Nasc chun díghlasáil"
-titleFeature = "Nasc chun {{feature}} a dhíghlasáil"
+[portal.accountLink.connect]
+close = "Close"
+exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
+notNow = "Not now"
+start = "Connect Stirling account"
+step = "Step {{current}} of {{total}}"
+
+[portal.accountLink.connect.benefits]
+creditsDetail = "500 free per month"
+creditsLabel = "Credits"
+processorDetail = "Pipelines, policies, sources and audit"
+processorLabel = "Processor"
+teamsDetail = "Free for up to 5 users"
+teamsLabel = "Teams"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
+retry = "Try again"
+signedInAnyway = "You are signed in to Stirling, so billing and usage will load. Only the server link is incomplete."
+working = "Finishing the connection."
+
+[portal.accountLink.connect.callback.expired]
+body = "Connection requests are short lived. Start another one."
+title = "Request expired"
+
+[portal.accountLink.connect.callback.malformed]
+body = "This page was opened without a valid connection response. Start the connection from settings."
+title = "Could not read the response"
+
+[portal.accountLink.connect.callback.rejected]
+body = "This request was declined or has already been used. Start another one if that was not intended."
+title = "Connection not completed"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling did not confirm the connection. This is usually temporary."
+title = "Not finished yet"
+
+[portal.accountLink.connect.done]
+accountLabel = "Account"
+addPolicy = "Add a policy"
+buildPipeline = "Set up a pipeline"
+creditsBarLabel = "Free credits remaining"
+creditsSuffix = "of {{allowance}} free credits left"
+cta = "Done"
+inviteTeam = "Invite your team"
+lede = "This server now runs against your Stirling account."
+pendingTitle = "Almost there"
+switchOnProcessor = "Switch on the Processor"
+title = "Connected"
+
+[portal.accountLink.connect.handoff]
+going = "Taking you to stirling.com"
+reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
+title = "Connecting"
 
 [portal.accountLink.instances]
 active = "Gníomhach"
@@ -6519,11 +7239,13 @@ minutesAgo_other = "{{count}}n ó shin"
 never = "riamh"
 
 [portal.accountLink.modal]
-linkSubtitle = "Sínigh isteach sa chuntas ar cheart don fhreastalaí seo billeáil ina aghaidh."
+cancel = "Cancel"
+continueReauth = "Sign in again"
+exhaustedTitle = "Add more monthly credits"
 linkTitle = "Nasc do chuntas Stirling"
-reauthSubtitle = "Chuaigh do sheisiún in éag — sínigh isteach arís i do chuntas Stirling. Fanann d’áis nasctha."
+noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
 reauthTitle = "Sínigh isteach arís"
-simulateSignIn = "Insamhail síniú isteach (dev)"
+startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "chun nascadh in-app leis an gcuntas Stirling óstáilte a chumasú."
@@ -6541,6 +7263,12 @@ sub = "Nasc an eagraíocht féin-óstáilte seo lena cuntas Stirling ionas go mb
 forbidden = "Ní féidir ach le húinéir na foirne áiseanna nasctha na heagraíochta a fheiceáil."
 generic = "Níorbh fhéidir áiseanna nasctha na foirne a luchtú. Bain triail eile as i gceann nóiméid."
 title = "Níorbh fhéidir áiseanna nasctha a luchtú"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Not now"
+sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
+title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "Plean Editor"
@@ -6629,16 +7357,16 @@ subtitle = "Imscar áit ar bith, do d’fhoireann iomlán."
 title = "Eagarthóirí PDF Saor in Aisce"
 
 [portal.billing.freePlan]
+anywhere = "Web, desktop & self-hosted"
 checkoutErrorTitle = "Níorbh fhéidir checkout a thosú"
 currentPlan = "Plean reatha"
+everyPdfTool = "Every PDF tool"
 freeForever = "Saor in aisce go deo"
 noTeamResolved = "Níl aon fhoireann réitithe ar do sparán fós — athnuaigh agus bain triail eile as."
 ownerOnly = "Ní féidir ach le húinéir na foirne an plean Processor a chur ar siúl."
 payInvoice = "Íoc sonrasc chun críochnú"
 planName = "Editor"
-ssoIncluded = "SSO san áireamh"
 switchOnProcessor = "Cuir Processor ar siúl →"
-unlimitedUsers = "Úsáideoirí gan teorainn"
 viewQuote = "Féach ar luachan"
 
 [portal.billing.invoices]
@@ -6664,11 +7392,6 @@ showMostRecent_other = "Taispeáin {{count}} is déanaí"
 title = "Stair sonrasc"
 viewAriaLabel = "Amharc ar shonrasc {{number}} in Stripe"
 viewLink = "Amharc ↗"
-
-[portal.billing.linkPrompt]
-cta = "Nasc cuntas Stirling"
-description = "Tá eagarthóireacht PDF de láimh — amharc, síniú, cumasc, scoilt, comhartha uisce, comhbhrú, tiontú, OCR de láimh — saor in aisce i gcónaí, bíodh sé nasctha nó ná bíodh. Nasc chun 500 PDFs próiseála méadraithe saor in aisce a éileamh (uathoibriú, AI, agus an API); nuair a bheidh níos mó uait, cuir an plean Processor ar siúl agus íoc as an méid a úsáideann tú amháin."
-title = "Nasc do chuntas Stirling"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Billeáilte go míosúil"
@@ -7431,114 +8154,33 @@ status = "Stádas"
 time = "Am"
 user = "Úsáideoir"
 
-[portal.editorAdmin]
-subtitle = "Imscar Stirling PDF Editor, péireáil insteansanna féin-óstáilte le d’eagraíocht, agus oibrigh an flít atá ag rith — spriocanna, sláinte, dintiúir, agus gníomhachtú as líne in aon áit amháin."
-title = "Imscaradh an Eagarthóra"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "Úsáideoirí gníomhacha"
-host = "Óstach"
-lastSeen = "Feicthe go deireanach"
-region = "Réigiún"
-status = "Stádas"
-target = "Target"
-version = "Leagan"
-
-[portal.editorAdmin.health.empty]
-description = "Imscar sprioc agus péireáil í chun sláinte bheo insteansanna a fheiceáil anseo."
-title = "Níl aon insteansanna ag tuairisciú"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "Gin beart as líne"
-lockCopy = "Is cuid de Enterprise é gníomhachtú as líne agus on-prem."
-subtitle = "Gin beart gníomhachtaithe sínithe le haghaidh suiteála as líne nó on-prem gan aon chonair líonra amach. Aistrigh é chuig an insteans agus cuir i bhfeidhm é le linn socrú an chéad rith."
-talkToSales = "Labhair le díolacháin"
-title = "Gníomhachtú air-gapped"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "Tá {{file}} sínithe agus réidh le haistriú. Gníomhaíonn sé insteans amháin agus rachaidh sé in éag i 14 lá."
-title = "Beart réidh"
-
-[portal.editorAdmin.pairing]
-generated = "Ginte ✓"
-generateNewCode = "Gin cód nua"
-lockCopy = "Is cuid de Enterprise é soláthar IaC."
-rotate = "Rothlaigh"
-talkToSales = "Labhair le díolacháin"
-
-[portal.editorAdmin.sections.health]
-sub = "Gach insteans Eagarthóra ag tuairisciú isteach — leagan, réigiún, stádas, feicthe go deireanach, agus úsáideoirí gníomhacha."
-title = "Sláinte insteansanna"
-
-[portal.editorAdmin.sections.pairing]
-sub = "Ceangail eagarthóir féin-óstáilte leis an eagraíocht seo. Gin token, tabhair cód gearr ar aghaidh, nó sreangaigh é trí IaC."
-title = "Péireáil"
-
-[portal.editorAdmin.sections.targets]
-sub = "An áit a ritheann an tEagarthóir. Cóipeáil blúire chun insteans féin-óstáilte a chur ar bun, nó úsáid Managed Cloud gan ops."
-title = "Spriocanna imscartha"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "Token reatha"
-lastRotated = "Rothlaithe go deireanach"
-rotateButton = "Rothlaigh token seirbhíse"
-subtitle = "Fíordheimhníonn insteansanna leis an eagraíocht leis an dintiúr seo. Rothlaigh é de réir sceidil nó láithreach tar éis sceitheadh amhrasta."
-title = "Token seirbhíse"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "Eisíodh token nua. Nuashonraigh STIRLING_SERVICE_TOKEN gach insteans féin-óstáilte laistigh den fhuinneog ghrásta 24h nó rachaidh siad as líne."
-title = "Rothlaigh insteansanna atá ag rith"
-
-[portal.editorAdmin.status]
-degraded = "Díghrádaithe"
-healthy = "Sláintiúil"
-offline = "As líne"
-pairing = "Á phéireáil"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} insteans"
-instanceCount_other = "{{count}} insteans"
-talkToSales = "Labhair le díolacháin"
-upgradePlan = "Uasghrádaigh plean"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "Is cuid de Enterprise iad féin-óstáil on-prem agus Kubernetes."
-paid = "Díghlasáiltear féin-óstáil le Docker agus Kubernetes ar phlean íoctha."
-
-[portal.editorAdmin.targets.state]
-available = "Ar fáil"
-locked = "Faoi ghlas"
-running = "Ag rith"
-
 [portal.errorBoundary]
 description = "Bhuail an radharc seo earráid gan choinne. Bain triail eile as, nó roghnaigh rannán eile ón mbarra taoibh."
 retry = "Bain triail eile as"
 title = "Chuaigh rud éigin mícheart ar an leathanach seo"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "Nothing matches the current filters"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "Search issues, users and errors"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
+decrypt = "Decrypt and retry"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
+openInTool = "Retry"
 viewFile = "Féach ar an gcomhad"
 viewInProcessor = "Féach sa phróiseálaí"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.columns]
+closedBy = "Closed by"
+date = "Date"
+failure = "Issue"
+origin = "Raised in"
+outcome = "Outcome"
+source = "Source"
+user = "User"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -7550,6 +8192,20 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.emptyClosed]
+description = "Items you dismiss or resolve are kept here with their outcome."
+title = "Nothing closed yet"
+
+[portal.failures.filters]
+origin = "Raised in"
+source = "Source"
+type = "Type"
+user = "User"
+
+[portal.failures.kind.complianceNotMet]
+description = "The compliance check refused this document because it does not meet the standard the policy validates against. The violation is shown below."
+title = "Compliance standard not met"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
@@ -7558,17 +8214,32 @@ title = "Password-protected document"
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
+[portal.failures.log]
+copy = "Copy error"
+view = "View error"
+
 [portal.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "Dismissed"
+fileRemoved = "File deleted"
+open = "Open"
+resolved = "Resolved"
+
+[portal.failures.scope]
+ariaLabel = "Review state"
+closed = "Closed"
+open = "Open"
+
+[portal.failures.source]
+editor = "Editor"
+
+[portal.failures.unavailable]
+description = "This queue is visible to team leaders on workspaces that run policies."
+title = "Nothing to review"
 
 [portal.home.download]
 back = "Siar"
@@ -7644,12 +8315,6 @@ kubernetes = "Féin-óstáilte · Kubernetes"
 afternoon = "Tráthnóna maith"
 evening = "Oíche mhaith"
 morning = "Maidin mhaith"
-
-[portal.infrastructure]
-manageEditorDeployment = "Bainistigh imscaradh an Eagarthóra"
-sectionsAriaLabel = "Rannáin bhonneagair"
-subtitle = "Imscarthaí, dintiúir, seasamh slándála, stóráil, agus an rian iniúchta do do spás oibre Stirling."
-title = "Bonneagar"
 
 [portal.infrastructure.apiKeys]
 createKey = "Cruthaigh eochair"
@@ -7760,17 +8425,175 @@ subtitleCreated = "Cóipeáil an rún seo anois — ní thaispeánfar arís é."
 title = "Cruthaigh eochair API"
 titleCreated = "Eochair cruthaithe"
 
+[portal.infrastructure.encryption]
+heading = "Encryption at rest"
+hintLabel = "More about this section"
+subheading = "Stored files are encrypted before they reach disk, the database or object storage."
+unknown = "Unknown"
+
+[portal.infrastructure.encryption.auditNotice]
+description = "Encryption is active on this licence, but encrypt, decrypt, revocation and export events are not written to the audit trail. Encryption itself is unaffected."
+title = "Audit events need an Enterprise licence"
+
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "New uploads are stored as plaintext. Files encrypted earlier are still readable."
+encrypted = "Encrypted files"
+heading = "Coverage"
+percentEncrypted = "{{percent}}% encrypted"
+plaintext = "Plaintext files"
+progressLabel = "{{percent}}% of stored files encrypted"
+subheading = "Covers files in My Files and signing workflows. Files a pipeline reads in place, including network sources, are not stored here and are not encrypted."
+
+[portal.infrastructure.encryption.error]
+action = "That key change could not be applied. Please try again."
+keyMissing = "That key no longer exists. Refresh to see the current list."
+migrationStart = "The migration could not be started. Please try again."
+rotate = "The re-wrap could not be completed. Please try again."
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "How to back it up"
+description = "No encryption key was configured, so one was created on this server. Back it up now: if it is lost, encrypted files cannot be recovered."
+title = "This key was generated for you"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "Changed {{when}}"
+changedBy = "By {{actor}}"
+changedByAt = "By {{actor}} on {{when}}"
+heading = "Scope keys"
+keyVersion = "Version {{version}}"
+neverChanged = "Never changed"
+restore = "Restore access"
+retiredNote = "A retired key still decrypts the files stored under it, but a newer key wraps new uploads."
+revoke = "Revoke"
+subheading = "One key per scope. Revoking a key blocks reads of everything stored under it."
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "Actions"
+lastChange = "Last change"
+scope = "Scope"
+status = "Status"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "A key is created the first time someone uploads a file, not at startup."
+title = "No keys yet"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Storage backend"
+compareNote = "Compare this against the fingerprint in your key backup and in the startup log."
+copied = "Copied"
+copy = "Copy"
+copyFailed = "This browser would not allow copying. The fingerprint is selected, so copy it manually."
+fingerprint = "Fingerprint"
+fingerprintHelp = "What is this fingerprint for?"
+heading = "Master key"
+notMaterialised = "The key machinery has not started on this node yet."
+s3StreamingNote = "While anything is encrypted, object-store downloads are streamed through this server rather than redirected, so they use its bandwidth."
+subheading = "Wraps every scope key. Never shown or accepted over the API."
+version = "Version"
+
+[portal.infrastructure.encryption.migration]
+backlog_one = "{{formatted}} file is stored as plaintext and can be encrypted now."
+backlog_other = "{{formatted}} files are stored as plaintext and can be encrypted now."
+encrypted = "Encrypted"
+failedCount = "Failed"
+heading = "Encrypt existing files"
+hint = "Encrypts the plaintext backlog left from before encryption was switched on. Progress is held in memory, so a backend restart resets it to not started. Running again skips files that are already encrypted."
+noBacklog = "Every stored file is already encrypted."
+progressLabel = "{{processed}} of {{total}} files encrypted"
+requiresEncryptionOn = "Switch encryption on before running this: the backlog is encrypted using the same write path as new uploads."
+runAgain = "Run again"
+skipped = "Skipped"
+skippedHelp = "What does skipped mean?"
+skippedNote = "Skipped files were replaced by a user while the run was in progress, so their copy was left alone."
+start = "Start"
+startedAt = "Started {{when}}"
+
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Cancel"
+confirm = "Start encrypting"
+noCancel = "There is no stop control. Once started, the run continues until it finishes or encryption is switched off."
+rewrites_one = "Rewrites {{formatted}} stored file, replacing the plaintext copy with an encrypted one."
+rewrites_other = "Rewrites {{formatted}} stored files, replacing the plaintext copies with encrypted ones."
+throttled = "The job is throttled and safe to re-run. Files already encrypted are skipped."
+title = "Encrypt the existing backlog?"
+
+[portal.infrastructure.encryption.migration.failed]
+description = "Encryption was switched off while the migration was running, so the remaining files were left untouched. Switch it back on and run again."
+title = "The run stopped early"
+
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "Completed"
+FAILED = "Failed"
+IDLE = "Not started"
+RUNNING = "Running"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "Cancel"
+clusterDelay = "On a cluster, other nodes apply this within 60 seconds."
+confirm = "Revoke access"
+readsFail = "Files already stored under this key stop opening, for everyone."
+reversible = "This is reversible. No key material is deleted."
+title = "Revoke access to this key?"
+uploadsContinue = "New uploads keep working. They get a fresh key, so they stay readable."
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "Current version"
+heading = "Master key rotation"
+hint = "Re-wraps scope keys under a new master key; file contents are never rewritten. The new key is set in configuration and applied on restart, so this button only performs the re-wrap."
+pendingRows = "Rows on an older version"
+rewrap = "Re-wrap keys"
+rewrapped_one = "{{count}} key row re-wrapped."
+rewrapped_other = "{{count}} key rows re-wrapped."
+runbook = "Rotation runbook"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Cancel"
+confirm = "Re-wrap keys"
+noFiles = "File contents are not touched. Only the key table is rewritten."
+rerunnable = "Safe to run again if it does not finish."
+rewraps_one = "Re-wraps {{count}} key row under the current master key."
+rewraps_other = "Re-wraps {{count}} key rows under the current master key."
+title = "Re-wrap the key table?"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "Do not remove the previous key from configuration yet. Files under those keys would stop opening."
+title_one = "{{count}} key row is still on the previous master key"
+title_other = "{{count}} key rows are still on the previous master key"
+
+[portal.infrastructure.encryption.scope]
+global = "All users"
+source = "Source {{id}}"
+team = "Team {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "Active"
+DISABLED = "Revoked"
+RETIRED = "Retired"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "Your account does not have permission to view encryption settings."
+title = "Not available for your account"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "The encryption key registry could not be read. Check the database connection and the application logs."
+title = "Key registry unavailable"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "File storage is switched off on this server, so there is nothing to encrypt."
+title = "Storage is disabled"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "Encryption status could not be loaded. Please try again."
+title = "Status unavailable"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "Decrypt only"
+encrypting = "Encrypting new uploads"
+off = "Off"
+
 [portal.infrastructure.keyLabel]
 active = "Gníomhach"
 revoked = "Cúlghairthe"
-
-[portal.infrastructure.tabs]
-apiKeys = "Eochracha API"
-audit = "Logaí Iniúchta"
-deployments = "Imscarthaí"
-models = "Samhlacha"
-security = "Slándáil"
-storage = "Stóráil"
 
 [portal.integrations]
 availableHeading = "Ar fáil"
@@ -7827,6 +8650,7 @@ integrations = "Comhtháthuithe"
 pipelines = "Píblínte"
 policies = "Beartais"
 procurement = "Soláthar"
+review = "Review"
 sources = "Foinsí"
 usage = "Úsáid & Billeáil"
 users = "Úsáideoirí"
@@ -7836,11 +8660,16 @@ platform = "Ardán PDF"
 processor = "Próiseálaí PDF"
 
 [portal.pipelines]
+permissionsRetry = "Retry"
+permissionsUnavailable = "Couldn't check whether you can manage policies, so policy actions are unavailable for now."
 subtitle = "Gach píblíne doiciméad uathoibrithe ar an inneall cúil: slabhra ordaithe oibríochtaí thar shraith foinsí, á rith ar thruicear. Cliceáil ró le haghaidh a céimeanna agus a foinsí."
 title = "Píblínte"
 
 [portal.pipelines.actions]
-newPipeline = "Píblíne nua"
+newCustomPipeline = "New custom pipeline"
+
+[portal.pipelines.all]
+title = "All pipelines"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -7851,6 +8680,9 @@ chooseDestination = "Roghnaigh ceann scríbe"
 chooseOperation = "Roghnaigh cad a dhéanann an chéim seo"
 chooseSource = "Roghnaigh foinse"
 discard = "Caith athruithe amach"
+editorDestination = "Editor"
+editorDestinationDetail = "Replaces the file you ran it on"
+editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 inputs = "Ionchur"
 inputSource = "Foinse ionchuir"
 inputTrigger = "Truicear"
@@ -7862,6 +8694,10 @@ needsSource = "No source chosen"
 noToolMatches = "Ní mheaitseálann aon uirlisí do chuardach."
 pause = "Pause"
 rename = "Rename pipeline"
+runOn = "Runs on"
+runOnExport = "Every export"
+runOnTooltip = "Choose when this pipeline runs on your files: when you add them, or when you export them."
+runOnUpload = "Every upload"
 searchTools = "Cuardaigh uirlisí"
 sendToSystem = "Seol chuig córas eile"
 stepsIncompatible = "Ní féidir leis na céimeanna seo rith ar an méid a tháirgeann an chéim roimhe seo: {{tools}}."
@@ -7878,6 +8714,7 @@ viewDefinition = "View definition"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "Only an admin or team leader can modify a policy"
 name = "Give the pipeline a name"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
@@ -7891,6 +8728,9 @@ format-mismatch = "Teastaíonn {{accepts}}, ach táirgeann an chéim roimhe seo 
 output-uncertain = "Seans nach rithfidh sé: braitheann aschur na céime roimhe seo ar an gcaoi a bhfuil sé socraithe"
 source-mismatch = "Teastaíonn {{accepts}}, ach is é {{produced}} ionchur na píblíne seo"
 undeclared-operation = "Ní féidir a sheiceáil cad a ghlacann an chéim seo"
+
+[portal.pipelines.builder.icon]
+label = "Change icon"
 
 [portal.pipelines.composer]
 addTool = "Cuir uirlis leis"
@@ -7941,6 +8781,12 @@ connectSource = "Ceangail foinse"
 description = "Cruthaigh do chéad phíblíne: roghnaigh na foinsí a ritheann sí orthu, slabhraigh na hoibríochtaí, agus roghnaigh cá dtéann an t-aschur."
 title = "Níl aon phíblínte fós"
 
+[portal.pipelines.enforce]
+desc = "A policy blocks a file that fails it; an ordinary pipeline reports the error but lets the file through."
+info = "What enforcing as a policy means"
+label = "Enforce as policy"
+managerOnly = "Only an admin or team leader can enforce a pipeline as a policy"
+
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
@@ -7972,11 +8818,6 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
-active = "Gníomhach"
-paused = "Ar sos"
-total = "Píblínte"
-
 [portal.pipelines.run]
 allProcessed_one = "Níl aon rud le rith: próiseáladh {{count}} doiciméad na foinse cheana féin."
 allProcessed_other = "Níl aon rud le rith: próiseáladh gach ceann de {{count}} doiciméad sna foinsí cheana féin."
@@ -8000,20 +8841,28 @@ sources = "Foinsí"
 status = "Stádas"
 steps = "Céimeanna"
 trigger = "Trigger"
+type = "Type"
+
+[portal.pipelines.templates]
+setUp = "Set up"
+title = "Templates"
 
 [portal.pipelines.trigger]
+editor-export = "Every export"
+editor-upload = "Every upload"
 folder-watch = "Faire fillteáin"
 manual = "Láimhe"
 schedule = "Sceidealaithe"
 
+[portal.pipelines.type]
+pipeline = "Pipeline"
+policy = "Policy"
+
 [portal.policies]
 defaultName = "Polasaí {{category}}"
-subtitle = "Uathoibrithe seasta a fhorfheidhmíonn píblíne uirlisí ar gach doiciméad. Spreagtar gach beartas ar uaslódáil nó easpórtáil, ritheann sé a shlabhra uirlisí, agus sábhálann sé an leagan forfheidhmithe taobh leis an mbunleagan."
-title = "Beartais"
 
 [portal.policies.card]
 comingSoon = "Uasghrádaigh go Enterprise"
-notSetUp = "Gan socrú"
 requiresAiEngine = "Teastaíonn inneall AI"
 
 [portal.policies.categories.classification]
@@ -8053,12 +8902,6 @@ summary = "Aicmíonn sé gach doiciméad uaslódáilte de réir lipéid d'fhoirn
 [portal.policies.config.compliance]
 summary = "Bailíochtaíonn doiciméid i gcoinne creatlaí rialála sula bhfágann siad an córas."
 
-[portal.policies.config.compliance.fields]
-accessLog = "Loga rochtana"
-auditTrail = "Rian iniúchta"
-frameworks = "Creatlaí"
-onViolation = "Nuair nach bhfuil sé comhlíontach"
-
 [portal.policies.config.compliance.rules]
 0 = "Scanadh creatlaí"
 1 = "Forfheidhmigh gníomh"
@@ -8076,6 +8919,10 @@ minConfidence = "Muinín íosta"
 1 = "Eastósc"
 2 = "Ainmnigh"
 3 = "Normalú"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
+label = "Archival profile"
 
 [portal.policies.config.purview]
 label = "Cuir lipéad íogaireachta Microsoft Purview i bhfeidhm"
@@ -8136,12 +8983,12 @@ summary = "Braithíonn agus eagarthóidh sé PII, baineann ábhar gníomhach (Ja
 
 [portal.policies.detail]
 enforces = "Forfheidhmíonn"
+managerOnly = "Only an admin or team leader can modify this policy"
 onEveryExport = "Ar gach easpórtáil"
 onEveryUpload = "Ar gach uaslódáil"
 outputAsNewFile = "mar chomhad nua"
 outputAsNewVersion = "mar leagan nua"
 recentActivity = "Gníomhaíocht le déanaí"
-retry = "Bain triail eile as"
 showLess = "Taispeáin níos lú"
 showMore = "Taispeáin níos mó"
 sources = "Foinsí"
@@ -8152,13 +8999,19 @@ delete = "Scrios"
 editSettings = "Cuir socruithe in eagar"
 pause = "Cuir ar sos"
 resume = "Lean ar aghaidh"
-runNow = "Rith anois"
 
 [portal.policies.detail.clearHistory]
 body = "Déanfaidh an beartas seo dearmad ar gach comhad atá próiseáilte aige cheana agus athphróiseálfaidh sé gach rud atá ina fhoinsí faoi láthair ar an gcéad rith eile. Ní athraítear na comhaid féin. Ní féidir é seo a chealú."
 cancel = "Cealaigh"
 confirm = "Glan stair"
 title = "Glan stair phróiseáilte?"
+
+[portal.policies.detail.delete]
+bodyActive = "\"{{name}}\" is active and enforcing on your documents. Deleting it stops that immediately and cannot be undone. Pause it instead if you only want it to stop running."
+bodyPaused = "\"{{name}}\" will be removed for everyone. This cannot be undone."
+cancel = "Cancel"
+confirm = "Delete"
+title = "Delete this pipeline?"
 
 [portal.policies.detail.emptyActivity]
 description = "Beidh cáipéisí le feiceáil anseo nuair a rithfidh an beartas seo."
@@ -8171,12 +9024,9 @@ classifyAndLabel = "Aicmigh"
 compressPdf = "Comhbhrúigh"
 flatten = "Leacaigh"
 ocrPdf = "OCR"
+pdfa = "Convert to PDF/A"
 sanitizePdf = "Bain JavaScript"
-
-[portal.policies.offline]
-description = "Sábháladh do bheartais agus beidh siad le feiceáil nuair a bheidh an ceangal ar ais."
-retry = "Atriail"
-title = "Níl Backend ar fáil"
+validateCompliance = "Validate compliance"
 
 [portal.policies.operations]
 change = "Athraigh cad a dhéanann an chéim seo"
@@ -8382,39 +9232,20 @@ docsEnforced = "Cáipéisí forfheidhmithe"
 active = "Gníomhach"
 paused = "Ar sos"
 
-[portal.policies.summary.active]
-description = "Á fhorfheidhmiú ar uaslódáil/easpórtáil"
-label = "Beartais ghníomhacha"
-
-[portal.policies.summary.categories]
-description = "Ar fáil le cumrú"
-label = "Catagóirí"
-
-[portal.policies.summary.docsEnforced]
-description = "Trasna beartas gníomhach"
-label = "Cáipéisí forfheidhmithe"
-
-[portal.policies.summary.paused]
-description = "Cumraithe ach gan lasadh"
-label = "Ar sos"
-
-[portal.policies.table]
-appliesTo = "Baineann le"
-docs = "Doiciméid curtha i bhfeidhm"
-enforces = "Cuireann i bhfeidhm"
-policy = "Polasaí"
-status = "Stádas"
-
 [portal.policies.wizard.actions]
-back = "Ar ais"
 cancel = "Cealaigh"
-continue = "Lean ar aghaidh"
+customise = "Customise"
+customiseUnavailable = "The full builder lives on Processor"
 enablePolicy = "Cumasaigh beartas"
 saveChanges = "Sábháil athruithe"
 
 [portal.policies.wizard.capability.classify]
 desc = "Aithníonn sé cineál an doiciméid ó lipéid d'fhoirne agus clibeálann sé é, ionas go gcomhdaítear agus go gcuardaítear é de réir catagóire."
 label = "Aicmigh an doiciméad"
+
+[portal.policies.wizard.capability.complianceCheck]
+desc = "Validates the finished document against PDF/A and stops the run if it does not hold up."
+label = "Check the document meets the standard"
 
 [portal.policies.wizard.capability.compress]
 desc = "Comhbhrúnn sé an cháipéis go méid comhaid níos lú."
@@ -8427,6 +9258,10 @@ label = "Leacaigh an cháipéis"
 [portal.policies.wizard.capability.ocr]
 desc = "Ritheann sé OCR ionas go mbeidh leathanaigh scanta ina dtéacs inroghnaithe agus inchuardaithe."
 label = "Déan an téacs inchuardaithe"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
+label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.redact]
 desc = "Aimsíonn agus dubhaíonn sé sonraí íogaire — amhail uimhreacha Slándála Sóisialta agus cártaí — ionas nach féidir iad a léamh."
@@ -8452,48 +9287,12 @@ labelsHeading = "Lipéid aicmithe"
 noTools = "Cumasaigh uirlis amháin ar a laghad sa sreabhadh oibre ar dtús."
 saveFailed = "Níorbh fhéidir an beartas a shábháil. Bain triail eile as."
 
-[portal.policies.wizard.output]
-heading = "Aschur & rith"
-
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "Uath-uimhriú"
-label = "Riail ainm comhaid"
-placeholder = "Téacs le cur leis (roghnach)"
-prefix = "Réimír"
-suffix = "Iarmhír"
-
-[portal.policies.wizard.output.outputAs]
-label = "Aschur mar"
-newFile = "Comhad nua"
-newVersion = "Leagan nua"
-
-[portal.policies.wizard.output.runOn]
-export = "Easpórtáil"
-helper = "Nuair a lasann an beartas: ar uaslódáil, nó roimh easpórtáil."
-label = "Rith ar"
-upload = "Uaslódáil"
-
-[portal.policies.wizard.settings]
-heading = "Socruithe"
-
-[portal.policies.wizard.sources]
-heading = "Foinsí"
-loading = "Foinsí á lódáil…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "Céimeanna socraithe"
-settings = "Socruithe"
-workflow = "Gníomhartha"
-
 [portal.policies.wizard.title]
 edit = "Cuir beartas {{category}} in eagar"
 setUp = "Socraigh beartas {{category}}"
 
 [portal.policies.wizard.workflow]
 description = "Roghnaigh cad a dhéanann an beartas seo le gach cáipéis a phróiseálann sé."
-
-[portal.policySummary.action]
-setUp = "Socraigh"
 
 [portal.processorFlow]
 footnote = "Tá na comhaireamh thar na 24 uair an chloig dheireanacha. Tá luas an tsreafa léiriúcháin."
@@ -8806,8 +9605,9 @@ maxed = "Uasmhéadaithe"
 subtitle = "Maireann do thriail saor in aisce go dtí {{date}}. Níl cárta de dhíth."
 title = "Triail Enterprise"
 
-[portal.settings.groups]
-admin = "Riarachán"
+[portal.review]
+subtitle = "Anything from your policy runs and your team's editors that needs your attention."
+title = "Review"
 
 [portal.settings.sections]
 account-link = "Nasc cuntais"
@@ -8817,7 +9617,6 @@ appEditor = "Eagarthóir"
 appProcessor = "Próiseálaí"
 linkAccount = "Nasc cuntas Stirling"
 primaryNav = "Príomh-nascleanúint"
-switchApp = "Athraigh aip"
 
 [portal.shell.topbar]
 closeNav = "Dún nascleanúint"
@@ -8856,11 +9655,6 @@ body = "Scrios \"{{name}}\"? Ní féidir é seo a chealú. Bheadh ar bheartais a
 cancel = "Cealaigh"
 confirm = "Scrios"
 title = "Scrios foinse?"
-
-[portal.sources.kpi]
-inUse = "In úsáid"
-total = "Naisc"
-unused = "Gan úsáid"
 
 [portal.sources.networkFields.connection]
 helperText = "An nasc stóráilte le seoladh an fhreastalaí agus dintiúir. Athúsáidtear é ag gach foinse a thagraíonn dó."
@@ -9034,6 +9828,21 @@ loadWallet = "Níorbh fhéidir sparán a lódáil"
 openStripePortal = "Níorbh fhéidir portal Stripe a oscailt"
 walletUnavailable = "Níl sparán ar fáil: {{status}} {{statusText}}"
 
+[portal.usage.freeTier]
+adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
+connect = "Connect a Stirling account"
+loadError = "Couldn't read this server's credit usage. Try again in a moment."
+loadErrorTitle = "Couldn't load credit usage"
+resets = "Resets {{date}}"
+statusLabel_one = "{{used}} used"
+statusLabel_other = "{{used}} used"
+subtitle = "What this server has processed against its monthly credits."
+title_one = "{{allowance}} free credit every month"
+title_other = "{{allowance}} free credits every month"
+
 [portal.usage.sessionExpired]
 action = "Sínigh isteach arís"
 body = "Tá seisiún do chuntais Stirling imithe in éag. Sínigh isteach arís chun billeáil a fheiceáil — fanann d’instance nasctha."
@@ -9088,6 +9897,39 @@ unlimited = "{{used}} · Gan teorainn"
 
 [printFile]
 title = "Priontáil Comhad"
+
+[processingFolders.downloads]
+approve = "Process my Downloads"
+cancelSweep = "Cancel"
+capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
+close = "Done"
+explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."
+explain_other = "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here."
+failed = "Could not set that up. Your files have not been changed."
+finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
+finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
+keepsOriginals = "Files are processed in place - and each original is kept, so you can restore it any time."
+nothingNew_one = "Nothing new to process - this {{count}} file has already been through."
+nothingNew_other = "Nothing new to process - these {{count}} files have already been through."
+notNow = "Not now"
+progressCounts = "of {{total}} processed"
+someFailed_one = "{{count}} could not be processed and was left untouched."
+someFailed_other = "{{count}} could not be processed and were left untouched."
+stillParked_one = "{{count}} file failed earlier and was not retried - fix the cause, then run again."
+stillParked_other = "{{count}} files failed earlier and were not retried - fix the cause, then run again."
+stillRunning = "Some files are still being processed in the background."
+title = "Organize your Downloads?"
+trigger_one = "Process {{count}} PDF in Downloads"
+trigger_other = "Process {{count}} PDFs in Downloads"
+typesFound_one = "{{count}} document type found"
+typesFound_other = "{{count}} document types found"
+working = "Processing ..."
+
+[processingFolders.wall]
+done = "Done"
+failed = "Failed"
+title = "Processing this folder"
+waiting = "Queued ..."
 
 [provider.googledrive]
 name = "Google Drive"
@@ -9295,6 +10137,18 @@ allTools = "All Tools"
 automate = "Auto"
 config = "Cumraigh"
 files = "Comhaid"
+
+[quickNav]
+account = "Account"
+docs = "Documentation"
+editor = "Editor"
+home = "Stirling"
+invite = "Invite"
+landmark = "Quick navigation"
+noProcessorAccess = "Ask an admin for processor access"
+notifications = "Notifications"
+processor = "Processor"
+reader = "Reader"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -9817,8 +10671,11 @@ expired = "Tá do sheisiún imithe in éag. Athnuaigh an leathanach agus bain tr
 
 [settings]
 backToSections = "Gach socrú"
-close = "Dún"
 title = "Socruithe"
+
+[settings.about]
+description = "Tours, legal documents and the licences of everything bundled with this build."
+title = "About"
 
 [settings.ai]
 documents = "Doiciméid & RAG"
@@ -9833,12 +10690,13 @@ database = "Bunachar Sonraí"
 endpoints = "Deirphointí"
 features = "Gnéithe"
 folderAccess = "Rochtain ar Fhillteáin"
+integrations = "Integrations"
 mcp = "MCP Server"
 storageSharing = "Stóráil Comhad agus Comhroinnt"
 systemSettings = "Socruithe Córais"
-title = "Cumraíocht"
 
 [settings.connection]
+description = "Work locally on this machine or connect the app to a Stirling server."
 localDescription = "Tá tú ag úsáid an chúlcheann áitiúil gan chuntas. Níl roinnt uirlisí a éilíonn próiseáil néil nó freastalaí féinóstáilte ar fáil."
 logout = "Logáil Amach"
 server = "Freastalaí"
@@ -9853,13 +10711,12 @@ selfhosted = "Féin-óstáilte"
 
 [settings.developer]
 apiKeys = "Eochracha API"
+apiKeysDescription = "Personal keys for calling the Stirling API from scripts and integrations."
 title = "Forbróir"
 
 [settings.general]
 autoUnzip = "Dífhuascailt uathoibríoch freagraí API"
-autoUnzipDescription = "Bain comhaid as freagraí ZIP go huathoibríoch"
 autoUnzipFileLimit = "Teorainn chomhaid dífhuascailte uathoibríoch"
-autoUnzipFileLimitDescription = "Uasmhéid comhad le baint as ZIP"
 autoUnzipFileLimitTooltip = "Dífhuascail ach amháin má tá an oiread seo comhad sa ZIP nó níos lú. Socraigh níos airde chun ZIPanna níos mó a bhaint."
 autoUnzipTooltip = "Baineann sé comhaid ZIP a fhilleann ó oibríochtaí API go huathoibríoch. Díchumasaigh chun comhaid ZIP a choinneáil slán. Ní théann sé seo i bhfeidhm ar shreafaí oibre uathoibrithe."
 defaultPdfEditor = "Eagarthóir PDF réamhshocraithe"
@@ -9910,12 +10767,6 @@ intro = "Cumasaigh fíordheimhniú úsáideoirí, bainistíocht foirne, agus gn�
 learnMore = "Tuilleadh eolais sa doiciméadú"
 title = "Do Riarthóirí Córais"
 
-[settings.general.loginLanding]
-description = "Roghnaigh cén aip a osclaítear nuair a shíníonn tú isteach i Stirling Cloud."
-editor = "Eagarthóir"
-processor = "Próiseálaí"
-title = "Tar éis síniú isteach"
-
 [settings.general.mode]
 fullscreen = "Lánscáileán"
 sidebar = "Barra taoibh"
@@ -9958,6 +10809,7 @@ fitPage = "Oiriúnaigh don leathanach"
 fitWidth = "Oiriúnaigh don leithead"
 
 [settings.help]
+description = "Guided walkthroughs of the editor and the admin area."
 label = "Turais"
 title = "Cabhair"
 
@@ -9990,6 +10842,7 @@ mac = "Cuir ⌘ (Command), ⌥ (Option), nó modhnóir eile i do aicearra."
 windows = "Cuir Ctrl, Alt, nó modhnóir eile i do aicearra."
 
 [settings.legal]
+description = "Terms, privacy policy and your cookie preferences."
 label = "Legal"
 title = "Legal"
 
@@ -10018,9 +10871,15 @@ version = "Leagan"
 
 [settings.licensingAnalytics]
 audit = "Iniúchadh"
+auditDescription = "Who did what on this server, and how long that record is kept."
 plan = "Plean"
-title = "Ceadúnú agus Anailísíocht"
+planDescription = "Your licence, seats and what the current plan unlocks."
+usage = "Usage Analytics"
 usageAnalytics = "Anailísíocht Úsáide"
+usageDescription = "How the server is being used: operations, volume and trends over time."
+
+[settings.monitoring]
+title = "Monitoring"
 
 [settings.planBilling]
 currentPlan = "Plean Reatha"
@@ -10058,18 +10917,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "Gnéithe agus tacaíocht fiontair shaincheaptha"
-free = "Saor"
-freeDescription = "50 creidmheas sa mhí"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "500 creidmheas/mí san áireamh, billeáil uathoibríoch ró-úsáide le seirbhís gan bhriseadh"
-teamTooltipCredits = "Cuimsíonn an plean Team {{credits}} creidmheas/mí."
-teamTooltipFineprint = "Íoc ach as an méid a úsáideann tú thar na creidmheasanna san áireamh."
-teamTooltipOverage = "Billeáil uathoibríoch ró-úsáide ag {{price}}/creidmheas chun seirbhís gan bhriseadh a chinntiú."
-
 [settings.planBilling.trial]
 daysRemaining = "{{days}} lá fágtha"
 daysRemainingFull = "Críochnaíonn do thriail i gceann {{days}} lá"
@@ -10094,6 +10941,10 @@ privacy = "Príobháideachas"
 title = "Polasaithe agus Príobháideachas"
 
 [settings.preferences]
+appearance = "Appearance"
+description = "How the editor looks and behaves for you, and your account."
+downloads = "Downloads"
+editorDefaults = "Editor defaults"
 title = "Sainroghanna"
 
 [settings.security]
@@ -10120,6 +10971,10 @@ connections = "Naisc"
 security = "Slándáil"
 telegram = "Telegram"
 title = "Slándáil agus Fíordheimhniú"
+
+[settings.server]
+system = "System"
+title = "Server"
 
 [settings.signOut]
 confirm = "An bhfuil tú cinnte gur mhaith leat síniú amach?"
@@ -11796,6 +12651,10 @@ title = "Téacs an Chomhartha Uisce"
 image = "Íomhá"
 text = "Téacs"
 
+[workbench.sessionRestore]
+none = "Your previous files are no longer stored on this device."
+partial = "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device."
+
 [workbenchBar]
 activeFiles = "Comhaid ghníomhacha"
 annotations = "Anótálacha"
@@ -11900,7 +12759,6 @@ noMembersFound = "Níor aimsíodh baill"
 role = "Ról"
 searchMembers = "Cuardaigh baill..."
 team = "Foireann"
-title = "Daoine"
 unlockAccount = "Díghlasáil an cuntas"
 unlockUserError = "Theip ar dhíghlasáil an chuntais úsáideora"
 unlockUserSuccess = "Díghlasáladh an cuntas úsáideora go rathúil"
@@ -12054,7 +12912,6 @@ system = "Córas"
 teamActions = "Gníomhartha foirne"
 teamName = "Ainm Foirne"
 teamNotFound = "Níor aimsíodh an fhoireann"
-title = "Foirne"
 totalMembers = "Iomlán na mBall"
 viewTeam = "Féach ar an bhFoireann"
 

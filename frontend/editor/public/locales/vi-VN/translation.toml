@@ -34,8 +34,6 @@ downloadUnavailable = "Không thể tải xuống mục này"
 edit = "Chỉnh sửa"
 editSecret = "Chỉnh sửa giá trị này"
 editYourNewFiles = "Chỉnh sửa tệp mới của bạn"
-encryptedFilesBlocked_one = "Tệp được bảo vệ bằng mật khẩu. Hãy mở khóa trước."
-encryptedFilesBlocked_other = "{{count}} tệp được bảo vệ bằng mật khẩu. Hãy mở khóa trước."
 exportAndContinue = "Xuất và tiếp tục"
 false = "Sai"
 fileNotSavedToDisk = "Chưa lưu vào ổ đĩa"
@@ -559,6 +557,47 @@ close = "Đóng"
 error = "Lỗi"
 expand = "Mở rộng"
 
+[admin.formDetection]
+confirmUninstall = "Click to confirm"
+description = "Detects text fields, checkboxes and signature areas in a PDF and turns them into fillable form fields. Detection runs on this server with the model you install below."
+downloadingNote = "{{percent}}% of {{size}}"
+enableFeature = "Enable feature"
+engineUnavailable = "This build does not include the detection engine, so the tool stays unavailable even with a model installed."
+errorTitle = "Something went wrong"
+install = "Install"
+installFailed = "Install failed"
+licenseLabel = "Licence"
+modelsLabel = "Detection model"
+notAvailable = "No download URL/checksum configured yet, so this model cannot be installed."
+notWritable = "The model directory is not writable; check the configs volume mount."
+saveFailed = "Failed to save setting"
+sizeUnknown = "size unknown"
+switch = "Use this model"
+title = "AI Form Detection"
+uninstall = "Uninstall"
+uninstallFailed = "Uninstall failed"
+verifyingNote = "Verifying SHA-256 checksum..."
+
+[admin.formDetection.airgap]
+intro = "No internet on the server? Download the model elsewhere, verify it, and copy it into the model directory. It is picked up on restart."
+noSha = "(checksum not set)"
+show = "Offline / air-gapped install"
+step1 = "1. Download on a machine with internet:"
+step2 = "2. Check the SHA-256 checksum matches:"
+step3 = "3. Copy it into the model directory on this server:"
+step4 = "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed."
+
+[admin.formDetection.badge]
+active = "Active"
+installed = "Installed"
+
+[admin.formDetection.state]
+downloading = "Downloading..."
+failed = "Failed"
+notInstalled = "No model installed"
+ready = "Ready"
+verifying = "Verifying..."
+
 [admin.settings]
 discard = "Bỏ"
 error = "Không thể lưu cài đặt"
@@ -688,6 +727,9 @@ manualLinks = "Tải xuống thủ công: nhấp vào các liên kết và đặ
 noLanguages = "Không tìm thấy ngôn ngữ tessdata trong thư mục đã cấu hình."
 permissionNotice = "Đường dẫn tessdata không thể ghi. Tệp tải xuống sẽ được mở trong trình duyệt; vui lòng lưu các tệp .traineddata thủ công vào thư mục tessdata."
 
+[admin.settings.ai]
+description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+
 [admin.settings.ai.documents]
 description = "Cấu hình mô hình embedding và cài đặt truy xuất dùng để trả lời câu hỏi trên tài liệu. Được áp dụng cho AI engine khi lưu."
 title = "Tài liệu & RAG"
@@ -727,6 +769,7 @@ description = "Số đoạn liên quan nhất được truy xuất cho mỗi l�
 label = "Top K"
 
 [admin.settings.ai.general]
+connection = "Connection"
 description = "Kết nối Stirling với Python AI engine và chọn các khả năng AI được hiển thị. Thay đổi áp dụng khi khởi động lại."
 title = "AI Engine"
 
@@ -818,6 +861,7 @@ openai = "OpenAI API key"
 setPlaceholder = "Đã lưu - để trống để giữ key hiện tại"
 
 [admin.settings.ai.models.baseUrl]
+contextWindow = "Use a context window of at least 16,384 tokens. Smaller windows silently drop part of the prompt. Ollama defaults to 4,096 - raise OLLAMA_CONTEXT_LENGTH."
 description = "Base URL của endpoint tương thích OpenAI / Ollama, ví dụ http://ollama:11434/v1."
 label = "Provider base URL"
 warning = "Base URL phải trỏ tới endpoint nội bộ đáng tin cậy. Engine sẽ thực hiện các yêu cầu phía máy chủ tới đó, vì vậy giá trị không đáng tin cậy sẽ nhạy cảm với SSRF."
@@ -852,6 +896,7 @@ clickToUpgrade = "Nhấp để xem chi tiết gói"
 
 [admin.settings.connections]
 connect = "Kết nối"
+connectedServicesDescription = "Services this server is wired up to. Sign-in providers live under Sign-in & security."
 description = "Cấu hình nhà cung cấp xác thực bên ngoài như OAuth2 và SAML."
 disconnect = "Ngắt kết nối"
 disconnected = "Ngắt kết nối nhà cung cấp thành công"
@@ -974,6 +1019,8 @@ configuration = "Cấu hình cơ sở dữ liệu"
 confirmCodeLabel = "Nhập mã xác nhận để tiếp tục"
 confirmImport = "Xác nhận nhập"
 confirmImportTitle = "Xác nhận nhập cơ sở dữ liệu"
+connection = "Connection"
+connectionDescription = "Point Stirling at an external database instead of the embedded one."
 createBackup = "Tạo bản sao lưu"
 created = "Ngày tạo"
 delete = "Xóa"
@@ -1114,6 +1161,7 @@ placeholder = "/data/inbox"
 remove = "Xóa gốc thư mục"
 
 [admin.settings.general]
+branding = "Branding & appearance"
 description = "Cấu hình cài đặt hệ thống cho ứng dụng, bao gồm thương hiệu và hành vi mặc định."
 system = "Hệ thống"
 title = "Cài đặt hệ thống"
@@ -1235,6 +1283,7 @@ label = "Chỉ hiển thị cập nhật cho quản trị viên"
 
 [admin.settings.legal]
 description = "Cấu hình liên kết đến các tài liệu và chính sách pháp lý."
+documentsDescription = "Links users are shown for terms, privacy, cookies and the impressum."
 title = "Tài liệu pháp lý"
 
 [admin.settings.legal.accessibilityStatement]
@@ -1488,8 +1537,7 @@ label = "Ghi nhật ký kiểm toán"
 showDetails = "Hiển thị chi tiết mức kiểm toán"
 
 [admin.settings.security.audit.advancedOptions]
-description = "Các tùy chọn sau sẽ tăng thời gian xử lý và sử dụng bộ nhớ. Chỉ bật khi thực sự cần thiết."
-title = "Tùy chọn nâng cao"
+cost = "Now increasing processing time and memory usage on every operation."
 
 [admin.settings.security.audit.captureFileHash]
 description = "Trích xuất mã băm SHA-256 của các tệp PDF tải lên để xác minh tính toàn vẹn. Độc lập với mức kiểm toán."
@@ -2060,6 +2108,50 @@ bullet2 = "Tạo tên tệp sạch, hợp lệ từ tiêu đề phát hiện đ�
 bullet3 = "Giữ tên gốc nếu không tìm thấy tiêu đề phù hợp"
 title = "Đổi tên thông minh"
 
+[autoFormDetection]
+loading = "Detecting form fields..."
+submit = "Detect form fields"
+
+[autoFormDetection.detects]
+checkboxes = "Checkboxes"
+label = "Finds and makes fillable"
+signatures = "Signatures"
+text = "Text fields"
+
+[autoFormDetection.error]
+failed = "An error occurred while detecting form fields."
+
+[autoFormDetection.progress]
+detecting = "Analyzing your document..."
+
+[autoFormDetection.results]
+title = "Review fillable PDF"
+
+[autoFormDetection.sensitivity]
+balanced = "Balanced"
+balancedHint = "Recommended for most forms."
+high = "Thorough"
+highHint = "Finds more fields, but may add some where none belong."
+label = "Detection sensitivity"
+low = "Strict"
+lowHint = "Only very confident matches - fewer fields, fewer mistakes."
+
+[autoFormDetection.settings]
+title = "Settings"
+
+[autoFormDetection.summary]
+checkboxes = "Checkboxes"
+noneBody = "The document may not contain form-like areas. Undo, switch sensitivity to \"Thorough\", and run again to look harder."
+noneTitle = "No form fields found"
+pages_one = "Across {{count}} page."
+pages_other = "Across {{count}} pages."
+radioButtons = "Radio buttons"
+signatures = "Signatures"
+stepTitle = "Detection results"
+textFields = "Text fields"
+title_one = "{{count}} fillable field added"
+title_other = "{{count}} fillable fields added"
+
 [automate]
 copyToSaved = "Sao chép vào Đã lưu"
 desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các thao tác PDF. Lý tưởng cho tác vụ lặp lại."
@@ -2369,6 +2461,35 @@ bullet3 = "Đóng ghim hoặc đóng gáy dọc theo mép gấp"
 bullet4 = "Với máy in cạnh ngắn: Bật tùy chọn 'Lật theo cạnh ngắn'"
 text = "Làm theo các bước này để có booklet hoàn hảo:"
 title = "Cách in & lắp ráp"
+
+[brickGame]
+balls = "Balls"
+best = "Best"
+close = "Close game"
+effectTimer = "{{label}} {{seconds}}s"
+hint = "Move with the pointer or the arrow keys. Click to capture the pointer, Esc to get back to work."
+hintPointerLocked = "Pointer captured. Esc releases it, then Esc again to get back to work."
+score = "Score"
+title = "Hidden game"
+
+[brickGame.effect]
+fast = "Fast"
+narrow = "Narrow"
+reversed = "Reversed"
+slow = "Slow"
+wide = "Wide"
+
+[brickGame.lost]
+detail = "Click or press Space to try again"
+headline = "Out of balls"
+
+[brickGame.ready]
+detail = "Click or press Space to serve"
+headline = "Ready"
+
+[brickGame.won]
+detail = "Click or press Space to play again"
+headline = "All clear"
 
 [bulkSelection]
 syntaxError = "Có vấn đề về cú pháp. Xem mẹo Chọn trang để được trợ giúp."
@@ -3001,6 +3122,293 @@ summary_one = "Đã chạy 1 công cụ"
 summary_other = "Đã chạy {{count}} công cụ"
 unknownTool = "Công cụ không xác định"
 
+[classification.families]
+correspondence = "Correspondence"
+education = "Education"
+engineering = "Engineering"
+finance = "Financial"
+forms = "Forms"
+government = "Government"
+health = "Medical"
+hr = "HR"
+legal = "Legal"
+operations = "Operations"
+projects = "Projects"
+property = "Property"
+reports = "Reports"
+sales = "Marketing"
+travel = "Travel"
+
+[classification.labels]
+academic-record = "Academic record"
+action-plan = "Action plan"
+addendum = "Addendum"
+advertisement = "Advertisement"
+affidavit = "Affidavit"
+agenda = "Agenda"
+amendment = "Amendment"
+analytics-report = "Analytics report"
+announcement = "Announcement"
+annual-report = "Annual report"
+api-documentation = "API documentation"
+application-form = "Application form"
+appraisal-report = "Appraisal report"
+architecture-document = "Architecture document"
+articles-of-incorporation = "Articles of incorporation"
+assignment-brief = "Assignment brief"
+audit-report = "Audit report"
+balance-sheet = "Balance sheet"
+bank-statement = "Bank statement"
+benefits-summary = "Benefits summary"
+bill-of-lading = "Bill of lading"
+bill-of-materials = "Bill of materials"
+blueprint = "Blueprint"
+board-report = "Board report"
+board-resolution = "Board resolution"
+booking-confirmation = "Booking confirmation"
+brochure = "Brochure"
+budget = "Budget"
+business-plan = "Business plan"
+business-proposal = "Business proposal"
+bylaws = "Bylaws"
+campaign-brief = "Campaign brief"
+case-study = "Case study"
+cash-flow-statement = "Cash flow statement"
+catalog = "Catalog"
+cease-and-desist = "Cease and desist"
+certificate = "Certificate"
+certificate-of-completion = "Certificate of completion"
+change-log = "Change log"
+checklist = "Checklist"
+claim-form = "Claim form"
+closing-statement = "Closing statement"
+complaint-letter = "Complaint letter"
+compliance-document = "Compliance document"
+confirmation-letter = "Confirmation letter"
+consent-form = "Consent form"
+contract = "Contract"
+course-syllabus = "Course syllabus"
+court-filing = "Court filing"
+cover-letter = "Cover letter"
+credit-note = "Credit note"
+customs-declaration = "Customs declaration"
+customs-form = "Customs form"
+cv = "CV"
+datasheet = "Datasheet"
+debit-note = "Debit note"
+deed = "Deed"
+delivery-note = "Delivery note"
+demand-letter = "Demand letter"
+design-document = "Design document"
+diploma = "Diploma"
+discharge-summary = "Discharge summary"
+dissertation = "Dissertation"
+donation-receipt = "Donation receipt"
+dunning-letter = "Dunning letter"
+email-thread = "Email thread"
+employee-handbook = "Employee handbook"
+employment-contract = "Employment contract"
+estimate = "Estimate"
+event-agenda = "Event agenda"
+event-program = "Event program"
+eviction-notice = "Eviction notice"
+exam-paper = "Exam paper"
+expense-report = "Expense report"
+expense-summary = "Expense summary"
+explanation-of-benefits = "Explanation of benefits"
+fact-sheet = "Fact sheet"
+faq-document = "FAQ document"
+feasibility-study = "Feasibility study"
+feedback-form = "Feedback form"
+financial-forecast = "Financial forecast"
+financial-statement = "Financial statement"
+floor-plan = "Floor plan"
+flyer = "Flyer"
+form = "Form"
+franchise-agreement = "Franchise agreement"
+freight-document = "Freight document"
+gift-certificate = "Gift certificate"
+glossary = "Glossary"
+government-notice = "Government notice"
+grade-report = "Grade report"
+grant-agreement = "Grant agreement"
+grant-application = "Grant application"
+hoa-document = "HOA document"
+home-inspection-report = "Home inspection report"
+hr-memo = "HR memo"
+hr-policy = "HR policy"
+immigration-document = "Immigration document"
+immunization-record = "Immunization record"
+incident-report = "Incident report"
+income-statement = "Income statement"
+index = "Index"
+inspection-report = "Inspection report"
+insurance-certificate = "Insurance certificate"
+insurance-claim = "Insurance claim"
+insurance-policy = "Insurance policy"
+intake-form = "Intake form"
+inventory-list = "Inventory list"
+investment-summary = "Investment summary"
+invitation = "Invitation"
+invoice = "Invoice"
+itinerary = "Itinerary"
+job-application = "Job application"
+job-description = "Job description"
+lab-report = "Lab report"
+lease-agreement = "Lease agreement"
+leave-request = "Leave request"
+legal-brief = "Legal brief"
+legal-filing = "Legal filing"
+legal-notice = "Legal notice"
+legal-opinion = "Legal opinion"
+lesson-plan = "Lesson plan"
+letter = "Letter"
+letter-of-intent = "Letter of intent"
+license = "License"
+license-agreement = "License agreement"
+loan-agreement = "Loan agreement"
+loan-document = "Loan document"
+maintenance-log = "Maintenance log"
+manual = "Manual"
+market-research = "Market research"
+marketing-plan = "Marketing plan"
+media-kit = "Media kit"
+medical-invoice = "Medical invoice"
+medical-report = "Medical report"
+meeting-agenda = "Meeting agenda"
+meeting-minutes = "Meeting minutes"
+meeting-notes = "Meeting notes"
+membership-document = "Membership document"
+memo = "Memo"
+memorandum-of-understanding = "Memorandum of understanding"
+mortgage-document = "Mortgage document"
+nda = "NDA"
+newsletter = "Newsletter"
+non-compete-agreement = "Non-compete agreement"
+notice = "Notice"
+offer-letter = "Offer letter"
+onboarding-document = "Onboarding document"
+order-confirmation = "Order confirmation"
+order-form = "Order form"
+organization-chart = "Organization chart"
+packing-slip = "Packing slip"
+partnership-agreement = "Partnership agreement"
+patent = "Patent"
+pathology-report = "Pathology report"
+payment-reminder = "Payment reminder"
+payroll-document = "Payroll document"
+payslip = "Payslip"
+performance-review = "Performance review"
+permit = "Permit"
+petition = "Petition"
+pitch-deck = "Pitch deck"
+power-of-attorney = "Power of attorney"
+prescription = "Prescription"
+presentation = "Presentation"
+press-release = "Press release"
+price-list = "Price list"
+pricing-sheet = "Pricing sheet"
+privacy-policy = "Privacy policy"
+product-sheet = "Product sheet"
+proforma-invoice = "Proforma invoice"
+progress-report = "Progress report"
+project-charter = "Project charter"
+project-plan = "Project plan"
+promotional-material = "Promotional material"
+property-listing = "Property listing"
+proposal = "Proposal"
+public-notice = "Public notice"
+purchase-agreement = "Purchase agreement"
+purchase-order = "Purchase order"
+quality-report = "Quality report"
+quarterly-report = "Quarterly report"
+questionnaire = "Questionnaire"
+quick-start-guide = "Quick start guide"
+quote = "Quote"
+radiology-report = "Radiology report"
+receipt = "Receipt"
+recommendation-letter = "Recommendation letter"
+reference-letter = "Reference letter"
+referral-letter = "Referral letter"
+registration-confirmation = "Registration confirmation"
+registration-form = "Registration form"
+regulatory-filing = "Regulatory filing"
+release-notes = "Release notes"
+remittance-advice = "Remittance advice"
+rental-agreement = "Rental agreement"
+report = "Report"
+request-for-proposal = "Request for proposal"
+request-for-quotation = "Request for quotation"
+requirements-document = "Requirements document"
+research-abstract = "Research abstract"
+research-paper = "Research paper"
+reservation = "Reservation"
+resignation-letter = "Resignation letter"
+resume = "Resume"
+retrospective = "Retrospective"
+return-authorization = "Return authorization"
+risk-assessment = "Risk assessment"
+roadmap = "Roadmap"
+safety-data-sheet = "Safety data sheet"
+safety-procedure = "Safety procedure"
+sales-proposal = "Sales proposal"
+sales-report = "Sales report"
+schematic = "Schematic"
+scope-of-work = "Scope of work"
+service-agreement = "Service agreement"
+service-report = "Service report"
+settlement-agreement = "Settlement agreement"
+shareholder-agreement = "Shareholder agreement"
+shipping-confirmation = "Shipping confirmation"
+specification = "Specification"
+sponsorship-agreement = "Sponsorship agreement"
+standard-operating-procedure = "Standard operating procedure"
+statement-of-account = "Statement of account"
+statement-of-work = "Statement of work"
+status-report = "Status report"
+stock-report = "Stock report"
+study-guide = "Study guide"
+subpoena = "Subpoena"
+subscription-confirmation = "Subscription confirmation"
+supply-order = "Supply order"
+survey-form = "Survey form"
+survey-results = "Survey results"
+sustainability-report = "Sustainability report"
+table-of-contents = "Table of contents"
+tax-form = "Tax form"
+tax-return = "Tax return"
+tax-statement = "Tax statement"
+technical-drawing = "Technical drawing"
+technical-specification = "Technical specification"
+tenancy-agreement = "Tenancy agreement"
+tender-document = "Tender document"
+termination-letter = "Termination letter"
+terms-and-conditions = "Terms and conditions"
+terms-of-service = "Terms of service"
+test-plan = "Test plan"
+test-report = "Test report"
+thesis = "Thesis"
+ticket = "Ticket"
+timeline = "Timeline"
+timesheet = "Timesheet"
+title-document = "Title document"
+training-material = "Training material"
+transcript = "Transcript"
+travel-itinerary = "Travel itinerary"
+trust-document = "Trust document"
+user-guide = "User guide"
+utility-bill = "Utility bill"
+vendor-agreement = "Vendor agreement"
+visa-document = "Visa document"
+waiver = "Waiver"
+warehouse-receipt = "Warehouse receipt"
+warranty-document = "Warranty document"
+waybill = "Waybill"
+white-paper = "White paper"
+will = "Will"
+work-instruction = "Work instruction"
+work-order = "Work order"
+
 [cloudBadge]
 tooltip = "Thao tác này sẽ sử dụng tín dụng đám mây của bạn"
 
@@ -3016,6 +3424,7 @@ title = "Chọn màu"
 actions = "Actions"
 back = "Quay lại"
 cancel = "Hủy"
+clearFilters = "Clear filters"
 close = "Đóng"
 codeSample = "Code sample"
 collapse = "Thu gọn"
@@ -3027,6 +3436,7 @@ done = "Xong"
 enterValue = "Enter value"
 error = "Lỗi"
 expand = "Mở rộng"
+filterEmpty = "Nothing to filter on"
 loading = "Đang tải..."
 next = "Tiếp"
 open = "Open"
@@ -3036,6 +3446,7 @@ refresh = "Làm mới"
 remaining = "Còn lại"
 retry = "Thử lại"
 save = "Lưu"
+search = "Search"
 stepOf = "Step {{current}} of {{total}}"
 
 [compare]
@@ -3227,7 +3638,9 @@ tags = "ép,nhỏ,nhỏ gọn"
 
 [config]
 plan = "Gói"
+planDescription = "Your plan, credits and spend limit, and the invoices behind them."
 team = "Team"
+teamDescription = "Who shares this workspace, and invitations still waiting on an answer."
 
 [config.account.overview]
 confirmDelete = "Xóa tài khoản của tôi"
@@ -3319,7 +3732,6 @@ description = "Model Context Protocol (MCP) lets AI assistants like Claude use y
 guestInfo = "Guest users can't connect MCP clients. Create an account to use the MCP server and let your AI assistant run Stirling PDF tools on your behalf."
 navLabel = "MCP Server"
 tip = "Every action your assistant runs is performed as your account and counts towards your usage, just like using Stirling PDF directly."
-title = "MCP Server"
 viewApiKeys = "View API keys"
 
 [config.mcp.copy]
@@ -3350,6 +3762,40 @@ basic = "Cấu hình cơ bản"
 integration = "Cấu hình tích hợp"
 security = "Cấu hình bảo mật"
 system = "Cấu hình hệ thống"
+
+[connect]
+loading = "Checking this request."
+redirecting = "Returning you to your server."
+step = "Step {{current}} of {{total}}"
+
+[connect.confirm]
+acknowledge = "I recognise this address and want to connect it to my team"
+approve = "Connect server"
+deny = "Decline"
+lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
+originLabel = "Address"
+signedInAs = "Signed in as"
+switchAccount = "Use a different account"
+title = "Connect this server?"
+unknownAccount = "an unknown account"
+
+[connect.confirm.insecure]
+body = "This address does not use HTTPS, so your sign-in will be sent over an unencrypted connection. Only approve it on a network you trust."
+label = "Not an encrypted address"
+
+[connect.declined]
+body = "Nothing was connected. You can close this page."
+title = "Request declined"
+
+[connect.error]
+failed = "That did not go through. Only a team owner can connect a server."
+
+[connect.meta]
+title = "Connect a server"
+
+[connect.notFound]
+body = "This connection request is not valid. It may have expired, or already been used. Start another one from your server."
+title = "Request not valid"
 
 [convert]
 autoRotate = "Tự động xoay"
@@ -3820,7 +4266,6 @@ mobileShort = "Di động"
 mobileUpload = "Tải lên từ di động"
 mobileUploadNotAvailable = "Tải lên từ di động chưa được bật"
 moreOptions = "Tùy chọn khác"
-myFiles = "Tệp của tôi"
 nextFile = "Tệp tiếp theo"
 noFiles = "Không có tệp nào"
 noFilesFound = "Không tìm thấy tệp khớp với tìm kiếm của bạn"
@@ -3880,6 +4325,7 @@ versionHistory = "Version history"
 [files]
 addFiles = "Thêm tệp"
 created = "Đã tạo"
+notIncludedInToolRun = "Not included in this tool run"
 selectFromWorkbench = "Chọn tệp từ bàn làm việc hoặc "
 selectMultipleFromWorkbench = "Chọn ít nhất {{count}} tệp từ bàn làm việc hoặc "
 size = "Kích thước tệp"
@@ -3968,6 +4414,7 @@ back = "Quay lại"
 backToFolder = "Quay lại {{folder}}"
 backToMyFiles = "Quay lại Tệp của tôi"
 breadcrumbs = "Đường dẫn thư mục"
+breadcrumbsOverflow = "Show parent folders"
 bulkActions = "Hành động"
 cancel = "Hủy"
 classification = "Phân loại"
@@ -4002,6 +4449,7 @@ downloadAll = "Tải xuống tất cả"
 downloadVersion = "Tải xuống phiên bản này"
 dropOverlay = "Thả tệp để tải lên"
 dropOverlaySub = "Các tệp bắt đầu ở Cục bộ. Dùng 'Di chuyển đến' hoặc 'Lưu lên đám mây' để sắp xếp vào thư mục."
+dropOverlaySubFolder = "They'll be added to this folder."
 duplicate = "Duplicate"
 file = "Tệp"
 fileInfo = "File info"
@@ -4014,11 +4462,17 @@ inPath = "trong {{path}}"
 inWorkspace = "Mở"
 inWorkspaceAria = "Đã có trong không gian làm việc"
 loading = "Đang tải…"
-localFoldersUnavailable = "Thư mục chỉ có trên đám mây - lưu tệp lên đám mây để sắp xếp."
+localFolderManagedByDisk = "This folder is managed by its directory on disk."
+moveAcrossKindsBlocked = "These folders live in different places, so one can't go inside the other."
+moveIntoMountCloudSkipped_one = "{{count}} server file stayed in your files. It lives on the server, not on this disk."
+moveIntoMountCloudSkipped_other = "{{count}} server files stayed in your files. They live on the server, not on this disk."
+moveIntoMountFailed_one = "{{count}} file could not be written into the folder."
+moveIntoMountFailed_other = "{{count}} files could not be written into the folder."
+moveIntoVirtualCloudSkipped_one = "{{count}} server file was left in place. Server files can't live in browser-only folders."
+moveIntoVirtualCloudSkipped_other = "{{count}} server files were left in place. Server files can't live in browser-only folders."
 moveSkippedRemote_one = "{{count}} file couldn't be moved on the server (no permission or already deleted)."
 moveSkippedRemote_other = "{{count}} files couldn't be moved on the server (no permission or already deleted)."
 moveTo = "Di chuyển đến…"
-myFiles = "Tệp của tôi"
 newFolder = "Thư mục mới"
 newFolderStorageDisabled = "Lưu trữ thư mục trên máy chủ chưa được bật. Hãy yêu cầu quản trị viên bật nó."
 newFolderTabUnavailable = "Chuyển sang Tất cả hoặc Đám mây để tạo thư mục."
@@ -4028,6 +4482,7 @@ openVersionInWorkspace = "Mở trong không gian làm việc"
 originFilter = "Lọc theo nguồn"
 refresh = "Làm mới từ máy chủ"
 remove = "Xóa"
+removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Xóa phiên bản này"
 rename = "Đổi tên"
 renamed = "Đã đổi tên"
@@ -4040,6 +4495,7 @@ selectAll = "Chọn tất cả"
 selectAllHint = "Nhấn để chọn tất cả. Mẹo: giữ Ctrl (hoặc Cmd) để thêm từng tệp, Shift để chọn một dải."
 selectedCount = "Đã chọn {{count}}"
 selectFile = "Chọn tệp {{name}}"
+serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
 shareDisabledHint = "Chia sẻ tệp chưa được bật trên máy chủ này. Hãy yêu cầu quản trị viên bật nó."
 shareManage = "Quản lý chia sẻ"
 showDetails = "Hiển thị chi tiết"
@@ -4047,8 +4503,10 @@ signInRequired = "Sign in to use cloud storage."
 summary_one = "{{count}} item"
 summary_other = "{{count}} items"
 tree = "Thư mục"
+unmount = "Unmount"
+unmountFolderBody = "Unmount \"{{name}}\"? The folder and its files stay on your disk."
+unmountFolderTitle = "Unmount from Stirling?"
 upload = "Tải lên"
-uploadedToLocal = "Các tệp đã tải lên bắt đầu ở Cục bộ. Dùng 'Lưu lên đám mây' để đưa vào thư mục."
 uploadFromMobile = "Tải lên từ Di động"
 versionActions = "Hành động phiên bản"
 versionCollapse = "Thu gọn các phiên bản ở giữa"
@@ -4079,9 +4537,19 @@ deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
 
+[filesPage.diskState]
+all = "All"
+done = "Ready"
+doneHint = "Processed - opens the result"
+failed = "Failed"
+processing = "Processing"
+processingHint = "Processing - available when it finishes"
+retry = "Retry"
+retryHint = "Run this file again"
+waiting = "Queued"
+
 [filesPage.empty]
 hint = "Thả PDF ở bất kỳ đâu trên trang này để tải lên, hoặc dùng nút Thư mục mới để sắp xếp tệp của bạn."
-newFolderCta = "Tạo thư mục"
 title = "Thư mục này trống"
 uploadCta = "Tải tệp lên"
 
@@ -4090,10 +4558,6 @@ hint = "Tải lên một tệp để bắt đầu, hoặc tạo thư mục để
 offlineHint = "Kết nối lại để tải thư viện đám mây của bạn."
 offlineTitle = "Không có tệp đám mây được lưu sẵn"
 title = "Chưa có tệp đám mây"
-
-[filesPage.empty.local]
-hint = "Các tệp lưu mà không tải lên sẽ ở đây. Thả một tệp để thêm."
-title = "Không có tệp chỉ cục bộ"
 
 [filesPage.empty.noResults]
 hint = "No files in this folder match your filter. Try a different term or clear the filter."
@@ -4114,6 +4578,8 @@ title = "Bạn chưa chia sẻ tệp nào"
 [filesPage.error]
 actionFailed = "Không thể {{action}}."
 actionFailedDetail = "Không thể {{action}}: {{message}}"
+addFolderFailed = "Could not add the folder."
+addFolderFailedDetail = "Could not add the folder: {{message}}"
 cloudDeleteFailed_one = "Couldn't delete 1 file from the cloud."
 cloudDeleteFailed_other = "Couldn't delete {{count}} files from the cloud."
 deleteFolderFailed = "Không thể xóa thư mục."
@@ -4126,8 +4592,20 @@ moveFilesFailed = "Không thể di chuyển tệp."
 moveFilesFailedDetail = "Không thể di chuyển tệp: {{message}}"
 moveFolderFailed = "Không thể di chuyển thư mục."
 moveFolderFailedDetail = "Không thể di chuyển thư mục: {{message}}"
+openDiskFileFailed = "Could not open {{name}}."
+openDiskFileFailedDetail = "Could not open {{name}}: {{message}}"
+readFolderFailed = "Could not read the folder."
+readFolderFailedDetail = "Could not read the folder: {{message}}"
 removeFilesFailed = "Không thể xóa tệp."
 removeFilesFailedDetail = "Không thể xóa tệp: {{message}}"
+removeFolderFailed = "Could not remove folder."
+removeFolderFailedDetail = "Could not remove folder: {{message}}"
+retryFailed = "Could not retry {{name}}."
+retryFailedDetail = "Could not retry {{name}}: {{message}}"
+revertAllFailed = "Could not restore originals."
+revertAllFailedDetail = "Could not restore originals: {{message}}"
+revertFailed = "Could not restore {{name}}."
+revertFailedDetail = "Could not restore {{name}}: {{message}}"
 uploadFilesFailed = "Không thể tải tệp lên."
 uploadFilesFailedDetail = "Không thể tải tệp lên: {{message}}"
 
@@ -4147,11 +4625,20 @@ activeCount = "{{count}} bộ lọc đang hoạt động"
 clearAll = "Xóa bộ lọc"
 label = "Bộ lọc"
 
+[filesPage.folderKind]
+local = "Local folder"
+virtual = "Browser folder"
+
 [filesPage.folderName]
 cancel = "Hủy"
 error = "Không thể lưu thư mục. Hãy thử lại."
 label = "Tên thư mục"
 placeholder = "Tên thư mục"
+
+[filesPage.folderOrigin]
+diskHint = "A folder mounted from a directory on your disk"
+serverHint = "A folder stored on the Stirling server"
+virtualHint = "A folder that lives only in this browser"
 
 [filesPage.moveDialog]
 cancel = "Hủy"
@@ -4166,14 +4653,46 @@ newFolderPlaceholder = "Tên thư mục"
 newFolderToggle = "Tạo thư mục mới…"
 title = "Di chuyển đến thư mục"
 
+[filesPage.newFolderMenu]
+addExisting = "Add local folder"
+server = "New folder on the server"
+serverHint = "Synced to your account, available wherever you sign in."
+
 [filesPage.origin]
 all = "Tất cả nguồn"
 cloud = "Đám mây"
 cloudHint = "Lưu trên máy chủ Stirling"
+diskHint = "A file in the mounted folder on your disk"
 local = "Cục bộ"
 localHint = "Chỉ lưu trong trình duyệt này"
 shared = "Được chia sẻ"
 sharedHint = "Được chia sẻ với bạn qua liên kết"
+
+[filesPage.processing]
+active = "Processing folder"
+edit = "Edit processing..."
+nothingToRestore = "No originals to restore - these files are already their originals."
+paused = "Processing paused"
+remove = "Remove processing"
+restore = "Restore original"
+restoreAll = "Restore all originals"
+resume = "Resume processing"
+revertCancel = "Cancel"
+revertConfirm = "Restore and pause"
+revertConfirmAll = "Restore every original in this folder? Processing will be paused, and restored files show as queued until you resume."
+revertConfirmFile = "Restore \"{{name}}\" to its original? Processing for this folder will be paused, and the file shows as queued until you resume."
+revertConfirmTitle = "Restore originals?"
+section = "Processing"
+start = "Process files in this folder..."
+stop = "Pause processing"
+sweep = "Retry failed files"
+
+[filesPage.processingSetup]
+back = "Back"
+cancel = "Cancel"
+lead = "Anything added to this folder runs these steps, in place - each file becomes its processed version."
+start = "Start processing"
+title = "Process '{{name}}'"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -4625,6 +5144,12 @@ title = "Điều chỉnh màu sắc/tương phản"
 desc = "Tô sáng, vẽ, thêm ghi chú và hình dạng trong trình xem"
 tags = "chú thích,tô sáng,vẽ"
 title = "Chú thích"
+
+[home.autoFormDetection]
+desc = "Automatically detect form fields with AI and make your PDF fillable."
+tags = "form,detect,fillable,acroform,auto detect,ai,fields,make fillable,form detection"
+title = "Auto Form Detection"
+unavailable = "Needs the AI detection model, which isn't installed on this server. An administrator can add it under Settings > Features > AI Form Detection."
 
 [home.automate]
 desc = "Xây dựng quy trình nhiều bước bằng cách xâu chuỗi các thao tác PDF. Lý tưởng cho các tác vụ lặp lại."
@@ -5097,39 +5622,45 @@ sort = "Sắp xếp"
 title = "Tổng quan cài đặt gộp"
 
 [mobileScanner]
-addToBatch = "Thêm vào lô"
+addMore = "Add More"
 back = "Quay lại"
-batchImages = "Lô"
 camera = "Camera"
 cameraAccessDenied = "Bị từ chối truy cập camera. Vui lòng bật quyền camera."
 cameraDescription = "Quét tài liệu bằng camera thiết bị với tự động phát hiện viền"
 capture = "Chụp ảnh"
 chooseMethod = "Chọn phương thức tải lên"
 chooseMethodDescription = "Chọn cách bạn muốn quét và tải tài liệu"
-clearBatch = "Xóa"
+clearAll = "Clear All"
+closeTabHint = "You can close this tab now."
+dismiss = "Dismiss"
 edgeDetection = "Phát hiện viền"
 fileDescription = "Tải lên ảnh hoặc tài liệu có sẵn từ thiết bị của bạn"
+fileReadFailed = "Could not read that file."
 fileUpload = "Tải tệp lên"
-flash = "Đèn flash"
 flashlight = "Đèn pin"
 httpsRequired = "Truy cập camera yêu cầu HTTPS hoặc localhost. Vui lòng dùng HTTPS hoặc truy cập qua localhost."
-noSession = "Phiên không hợp lệ"
+imageCount_one = "{{count}} image"
+imageCount_other = "{{count}} images"
+imagePosition = "Image {{index}} of {{total}}"
+invalidFileType = "Please choose an image file."
 noSessionMessage = "Vui lòng quét mã QR hợp lệ để truy cập trang này."
 processing = "Đang xử lý..."
+remove = "Remove"
 retake = "Chụp lại"
+scanAnother = "Scan another"
 selectFilesPrompt = "Chọn tệp để tải lên"
-selectImage = "Chọn ảnh"
+selectImages = "Select Images"
 sessionExpired = "Phiên này đã hết hạn. Vui lòng làm mới và thử lại."
 sessionInvalid = "Lỗi phiên"
 sessionNotFound = "Không tìm thấy phiên. Vui lòng làm mới và thử lại."
 sessionValidationError = "Không thể xác minh phiên. Vui lòng thử lại."
+startingCamera = "Starting camera…"
 title = "Máy quét di động"
-upload = "Tải lên"
-uploadAll = "Tải lên tất cả"
 uploadFailed = "Tải lên thất bại. Vui lòng thử lại."
 uploading = "Đang tải lên..."
 uploadSuccess = "Tải lên thành công!"
 uploadSuccessMessage = "Hình ảnh của bạn đã được chuyển."
+uploadWithCount = "Upload ({{total}})"
 validating = "Đang xác thực phiên..."
 
 [mobileSign]
@@ -5187,24 +5718,27 @@ count = "{{remaining}} of {{total}}"
 label = "Free credits"
 
 [notifications]
+adoptFailed = "The document was unlocked but could not be opened here. Try the tool directly."
 empty = "Không có gì để báo cáo."
 handoffUnavailable = "Trình duyệt này không cho phép bộ xử lý chuyển tài liệu sang trình chỉnh sửa. Thay vào đó, hãy mở tài liệu từ trình chỉnh sửa."
 noDocumentLinked = "Lỗi này không được liên kết với tài liệu cụ thể nào, nên không có gì để mở ở đây."
 notOnThisDevice = "Tài liệu này không có trên thiết bị này, nên không thể mở tại đây."
 occurrences = "{{count}} lần"
 open = "Thông báo"
+rerunRejected = "The policy could not be run again just now. Try again in a moment."
+rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
+retryUnavailable = "This document can no longer be retried from this browser."
 title = "Thông báo"
+unlockedNotRerun = "The document was unlocked and opened here, but the policy could not be run on it again."
+unlockedRerunUndelivered = "The document was unlocked and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
 unread = "Chưa đọc"
 
 [notifications.action]
+copiedLog = "Copied"
+copyLog = "Copy log"
 failed = "Thao tác đó không hoạt động. Hãy thử lại sau ít phút."
+more = "More options"
 unavailable = "Không khả dụng cho thông báo này."
-
-[notifications.detail]
-copied = "Đã sao chép"
-copy = "Sao chép lỗi"
-less = "Hiển thị ít hơn"
-more = "Hiển thị toàn bộ thông báo"
 
 [notifications.section]
 earlier = "Trước đó"
@@ -5956,6 +6490,23 @@ upgradeSuccess = "Thanh toán thành công! Gói của bạn đã được nâng
 upgradeTitle = "Nâng cấp lên {{planName}}"
 yearly = "Theo năm"
 
+[payment.capacityStage]
+continue = "Continue to payment"
+customHint = "Rounded up to the next block of {{users}}."
+customLabel = "Number of users"
+dueToday = "Due today"
+enterpriseQuote = "Get an enterprise quote"
+lineItem = "Team · {{price}}{{period}} per {{block}} users"
+minimumForCurrentUsers = "You have {{users}} users, so the plan must cover at least {{minimum}}."
+modalTitle = "Upgrade to {{planName}}"
+other = "Other"
+perMonth = "/mo"
+perYear = "/yr"
+renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
+subheading = "Covers everyone you invite, in blocks of {{users}} users."
+usersLabel = "Users"
+userTotal = "{{users}} users"
+
 [payment.emailStage]
 continue = "Tiếp tục"
 description = "Chúng tôi dùng email này để gửi license key và biên nhận."
@@ -6025,99 +6576,271 @@ REVERSE_ORDER = "Đảo thứ tự tài liệu để trang cuối thành trang �
 SIDE_STITCH_BOOKLET_SORT = "Sắp xếp trang để in sổ tay ghim cạnh (tối ưu cho đóng gáy bên)."
 
 [pdfTextEditor]
-conversionFailed = "Không thể chuyển đổi PDF. Vui lòng thử lại."
-converting = "Đang chuyển PDF sang định dạng có thể chỉnh sửa..."
-currentFile = "Tệp hiện tại: {{name}}"
-imageLabel = "Ảnh đã đặt"
-noTextOnPage = "Không phát hiện văn bản có thể chỉnh sửa trên trang này."
-pagePreviewAlt = "Xem trước trang"
-pageSummary = "Trang {{number}}/{{total}}"
+download = "Download"
+downloadTooltip = "Save and download the edited PDF"
+save = "Save PDF"
+saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "Trình chỉnh sửa PDF JSON"
-viewLabel = "Trình chỉnh sửa PDF"
+unsaved = "(unsaved)"
+workbenchLabel = "Editor"
 
-[pdfTextEditor.actions]
-applyChanges = "Áp dụng thay đổi"
-clearText = "Xóa văn bản"
-downloadCopy = "Tải bản sao"
-moreOptions = "Tùy chọn khác"
-reset = "Đặt lại thay đổi"
+[pdfTextEditor.annotations]
+freetext = "Annotation text - not page text, so it can't be edited here"
+stamp = "Stamp annotation - not page text, so it can't be edited here"
+widget = "Form field - not page text, so it can't be edited here"
 
-[pdfTextEditor.badges]
-earlyAccess = "Truy cập sớm"
-modified = "Đã chỉnh sửa"
+[pdfTextEditor.discard]
+body = "Opening {{name}} closes the document you are editing. Your unsaved changes will be lost."
+cancel = "Cancel"
+confirm = "Discard and open"
+hint = "Cancel, then Save PDF to keep them in your workspace first."
+title = "Discard unsaved changes?"
 
-[pdfTextEditor.empty]
-dropzone = "Kéo và thả tệp PDF hoặc JSON vào đây, hoặc nhấp để duyệt"
-dropzoneWithFiles = "Chọn một tệp từ tab Tệp, hoặc kéo và thả tệp PDF hoặc JSON vào đây, hoặc nhấp để duyệt"
-title = "Chưa tải tài liệu"
+[pdfTextEditor.drop]
+hint = "Releases on the editor stage replace any open document."
+title = "Drop a PDF to open"
 
-[pdfTextEditor.errors]
-invalidJson = "Không thể đọc tệp JSON. Hãy đảm bảo tệp được tạo bởi công cụ PDF to JSON."
-pdfConversion = "Không thể chuyển JSON đã chỉnh sửa lại thành PDF."
+[pdfTextEditor.error]
+decodeImage = "Could not decode the selected image."
+insertImage = "Could not insert the selected image."
 
-[pdfTextEditor.fontAnalysis]
-allFonts = "Tất cả font"
-currentPageFonts = "Font trên trang này"
-details = "Chi tiết font"
-embedded = "Nhúng"
-fallback = "dự phòng"
-infoMessage = "Có thông tin về tái tạo font."
-missing = "thiếu"
-perfect = "hoàn hảo"
-perfectMessage = "Tất cả font có thể tái tạo hoàn hảo."
-subset = "nhúng một phần"
-suggestions = "Ghi chú"
-type = "Loại"
-warningMessage = "Một số font có thể không hiển thị đúng."
-warnings = "Cảnh báo"
-webFormat = "Định dạng Web"
+[pdfTextEditor.find]
+close = "Close find bar"
+count = "{{current}} of {{total}}"
+findPlaceholder = "Find"
+ignoreAccents = "Ignore accents"
+matchCase = "Match case"
+next = "Next match"
+noMatches = "No matches"
+previous = "Previous match"
+replace = "Replace"
+replaceAll = "Replace all"
+replaced = "{{count}} replaced"
+replacePlaceholder = "Replace with"
+wholeWord = "Whole word"
 
-[pdfTextEditor.groupingMode]
-auto = "Tự động"
-paragraph = "Đoạn văn"
-singleLine = "Một dòng"
+[pdfTextEditor.fontPicker]
+builtInGroup = "Built-in fonts"
+deviceFontsNone = "No extra device fonts were found."
+deviceFontsUnavailable = "Device fonts are unavailable. The built-in fonts still work."
+deviceGroup = "Device fonts"
+documentGroup = "Document font"
+label = "Font family"
+mixed = "Mixed"
+noMatch = "No matching font"
+placeholder = "Font family"
+useDeviceFonts = "Use device fonts"
 
-[pdfTextEditor.manual]
-expandWidth = "Mở rộng tới mép trang"
-merge = "Gộp vùng chọn"
-mergeTooltip = "Gộp các hộp đã chọn"
-resetWidth = "Đặt lại độ rộng"
-resizeHandle = "Điều chỉnh độ rộng văn bản"
-ungroup = "Bỏ nhóm vùng chọn"
-ungroupTooltip = "Tách đoạn thành các dòng"
-widthMenu = "Tùy chọn độ rộng"
+[pdfTextEditor.fonts]
+allPresent = "All letters & numbers present"
+missing = "Missing: {{glyphs}}"
+title = "Fonts"
 
-[pdfTextEditor.modeChange]
-cancel = "Hủy"
-confirm = "Đặt lại và đổi chế độ"
-title = "Xác nhận đổi chế độ"
-warning = "Đổi chế độ nhóm văn bản sẽ đặt lại mọi thay đổi chưa lưu. Bạn có chắc muốn tiếp tục?"
+[pdfTextEditor.fonts.compat]
+info = "Existing text edits perfectly. A new character an embedded font doesn't include falls back to a standard font."
+ok = "Every font includes the full alphabet and digits - type freely."
+warnOther = "{{count}} fonts missing some letters or numbers - typing those uses a standard fallback font."
 
-[pdfTextEditor.options.advanced]
-title = "Cài đặt nâng cao"
+[pdfTextEditor.fonts.pill]
+info = "Embedded"
+ok = "All glyphs"
+warn = "{{count}} with gaps"
 
-[pdfTextEditor.options.autoScaleText]
-description = "Tự động co giãn văn bản theo chiều ngang để vừa với hộp giới hạn gốc khi cách hiển thị font khác so với PDF."
-title = "Tự căn chỉnh văn bản cho vừa hộp"
+[pdfTextEditor.fonts.status.embedded]
+label = "Embedded"
 
-[pdfTextEditor.options.forceSingleElement]
-description = "Khi bật, trình chỉnh sửa xuất mỗi hộp văn bản đã chỉnh sửa thành một phần tử văn bản PDF để tránh chồng ký tự hoặc trộn font."
-title = "Khóa văn bản đã chỉnh sửa thành một phần tử PDF duy nhất"
+[pdfTextEditor.fonts.status.standard]
+label = "Standard"
 
-[pdfTextEditor.options.groupingMode]
-autoDescription = "Tự động nhận diện loại trang và nhóm văn bản phù hợp."
-paragraphDescription = "Nhóm các dòng thẳng hàng thành hộp văn bản đoạn nhiều dòng."
-singleLineDescription = "Giữ mỗi dòng văn bản PDF thành một hộp riêng."
-title = "Chế độ nhóm văn bản"
+[pdfTextEditor.fonts.status.subset]
+label = "Subset"
 
-[pdfTextEditor.pageType]
-paragraph = "Trang đoạn văn"
-sparse = "Văn bản thưa"
+[pdfTextEditor.help]
+ariaLabel = "Keyboard shortcuts"
+title = "Keyboard shortcuts"
+tooltip = "Keyboard shortcuts (?)"
 
-[pdfTextEditor.stages]
-processing = "Processing"
-uploading = "Uploading"
+[pdfTextEditor.help.clipboard]
+copyDesc = "Copy selected text"
+cutDesc = "Cut selected (copy + delete)"
+heading = "Clipboard"
+pasteDesc = "Paste clipboard text as new run"
+pastePlainDesc = "Paste as plain text"
+
+[pdfTextEditor.help.document]
+escDesc = "Clear selection / close find / close help"
+heading = "Document"
+helpDesc = "This help"
+saveDesc = "Save to your workspace"
+
+[pdfTextEditor.help.editing]
+deleteDesc = "Remove selected"
+duplicateDesc = "Duplicate selected"
+groupDesc = "Group selected runs into one paragraph"
+heading = "Editing"
+marqueeDesc = "Marquee multi-select"
+moveDesc = "Move text run"
+selectAllDesc = "Select all"
+shiftClickDesc = "Add / remove a run from selection"
+undoRedoDesc = "Undo / Redo"
+
+[pdfTextEditor.help.find]
+heading = "Find & replace"
+nextDesc = "Next match (add Shift for previous)"
+openDesc = "Open find bar (and replace)"
+
+[pdfTextEditor.help.navigation]
+firstLastDesc = "First / last page"
+heading = "Navigation"
+pageDesc = "Previous / next page"
+zoomDesc = "Zoom in / out"
+
+[pdfTextEditor.inspector]
+document = "Document"
+fontEmbedded = "Embedded font · a character it lacks falls back to Helvetica."
+fontGap = "{{name}} · missing {{glyphs}} - typing those falls back to Helvetica."
+geometry = "Position & size"
+height = "Height"
+heightHint = "A text box's height follows its type size and line count."
+image = "Image"
+images = "Images"
+manyImages = "{{count}} images"
+manyText = "Text · {{count}} boxes"
+mixed = "{{count}} objects"
+multiGeometry = "Select a single object to edit its position and size."
+nothingSelected = "Nothing selected"
+nothingSelectedHint = "Click any text or image on the page to edit it here."
+oneImage = "Image"
+oneText = "Text"
+pages = "Pages"
+tabDocument = "Document"
+tabSelected = "Selected"
+textBoxes = "Text boxes"
+width = "Width"
+widthHint = "A text box's width follows its content and wrapping."
+x = "X"
+y = "Y"
+
+[pdfTextEditor.password]
+cancel = "Cancel"
+incorrect = "Incorrect password - try again."
+label = "Password"
+open = "Open"
+protected = "This PDF is password-protected."
+protectedNamed = "\"{{fileName}}\" is password-protected."
+title = "Password required"
+
+[pdfTextEditor.rulers]
+guide = "Alignment guide at {{value}} {{unit}} - drag onto a ruler to remove"
+hint = "Drag from a ruler to add an alignment guide"
+horizontal = "Horizontal ruler"
+unit = "pt"
+vertical = "Vertical ruler"
+
+[pdfTextEditor.run]
+lockedTitle = "Locked - use the Unlock button to edit"
+
+[pdfTextEditor.saveRisk]
+cancel = "Cancel"
+intro = "Saving the edited copy changes the file. That means:"
+note = "Your edits are kept. The changes listed above are unavoidable when saving the edited copy."
+saveAnyway = "Save anyway"
+title = "Saving will change this PDF"
+
+[pdfTextEditor.settings]
+advanced = "Advanced"
+find = "Find in document"
+findTooltip = "Find ({{shortcut}})"
+view = "View"
+
+[pdfTextEditor.sidebar]
+addImage = "Add image"
+addText = "Add text"
+clickPageToAddText = "Click page to add text"
+document = "Document"
+group = "Group"
+groupingAuto = "Auto"
+groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
+groupingLine = "Line"
+groupTooltip = "Merge selected runs into one paragraph ({{shortcut}})"
+groupTooltipDisabled = "Select 2+ runs to merge"
+noFile = "No file loaded"
+noFileHint = "Pick a PDF from the Files panel on the left, or drop one in. The editor will open it automatically."
+opening = "Opening document..."
+paragraph = "Paragraph"
+rulers = "Rulers and guides"
+textBoxWidth = "New text box width"
+textGrouping = "Text grouping"
+ungroup = "Ungroup"
+ungroupTooltip = "Split this paragraph into one run per line"
+ungroupTooltipDisabled = "Select a multi-line paragraph to ungroup"
+widthGrow = "Grow"
+widthGrowHint = "Grow widens a box as you type; Wrap keeps its width and flows onto new lines."
+widthWrap = "Wrap"
+
+[pdfTextEditor.spellcheck]
+auto = "Automatic"
+enable = "Check spelling as you type"
+language = "Dictionary language"
+
+[pdfTextEditor.stage]
+loadingDocument = "Loading document"
+loadingProgress = "Loading progress"
+noDocument = "No document loaded."
+pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
+renderingPreview = "Rendering preview"
+
+[pdfTextEditor.toolbar]
+addTextTooltip = "Add a text box - then click the page"
+advancedColour = "Advanced colour"
+advancedColourTooltip = "Advanced colour (glyph outline)"
+alignBottom = "Align bottom"
+alignCentre = "Align centre"
+alignLabel = "Align · needs 2+ objects"
+alignLeft = "Align left"
+alignMiddle = "Align middle"
+alignRight = "Align right"
+alignTop = "Align top"
+arrange = "Arrange"
+bringForward = "Bring forward"
+bringToFront = "Bring to front"
+caseLower = "lowercase"
+caseSentence = "Sentence case"
+caseTitle = "Title Case"
+caseUpper = "UPPERCASE"
+changeCase = "Change case"
+changeCaseTooltip = "Change case (text runs only)"
+delete = "Delete selected"
+deleteTooltip = "Delete (Del)"
+distributeHorizontally = "Distribute horizontally"
+distributeLabel = "Distribute · needs 3+ objects"
+distributeVertically = "Distribute vertically"
+editImageExternally = "Edit in another app"
+flipHorizontal = "Flip horizontal"
+flipVertical = "Flip vertical"
+fontColour = "Font colour"
+fontSize = "Font size"
+formatting = "Text formatting"
+italic = "Italic"
+italicUnavailable = "This font has no italic version. Load your device fonts or pick another font family."
+lock = "Lock selection"
+lockTooltip = "Lock selection - prevents accidental edits"
+more = "More actions"
+order = "Order"
+outlineColour = "Outline colour"
+outlineWidth = "Outline width (0 = none)"
+redo = "Redo"
+redoTooltip = "Redo ({{shortcut}})"
+replaceImage = "Replace, keeping placement"
+rotateLeft = "Rotate 90° left"
+rotateRight = "Rotate 90° right"
+sendBackward = "Send backward"
+sendToBack = "Send to back"
+undo = "Undo"
+undoTooltip = "Undo ({{shortcut}})"
+unlock = "Unlock selection"
+unlockTooltip = "Unlock selection - makes it editable again"
 
 [pdfTextEditor.tooltip.alpha]
 text = "Trình xem alpha này vẫn đang phát triển—một số phông chữ, màu sắc, hiệu ứng trong suốt và chi tiết bố cục có thể thay đổi nhẹ. Vui lòng kiểm tra lại PDF đã tạo trước khi chia sẻ."
@@ -6134,31 +6857,12 @@ title = "Sai lệch khi xem trước"
 text = "Không gian làm việc này tập trung vào chỉnh sửa văn bản và thay đổi vị trí hình ảnh nhúng. Tác phẩm trang phức tạp, tiện ích biểu mẫu và đồ họa nhiều lớp sẽ được giữ lại khi xuất nhưng không thể chỉnh sửa đầy đủ tại đây."
 title = "Tập trung Văn bản và Hình ảnh"
 
-[pdfTextEditor.welcomeBanner]
-bestFor = "Tốt nhất cho:"
-bestFor1 = "PDF đơn giản chủ yếu gồm văn bản và hình ảnh"
-bestFor2 = "Tài liệu có định dạng đoạn văn tiêu chuẩn"
-bestFor3 = "Thư, bài luận, báo cáo và tài liệu cơ bản"
-dontShowAgain = "Đừng hiển thị lại"
-experimental = "Đây là tính năng thử nghiệm đang được phát triển tích cực. Có thể sẽ không ổn định và phát sinh lỗi khi sử dụng."
-feedback = "Đây là tính năng truy cập sớm. Vui lòng báo lỗi bạn gặp để giúp chúng tôi cải thiện!"
-gotIt = "Đã hiểu"
-howItWorks = "Công cụ này chuyển PDF của bạn sang định dạng có thể chỉnh sửa, nơi bạn có thể sửa nội dung văn bản và đặt lại vị trí hình ảnh. Thay đổi sẽ được lưu thành một PDF mới."
-issue1 = "Hiện chưa giữ màu văn bản (sẽ sớm bổ sung)"
-issue2 = "Chế độ Đoạn có nhiều vấn đề căn chỉnh và giãn cách hơn - khuyến nghị dùng chế độ Dòng đơn"
-issue3 = "Bản xem trước khác với PDF xuất ra - PDF xuất ra gần với bản gốc hơn"
-issue4 = "Căn chỉnh văn bản xoay có thể cần chỉnh tay"
-issue5 = "Hiệu ứng trong suốt và lớp có thể khác bản gốc"
-knownIssues = "Vấn đề đã biết (đang sửa):"
-limitation1 = "Hiển thị font có thể hơi khác so với PDF gốc"
-limitation2 = "Đồ họa phức tạp, trường biểu mẫu và chú thích được giữ lại nhưng không thể chỉnh sửa"
-limitation3 = "Tệp lớn có thể mất thời gian để chuyển đổi và xử lý"
-limitations = "Giới hạn hiện tại:"
-notIdealFor = "Không phù hợp cho:"
-notIdealFor1 = "PDF có định dạng đặc biệt như gạch đầu dòng, bảng hoặc bố cục nhiều cột"
-notIdealFor2 = "Tạp chí, brochure hoặc tài liệu thiết kế phức tạp"
-notIdealFor3 = "Sổ tay hướng dẫn có bố cục phức tạp"
-title = "Chào mừng đến với PDF Text Editor (Truy cập sớm)"
+[pdfTextEditor.zoom]
+fit = "Fit"
+fitToWidth = "Fit to width"
+in = "Zoom in"
+out = "Zoom out"
+reset = "Reset zoom to 100%"
 
 [PDFToCSV]
 header = "PDF sang CSV"
@@ -6298,10 +7002,10 @@ saml = "SAML"
 secureLoginSupport = "Hỗ trợ đăng nhập an toàn"
 selfHostedDeployment = "Triển khai tự lưu trữ"
 sso = "SSO"
-unlimitedUsers = "Người dùng không giới hạn"
 upToFiveUsers = "Tối đa 5 người dùng"
 upToFiveUsersLowercase = "tối đa 5 người dùng"
 usageTracking = "Theo dõi sử dụng"
+usersIncluded = "100 users included"
 usersLimitedToSeats = "Người dùng bị giới hạn theo số chỗ"
 
 [plan.free]
@@ -6330,9 +7034,9 @@ saveWithAnnualBilling = "Tiết kiệm với hóa đơn hàng năm"
 selfHosted = "Tự lưu trữ"
 selfHostedOnInfrastructure = "Tự lưu trữ trên hạ tầng của bạn"
 ssoOAuth = "SSO (OAuth2/OIDC)"
-unlimitedUsers = "Người dùng không giới hạn"
 upToFiveUsers = "Tối đa 5 người dùng"
 usageTrackingPrometheus = "Theo dõi sử dụng & Prometheus"
+usersIncluded = "100 users included"
 
 [plan.licenseWarning]
 body = "Bạn có {{total}} người dùng nhưng gói miễn phí chỉ hỗ trợ {{limit}} mỗi server. Hãy nâng cấp để Stirling PDF hoạt động ổn định."
@@ -6378,6 +7082,10 @@ instructions = "Hoàn tất mua hàng trong thẻ Stripe. Khi thanh toán xong, 
 keyDescription = "Dán khóa giấy phép từ email của bạn"
 success = "Đã kích hoạt giấy phép!"
 successMessage = "Giấy phép của bạn đã được kích hoạt thành công. Bạn có thể đóng cửa sổ này."
+
+[plan.team]
+maxUsers = "100 users"
+name = "Team"
 
 [policies.activity]
 outputsUnavailable = "Đầu ra của chính sách không còn khả dụng để tải xuống."
@@ -6426,46 +7134,9 @@ enforcingTitle = "Đang thực thi chính sách..."
 viewAnyway = "Xem tệp (chính sách vẫn đang thực thi)"
 
 [policyOption]
-autoRedactPhi = "Tự động che PHI"
-blockExport = "Chặn xuất"
-ccpa = "CCPA"
-contracts = "Hợp đồng"
-documents = "Tài liệu"
-fedramp = "FedRAMP"
-financialReports = "Báo cáo tài chính"
-flagForReview = "Đánh dấu để xem xét"
-gdpr = "GDPR"
-hipaa = "HIPAA"
-hold = "Giữ lại"
-hrRecords = "Hồ sơ nhân sự"
-indefinite = "Vô thời hạn"
-insurance = "Bảo hiểm"
-invoices = "Hóa đơn"
-iso27001 = "ISO 27001"
-legalFilings = "Hồ sơ pháp lý"
-medicalPhi = "Y tế / PHI"
-never = "Không bao giờ"
-ninetyDays = "90 ngày"
-oneYear = "1 năm"
-p60 = "60%"
-p70 = "70%"
-p80 = "80%"
-p90 = "90%"
-p95 = "95%"
-pciDss = "PCI DSS"
-quarantineDocument = "Cách ly tài liệu"
-routeToBucket = "Định tuyến đến bucket"
-s3Bucket = "S3 bucket"
-sevenYears = "7 năm"
-sharePoint = "SharePoint"
-soc2 = "SOC 2"
-taxDocuments = "Tài liệu thuế"
-thirtyDays = "30 ngày"
-threeYears = "3 năm"
-webhook = "Webhook"
-
-[portal]
-comingSoon = "Sắp ra mắt"
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
 billingNote = "Xử lý không giám sát được tính phí vào ví tổ chức của bạn."
@@ -6486,11 +7157,60 @@ after = "để bật liên kết tài khoản với tài khoản Stirling đư�
 before = "Đặt"
 title = "Chưa cấu hình đăng nhập SaaS"
 
-[portal.accountLink.gate]
-action = "Liên kết tài khoản"
-description = "Liên kết tài khoản Stirling của tổ chức này để dùng các tính năng tính phí."
-title = "Liên kết để mở khóa"
-titleFeature = "Liên kết để mở khóa {{feature}}"
+[portal.accountLink.connect]
+close = "Close"
+exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
+notNow = "Not now"
+start = "Connect Stirling account"
+step = "Step {{current}} of {{total}}"
+
+[portal.accountLink.connect.benefits]
+creditsDetail = "500 free per month"
+creditsLabel = "Credits"
+processorDetail = "Pipelines, policies, sources and audit"
+processorLabel = "Processor"
+teamsDetail = "Free for up to 5 users"
+teamsLabel = "Teams"
+
+[portal.accountLink.connect.callback]
+linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
+retry = "Try again"
+signedInAnyway = "You are signed in to Stirling, so billing and usage will load. Only the server link is incomplete."
+working = "Finishing the connection."
+
+[portal.accountLink.connect.callback.expired]
+body = "Connection requests are short lived. Start another one."
+title = "Request expired"
+
+[portal.accountLink.connect.callback.malformed]
+body = "This page was opened without a valid connection response. Start the connection from settings."
+title = "Could not read the response"
+
+[portal.accountLink.connect.callback.rejected]
+body = "This request was declined or has already been used. Start another one if that was not intended."
+title = "Connection not completed"
+
+[portal.accountLink.connect.callback.unfinished]
+body = "Stirling did not confirm the connection. This is usually temporary."
+title = "Not finished yet"
+
+[portal.accountLink.connect.done]
+accountLabel = "Account"
+addPolicy = "Add a policy"
+buildPipeline = "Set up a pipeline"
+creditsBarLabel = "Free credits remaining"
+creditsSuffix = "of {{allowance}} free credits left"
+cta = "Done"
+inviteTeam = "Invite your team"
+lede = "This server now runs against your Stirling account."
+pendingTitle = "Almost there"
+switchOnProcessor = "Switch on the Processor"
+title = "Connected"
+
+[portal.accountLink.connect.handoff]
+going = "Taking you to stirling.com"
+reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
+title = "Connecting"
 
 [portal.accountLink.instances]
 active = "Đang hoạt động"
@@ -6519,11 +7239,13 @@ minutesAgo_other = "{{count}} phút trước"
 never = "chưa bao giờ"
 
 [portal.accountLink.modal]
-linkSubtitle = "Đăng nhập vào tài khoản mà máy chủ này sẽ tính phí."
+cancel = "Cancel"
+continueReauth = "Sign in again"
+exhaustedTitle = "Add more monthly credits"
 linkTitle = "Liên kết tài khoản Stirling của bạn"
-reauthSubtitle = "Phiên của bạn đã hết hạn — hãy đăng nhập lại vào tài khoản Stirling của bạn. Phiên bản của bạn vẫn được liên kết."
+noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
 reauthTitle = "Đăng nhập lại"
-simulateSignIn = "Mô phỏng đăng nhập (dev)"
+startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
 after = "để bật liên kết trong ứng dụng với tài khoản Stirling được lưu trữ."
@@ -6541,6 +7263,12 @@ sub = "Liên kết tổ chức tự lưu trữ này với tài khoản Stirling 
 forbidden = "Chỉ chủ sở hữu nhóm mới có thể xem các phiên bản đã liên kết của tổ chức."
 generic = "Không thể tải các phiên bản đã liên kết của nhóm. Hãy thử lại sau giây lát."
 title = "Không thể tải phiên bản đã liên kết"
+
+[portal.accountLink.rail]
+cta = "Connect"
+later = "Not now"
+sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
+title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "Gói Editor"
@@ -6629,16 +7357,16 @@ subtitle = "Triển khai ở bất kỳ đâu, cho toàn bộ nhóm của bạn.
 title = "Trình chỉnh sửa PDF miễn phí"
 
 [portal.billing.freePlan]
+anywhere = "Web, desktop & self-hosted"
 checkoutErrorTitle = "Không thể bắt đầu thanh toán"
 currentPlan = "Gói hiện tại"
+everyPdfTool = "Every PDF tool"
 freeForever = "Miễn phí mãi mãi"
 noTeamResolved = "Chưa xác định được nhóm nào trên ví của bạn — hãy làm mới và thử lại."
 ownerOnly = "Chỉ chủ sở hữu nhóm mới có thể bật gói Processor."
 payInvoice = "Thanh toán hóa đơn để hoàn tất"
 planName = "Editor"
-ssoIncluded = "Bao gồm SSO"
 switchOnProcessor = "Bật Processor →"
-unlimitedUsers = "Người dùng không giới hạn"
 viewQuote = "Xem báo giá"
 
 [portal.billing.invoices]
@@ -6664,11 +7392,6 @@ showMostRecent_other = "Hiển thị {{count}} gần đây nhất"
 title = "Lịch sử hóa đơn"
 viewAriaLabel = "Xem hóa đơn {{number}} trong Stripe"
 viewLink = "Xem ↗"
-
-[portal.billing.linkPrompt]
-cta = "Liên kết tài khoản Stirling"
-description = "Chỉnh sửa PDF thủ công — xem, ký, hợp nhất, tách, watermark, nén, chuyển đổi, OCR thủ công — luôn miễn phí, dù có liên kết hay không. Liên kết để nhận 500 PDF miễn phí cho xử lý tính theo mức sử dụng (tự động hóa, AI và API); khi cần thêm, hãy bật gói Processor và chỉ trả tiền cho những gì bạn dùng."
-title = "Liên kết tài khoản Stirling của bạn"
 
 [portal.billing.paymentMethod]
 billedMonthly = "Tính phí hàng tháng"
@@ -7431,114 +8154,33 @@ status = "Trạng thái"
 time = "Thời gian"
 user = "Người dùng"
 
-[portal.editorAdmin]
-subtitle = "Triển khai Stirling PDF Editor, ghép nối các phiên bản self-hosted với tổ chức của bạn và vận hành đội hình đang chạy — mục tiêu, tình trạng, thông tin xác thực và kích hoạt offline tại một nơi."
-title = "Triển khai Editor"
-
-[portal.editorAdmin.health.columns]
-activeUsers = "Người dùng đang hoạt động"
-host = "Host"
-lastSeen = "Lần thấy gần nhất"
-region = "Khu vực"
-status = "Trạng thái"
-target = "Target"
-version = "Phiên bản"
-
-[portal.editorAdmin.health.empty]
-description = "Triển khai một mục tiêu và ghép nối để xem tình trạng phiên bản trực tiếp tại đây."
-title = "Không có phiên bản nào đang báo cáo"
-
-[portal.editorAdmin.offlineActivation]
-enterpriseTag = "Enterprise"
-generateButton = "Tạo gói offline"
-lockCopy = "Kích hoạt offline và on-prem là một phần của Enterprise."
-subtitle = "Tạo gói kích hoạt đã ký cho bản cài đặt offline hoặc on-prem không có đường mạng ra ngoài. Chuyển gói đó sang phiên bản và áp dụng trong quá trình thiết lập lần chạy đầu tiên."
-talkToSales = "Liên hệ bộ phận bán hàng"
-title = "Kích hoạt air-gapped"
-
-[portal.editorAdmin.offlineActivation.readyBanner]
-description = "{{file}} đã được ký và sẵn sàng để chuyển. Gói này kích hoạt một phiên bản và hết hạn sau 14 ngày."
-title = "Gói đã sẵn sàng"
-
-[portal.editorAdmin.pairing]
-generated = "Đã tạo ✓"
-generateNewCode = "Tạo mã mới"
-lockCopy = "Cấp phát IaC là một phần của Enterprise."
-rotate = "Xoay vòng"
-talkToSales = "Liên hệ bộ phận bán hàng"
-
-[portal.editorAdmin.sections.health]
-sub = "Mọi phiên bản Editor đang báo cáo — phiên bản, khu vực, trạng thái, lần thấy gần nhất và người dùng đang hoạt động."
-title = "Tình trạng phiên bản"
-
-[portal.editorAdmin.sections.pairing]
-sub = "Kết nối một editor self-hosted với tổ chức này. Tạo token, chuyển giao mã ngắn hoặc nối qua IaC."
-title = "Ghép nối"
-
-[portal.editorAdmin.sections.targets]
-sub = "Nơi Editor chạy. Sao chép một đoạn mã để dựng phiên bản self-hosted, hoặc dùng Managed Cloud không cần vận hành."
-title = "Mục tiêu triển khai"
-
-[portal.editorAdmin.serviceToken]
-currentToken = "Token hiện tại"
-lastRotated = "Lần xoay vòng gần nhất"
-rotateButton = "Xoay vòng service token"
-subtitle = "Các phiên bản xác thực với tổ chức bằng thông tin xác thực này. Xoay vòng theo lịch hoặc ngay sau khi nghi ngờ bị rò rỉ."
-title = "Service token"
-
-[portal.editorAdmin.serviceToken.rotatedBanner]
-description = "Một token mới đã được phát hành. Cập nhật STIRLING_SERVICE_TOKEN của từng phiên bản self-hosted trong thời gian ân hạn 24 giờ, nếu không chúng sẽ offline."
-title = "Xoay vòng các phiên bản đang chạy"
-
-[portal.editorAdmin.status]
-degraded = "Suy giảm"
-healthy = "Khỏe mạnh"
-offline = "Offline"
-pairing = "Đang ghép nối"
-
-[portal.editorAdmin.targets]
-instanceCount_one = "{{count}} phiên bản"
-instanceCount_other = "{{count}} phiên bản"
-talkToSales = "Liên hệ bộ phận bán hàng"
-upgradePlan = "Nâng cấp gói"
-
-[portal.editorAdmin.targets.lock]
-enterprise = "Self-hosting on-prem và Kubernetes là một phần của Enterprise."
-paid = "Self-hosting với Docker và Kubernetes được mở khóa trên gói trả phí."
-
-[portal.editorAdmin.targets.state]
-available = "Khả dụng"
-locked = "Bị khóa"
-running = "Đang chạy"
-
 [portal.errorBoundary]
 description = "Chế độ xem này gặp lỗi không mong muốn. Hãy thử lại hoặc chọn phần khác từ thanh bên."
 retry = "Thử lại"
 title = "Đã xảy ra lỗi trên trang này"
 
 [portal.failures]
-fromSource = "From source {{source}}"
+closedBySystem = "Stirling"
+noMatches = "Nothing matches the current filters"
 occurrences = "{{count}} occurrences"
-reportedBy = "Hit by {{actor}}"
-runReference = "Run {{runId}}"
-subtitle = "Failures recorded from your policy runs and your team's editors, with the actions you can take."
-title = "Failures"
+searchPlaceholder = "Search issues, users and errors"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-confirm = "Are you sure?"
+decrypt = "Decrypt and retry"
 dismiss = "Dismiss"
-dismissSkipFile = "Skip this file"
+openInTool = "Retry"
 viewFile = "Xem tệp"
 viewInProcessor = "Xem trong bộ xử lý"
 
-[portal.failures.debug]
-copyJson = "Copy JSON"
-dismissAll = "Dismiss all ({{total}})"
-dismissing = "Dismissing..."
-hideJson = "Hide raw JSON ({{total}})"
-refresh = "Refresh failures"
-showJson = "Show raw JSON ({{total}})"
+[portal.failures.columns]
+closedBy = "Closed by"
+date = "Date"
+failure = "Issue"
+origin = "Raised in"
+outcome = "Outcome"
+source = "Source"
+user = "User"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
@@ -7550,6 +8192,20 @@ unavailable = "Not available for this failure."
 description = "Policy runs that fail will appear here with the actions you can take."
 title = "No failures recorded"
 
+[portal.failures.emptyClosed]
+description = "Items you dismiss or resolve are kept here with their outcome."
+title = "Nothing closed yet"
+
+[portal.failures.filters]
+origin = "Raised in"
+source = "Source"
+type = "Type"
+user = "User"
+
+[portal.failures.kind.complianceNotMet]
+description = "The compliance check refused this document because it does not meet the standard the policy validates against. The violation is shown below."
+title = "Compliance standard not met"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "The pipeline could not open the document because it is password-protected. Unlock it and run it again, or skip this file."
 title = "Password-protected document"
@@ -7558,17 +8214,32 @@ title = "Password-protected document"
 description = "This run failed for a reason Stirling does not yet recognise. The raw message is shown below."
 title = "Unrecognised failure"
 
+[portal.failures.log]
+copy = "Copy error"
+view = "View error"
+
 [portal.failures.origin]
 pipeline = "Pipeline"
 policy = "Policy"
 tool = "Tool run"
 
-[portal.failures.stage]
-blocked = "Blocked"
-input = "Input"
-internal = "Internal"
-never_ran = "Never ran"
-output = "Output"
+[portal.failures.outcome]
+dismissed = "Dismissed"
+fileRemoved = "File deleted"
+open = "Open"
+resolved = "Resolved"
+
+[portal.failures.scope]
+ariaLabel = "Review state"
+closed = "Closed"
+open = "Open"
+
+[portal.failures.source]
+editor = "Editor"
+
+[portal.failures.unavailable]
+description = "This queue is visible to team leaders on workspaces that run policies."
+title = "Nothing to review"
 
 [portal.home.download]
 back = "Quay lại"
@@ -7644,12 +8315,6 @@ kubernetes = "Self-hosted · Kubernetes"
 afternoon = "Chào buổi chiều"
 evening = "Chào buổi tối"
 morning = "Chào buổi sáng"
-
-[portal.infrastructure]
-manageEditorDeployment = "Quản lý triển khai Editor"
-sectionsAriaLabel = "Các phần hạ tầng"
-subtitle = "Triển khai, thông tin xác thực, tư thế bảo mật, lưu trữ và dấu vết kiểm tra cho workspace Stirling của bạn."
-title = "Hạ tầng"
 
 [portal.infrastructure.apiKeys]
 createKey = "Tạo khóa"
@@ -7760,17 +8425,175 @@ subtitleCreated = "Sao chép bí mật này ngay — nó sẽ không được hi
 title = "Tạo khóa API"
 titleCreated = "Đã tạo khóa"
 
+[portal.infrastructure.encryption]
+heading = "Encryption at rest"
+hintLabel = "More about this section"
+subheading = "Stored files are encrypted before they reach disk, the database or object storage."
+unknown = "Unknown"
+
+[portal.infrastructure.encryption.auditNotice]
+description = "Encryption is active on this licence, but encrypt, decrypt, revocation and export events are not written to the audit trail. Encryption itself is unaffected."
+title = "Audit events need an Enterprise licence"
+
+[portal.infrastructure.encryption.coverage]
+decryptOnlyNote = "New uploads are stored as plaintext. Files encrypted earlier are still readable."
+encrypted = "Encrypted files"
+heading = "Coverage"
+percentEncrypted = "{{percent}}% encrypted"
+plaintext = "Plaintext files"
+progressLabel = "{{percent}}% of stored files encrypted"
+subheading = "Covers files in My Files and signing workflows. Files a pipeline reads in place, including network sources, are not stored here and are not encrypted."
+
+[portal.infrastructure.encryption.error]
+action = "That key change could not be applied. Please try again."
+keyMissing = "That key no longer exists. Refresh to see the current list."
+migrationStart = "The migration could not be started. Please try again."
+rotate = "The re-wrap could not be completed. Please try again."
+
+[portal.infrastructure.encryption.generatedKey]
+backupGuide = "How to back it up"
+description = "No encryption key was configured, so one was created on this server. Back it up now: if it is lost, encrypted files cannot be recovered."
+title = "This key was generated for you"
+
+[portal.infrastructure.encryption.keys]
+changedAt = "Changed {{when}}"
+changedBy = "By {{actor}}"
+changedByAt = "By {{actor}} on {{when}}"
+heading = "Scope keys"
+keyVersion = "Version {{version}}"
+neverChanged = "Never changed"
+restore = "Restore access"
+retiredNote = "A retired key still decrypts the files stored under it, but a newer key wraps new uploads."
+revoke = "Revoke"
+subheading = "One key per scope. Revoking a key blocks reads of everything stored under it."
+
+[portal.infrastructure.encryption.keys.columns]
+actions = "Actions"
+lastChange = "Last change"
+scope = "Scope"
+status = "Status"
+
+[portal.infrastructure.encryption.keys.empty]
+description = "A key is created the first time someone uploads a file, not at startup."
+title = "No keys yet"
+
+[portal.infrastructure.encryption.masterKey]
+backend = "Storage backend"
+compareNote = "Compare this against the fingerprint in your key backup and in the startup log."
+copied = "Copied"
+copy = "Copy"
+copyFailed = "This browser would not allow copying. The fingerprint is selected, so copy it manually."
+fingerprint = "Fingerprint"
+fingerprintHelp = "What is this fingerprint for?"
+heading = "Master key"
+notMaterialised = "The key machinery has not started on this node yet."
+s3StreamingNote = "While anything is encrypted, object-store downloads are streamed through this server rather than redirected, so they use its bandwidth."
+subheading = "Wraps every scope key. Never shown or accepted over the API."
+version = "Version"
+
+[portal.infrastructure.encryption.migration]
+backlog_one = "{{formatted}} file is stored as plaintext and can be encrypted now."
+backlog_other = "{{formatted}} files are stored as plaintext and can be encrypted now."
+encrypted = "Encrypted"
+failedCount = "Failed"
+heading = "Encrypt existing files"
+hint = "Encrypts the plaintext backlog left from before encryption was switched on. Progress is held in memory, so a backend restart resets it to not started. Running again skips files that are already encrypted."
+noBacklog = "Every stored file is already encrypted."
+progressLabel = "{{processed}} of {{total}} files encrypted"
+requiresEncryptionOn = "Switch encryption on before running this: the backlog is encrypted using the same write path as new uploads."
+runAgain = "Run again"
+skipped = "Skipped"
+skippedHelp = "What does skipped mean?"
+skippedNote = "Skipped files were replaced by a user while the run was in progress, so their copy was left alone."
+start = "Start"
+startedAt = "Started {{when}}"
+
+[portal.infrastructure.encryption.migration.confirm]
+cancel = "Cancel"
+confirm = "Start encrypting"
+noCancel = "There is no stop control. Once started, the run continues until it finishes or encryption is switched off."
+rewrites_one = "Rewrites {{formatted}} stored file, replacing the plaintext copy with an encrypted one."
+rewrites_other = "Rewrites {{formatted}} stored files, replacing the plaintext copies with encrypted ones."
+throttled = "The job is throttled and safe to re-run. Files already encrypted are skipped."
+title = "Encrypt the existing backlog?"
+
+[portal.infrastructure.encryption.migration.failed]
+description = "Encryption was switched off while the migration was running, so the remaining files were left untouched. Switch it back on and run again."
+title = "The run stopped early"
+
+[portal.infrastructure.encryption.migration.state]
+COMPLETED = "Completed"
+FAILED = "Failed"
+IDLE = "Not started"
+RUNNING = "Running"
+
+[portal.infrastructure.encryption.revoke]
+cancel = "Cancel"
+clusterDelay = "On a cluster, other nodes apply this within 60 seconds."
+confirm = "Revoke access"
+readsFail = "Files already stored under this key stop opening, for everyone."
+reversible = "This is reversible. No key material is deleted."
+title = "Revoke access to this key?"
+uploadsContinue = "New uploads keep working. They get a fresh key, so they stay readable."
+
+[portal.infrastructure.encryption.rotation]
+currentVersion = "Current version"
+heading = "Master key rotation"
+hint = "Re-wraps scope keys under a new master key; file contents are never rewritten. The new key is set in configuration and applied on restart, so this button only performs the re-wrap."
+pendingRows = "Rows on an older version"
+rewrap = "Re-wrap keys"
+rewrapped_one = "{{count}} key row re-wrapped."
+rewrapped_other = "{{count}} key rows re-wrapped."
+runbook = "Rotation runbook"
+
+[portal.infrastructure.encryption.rotation.confirm]
+cancel = "Cancel"
+confirm = "Re-wrap keys"
+noFiles = "File contents are not touched. Only the key table is rewritten."
+rerunnable = "Safe to run again if it does not finish."
+rewraps_one = "Re-wraps {{count}} key row under the current master key."
+rewraps_other = "Re-wraps {{count}} key rows under the current master key."
+title = "Re-wrap the key table?"
+
+[portal.infrastructure.encryption.rotation.pending]
+description = "Do not remove the previous key from configuration yet. Files under those keys would stop opening."
+title_one = "{{count}} key row is still on the previous master key"
+title_other = "{{count}} key rows are still on the previous master key"
+
+[portal.infrastructure.encryption.scope]
+global = "All users"
+source = "Source {{id}}"
+team = "Team {{id}}"
+
+[portal.infrastructure.encryption.status]
+ACTIVE = "Active"
+DISABLED = "Revoked"
+RETIRED = "Retired"
+
+[portal.infrastructure.encryption.unavailable.forbidden]
+description = "Your account does not have permission to view encryption settings."
+title = "Not available for your account"
+
+[portal.infrastructure.encryption.unavailable.registry-unavailable]
+description = "The encryption key registry could not be read. Check the database connection and the application logs."
+title = "Key registry unavailable"
+
+[portal.infrastructure.encryption.unavailable.storage-disabled]
+description = "File storage is switched off on this server, so there is nothing to encrypt."
+title = "Storage is disabled"
+
+[portal.infrastructure.encryption.unavailable.unknown]
+description = "Encryption status could not be loaded. Please try again."
+title = "Status unavailable"
+
+[portal.infrastructure.encryption.writeState]
+decryptOnly = "Decrypt only"
+encrypting = "Encrypting new uploads"
+off = "Off"
+
 [portal.infrastructure.keyLabel]
 active = "Đang hoạt động"
 revoked = "Đã thu hồi"
-
-[portal.infrastructure.tabs]
-apiKeys = "Khóa API"
-audit = "Nhật ký kiểm tra"
-deployments = "Triển khai"
-models = "Mô hình"
-security = "Bảo mật"
-storage = "Lưu trữ"
 
 [portal.integrations]
 availableHeading = "Có sẵn"
@@ -7827,6 +8650,7 @@ integrations = "Tích hợp"
 pipelines = "Pipeline"
 policies = "Chính sách"
 procurement = "Mua sắm"
+review = "Review"
 sources = "Nguồn"
 usage = "Sử dụng & Thanh toán"
 users = "Người dùng"
@@ -7836,11 +8660,16 @@ platform = "Nền tảng PDF"
 processor = "Bộ xử lý PDF"
 
 [portal.pipelines]
+permissionsRetry = "Retry"
+permissionsUnavailable = "Couldn't check whether you can manage policies, so policy actions are unavailable for now."
 subtitle = "Mọi pipeline tài liệu tự động trên backend: một chuỗi thao tác có thứ tự trên một tập nguồn, chạy theo trigger. Nhấp vào một hàng để xem các bước và nguồn của nó."
 title = "Pipeline"
 
 [portal.pipelines.actions]
-newPipeline = "Pipeline mới"
+newCustomPipeline = "New custom pipeline"
+
+[portal.pipelines.all]
+title = "All pipelines"
 
 [portal.pipelines.builder]
 activate = "Activate"
@@ -7851,6 +8680,9 @@ chooseDestination = "Chọn đích đến"
 chooseOperation = "Chọn việc bước này thực hiện"
 chooseSource = "Chọn nguồn"
 discard = "Hủy thay đổi"
+editorDestination = "Editor"
+editorDestinationDetail = "Replaces the file you ran it on"
+editorDestinationHelp = "This pipeline runs on the files in your workspace, and its results replace the file it ran on. There is nowhere else to send them."
 inputs = "Đầu vào"
 inputSource = "Nguồn đầu vào"
 inputTrigger = "Kích hoạt"
@@ -7862,6 +8694,10 @@ needsSource = "No source chosen"
 noToolMatches = "Không có công cụ nào khớp với tìm kiếm của bạn."
 pause = "Pause"
 rename = "Rename pipeline"
+runOn = "Runs on"
+runOnExport = "Every export"
+runOnTooltip = "Choose when this pipeline runs on your files: when you add them, or when you export them."
+runOnUpload = "Every upload"
 searchTools = "Tìm kiếm công cụ"
 sendToSystem = "Gửi đến hệ thống khác"
 stepsIncompatible = "Các bước này không thể chạy trên kết quả mà bước trước tạo ra: {{tools}}."
@@ -7878,6 +8714,7 @@ viewDefinition = "View definition"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
+managerOnly = "Only an admin or team leader can modify a policy"
 name = "Give the pipeline a name"
 saveHeading = "To save your changes:"
 schedule = "Set how often it runs"
@@ -7891,6 +8728,9 @@ format-mismatch = "Cần {{accepts}}, nhưng bước trước tạo ra {{produce
 output-uncertain = "Có thể không chạy: đầu ra của bước trước phụ thuộc vào cách thiết lập"
 source-mismatch = "Cần {{accepts}}, nhưng đầu vào của pipeline này là {{produced}}"
 undeclared-operation = "Không thể kiểm tra bước này chấp nhận gì"
+
+[portal.pipelines.builder.icon]
+label = "Change icon"
 
 [portal.pipelines.composer]
 addTool = "Thêm công cụ"
@@ -7941,6 +8781,12 @@ connectSource = "Kết nối một nguồn"
 description = "Tạo pipeline đầu tiên của bạn: chọn các nguồn mà nó chạy, nối chuỗi các thao tác và chọn nơi đầu ra sẽ đến."
 title = "Chưa có pipeline"
 
+[portal.pipelines.enforce]
+desc = "A policy blocks a file that fails it; an ordinary pipeline reports the error but lets the file through."
+info = "What enforcing as a policy means"
+label = "Enforce as policy"
+managerOnly = "Only an admin or team leader can enforce a pipeline as a policy"
+
 [portal.pipelines.graph]
 addFirstTool = "Add a tool"
 dragHint = "Drop on a line to move it"
@@ -7972,11 +8818,6 @@ failed_other = "Failed after {{done}} of {{count}} steps"
 running_one = "Running the only step"
 running_other = "Running step {{done}} of {{count}}"
 
-[portal.pipelines.kpi]
-active = "Đang hoạt động"
-paused = "Đã tạm dừng"
-total = "Pipeline"
-
 [portal.pipelines.run]
 allProcessed_one = "Không có gì để chạy: {{count}} tài liệu của nguồn đã được xử lý."
 allProcessed_other = "Không có gì để chạy: tất cả {{count}} tài liệu trong các nguồn đã được xử lý."
@@ -8000,20 +8841,28 @@ sources = "Nguồn"
 status = "Trạng thái"
 steps = "Bước"
 trigger = "Trigger"
+type = "Type"
+
+[portal.pipelines.templates]
+setUp = "Set up"
+title = "Templates"
 
 [portal.pipelines.trigger]
+editor-export = "Every export"
+editor-upload = "Every upload"
 folder-watch = "Theo dõi thư mục"
 manual = "Thủ công"
 schedule = "Theo lịch"
 
+[portal.pipelines.type]
+pipeline = "Pipeline"
+policy = "Policy"
+
 [portal.policies]
 defaultName = "Chính sách {{category}}"
-subtitle = "Các tự động hóa thường trực áp dụng một pipeline công cụ trên mọi tài liệu. Mỗi chính sách kích hoạt khi upload hoặc export, chạy chuỗi công cụ của nó và lưu phiên bản đã áp dụng cùng với bản gốc."
-title = "Chính sách"
 
 [portal.policies.card]
 comingSoon = "Nâng cấp lên Enterprise"
-notSetUp = "Chưa thiết lập"
 requiresAiEngine = "Yêu cầu AI engine"
 
 [portal.policies.categories.classification]
@@ -8053,12 +8902,6 @@ summary = "Phân loại mọi tài liệu đã tải lên theo nhãn của nhóm
 [portal.policies.config.compliance]
 summary = "Xác thực tài liệu theo các framework quy định trước khi chúng rời khỏi hệ thống."
 
-[portal.policies.config.compliance.fields]
-accessLog = "Nhật ký truy cập"
-auditTrail = "Dấu vết kiểm tra"
-frameworks = "Framework"
-onViolation = "Khi không tuân thủ"
-
 [portal.policies.config.compliance.rules]
 0 = "Quét framework"
 1 = "Áp dụng hành động"
@@ -8076,6 +8919,10 @@ minConfidence = "Độ tin cậy tối thiểu"
 1 = "Trích xuất"
 2 = "Đặt tên"
 3 = "Chuẩn hóa"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
+label = "Archival profile"
 
 [portal.policies.config.purview]
 label = "Áp dụng nhãn độ nhạy Microsoft Purview"
@@ -8136,12 +8983,12 @@ summary = "Phát hiện và che giấu PII, loại bỏ nội dung hoạt độn
 
 [portal.policies.detail]
 enforces = "Áp dụng"
+managerOnly = "Only an admin or team leader can modify this policy"
 onEveryExport = "Khi mỗi lần export"
 onEveryUpload = "Khi mỗi lần upload"
 outputAsNewFile = "dưới dạng file mới"
 outputAsNewVersion = "dưới dạng phiên bản mới"
 recentActivity = "Hoạt động gần đây"
-retry = "Thử lại"
 showLess = "Hiển thị ít hơn"
 showMore = "Hiển thị thêm"
 sources = "Nguồn"
@@ -8152,13 +8999,19 @@ delete = "Xóa"
 editSettings = "Chỉnh sửa cài đặt"
 pause = "Tạm dừng"
 resume = "Tiếp tục"
-runNow = "Chạy ngay"
 
 [portal.policies.detail.clearHistory]
 body = "Chính sách này sẽ quên mọi file đã xử lý và xử lý lại mọi thứ hiện có trong các nguồn của nó ở lần chạy tiếp theo. Bản thân các file không bị thay đổi. Không thể hoàn tác thao tác này."
 cancel = "Hủy"
 confirm = "Xóa lịch sử"
 title = "Xóa lịch sử đã xử lý?"
+
+[portal.policies.detail.delete]
+bodyActive = "\"{{name}}\" is active and enforcing on your documents. Deleting it stops that immediately and cannot be undone. Pause it instead if you only want it to stop running."
+bodyPaused = "\"{{name}}\" will be removed for everyone. This cannot be undone."
+cancel = "Cancel"
+confirm = "Delete"
+title = "Delete this pipeline?"
 
 [portal.policies.detail.emptyActivity]
 description = "Tài liệu sẽ xuất hiện ở đây sau khi chính sách này chạy."
@@ -8171,12 +9024,9 @@ classifyAndLabel = "Phân loại"
 compressPdf = "Nén"
 flatten = "Làm phẳng"
 ocrPdf = "OCR"
+pdfa = "Convert to PDF/A"
 sanitizePdf = "Xóa JavaScript"
-
-[portal.policies.offline]
-description = "Các chính sách của bạn đã được lưu và sẽ xuất hiện sau khi kết nối được khôi phục."
-retry = "Thử lại"
-title = "Backend không khả dụng"
+validateCompliance = "Validate compliance"
 
 [portal.policies.operations]
 change = "Thay đổi việc bước này thực hiện"
@@ -8382,39 +9232,20 @@ docsEnforced = "Tài liệu đã áp dụng"
 active = "Hoạt động"
 paused = "Đã tạm dừng"
 
-[portal.policies.summary.active]
-description = "Áp dụng khi tải lên/xuất"
-label = "Chính sách đang hoạt động"
-
-[portal.policies.summary.categories]
-description = "Có sẵn để cấu hình"
-label = "Danh mục"
-
-[portal.policies.summary.docsEnforced]
-description = "Trên các chính sách đang hoạt động"
-label = "Tài liệu đã áp dụng"
-
-[portal.policies.summary.paused]
-description = "Đã cấu hình nhưng không kích hoạt"
-label = "Đã tạm dừng"
-
-[portal.policies.table]
-appliesTo = "Áp dụng cho"
-docs = "Tài liệu đã thực thi"
-enforces = "Thực thi"
-policy = "Chính sách"
-status = "Trạng thái"
-
 [portal.policies.wizard.actions]
-back = "Quay lại"
 cancel = "Hủy"
-continue = "Tiếp tục"
+customise = "Customise"
+customiseUnavailable = "The full builder lives on Processor"
 enablePolicy = "Bật chính sách"
 saveChanges = "Lưu thay đổi"
 
 [portal.policies.wizard.capability.classify]
 desc = "Xác định loại tài liệu từ nhãn của nhóm bạn và gắn thẻ cho tài liệu, để tài liệu được lưu và tìm kiếm theo danh mục."
 label = "Phân loại tài liệu"
+
+[portal.policies.wizard.capability.complianceCheck]
+desc = "Validates the finished document against PDF/A and stops the run if it does not hold up."
+label = "Check the document meets the standard"
 
 [portal.policies.wizard.capability.compress]
 desc = "Nén tài liệu thành kích thước file nhỏ hơn."
@@ -8427,6 +9258,10 @@ label = "Làm phẳng tài liệu"
 [portal.policies.wizard.capability.ocr]
 desc = "Chạy OCR để các trang được quét trở thành văn bản có thể chọn và tìm kiếm."
 label = "Làm cho văn bản có thể tìm kiếm"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
+label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.redact]
 desc = "Tìm và bôi đen các chi tiết nhạy cảm — như số An sinh Xã hội và số thẻ — để không thể đọc được."
@@ -8452,48 +9287,12 @@ labelsHeading = "Nhãn phân loại"
 noTools = "Trước tiên hãy bật ít nhất một công cụ trong workflow."
 saveFailed = "Không thể lưu chính sách. Vui lòng thử lại."
 
-[portal.policies.wizard.output]
-heading = "Đầu ra & chạy"
-
-[portal.policies.wizard.output.filenameRule]
-autoNumber = "Tự động đánh số"
-label = "Quy tắc tên file"
-placeholder = "Văn bản để thêm (tùy chọn)"
-prefix = "Tiền tố"
-suffix = "Hậu tố"
-
-[portal.policies.wizard.output.outputAs]
-label = "Xuất dưới dạng"
-newFile = "File mới"
-newVersion = "Phiên bản mới"
-
-[portal.policies.wizard.output.runOn]
-export = "Xuất"
-helper = "Khi chính sách kích hoạt: khi tải lên hoặc trước khi xuất."
-label = "Chạy khi"
-upload = "Tải lên"
-
-[portal.policies.wizard.settings]
-heading = "Cài đặt"
-
-[portal.policies.wizard.sources]
-heading = "Nguồn"
-loading = "Đang tải nguồn…"
-
-[portal.policies.wizard.tabs]
-ariaLabel = "Các bước thiết lập"
-settings = "Cài đặt"
-workflow = "Hành động"
-
 [portal.policies.wizard.title]
 edit = "Chỉnh sửa chính sách {{category}}"
 setUp = "Thiết lập chính sách {{category}}"
 
 [portal.policies.wizard.workflow]
 description = "Chọn những gì chính sách này thực hiện với mỗi tài liệu mà nó xử lý."
-
-[portal.policySummary.action]
-setUp = "Thiết lập"
 
 [portal.processorFlow]
 footnote = "Số đếm trong 24 giờ qua. Tốc độ luồng chỉ mang tính minh họa."
@@ -8806,8 +9605,9 @@ maxed = "Đã đạt giới hạn"
 subtitle = "Bản dùng thử miễn phí của bạn kéo dài đến {{date}}. Không cần thẻ."
 title = "Dùng thử Enterprise"
 
-[portal.settings.groups]
-admin = "Quản trị"
+[portal.review]
+subtitle = "Anything from your policy runs and your team's editors that needs your attention."
+title = "Review"
 
 [portal.settings.sections]
 account-link = "Liên kết tài khoản"
@@ -8817,7 +9617,6 @@ appEditor = "Trình chỉnh sửa"
 appProcessor = "Trình xử lý"
 linkAccount = "Liên kết tài khoản Stirling"
 primaryNav = "Điều hướng chính"
-switchApp = "Chuyển ứng dụng"
 
 [portal.shell.topbar]
 closeNav = "Đóng điều hướng"
@@ -8856,11 +9655,6 @@ body = "Xóa \"{{name}}\"? Không thể hoàn tác. Các chính sách tham chi�
 cancel = "Hủy"
 confirm = "Xóa"
 title = "Xóa nguồn?"
-
-[portal.sources.kpi]
-inUse = "Đang sử dụng"
-total = "Kết nối"
-unused = "Chưa dùng"
 
 [portal.sources.networkFields.connection]
 helperText = "Kết nối đã lưu với địa chỉ máy chủ và thông tin xác thực. Được tái sử dụng bởi mọi nguồn tham chiếu đến nó."
@@ -9034,6 +9828,21 @@ loadWallet = "Không thể tải ví"
 openStripePortal = "Không thể mở portal Stripe"
 walletUnavailable = "Ví không khả dụng: {{status}} {{statusText}}"
 
+[portal.usage.freeTier]
+adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
+connect = "Connect a Stirling account"
+loadError = "Couldn't read this server's credit usage. Try again in a moment."
+loadErrorTitle = "Couldn't load credit usage"
+resets = "Resets {{date}}"
+statusLabel_one = "{{used}} used"
+statusLabel_other = "{{used}} used"
+subtitle = "What this server has processed against its monthly credits."
+title_one = "{{allowance}} free credit every month"
+title_other = "{{allowance}} free credits every month"
+
 [portal.usage.sessionExpired]
 action = "Đăng nhập lại"
 body = "Phiên tài khoản Stirling của bạn đã hết hạn. Đăng nhập lại để xem thanh toán — phiên bản của bạn vẫn được liên kết."
@@ -9088,6 +9897,39 @@ unlimited = "{{used}} · Không giới hạn"
 
 [printFile]
 title = "In tệp"
+
+[processingFolders.downloads]
+approve = "Process my Downloads"
+cancelSweep = "Cancel"
+capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
+close = "Done"
+explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."
+explain_other = "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here."
+failed = "Could not set that up. Your files have not been changed."
+finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
+finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
+keepsOriginals = "Files are processed in place - and each original is kept, so you can restore it any time."
+nothingNew_one = "Nothing new to process - this {{count}} file has already been through."
+nothingNew_other = "Nothing new to process - these {{count}} files have already been through."
+notNow = "Not now"
+progressCounts = "of {{total}} processed"
+someFailed_one = "{{count}} could not be processed and was left untouched."
+someFailed_other = "{{count}} could not be processed and were left untouched."
+stillParked_one = "{{count}} file failed earlier and was not retried - fix the cause, then run again."
+stillParked_other = "{{count}} files failed earlier and were not retried - fix the cause, then run again."
+stillRunning = "Some files are still being processed in the background."
+title = "Organize your Downloads?"
+trigger_one = "Process {{count}} PDF in Downloads"
+trigger_other = "Process {{count}} PDFs in Downloads"
+typesFound_one = "{{count}} document type found"
+typesFound_other = "{{count}} document types found"
+working = "Processing ..."
+
+[processingFolders.wall]
+done = "Done"
+failed = "Failed"
+title = "Processing this folder"
+waiting = "Queued ..."
 
 [provider.googledrive]
 name = "Google Drive"
@@ -9295,6 +10137,18 @@ allTools = "All Tools"
 automate = "Tự động hóa"
 config = "Cấu hình"
 files = "Tệp"
+
+[quickNav]
+account = "Account"
+docs = "Documentation"
+editor = "Editor"
+home = "Stirling"
+invite = "Invite"
+landmark = "Quick navigation"
+noProcessorAccess = "Ask an admin for processor access"
+notifications = "Notifications"
+processor = "Processor"
+reader = "Reader"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
@@ -9817,8 +10671,11 @@ expired = "Phiên của bạn đã hết hạn. Vui lòng làm mới trang và t
 
 [settings]
 backToSections = "Tất cả cài đặt"
-close = "Đóng"
 title = "Cài đặt"
+
+[settings.about]
+description = "Tours, legal documents and the licences of everything bundled with this build."
+title = "About"
 
 [settings.ai]
 documents = "Tài liệu & RAG"
@@ -9833,12 +10690,13 @@ database = "Cơ sở dữ liệu"
 endpoints = "Endpoints"
 features = "Tính năng"
 folderAccess = "Quyền truy cập thư mục"
+integrations = "Integrations"
 mcp = "MCP Server"
 storageSharing = "Lưu trữ & Chia sẻ Tệp"
 systemSettings = "Cài đặt hệ thống"
-title = "Cấu hình"
 
 [settings.connection]
+description = "Work locally on this machine or connect the app to a Stirling server."
 localDescription = "Bạn đang sử dụng backend cục bộ mà không có tài khoản. Một số công cụ cần xử lý trên đám mây hoặc máy chủ tự lưu trữ sẽ không khả dụng."
 logout = "Đăng xuất"
 server = "Máy chủ"
@@ -9853,13 +10711,12 @@ selfhosted = "Tự lưu trữ"
 
 [settings.developer]
 apiKeys = "API Keys"
+apiKeysDescription = "Personal keys for calling the Stirling API from scripts and integrations."
 title = "Nhà phát triển"
 
 [settings.general]
 autoUnzip = "Tự động giải nén phản hồi API"
-autoUnzipDescription = "Tự động giải nén tệp từ phản hồi ZIP"
 autoUnzipFileLimit = "Giới hạn tệp tự động giải nén"
-autoUnzipFileLimitDescription = "Số lượng tệp tối đa để giải nén từ ZIP"
 autoUnzipFileLimitTooltip = "Chỉ giải nén nếu ZIP chứa số tệp bằng hoặc ít hơn giá trị này. Tăng lên để giải nén ZIP lớn hơn."
 autoUnzipTooltip = "Tự động giải nén các tệp ZIP trả về từ thao tác API. Tắt để giữ nguyên tệp ZIP. Điều này không ảnh hưởng đến các quy trình tự động."
 defaultPdfEditor = "Trình chỉnh sửa PDF mặc định"
@@ -9910,12 +10767,6 @@ intro = "Bật xác thực người dùng, quản lý nhóm và các tính năng
 learnMore = "Tìm hiểu thêm trong tài liệu"
 title = "Dành cho Quản trị viên Hệ thống"
 
-[settings.general.loginLanding]
-description = "Chọn ứng dụng sẽ mở khi bạn đăng nhập vào Stirling Cloud."
-editor = "Trình chỉnh sửa"
-processor = "Bộ xử lý"
-title = "Sau khi đăng nhập"
-
 [settings.general.mode]
 fullscreen = "Toàn màn hình"
 sidebar = "Thanh bên"
@@ -9958,6 +10809,7 @@ fitPage = "Vừa trang"
 fitWidth = "Vừa chiều rộng"
 
 [settings.help]
+description = "Guided walkthroughs of the editor and the admin area."
 label = "Tour"
 title = "Trợ giúp"
 
@@ -9990,6 +10842,7 @@ mac = "Bao gồm ⌘ (Command), ⌥ (Option), hoặc một phím bổ trợ khá
 windows = "Bao gồm Ctrl, Alt, hoặc phím bổ trợ khác trong phím tắt của bạn."
 
 [settings.legal]
+description = "Terms, privacy policy and your cookie preferences."
 label = "Legal"
 title = "Legal"
 
@@ -10018,9 +10871,15 @@ version = "Phiên bản"
 
 [settings.licensingAnalytics]
 audit = "Audit"
+auditDescription = "Who did what on this server, and how long that record is kept."
 plan = "Gói"
-title = "Giấy phép & Phân tích"
+planDescription = "Your licence, seats and what the current plan unlocks."
+usage = "Usage Analytics"
 usageAnalytics = "Phân tích sử dụng"
+usageDescription = "How the server is being used: operations, volume and trends over time."
+
+[settings.monitoring]
+title = "Monitoring"
 
 [settings.planBilling]
 currentPlan = "Gói hiện tại"
@@ -10058,18 +10917,6 @@ memberCount_one = "{{count}} team member"
 memberCount_other = "{{count}} team members"
 memberCount_zero = "no team members"
 
-[settings.planBilling.tier]
-enterprise = "Enterprise"
-enterpriseDescription = "Tính năng và hỗ trợ doanh nghiệp tùy chỉnh"
-free = "Free"
-freeDescription = "50 tín dụng mỗi tháng"
-team = "Team"
-teamBadge = "Team"
-teamDescription = "Bao gồm 500 tín dụng/tháng, tính phí vượt mức tự động để dịch vụ không gián đoạn"
-teamTooltipCredits = "Gói Team bao gồm {{credits}} tín dụng/tháng."
-teamTooltipFineprint = "Chỉ trả cho phần dùng vượt quá tín dụng bao gồm."
-teamTooltipOverage = "Tính phí vượt mức tự động {{price}}/tín dụng đảm bảo dịch vụ không gián đoạn."
-
 [settings.planBilling.trial]
 daysRemaining = "Còn {{days}} ngày"
 daysRemainingFull = "Bản dùng thử của bạn kết thúc sau {{days}} ngày"
@@ -10094,6 +10941,10 @@ privacy = "Quyền riêng tư"
 title = "Chính sách & Quyền riêng tư"
 
 [settings.preferences]
+appearance = "Appearance"
+description = "How the editor looks and behaves for you, and your account."
+downloads = "Downloads"
+editorDefaults = "Editor defaults"
 title = "Tùy chọn"
 
 [settings.security]
@@ -10120,6 +10971,10 @@ connections = "Kết nối"
 security = "Bảo mật"
 telegram = "Telegram"
 title = "Bảo mật & Xác thực"
+
+[settings.server]
+system = "System"
+title = "Server"
 
 [settings.signOut]
 confirm = "Bạn có chắc chắn muốn đăng xuất không?"
@@ -11796,6 +12651,10 @@ title = "Văn bản hình mờ"
 image = "Hình ảnh"
 text = "Văn bản"
 
+[workbench.sessionRestore]
+none = "Your previous files are no longer stored on this device."
+partial = "Restored {{restored}} of {{total}} files. The rest are no longer stored on this device."
+
 [workbenchBar]
 activeFiles = "Tệp đang mở"
 annotations = "Chú thích"
@@ -11900,7 +12759,6 @@ noMembersFound = "Không tìm thấy thành viên"
 role = "Vai trò"
 searchMembers = "Tìm thành viên..."
 team = "Nhóm"
-title = "Mọi người"
 unlockAccount = "Mở khóa tài khoản"
 unlockUserError = "Mở khóa tài khoản người dùng không thành công"
 unlockUserSuccess = "Đã mở khóa tài khoản người dùng thành công"
@@ -12054,7 +12912,6 @@ system = "Hệ thống"
 teamActions = "Hành động nhóm"
 teamName = "Tên nhóm"
 teamNotFound = "Không tìm thấy nhóm"
-title = "Nhóm"
 totalMembers = "Tổng số thành viên"
 viewTeam = "Xem nhóm"
 
