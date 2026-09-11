@@ -14,7 +14,7 @@ export interface AvatarProps {
   /** Image source. Falls back to initials when missing or load fails. */
   src?: string;
   /** Full name. Initials are derived from the first letter of each word, max 2. */
-  name: string;
+  name: string | undefined;
   size?: AvatarSize;
   /** Background tone when rendering initials. Defaults to blue. */
   tone?: AvatarTone;
@@ -26,8 +26,10 @@ export interface AvatarProps {
   className?: string;
 }
 
-function avatarInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
+function avatarInitials(name: string | undefined | null): string {
+  // Defensive: a roster row whose display name never arrived used to throw
+  // here and take the whole section down with it.
+  const parts = (name ?? "").trim().split(/\s+/).filter(Boolean);
   if (parts.length === 0) return "?";
   // Single word (a username or an email) reads as one letter — two letters of
   // "admin" ("AD") looks like a different person's initials, not a truncation.

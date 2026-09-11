@@ -1,6 +1,9 @@
-import { HAS_PORTAL } from "@app/routes/hasPortal";
-
 export { DOCS_PATH } from "@core/routes/docsRoute";
 
-/** The manifest is bundled with the portal chunk, so it ships wherever that does. */
-export const HAS_DOCS = HAS_PORTAL;
+/**
+ * The documentation browser ships in every build that can resolve the docs
+ * view, whether or not the processor is included. It was gated on HAS_PORTAL
+ * only because the view lives in the portal tree; that made /docs silently
+ * fall through to the editor in any build without the processor.
+ */
+export const HAS_DOCS = true;

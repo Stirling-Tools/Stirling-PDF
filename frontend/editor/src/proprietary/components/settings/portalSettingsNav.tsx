@@ -50,13 +50,29 @@ const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
  *   account; SaaS has nothing to link, so it passes false.
  * @param includeAudit SaaS has no other audit surface; self-hosted has the
  *   admin one under Security & sign-in and passes false.
+ * @param includeEncryption encryption at rest is deployment-wide server
+ *   configuration, so only a self-hosted admin can act on it. SaaS operates
+ *   the storage itself and passes false for every user.
+ * @param includeBilling what the deployment spends is the operator's business,
+ *   not every member's, so self-hosted passes its admin flag. On SaaS the
+ *   signed-in account owns the wallet, so it stays on.
+ *
+ * These flags only decide what is offered: the endpoints behind each section
+ * enforce the same rule server-side.
  */
 export function buildPortalSettingsSections(
   t: TFunction<"translation", undefined>,
   {
     includeAccountLink = true,
     includeAudit = false,
-  }: { includeAccountLink?: boolean; includeAudit?: boolean } = {},
+    includeEncryption = false,
+    includeBilling = true,
+  }: {
+    includeAccountLink?: boolean;
+    includeAudit?: boolean;
+    includeEncryption?: boolean;
+    includeBilling?: boolean;
+  } = {},
 ): ConfigNavSection[] {
   if (!UsersSection || !ApiKeysSection || !AuditSection || !BillingSection) {
     return [];
@@ -73,14 +89,16 @@ export function buildPortalSettingsSections(
       component: <UsersSection />,
       fullBleed: true,
     },
-    {
+  ];
+  if (includeBilling) {
+    workspace.push({
       key: "billing",
       label: t("portal.nav.usage", "Usage & Billing"),
       icon: "payments-rounded",
       component: <BillingSection />,
       fullBleed: true,
-    },
-  ];
+    });
+  }
   if (includeAccountLink && AccountLinkSection) {
     workspace.push({
       key: "account-link",
@@ -117,7 +135,7 @@ export function buildPortalSettingsSections(
       ],
     },
   ];
-  if (EncryptionSection) {
+  if (includeEncryption && EncryptionSection) {
     groups.push({
       id: "server",
       title: t("settings.server.title", "Server"),
@@ -165,6 +183,9 @@ export function buildPortalSettingsSections(
 export const PORTAL_SUPERSEDED_SECTION_KEYS: readonly NavKey[] = [
   "people",
   "teams",
+  // The cloud builds carry their own roster under this key; the processor's is
+  // the superset, so it replaces rather than duplicates it.
+  "users",
   "api-keys",
 ];
 

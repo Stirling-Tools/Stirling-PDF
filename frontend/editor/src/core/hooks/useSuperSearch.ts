@@ -15,6 +15,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import { usePortalAccess } from "@app/hooks/usePortalAccess";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
@@ -97,18 +98,21 @@ export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
 export function useSuperSearchGates(): SuperSearchGates | null {
   const authState = useAuth();
   const { config } = useAppConfig();
+  // Through the seam, not authState: on SaaS the editor's Supabase session
+  // carries no permission flags, so reading it here hid every processor lane.
+  const portalAccessible = usePortalAccess();
   return useMemo(
     () =>
       config
         ? {
             isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
-            portalAccessible: authState.portalAccess ?? false,
+            portalAccessible,
             isAnonymous: authState.isAnonymous,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
-    [authState.isAdmin, authState.isAnonymous, authState.portalAccess, config],
+    [authState.isAdmin, authState.isAnonymous, portalAccessible, config],
   );
 }
 

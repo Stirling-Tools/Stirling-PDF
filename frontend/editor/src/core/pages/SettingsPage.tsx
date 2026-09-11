@@ -67,7 +67,7 @@ const SettingsPageInner: React.FC = () => {
     navigate(takeSettingsOrigin() ?? EDITOR_BASENAME, { replace: true });
   }, [navigate]);
 
-  const { sections, overlay, aliases } = useSettingsNav(leave);
+  const { sections, overlay, aliases, pending } = useSettingsNav(leave);
   const items = useMemo(() => sections.flatMap((s) => s.items), [sections]);
 
   const urlSection = sectionFromPath(location.pathname);
@@ -86,7 +86,9 @@ const SettingsPageInner: React.FC = () => {
   // the first section; a retired key (an old bookmark, an older search result)
   // follows its alias to whatever replaced it.
   useEffect(() => {
-    if (items.length === 0 || activeItem) return;
+    // `pending` matters as much as an empty list: the permission-gated sections
+    // arrive a request later, so a deep link to one of them is not unknown yet.
+    if (items.length === 0 || activeItem || pending) return;
     const target =
       (urlSection && aliases?.[urlSection]) ??
       items.find((i) => !i.disabled)?.key ??
@@ -99,6 +101,7 @@ const SettingsPageInner: React.FC = () => {
   }, [
     items,
     activeItem,
+    pending,
     urlSection,
     aliases,
     location.search,

@@ -20,7 +20,6 @@ import {
 type OverviewComponent = React.ComponentType<{ onLogoutClick: () => void }>;
 
 interface CreateSaasConfigNavSectionsOptions {
-  isDev?: boolean;
   isAnonymous?: boolean;
   t: TFunction<"translation", undefined>;
   /** Close the settings modal — the Help tours need it to start the tour. */
@@ -213,13 +212,12 @@ export function createSaasConfigNavSections(
   Overview: OverviewComponent,
   onLogoutClick: () => void,
   {
-    isDev = false,
     isAnonymous = false,
     t,
     onRequestClose = () => {},
   }: CreateSaasConfigNavSectionsOptions,
 ): ConfigNavSection[] {
-  const baseSections = createCoreConfigNavSections(false, false, false);
+  const baseSections = createCoreConfigNavSections(t);
 
   // Create Account section as the first section with Overview and Passwords & Security
   const accountSection: ConfigNavSection = {
@@ -273,10 +271,6 @@ export function createSaasConfigNavSections(
 
   sections = appendHelpSection(sections, t, onRequestClose);
   sections = appendLegalSection(sections, t);
-
-  if (isDev) {
-    console.debug("[AppConfigModal] SaaS navigation sections", sections);
-  }
 
   return sections;
 }

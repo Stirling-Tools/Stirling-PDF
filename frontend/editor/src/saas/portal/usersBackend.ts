@@ -104,7 +104,9 @@ function toMember(dto: TeamMemberDTO, team: TeamDetailsDTO): Member {
   const role: RoleId = isLeader ? "team_owner" : "member";
   return {
     id: String(dto.id),
-    name: dto.username,
+    // An invited member may have no username yet; their email is the only name
+    // the roster can show.
+    name: dto.username ?? dto.email,
     email: dto.email ?? dto.username,
     username: dto.username,
     role,

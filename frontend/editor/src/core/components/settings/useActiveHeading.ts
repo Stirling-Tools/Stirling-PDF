@@ -69,9 +69,14 @@ export function useActiveHeading(
         if (el && el.getBoundingClientRect().top <= line) current = h.id;
       }
       // At the very bottom the last card wins, or it can never become active.
+      // Only when there is something to scroll: a section shorter than the
+      // viewport is permanently "at the bottom", which made every one of them
+      // open deep-linked to its last card.
+      const scrollable = container.scrollHeight > container.clientHeight + 4;
       if (
+        scrollable &&
         container.scrollTop + container.clientHeight >=
-        container.scrollHeight - 4
+          container.scrollHeight - 4
       ) {
         current = headings[headings.length - 1]?.id ?? current;
       }

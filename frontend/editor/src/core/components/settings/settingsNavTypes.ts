@@ -19,4 +19,10 @@ export interface SettingsNav {
    * key land on its replacement instead of an empty page.
    */
   aliases?: Partial<Record<string, NavKey>>;
+  /**
+   * Sections are still arriving. Set while a permission lookup is in flight,
+   * so a deep link to a section that has not been added yet waits instead of
+   * being redirected away as unknown.
+   */
+  pending?: boolean;
 }

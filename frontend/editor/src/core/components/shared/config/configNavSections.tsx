@@ -1,7 +1,7 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
+import type { TFunction } from "i18next";
 import PreferencesSection from "@app/components/shared/config/configSections/preferences/PreferencesSection";
-// Still referenced by the deprecated createConfigNavSections below.
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import AboutSection from "@app/components/shared/config/configSections/AboutSection";
@@ -75,35 +75,34 @@ export const useConfigNavSections = (
   return sections;
 };
 
-// Deprecated: Use useConfigNavSections hook instead
+/**
+ * The editor's own preference sections, for builders that are plain functions
+ * rather than hooks (the cloud navs assemble their tree outside a component)
+ * and so must be handed a `t` instead of calling useTranslation themselves.
+ *
+ * Replaces a hardcoded-English copy of this list: the SaaS nav was its only
+ * caller, which is why "Preferences", "General" and "Keyboard Shortcuts" never
+ * translated there.
+ */
 export const createConfigNavSections = (
-  _isAdmin: boolean = false,
-  _runningEE: boolean = false,
-  _loginEnabled: boolean = false,
-): ConfigNavSection[] => {
-  console.warn(
-    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
-  );
-  const sections: ConfigNavSection[] = [
-    {
-      id: "preferences",
-      title: "Preferences",
-      items: [
-        {
-          key: "general",
-          label: "General",
-          icon: "settings-rounded",
-          component: <GeneralSection hideTitle />,
-        },
-        {
-          key: "hotkeys",
-          label: "Keyboard Shortcuts",
-          icon: "keyboard-rounded",
-          component: <HotkeysSection />,
-        },
-      ],
-    },
-  ];
-
-  return sections;
-};
+  t: TFunction<"translation", undefined>,
+): ConfigNavSection[] => [
+  {
+    id: "preferences",
+    title: t("settings.preferences.title", "Preferences"),
+    items: [
+      {
+        key: "general",
+        label: t("settings.general.title", "General"),
+        icon: "settings-rounded",
+        component: <GeneralSection hideTitle />,
+      },
+      {
+        key: "hotkeys",
+        label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
+        icon: "keyboard-rounded",
+        component: <HotkeysSection />,
+      },
+    ],
+  },
+];

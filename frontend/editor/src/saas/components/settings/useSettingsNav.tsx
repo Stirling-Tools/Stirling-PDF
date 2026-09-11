@@ -3,6 +3,7 @@ import { Modal, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
+import { usePortalAccessState } from "@app/hooks/usePortalAccess";
 import { isUserAnonymous } from "@app/auth/supabase";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
@@ -27,15 +28,17 @@ export type { SettingsNav };
  */
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
-  const { signOut, user, portalAccess } = useAuth();
+  const { signOut, user } = useAuth();
+  // Not from useAuth: the editor's Supabase context never carries permission
+  // flags, so only this seam knows. The processor has its own auth context.
+  const { granted: portalAccess, settled: accessSettled } =
+    usePortalAccessState();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const openLogoutConfirm = useCallback(() => setConfirmOpen(true), []);
   const isAnonymous = user ? isUserAnonymous(user) : false;
-  const isDev = process.env.NODE_ENV === "development";
 
   const sections = useMemo(() => {
     const own = createSaasConfigNavSections(Overview, openLogoutConfirm, {
-      isDev,
       isAnonymous,
       t,
       onRequestClose: onLeave,
@@ -47,7 +50,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     });
     if (portal.length === 0) return own;
     return mergeSettingsGroups(own, portal, PORTAL_SUPERSEDED_SECTION_KEYS);
-  }, [openLogoutConfirm, isDev, isAnonymous, t, onLeave, portalAccess]);
+  }, [openLogoutConfirm, isAnonymous, t, onLeave, portalAccess]);
 
   const overlay = (
     <Modal
@@ -87,5 +90,6 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     sections,
     overlay,
     aliases: portalAccess ? PORTAL_SECTION_ALIASES : undefined,
+    pending: !accessSettled,
   };
 }
