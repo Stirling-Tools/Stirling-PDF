@@ -1,13 +1,13 @@
 package stirling.software.proprietary.accountlink;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -20,6 +20,7 @@ class InstanceEntitlementGateWiringTest {
     private DeviceCredentialStore store;
     private EntitlementCache cache;
     private LocalUsageService localUsage;
+    private FreeTierUsageService freeTier;
     private InstanceEntitlementGate gate;
 
     @BeforeEach
@@ -29,13 +30,21 @@ class InstanceEntitlementGateWiringTest {
         store = mock(DeviceCredentialStore.class);
         cache = mock(EntitlementCache.class);
         localUsage = mock(LocalUsageService.class);
+        freeTier = mock(FreeTierUsageService.class);
         gate =
                 new InstanceEntitlementGate(
                         properties,
                         store,
                         cache,
                         mock(AccountLinkSyncStateRepository.class),
-                        localUsage);
+                        localUsage,
+                        freeTier);
+    }
+
+    private static FreeTierUsageService.FreeTierBalance grant(long remaining) {
+        LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
+        return new FreeTierUsageService.FreeTierBalance(
+                500, 500 - remaining, remaining, start, start.plusMonths(1));
     }
 
     @Test
@@ -48,11 +57,12 @@ class InstanceEntitlementGateWiringTest {
     }
 
     @Test
-    void billableUnlinkedDoesNotHitCache() {
+    void billableUnlinkedReadsTheLocalGrantNotTheCache() {
         when(store.isLinked()).thenReturn(false);
+        when(freeTier.balance()).thenReturn(grant(10));
         GateDecision d = gate.evaluate(true);
-        assertFalse(d.allowed());
-        assertEquals(GateDecision.Reason.NOT_LINKED, d.reason());
+        assertTrue(d.allowed());
+        assertEquals(GateDecision.Reason.FREE_TIER, d.reason());
         verify(cache, never()).current();
     }
 
