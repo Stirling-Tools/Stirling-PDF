@@ -12,7 +12,7 @@ import { SettingsMobileNavHeader } from "@app/components/shared/config/SettingsM
 import { SettingsNavChevron } from "@app/components/shared/config/SettingsNavChevron";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { useConfigNavSections } from "@app/components/shared/config/configNavSections";
 import {
   NavKey,
@@ -385,10 +385,9 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                         }}
                         data-tour={`admin-${item.key}-nav`}
                       >
-                        <LocalIcon
-                          icon={item.icon}
-                          width={iconSize}
-                          height={iconSize}
+                        <Icon
+                          name={item.icon}
+                          size={iconSize}
                           style={{ color, flexShrink: 0 }}
                         />
                         <Group
@@ -418,13 +417,10 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                             </Badge>
                           )}
                           {showPlanWarning && (
-                            <LocalIcon
-                              icon="warning-rounded"
-                              width={14}
-                              height={14}
-                              style={{
-                                color: "var(--mantine-color-orange-7)",
-                              }}
+                            <Icon
+                              name="triangle-alert"
+                              size={14}
+                              style={{ color: "var(--mantine-color-orange-7)" }}
                             />
                           )}
                         </Group>
@@ -490,7 +486,7 @@ const AppConfigModalInner: React.FC<AppConfigModalProps> = ({
                   aria-label={t("settings.close", "Close")}
                   data-autofocus
                 >
-                  <LocalIcon icon="close-rounded" width={18} height={18} />
+                  <Icon name="x" size={18} />
                 </ActionIcon>
               </Group>
             </div>
