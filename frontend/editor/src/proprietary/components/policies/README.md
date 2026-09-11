@@ -17,7 +17,10 @@ failed outcome per policy/file separately from its capped activity history;
 export checks read the outcomes synchronously through `services/policyBlockRegistry.ts`.
 
 Required export-policy failures refuse that export without blocking further editing.
-Ordinary pipeline failures warn and allow export. Page Editor checks its source files
+Ordinary pipeline failures warn, retain successful changes, and continue through the
+remaining policies. Export rechecks upload blocks after queueing and enforcement.
+Failed upload requests also record a failure so the file can be blocked and retried.
+Page Editor checks its source files
 and enforces export policies on the edited PDFs before combining them into a ZIP.
 
 ## Layout

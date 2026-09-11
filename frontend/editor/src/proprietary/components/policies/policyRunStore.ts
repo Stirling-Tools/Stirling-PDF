@@ -312,7 +312,7 @@ export function addReconciledRun(record: PolicyRunRecord) {
   emit();
 }
 
-/** Mark a (policy, file) pair dispatched without a run (e.g. dispatch failed). */
+/** Mark a (policy, file) pair handled without a run, such as a file with no remaining bytes. */
 export function markDispatched(policyKey: string, fileId: string) {
   const key = dispatchKey(policyKey, fileId);
   if (state.dispatched.includes(key)) return;
