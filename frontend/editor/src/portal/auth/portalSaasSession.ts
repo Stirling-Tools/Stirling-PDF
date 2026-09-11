@@ -76,7 +76,9 @@ export async function getPortalSaasToken(): Promise<string | null> {
   ensureSaasSupabase();
   const supabase = getSupabaseClient();
   if (!supabase) return null;
+  const started = generation;
   const { data, error } = await supabase.auth.getSession();
+  if (!getSupabaseClient() || started !== generation) return null;
   if (error && !isTerminalSaasAuthError(error)) throw error;
   return error ? null : (data.session?.access_token ?? null);
 }
@@ -94,7 +96,7 @@ export function refreshPortalSaasToken(
     const supabase = getSupabaseClient();
     if (!supabase) return null;
     const { data, error } = await supabase.auth.refreshSession();
-    if (started !== generation) return null;
+    if (!getSupabaseClient() || started !== generation) return null;
     if (error && !isTerminalSaasAuthError(error)) throw error;
     return error ? null : (data.session?.access_token ?? null);
   })();

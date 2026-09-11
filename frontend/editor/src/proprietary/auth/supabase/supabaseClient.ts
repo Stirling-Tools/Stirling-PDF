@@ -22,6 +22,7 @@ export interface SupabaseConfig {
 let client: SupabaseClient | null = null;
 let generation = 0;
 let storageKey: string | null = null;
+let clientInvalidation: string | null = null;
 const INVALIDATION_KEY = "stirling.saasSessionGeneration";
 
 function readInvalidation(): string | null {
@@ -48,6 +49,7 @@ export function configureSupabase(config: SupabaseConfig): SupabaseClient {
   if (client) void client.auth.stopAutoRefresh().catch(() => {});
   const current = ++generation;
   const invalidation = readInvalidation();
+  clientInvalidation = invalidation;
   const active = () =>
     current === generation && invalidation === readInvalidation();
   const memory = new Map<string, string>();
@@ -74,6 +76,18 @@ export function configureSupabase(config: SupabaseConfig): SupabaseClient {
                 if (value !== null) memory.set(key, value);
                 return value;
               }
+              if (
+                envelope &&
+                typeof envelope === "object" &&
+                !Array.isArray(envelope)
+              ) {
+                if (
+                  (envelope.stirlingSessionGeneration ?? null) !== invalidation
+                )
+                  return null;
+                memory.set(key, stored);
+                return stored;
+              }
             } catch {
               // SDK code-verifier entries are plain strings, unlike serialized sessions.
             }
@@ -90,15 +104,29 @@ export function configureSupabase(config: SupabaseConfig): SupabaseClient {
           memory.set(key, value);
           if (memoryOnly) return;
           try {
+            let serialized = JSON.stringify({
+              stirlingSessionVersion: 1,
+              generation: invalidation,
+              value,
+            });
+            try {
+              const session = JSON.parse(value);
+              if (
+                session &&
+                typeof session === "object" &&
+                !Array.isArray(session)
+              ) {
+                // Preserve the SDK's session shape for clients reading the same storage key.
+                serialized = JSON.stringify({
+                  ...session,
+                  stirlingSessionGeneration: invalidation,
+                });
+              }
+            } catch {
+              // Non-JSON SDK entries retain their value inside the versioned envelope.
+            }
             // A late cross-tab write is unreadable even if it races the invalidation check.
-            localStorage.setItem(
-              key,
-              JSON.stringify({
-                stirlingSessionVersion: 1,
-                generation: invalidation,
-                value,
-              }),
-            );
+            localStorage.setItem(key, serialized);
           } catch {
             memoryOnly = true;
           }
@@ -146,6 +174,7 @@ export function clearSupabaseSession(): void {
 
 /** The configured Supabase client, or null if not configured. */
 export function getSupabaseClient(): SupabaseClient | null {
+  if (client && clientInvalidation !== readInvalidation()) invalidateClient();
   return client;
 }
 

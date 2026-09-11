@@ -77,6 +77,7 @@ describe("browser session isolation", () => {
     previous.setItem(key, "old-session");
     const delayedWrite = localStorage.getItem(key)!;
     firstTab.clearSupabaseSession();
+    expect(secondTab.getSupabaseClient()).toBeNull();
     firstTab.configureSupabase(config);
     const current = createClient.mock.calls[2][2].auth.storage;
     localStorage.setItem(key, delayedWrite);

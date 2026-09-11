@@ -70,5 +70,6 @@ it("[US02] renews an expired persisted session through the real Supabase SDK", a
     "old-refresh",
   );
   const persisted = JSON.parse(localStorage.getItem(key)!);
-  expect(JSON.parse(persisted.value).refresh_token).toBe("rotated-refresh");
+  expect(persisted.refresh_token).toBe("rotated-refresh");
+  expect(persisted.access_token).toBe(renewed);
 });
