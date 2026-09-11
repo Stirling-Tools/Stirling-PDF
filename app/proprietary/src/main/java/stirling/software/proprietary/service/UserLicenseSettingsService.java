@@ -46,8 +46,9 @@ import stirling.software.proprietary.security.service.UserService;
 public class UserLicenseSettingsService {
 
     /**
-     * Users a team may have with no Team plan and no Enterprise licence. The same number on both
-     * editions, so it is declared once here and read by the cloud wallet rather than restated.
+     * Users an installation gets before it has to buy capacity. The one free-allowance number in
+     * Java: the saas seat reader floors on it, the cloud wallet reports it, and {@code
+     * pricing_policy.server_free_user_allowance} is seeded to match.
      */
     public static final int DEFAULT_USER_LIMIT = 5;
 
@@ -307,12 +308,14 @@ public class UserLicenseSettingsService {
      *
      * <ul>
      *   <li>Grandfathered limit = max(5, existing user count at V1→V2 migration)
-     *   <li>No license: Uses grandfathered limit only
+     *   <li>No license, not linked: Uses grandfathered limit only
+     *   <li>No license, linked: max(grandfathered limit, the linked team's allowance)
      *   <li>SERVER license (maxUsers=0): Unlimited users (Integer.MAX_VALUE)
      *   <li>ENTERPRISE license (maxUsers>0): License seats only (NO grandfathering added)
      * </ul>
      *
-     * <p>IMPORTANT: Paid licenses REPLACE the limit, they don't add to grandfathering.
+     * <p>IMPORTANT: Paid licenses REPLACE the limit, they don't add to grandfathering. A linked
+     * team's allowance does not: linking is monotonic, so it can only raise the ceiling.
      *
      * @return Maximum number of users allowed (Integer.MAX_VALUE for unlimited)
      */
@@ -334,8 +337,16 @@ public class UserLicenseSettingsService {
         if (!hasPaidLicense()) {
             Integer fromSaas = linkedTeamAllowance();
             if (fromSaas != null) {
-                log.debug("No licence; linked team allowance: {} users", fromSaas);
-                return fromSaas;
+                // Floored at the grandfathered limit, so linking can only raise the ceiling.
+                // Otherwise a solo cloud account, whose team the instance binds to before any
+                // invitation is accepted, hands back its own seat count and refuses every user.
+                int allowed = Math.max(grandfatheredLimit, fromSaas);
+                log.debug(
+                        "No licence; linked team allowance {} against grandfathered {}: {} users",
+                        fromSaas,
+                        grandfatheredLimit,
+                        allowed);
+                return allowed;
             }
             log.debug("No license: using grandfathered limit of {}", grandfatheredLimit);
             return grandfatheredLimit;

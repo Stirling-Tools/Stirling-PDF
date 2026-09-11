@@ -5,7 +5,7 @@ import { LinkAccountModal } from "@portal/components/account-link/LinkAccountMod
 import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
 import { ConnectCallbackHost } from "@portal/components/account-link/ConnectCallbackHost";
 import { PortalChrome } from "@portal/components/PortalChrome";
-import { useConnectPrompt } from "@portal/hooks/useConnectPrompt";
+import { useFreeTierExhaustedPrompt } from "@portal/hooks/useFreeTierExhaustedPrompt";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 
@@ -13,8 +13,9 @@ import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 function LinkModalHost() {
   const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
     useUI();
-  // Ask once a session while the instance is unlinked, rather than waiting to be found.
-  useConnectPrompt();
+  // Being unlinked prompts nothing: the free tier is the whole product. The only unprompted ask is
+  // the server reporting the month's grant spent.
+  useFreeTierExhaustedPrompt();
 
   // Mounted only while open: kept mounted, an interrupted hand-off stays flagged and every
   // later open resumes on a ghost step with no way forward.

@@ -257,20 +257,15 @@ public class PaygWalletController {
     }
 
     /**
-     * The team's user-capacity holding.
-     *
-     * <p>The cap is written from the Team subscription, so a team holds Team exactly when it
-     * carries a real one. Integer.MAX_VALUE is the sentinel a team carries before it ever holds a
-     * Team plan, and it reports as no holding and no limit rather than as a number, so nothing
-     * downstream does arithmetic on it.
+     * The team's user-capacity holding. The cap is written from the Team subscription, so a team
+     * holds Team exactly when {@link SaasTeamExtensions#licensedUsers()} states one.
      */
     private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId) {
         int usersInUse = Math.toIntExact(memberRepo.countByTeamId(teamId));
         Integer licensed =
                 teamExtensionsRepository
                         .findByTeamId(teamId)
-                        .map(SaasTeamExtensions::getMaxSeats)
-                        .filter(max -> max != null && max > 0 && max < Integer.MAX_VALUE)
+                        .map(SaasTeamExtensions::licensedUsers)
                         .orElse(null);
         return new WalletSnapshotResponse.TeamHolding(licensed != null, licensed, usersInUse);
     }
