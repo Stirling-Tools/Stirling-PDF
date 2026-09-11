@@ -4,14 +4,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
-import DrawIcon from "@mui/icons-material/Draw";
-import OpenWithIcon from "@mui/icons-material/OpenWith";
-import CloseIcon from "@mui/icons-material/Close";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import CheckIcon from "@mui/icons-material/Check";
-import AddIcon from "@mui/icons-material/Add";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-
+import { Icon } from "@app/ui/Icon";
 import {
   DEFAULT_PARAMETERS,
   type SignParameters,
@@ -341,7 +334,7 @@ export default function SignControlsPanel({
       // Sits on the white signature sheet in both schemes, so it takes a fixed
       // accent ink rather than the scheme-dependent one.
       <Group gap={4} wrap="nowrap" c="var(--c-accent-on-light)">
-        <DrawIcon sx={{ fontSize: "0.95rem" }} />
+        <Icon name="pen-tool" size={"0.95rem"} />
         <Text size="xs" fw={600}>
           {t("certSign.collab.signRequest.preview.create", "Add signature")}
         </Text>
@@ -361,7 +354,7 @@ export default function SignControlsPanel({
             variant="secondary"
             fullWidth
             justify="between"
-            rightSection={<KeyboardArrowDownIcon sx={{ fontSize: "1.1rem" }} />}
+            rightSection={<Icon name="chevron-down" size={"1.1rem"} />}
             aria-label={t(
               "certSign.collab.signRequest.changeSignature",
               "Change signature",
@@ -403,7 +396,7 @@ export default function SignControlsPanel({
                       "Delete signature",
                     )}
                   >
-                    <CloseIcon sx={{ fontSize: "0.9rem" }} />
+                    <Icon name="x" size={"0.9rem"} />
                   </ActionIcon>
                 </Group>
               </Menu.Item>
@@ -418,7 +411,7 @@ export default function SignControlsPanel({
           )}
           <Menu.Divider />
           <Menu.Item
-            leftSection={<AddIcon sx={{ fontSize: "1rem" }} />}
+            leftSection={<Icon name="plus" size={"1rem"} />}
             onClick={openCreateModal}
             disabled={isAtCapacity}
           >
@@ -440,7 +433,7 @@ export default function SignControlsPanel({
             value: "place",
             label: (
               <Group gap={6} wrap="nowrap" justify="center">
-                <DrawIcon sx={{ fontSize: "1.1rem" }} />
+                <Icon name="pen-tool" size={"1.1rem"} />
                 <span>
                   {t("certSign.collab.signRequest.mode.place", "Place")}
                 </span>
@@ -451,7 +444,7 @@ export default function SignControlsPanel({
             value: "move",
             label: (
               <Group gap={6} wrap="nowrap" justify="center">
-                <OpenWithIcon sx={{ fontSize: "1.1rem" }} />
+                <Icon name="move" size={"1.1rem"} />
                 <span>
                   {t("certSign.collab.signRequest.mode.move", "Move")}
                 </span>
@@ -469,7 +462,7 @@ export default function SignControlsPanel({
       <Button
         variant="tertiary"
         accent="danger"
-        leftSection={<DeleteOutlineIcon sx={{ fontSize: "1.1rem" }} />}
+        leftSection={<Icon name="trash" size={"1.1rem"} />}
         onClick={onDeleteSelected}
         disabled={!hasSelectedAnnotation}
         fullWidth
@@ -481,7 +474,7 @@ export default function SignControlsPanel({
       </Button>
 
       <Button
-        leftSection={<CheckIcon sx={{ fontSize: "1.1rem" }} />}
+        leftSection={<Icon name="check" size={"1.1rem"} />}
         onClick={onComplete}
         disabled={!canComplete}
         fullWidth

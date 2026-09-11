@@ -1,14 +1,7 @@
 import { useRef } from "react";
+import { Icon } from "@app/ui/Icon";
 import { Group, Menu, Popover, Text, Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import UndoIcon from "@mui/icons-material/Undo";
-import RedoIcon from "@mui/icons-material/Redo";
-import TextFieldsIcon from "@mui/icons-material/TextFieldsOutlined";
-import ImageIcon from "@mui/icons-material/ImageOutlined";
-import SearchIcon from "@mui/icons-material/SearchOutlined";
-import HelpIcon from "@mui/icons-material/HelpOutlineOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import TextFormatIcon from "@mui/icons-material/TextFormat";
 import { Button } from "@app/ui/Button";
 import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/components/EditorFileSwitcher";
 import { FormatGroup } from "@app/tools/pdfTextEditor/components/toolbar/FormatGroup";
@@ -99,7 +92,7 @@ export function EditorTopBar({
               aria-label={t("pdfTextEditor.toolbar.undo", "Undo")}
               data-testid="pdf-editor-undo"
               style={NO_SHRINK}
-              leftSection={<UndoIcon fontSize="small" />}
+              leftSection={<Icon name="undo-2" size={20} />}
             />
           </Tooltip>
           <Tooltip
@@ -117,7 +110,7 @@ export function EditorTopBar({
               aria-label={t("pdfTextEditor.toolbar.redo", "Redo")}
               data-testid="pdf-editor-redo"
               style={NO_SHRINK}
-              leftSection={<RedoIcon fontSize="small" />}
+              leftSection={<Icon name="redo-2" size={20} />}
             />
           </Tooltip>
 
@@ -133,19 +126,19 @@ export function EditorTopBar({
                   aria-label={t("pdfTextEditor.toolbar.more", "More actions")}
                   data-testid="pdf-editor-overflow-menu"
                   style={NO_SHRINK}
-                  leftSection={<MoreVertIcon fontSize="small" />}
+                  leftSection={<Icon name="ellipsis-vertical" size={20} />}
                 />
               </Menu.Target>
               <Menu.Dropdown>
                 <Menu.Item
-                  leftSection={<TextFieldsIcon fontSize="small" />}
+                  leftSection={<Icon name="type" size={20} />}
                   onClick={onToggleAddText}
                   data-testid="pdf-editor-add-text"
                 >
                   {addTextLabel}
                 </Menu.Item>
                 <Menu.Item
-                  leftSection={<ImageIcon fontSize="small" />}
+                  leftSection={<Icon name="image" size={20} />}
                   onClick={() => session?.pickImage()}
                   disabled={!session}
                   data-testid="pdf-editor-add-image"
@@ -154,14 +147,14 @@ export function EditorTopBar({
                 </Menu.Item>
                 <Menu.Divider />
                 <Menu.Item
-                  leftSection={<SearchIcon fontSize="small" />}
+                  leftSection={<Icon name="search" size={20} />}
                   onClick={onToggleFind}
                   data-testid="pdf-editor-open-find"
                 >
                   {findLabel}
                 </Menu.Item>
                 <Menu.Item
-                  leftSection={<HelpIcon fontSize="small" />}
+                  leftSection={<Icon name="circle-question-mark" size={20} />}
                   onClick={onShowHelp}
                   data-testid="pdf-editor-help"
                 >
@@ -181,7 +174,7 @@ export function EditorTopBar({
                   size="sm"
                   variant={addTextArmed ? "primary" : "tertiary"}
                   accent={addTextArmed ? "default" : "neutral"}
-                  leftSection={<TextFieldsIcon fontSize="small" />}
+                  leftSection={<Icon name="type" size={20} />}
                   onClick={onToggleAddText}
                   data-testid="pdf-editor-add-text"
                   style={NO_SHRINK}
@@ -199,7 +192,7 @@ export function EditorTopBar({
                   size="sm"
                   variant="tertiary"
                   accent="neutral"
-                  leftSection={<ImageIcon fontSize="small" />}
+                  leftSection={<Icon name="image" size={20} />}
                   onClick={() => session?.pickImage()}
                   disabled={!session}
                   aria-label={t("pdfTextEditor.sidebar.addImage", "Add image")}
@@ -225,7 +218,7 @@ export function EditorTopBar({
                   )}
                   data-testid="pdf-editor-open-find"
                   style={NO_SHRINK}
-                  leftSection={<SearchIcon fontSize="small" />}
+                  leftSection={<Icon name="search" size={20} />}
                 />
               </Tooltip>
             </>
@@ -247,7 +240,7 @@ export function EditorTopBar({
                       )}
                       data-testid="pdf-editor-format-menu"
                       style={NO_SHRINK}
-                      leftSection={<TextFormatIcon fontSize="small" />}
+                      leftSection={<Icon name="case-sensitive" size={20} />}
                     />
                   </Popover.Target>
                   <Popover.Dropdown>
@@ -282,7 +275,7 @@ export function EditorTopBar({
               )}
               data-testid="pdf-editor-help"
               style={NO_SHRINK}
-              leftSection={<HelpIcon fontSize="small" />}
+              leftSection={<Icon name="circle-question-mark" size={20} />}
             />
           </Tooltip>
         )}
