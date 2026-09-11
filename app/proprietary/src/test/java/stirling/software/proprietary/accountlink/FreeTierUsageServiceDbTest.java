@@ -141,6 +141,37 @@ class FreeTierUsageServiceDbTest {
     }
 
     @Test
+    void theReportedResetIsTheDayEnforcementActuallyRollsOn() {
+        FreeTierUsageService service = service(500);
+        service.accrue(BillingCategory.API, 1, null); // anchors on the 31st
+
+        // February clamps to the 28th, whose own next month is 28 March. Enforcement counts whole
+        // months from the anchor instead and holds until the 31st, so a reset derived from the
+        // start would promise the grant back three days early.
+        now.set(LocalDateTime.of(2026, 3, 1, 0, 0));
+        service.accrue(BillingCategory.API, 500, null);
+        FreeTierUsageService.FreeTierBalance february = service.balance();
+        assertThat(february.periodStart()).isEqualTo(LocalDateTime.of(2026, 2, 28, 9, 30));
+        assertThat(february.periodEnd()).isEqualTo(LocalDateTime.of(2026, 3, 31, 9, 30));
+        assertThat(february.remainingUnits()).isZero();
+
+        now.set(LocalDateTime.of(2026, 3, 29, 0, 0));
+        assertThat(service.balance().remainingUnits()).isZero();
+    }
+
+    @Test
+    void aFreshPeriodIsInsertedRatherThanMergedOverALiveAnchor() {
+        FreeTierUsageService service = service(500);
+        service.accrue(BillingCategory.API, 30, null);
+        em.clear();
+
+        // The id is assigned, so without Persistable a racing first request would merge: an UPDATE
+        // moving the anchor forward and handing back a fresh grant instead of losing the race.
+        assertThat(new FreeTierPeriod(T0.plusDays(3)).isNew()).isTrue();
+        assertThat(periods.findById(FreeTierPeriod.SINGLETON_ID).orElseThrow().isNew()).isFalse();
+    }
+
+    @Test
     void repeatingAnInputSetInsideTheWorkflowWindowIsNotCharged() {
         FreeTierUsageService service = service(500);
 

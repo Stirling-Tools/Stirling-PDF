@@ -2,10 +2,13 @@ package stirling.software.proprietary.accountlink;
 
 import java.time.LocalDateTime;
 
+import org.springframework.data.domain.Persistable;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 
 import lombok.AccessLevel;
 import lombok.Getter;
@@ -22,7 +25,7 @@ import lombok.NoArgsConstructor;
 @Table(name = "account_link_free_tier_period")
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class FreeTierPeriod {
+public class FreeTierPeriod implements Persistable<Long> {
 
     public static final long SINGLETON_ID = 1L;
 
@@ -38,10 +41,22 @@ public class FreeTierPeriod {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Transient private boolean unsaved;
+
     public FreeTierPeriod(LocalDateTime anchorAt) {
         this.id = SINGLETON_ID;
         this.anchorAt = anchorAt;
         this.periodStart = anchorAt;
         this.updatedAt = anchorAt;
+        this.unsaved = true;
+    }
+
+    /**
+     * Forces an insert. The id is assigned, so Spring Data would otherwise read a new instance as
+     * detached and merge it, overwriting a live anchor instead of losing the race for it.
+     */
+    @Override
+    public boolean isNew() {
+        return unsaved;
     }
 }

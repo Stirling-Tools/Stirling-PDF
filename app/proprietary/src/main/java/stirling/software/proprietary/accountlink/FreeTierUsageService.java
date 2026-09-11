@@ -87,10 +87,10 @@ public class FreeTierUsageService {
     }
 
     public FreeTierBalance balance() {
-        LocalDateTime start = currentPeriodStart();
+        PeriodWindow window = currentPeriod();
         Map<String, Long> byCategory = new LinkedHashMap<>();
         long spent = 0;
-        for (Object[] row : counters.sumUnitsByCategory(start)) {
+        for (Object[] row : counters.sumUnitsByCategory(window.start())) {
             long units = row[1] == null ? 0L : ((Number) row[1]).longValue();
             byCategory.put(String.valueOf(row[0]), units);
             spent += units;
@@ -99,8 +99,8 @@ public class FreeTierUsageService {
                 grantUnits,
                 spent,
                 Math.max(0, grantUnits - spent),
-                start,
-                start.plusMonths(1),
+                window.start(),
+                window.end(),
                 Map.copyOf(byCategory));
     }
 
@@ -127,22 +127,35 @@ public class FreeTierUsageService {
         incrementOrInsert(period, category.name(), units);
     }
 
+    /** Start inclusive, end exclusive; both whole month counts from the same immutable anchor. */
+    record PeriodWindow(LocalDateTime start, LocalDateTime end) {}
+
+    LocalDateTime currentPeriodStart() {
+        return currentPeriod().start();
+    }
+
     /**
      * The period in force, anchoring on first use and rolling the stamp when the boundary has
-     * passed. Every start is a whole month count from the immutable anchor, so it cannot drift.
+     * passed. Every bound is a whole month count from the immutable anchor, so neither drifts and
+     * the end reported to the UI is the one enforcement rolls on. Deriving the end from the
+     * <em>start</em> would report an earlier reset than the gate honours whenever the anchor day
+     * clamps: a 31st anchor starts February on the 28th, whose next month is the 28th of March,
+     * while the gate holds until the 31st.
      */
-    LocalDateTime currentPeriodStart() {
+    PeriodWindow currentPeriod() {
         LocalDateTime now = clock.get();
         FreeTierPeriod stored = periods.findById(FreeTierPeriod.SINGLETON_ID).orElse(null);
         if (stored == null) {
-            return anchorNow(now);
+            LocalDateTime first = anchorNow(now);
+            return new PeriodWindow(first, first.plusMonths(1));
         }
         LocalDateTime anchor = stored.getAnchorAt();
-        LocalDateTime start = anchor.plusMonths(periodsElapsed(anchor, now));
+        long elapsed = periodsElapsed(anchor, now);
+        LocalDateTime start = anchor.plusMonths(elapsed);
         if (start.isAfter(stored.getPeriodStart())) {
             periods.rollTo(FreeTierPeriod.SINGLETON_ID, start, now);
         }
-        return start;
+        return new PeriodWindow(start, anchor.plusMonths(elapsed + 1));
     }
 
     /**
@@ -163,7 +176,9 @@ public class FreeTierUsageService {
         return n;
     }
 
-    /** Anchors the first period at {@code now}, tolerating a concurrent first request. */
+    /**
+     * Anchors the first period at {@code now}; a concurrent first request wins or loses cleanly.
+     */
     private LocalDateTime anchorNow(LocalDateTime now) {
         try {
             return periods.saveAndFlush(new FreeTierPeriod(now)).getPeriodStart();
