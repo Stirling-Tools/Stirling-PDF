@@ -59,9 +59,16 @@ interface InvitationDTO {
 /** No last-activity signal on the team endpoints, so the column reads a dash. */
 const NO_ACTIVITY = "-";
 
-/** 0 / huge sentinel seat values mean "no limit". */
+/** Mirrors `UserLicenseSettingsService.DEFAULT_USER_LIMIT`; keep the two in step. */
+const FREE_USER_ALLOWANCE = 5;
+
+/**
+ * Users the team is allowed, or null when `maxSeats` holds no purchased allowance. Must agree with
+ * `SaasTeamExtensions.licensedUsers()`: a team on the free allowance has no limit to show, and the
+ * unlimited sentinel is never a number.
+ */
 function normalizeSeatLimit(max: number | undefined): number | null {
-  if (!max || max <= 0 || max >= 100000) return null;
+  if (!max || max <= FREE_USER_ALLOWANCE || max >= 2147483647) return null;
   return max;
 }
 

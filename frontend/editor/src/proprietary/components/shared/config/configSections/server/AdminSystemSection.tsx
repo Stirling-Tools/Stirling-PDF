@@ -31,6 +31,7 @@ import { FolderAccessCard } from "@app/components/shared/config/configSections/s
 import { CustomPathsCard } from "@app/components/shared/config/configSections/server/CustomPathsCard";
 import { CustomMetadataCard } from "@app/components/shared/config/configSections/server/CustomMetadataCard";
 import { ServerCertificateCard } from "@app/components/shared/config/configSections/server/ServerCertificateCard";
+import AdminFormDetectionSection from "@app/components/shared/config/configSections/AdminFormDetectionSection";
 import "@app/components/shared/config/configSections/server/AdminSystemSection.css";
 
 /** Every admin section this page drafts, and so every key a save invalidates. */
@@ -581,6 +582,13 @@ export default function AdminSystemSection() {
           }
         >
           <ServerCertificateCard {...generalCard} />
+        </SettingsCard>
+
+        <SettingsCard
+          id="adminFormDetection"
+          title={t("admin.formDetection.title", "AI Form Detection")}
+        >
+          <AdminFormDetectionSection />
         </SettingsCard>
       </Stack>
 

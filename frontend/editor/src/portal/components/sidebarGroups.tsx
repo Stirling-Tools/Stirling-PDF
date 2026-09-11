@@ -14,8 +14,8 @@ export interface NavEntry {
   icon: ReactNode;
   /** When set, the tab opens this URL in a new tab instead of navigating in-app. */
   externalUrl?: string;
-  /** The whole tab is facts about the linked account, so unlinked is asked rather than navigated. */
-  requiresLink?: boolean;
+  /** Hidden from a member. The view reports instance-wide figures behind ADMIN-gated endpoints. */
+  requiresAdmin?: boolean;
 }
 
 export interface NavGroup {
