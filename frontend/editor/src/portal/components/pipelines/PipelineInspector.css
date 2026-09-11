@@ -29,3 +29,9 @@
   font-weight: 500;
   color: var(--c-text);
 }
+
+/* Same slot as the node cards: the selected step's glyph is whatever the builder passes. */
+.portal-inspector__title > svg {
+  width: 1.125rem;
+  height: 1.125rem;
+}
