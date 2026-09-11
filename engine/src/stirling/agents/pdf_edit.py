@@ -27,7 +27,15 @@ from stirling.contracts import (
 )
 from stirling.logging import Pretty
 from stirling.models import OPERATIONS, ApiModel, ParamToolModel, ToolEndpoint
-from stirling.services import AppRuntime, ToolChainStep, blocking, language_directive, validate_tool_chain
+from stirling.services import (
+    AppRuntime,
+    OperationRanker,
+    ToolChainStep,
+    blocking,
+    language_directive,
+    retrieval_query,
+    validate_tool_chain,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -175,6 +183,7 @@ class PdfEditAgent:
     def __init__(self, runtime: AppRuntime) -> None:
         self.runtime = runtime
         self.parameter_selector = PdfEditParameterSelector(runtime)
+        self.shortlist: OperationRanker = runtime.operation_shortlist
 
     async def orchestrate(self, request: OrchestratorRequest) -> PdfEditResponse:
         """Entry point for the orchestrator delegate — adapts the orchestrator's
@@ -277,12 +286,19 @@ class PdfEditAgent:
         repair_note: str = "",
     ) -> PdfEditPlanOutput:
         can_request_content = allow_need_content and not has_page_text(request.page_text)
+        available = list(supported_operations)
+        candidates = await self.shortlist.select(
+            retrieval_query(request.user_message, request.conversation_history),
+            available,
+            self.runtime.settings.planner_shortlist_size,
+        )
+        logger.info("[pdf-edit] showing %d of %d operations", len(candidates), len(available))
         agent = self._build_selection_agent(
-            supported_operations,
+            candidates,
             unavailable_operations,
             allow_need_content=can_request_content,
         )
-        return await agent.select(self._build_selection_prompt(request, supported_operations, repair_note))
+        return await agent.select(self._build_selection_prompt(request, candidates, repair_note))
 
     def _build_selection_agent(
         self,
