@@ -38,3 +38,12 @@ export {
   type SpendCapControlProps,
   type SpendCapControlLabels,
 } from "@app/billing/SpendCapControl";
+export {
+  UNLIMITED_USER_LIMIT,
+  NEAR_LIMIT_RATIO,
+  isUnlimitedUserLimit,
+  resolveUserCapacity,
+  type UserCapacity,
+  type UserCapacityInput,
+  type UserCapacityKind,
+} from "@app/billing/userCapacity";

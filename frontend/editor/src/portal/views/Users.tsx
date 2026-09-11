@@ -22,7 +22,9 @@ import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
+import { useOptionalCheckout } from "@app/contexts/CheckoutContext";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
+import { CapacityLine } from "@portal/components/users/CapacityLine";
 import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
 import { NewTeamModal } from "@portal/components/users/NewTeamModal";
@@ -146,6 +148,18 @@ export function Users() {
 
   const teams = teamsState.data ?? [];
   // Pending invites ride along with the roster fetch (SaaS); empty on self-hosted.
+  const capacity = usersState.data?.summary.capacity;
+  const checkout = useOptionalCheckout();
+  // Seeding from the current headcount lands the buyer on a quantity that already covers
+  // everyone, rather than on a blocked step they have to correct.
+  const addCapacity =
+    checkout && capacity
+      ? () =>
+          void checkout.openCheckout("server", {
+            minimumSeats: Math.max(1, capacity.used),
+          })
+      : undefined;
+
   const invitations = usersState.data?.invitations ?? [];
   const mailEnabled = usersState.data?.mailEnabled ?? false;
   // Email invites need SMTP + mail.enableInvites on self-hosted; SaaS (no directCreate path)
@@ -284,12 +298,16 @@ export function Users() {
       <header className="portal-users__head">
         <div>
           <h1 className="portal-users__title">{t("users.title", "Users")}</h1>
-          <p className="portal-users__sub">
-            {t("users.subtitle2", "Your people, teams, and access levels.")}{" "}
-            <a className="portal-users__link" href="/docs">
-              {t("users.learnMore", "Learn more about roles and access.")}
-            </a>
-          </p>
+          {capacity ? (
+            <CapacityLine capacity={capacity} onAddCapacity={addCapacity} />
+          ) : (
+            <p className="portal-users__sub">
+              {t("users.subtitle2", "Your people, teams, and access levels.")}{" "}
+              <a className="portal-users__link" href="/docs">
+                {t("users.learnMore", "Learn more about roles and access.")}
+              </a>
+            </p>
+          )}
         </div>
         <div className="portal-users__head-actions">
           {caps.createTeam && (

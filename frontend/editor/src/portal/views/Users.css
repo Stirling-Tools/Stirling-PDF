@@ -286,6 +286,35 @@
   text-decoration: underline;
 }
 
+/* Capacity line — the user count under the heading, and the only place capacity is sold.
+   Styled as running text, not as a control, so the page keeps one visual weight at the top. */
+.portal-users__capacity-count {
+  color: inherit;
+}
+.portal-users__capacity[data-tone="near"] .portal-users__capacity-count {
+  color: var(--c-warning);
+}
+.portal-users__capacity[data-tone="full"] .portal-users__capacity-count {
+  color: var(--c-danger);
+}
+.portal-users__capacity-count[title] {
+  cursor: help;
+  text-decoration: underline dotted;
+  text-underline-offset: 0.2em;
+}
+
+.portal-users__capacity-action {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--c-accent-text);
+  cursor: pointer;
+}
+.portal-users__capacity-action:hover {
+  text-decoration: underline;
+}
+
 .portal-users__directory {
   display: flex;
   flex-direction: column;
