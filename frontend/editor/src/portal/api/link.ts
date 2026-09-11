@@ -17,6 +17,19 @@ export interface LocalUsage {
   totalUnsyncedUnits: number;
 }
 
+/**
+ * The instance's own monthly grant. {@code remainingUnits} is floored at 0; dormant while linked.
+ */
+export interface FreeTierBalance {
+  grantUnits: number;
+  usedUnits: number;
+  remainingUnits: number;
+  /** ISO local timestamp, inclusive. */
+  periodStart: string;
+  /** ISO local timestamp, exclusive — when the grant resets. */
+  periodEnd: string;
+}
+
 /** A linked instance row (GET /api/v1/account-link/instances). */
 export interface LinkedInstanceRow {
   instanceId: number;
@@ -43,6 +56,14 @@ export async function fetchStatus(): Promise<LinkStatus> {
  */
 export async function fetchLocalUsage(): Promise<LocalUsage> {
   return apiClient.local.json<LocalUsage>(`${BASE}/usage`);
+}
+
+/**
+ * Admin-only server-side, the allowance being instance-wide: a caller must render a 403 as figures
+ * it may not see, not as a fault.
+ */
+export async function fetchFreeTier(): Promise<FreeTierBalance> {
+  return apiClient.local.json<FreeTierBalance>(`${BASE}/free-tier`);
 }
 
 /** Drop this instance's link. */
