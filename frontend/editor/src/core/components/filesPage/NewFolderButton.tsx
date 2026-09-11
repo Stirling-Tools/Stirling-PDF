@@ -6,12 +6,15 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import { useTranslation } from "react-i18next";
 
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import type { FolderId, FolderKind } from "@app/types/folder";
 
 export interface NewFolderButtonProps {
   label: string;
   size?: "sm" | "md";
+  /** "icon" matches the workbench bar's controls, which carry no labels. */
+  trigger?: "labelled" | "icon";
   /** Set when a folder cannot be created here at all; also the tooltip. */
   disabledReason?: string | null;
   /** Set when only the server destination is unavailable; also its tooltip. */
@@ -32,6 +35,7 @@ export interface NewFolderButtonProps {
 export function NewFolderButton({
   label,
   size = "sm",
+  trigger = "labelled",
   disabledReason,
   serverDisabledReason,
   currentFolderId,
@@ -40,21 +44,34 @@ export function NewFolderButton({
   onOpenDialog,
 }: NewFolderButtonProps): ReactNode {
   const { t } = useTranslation();
+  const iconOnly = trigger === "icon";
 
   if (disabledReason) {
     return (
       <Tooltip label={disabledReason} withinPortal multiline w={260}>
         {/* Wrapped so the tooltip still opens while the button is disabled. */}
         <span style={{ display: "inline-flex" }}>
-          <Button
-            variant="secondary"
-            size={size}
-            leftSection={<CreateNewFolderIcon fontSize="small" />}
-            disabled
-            style={{ pointerEvents: "auto" }}
-          >
-            {label}
-          </Button>
+          {iconOnly ? (
+            <ActionIcon
+              variant="tertiary"
+              size="sm"
+              disabled
+              aria-label={label}
+              style={{ pointerEvents: "auto" }}
+            >
+              <CreateNewFolderIcon fontSize="small" />
+            </ActionIcon>
+          ) : (
+            <Button
+              variant="secondary"
+              size={size}
+              leftSection={<CreateNewFolderIcon fontSize="small" />}
+              disabled
+              style={{ pointerEvents: "auto" }}
+            >
+              {label}
+            </Button>
+          )}
         </span>
       </Tooltip>
     );
@@ -63,6 +80,22 @@ export function NewFolderButton({
   // Inside a folder the kind is inherited, and on the web the server is the only
   // place a folder can go.
   if (currentFolderId !== null || !canAddLocalFolder) {
+    const open = () =>
+      currentFolderId !== null ? onOpenDialog() : onOpenDialog(null, "server");
+    if (iconOnly) {
+      return (
+        <Tooltip label={label} withinPortal>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            aria-label={label}
+            onClick={open}
+          >
+            <CreateNewFolderIcon fontSize="small" />
+          </ActionIcon>
+        </Tooltip>
+      );
+    }
     return (
       <Button
         variant="secondary"
@@ -82,14 +115,20 @@ export function NewFolderButton({
   return (
     <Menu shadow="md" position="bottom-end" withinPortal>
       <Menu.Target>
-        <Button
-          variant="secondary"
-          size={size}
-          leftSection={<CreateNewFolderIcon fontSize="small" />}
-          rightSection={<ArrowDropDownIcon fontSize="small" />}
-        >
-          {label}
-        </Button>
+        {iconOnly ? (
+          <ActionIcon variant="tertiary" size="sm" aria-label={label}>
+            <CreateNewFolderIcon fontSize="small" />
+          </ActionIcon>
+        ) : (
+          <Button
+            variant="secondary"
+            size={size}
+            leftSection={<CreateNewFolderIcon fontSize="small" />}
+            rightSection={<ArrowDropDownIcon fontSize="small" />}
+          >
+            {label}
+          </Button>
+        )}
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item

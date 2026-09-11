@@ -941,9 +941,9 @@ test.describe("Files page", () => {
     const CHROME_FOLDER = "11111111-2222-4333-8444-555555555561";
     test.use({ autoGoto: false });
 
-    /** The column is sized by the user, not by its contents: a long name has to give
-     *  way inside the row rather than push the panel wider. */
-    test("a long folder name does not widen the tree panel", async ({
+    /** The sidebar is sized by the user, not by its contents: a long name has to give
+     *  way inside the row rather than push the sidebar wider. */
+    test("a long folder name does not widen the file sidebar", async ({
       page,
     }) => {
       await stubStorageApis(page);
@@ -959,16 +959,16 @@ test.describe("Files page", () => {
       );
       await gotoFilesPage(page);
 
-      const panel = page.locator('.folder-tree-panel[data-active="true"]');
-      await expect(panel).toBeVisible({ timeout: 10_000 });
+      const sidebar = page.locator(".file-sidebar");
+      await expect(sidebar).toBeVisible({ timeout: 10_000 });
       await expect(
         page.getByRole("treeitem", { name: /Quarterly/i }),
       ).toBeVisible();
 
-      const width = await panel.evaluate(
+      const width = await sidebar.evaluate(
         (el) => el.getBoundingClientRect().width,
       );
-      expect(width).toBeLessThanOrEqual(280);
+      expect(width).toBeLessThanOrEqual(320);
       // Clipped inside the row rather than laid out at full length.
       const clipped = await page
         .locator(".files-page-tree-name-head")
@@ -1003,7 +1003,7 @@ test.describe("Files page", () => {
       );
       await gotoFilesPage(page);
 
-      const header = page.locator(".files-page-header");
+      const header = page.locator(".files-page-tabs-row");
       const atRoot = await header.evaluate(
         (el) => el.getBoundingClientRect().height,
       );
@@ -1042,7 +1042,7 @@ test.describe("Files page", () => {
       );
       await gotoFilesPage(page);
 
-      const header = page.locator(".files-page-header");
+      const header = page.locator(".files-page-tabs-row");
       const atRoot = await header.evaluate(
         (el) => el.getBoundingClientRect().height,
       );
@@ -1056,6 +1056,71 @@ test.describe("Files page", () => {
       );
 
       expect(inFolder).toBe(atRoot);
+    });
+  });
+
+  test.describe("Library chrome placement", () => {
+    test.use({ autoGoto: false });
+
+    /** The library's chrome sits on its own row with the tabs, and the shared bar
+     *  above carries only what every view has. */
+    test("the path and New folder sit on the tabs row", async ({ page }) => {
+      const NESTED = "11111111-2222-4333-8444-555555555581";
+      const PARENT = "11111111-2222-4333-8444-555555555580";
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [{ id: "b-1", name: "b-1.pdf", remoteStorageId: null }],
+        [
+          { id: PARENT, name: "Engagements" },
+          { id: NESTED, name: "Signed originals", parentFolderId: PARENT },
+        ],
+      );
+      await gotoFilesPage(page);
+
+      const bar = page.locator(".workbench-bar");
+      await expect(bar).toBeVisible({ timeout: 10_000 });
+      const row = page.locator(".files-page-tabs-row");
+      // On the library's row, and not in the bar above it.
+      await expect(
+        row.getByRole("navigation", { name: /Folder path/i }),
+      ).toBeVisible();
+      await expect(
+        row.getByRole("button", { name: /New folder/i }),
+      ).toBeVisible();
+      await expect(
+        bar.getByRole("navigation", { name: /Folder path/i }),
+      ).toHaveCount(0);
+
+      const tree = page.getByRole("tree", { name: /Folders/i });
+      await tree.getByRole("treeitem", { name: /Engagements/i }).click();
+      await expect(page).toHaveURL(new RegExp(PARENT), { timeout: 5_000 });
+      await tree.getByRole("treeitem", { name: /Signed originals/i }).click();
+      await expect(page).toHaveURL(new RegExp(NESTED), { timeout: 5_000 });
+
+      // Two crumbs whatever the depth, and the bar stays one row tall.
+      await expect(page.locator(".files-page-breadcrumb")).toHaveCount(2);
+      await expect(bar).toHaveAttribute("data-wrapped", "false");
+    });
+  });
+
+  test.describe("Document actions in the library", () => {
+    test.use({ autoGoto: false });
+
+    /** Save, Save As and Close act on an open document, and the library has none.
+     *  Desktop is where this shows: two save glyphs sit side by side there. */
+    test("saving and closing are absent from the library", async ({ page }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "d-a", name: "d-a.pdf", remoteStorageId: null },
+      ]);
+      await gotoFilesPage(page);
+
+      const bar = page.locator(".workbench-bar");
+      await expect(bar).toBeVisible({ timeout: 10_000 });
+      for (const name of [/^Save$/i, /Save As/i, /Close (All|PDF)/i]) {
+        await expect(bar.getByRole("button", { name })).toHaveCount(0);
+      }
     });
   });
 

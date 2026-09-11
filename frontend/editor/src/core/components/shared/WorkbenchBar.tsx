@@ -52,6 +52,7 @@ import {
 } from "@app/types/workbenchBar";
 import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import FolderOpenOutlinedIcon from "@mui/icons-material/FolderOpenOutlined";
 import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
 import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/WorkbenchBarMobileActions";
 import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
@@ -167,6 +168,24 @@ export default function WorkbenchBar({
     if (currentView === "pageEditor") return pageEditorSelectedCount;
     return selectedFileIds.length;
   }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
+
+  // Registered into the bar's own row rather than the tool row below it. Already
+  // sorted by order when registered.
+  const barRowButtons = useMemo(
+    () =>
+      buttons.filter((btn) => btn.section === "bar" && (btn.visible ?? true)),
+    [buttons],
+  );
+
+  // Beside the view switcher rather than among the actions: what the view is showing
+  // reads as part of the view, not as something to do to it.
+  const barLeadButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "bar-lead" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
 
   const sectionsWithButtons = useMemo(() => {
     return SECTION_ORDER.map((section) => {
@@ -334,7 +353,9 @@ export default function WorkbenchBar({
   // stay in step; each renders the same actions in its own shape.
   const globalActionProps: WorkbenchBarActionsProps = {
     currentView,
-    isCustomView,
+    // Save, Save As and Close act on an open document. The library has none: it
+    // lists files, and opening one is what the other views are for.
+    showsFileActions: !isCustomView && currentView !== "myFiles",
     actionsDisabled,
     policyEnforcing,
     downloadLabel: downloadTooltip,
@@ -418,6 +439,11 @@ export default function WorkbenchBar({
       value: "fileEditor" as WorkbenchType,
       label: t("workbenchBar.activeFiles", "Active Files"),
       icon: <FolderOutlinedIcon fontSize="small" />,
+    },
+    {
+      value: "myFiles",
+      label: t("fileSidebar.myFiles", "File library"),
+      icon: <FolderOpenOutlinedIcon fontSize="small" />,
     },
     ...(selectedTool === "multiTool"
       ? [
@@ -525,7 +551,7 @@ export default function WorkbenchBar({
             <div className="workbench-bar-divider" />
           </>
         )}
-        {(hasFiles || isCustomView) && (
+        {(hasFiles || isCustomView || currentView === "myFiles") && (
           <SegmentedControl<WorkbenchType>
             className="workbench-bar-views"
             size="sm"
@@ -543,6 +569,16 @@ export default function WorkbenchBar({
             }))}
           />
         )}
+        {barLeadButtons.map((btn) => {
+          const content = renderButton(btn);
+          if (!content) return null;
+          return (
+            <div className="workbench-bar-lead" key={btn.id}>
+              <div className="workbench-bar-divider" />
+              {content}
+            </div>
+          );
+        })}
       </div>
 
       {/* Global super search - always present, even on the homepage */}
@@ -598,6 +634,19 @@ export default function WorkbenchBar({
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
+        {/* A view's own controls, ahead of the globals every view shares. */}
+        {barRowButtons.map((btn) => {
+          const content = renderButton(btn);
+          if (!content) return null;
+          return (
+            <div key={btn.id} className="workbench-bar-action-wrapper">
+              {content}
+            </div>
+          );
+        })}
+        {barRowButtons.length > 0 && (
+          <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        )}
         {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
         {currentView === "viewer" && sharingEnabled && (
           <ViewerShareButton disabled={actionsDisabled} />

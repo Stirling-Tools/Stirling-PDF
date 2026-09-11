@@ -31,14 +31,15 @@ import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import RefreshIcon from "@mui/icons-material/Refresh";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
+import { useFileLibraryWorkbenchBarButtons } from "@app/components/filesPage/useFileLibraryWorkbenchBarButtons";
 
 import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
@@ -89,8 +90,6 @@ import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
@@ -133,7 +132,6 @@ export default function FileManagerView() {
   const navigate = useNavigate();
   const location = useLocation();
   const openFolder = useOpenFolder();
-  const searchScopes = useEditorSearchScopes();
 
   // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
@@ -1383,6 +1381,32 @@ export default function FileManagerView() {
   const { addLocalFolder } = useNewFolderFlow();
 
   // null = New folder actionable; string = disabled tooltip reason.
+  // Lifted out of the header that used to render it: the workbench bar owns these
+  // controls now, and a handler defined inside JSX cannot be handed to it.
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      // pullFromServer bumps the folder revision, which the FolderProvider's effect
+      // reacts to by re-running refresh() - no need to await folders.refresh() here.
+      const result = await folders.pullFromServer();
+      if (!result.ok && result.reason !== "endpoint-missing") {
+        folders.setError(
+          result.reason === "network"
+            ? t("filesPage.syncError.network", "Could not reach the server.")
+            : result.reason === "server"
+              ? t(
+                  "filesPage.syncError.server",
+                  "Server error during folder sync.",
+                )
+              : t("filesPage.syncError.client", "Folder sync failed."),
+        );
+      }
+      await refresh();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [folders, refresh, t]);
+
   const newFolderDisabledReason: string | null = useMemo(() => {
     // Only All/Cloud render folders, so creating one elsewhere would look inert.
     if (
@@ -1422,137 +1446,120 @@ export default function FileManagerView() {
     t,
   ]);
 
+  // Stable identities: the bar re-registers whenever these change, and a fresh arrow
+  // per render turns that into an endless register -> render -> register loop.
+  const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
+  const openMobileUpload = useCallback(
+    () => setMobileUploadModalOpen(true),
+    [],
+  );
+
+  // Memoised for the same reason the handlers above are: the bar re-registers
+  // whenever what it was given changes, and a fresh element per render makes that a
+  // register -> render -> register loop.
+  const newFolderControl = useMemo(
+    () => (
+      <NewFolderButton
+        trigger="icon"
+        label={t("filesPage.newFolder", "New folder")}
+        disabledReason={newFolderDisabledReason}
+        serverDisabledReason={serverFolderDisabledReason}
+        currentFolderId={folders.currentFolderId}
+        canAddLocalFolder={canPickDirectory}
+        onAddLocalFolder={() => void addLocalFolder()}
+        onOpenDialog={openNewFolderDialog}
+      />
+    ),
+    [
+      t,
+      newFolderDisabledReason,
+      serverFolderDisabledReason,
+      folders.currentFolderId,
+      addLocalFolder,
+      openNewFolderDialog,
+    ],
+  );
+  // Reads the trail from context, so it takes no props to change.
+  const path = useMemo(() => <Breadcrumbs />, []);
+
+  const libraryActions = useMemo(
+    () => (
+      <>
+        <Tooltip
+          label={
+            signInRequiredReason ??
+            t("filesPage.refresh", "Refresh from server")
+          }
+          withinPortal
+        >
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            loading={refreshing}
+            disabled={refreshing || Boolean(signInRequiredReason)}
+            aria-busy={refreshing}
+            aria-label={t("filesPage.refresh", "Refresh from server")}
+            onClick={handleRefresh}
+          >
+            <RefreshIcon fontSize="small" />
+          </ActionIcon>
+        </Tooltip>
+        {newFolderControl}
+        <Tooltip label={t("filesPage.upload", "Upload")} withinPortal>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            aria-label={t("filesPage.upload", "Upload")}
+            onClick={openFilePicker}
+          >
+            <UploadFileIcon fontSize="small" />
+          </ActionIcon>
+        </Tooltip>
+        {isMobileUploadAvailable && (
+          <Tooltip
+            label={t("filesPage.uploadFromMobile", "Upload from Mobile")}
+            withinPortal
+          >
+            <ActionIcon
+              variant="tertiary"
+              size="sm"
+              aria-label={t("filesPage.uploadFromMobile", "Upload from Mobile")}
+              onClick={openMobileUpload}
+            >
+              <QrCode2Icon fontSize="small" />
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </>
+    ),
+    [
+      t,
+      signInRequiredReason,
+      refreshing,
+      handleRefresh,
+      newFolderControl,
+      openFilePicker,
+      isMobileUploadAvailable,
+      openMobileUpload,
+    ],
+  );
+
+  // Mobile has no room for a row of its own here - it keeps them in the bar, which
+  // is the only chrome its full-viewport layout shows.
+  useFileLibraryWorkbenchBarButtons({
+    path: isMobile ? path : null,
+    actions: isMobile ? libraryActions : null,
+  });
+
   return (
     <div className="files-page" ref={dropZoneRef}>
-      <header className="files-page-header">
-        {/* Breadcrumb only for folder-rooted tabs. */}
-        {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
-        {(currentTab === "recent" ||
-          currentTab === "shared" ||
-          currentTab === "sharedByMe") && (
-          <div
-            style={{
-              fontSize: "0.95rem",
-              fontWeight: 600,
-              padding: "0.25rem 0.5rem",
-              color: "var(--c-text)",
-            }}
-          >
-            {currentTab === "recent"
-              ? t("filesPage.tabName.recent", "Recent")
-              : currentTab === "shared"
-                ? t("filesPage.tabName.shared", "Shared with me")
-                : t("filesPage.tabName.sharedByMe", "Shared by me")}
-          </div>
-        )}
-        {(() => {
-          // Both the inline desktop buttons and the mobile kebab menu need
-          // these handlers - extract once so we don't drift two copies.
-          const handleRefresh = async () => {
-            setRefreshing(true);
-            try {
-              // In a mount, refresh means the directory: the listing only re-reads when told.
-              if (currentLocalDirectory) {
-                setDiskRefreshTick((tick) => tick + 1);
-              }
-              // pullFromServer bumps the folder revision, which the
-              // FolderProvider's effect reacts to by re-running refresh() -
-              // no need to await folders.refresh() manually.
-              const result = await folders.pullFromServer();
-              if (!result.ok && result.reason !== "endpoint-missing") {
-                folders.setError(
-                  result.reason === "network"
-                    ? t(
-                        "filesPage.syncError.network",
-                        "Could not reach the server.",
-                      )
-                    : result.reason === "server"
-                      ? t(
-                          "filesPage.syncError.server",
-                          "Server error during folder sync.",
-                        )
-                      : t("filesPage.syncError.client", "Folder sync failed."),
-                );
-              }
-              await refresh();
-            } finally {
-              setRefreshing(false);
-            }
-          };
-          return (
-            <>
-              <div className="files-page-header-search">
-                <SuperSearch scopes={searchScopes} />
-              </div>
-              <div className="files-page-header-actions">
-                <Tooltip
-                  label={
-                    signInRequiredReason ??
-                    t("filesPage.refresh", "Refresh from server")
-                  }
-                  withinPortal
-                >
-                  <ActionIcon
-                    variant="secondary"
-                    size="sm"
-                    loading={refreshing}
-                    disabled={refreshing || Boolean(signInRequiredReason)}
-                    aria-busy={refreshing}
-                    onClick={handleRefresh}
-                    aria-label={t("filesPage.refresh", "Refresh from server")}
-                  >
-                    <RefreshIcon />
-                  </ActionIcon>
-                </Tooltip>
-                <NewFolderButton
-                  label={t("filesPage.newFolder", "New folder")}
-                  disabledReason={newFolderDisabledReason}
-                  serverDisabledReason={serverFolderDisabledReason}
-                  currentFolderId={folders.currentFolderId}
-                  canAddLocalFolder={canPickDirectory}
-                  onAddLocalFolder={() => void addLocalFolder()}
-                  onOpenDialog={openNewFolderDialog}
-                />
-                <Button
-                  size="sm"
-                  leftSection={<UploadFileIcon fontSize="small" />}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {t("filesPage.upload", "Upload")}
-                </Button>
-                {isMobileUploadAvailable && (
-                  <Tooltip
-                    label={t(
-                      "filesPage.uploadFromMobile",
-                      "Upload from Mobile",
-                    )}
-                    withinPortal
-                  >
-                    <ActionIcon
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setMobileUploadModalOpen(true)}
-                      aria-label={t(
-                        "filesPage.uploadFromMobile",
-                        "Upload from Mobile",
-                      )}
-                    >
-                      <QrCode2Icon fontSize="small" />
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  style={{ display: "none" }}
-                  onChange={onFileInputChange}
-                />
-              </div>
-            </>
-          );
-        })()}
-      </header>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        style={{ display: "none" }}
+        onChange={onFileInputChange}
+      />
 
       {folders.error && (
         <div
@@ -1590,89 +1597,101 @@ export default function FileManagerView() {
 
       <div className="files-page-body">
         <main className="files-page-main">
-          {/* Tab strip filters the file list; ARIA Tabs keyboard model. */}
-          {(() => {
-            const TAB_DEFS = [
-              { id: "all", label: t("filesPage.tabs.all", "All") },
-              { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
-              // Sharing tabs only when sharingEnabled.
-              ...(sharingEnabled
-                ? [
-                    {
-                      id: "shared" as const,
-                      label: t("filesPage.tabs.shared", "Shared with me"),
-                    },
-                    {
-                      id: "sharedByMe" as const,
-                      label: t("filesPage.tabs.sharedByMe", "Shared by me"),
-                    },
-                  ]
-                : []),
-            ] as const;
-            const focusTab = (id: string) => {
-              const el = document.getElementById(`filesPage-tab-${id}`);
-              el?.focus();
-            };
-            return (
-              <div
-                className="files-page-tabs"
-                role="tablist"
-                aria-label={t("filesPage.tabs.ariaLabel", "File views")}
-                onKeyDown={(e) => {
-                  const idx = TAB_DEFS.findIndex((t2) => t2.id === currentTab);
-                  if (idx < 0) return;
-                  let next: number;
-                  if (e.key === "ArrowRight")
-                    next = (idx + 1) % TAB_DEFS.length;
-                  else if (e.key === "ArrowLeft")
-                    next = (idx - 1 + TAB_DEFS.length) % TAB_DEFS.length;
-                  else if (e.key === "Home") next = 0;
-                  else if (e.key === "End") next = TAB_DEFS.length - 1;
-                  else return;
-                  e.preventDefault();
-                  const target = TAB_DEFS[next];
-                  setCurrentTab(target.id);
-                  focusTab(target.id);
-                }}
-                style={{
-                  display: "flex",
-                  gap: "0.1rem",
-                  padding: "0.2rem 1rem 0.2rem",
-                }}
-              >
-                {TAB_DEFS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    id={`filesPage-tab-${tab.id}`}
-                    role="tab"
-                    type="button"
-                    aria-selected={currentTab === tab.id}
-                    aria-controls="filesPage-tabpanel"
-                    tabIndex={currentTab === tab.id ? 0 : -1}
-                    onClick={() => setCurrentTab(tab.id)}
-                    style={{
-                      background:
-                        currentTab === tab.id
-                          ? "var(--c-hover)"
-                          : "transparent",
-                      border: "none",
-                      borderRadius: "0.3rem",
-                      padding: "0.2rem 0.6rem",
-                      color:
-                        currentTab === tab.id
-                          ? "var(--c-text)"
-                          : "var(--c-text-subtle)",
-                      fontWeight: currentTab === tab.id ? 500 : 400,
-                      fontSize: "0.75rem",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+          {/* Tab strip filters the file list; ARIA Tabs keyboard model. The
+              library's path and actions share the row: kept out of the tablist
+              itself, which may only contain tabs. */}
+          <div className="files-page-tabs-row">
+            {(() => {
+              const TAB_DEFS = [
+                { id: "all", label: t("filesPage.tabs.all", "All") },
+                { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
+                // Sharing tabs only when sharingEnabled.
+                ...(sharingEnabled
+                  ? [
+                      {
+                        id: "shared" as const,
+                        label: t("filesPage.tabs.shared", "Shared with me"),
+                      },
+                      {
+                        id: "sharedByMe" as const,
+                        label: t("filesPage.tabs.sharedByMe", "Shared by me"),
+                      },
+                    ]
+                  : []),
+              ] as const;
+              const focusTab = (id: string) => {
+                const el = document.getElementById(`filesPage-tab-${id}`);
+                el?.focus();
+              };
+              return (
+                <div
+                  className="files-page-tabs"
+                  role="tablist"
+                  aria-label={t("filesPage.tabs.ariaLabel", "File views")}
+                  onKeyDown={(e) => {
+                    const idx = TAB_DEFS.findIndex(
+                      (t2) => t2.id === currentTab,
+                    );
+                    if (idx < 0) return;
+                    let next: number;
+                    if (e.key === "ArrowRight")
+                      next = (idx + 1) % TAB_DEFS.length;
+                    else if (e.key === "ArrowLeft")
+                      next = (idx - 1 + TAB_DEFS.length) % TAB_DEFS.length;
+                    else if (e.key === "Home") next = 0;
+                    else if (e.key === "End") next = TAB_DEFS.length - 1;
+                    else return;
+                    e.preventDefault();
+                    const target = TAB_DEFS[next];
+                    setCurrentTab(target.id);
+                    focusTab(target.id);
+                  }}
+                  style={{
+                    display: "flex",
+                    gap: "0.1rem",
+                    padding: "0.2rem 1rem 0.2rem",
+                  }}
+                >
+                  {TAB_DEFS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      id={`filesPage-tab-${tab.id}`}
+                      role="tab"
+                      type="button"
+                      aria-selected={currentTab === tab.id}
+                      aria-controls="filesPage-tabpanel"
+                      tabIndex={currentTab === tab.id ? 0 : -1}
+                      onClick={() => setCurrentTab(tab.id)}
+                      style={{
+                        background:
+                          currentTab === tab.id
+                            ? "var(--c-hover)"
+                            : "transparent",
+                        border: "none",
+                        borderRadius: "0.3rem",
+                        padding: "0.2rem 0.6rem",
+                        color:
+                          currentTab === tab.id
+                            ? "var(--c-text)"
+                            : "var(--c-text-subtle)",
+                        fontWeight: currentTab === tab.id ? 500 : 400,
+                        fontSize: "0.75rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+            {!isMobile && (
+              <>
+                <div className="files-page-tabs-path">{path}</div>
+                <div className="files-page-tabs-actions">{libraryActions}</div>
+              </>
+            )}
+          </div>
 
           <div className="files-page-toolbar">
             <FilesToolbarCount
@@ -2776,7 +2795,7 @@ function Breadcrumbs() {
           <Menu shadow="md" position="bottom-start" withinPortal>
             <Menu.Target>
               <ActionIcon
-                variant="quiet"
+                variant="tertiary"
                 size="sm"
                 className="files-page-breadcrumb-overflow"
                 aria-label={t(
