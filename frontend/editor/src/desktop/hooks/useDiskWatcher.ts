@@ -65,25 +65,20 @@ export function useDiskWatcher(): void {
     };
   }, [actions]);
 
-  const unavailableRef = useRef<string[]>([]);
-  unavailableRef.current = [
-    ...new Set(
-      fileStubs
-        .filter((stub) => stub.diskUnavailableReason && stub.localFilePath)
-        .map((stub) => stub.localFilePath!),
-    ),
-  ];
-
+  // Every linked path, not just the ones already marked unreachable: a volume
+  // that goes away takes its watches with it, so nothing can raise the first
+  // mark. This also picks up what the watcher cannot see at all - on Windows,
+  // a watched folder being renamed or moved.
   useEffect(() => {
     const recheck = () => {
-      if (unavailableRef.current.length > 0) {
-        void actions.reconcileOpenFiles(unavailableRef.current);
-      }
+      const linked = pathsRef.current;
+      if (linked.length > 0) void actions.reconcileOpenFiles(linked);
     };
     window.addEventListener("focus", recheck);
     return () => window.removeEventListener("focus", recheck);
   }, [actions]);
 
-  // outlive the files it was watching for.
+  // Stop watching when the window goes away, so the watcher does not outlive
+  // the files it was watching for.
   useEffect(() => () => void watchDiskPaths([]), []);
 }
