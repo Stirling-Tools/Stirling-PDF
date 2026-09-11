@@ -1,6 +1,12 @@
-import { createContext, type ReactNode } from "react";
+import { createContext, useSyncExternalStore, type ReactNode } from "react";
 import { beforeEach, describe, expect, test, vi } from "vitest";
-import { render, renderHook, screen, waitFor } from "@testing-library/react";
+import {
+  act,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 import Compress from "@app/tools/Compress";
@@ -15,7 +21,10 @@ import {
   createStirlingFile,
   type StirlingFile,
   type StirlingFileStub,
+  type FileContextState,
+  type FileId,
 } from "@app/types/fileContext";
+import { initialFileContextState } from "@app/contexts/file/FileReducer";
 import { createTestStirlingFile } from "@app/tests/utils/testFileHelpers";
 import {
   ToolFileEligibilityProvider,
@@ -32,13 +41,21 @@ const workspace = {
 };
 const viewer = { activeFileIndex: 0 };
 const navigation = { workbench: "fileEditor" };
+let fileState = initialFileContextState;
+const fileListeners = new Set<() => void>();
+function setPolicyBlocks(policyBlocks: Record<FileId, string>) {
+  fileState = { ...fileState, ui: { ...fileState.ui, policyBlocks } };
+  fileListeners.forEach((listener) => listener());
+}
 const selectors = {
   getStirlingFileStub: (id: string) =>
     workspace.fileStubs.find((stub) => stub.id === id),
+  getPolicyBlock: (id: FileId) => fileState.ui.policyBlocks[id],
 };
 const loadRecentFiles = vi.fn().mockResolvedValue([]);
 const onFileClick = vi.fn();
 const onPreviewRender = vi.fn();
+const processFiles = vi.fn();
 
 const pdfWorker = vi.hoisted(() => ({
   createDocument: vi.fn(),
@@ -56,6 +73,18 @@ function FilePreviews() {
       isSelected
       isActive={false}
       isViewedInViewer={false}
+      policies={
+        fileState.ui.policyBlocks[file.fileId]
+          ? [
+              {
+                id: "security",
+                name: "Security",
+                accentColor: "var(--c-primary)",
+                blocked: true,
+              },
+            ]
+          : []
+      }
       isToolSkipped={
         eligibleFileIds !== null && !eligibleFileIds.has(file.fileId)
       }
@@ -79,6 +108,18 @@ vi.mock("@app/hooks/useLazyThumbnail", () => ({
 }));
 
 vi.mock("@app/contexts/FileContext", () => ({
+  useFileSelector: <T,>(selector: (state: FileContextState) => T) => {
+    const state = useSyncExternalStore(
+      (listener) => {
+        fileListeners.add(listener);
+        return () => {
+          fileListeners.delete(listener);
+        };
+      },
+      () => fileState,
+    );
+    return selector(state);
+  },
   useAllFiles: () => ({
     ...workspace,
     fileIds: workspace.files.map((file) => file.fileId),
@@ -88,6 +129,9 @@ vi.mock("@app/contexts/FileContext", () => ({
   useFileActions: () => ({ actions: {} }),
   useFileSelection: () => ({ setSelectedFiles: vi.fn() }),
   useFileManagement: () => ({ reorderFiles: vi.fn() }),
+}));
+vi.mock("@app/hooks/tools/shared/useToolApiCalls", () => ({
+  useToolApiCalls: () => ({ processFiles, cancelOperation: vi.fn() }),
 }));
 vi.mock("@app/contexts/ViewerContext", () => ({
   ViewerContext: createContext(null),
@@ -173,6 +217,12 @@ vi.mock("@app/components/tools/convert/ConvertSettings", () => ({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  fileState = initialFileContextState;
+  processFiles.mockResolvedValue({
+    outputFiles: [],
+    successSourceIds: [],
+    failedInputs: [],
+  });
   pdfWorker.createDocument.mockResolvedValue({ numPages: 0 });
   viewer.activeFileIndex = 0;
   navigation.workbench = "fileEditor";
@@ -186,6 +236,93 @@ beforeEach(() => {
 });
 
 describe("tool file selection", () => {
+  test("a policy failure removes the tool selection and disables Run until recovery", async () => {
+    render(
+      <MantineProvider>
+        <ToolFileEligibilityProvider>
+          <FilePreviews />
+          <Compress />
+        </ToolFileEligibilityProvider>
+      </MantineProvider>,
+    );
+    const run = screen.getByRole("button", { name: "Compress" });
+    const pdf = screen.getByRole("button", { name: /report.pdf/ });
+    expect(run).toBeEnabled();
+
+    act(() => setPolicyBlocks({ [workspace.files[0].fileId]: "security" }));
+    await waitFor(() =>
+      expect(screen.getByRole("button", { name: "Compress" })).toBeDisabled(),
+    );
+    expect(pdf).toHaveAttribute("data-policy-blocked", "true");
+    expect(pdf).toHaveAttribute("data-tool-skipped", "true");
+    expect(pdf).toHaveAttribute("aria-disabled", "true");
+    expect(pdf).not.toHaveClass("selected");
+    expect(pdf).toHaveAccessibleDescription(/A required policy failed/);
+    await userEvent.click(screen.getByRole("button", { name: "Compress" }));
+    expect(processFiles).not.toHaveBeenCalled();
+
+    act(() => setPolicyBlocks({}));
+    expect(screen.getByRole("button", { name: "Compress" })).toBeEnabled();
+    expect(pdf).toHaveAttribute("data-policy-blocked", "false");
+    expect(pdf).toHaveAttribute("data-tool-skipped", "false");
+  });
+
+  test("a mixed batch displays and processes only the usable PDF", async () => {
+    const usable = createTestStirlingFile("usable.pdf");
+    workspace.files.push(usable);
+    workspace.fileStubs.push(createNewStirlingFileStub(usable, usable.fileId));
+    setPolicyBlocks({ [workspace.files[0].fileId]: "security" });
+    render(
+      <MantineProvider>
+        <Compress />
+      </MantineProvider>,
+    );
+    expect(screen.queryByText("report.pdf")).not.toBeInTheDocument();
+    expect(await screen.findByText("usable.pdf")).toBeInTheDocument();
+    const run = screen.getByRole("button", { name: "Compress" });
+    expect(run).toBeEnabled();
+    await userEvent.click(run);
+    await waitFor(() => expect(processFiles).toHaveBeenCalledTimes(1));
+    expect(processFiles.mock.calls[0][1]).toEqual([usable]);
+  });
+
+  test("blocked sidebar files cannot be selected by mouse or keyboard without a tool open", async () => {
+    const blocked = [
+      {
+        id: "security",
+        name: "Security",
+        accentColor: "var(--c-primary)",
+        blocked: true,
+      },
+    ];
+    const renderRow = (policies = blocked) => (
+      <MantineProvider>
+        <FileItem
+          fileId={workspace.files[0].fileId}
+          name="report.pdf"
+          isSelected
+          isActive={false}
+          isViewedInViewer={false}
+          policies={policies}
+          onClick={onFileClick}
+          onEyeClick={vi.fn()}
+        />
+      </MantineProvider>
+    );
+    const view = render(renderRow());
+    const row = screen.getByRole("button", { name: /report.pdf/ });
+    expect(row).not.toHaveClass("selected");
+    expect(row).toHaveAttribute("data-policy-blocked", "true");
+    await userEvent.click(row);
+    row.focus();
+    await userEvent.keyboard("{Enter}");
+    expect(onFileClick).not.toHaveBeenCalled();
+
+    view.rerender(renderRow([]));
+    await userEvent.click(row);
+    expect(onFileClick).toHaveBeenCalledWith(workspace.files[0].fileId);
+  });
+
   test("eligible selections keep their identity until file objects or order change", () => {
     const secondPdf = createTestStirlingFile(
       "second.pdf",
@@ -276,8 +413,8 @@ describe("tool file selection", () => {
       "application/pdf",
     );
     const secondStub = createNewStirlingFileStub(secondPdf, secondPdf.fileId);
-    workspace.files.push(secondPdf);
-    workspace.fileStubs.push(secondStub);
+    workspace.files = [...workspace.files, secondPdf];
+    workspace.fileStubs = [...workspace.fileStubs, secondStub];
     view.rerender(renderMerge());
     expect(
       await screen.findByText(/2 files$/, { selector: "p" }),

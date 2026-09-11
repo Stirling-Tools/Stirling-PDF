@@ -1,22 +1,25 @@
 import { useMemo } from "react";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { useAllFiles, useFileSelector } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 
+/** Returns usable files in the current view; a blocked viewer file never falls back to another file. */
 export function useViewScopedFiles(ignoreViewerScope = false): StirlingFile[] {
   const { activeFileIndex } = useViewer();
   const { files: allFiles } = useAllFiles();
   const { workbench } = useNavigationState();
+  const policyBlocks = useFileSelector((state) => state.ui.policyBlocks);
 
   return useMemo(() => {
+    let scopedFiles = allFiles;
     if (workbench === "viewer" && !ignoreViewerScope) {
       const viewerFile = allFiles[activeFileIndex];
-      return viewerFile ? [viewerFile] : allFiles;
+      scopedFiles = viewerFile ? [viewerFile] : allFiles;
     }
 
-    return allFiles;
-  }, [workbench, allFiles, activeFileIndex, ignoreViewerScope]);
+    return scopedFiles.filter((file) => !policyBlocks[file.fileId]);
+  }, [workbench, allFiles, activeFileIndex, ignoreViewerScope, policyBlocks]);
 }
 
 /**

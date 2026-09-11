@@ -60,7 +60,9 @@ function processFileSwap(
   const validSelectedFileIds = state.ui.selectedFileIds.filter(
     (id) => !unpinnedRemoveIds.includes(id),
   );
-  const newSelectedFileIds = [...validSelectedFileIds, ...addedIds];
+  const newSelectedFileIds = [...validSelectedFileIds, ...addedIds].filter(
+    (id) => !state.ui.policyBlocks[id],
+  );
 
   return {
     ...state,
@@ -134,9 +136,11 @@ function processFileSwapInPlace(
   const validSelectedFileIds = state.ui.selectedFileIds.filter(
     (id) => !removeSet.has(id),
   );
-  const newSelectedFileIds = inputWasSelected
-    ? [...validSelectedFileIds, ...addedIds]
-    : validSelectedFileIds;
+  const newSelectedFileIds = (
+    inputWasSelected
+      ? [...validSelectedFileIds, ...addedIds]
+      : validSelectedFileIds
+  ).filter((id) => !state.ui.policyBlocks[id]);
 
   return {
     ...state,
@@ -271,7 +275,7 @@ export function fileContextReducer(
         ...state,
         ui: {
           ...state.ui,
-          selectedFileIds: fileIds,
+          selectedFileIds: fileIds.filter((id) => !state.ui.policyBlocks[id]),
         },
       };
     }
@@ -355,6 +359,9 @@ export function fileContextReducer(
         ui: {
           ...state.ui,
           policyBlocks: { ...state.ui.policyBlocks, [fileId]: policyKey },
+          selectedFileIds: state.ui.selectedFileIds.filter(
+            (id) => id !== fileId,
+          ),
         },
       };
     }

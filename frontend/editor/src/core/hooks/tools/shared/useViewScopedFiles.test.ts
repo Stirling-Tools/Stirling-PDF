@@ -1,5 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
+import { initialFileContextState } from "@app/contexts/file/FileReducer";
+import type { FileContextState, FileId } from "@app/types/fileContext";
 
 const mockViewer = { activeFileIndex: 0 };
 const mockNavigation = { workbench: "viewer" };
@@ -7,6 +9,7 @@ const mockFiles: { files: unknown[]; fileStubs: unknown[] } = {
   files: [],
   fileStubs: [],
 };
+let mockPolicyBlocks: Record<FileId, string> = {};
 
 vi.mock("@app/contexts/ViewerContext", () => ({
   useViewer: () => mockViewer,
@@ -18,6 +21,11 @@ vi.mock("@app/contexts/NavigationContext", () => ({
 
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => mockFiles,
+  useFileSelector: <T>(selector: (state: FileContextState) => T) =>
+    selector({
+      ...initialFileContextState,
+      ui: { ...initialFileContextState.ui, policyBlocks: mockPolicyBlocks },
+    }),
 }));
 
 import {
@@ -37,14 +45,29 @@ function setState(opts: {
   activeFileIndex?: number;
   files?: unknown[];
   fileStubs?: unknown[];
+  policyBlocks?: Record<FileId, string>;
 }) {
   mockNavigation.workbench = opts.workbench ?? "viewer";
   mockViewer.activeFileIndex = opts.activeFileIndex ?? 0;
   mockFiles.files = opts.files ?? [];
   mockFiles.fileStubs = opts.fileStubs ?? [];
+  mockPolicyBlocks = opts.policyBlocks ?? {};
 }
 
 describe("useViewScopedFileStubs", () => {
+  it("never substitutes a usable file for a blocked file open in the viewer", () => {
+    setState({
+      files: [file("a"), file("b")],
+      fileStubs: [stub("a"), stub("b")],
+      policyBlocks: { ["a" as FileId]: "security" },
+    });
+    const { result, rerender } = renderHook(() => useViewScopedFileStubs());
+    expect(result.current).toEqual([]);
+    mockViewer.activeFileIndex = 1;
+    rerender();
+    expect(result.current.map((s) => s.id)).toEqual(["b"]);
+  });
+
   it("follows the viewer's active file rather than the first loaded one", () => {
     setState({
       files: [file("a"), file("b"), file("c")],

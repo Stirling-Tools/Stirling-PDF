@@ -342,6 +342,38 @@ describe("fileContextReducer — REMOVE_FILES", () => {
 });
 
 describe("fileContextReducer — policy blocks", () => {
+  it("deselects blocked files and rejects bulk selection until recovery", () => {
+    const blockedId = "blocked" as FileId;
+    const usableId = "usable" as FileId;
+    const initial = fileContextReducer(
+      stateWith([stub(blockedId), stub(usableId)]),
+      {
+        type: "SET_SELECTED_FILES",
+        payload: { fileIds: [blockedId, usableId] },
+      },
+    );
+    const blocked = fileContextReducer(initial, {
+      type: "MARK_POLICY_BLOCKED",
+      payload: { fileId: blockedId, policyKey: "security" },
+    });
+    expect(blocked.ui.selectedFileIds).toEqual([usableId]);
+    const selectBoth = {
+      type: "SET_SELECTED_FILES" as const,
+      payload: { fileIds: [blockedId, usableId] },
+    };
+    expect(fileContextReducer(blocked, selectBoth).ui.selectedFileIds).toEqual([
+      usableId,
+    ]);
+    const recovered = fileContextReducer(blocked, {
+      type: "CLEAR_POLICY_BLOCK",
+      payload: { fileId: blockedId },
+    });
+    expect(recovered.ui.selectedFileIds).toEqual([usableId]);
+    expect(
+      fileContextReducer(recovered, selectBoth).ui.selectedFileIds,
+    ).toEqual([blockedId, usableId]);
+  });
+
   it("marks a file blocked by a policy, then clears it", () => {
     const fileId = "f1" as FileId;
     const blocked = fileContextReducer(initialFileContextState, {

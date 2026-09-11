@@ -202,7 +202,7 @@ export const useToolOperation = <TParams>(
   const getEligibleFiles = useCallback(
     (params: TParams, selectedFiles: StirlingFile[]) => {
       const eligibleFiles = getCompatibleFiles(params, selectedFiles).filter(
-        (file) => file.size > 0,
+        (file) => file.size > 0 && !selectors.getPolicyBlock(file.fileId),
       );
       const previous = eligibleFilesRef.current;
       if (
@@ -214,7 +214,7 @@ export const useToolOperation = <TParams>(
       eligibleFilesRef.current = eligibleFiles;
       return eligibleFiles;
     },
-    [getCompatibleFiles],
+    [getCompatibleFiles, selectors],
   );
 
   const executeOperation = useCallback(

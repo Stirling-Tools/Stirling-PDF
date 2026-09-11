@@ -1,6 +1,8 @@
 import { describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
+import { initialFileContextState } from "@app/contexts/file/FileReducer";
+import type { FileContextState } from "@app/types/fileContext";
 
 const viewer = { activeFileIndex: 0 };
 const files = {
@@ -18,7 +20,11 @@ vi.mock("@app/contexts/ViewerContext", () => ({ useViewer: () => viewer }));
 vi.mock("@app/contexts/NavigationContext", () => ({
   useNavigationState: () => ({ workbench: "viewer" }),
 }));
-vi.mock("@app/contexts/FileContext", () => ({ useAllFiles: () => files }));
+vi.mock("@app/contexts/FileContext", () => ({
+  useAllFiles: () => files,
+  useFileSelector: <T,>(selector: (state: FileContextState) => T) =>
+    selector(initialFileContextState),
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (_key: string, fallback?: string) => fallback ?? _key,

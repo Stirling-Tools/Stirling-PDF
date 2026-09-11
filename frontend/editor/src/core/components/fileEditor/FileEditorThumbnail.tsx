@@ -86,12 +86,18 @@ const FileEditorThumbnail = ({
   policies = [],
 }: FileEditorThumbnailProps) => {
   const { t } = useTranslation();
+  const policyBlocked = policies.some((p) => p.blocked);
   const eligibleFileIds = useToolEligibleFileIds();
   const isToolSkipped =
     eligibleFileIds !== null && !eligibleFileIds.has(file.id);
-  const toolSkipReason = isToolSkipped
-    ? t("files.notIncludedInToolRun", "Not included in this tool run")
-    : undefined;
+  const unavailableReason = policyBlocked
+    ? t(
+        "policy.blockedBody",
+        "A required policy failed on this file, so it's blocked. Re-run the policy, or close the file.",
+      )
+    : isToolSkipped
+      ? t("files.notIncludedInToolRun", "Not included in this tool run")
+      : undefined;
   const { config } = useAppConfig();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
@@ -310,10 +316,6 @@ const FileEditorThumbnail = ({
   const [showVersionHistory, setShowVersionHistory] = useState(false);
 
   const policyEnforcing = policies.some((p) => p.enforcing);
-  // A required policy failed on this file: it's blocked (unusable) until the
-  // policy re-runs clean or the file is closed. Gates the same actions enforcing
-  // does, but offers recovery instead of a "please wait".
-  const policyBlocked = policies.some((p) => p.blocked);
   const { reRunPolicy } = usePolicyRecovery();
   // The overlay swallows clicks, so a run that never settles would leave the card
   // unusable with no way out. Dismissible, like the viewer's; resets per run.
@@ -527,7 +529,7 @@ const FileEditorThumbnail = ({
   ]);
 
   const handleCardClick = () => {
-    if (!isSupported) return;
+    if (!isSupported || policyBlocked) return;
     if (hasError) {
       try {
         fileActions.clearFileError(file.id);
@@ -542,7 +544,7 @@ const FileEditorThumbnail = ({
   };
 
   const handleCardDoubleClick = () => {
-    if (!isSupported) return;
+    if (!isSupported || policyBlocked) return;
     onViewFile(file.id);
   };
 
@@ -558,8 +560,10 @@ const FileEditorThumbnail = ({
       data-tour="file-card-checkbox"
       data-supported={isSupported}
       data-tool-skipped={isToolSkipped}
-      title={toolSkipReason}
-      aria-description={toolSkipReason}
+      data-policy-blocked={policyBlocked}
+      title={unavailableReason}
+      aria-description={unavailableReason}
+      aria-disabled={policyBlocked || undefined}
       className={`${styles.card} select-none`}
       style={{ opacity: isDragging ? 0.9 : 1 }}
       tabIndex={0}
