@@ -318,7 +318,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
 
   function ApiProbe(props: { onReady: (api: ProbeApi) => void }) {
     const f = useFolders();
-    React.useEffect(() => {
+    React.useLayoutEffect(() => {
       props.onReady({
         error: f.error,
         folderCount: f.folders.length,
@@ -358,6 +358,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       expect(apiRef.current?.folderCount).toBe(initial.length),
     );
     if (!apiRef.current) throw new Error("ApiProbe never reported ready");
+    expect(apiRef.current.folderCount).toBe(initial.length);
     return apiRef as { current: ProbeApi };
   }
 
