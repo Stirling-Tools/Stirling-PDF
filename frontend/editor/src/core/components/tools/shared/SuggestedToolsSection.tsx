@@ -1,4 +1,5 @@
 import React from "react";
+import { Icon } from "@app/ui/Icon";
 import { Stack, Text, Divider, Card, Group, Anchor } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useSuggestedTools } from "@app/hooks/useSuggestedTools";
@@ -18,7 +19,6 @@ export function SuggestedToolsSection(): React.ReactElement {
 
       <Stack gap="xs">
         {suggestedTools.map((tool) => {
-          const IconComponent = tool.icon;
           return (
             <Anchor
               key={tool.id}
@@ -28,7 +28,7 @@ export function SuggestedToolsSection(): React.ReactElement {
             >
               <Card p="sm" withBorder style={{ cursor: "pointer" }}>
                 <Group gap="xs">
-                  <ToolIcon icon={<IconComponent />} />
+                  <ToolIcon icon={<Icon name={tool.icon} />} />
                   <Text size="sm" fw={500}>
                     {tool.title}
                   </Text>
