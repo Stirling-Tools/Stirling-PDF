@@ -6,7 +6,7 @@ import { Logo } from "@app/ui/Logo";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
-import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
+import { useAdminNavVisible } from "@portal/hooks/useAdminNavVisible";
 import { useOpenPlan } from "@portal/hooks/useOpenPlan";
 import { useTranslation } from "react-i18next";
 import { useView, type ViewId } from "@portal/contexts/ViewContext";
@@ -43,7 +43,7 @@ export function Sidebar() {
   });
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const credits = useFreeCreditsSummary();
-  const isAdmin = usePortalAdmin();
+  const adminNavVisible = useAdminNavVisible();
   const openPlan = useOpenPlan();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
@@ -55,7 +55,7 @@ export function Sidebar() {
 
   function renderGroup(entries: NavEntry[]) {
     return entries
-      .filter((entry) => isAdmin || !entry.requiresAdmin)
+      .filter((entry) => adminNavVisible || !entry.requiresAdmin)
       .map((entry) => {
         const label = t(`portal.nav.${entry.id}`);
         const item = (
