@@ -171,10 +171,10 @@ public class PolicyExecutor {
     }
 
     /**
-     * Per-document scope for one dispatch so a linked instance bills each source document once
-     * within a multi-document run (its transform chain shares this key and collapses). No-op with
-     * no single origin (a genuine merge) or outside a run - those fall back to run-level or
-     * per-call metering. The id is run-scoped so it never collides across runs.
+     * Per-document scope so a linked instance groups each source document's transform chain under
+     * its own billing key and step allowance. No-op with no single origin (a genuine merge) or
+     * outside a run - those fall back to run-level or per-call metering. The id is run-scoped so it
+     * never collides across runs.
      */
     private static AutomationRunContext.Scope documentScope(Integer origin) {
         String runId = AutomationRunContext.current();

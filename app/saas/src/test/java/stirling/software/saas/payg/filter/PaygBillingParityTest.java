@@ -236,7 +236,8 @@ class PaygBillingParityTest {
                         eq(period),
                         eq(stirling.software.proprietary.billing.BillingCategory.AUTOMATION),
                         anyLong(),
-                        eq(runId));
+                        eq(runId),
+                        eq(10));
     }
 
     private void assertSaas(Op op) throws Exception {
@@ -335,7 +336,7 @@ class PaygBillingParityTest {
         interceptor.afterCompletion(req, resp, handler(op.handler()), null);
 
         if ("BYPASSED".equals(op.expected())) {
-            verify(meter, never()).accrue(any(), any(), anyLong(), any());
+            verify(meter, never()).accrue(any(), any(), anyLong(), any(), eq(10));
         } else {
             verify(meter)
                     .accrue(
@@ -344,7 +345,8 @@ class PaygBillingParityTest {
                                     stirling.software.proprietary.billing.BillingCategory.valueOf(
                                             op.expected())),
                             anyLong(),
-                            any());
+                            any(),
+                            eq(10));
         }
     }
 

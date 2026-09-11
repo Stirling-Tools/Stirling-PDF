@@ -136,9 +136,8 @@ public class InternalApiClient {
         if (runId != null && !runId.isEmpty()) {
             headers.add(AutomationRunContext.RUN_ID_HEADER, runId);
         }
-        // Within a multi-document run, the executor scopes each source document so a linked
-        // instance
-        // bills it once even when the run spans several. SaaS ignores this and groups by lineage.
+        // Each source document gets its own charge grouping and step allowance on a linked
+        // instance. SaaS groups by lineage instead.
         String documentId = AutomationRunContext.currentDocument();
         if (documentId != null && !documentId.isEmpty()) {
             headers.add(AutomationRunContext.DOCUMENT_ID_HEADER, documentId);

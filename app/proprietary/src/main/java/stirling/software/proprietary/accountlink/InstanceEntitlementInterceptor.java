@@ -148,8 +148,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
     /**
      * The per-document id ({@link AutomationRunContext#DOCUMENT_ID_HEADER}) on a genuine internal
      * dispatch, else {@code null} - same automation-header trust boundary as {@link
-     * #automationRunId}. Present only on a multi-document run's per-file dispatch, so each source
-     * document bills once while distinct documents in the run bill separately.
+     * #automationRunId}. Each source document gets its own charge grouping and step allowance.
      */
     private static String automationDocumentId(HttpServletRequest request) {
         if (request.getHeader(InternalApiClient.AUTOMATION_HEADER) == null) {
@@ -220,15 +219,15 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             if (sizes.isEmpty()) {
                 return; // no non-empty input, so nothing billable - matching SaaS
             }
-            // Prefer the per-document key so each source document in a multi-document run bills
-            // once; fall back to the whole-run key for automation sub-steps with no document id. A
+            // Prefer the per-document key so each source document has its own step allowance;
+            // fall back to the whole-run key for automation sub-steps with no document id. A
             // standalone op has no key (null) and always accrues - each call is its own charge.
             String runKey = automationDocumentId(request);
             if (runKey == null) {
                 runKey = automationRunId(request);
             }
             long units = DocumentUnitCalculator.unitsForGroup(sizes, policy);
-            meter.accrue(ent.periodStart(), category, units, runKey);
+            meter.accrue(ent.periodStart(), category, units, runKey, ent.automationStepLimit());
         } finally {
             for (TempFile temp : temps) {
                 try {

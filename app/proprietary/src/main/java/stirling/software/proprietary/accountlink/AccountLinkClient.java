@@ -354,7 +354,8 @@ public class AccountLinkClient {
                 parseUnitCalcPolicy(root),
                 parseDateTime(root, "periodStart"),
                 parseDateTime(root, "periodEnd"),
-                licensedUsers);
+                licensedUsers,
+                root.path("automationStepLimit").asInt(0));
     }
 
     /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */

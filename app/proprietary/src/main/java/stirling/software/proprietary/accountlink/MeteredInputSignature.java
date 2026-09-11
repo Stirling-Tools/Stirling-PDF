@@ -15,12 +15,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * A dedup key the instance has metered this period, with the last time it saw it - the local
- * equivalent of the cloud's run grouping / lineage join (combined billing). The key (stored in
- * {@code signature}) is a policy run's correlation id, so all its sub-steps collapse to one charge;
- * or, for a standalone op, its input-set signature, deduped on a rolling <b>workflow window</b>
- * (see {@link AccountLinkProperties.Metering}): an identical input re-submitted within the window
- * is treated as chaining and not re-charged, while the same inputs after the window bill afresh.
+ * A run/document billing key with the successful step count for its current charge. Another charge
+ * begins when the configured step limit or rolling workflow window is reached.
  *
  * <p>{@code lastMeteredAt} is refreshed on every sighting (the window slides, as recording a cloud
  * artifact touches its job). One row per {@code (period, signature)}; the unique constraint also
@@ -46,28 +42,26 @@ public class MeteredInputSignature {
     @Column(name = "period_start", nullable = false)
     private LocalDateTime periodStart;
 
-    /** SHA-256 hex of the op's input set (64 chars); the dedup key within a period. */
+    /** Run-scoped document id, or the run id when the dispatch has no single source document. */
     @Column(name = "signature", nullable = false, length = 64)
     private String signature;
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
-    /**
-     * When this input set was last metered — the anchor the workflow-window dedup compares against.
-     */
+    /** Last successful step; anchors the rolling workflow window. */
     @Column(name = "last_metered_at")
     private LocalDateTime lastMeteredAt;
+
+    /** Null on rows predating step counting; treated as one already-charged step. */
+    @Column(name = "step_count")
+    private Integer stepCount;
 
     public MeteredInputSignature(LocalDateTime periodStart, String signature, LocalDateTime at) {
         this.periodStart = periodStart;
         this.signature = signature;
         this.createdAt = at;
         this.lastMeteredAt = at;
-    }
-
-    /** Slides the window forward — the input set was seen again. */
-    public void touch(LocalDateTime at) {
-        this.lastMeteredAt = at;
+        this.stepCount = 1;
     }
 }

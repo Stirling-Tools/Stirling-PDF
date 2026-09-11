@@ -28,6 +28,8 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
@@ -125,7 +127,7 @@ class InstanceEntitlementInterceptorTest {
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         // A tiny non-PDF input bills the 1-unit byte floor; a standalone op has a null key.
-        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(1L), isNull());
+        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(1L), isNull(), eq(10));
     }
 
     @Test
@@ -146,7 +148,7 @@ class InstanceEntitlementInterceptorTest {
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
 
-        verify(meter, never()).accrue(any(), any(), anyLong(), any());
+        verify(meter, never()).accrue(any(), any(), anyLong(), any(), eq(10));
     }
 
     @Test
@@ -175,7 +177,7 @@ class InstanceEntitlementInterceptorTest {
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         // 5 pages, and a null key: a standalone op (no run) is its own charge - never deduped.
-        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(5L), isNull());
+        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(5L), isNull(), eq(10));
     }
 
     @Test
@@ -200,7 +202,8 @@ class InstanceEntitlementInterceptorTest {
             interceptor.afterCompletion(req, resp, toolHandler(), null);
         }
 
-        verify(meter, times(2)).accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull());
+        verify(meter, times(2))
+                .accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull(), eq(10));
     }
 
     @Test
@@ -273,7 +276,7 @@ class InstanceEntitlementInterceptorTest {
         interceptor.preHandle(req, resp, toolHandler());
         interceptor.afterCompletion(req, resp, toolHandler(), null);
 
-        verify(meter).accrue(eq(period), eq(BillingCategory.API), eq(1L), isNull());
+        verify(meter).accrue(eq(period), eq(BillingCategory.API), eq(1L), isNull(), eq(10));
     }
 
     @Test
@@ -293,23 +296,31 @@ class InstanceEntitlementInterceptorTest {
         interceptor.preHandle(req, resp, plainHandler());
         interceptor.afterCompletion(req, resp, plainHandler(), null);
 
-        verify(meter, never()).accrue(any(), any(), anyLong(), any());
+        verify(meter, never()).accrue(any(), any(), anyLong(), any(), eq(10));
     }
 
     @Test
     void policyRunSubStepsAccrueUnderTheSharedRunId() throws Exception {
-        // Every sub-step of one policy run carries the same X-Stirling-Run-Id, so each accrues
-        // under
-        // that key and the meter collapses them to a single charge (the collapse itself is
-        // UsageMeterServiceTest.skipsRepeatWithinWorkflowWindow). Without this, each transforming
-        // step has a different input signature and is billed separately.
         when(gate.evaluate(anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         UsageMeterService meter = mock(UsageMeterService.class);
         when(meterProvider.getIfAvailable()).thenReturn(meter);
         UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
         LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
-        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+        when(entitlementCache.current())
+                .thenReturn(
+                        Optional.of(
+                                new InstanceEntitlement(
+                                        true,
+                                        0,
+                                        0,
+                                        100L,
+                                        EntitlementState.OK,
+                                        policy,
+                                        period,
+                                        period.plusMonths(1),
+                                        null,
+                                        20)));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         for (int step = 0; step < 3; step++) {
@@ -322,7 +333,32 @@ class InstanceEntitlementInterceptorTest {
         }
 
         verify(meter, times(3))
-                .accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1"));
+                .accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1"), eq(20));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {400, 422, 500})
+    void failedResponsesDoNotConsumeStepAllowance(int status) {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        response.setStatus(status);
+
+        interceptor()
+                .afterCompletion(
+                        fileRequest("/api/v1/general/merge"), response, new Object(), null);
+
+        verifyNoInteractions(meterProvider);
+    }
+
+    @Test
+    void failedRequestsDoNotConsumeStepAllowance() {
+        interceptor()
+                .afterCompletion(
+                        fileRequest("/api/v1/general/merge"),
+                        new MockHttpServletResponse(),
+                        new Object(),
+                        new IllegalStateException("failed"));
+
+        verifyNoInteractions(meterProvider);
     }
 
     @Test
@@ -347,7 +383,7 @@ class InstanceEntitlementInterceptorTest {
         interceptor.preHandle(req, resp, toolHandler());
         interceptor.afterCompletion(req, resp, toolHandler(), null);
 
-        verify(meter).accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull());
+        verify(meter).accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull(), eq(10));
     }
 
     @Test
@@ -378,8 +414,19 @@ class InstanceEntitlementInterceptorTest {
         // Keyed on the document id, not the run id: document run-1:0's two steps both accrue under
         // it (the meter dedups them), and run-1:1 accrues under its own key.
         verify(meter, times(2))
-                .accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1:0"));
-        verify(meter).accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1:1"));
+                .accrue(
+                        eq(period),
+                        eq(BillingCategory.AUTOMATION),
+                        anyLong(),
+                        eq("run-1:0"),
+                        eq(10));
+        verify(meter)
+                .accrue(
+                        eq(period),
+                        eq(BillingCategory.AUTOMATION),
+                        anyLong(),
+                        eq("run-1:1"),
+                        eq(10));
     }
 
     private static MockMultipartHttpServletRequest fileRequest(String uri) {

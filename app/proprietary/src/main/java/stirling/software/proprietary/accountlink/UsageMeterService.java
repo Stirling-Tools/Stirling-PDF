@@ -11,17 +11,15 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.billing.BillingCategory;
+import stirling.software.proprietary.billing.BillingStepLimit;
 
 /**
  * Accrues metered usage into the durable per-(period, category) {@link UsageCounter}; the daily
  * sync later reports the cumulative totals to SaaS.
  *
- * <p>Dedup by key ({@link #accrue}): a policy / workflow run's sub-steps share a run correlation id
- * and collapse to a single charge, mirroring the cloud's run grouping. A standalone op keys on its
- * input-set signature instead, so an identical input re-submitted within {@code
- * metering.workflow-window} is treated as chaining and not re-charged, while the same inputs after
- * the window bill afresh. A null key always accrues. {@link #accrue} is best-effort: callers need
- * not handle persistence errors.
+ * <p>A run/document key groups successful sub-steps until the configured step limit or workflow
+ * window is reached. Standalone calls have no key and always accrue. Persistence failures are
+ * logged and never affect the completed operation's response.
  */
 @Slf4j
 @Service
@@ -45,55 +43,71 @@ public class UsageMeterService {
     }
 
     /**
-     * Adds {@code units} to the {@code (periodStart, category)} counter (creating the row on first
-     * use), unless {@code dedupKey} was already metered this period. The key is a policy run's
-     * correlation id - so all its sub-steps collapse to one charge - or an input-set signature - so
-     * an identical input re-submitted within the window is not re-charged; {@code null} always
-     * accrues. No-ops for non-billable categories, non-positive units, or a missing period.
+     * Records successful work using the default step limit. A null key always charges; a
+     * run/document key groups steps within that limit and the workflow window.
      */
     public void accrue(
             LocalDateTime periodStart, BillingCategory category, long units, String dedupKey) {
+        accrue(periodStart, category, units, dedupKey, BillingStepLimit.resolve(null));
+    }
+
+    /**
+     * Records one successful step. Charges its current input units on the first step, after {@code
+     * stepLimit} successful steps, or after the workflow window expires. Each key counts
+     * independently; a null key always charges. Missing periods, non-billable categories and
+     * non-positive units are ignored. Callers must not report failed steps.
+     */
+    public void accrue(
+            LocalDateTime periodStart,
+            BillingCategory category,
+            long units,
+            String dedupKey,
+            int stepLimit) {
         if (periodStart == null
                 || category == null
                 || category == BillingCategory.BYPASSED
                 || units <= 0) {
             return;
         }
-        if (dedupKey != null && !shouldCharge(periodStart, dedupKey)) {
-            return; // same run, or identical inputs within the window - already billed
+        if (dedupKey != null
+                && !shouldCharge(periodStart, dedupKey, BillingStepLimit.resolve(stepLimit))) {
+            return;
         }
         incrementOrInsert(periodStart, category.name(), units);
     }
 
-    /**
-     * True when this key should be charged: unseen this period, or last seen outside the workflow
-     * window. Records a first sighting (an atomic insert-as-claim under concurrency) and slides the
-     * window on a repeat. Fails toward charging so a store hiccup never drops a charge.
-     */
-    private boolean shouldCharge(LocalDateTime periodStart, String dedupKey) {
+    private boolean shouldCharge(LocalDateTime periodStart, String dedupKey, int stepLimit) {
         LocalDateTime now = LocalDateTime.now();
-        MeteredInputSignature seen =
-                signatureRepo.findByPeriodStartAndSignature(periodStart, dedupKey).orElse(null);
-        if (seen == null) {
-            try {
-                signatureRepo.saveAndFlush(new MeteredInputSignature(periodStart, dedupKey, now));
-                return true; // first sighting this period
-            } catch (DataIntegrityViolationException raced) {
-                return false; // a concurrent op just claimed it — within window → chaining
-            } catch (RuntimeException e) {
-                log.debug("Signature claim failed for {}: {}", periodStart, e.getMessage());
-                return true;
-            }
-        }
-        LocalDateTime last = seen.getLastMeteredAt() != null ? seen.getLastMeteredAt() : now;
-        boolean withinWindow = last.isAfter(now.minus(workflowWindow));
+        LocalDateTime cutoff = now.minus(workflowWindow);
         try {
-            seen.touch(now);
-            signatureRepo.save(seen);
+            while (true) {
+                if (signatureRepo.restartIfFullOrExpired(
+                                periodStart, dedupKey, now, cutoff, stepLimit)
+                        > 0) {
+                    return true;
+                }
+                if (signatureRepo.joinIfWithinLimit(periodStart, dedupKey, now, cutoff, stepLimit)
+                        > 0) {
+                    return false;
+                }
+                try {
+                    signatureRepo.saveAndFlush(
+                            new MeteredInputSignature(periodStart, dedupKey, now));
+                    return true;
+                } catch (DataIntegrityViolationException raced) {
+                    // Another completion inserted or filled this key between the conditional
+                    // updates. Retry so this successful step still counts toward the limit.
+                    if (signatureRepo
+                            .findByPeriodStartAndSignature(periodStart, dedupKey)
+                            .isEmpty()) {
+                        throw raced;
+                    }
+                }
+            }
         } catch (RuntimeException e) {
-            log.debug("Signature touch failed for {}: {}", periodStart, e.getMessage());
+            log.debug("Step counting failed for {}: {}", periodStart, e.getMessage());
+            return true;
         }
-        return !withinWindow;
     }
 
     private void incrementOrInsert(LocalDateTime periodStart, String category, long units) {

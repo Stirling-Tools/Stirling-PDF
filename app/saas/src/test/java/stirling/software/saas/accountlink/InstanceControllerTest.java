@@ -14,6 +14,9 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,6 +37,7 @@ import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
+import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
@@ -90,11 +94,31 @@ class InstanceControllerTest {
         assertThat(body.state()).isEqualTo("OK");
         // Phase 2: the metering inputs the instance needs ride along.
         assertThat(body.unitCalcPolicy()).isEqualTo(new UnitCalcPolicy(1, 1_048_576L, 1, 1000));
+        assertThat(body.automationStepLimit()).isEqualTo(10);
         assertThat(body.periodStart()).isNotNull();
         assertThat(body.periodEnd()).isNotNull();
         // The instance-facing read drops the cached snapshot first so a just-subscribed team's
         // plan surfaces on the next poll instead of waiting out the cache TTL.
         verify(entitlementService).invalidate(42L);
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, 0, 1, 20, Integer.MAX_VALUE})
+    void entitlementUsesThePipelineStepLimit(Integer limit) {
+        PricingPolicy policy = policy();
+        policy.getStepLimits().put(JobSource.PIPELINE, limit);
+        policy.getStepLimits().put(JobSource.LINKED_INSTANCE, 99);
+        when(billingService.forTeam(42L)).thenReturn(subscribedBilling("sub_42", 120L));
+        when(entitlementService.getSnapshot(42L))
+                .thenReturn(snapshot(EntitlementState.FULL, 0L, null));
+        when(pricingPolicyService.getEffectivePolicy(42L)).thenReturn(policy);
+
+        EntitlementResponse body =
+                controller().entitlement(new LinkedInstanceAuthenticationToken(1L, 42L)).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.automationStepLimit()).isEqualTo(limit != null && limit > 0 ? limit : 10);
     }
 
     @Test
