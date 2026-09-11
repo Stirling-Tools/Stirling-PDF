@@ -16,7 +16,6 @@ import { Sources } from "@portal/views/Sources";
 import { Integrations } from "@portal/views/Integrations";
 import { Infrastructure } from "@portal/views/Infrastructure";
 import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
-import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { useUI } from "@portal/contexts/UIContext";
 
@@ -65,24 +64,13 @@ export function ViewRouter() {
       <Route index element={<Home />} />
       <Route path={rel(VIEW_PATHS.users)} element={<Users />} />
       <Route path={rel(VIEW_PATHS.pipelines)} element={<Pipelines />} />
-      {/* Building and editing need a linked account. Gated at the route so every way in is
-          covered: the list, the Documents review queue, the Connect flow's next steps, and a
-          typed URL. */}
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/new`}
-        element={
-          <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.pipelines)}>
-            <PipelineBuilder />
-          </ConnectGuardedRoute>
-        }
+        element={<PipelineBuilder />}
       />
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/:id`}
-        element={
-          <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.pipelines)}>
-            <PipelineBuilder />
-          </ConnectGuardedRoute>
-        }
+        element={<PipelineBuilder />}
       />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
       {/* Source create/edit is a modal on the list now; old deep links land there. */}

@@ -25,7 +25,10 @@ import stirling.software.common.model.ApplicationProperties;
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class ConnectService {
 
     /** Frontend route that consumes the callback fragment. */

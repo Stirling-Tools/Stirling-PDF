@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { UIProvider } from "@portal/contexts/UIContext";
+import { UIProvider, type LinkModalMode } from "@portal/contexts/UIContext";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
@@ -36,7 +36,7 @@ const GHOST = /Taking you to stirling\.com/;
 const CONNECT = /Connect Stirling account/;
 
 function renderModal(
-  mode?: "link" | "reauth",
+  mode?: LinkModalMode,
   outcome: ConnectOutcome | null = null,
 ) {
   return render(
@@ -256,6 +256,30 @@ describe("LinkAccountModal", () => {
   });
 
   describe("resuming after the round trip", () => {
+    it("renews missing browser access after an exhausted free-tier link succeeds", async () => {
+      renderModal("exhausted", {
+        state: "linked",
+        sessionRestored: false,
+      });
+
+      expect(screen.getByText("Renew billing access")).toBeTruthy();
+      expect(filledSteps()).toBe(0);
+      click(/Try again/);
+
+      await waitFor(() => expect(startReauth).toHaveBeenCalledTimes(1));
+      expect(startConnect).not.toHaveBeenCalled();
+    });
+
+    it("keeps the normal completion after an exhausted free-tier link restores access", async () => {
+      renderModal("exhausted", { state: "linked", sessionRestored: true });
+
+      expect(
+        await screen.findByText(/now runs against your Stirling account/),
+      ).toBeTruthy();
+      expect(filledSteps()).toBe(3);
+      expect(startReauth).not.toHaveBeenCalled();
+    });
+
     it("keeps a renewal success to one step without the link onboarding", async () => {
       renderModal("reauth", {
         mode: "reauth",

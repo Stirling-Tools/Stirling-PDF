@@ -4,24 +4,23 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { PortalViewProviders } from "@portal/test/TestQueryProvider";
 
 /**
- * `?invite` opens the modal from an effect, so guarding openInvite did nothing for it. Same hole as
- * Sources' `?new=1`, and it survived that fix.
+ * An unlinked instance has its own user limit, so inviting is a free-tier feature and nothing here
+ * asks for an account. Running out of seats is the invite endpoint's answer, not a pre-emption.
  */
 const { connect } = vi.hoisted(() => ({ connect: vi.fn() }));
-const gate = { gated: true };
 
 vi.mock("@portal/hooks/useConnectGate", () => ({
   useConnectGate: () => ({
-    gated: gate.gated,
+    gated: true,
     loading: false,
     available: true,
     connect,
+    // Faithful to the real hook while gated, so re-guarding any of these actions fails the test
+    // rather than passing through it.
     guard:
-      <A extends unknown[]>(action: (...args: A) => void) =>
-      (...args: A) => {
-        if (gate.gated) connect();
-        else action(...args);
-      },
+      <A extends unknown[]>(_action: (...args: A) => void) =>
+      () =>
+        connect(),
   }),
 }));
 
@@ -45,9 +44,9 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
 }));
 vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
 
-vi.mock("@portal/hooks/useUsersData", () => ({
+vi.mock("@portal/views/usersData", () => ({
   useUsersData: () => ({
-    usersState: { data: [], loading: false, error: null },
+    usersState: { data: null, loading: false, error: null },
     grantsState: { data: [], loading: false, error: null },
     teamsState: { data: [], loading: false, error: null },
     authState: { data: null, loading: false, error: null },
@@ -70,27 +69,17 @@ const renderAt = (initial: string) =>
     </PortalViewProviders>,
   );
 
-describe("Users deep link when the account is not connected", () => {
-  beforeEach(() => {
-    connect.mockReset();
-    gate.gated = true;
-  });
+describe("Users on an instance with no Stirling account", () => {
+  beforeEach(() => connect.mockReset());
 
-  it("asks to connect instead of opening the invite modal", () => {
+  it("honours the invite deep link rather than asking for an account", () => {
     renderAt("/processor/users?invite");
-    expect(connect).toHaveBeenCalled();
-    expect(screen.queryByText(INVITE_MODAL)).toBeNull();
+    expect(screen.getByText(INVITE_MODAL)).toBeInTheDocument();
+    expect(connect).not.toHaveBeenCalled();
   });
 
   it("leaves the page alone when there is no deep link", () => {
     renderAt("/processor/users");
     expect(connect).not.toHaveBeenCalled();
-  });
-
-  it("still honours the deep link once connected", () => {
-    gate.gated = false;
-    renderAt("/processor/users?invite");
-    expect(connect).not.toHaveBeenCalled();
-    expect(screen.getByText(INVITE_MODAL)).toBeInTheDocument();
   });
 });

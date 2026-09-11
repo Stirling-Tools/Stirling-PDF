@@ -5,23 +5,21 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import type React from "react";
+
 import { MantineProvider } from "@mantine/core";
 import { HttpError } from "@portal/api/http";
 import { Integrations } from "@portal/views/Integrations";
 import type { IntegrationConfig } from "@portal/api/integrations";
 
-const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+// env="test" drops Mantine's transitions; otherwise a pending one fires after the environment
+// is torn down and vitest reports "window is not defined" against whichever file ran last.
+const TestProvider = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider env="test">{children}</MantineProvider>
+);
 
-vi.mock("@portal/hooks/useConnectGate", () => ({
-  useConnectGate: () => ({
-    gated: false,
-    loading: false,
-    available: false,
-    connect: vi.fn(),
-    guard: (fn: unknown) => fn,
-  }),
-}));
+const render = (ui: Parameters<typeof baseRender>[0]) =>
+  baseRender(ui, { wrapper: TestProvider });
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

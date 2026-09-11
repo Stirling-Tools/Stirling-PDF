@@ -276,6 +276,11 @@
       "title": "Form Editor - Stirling PDF",
       "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
     },
+    "autoFormDetection": {
+      "image": "/og_images/home.png",
+      "title": "Auto Form Detection - Stirling PDF",
+      "description": "Automatically detect form fields with AI and make your PDF fillable."
+    },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
       "title": "Multi-Tool - Stirling PDF",
@@ -609,6 +614,7 @@
     "/booklet-imposition": "bookletImposition",
     "/pdf-text-editor": "pdfTextEditor",
     "/form-fill": "formFill",
+    "/auto-form-detection": "autoFormDetection",
     "/multi-tool": "multiTool",
     "/read": "read",
     "/automate": "automate",

@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 
 import stirling.software.proprietary.model.Team;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 
@@ -28,10 +29,10 @@ import stirling.software.saas.repository.SaasTeamExtensionsRepository;
  * Unit tests for {@link SaasTeamExtensionService}.
  *
  * <p>The service is a thin read/write facade over {@link SaasTeamExtensionsRepository}. Reads
- * return safe defaults when no row exists (non-personal, STANDARD type, seatsUsed=0, maxSeats=1,
- * createdBy=null, hasAvailableSeats=true, canInviteMembers=true); writes create the row lazily via
- * {@code getOrCreate}. Pure delegation + Optional mapping, so everything is mocked at the
- * repository boundary.
+ * return safe defaults when no row exists (non-personal, STANDARD type, seatsUsed=0, maxSeats=the
+ * free allowance, createdBy=null, hasAvailableSeats=true, canInviteMembers=true); writes create the
+ * row lazily via {@code getOrCreate}. Pure delegation + Optional mapping, so everything is mocked
+ * at the repository boundary.
  */
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
@@ -98,7 +99,8 @@ class SaasTeamExtensionServiceTest {
             assertThat(saved.getTeamType()).isEqualTo(SaasTeamExtensions.TEAM_TYPE_STANDARD);
             assertThat(saved.isPersonal()).isFalse();
             assertThat(saved.getSeatsUsed()).isZero();
-            assertThat(saved.getMaxSeats()).isEqualTo(1);
+            assertThat(saved.getMaxSeats())
+                    .isEqualTo(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
             assertThat(result).isSameAs(saved);
         }
     }
@@ -212,12 +214,13 @@ class SaasTeamExtensionServiceTest {
     class GetMaxSeats {
 
         @Test
-        @DisplayName("no row defaults to 1 (not 0)")
-        void noRow_one() {
+        @DisplayName("no row defaults to the free allowance")
+        void noRow_freeAllowance() {
             Team team = team();
             when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.empty());
 
-            assertThat(service.getMaxSeats(team)).isEqualTo(1);
+            assertThat(service.getMaxSeats(team))
+                    .isEqualTo(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         }
 
         @Test

@@ -8,6 +8,13 @@ import {
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 import { clearPendingConnect } from "@portal/auth/pendingConnect";
 
+/**
+ * Why the dialog is open. All three run the same handshake; the mode only chooses the pitch.
+ *
+ * <p>{@code reauth} must NOT re-register, which would mint a duplicate device credential.
+ */
+export type LinkModalMode = "link" | "reauth" | "exhausted";
+
 interface UIContextValue {
   /** Off-canvas sidebar drawer on small screens (no-op chrome on desktop). */
   mobileNavOpen: boolean;
@@ -40,14 +47,9 @@ interface UIContextValue {
    * login modal closes, so the admin returns to where they were.
    */
   linkModalOpen: boolean;
-  /**
-   * "link" registers this instance (the normal first-time flow); "reauth" only
-   * refreshes an expired SaaS session for attended reads — it must NOT re-register
-   * (that would mint a duplicate device credential).
-   */
-  linkModalMode: "link" | "reauth";
+  linkModalMode: LinkModalMode;
   linkReturnSection: string | null;
-  openLinkModal: (mode?: "link" | "reauth") => void;
+  openLinkModal: (mode?: LinkModalMode) => void;
   closeLinkModal: () => void;
   /**
    * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
@@ -100,7 +102,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   >(null);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
-  const [linkModalMode, setLinkModalMode] = useState<"link" | "reauth">("link");
+  const [linkModalMode, setLinkModalMode] = useState<LinkModalMode>("link");
   const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
     null,
   );
@@ -150,7 +152,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       linkModalOpen,
       linkModalMode,
       linkReturnSection: reopenSettingsAfterLink,
-      openLinkModal: (mode: "link" | "reauth" = "link") => {
+      openLinkModal: (mode: LinkModalMode = "link") => {
         setMobileNavOpen(false);
         setLinkModalMode(mode);
         setConnectOutcome(null);

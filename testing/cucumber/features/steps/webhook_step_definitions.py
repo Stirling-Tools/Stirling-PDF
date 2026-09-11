@@ -4,7 +4,7 @@ import hmac
 import requests
 from behave import given, when, then
 
-BASE_URL = "http://localhost:8080"
+from api_base import BASE_URL
 API_HEADERS = {"X-API-KEY": "123456789"}
 
 
