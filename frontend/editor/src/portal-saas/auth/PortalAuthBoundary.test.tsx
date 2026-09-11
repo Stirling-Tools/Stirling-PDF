@@ -25,6 +25,11 @@ vi.mock("@app/auth", () => ({
   AuthProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@app/auth/context", () => ({ useAuth: () => authState }));
+// Passthrough too — the real one builds a Supabase client at import time, which
+// needs env this suite deliberately does not set.
+vi.mock("@app/auth/UseSession", () => ({
+  AuthProvider: ({ children }: { children: ReactNode }) => children,
+}));
 vi.mock("@app/ui", () => ({ Spinner: () => null }));
 vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
 

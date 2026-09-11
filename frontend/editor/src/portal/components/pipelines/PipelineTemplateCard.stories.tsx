@@ -6,7 +6,7 @@ import {
 import { PipelineTemplateCard } from "@portal/components/pipelines/PipelineTemplateCard";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
-const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
+const routing = POLICY_CATEGORIES.find((c) => c.id === "routing")!;
 
 const meta: Meta<typeof PipelineTemplateCard> = {
   title: "Portal/Pipelines/PipelineTemplateCard",
@@ -37,8 +37,8 @@ export const Locked: Story = {
 export const ComingSoon: Story = {
   args: {
     entry: {
-      category: compliance,
-      config: POLICY_CONFIG.compliance,
+      category: routing,
+      config: POLICY_CONFIG.routing,
       policy: null,
     },
   },
