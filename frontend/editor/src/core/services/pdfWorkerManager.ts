@@ -63,31 +63,6 @@ class PDFWorkerManager {
   }
 
   /**
-   * Lazily ensure a shared Worker instance exists on workerPort when a document is opened.
-   */
-  private ensureSharedWorkerPort(pdfjs: PdfjsModule): void {
-    if (
-      typeof window !== "undefined" &&
-      "Worker" in window &&
-      !pdfjs.GlobalWorkerOptions.workerPort
-    ) {
-      try {
-        const workerUrl =
-          pdfjs.GlobalWorkerOptions.workerSrc ||
-          new URL(
-            "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-            import.meta.url,
-          ).toString();
-        pdfjs.GlobalWorkerOptions.workerPort = new Worker(workerUrl, {
-          type: "module",
-        });
-      } catch {
-        // Fall back to workerSrc if new Worker fails (e.g. mock or restricted environment)
-      }
-    }
-  }
-
-  /**
    * Create a PDF document with proper lifecycle management
    * Supports ArrayBuffer, Uint8Array, URL string, or {data: ArrayBuffer} object
    */
@@ -101,7 +76,6 @@ class PDFWorkerManager {
     } = {},
   ): Promise<PDFDocumentProxy> {
     const pdfjs = await this.loadPdfjs();
-    this.ensureSharedWorkerPort(pdfjs);
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
       await this.waitForAvailableWorker();
@@ -151,7 +125,7 @@ class PDFWorkerManager {
       // If document creation fails, make sure to clean up the loading task
       if (loadingTask) {
         try {
-          loadingTask.destroy();
+          await loadingTask.destroy();
         } catch {
           // Ignore errors
         }
@@ -161,30 +135,32 @@ class PDFWorkerManager {
   }
 
   /**
-   * Properly destroy a PDF document and clean up resources
+   * Properly destroy a PDF document and clean up resources.
+   * Returns a promise so sequential open-close-open flows can await teardown
+   * before creating the next document.
    */
-  destroyDocument(pdf: PDFDocumentProxy): void {
-    if (this.activeDocuments.has(pdf)) {
-      try {
-        pdf.destroy();
-        this.activeDocuments.delete(pdf);
-        this.workerCount = Math.max(0, this.workerCount - 1);
-      } catch {
-        // Still remove from tracking even if destroy failed
-        this.activeDocuments.delete(pdf);
-        this.workerCount = Math.max(0, this.workerCount - 1);
-      }
+  async destroyDocument(pdf: PDFDocumentProxy): Promise<void> {
+    if (!this.activeDocuments.has(pdf)) {
+      return;
+    }
+    try {
+      await pdf.destroy();
+    } catch {
+      // Still remove from tracking even if destroy failed
+    } finally {
+      this.activeDocuments.delete(pdf);
+      this.workerCount = Math.max(0, this.workerCount - 1);
     }
   }
 
   /**
    * Destroy all active PDF documents
    */
-  destroyAllDocuments(): void {
+  async destroyAllDocuments(): Promise<void> {
     const documentsToDestroy = Array.from(this.activeDocuments);
-    documentsToDestroy.forEach((pdf) => {
-      this.destroyDocument(pdf);
-    });
+    await Promise.allSettled(
+      documentsToDestroy.map((pdf) => this.destroyDocument(pdf)),
+    );
 
     this.activeDocuments.clear();
     this.workerCount = 0;
@@ -224,7 +200,7 @@ class PDFWorkerManager {
     // Force destroy all documents
     this.activeDocuments.forEach((pdf) => {
       try {
-        pdf.destroy();
+        void Promise.resolve(pdf.destroy()).catch(() => {});
       } catch {
         // Ignore errors
       }
