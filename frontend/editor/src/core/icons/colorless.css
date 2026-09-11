@@ -1,0 +1,10 @@
+/* Renders a brand mark as a disabled glyph, for a source that is off or unavailable.
+
+   A filter, not a recolour: the mark keeps the artwork its owner published, and the greying
+   happens at render. Greyscale maps luminance, so a multi-plane mark (Drive's six planes,
+   Dropbox's four) keeps its facets legible instead of merging into one silhouette. */
+
+.icon-colorless {
+  filter: grayscale(1);
+  opacity: 0.45;
+}
