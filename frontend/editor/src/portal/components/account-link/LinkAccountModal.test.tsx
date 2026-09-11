@@ -107,7 +107,7 @@ describe("LinkAccountModal", () => {
     expect(startConnect).not.toHaveBeenCalled();
   });
 
-  it("[US14] starts renewal on HTTP hosts without crypto.randomUUID", async () => {
+  it("starts renewal on HTTP hosts without crypto.randomUUID", async () => {
     const original = crypto.randomUUID;
     Object.defineProperty(crypto, "randomUUID", {
       configurable: true,

@@ -40,7 +40,7 @@ describe("local account ownership of the billing session", () => {
     expect(clearSupabaseSession).not.toHaveBeenCalled();
   });
 
-  it("[US08] preserves the session for numeric owner IDs returned by Spring", () => {
+  it("preserves the session for numeric owner IDs returned by Spring", () => {
     const wireUser = JSON.parse('{"id":7,"role":"ROLE_ADMIN"}');
     localStorage.setItem("stirling.portalSaasOwner", "7");
     rememberConnect({ ...pending, ownerId: "7" });

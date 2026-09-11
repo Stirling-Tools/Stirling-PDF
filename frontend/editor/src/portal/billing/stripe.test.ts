@@ -225,7 +225,7 @@ describe("upsertBundleQuote", () => {
     eulaVersion: "2026-07-draft",
   } as const;
 
-  it("[US04] does not replay a quote mutation after a 401", async () => {
+  it("does not replay a quote mutation after a 401", async () => {
     rpc.mockResolvedValue({
       data: null,
       error: { message: "expired" },
@@ -291,7 +291,7 @@ describe("upsertBundleQuote", () => {
   });
 });
 
-it("[US03] renews once when reading a saved quote returns 401", async () => {
+it("renews once when reading a saved quote returns 401", async () => {
   const refreshSession = vi
     .fn()
     .mockResolvedValue({ data: { session: { access_token: "renewed" } } });

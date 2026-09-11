@@ -28,7 +28,7 @@ beforeEach(() => {
   mocks.fetchStatus.mockResolvedValue({ linked: true, name: "QA" });
   mocks.unlinkInstance.mockResolvedValue(undefined);
 });
-it("[US10] clears browser authorization only after the server confirms unlinking", async () => {
+it("clears browser authorization only after the server confirms unlinking", async () => {
   const { result } = renderHook(() => useAccountLink());
   await waitFor(() => expect(result.current.status?.linked).toBe(true));
   await act(async () => {
@@ -39,7 +39,7 @@ it("[US10] clears browser authorization only after the server confirms unlinking
   expect(result.current.status?.linked).toBe(false);
   expect(mocks.applyLinkFacts).toHaveBeenLastCalledWith(false, false);
 });
-it("[US10] retains browser authorization if unlinking fails", async () => {
+it("retains browser authorization if unlinking fails", async () => {
   mocks.unlinkInstance.mockRejectedValue(new Error("offline"));
   const { result } = renderHook(() => useAccountLink());
   await waitFor(() => expect(result.current.status?.linked).toBe(true));

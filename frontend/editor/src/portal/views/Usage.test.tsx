@@ -74,7 +74,7 @@ describe("Usage — link-free wallet renderer", () => {
     await waitFor(() => expect(fetchWallet).toHaveBeenCalledTimes(1));
   });
 
-  it("[US12] reloads billing and clears the expired-session view after renewal", async () => {
+  it("reloads billing and clears the expired-session view after renewal", async () => {
     fetchWallet
       .mockRejectedValueOnce(new SaasSessionRequiredError())
       .mockResolvedValue({ status: "free" });

@@ -32,7 +32,7 @@ describe("browser session isolation", () => {
     vi.unstubAllGlobals();
   });
 
-  it("[US09] prevents another tab's pending refresh from restoring a logged-out session", async () => {
+  it("prevents another tab's pending refresh from restoring a logged-out session", async () => {
     // Each tab has its own module state but shares the origin's localStorage.
     vi.resetModules();
     const firstTab = await import("@app/auth/supabase/supabaseClient");
@@ -54,7 +54,7 @@ describe("browser session isolation", () => {
     expect(localStorage.getItem(key)).toBeNull();
   });
 
-  it("[US15] reads the in-memory fallback when persistent storage rejects writes", async () => {
+  it("reads the in-memory fallback when persistent storage rejects writes", async () => {
     vi.resetModules();
     const client = await import("@app/auth/supabase/supabaseClient");
     client.configureSupabase(config);

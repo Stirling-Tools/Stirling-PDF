@@ -331,7 +331,7 @@ describe("account-link callback", () => {
     expect(setSession).toHaveBeenCalledTimes(2);
   });
 
-  it("[US06] offers a fresh sign-in when callback credentials are permanently rejected", async () => {
+  it("offers a fresh sign-in when callback credentials are permanently rejected", async () => {
     landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=revoked`);
     setSession.mockResolvedValue({
       error: new AuthApiError("revoked", 400, "refresh_token_not_found"),
@@ -344,7 +344,7 @@ describe("account-link callback", () => {
     expect(lastOutcome()?.reclaim).toBeUndefined();
   });
 
-  it("[US07] refuses a callback with a mismatched tab correlator", async () => {
+  it("refuses a callback with a mismatched tab correlator", async () => {
     window.history.replaceState(
       null,
       "",

@@ -28,7 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import stirling.software.common.model.enumeration.Role;
 
 /**
- * US01: invokes the Spring security proxy, so role checks cannot be bypassed by a direct unit call.
+ * Invokes the Spring security proxy, so role checks cannot be bypassed by a direct unit call.
  */
 class AccountLinkAuthorizationTest {
     private AnnotationConfigApplicationContext context;

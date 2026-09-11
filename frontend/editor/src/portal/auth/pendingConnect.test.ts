@@ -15,7 +15,7 @@ const pending = {
 
 describe("renewal return destinations", () => {
   beforeEach(() => sessionStorage.clear());
-  it("[US05] retains only the portal route and settings intent", () => {
+  it("retains only the portal route and settings intent", () => {
     rememberConnect(pending);
     expect(readPendingConnect()).toEqual(pending);
     clearPendingConnect();
@@ -27,11 +27,11 @@ describe("renewal return destinations", () => {
     "/processor-fake",
     "/processor/../login",
     "javascript:alert(1)",
-  ])("[US07] rejects unsafe destination %s", (returnTo) => {
+  ])("rejects unsafe destination %s", (returnTo) => {
     rememberConnect({ ...pending, returnTo });
     expect(readPendingConnect()).toBeNull();
   });
-  it("[US07] rejects corrupt saved state", () => {
+  it("rejects corrupt saved state", () => {
     sessionStorage.setItem("stirling.portalConnect", "{invalid");
     expect(readPendingConnect()).toBeNull();
   });

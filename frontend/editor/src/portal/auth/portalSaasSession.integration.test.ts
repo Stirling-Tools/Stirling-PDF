@@ -24,7 +24,7 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-it("[US02] renews an expired persisted session through the real Supabase SDK", async () => {
+it("renews an expired persisted session through the real Supabase SDK", async () => {
   const now = Math.floor(Date.now() / 1000);
   const user = {
     id: "00000000-0000-0000-0000-000000000001",

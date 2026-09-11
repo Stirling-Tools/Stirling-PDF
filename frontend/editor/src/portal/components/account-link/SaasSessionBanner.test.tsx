@@ -34,18 +34,18 @@ beforeEach(() => {
   flags.isAdmin = true;
   flags.required = true;
 });
-it("[US12] opens renewal for a linked owner without changing the device link", () => {
+it("opens renewal for a linked owner without changing the device link", () => {
   show();
   fireEvent.click(screen.getByRole("button", { name: "Sign in again" }));
   expect(ui.linkModalOpen).toBe(true);
   expect(ui.linkModalMode).toBe("reauth");
 });
-it("[US01] does not expose the renewal action to a non-owner", () => {
+it("does not expose the renewal action to a non-owner", () => {
   flags.isAdmin = false;
   show();
   expect(screen.queryByRole("button")).toBeNull();
 });
-it("[US13] does not ask an unlinked instance to renew a billing session", () => {
+it("does not ask an unlinked instance to renew a billing session", () => {
   show(false);
   expect(screen.queryByRole("button")).toBeNull();
 });
