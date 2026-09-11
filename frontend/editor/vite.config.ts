@@ -22,7 +22,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // Shared by the main build and Vite's worker sub-builds, which do not inherit
 // the main build's output options.
 const mjsToJsAssetFileNames = (assetInfo: { names: string[] }) =>
-  assetInfo.names.length > 0 && assetInfo.names.every((name) => name.endsWith(".mjs"))
+  assetInfo.names.length > 0 &&
+  assetInfo.names.every((name) => name.endsWith(".mjs"))
     ? "assets/[name]-[hash].js"
     : "assets/[name]-[hash][extname]";
 
