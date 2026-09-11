@@ -4,8 +4,8 @@
  * what gets exported. Core export handlers reach this via the `@app/*` alias
  * (the open-source build ships a no-op stub).
  *
- * Export is never hard-blocked: on failure the original file is exported and a
- * warning toast is shown. For "new version" policies, the run is also recorded
+ * Required-policy failure refuses this export without blocking further editing;
+ * ordinary pipeline failure exports the original with a warning. For "new version" policies, the run is also recorded
  * so the mounted import effect versions the in-editor file, not just the
  * download. Only PDFs are enforced.
  */

@@ -50,6 +50,7 @@ import {
   addReconciledRun,
   dispatchKey,
   getRun,
+  getPolicyRunOutcomes,
   isDispatched,
   markDispatched,
   removeRun,
@@ -129,20 +130,20 @@ function isTerminal(status: PolicyRunStatus): boolean {
 }
 
 /**
- * The files a required policy currently blocks, keyed to the blocking policy key. Derived from the
- * run store so a block survives a reload or a trip out of the editor (the store outlives the
- * session, the imperative FileContext state does not). A file is blocked iff the latest SETTLED run
- * of a required policy on it FAILED and it's still in the workspace; an in-flight re-run is ignored,
- * so the block stands until that re-run settles (clean -> cleared, failed -> stays).
+ * Required-policy failures for live files. Only a later completion clears a failure;
+ * cancelled and in-flight retries leave it intact. Pass persisted outcomes to survive log pruning.
  */
 export function derivePolicyBlocks(
-  runs: ReadonlyArray<PolicyRunRecord>,
+  runs: ReadonlyArray<
+    Pick<PolicyRunRecord, "fileId" | "policyKey" | "status" | "startedAt">
+  >,
   liveFileIds: ReadonlySet<string>,
   policies: PoliciesByKey,
 ): Map<string, string> {
-  const latestSettled = new Map<string, PolicyRunRecord>();
+  const latestSettled = new Map<string, (typeof runs)[number]>();
   for (const run of runs) {
-    if (!run.fileId || !isTerminal(run.status)) continue;
+    if (!run.fileId || (run.status !== "FAILED" && run.status !== "COMPLETED"))
+      continue;
     const key = dispatchKey(run.policyKey, run.fileId);
     const prev = latestSettled.get(key);
     if (!prev || run.startedAt > prev.startedAt) latestSettled.set(key, run);
@@ -436,13 +437,10 @@ export function usePolicyAutoRun(): void {
     void reconcileServerRuns(policies);
   }, [policies]);
 
-  // Keep ui.policyBlocks in sync with what the run store implies (see derivePolicyBlocks): the block
-  // is derived, not set imperatively, so it survives a reload or a trip out of the editor - where
-  // onRunFinished would never re-fire for an already-terminal run. Idempotent: the guards dispatch
-  // only on a real change, so this converges rather than looping.
+  // The UI mirrors durable outcomes; activity-log eviction and retry-record removal cannot lift a block.
   useEffect(() => {
     const shouldBlock = derivePolicyBlocks(
-      runs,
+      Object.values(getPolicyRunOutcomes()),
       new Set(fileStubs.map((s) => s.id as string)),
       policies,
     );

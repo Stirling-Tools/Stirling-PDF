@@ -223,6 +223,18 @@ describe("derivePolicyBlocks - a block survives because it's derived from the ru
     expect(blocks.get("f1")).toBe("security");
   });
 
+  it("keeps the block when a later retry is cancelled", () => {
+    const blocks = derivePolicyBlocks(
+      [
+        run({ status: "FAILED", startedAt: 1 }),
+        run({ status: "CANCELLED", startedAt: 2 }),
+      ],
+      live("f1"),
+      policies(true),
+    );
+    expect(blocks.get("f1")).toBe("security");
+  });
+
   it("re-blocks when the latest settled run failed again", () => {
     const blocks = derivePolicyBlocks(
       [

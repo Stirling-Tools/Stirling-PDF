@@ -2,8 +2,8 @@
  * Export entry points call {@link downloadFileWithPolicy} instead of
  * {@link downloadFile} so any "export"-triggered policy enforces on the file
  * before it's downloaded. The enforcement itself is proprietary (a no-op in the
- * core build via the `@app/services/policyExport` stub), and never hard-blocks:
- * on failure the original file is downloaded.
+ * core build via the `@app/services/policyExport` stub). Required-policy failures
+ * cancel the download; ordinary pipeline failures may export the original.
  */
 
 import {

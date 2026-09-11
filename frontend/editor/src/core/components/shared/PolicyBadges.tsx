@@ -102,9 +102,12 @@ export function PolicyBadges({
       className={`policy-badges${className ? ` ${className}` : ""}`}
       data-no-select
     >
-      {policies.slice(0, MAX_VISIBLE).map((policy) => (
-        <PolicyBadge key={policy.id} policy={policy} />
-      ))}
+      {[...policies]
+        .sort((a, b) => Number(!!b.blocked) - Number(!!a.blocked))
+        .slice(0, MAX_VISIBLE)
+        .map((policy) => (
+          <PolicyBadge key={policy.id} policy={policy} />
+        ))}
     </span>
   );
 }

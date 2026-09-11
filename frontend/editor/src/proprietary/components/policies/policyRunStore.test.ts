@@ -3,6 +3,7 @@ import {
   appliedPoliciesFor,
   dispatchKey,
   getRun,
+  getPolicyRunOutcomes,
   isDispatched,
   markDispatched,
   recordRunStart,
@@ -216,6 +217,72 @@ describe("policyRunStore", () => {
     expect(runs).toHaveLength(200); // trimmed to MAX_RUNS
     expect(runs[0].runId).toBe("r209"); // newest kept
     expect(runs.some((r: PolicyRunRecord) => r.runId === "r0")).toBe(false); // oldest dropped
+  });
+
+  it("retains a failed outcome after its run is evicted and storage is reloaded", () => {
+    recordRunStart(rec({ runId: "failed", status: "FAILED" }));
+    for (let i = 0; i < 200; i++) {
+      recordRunStart(
+        rec({
+          runId: `other-${i}`,
+          fileId: `other-${i}`,
+          status: "COMPLETED",
+          imported: true,
+          startedAt: i + 2,
+        }),
+      );
+    }
+    expect(getRun("failed")).toBeUndefined();
+    const saved = localStorage.getItem("stirling-policy-runs")!;
+    resetPolicyRuns();
+    localStorage.setItem("stirling-policy-runs", saved);
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: "stirling-policy-runs" }),
+    );
+
+    expect(getPolicyRunOutcomes()[dispatchKey("security", "f1")]?.status).toBe(
+      "FAILED",
+    );
+  });
+
+  it("keeps a failure through retry-record removal and cancellation until a successful retry", () => {
+    recordRunStart(rec({ runId: "failed", status: "FAILED" }));
+    removeRun("failed");
+    recordRunStart(rec({ runId: "retry", startedAt: 2 }));
+    updateRun("retry", { status: "CANCELLED" });
+    expect(getPolicyRunOutcomes()[dispatchKey("security", "f1")]?.status).toBe(
+      "FAILED",
+    );
+
+    recordRunStart(rec({ runId: "success", startedAt: 3 }));
+    updateRun("success", { status: "COMPLETED" });
+    expect(getPolicyRunOutcomes()[dispatchKey("security", "f1")]?.status).toBe(
+      "COMPLETED",
+    );
+
+    updateRun("retry", { status: "FAILED" });
+    expect(getPolicyRunOutcomes()[dispatchKey("security", "f1")]?.status).toBe(
+      "COMPLETED",
+    );
+  });
+
+  it("migrates legacy history without allowing a cancelled retry to clear a failure", () => {
+    localStorage.setItem(
+      "stirling-policy-runs",
+      JSON.stringify({
+        runs: [
+          rec({ runId: "retry", startedAt: 2, status: "CANCELLED" }),
+          rec({ runId: "failed", status: "FAILED" }),
+        ],
+        dispatched: [],
+      }),
+    );
+    window.dispatchEvent(
+      new StorageEvent("storage", { key: "stirling-policy-runs" }),
+    );
+    expect(getPolicyRunOutcomes()[dispatchKey("security", "f1")]?.status).toBe(
+      "FAILED",
+    );
   });
 
   it("does not evict a COMPLETED run that hasn't been imported yet, even past the cap", () => {

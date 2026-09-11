@@ -9,6 +9,17 @@ the core (OSS) build has no implementation (`usePoliciesEnabled` stub = false),
 and desktop additionally requires an active SaaS connection (runs bill through
 the cloud). The single gate is `components/policies/usePoliciesEnabled.ts`.
 
+Required upload-policy failures block the source file from tools, saved page edits,
+and export until the policy succeeds on a retry or the file is closed. Cancelling a
+retry leaves the failure intact. The run store persists the latest completed or
+failed outcome per policy/file separately from its capped activity history;
+`ui.policyBlocks` mirrors these outcomes for badges and recovery controls. Tool and
+export checks read the outcomes synchronously through `services/policyBlockRegistry.ts`.
+
+Required export-policy failures refuse that export without blocking further editing.
+Ordinary pipeline failures warn and allow export. Page Editor checks its source files
+and enforces export policies on the edited PDFs before combining them into a ZIP.
+
 ## Layout
 
 | Path | Role |

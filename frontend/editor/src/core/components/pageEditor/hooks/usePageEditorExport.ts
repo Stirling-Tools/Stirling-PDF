@@ -1,14 +1,24 @@
 import { Dispatch, SetStateAction, useCallback } from "react";
+import { useTranslation } from "react-i18next";
 
 import type { useFileActions, useFileState } from "@app/contexts/FileContext";
 import { documentManipulationService } from "@app/services/documentManipulationService";
 import { pdfExportService } from "@app/services/pdfExportService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
+import { enforceExportPolicies } from "@app/services/policyExport";
+import { downloadFile } from "@app/services/downloadService";
+import { alert } from "@app/components/toast";
 import { FileId } from "@app/types/file";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
 
-type FileActions = ReturnType<typeof useFileActions>["actions"];
-type FileSelectors = ReturnType<typeof useFileState>["selectors"];
+type FileActions = Pick<
+  ReturnType<typeof useFileActions>["actions"],
+  "setSelectedFiles" | "removeFiles" | "addFiles" | "updateStirlingFileStub"
+>;
+type FileSelectors = Pick<
+  ReturnType<typeof useFileState>["selectors"],
+  "getFile" | "getPolicyBlock" | "getStirlingFileStub"
+>;
 
 interface UsePageEditorExportParams {
   displayDocument: PDFDocument | null;
@@ -69,6 +79,47 @@ export const usePageEditorExport = ({
   clearPersistedDocument,
   updateCurrentPages,
 }: UsePageEditorExportParams) => {
+  const { t } = useTranslation();
+  const canUseSourceFiles = useCallback(() => {
+    const sourceIds = new Set(selectedFileIds);
+    for (const page of displayDocument?.pages ?? []) {
+      if (page.originalFileId) sourceIds.add(page.originalFileId);
+    }
+    const blocked = [...sourceIds].filter((id) => selectors.getPolicyBlock(id));
+    if (blocked.length === 0) return true;
+    alert({
+      alertType: "error",
+      title: t("policy.blockedTitle"),
+      body: t("policyBlockedFilesBlocked", { count: blocked.length }),
+    });
+    return false;
+  }, [selectedFileIds, displayDocument, selectors, t]);
+
+  const downloadExportedFiles = useCallback(
+    async (files: File[], filename: string) => {
+      if (!canUseSourceFiles()) return false;
+      // These are edited outputs: source IDs would incorrectly reuse enforcement of the old bytes.
+      const result = await enforceExportPolicies(files);
+      if (result.blocked.length > 0 || !canUseSourceFiles()) return false;
+      let data: Blob;
+      if (result.files.length > 1) {
+        const JSZip = await import("jszip");
+        const zip = new JSZip.default();
+        for (const file of result.files) zip.file(file.name, file);
+        data = await zip.generateAsync({ type: "blob" });
+        filename = filename.replace(/\.pdf$/i, ".zip");
+      } else {
+        const file = result.files[0];
+        if (!file) return false;
+        data = file;
+        filename = file.name;
+      }
+      if (!canUseSourceFiles()) return false;
+      return !(await downloadFile({ data, filename })).cancelled;
+    },
+    [canUseSourceFiles],
+  );
+
   const getSourceFiles = useCallback((): Map<FileId, File> | null => {
     const sourceFiles = new Map<FileId, File>();
 
@@ -105,6 +156,7 @@ export const usePageEditorExport = ({
 
   const onExportSelected = useCallback(async () => {
     if (!displayDocument || selectedPageIds.length === 0) return;
+    if (!canUseSourceFiles()) return;
 
     setExportLoading(true);
     try {
@@ -154,7 +206,14 @@ export const usePageEditorExport = ({
             },
           );
 
-      pdfExportService.downloadFile(result.blob, result.filename);
+      const downloaded = await downloadExportedFiles(
+        [new File([result.blob], result.filename, { type: "application/pdf" })],
+        result.filename,
+      );
+      if (!downloaded) {
+        setExportLoading(false);
+        return;
+      }
       setHasUnsavedChanges(false);
       setSplitPositions(new Set());
       setExportLoading(false);
@@ -170,10 +229,13 @@ export const usePageEditorExport = ({
     getExportFilename,
     setHasUnsavedChanges,
     setExportLoading,
+    canUseSourceFiles,
+    downloadExportedFiles,
   ]);
 
   const onExportAll = useCallback(async () => {
     if (!displayDocument) return;
+    if (!canUseSourceFiles()) return;
 
     setExportLoading(true);
     try {
@@ -208,21 +270,9 @@ export const usePageEditorExport = ({
         exportFilename,
       );
 
-      if (files.length > 1) {
-        const JSZip = await import("jszip");
-        const zip = new JSZip.default();
-
-        files.forEach((file) => {
-          zip.file(file.name, file);
-        });
-
-        const zipBlob = await zip.generateAsync({ type: "blob" });
-        const zipFilename = exportFilename.replace(/\.pdf$/i, ".zip");
-
-        pdfExportService.downloadFile(zipBlob, zipFilename);
-      } else {
-        const file = files[0];
-        pdfExportService.downloadFile(file, file.name);
+      if (!(await downloadExportedFiles(files, exportFilename))) {
+        setExportLoading(false);
+        return;
       }
 
       setHasUnsavedChanges(false);
@@ -239,10 +289,13 @@ export const usePageEditorExport = ({
     getExportFilename,
     setHasUnsavedChanges,
     setExportLoading,
+    canUseSourceFiles,
+    downloadExportedFiles,
   ]);
 
   const applyChanges = useCallback(async () => {
     if (!displayDocument) return;
+    if (!canUseSourceFiles()) return;
 
     setExportLoading(true);
     try {
@@ -276,6 +329,10 @@ export const usePageEditorExport = ({
         sourceFiles,
         exportFilename,
       );
+      if (!canUseSourceFiles()) {
+        setExportLoading(false);
+        return;
+      }
 
       // Add "_multitool" suffix to filenames
       const renamedFiles = files.map((file) => {
@@ -345,6 +402,7 @@ export const usePageEditorExport = ({
     setExportLoading,
     clearPersistedDocument,
     updateCurrentPages,
+    canUseSourceFiles,
   ]);
 
   return {
