@@ -7150,7 +7150,6 @@ cancel = "Cancel"
 continueReauth = "Sign in again"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
-reauthTitle = "Sign in again"
 startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
