@@ -169,6 +169,7 @@ def apply_to_app(app: FastAPI, request: ConfigPushRequest) -> tuple[AppSettings,
         documents=runtime.documents,
         fast_model=fast_model,
         smart_model=smart_model,
+        operation_shortlist=runtime.operation_shortlist,
     )
     app.state.settings = effective
     apply_app_state(app.state, new_state)
