@@ -151,8 +151,6 @@ export default function RightSidebar() {
       className={`tool-panel flex flex-col ${fullscreenExpanded ? "tool-panel--fullscreen-active" : "overflow-hidden"} ${isMobile || fullscreenExpanded ? "border-l border-[var(--c-border-subtle)]" : "tool-panel--floating"} transition-all duration-300 ease-out ${isMobile ? "h-full border-r-0" : fullscreenExpanded ? "h-screen" : ""} ${fullscreenExpanded ? "tool-panel--fullscreen" : ""}`}
       style={{
         width: computedWidth(),
-        minWidth: computedWidth(),
-        maxWidth: computedWidth(),
         padding: "0",
       }}
     >
