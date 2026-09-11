@@ -1,6 +1,7 @@
 package stirling.software.SPDF;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,6 +72,7 @@ public class SPDFApplication {
         } catch (IOException | URISyntaxException e) {
             log.error("Error initialising configuration", e);
         }
+        migrateLegacyH2Database();
         Map<String, String> propertyFiles = new HashMap<>();
 
         // External config files
@@ -124,6 +126,25 @@ public class SPDFApplication {
         }
 
         printStartupLogs();
+    }
+
+    private static void migrateLegacyH2Database() throws IOException {
+        try {
+            Class<?> migrationClass =
+                    Class.forName(
+                            "stirling.software.proprietary.security.migration.H2DatabaseMigration");
+            migrationClass.getMethod("migrateIfNeeded").invoke(null);
+        } catch (ClassNotFoundException e) {
+            // Core/ultra-lite builds do not contain the proprietary database module.
+        } catch (InvocationTargetException e) {
+            Throwable cause = e.getCause();
+            if (cause instanceof IOException ioException) {
+                throw ioException;
+            }
+            throw new IOException("Legacy H2 database migration failed", cause);
+        } catch (ReflectiveOperationException e) {
+            throw new IOException("Could not start legacy H2 database migration", e);
+        }
     }
 
     @PostConstruct

@@ -317,6 +317,10 @@ subprojects {
 
     jacocoReport.configure {
         dependsOn(tasks.named("test"))
+        // SourceSetOutput also contains processed resources. Restrict the report to compiled
+        // application classes so embedded migration dependencies are not analysed as project code.
+        classDirectories.setFrom(files(sourceSets.main.output.classesDirs))
+        sourceDirectories.setFrom(files(sourceSets.main.allSource.srcDirs))
         reports {
             xml.required.set(true)
             csv.required.set(false)

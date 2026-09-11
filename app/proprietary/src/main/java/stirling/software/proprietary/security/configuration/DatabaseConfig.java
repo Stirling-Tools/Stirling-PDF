@@ -73,7 +73,7 @@ public class DatabaseConfig {
         DATASOURCE_DEFAULT_URL =
                 "jdbc:h2:file:"
                         + InstallationPathConfig.getConfigPath()
-                        + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
+                        + "stirling-pdf-DB-2.4.240;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
         log.debug("Database URL: {}", DATASOURCE_DEFAULT_URL);
         this.datasource = datasource;
         this.runningProOrHigher = runningProOrHigher;

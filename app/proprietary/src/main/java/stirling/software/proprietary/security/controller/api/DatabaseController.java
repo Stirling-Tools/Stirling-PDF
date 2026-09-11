@@ -84,6 +84,8 @@ public class DatabaseController {
                                     "failedImportFile",
                                     "message",
                                     "Failed to import database: " + e.getMessage()));
+        } finally {
+            Files.deleteIfExists(tempTemplatePath);
         }
     }
 

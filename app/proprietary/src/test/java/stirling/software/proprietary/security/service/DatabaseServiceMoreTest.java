@@ -95,10 +95,13 @@ class DatabaseServiceMoreTest {
         @DisplayName("importDatabaseFromUI by name notifies success")
         void importByNameSuccess() throws IOException {
             Path backup = writeBackup("backup_user_202601010101.sql");
+            String backupContent = Files.readString(backup);
 
             boolean result = databaseService.importDatabaseFromUI(backup.getFileName().toString());
 
             assertThat(result).isTrue();
+            assertThat(backup).exists();
+            assertThat(Files.readString(backup)).isEqualTo(backupContent);
             verify(notificationService)
                     .notifyImportsSuccess(
                             org.mockito.ArgumentMatchers.anyString(),
