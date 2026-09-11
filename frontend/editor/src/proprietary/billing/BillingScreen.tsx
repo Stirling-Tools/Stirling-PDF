@@ -10,7 +10,11 @@ import type { Wallet } from "@app/billing/types";
 import "@app/billing/billing-screen.css";
 
 export interface BillingScreenProps {
-  /** Null while loading, or when the host could not read one. */
+  /**
+   * Null while loading, or when the host could not read one. A non-null wallet must be complete:
+   * the sections dereference its fields without guards, so a hand-built partial object throws
+   * rather than rendering a blank row.
+   */
   wallet: Wallet | null;
   loading?: boolean;
   /** Self-hosted phrases its free tier differently. */

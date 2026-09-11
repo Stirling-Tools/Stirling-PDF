@@ -20,7 +20,11 @@ export function ProcessorPlanRow({
   governLabel,
 }: {
   wallet: Wallet;
-  /** Pending units draw down the same grant, so they are subtracted rather than shown beside it. */
+  /**
+   * Units accrued locally that the cloud has not billed yet. Subtracted rather than shown beside
+   * the total, because the entitlement gate blocks against this same pending delta: reporting more
+   * remaining than the gate will honour is what makes a wall arrive early.
+   */
   pendingUnits?: number;
   /** Leader-only, while off: the activation door. Omit for members. */
   onActivate?: () => void;

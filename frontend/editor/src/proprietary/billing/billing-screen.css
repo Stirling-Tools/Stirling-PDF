@@ -1,13 +1,8 @@
 /*
  * The billing screen's own stylesheet, shared by every edition that renders it.
  *
- * Follows the sectioned-card grammar the design settled on (D277 / D289): one card at page width,
- * a jump-chip row on its top, and sections stacked inside it as hairline blocks. The products are
- * ROWS inside the plan section rather than cards of their own (D290 / D291), which is why there is
- * a row primitive here and no card primitive.
- *
- * Colours go through the semantic tokens rather than the design's own COLORS map, so light and dark
- * both come out right and theme-lint stays satisfied.
+ * Colours must go through the semantic tokens, never a literal: that is what makes both themes
+ * come out right, and theme-lint blocks the alternative.
  */
 
 .billing-page {
@@ -48,8 +43,6 @@
   margin-bottom: 1rem;
 }
 
-/* ── the one card ─────────────────────────────────────────────────────────── */
-
 .billing-card {
   overflow: hidden;
   background: var(--c-surface);
@@ -57,7 +50,6 @@
   border-radius: 0.75rem;
 }
 
-/* Chips navigate the page rather than switching panes, so this is a nav of links to sections. */
 .billing-card__chips {
   display: flex;
   flex-wrap: wrap;
@@ -124,8 +116,6 @@
   color: var(--c-text-subtle);
 }
 
-/* ── plan identity ───────────────────────────────────────────────────────── */
-
 .billing-id {
   display: flex;
   flex-wrap: wrap;
@@ -160,8 +150,6 @@
   border: 1px solid var(--c-border-subtle);
   border-radius: 1.25rem;
 }
-
-/* ── the product rows: the meters ARE the upgrade (D290) ─────────────────── */
 
 .billing-meters {
   margin-top: 0.875rem;
@@ -206,7 +194,6 @@
   color: var(--c-text);
 }
 
-/* The plan identity prices the plan, so this line never re-prices it (D291's copy razor). */
 .billing-meter__mid {
   flex: 1;
   min-width: 0;
@@ -243,8 +230,6 @@
   text-align: right;
 }
 
-/* The door is a fact's door, at the row's right. Not a button: buttons on these rows were the
-   upgrade pattern the design retired. */
 .billing-meter__door {
   flex-shrink: 0;
   width: 10.625rem;
@@ -265,8 +250,6 @@
 .billing-meter__door:focus-visible {
   text-decoration: underline;
 }
-
-/* ── the cycle: key-value rows (D292) ───────────────────────────────────── */
 
 .billing-bignum-row {
   display: flex;
@@ -323,8 +306,6 @@
   font-weight: 400;
   color: var(--c-text-subtle);
 }
-
-/* ── enterprise: its own band below the card, never a rung on the ladder ── */
 
 .billing-ent {
   display: flex;
@@ -391,8 +372,6 @@
 .billing-ent__cta:hover {
   background: var(--c-hover);
 }
-
-/* ── the paper trail: one row per invoice ────────────────────────────────── */
 
 .billing-inv {
   display: flex;
