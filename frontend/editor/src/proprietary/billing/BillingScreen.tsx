@@ -31,6 +31,10 @@ export interface BillingScreenProps {
   governLabel?: ReactNode;
   /** Banners above the card: a lapsed session, a failed wallet read. Host-owned. */
   notices?: ReactNode;
+  /** An existing deal stays above the plan, even when the wallet cannot be loaded. */
+  procurementSection?: ReactNode;
+  /** Local server license management, supplied only by self-hosted admin views. */
+  licenseSection?: ReactNode;
   /** Omit where the edition has no payment surface; the chip drops out with the section. */
   paymentSection?: ReactNode;
   /** Omit where there are no invoices, for the same reason. */
@@ -77,6 +81,8 @@ export function BillingScreen({
   onGovernSpend,
   governLabel,
   notices,
+  procurementSection,
+  licenseSection,
   editorsDeployed,
   paymentSection,
   invoicesSection,
@@ -95,16 +101,32 @@ export function BillingScreen({
   const teamHeld = Boolean(wallet?.team?.held);
 
   const chips = useMemo(() => {
-    const out: Array<[string, string]> = [
-      ["ub-plan", t("portal.billing.chip.plan", "Plan")],
-      ["ub-usage", t("portal.billing.chip.usage", "Usage")],
-    ];
-    if (paymentSection)
+    const out: Array<[string, string]> = [];
+    if (procurementSection)
+      out.push([
+        "ub-procurement",
+        t("portal.billing.chip.procurement", "Procurement"),
+      ]);
+    if (wallet) out.push(["ub-plan", t("portal.billing.chip.plan", "Plan")]);
+    if (wallet) out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
+    if (wallet && paymentSection)
       out.push(["ub-pay", t("portal.billing.chip.payment", "Payment")]);
-    if (invoicesSection)
+    if (wallet && invoicesSection)
       out.push(["ub-inv", t("portal.billing.chip.invoices", "Invoices")]);
+    if (licenseSection)
+      out.push([
+        "ub-license",
+        t("admin.settings.premium.inputMethod.text", "License Key"),
+      ]);
     return out;
-  }, [paymentSection, invoicesSection, t]);
+  }, [
+    wallet,
+    procurementSection,
+    licenseSection,
+    paymentSection,
+    invoicesSection,
+    t,
+  ]);
 
   const identity = useMemo(() => {
     if (!wallet) return null;
@@ -117,7 +139,9 @@ export function BillingScreen({
             ? t(
                 "portal.billing.identity.processor.sub",
                 "Team base plus {{rate}} per credit",
-                { rate: formatMinor(rate, wallet.currency) },
+                {
+                  rate: formatMinor(rate, wallet.currency),
+                },
               )
             : t(
                 "portal.billing.identity.processor.subNoRate",
@@ -162,7 +186,9 @@ export function BillingScreen({
         t(
           "portal.billing.identity.free.chipCredits",
           "{{allowance}} free credits monthly",
-          { allowance: wallet.freeAllowance.toLocaleString() },
+          {
+            allowance: wallet.freeAllowance.toLocaleString(),
+          },
         ),
       ],
     };
@@ -195,7 +221,7 @@ export function BillingScreen({
           </div>
         )}
 
-        {wallet && identity && (
+        {(procurementSection || licenseSection || (wallet && identity)) && (
           <div className="billing-card">
             <nav
               className="billing-card__chips"
@@ -213,143 +239,184 @@ export function BillingScreen({
               ))}
             </nav>
 
-            <section id="ub-plan" className="billing-sec">
-              <span className="billing-eyebrow">
-                {t("portal.billing.section.plan", "Your plan")}
-              </span>
-              <div className="billing-id">
-                <span className="billing-id__name">{identity.name}</span>
-                <span className="billing-id__sub">{identity.sub}</span>
-              </div>
-              <div className="billing-id__chips">
-                {identity.chips.map((c) => (
-                  <span key={c} className="billing-id__chip">
-                    {c}
-                  </span>
-                ))}
-              </div>
-              <div className="billing-meters">
-                {wallet.team && (
-                  <TeamPlanRow
-                    wallet={wallet}
-                    selfHosted={selfHosted}
-                    onAddCapacity={onAddCapacity}
-                  />
-                )}
-                {wallet.processor && (
-                  <ProcessorPlanRow
-                    wallet={wallet}
-                    pendingUnits={pendingUnits}
-                    onActivate={onActivateProcessor}
-                    onGovern={onGovernSpend}
-                    governLabel={governLabel}
-                  />
-                )}
-              </div>
-            </section>
-
-            <section id="ub-usage" className="billing-sec">
-              <div className="billing-eyebrow-row">
-                <span className="billing-eyebrow">
-                  {t("portal.billing.section.cycle", "This cycle")}
-                </span>
-                {cycle && (
-                  <span className="billing-eyebrow-row__fact">
-                    {t("portal.billing.cycle.day", "Day {{day}} of {{of}}", {
-                      day: cycle.day,
-                      of: cycle.of,
-                    })}
-                  </span>
-                )}
-              </div>
-
-              {/* The bill leads only once there is a bill. On the free tier the estimate is zero
-                  by definition, and a zero hero would read as a figure rather than as a state. */}
-              {paying && wallet.estimatedBillMinor != null && (
-                <div className="billing-bignum-row">
-                  <span className="billing-bignum">
-                    {formatMinor(wallet.estimatedBillMinor, wallet.currency)}
-                  </span>
-                  <span className="billing-bignum__note">
-                    {t(
-                      "portal.billing.cycle.estimated",
-                      "estimated · the meter settles at close",
-                    )}
-                  </span>
-                </div>
-              )}
-
-              <KvRow
-                label={t("portal.billing.cycle.pdfs", "PDFs processed")}
-                value={wallet.docsProcessedThisPeriod.toLocaleString()}
-              />
-              <KvRow
-                label={t("portal.billing.cycle.users", "Users")}
-                value={wallet.team.usersInUse.toLocaleString()}
-              />
-              {editorsDeployed != null && (
-                <KvRow
-                  label={t("portal.billing.cycle.editors", "Editors deployed")}
-                  value={editorsDeployed.toLocaleString()}
-                />
-              )}
-              {paying && (
-                <KvRow
-                  label={t("portal.billing.cycle.credits", "Credits")}
-                  note={
-                    wallet.pricePerDocMinor != null
-                      ? t(
-                          "portal.billing.cycle.creditsNote",
-                          "{{units}} · {{rate}} each",
-                          {
-                            units: wallet.spendUnitsThisPeriod.toLocaleString(),
-                            rate: formatMinor(
-                              wallet.pricePerDocMinor,
-                              wallet.currency,
-                            ),
-                          },
-                        )
-                      : undefined
-                  }
-                  value={
-                    wallet.pricePerDocMinor != null
-                      ? formatMinor(
-                          wallet.spendUnitsThisPeriod * wallet.pricePerDocMinor,
-                          wallet.currency,
-                        )
-                      : wallet.spendUnitsThisPeriod.toLocaleString()
-                  }
-                />
-              )}
-              {wallet.sizeMultiplierPdfsThisPeriod > 0 && (
-                <KvRow
-                  label={t("portal.billing.cycle.largeFiles", "Large files")}
-                  value={t(
-                    "portal.billing.cycle.largeFilesValue",
-                    "{{pdfs}} PDFs past the size threshold",
-                    {
-                      pdfs: wallet.sizeMultiplierPdfsThisPeriod.toLocaleString(),
-                    },
-                  )}
-                />
-              )}
-            </section>
-
-            {paymentSection && (
-              <section id="ub-pay" className="billing-sec">
-                <span className="billing-eyebrow">
-                  {t("portal.billing.section.payment", "Payment")}
-                </span>
-                {paymentSection}
+            {procurementSection && (
+              <section
+                id="ub-procurement"
+                className="billing-sec billing-sec--procurement"
+                aria-label={t("portal.billing.chip.procurement", "Procurement")}
+              >
+                {procurementSection}
               </section>
             )}
 
-            {invoicesSection && (
-              <section id="ub-inv" className="billing-sec">
-                <span className="billing-eyebrow">
-                  {t("portal.billing.section.invoices", "Invoices")}
-                </span>
-                {invoicesSection}
+            {wallet && identity && (
+              <>
+                <section id="ub-plan" className="billing-sec">
+                  <span className="billing-eyebrow">
+                    {t("portal.billing.section.plan", "Your plan")}
+                  </span>
+                  <div className="billing-id">
+                    <span className="billing-id__name">{identity.name}</span>
+                    <span className="billing-id__sub">{identity.sub}</span>
+                  </div>
+                  <div className="billing-id__chips">
+                    {identity.chips.map((c) => (
+                      <span key={c} className="billing-id__chip">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="billing-meters">
+                    {wallet.team && (
+                      <TeamPlanRow
+                        wallet={wallet}
+                        selfHosted={selfHosted}
+                        onAddCapacity={onAddCapacity}
+                      />
+                    )}
+                    {wallet.processor && (
+                      <ProcessorPlanRow
+                        wallet={wallet}
+                        pendingUnits={pendingUnits}
+                        onActivate={onActivateProcessor}
+                        onGovern={onGovernSpend}
+                        governLabel={governLabel}
+                      />
+                    )}
+                  </div>
+                </section>
+
+                <section id="ub-usage" className="billing-sec">
+                  <div className="billing-eyebrow-row">
+                    <span className="billing-eyebrow">
+                      {t("portal.billing.section.cycle", "This cycle")}
+                    </span>
+                    {cycle && (
+                      <span className="billing-eyebrow-row__fact">
+                        {t(
+                          "portal.billing.cycle.day",
+                          "Day {{day}} of {{of}}",
+                          {
+                            day: cycle.day,
+                            of: cycle.of,
+                          },
+                        )}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* The bill leads only once there is a bill. On the free tier the estimate is zero
+                  by definition, and a zero hero would read as a figure rather than as a state. */}
+                  {paying && wallet.estimatedBillMinor != null && (
+                    <div className="billing-bignum-row">
+                      <span className="billing-bignum">
+                        {formatMinor(
+                          wallet.estimatedBillMinor,
+                          wallet.currency,
+                        )}
+                      </span>
+                      <span className="billing-bignum__note">
+                        {t(
+                          "portal.billing.cycle.estimated",
+                          "estimated · the meter settles at close",
+                        )}
+                      </span>
+                    </div>
+                  )}
+
+                  <KvRow
+                    label={t("portal.billing.cycle.pdfs", "PDFs processed")}
+                    value={wallet.docsProcessedThisPeriod.toLocaleString()}
+                  />
+                  <KvRow
+                    label={t("portal.billing.cycle.users", "Users")}
+                    value={wallet.team.usersInUse.toLocaleString()}
+                  />
+                  {editorsDeployed != null && (
+                    <KvRow
+                      label={t(
+                        "portal.billing.cycle.editors",
+                        "Editors deployed",
+                      )}
+                      value={editorsDeployed.toLocaleString()}
+                    />
+                  )}
+                  {paying && (
+                    <KvRow
+                      label={t("portal.billing.cycle.credits", "Credits")}
+                      note={
+                        wallet.pricePerDocMinor != null
+                          ? t(
+                              "portal.billing.cycle.creditsNote",
+                              "{{units}} · {{rate}} each",
+                              {
+                                units:
+                                  wallet.spendUnitsThisPeriod.toLocaleString(),
+                                rate: formatMinor(
+                                  wallet.pricePerDocMinor,
+                                  wallet.currency,
+                                ),
+                              },
+                            )
+                          : undefined
+                      }
+                      value={
+                        wallet.pricePerDocMinor != null
+                          ? formatMinor(
+                              wallet.spendUnitsThisPeriod *
+                                wallet.pricePerDocMinor,
+                              wallet.currency,
+                            )
+                          : wallet.spendUnitsThisPeriod.toLocaleString()
+                      }
+                    />
+                  )}
+                  {wallet.sizeMultiplierPdfsThisPeriod > 0 && (
+                    <KvRow
+                      label={t(
+                        "portal.billing.cycle.largeFiles",
+                        "Large files",
+                      )}
+                      value={t(
+                        "portal.billing.cycle.largeFilesValue",
+                        "{{pdfs}} PDFs past the size threshold",
+                        {
+                          pdfs: wallet.sizeMultiplierPdfsThisPeriod.toLocaleString(),
+                        },
+                      )}
+                    />
+                  )}
+                </section>
+
+                {paymentSection && (
+                  <section id="ub-pay" className="billing-sec">
+                    <span className="billing-eyebrow">
+                      {t("portal.billing.section.payment", "Payment")}
+                    </span>
+                    {paymentSection}
+                  </section>
+                )}
+
+                {invoicesSection && (
+                  <section id="ub-inv" className="billing-sec">
+                    <span className="billing-eyebrow">
+                      {t("portal.billing.section.invoices", "Invoices")}
+                    </span>
+                    {invoicesSection}
+                  </section>
+                )}
+              </>
+            )}
+            {licenseSection && (
+              <section
+                id="ub-license"
+                className="billing-sec billing-sec--license"
+                aria-label={t(
+                  "admin.settings.premium.inputMethod.text",
+                  "License Key",
+                )}
+              >
+                {licenseSection}
               </section>
             )}
           </div>

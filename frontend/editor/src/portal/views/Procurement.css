@@ -380,7 +380,6 @@
   margin-top: 3px;
 }
 
-/* ── Deal-status hero (Home, active deal) ─────────────────────────────────── */
 .portal-hero {
   padding: 1.1rem 1.25rem;
   display: flex;
@@ -388,12 +387,11 @@
   gap: 1rem;
 }
 
-/* Attached under the editor rail the two read as one card, so the hero drops its standalone frame
-   and lets the footer's top border be the only seam. It keeps the frame on the procurement view,
-   where it stands alone. */
-.portal-editor-hero__footer .portal-hero {
+.billing-sec--procurement .portal-hero {
+  padding: 0;
   border: none;
   border-radius: 0;
+  background: transparent;
 }
 .portal-hero__top {
   display: flex;

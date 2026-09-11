@@ -90,8 +90,16 @@
   border-top: none;
 }
 
+.billing-sec--procurement {
+  padding-bottom: 1.25rem;
+}
+
 .billing-sec:last-of-type {
   padding-bottom: 1.375rem;
+}
+
+.billing-sec.billing-sec--license {
+  padding-block: 0.125rem;
 }
 
 .billing-eyebrow {
@@ -446,4 +454,14 @@
 .billing-kv__door button:hover,
 .billing-kv__door button:focus-visible {
   text-decoration: underline;
+}
+
+.billing-license__actions {
+  display: inline-flex;
+  gap: 0.75rem;
+}
+
+.billing-license__value {
+  overflow-wrap: anywhere;
+  user-select: all;
 }

@@ -1,10 +1,11 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Card, Skeleton } from "@app/ui";
 import { formatPeriodDate, MeterBar, remainingMeter } from "@app/billing";
 import { fetchFreeTier, type FreeTierBalance } from "@portal/api/link";
 import { HttpError } from "@portal/api/http";
 import { useUI } from "@portal/contexts/UIContext";
+import "@app/billing/billing-screen.css";
 import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 
 /** {@code forbidden} is an outcome, not a failure: the endpoint is admin-only. */
@@ -18,7 +19,11 @@ type Load =
  * Usage & billing for an instance with no Stirling account. Reads the local endpoint only: loading
  * a wallet here would assert linkage the browser's SaaS session cannot vouch for.
  */
-export function FreeTierPlanView() {
+export function FreeTierPlanView({
+  licenseSection,
+}: {
+  licenseSection?: ReactNode;
+}) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
   // An outcome, not a rendered message: the effect must not depend on `t`, whose identity is
@@ -100,6 +105,7 @@ export function FreeTierPlanView() {
         )}
 
         {load.state === "ready" && <FreeTierMeter balance={load.balance} />}
+        {licenseSection && <Card padding="loose">{licenseSection}</Card>}
       </div>
     </div>
   );

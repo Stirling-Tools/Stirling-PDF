@@ -42,13 +42,13 @@ const STAGE_CTA: Record<DealStage, string> = {
 };
 
 /**
- * The enterprise deal-status hero on Home (procurement lives here, not as a nav tab) — this card IS
- * the procurement surface. It carries the journey as a segmented progress band plus a stage
+ * The enterprise deal summary carries the journey as a segmented progress band plus a stage
  * sentence, and one primary action with quiet icon buttons beside it; the flow itself opens in the
  * takeover modal. Rollout setup lives in the non-procurement setup checklist, not here.
  */
 export function DealStatusHero({
   snapshot,
+  readOnly = false,
   busy = false,
   canSchedule,
   onExpand,
@@ -60,6 +60,8 @@ export function DealStatusHero({
   onDocuments,
 }: {
   snapshot: ProcurementSnapshot;
+  /** Members can follow the deal without access to the leader's procurement actions. */
+  readOnly?: boolean;
   busy?: boolean;
   /** Booking a call runs through the linked account (its email prefills Calendly), so the
    * "Schedule a call" action only appears when the org has linked its account. */
@@ -87,6 +89,14 @@ export function DealStatusHero({
 
   const stage = snapshot.stage ?? "trial";
   const inTrial = stage === "trial";
+  const trialDaysLeft =
+    snapshot.trialEndsAt && ["trial", "quote", "security"].includes(stage)
+      ? daysLeft(snapshot.trialEndsAt)
+      : null;
+  const trialLabel =
+    trialDaysLeft === 0
+      ? t("portal.procurement.journey.expired", "Trial expired")
+      : t("portal.procurement.journey.daysLeft", { count: trialDaysLeft ?? 0 });
   const isLive = stage === "active";
   // A live quote is sitting with the buyer. A draft (or an expired/cancelled one) is not something to
   // accept — that stage still means "finish building it".
@@ -149,17 +159,19 @@ export function DealStatusHero({
             )}
           </p>
 
-          {inTrial && snapshot.trialEndsAt && (
+          {trialDaysLeft != null && Number.isFinite(trialDaysLeft) && (
             <div className="portal-hero__chips">
-              <button
-                type="button"
-                className="portal-hero__chip portal-hero__chip--action"
-                onClick={onManageTrial}
-              >
-                {t("portal.procurement.journey.daysLeft", {
-                  count: daysLeft(snapshot.trialEndsAt),
-                })}
-              </button>
+              {inTrial && !readOnly ? (
+                <button
+                  type="button"
+                  className="portal-hero__chip portal-hero__chip--action"
+                  onClick={onManageTrial}
+                >
+                  {trialLabel}
+                </button>
+              ) : (
+                <span className="portal-hero__chip">{trialLabel}</span>
+              )}
             </div>
           )}
         </div>
@@ -181,60 +193,62 @@ export function DealStatusHero({
         </div>
       )}
 
-      <div className="portal-hero__cta">
-        {/* An issued quote is a decision point, so the card carries both halves of it: accept it, or
+      {!readOnly && (
+        <div className="portal-hero__cta">
+          {/* An issued quote is a decision point, so the card carries both halves of it: accept it, or
             open it again to read and circulate first. Every other stage has one next step. */}
-        {quoteAwaitingDecision ? (
-          <>
-            <Button variant="primary" loading={busy} onClick={onAcceptQuote}>
-              {t("portal.procurement.review.acceptCta")}
+          {quoteAwaitingDecision ? (
+            <>
+              <Button variant="primary" loading={busy} onClick={onAcceptQuote}>
+                {t("portal.procurement.review.acceptCta")}
+              </Button>
+              <Button variant="secondary" onClick={onExpand}>
+                {t("portal.procurement.hero.ctaReviewQuote")}
+              </Button>
+            </>
+          ) : invoiceUrl ? (
+            <Button variant="primary" onClick={() => openApiUrl(invoiceUrl)}>
+              {t("portal.procurement.payment.viewInvoice")}
             </Button>
-            <Button variant="secondary" onClick={onExpand}>
-              {t("portal.procurement.hero.ctaReviewQuote")}
+          ) : (
+            <Button variant="primary" loading={busy} onClick={onExpand}>
+              {t(STAGE_CTA[stage])}
             </Button>
-          </>
-        ) : invoiceUrl ? (
-          <Button variant="primary" onClick={() => openApiUrl(invoiceUrl)}>
-            {t("portal.procurement.payment.viewInvoice")}
-          </Button>
-        ) : (
-          <Button variant="primary" loading={busy} onClick={onExpand}>
-            {t(STAGE_CTA[stage])}
-          </Button>
-        )}
-        <div className="portal-hero__icons">
-          {snapshot.licenseKey && (
-            <IconAction
-              label={t("portal.procurement.hero.licenseKey")}
-              onClick={onLicense}
-            >
-              <KeyIcon size={15} />
-            </IconAction>
           )}
-          <IconAction
-            label={t("portal.procurement.hero.documents")}
-            onClick={onDocuments}
-          >
-            <DocumentsIcon size={15} />
-          </IconAction>
-          {!isLive && (
+          <div className="portal-hero__icons">
+            {snapshot.licenseKey && (
+              <IconAction
+                label={t("portal.procurement.hero.licenseKey")}
+                onClick={onLicense}
+              >
+                <KeyIcon size={15} />
+              </IconAction>
+            )}
             <IconAction
-              label={t("portal.procurement.hero.inviteTeammates")}
-              onClick={onInvite}
+              label={t("portal.procurement.hero.documents")}
+              onClick={onDocuments}
             >
-              <UserPlusIcon size={15} />
+              <DocumentsIcon size={15} />
             </IconAction>
-          )}
-          {canSchedule && (
-            <IconAction
-              label={t("portal.procurement.hero.scheduleCall")}
-              onClick={onSchedule}
-            >
-              <CalendarIcon size={15} />
-            </IconAction>
-          )}
+            {!isLive && (
+              <IconAction
+                label={t("portal.procurement.hero.inviteTeammates")}
+                onClick={onInvite}
+              >
+                <UserPlusIcon size={15} />
+              </IconAction>
+            )}
+            {canSchedule && (
+              <IconAction
+                label={t("portal.procurement.hero.scheduleCall")}
+                onClick={onSchedule}
+              >
+                <CalendarIcon size={15} />
+              </IconAction>
+            )}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }
