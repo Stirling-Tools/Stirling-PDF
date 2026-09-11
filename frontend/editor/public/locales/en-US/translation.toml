@@ -7062,6 +7062,7 @@ title = "SaaS login not configured"
 
 [portal.accountLink.connect]
 close = "Close"
+exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
 notNow = "Not now"
 start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
@@ -7114,11 +7115,6 @@ going = "Taking you to stirling.com"
 reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
 title = "Connecting"
 
-[portal.accountLink.gate]
-error = "Couldn't check the Stirling account connection"
-loading = "Checking the Stirling account connection..."
-retry = "Try again"
-
 [portal.accountLink.instances]
 active = "Active"
 revoke = "Revoke"
@@ -7148,6 +7144,7 @@ never = "never"
 [portal.accountLink.modal]
 cancel = "Cancel"
 continueReauth = "Sign in again"
+exhaustedTitle = "Add more monthly credits"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
 reauthTitle = "Sign in again"
@@ -7173,7 +7170,7 @@ title = "Couldn't load linked instances"
 [portal.accountLink.rail]
 cta = "Connect"
 later = "Not now"
-sub = "Unlocks teams, PDF processor, pipelines, and policies. PDF editing stays free."
+sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
 title = "Connect your Stirling account"
 
 [portal.accountLink.state]
@@ -9749,6 +9746,21 @@ title = "Usage & billing"
 loadWallet = "Couldn't load wallet"
 openStripePortal = "Couldn't open Stripe portal"
 walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
+
+[portal.usage.freeTier]
+adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
+connect = "Connect a Stirling account"
+loadError = "Couldn't read this server's credit usage. Try again in a moment."
+loadErrorTitle = "Couldn't load credit usage"
+resets = "Resets {{date}}"
+statusLabel_one = "{{used}} used"
+statusLabel_other = "{{used}} used"
+subtitle = "What this server has processed against its monthly credits."
+title_one = "{{allowance}} free credit every month"
+title_other = "{{allowance}} free credits every month"
 
 [portal.usage.sessionExpired]
 action = "Sign in again"
