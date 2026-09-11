@@ -72,7 +72,7 @@ export function FormFieldCreatePanel({
   const { scrollActions } = useViewer();
   const goToPage = (pageIndex: number) =>
     scrollActions.scrollToPage(pageIndex + 1);
-  const { committing, error, commit } = useFormCommit(onApplied);
+  const { committing, error, commit } = useFormCommit(onApplied, currentFile);
 
   // Auto-expand the property editor of a freshly-drawn field so its settings
   // (especially options for choice/radio) are visible immediately.

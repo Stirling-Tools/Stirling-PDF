@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import {
   findVisiblePageIndex,
@@ -43,6 +44,11 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     function onMetaKey(e: KeyboardEvent) {
       const meta = e.ctrlKey || e.metaKey;
       if (!meta) return;
+      const sourceId = store.getState().sourceFileId;
+      if (sourceId && isFileBlocked(sourceId)) {
+        if (e.key.toLowerCase() === "s") e.preventDefault();
+        return;
+      }
       // Normalise: with Shift or CapsLock the letter arrives UPPERCASE.
       switch (e.key.toLowerCase()) {
         case "z":
@@ -110,6 +116,8 @@ export function useEditorKeyboardShortcuts(cbs: KeyboardShortcutCallbacks) {
     }
 
     function onPlainKey(e: KeyboardEvent) {
+      const sourceId = store.getState().sourceFileId;
+      if (sourceId && isFileBlocked(sourceId)) return;
       if (e.ctrlKey || e.metaKey || e.altKey) return;
       if (e.key === "?" || e.key === "F1") {
         if (isFocusInContentEditable()) return;

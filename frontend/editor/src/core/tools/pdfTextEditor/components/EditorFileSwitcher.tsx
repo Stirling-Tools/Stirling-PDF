@@ -4,6 +4,8 @@ import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
 import { Button } from "@app/ui/Button";
 import { useAllFiles, useFileSelection } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 
 interface Props {
   /** Workbench file the editor currently holds, when it came from one. */
@@ -25,6 +27,9 @@ export function EditorFileSwitcher({ currentFileId, onPick }: Props) {
   const { t } = useTranslation();
   const { files } = useAllFiles();
   const { setSelectedFiles } = useFileSelection();
+  const blockedIds = useBlockedFiles(
+    files.map((file) => (file as File & { fileId?: FileId }).fileId),
+  );
 
   const pdfs = files.filter((f) => /\.pdf$/i.test(f.name));
   if (pdfs.length < 2) return null;
@@ -36,7 +41,8 @@ export function EditorFileSwitcher({ currentFileId, onPick }: Props) {
       </Text>
       {pdfs.map((file) => {
         const fileId = (file as File & { fileId?: FileId }).fileId;
-        const current = fileId != null && fileId === currentFileId;
+        const blocked = fileId != null && blockedIds.includes(fileId);
+        const current = !blocked && fileId != null && fileId === currentFileId;
         return (
           <Button
             key={fileId ?? file.name}
@@ -47,12 +53,13 @@ export function EditorFileSwitcher({ currentFileId, onPick }: Props) {
             variant={current ? "primary" : "secondary"}
             accent={current ? "default" : "neutral"}
             leftSection={<DescriptionIcon fontSize="small" />}
-            title={file.name}
+            title={blocked ? t("policy.blockedBody") : file.name}
             data-testid="pdf-editor-file-switch"
             data-current={current ? "true" : "false"}
-            disabled={fileId == null}
+            disabled={fileId == null || blocked}
+            data-policy-blocked={blocked}
             onClick={() => {
-              if (fileId == null) return;
+              if (fileId == null || isFileBlocked(fileId)) return;
               setSelectedFiles([fileId]);
               onPick(file);
             }}

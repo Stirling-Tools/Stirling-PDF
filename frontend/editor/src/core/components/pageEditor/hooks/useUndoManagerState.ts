@@ -7,10 +7,12 @@ import {
 
 interface UseUndoManagerStateParams {
   setHasUnsavedChanges: (dirty: boolean) => void;
+  canEdit: () => boolean;
 }
 
 export const useUndoManagerState = ({
   setHasUnsavedChanges,
+  canEdit,
 }: UseUndoManagerStateParams) => {
   const undoManagerRef = useRef(new UndoManager());
   const [canUndo, setCanUndo] = useState(false);
@@ -33,19 +35,22 @@ export const useUndoManagerState = ({
 
   const executeCommandWithTracking = useCallback(
     (command: DOMCommand) => {
+      if (!canEdit()) return;
       undoManagerRef.current.executeCommand(command);
       setHasUnsavedChanges(true);
     },
-    [setHasUnsavedChanges],
+    [setHasUnsavedChanges, canEdit],
   );
 
   const handleUndo = useCallback(() => {
+    if (!canEdit()) return;
     undoManagerRef.current.undo();
-  }, []);
+  }, [canEdit]);
 
   const handleRedo = useCallback(() => {
+    if (!canEdit()) return;
     undoManagerRef.current.redo();
-  }, []);
+  }, [canEdit]);
 
   const clearUndoHistory = useCallback(() => {
     undoManagerRef.current.clear();

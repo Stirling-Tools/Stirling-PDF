@@ -2,7 +2,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import DescriptionIcon from "@mui/icons-material/DescriptionOutlined";
-import { downloadFile } from "@app/services/downloadService";
+import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
+import { PolicyBlockedNotice } from "@app/components/shared/PolicyBlockedNotice";
 import { useFileContext } from "@app/contexts/FileContext";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import type { FileId } from "@app/types/file";
@@ -58,15 +62,15 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const [findOpen, setFindOpen] = useState(false);
   const [helpOpen, setHelpOpen] = useState(false);
   const [openedFileName, setOpenedFileName] = useState<string | null>(null);
-  // Set only when the document came from the workbench; a drag-dropped
-  // file has no fileId and can only be downloaded. Mirrored into state so the
-  // sidebar's file switcher can mark which workbench file is open.
-  const sourceFileIdRef = useRef<FileId | null>(null);
-  const [sourceFileId, setSourceFileId] = useState<FileId | null>(null);
-  const setSourceFile = useCallback((id: FileId | null) => {
-    sourceFileIdRef.current = id;
-    setSourceFileId(id);
-  }, []);
+  const sourceFileId = state.sourceFileId ?? null;
+  const blockedIds = useBlockedFiles([sourceFileId]);
+  const policyBlocked = blockedIds.length > 0;
+  const setSourceFile = useCallback(
+    (id: FileId | null) => {
+      store.setSourceFileId(id);
+    },
+    [store],
+  );
   const { addFiles, consumeFiles, selectors } = useFileContext();
   // Saving replaces the workbench file, so for a moment the selection points at
   // a file the editor has not adopted yet. Auto-load must sit that out.
@@ -84,12 +88,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   // Uploading flips the workbench to Active Files, so landing a document has to
   // pin the canvas back. useAutoLoadFile only fires for a genuine file change.
   const handleFileChosen = useCallback(
-    (name: string, fileId?: FileId) => {
+    (name: string) => {
       setOpenedFileName(name);
-      setSourceFile(fileId ?? null);
       pinWorkbench();
     },
-    [pinWorkbench, setSourceFile],
+    [pinWorkbench],
   );
   const { openFile: openWorkbenchFile, adopt: adoptFile } = useAutoLoadFile(
     load,
@@ -120,9 +123,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   // file it came from, or add it if the document was opened from disk. Without
   // this the editor is an island and the next tool runs on the pre-edit bytes.
   const applyToWorkbench = useCallback(
-    async (blob: Blob, filename: string) => {
+    async (blob: Blob, filename: string, sourceId: FileId | null) => {
       const edited = new File([blob], filename, { type: "application/pdf" });
-      const sourceId = sourceFileIdRef.current;
+      assertFilesNotBlocked(sourceId ? [sourceId] : []);
       const parentStub = sourceId
         ? selectors.getStirlingFileStub(sourceId)
         : null;
@@ -134,6 +137,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
             parentStub,
             "pdfTextEditor",
           );
+          assertFilesNotBlocked([sourceId]);
           await consumeFiles([sourceId], stirlingFiles, stubs);
           // Claim the replacement before releasing the hold, otherwise the
           // editor sees an unfamiliar selection and re-opens the file it just
@@ -158,24 +162,34 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const doSave = useCallback(
     async (download: boolean) => {
       if (!store.document || savingRef.current) return;
+      const document = store.document;
+      const sourceId = store.getState().sourceFileId ?? null;
       savingRef.current = true;
       store.setError(null);
       try {
+        assertFilesNotBlocked(sourceId ? [sourceId] : []);
         // Yield once so React can paint the disabled/saving state before the
         // synchronous PDFium serialize blocks the main thread.
         await new Promise((resolve) => setTimeout(resolve, 0));
+        if (store.document !== document) return;
+        assertFilesNotBlocked(sourceId ? [sourceId] : []);
         // The position that is about to be written out. Anything the user edits
         // while the export runs is NOT in these bytes, so it must stay dirty.
         const exported = store.savedPosition();
-        const { blob, filename } = await exportToBlob(
-          store.document,
-          openedFileName,
-        );
+        const { blob, filename } = await exportToBlob(document, openedFileName);
+        if (store.document !== document) return;
         // Apply first and unconditionally. Gating the write-back on the browser
         // download dialog meant cancelling it silently discarded the save.
-        await applyToWorkbench(blob, filename);
+        await applyToWorkbench(blob, filename, sourceId);
         store.markSaved(exported);
-        if (download) await downloadFile({ data: blob, filename });
+        if (download) {
+          assertFilesNotBlocked(sourceId ? [sourceId] : []);
+          await downloadFile({
+            data: blob,
+            filename,
+            fileId: store.getState().sourceFileId ?? undefined,
+          });
+        }
       } catch (err) {
         // Surface the failure instead of silently dropping it - the user
         // must not believe a broken save succeeded.
@@ -194,6 +208,11 @@ export default function PdfTextEditor(_props: BaseToolProps) {
     async (download: boolean) => {
       const doc = store.document;
       if (!doc || savingRef.current) return;
+      const sourceId = store.getState().sourceFileId;
+      if (sourceId && isFileBlocked(sourceId)) {
+        store.setError(t("policy.blockedBody"));
+        return;
+      }
       // Re-evaluate on EVERY save: the ack only covers the exact risk set
       // the user saw. A new risk appearing later must warn again.
       const risks = detectSaveRisks(doc);
@@ -208,7 +227,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       }
       await doSave(download);
     },
-    [store, doSave],
+    [store, doSave, t],
   );
 
   const handleSave = useCallback(() => void runSave(false), [runSave]);
@@ -463,6 +482,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   });
 
   useEditorClipboard({
+    isBlocked: () => {
+      const id = store.getState().sourceFileId;
+      return !!id && isFileBlocked(id);
+    },
     hasSelection,
     getSelectedText,
     deleteSelection: sel.deleteSelection,
@@ -483,10 +506,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       // Dropped/picked from disk: no workbench file to replace yet, but claim
       // it so a later workbench arrival cannot auto-open over these edits.
       adoptFile(file);
-      setSourceFile(null);
       void load(file);
     },
-    [adoptFile, load, setSourceFile],
+    [adoptFile, load],
   );
 
   const handleSubmitPassword = useCallback(
@@ -509,13 +531,21 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       style={{ overflow: "hidden" }}
       data-testid="pdf-editor-root"
     >
+      <PolicyBlockedNotice
+        fileIds={blockedIds}
+        onClose={() => {
+          const currentId = store.getState().sourceFileId;
+          if (currentId && blockedIds.includes(currentId))
+            store.clearDocument();
+        }}
+      />
       {state.error && (
         <Alert color="red" m="sm" data-testid="pdf-editor-error">
           {state.error}
         </Alert>
       )}
       <EditorFileInputs onPickPdf={onPickPdf} onPickImage={handleInsertImage} />
-      {findOpen && state.hasDocument && (
+      {findOpen && state.hasDocument && !policyBlocked && (
         <FindBar
           store={store}
           pages={state.pages}
@@ -524,7 +554,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       )}
       <HelpOverlay opened={helpOpen} onClose={() => setHelpOpen(false)} />
       <SaveRiskModal
-        risks={saveRisks}
+        risks={policyBlocked ? null : saveRisks}
         onConfirm={handleConfirmSaveRisk}
         onCancel={() => setSaveRisks(null)}
       />
@@ -534,33 +564,38 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         onSubmit={handleSubmitPassword}
         onCancel={handleCancelPassword}
       />
-      <EditorSidebar
-        store={store}
-        state={state}
-        selection={selection}
-        canGroup={canGroup}
-        canUngroup={canUngroup}
-        onGroup={handleMergeSelection}
-        onUngroup={handleUngroupSelection}
-        onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
-        onSetWidthMode={(m) => store.setWidthMode(m)}
-        onSetShowRulers={(show) => store.setShowRulers(show)}
-        onOpenFind={() => setFindOpen(true)}
-        onShowHelp={() => setHelpOpen(true)}
-        addTextArmed={state.mode === "addText"}
-        onToggleAddText={() =>
-          store.setMode(
-            store.getState().mode === "addText" ? "select" : "addText",
-          )
-        }
-        onPickImage={() =>
-          document
-            .querySelector<HTMLInputElement>(
-              '[data-testid="pdf-editor-image-input"]',
+      <div
+        inert={policyBlocked}
+        style={{ opacity: policyBlocked ? 0.45 : undefined }}
+      >
+        <EditorSidebar
+          store={store}
+          state={state}
+          selection={selection}
+          canGroup={canGroup}
+          canUngroup={canUngroup}
+          onGroup={handleMergeSelection}
+          onUngroup={handleUngroupSelection}
+          onSetGroupingMode={(mode) => store.setGroupingMode(mode)}
+          onSetWidthMode={(m) => store.setWidthMode(m)}
+          onSetShowRulers={(show) => store.setShowRulers(show)}
+          onOpenFind={() => setFindOpen(true)}
+          onShowHelp={() => setHelpOpen(true)}
+          addTextArmed={state.mode === "addText"}
+          onToggleAddText={() =>
+            store.setMode(
+              store.getState().mode === "addText" ? "select" : "addText",
             )
-            ?.click()
-        }
-      />
+          }
+          onPickImage={() =>
+            document
+              .querySelector<HTMLInputElement>(
+                '[data-testid="pdf-editor-image-input"]',
+              )
+              ?.click()
+          }
+        />
+      </div>
       {state.hasDocument && (
         <EditorSaveBar
           openedFileName={openedFileName}

@@ -7,6 +7,9 @@ import {
 } from "@app/services/pdfiumService";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import { isStirlingFile } from "@app/types/fileContext";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 
 const EAGER_PAGE_LIMIT = 5;
 
@@ -18,6 +21,8 @@ const yieldToBrowser = () =>
 export function useDocumentLoader(store: EditorStore) {
   return useCallback(
     async (file: File, password?: string): Promise<void> => {
+      const sourceId = isStirlingFile(file) ? file.fileId : null;
+      const sourceIds = sourceId ? [sourceId] : [];
       // Each load claims a token.
       const token = store.beginLoad();
       store.setLoading(true);
@@ -27,8 +32,10 @@ export function useDocumentLoader(store: EditorStore) {
         total: 0,
       });
       try {
+        assertFilesNotBlocked(sourceIds);
         await yieldToBrowser();
         const bytes = new Uint8Array(await file.arrayBuffer());
+        assertFilesNotBlocked(sourceIds);
         if (!store.isCurrentLoad(token)) return;
         store.setProgress({
           stage: "Parsing PDF",
@@ -37,7 +44,10 @@ export function useDocumentLoader(store: EditorStore) {
         });
         await yieldToBrowser();
         const doc = await EditorDocument.open(bytes, password);
-        if (!store.isCurrentLoad(token)) {
+        if (
+          !store.isCurrentLoad(token) ||
+          (sourceId && isFileBlocked(sourceId))
+        ) {
           // A newer load superseded us before we installed our doc - free
           // it ourselves (setDocument never took ownership).
           try {
@@ -45,9 +55,11 @@ export function useDocumentLoader(store: EditorStore) {
           } catch {
             /* best-effort */
           }
+          assertFilesNotBlocked(sourceIds);
           return;
         }
         await store.setDocument(doc);
+        store.setSourceFileId(sourceId);
 
         const total = doc.pageCount;
         const eager = Math.min(EAGER_PAGE_LIMIT, total);
@@ -62,6 +74,7 @@ export function useDocumentLoader(store: EditorStore) {
           // The check + synchronous read below run in one tick, so a
           // superseding load can only interpose here.
           if (!store.isCurrentLoad(token)) return;
+          assertFilesNotBlocked(sourceIds);
           const page = doc.page(i);
           PdfiumTextReader.populate(doc, page, store.groupingMode);
           snapshots.push({

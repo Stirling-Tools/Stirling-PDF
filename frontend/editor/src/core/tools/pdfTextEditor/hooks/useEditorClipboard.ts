@@ -2,6 +2,8 @@ import { useEffect, useRef } from "react";
 import { isFocusInContentEditable } from "@app/tools/pdfTextEditor/util/dom";
 
 export interface EditorClipboardCallbacks {
+  /** Rechecked at the event boundary, including while a policy update is rendering. */
+  isBlocked?: () => boolean;
   /** True when any run or image is selected (images cut without carrying text). */
   hasSelection: () => boolean;
   /** Text of the selected runs, or null when the selection carries none. */
@@ -82,10 +84,18 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
     }
 
     function onCut(e: ClipboardEvent): void {
+      if (ref.current.isBlocked?.()) {
+        e.preventDefault();
+        return;
+      }
       if (e.target === getSink()) sinkCutObserved = true;
     }
 
     function onPaste(e: ClipboardEvent) {
+      if (ref.current.isBlocked?.()) {
+        e.preventDefault();
+        return;
+      }
       // Consume the modifier state captured by the keystroke that opened this
       // paste, whoever ends up handling it.
       const stripFormatting = pastePlain;
@@ -104,6 +114,7 @@ export function useEditorClipboard(cbs: EditorClipboardCallbacks) {
     }
 
     function onKeyDown(e: KeyboardEvent) {
+      if (ref.current.isBlocked?.()) return;
       if (!e.ctrlKey && !e.metaKey) return;
       const key = e.key.toLowerCase();
       if (key === "v") {

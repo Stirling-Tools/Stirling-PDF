@@ -22,6 +22,8 @@ import { useCompareHighlights } from "@app/components/tools/compare/hooks/useCom
 import { useCompareChangeNavigation } from "@app/components/tools/compare/hooks/useCompareChangeNavigation";
 import "@app/components/tools/compare/compareView.css";
 import { useCompareWorkbenchBarButtons } from "@app/components/tools/compare/hooks/useCompareWorkbenchBarButtons";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
+import { PolicyBlockedNotice } from "@app/components/shared/PolicyBlockedNotice";
 import {
   alert,
   updateToast,
@@ -36,6 +38,17 @@ interface CompareWorkbenchViewProps {
 // helpers moved to compare.ts
 
 const CompareWorkbenchView = ({ data }: CompareWorkbenchViewProps) => {
+  const blockedIds = useBlockedFiles([
+    data?.baseFileId,
+    data?.comparisonFileId,
+  ]);
+  if (blockedIds.length > 0)
+    return (
+      <PolicyBlockedNotice
+        fileIds={blockedIds}
+        onClose={() => window.dispatchEvent(new Event("compare:close-blocked"))}
+      />
+    );
   const rawResult = data?.result ?? null;
   if (rawResult && rawResult.mode === "pixel") {
     return <ComparePixelWorkbenchView result={rawResult} />;

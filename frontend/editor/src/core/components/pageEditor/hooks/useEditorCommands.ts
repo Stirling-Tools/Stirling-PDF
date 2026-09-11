@@ -17,6 +17,7 @@ type FileActions = ReturnType<typeof useFileActions>["actions"];
 type FileSelectors = ReturnType<typeof useFileState>["selectors"];
 
 interface UsePageEditorCommandsParams {
+  canEdit: () => boolean;
   displayDocument: PDFDocument | null;
   getEditedDocument: () => PDFDocument | null;
   setEditedDocument: React.Dispatch<React.SetStateAction<PDFDocument | null>>;
@@ -34,6 +35,7 @@ interface UsePageEditorCommandsParams {
 }
 
 export const usePageEditorCommands = ({
+  canEdit,
   displayDocument,
   getEditedDocument,
   setEditedDocument,
@@ -146,9 +148,13 @@ export const usePageEditorCommands = ({
     [executeCommandWithTracking, setSplitPositions],
   );
 
-  const executeCommand = useCallback((command: { execute: () => void }) => {
-    command.execute();
-  }, []);
+  const executeCommand = useCallback(
+    (command: { execute: () => void }) => {
+      if (!canEdit()) return;
+      command.execute();
+    },
+    [canEdit],
+  );
 
   const handleRotate = useCallback(
     (direction: "left" | "right") => {
@@ -293,6 +299,7 @@ export const usePageEditorCommands = ({
       insertAfterPage: number,
       isFromStorage?: boolean,
     ) => {
+      if (!canEdit()) return;
       console.log("[PageEditor] handleInsertFiles called:", {
         fileCount: files.length,
         insertAfterPage,
@@ -326,6 +333,7 @@ export const usePageEditorCommands = ({
         let addedFileIds: FileId[] = [];
         if (isFromStorage) {
           const stubs = files as StirlingFileStub[];
+          if (stubs.some((stub) => selectors.getPolicyBlock(stub.id))) return;
           const result = await actions.addStirlingFileStubs(stubs, {
             selectFiles: true,
             insertAfterPageId,
@@ -344,6 +352,11 @@ export const usePageEditorCommands = ({
         }
 
         await new Promise((resolve) => setTimeout(resolve, 100));
+        if (
+          !canEdit() ||
+          addedFileIds.some((id) => selectors.getPolicyBlock(id))
+        )
+          return;
 
         const newPages: PDFPage[] = [];
         for (const fileId of addedFileIds) {
@@ -392,6 +405,7 @@ export const usePageEditorCommands = ({
     },
     [
       getEditedDocument,
+      canEdit,
       actions,
       selectors,
       updateFileOrderFromPages,

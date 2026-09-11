@@ -43,7 +43,14 @@ import {
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
-import { FORM_APPLY_EVENT } from "@app/tools/formFill/formFillEvents";
+import {
+  FORM_APPLY_EVENT,
+  type FormApplyDetail,
+} from "@app/tools/formFill/formFillEvents";
+import {
+  assertFilesNotBlocked,
+  PolicyBlockedError,
+} from "@app/services/policyFileGuard";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
 import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
 import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
@@ -714,6 +721,8 @@ const EmbedPdfViewerContent = ({
 
       formApplyInProgressRef.current = true;
       try {
+        if (!currentFileStableId) return;
+        assertFilesNotBlocked([currentFileStableId]);
         console.log(
           "[Viewer] Applying form fill changes - reloading filled PDF",
         );
@@ -743,6 +752,7 @@ const EmbedPdfViewerContent = ({
           parentStub,
           selectedTool ?? "multiTool",
         );
+        assertFilesNotBlocked([currentFileId]);
 
         // Store the page to restore after file replacement
         pendingScrollRestoreRef.current = pageToRestore;
@@ -761,6 +771,14 @@ const EmbedPdfViewerContent = ({
 
         console.log("[Viewer] Form fill changes applied successfully");
       } catch (error) {
+        if (error instanceof PolicyBlockedError) {
+          alert({
+            alertType: "error",
+            title: t("policy.blockedTitle"),
+            body: error.message,
+          });
+          return;
+        }
         console.error("[Viewer] Apply form changes failed:", error);
       } finally {
         formApplyInProgressRef.current = false;
@@ -769,6 +787,10 @@ const EmbedPdfViewerContent = ({
     [
       currentFile,
       activeFiles,
+      currentFileStableId,
+      selectedTool,
+      setActiveFileId,
+      t,
       actions,
       selectors,
       activeFileIds.length,
@@ -778,14 +800,17 @@ const EmbedPdfViewerContent = ({
 
   useEffect(() => {
     const handler = (e: Event) => {
-      const blob = (e as CustomEvent).detail?.blob;
+      const detail = (e as CustomEvent<FormApplyDetail>).detail;
+      if (detail?.sourceFileId && detail.sourceFileId !== currentFileStableId)
+        return;
+      const blob = detail?.blob;
       if (blob) {
         handleFormApply(blob);
       }
     };
     window.addEventListener(FORM_APPLY_EVENT, handler);
     return () => window.removeEventListener(FORM_APPLY_EVENT, handler);
-  }, [handleFormApply]);
+  }, [handleFormApply, currentFileStableId]);
 
   // Apply layer visibility changes - reload the modified PDF into the viewer
   const layerApplyInProgressRef = useRef(false);

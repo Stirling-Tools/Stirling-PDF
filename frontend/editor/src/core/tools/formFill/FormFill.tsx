@@ -58,6 +58,13 @@ import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
 import { FormFieldModifyPanel } from "@app/tools/formFill/FormFieldModifyPanel";
 import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
 import styles from "@app/tools/formFill/FormFill.module.css";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
+import { PolicyBlockedNotice } from "@app/components/shared/PolicyBlockedNotice";
+import {
+  assertFilesNotBlocked,
+  PolicyBlockedError,
+} from "@app/services/policyFileGuard";
+import { formPolicySourceIds } from "@app/tools/formFill/formPolicy";
 
 // ---------------------------------------------------------------------------
 // Mode tabs — extensible for future form tools
@@ -125,7 +132,7 @@ const FormFill = (_props: BaseToolProps) => {
   const allValues = useAllFormValues();
   const { validationErrors } = formState;
 
-  const { scrollActions } = useViewer();
+  const { scrollActions, activeFileId } = useViewer();
 
   const [flatten, setFlatten] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -140,7 +147,51 @@ const FormFill = (_props: BaseToolProps) => {
 
   const savingRef = useRef(false);
 
+  // Subscribing read: getFiles() during render doesn't re-run when the workbench
+  // changes, so the panel kept showing the pre-hydration (or pre-version) file.
+  const { files: activeFiles } = useAllFiles();
+  const selectedFileIds = fileState.ui.selectedFileIds;
+  const currentFile = useMemo(() => {
+    if (activeFiles.length === 0) return null;
+    if (forFileId)
+      return (
+        activeFiles.find((file) => getFormFillFileId(file) === forFileId) ??
+        null
+      );
+    if (activeFileId)
+      return (
+        activeFiles.find(
+          (file) => isStirlingFile(file) && file.fileId === activeFileId,
+        ) ?? null
+      );
+    if (selectedFileIds.length > 0) {
+      const sel = activeFiles.find(
+        (f) => isStirlingFile(f) && selectedFileIds.includes(f.fileId),
+      );
+      if (sel) return sel;
+    }
+    return activeFiles[0];
+  }, [activeFiles, selectedFileIds, forFileId, activeFileId]);
+  const sourceIds = useMemo(
+    () => formPolicySourceIds(currentFile, forFileId),
+    [currentFile, forFileId],
+  );
+  const blockedIds = useBlockedFiles(sourceIds);
+  const policyBlocked = blockedIds.length > 0;
+  const canUseForm = useCallback(() => {
+    try {
+      assertFilesNotBlocked(sourceIds);
+      return true;
+    } catch (error) {
+      setSaveError(
+        error instanceof Error ? error.message : t("policy.blockedBody"),
+      );
+      return false;
+    }
+  }, [sourceIds, t]);
+
   const handleExtractJson = useCallback(() => {
+    if (!currentFile || !canUseForm()) return;
     setExtracting(true);
     try {
       const data = JSON.stringify(allValues, null, 2);
@@ -155,7 +206,7 @@ const FormFill = (_props: BaseToolProps) => {
     } finally {
       setExtracting(false);
     }
-  }, [allValues]);
+  }, [allValues, currentFile, canUseForm]);
   const activeFieldRef = useRef<HTMLDivElement>(null);
   useFieldShortcuts();
 
@@ -199,26 +250,12 @@ const FormFill = (_props: BaseToolProps) => {
     setHasUnsavedChanges(hasUncommittedChanges || formState.isDirty);
   }, [hasUncommittedChanges, formState.isDirty, setHasUnsavedChanges]);
 
-  // Subscribing read: getFiles() during render doesn't re-run when the workbench
-  // changes, so the panel kept showing the pre-hydration (or pre-version) file.
-  const { files: activeFiles } = useAllFiles();
-  const selectedFileIds = fileState.ui.selectedFileIds;
-  const currentFile = useMemo(() => {
-    if (activeFiles.length === 0) return null;
-    if (selectedFileIds.length > 0) {
-      const sel = activeFiles.find(
-        (f) => isStirlingFile(f) && selectedFileIds.includes(f.fileId),
-      );
-      if (sel) return sel;
-    }
-    return activeFiles[0];
-  }, [activeFiles, selectedFileIds]);
-
   const handleExtractCsv = useCallback(async () => {
-    if (!currentFile) return;
+    if (!currentFile || !canUseForm()) return;
     setExtracting(true);
     try {
       const blob = await extractFormFieldsCsv(currentFile, allValues);
+      if (!canUseForm()) return;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -231,13 +268,14 @@ const FormFill = (_props: BaseToolProps) => {
     } finally {
       setExtracting(false);
     }
-  }, [currentFile, allValues]);
+  }, [currentFile, allValues, canUseForm]);
 
   const handleExtractXlsx = useCallback(async () => {
-    if (!currentFile) return;
+    if (!currentFile || !canUseForm()) return;
     setExtracting(true);
     try {
       const blob = await extractFormFieldsXlsx(currentFile, allValues);
+      if (!canUseForm()) return;
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -250,7 +288,7 @@ const FormFill = (_props: BaseToolProps) => {
     } finally {
       setExtracting(false);
     }
-  }, [currentFile, allValues]);
+  }, [currentFile, allValues, canUseForm]);
 
   const isActive = selectedTool === "formFill";
 
@@ -276,6 +314,7 @@ const FormFill = (_props: BaseToolProps) => {
     // Ref-based guard prevents concurrent saves that cause file duplication
     if (savingRef.current) return;
     if (!currentFile || !isStirlingFile(currentFile)) return;
+    if (!canUseForm()) return;
 
     if (!validateForm()) {
       setSaveError(
@@ -290,13 +329,14 @@ const FormFill = (_props: BaseToolProps) => {
 
     try {
       const filledBlob = await submitForm(currentFile, flatten);
+      if (!canUseForm()) return;
 
       // Track the flatten value at save so toggling it later re-enables Save
       setLastSavedFlatten(flatten);
 
       // Route through the viewer's handleFormApply: a direct consumeFiles call
       // loses the viewer's file tracking, and with it scroll position and rotation.
-      dispatchFormApply(filledBlob);
+      dispatchFormApply(filledBlob, currentFile);
     } catch (err) {
       const status = isAxiosError(err) ? err.response?.status : undefined;
       const message =
@@ -309,25 +349,34 @@ const FormFill = (_props: BaseToolProps) => {
             (err instanceof Error ? err.message : undefined) ||
             "Failed to save filled form";
       setSaveError(message);
-      console.error("[FormFill] Save failed:", err);
+      if (!(err instanceof PolicyBlockedError))
+        console.error("[FormFill] Save failed:", err);
     } finally {
       savingRef.current = false;
       setSaving(false);
     }
-  }, [currentFile, submitForm, flatten, validateForm]);
+  }, [currentFile, submitForm, flatten, validateForm, canUseForm]);
 
   const applyCurrentMode = useCallback(async () => {
     if (!currentFile) return;
+    assertFilesNotBlocked(sourceIds);
     if (mode === "create") {
-      dispatchFormApply(await commitNewFields(currentFile));
+      dispatchFormApply(await commitNewFields(currentFile), currentFile);
       return;
     }
     if (mode === "modify") {
-      dispatchFormApply(await commitModifications(currentFile));
+      dispatchFormApply(await commitModifications(currentFile), currentFile);
       return;
     }
     await handleSave();
-  }, [mode, currentFile, commitNewFields, commitModifications, handleSave]);
+  }, [
+    mode,
+    currentFile,
+    commitNewFields,
+    commitModifications,
+    handleSave,
+    sourceIds,
+  ]);
 
   // Switching tabs throws away that tab's working state, so it asks first. Owned here rather
   // than through the app-wide warning handlers, which hold a single registration app-wide.
@@ -402,10 +451,11 @@ const FormFill = (_props: BaseToolProps) => {
   }, [formState.isDirty]);
 
   const handleRefresh = useCallback(() => {
+    if (!canUseForm()) return;
     if (currentFile) {
       fetchFields(currentFile, getFormFillFileId(currentFile) ?? undefined);
     }
-  }, [currentFile, fetchFields]);
+  }, [currentFile, fetchFields, canUseForm]);
 
   const handleValueChange = useCallback(
     (fieldName: string, value: string) => {
@@ -476,326 +526,347 @@ const FormFill = (_props: BaseToolProps) => {
 
   return (
     <div className={styles.root}>
+      <PolicyBlockedNotice fileIds={blockedIds} />
       <UnsavedChangesDialog
-        opened={pendingMode !== null}
+        opened={!policyBlocked && pendingMode !== null}
         saving={switching}
         onKeepWorking={() => setPendingMode(null)}
         onDiscard={discardAndSwitch}
         onSave={applyAndSwitch}
       />
 
-      {/* ---- Mode selection ---- */}
-      <div className={styles.modeTabs}>
-        <SegmentedControl
-          value={mode}
-          onChange={(val) => requestMode(val as FormMode)}
-          options={MODE_TABS.map((tab) => ({
-            value: tab.id,
-            label: (
-              // title carries the full label for locales where it has to ellipsise.
-              <div className={styles.segmentedLabel} title={tab.label}>
-                {tab.icon}
-                <span className={styles.segmentedInnerLabel}>{tab.label}</span>
-              </div>
-            ),
-          }))}
-          fullWidth
-          size="xs"
-          ariaLabel={t("formFill.mode.label", "Form editor mode")}
-        />
-      </div>
-
-      {/* ---- Create mode ---- */}
-      {mode === "create" && (
-        <FormFieldCreatePanel currentFile={currentFile as File | Blob | null} />
-      )}
-
-      {/* ---- Modify mode ---- */}
-      {mode === "modify" && (
-        <FormFieldModifyPanel currentFile={currentFile as File | Blob | null} />
-      )}
-
-      {/* ---- Fill Form content ---- */}
-      {mode === "fill" && (
-        <>
-          {/* Header / controls */}
-          <div className={styles.header}>
-            {/* Loading state */}
-            {formState.loading && (
-              <>
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "0.5rem",
-                  }}
-                >
-                  <Loader size={14} />
-                  <Text size="xs" c="dimmed">
-                    {t("formFill.analyzingFields", "Analysing form fields...")}
-                  </Text>
-                </div>
-                <Skeleton height={48} radius="sm" />
-                <Skeleton height={48} radius="sm" />
-              </>
-            )}
-
-            {/* Error state */}
-            {formState.error && (
-              <Alert
-                icon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
-                color="red"
-                variant="light"
-                p="xs"
-                radius="sm"
-              >
-                <Text size="xs">{formState.error}</Text>
-              </Alert>
-            )}
-
-            {/* Ready state with fields */}
-            {!formState.loading && formState.fields.length > 0 && (
-              <>
-                {/* Progress bar */}
-                <div>
-                  <div className={styles.progressRow}>
-                    <span className={styles.progressLabel}>
-                      {filledCount} / {fillableCount}{" "}
-                      {t("formFill.filled", "filled")}
-                      {requiredCount > 0 && (
-                        <span style={{ marginLeft: "0.5rem", opacity: 0.7 }}>
-                          ({filledRequiredCount}/{requiredCount}{" "}
-                          {t("formFill.requiredAbbreviation", "req")}.)
-                        </span>
-                      )}
-                    </span>
-                    <span className={styles.progressLabel}>
-                      {fillableCount > 0
-                        ? Math.round((filledCount / fillableCount) * 100)
-                        : 0}
-                      %
-                    </span>
-                  </div>
-                  <Progress
-                    value={
-                      fillableCount > 0
-                        ? (filledCount / fillableCount) * 100
-                        : 0
-                    }
-                    size={6}
-                    radius="xl"
-                    color={
-                      filledRequiredCount === requiredCount ? "teal" : "blue"
-                    }
-                    mt={4}
-                  />
-                </div>
-
-                {/* Flatten toggle */}
-                <Switch
-                  label={t(
-                    "formFill.flattenAfterFilling",
-                    "Flatten after filling",
-                  )}
-                  checked={flatten}
-                  onChange={(e) => setFlatten(e.currentTarget.checked)}
-                  size="xs"
-                  styles={{
-                    label: { fontSize: "0.75rem", cursor: "pointer" },
-                  }}
-                />
-
-                {/* Action buttons */}
-                <div className={styles.actionBar}>
-                  <div className={styles.primaryActions}>
-                    <Button
-                      leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
-                      size="sm"
-                      onClick={handleSave}
-                      loading={saving}
-                      disabled={!formState.isDirty && !flattenChanged}
-                    >
-                      {t("formFill.save", "Save")}
-                    </Button>
-
-                    <Tooltip
-                      label={t("formFill.rescanFields", "Re-scan fields")}
-                      withArrow
-                      position="bottom"
-                    >
-                      <ActionIcon
-                        variant="secondary"
-                        size="md"
-                        onClick={handleRefresh}
-                        aria-label={t(
-                          "formFill.rescanFormFields",
-                          "Re-scan form fields",
-                        )}
-                      >
-                        <RefreshIcon sx={{ fontSize: 16 }} />
-                      </ActionIcon>
-                    </Tooltip>
-                  </div>
-
-                  <div className={styles.secondaryActions}>
-                    <Button
-                      variant="secondary"
-                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
-                      loading={extracting}
-                      onClick={handleExtractJson}
-                      size="sm"
-                    >
-                      JSON
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
-                      loading={extracting}
-                      onClick={handleExtractCsv}
-                      size="sm"
-                    >
-                      CSV
-                    </Button>
-
-                    <Button
-                      variant="secondary"
-                      leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
-                      loading={extracting}
-                      onClick={handleExtractXlsx}
-                      size="sm"
-                    >
-                      XLSX
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Error message */}
-                {saveError && (
-                  <Alert color="red" variant="light" p="xs" radius="sm">
-                    <Text size="xs">{saveError}</Text>
-                  </Alert>
-                )}
-              </>
-            )}
-
-            {/* Empty state */}
-            {!formState.loading &&
-              formState.fields.length === 0 &&
-              !formState.error && (
-                <div className={styles.emptyState}>
-                  <DescriptionIcon className={styles.emptyStateIcon} />
-                  <span className={styles.emptyStateText}>
-                    {t(
-                      "formFill.noFields",
-                      "No fillable form fields found in this PDF.",
-                    )}
+      <fieldset
+        disabled={policyBlocked}
+        inert={policyBlocked}
+        style={{ display: "contents" }}
+      >
+        <div className={styles.modeTabs}>
+          <SegmentedControl
+            value={mode}
+            onChange={(val) => requestMode(val as FormMode)}
+            options={MODE_TABS.map((tab) => ({
+              value: tab.id,
+              label: (
+                // title carries the full label for locales where it has to ellipsise.
+                <div className={styles.segmentedLabel} title={tab.label}>
+                  {tab.icon}
+                  <span className={styles.segmentedInnerLabel}>
+                    {tab.label}
                   </span>
                 </div>
-              )}
-          </div>
+              ),
+            }))}
+            fullWidth
+            size="xs"
+            ariaLabel={t("formFill.mode.label", "Form editor mode")}
+          />
+        </div>
 
-          {/* ---- Scrollable field list ---- */}
-          {!formState.loading && formState.fields.length > 0 && (
-            <ScrollArea className={styles.fieldList}>
-              <div className={styles.fieldListInner}>
-                {sortedPages.map((pageIdx, i) => (
-                  <React.Fragment key={pageIdx}>
-                    <div
-                      className={styles.pageDivider}
-                      style={i === 0 ? { marginTop: 0 } : undefined}
-                    >
-                      <Text className={styles.pageDividerLabel}>
-                        {t("page", "Page")} {pageIdx + 1}
-                      </Text>
+        {/* ---- Create mode ---- */}
+        {mode === "create" && (
+          <FormFieldCreatePanel
+            currentFile={currentFile as File | Blob | null}
+          />
+        )}
+
+        {/* ---- Modify mode ---- */}
+        {mode === "modify" && (
+          <FormFieldModifyPanel
+            currentFile={currentFile as File | Blob | null}
+          />
+        )}
+
+        {/* ---- Fill Form content ---- */}
+        {mode === "fill" && (
+          <>
+            {/* Header / controls */}
+            <div className={styles.header}>
+              {/* Loading state */}
+              {formState.loading && (
+                <>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
+                    <Loader size={14} />
+                    <Text size="xs" c="dimmed">
+                      {t(
+                        "formFill.analyzingFields",
+                        "Analysing form fields...",
+                      )}
+                    </Text>
+                  </div>
+                  <Skeleton height={48} radius="sm" />
+                  <Skeleton height={48} radius="sm" />
+                </>
+              )}
+
+              {/* Error state */}
+              {formState.error && (
+                <Alert
+                  icon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
+                  color="red"
+                  variant="light"
+                  p="xs"
+                  radius="sm"
+                >
+                  <Text size="xs">{formState.error}</Text>
+                </Alert>
+              )}
+
+              {/* Ready state with fields */}
+              {!formState.loading && formState.fields.length > 0 && (
+                <>
+                  {/* Progress bar */}
+                  <div>
+                    <div className={styles.progressRow}>
+                      <span className={styles.progressLabel}>
+                        {filledCount} / {fillableCount}{" "}
+                        {t("formFill.filled", "filled")}
+                        {requiredCount > 0 && (
+                          <span style={{ marginLeft: "0.5rem", opacity: 0.7 }}>
+                            ({filledRequiredCount}/{requiredCount}{" "}
+                            {t("formFill.requiredAbbreviation", "req")}.)
+                          </span>
+                        )}
+                      </span>
+                      <span className={styles.progressLabel}>
+                        {fillableCount > 0
+                          ? Math.round((filledCount / fillableCount) * 100)
+                          : 0}
+                        %
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        fillableCount > 0
+                          ? (filledCount / fillableCount) * 100
+                          : 0
+                      }
+                      size={6}
+                      radius="xl"
+                      color={
+                        filledRequiredCount === requiredCount ? "teal" : "blue"
+                      }
+                      mt={4}
+                    />
+                  </div>
+
+                  {/* Flatten toggle */}
+                  <Switch
+                    label={t(
+                      "formFill.flattenAfterFilling",
+                      "Flatten after filling",
+                    )}
+                    checked={flatten}
+                    onChange={(e) => setFlatten(e.currentTarget.checked)}
+                    size="xs"
+                    styles={{
+                      label: { fontSize: "0.75rem", cursor: "pointer" },
+                    }}
+                  />
+
+                  {/* Action buttons */}
+                  <div className={styles.actionBar}>
+                    <div className={styles.primaryActions}>
+                      <Button
+                        leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
+                        size="sm"
+                        onClick={handleSave}
+                        loading={saving}
+                        disabled={
+                          policyBlocked ||
+                          (!formState.isDirty && !flattenChanged)
+                        }
+                      >
+                        {t("formFill.save", "Save")}
+                      </Button>
+
+                      <Tooltip
+                        label={t("formFill.rescanFields", "Re-scan fields")}
+                        withArrow
+                        position="bottom"
+                      >
+                        <ActionIcon
+                          variant="secondary"
+                          size="md"
+                          onClick={handleRefresh}
+                          aria-label={t(
+                            "formFill.rescanFormFields",
+                            "Re-scan form fields",
+                          )}
+                        >
+                          <RefreshIcon sx={{ fontSize: 16 }} />
+                        </ActionIcon>
+                      </Tooltip>
                     </div>
 
-                    {fieldsByPage.get(pageIdx)!.map((field) => {
-                      const isFieldActive =
-                        formState.activeFieldName === field.name;
-                      const hasError = !!validationErrors[field.name];
-                      const pageIndex =
-                        field.widgets && field.widgets.length > 0
-                          ? field.widgets[0].pageIndex
-                          : undefined;
+                    <div className={styles.secondaryActions}>
+                      <Button
+                        variant="secondary"
+                        leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
+                        loading={extracting}
+                        onClick={handleExtractJson}
+                        disabled={policyBlocked}
+                        size="sm"
+                      >
+                        JSON
+                      </Button>
 
-                      return (
-                        <div
-                          key={field.name}
-                          ref={isFieldActive ? activeFieldRef : undefined}
-                          className={`${styles.fieldCard} ${
-                            isFieldActive ? styles.fieldCardActive : ""
-                          } ${hasError ? styles.fieldCardError : ""}`}
-                          onClick={() =>
-                            handleFieldClick(field.name, pageIndex)
-                          }
-                        >
-                          <div className={styles.fieldHeader}>
-                            <span
-                              className={styles.fieldTypeIcon}
-                              style={{
-                                color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
-                                fontSize: "0.875rem",
-                              }}
-                            >
-                              {FIELD_TYPE_ICON[field.type]}
-                            </span>
-                            <span className={styles.fieldName}>
-                              {field.label || field.name}
-                            </span>
-                            {field.required && (
-                              <span className={styles.fieldRequired}>
-                                {t("formFill.requiredAbbreviation", "req")}
+                      <Button
+                        variant="secondary"
+                        leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
+                        loading={extracting}
+                        onClick={handleExtractCsv}
+                        disabled={policyBlocked}
+                        size="sm"
+                      >
+                        CSV
+                      </Button>
+
+                      <Button
+                        variant="secondary"
+                        leftSection={<FileDownloadIcon sx={{ fontSize: 14 }} />}
+                        loading={extracting}
+                        onClick={handleExtractXlsx}
+                        disabled={policyBlocked}
+                        size="sm"
+                      >
+                        XLSX
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Error message */}
+                  {saveError && (
+                    <Alert color="red" variant="light" p="xs" radius="sm">
+                      <Text size="xs">{saveError}</Text>
+                    </Alert>
+                  )}
+                </>
+              )}
+
+              {/* Empty state */}
+              {!formState.loading &&
+                formState.fields.length === 0 &&
+                !formState.error && (
+                  <div className={styles.emptyState}>
+                    <DescriptionIcon className={styles.emptyStateIcon} />
+                    <span className={styles.emptyStateText}>
+                      {t(
+                        "formFill.noFields",
+                        "No fillable form fields found in this PDF.",
+                      )}
+                    </span>
+                  </div>
+                )}
+            </div>
+
+            {/* ---- Scrollable field list ---- */}
+            {!formState.loading && formState.fields.length > 0 && (
+              <ScrollArea className={styles.fieldList}>
+                <div className={styles.fieldListInner}>
+                  {sortedPages.map((pageIdx, i) => (
+                    <React.Fragment key={pageIdx}>
+                      <div
+                        className={styles.pageDivider}
+                        style={i === 0 ? { marginTop: 0 } : undefined}
+                      >
+                        <Text className={styles.pageDividerLabel}>
+                          {t("page", "Page")} {pageIdx + 1}
+                        </Text>
+                      </div>
+
+                      {fieldsByPage.get(pageIdx)!.map((field) => {
+                        const isFieldActive =
+                          formState.activeFieldName === field.name;
+                        const hasError = !!validationErrors[field.name];
+                        const pageIndex =
+                          field.widgets && field.widgets.length > 0
+                            ? field.widgets[0].pageIndex
+                            : undefined;
+
+                        return (
+                          <div
+                            key={field.name}
+                            ref={isFieldActive ? activeFieldRef : undefined}
+                            className={`${styles.fieldCard} ${
+                              isFieldActive ? styles.fieldCardActive : ""
+                            } ${hasError ? styles.fieldCardError : ""}`}
+                            onClick={() =>
+                              handleFieldClick(field.name, pageIndex)
+                            }
+                          >
+                            <div className={styles.fieldHeader}>
+                              <span
+                                className={styles.fieldTypeIcon}
+                                style={{
+                                  color: `var(--mantine-color-${FIELD_TYPE_COLOR[field.type]}-6)`,
+                                  fontSize: "0.875rem",
+                                }}
+                              >
+                                {FIELD_TYPE_ICON[field.type]}
                               </span>
-                            )}
-                          </div>
+                              <span className={styles.fieldName}>
+                                {field.label || field.name}
+                              </span>
+                              {field.required && (
+                                <span className={styles.fieldRequired}>
+                                  {t("formFill.requiredAbbreviation", "req")}
+                                </span>
+                              )}
+                            </div>
 
-                          {field.type !== "button" &&
-                            field.type !== "signature" && (
-                              <div className={styles.fieldInputWrap}>
-                                <FieldInput
-                                  field={field}
-                                  onValueChange={handleValueChange}
-                                />
+                            {field.type !== "button" &&
+                              field.type !== "signature" && (
+                                <div className={styles.fieldInputWrap}>
+                                  <FieldInput
+                                    field={field}
+                                    onValueChange={handleValueChange}
+                                  />
+                                </div>
+                              )}
+
+                            {hasError && (
+                              <div className={styles.fieldError}>
+                                {validationErrors[field.name]}
                               </div>
                             )}
 
-                          {hasError && (
-                            <div className={styles.fieldError}>
-                              {validationErrors[field.name]}
-                            </div>
-                          )}
+                            {field.tooltip && (
+                              <div className={styles.fieldHint}>
+                                {field.tooltip}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </React.Fragment>
+                  ))}
+                </div>
+              </ScrollArea>
+            )}
 
-                          {field.tooltip && (
-                            <div className={styles.fieldHint}>
-                              {field.tooltip}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </React.Fragment>
-                ))}
+            {/* ---- Status bar ---- */}
+            {!formState.loading && formState.fields.length > 0 && (
+              <div className={styles.statusBar}>
+                <span>
+                  {(formState.isDirty || flattenChanged) && (
+                    <span className={styles.unsavedDot} />
+                  )}
+                  {formState.isDirty || flattenChanged
+                    ? t("formFill.unsavedChanges", "Unsaved changes")
+                    : t("formFill.allSaved", "All saved")}
+                </span>
+                <span>{t("formFill.saveShortcut", "Ctrl+S to save")}</span>
               </div>
-            </ScrollArea>
-          )}
-
-          {/* ---- Status bar ---- */}
-          {!formState.loading && formState.fields.length > 0 && (
-            <div className={styles.statusBar}>
-              <span>
-                {(formState.isDirty || flattenChanged) && (
-                  <span className={styles.unsavedDot} />
-                )}
-                {formState.isDirty || flattenChanged
-                  ? t("formFill.unsavedChanges", "Unsaved changes")
-                  : t("formFill.allSaved", "All saved")}
-              </span>
-              <span>{t("formFill.saveShortcut", "Ctrl+S to save")}</span>
-            </div>
-          )}
-        </>
-      )}
+            )}
+          </>
+        )}
+      </fieldset>
     </div>
   );
 };

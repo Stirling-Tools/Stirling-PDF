@@ -3,6 +3,8 @@ import { useAllFiles, useFileSelection } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 
 type Loader = (file: File) => unknown;
 // The workbench fileId is what lets save write the edit back to the
@@ -57,6 +59,9 @@ export function useAutoLoadFile(
   const { selectedFiles } = useFileSelection();
   const { files: allFiles } = useAllFiles();
   const { activeFileId } = useViewer();
+  const blockedIds = useBlockedFiles(
+    allFiles.map((file) => (file as WorkbenchFile).fileId),
+  );
 
   const autoLoadFile = useMemo(() => {
     // Prefer the open document while it is still selected so a reordering
@@ -89,6 +94,8 @@ export function useAutoLoadFile(
   }, []);
   const openFile = useCallback(
     (file: File) => {
+      const fileId = (file as WorkbenchFile).fileId;
+      if (fileId && isFileBlocked(fileId)) return;
       adopt(file);
       onFileChosen(file.name, (file as WorkbenchFile).fileId);
       void load(file);
@@ -116,6 +123,8 @@ export function useAutoLoadFile(
       // Nothing to recover to: the file left the workbench, so fall through
       // and pick a candidate the normal way.
       if (same) {
+        const sameId = (same as WorkbenchFile).fileId;
+        if (sameId && isFileBlocked(sameId)) return;
         if (editor.error && lastKeyRef.current === fileKey(same)) return;
         adopt(same);
         void load(same);
@@ -139,6 +148,7 @@ export function useAutoLoadFile(
     allFiles,
     currentFileId,
     load,
+    blockedIds,
   ]);
 
   return useMemo(() => ({ openFile, adopt }), [openFile, adopt]);

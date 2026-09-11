@@ -10,9 +10,15 @@ import {
   useFormFill,
 } from "@app/tools/formFill/FormFillContext";
 import type { FieldEditResult } from "@app/tools/formFill/types";
+import { PolicyBlockedError } from "@app/services/policyFileGuard";
 
 const applyFieldEdits = vi.fn();
 const fetchFields = vi.fn();
+const fillForm = vi.fn();
+const blocked = new Set<string>();
+vi.mock("@app/services/policyBlockRegistry", () => ({
+  isFileBlocked: (id: string) => blocked.has(id),
+}));
 
 vi.mock("@app/tools/formFill/formApi", () => ({
   applyFieldEdits: (...args: unknown[]) => applyFieldEdits(...args),
@@ -24,7 +30,7 @@ vi.mock("@app/tools/formFill/providers/PdfBoxFormProvider", () => ({
       return fetchFields(...args);
     }
     fillForm() {
-      return Promise.resolve(new Blob());
+      return fillForm();
     }
   },
 }));
@@ -34,7 +40,7 @@ vi.mock("@app/tools/formFill/providers/PdfiumFormProvider", () => ({
       return fetchFields(...args);
     }
     fillForm() {
-      return Promise.resolve(new Blob());
+      return fillForm();
     }
   },
 }));
@@ -54,9 +60,63 @@ function result(skipped: FieldEditResult["skipped"]): FieldEditResult {
 
 describe("FormFillContext staged-edit ownership", () => {
   beforeEach(() => {
+    blocked.clear();
+    fillForm.mockReset().mockResolvedValue(new Blob());
     applyFieldEdits.mockReset();
     fetchFields.mockReset();
     fetchFields.mockResolvedValue([]);
+  });
+
+  it("rejects fill, create and modify operations on a blocked form source", async () => {
+    const { result: hook } = renderHook(useFormFill, { wrapper });
+    await act(() => hook.current.fetchFields(blob(), "stirling-source"));
+    blocked.add("source");
+    await expect(hook.current.submitForm(blob())).rejects.toBeInstanceOf(
+      PolicyBlockedError,
+    );
+    await expect(hook.current.commitNewFields(blob())).rejects.toBeInstanceOf(
+      PolicyBlockedError,
+    );
+    await expect(
+      hook.current.commitModifications(blob()),
+    ).rejects.toBeInstanceOf(PolicyBlockedError);
+    expect(fillForm).not.toHaveBeenCalled();
+    expect(applyFieldEdits).not.toHaveBeenCalled();
+  });
+
+  it("retains dirty form values if the source fails while saving", async () => {
+    const { result: hook } = renderHook(useFormFill, { wrapper });
+    await act(() => hook.current.fetchFields(blob(), "stirling-source"));
+    act(() => hook.current.setValue("name", "Alice"));
+    fillForm.mockImplementationOnce(async () => {
+      blocked.add("source");
+      return blob();
+    });
+    await act(async () => {
+      await expect(hook.current.submitForm(blob())).rejects.toBeInstanceOf(
+        PolicyBlockedError,
+      );
+    });
+    expect(hook.current.state.isDirty).toBe(true);
+    blocked.clear();
+    await act(() => hook.current.submitForm(blob()));
+    expect(hook.current.state.isDirty).toBe(false);
+  });
+
+  it("preserves staged modifications if a policy fails during the commit", async () => {
+    const { result: hook } = renderHook(useFormFill, { wrapper });
+    await act(() => hook.current.fetchFields(blob(), "stirling-source"));
+    act(() => hook.current.stageModification("field", { x: 1 }));
+    applyFieldEdits.mockImplementationOnce(async () => {
+      blocked.add("source");
+      return result([]);
+    });
+    await act(async () => {
+      await expect(
+        hook.current.commitModifications(blob()),
+      ).rejects.toBeInstanceOf(PolicyBlockedError);
+    });
+    expect(hook.current.hasUncommittedChanges).toBe(true);
   });
 
   it("keeps the skip report across the re-fetch a commit triggers", async () => {

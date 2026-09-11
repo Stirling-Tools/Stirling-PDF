@@ -30,6 +30,9 @@ import { usePageEditorCommands } from "@app/components/pageEditor/hooks/useEdito
 import { usePageEditorExport } from "@app/components/pageEditor/hooks/usePageEditorExport";
 import { useThumbnailGeneration } from "@app/hooks/useThumbnailGeneration";
 import { convertSplitPageIdsToIndexes } from "@app/components/pageEditor/utils/splitPositions";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
+import { PolicyBlockedNotice } from "@app/components/shared/PolicyBlockedNotice";
 
 export interface PageEditorProps {
   onFunctionsReady?: (functions: PageEditorFunctions) => void;
@@ -362,14 +365,53 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     splitPositions,
     exportLoading,
     setSelectionMode,
-    setSelectedPageIds,
+    setSelectedPageIds: setSelectedPageIdsRaw,
     setMovingPage,
     setSplitPositions,
     setExportLoading,
-    togglePage,
-    toggleSelectAll,
+    togglePage: togglePageRaw,
+    toggleSelectAll: toggleSelectAllRaw,
     animateReorder,
   } = usePageEditorState();
+
+  const sourceIds = useMemo(
+    () => [
+      ...new Set([
+        ...selectedFileIds,
+        ...(displayDocument?.pages.flatMap((page) =>
+          page.originalFileId ? [page.originalFileId] : [],
+        ) ?? []),
+      ]),
+    ],
+    [selectedFileIds, displayDocument],
+  );
+  const blockedIds = useBlockedFiles(sourceIds);
+  const policyBlocked = blockedIds.length > 0;
+  const canEdit = useCallback(
+    () => !sourceIds.some(isFileBlocked),
+    [sourceIds],
+  );
+  const setSelectedPageIds = useCallback(
+    (ids: string[]) => {
+      setSelectedPageIdsRaw(canEdit() ? ids : []);
+    },
+    [canEdit, setSelectedPageIdsRaw],
+  );
+  const togglePage = useCallback(
+    (id: string) => {
+      if (canEdit()) togglePageRaw(id);
+    },
+    [canEdit, togglePageRaw],
+  );
+  const toggleSelectAll = useCallback(
+    (ids: string[]) => {
+      if (canEdit()) toggleSelectAllRaw(ids);
+    },
+    [canEdit, toggleSelectAllRaw],
+  );
+  useEffect(() => {
+    if (policyBlocked) setSelectedPageIdsRaw([]);
+  }, [policyBlocked, setSelectedPageIdsRaw]);
 
   const {
     csvInput,
@@ -401,6 +443,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     clearUndoHistory,
   } = useUndoManagerState({
     setHasUnsavedChanges,
+    canEdit,
   });
 
   const {
@@ -419,6 +462,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     handleReorderPages,
     closePdf,
   } = usePageEditorCommands({
+    canEdit,
     displayDocument,
     getEditedDocument,
     setEditedDocument,
@@ -472,6 +516,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
   const selectedPageCount = selectedPageIds.length;
 
   usePageEditorWorkbenchBarButtons({
+    policyBlocked,
     totalPages,
     selectedPageCount,
     csvInput,
@@ -509,8 +554,8 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       onFunctionsReady({
         handleUndo,
         handleRedo,
-        canUndo,
-        canRedo,
+        canUndo: canUndo && !policyBlocked,
+        canRedo: canRedo && !policyBlocked,
         handleRotate,
         handleDelete,
         handleSplit,
@@ -526,7 +571,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
         applyChanges,
         exportLoading,
         selectionMode,
-        selectedPageIds,
+        selectedPageIds: policyBlocked ? [] : selectedPageIds,
         displayDocument: displayDocument || undefined,
         splitPositions,
         totalPages: displayDocument?.pages.length || 0,
@@ -535,6 +580,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
     }
   }, [
     onFunctionsReady,
+    policyBlocked,
     handleUndo,
     handleRedo,
     canUndo,
@@ -626,6 +672,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
         <PageThumbnail
           key={page.id}
           page={page}
+          disabled={policyBlocked}
           index={index}
           totalPages={displayDocument?.pages.length || 0}
           fileColorIndex={fileColorIndex}
@@ -658,6 +705,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       );
     },
     [
+      policyBlocked,
       selectedPageIds,
       selectionMode,
       movingPage,
@@ -692,6 +740,7 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       }}
     >
       <LoadingOverlay visible={globalProcessing && !initialDocument} />
+      <PolicyBlockedNotice fileIds={blockedIds} />
 
       {!initialDocument && !globalProcessing && !hasPdfFiles && (
         <Center h="100%">
@@ -722,6 +771,8 @@ const PageEditor = ({ onFunctionsReady }: PageEditorProps) => {
       {displayDocument && (
         <Box
           ref={gridContainerRef}
+          inert={policyBlocked}
+          aria-disabled={policyBlocked || undefined}
           p={0}
           pt="2rem"
           pb="4rem"

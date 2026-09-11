@@ -1,6 +1,11 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  assertFilesNotBlocked,
+  PolicyBlockedError,
+} from "@app/services/policyFileGuard";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
+import {
   ADDITION_HIGHLIGHT,
   CompareAnyResult,
   CompareDiffToken,
@@ -248,6 +253,11 @@ export const useCompareOperation = (): CompareOperationHook => {
         return;
       }
 
+      const sourceIds = [params.baseFileId, params.comparisonFileId];
+      if (sourceIds.some(isFileBlocked)) {
+        setErrorMessage(t("policy.blockedBody"));
+        return;
+      }
       const baseFile =
         selectedFiles.find((file) => file.fileId === params.baseFileId) ??
         selectors.getFile(params.baseFileId);
@@ -312,8 +322,13 @@ export const useCompareOperation = (): CompareOperationHook => {
               ),
             },
           });
-          if (cancelledRef.current || activeRunIdRef.current !== runId) {
+          if (
+            cancelledRef.current ||
+            activeRunIdRef.current !== runId ||
+            sourceIds.some(isFileBlocked)
+          ) {
             revokePixelResult(pixelResult);
+            assertFilesNotBlocked(sourceIds);
             return;
           }
           pixelResultRef.current = pixelResult;
@@ -324,7 +339,8 @@ export const useCompareOperation = (): CompareOperationHook => {
           if (error instanceof Error && error.message === "CANCELLED") {
             setStatusState("cancelled");
           } else {
-            console.error("[compare] pixel operation failed", error);
+            if (!(error instanceof PolicyBlockedError))
+              console.error("[compare] pixel operation failed", error);
             const fallback = t(
               "compare.error.generic",
               "Unable to compare these files.",
@@ -366,6 +382,7 @@ export const useCompareOperation = (): CompareOperationHook => {
           extractContentFromPdf(baseFile),
           extractContentFromPdf(comparisonFile),
         ]);
+        assertFilesNotBlocked(sourceIds);
 
         if (cancelledRef.current || activeRunIdRef.current !== runId) return;
 
@@ -592,6 +609,7 @@ export const useCompareOperation = (): CompareOperationHook => {
           comparisonParagraphs: comparisonContent.paragraphs,
         };
 
+        assertFilesNotBlocked(sourceIds);
         setResult(comparisonResult);
         setWarnings(workerWarnings);
 
@@ -606,7 +624,8 @@ export const useCompareOperation = (): CompareOperationHook => {
 
         setStatusState("complete");
       } catch (error: unknown) {
-        console.error("[compare] operation failed", error);
+        if (!(error instanceof PolicyBlockedError))
+          console.error("[compare] operation failed", error);
         const errorCode = getWorkerErrorCode(error);
         let resolvedMessage: string;
         if (errorCode === "EMPTY_TEXT") {

@@ -8,6 +8,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import PageSelectByNumberButton from "@app/components/pageEditor/PageSelectByNumberButton";
 
 interface PageEditorWorkbenchBarButtonsParams {
+  policyBlocked: boolean;
   totalPages: number;
   selectedPageCount: number;
   csvInput: string;
@@ -27,6 +28,7 @@ export function usePageEditorWorkbenchBarButtons(
   params: PageEditorWorkbenchBarButtonsParams,
 ) {
   const {
+    policyBlocked,
     totalPages,
     selectedPageCount,
     csvInput,
@@ -61,7 +63,7 @@ export function usePageEditorWorkbenchBarButtons(
   );
   const saveChangesLabel = t("workbenchBar.saveChanges", "Save Changes");
   const buttons = useMemo<WorkbenchBarButtonWithAction[]>(() => {
-    return [
+    const actions: WorkbenchBarButtonWithAction[] = [
       {
         id: "page-select-all",
         icon: <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />,
@@ -151,8 +153,18 @@ export function usePageEditorWorkbenchBarButtons(
         onClick: onSaveChanges,
       },
     ];
+    return actions.map((button) =>
+      policyBlocked
+        ? {
+            ...button,
+            disabled: true,
+            tooltip: t("policy.blockedBody"),
+          }
+        : button,
+    );
   }, [
     t,
+    policyBlocked,
     i18n.language,
     selectAllLabel,
     deselectAllLabel,

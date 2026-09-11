@@ -4,6 +4,7 @@ import { Button } from "@app/ui/Button";
 import DownloadIcon from "@mui/icons-material/FileDownloadOutlined";
 import { EditorFileSwitcher } from "@app/tools/pdfTextEditor/components/EditorFileSwitcher";
 import type { FileId } from "@app/types/file";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
 
 interface Props {
   openedFileName: string | null;
@@ -33,6 +34,7 @@ export function EditorSaveBar({
   onDownload,
 }: Props) {
   const { t } = useTranslation();
+  const blocked = useBlockedFiles([currentFileId]).length > 0;
   return (
     <Box
       px="md"
@@ -77,14 +79,19 @@ export function EditorSaveBar({
       )}
       <Group gap="xs" wrap="nowrap">
         <Tooltip
-          label={t(
-            "pdfTextEditor.saveTooltip",
-            "Apply changes to the file in your workspace (Ctrl+S)",
-          )}
+          label={
+            blocked
+              ? t("policy.blockedBody")
+              : t(
+                  "pdfTextEditor.saveTooltip",
+                  "Apply changes to the file in your workspace (Ctrl+S)",
+                )
+          }
         >
           <Button
             size="sm"
             onClick={onSave}
+            disabled={blocked}
             data-testid="pdf-editor-save"
             style={{ flex: 1, minWidth: 0 }}
           >
@@ -92,16 +99,21 @@ export function EditorSaveBar({
           </Button>
         </Tooltip>
         <Tooltip
-          label={t(
-            "pdfTextEditor.downloadTooltip",
-            "Save and download the edited PDF",
-          )}
+          label={
+            blocked
+              ? t("policy.blockedBody")
+              : t(
+                  "pdfTextEditor.downloadTooltip",
+                  "Save and download the edited PDF",
+                )
+          }
         >
           <Button
             size="sm"
             variant="secondary"
             accent="neutral"
             onClick={onDownload}
+            disabled={blocked}
             data-testid="pdf-editor-download"
             aria-label={t("pdfTextEditor.download", "Download")}
             leftSection={<DownloadIcon fontSize="small" />}

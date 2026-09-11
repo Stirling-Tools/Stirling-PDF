@@ -31,6 +31,9 @@ import {
   FileSelectorResult,
 } from "@app/components/shared/FileSelectorPicker";
 import "@app/components/tools/compare/compareView.css";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
+import { PolicyBlockedNotice } from "@app/components/shared/PolicyBlockedNotice";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 
 const CUSTOM_VIEW_ID = "compareWorkbenchView";
 const CUSTOM_WORKBENCH_ID = "custom:compareWorkbenchView" as const;
@@ -69,6 +72,11 @@ const Compare = (props: BaseToolProps) => {
   // Slot state — files loaded directly for comparison, never added to workbench
   const [baseSlot, setBaseSlot] = useState<FileSelectorResult | null>(null);
   const [compSlot, setCompSlot] = useState<FileSelectorResult | null>(null);
+  const blockedIds = useBlockedFiles([
+    baseSlot?.stirlingFile.fileId,
+    compSlot?.stirlingFile.fileId,
+  ]);
+  const policyBlocked = blockedIds.length > 0;
 
   // Sync params fileIds from slots (needed for operation result matching)
   useEffect(() => {
@@ -111,6 +119,25 @@ const Compare = (props: BaseToolProps) => {
       );
     };
   }, [performClearSelected]);
+
+  const closeBlockedSlots = useCallback(() => {
+    base.operation.cancelOperation();
+    base.operation.resetResults();
+    setBaseSlot((slot) =>
+      slot && isFileBlocked(slot.stirlingFile.fileId) ? null : slot,
+    );
+    setCompSlot((slot) =>
+      slot && isFileBlocked(slot.stirlingFile.fileId) ? null : slot,
+    );
+    clearCustomWorkbenchViewData(CUSTOM_VIEW_ID);
+    navigationActions.setWorkbench(getDefaultWorkbench());
+  }, [base.operation, clearCustomWorkbenchViewData, navigationActions]);
+
+  useEffect(() => {
+    window.addEventListener("compare:close-blocked", closeBlockedSlots);
+    return () =>
+      window.removeEventListener("compare:close-blocked", closeBlockedSlots);
+  }, [closeBlockedSlots]);
 
   useEffect(() => {
     registerCustomWorkbenchView({
@@ -254,6 +281,12 @@ const Compare = (props: BaseToolProps) => {
 
   const handleExecuteCompare = useCallback(async () => {
     if (!baseSlot || !compSlot) return;
+    if (
+      [baseSlot.stirlingFile.fileId, compSlot.stirlingFile.fileId].some(
+        isFileBlocked,
+      )
+    )
+      return;
     const baseId = baseSlot.stirlingFile.fileId;
     const compId = compSlot.stirlingFile.fileId;
     const selected: StirlingFile[] = [
@@ -286,6 +319,12 @@ const Compare = (props: BaseToolProps) => {
 
   const performSwap = useCallback(() => {
     if (!baseSlot || !compSlot) return;
+    if (
+      [baseSlot.stirlingFile.fileId, compSlot.stirlingFile.fileId].some(
+        isFileBlocked,
+      )
+    )
+      return;
     const newBase = compSlot;
     const newComp = baseSlot;
     setBaseSlot(newBase);
@@ -356,6 +395,7 @@ const Compare = (props: BaseToolProps) => {
             data-testid={`compare-slot-${role}`}
             data-slot-state="filled"
             data-slot-filename={stub?.name}
+            data-policy-blocked={blockedIds.includes(stub.id)}
             style={{
               border: "1px solid var(--c-border)",
               borderRadius: "var(--radius-md)",
@@ -380,7 +420,16 @@ const Compare = (props: BaseToolProps) => {
             >
               <CloseIcon fontSize="small" />
             </ActionIcon>
-            <Group align="flex-start" wrap="nowrap" gap="md">
+            <Group
+              align="flex-start"
+              wrap="nowrap"
+              gap="md"
+              style={
+                blockedIds.includes(stub.id)
+                  ? { opacity: 0.45, filter: "grayscale(1)" }
+                  : undefined
+              }
+            >
               <Box style={{ alignSelf: "center" }}>
                 <DocumentThumbnail
                   file={stub}
@@ -440,6 +489,7 @@ const Compare = (props: BaseToolProps) => {
             excludeIds={otherSlot ? [otherSlot.stirlingFile.fileId] : []}
             disabled={isDisabled}
             onSelect={(result: FileSelectorResult) => {
+              if (isFileBlocked(result.stirlingFile.fileId)) return;
               if (role === "base") setBaseSlot(result);
               else setCompSlot(result);
             }}
@@ -447,13 +497,14 @@ const Compare = (props: BaseToolProps) => {
         </div>
       );
     },
-    [baseSlot, compSlot, clearSlot, t],
+    [baseSlot, compSlot, clearSlot, blockedIds, t],
   );
   const canExecute = Boolean(
     baseSlot &&
     compSlot &&
     baseSlot.stirlingFile.fileId !== compSlot.stirlingFile.fileId &&
     !base.operation.isLoading &&
+    !policyBlocked &&
     base.endpointEnabled !== false,
   );
 
@@ -504,7 +555,7 @@ const Compare = (props: BaseToolProps) => {
                   variant="secondary"
                   size="sm"
                   onClick={handleSwap}
-                  disabled={base.operation.isLoading}
+                  disabled={base.operation.isLoading || policyBlocked}
                   leftSection={<SwapVertRoundedIcon fontSize="small" />}
                   style={{ alignSelf: "center" }}
                 >
@@ -516,6 +567,10 @@ const Compare = (props: BaseToolProps) => {
                 {t("compare.edited.label", "Edited PDF")}
               </Text>
               {renderSlot("comparison")}
+              <PolicyBlockedNotice
+                fileIds={blockedIds}
+                onClose={closeBlockedSlots}
+              />
             </Stack>
 
             <Modal
@@ -540,6 +595,7 @@ const Compare = (props: BaseToolProps) => {
                     {t("cancel", "Cancel")}
                   </Button>
                   <Button
+                    disabled={policyBlocked}
                     onClick={() => {
                       setSwapConfirmOpen(false);
                       performSwap();

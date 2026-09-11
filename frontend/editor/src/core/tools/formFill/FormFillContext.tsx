@@ -49,6 +49,8 @@ import { PdfiumFormProvider } from "@app/tools/formFill/providers/PdfiumFormProv
 import { fetchSignatureFieldsWithAppearances } from "@app/services/pdfiumService";
 import { applyFieldEdits } from "@app/tools/formFill/formApi";
 import { mergeSignatureAppearances } from "@app/tools/formFill/formFieldMerge";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
+import { formPolicySourceIds } from "@app/tools/formFill/formPolicy";
 
 /** Marks a skip report as belonging to whichever document the commit just produced. */
 const PENDING_SKIP_REPORT = "__pending__";
@@ -674,11 +676,14 @@ export function FormFillProvider({
 
   const submitForm = useCallback(
     async (file: File | Blob, flatten = false) => {
+      const sourceIds = formPolicySourceIds(file, lastKnownFileIdRef.current);
+      assertFilesNotBlocked(sourceIds);
       const blob = await providerRef.current.fillForm(
         file,
         valuesStore.values,
         flatten,
       );
+      assertFilesNotBlocked(sourceIds);
       dispatch({ type: "MARK_CLEAN" });
       return blob;
     },
@@ -816,11 +821,14 @@ export function FormFillProvider({
 
   const commitNewFields = useCallback(
     async (file: File | Blob): Promise<Blob> => {
+      const sourceIds = formPolicySourceIds(file, lastKnownFileIdRef.current);
+      assertFilesNotBlocked(sourceIds);
       // Strip the client-side id before sending to the backend.
       const definitions: NewFieldDefinition[] = pendingFields.map(
         ({ id: _id, ...rest }) => rest,
       );
       const result = await applyFieldEdits(file, { add: definitions });
+      assertFilesNotBlocked(sourceIds);
       bundledFieldsRef.current = result.fields
         ? { fields: result.fields, size: result.blob.size }
         : null;
@@ -874,6 +882,8 @@ export function FormFillProvider({
 
   const commitModifications = useCallback(
     async (file: File | Blob): Promise<Blob> => {
+      const sourceIds = formPolicySourceIds(file, lastKnownFileIdRef.current);
+      assertFilesNotBlocked(sourceIds);
       // Apply property/geometry changes (for fields not being deleted) and the
       // deletions in a single backend round-trip.
       const updates = Object.values(modifiedFields).filter(
@@ -883,6 +893,7 @@ export function FormFillProvider({
         modify: updates,
         delete: deletedFieldNames,
       });
+      assertFilesNotBlocked(sourceIds);
       bundledFieldsRef.current = result.fields
         ? { fields: result.fields, size: result.blob.size }
         : null;

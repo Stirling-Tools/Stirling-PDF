@@ -29,7 +29,10 @@ export async function serverMessage(err: unknown): Promise<string | null> {
   }
 }
 
-export function useFormCommit(onApplied?: (blob: Blob) => void) {
+export function useFormCommit(
+  onApplied?: (blob: Blob) => void,
+  sourceFile?: File | Blob | null,
+) {
   const { t } = useTranslation();
   const [committing, setCommitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -44,7 +47,7 @@ export function useFormCommit(onApplied?: (blob: Blob) => void) {
       setError(null);
       try {
         const blob = await run();
-        dispatchFormApply(blob);
+        dispatchFormApply(blob, sourceFile);
         onApplied?.(blob);
       } catch (err) {
         setError(
@@ -57,7 +60,7 @@ export function useFormCommit(onApplied?: (blob: Blob) => void) {
         setCommitting(false);
       }
     },
-    [onApplied, t],
+    [onApplied, sourceFile, t],
   );
 
   return { committing, error, setError, commit };

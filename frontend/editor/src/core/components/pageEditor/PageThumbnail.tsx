@@ -26,6 +26,7 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 
 interface PageThumbnailProps {
+  disabled?: boolean;
   page: PDFPage;
   index: number;
   totalPages: number;
@@ -72,6 +73,7 @@ interface PageThumbnailProps {
 }
 
 const PageThumbnail: React.FC<PageThumbnailProps> = ({
+  disabled = false,
   page,
   index: _index,
   totalPages,
@@ -80,7 +82,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   selectionMode,
   movingPage,
   isAnimating,
-  isBoxSelected = false,
+  isBoxSelected: boxSelected = false,
   clearBoxSelection,
   activeDragIds,
   pageRefs,
@@ -99,9 +101,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   justMoved = false,
 }: PageThumbnailProps) => {
   const pageIndex = page.pageNumber - 1;
-  const isSelected = Array.isArray(selectedPageIds)
-    ? selectedPageIds.includes(page.id)
-    : false;
+  const isSelected =
+    !disabled && Array.isArray(selectedPageIds)
+      ? selectedPageIds.includes(page.id)
+      : false;
 
   const [isMouseDown, setIsMouseDown] = useState(false);
   const [mouseStartPos, setMouseStartPos] = useState<{
@@ -118,8 +121,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   const elementRef = useRef<HTMLDivElement | null>(null);
   const { openFilesModal } = useFilesModalContext();
 
-  // Check if this page is currently being dragged
-  const isDragging = activeDragIds.includes(page.id);
+  const isBoxSelected = !disabled && boxSelected;
+  const isDragging = !disabled && activeDragIds.includes(page.id);
 
   // Calculate document aspect ratio from first non-blank page
   const getDocumentAspectRatio = useCallback(() => {
@@ -255,13 +258,18 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   );
 
   // Handle click vs drag differentiation
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    setIsMouseDown(true);
-    setMouseStartPos({ x: e.clientX, y: e.clientY });
-  }, []);
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (disabled) return;
+      setIsMouseDown(true);
+      setMouseStartPos({ x: e.clientX, y: e.clientY });
+    },
+    [disabled],
+  );
 
   const handleMouseUp = useCallback(
     (e: React.MouseEvent) => {
+      if (disabled) return;
       if (!isMouseDown || !mouseStartPos) {
         setIsMouseDown(false);
         setMouseStartPos(null);
@@ -296,6 +304,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       setMouseStartPos(null);
     },
     [
+      disabled,
       isMouseDown,
       mouseStartPos,
       isDragging,
@@ -400,7 +409,10 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
   return (
     <div
       ref={mergedRef}
-      {...restDragProps}
+      {...(disabled ? {} : restDragProps)}
+      aria-disabled={disabled || undefined}
+      data-policy-blocked={disabled}
+      inert={disabled}
       data-page-id={page.id}
       data-page-number={page.pageNumber}
       className={`
@@ -419,6 +431,8 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         ${isBoxSelected ? "ring-4 ring-blue-400 ring-offset-2" : ""}
       `}
       style={{
+        opacity: disabled ? 0.45 : undefined,
+        filter: disabled ? "grayscale(1)" : undefined,
         width: `calc(20rem * ${zoomLevel})`,
         height: `calc(20rem * ${zoomLevel})`,
         transition: isAnimating ? "none" : "transform 0.2s ease-in-out",
@@ -448,6 +462,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           }}
           onMouseDown={(e) => {
             e.stopPropagation();
+            if (disabled) return;
             onTogglePage(page.id);
           }}
           onMouseUp={(e) => e.stopPropagation()}
@@ -457,6 +472,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
           }}
         >
           <Checkbox
+            disabled={disabled}
             checked={isSelected}
             onChange={() => {
               // Selection is handled by container mouseDown
@@ -555,7 +571,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
         </Text>
 
         <HoverActionMenu
-          show={isHovered || isMobile}
+          show={!disabled && (isHovered || isMobile)}
           actions={hoverActions}
           position="inside"
           className={styles.pageHoverControls}

@@ -24,6 +24,8 @@ import type {
   WidthMode,
 } from "@app/tools/pdfTextEditor/types";
 import { resetEmbeddedFaces } from "@app/tools/pdfTextEditor/util/embeddedFace";
+import type { FileId } from "@app/types/file";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 
 /** Drop EVERY per-document charcode/glyph cache. */
 function resetCharcodeCaches(): void {
@@ -52,6 +54,8 @@ export interface LoadProgress {
 }
 
 export interface EditorViewState {
+  /** Workbench source whose policies govern this document; absent for a disk import. */
+  sourceFileId?: FileId | null;
   hasDocument: boolean;
   pageCount: number;
   pages: PageSnapshot[];
@@ -138,6 +142,11 @@ export class EditorStore {
 
   getState(): EditorViewState {
     return this.state;
+  }
+
+  /** Keeps the canvas and save controls tied to the same workspace source. */
+  setSourceFileId(sourceFileId: FileId | null): void {
+    if (this.state.sourceFileId !== sourceFileId) this.patch({ sourceFileId });
   }
 
   subscribe(listener: (s: EditorViewState) => void): () => void {
@@ -300,6 +309,8 @@ export class EditorStore {
 
   /** Apply a command via the history stack, re-snapshot, and notify. */
   dispatch(cmd: Command): void {
+    if (this.state.sourceFileId && isFileBlocked(this.state.sourceFileId))
+      return;
     if (!this.doc) return;
     this.history.execute(cmd, this.doc);
     this.resnapshot();
@@ -388,6 +399,8 @@ export class EditorStore {
   }
 
   undo(): void {
+    if (this.state.sourceFileId && isFileBlocked(this.state.sourceFileId))
+      return;
     if (!this.doc) return;
     try {
       this.history.undo(this.doc);
@@ -400,6 +413,8 @@ export class EditorStore {
   }
 
   redo(): void {
+    if (this.state.sourceFileId && isFileBlocked(this.state.sourceFileId))
+      return;
     if (!this.doc) return;
     try {
       this.history.redo(this.doc);

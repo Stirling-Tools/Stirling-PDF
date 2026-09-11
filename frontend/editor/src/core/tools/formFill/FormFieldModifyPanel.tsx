@@ -93,7 +93,7 @@ export function FormFieldModifyPanel({
     dragActiveRef,
   } = useFormFill();
 
-  const { committing, error, commit } = useFormCommit(onApplied);
+  const { committing, error, commit } = useFormCommit(onApplied, currentFile);
   const selectedRowRef = useRef<HTMLDivElement>(null);
 
   // A long form is easier to scan a page at a time; pages start open so nothing hides itself.

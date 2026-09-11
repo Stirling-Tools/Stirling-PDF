@@ -24,6 +24,8 @@ import {
 } from "@app/services/shareBundleUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import { useBlockedFiles } from "@app/hooks/useBlockedFiles";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 import styles from "@app/components/shared/FileSelectorPicker.module.css";
 import "@app/components/shared/FileSidebarFileItem.css";
 
@@ -135,6 +137,9 @@ export function FileSelectorPicker({
   const indexedDB = useIndexedDB();
   const { selectors } = useFileContext();
   const { loadRecentFiles } = useFileManager();
+  const blockedIds = useBlockedFiles(
+    [...workbenchStubs, ...savedStubs].map((stub) => stub.id),
+  );
 
   // Load thumbnail lazily when hovering over a file row
   useEffect(() => {
@@ -242,7 +247,7 @@ export function FileSelectorPicker({
 
   const loadAndSelect = useCallback(
     async (stub: StirlingFileStub) => {
-      if (loadingId) return;
+      if (loadingId || disabled || isFileBlocked(stub.id)) return;
 
       // Workbench file — get StirlingFile directly from FileContext (no loading needed)
       if (workbenchIdSet.has(stub.id)) {
@@ -278,8 +283,7 @@ export function FileSelectorPicker({
             parseContentDispositionFilename(disp) || "shared-file",
             ct,
           );
-          if (files[0])
-            stirlingFile = createStirlingFile(files[0], createFileId());
+          if (files[0]) stirlingFile = createStirlingFile(files[0], stub.id);
         } else if (stub.remoteStorageId) {
           const res = await apiClient.get(
             `/api/v1/storage/files/${stub.remoteStorageId}/download`,
@@ -322,6 +326,8 @@ export function FileSelectorPicker({
               // Non-fatal — thumbnail simply won't show
             }
           }
+          if (isFileBlocked(stub.id) || isFileBlocked(stirlingFile.fileId))
+            return;
           onSelect({ stub: resolvedStub, stirlingFile });
           setIsOpen(false);
         }
@@ -331,7 +337,7 @@ export function FileSelectorPicker({
         setLoadingId(null);
       }
     },
-    [loadingId, workbenchIdSet, selectors, onSelect],
+    [loadingId, disabled, workbenchIdSet, selectors, onSelect],
   );
 
   const handleUpload = useCallback(
@@ -556,6 +562,7 @@ export function FileSelectorPicker({
               displayStubs.map((stub) => {
                 const meta = buildMeta(stub);
                 const isItemLoading = loadingId === stub.id;
+                const policyBlocked = blockedIds.includes(stub.id);
                 return (
                   <Button
                     key={stub.id}
@@ -563,7 +570,14 @@ export function FileSelectorPicker({
                     hover={false}
                     className={styles.fileItem}
                     onClick={() => void loadAndSelect(stub)}
-                    disabled={!!loadingId}
+                    disabled={!!loadingId || policyBlocked}
+                    data-policy-blocked={policyBlocked}
+                    title={policyBlocked ? t("policy.blockedBody") : undefined}
+                    style={
+                      policyBlocked
+                        ? { opacity: 0.45, filter: "grayscale(1)" }
+                        : undefined
+                    }
                     onMouseEnter={(e) =>
                       setHoveredStub({
                         rect: e.currentTarget.getBoundingClientRect(),
