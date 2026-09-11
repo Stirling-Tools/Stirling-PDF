@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { UIProvider } from "@portal/contexts/UIContext";
@@ -18,13 +18,19 @@ vi.mock("@portal/api/http", () => ({
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 
 function Probe() {
-  const { gated, loading, available } = useConnectGate();
+  const { gated, loading, available, error, retry } = useConnectGate();
   return (
-    <span data-testid="state">
-      {loading
-        ? "loading"
-        : `${available ? "available" : "unavailable"}:${gated ? "gated" : "open"}`}
-    </span>
+    <>
+      <span data-testid="state">
+        {loading
+          ? "loading"
+          : `${available ? "available" : "unavailable"}:${gated ? "gated" : "open"}`}
+      </span>
+      <span data-testid="error">{error ?? "none"}</span>
+      <button type="button" onClick={retry}>
+        retry
+      </button>
+    </>
   );
 }
 
@@ -89,5 +95,39 @@ describe("useConnectGate", () => {
     json.mockResolvedValue({ accountLinkAvailable: true });
     renderProbe("unlinked");
     expect(screen.getByTestId("state").textContent).toBe("loading");
+  });
+
+  it("reports a configuration failure rather than reading it as linking disabled", async () => {
+    json.mockRejectedValue(new Error("Configuration unavailable"));
+    renderProbe("unlinked");
+
+    // Not "loading": hanging on a call that already failed is the blank page from #7926.
+    await settled("unavailable:open");
+    await waitFor(() =>
+      expect(screen.getByTestId("error").textContent).toContain(
+        "Configuration unavailable",
+      ),
+    );
+  });
+
+  it("clears the failure on retry and gates on the answer it then gets", async () => {
+    json
+      .mockRejectedValueOnce(new Error("Configuration unavailable"))
+      .mockResolvedValue({ accountLinkAvailable: true });
+    renderProbe("unlinked");
+    await settled("unavailable:open");
+
+    fireEvent.click(screen.getByRole("button", { name: "retry" }));
+
+    await settled("available:gated");
+    expect(screen.getByTestId("error").textContent).toBe("none");
+  });
+
+  it("honours no dev bypass, in the URL or in storage", async () => {
+    window.history.replaceState({}, "", "/processor?bypassConnect=true");
+    sessionStorage.setItem("accountLink::dev-bypass", "true");
+    json.mockResolvedValue({ accountLinkAvailable: true });
+    renderProbe("unlinked");
+    await settled("available:gated");
   });
 });
