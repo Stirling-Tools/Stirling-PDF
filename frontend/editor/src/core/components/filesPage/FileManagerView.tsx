@@ -327,8 +327,10 @@ export default function FileManagerView() {
       // The Cloud tab is the server's view: browser folders and mounts aren't on it.
       if (currentTab === "cloud" && folderKind(f) !== "server") return false;
       // A folder answers to the source filter the way its files would: a server
-      // folder is cloud, a browser folder and a mount are both local.
-      if (originFilter !== "all") {
+      // folder is cloud, a browser folder and a mount are both local. Sharing is a
+      // property of a file, so filtering by it leaves the folders alone rather than
+      // emptying the tree of every one of them.
+      if (originFilter !== "all" && originFilter !== "shared-with-me") {
         const folderOrigin = folderKind(f) === "server" ? "cloud" : "local";
         if (folderOrigin !== originFilter) return false;
       }
