@@ -23,10 +23,13 @@ export class PdfiumTextWriter {
    */
   static commitRunText(doc: EditorDocument, page: Page, run: TextRun): boolean {
     if (!run.pdfiumObjPtr) return false;
+    if (run.text.length === 0) return false;
     const m = doc.module;
     const ptr = writeUtf16(m, run.text);
     try {
       m.FPDFText_SetText(run.pdfiumObjPtr, ptr);
+    } catch {
+      return false;
     } finally {
       m.pdfium.wasmExports.free(ptr);
     }

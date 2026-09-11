@@ -11,7 +11,8 @@ import {
 import { useTranslation } from "react-i18next";
 import { useEditorStore } from "@app/tools/pdfTextEditor/hooks/useEditorStore";
 import { ensurePageRead } from "@app/tools/pdfTextEditor/hooks/useDocumentLoader";
-import { Toolbar } from "@app/tools/pdfTextEditor/components/Toolbar";
+import { EditorTopBar } from "@app/tools/pdfTextEditor/components/EditorTopBar";
+import { FindBar } from "@app/tools/pdfTextEditor/components/FindBar";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { ZoomPill } from "@app/tools/pdfTextEditor/components/ZoomPill";
 import { MarqueeSelector } from "@app/tools/pdfTextEditor/components/MarqueeSelector";
@@ -69,12 +70,27 @@ export function PageStage() {
   // inspector derives from the same controller, so both surfaces read one
   // source of truth.
   const controller = useToolbarController(store, state, selection);
-  const toolbar = { controller };
+  const topBar = (
+    <EditorTopBar
+      controller={controller}
+      hasDocument={state.hasDocument}
+      dirty={state.dirty}
+      addTextArmed={state.mode === "addText"}
+      onToggleAddText={() =>
+        store.setMode(
+          store.getState().mode === "addText" ? "select" : "addText",
+        )
+      }
+      findOpen={state.findOpen}
+      onToggleFind={() => store.setFindOpen(!store.getState().findOpen)}
+      onShowHelp={() => store.setHelpOpen(true)}
+    />
+  );
 
   if (!state.hasDocument && !state.loading) {
     return (
       <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
-        <Toolbar {...toolbar} />
+        {topBar}
         <Center
           style={{ flex: 1, minHeight: 0 }}
           data-testid="pdf-editor-stage-empty"
@@ -110,7 +126,14 @@ export function PageStage() {
 
   return (
     <Stack gap={0} h="100%" style={{ overflow: "hidden" }}>
-      <Toolbar {...toolbar} />
+      {topBar}
+      {state.findOpen && state.hasDocument && (
+        <FindBar
+          store={store}
+          pages={state.pages}
+          onClose={() => store.setFindOpen(false)}
+        />
+      )}
       <Box
         pos="relative"
         ref={stageRootRef}
@@ -142,19 +165,6 @@ export function PageStage() {
             (f) => f.type === "application/pdf" || /\.pdf$/i.test(f.name),
           );
           if (!pdf) return;
-          // Replacing the open document discards in-progress edits - confirm
-          // first when dirty, so an accidental drop can't silently lose work.
-          if (
-            store.getState().dirty &&
-            !window.confirm(
-              t(
-                "pdfTextEditor.confirmReplaceDirty",
-                "You have unsaved changes. Replace the open document and discard them?",
-              ),
-            )
-          ) {
-            return;
-          }
           const input = document.querySelector<HTMLInputElement>(
             '[data-testid="pdf-editor-file-input"]',
           );
