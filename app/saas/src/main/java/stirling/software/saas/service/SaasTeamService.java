@@ -21,6 +21,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
@@ -126,7 +127,12 @@ public class SaasTeamService {
         Team savedTeam = teamRepository.save(team);
 
         saasTeamExtensionService.setPersonal(savedTeam, true);
-        saasTeamExtensionService.setSeats(savedTeam, 1, 1);
+        // The free allowance, not 1: a linked instance reads this number as its own ceiling, so
+        // a 1 here would refuse every user it tried to create.
+        saasTeamExtensionService.setSeats(
+                savedTeam,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         saasTeamExtensionService.setCreatedByUserId(savedTeam, user.getId());
         saasTeamExtensionsRepository.incrementSeatsUsed(savedTeam.getId());
 
@@ -243,7 +249,10 @@ public class SaasTeamService {
                     team.getName(),
                     inviter.getUsername());
             saasTeamExtensionService.setPersonal(team, false);
-            // Unlimited seats once converted to standard
+            // Still the unlimited sentinel, which is what a standard team is until it buys: nothing
+            // enforces capacity for one. Writing the free allowance here instead would state a
+            // ceiling nothing honours, and SaasTeamController's availableSeats would go negative as
+            // the team grew past it. The sentinel goes when enforcement arrives.
             saasTeamExtensionService.setSeats(team, Integer.MAX_VALUE, Integer.MAX_VALUE);
         }
 

@@ -1360,6 +1360,7 @@ export interface SecurityCertSignValidateCertificateRequest {
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
+export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
    * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
@@ -1603,6 +1604,7 @@ export type ToolEndpoint =
   | "/api/v1/security/remove-password"
   | "/api/v1/security/sanitize-pdf"
   | "/api/v1/security/timestamp-pdf"
+  | "/api/v1/security/validate-compliance"
   | "/api/v1/security/validate-signature"
   | "/api/v1/security/verify-pdf";
 
@@ -1707,6 +1709,7 @@ export interface ToolApiParams {
   "/api/v1/security/remove-password": PDFPasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
+  "/api/v1/security/validate-compliance": SecurityValidateComplianceRequest;
   "/api/v1/security/validate-signature": SignatureValidationRequest;
   "/api/v1/security/verify-pdf": PDFVerificationRequest;
 }
@@ -1812,6 +1815,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/remove-password",
   "/api/v1/security/sanitize-pdf",
   "/api/v1/security/timestamp-pdf",
+  "/api/v1/security/validate-compliance",
   "/api/v1/security/validate-signature",
   "/api/v1/security/verify-pdf",
 ] as const satisfies readonly ToolEndpoint[];

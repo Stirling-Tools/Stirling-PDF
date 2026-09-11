@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate, useSearchParams } from "react-router-dom";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -9,13 +9,11 @@ import { type SourceView } from "@portal/api/sources";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceModal } from "@portal/components/sources/SourceModal";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Sources.css";
 
 export function Sources() {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { guard, gated, connect } = useConnectGate();
 
   const state = useSources();
   const { data } = state;
@@ -28,28 +26,19 @@ export function Sources() {
     sourceId: string | null;
   }>({ open: false, sourceId: null });
 
-  // Ref so the effect does not loop: it writes the param back, which would re-run it.
-  const connectRef = useRef(connect);
-  connectRef.current = connect;
-
-  // Sets the modal directly, so it needs the gate in its own right: guarding openCreate would
-  // leave ?new=1 as a way past it.
   useEffect(() => {
     if (searchParams.get("new") !== "1") return;
-    if (gated) connectRef.current();
-    else setModal({ open: true, sourceId: null });
+    setModal({ open: true, sourceId: null });
     const next = new URLSearchParams(searchParams);
     next.delete("new");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams, gated]);
+  }, [searchParams, setSearchParams]);
 
   const sources = data?.sources ?? [];
 
-  // Connecting a source and editing one both need a linked account.
-  const openCreate = guard(() => setModal({ open: true, sourceId: null }));
-  const openSource = guard((source: SourceView) =>
-    setModal({ open: true, sourceId: source.id }),
-  );
+  const openCreate = () => setModal({ open: true, sourceId: null });
+  const openSource = (source: SourceView) =>
+    setModal({ open: true, sourceId: source.id });
 
   // The Connections tab moved to its own Integrations view.
   if (searchParams.get("tab") === "connections") {
