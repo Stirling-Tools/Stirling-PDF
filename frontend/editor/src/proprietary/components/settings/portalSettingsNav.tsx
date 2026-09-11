@@ -49,7 +49,7 @@ const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
  * @param includeAccountLink self-hosted links the instance to a Stirling
  *   account; SaaS has nothing to link, so it passes false.
  * @param includeAudit SaaS has no other audit surface; self-hosted has the
- *   admin one under Server and passes false.
+ *   admin one under Monitoring and passes false.
  * @param includeEncryption encryption at rest is deployment-wide server
  *   configuration, so only a self-hosted admin can act on it. SaaS operates
  *   the storage itself and passes false for every user.
@@ -161,8 +161,8 @@ export function buildPortalSettingsSections(
   }
   if (includeAudit) {
     groups.push({
-      id: "security",
-      title: t("settings.securityAuth.title", "Security & sign-in"),
+      id: "monitoring",
+      title: t("settings.monitoring.title", "Monitoring"),
       items: [
         {
           key: "audit",

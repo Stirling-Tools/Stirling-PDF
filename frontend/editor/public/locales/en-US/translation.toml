@@ -10878,6 +10878,9 @@ usage = "Usage Analytics"
 usageAnalytics = "Usage Analytics"
 usageDescription = "How the server is being used: operations, volume and trends over time."
 
+[settings.monitoring]
+title = "Monitoring"
+
 [settings.planBilling]
 currentPlan = "Current Plan"
 loading = "Loading billing information..."

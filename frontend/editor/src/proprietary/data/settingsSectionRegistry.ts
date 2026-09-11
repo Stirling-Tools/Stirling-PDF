@@ -164,8 +164,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Audit",
     keywords: ["audit", "logs", "events", "history"],
     adminArea: true,
-    groupLabelKey: "settings.server.title",
-    groupLabelFallback: "Server",
+    groupLabelKey: "settings.monitoring.title",
+    groupLabelFallback: "Monitoring",
   },
   {
     key: "adminUsage",
@@ -173,8 +173,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelFallback: "Usage Analytics",
     keywords: ["usage", "analytics", "stats", "metrics"],
     adminArea: true,
-    groupLabelKey: "settings.server.title",
-    groupLabelFallback: "Server",
+    groupLabelKey: "settings.monitoring.title",
+    groupLabelFallback: "Monitoring",
   },
   // --- Workspace (moved off the processor's own nav). Present only where the
   // nav can actually show them: a processor build, and a session that can

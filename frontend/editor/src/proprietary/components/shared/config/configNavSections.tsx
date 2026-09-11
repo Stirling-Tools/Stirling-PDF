@@ -47,10 +47,11 @@ import AdminUsageSection from "@app/components/shared/config/configSections/Admi
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
 
 /**
- * Self-hosted settings, grouped by who reaches for them: your own settings and
- * keys, then the people and money of the workspace, then everything that
- * configures the server. Admin groups appear for admins, and as a read-only
- * preview when login is off and system.showSettingsWhenNoLogin allows it.
+ * Self-hosted settings, grouped by who reaches for them and what they do there:
+ * your own settings and keys, then the people and money of the workspace, then
+ * what configures the server, then what only reports on it. Admin groups appear
+ * for admins, and as a read-only preview when login is off and
+ * system.showSettingsWhenNoLogin allows it.
  */
 export const useConfigNavSections = (
   isAdmin: boolean = false,
@@ -157,139 +158,148 @@ export const useConfigNavSections = (
   }
 
   if (showAdmin) {
-    sections.push({
-      id: "server",
-      title: t("settings.server.title", "Server"),
-      items: [
-        {
-          key: "adminGeneral",
-          label: t("settings.server.system", "System"),
-          description: t(
-            "admin.settings.general.description",
-            "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
-          ),
-          icon: "settings-rounded",
-          component: (
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminSystemSection />
-            </Suspense>
-          ),
-          ...gated,
-        },
-        {
-          key: "adminSecurity",
-          label: t("settings.securityAuth.security", "Sign-in & security"),
-          description: t(
-            "admin.settings.security.description",
-            "How people sign in, how sessions are held, and what this server discloses about itself.",
-          ),
-          icon: "shield-rounded",
-          component: (
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminSecurityPage />
-            </Suspense>
-          ),
-          ...gated,
-        },
-        {
-          key: "adminConnections",
-          label: t("settings.configuration.integrations", "Integrations"),
-          description: t(
-            "admin.settings.connections.description",
-            "Mail, Telegram, Drive, and uploading from a phone.",
-          ),
-          icon: "hub-rounded",
-          component: (
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminIntegrationsPage />
-            </Suspense>
-          ),
-          ...gated,
-        },
-        {
-          key: "adminAi",
-          label: t("settings.ai.general", "AI Engine"),
-          description: t(
-            "admin.settings.ai.description",
-            "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under.",
-          ),
-          icon: "smart-toy-rounded",
-          component: (
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminAiSection />
-            </Suspense>
-          ),
-          ...gated,
-        },
-        {
-          key: "adminDatabase",
-          label: t("settings.configuration.database", "Database"),
-          description: t(
-            "admin.settings.database.description",
-            "Connect a custom database, and back up or restore the one in use.",
-          ),
-          icon: "database-rounded",
-          component: (
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminDatabasePage />
-            </Suspense>
-          ),
-          ...gated,
-        },
-        {
-          key: "adminAdvanced",
-          label: t("settings.configuration.advanced", "Advanced"),
-          description: t(
-            "admin.settings.advanced.description",
-            "Feature flags, processing limits, temp files and the database. Set once at install, if ever.",
-          ),
-          icon: "tune-rounded",
-          component: (
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminAdvancedPage />
-            </Suspense>
-          ),
-          ...gated,
-        },
-        {
-          key: "adminUsage",
-          label: t("settings.licensingAnalytics.usage", "Usage Analytics"),
-          description: t(
-            "settings.licensingAnalytics.usageDescription",
-            "Endpoint usage and activity for this server.",
-          ),
-          icon: "monitoring",
-          component: <AdminUsageSection />,
-          ...gated,
-        },
-        {
-          key: "adminAudit",
-          label: t("settings.licensingAnalytics.audit", "Audit log"),
-          description: t(
-            "settings.licensingAnalytics.auditDescription",
-            "Who did what on this server, and how long that record is kept.",
-          ),
-          icon: "fact-check-rounded",
-          component: <AdminAuditSection />,
-          ...gated,
-        },
-        {
-          key: "adminLegal",
-          label: t("settings.policiesPrivacy.title", "Legal & privacy"),
-          description: t(
-            "admin.settings.legal.description",
-            "Configure links to legal documents and policies.",
-          ),
-          icon: "gavel-rounded",
-          component: (
-            <Suspense fallback={<LoadingFallback />}>
-              <AdminLegalPrivacyPage />
-            </Suspense>
-          ),
-          ...gated,
-        },
-      ],
-    });
+    sections.push(
+      {
+        id: "server",
+        title: t("settings.server.title", "Server"),
+        items: [
+          {
+            key: "adminGeneral",
+            label: t("settings.server.system", "System"),
+            description: t(
+              "admin.settings.general.description",
+              "How this server runs: branding, storage, the tools it exposes, and the paths it may touch.",
+            ),
+            icon: "settings-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminSystemSection />
+              </Suspense>
+            ),
+            ...gated,
+          },
+          {
+            key: "adminSecurity",
+            label: t("settings.securityAuth.security", "Sign-in & security"),
+            description: t(
+              "admin.settings.security.description",
+              "How people sign in, how sessions are held, and what this server discloses about itself.",
+            ),
+            icon: "shield-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminSecurityPage />
+              </Suspense>
+            ),
+            ...gated,
+          },
+          {
+            key: "adminConnections",
+            label: t("settings.configuration.integrations", "Integrations"),
+            description: t(
+              "admin.settings.connections.description",
+              "Mail, Telegram, Drive, and uploading from a phone.",
+            ),
+            icon: "hub-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminIntegrationsPage />
+              </Suspense>
+            ),
+            ...gated,
+          },
+          {
+            key: "adminAi",
+            label: t("settings.ai.general", "AI Engine"),
+            description: t(
+              "admin.settings.ai.description",
+              "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under.",
+            ),
+            icon: "smart-toy-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminAiSection />
+              </Suspense>
+            ),
+            ...gated,
+          },
+          {
+            key: "adminDatabase",
+            label: t("settings.configuration.database", "Database"),
+            description: t(
+              "admin.settings.database.description",
+              "Connect a custom database, and back up or restore the one in use.",
+            ),
+            icon: "database-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminDatabasePage />
+              </Suspense>
+            ),
+            ...gated,
+          },
+          {
+            key: "adminAdvanced",
+            label: t("settings.configuration.advanced", "Advanced"),
+            description: t(
+              "admin.settings.advanced.description",
+              "Feature flags, processing limits, temp files and the database. Set once at install, if ever.",
+            ),
+            icon: "tune-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminAdvancedPage />
+              </Suspense>
+            ),
+            ...gated,
+          },
+          {
+            key: "adminLegal",
+            label: t("settings.policiesPrivacy.title", "Legal & privacy"),
+            description: t(
+              "admin.settings.legal.description",
+              "Configure links to legal documents and policies.",
+            ),
+            icon: "gavel-rounded",
+            component: (
+              <Suspense fallback={<LoadingFallback />}>
+                <AdminLegalPrivacyPage />
+              </Suspense>
+            ),
+            ...gated,
+          },
+        ],
+      },
+      // Split from Server because you read these rather than set them.
+      {
+        id: "monitoring",
+        title: t("settings.monitoring.title", "Monitoring"),
+        items: [
+          {
+            key: "adminUsage",
+            label: t("settings.licensingAnalytics.usage", "Usage Analytics"),
+            description: t(
+              "settings.licensingAnalytics.usageDescription",
+              "Endpoint usage and activity for this server.",
+            ),
+            icon: "monitoring",
+            component: <AdminUsageSection />,
+            ...gated,
+          },
+          {
+            key: "adminAudit",
+            label: t("settings.licensingAnalytics.audit", "Audit log"),
+            description: t(
+              "settings.licensingAnalytics.auditDescription",
+              "Who did what on this server, and how long that record is kept.",
+            ),
+            icon: "fact-check-rounded",
+            component: <AdminAuditSection />,
+            ...gated,
+          },
+        ],
+      },
+    );
   }
 
   return [...sections, ...about];
