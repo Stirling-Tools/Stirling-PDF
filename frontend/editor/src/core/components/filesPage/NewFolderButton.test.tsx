@@ -117,3 +117,26 @@ describe("NewFolderButton keyboard access", () => {
     expect(onAddLocalFolder).toHaveBeenCalled();
   });
 });
+
+describe("NewFolderButton single-destination row", () => {
+  it("opens the dialog from the keyboard where the server is the only place", async () => {
+    const onOpenDialog = vi.fn();
+    render(
+      <MantineProvider>
+        <NewFolderButton
+          label="New folder"
+          trigger="row"
+          currentFolderId={null}
+          canAddLocalFolder={false}
+          onAddLocalFolder={vi.fn()}
+          onOpenDialog={onOpenDialog}
+        />
+      </MantineProvider>,
+    );
+
+    screen.getByRole("button", { name: "New folder" }).focus();
+    await userEvent.keyboard(" ");
+
+    expect(onOpenDialog).toHaveBeenCalledWith(null, "server");
+  });
+});

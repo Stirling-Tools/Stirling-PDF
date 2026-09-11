@@ -189,7 +189,7 @@ describe("views the restore may reopen", () => {
   });
 
   it("leaves path-seeded and tool-owned views alone", () => {
-    // HomePage pins myFiles to /files and bounces it elsewhere; custom views belong to a tool.
+    // The library arrives with the path that names the folder; custom views belong to a tool.
     expect(isSeedableView("myFiles")).toBe(false);
     expect(isSeedableView("custom:compare")).toBe(false);
     expect(isSeedableView(undefined)).toBe(false);

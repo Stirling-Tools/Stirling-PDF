@@ -498,7 +498,9 @@ export default function FileManagerView() {
   const { diskRevision, bumpDiskRevision } = filesPage;
   useEffect(() => {
     if (!currentLocalDirectory || !canListDirectory) {
-      setDiskEntries([]);
+      // Same array when it is already empty: a refresh outside a mount re-runs this
+      // and a fresh one would re-render every reader of the listing for nothing.
+      setDiskEntries((prev) => (prev.length > 0 ? [] : prev));
       // Leaving a mount mid-listing cancels the in-flight reset, so clear the
       // flag here or the skeleton covers every folder for the rest of the session.
       setDiskLoading(false);

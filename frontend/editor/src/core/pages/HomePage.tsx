@@ -316,7 +316,7 @@ export default function HomePage() {
     return reasons;
   }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
 
-  // Shared with the sidebar's own toggle. On /files it leaves rather than collapses.
+  // The collapse is a preference, so it is written as one; every view reads it back.
   const handleSidebarToggle = useCallback(() => {
     setFileSidebarCollapsed((c) => {
       const next = !c;

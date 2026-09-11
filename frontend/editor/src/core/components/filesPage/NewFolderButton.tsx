@@ -53,8 +53,10 @@ export function NewFolderButton({
   const iconOnly = trigger === "icon";
   const asRow = trigger === "row";
 
-  /** The sidebar's own action-row markup, so the row reads as one of its own. */
-  const row = (onClick?: () => void) => (
+  /** The sidebar's own action-row markup, so the row reads as one of its own.
+   *  `nativeTitle` for the menu shape, which Menu.Target's clone leaves no room to
+   *  wrap in a Tooltip. */
+  const row = (onClick?: () => void, nativeTitle = false) => (
     <div
       className={`file-sidebar-action-row${disabledReason ? " disabled" : ""}`}
       data-testid={testId}
@@ -62,7 +64,7 @@ export function NewFolderButton({
       tabIndex={disabledReason ? -1 : 0}
       aria-disabled={Boolean(disabledReason)}
       aria-label={label}
-      title={collapsed ? label : undefined}
+      title={nativeTitle && collapsed ? label : undefined}
       onClick={disabledReason ? undefined : onClick}
       // Not onClick: in the menu shape the click handler belongs to Menu.Target,
       // which binds the pointer only. A div has no native Enter/Space either way.
@@ -175,7 +177,7 @@ export function NewFolderButton({
     <Menu shadow="md" position="bottom-end" withinPortal>
       <Menu.Target>
         {asRow ? (
-          row()
+          row(undefined, true)
         ) : iconOnly ? (
           <Tooltip label={label} withinPortal>
             <ActionIcon variant="tertiary" size="sm" aria-label={label}>

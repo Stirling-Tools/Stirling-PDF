@@ -286,9 +286,9 @@
   animation: file-sidebar-spin 0.9s linear infinite;
 }
 
-@keyframes file-sidebar-spin {
-  to {
-    transform: rotate(360deg);
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar-spin {
+    animation-duration: 2s;
   }
 }
 
