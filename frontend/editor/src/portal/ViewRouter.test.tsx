@@ -1,7 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
+import { Suspense } from "react";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import { MemoryRouter, Routes, useLocation } from "react-router-dom";
 import { ViewRouter } from "@portal/ViewRouter";
+import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
+
+vi.mock("@app/routes/hasPortal", () => ({ HAS_PORTAL: true }));
+vi.mock("@portal/PortalApp", () => ({ PortalApp: () => <ViewRouter /> }));
 
 vi.mock("@portal/views/Home", () => ({ Home: () => <div>Home</div> }));
 vi.mock("@portal/views/Users", () => ({ Users: () => null }));
@@ -29,19 +34,26 @@ function BillingLocation() {
 }
 
 describe("procurement sales links", () => {
-  it("lands on billing with a resumable request and preserves other query parameters", async () => {
-    render(
-      <MemoryRouter initialEntries={["/processor/procurement?source=sales"]}>
-        <Routes>
-          <Route path="/processor/*" element={<ViewRouter />} />
-        </Routes>
-      </MemoryRouter>,
-    );
-    expect(
-      await screen.findByText(
-        "/processor/usage?source=sales&procurement=start",
-      ),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Home")).not.toBeInTheDocument();
-  });
+  it.each(["/", "/app"])(
+    "accepts the short link under basename %s without duplicating the prefix",
+    async (basename) => {
+      render(
+        <MemoryRouter
+          basename={basename}
+          initialEntries={[
+            `${basename === "/" ? "" : basename}/procurement?source=sales`,
+          ]}
+        >
+          <Suspense fallback={null}>
+            <Routes>{getAdminRouteExtensions()}</Routes>
+          </Suspense>
+        </MemoryRouter>,
+      );
+      expect(
+        await screen.findByText(
+          "/processor/usage?source=sales&procurement=start",
+        ),
+      ).toBeInTheDocument();
+    },
+  );
 });

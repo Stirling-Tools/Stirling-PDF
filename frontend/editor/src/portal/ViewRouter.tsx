@@ -25,16 +25,6 @@ const DeveloperDocs = lazy(() =>
 // so they resolve to the portal, not the editor root.
 const rel = (viewPath: string) => viewPath.replace(/^\//, "");
 
-/** Keep sales links resumable across sign-in, account linking and page reloads. */
-function ProcurementRedirect() {
-  const { search } = useLocation();
-  const params = new URLSearchParams(search);
-  params.set("procurement", "start");
-  return (
-    <Navigate to={`${toPortalPath(VIEW_PATHS.usage)}?${params}`} replace />
-  );
-}
-
 /** Redirect the retired Policies path to the unified Pipelines page, carrying any query string. */
 function PoliciesRedirect() {
   const { search } = useLocation();
@@ -91,8 +81,6 @@ export function ViewRouter() {
           </Suspense>
         }
       />
-      {/* A bare path, not a VIEW_PATHS entry: nothing should list it as a view. */}
-      <Route path="procurement" element={<ProcurementRedirect />} />
       {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
       <Route
         path="account-link"
