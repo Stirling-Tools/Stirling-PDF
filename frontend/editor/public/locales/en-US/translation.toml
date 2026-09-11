@@ -10058,8 +10058,15 @@ reader = "Reader"
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 
 [reader.rail]
+comment = "Comments"
+contents = "Contents"
 label = "Reading tools"
+readAloud = "Read aloud"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+search = "Find in document"
 sign = "Sign"
+thumbnails = "Pages"
 
 [reader.sign]
 noneBody = "Create one and it will be one press away here."
