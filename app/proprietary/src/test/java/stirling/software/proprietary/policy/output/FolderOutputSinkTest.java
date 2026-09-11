@@ -190,6 +190,105 @@ class FolderOutputSinkTest {
     }
 
     @Test
+    void renamesOutputsWithTheConfiguredPattern() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(
+                AD_HOC,
+                List.of(named("report.pdf", "x")),
+                new OutputSpec(
+                        "folder",
+                        Map.of(
+                                "directory",
+                                out.toString(),
+                                "filenamePattern",
+                                "archived_{filename}")));
+
+        assertTrue(Files.exists(out.resolve("archived_report.pdf")));
+    }
+
+    @Test
+    void stampsTheDateAndTimeTokensAndKeepsThePatternsOwnExtension() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(
+                AD_HOC,
+                List.of(named("report.pdf", "x")),
+                new OutputSpec(
+                        "folder",
+                        Map.of(
+                                "directory",
+                                out.toString(),
+                                "filenamePattern",
+                                "{filename}-{date}-{time}.pdf")));
+
+        try (Stream<Path> written = Files.list(out)) {
+            List<String> names =
+                    written.filter(Files::isRegularFile)
+                            .map(path -> path.getFileName().toString())
+                            .toList();
+            assertEquals(1, names.size());
+            assertTrue(names.get(0).matches("report-\\d{8}-\\d{6}\\.pdf"), names.get(0));
+        }
+    }
+
+    @Test
+    void keepsTheExtensionWhenTheBaseNameIsDotted() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(
+                AD_HOC,
+                List.of(named("invoice.2026.pdf", "x")),
+                new OutputSpec(
+                        "folder",
+                        Map.of(
+                                "directory",
+                                out.toString(),
+                                "filenamePattern",
+                                "archived_{filename}")));
+
+        assertTrue(Files.exists(out.resolve("archived_invoice.2026.pdf")));
+    }
+
+    @Test
+    void patternCannotWriteOutsideTheTargetDirectory() throws IOException {
+        Path out = tempDir.resolve("out");
+
+        sink.deliver(
+                AD_HOC,
+                List.of(named("report.pdf", "x")),
+                new OutputSpec(
+                        "folder",
+                        Map.of("directory", out.toString(), "filenamePattern", "../{filename}")));
+
+        assertTrue(Files.exists(out.resolve("report.pdf")));
+        assertFalse(Files.exists(tempDir.resolve("report.pdf")));
+    }
+
+    @Test
+    void replaceIgnoresTheNamingPatternSoTheFileBecomesItsResult() throws IOException {
+        Path out = tempDir.resolve("out");
+        Files.createDirectories(out);
+        Files.writeString(out.resolve("a.pdf"), "original");
+
+        sink.deliver(
+                inPlaceRun("a.pdf"),
+                List.of(named("a.pdf", "v1")),
+                new OutputSpec(
+                        "folder",
+                        Map.of(
+                                "directory",
+                                out.toString(),
+                                "replace",
+                                true,
+                                "filenamePattern",
+                                "archived_{filename}")));
+
+        assertEquals("v1", Files.readString(out.resolve("a.pdf")));
+        assertFalse(Files.exists(out.resolve("archived_a.pdf")));
+    }
+
+    @Test
     void replaceKeepsTheFirstOriginalForRevert() throws IOException {
         Path out = tempDir.resolve("out");
         Files.createDirectories(out);

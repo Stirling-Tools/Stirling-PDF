@@ -242,6 +242,51 @@ describe("Pipelines view", () => {
     expect(savePolicy.mock.calls[0][0]).toMatchObject({ enabled: false });
   });
 
+  it("says so when a pipeline was migrated rather than built here", async () => {
+    fetchPipelines.mockResolvedValue({
+      ...RESPONSE,
+      pipelines: [
+        ...RESPONSE.pipelines,
+        {
+          ...RESPONSE.pipelines[0],
+          id: "plc-invoices",
+          name: "Rotate invoices",
+          origin: "migrated",
+        },
+      ],
+    });
+    renderView();
+
+    expect(
+      await screen.findByText("portal.pipelines.origin.migrated.label"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("columnheader", {
+        name: "portal.pipelines.table.origin",
+      }),
+    ).toBeInTheDocument();
+  });
+
+  it("leaves a pipeline the team built unbadged", async () => {
+    renderView();
+    await screen.findByText("Redaction sweep");
+
+    expect(
+      screen.queryByText("portal.pipelines.origin.migrated.label"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("drops the Origin column entirely when nothing was migrated", async () => {
+    renderView();
+    await screen.findByText("Redaction sweep");
+
+    expect(
+      screen.queryByRole("columnheader", {
+        name: "portal.pipelines.table.origin",
+      }),
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps a paused policy paused when customising from the wizard", async () => {
     fetchPipeline.mockResolvedValue(pausedPolicy);
 

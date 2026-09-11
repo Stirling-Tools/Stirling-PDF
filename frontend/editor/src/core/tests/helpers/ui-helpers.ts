@@ -178,13 +178,21 @@ export async function runToolAndWaitForReview(
   ).toBeVisible({ timeout: reviewTimeout });
 }
 
+// Pin the settings modal by its own hook rather than `.mantine-Modal-content`
+// `.first()`, which resolves to whichever modal is first in the DOM.
+function settingsDialog(page: Page): Locator {
+  return page.locator(
+    '.mantine-Modal-content:has([data-tour="settings-modal"])',
+  );
+}
+
 /**
  * Open the global Settings dialog. Returns the dialog locator so callers can
  * scope further queries to it.
  */
 export async function openSettings(page: Page): Promise<Locator> {
   await page.locator('[data-testid="config-button"]').first().click();
-  const dialog = page.locator(".mantine-Modal-content").first();
+  const dialog = settingsDialog(page);
   await expect(dialog).toBeVisible({ timeout: 5_000 });
   return dialog;
 }
@@ -194,19 +202,23 @@ export async function openSettings(page: Page): Promise<Locator> {
  * dialog is fully dismissed before returning.
  */
 export async function closeSettings(page: Page): Promise<void> {
-  const modal = page.locator(".mantine-Modal-content").first();
-  // A click on the X can be swallowed by a re-render, leaving the modal open;
+  const dialog = settingsDialog(page);
+  // A click on the X can be swallowed by a re-render, leaving the dialog open;
   // retry until it's gone. A genuinely broken close still fails - every retry
-  // misses and the modal stays past the cap.
+  // misses and the dialog stays past the cap.
   await expect(async () => {
-    if (await modal.isVisible().catch(() => false)) {
-      await page
+    if (await dialog.isVisible().catch(() => false)) {
+      // Scope the button to the dialog - `[aria-label="Close"]` also matches
+      // the viewer/tour/banner close controls that live outside it.
+      await dialog
         .locator('[aria-label="Close"]')
         .first()
         .click({ timeout: 2_000 })
         .catch(() => {});
     }
-    await expect(modal).not.toBeVisible({ timeout: 2_000 });
+    // Mantine unmounts the modal once its exit transition ends, so absence
+    // from the DOM - not visibility - is what "closed" means on every engine.
+    await expect(dialog).toHaveCount(0, { timeout: 2_000 });
   }).toPass({ timeout: 12_000 });
 }
 

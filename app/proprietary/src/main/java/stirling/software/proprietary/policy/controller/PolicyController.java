@@ -404,19 +404,25 @@ public class PolicyController {
                 if (!accessiblePolicySurface(existing)) {
                     throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No policy: " + id);
                 }
-                return withOwnerAndTeam(
-                        incoming, existing.owner(), existing.teamId(), existing.surface());
+                return withOwnerTeamSurfaceAndOrigin(
+                        incoming,
+                        existing.owner(),
+                        existing.teamId(),
+                        existing.surface(),
+                        existing.origin());
             }
         }
-        return withOwnerAndTeam(
+        return withOwnerTeamSurfaceAndOrigin(
                 incoming,
                 policyAccessGuard.ownerForNewPolicy(),
                 policyAccessGuard.teamForNewPolicy(),
-                Policy.SURFACE_POLICY);
+                Policy.SURFACE_POLICY,
+                // Anything created through this endpoint was built here, whatever the body claims.
+                null);
     }
 
-    private static Policy withOwnerAndTeam(
-            Policy policy, String owner, Long teamId, String surface) {
+    private static Policy withOwnerTeamSurfaceAndOrigin(
+            Policy policy, String owner, Long teamId, String surface, String origin) {
         return new Policy(
                 policy.id(),
                 policy.name(),
@@ -430,7 +436,8 @@ public class PolicyController {
                 policy.outputIds(),
                 teamId,
                 policy.editor(),
-                surface);
+                surface,
+                origin);
     }
 
     /** Output secrets never leave the server: reads return the redaction sentinel instead. */

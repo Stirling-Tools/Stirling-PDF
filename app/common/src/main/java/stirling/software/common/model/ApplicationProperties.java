@@ -231,9 +231,10 @@ public class ApplicationProperties {
         /**
          * How often (seconds) the folder-watch trigger reconciles its watch registrations and
          * re-runs every folder-watch policy as a safety net for filesystem events that were missed
-         * (NFS, bind mounts, inotify-queue overflow).
+         * (NFS, bind mounts, inotify-queue overflow). The default bounds how long a file can sit
+         * unnoticed after a missed event to one minute.
          */
-        private long watchReconcileSeconds = 300;
+        private long watchReconcileSeconds = 60;
 
         /**
          * How long (milliseconds) the folder-watch trigger keeps draining filesystem events after
@@ -298,6 +299,15 @@ public class ApplicationProperties {
         private boolean allowCustomApiIntegrations = true;
 
         private long webhookMaxBytes = 104857600L;
+
+        /**
+         * Whether a legacy watched folder whose pipeline batches every ready file into one call
+         * (merge, overlay, images-to-PDF) is converted into a policy too. Off by default because a
+         * policy runs such a folder once per file, which is not what the legacy config asked for;
+         * those folders keep running on the legacy scanner until batch runs exist. Enable to
+         * convert them anyway and accept per-file runs.
+         */
+        private boolean migrateBatchWatchedFolders = false;
     }
 
     @Data
