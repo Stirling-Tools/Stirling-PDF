@@ -4,6 +4,7 @@ import { useSettingsNav as useCoreSettingsNav } from "@core/components/settings/
 import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
 import { usePortalAccessState } from "@app/hooks/usePortalAccess";
 import { useAuth } from "@app/auth/context";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 import {
   buildPortalSettingsSections,
@@ -30,19 +31,24 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
   const { isAdmin } = useAuth();
+  // The roster stands where People and Teams did, so it answers to the same
+  // admin flag the rest of the nav is built from, not the session's — the two
+  // disagree while /me is still in flight.
+  const { config } = useAppConfig();
+  const navAdmin = config?.isAdmin ?? false;
 
   const portalSections = useMemo(
     () =>
       buildPortalSettingsSections(t, {
         // The roster is this build's only one, so it does not wait on processor
         // access the way the processor's own surfaces do.
-        includeRoster: isAdmin || portalAccess,
+        includeRoster: navAdmin || portalAccess,
         includeApiKeys: portalAccess,
         includeEncryption: portalAccess && isAdmin,
         includeBilling: portalAccess && isAdmin,
         includeAccountLink: portalAccess && isAdmin,
       }),
-    [portalAccess, isAdmin, t],
+    [portalAccess, isAdmin, navAdmin, t],
   );
 
   const sections = useMemo(
