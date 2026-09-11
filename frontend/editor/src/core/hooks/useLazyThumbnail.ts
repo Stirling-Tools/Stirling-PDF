@@ -91,8 +91,12 @@ export function useLazyThumbnail(
         const file = await indexedDB.loadFile(fileId);
         if (!file || cancelled) return;
         const thumbnail = await generateThumbnailForFile(file);
-        if (cancelled || !thumbnail) return;
-        setThumb(thumbnail);
+        if (!thumbnail) return;
+        // Only the render belongs to the row that asked for it. Caching does not:
+        // rows mount and unmount as the list scrolls, and dropping a thumbnail that
+        // has already been generated means loading the bytes and drawing it again
+        // the next time that row comes round.
+        if (!cancelled) setThumb(thumbnail);
         void indexedDB.updateThumbnail(fileId, thumbnail);
         queueStubThumbUpdate(fileId, thumbnail, (id, url) =>
           updateStirlingFileStub(id, { thumbnailUrl: url }),
