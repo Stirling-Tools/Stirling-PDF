@@ -265,6 +265,18 @@ class InviteLinkControllerMoreTest {
         }
 
         @Test
+        @DisplayName("rejects a password below the shared minimum length")
+        void passwordTooShort() throws Exception {
+            mockMvc.perform(post("/api/v1/invite/accept/tok").param("password", "x"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("passwordTooShort"))
+                    .andExpect(
+                            jsonPath("$.message").value("Password must be at least 8 characters."));
+
+            verify(inviteTokenRepository, never()).findByToken(any());
+        }
+
+        @Test
         @DisplayName("returns 404 for an expired token")
         void expiredToken() throws Exception {
             InviteToken invite = validInvite("exp");

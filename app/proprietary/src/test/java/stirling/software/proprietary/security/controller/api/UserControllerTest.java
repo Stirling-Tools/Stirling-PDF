@@ -105,7 +105,7 @@ class UserControllerTest {
     void registerCreatesUserWhenValid() throws Exception {
         UsernameAndPass payload = new UsernameAndPass();
         payload.setUsername("new@example.com");
-        payload.setPassword("pw");
+        payload.setPassword("secret12");
         Team defaultTeam = new Team();
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
 
