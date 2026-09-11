@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { uploadFiles } from "@app/tests/helpers/ui-helpers";
+import { SETTINGS_SURFACE, uploadFiles } from "@app/tests/helpers/ui-helpers";
 import type { Page, Route } from "@playwright/test";
 import path from "node:path";
 import fs from "node:fs";
@@ -291,20 +291,20 @@ async function openFormDetectionSettings(page: Page) {
       json: { username: "admin", email: "admin@example.com", isAdmin: true },
     }),
   );
-  await page.goto("/", { waitUntil: "domcontentloaded" });
+  await page.goto("/editor", { waitUntil: "domcontentloaded" });
   const configBtn = page.locator('[data-testid="config-button"]').first();
   await expect(configBtn).toBeVisible({ timeout: 15_000 });
   await configBtn.click();
-  const dialog = page.locator(".mantine-Modal-content").first();
-  await expect(dialog).toBeVisible({ timeout: 5_000 });
-  await dialog
-    .getByText(/^(Features|الميزات)$/)
+  const settings = page.locator(SETTINGS_SURFACE);
+  await expect(settings).toBeVisible({ timeout: 5_000 });
+  await settings
+    .locator('[data-tour="admin-adminGeneral-nav"]')
     .first()
     .click();
-  await expect(dialog.getByText(/AI Form Detection/i).first()).toBeVisible({
+  await expect(settings.getByText(/AI Form Detection/i).first()).toBeVisible({
     timeout: 5_000,
   });
-  return dialog;
+  return settings;
 }
 
 async function shootCard(
@@ -312,13 +312,10 @@ async function shootCard(
   dialog: ReturnType<Page["locator"]>,
   name: string,
 ) {
-  const paper = dialog
-    .locator(".mantine-Paper-root")
-    .filter({ hasText: "AI Form Detection" })
-    .last();
-  await paper.scrollIntoViewIfNeeded();
+  const card = dialog.locator("section.settings-card:has(#adminFormDetection)");
+  await card.scrollIntoViewIfNeeded();
   await settle(page);
-  await paper.screenshot({ path: shot(name) });
+  await card.screenshot({ path: shot(name) });
 }
 
 test.describe("admin", () => {

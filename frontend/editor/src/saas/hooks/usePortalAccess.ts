@@ -7,6 +7,9 @@ import {
   writeCachedOtherApp,
 } from "@app/services/navFooterCache";
 import { qk } from "@app/query/keys";
+import type { PortalAccessState } from "@core/hooks/usePortalAccess";
+
+export type { PortalAccessState };
 
 async function fetchPortalAccess(): Promise<boolean> {
   const res = await apiClient.get<{ user?: { portalAccess?: boolean } }>(
@@ -33,7 +36,7 @@ async function fetchPortalAccess(): Promise<boolean> {
  * and coming back resolves from cache: the switcher is there on first paint
  * instead of appearing a request later. Guests skip the request entirely.
  */
-export function usePortalAccess(): boolean {
+export function usePortalAccessState(): PortalAccessState {
   const { user } = useAuth();
   const userId = user?.id ?? null;
   // The query cache is per-tree and per-load, so it can't help a cold start or
@@ -42,7 +45,7 @@ export function usePortalAccess(): boolean {
   // there at first paint. Marked ancient so it still revalidates immediately.
   const [seed] = useState(readCachedOtherApp);
 
-  const { data, isSuccess } = useQuery({
+  const { data, isSuccess, isFetched } = useQuery({
     queryKey: qk.portalAccess(userId),
     queryFn: fetchPortalAccess,
     // Signed out: nothing to ask, and any previous answer is void.
@@ -60,5 +63,15 @@ export function usePortalAccess(): boolean {
     if (isSuccess && data !== undefined) writeCachedOtherApp(data);
   }, [isSuccess, data]);
 
-  return data === true;
+  // A signed-out user has nothing to look up, so that answer is settled at
+  // once. Otherwise the seeded value is a guess until the probe comes back -
+  // callers that hide UI on "no access" must not act on the guess.
+  return {
+    granted: data === true,
+    settled: userId === null || isFetched,
+  };
+}
+
+export function usePortalAccess(): boolean {
+  return usePortalAccessState().granted;
 }

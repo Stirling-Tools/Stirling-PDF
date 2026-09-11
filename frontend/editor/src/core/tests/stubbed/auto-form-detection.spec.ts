@@ -4,6 +4,7 @@ import {
   mockAppApis,
   seedCookieConsent,
 } from "@app/tests/helpers/api-stubs";
+import { SETTINGS_SURFACE } from "@app/tests/helpers/ui-helpers";
 
 /**
  * Stubbed coverage for the tool tile (shown even when the endpoint is disabled, so the tool stays
@@ -70,7 +71,7 @@ test.describe("Auto Form Detection tool", () => {
     await expect(page).toHaveURL(/auto-form-detection/i);
   });
 
-  test("admin sees the AI Form Detection box inside the Features section", async ({
+  test("admin sees the AI Form Detection box inside the System section", async ({
     page,
   }) => {
     await seedCookieConsent(page);
@@ -98,7 +99,7 @@ test.describe("Auto Form Detection tool", () => {
         json: { username: "admin", email: "admin@example.com", isAdmin: true },
       }),
     );
-    await page.goto("/");
+    await page.goto("/editor");
 
     const configBtn = page.locator('[data-testid="config-button"]').first();
     if (!(await configBtn.isVisible({ timeout: 5_000 }).catch(() => false))) {
@@ -106,14 +107,17 @@ test.describe("Auto Form Detection tool", () => {
       return;
     }
     await configBtn.click();
-    const dialog = page.locator(".mantine-Modal-content").first();
-    await expect(dialog).toBeVisible({ timeout: 5_000 });
+    const settings = page.locator(SETTINGS_SURFACE);
+    await expect(settings).toBeVisible({ timeout: 5_000 });
 
-    // AI Form Detection now lives as a box inside the "Features" section,
-    // not as its own nav entry - navigate there first.
-    await dialog.getByText("Features", { exact: true }).first().click();
+    // AI Form Detection is a card on the System settings page, not a nav entry
+    // of its own - navigate there first.
+    await settings
+      .locator('[data-tour="admin-adminGeneral-nav"]')
+      .first()
+      .click();
 
-    await expect(dialog.getByText(/AI Form Detection/i).first()).toBeVisible({
+    await expect(settings.getByText(/AI Form Detection/i).first()).toBeVisible({
       timeout: 5_000,
     });
   });
