@@ -7,7 +7,7 @@ import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
 import { errorMessage } from "@portal/api/http";
 import { useSectionFlags } from "@portal/hooks/useAsync";
 import { usePipelines } from "@portal/queries/pipelines";
-import { usePoliciesOverview } from "@portal/queries/policies";
+import { usePoliciesOverview, usePolicyRuns } from "@portal/queries/policies";
 import {
   fetchPipeline,
   savePipeline,
@@ -32,7 +32,6 @@ import { PolicyDetailPanel } from "@portal/components/policies/PolicyDetailPanel
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import { useCanManagePolicies } from "@portal/queries/policyPermissions";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/views/Pipelines.css";
 
 /**
@@ -45,14 +44,14 @@ export function Pipelines() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
-  // Building and editing a pipeline both need a linked account, so both ask for one first (#7581).
-  const { guard } = useConnectGate();
 
   const listState = usePipelines();
   const { data: overview } = listState;
   const { isLoading: listLoading } = useSectionFlags(listState);
 
   const catalogueState = usePoliciesOverview();
+  // Shares the cache entry the catalogue already fills, so opening a row costs no fetch.
+  const runsState = usePolicyRuns();
   const { data: catalogueData } = catalogueState;
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
@@ -103,10 +102,9 @@ export function Pipelines() {
     queryClient.invalidateQueries({ queryKey: qk.policyRuns() });
   }, [queryClient]);
 
-  const openCreate = guard(() => navigate(`${listPath}/new`));
-  const connectSource = guard(() =>
-    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`),
-  );
+  const openCreate = () => navigate(`${listPath}/new`);
+  const connectSource = () =>
+    navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`);
 
   // Open a suggested template in the simple wizard (a fresh policy). AI-gated templates stay closed
   // until the engine is confirmed on, so a click during the app-config load can't open a disabled one.
@@ -122,17 +120,17 @@ export function Pipelines() {
   // A list row routes by representability: a policy that still fits its template opens the simple
   // detail panel (edit/pause/delete there); anything else opens the full builder. The full record is
   // fetched on click so parseSimplePolicy - the single authority - decides on real data.
-  const openListRow = guard(async (view: PipelineView) => {
+  const openListRow = async (view: PipelineView) => {
     setPageError(null);
     try {
       const policy = await fetchPipeline(view.id);
-      const entry = parseSimplePolicy(policy);
+      const entry = parseSimplePolicy(policy, runsState.data ?? []);
       if (entry) setDetail(entry);
       else navigate(`${listPath}/${view.id}`);
     } catch (e) {
       setPageError(errorMessage(e));
     }
-  });
+  };
 
   // ?setup=<categoryId> deep link (onboarding): open the wizard for that suggested policy, then
   // strip the param so back/reload doesn't re-open it.
