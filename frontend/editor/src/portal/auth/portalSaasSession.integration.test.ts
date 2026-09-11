@@ -43,20 +43,18 @@ it("[US02] renews an expired persisted session through the real Supabase SDK", a
       user,
     }),
   );
-  const fetch = vi
-    .fn()
-    .mockResolvedValue(
-      new Response(
-        JSON.stringify({
-          access_token: renewed,
-          refresh_token: "rotated-refresh",
-          token_type: "bearer",
-          expires_in: 3600,
-          user,
-        }),
-        { status: 200, headers: { "Content-Type": "application/json" } },
-      ),
-    );
+  const fetch = vi.fn().mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        access_token: renewed,
+        refresh_token: "rotated-refresh",
+        token_type: "bearer",
+        expires_in: 3600,
+        user,
+      }),
+      { status: 200, headers: { "Content-Type": "application/json" } },
+    ),
+  );
   vi.stubGlobal("fetch", fetch);
   configureSupabase({
     url: "https://renewal-review.supabase.co",
@@ -71,7 +69,6 @@ it("[US02] renews an expired persisted session through the real Supabase SDK", a
   expect(JSON.parse(fetch.mock.calls[0][1].body).refresh_token).toBe(
     "old-refresh",
   );
-  expect(JSON.parse(localStorage.getItem(key)!).refresh_token).toBe(
-    "rotated-refresh",
-  );
+  const persisted = JSON.parse(localStorage.getItem(key)!);
+  expect(JSON.parse(persisted.value).refresh_token).toBe("rotated-refresh");
 });

@@ -37,7 +37,7 @@ const standardAuth: AuthContextValue = {
   refreshSession: async () => {},
 };
 
-const ssoAuth: AuthContextValue = {
+const ssoAccountContext: AuthContextValue = {
   ...standardAuth,
   user: {
     ...standardAuth.user!,
@@ -93,7 +93,7 @@ export const MfaEnabled: Story = {
 export const SsoUser: Story = {
   decorators: [
     (Story) => (
-      <AuthContext.Provider value={ssoAuth}>
+      <AuthContext.Provider value={ssoAccountContext}>
         <Story />
       </AuthContext.Provider>
     ),

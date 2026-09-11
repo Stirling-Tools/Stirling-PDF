@@ -35,4 +35,16 @@ describe("renewal return destinations", () => {
     sessionStorage.setItem("stirling.portalConnect", "{invalid");
     expect(readPendingConnect()).toBeNull();
   });
+  it("stores only the allowed handoff fields, even if runtime input contains credentials", () => {
+    const runtimeInput = {
+      ...pending,
+      access_token: "private-access",
+      refresh_token: "private-refresh",
+      password: "private-password",
+    };
+    rememberConnect(runtimeInput);
+    expect(
+      JSON.parse(sessionStorage.getItem("stirling.portalConnect")!),
+    ).toEqual(pending);
+  });
 });

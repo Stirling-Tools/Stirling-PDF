@@ -55,7 +55,8 @@ function sessionRequired(): never {
   throw new SaasSessionRequiredError();
 }
 
-function terminalAuthError(error: unknown): boolean {
+/** Terminal provider failures require a fresh sign-in, not another attempt with the same tokens. */
+export function isTerminalSaasAuthError(error: unknown): boolean {
   return (
     isAuthSessionMissingError(error) ||
     (isAuthError(error) &&
@@ -76,7 +77,7 @@ export async function getPortalSaasToken(): Promise<string | null> {
   const supabase = getSupabaseClient();
   if (!supabase) return null;
   const { data, error } = await supabase.auth.getSession();
-  if (error && !terminalAuthError(error)) throw error;
+  if (error && !isTerminalSaasAuthError(error)) throw error;
   return error ? null : (data.session?.access_token ?? null);
 }
 
@@ -94,7 +95,7 @@ export function refreshPortalSaasToken(
     if (!supabase) return null;
     const { data, error } = await supabase.auth.refreshSession();
     if (started !== generation) return null;
-    if (error && !terminalAuthError(error)) throw error;
+    if (error && !isTerminalSaasAuthError(error)) throw error;
     return error ? null : (data.session?.access_token ?? null);
   })();
   refreshPromise = pending;

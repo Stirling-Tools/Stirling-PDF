@@ -49,6 +49,15 @@ describe("local account ownership of the billing session", () => {
     expect(clearSupabaseSession).not.toHaveBeenCalled();
     expect(readPendingConnect()?.ownerId).toBe("7");
   });
+  it("persists only the local owner's scalar ID, without authentication context", () => {
+    const user = {
+      id: 7,
+      access_token: "private-access",
+      password: "private-password",
+    };
+    bindAccountLinkSession(user.id);
+    expect(localStorage.getItem("stirling.portalSaasOwner")).toBe("7");
+  });
 
   it("discards credentials, callback intent and query data when the local user changes", () => {
     bindAccountLinkSession("first");

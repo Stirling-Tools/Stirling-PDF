@@ -4,7 +4,10 @@ import { completeConnect, type ConnectPhase } from "@portal/api/link";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 import { clearAccountLinkSession } from "@portal/auth/accountLinkSession";
-import { portalSaasSessionRestored } from "@portal/auth/portalSaasSession";
+import {
+  isTerminalSaasAuthError,
+  portalSaasSessionRestored,
+} from "@portal/auth/portalSaasSession";
 import type { PendingConnect } from "@portal/auth/pendingConnect";
 import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
 import { useUI } from "@portal/contexts/UIContext";
@@ -141,7 +144,17 @@ export function ConnectCallbackHost() {
         }
         discardTokens();
         publishRef.current({ ...metadata, state: "linked", sessionRestored });
-      } catch {
+      } catch (error) {
+        if (current() && isTerminalSaasAuthError(error)) {
+          discardTokens();
+          publishRef.current({
+            ...metadata,
+            state: "rejected",
+            sessionRestored: false,
+            cancel,
+          });
+          return;
+        }
         // A confirmed claim is single-use; retry only session installation after it succeeds.
         if (current())
           publishRef.current({

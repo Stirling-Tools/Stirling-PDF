@@ -90,7 +90,11 @@ async function invoke<T>(
 }
 
 /** Call a SECURITY DEFINER public.* RPC with the admin's JWT (same client as {@link invoke}). */
-async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
+async function rpc<T>(
+  fn: string,
+  args: Record<string, unknown>,
+  readOnly = false,
+): Promise<T> {
   ensureSaasSupabase();
   const supabase = getSupabaseClient();
   if (!supabase) {
@@ -102,6 +106,7 @@ async function rpc<T>(fn: string, args: Record<string, unknown>): Promise<T> {
   const { data, error } = await withPortalSaasSession(
     () => Promise.resolve(supabase.rpc(fn, args)),
     (response) => response.status === 401,
+    readOnly,
   );
   if (error) {
     throw new StripeFunctionError(
@@ -229,6 +234,7 @@ export async function getLatestBundleQuote(
   const rows = await rpc<LatestBundleQuoteRow[]>(
     "payg_get_latest_bundle_quote",
     { p_team_id: teamId },
+    true,
   );
   const row = rows?.[0];
   if (!row) return null;

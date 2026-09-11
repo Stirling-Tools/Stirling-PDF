@@ -13,7 +13,11 @@ const KEY = "stirling.portalConnect";
 
 /** Retains tab-local intent across the SaaS redirect; never stores access or refresh tokens. */
 export function rememberConnect(pending: PendingConnect): void {
-  sessionStorage.setItem(KEY, JSON.stringify(pending));
+  const { ownerId, mode, returnTo, settingsSection, browserState } = pending;
+  sessionStorage.setItem(
+    KEY,
+    JSON.stringify({ ownerId, mode, returnTo, settingsSection, browserState }),
+  );
 }
 
 /** Returns a router-relative destination confined to this portal. */

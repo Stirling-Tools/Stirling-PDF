@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,6 +16,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.MapPropertySource;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
@@ -43,6 +45,13 @@ class AccountLinkAuthorizationTest {
         service = mock(AccountLinkService.class);
         connectService = mock(ConnectService.class);
         context = new AnnotationConfigApplicationContext();
+        context.getEnvironment().setActiveProfiles("test");
+        context.getEnvironment()
+                .getPropertySources()
+                .addFirst(
+                        new MapPropertySource(
+                                "accountLinkTest",
+                                Map.of("stirling.billing.account-link.enabled", "true")));
         context.register(SecurityConfig.class);
         context.registerBean(
                 AccountLinkController.class,

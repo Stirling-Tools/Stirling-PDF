@@ -5,10 +5,11 @@ import { getPortalQueryClient } from "@portal/queryClient";
 const OWNER_KEY = "stirling.portalSaasOwner";
 
 /** Local account changes require a new browser authorization, leaving the device link intact. */
-export function bindAccountLinkSession(userId: string | null): void {
-  if (userId && localStorage.getItem(OWNER_KEY) === userId) return;
+export function bindAccountLinkSession(userId: string | number | null): void {
+  const ownerId = userId == null ? null : String(userId);
+  if (ownerId && localStorage.getItem(OWNER_KEY) === ownerId) return;
   clearAccountLinkSession();
-  if (userId) localStorage.setItem(OWNER_KEY, userId);
+  if (ownerId) localStorage.setItem(OWNER_KEY, ownerId);
   else localStorage.removeItem(OWNER_KEY);
 }
 

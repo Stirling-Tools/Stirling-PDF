@@ -47,7 +47,10 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
         const ownerId = localStorage.getItem("stirling.portalSaasOwner");
         if (!ownerId) throw new Error("A local organization owner is required");
         // Stated, not inferred: only the frontend knows its own base path.
-        const browserState = crypto.randomUUID();
+        const browserState = Array.from(
+          crypto.getRandomValues(new Uint8Array(32)),
+          (byte) => byte.toString(16).padStart(2, "0"),
+        ).join("");
         const callback = new URL(
           withBasePath("/account-link/callback"),
           window.location.origin,
