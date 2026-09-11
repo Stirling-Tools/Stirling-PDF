@@ -1,12 +1,6 @@
 import { Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import UndoIcon from "@mui/icons-material/Undo";
-import RedoIcon from "@mui/icons-material/Redo";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import DeleteIcon from "@mui/icons-material/Delete";
-import InsertPageBreakIcon from "@mui/icons-material/InsertPageBreak";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 
 interface PageEditorControlsProps {
@@ -142,7 +136,7 @@ const PageEditorControls = ({
             disabled={!canUndo}
             aria-label={t("pageEditor.toolbar.undo", "Undo")}
           >
-            <UndoIcon />
+            <Icon name="undo-2" />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={t("pageEditor.toolbar.redo", "Redo")}>
@@ -153,7 +147,7 @@ const PageEditorControls = ({
             disabled={!canRedo}
             aria-label={t("pageEditor.toolbar.redo", "Redo")}
           >
-            <RedoIcon />
+            <Icon name="redo-2" />
           </ActionIcon>
         </Tooltip>
 
@@ -180,7 +174,7 @@ const PageEditorControls = ({
               "Rotate Selected Left",
             )}
           >
-            <RotateLeftIcon />
+            <Icon name="rotate-ccw" />
           </ActionIcon>
         </Tooltip>
         <Tooltip
@@ -196,7 +190,7 @@ const PageEditorControls = ({
               "Rotate Selected Right",
             )}
           >
-            <RotateRightIcon />
+            <Icon name="rotate-cw" />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={t("pageEditor.toolbar.delete", "Delete Selected")}>
@@ -207,7 +201,7 @@ const PageEditorControls = ({
             disabled={selectedPageIds.length === 0}
             aria-label={t("pageEditor.toolbar.delete", "Delete Selected")}
           >
-            <DeleteIcon />
+            <Icon name="trash" />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={getSplitTooltip()}>
@@ -218,7 +212,7 @@ const PageEditorControls = ({
             disabled={selectedPageIds.length === 0}
             aria-label={getSplitTooltip()}
           >
-            <ContentCutIcon />
+            <Icon name="scissors" />
           </ActionIcon>
         </Tooltip>
         <Tooltip label={getPageBreakTooltip()}>
@@ -229,7 +223,7 @@ const PageEditorControls = ({
             disabled={selectedPageIds.length === 0}
             aria-label={getPageBreakTooltip()}
           >
-            <InsertPageBreakIcon />
+            <Icon name="square-split-vertical" />
           </ActionIcon>
         </Tooltip>
       </div>
