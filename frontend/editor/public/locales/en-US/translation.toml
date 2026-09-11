@@ -7278,12 +7278,6 @@ cta = "Get an enterprise quote"
 sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match."
 title = "Running Stirling in a regulated environment?"
 
-[portal.billing.enterpriseUpsell]
-cta = "Explore Enterprise"
-description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
-eyebrow = "Volume discount · 1M+ PDFs"
-title = "Stirling Enterprise"
-
 [portal.billing.freeEditors]
 activeThisMonth = "Active this month"
 cost = "Cost"
@@ -7294,16 +7288,10 @@ subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
 [portal.billing.freePlan]
-anywhere = "Web, desktop & self-hosted"
 checkoutErrorTitle = "Couldn't start checkout"
-currentPlan = "Current plan"
-everyPdfTool = "Every PDF tool"
-freeForever = "Free forever"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
 ownerOnly = "Only the team owner can switch on the Processor plan."
 payInvoice = "Pay invoice to complete"
-planName = "Editor"
-switchOnProcessor = "Switch on the Processor →"
 viewQuote = "View quote"
 
 [portal.billing.identity.free]
@@ -7335,30 +7323,6 @@ undated = "Undated"
 unknownAmount = "Unknown"
 view = "View"
 
-[portal.billing.invoices]
-columnAmount = "Amount"
-columnDate = "Date"
-columnDescription = "Description"
-columnPdfsProcessed = "PDFs processed"
-columnStatus = "Status"
-descriptionFallback = "Invoice"
-downloadAriaLabel = "Download invoice {{number}} as PDF"
-emptyDescription = "Once your team subscribes and the first cycle closes, your invoices appear here."
-emptyTitle = "No invoices yet"
-fetchLimitNote_one = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
-fetchLimitNote_other = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
-loadError = "Couldn't load invoices: {{error}}"
-pdfLink = "PDF ↓"
-showAll_one = "Show all {{count}}"
-showAll_other = "Show all {{count}}"
-showFewer_one = "Show fewer (top {{count}})"
-showFewer_other = "Show fewer (top {{count}})"
-showMostRecent_one = "Show {{count}} most recent"
-showMostRecent_other = "Show {{count}} most recent"
-title = "Invoice history"
-viewAriaLabel = "View invoice {{number}} in Stripe"
-viewLink = "View ↗"
-
 [portal.billing.payment]
 billedTo = "Billed to"
 card = "{{brand}} ending {{last4}}"
@@ -7369,16 +7333,6 @@ nextInvoice = "Next invoice"
 nextInvoiceNote = "from this cycle's pace"
 nextInvoiceValue = "{{date}} · {{amount}}"
 noCard = "No card on file"
-update = "Update"
-
-[portal.billing.paymentMethod]
-billedMonthly = "Billed monthly"
-cardEnding = "{{brand}} ending {{last4}}"
-cardFallback = "Card"
-expiresBilledMonthly = "Expires {{expiry}} · billed monthly"
-eyebrow = "Payment method"
-managedSub = "Your card and billing details are kept securely in Stripe's customer portal."
-managedTitle = "Managed in Stripe"
 update = "Update"
 
 [portal.billing.pdfsProcessed]

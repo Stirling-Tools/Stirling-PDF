@@ -5,13 +5,10 @@ import { meterState } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
 import type { LocalUsage } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
-import { FreePdfEditorsCard } from "@portal/components/billing/FreePdfEditorsCard";
 import { PdfsProcessedCard } from "@portal/components/billing/PdfsProcessedCard";
 import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
 import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
 import { SpendLimitCard } from "@portal/components/billing/SpendLimitCard";
-import { PaymentMethodCard } from "@portal/components/billing/PaymentMethodCard";
-import { InvoicesList } from "@portal/components/billing/InvoicesList";
 
 interface Props {
   wallet: Wallet;
@@ -27,18 +24,10 @@ interface Props {
 }
 
 /**
- * Linked + subscribed — the full Processor-plan dashboard, matching the
- * marketing layout and reusing the free view's building blocks:
- *   - team editor fleet ({@link FreePdfEditorsCard}, shared with the free view)
- *   - PDFs processed + category split ({@link PdfsProcessedCard})
- *   - spend-vs-cap meter, projection, and the leader-only cap editor
- *     ({@link SpendLimitCard} → shared {@code SpendCapControl})
- *   - Enterprise upsell ({@link EnterpriseUpsell}, shared with the free view)
- *   - per-member usage, Stripe invoices, and the default payment method
- *
- * Card / subscription management lives in Stripe's hosted portal — both the
- * page-header "Manage Payment" action and the payment card's "Update" button
- * deep-link there via {@link useStripePortal}.
+ * What a subscribed team needs beyond {@link BillingScreen}: prepaid capacity, the per-category
+ * split of what was processed, the leader-only spend-limit editor, and the bundle checkout. The
+ * fleet count, invoices and the payment method are not repeated here; the shared screen states
+ * those already.
  */
 export function SubscribedPlanView({
   wallet,
@@ -115,17 +104,16 @@ export function SubscribedPlanView({
         </Banner>
       )}
 
-      <FreePdfEditorsCard />
-
       <PrepaidCapacityCard
         wallet={wallet}
         onBuy={canBuyBundle ? () => setBundleOpen(true) : undefined}
       />
 
+      {/* Kept despite the shared screen also printing a total: only this carries the per-category
+          split, and the total is the axis the split is read against. */}
       <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
 
-      {/* Spend for the period is BillingScreen's ProcessorPlanCard now; what stays here is the
-          limit control, which is interactive and has no equivalent on the shared card. */}
+      {/* The limit control, which is interactive and has no equivalent on the shared card. */}
       <div className="portal-billing__spend-row">
         <SpendLimitCard
           wallet={wallet}
@@ -134,10 +122,6 @@ export function SubscribedPlanView({
           onAdjustingChange={setAdjusting}
         />
       </div>
-
-      <InvoicesList />
-
-      <PaymentMethodCard onManage={portal.open} managing={portal.opening} />
 
       {portal.error && (
         <Banner
