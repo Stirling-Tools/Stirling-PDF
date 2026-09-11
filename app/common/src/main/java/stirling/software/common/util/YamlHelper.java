@@ -2,8 +2,11 @@ package stirling.software.common.util;
 
 import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.FileSystemException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,6 +46,8 @@ public class YamlHelper {
                     .setWidth(Integer.MAX_VALUE)
                     .setDefaultFlowStyle(FlowStyle.BLOCK)
                     .build();
+
+    private static final int MAX_SYMLINK_HOPS = 16;
 
     private final String yamlContent; // Stores the entire YAML content as a string
 
@@ -349,13 +354,96 @@ public class YamlHelper {
 
     public MappingNode save(Path saveFilePath) throws IOException {
         if (!saveFilePath.equals(originalFilePath)) {
-            Files.writeString(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
+            writeAtomically(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
         }
         return (MappingNode) getUpdatedRootNode();
     }
 
     public void saveOverride(Path saveFilePath) throws IOException {
-        Files.writeString(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
+        writeAtomically(saveFilePath, convertNodeToYaml(getUpdatedRootNode()));
+    }
+
+    /**
+     * Write via a sibling temp file and rename. A direct write truncates first, so a crash or a
+     * full disk part-way through would leave settings.yml half-written and the app unable to boot.
+     *
+     * <p>The published file keeps the identity and the mode a direct write would have given it: a
+     * symlinked target is written through to its destination, even when that destination does not
+     * exist yet, and an existing target's POSIX permissions are carried onto the replacement. A
+     * parent directory that will not take the staging file falls back to writing in place, so a
+     * read-only config mount still fails only the way it did before.
+     *
+     * <p>The staging file holds the whole settings content, secrets included, so it is created
+     * owner-only and only widened to the target's mode once the content is on disk.
+     */
+    private static void writeAtomically(Path target, String content) throws IOException {
+        Path resolved = resolveLink(target);
+        Path dir = resolved.getParent() != null ? resolved.getParent() : Path.of(".");
+        Path tmp;
+        try {
+            tmp = createStagingFile(dir);
+        } catch (IOException e) {
+            log.debug("Cannot stage a temp file in {}, writing in place", dir, e);
+            Files.writeString(resolved, content);
+            return;
+        }
+        try {
+            Files.writeString(tmp, content);
+            copyPermissions(resolved, tmp);
+            try {
+                Files.move(
+                        tmp,
+                        resolved,
+                        StandardCopyOption.REPLACE_EXISTING,
+                        StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException e) {
+                Files.move(tmp, resolved, StandardCopyOption.REPLACE_EXISTING);
+            } catch (FileSystemException e) {
+                // Bind-mounted files (docker) reject rename with EBUSY; write in place
+                Files.writeString(resolved, content);
+            }
+        } finally {
+            Files.deleteIfExists(tmp);
+        }
+    }
+
+    /**
+     * Creates the empty staging file the settings content is written into. Readable and writable by
+     * its owner alone, whatever the umask: the content lands before the target's mode is applied,
+     * so anything wider would expose every secret in settings.yml for the length of the write.
+     */
+    static Path createStagingFile(Path dir) throws IOException {
+        return Files.createTempFile(dir, ".yaml-", ".tmp");
+    }
+
+    /**
+     * The file a write to {@code target} ends up at, following a chain of symlinks by name rather
+     * than by resolving on disk so that a link whose destination does not exist yet still resolves.
+     * A link loop exhausts the hop budget and returns the last link, which fails the write the same
+     * way a direct write would.
+     */
+    static Path resolveLink(Path target) throws IOException {
+        Path current = target;
+        for (int hop = 0; hop < MAX_SYMLINK_HOPS && Files.isSymbolicLink(current); hop++) {
+            Path destination = Files.readSymbolicLink(current);
+            Path parent = current.getParent();
+            current =
+                    (destination.isAbsolute() || parent == null)
+                            ? destination
+                            : parent.resolve(destination);
+            current = current.normalize();
+        }
+        return current;
+    }
+
+    private static void copyPermissions(Path from, Path to) {
+        try {
+            if (Files.exists(from)) {
+                Files.setPosixFilePermissions(to, Files.getPosixFilePermissions(from));
+            }
+        } catch (UnsupportedOperationException | IOException e) {
+            log.debug("Could not carry permissions from {} onto the replacement", from, e);
+        }
     }
 
     /**
