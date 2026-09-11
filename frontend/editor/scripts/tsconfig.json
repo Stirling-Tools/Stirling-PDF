@@ -6,7 +6,9 @@
     "types": ["node"],
     "noEmit": true,
     // sync-portal-docs.mts imports the shared transform by its .ts path (run via tsx).
-    "allowImportingTsExtensions": true
+    "allowImportingTsExtensions": true,
+    // icons.config.mjs stays plain JS so plain-node scripts can read it; this types the import.
+    "allowJs": true
   },
   "include": ["./**/*.ts", "./**/*.mts", "../../oxlint.config.ts"]
 }

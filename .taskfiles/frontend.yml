@@ -46,7 +46,9 @@ tasks:
     run: once
     deps: [install]
     cmds:
+      # Both sets while the migration is in flight: unmigrated call sites still use material-symbols.
       - node editor/scripts/generate-icons.js
+      - npx tsx editor/scripts/generate-icon-registry.mts
 
   prepare:og:
     internal: true
@@ -342,7 +344,20 @@ tasks:
     cmds:
       - task: lint:oxlint
       - task: lint:colors
+      - task: lint:icons
       - task: lint:css
+
+  lint:icons:
+    desc: "Enforce one icon system - no inline svg, no retired icon libraries"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/lint/icon-lint.mts
+
+  lint:unused-icons:
+    desc: "Report icons we draw ourselves that nothing renders"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/lint/icon-lint.mts unused
 
   lint:css:
     desc: "Lint stylesheets for duplicate selectors"
@@ -506,12 +521,19 @@ tasks:
     cmds:
       - node editor/scripts/generate-og-metadata.mjs --check
 
+  icons:check:
+    desc: "Fail if the committed icon registry is out of date"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/generate-icon-registry.mts --check
+
   check:all:
     desc: "Full CI quality gate"
     cmds:
       # Runs first, before prepare regenerates: guards the committed og-metadata.json /
       # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
       - task: og:check
+      - task: icons:check
       - task: typecheck:all
       - task: lint
       - task: format:check
