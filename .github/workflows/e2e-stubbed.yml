@@ -63,6 +63,21 @@ jobs:
           NPM_CONFIG_FETCH_RETRY_MINTIMEOUT: "1000"
           NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT: "120000"
         run: task e2e:stubbed-project PROJECT=${{ matrix.project }} -- --workers=3
+      # The disk-link suite exercises a seam chosen at build time, so it needs
+      # a desktop-mode bundle of its own. Chromium only: it is not testing
+      # engine behaviour, and building twice on all three would treble the job.
+      - name: Build frontend (desktop mode, for the disk-link suite)
+        if: matrix.browser == 'chromium'
+        env:
+          VITE_BUILD_FOR_PREVIEW: "1"
+        run: task frontend:build:desktop:e2e
+      - name: Run disk-link E2E tests (desktop mode)
+        if: matrix.browser == 'chromium'
+        env:
+          HOME: /root
+          DOCKER_CONFIG: /tmp/playwright-docker-config
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/frontend/playwright-report/results-desktop.json
+        run: task e2e:stubbed-desktop -- --workers=3
       - name: Flag flaky tests
         # Runs regardless of the test outcome: a flaky test (passed on retry)
         # leaves the step green, so this is the only place it surfaces. Emits
