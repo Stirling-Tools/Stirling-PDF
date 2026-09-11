@@ -191,59 +191,69 @@ public class MetadataController {
                 info.setTitle(null);
                 info.setTrapped(null);
             } else {
-                Set<String> existingKeys = info.getMetadataKeys();
-                if (existingKeys != null) {
-                    for (String existingKey : existingKeys) {
-                        if (!STANDARD_KEYS.contains(existingKey.toLowerCase(Locale.ROOT))
-                                && !PdfMetadataService.CLASSIFICATION_KEY.equalsIgnoreCase(
-                                        existingKey)) {
-                            boolean retained =
-                                    customMetadata.keySet().stream()
-                                            .anyMatch(k -> k.equalsIgnoreCase(existingKey));
-                            if (!retained) {
-                                info.setCustomMetadataValue(existingKey, null);
-                            }
-                        }
-                    }
-                }
-
                 for (Entry<String, String> entry : customMetadata.entrySet()) {
                     info.setCustomMetadataValue(entry.getKey(), entry.getValue());
                 }
 
-                Calendar creationDateCal = PdfMetadataService.parseToCalendar(creationDate);
-                if (creationDateCal != null) {
-                    info.setCreationDate(creationDateCal);
-                } else if (creationDate != null
-                        && (creationDate.isBlank() || "undefined".equalsIgnoreCase(creationDate))) {
-                    info.setCreationDate(null);
+                String rawCreationDate = request.getCreationDate();
+                if (rawCreationDate != null) {
+                    Calendar creationDateCal = PdfMetadataService.parseToCalendar(creationDate);
+                    if (creationDateCal != null) {
+                        info.setCreationDate(creationDateCal);
+                    } else if (rawCreationDate.isBlank()
+                            || "undefined".equalsIgnoreCase(rawCreationDate.trim())) {
+                        info.setCreationDate(null);
+                    }
                 }
 
-                Calendar modificationDateCal = PdfMetadataService.parseToCalendar(modificationDate);
-                if (modificationDateCal != null) {
-                    info.setModificationDate(modificationDateCal);
-                } else if (modificationDate != null
-                        && (modificationDate.isBlank()
-                                || "undefined".equalsIgnoreCase(modificationDate))) {
-                    info.setModificationDate(null);
+                String rawModificationDate = request.getModificationDate();
+                if (rawModificationDate != null) {
+                    Calendar modificationDateCal =
+                            PdfMetadataService.parseToCalendar(modificationDate);
+                    if (modificationDateCal != null) {
+                        info.setModificationDate(modificationDateCal);
+                    } else if (rawModificationDate.isBlank()
+                            || "undefined".equalsIgnoreCase(rawModificationDate.trim())) {
+                        info.setModificationDate(null);
+                    }
                 }
 
-                info.setCreator(creator);
-                info.setKeywords(keywords);
-                info.setAuthor(author);
-                info.setProducer(producer);
-                info.setSubject(subject);
-                info.setTitle(title);
-
-                String normalizedTrapped = null;
-                if ("true".equalsIgnoreCase(trapped)) {
-                    normalizedTrapped = "True";
-                } else if ("false".equalsIgnoreCase(trapped)) {
-                    normalizedTrapped = "False";
-                } else if ("unknown".equalsIgnoreCase(trapped)) {
-                    normalizedTrapped = "Unknown";
+                if (request.getCreator() != null) {
+                    info.setCreator(creator);
                 }
-                info.setTrapped(normalizedTrapped);
+                if (request.getKeywords() != null) {
+                    info.setKeywords(keywords);
+                }
+                if (request.getAuthor() != null) {
+                    info.setAuthor(author);
+                }
+                if (request.getProducer() != null) {
+                    info.setProducer(producer);
+                }
+                if (request.getSubject() != null) {
+                    info.setSubject(subject);
+                }
+                if (request.getTitle() != null) {
+                    info.setTitle(title);
+                }
+
+                if (request.getTrapped() != null) {
+                    String normalizedTrapped = null;
+                    if ("true".equalsIgnoreCase(trapped)) {
+                        normalizedTrapped = "True";
+                    } else if ("false".equalsIgnoreCase(trapped)) {
+                        normalizedTrapped = "False";
+                    } else if ("unknown".equalsIgnoreCase(trapped)) {
+                        normalizedTrapped = "Unknown";
+                    } else if (trapped == null
+                            || trapped.isBlank()
+                            || "undefined".equalsIgnoreCase(trapped.trim())) {
+                        normalizedTrapped = null;
+                    } else {
+                        normalizedTrapped = info.getTrapped();
+                    }
+                    info.setTrapped(normalizedTrapped);
+                }
 
                 pdfMetadataService.synchronizeXmpMetadata(document, customMetadata);
             }

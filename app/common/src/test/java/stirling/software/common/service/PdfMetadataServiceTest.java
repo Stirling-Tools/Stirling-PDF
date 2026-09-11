@@ -546,8 +546,8 @@ class PdfMetadataServiceTest {
         }
 
         @Test
-        @DisplayName("removes deleted custom fields on subsequent synchronization")
-        void removesDeletedCustomFields() throws Exception {
+        @DisplayName("preserves unspecified custom fields on subsequent synchronization")
+        void preservesUnspecifiedCustomFields() throws Exception {
             PdfMetadataService service = nonProService(null);
             try (PDDocument doc = new PDDocument()) {
                 doc.addPage(new PDPage());
@@ -562,7 +562,7 @@ class PdfMetadataServiceTest {
 
                 XMPSchema pdfx = xmp.getSchema(PdfMetadataService.PDFX_NAMESPACE);
                 assertNotNull(pdfx);
-                assertNull(pdfx.getUnqualifiedTextPropertyValue("Field1"));
+                assertEquals("Val1", pdfx.getUnqualifiedTextPropertyValue("Field1"));
                 assertEquals("Val2Updated", pdfx.getUnqualifiedTextPropertyValue("Field2"));
             }
         }
@@ -601,7 +601,7 @@ class PdfMetadataServiceTest {
                 assertEquals(
                         "PDF/X-1:2001", pdfx.getUnqualifiedTextPropertyValue("GTS_PDFXVersion"));
                 assertEquals("NewValue", pdfx.getUnqualifiedTextPropertyValue("NewCustom"));
-                assertNull(pdfx.getUnqualifiedTextPropertyValue("OldCustom"));
+                assertEquals("OldValue", pdfx.getUnqualifiedTextPropertyValue("OldCustom"));
             }
         }
     }

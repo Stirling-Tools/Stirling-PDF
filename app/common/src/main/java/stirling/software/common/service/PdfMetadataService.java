@@ -464,6 +464,8 @@ public class PdfMetadataService {
             normalizedTrapped = "True";
         } else if ("false".equalsIgnoreCase(trapped)) {
             normalizedTrapped = "False";
+        } else if ("unknown".equalsIgnoreCase(trapped)) {
+            normalizedTrapped = "Unknown";
         }
         if (normalizedTrapped != null) {
             adobePdf.setTextPropertyValueAsSimple("Trapped", normalizedTrapped);
@@ -483,22 +485,6 @@ public class PdfMetadataService {
                 xmp.addSchema(pdfx);
             }
             if (pdfx != null) {
-                // Remove deleted custom properties, preserving standard PDF/X properties (e.g.
-                // GTS_PDFXVersion)
-                for (AbstractField prop : List.copyOf(pdfx.getAllProperties())) {
-                    String propName = prop.getPropertyName();
-                    if (propName != null && !propName.startsWith("GTS_")) {
-                        boolean retained =
-                                customMetadata.keySet().stream()
-                                        .anyMatch(
-                                                k ->
-                                                        sanitizeXmlPropertyName(k.trim())
-                                                                .equalsIgnoreCase(propName));
-                        if (!retained) {
-                            pdfx.removeProperty(prop);
-                        }
-                    }
-                }
                 for (Map.Entry<String, String> entry : customMetadata.entrySet()) {
                     String rawKey = entry.getKey();
                     String val = entry.getValue();
