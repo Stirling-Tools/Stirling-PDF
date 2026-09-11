@@ -58,6 +58,11 @@ import { folderKind } from "@app/types/folder";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
+import MobileUploadModal from "@app/components/shared/MobileUploadModal";
+import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
+import { useAuth } from "@app/auth/UseSession";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import QrCode2Icon from "@mui/icons-material/QrCode2";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
@@ -722,6 +727,18 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { addFiles } = useFileHandler();
     const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
       useNewFolderFlow();
+    const { refreshing, refresh: refreshLibrary } = useLibraryRefresh();
+    const { isAnonymous } = useAuth();
+    const { config: appConfig } = useAppConfig();
+    const [mobileUploadOpen, setMobileUploadOpen] = useState(false);
+    const isMobileViewport = useIsMobile();
+    // The scanner sends files from a phone to this screen, so it is a desktop
+    // affordance: on a phone you are already where the files are.
+    const mobileUploadAvailable =
+      Boolean(appConfig?.enableMobileScanner) && !isMobileViewport;
+    const signInRequired = isAnonymous
+      ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
+      : null;
 
     const handleUpload = useCallback(
       async (files: File[]) => {
@@ -753,36 +770,69 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
         : createFolderHereBlockedReason;
 
     return (
-      <FileSidebar
-        ref={ref}
-        {...props}
-        onUploadFiles={handleUpload}
-        onPickGoogleDriveFiles={handleUpload}
-        extraAction={{
-          icon: <CreateNewFolderIcon />,
-          label: t("filesPage.newFolder", "New folder"),
-          onClick: createFolderHere,
-          disabled: newFolderDisabledReason !== null,
-          disabledTooltip: newFolderDisabledReason ?? undefined,
-          testId: "files-rail-new-folder",
-          // The same control the library's own chrome uses, so one row cannot
-          // offer less than the other: where a folder can go decides its shape.
-          render: ({ collapsed }) => (
-            <NewFolderButton
-              trigger="row"
-              collapsed={collapsed}
-              testId="files-rail-new-folder"
-              label={t("filesPage.newFolder", "New folder")}
-              disabledReason={newFolderDisabledReason}
-              serverDisabledReason={serverFolderBlock ?? undefined}
-              currentFolderId={folders.currentFolderId}
-              canAddLocalFolder={canPickDirectory}
-              onAddLocalFolder={() => void addLocalFolder()}
-              onOpenDialog={filesPage.openNewFolderDialog}
-            />
-          ),
-        }}
-      />
+      <>
+        <FileSidebar
+          ref={ref}
+          {...props}
+          onUploadFiles={handleUpload}
+          onPickGoogleDriveFiles={handleUpload}
+          extraActions={[
+            {
+              icon: <CreateNewFolderIcon />,
+              label: t("filesPage.newFolder", "New folder"),
+              onClick: createFolderHere,
+              disabled: newFolderDisabledReason !== null,
+              disabledTooltip: newFolderDisabledReason ?? undefined,
+              testId: "files-rail-new-folder",
+              // The same control the library's other surfaces use, so one row
+              // cannot offer less than another: where a folder can go decides
+              // its shape.
+              render: ({ collapsed }) => (
+                <NewFolderButton
+                  trigger="row"
+                  collapsed={collapsed}
+                  testId="files-rail-new-folder"
+                  label={t("filesPage.newFolder", "New folder")}
+                  disabledReason={newFolderDisabledReason}
+                  serverDisabledReason={serverFolderBlock ?? undefined}
+                  currentFolderId={folders.currentFolderId}
+                  canAddLocalFolder={canPickDirectory}
+                  onAddLocalFolder={() => void addLocalFolder()}
+                  onOpenDialog={filesPage.openNewFolderDialog}
+                />
+              ),
+            },
+            {
+              icon: <RefreshIcon />,
+              label: t("filesPage.refresh", "Refresh from server"),
+              onClick: () => void refreshLibrary(),
+              disabled: refreshing || signInRequired !== null,
+              disabledTooltip: signInRequired ?? undefined,
+              testId: "files-rail-refresh",
+            },
+            ...(mobileUploadAvailable
+              ? [
+                  {
+                    icon: <QrCode2Icon />,
+                    label: t(
+                      "filesPage.uploadFromMobile",
+                      "Upload from Mobile",
+                    ),
+                    onClick: () => setMobileUploadOpen(true),
+                    testId: "files-rail-mobile-upload",
+                  },
+                ]
+              : []),
+          ]}
+        />
+        <MobileUploadModal
+          opened={mobileUploadOpen}
+          onClose={() => setMobileUploadOpen(false)}
+          onFilesReceived={(files) => {
+            if (files.length > 0) void handleUpload(files);
+          }}
+        />
+      </>
     );
   },
 );

@@ -23,7 +23,6 @@ import { useMediaQuery } from "@mantine/hooks";
 import CloseIcon from "@mui/icons-material/Close";
 import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -92,7 +91,6 @@ import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import {
@@ -101,6 +99,7 @@ import {
   pickFolderColor,
 } from "@app/types/folder";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
+import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { writeIntoMount } from "@app/services/mountWrites";
 import {
   canListDirectory,
@@ -159,8 +158,6 @@ export default function FileManagerView() {
   const { addFiles } = useFileHandler();
   const { config: appConfig } = useAppConfig();
   const isMobile = useIsMobile();
-  const isMobileUploadAvailable =
-    Boolean(appConfig?.enableMobileScanner) && !isMobile;
   // Guests (anonymous sessions) have no server-side storage, so every cloud
   // action is account-only. Rather than let the click fire a guaranteed 401
   // (which surfaced as an error toast), we disable the control and explain why
@@ -182,7 +179,6 @@ export default function FileManagerView() {
           "filesPage.saveToServerDisabledHint",
           "Saving to the server isn't enabled on this server. Ask your admin to enable it.",
         ));
-  const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { actions: navActions } = useNavigationActions();
   const { requestNavigation } = useNavigationGuard();
   const { setActiveFileId } = useViewer();
@@ -947,7 +943,6 @@ export default function FileManagerView() {
   // ─── upload (drag-from-desktop or button) ───────────────────────────────
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const handleNativeUpload = useCallback(
     async (files: File[]) => {
@@ -1383,29 +1378,7 @@ export default function FileManagerView() {
   // null = New folder actionable; string = disabled tooltip reason.
   // Lifted out of the header that used to render it: the workbench bar owns these
   // controls now, and a handler defined inside JSX cannot be handed to it.
-  const handleRefresh = useCallback(async () => {
-    setRefreshing(true);
-    try {
-      // pullFromServer bumps the folder revision, which the FolderProvider's effect
-      // reacts to by re-running refresh() - no need to await folders.refresh() here.
-      const result = await folders.pullFromServer();
-      if (!result.ok && result.reason !== "endpoint-missing") {
-        folders.setError(
-          result.reason === "network"
-            ? t("filesPage.syncError.network", "Could not reach the server.")
-            : result.reason === "server"
-              ? t(
-                  "filesPage.syncError.server",
-                  "Server error during folder sync.",
-                )
-              : t("filesPage.syncError.client", "Folder sync failed."),
-        );
-      }
-      await refresh();
-    } finally {
-      setRefreshing(false);
-    }
-  }, [folders, refresh, t]);
+  const { refreshing, refresh: handleRefresh } = useLibraryRefresh();
 
   const newFolderDisabledReason: string | null = useMemo(() => {
     // Only All/Cloud render folders, so creating one elsewhere would look inert.
@@ -1449,10 +1422,6 @@ export default function FileManagerView() {
   // Stable identities: the bar re-registers whenever these change, and a fresh arrow
   // per render turns that into an endless register -> render -> register loop.
   const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
-  const openMobileUpload = useCallback(
-    () => setMobileUploadModalOpen(true),
-    [],
-  );
 
   // Memoised for the same reason the handlers above are: the bar re-registers
   // whenever what it was given changes, and a fresh element per render makes that a
@@ -1515,21 +1484,6 @@ export default function FileManagerView() {
             <UploadFileIcon fontSize="small" />
           </ActionIcon>
         </Tooltip>
-        {isMobileUploadAvailable && (
-          <Tooltip
-            label={t("filesPage.uploadFromMobile", "Upload from Mobile")}
-            withinPortal
-          >
-            <ActionIcon
-              variant="tertiary"
-              size="sm"
-              aria-label={t("filesPage.uploadFromMobile", "Upload from Mobile")}
-              onClick={openMobileUpload}
-            >
-              <QrCode2Icon fontSize="small" />
-            </ActionIcon>
-          </Tooltip>
-        )}
       </>
     ),
     [
@@ -1539,13 +1493,11 @@ export default function FileManagerView() {
       handleRefresh,
       newFolderControl,
       openFilePicker,
-      isMobileUploadAvailable,
-      openMobileUpload,
     ],
   );
 
-  // Mobile has no room for a row of its own here - it keeps them in the bar, which
-  // is the only chrome its full-viewport layout shows.
+  // The file sidebar carries these on desktop. Mobile has no sidebar to put them
+  // in, so there they go in the bar - the only chrome its layout shows.
   useFileLibraryWorkbenchBarButtons({
     path: isMobile ? path : null,
     actions: isMobile ? libraryActions : null,
@@ -1688,7 +1640,6 @@ export default function FileManagerView() {
             {!isMobile && (
               <>
                 <div className="files-page-tabs-path">{path}</div>
-                <div className="files-page-tabs-actions">{libraryActions}</div>
               </>
             )}
           </div>
@@ -2691,16 +2642,6 @@ export default function FileManagerView() {
         onClose={() => setSaveToServerTarget(null)}
         files={saveToServerTarget ?? []}
         onUploaded={refresh}
-      />
-
-      <MobileUploadModal
-        opened={mobileUploadModalOpen}
-        onClose={() => setMobileUploadModalOpen(false)}
-        onFilesReceived={(files) => {
-          if (files.length > 0) {
-            void addFiles(files);
-          }
-        }}
       />
     </div>
   );

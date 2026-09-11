@@ -108,10 +108,10 @@ export interface FileSidebarProps {
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
-  /** Extra action row inserted under Open-from-computer (e.g. New folder). A
+  /** Action rows inserted under Open-from-computer (New folder, Refresh). A
    *  control with more than one destination renders itself instead, given the
    *  collapse state the row would have used. */
-  extraAction?: {
+  extraActions?: Array<{
     icon: React.ReactNode;
     label: string;
     onClick: () => void;
@@ -119,7 +119,7 @@ export interface FileSidebarProps {
     disabledTooltip?: string;
     testId?: string;
     render?: (ctx: { collapsed: boolean }) => React.ReactNode;
-  };
+  }>;
 }
 
 /**
@@ -163,7 +163,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       accountHoisted = false,
       onUploadFiles,
       onPickGoogleDriveFiles,
-      extraAction,
+      extraActions,
     },
     ref,
   ) {
@@ -1028,57 +1028,61 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               </div>
             </Tooltip>
 
-            {extraAction?.render && extraAction.render({ collapsed })}
-            {extraAction && !extraAction.render && (
-              <Tooltip
-                label={extraAction.disabledTooltip ?? extraAction.label}
-                position="right"
-                withinPortal
-                // Only force a wide multiline box when the long disabled
-                // reason is shown; the short label fits one line.
-                multiline={Boolean(
-                  extraAction.disabled && extraAction.disabledTooltip,
-                )}
-                w={
-                  extraAction.disabled && extraAction.disabledTooltip
-                    ? 220
-                    : undefined
-                }
-                disabled={
-                  !collapsed &&
-                  !(extraAction.disabled && extraAction.disabledTooltip)
-                }
-              >
-                <div
-                  className={`file-sidebar-action-row${extraAction.disabled ? " disabled" : ""}`}
-                  data-testid={extraAction.testId}
-                  onClick={() => {
-                    if (extraAction.disabled) return;
-                    extraAction.onClick();
-                  }}
-                  role="button"
-                  tabIndex={extraAction.disabled ? -1 : 0}
-                  aria-disabled={extraAction.disabled}
-                  aria-label={extraAction.label}
-                  onKeyDown={(e) => {
-                    if (extraAction.disabled) return;
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      extraAction.onClick();
+            {extraActions?.map((action) => (
+              <React.Fragment key={action.label}>
+                {action.render ? (
+                  action.render({ collapsed })
+                ) : (
+                  <Tooltip
+                    label={action.disabledTooltip ?? action.label}
+                    position="right"
+                    withinPortal
+                    // Only force a wide multiline box when the long disabled
+                    // reason is shown; the short label fits one line.
+                    multiline={Boolean(
+                      action.disabled && action.disabledTooltip,
+                    )}
+                    w={
+                      action.disabled && action.disabledTooltip
+                        ? 220
+                        : undefined
                     }
-                  }}
-                >
-                  <span className="file-sidebar-action-icon">
-                    {extraAction.icon}
-                  </span>
-                  {!collapsed && (
-                    <span className="file-sidebar-action-label sidebar-content-fade">
-                      {extraAction.label}
-                    </span>
-                  )}
-                </div>
-              </Tooltip>
-            )}
+                    disabled={
+                      !collapsed && !(action.disabled && action.disabledTooltip)
+                    }
+                  >
+                    <div
+                      className={`file-sidebar-action-row${action.disabled ? " disabled" : ""}`}
+                      data-testid={action.testId}
+                      onClick={() => {
+                        if (action.disabled) return;
+                        action.onClick();
+                      }}
+                      role="button"
+                      tabIndex={action.disabled ? -1 : 0}
+                      aria-disabled={action.disabled}
+                      aria-label={action.label}
+                      onKeyDown={(e) => {
+                        if (action.disabled) return;
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          action.onClick();
+                        }
+                      }}
+                    >
+                      <span className="file-sidebar-action-icon">
+                        {action.icon}
+                      </span>
+                      {!collapsed && (
+                        <span className="file-sidebar-action-label sidebar-content-fade">
+                          {action.label}
+                        </span>
+                      )}
+                    </div>
+                  </Tooltip>
+                )}
+              </React.Fragment>
+            ))}
 
             <Tooltip
               label={t("fileSidebar.myFiles", "File library")}

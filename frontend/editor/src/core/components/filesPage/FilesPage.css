@@ -26,14 +26,6 @@
   overflow: hidden;
 }
 
-.files-page-tabs-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-  flex-shrink: 0;
-  padding-right: 1rem;
-}
-
 /* The folder path, in the workbench bar beside the view switcher. Sized and
    coloured like .workbench-bar-view-btn so it reads as part of the bar rather than
    as something the library brought with it. Fixed height and no wrapping: the bar

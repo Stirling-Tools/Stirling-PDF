@@ -1027,9 +1027,11 @@ test.describe("Files page", () => {
   test.describe("Library chrome placement", () => {
     test.use({ autoGoto: false });
 
-    /** The library's chrome sits on its own row with the tabs, and the shared bar
-     *  above carries only what every view has. */
-    test("the path and New folder sit on the tabs row", async ({ page }) => {
+    /** The path sits on the library's own row with the tabs; its actions live in the
+     *  file sidebar, and the shared bar above carries only what every view has. */
+    test("the path is on the tabs row and the actions are in the sidebar", async ({
+      page,
+    }) => {
       const NESTED = "11111111-2222-4333-8444-555555555581";
       const PARENT = "11111111-2222-4333-8444-555555555580";
       await stubStorageApis(page);
@@ -1052,6 +1054,12 @@ test.describe("Files page", () => {
       ).toBeVisible();
       await expect(
         row.getByRole("button", { name: /New folder/i }),
+      ).toHaveCount(0);
+      await expect(
+        page.locator('[data-testid="files-rail-new-folder"]'),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-testid="files-rail-refresh"]'),
       ).toBeVisible();
       await expect(
         bar.getByRole("navigation", { name: /Folder path/i }),
