@@ -153,6 +153,41 @@ function BulkAddProgressRow() {
   );
 }
 
+/**
+ * The library's folder tree, as a section of the file sidebar. Separate so the
+ * subscription to the library's state belongs to the only part that reads it: that
+ * state changes on every keystroke in the library's filter, and the sidebar renders
+ * in every view.
+ */
+function FolderTreeSection() {
+  const { t } = useTranslation();
+  const filesPage = useFilesPage();
+  return (
+    <div className="file-sidebar-folders-section sidebar-content-fade">
+      <div className="file-sidebar-section-header">
+        <span className="file-sidebar-section-label">
+          {t("filesPage.tree", "Folders")}
+        </span>
+      </div>
+      <FolderTreeSidebar
+        fileCounts={filesPage.fileCountsByFolder}
+        onRequestNewFolder={filesPage.openNewFolderDialog}
+        onRenameFolder={(folder: FolderRecord) =>
+          filesPage.openRenameFolderDialog(folder)
+        }
+        onDeleteFolder={filesPage.promptDeleteFolder}
+        onMoveFilesIntoFolder={async (
+          targetId: FolderId | null,
+          fileIds: FileId[],
+        ) => {
+          if (fileIds.length === 0) return;
+          await filesPage.moveFilesTo(fileIds, targetId);
+        }}
+      />
+    </div>
+  );
+}
+
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
     {
@@ -186,7 +221,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { state } = useFileState();
     const { actions: fileActions } = useFileActions();
     const { actions: navActions } = useNavigationActions();
-    const filesPage = useFilesPage();
     const { setCustomWorkbenchViewData, customWorkbenchViews } =
       useToolWorkflow();
     const { workbench: currentWorkbench, selectedTool } = useNavigationState();
@@ -1165,30 +1199,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             <div className="file-sidebar-scroll">
               {/* The library browses folders, so there the box carries the tree the
                   file list would otherwise fill: one sidebar, its contents following
-                  the view rather than a column of its own beside it. */}
+                  the view. */}
               {!collapsed && currentWorkbench === "myFiles" && (
-                <div className="file-sidebar-folders-section sidebar-content-fade">
-                  <div className="file-sidebar-section-header">
-                    <span className="file-sidebar-section-label">
-                      {t("filesPage.tree", "Folders")}
-                    </span>
-                  </div>
-                  <FolderTreeSidebar
-                    fileCounts={filesPage.fileCountsByFolder}
-                    onRequestNewFolder={filesPage.openNewFolderDialog}
-                    onRenameFolder={(folder: FolderRecord) =>
-                      filesPage.openRenameFolderDialog(folder)
-                    }
-                    onDeleteFolder={filesPage.promptDeleteFolder}
-                    onMoveFilesIntoFolder={async (
-                      targetId: FolderId | null,
-                      fileIds: FileId[],
-                    ) => {
-                      if (fileIds.length === 0) return;
-                      await filesPage.moveFilesTo(fileIds, targetId);
-                    }}
-                  />
-                </div>
+                <FolderTreeSection />
               )}
 
               {/* Files section - visible when expanded, outside the library */}

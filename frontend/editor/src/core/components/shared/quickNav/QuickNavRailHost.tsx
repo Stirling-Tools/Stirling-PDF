@@ -47,11 +47,13 @@ export function QuickNavRailHost() {
   };
 
   // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
-  const go = (to: string) => {
+  const guarded = (leave: () => void) => {
     const guard = host?.actions.current?.requestNavigation;
-    if (guard) guard(() => navigate(to));
-    else navigate(to);
+    if (guard) guard(leave);
+    else leave();
   };
+
+  const go = (to: string) => guarded(() => navigate(to));
 
   // Through the app where possible: its route only selects a tool on a fresh mount.
   const openTool = (toolId: ToolId, route: string) => {
@@ -154,7 +156,9 @@ export function QuickNavRailHost() {
       // prompt.
       onClick: () => {
         const show = host?.actions.current?.showFileLibrary;
-        if (show) show();
+        // Guarded like the routed path it replaces: the library is another view to
+        // leave a half-finished document for.
+        if (show) guarded(show);
         else go("/files");
       },
     },
