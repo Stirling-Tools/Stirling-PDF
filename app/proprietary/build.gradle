@@ -107,3 +107,14 @@ tasks.register('type3SignatureTool', JavaExec) {
     mainClass = 'stirling.software.SPDF.service.pdfjson.type3.tool.Type3SignatureTool'
     standardInput = System.in
 }
+
+// FailureKindTest asserts the enum against two files outside this project, found by walking up to
+// the repo root: the kind-to-code fixture the frontend also reads, and the English copy every kind
+// must have a key in. Gradle cannot infer either, so without this the task is up-to-date when only
+// one of them changed and the mismatch surfaces on the next unrelated Java edit instead.
+tasks.named('test', Test).configure {
+    inputs.files(
+        rootProject.file('testing/failure-kind-codes.json'),
+        rootProject.file('frontend/editor/public/locales/en-US/translation.toml')
+    ).withPropertyName('sharedConformanceFixtures').optional()
+}
