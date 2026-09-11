@@ -17,8 +17,9 @@ type PortalSectionModule =
 
 function portalSection(
   pick: (m: PortalSectionModule) => ComponentType | null,
+  { requiresProcessor = true }: { requiresProcessor?: boolean } = {},
 ): ComponentType | null {
-  if (!HAS_PORTAL) return null;
+  if (requiresProcessor && !HAS_PORTAL) return null;
   const Lazy = lazy(async () => {
     const m =
       await import("@portal/components/settings/portalSettingsSections");
@@ -34,7 +35,12 @@ function portalSection(
   };
 }
 
-const UsersSection = portalSection((m) => m.PortalUsersSection);
+// The roster is org administration, not a processor surface, so it is the one
+// section a build without the processor still gets. Still lazy: a build that
+// never opens it never pulls the chunk.
+const UsersSection = portalSection((m) => m.PortalUsersSection, {
+  requiresProcessor: false,
+});
 const ApiKeysSection = portalSection((m) => m.PortalApiKeysSection);
 const AuditSection = portalSection((m) => m.PortalAuditSection);
 const EncryptionSection = portalSection((m) => m.PortalEncryptionSection);
@@ -56,6 +62,11 @@ const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
  * @param includeBilling what the deployment spends is the operator's business,
  *   not every member's, so self-hosted passes its admin flag. On SaaS the
  *   signed-in account owns the wallet, so it stays on.
+ * @param includeRoster off for a viewer with no business administering people.
+ *   Unlike the rest, this one does not need the processor: it is the build's
+ *   only roster.
+ * @param includeApiKeys the processor's keys tab, which supersedes the build's
+ *   own. Off without processor access, so the build keeps its own.
  *
  * These flags only decide what is offered: the endpoints behind each section
  * enforce the same rule server-side.
@@ -67,14 +78,18 @@ export function buildPortalSettingsSections(
     includeAudit = false,
     includeEncryption = false,
     includeBilling = true,
+    includeRoster = true,
+    includeApiKeys = true,
   }: {
     includeAccountLink?: boolean;
     includeAudit?: boolean;
     includeEncryption?: boolean;
     includeBilling?: boolean;
+    includeRoster?: boolean;
+    includeApiKeys?: boolean;
   } = {},
 ): ConfigNavSection[] {
-  if (!UsersSection || !ApiKeysSection || !AuditSection || !BillingSection) {
+  if (!UsersSection || !includeRoster) {
     return [];
   }
   const workspace: ConfigNavItem[] = [
@@ -90,7 +105,7 @@ export function buildPortalSettingsSections(
       fullBleed: true,
     },
   ];
-  if (includeBilling) {
+  if (includeBilling && BillingSection) {
     workspace.push({
       key: "billing",
       label: t("portal.nav.usage", "Usage & Billing"),
@@ -117,9 +132,13 @@ export function buildPortalSettingsSections(
       title: t("settings.workspace.title", "Workspace"),
       items: workspace,
     },
-    // Keys belong to you, not to the server, so they join your own settings
-    // rather than standing alone under a heading of their own.
-    {
+  ];
+  // Keys belong to you, not to the server, so they join your own settings
+  // rather than standing alone under a heading of their own. Only the
+  // processor's keys tab supersedes the build's own, so a build without it
+  // keeps that one rather than losing the section.
+  if (ApiKeysSection && includeApiKeys) {
+    groups.push({
       id: "preferences",
       title: t("settings.preferences.title", "Preferences"),
       mergeAt: "append",
@@ -136,8 +155,8 @@ export function buildPortalSettingsSections(
           fullBleed: true,
         },
       ],
-    },
-  ];
+    });
+  }
   if (includeEncryption && EncryptionSection) {
     groups.push({
       id: "server",
@@ -161,7 +180,7 @@ export function buildPortalSettingsSections(
       ],
     });
   }
-  if (includeAudit) {
+  if (includeAudit && AuditSection) {
     groups.push({
       id: "monitoring",
       title: t("settings.monitoring.title", "Monitoring"),
@@ -184,15 +203,29 @@ export function buildPortalSettingsSections(
   return groups;
 }
 
-/** Settings sections the portal ones supersede; dropped when they are shown. */
-export const PORTAL_SUPERSEDED_SECTION_KEYS: readonly NavKey[] = [
-  "people",
-  "teams",
-  // The cloud builds carry their own roster under this key; the processor's is
-  // the superset, so it replaces rather than duplicates it.
-  "users",
-  "api-keys",
-];
+/**
+ * Settings sections the given portal sections supersede, to drop from the
+ * build's own nav.
+ *
+ * <p>Derived from what was actually built rather than listed once: a build
+ * without the processor still gets the roster but not the processor's keys tab,
+ * and dropping a key nothing replaces would delete the section outright.
+ */
+export function portalSupersededSectionKeys(
+  sections: readonly ConfigNavSection[],
+): NavKey[] {
+  const provided = new Set(
+    sections.flatMap((group) => group.items.map((item) => item.key)),
+  );
+  const superseded: NavKey[] = [];
+  if (provided.has("users")) {
+    // The cloud builds carry their own roster under "users"; the processor's is
+    // the superset, so it replaces rather than duplicates it.
+    superseded.push("people", "teams", "users");
+  }
+  if (provided.has("api-keys")) superseded.push("api-keys");
+  return superseded;
+}
 
 /** Where a superseded section's bookmarks and search results now land. */
 export const PORTAL_SECTION_ALIASES: Partial<Record<string, NavKey>> = {

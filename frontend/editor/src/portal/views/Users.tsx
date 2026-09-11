@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton } from "@app/ui";
+import { Button, EmptyState, Skeleton, StatusBadge } from "@app/ui";
 import {
   changeMemberRole,
   disableMemberMfa,
@@ -30,6 +30,7 @@ import { ResetPasswordModal } from "@portal/components/users/ResetPasswordModal"
 import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
+import { seatsLabel } from "@portal/components/users/format";
 import type { TeamGroup } from "@portal/components/users/directory";
 import { useUsersData } from "@portal/views/usersData";
 
@@ -186,6 +187,17 @@ export function Users() {
   // Either route to a new member: an emailed invite, or creating the account
   // outright. With neither, the invite controls have nothing to open.
   const canAddMembers = canEmailInvite || caps.directCreate;
+  // Licence seats, from the same roster fetch. A null limit is an unlimited
+  // licence, which still shows the count; no summary at all (SaaS) shows nothing.
+  const summary = usersState.data?.summary;
+  const seats = summary
+    ? {
+        used: summary.seatsUsed,
+        limit: summary.seatLimit,
+        full:
+          summary.seatLimit !== null && summary.seatsUsed >= summary.seatLimit,
+      }
+    : null;
   const loading = usersState.loading && usersState.data === null;
   const loadError = !usersState.loading && usersState.error !== null;
   const isEmpty = !usersState.loading && !loadError && members.length === 0;
@@ -324,6 +336,11 @@ export function Users() {
           </p>
         </div>
         <div className="portal-users__head-actions">
+          {seats && (
+            <StatusBadge tone={seats.full ? "warning" : "neutral"}>
+              {seatsLabel(t, seats.used, seats.limit)}
+            </StatusBadge>
+          )}
           {caps.createTeam && (
             <Button fat variant="secondary" onClick={openNewTeam}>
               {t("users.newTeam.action", "+ New team")}

@@ -2,6 +2,7 @@ import { Suspense, lazy, type ComponentType } from "react";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { useEnterpriseEnabled } from "@portal/hooks/useEnterpriseEnabled";
 import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
+import { PortalRosterHost } from "@portal/components/settings/PortalRosterHost";
 import { accountLinkSettings } from "@portal/components/settings/accountLinkSettings";
 
 const Users = lazy(async () => {
@@ -40,6 +41,19 @@ const Billing = lazy(async () => {
   return { default: m.BillingSettingsSection };
 });
 
+/** The roster's own host: it reads the tier and nothing else (see PortalRosterHost). */
+function rosterHosted(View: ComponentType) {
+  return function HostedRosterSection() {
+    return (
+      <PortalRosterHost>
+        <Suspense fallback={<LoadingFallback />}>
+          <View />
+        </Suspense>
+      </PortalRosterHost>
+    );
+  };
+}
+
 /** `padded`: for views that were tab panels and left the page gutter to their host. */
 function hosted(View: ComponentType, { padded = false } = {}) {
   return function HostedPortalSection() {
@@ -65,12 +79,13 @@ function hosted(View: ComponentType, { padded = false } = {}) {
  * configure the whole deployment rather than a step in a document pipeline, so
  * they belong on the settings page and the processor keeps only its workflow.
  *
- * Each is a portal-authored view wrapped in {@link PortalSettingsSectionHost}
- * for the contexts it expects. The nav entries that mount these (labels, keys,
- * aliases) live in the proprietary layer, so a build without the processor
- * never pulls this module - and with it the portal chunk - into its graph.
+ * Each is a portal-authored view wrapped in the host supplying the contexts it
+ * expects. The nav entries that mount these (labels, keys, aliases) live in the
+ * proprietary layer, and every section but the roster is gated on the build
+ * shipping the processor - so a build without it pulls this module for the
+ * roster alone, and the rest resolve to null.
  */
-export const PortalUsersSection = hosted(Users);
+export const PortalUsersSection = rosterHosted(Users);
 export const PortalApiKeysSection = hosted(ApiKeys, { padded: true });
 export const PortalAuditSection = hosted(Audit, { padded: true });
 export const PortalEncryptionSection = hosted(Encryption, { padded: true });

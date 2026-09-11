@@ -8,7 +8,7 @@ import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroup
 import {
   buildPortalSettingsSections,
   PORTAL_SECTION_ALIASES,
-  PORTAL_SUPERSEDED_SECTION_KEYS,
+  portalSupersededSectionKeys,
 } from "@app/components/settings/portalSettingsNav";
 
 export type { SettingsNav };
@@ -33,13 +33,15 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
 
   const portalSections = useMemo(
     () =>
-      portalAccess
-        ? buildPortalSettingsSections(t, {
-            includeEncryption: isAdmin,
-            includeBilling: isAdmin,
-            includeAccountLink: isAdmin,
-          })
-        : [],
+      buildPortalSettingsSections(t, {
+        // The roster is this build's only one, so it does not wait on processor
+        // access the way the processor's own surfaces do.
+        includeRoster: isAdmin || portalAccess,
+        includeApiKeys: portalAccess,
+        includeEncryption: portalAccess && isAdmin,
+        includeBilling: portalAccess && isAdmin,
+        includeAccountLink: portalAccess && isAdmin,
+      }),
     [portalAccess, isAdmin, t],
   );
 
@@ -50,7 +52,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
         : mergeSettingsGroups(
             base.sections,
             portalSections,
-            PORTAL_SUPERSEDED_SECTION_KEYS,
+            portalSupersededSectionKeys(portalSections),
           ),
     [base.sections, portalSections],
   );
