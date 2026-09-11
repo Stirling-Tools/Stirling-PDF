@@ -62,12 +62,15 @@ export function NewFolderButton({
       tabIndex={disabledReason ? -1 : 0}
       aria-disabled={Boolean(disabledReason)}
       aria-label={label}
+      title={collapsed ? label : undefined}
       onClick={disabledReason ? undefined : onClick}
+      // Not onClick: in the menu shape the click handler belongs to Menu.Target,
+      // which binds the pointer only. A div has no native Enter/Space either way.
       onKeyDown={(e) => {
-        if (disabledReason || !onClick) return;
+        if (disabledReason) return;
         if (e.key === "Enter" || e.key === " ") {
           e.preventDefault();
-          onClick();
+          e.currentTarget.click();
         }
       }}
     >
@@ -174,9 +177,11 @@ export function NewFolderButton({
         {asRow ? (
           row()
         ) : iconOnly ? (
-          <ActionIcon variant="tertiary" size="sm" aria-label={label}>
-            <CreateNewFolderIcon fontSize="small" />
-          </ActionIcon>
+          <Tooltip label={label} withinPortal>
+            <ActionIcon variant="tertiary" size="sm" aria-label={label}>
+              <CreateNewFolderIcon fontSize="small" />
+            </ActionIcon>
+          </Tooltip>
         ) : (
           <Button
             variant="secondary"

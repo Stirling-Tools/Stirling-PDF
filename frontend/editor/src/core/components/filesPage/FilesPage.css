@@ -1439,8 +1439,7 @@
    filter selects + grid/list toggle is too wide to fit. This block
    collapses bulk-action button labels to icon-only, shrinks the
    filter selects, and pins the view toggle so it never clips off the
-   right edge. The header stays in desktop layout here (it has fewer
-   items and the side panels disappearing actually GIVES it room). */
+   right edge. */
 @media (max-width: 1024px) {
   .files-page-toolbar {
     /* nowrap so "7 items" + "Select all" sit on the same row as the
@@ -1499,11 +1498,9 @@
 }
 
 /* ── Mobile (≤640px) ────────────────────────────────────────────────
-   Tighten the chrome so the file manager fits inside the mobile
-   workspace slide. The slide-rail's bottom tab bar already provides
-   navigation, so the in-header Home/Apps/Close trio is duplicated
-   and the first to go. Same for "Upload" - the user can use the
-   centre drop overlay. */
+   Tighten the chrome so the file manager fits inside the mobile workspace
+   slide: the slide-rail's bottom tab bar already carries the navigation, and
+   uploads have the centre drop overlay. */
 
 @media (max-width: 640px) {
   /* Grid: single column on very narrow phones; two columns from ~440px */

@@ -14,7 +14,7 @@ export function useLibraryRefresh(): {
 } {
   const { t } = useTranslation();
   const folders = useFolders();
-  const { refresh } = useFilesPage();
+  const { refresh, bumpDiskRevision } = useFilesPage();
   const [refreshing, setRefreshing] = useState(false);
 
   const run = useCallback(async () => {
@@ -35,11 +35,13 @@ export function useLibraryRefresh(): {
               : t("filesPage.syncError.client", "Folder sync failed."),
         );
       }
+      // A mount is listed from the disk, which no amount of server syncing re-reads.
+      bumpDiskRevision();
       await refresh();
     } finally {
       setRefreshing(false);
     }
-  }, [folders, refresh, t]);
+  }, [folders, refresh, bumpDiskRevision, t]);
 
   return { refreshing, refresh: run };
 }

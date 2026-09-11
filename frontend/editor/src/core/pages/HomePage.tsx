@@ -142,10 +142,8 @@ export default function HomePage() {
   const isProgrammaticScroll = useRef(false);
   const otherApp = useOtherAppSwitch();
   const location = useLocation();
-  // Persisted user preference for the FileSidebar collapsed state. Auto-
-  // collapse on /files is layered on top in the transition effect below and
-  // doesn't write to storage, so deep-linking to /files won't overwrite what
-  // the user actually chose last time.
+  // The user's preference, and the only thing that decides it: reading mode forces
+  // the sidebar shut without writing, so leaving reading restores this.
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
     // Reader mode outlives this page (settings swaps it out and back), and it
     // collapses the sidebar without persisting that, so it wins on mount too.
@@ -329,16 +327,12 @@ export default function HomePage() {
 
   // Shared with the sidebar's own toggle. On /files it leaves rather than collapses.
   const handleSidebarToggle = useCallback(() => {
-    if (navigationState.workbench === "myFiles") {
-      navigate(EDITOR_BASENAME);
-      return;
-    }
     setFileSidebarCollapsed((c) => {
       const next = !c;
       writePersistedSidebarCollapsed(next);
       return next;
     });
-  }, [navigationState.workbench, navigate]);
+  }, []);
 
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
@@ -370,10 +364,8 @@ export default function HomePage() {
     [dismissSwipeHint],
   );
 
-  // The /files URL pins the workbench to myFiles, so changing view while the
-  // file manager is open does nothing until we navigate off it. Desktop leaves
-  // via the sidebar's back arrow; mobile renders no sidebar, so without this the
-  // bottom bar could not get out of My Files at all.
+  // Mobile's bottom bar sets no view of its own, so leaving the library is the path
+  // moving; the reconciliation effect takes the view with it.
   const leaveMyFiles = useCallback(() => {
     if (navigationState.workbench === "myFiles") navigate(EDITOR_BASENAME);
   }, [navigationState.workbench, navigate]);
@@ -511,10 +503,9 @@ export default function HomePage() {
             className="mobile-layout"
             data-files-mode={navigationState.workbench === "myFiles"}
           >
-            {/* On /files the FileManagerView already has its own Back +
-              breadcrumb + tabs chrome - the tools/workspace toggle would
-              just duplicate vertical space. Keep the toggle on every
-              other route. */}
+            {/* The library brings its own tabs and folder path, so the
+              tools/workspace toggle would only cost it vertical space. Every
+              other view keeps the toggle. */}
             {navigationState.workbench !== "myFiles" && (
               <div className="mobile-toggle">
                 <div className="mobile-brand">
@@ -707,7 +698,7 @@ interface MyFilesAwareFileSidebarProps extends FileSidebarProps {
   active: boolean;
 }
 
-/** Wraps FileSidebar with /files-aware overrides when `active`. */
+/** Wraps FileSidebar with the library's overrides while the library is on screen. */
 const MyFilesAwareFileSidebar = forwardRef<
   HTMLDivElement,
   MyFilesAwareFileSidebarProps
@@ -803,7 +794,11 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
               ),
             },
             {
-              icon: <RefreshIcon />,
+              icon: (
+                <RefreshIcon
+                  className={refreshing ? "file-sidebar-spin" : undefined}
+                />
+              ),
               label: t("filesPage.refresh", "Refresh from server"),
               onClick: () => void refreshLibrary(),
               disabled: refreshing || signInRequired !== null,

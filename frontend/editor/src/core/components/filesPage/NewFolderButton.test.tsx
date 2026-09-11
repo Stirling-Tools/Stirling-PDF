@@ -93,3 +93,27 @@ describe("NewFolderButton in the sidebar", () => {
     );
   });
 });
+
+describe("NewFolderButton keyboard access", () => {
+  it("opens the row's menu from the keyboard", async () => {
+    const onAddLocalFolder = vi.fn();
+    render(
+      <MantineProvider>
+        <NewFolderButton
+          label="New folder"
+          trigger="row"
+          currentFolderId={null}
+          canAddLocalFolder
+          onAddLocalFolder={onAddLocalFolder}
+          onOpenDialog={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    screen.getByRole("button", { name: "New folder" }).focus();
+    await userEvent.keyboard("{Enter}");
+
+    await userEvent.click(await screen.findByText("Add local folder"));
+    expect(onAddLocalFolder).toHaveBeenCalled();
+  });
+});

@@ -281,6 +281,17 @@
   margin-top: 4px;
 }
 
+/* A refresh in progress, on a row that has no room for a spinner beside its label. */
+.file-sidebar-spin {
+  animation: file-sidebar-spin 0.9s linear infinite;
+}
+
+@keyframes file-sidebar-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* Folder navigation fills the box the file list would: in the library it is what the
    sidebar is for, and a deep tree scrolls within it. */
 .file-sidebar-folders-section {

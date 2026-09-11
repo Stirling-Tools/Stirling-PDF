@@ -188,7 +188,7 @@ describe("views the restore may reopen", () => {
     expect(isSeedableView("pageEditor")).toBe(true);
   });
 
-  it("leaves URL-owned and tool-owned views alone", () => {
+  it("leaves path-seeded and tool-owned views alone", () => {
     // HomePage pins myFiles to /files and bounces it elsewhere; custom views belong to a tool.
     expect(isSeedableView("myFiles")).toBe(false);
     expect(isSeedableView("custom:compare")).toBe(false);

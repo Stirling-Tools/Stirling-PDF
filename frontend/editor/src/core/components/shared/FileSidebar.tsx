@@ -1170,7 +1170,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                 <div className="file-sidebar-folders-section sidebar-content-fade">
                   <div className="file-sidebar-section-header">
                     <span className="file-sidebar-section-label">
-                      {t("fileSidebar.folders", "Folders")}
+                      {t("filesPage.tree", "Folders")}
                     </span>
                   </div>
                   <FolderTreeSidebar

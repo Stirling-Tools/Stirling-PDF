@@ -495,7 +495,7 @@ export default function FileManagerView() {
   const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
   const [diskLoading, setDiskLoading] = useState(false);
   // Bumped when this view writes into the directory, so the listing re-reads.
-  const [diskRefreshTick, setDiskRefreshTick] = useState(0);
+  const { diskRevision, bumpDiskRevision } = filesPage;
   useEffect(() => {
     if (!currentLocalDirectory || !canListDirectory) {
       setDiskEntries([]);
@@ -566,7 +566,7 @@ export default function FileManagerView() {
     currentFolderId,
     registerDiskSubfolders,
     setFolderError,
-    diskRefreshTick,
+    diskRevision,
     t,
   ]);
 
@@ -971,7 +971,7 @@ export default function FileManagerView() {
             }),
           );
         }
-        setDiskRefreshTick((tick) => tick + 1);
+        bumpDiskRevision();
         return;
       }
       // Everywhere else membership is set with the stub rather than by a move that
@@ -1417,13 +1417,11 @@ export default function FileManagerView() {
     t,
   ]);
 
-  // Stable identities: the bar re-registers whenever these change, and a fresh arrow
-  // per render turns that into an endless register -> render -> register loop.
+  // Stable identities, here and for the controls built below: the bar re-registers
+  // whenever what it was given changes, so a value rebuilt per render turns that into
+  // an endless register -> render -> register loop.
   const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
 
-  // Memoised for the same reason the handlers above are: the bar re-registers
-  // whenever what it was given changes, and a fresh element per render makes that a
-  // register -> render -> register loop.
   const newFolderControl = useMemo(
     () => (
       <NewFolderButton
@@ -1446,8 +1444,13 @@ export default function FileManagerView() {
       openNewFolderDialog,
     ],
   );
-  // Reads the trail from context, so it takes no props to change.
-  const path = useMemo(() => <Breadcrumbs />, []);
+  // Reads the trail from context, so it takes no props to change. Only the
+  // folder-rooted tabs have a trail to show: the rest list files by predicate.
+  const path = useMemo(
+    () =>
+      currentTab === "all" || currentTab === "cloud" ? <Breadcrumbs /> : null,
+    [currentTab],
+  );
 
   const libraryActions = useMemo(
     () => (
@@ -1636,9 +1639,7 @@ export default function FileManagerView() {
               );
             })()}
             {!isMobile && (
-              <>
-                <div className="files-page-tabs-path">{path}</div>
-              </>
+              <>{path && <div className="files-page-tabs-path">{path}</div>}</>
             )}
           </div>
 
