@@ -59,7 +59,7 @@ For a prop that takes *either* a name or your own node, narrow with `isIconName(
 
 ## Linter
 
-`editor/scripts/lint/icon-lint.mts`, run by `task frontend:lint:icons` (part of `task frontend:lint`). Blocking: no inline `<svg>`, no retired icon library, `.svg` only in the icon dirs or `assets/`, and every `<Icon name="…">` literal must resolve.
+`editor/scripts/lint/icon-lint.mts`, run by `task frontend:lint:icons` (part of `task frontend:lint`). Blocking: no inline `<svg>`, no retired icon library, `.svg` only in the icon dirs or `assets/`, every `<Icon name="…">` literal must resolve, and every icon svg must be on the `0 0 24 24` frame.
 
 `task frontend:lint:unused-icons` reports svgs in `svg/stirling/` that nothing renders, each of which is a drawing to keep on style for no reason. It deliberately over-counts references, because a false "unused" gets a live icon deleted.
 
