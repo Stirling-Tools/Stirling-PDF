@@ -97,7 +97,8 @@ export function QuickNavRailHost() {
     ) : (
       <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
     ),
-    current: inEditor,
+    // The library is a place of its own, not the editor with a different centre.
+    current: inEditor && !host?.fileLibrary,
     onClick: () => {
       if (inEditor) {
         returnHome();
@@ -145,7 +146,17 @@ export function QuickNavRailHost() {
       icon: (
         <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
       ),
-      onClick: () => go("/files"),
+      current: Boolean(host?.fileLibrary),
+      // Through the app where possible: the library is a view, not a route. From the
+      // processor there is no editor to ask, so the path carries it and HomePage seeds
+      // the view on arrival. Unwrapped: setting the view runs the app's own
+      // unsaved-changes check, and asking twice leaves the second ask nowhere to
+      // prompt.
+      onClick: () => {
+        const show = host?.actions.current?.showFileLibrary;
+        if (show) show();
+        else go("/files");
+      },
     },
     {
       id: "automate",

@@ -77,6 +77,15 @@ function readSwipeHintSeen(): boolean {
   }
 }
 
+/**
+ * The path this last derived a view from. Module scope on purpose: HomePage remounts
+ * (a share link, a login bounce, a Suspense boundary resolving) and a per-mount ref
+ * would read the unchanged path as a fresh arrival, re-imposing the library over a
+ * view the user had just picked. Reset by a real page load, which is when a path does
+ * need deriving again.
+ */
+let lastSyncedPath: string | null = null;
+
 function readPersistedSidebarCollapsed(): boolean {
   try {
     return (
@@ -194,20 +203,19 @@ export default function HomePage() {
   // Clean slate: no tool, out of the file library and reading.
   const goToDefaultState = useCallback(() => {
     handleBackToTools();
-    if (location.pathname.startsWith("/files")) navigate(EDITOR_BASENAME);
     actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
-  }, [
-    handleBackToTools,
-    location.pathname,
-    navigate,
-    actions,
-    activeFiles.length,
-  ]);
+  }, [handleBackToTools, actions, activeFiles.length]);
 
-  // Sync the /files* URL into the workbench state so the file manager view
-  // takes over the workbench area when the user lands on it. This is the
-  // only state-of-truth for the active workbench, so keep the URL pinned.
+  // The library is a view like the viewer and the file editor: which view is on screen
+  // is state, the path says which folder you are in. Each side moves the other on a
+  // transition only - asserting either every render is what let the path re-impose
+  // "myFiles" a render after anything else had set a view.
+
+  // Path moved, so the path is the cause: arrival, back/forward, or a deliberate
+  // navigate. Mount included, which is what seeds a deep link.
   useEffect(() => {
+    if (lastSyncedPath === location.pathname) return;
+    lastSyncedPath = location.pathname;
     if (location.pathname.startsWith("/files")) {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
@@ -216,18 +224,25 @@ export default function HomePage() {
       navigationState.workbench === "myFiles" &&
       !isApplyingRestoredView()
     ) {
-      // The URL no longer supports the file manager - drop back to a sensible default. Stays a
-      // state check rather than a transition one: HomePage remounts without NavigationContext
-      // (a share link, a login bounce), and the view has to be corrected on arrival too.
       // Skipped mid-restore, which is reopening a recorded view onto files still loading.
-      actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
+      actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
     }
-  }, [
-    location.pathname,
-    navigationState.workbench,
-    actions,
-    activeFiles.length,
-  ]);
+    // Deliberately not keyed on the workbench: this reacts to the path only.
+  }, [location.pathname, actions, activeFiles.length]);
+
+  // View moved, so the path follows. Pushed, not replaced, so Back leaves the library.
+  const wasInLibraryRef = useRef(navigationState.workbench === "myFiles");
+  useEffect(() => {
+    const inLibrary = navigationState.workbench === "myFiles";
+    if (inLibrary === wasInLibraryRef.current) return;
+    wasInLibraryRef.current = inLibrary;
+    const onFilesPath = location.pathname.startsWith("/files");
+    if (inLibrary && !onFilesPath) {
+      navigate("/files");
+    } else if (!inLibrary && onFilesPath) {
+      navigate(EDITOR_BASENAME);
+    }
+  }, [navigationState.workbench, location.pathname, navigate]);
 
   // Auto-collapse the FileSidebar while on /files; restore the user's persisted
   // preference on leave. Auto-collapse doesn't write to storage so deep-linking
@@ -492,10 +507,12 @@ export default function HomePage() {
         portalAccess={Boolean(otherApp)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
+        fileLibrary={navigationState.workbench === "myFiles"}
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
+        onShowFileLibrary={() => actions.setWorkbench("myFiles")}
         toolReasons={quickNavToolReasons}
       />
       <FilesPageProvider>
