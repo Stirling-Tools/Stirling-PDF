@@ -16,10 +16,12 @@ describe("POLICY_OPERATIONS", () => {
     // The catalogue uses these across all categories; each must be wired.
     expect(ALL_TOOL_IDS.sort()).toEqual([
       "classify",
+      "complianceCheck",
       "compress",
       "externalApiCall",
       "flatten",
       "ocr",
+      "pdfa",
       "purviewApplyLabel",
       "purviewReadLabel",
       "redact",
@@ -41,6 +43,10 @@ describe("POLICY_OPERATIONS", () => {
     expect(policyEndpoint("ocr")).toBe("/api/v1/misc/ocr-pdf");
     expect(policyEndpoint("flatten")).toBe("/api/v1/misc/flatten");
     expect(policyEndpoint("compress")).toBe("/api/v1/misc/compress-pdf");
+    expect(policyEndpoint("pdfa")).toBe("/api/v1/convert/pdf/pdfa");
+    expect(policyEndpoint("complianceCheck")).toBe(
+      "/api/v1/security/validate-compliance",
+    );
   });
 
   test("policyToolIdForEndpoint maps endpoints back, and rejects non-policy ones", () => {
@@ -113,5 +119,41 @@ describe("wire conversion", () => {
     expect(
       policyStepFromWire({ operation: "/api/v1/misc/repair", parameters: {} }),
     ).toBeNull();
+  });
+});
+
+describe("compliance steps", () => {
+  test("pdfa sends the archival profile the backend expects", () => {
+    const wire = policyStepToWire(
+      policyStep("pdfa", { outputFormat: "pdfa-3b" }),
+    );
+    expect(wire.operation).toBe("/api/v1/convert/pdf/pdfa");
+    expect(wire.parameters).toEqual({ outputFormat: "pdfa-3b" });
+  });
+
+  test("pdfa clamps a stored profile this policy UI no longer offers", () => {
+    // PDF/X is a print standard the compliance picker does not list; a hand-edited or legacy
+    // step naming it must not round-trip back into the archival picker.
+    const back = policyStepFromWire({
+      operation: "/api/v1/convert/pdf/pdfa",
+      parameters: { outputFormat: "pdfx" },
+    });
+    expect(back?.toolId).toBe("pdfa");
+    if (back?.toolId === "pdfa") {
+      expect(back.params.outputFormat).toBe("pdfa-2b");
+    }
+  });
+
+  test("the compliance gate carries no options to get wrong", () => {
+    expect(policyStep("complianceCheck").params).toEqual({});
+  });
+
+  test("the gate drops any stored options a hand-edited step carries", () => {
+    const back = policyStepFromWire({
+      operation: "/api/v1/security/validate-compliance",
+      parameters: { standard: "pdfua", onViolation: "ignore" },
+    });
+    expect(back?.toolId).toBe("complianceCheck");
+    expect(back?.params).toEqual({});
   });
 });
