@@ -5,6 +5,7 @@ import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
 import { usePortalAccessState } from "@app/hooks/usePortalAccess";
 import { useAuth } from "@app/auth/context";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useRosterAvailable } from "@app/hooks/useRosterAvailable";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 import {
   buildPortalSettingsSections,
@@ -36,19 +37,20 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   // disagree while /me is still in flight.
   const { config } = useAppConfig();
   const navAdmin = config?.isAdmin ?? false;
+  const rosterAvailable = useRosterAvailable();
 
   const portalSections = useMemo(
     () =>
       buildPortalSettingsSections(t, {
         // The roster is this build's only one, so it does not wait on processor
         // access the way the processor's own surfaces do.
-        includeRoster: navAdmin || portalAccess,
+        includeRoster: rosterAvailable && (navAdmin || portalAccess),
         includeApiKeys: portalAccess,
         includeEncryption: portalAccess && isAdmin,
         includeBilling: portalAccess && isAdmin,
         includeAccountLink: portalAccess && isAdmin,
       }),
-    [portalAccess, isAdmin, navAdmin, t],
+    [portalAccess, isAdmin, navAdmin, rosterAvailable, t],
   );
 
   const sections = useMemo(
