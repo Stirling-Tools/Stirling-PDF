@@ -293,6 +293,15 @@ export const usePageEditorExport = ({
       // Store source file IDs before adding new files
       const sourceFileIds = [...selectedFileIds];
 
+      // Read before the removal below, which takes the source out of the
+      // workbench and out of storage: a read afterwards finds nothing, and the
+      // file this produces silently loses its link to the one it came from.
+      const sourceStub =
+        sourceFileIds.length === 1
+          ? selectors.getStirlingFileStub(sourceFileIds[0])
+          : undefined;
+      const inherited = sourceStub ? inheritedSourceLink(sourceStub) : {};
+
       // Clear all cached page state to prevent stale data from being merged
       clearPersistedDocument();
       updateCurrentPages(null);
@@ -313,20 +322,11 @@ export const usePageEditorExport = ({
         actions.setSelectedFiles(newStirlingFiles.map((file) => file.fileId));
       }
 
-      if (sourceFileIds.length === 1 && newStirlingFiles.length === 1) {
-        const sourceStub = selectors.getStirlingFileStub(sourceFileIds[0]);
-        const inherited = sourceStub ? inheritedSourceLink(sourceStub) : {};
-        if (Object.keys(inherited).length > 0) {
-          actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
-            ...inherited,
-            isDirty: true,
-          });
-        }
-      }
-
-      // Remove source files from context
-      if (sourceFileIds.length > 0) {
-        await actions.removeFiles(sourceFileIds, true);
+      if (newStirlingFiles.length === 1 && Object.keys(inherited).length > 0) {
+        actions.updateStirlingFileStub(newStirlingFiles[0].fileId, {
+          ...inherited,
+          isDirty: true,
+        });
       }
 
       setHasUnsavedChanges(false);
