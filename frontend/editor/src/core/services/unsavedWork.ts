@@ -16,8 +16,10 @@ export function registerUnsavedWorkChecker(next: Checker): () => void {
   };
 }
 
-/** Whether an open editor holds edits no version has captured yet. Fails closed:
- *  an unanswerable question must not read as "safe to overwrite". */
+/** Whether an open editor holds edits no version has captured yet. No checker
+ *  means no editor is mounted to hold any, so that answer is false; a checker
+ *  that throws fails closed, because "unknown" must not read as safe to
+ *  overwrite. */
 export function hasUnsavedWork(): boolean {
   if (!checker) return false;
   try {
