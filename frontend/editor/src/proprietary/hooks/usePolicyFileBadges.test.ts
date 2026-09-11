@@ -199,6 +199,44 @@ describe("buildPolicyBadgeMap — in-flight indicators", () => {
   });
 });
 
+describe("buildPolicyBadgeMap - blocked files", () => {
+  const blockedOn = (map: Map<string, { blocked?: boolean }[]>, id: string) =>
+    (map.get(id) ?? []).some((b) => b.blocked);
+
+  it("stamps a static blocked badge on a file a required policy blocked", () => {
+    const map = buildPolicyBadgeMap([], [{ id: "in" }], labels, {
+      in: "security",
+    });
+    const badges = map.get("in") ?? [];
+    expect(badges.map((b) => b.id)).toEqual(["security"]);
+    expect(badges[0].blocked).toBe(true);
+    expect(badges[0].enforcing).toBeUndefined();
+  });
+
+  it("shows the block even for a policy absent from the catalog", () => {
+    const map = buildPolicyBadgeMap([], [{ id: "in" }], labels, {
+      in: "builder-xyz",
+    });
+    const badges = map.get("in") ?? [];
+    expect(badges.map((b) => b.id)).toEqual(["builder-xyz"]);
+    expect(badges[0].blocked).toBe(true);
+  });
+
+  it("yields to an in-flight re-run: spins, not blocked, while the run works", () => {
+    // A recovery re-run is in flight while the block still stands - show its
+    // spinner, not the static block badge.
+    const map = buildPolicyBadgeMap(
+      [run({ status: "RUNNING", fileId: "in", outputFileIds: [] })],
+      [{ id: "in" }],
+      labels,
+      { in: "security" },
+    );
+    const badges = map.get("in") ?? [];
+    expect(badges[0].enforcing).toBe(true);
+    expect(blockedOn(map, "in")).toBe(false);
+  });
+});
+
 describe("reusePolicyBadgeArrays — per-file identity across rebuilds", () => {
   // buildPolicyBadgeMap allocates fresh arrays every call and the run store hands
   // back a new `runs` array on every status poll, so without this the memoized

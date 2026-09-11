@@ -60,9 +60,18 @@ export const POLICY_IN_FLIGHT_STATUSES: readonly PolicyRunStatus[] = [
   "WAITING_FOR_INPUT",
 ];
 
+/** Latest definitive result per policy/file, retained independently of the activity log. */
+export interface PolicyRunOutcome {
+  policyKey: string;
+  fileId: string;
+  status: "COMPLETED" | "FAILED";
+  startedAt: number;
+}
+
 interface RunState {
   runs: PolicyRunRecord[];
   dispatched: string[];
+  outcomes: Record<string, PolicyRunOutcome>;
   /** startedAt of the run that began the current processing "wave" — a burst of
    *  runs with no idle gap. Reset whenever a run is recorded while nothing is in
    *  flight. The panel's progress counts (X of Y processed) scope to this so they
@@ -114,6 +123,32 @@ function capRuns(runs: PolicyRunRecord[]): PolicyRunRecord[] {
   return trimmed;
 }
 
+function recordOutcome(
+  outcomes: Record<string, PolicyRunOutcome>,
+  run: PolicyRunRecord,
+): Record<string, PolicyRunOutcome> {
+  // Cancellation and retries never establish that a previously failed policy succeeded.
+  if (!run.fileId || (run.status !== "FAILED" && run.status !== "COMPLETED"))
+    return outcomes;
+  const key = dispatchKey(run.policyKey, run.fileId);
+  const previous = outcomes[key];
+  if (
+    previous &&
+    (previous.startedAt > run.startedAt ||
+      (previous.startedAt === run.startedAt && previous.status === run.status))
+  )
+    return outcomes;
+  return {
+    ...outcomes,
+    [key]: {
+      policyKey: run.policyKey,
+      fileId: run.fileId,
+      status: run.status,
+      startedAt: run.startedAt,
+    },
+  };
+}
+
 function read(): RunState {
   try {
     const raw =
@@ -122,10 +157,10 @@ function read(): RunState {
         : null;
     if (raw) {
       const parsed = JSON.parse(raw) as Partial<RunState>;
-      return {
+      const runs: PolicyRunRecord[] =
         // Normalise older persisted records (which predate the `outputs` field)
         // so consumers can always rely on `outputs` being an array.
-        runs: Array.isArray(parsed.runs)
+        Array.isArray(parsed.runs)
           ? parsed.runs.map((r) => ({
               ...r,
               // Records written before the rename carry the key as `categoryId`. Without this
@@ -139,7 +174,11 @@ function read(): RunState {
               // Records predating per-run targets all executed on SaaS.
               target: r.target === "local" ? "local" : "saas",
             }))
-          : [],
+          : [];
+      return {
+        runs,
+        // Seed older caches from their remaining history; newer caches retain outcomes after pruning.
+        outcomes: runs.reduce(recordOutcome, parsed.outcomes ?? {}),
         dispatched: Array.isArray(parsed.dispatched) ? parsed.dispatched : [],
         waveStartedAt:
           typeof parsed.waveStartedAt === "number" ? parsed.waveStartedAt : 0,
@@ -148,7 +187,7 @@ function read(): RunState {
   } catch {
     // Corrupt/unavailable storage — start empty.
   }
-  return { runs: [], dispatched: [], waveStartedAt: 0 };
+  return { runs: [], dispatched: [], outcomes: {}, waveStartedAt: 0 };
 }
 
 let state: RunState = read();
@@ -192,6 +231,7 @@ function getSnapshot(): RunState {
 const SERVER_SNAPSHOT: RunState = {
   runs: [],
   dispatched: [],
+  outcomes: {},
   waveStartedAt: 0,
 };
 function getServerSnapshot(): RunState {
@@ -247,6 +287,7 @@ export function recordRunStart(record: PolicyRunRecord) {
     : record.startedAt;
   state = {
     runs: capRuns([record, ...state.runs]),
+    outcomes: recordOutcome(state.outcomes, record),
     dispatched: state.dispatched.includes(key)
       ? state.dispatched
       : [...state.dispatched, key],
@@ -263,11 +304,15 @@ export function recordRunStart(record: PolicyRunRecord) {
  */
 export function addReconciledRun(record: PolicyRunRecord) {
   if (state.runs.some((r) => r.runId === record.runId)) return;
-  state = { ...state, runs: capRuns([record, ...state.runs]) };
+  state = {
+    ...state,
+    runs: capRuns([record, ...state.runs]),
+    outcomes: recordOutcome(state.outcomes, record),
+  };
   emit();
 }
 
-/** Mark a (policy, file) pair dispatched without a run (e.g. dispatch failed). */
+/** Mark a (policy, file) pair handled without a run, such as a file with no remaining bytes. */
 export function markDispatched(policyKey: string, fileId: string) {
   const key = dispatchKey(policyKey, fileId);
   if (state.dispatched.includes(key)) return;
@@ -278,13 +323,16 @@ export function markDispatched(policyKey: string, fileId: string) {
 /** Patch an in-flight run's status/outputs/error as it progresses. */
 export function updateRun(runId: string, patch: Partial<PolicyRunRecord>) {
   let changed = false;
+  let outcomes = state.outcomes;
   const runs = state.runs.map((r) => {
     if (r.runId !== runId) return r;
     changed = true;
-    return { ...r, ...patch };
+    const updated = { ...r, ...patch };
+    outcomes = recordOutcome(outcomes, updated);
+    return updated;
   });
   if (!changed) return;
-  state = { ...state, runs };
+  state = { ...state, runs, outcomes };
   emit();
 }
 
@@ -303,8 +351,15 @@ export function removeRun(runId: string) {
 
 /** Reset the store — used by tests to isolate it. */
 export function resetPolicyRuns() {
-  state = { runs: [], dispatched: [], waveStartedAt: 0 };
+  state = { runs: [], dispatched: [], outcomes: {}, waveStartedAt: 0 };
   emit();
+}
+
+/** Synchronous enforcement state, available before the editor's effects mount. */
+export function getPolicyRunOutcomes(): Readonly<
+  Record<string, PolicyRunOutcome>
+> {
+  return state.outcomes;
 }
 
 export function usePolicyRuns(): PolicyRunRecord[] {

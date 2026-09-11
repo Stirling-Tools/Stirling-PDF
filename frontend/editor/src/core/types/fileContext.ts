@@ -287,6 +287,7 @@ export interface FileContextState {
     processingProgress: number;
     hasUnsavedChanges: boolean;
     errorFileIds: FileId[]; // files that errored during processing
+    policyBlocks: Record<FileId, string>;
   };
 }
 
@@ -333,6 +334,11 @@ export type FileContextAction =
   | { type: "MARK_FILE_ERROR"; payload: { fileId: FileId } }
   | { type: "CLEAR_FILE_ERROR"; payload: { fileId: FileId } }
   | { type: "CLEAR_ALL_FILE_ERRORS" }
+  | {
+      type: "MARK_POLICY_BLOCKED";
+      payload: { fileId: FileId; policyKey: string };
+    }
+  | { type: "CLEAR_POLICY_BLOCK"; payload: { fileId: FileId } }
 
   // Navigation guard actions (minimal for file-related unsaved changes only)
   | { type: "SET_UNSAVED_CHANGES"; payload: { hasChanges: boolean } }
@@ -410,6 +416,10 @@ export interface FileContextActions {
   markFileError: (fileId: FileId) => void;
   clearFileError: (fileId: FileId) => void;
   clearAllFileErrors: () => void;
+  /** Block a file because the given Policy (its key) failed on it; tools and export then reject it. */
+  markPolicyBlocked: (fileId: FileId, policyKey: string) => void;
+  /** Clear a file's policy block (e.g. after a successful re-run). */
+  clearPolicyBlock: (fileId: FileId) => void;
 
   // Processing state - simple flags only
   setProcessing: (isProcessing: boolean, progress?: number) => void;
@@ -433,6 +443,8 @@ export interface FileContextSelectors {
   getFiles: (ids?: FileId[]) => StirlingFile[];
   getStirlingFileStub: (id: FileId) => StirlingFileStub | undefined;
   getStirlingFileStubs: (ids?: FileId[]) => StirlingFileStub[];
+  /** The key of the failed Policy blocking this file (see ui.policyBlocks), or undefined if usable. */
+  getPolicyBlock: (id: FileId) => string | undefined;
   getAllFileIds: () => FileId[];
   getSelectedFiles: () => StirlingFile[];
   getSelectedStirlingFileStubs: () => StirlingFileStub[];

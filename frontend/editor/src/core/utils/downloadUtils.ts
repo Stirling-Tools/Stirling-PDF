@@ -79,7 +79,12 @@ export async function downloadFilesAsZip(
   }
 
   // Enforce any export-triggered policy on each PDF before they're zipped.
-  const enforced = await enforceExportPolicies(filesToZip, fileIds);
+  const { files: enforced, blocked } = await enforceExportPolicies(
+    filesToZip,
+    fileIds,
+  );
+  // A required policy failed on some files: refuse the whole download (its toast is shown).
+  if (blocked.length > 0) return;
 
   // Generate default filename if not provided
   const finalZipFilename =

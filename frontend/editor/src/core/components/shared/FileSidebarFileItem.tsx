@@ -232,7 +232,7 @@ export const FileItem = React.memo(function FileItem({
   name,
   size,
   lastModified,
-  isSelected,
+  isSelected: selected,
   isActive,
   isViewedInViewer,
   isToolSkipped = false,
@@ -258,9 +258,16 @@ export const FileItem = React.memo(function FileItem({
   hasVersionHistory = false,
 }: FileItemProps) {
   const { t } = useTranslation();
-  const toolSkipReason = isToolSkipped
-    ? t("files.notIncludedInToolRun", "Not included in this tool run")
-    : undefined;
+  const policyBlocked = policies.some((p) => p.blocked);
+  const isSelected = selected && !policyBlocked;
+  const unavailableReason = policyBlocked
+    ? t(
+        "policy.blockedBody",
+        "A required policy failed on this file, so it's blocked. Re-run the policy, or close the file.",
+      )
+    : isToolSkipped
+      ? t("files.notIncludedInToolRun", "Not included in this tool run")
+      : undefined;
   const terminology = useFileActionTerminology();
   const DownloadIcon = useFileActionIcons().download;
   const ext = getFileExtension(name);
@@ -342,17 +349,23 @@ export const FileItem = React.memo(function FileItem({
       <div
         ref={itemRef}
         data-tool-skipped={isToolSkipped}
-        title={toolSkipReason}
-        aria-description={toolSkipReason}
+        data-policy-blocked={policyBlocked}
+        title={unavailableReason}
+        aria-description={unavailableReason}
+        aria-disabled={policyBlocked || undefined}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
-        onClick={() => onClick(fileId)}
-        draggable={draggable}
+        onClick={() => !policyBlocked && onClick(fileId)}
+        draggable={draggable && !policyBlocked}
         onDragStart={
-          draggable && onDragStart ? (e) => onDragStart(e, fileId) : undefined
+          draggable && !policyBlocked && onDragStart
+            ? (e) => onDragStart(e, fileId)
+            : undefined
         }
         role="button"
         tabIndex={0}
-        onKeyDown={(e) => e.key === "Enter" && onClick(fileId)}
+        onKeyDown={(e) =>
+          !policyBlocked && e.key === "Enter" && onClick(fileId)
+        }
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >

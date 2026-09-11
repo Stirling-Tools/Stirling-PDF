@@ -202,7 +202,7 @@ export const useToolOperation = <TParams>(
   const getEligibleFiles = useCallback(
     (params: TParams, selectedFiles: StirlingFile[]) => {
       const eligibleFiles = getCompatibleFiles(params, selectedFiles).filter(
-        (file) => file.size > 0,
+        (file) => file.size > 0 && !selectors.getPolicyBlock(file.fileId),
       );
       const previous = eligibleFilesRef.current;
       if (
@@ -214,7 +214,7 @@ export const useToolOperation = <TParams>(
       eligibleFilesRef.current = eligibleFiles;
       return eligibleFiles;
     },
-    [getCompatibleFiles],
+    [getCompatibleFiles, selectors],
   );
 
   const executeOperation = useCallback(
@@ -222,6 +222,22 @@ export const useToolOperation = <TParams>(
       // Validation
       if (selectedFiles.length === 0) {
         actions.setError(t("noFileSelected", "No file loaded"));
+        return;
+      }
+
+      // A file blocked by a failed Policy is unusable until that policy re-runs clean; no tool may
+      // run over it (format-agnostic, unlike the tool-compatibility filter below).
+      const policyBlockedFiles = selectedFiles.filter((file) =>
+        selectors.getPolicyBlock(file.fileId),
+      );
+      if (policyBlockedFiles.length > 0) {
+        actions.setError(
+          t(
+            "policyBlockedFilesBlocked",
+            "{{count}} file(s) are blocked by a policy that failed to run. Re-run the policy or remove them.",
+            { count: policyBlockedFiles.length },
+          ),
+        );
         return;
       }
 

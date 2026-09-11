@@ -19,6 +19,8 @@ import {
 } from "@app/components/policies/policyRunStore";
 import type { FileId } from "@app/types/file";
 import type { StirlingFile } from "@app/types/fileContext";
+import { extractErrorMessage } from "@app/utils/toolErrorHandler";
+import { generateId } from "@app/utils/generateId";
 
 /** Wait for an upload's bytes to land in IndexedDB (~5s): the stub surfaces in the
  *  file list before its bytes are committed, so an eager fetch would miss the file. */
@@ -27,7 +29,7 @@ const FILE_WAIT_MS = 250;
 
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-/** Resolve the file's bytes, fire a backend run, and record it. */
+/** Dispatch a file and record the attempt, including request failures so required policies block it. */
 export async function runPolicyOnFile(
   policyKey: string,
   backendId: string,
@@ -63,9 +65,10 @@ export async function runPolicyOnFile(
   }
   // Bounded upload window — see MAX_CONCURRENT_DISPATCHES. Only the POST is
   // gated; the IDB wait above never holds a slot.
+  const target = resolvePolicyRunTarget();
   await acquireDispatchSlot(priority);
+  const startedAt = Date.now();
   try {
-    const target = resolvePolicyRunTarget();
     // Recorded against a document this browser can resolve. One file per run, which is the only
     // shape the server keeps a reference for.
     const runId = await runStoredPolicy(backendId, [file], fileId);
@@ -80,17 +83,27 @@ export async function runPolicyOnFile(
       status: "PENDING",
       outputs: [],
       error: null,
-      startedAt: Date.now(),
+      startedAt,
     });
   } catch (err) {
-    // Dispatch failed (e.g. policy deleted/404 or backend offline). Mark dispatched so we don't hammer;
-    // the absent run simply won't appear in the activity feed. If the backend did
-    // start a run we never recorded, reconcileServerRuns rediscovers it.
+    // No server run ID is available. The terminal local record blocks required-policy inputs
+    // and exposes manual recovery without sending status polls for an invented server run.
+    recordRunStart({
+      runId: `dispatch-failed:${generateId()}`,
+      policyKey,
+      fileId,
+      fileName,
+      fileSize: file.size,
+      target,
+      status: "FAILED",
+      outputs: [],
+      error: extractErrorMessage(err),
+      startedAt,
+    });
     console.debug(
       `[PolicyAutoRun] Failed to dispatch policy ${policyKey} (${backendId}):`,
       err,
     );
-    markDispatched(policyKey, fileId);
   } finally {
     releaseDispatchSlot();
   }

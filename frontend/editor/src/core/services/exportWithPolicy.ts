@@ -2,8 +2,8 @@
  * Export entry points call {@link downloadFileWithPolicy} instead of
  * {@link downloadFile} so any "export"-triggered policy enforces on the file
  * before it's downloaded. The enforcement itself is proprietary (a no-op in the
- * core build via the `@app/services/policyExport` stub), and never hard-blocks:
- * on failure the original file is downloaded.
+ * core build via the `@app/services/policyExport` stub). Required-policy failures
+ * cancel the download; ordinary pipeline failures may export the original.
  */
 
 import {
@@ -24,6 +24,12 @@ export async function downloadFileWithPolicy(
       : new File([request.data], request.filename, {
           type: request.data.type,
         });
-  const [enforced] = await enforceExportPolicies([input], [request.fileId]);
+  const { files, blocked } = await enforceExportPolicies(
+    [input],
+    [request.fileId],
+  );
+  // A required policy failed: refuse the download (its toast is shown), reported as cancelled.
+  if (blocked.length > 0) return { cancelled: true };
+  const [enforced] = files;
   return downloadFile({ ...request, data: enforced ?? request.data });
 }

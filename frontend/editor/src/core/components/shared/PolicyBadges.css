@@ -30,6 +30,12 @@
   box-shadow: var(--shadow-md);
 }
 
+/* A required policy failed: static red badge (never spins), tinted a little
+ * stronger than a normal badge so a blocked file stands out in the row. */
+.policy-badge--blocked {
+  background: color-mix(in srgb, currentColor 22%, transparent);
+}
+
 .policy-badge--enforcing svg {
   animation: policy-badge-spin 1s linear infinite;
 }

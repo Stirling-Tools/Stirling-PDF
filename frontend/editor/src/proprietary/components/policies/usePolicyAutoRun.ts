@@ -14,6 +14,7 @@ import {
   useAllFiles,
   useFileManagement,
   useFileContext,
+  useFileSelector,
 } from "@app/contexts/FileContext";
 import { fileStorage } from "@app/services/fileStorage";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
@@ -49,6 +50,7 @@ import {
   addReconciledRun,
   dispatchKey,
   getRun,
+  getPolicyRunOutcomes,
   isDispatched,
   markDispatched,
   removeRun,
@@ -127,11 +129,50 @@ function isTerminal(status: PolicyRunStatus): boolean {
   );
 }
 
+/**
+ * Required-policy failures for live files. Only a later completion clears a failure;
+ * cancelled and in-flight retries leave it intact. Pass persisted outcomes to survive log pruning.
+ */
+export function derivePolicyBlocks(
+  runs: ReadonlyArray<
+    Pick<PolicyRunRecord, "fileId" | "policyKey" | "status" | "startedAt">
+  >,
+  liveFileIds: ReadonlySet<string>,
+  policies: PoliciesByKey,
+): Map<string, string> {
+  const latestSettled = new Map<string, (typeof runs)[number]>();
+  for (const run of runs) {
+    if (!run.fileId || (run.status !== "FAILED" && run.status !== "COMPLETED"))
+      continue;
+    const key = dispatchKey(run.policyKey, run.fileId);
+    const prev = latestSettled.get(key);
+    if (!prev || run.startedAt > prev.startedAt) latestSettled.set(key, run);
+  }
+  const blocked = new Map<string, string>();
+  for (const run of latestSettled.values()) {
+    if (
+      run.status === "FAILED" &&
+      liveFileIds.has(run.fileId) &&
+      policies[run.policyKey]?.required
+    ) {
+      blocked.set(run.fileId, run.policyKey);
+    }
+  }
+  return blocked;
+}
+
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export function usePolicyAutoRun(): void {
   const { fileStubs } = useAllFiles();
-  const { addFiles, updateStirlingFileStub } = useFileManagement();
+  const {
+    addFiles,
+    updateStirlingFileStub,
+    markPolicyBlocked,
+    clearPolicyBlock,
+  } = useFileManagement();
+  // Files blocked by a failed Policy: skip all further passes on them (any policy failure blocks).
+  const policyBlocks = useFileSelector((s) => s.ui.policyBlocks);
   const { consumeFiles } = useFileContext();
   const { bumpRevision } = useIndexedDB();
   const { policies } = usePolicies();
@@ -223,7 +264,9 @@ export function usePolicyAutoRun(): void {
           dispatchKey(finished.policyKey, finished.fileId),
         );
       }
-      // Read now rather than leaving them a poll interval to hear about their own upload.
+      // Read now rather than leaving them a poll interval to hear about their own upload. The block
+      // that a failed Policy imposes is derived from the run store (see the reconcile effect below),
+      // not set here, so it survives a reload or a trip out of the editor.
       if (view.status === "FAILED") refreshNotificationsNow();
       const code = view.errorCode;
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
@@ -245,6 +288,8 @@ export function usePolicyAutoRun(): void {
       // Input-mode policies cover uploads only; tool-produced files are left to
       // export-mode policies at export time.
       if (stub.derivedFromTool) continue;
+      // A file a Policy already blocked takes no further passes (any policy failure blocks it).
+      if (policyBlocks[stub.id]) continue;
       // Held while the unlock prompt is open: the run would fail on a document the user is
       // about to decrypt, bill for it, and leave a row about a version soon replaced. Skipping
       // the prompt releases it, so a document nobody unlocks still records its failure.
@@ -264,7 +309,13 @@ export function usePolicyAutoRun(): void {
         })
         .finally(() => dispatching.current.delete(key));
     }
-  }, [fileStubs, policies, orderedUploadPolicyKeys, unlocksVersion]);
+  }, [
+    fileStubs,
+    policies,
+    orderedUploadPolicyKeys,
+    unlocksVersion,
+    policyBlocks,
+  ]);
 
   // Once a run's output lands, fire the next upload policy on it - success only, once per
   // run. isDispatched guards re-dispatch across reloads.
@@ -385,6 +436,30 @@ export function usePolicyAutoRun(): void {
     reconciled.current = true;
     void reconcileServerRuns(policies);
   }, [policies]);
+
+  // The UI mirrors durable outcomes; activity-log eviction and retry-record removal cannot lift a block.
+  useEffect(() => {
+    const shouldBlock = derivePolicyBlocks(
+      Object.values(getPolicyRunOutcomes()),
+      new Set(fileStubs.map((s) => s.id as string)),
+      policies,
+    );
+    for (const [fileId, policyKey] of shouldBlock) {
+      if (policyBlocks[fileId as FileId] !== policyKey) {
+        markPolicyBlocked(fileId as FileId, policyKey);
+      }
+    }
+    for (const fileId of Object.keys(policyBlocks)) {
+      if (!shouldBlock.has(fileId)) clearPolicyBlock(fileId as FileId);
+    }
+  }, [
+    runs,
+    fileStubs,
+    policies,
+    policyBlocks,
+    markPolicyBlocked,
+    clearPolicyBlock,
+  ]);
 }
 
 interface ImportContext {

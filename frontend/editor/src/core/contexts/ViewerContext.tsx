@@ -573,11 +573,14 @@ export const ViewerProvider: React.FC<ViewerProviderProps> = ({ children }) => {
       printActions.print();
       return;
     }
-    const [enforced] = await enforceExportPolicies(
+    const { files: enforcedFiles, blocked } = await enforceExportPolicies(
       [file],
       [activeFileId],
       "print",
     );
+    // A required policy failed: refuse to print (its toast is shown).
+    if (blocked.length > 0) return;
+    const [enforced] = enforcedFiles;
     // Original file back means no policy rewrote it (no active policy, already
     // enforced, or graceful failure fallback) — nothing new to review, print it.
     if (!enforced || enforced === file) {

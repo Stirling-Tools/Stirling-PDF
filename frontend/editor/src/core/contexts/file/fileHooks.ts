@@ -270,6 +270,8 @@ export function useFileManagement() {
       clearAllFiles: actions.clearAllFiles,
       updateStirlingFileStub: actions.updateStirlingFileStub,
       reorderFiles: actions.reorderFiles,
+      markPolicyBlocked: actions.markPolicyBlocked,
+      clearPolicyBlock: actions.clearPolicyBlock,
     }),
     [actions],
   );

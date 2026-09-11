@@ -3,6 +3,7 @@
  */
 
 import { FileId } from "@app/types/file";
+import { getPolicyBlock } from "@app/services/policyBlockRegistry";
 import {
   StirlingFileStub,
   FileContextState,
@@ -35,6 +36,9 @@ export function createFileSelectors(
     },
 
     getStirlingFileStub: (id: FileId) => stateRef.current.files.byId[id],
+
+    getPolicyBlock: (id: FileId) =>
+      getPolicyBlock(id) ?? stateRef.current.ui.policyBlocks[id],
 
     getStirlingFileStubs: (ids?: FileId[]) => {
       const currentIds = ids || stateRef.current.files.ids;

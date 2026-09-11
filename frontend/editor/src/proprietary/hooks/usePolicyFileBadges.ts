@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import { usePolicyRuns } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { useAllFiles, useFileSelector } from "@app/contexts/FileContext";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { policyAccentVar } from "@app/components/policies/policyStatus";
 import { isClassificationPolicy } from "@app/data/classificationPolicy";
@@ -39,6 +39,8 @@ export function buildPolicyBadgeMap(
   runs: ReadonlyArray<PolicyRunRecord>,
   stubs: ReadonlyArray<LineageStub>,
   labelById: ReadonlyMap<string, string>,
+  /** fileId → the key of the required policy blocking it (ui.policyBlocks). */
+  policyBlocks: Readonly<Record<string, string>> = {},
 ): Map<string, FileItemPolicyRef[]> {
   // Direct badges: a file that IS a policy run's output.
   const directByFile = new Map<string, FileItemPolicyRef[]>();
@@ -120,6 +122,25 @@ export function buildPolicyBadgeMap(
     }
   }
 
+  // Blocked pass: a required policy that FAILED marks its file blocked
+  for (const [fileId, policyKey] of Object.entries(policyBlocks)) {
+    const name = labelById.get(policyKey) ?? policyKey;
+    const list = result.get(fileId) ?? [];
+    const existing = list.find((p) => p.id === policyKey);
+    if (existing) {
+      if (existing.enforcing || existing.background) continue;
+      existing.blocked = true;
+    } else {
+      list.push({
+        id: policyKey,
+        name,
+        accentColor: policyAccentVar(policyKey),
+        blocked: true,
+      });
+      result.set(fileId, list);
+    }
+  }
+
   return result;
 }
 
@@ -130,7 +151,8 @@ function sameRef(a: FileItemPolicyRef, b: FileItemPolicyRef): boolean {
     a.name === b.name &&
     a.accentColor === b.accentColor &&
     !!a.enforcing === !!b.enforcing &&
-    !!a.background === !!b.background
+    !!a.background === !!b.background &&
+    !!a.blocked === !!b.blocked
   );
 }
 
@@ -177,6 +199,7 @@ export function reusePolicyBadgeArrays(
 export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
   const runs = usePolicyRuns();
   const { fileStubs } = useAllFiles();
+  const policyBlocks = useFileSelector((s) => s.ui.policyBlocks);
   const previous = useRef<Map<string, FileItemPolicyRef[]> | null>(null);
   return useMemo(() => {
     const labelById = new Map(
@@ -184,9 +207,9 @@ export function usePolicyFileBadges(): Map<string, FileItemPolicyRef[]> {
     );
     const map = reusePolicyBadgeArrays(
       previous.current,
-      buildPolicyBadgeMap(runs, fileStubs, labelById),
+      buildPolicyBadgeMap(runs, fileStubs, labelById, policyBlocks),
     );
     previous.current = map;
     return map;
-  }, [runs, fileStubs]);
+  }, [runs, fileStubs, policyBlocks]);
 }

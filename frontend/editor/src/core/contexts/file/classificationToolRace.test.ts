@@ -45,6 +45,7 @@ function stateWith(...stubs: StirlingFileStub[]): FileContextState {
       processingProgress: 0,
       hasUnsavedChanges: false,
       errorFileIds: [],
+      policyBlocks: {},
     },
   };
 }

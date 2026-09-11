@@ -86,13 +86,19 @@
   box-shadow: var(--shadow-lg);
 }
 
-.card[data-tool-skipped="true"] .thumbContainer {
+.card[data-tool-skipped="true"] .thumbContainer,
+.card[data-policy-blocked="true"] .thumbContainer {
   opacity: 0.45;
   filter: grayscale(1);
 }
 
-.card[data-tool-skipped="true"] .fileNameText {
+.card[data-tool-skipped="true"] .fileNameText,
+.card[data-policy-blocked="true"] .fileNameText {
   color: var(--c-text-muted);
+}
+
+.card[data-policy-blocked="true"] {
+  cursor: not-allowed;
 }
 
 .thumbImage {

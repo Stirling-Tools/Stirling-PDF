@@ -225,10 +225,13 @@ export default function WorkbenchBar({
       // whole set (e.g. "report.pdf (2 of 5)") rather than N invisible solo runs.
       let enforced: File[];
       try {
-        enforced = await enforceExportPolicies(
+        const result = await enforceExportPolicies(
           filesToExport as File[],
           stubs.map((s) => s?.id),
         );
+        // A required policy failed on some files: refuse the whole export (its toast is shown).
+        if (result.blocked.length > 0) return;
+        enforced = result.files;
       } catch {
         enforced = filesToExport as File[];
         showAlert({

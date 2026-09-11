@@ -3,6 +3,7 @@ import CoreViewer from "@core/components/viewer/Viewer";
 import type { ViewerProps } from "@core/components/viewer/Viewer";
 import type { EmbedPdfViewerProps } from "@core/components/viewer/EmbedPdfViewer";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { useFileSelector } from "@app/contexts/FileContext";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
@@ -10,6 +11,7 @@ import {
 } from "@app/components/policies/policyRunStore";
 import { isClassificationPolicy } from "@app/data/classificationPolicy";
 import { PolicyEnforcementOverlay } from "@app/components/viewer/PolicyEnforcementOverlay";
+import type { FileId } from "@app/types/file";
 
 type SignatureOverlayPassThrough = Pick<
   EmbedPdfViewerProps,
@@ -25,6 +27,11 @@ type SignatureOverlayPassThrough = Pick<
 const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
   const { activeFileId } = useViewer();
   const allRuns = usePolicyRuns();
+  const policyBlocks = useFileSelector((s) => s.ui.policyBlocks);
+  const blockedFileId =
+    activeFileId && policyBlocks[activeFileId as FileId]
+      ? (activeFileId as FileId)
+      : undefined;
 
   const activeFileRuns = activeFileId
     ? allRuns.filter(
@@ -54,6 +61,7 @@ const Viewer = (props: ViewerProps & SignatureOverlayPassThrough) => {
       <PolicyEnforcementOverlay
         key={activeFileId ?? ""}
         runs={activeFileRuns}
+        blockedFileId={blockedFileId}
       />
     </Box>
   );

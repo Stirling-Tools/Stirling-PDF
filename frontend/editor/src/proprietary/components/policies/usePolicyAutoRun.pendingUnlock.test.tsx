@@ -11,6 +11,9 @@ vi.mock("@app/hooks/useAiEngineEnabled", () => ({
 }));
 const fileStubs: { id: string; name: string; derivedFromTool?: boolean }[] = [];
 vi.mock("@app/contexts/FileContext", () => ({
+  useFileSelector: (
+    selector: (s: { ui: { policyBlocks: Record<string, string> } }) => unknown,
+  ) => selector({ ui: { policyBlocks: {} } }),
   useAllFiles: () => ({ fileStubs }),
   useFileManagement: () => ({ addFiles: vi.fn() }),
   useFileContext: () => ({ consumeFiles: vi.fn() }),
