@@ -14,6 +14,10 @@ export interface ReconcilePort {
   putFile(fileId: FileId, file: File): void;
   updateStub(fileId: FileId, updates: Partial<StirlingFileStub>): void;
   dropFile(fileId: FileId): void;
+  /** Re-derive page data and thumbnails from the bytes now published. Every
+   *  path that replaces a record's content owes this: the cached page data
+   *  describes the old bytes, and the editors lay out from it. */
+  reprocessFile(fileId: FileId): void;
 }
 
 /** What to do with a stored record before the workbench serves it. */

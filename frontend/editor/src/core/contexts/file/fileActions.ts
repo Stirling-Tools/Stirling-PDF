@@ -787,6 +787,37 @@ export async function undoConsumeFiles(
  * Action factory functions
  */
 
+/** Regenerate page metadata and thumbnails for a file whose bytes are current.
+ *  Queued, because parsing several PDFs at once is what the limit bounds. */
+function hydrateMetadataFor(
+  fileId: FileId,
+  stirlingFile: StirlingFile,
+  stateRef: React.MutableRefObject<FileContextState>,
+  lifecycleManager: FileLifecycleManager,
+): void {
+  if (!stirlingFile.type.startsWith("application/pdf")) return;
+  scheduleMetadataHydration(async () => {
+    const processedFileMetadata =
+      await generateProcessedFileMetadata(stirlingFile);
+    if (!processedFileMetadata) return;
+
+    const updates: Partial<StirlingFileStub> = {
+      processedFile: processedFileMetadata,
+    };
+
+    // Update thumbnail only if current stub doesn't have one
+    const currentStub = stateRef.current.files.byId[fileId];
+    if (!currentStub?.thumbnailUrl && processedFileMetadata.thumbnailUrl) {
+      updates.thumbnailUrl = processedFileMetadata.thumbnailUrl;
+      if (processedFileMetadata.thumbnailUrl.startsWith("blob:")) {
+        lifecycleManager.trackBlobUrl(processedFileMetadata.thumbnailUrl);
+      }
+    }
+
+    lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
+  });
+}
+
 /** Hand the reconciler the workbench, so it can settle a record in place
  *  without core knowing what it settles it against. */
 function reconcilePort(
@@ -802,6 +833,17 @@ function reconcilePort(
     updateStub: (fileId, updates) =>
       lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef),
     dropFile: (fileId) => lifecycleManager.removeFiles([fileId], stateRef),
+    reprocessFile: (fileId) => {
+      const file = filesRef.current.get(fileId);
+      if (file) {
+        hydrateMetadataFor(
+          fileId,
+          createStirlingFile(file, fileId),
+          stateRef,
+          lifecycleManager,
+        );
+      }
+    },
   };
 }
 
@@ -881,33 +923,8 @@ export async function addStirlingFileStubs(
       // Load File object and hydrate metadata in background (non-blocking)
       const fileId = stub.id;
 
-      // Regenerate page metadata + thumbnails. Queued, because parsing several
-      // PDFs at once is what the concurrency limit exists to bound.
-      const scheduleMetadataFor = (stirlingFile: StirlingFile): void => {
-        scheduleMetadataHydration(async () => {
-          const processedFileMetadata =
-            await generateProcessedFileMetadata(stirlingFile);
-          if (!processedFileMetadata) return;
-
-          const updates: Partial<StirlingFileStub> = {
-            processedFile: processedFileMetadata,
-          };
-
-          // Update thumbnail only if current stub doesn't have one
-          const currentStub = stateRef.current.files.byId[fileId];
-          if (
-            !currentStub?.thumbnailUrl &&
-            processedFileMetadata.thumbnailUrl
-          ) {
-            updates.thumbnailUrl = processedFileMetadata.thumbnailUrl;
-            if (processedFileMetadata.thumbnailUrl.startsWith("blob:")) {
-              lifecycleManager.trackBlobUrl(processedFileMetadata.thumbnailUrl);
-            }
-          }
-
-          lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
-        });
-      };
+      const scheduleMetadataFor = (stirlingFile: StirlingFile): void =>
+        hydrateMetadataFor(fileId, stirlingFile, stateRef, lifecycleManager);
 
       // Load and publish the File, ahead of any parsing. NOT queued: whether a
       // file opens at all must not wait on other files' parses.
@@ -967,10 +984,7 @@ export async function addStirlingFileStubs(
           !stub.processedFile.pages ||
           stub.processedFile.pages.length === 0 ||
           stub.processedFile.totalPages !== stub.processedFile.pages.length;
-        if (
-          stirlingFile.type.startsWith("application/pdf") &&
-          needsProcessing
-        ) {
+        if (needsProcessing) {
           scheduleMetadataFor(stirlingFile);
         }
       })().catch((error) =>

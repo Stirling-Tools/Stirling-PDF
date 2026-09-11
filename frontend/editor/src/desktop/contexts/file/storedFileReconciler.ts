@@ -48,6 +48,9 @@ async function useDiskVersion(
   await persistDiskUpdate(stub.id, file, state, reloadedAt);
   // Must follow putFile: the workbench drops updates for a file it cannot find.
   port.updateStub(stub.id, pickedUpFields(file, state, reloadedAt));
+  // pickedUpFields cleared the cached page data; without this the editors lay
+  // out from a placeholder and never get the real document back.
+  port.reprocessFile(stub.id);
 }
 
 /** Fields marking a picked-up disk read, shared by both reconcile paths. */
@@ -269,6 +272,7 @@ async function resyncRecord(
     port.putFile(fileId, file);
     await persistDiskUpdate(fileId, file, state, reloadedAt);
     port.updateStub(fileId, pickedUpFields(file, state, reloadedAt));
+    port.reprocessFile(fileId);
     notifyDiskReloaded(stub.name);
   }
 

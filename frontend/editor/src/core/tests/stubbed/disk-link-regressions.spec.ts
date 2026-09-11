@@ -125,6 +125,32 @@ test.describe("an external edit never silently costs the user work", () => {
     await expect(viewerPageCount(page, 8)).toBeVisible({ timeout: 20_000 });
   });
 
+  test("the second external edit reaches the editor too", async ({ page }) => {
+    await installTauri(page);
+    await gotoFiles(page);
+    await stage(page, onDisk(), [report()]);
+    await dismissModals(page);
+    await requireDiskLinking(page);
+    await openCard(page, "quarterly-report.pdf");
+
+    await page.getByText("PDF Multi Tool", { exact: true }).first().click();
+    await expect(editorPages(page)).toHaveCount(1, { timeout: 30_000 });
+
+    // The bug this pins: picking up a reload left the record with no page data
+    // and nothing regenerated it, so the editor fell back to a placeholder
+    // built from deps a bytes-only change cannot move. The first reload looked
+    // right; every one after it was dropped, in either direction.
+    for (const [bytes, pages] of [
+      [PDF_8_PAGES, 8],
+      [PDF_1_PAGE, 1],
+      [PDF_8_PAGES, 8],
+    ] as const) {
+      await editOnDisk(page, REPORT, bytes);
+      await emitWatch(page, [REPORT]);
+      await expect(editorPages(page)).toHaveCount(pages, { timeout: 30_000 });
+    }
+  });
+
   test("an open page editor's edits are offered as a choice, not overwritten", async ({
     page,
   }) => {

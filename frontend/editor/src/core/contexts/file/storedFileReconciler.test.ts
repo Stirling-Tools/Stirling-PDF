@@ -23,6 +23,7 @@ describe("reconciling a record with no source", () => {
         putFile: () => {},
         updateStub: () => {},
         dropFile: () => {},
+        reprocessFile: () => {},
       }),
     ).resolves.toEqual({});
   });
