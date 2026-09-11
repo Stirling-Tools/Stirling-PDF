@@ -24,6 +24,7 @@ export default function WorkbenchBarDesktopActions({
   isCustomView,
   actionsDisabled,
   policyEnforcing,
+  policyBlocked,
   downloadLabel,
   downloadIconName,
   saveAsIconName,
@@ -33,15 +34,16 @@ export default function WorkbenchBarDesktopActions({
   enforcingProgress,
 }: WorkbenchBarDesktopActionsProps) {
   const { t } = useTranslation();
-  const exportDisabled = actionsDisabled || policyEnforcing;
+  const exportDisabled = actionsDisabled || policyEnforcing || policyBlocked;
   const closeLabel =
     currentView === "fileEditor"
       ? t("workbenchBar.closeAll", "Close All")
       : t("workbenchBar.closePdf", "Close PDF");
 
-  // Policy enforcement replaces the plain label with a "why is this blocked" card.
   const tooltipFor = (label: string): React.ReactNode =>
-    policyEnforcing ? (
+    policyBlocked ? (
+      t("policy.blockedAction", { action: label })
+    ) : policyEnforcing ? (
       <PolicyEnforcingTooltip action={label} progress={enforcingProgress} />
     ) : (
       label

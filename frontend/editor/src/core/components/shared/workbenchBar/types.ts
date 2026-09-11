@@ -10,6 +10,8 @@ export interface WorkbenchBarActionsProps {
   actionsDisabled: boolean;
   /** A policy run is enforcing on a file the export would touch. */
   policyEnforcing: boolean;
+  /** A required policy failed on a file the action would use. */
+  policyBlocked: boolean;
   /** Context-aware label for the download/export action. */
   downloadLabel: string;
   downloadIconName: string;

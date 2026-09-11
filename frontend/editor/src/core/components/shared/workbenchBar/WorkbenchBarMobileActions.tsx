@@ -16,6 +16,7 @@ export default function WorkbenchBarMobileActions({
   isCustomView,
   actionsDisabled,
   policyEnforcing,
+  policyBlocked,
   downloadLabel,
   downloadIconName,
   saveAsIconName,
@@ -24,7 +25,7 @@ export default function WorkbenchBarMobileActions({
   onClose,
 }: WorkbenchBarActionsProps) {
   const { t } = useTranslation();
-  const exportDisabled = actionsDisabled || policyEnforcing;
+  const exportDisabled = actionsDisabled || policyEnforcing || policyBlocked;
   const showPrint = currentView === "viewer";
   const showFileActions = !isCustomView;
 
@@ -46,6 +47,7 @@ export default function WorkbenchBarMobileActions({
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
+        {policyBlocked && <Menu.Label>{t("policy.blockedBody")}</Menu.Label>}
         {showPrint && (
           <Menu.Item
             leftSection={<PrintIcon sx={{ fontSize: "1.1rem" }} />}

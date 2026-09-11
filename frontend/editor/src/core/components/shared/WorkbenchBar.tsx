@@ -44,6 +44,7 @@ import {
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
 import { enforceExportPolicies } from "@app/services/policyExport";
 import { downloadFile as downloadRaw } from "@app/services/downloadService";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 import { alert as showAlert } from "@app/components/toast";
 import {
   WorkbenchBarButtonConfig,
@@ -127,21 +128,35 @@ export default function WorkbenchBar({
   const { files: activeFiles } = useAllFiles();
   const { activeFileId, setActiveFileId } = useViewer();
   const policyFileBadges = usePolicyFileBadges();
-  // Block print/export while any file the export would touch is under active
-  // policy enforcement: the viewer exports its active file, every other view
-  // exports the selection (or all files when nothing is selected).
-  const exportTargetIds: string[] =
-    currentView === "viewer"
-      ? activeFileId
-        ? [activeFileId]
-        : []
-      : selectedFileIds.length > 0
-        ? selectedFileIds
-        : activeFiles.filter(isStirlingFile).map((f) => f.fileId);
+  const exportTargetIds = useMemo(() => {
+    if (currentView === "viewer") return activeFileId ? [activeFileId] : [];
+    if (currentView === "pageEditor" && pageEditorFunctions?.displayDocument) {
+      return Array.from(
+        new Set([
+          ...selectedFileIds,
+          ...pageEditorFunctions.displayDocument.pages.flatMap((page) =>
+            page.originalFileId ? [page.originalFileId] : [],
+          ),
+        ]),
+      );
+    }
+    return selectedFileIds.length > 0
+      ? selectedFileIds
+      : activeFiles.filter(isStirlingFile).map((file) => file.fileId);
+  }, [
+    currentView,
+    activeFileId,
+    pageEditorFunctions,
+    selectedFileIds,
+    activeFiles,
+  ]);
   const enforcingFileId = exportTargetIds.find((id) =>
     (policyFileBadges.get(id) ?? []).some((p) => p.enforcing),
   );
   const policyEnforcing = enforcingFileId != null;
+  const policyBlocked = exportTargetIds.some((id) =>
+    (policyFileBadges.get(id) ?? []).some((policy) => policy.blocked),
+  );
   const policyRuns = usePolicyRuns();
   const enforcingRun = policyEnforcing
     ? policyRuns.find(
@@ -177,24 +192,39 @@ export default function WorkbenchBar({
     }).filter((entry) => entry.buttons.length > 0);
   }, [buttons]);
 
+  const canUseFiles = useCallback(
+    (fileIds: string[]) => {
+      if (!fileIds.some(isFileBlocked)) return true;
+      showAlert({
+        alertType: "error",
+        title: t("policy.blockedTitle"),
+        body: t("policy.blockedBody"),
+      });
+      return false;
+    },
+    [t],
+  );
+
   const handleExportAll = useCallback(
     async (forceNewFile = false) => {
+      if (!canUseFiles(exportTargetIds)) return;
       if (currentView === "viewer") {
-        const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
-        if (!buffer) return;
-        const fileToExport =
-          selectedFiles.length > 0 ? selectedFiles[0] : activeFiles[0];
+        const fileToExport = activeFiles.find(
+          (file) => isStirlingFile(file) && file.fileId === activeFileId,
+        );
         if (!fileToExport) return;
         const stub = isStirlingFile(fileToExport)
           ? selectors.getStirlingFileStub(fileToExport.fileId)
           : undefined;
         try {
+          const buffer = await viewerContext?.exportActions?.saveAsCopy?.();
+          if (!buffer || !canUseFiles(exportTargetIds)) return;
           const result = await downloadFile({
             data: new Blob([buffer], { type: "application/pdf" }),
             // Stub name, not File.name: a rename only writes the stub.
             filename: stub?.name ?? fileToExport.name,
             localPath: forceNewFile ? undefined : stub?.localFilePath,
-            fileId: stub?.id,
+            fileId: activeFileId ?? undefined,
           });
           if (!forceNewFile && !result.cancelled && stub && result.savedPath) {
             fileActions.updateStirlingFileStub(stub.id, {
@@ -233,15 +263,16 @@ export default function WorkbenchBar({
         if (result.blocked.length > 0) return;
         enforced = result.files;
       } catch {
-        enforced = filesToExport as File[];
         showAlert({
-          alertType: "warning",
-          title: t("policies.enforcement.exportFailureTitle"),
-          body: t("policies.enforcement.exportFailureBody"),
+          alertType: "error",
+          title: t("policies.enforcement.exportStoppedTitle"),
+          body: t("policies.enforcement.exportStoppedBody"),
         });
+        return;
       }
 
       for (let idx = 0; idx < filesToExport.length; idx++) {
+        if (!canUseFiles(exportTargetIds)) return;
         const file = filesToExport[idx];
         const stub = stubs[idx];
         try {
@@ -270,18 +301,23 @@ export default function WorkbenchBar({
     },
     [
       currentView,
+      activeFileId,
+      canUseFiles,
+      exportTargetIds,
       selectedFiles,
       activeFiles,
       pageEditorFunctions,
       viewerContext,
       selectors,
       fileActions,
+      t,
     ],
   );
 
   const handlePrint = useCallback(() => {
+    if (!activeFileId || !canUseFiles([activeFileId])) return;
     viewerContext?.printActions?.print?.();
-  }, [viewerContext]);
+  }, [viewerContext, activeFileId, canUseFiles]);
 
   const handleClose = useCallback(async () => {
     if (currentView === "fileEditor") {
@@ -340,6 +376,7 @@ export default function WorkbenchBar({
     isCustomView,
     actionsDisabled,
     policyEnforcing,
+    policyBlocked,
     downloadLabel: downloadTooltip,
     downloadIconName: icons.downloadIconName,
     saveAsIconName: icons.saveAsIconName,

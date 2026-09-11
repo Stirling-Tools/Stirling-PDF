@@ -294,12 +294,12 @@ export const FileItem = React.memo(function FileItem({
     </Stack>
   );
 
-  // Why an action can't run right now: a policy is rewriting the file, or its
-  // bytes are gone. `needsBytes` actions are the ones that read the file.
   const blockedReason = (
     action: string,
     needsBytes = true,
   ): React.ReactNode | null => {
+    if (needsBytes && policyBlocked)
+      return t("policy.blockedAction", { action });
     if (policyEnforcing) return enforcingTooltip(action);
     if (needsBytes && dataUnavailable)
       return t(
@@ -537,7 +537,9 @@ export const FileItem = React.memo(function FileItem({
               </Menu.Label>
 
               <FileMenuItem
-                disabledReason={blockedReason(viewerLabel)}
+                disabledReason={
+                  policyBlocked ? null : blockedReason(viewerLabel)
+                }
                 icon={
                   isViewedInViewer ? (
                     <VisibilityOffOutlinedIcon sx={{ fontSize: 16 }} />

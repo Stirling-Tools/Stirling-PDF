@@ -1,5 +1,6 @@
 import apiClient from "@app/services/apiClient";
 import { fileStorage } from "@app/services/fileStorage";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import {
   buildHistoryBundle,
   buildSharePackage,
@@ -18,6 +19,7 @@ function resolveUpdatedAt(value: unknown): number {
   return Number.isFinite(parsed) ? parsed : Date.now();
 }
 
+/** Uploads the full history; rejects if any included version is policy-blocked. */
 export async function uploadHistoryChain(
   originalFileId: FileId,
   existingRemoteId?: number,
@@ -26,6 +28,7 @@ export async function uploadHistoryChain(
   if (chain.length === 0) {
     throw new Error("No history chain found.");
   }
+  assertFilesNotBlocked(chain.map((stub) => stub.id));
 
   const finalStub =
     chain
@@ -50,6 +53,10 @@ export async function uploadHistoryChain(
   formData.append("file", finalFile, finalFile.name);
   formData.append("historyBundle", bundleFile, bundleFile.name);
   formData.append("auditLog", auditLog, auditLog.name);
+  assertFilesNotBlocked([
+    ...chain.map((stub) => stub.id),
+    ...manifest.entries.map((entry) => entry.logicalId),
+  ]);
 
   if (existingRemoteId) {
     const response = await apiClient.put(
@@ -70,6 +77,7 @@ export async function uploadHistoryChain(
   return { remoteId, updatedAt, chain };
 }
 
+/** Uploads complete histories; rejects if any included version is policy-blocked. */
 export async function uploadHistoryChains(
   originalFileIds: FileId[],
   existingRemoteId?: number,
@@ -102,6 +110,7 @@ export async function uploadHistoryChains(
     }
   }
 
+  assertFilesNotBlocked(seenIds);
   let shareFile: File;
   if (leafStubs.length === 1) {
     const finalFile = await fileStorage.getStirlingFile(leafStubs[0].id);
@@ -127,6 +136,10 @@ export async function uploadHistoryChains(
   formData.append("file", shareFile, shareFile.name);
   formData.append("historyBundle", bundleFile, bundleFile.name);
   formData.append("auditLog", auditLog, auditLog.name);
+  assertFilesNotBlocked([
+    ...seenIds,
+    ...manifest.entries.map((entry) => entry.logicalId),
+  ]);
 
   if (existingRemoteId) {
     const response = await apiClient.put(

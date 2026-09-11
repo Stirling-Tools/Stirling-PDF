@@ -63,6 +63,7 @@ import {
 } from "@app/services/serverStorageDelete";
 import { fileStorage, onRecordUnreadable } from "@app/services/fileStorage";
 import { downloadFileWithPolicy } from "@app/services/exportWithPolicy";
+import { isFileBlocked } from "@app/services/policyBlockRegistry";
 import { useOpenInNewWindow } from "@app/extensions/openInNewWindow";
 import { alert } from "@app/components/toast";
 import { useBulkAddProgress } from "@app/services/bulkAddProgress";
@@ -413,13 +414,27 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [deleteTarget, fileActions, refreshStubs],
     );
 
-    // Kebab: open the upload-to-server modal for this one file.
+    const canUseFile = useCallback(
+      (fileId: FileId) => {
+        if (!isFileBlocked(fileId)) return true;
+        alert({
+          alertType: "error",
+          title: t("policy.blockedTitle"),
+          body: t("policy.blockedBody"),
+          expandable: false,
+        });
+        return false;
+      },
+      [t],
+    );
+
     const handleSaveToCloud = useCallback(
       (fileId: FileId) => {
+        if (!canUseFile(fileId)) return;
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (stub) setSaveToServerTarget([stub]);
       },
-      [allFileStubs],
+      [allFileStubs, canUseFile],
     );
 
     // Kebab: open the version-history modal for this one file.
@@ -448,6 +463,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // through the policy wrapper so export policies enforce here too.
     const handleDownload = useCallback(
       async (fileId: FileId) => {
+        if (!canUseFile(fileId)) return;
         const stub = allFileStubs.find((s) => s.id === fileId);
         const file = await fileStorage.getStirlingFile(fileId);
         if (!file) {
@@ -470,12 +486,13 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           });
         }
       },
-      [allFileStubs, warnDataUnavailable, t],
+      [allFileStubs, warnDataUnavailable, canUseFile, t],
     );
 
     // Kebab: copy the file into the library under a free "(copy)" name.
     const handleDuplicate = useCallback(
       async (fileId: FileId) => {
+        if (!canUseFile(fileId)) return;
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (!stub) return;
         try {
@@ -499,7 +516,14 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           });
         }
       },
-      [allFileStubs, addFiles, refreshStubs, warnDataUnavailable, t],
+      [
+        allFileStubs,
+        addFiles,
+        refreshStubs,
+        warnDataUnavailable,
+        canUseFile,
+        t,
+      ],
     );
 
     // Kebab: open the rename dialog for this one file.
@@ -540,10 +564,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     const { canOpenInNewWindow, openInNewWindow } = useOpenInNewWindow();
     const handleOpenInNewWindow = useCallback(
       (fileId: FileId) => {
+        if (!canUseFile(fileId)) return;
         const stub = allFileStubs.find((s) => s.id === fileId);
         if (stub) openInNewWindow(stub);
       },
-      [allFileStubs, openInNewWindow],
+      [allFileStubs, openInNewWindow, canUseFile],
     );
 
     // Once a pending file lands in state, open it in the viewer.

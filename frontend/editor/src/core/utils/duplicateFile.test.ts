@@ -2,9 +2,15 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import type { FolderId } from "@app/types/folder";
+import { PolicyBlockedError } from "@app/services/policyFileGuard";
 
 const getStirlingFile = vi.fn();
 const updateFileMetadata = vi.fn();
+const isFileBlocked = vi.fn();
+
+vi.mock("@app/services/policyBlockRegistry", () => ({
+  isFileBlocked: (id: string) => isFileBlocked(id),
+}));
 
 vi.mock("@app/services/fileStorage", () => ({
   fileStorage: {
@@ -50,6 +56,7 @@ const addFiles = vi.fn<
 
 beforeEach(() => {
   vi.clearAllMocks();
+  isFileBlocked.mockReturnValue(false);
   getStirlingFile.mockResolvedValue(asStirlingFile("report.pdf"));
   updateFileMetadata.mockResolvedValue(true);
   addFiles.mockResolvedValue([asStirlingFile("report (copy).pdf")]);
@@ -72,6 +79,26 @@ describe("copyNameFor", () => {
 });
 
 describe("duplicateStoredFile", () => {
+  it("refuses to duplicate a blocked file", async () => {
+    isFileBlocked.mockReturnValue(true);
+    await expect(
+      duplicateStoredFile(stub(), [], addFiles),
+    ).rejects.toBeInstanceOf(PolicyBlockedError);
+    expect(getStirlingFile).not.toHaveBeenCalled();
+    expect(addFiles).not.toHaveBeenCalled();
+  });
+
+  it("refuses a copy when the source becomes blocked while loading", async () => {
+    getStirlingFile.mockImplementationOnce(async () => {
+      isFileBlocked.mockReturnValue(true);
+      return asStirlingFile("report.pdf");
+    });
+    await expect(
+      duplicateStoredFile(stub(), [], addFiles),
+    ).rejects.toBeInstanceOf(PolicyBlockedError);
+    expect(addFiles).not.toHaveBeenCalled();
+  });
+
   it("inherits labels, folder and a persisted thumbnail", async () => {
     const id = await duplicateStoredFile(
       stub({

@@ -1,5 +1,13 @@
-import { useState } from "react";
-import { Group, Loader, Modal, Progress, Stack, Text } from "@mantine/core";
+import { useEffect, useState } from "react";
+import {
+  Alert,
+  Group,
+  Loader,
+  Modal,
+  Progress,
+  Stack,
+  Text,
+} from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
@@ -17,6 +25,10 @@ import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import {
+  assertFilesNotBlocked,
+  PolicyBlockedError,
+} from "@app/services/policyFileGuard";
 import {
   POLICY_IN_FLIGHT_STATUSES,
   usePolicyRuns,
@@ -45,6 +57,7 @@ export default function ViewerShareButton({
   const [saving, setSaving] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [shareStub, setShareStub] = useState<StirlingFileStub | null>(null);
+  const [confirmStub, setConfirmStub] = useState<StirlingFileStub | null>(null);
 
   // Resolve strictly to the file shown in the viewer. Never fall back to an
   // arbitrary file — sharing the wrong document would be worse than not
@@ -55,6 +68,20 @@ export default function ViewerShareButton({
     : undefined;
 
   const policyFileBadges = usePolicyFileBadges();
+  const blocked =
+    !!stub &&
+    (policyFileBadges.get(stub.id) ?? []).some((policy) => policy.blocked);
+  const confirmBlocked =
+    !!confirmStub &&
+    (policyFileBadges.get(confirmStub.id) ?? []).some(
+      (policy) => policy.blocked,
+    );
+  const shareBlocked =
+    !!shareStub &&
+    (policyFileBadges.get(shareStub.id) ?? []).some((policy) => policy.blocked);
+  useEffect(() => {
+    if (shareBlocked) setShareOpen(false);
+  }, [shareBlocked]);
   const runs = usePolicyRuns();
   const enforcing =
     !!activeFileId &&
@@ -72,9 +99,11 @@ export default function ViewerShareButton({
       : undefined;
 
   const label = t("workbenchBar.share", "Share");
-  const isDisabled = Boolean(disabled) || !stub || enforcing;
+  const isDisabled = Boolean(disabled) || !stub || enforcing || blocked;
 
-  const tooltipContent = enforcing ? (
+  const tooltipContent = blocked ? (
+    t("policy.blockedAction", { action: label })
+  ) : enforcing ? (
     <Stack gap={6} py={2} w={200}>
       <Group gap={6} wrap="nowrap">
         <ShieldOutlinedIcon style={{ fontSize: 13 }} />
@@ -103,22 +132,40 @@ export default function ViewerShareButton({
     label
   );
 
+  const canShare = (target: StirlingFileStub) => {
+    try {
+      assertFilesNotBlocked([target.id]);
+      return true;
+    } catch (error) {
+      alert({
+        alertType: "error",
+        title: t("policy.blockedTitle"),
+        body: error instanceof Error ? error.message : t("policy.blockedBody"),
+        expandable: false,
+      });
+      return false;
+    }
+  };
+
   const openShare = (target: StirlingFileStub) => {
+    if (!canShare(target)) return;
     setShareStub(target);
     setShareOpen(true);
   };
 
   const handleClick = () => {
-    if (!stub) return;
+    if (!stub || !canShare(stub)) return;
     if (stub.remoteStorageId) {
       openShare(stub);
     } else {
+      setConfirmStub(stub);
       setConfirmOpen(true);
     }
   };
 
   const handleSaveAndShare = async () => {
-    if (!stub) return;
+    const stub = confirmStub;
+    if (!stub || !canShare(stub)) return;
     setSaving(true);
     try {
       const originalFileId = (stub.originalFileId || stub.id) as FileId;
@@ -150,22 +197,26 @@ export default function ViewerShareButton({
       setConfirmOpen(false);
       openShare({ ...stub, ...metadata });
     } catch (error) {
-      console.error("Failed to save file to server for sharing:", error);
+      if (!(error instanceof PolicyBlockedError)) {
+        console.error("Failed to save file to server for sharing:", error);
+      }
       const status = (error as { response?: { status?: number } })?.response
         ?.status;
       alert({
         alertType: "error",
         title: t("storageShare.saveFailedTitle", "Couldn't save to server"),
         body:
-          status === 403
-            ? t(
-                "storageUpload.featureDisabled",
-                "Saving to the server isn't enabled on this server.",
-              )
-            : t(
-                "storageShare.saveFailed",
-                "Failed to save the file to the server. Please try again.",
-              ),
+          error instanceof PolicyBlockedError
+            ? error.message
+            : status === 403
+              ? t(
+                  "storageUpload.featureDisabled",
+                  "Saving to the server isn't enabled on this server.",
+                )
+              : t(
+                  "storageShare.saveFailed",
+                  "Failed to save the file to the server. Please try again.",
+                ),
         expandable: false,
         durationMs: 3000,
       });
@@ -209,6 +260,11 @@ export default function ViewerShareButton({
         overlayProps={{ blur: 4 }}
       >
         <Stack>
+          {confirmBlocked && (
+            <Alert color="red" title={t("policy.blockedTitle")}>
+              {t("policy.blockedBody")}
+            </Alert>
+          )}
           <Stack ta="center" p="md" gap="xs">
             <Text size="lg" fw={500}>
               {t(
@@ -239,6 +295,7 @@ export default function ViewerShareButton({
               leftSection={<CloudUploadIcon fontSize="small" />}
               onClick={handleSaveAndShare}
               loading={saving}
+              disabled={!confirmStub || confirmBlocked}
             >
               {t("storageShare.saveAndShare", "Save to server & share")}
             </Button>
@@ -246,7 +303,7 @@ export default function ViewerShareButton({
         </Stack>
       </Modal>
 
-      {shareStub && (
+      {shareStub && !shareBlocked && (
         <ShareManagementModal
           opened={shareOpen}
           onClose={() => setShareOpen(false)}

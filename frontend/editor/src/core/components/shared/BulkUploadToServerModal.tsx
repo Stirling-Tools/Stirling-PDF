@@ -11,6 +11,11 @@ import { uploadHistoryChains } from "@app/services/serverStorageUpload";
 import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
+import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import {
+  assertFilesNotBlocked,
+  PolicyBlockedError,
+} from "@app/services/policyFileGuard";
 
 interface BulkUploadToServerModalProps {
   opened: boolean;
@@ -29,6 +34,10 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
   const { actions } = useFileActions();
   const [isUploading, setIsUploading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const policyFileBadges = usePolicyFileBadges();
+  const policyBlocked = files.some((file) =>
+    (policyFileBadges.get(file.id) ?? []).some((policy) => policy.blocked),
+  );
 
   const fileNames = useMemo(() => files.map((file) => file.name), [files]);
   const displayNames = useMemo(() => fileNames.slice(0, 3), [fileNames]);
@@ -45,6 +54,7 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
     setErrorMessage(null);
 
     try {
+      assertFilesNotBlocked(files.map((file) => file.id));
       const rootIds = Array.from(
         new Set(
           files.map((file) => (file.originalFileId || file.id) as FileId),
@@ -89,6 +99,10 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
       }
       onClose();
     } catch (error) {
+      if (error instanceof PolicyBlockedError) {
+        setErrorMessage(error.message);
+        return;
+      }
       console.error("Failed to upload files to server:", error);
       // A 403 means the server has storage turned off (or login disabled,
       // which gates storage). Say so plainly instead of the generic
@@ -142,12 +156,16 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
           </Text>
         )}
 
-        {errorMessage && (
+        {(policyBlocked || errorMessage) && (
           <Alert
             color="red"
-            title={t("storageUpload.errorTitle", "Upload failed")}
+            title={
+              policyBlocked
+                ? t("policy.blockedTitle")
+                : t("storageUpload.errorTitle", "Upload failed")
+            }
           >
-            {errorMessage}
+            {policyBlocked ? t("policy.blockedBody") : errorMessage}
           </Alert>
         )}
 
@@ -159,6 +177,7 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
             leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />}
             onClick={handleUpload}
             loading={isUploading}
+            disabled={policyBlocked}
           >
             {t("storageUpload.uploadButton", "Upload to Server")}
           </Button>

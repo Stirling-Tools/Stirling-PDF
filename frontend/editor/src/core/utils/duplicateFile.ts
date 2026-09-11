@@ -1,6 +1,7 @@
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 import { fileStorage } from "@app/services/fileStorage";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { splitFileName } from "@app/utils/fileUtils";
 
 /** The subset of `useFileHandler().addFiles` a duplicate needs. */
@@ -36,14 +37,17 @@ export function copyNameFor(name: string, taken: Iterable<string>): string {
  * copy also lands in the source's folder rather than back at the root.
  *
  * @returns the new file's id, or null if the source has no readable bytes.
+ * @throws PolicyBlockedError if a required policy blocks the source.
  */
 export async function duplicateStoredFile(
   stub: StirlingFileStub,
   existingNames: Iterable<string>,
   addFiles: AddFilesFn,
 ): Promise<FileId | null> {
+  assertFilesNotBlocked([stub.id]);
   const source = await fileStorage.getStirlingFile(stub.id);
   if (!source) return null;
+  assertFilesNotBlocked([stub.id]);
 
   const [copy] = await addFiles(
     [
