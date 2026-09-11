@@ -60,7 +60,7 @@ export function ReaderRail() {
 
   const labels: Record<string, string> = useMemo(
     () => ({
-      "viewer-toggle-bookmarks": t("reader.rail.contents", "Contents"),
+      "viewer-toggle-bookmarks": t("reader.rail.bookmarks", "Bookmarks"),
       "viewer-toggle-sidebar": t("reader.rail.thumbnails", "Pages"),
       "viewer-search": t("reader.rail.search", "Find in document"),
       "viewer-rotate-left": t("reader.rail.rotateLeft", "Rotate left"),
