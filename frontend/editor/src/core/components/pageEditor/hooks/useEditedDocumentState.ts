@@ -10,6 +10,11 @@ interface UseEditedDocumentStateParams {
   clearReorderedPages: () => void;
   fileOrder: FileId[];
   updateCurrentPages: (pages: PDFPage[] | null) => void;
+  /** Bumps when the bytes behind the open files are replaced. */
+  contentRevision: number;
+  /** Runs when that discards the working document, so the caller can drop the
+   *  undo history and the unsaved-changes flag that described it. */
+  onDocumentReplaced: () => void;
 }
 
 export const useEditedDocumentState = ({
@@ -19,6 +24,8 @@ export const useEditedDocumentState = ({
   clearReorderedPages,
   fileOrder,
   updateCurrentPages,
+  contentRevision,
+  onDocumentReplaced,
 }: UseEditedDocumentStateParams) => {
   const [editedDocument, setEditedDocument] = useState<PDFDocument | null>(
     null,
@@ -68,6 +75,19 @@ export const useEditedDocumentState = ({
     });
   }, [editedDocument]);
 
+  // A disk reload swaps the bytes under an unchanged file id, so the merge
+  // below - which is built to fold in additions and removals while preserving
+  // the user's edits - would carry edits belonging to a document that no longer
+  // exists. The next rebuild is taken whole instead.
+  const replaceOnNextRebuild = useRef(false);
+  const seenContentRevision = useRef(contentRevision);
+  useEffect(() => {
+    if (seenContentRevision.current === contentRevision) return;
+    seenContentRevision.current = contentRevision;
+    replaceOnNextRebuild.current = true;
+    onDocumentReplaced();
+  }, [contentRevision, onDocumentReplaced]);
+
   const fileOrderKey = useMemo(() => fileOrder.join(","), [fileOrder]);
   const mergedDocSignature = useMemo(() => {
     if (!mergedPdfDocument?.pages) return "";
@@ -97,20 +117,25 @@ export const useEditedDocumentState = ({
       currentEditedDocument.id !== mergedPdfDocument.id ||
       currentEditedDocument.file !== mergedPdfDocument.file ||
       currentEditedDocument.name !== mergedPdfDocument.name;
+    // Replacing the bytes can leave the page ids identical - same file, same
+    // page count, different content - so a pending replace is its own reason to
+    // rebuild, not just a modifier on one.
+    const replacing = replaceOnNextRebuild.current;
 
-    if (!signatureChanged && !metadataChanged) return;
+    if (!signatureChanged && !metadataChanged && !replacing) return;
+    replaceOnNextRebuild.current = false;
 
     setEditedDocument((prev) => {
       if (!prev) return prev;
 
       let pages = prev.pages;
 
-      if (signatureChanged) {
+      if (signatureChanged || replacing) {
         const sourcePages = mergedPdfDocument.pages;
         const sourceIds = new Set(sourcePages.map((p) => p.id));
         const prevIds = new Set(prev.pages.map((p) => p.id));
         const hasOverlap = sourcePages.some((page) => prevIds.has(page.id));
-        const shouldResetToMerged = !hasOverlap;
+        const shouldResetToMerged = replacing || !hasOverlap;
 
         const newPages: PDFPage[] = [];
         for (const page of sourcePages) {
@@ -221,7 +246,8 @@ export const useEditedDocumentState = ({
         }
       }
 
-      const shouldReplaceBase = metadataChanged || signatureChanged;
+      const shouldReplaceBase =
+        metadataChanged || signatureChanged || replacing;
       const baseDocument = shouldReplaceBase
         ? {
             ...mergedPdfDocument,
@@ -240,10 +266,10 @@ export const useEditedDocumentState = ({
       };
     });
 
-    if (signatureChanged) {
+    if (signatureChanged || replacing) {
       lastSyncedSignatureRef.current = mergedDocSignature;
     }
-  }, [mergedPdfDocument, fileOrderKey, mergedDocSignature]);
+  }, [mergedPdfDocument, fileOrderKey, mergedDocSignature, contentRevision]);
 
   const displayDocument = editedDocument || initialDocument;
 

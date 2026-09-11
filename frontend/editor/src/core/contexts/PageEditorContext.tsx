@@ -143,6 +143,11 @@ interface PageEditorContextValue {
   persistedDocumentSignature: string | null;
   savePersistedDocument: (document: PDFDocument, signature: string) => void;
   clearPersistedDocument: () => void;
+  /** Bumps whenever the bytes behind the open files are replaced under an
+   *  unchanged file id, which is what a disk reload does. Anything laid out
+   *  from those bytes has to start over rather than merge into what replaced
+   *  them. */
+  contentRevision: number;
 }
 
 const PageEditorContext = createContext<PageEditorContextValue | undefined>(
@@ -248,6 +253,7 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
 
   const prevFileContextSignature = useRef<string | null>(null);
   const prevFileContentSignature = useRef<string | null>(null);
+  const [contentRevision, setContentRevision] = useState(0);
   const haveFileIdSetsChanged = (prevIds: FileId[], currentIds: FileId[]) => {
     if (prevIds.length !== currentIds.length) {
       return true;
@@ -268,6 +274,9 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       prevFileContentSignature.current !== null &&
       prevFileContentSignature.current !== fileContentSignature;
     prevFileContentSignature.current = fileContentSignature;
+    // Clearing the persisted document only invalidates the cache. The live
+    // document is held by the editor and has to be told to start over too.
+    if (contentChanged) setContentRevision((revision) => revision + 1);
 
     if (
       !idsChanged &&
@@ -537,8 +546,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       persistedDocumentSignature,
       savePersistedDocument,
       clearPersistedDocument,
+      contentRevision,
     }),
     [
+      contentRevision,
       currentPages,
       updateCurrentPages,
       reorderedPages,
