@@ -5,7 +5,6 @@ import { useQuery } from "@tanstack/react-query";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
 import { isPortalEntityScopeAccessible } from "@app/data/processorSearchIndex";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { PORTAL_HIDDEN_SECTION_KEYS } from "@portal/components/PortalSettingsHost";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
   assembleSuperSearchGroups,
@@ -236,6 +235,8 @@ export function usePortalSearchResults(
         ? {
             isAdmin: config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
+            // Being in the processor is proof of access to it.
+            portalAccessible: true,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
@@ -255,14 +256,7 @@ export function usePortalSearchResults(
     const settingsGroups = assembleSuperSearchGroups(
       {
         settings: scopeEnabled("settings")
-          ? rankSettingsResults(
-              trimmed,
-              t,
-              gates,
-              openSettingsSection,
-              undefined,
-              PORTAL_HIDDEN_SECTION_KEYS,
-            )
+          ? rankSettingsResults(trimmed, t, gates, openSettingsSection)
           : [],
       },
       t,

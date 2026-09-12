@@ -1,13 +1,10 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
+import type { TFunction } from "i18next";
+import PreferencesSection from "@app/components/shared/config/configSections/preferences/PreferencesSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
-import HelpSection from "@app/components/shared/config/configSections/HelpSection";
-import LegalSection from "@app/components/shared/config/configSections/LegalSection";
-import {
-  BackendThirdPartyLicensesSection,
-  FrontendThirdPartyLicensesSection,
-} from "@app/components/shared/config/configSections/ThirdPartyLicensesSection";
+import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
+import AboutSection from "@app/components/shared/config/configSections/AboutSection";
 import type {
   ConfigNavItem,
   ConfigNavSection,
@@ -38,91 +35,74 @@ export const useConfigNavSections = (
 
   const sections: ConfigNavSection[] = [
     {
+      id: "preferences",
       title: t("settings.preferences.title", "Preferences"),
       items: [
         {
           key: "general",
           label: t("settings.general.title", "General"),
-          icon: "settings-rounded",
-          component: <GeneralSection hideTitle />,
-        },
-        {
-          key: "hotkeys",
-          label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
-          icon: "keyboard-rounded",
-          component: <HotkeysSection />,
+          description: t(
+            "settings.preferences.description",
+            "How the editor looks and behaves for you, and your account.",
+          ),
+          icon: "tune-rounded",
+          component: <PreferencesSection />,
         },
       ],
     },
+    // Reference material: read once and rarely revisited, so it is one page
+    // rather than four rows you have to open in turn.
     {
-      title: t("settings.help.title", "Help"),
+      id: "about",
+      title: t("settings.about.title", "About"),
       items: [
         {
-          key: "help",
-          label: t("settings.help.label", "Tours"),
+          key: "about",
+          label: t("settings.about.title", "About"),
+          description: t(
+            "settings.about.description",
+            "Tours, legal documents and the licences of everything bundled with this build.",
+          ),
           icon: "help-rounded",
           component: (
-            <HelpSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
+            <AboutSection isAdmin={_isAdmin} onRequestClose={onRequestClose} />
           ),
         },
       ],
     },
-    {
-      title: t("settings.legal.title", "Legal"),
-      items: [
-        {
-          key: "legal",
-          label: t("settings.legal.label", "Legal"),
-          icon: "gavel-rounded",
-          component: <LegalSection />,
-        },
-        {
-          key: "backendThirdPartyLicenses",
-          label: t("settings.licenses.backendLabel", "Backend Licenses"),
-          icon: "article-rounded",
-          component: <BackendThirdPartyLicensesSection />,
-        },
-        {
-          key: "frontendThirdPartyLicenses",
-          label: t("settings.licenses.frontendLabel", "Frontend Licenses"),
-          icon: "code-rounded",
-          component: <FrontendThirdPartyLicensesSection />,
-        },
-      ],
-    },
   ];
 
   return sections;
 };
 
-// Deprecated: Use useConfigNavSections hook instead
+/**
+ * The editor's own preference sections, for builders that are plain functions
+ * rather than hooks (the cloud navs assemble their tree outside a component)
+ * and so must be handed a `t` instead of calling useTranslation themselves.
+ *
+ * Replaces a hardcoded-English copy of this list: the SaaS nav was its only
+ * caller, which is why "Preferences", "General" and "Keyboard Shortcuts" never
+ * translated there.
+ */
 export const createConfigNavSections = (
-  _isAdmin: boolean = false,
-  _runningEE: boolean = false,
-  _loginEnabled: boolean = false,
-): ConfigNavSection[] => {
-  console.warn(
-    "createConfigNavSections is deprecated. Use useConfigNavSections hook instead for proper i18n support.",
-  );
-  const sections: ConfigNavSection[] = [
-    {
-      title: "Preferences",
-      items: [
-        {
-          key: "general",
-          label: "General",
-          icon: "settings-rounded",
-          component: <GeneralSection hideTitle />,
-        },
-        {
-          key: "hotkeys",
-          label: "Keyboard Shortcuts",
-          icon: "keyboard-rounded",
-          component: <HotkeysSection />,
-        },
-      ],
-    },
-  ];
-
-  return sections;
-};
+  t: TFunction<"translation", undefined>,
+): ConfigNavSection[] => [
+  {
+    id: "preferences",
+    title: t("settings.preferences.title", "Preferences"),
+    items: [
+      {
+        key: "general",
+        label: t("settings.general.title", "General"),
+        icon: "settings-rounded",
+        component: <GeneralSection hideTitle />,
+      },
+      {
+        key: "hotkeys",
+        label: t("settings.hotkeys.title", "Keyboard Shortcuts"),
+        icon: "keyboard-rounded",
+        component: <HotkeysSection />,
+      },
+    ],
+  },
+];

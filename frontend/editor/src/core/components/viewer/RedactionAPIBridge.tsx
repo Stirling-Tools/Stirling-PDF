@@ -5,6 +5,7 @@ import { useRedaction } from "@app/contexts/RedactionContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
+import { leaveRedactionMode } from "@app/components/viewer/leaveRedactionMode";
 
 /**
  * Bridges between the EmbedPDF redaction plugin and the Stirling-PDF RedactionContext.
@@ -42,6 +43,14 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
       setBridgeReady(false);
     };
   }, [setBridgeReady]);
+
+  // The interaction mode is viewer-global, so a stranded redaction mode would block
+  // selection for the next document.
+  useEffect(() => {
+    return () => {
+      leaveRedactionMode(redactionProvides);
+    };
+  }, [redactionProvides]);
 
   // Sync EmbedPDF state to our context
   useEffect(() => {

@@ -65,13 +65,12 @@ test.describe("Stripe SDK lazy loading", () => {
     // checkout without actually clicking Upgrade. Even rendering the
     // settings drawer must NOT pull Stripe into the entry path — only the
     // upgrade modal itself, which sits one click further in.
-    const settingsButton = page
-      .getByRole("button", { name: /settings/i })
-      .first();
-    if (await settingsButton.isVisible({ timeout: 5_000 }).catch(() => false)) {
-      await settingsButton.click();
-      await page.waitForTimeout(1_500);
-    }
+    await page.goto("/settings");
+    await page
+      .locator(".settings-page")
+      .waitFor({ timeout: 30_000 })
+      .catch(() => {});
+    await page.waitForTimeout(1_500);
 
     expect(
       stripeRequests,
