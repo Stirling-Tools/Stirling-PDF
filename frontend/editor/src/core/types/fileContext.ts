@@ -73,6 +73,14 @@ export interface StirlingFileStub extends BaseFileMetadata {
    */
   classificationConfidence?: ClassificationConfidence;
   /**
+   * This file's classification is final. It was produced outside the policy system — by
+   * desktop onboarding's classification demo — so no policy may reclassify it and an unsure
+   * verdict must never be escalated to the AI classifier. Rides on the stub, so
+   * {@code createChildStub} carries it onto every later version; a dispatch marker would
+   * not, being keyed to the file id that a new version replaces.
+   */
+  classificationLocked?: boolean;
+  /**
    * This session proved the stored bytes unreadable (WebKit losing a blob's
    * backing store). The row renders as "data lost" instead of pretending the
    * file can open; re-uploading is the only recovery.

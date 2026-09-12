@@ -287,6 +287,11 @@ function FileContextInner({
         derivedFromTool?: boolean;
         /** Folder every added file is born into (see AddFileOptions). */
         folderId?: string;
+        /** Classification computed outside the policy system (see AddFileOptions). */
+        presetClassification?: {
+          labels: string[];
+          confidence: StirlingFileStub["classificationConfidence"];
+        };
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(

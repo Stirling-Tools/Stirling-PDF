@@ -1,7 +1,7 @@
 import CloseIcon from "@mui/icons-material/Close";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { useLogoAssets } from "@app/hooks/useLogoAssets";
+import { Logo } from "@app/ui/Logo";
 
 interface LoginHeaderProps {
   title: string;
@@ -21,7 +21,6 @@ export default function LoginHeader({
   onClose,
 }: LoginHeaderProps) {
   const { t } = useTranslation();
-  const { tooltipLogo } = useLogoAssets();
 
   return (
     <div
@@ -45,10 +44,11 @@ export default function LoginHeader({
             minWidth: 0,
           }}
         >
-          <img
-            src={tooltipLogo}
+          <Logo
+            variant="iconOnly"
+            iconHeight="2rem"
             alt="Stirling PDF"
-            style={{ width: 36, height: 36, flexShrink: 0 }}
+            style={{ flexShrink: 0 }}
           />
           {title && (
             <h1 className="login-title" style={{ margin: 0 }}>

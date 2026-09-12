@@ -273,6 +273,12 @@ interface AddFileOptions {
   /** When true, marks every added stub as derivedFromTool so the policy
    *  auto-run skips it — used for policy outputs imported via addFiles. */
   derivedFromTool?: boolean;
+  /** A classification computed outside the policy system, written at stub birth and
+   *  locked, so no policy can reclassify it or escalate it to the AI. */
+  presetClassification?: {
+    labels: string[];
+    confidence: StirlingFileStub["classificationConfidence"];
+  };
   /**
    * The folder every added file is born into — membership set at creation, atomically
    * with the stub, instead of a separate move that can fail after the file already
@@ -450,6 +456,14 @@ export async function addFiles(
       // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
       const fileStub = createNewStirlingFileStub(file, fileId);
       if (options.derivedFromTool) fileStub.derivedFromTool = true;
+      if (options.presetClassification) {
+        // Set together: a stub that is labelled but not yet locked is exactly the window
+        // a policy pass could claim it in.
+        fileStub.classificationLabels = options.presetClassification.labels;
+        fileStub.classificationConfidence =
+          options.presetClassification.confidence;
+        fileStub.classificationLocked = true;
+      }
       if (options.folderId) {
         fileStub.folderId = options.folderId as StirlingFileStub["folderId"];
       }

@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -35,10 +36,27 @@ public class ClassificationMeterController {
     /** Client-supplied count cap: the frontend meters one document per call. */
     private static final int MAX_DOCUMENTS = 10_000;
 
+    /** Onboarding's Downloads sweep, priced separately from classification on upload. */
+    private static final String ONBOARDING_SOURCE = "onboarding";
+
     private final ObjectProvider<ClassificationRunBiller> biller;
 
-    public ClassificationMeterController(ObjectProvider<ClassificationRunBiller> biller) {
+    /**
+     * Whether onboarding's sweep is charged. Only that source is affected; classification on upload
+     * bills regardless.
+     *
+     * <p>Keyed on the client-declared {@code source}, which this endpoint necessarily trusts: it
+     * performs no classification and cannot observe one, so {@code documentCount} is already taken
+     * on the caller's word and omitting the call entirely skips billing outright. Naming a source
+     * therefore adds no trust assumption beyond the ones metering already rests on.
+     */
+    private final boolean billOnboarding;
+
+    public ClassificationMeterController(
+            ObjectProvider<ClassificationRunBiller> biller,
+            @Value("${premium.classification.billOnboarding:true}") boolean billOnboarding) {
         this.biller = biller;
+        this.billOnboarding = billOnboarding;
     }
 
     @PostMapping("/classify/meter")
@@ -62,8 +80,13 @@ public class ClassificationMeterController {
         request.setAttribute(AuditContext.REQ_ATTR_POLICY_NAME, policyName);
         request.setAttribute(AuditContext.REQ_ATTR_POLICY_STEPS, List.of(CLASSIFY_STEP));
 
+        boolean billable =
+                billOnboarding
+                        || body == null
+                        || !ONBOARDING_SOURCE.equalsIgnoreCase(body.source());
+
         ClassificationRunBiller runBiller = biller.getIfAvailable();
-        if (runBiller != null) {
+        if (runBiller != null && billable) {
             try {
                 runBiller.recordClassificationRun(documents);
             } catch (RuntimeException e) {
@@ -75,7 +98,10 @@ public class ClassificationMeterController {
         return ResponseEntity.accepted().build();
     }
 
-    /** Frontend payload: documents classified, plus the policy name for the audit label. */
+    /**
+     * Frontend payload. {@code source} names the flow that ran the classification, so it can be
+     * priced on its own; {@code policyName} is the audit label.
+     */
     public record ClassifyMeterRequest(
-            String policyName, Integer documentCount, List<String> labels) {}
+            String policyName, String source, Integer documentCount, List<String> labels) {}
 }
