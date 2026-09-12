@@ -16,6 +16,7 @@ import re
 from PIL import Image, ImageDraw
 
 import parallel_support
+from api_base import BASE_URL
 
 API_HEADERS = {"X-API-KEY": "123456789"}
 
@@ -583,8 +584,7 @@ def step_request_json_part(context, part_name, json_content):
 
 @when('I send a GET request to "{endpoint}"')
 def step_send_get_request(context, endpoint):
-    base_url = "http://localhost:8080"
-    full_url = f"{base_url}{endpoint}"
+    full_url = f"{BASE_URL}{endpoint}"
     response = requests.get(full_url, headers=API_HEADERS, timeout=60)
     context.response = response
     context.parallel_get = (full_url, None, API_HEADERS, endpoint)
@@ -593,9 +593,8 @@ def step_send_get_request(context, endpoint):
 
 @when('I send a GET request to "{endpoint}" with parameters')
 def step_send_get_request_with_params(context, endpoint):
-    base_url = "http://localhost:8080"
     params = {row["parameter"]: row["value"] for row in context.table}
-    full_url = f"{base_url}{endpoint}"
+    full_url = f"{BASE_URL}{endpoint}"
     response = requests.get(full_url, params=params, headers=API_HEADERS, timeout=60)
     context.response = response
     context.parallel_get = (full_url, params, API_HEADERS, endpoint)
@@ -649,7 +648,7 @@ def _build_request_spec(context):
 
 @when('I send the API request to the endpoint "{endpoint}"')
 def step_send_api_request(context, endpoint):
-    url = f"http://localhost:8080{endpoint}"
+    url = f"{BASE_URL}{endpoint}"
     spec = _build_request_spec(context)
 
     # Set timeout to 300 seconds (5 minutes) to prevent infinite hangs
