@@ -87,6 +87,7 @@ import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutli
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
@@ -1380,6 +1381,10 @@ export default function FileManagerView() {
   // disabled item's caption.
   const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
 
+  // Set when folder processing has no server to run on; every processing control
+  // carries it as its disabled reason.
+  const processingBlock = useServerProcessingBlock();
+
   const { addLocalFolder } = useNewFolderFlow();
 
   // null = New folder actionable; string = disabled tooltip reason.
@@ -1685,23 +1690,31 @@ export default function FileManagerView() {
               <div className="files-page-folder-actions">
                 {!currentProcessing ? (
                   <Tooltip
-                    label={t(
-                      "filesPage.processing.start",
-                      "Process files in this folder...",
-                    )}
-                    withinPortal
-                  >
-                    <ActionIcon
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setProcessingSetupFolder(currentFolder)}
-                      aria-label={t(
+                    label={
+                      processingBlock ??
+                      t(
                         "filesPage.processing.start",
                         "Process files in this folder...",
-                      )}
-                    >
-                      <AutoModeIcon fontSize="small" />
-                    </ActionIcon>
+                      )
+                    }
+                    withinPortal
+                  >
+                    {/* Mantine drops hover events on a disabled control, so the
+                        tooltip needs a live element to hang off. */}
+                    <span style={{ display: "inline-flex" }}>
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        disabled={Boolean(processingBlock)}
+                        onClick={() => setProcessingSetupFolder(currentFolder)}
+                        aria-label={t(
+                          "filesPage.processing.start",
+                          "Process files in this folder...",
+                        )}
+                      >
+                        <AutoModeIcon fontSize="small" />
+                      </ActionIcon>
+                    </span>
                   </Tooltip>
                 ) : (
                   <>
@@ -1795,6 +1808,7 @@ export default function FileManagerView() {
                       <ActionIcon
                         size="sm"
                         variant="secondary"
+                        disabled={Boolean(processingBlock)}
                         onClick={() => setProcessingSetupFolder(currentFolder)}
                         aria-label={t(
                           "filesPage.processing.edit",
@@ -2529,7 +2543,7 @@ export default function FileManagerView() {
         }}
       />
       <FolderProcessingSetup
-        folder={processingSetupFolder}
+        folder={processingBlock ? null : processingSetupFolder}
         onClose={() => setProcessingSetupFolder(null)}
       />
 

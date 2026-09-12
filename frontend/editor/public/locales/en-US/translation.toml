@@ -4628,6 +4628,7 @@ sharedHint = "Shared with you via link"
 
 [filesPage.processing]
 active = "Processing folder"
+blockedNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to process folders."
 edit = "Edit processing..."
 nothingToRestore = "No originals to restore - these files are already their originals."
 paused = "Processing paused"
