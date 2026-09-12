@@ -70,6 +70,7 @@ export function LayerSidebar({
     setStatus("loading");
     setLoadError(null);
     userChangedRef.current = false;
+    loadedKeyRef.current = documentCacheKey;
 
     let cancelled = false;
 
@@ -81,7 +82,6 @@ export function LayerSidebar({
           setStatus("no-layers");
           setLayers([]);
           setVisibility({});
-          loadedKeyRef.current = documentCacheKey;
           onLayersDetected?.(false);
           return;
         }
@@ -102,11 +102,11 @@ export function LayerSidebar({
         setLayers(layerList);
         setVisibility(visMap);
         setStatus("ready");
-        loadedKeyRef.current = documentCacheKey;
         onLayersDetected?.(true);
       })
       .catch((err) => {
         if (cancelled) return;
+        loadedKeyRef.current = null;
         setStatus("error");
         setLoadError(
           err instanceof Error ? err.message : "Failed to read PDF layers",

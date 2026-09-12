@@ -7,120 +7,228 @@ export interface LayerInfo {
   children?: LayerInfo[];
 }
 
-// pdfjs types its OCG groups as `any`; these are the fields we read off them.
-interface OcGroup {
-  name?: string;
-  visible?: boolean;
+function decodePdfString(s: string): string {
+  const trimmed = s.trim();
+  if (trimmed.startsWith("<") && trimmed.endsWith(">")) {
+    const hex = trimmed.slice(1, -1).replace(/\s+/g, "");
+    const bytes = new Uint8Array(hex.length / 2);
+    for (let i = 0; i < hex.length; i += 2) {
+      bytes[i / 2] = parseInt(hex.substring(i, i + 2), 16);
+    }
+    if (bytes[0] === 0xfe && bytes[1] === 0xff) {
+      let res = "";
+      for (let i = 2; i < bytes.length; i += 2) {
+        res += String.fromCharCode((bytes[i] << 8) | bytes[i + 1]);
+      }
+      return res;
+    }
+    return new TextDecoder("latin1").decode(bytes);
+  }
+  if (trimmed.startsWith("(") && trimmed.endsWith(")")) {
+    const content = trimmed.slice(1, -1);
+    if (content.startsWith("\xfe\xff")) {
+      let res = "";
+      for (let i = 2; i < content.length; i += 2) {
+        res += String.fromCharCode(
+          (content.charCodeAt(i) << 8) | content.charCodeAt(i + 1),
+        );
+      }
+      return res;
+    }
+    return content.replace(/\\([nrtbf()\\]|[0-7]{1,3})/g, (_, esc) => {
+      if (esc === "n") return "\n";
+      if (esc === "r") return "\r";
+      if (esc === "t") return "\t";
+      if (esc === "b") return "\b";
+      if (esc === "f") return "\f";
+      if (esc === "(" || esc === ")" || esc === "\\") return esc;
+      return String.fromCharCode(parseInt(esc, 8));
+    });
+  }
+  return trimmed.replace(/^\//, "");
 }
 
-/**
- * Reads OCG layer info from a PDF file using pdfjs-dist.
- * Returns a flat list of all OCG groups with their names and default visibility.
- */
-export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
-  const { getDocument, GlobalWorkerOptions } =
-    await import("pdfjs-dist/legacy/build/pdf.mjs");
-
-  if (!GlobalWorkerOptions.workerSrc) {
-    GlobalWorkerOptions.workerSrc = new URL(
-      "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
-      import.meta.url,
-    ).toString();
+async function decompressFlate(data: Uint8Array): Promise<Uint8Array | null> {
+  if (typeof DecompressionStream === "undefined") return null;
+  const ds = new DecompressionStream("deflate");
+  const writer = ds.writable.getWriter();
+  writer.write(data as unknown as BufferSource);
+  writer.close();
+  const reader = ds.readable.getReader();
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  while (true) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    chunks.push(value);
+    total += value.length;
   }
-
-  const arrayBuffer = await file.arrayBuffer();
-  const loadingTask = getDocument({ data: arrayBuffer, verbosity: 0 });
-  const pdfDoc = await loadingTask.promise;
-
-  try {
-    const ocConfig = await pdfDoc.getOptionalContentConfig();
-
-    if (!ocConfig) return [];
-
-    const groups: Record<string, OcGroup> = {};
-    for (const [id, group] of ocConfig) {
-      groups[id] = group;
-    }
-    if (Object.keys(groups).length === 0) return [];
-
-    // Use getOrder() for hierarchical display
-    let order: unknown[] | null = null;
-    try {
-      order = ocConfig.getOrder?.() ?? null;
-    } catch {
-      // getOrder not available
-    }
-
-    if (order && Array.isArray(order) && order.length > 0) {
-      return buildLayerTree(order, groups);
-    }
-
-    // Fallback: flat list in enumeration order
-    return Object.entries(groups).map(([id, group]) => ({
-      id,
-      name: group.name ?? id,
-      visible: group.visible ?? true,
-    }));
-  } finally {
-    await pdfDoc.destroy();
+  const result = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    result.set(chunk, offset);
+    offset += chunk.length;
   }
-}
-
-/**
- * Recursively builds a LayerInfo tree from pdfjs OCG order array.
- * The order array can contain:
- *  - string: an OCG id
- *  - { name: string, order: unknown[] }: a named group with children
- *  - array: a nested group
- */
-function buildLayerTree(
-  order: unknown[],
-  groups: Record<string, OcGroup>,
-  visited = new Set<string>(),
-): LayerInfo[] {
-  const result: LayerInfo[] = [];
-
-  for (const item of order) {
-    if (typeof item === "string") {
-      // It's an OCG id
-      if (visited.has(item)) continue;
-      visited.add(item);
-      const group = groups[item];
-      if (group) {
-        result.push({
-          id: item,
-          name: group.name ?? item,
-          visible: group.visible ?? true,
-        });
-      }
-    } else if (Array.isArray(item)) {
-      // Nested group (unlabeled)
-      const children = buildLayerTree(item, groups, visited);
-      result.push(...children);
-    } else if (item && typeof item === "object") {
-      // Named group with nested items
-      const { name, order: subOrder } = item as {
-        name?: string;
-        order?: unknown[];
-      };
-      const children = subOrder
-        ? buildLayerTree(subOrder, groups, visited)
-        : [];
-      if (name && children.length > 0) {
-        // Use the first child's id as a synthetic group id
-        result.push({
-          id: `group-${name}`,
-          name: name,
-          visible: children.every((c) => c.visible),
-          children,
-        });
-      } else {
-        result.push(...children);
-      }
-    }
-  }
-
   return result;
+}
+
+const MAX_ARRAY_DEPTH = 64;
+
+function parseOrderTokens(
+  str: string,
+  ocgMap: Map<string, LayerInfo>,
+): LayerInfo[] {
+  const tokenRegex = /(\[|\]|\d+\s+\d+\s+R|\([^)]*\)|<[^>]*>)/g;
+  const tokens = str.match(tokenRegex) || [];
+  let i = 0;
+
+  function parseList(depth: number): LayerInfo[] {
+    if (depth > MAX_ARRAY_DEPTH) {
+      let nesting = 1;
+      while (i < tokens.length && nesting > 0) {
+        const t = tokens[i++];
+        if (t === "[") nesting++;
+        else if (t === "]") nesting--;
+      }
+      return [];
+    }
+    const items: LayerInfo[] = [];
+    while (i < tokens.length) {
+      const token = tokens[i++];
+      if (token === "]") break;
+      if (token === "[") {
+        const sub = parseList(depth + 1);
+        if (sub.length > 0) items.push(...sub);
+      } else if (token.endsWith("R")) {
+        const objNum = token.split(/\s+/)[0];
+        const ocg = ocgMap.get(objNum);
+        if (ocg) items.push(ocg);
+      } else if (token.startsWith("(") || token.startsWith("<")) {
+        const groupName = decodePdfString(token);
+        if (i < tokens.length && tokens[i] === "[") {
+          i++;
+          const children = parseList(depth + 1);
+          if (children.length > 0) {
+            items.push({
+              id: `group-${groupName}`,
+              name: groupName,
+              visible: children.every((c) => c.visible),
+              children,
+            });
+          }
+        }
+      }
+    }
+    return items;
+  }
+
+  return parseList(0);
+}
+
+const LAYER_SCAN_SIZE_LIMIT = 100 * 1024 * 1024;
+
+export async function readPdfLayers(file: Blob): Promise<LayerInfo[]> {
+  if (file.size >= LAYER_SCAN_SIZE_LIMIT) return [];
+  const arrayBuffer = await file.arrayBuffer();
+  const bytes = new Uint8Array(arrayBuffer);
+  const text = new TextDecoder("latin1").decode(bytes);
+
+  if (!text.includes("/OCProperties")) {
+    return [];
+  }
+
+  const objects = new Map<string, string>();
+
+  const objRegex = /(\d+)\s+\d+\s+obj\s*<<([^]*?)>>/g;
+  for (const match of text.matchAll(objRegex)) {
+    objects.set(match[1], match[2]);
+  }
+
+  const objStmRegex =
+    /(\d+)\s+\d+\s+obj\s*<<([^>]*?\/Type\s*\/ObjStm[^]*?)>>\s*stream[\r\n]+/g;
+  for (const m of text.matchAll(objStmRegex)) {
+    const dict = m[2];
+    const n = parseInt(dict.match(/\/N\s+(\d+)/)?.[1] || "0", 10);
+    const first = parseInt(dict.match(/\/First\s+(\d+)/)?.[1] || "0", 10);
+    const len = parseInt(dict.match(/\/Length\s+(\d+)/)?.[1] || "0", 10);
+    const streamStart = (m.index ?? 0) + m[0].length;
+    const compressed = bytes.subarray(
+      streamStart,
+      len > 0 ? streamStart + len : undefined,
+    );
+    try {
+      const decompressedBytes = await decompressFlate(compressed);
+      if (!decompressedBytes) continue;
+      const decompressed = new TextDecoder("latin1").decode(decompressedBytes);
+      const header = decompressed.substring(0, first).trim().split(/\s+/);
+      for (let i = 0; i < n * 2; i += 2) {
+        const objNum = header[i];
+        const start = first + parseInt(header[i + 1], 10);
+        const nextStart =
+          i + 3 < header.length
+            ? first + parseInt(header[i + 3], 10)
+            : decompressed.length;
+        objects.set(objNum, decompressed.substring(start, nextStart).trim());
+      }
+    } catch {
+      // Stream decompression failure falls through to uncompressed object entries
+    }
+  }
+
+  let ocPropsBody = "";
+  const ocPropsRef = text.match(/\/OCProperties\s+(\d+)\s+\d+\s+R/);
+  if (ocPropsRef) {
+    ocPropsBody = objects.get(ocPropsRef[1]) || "";
+  } else {
+    const inlineMatch = text.match(/\/OCProperties\s*<<([^]*?)>>/);
+    if (inlineMatch) ocPropsBody = inlineMatch[1];
+  }
+
+  let dBody = "";
+  const dRef = ocPropsBody.match(/\/D\s+(\d+)\s+\d+\s+R/);
+  if (dRef) {
+    dBody = objects.get(dRef[1]) || "";
+  } else {
+    const dInline = ocPropsBody.match(/\/D\s*<<([^]*?)>>/);
+    if (dInline) dBody = dInline[1];
+  }
+
+  const baseStateMatch = dBody.match(/\/BaseState\s*\/([A-Za-z]+)/);
+  const baseState = baseStateMatch ? baseStateMatch[1] : "ON";
+
+  const onRefs = new Set<string>();
+  const onMatch = dBody.match(/\/ON\s*\[([^\]]*)\]/);
+  if (onMatch) {
+    for (const m of onMatch[1].matchAll(/(\d+)\s+\d+\s+R/g)) onRefs.add(m[1]);
+  }
+
+  const offRefs = new Set<string>();
+  const offMatch = dBody.match(/\/OFF\s*\[([^\]]*)\]/);
+  if (offMatch) {
+    for (const m of offMatch[1].matchAll(/(\d+)\s+\d+\s+R/g)) offRefs.add(m[1]);
+  }
+
+  const ocgMap = new Map<string, LayerInfo>();
+  for (const [id, body] of objects.entries()) {
+    if (body.includes("/Type /OCG") || body.includes("/Type/OCG")) {
+      const nameMatch = body.match(
+        /\/Name\s*(\([^)]*\)|<[^>]*>|\/[^\s()<>[\]]+)/,
+      );
+      const name = nameMatch ? decodePdfString(nameMatch[1]) : `Layer ${id}`;
+      const visible = baseState === "OFF" ? onRefs.has(id) : !offRefs.has(id);
+      ocgMap.set(id, { id: `${id} 0 R`, name, visible });
+    }
+  }
+
+  if (ocgMap.size === 0) return [];
+
+  const orderMatch = dBody.match(/\/Order\s*\[([^\]]*)\]/);
+  if (orderMatch) {
+    const ordered = parseOrderTokens(orderMatch[1], ocgMap);
+    if (ordered.length > 0) return ordered;
+  }
+
+  return Array.from(ocgMap.values());
 }
 
 /**
