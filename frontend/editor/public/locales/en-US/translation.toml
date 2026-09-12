@@ -7266,10 +7266,10 @@ usage = "Usage"
 [portal.billing.cycle]
 credits = "Credits"
 creditsNote = "{{units}} · {{rate}} each"
-creditsNotePending = "{{units}} · {{rate}} each · {{pending}} pending sync"
 day = "Day {{day}} of {{of}}"
 editors = "Editors deployed"
 estimated = "estimated · the meter settles at close"
+estimatedPending = "estimated · includes {{pending}} not yet synced from your instances"
 largeFiles = "Large files"
 largeFilesValue = "{{pdfs}} PDFs past the size threshold"
 pdfs = "PDFs processed"
@@ -7292,7 +7292,6 @@ title = "Free PDF Editors"
 [portal.billing.freePlan]
 checkoutErrorTitle = "Couldn't start checkout"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
-ownerOnly = "Only the team owner can switch on the Processor plan."
 payInvoice = "Pay invoice to complete"
 viewQuote = "View quote"
 
@@ -7498,6 +7497,9 @@ useSuggested = "Use suggested · {{amount}} / month"
 body_one = "At {{rate}}/day you reach the cap in ~{{count}} day (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 body_other = "At {{rate}}/day you reach the cap in ~{{count}} days (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 label = "Projected to exceed."
+
+[portal.billing.spendLimitModal]
+title = "Monthly spend limit"
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Raise it now so automated processing never pauses."
