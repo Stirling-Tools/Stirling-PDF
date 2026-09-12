@@ -12,6 +12,7 @@ import {
   type LocalUsage,
 } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
+import { usePortalSaasSession } from "@portal/hooks/usePortalSaasSession";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
@@ -36,6 +37,8 @@ export interface UsageProps {
    * is owned by the app, so this path never triggers).
    */
   onReauth?: () => void;
+  /** Self-hosted supplies a shared recovery banner for usage, checkout and settings. */
+  sessionRecoveryInShell?: boolean;
 }
 
 /**
@@ -50,8 +53,13 @@ export interface UsageProps {
  * Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas). After a
  * checkout / cancel, the refresh re-reads and the view re-dispatches on status.
  */
-export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
+export function Usage({
+  onWalletLoaded,
+  onReauth,
+  sessionRecoveryInShell = false,
+}: UsageProps = {}) {
   const { t } = useTranslation();
+  const { revision: sessionRevision } = usePortalSaasSession();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
@@ -120,7 +128,7 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
     return () => {
       cancelled = true;
     };
-  }, [refreshKey, onWalletLoaded, t]);
+  }, [refreshKey, onWalletLoaded, t, sessionRevision]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
 
@@ -194,7 +202,7 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
           </div>
         )}
 
-        {sessionExpired && (
+        {sessionExpired && !sessionRecoveryInShell && (
           <Banner
             tone="warning"
             title={t("portal.usage.sessionExpired.title", "Session expired")}

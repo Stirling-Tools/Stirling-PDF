@@ -39,5 +39,11 @@ export function PortalBillingGate() {
   // A positively known link, not merely "not gated": linking turned off and a failed status
   // check are neither, and must not reach a SaaS this instance has no address for.
   if (!link?.isLinked) return <FreeTierPlanView />;
-  return <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />;
+  return (
+    <Usage
+      onWalletLoaded={onWalletLoaded}
+      onReauth={onReauth}
+      sessionRecoveryInShell
+    />
+  );
 }

@@ -41,7 +41,9 @@ export function LinkAccountModal({
   outcome = null,
 }: Props) {
   const { t } = useTranslation();
-  const reauth = mode === "reauth";
+  const reauth =
+    mode === "reauth" ||
+    (outcome?.state === "linked" && !outcome.sessionRestored);
   const exhausted = mode === "exhausted";
   const handoff = useConnectHandoff(reauth);
 
@@ -86,7 +88,7 @@ export function LinkAccountModal({
 
   function stepTitle(): string {
     if (reauth) {
-      return t("portal.accountLink.modal.reauthTitle", "Sign in again");
+      return t("portal.accountLink.renewal.title", "Renew billing access");
     }
     if (step === "ask") {
       return exhausted
@@ -123,6 +125,7 @@ export function LinkAccountModal({
       case "outcome":
         return outcome ? (
           <ConnectCallbackView
+            mode={reauth ? "reauth" : "link"}
             state={outcome.state}
             sessionRestored={outcome.sessionRestored}
             onDone={onClose}
@@ -193,6 +196,15 @@ export function LinkAccountModal({
         <>
           {closeButton()}
           {retryButton(outcome.reclaim)}
+        </>
+      );
+    }
+
+    if (outcome?.state === "linked" && !outcome.sessionRestored) {
+      return (
+        <>
+          {closeButton()}
+          {retryButton(handoff.begin)}
         </>
       );
     }

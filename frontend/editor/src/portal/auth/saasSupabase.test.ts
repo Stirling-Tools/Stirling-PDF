@@ -29,6 +29,7 @@ describe("ensureSaasSupabase — configures the shared client from VITE_SUPABASE
     expect(configureSupabase).toHaveBeenCalledWith({
       url: "https://proj.supabase.co",
       key: "anon-key",
+      authOptions: { detectSessionInUrl: false },
     });
     expect(client).not.toBeNull();
   });

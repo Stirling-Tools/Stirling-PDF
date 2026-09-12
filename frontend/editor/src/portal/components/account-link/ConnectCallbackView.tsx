@@ -1,6 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Banner, Spinner } from "@app/ui";
 import { ConnectDoneSlide } from "@portal/components/account-link/connect/ConnectDoneSlide";
+import type { ConnectMode } from "@portal/auth/pendingConnect";
 import "@portal/components/account-link/connect/connect.css";
 
 /** Outcomes of returning from the approval page. */
@@ -13,11 +14,15 @@ export type ConnectCallbackState =
   | "malformed";
 
 export interface ConnectOutcome {
+  mode?: ConnectMode;
+  settingsSection?: string | null;
   state: ConnectCallbackState;
-  /** True once the SaaS session landed, regardless of how the link itself went. */
+  /** True only after the server accepts the callback and the SDK installs its session. */
   sessionRestored: boolean;
-  /** Present only while the handshake is still open, so a retry re-claims rather than opening one. */
+  /** Retries the uncompleted phase without repeating a claim already accepted by the server. */
   reclaim?: () => void;
+  /** Discards an unfinished callback when its dialog is dismissed. */
+  cancel?: () => void;
 }
 
 export function isRetryableOutcome(state: ConnectCallbackState): boolean {
@@ -25,6 +30,7 @@ export function isRetryableOutcome(state: ConnectCallbackState): boolean {
 }
 
 export interface ConnectCallbackViewProps {
+  mode?: ConnectMode;
   state: ConnectCallbackState;
   sessionRestored: boolean;
   onDone: () => void;
@@ -36,6 +42,7 @@ export interface ConnectCallbackViewProps {
  * dialog's footer, not here, so they stay where steps 1 and 2 put them.
  */
 export function ConnectCallbackView({
+  mode = "link",
   state,
   sessionRestored,
   onDone,
@@ -47,16 +54,36 @@ export function ConnectCallbackView({
       <div className="portal-connect-callback portal-connect-callback--working">
         <Spinner size="md" />
         <p>
-          {t(
-            "portal.accountLink.connect.callback.working",
-            "Finishing the connection.",
-          )}
+          {mode === "reauth"
+            ? t(
+                "portal.accountLink.renewal.working",
+                "Restoring billing access.",
+              )
+            : t(
+                "portal.accountLink.connect.callback.working",
+                "Finishing the connection.",
+              )}
         </p>
       </div>
     );
   }
 
   if (state === "linked") {
+    if (mode === "reauth") {
+      return (
+        <p className="portal-connect__lede">
+          {sessionRestored
+            ? t(
+                "portal.accountLink.renewal.success",
+                "Your billing access has been renewed. This server is still connected to the same Stirling account.",
+              )
+            : t(
+                "portal.accountLink.renewal.incomplete",
+                "This server is still connected, but we could not restore billing access in this browser. Try signing in again.",
+              )}
+        </p>
+      );
+    }
     return (
       <div className="portal-connect-callback">
         <p className="portal-connect__lede">
@@ -80,7 +107,7 @@ export function ConnectCallbackView({
     );
   }
 
-  const { tone, title, body } = failure(state, t);
+  const { tone, title, body } = failure(state, t, mode === "reauth");
   return (
     <div className="portal-connect-callback">
       <Banner tone={tone} title={title}>
@@ -102,7 +129,32 @@ export function ConnectCallbackView({
 
 type Translate = ReturnType<typeof useTranslation>["t"];
 
-function failure(state: ConnectCallbackState, t: Translate) {
+function failure(state: ConnectCallbackState, t: Translate, reauth: boolean) {
+  if (reauth) {
+    const messages = {
+      expired: t(
+        "portal.accountLink.renewal.expired",
+        "This sign-in request expired. Try again to renew billing access; your server is still connected.",
+      ),
+      rejected: t(
+        "portal.accountLink.renewal.rejected",
+        "This sign-in request was declined or has already been used. Try again to renew billing access.",
+      ),
+      malformed: t(
+        "portal.accountLink.renewal.malformed",
+        "We could not verify this sign-in response. Start again from Usage & billing; your server is still connected.",
+      ),
+      retry: t(
+        "portal.accountLink.renewal.retry",
+        "Stirling could not finish renewing billing access. Try again in a moment; your server is still connected.",
+      ),
+    };
+    return {
+      tone: "warning" as const,
+      title: t("portal.accountLink.renewal.title", "Renew billing access"),
+      body: messages[state as keyof typeof messages] ?? messages.retry,
+    };
+  }
   switch (state) {
     case "expired":
       return {

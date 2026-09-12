@@ -83,7 +83,8 @@ export type ConnectPhase =
   | "LINKED"
   | "EXPIRED"
   | "REJECTED"
-  | "UNAVAILABLE";
+  | "UNAVAILABLE"
+  | "CALLBACK_MISMATCH";
 
 export interface ConnectStatus {
   phase: ConnectPhase;

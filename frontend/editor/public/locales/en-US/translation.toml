@@ -7239,12 +7239,12 @@ minutesAgo_other = "{{count}}m ago"
 never = "never"
 
 [portal.accountLink.modal]
+callbackMismatch = "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again."
 cancel = "Cancel"
 continueReauth = "Sign in again"
 exhaustedTitle = "Add more monthly credits"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
-reauthTitle = "Sign in again"
 startFailed = "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again."
 
 [portal.accountLink.modal.loginNotConfigured]
@@ -7269,6 +7269,16 @@ cta = "Connect"
 later = "Not now"
 sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
 title = "Connect your Stirling account"
+
+[portal.accountLink.renewal]
+expired = "This sign-in request expired. Try again to renew billing access; your server is still connected."
+incomplete = "This server is still connected, but we could not restore billing access in this browser. Try signing in again."
+malformed = "We could not verify this sign-in response. Start again from Usage & billing; your server is still connected."
+rejected = "This sign-in request was declined or has already been used. Try again to renew billing access."
+retry = "Stirling could not finish renewing billing access. Try again in a moment; your server is still connected."
+success = "Your billing access has been renewed. This server is still connected to the same Stirling account."
+title = "Renew billing access"
+working = "Restoring billing access."
 
 [portal.accountLink.state]
 free = "Editor plan"

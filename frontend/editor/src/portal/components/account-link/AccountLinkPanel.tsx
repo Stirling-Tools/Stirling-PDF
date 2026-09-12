@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Skeleton, StatusBadge } from "@app/ui";
 import { useAsync } from "@portal/hooks/useAsync";
+import { usePortalSaasSession } from "@portal/hooks/usePortalSaasSession";
 import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
 import { useLink, LINK_INFO } from "@portal/contexts/LinkContext";
 import { HttpError } from "@portal/api/http";
@@ -22,6 +23,7 @@ import "@portal/views/AccountLink.css";
  */
 export function AccountLinkPanel() {
   const { t } = useTranslation();
+  const { revision: sessionRevision } = usePortalSaasSession();
   const link = useAccountLinkContext();
   const { linkState } = useLink();
 
@@ -33,7 +35,7 @@ export function AccountLinkPanel() {
   // (so showing the team's other instances would be confusing).
   const instancesState = useAsync<LinkedInstanceRow[]>(
     () => (linked ? fetchInstances() : Promise.resolve([])),
-    [reloadKey, linked],
+    [reloadKey, linked, sessionRevision],
   );
 
   const [revokingId, setRevokingId] = useState<number | null>(null);

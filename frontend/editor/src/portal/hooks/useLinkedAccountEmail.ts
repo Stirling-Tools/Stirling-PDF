@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import { usePortalSaasSession } from "@portal/hooks/usePortalSaasSession";
 
 /**
  * The email of the linked SaaS account, read from the in-app SaaS Supabase
@@ -13,6 +14,7 @@ import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
  * shared procurement code compiled into every flavor.
  */
 export function useLinkedAccountEmail(): string | null {
+  const { revision } = usePortalSaasSession();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -22,13 +24,18 @@ export function useLinkedAccountEmail(): string | null {
       setEmail(null);
       return;
     }
-    void supabase.auth.getSession().then(({ data }) => {
-      if (!cancelled) setEmail(data.session?.user?.email ?? null);
-    });
+    void supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (!cancelled) setEmail(data.session?.user?.email ?? null);
+      })
+      .catch(() => {
+        if (!cancelled) setEmail(null);
+      });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [revision]);
 
   return email;
 }

@@ -1,26 +1,52 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
+import { PortalSettingsSectionHost } from "@app/portal/components/settings/PortalSettingsSectionHost";
 import { act, render, waitFor } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
+import { rememberConnect } from "@portal/auth/pendingConnect";
+import { AuthApiError } from "@supabase/supabase-js";
 
 /** A live session token rides in the fragment: strip it at once, refuse what cannot be verified. */
-const { completeConnect, startConnect, setSession, refresh } = vi.hoisted(
-  () => ({
-    completeConnect: vi.fn(),
-    startConnect: vi.fn(),
-    setSession: vi.fn(),
-    refresh: vi.fn(),
-  }),
-);
+const { completeConnect, startConnect, setSession, refresh, client } =
+  vi.hoisted(() => {
+    const setSession = vi.fn();
+    return {
+      completeConnect: vi.fn(),
+      startConnect: vi.fn(),
+      setSession,
+      client: { auth: { setSession } },
+      refresh: vi.fn(),
+    };
+  });
 
 vi.mock("@portal/api/link", () => ({ completeConnect, startConnect }));
 vi.mock("@portal/auth/saasSupabase", () => ({
-  ensureSaasSupabase: () => ({ auth: { setSession } }),
+  ensureSaasSupabase: () => client,
+}));
+vi.mock("@app/auth/supabase/supabaseClient", () => ({
+  getSupabaseClient: () => client,
+  clearSupabaseSession: vi.fn(),
 }));
 vi.mock("@portal/contexts/AccountLinkContext", () => ({
+  AccountLinkProvider: ({ children }: { children: ReactNode }) => children,
   useAccountLinkContext: () => ({ refresh }),
+}));
+
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({ user: { id: "owner" }, isAdmin: true }),
+}));
+vi.mock("@app/portal/auth/accountLinkSession", () => ({
+  bindAccountLinkSession: vi.fn(),
+  clearAccountLinkSession: vi.fn(),
+}));
+vi.mock("@app/portal/components/account-link/SaasSessionBanner", () => ({
+  SaasSessionBanner: () => null,
+}));
+vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
+  LinkAccountModal: () => null,
 }));
 
 import ConnectCallback from "@portal/views/ConnectCallback";
@@ -29,14 +55,22 @@ import { ConnectCallbackHost } from "@portal/components/account-link/ConnectCall
 const NONCE = "the-nonce";
 
 function landOn(fragment: string) {
-  window.history.replaceState(null, "", `/account-link/callback${fragment}`);
+  window.history.replaceState(
+    null,
+    "",
+    `/account-link/callback?state=browser-state${fragment}`,
+  );
 }
 
 /** Stands in for the dialog that consumes the outcome. */
 let published: ConnectOutcome[] = [];
+let modalMode = "";
+let routeState: unknown;
 
 function OutcomeSpy() {
-  const { connectOutcome } = useUI();
+  const { connectOutcome, linkModalMode } = useUI();
+  modalMode = linkModalMode;
+  routeState = useLocation().state;
   if (
     connectOutcome &&
     published[published.length - 1]?.state !== connectOutcome.state
@@ -62,6 +96,10 @@ function renderFlow() {
               element={<ConnectCallback />}
             />
             <Route path="/processor" element={<div data-testid="portal" />} />
+            <Route
+              path="/processor/usage"
+              element={<div data-testid="usage" />}
+            />
           </Routes>
         </UIProvider>
       </MemoryRouter>
@@ -73,6 +111,15 @@ describe("account-link callback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     published = [];
+    sessionStorage.clear();
+    localStorage.setItem("stirling.portalSaasOwner", "owner");
+    rememberConnect({
+      ownerId: "owner",
+      mode: "link",
+      returnTo: "/processor",
+      settingsSection: null,
+      browserState: "browser-state",
+    });
     completeConnect.mockResolvedValue({
       phase: "LINKED",
       authorizeUrl: null,
@@ -82,6 +129,49 @@ describe("account-link callback", () => {
     setSession.mockResolvedValue({ error: null });
   });
 
+  it.each(["/settings/billing", "/settings/account-link"])(
+    "restores renewal through the settings host at %s",
+    async (returnTo) => {
+      rememberConnect({
+        ownerId: "owner",
+        mode: "reauth",
+        returnTo,
+        settingsSection: null,
+        browserState: "browser-state",
+      });
+      landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+      const screen = render(
+        <MantineProvider>
+          <MemoryRouter initialEntries={["/account-link/callback"]}>
+            <Routes>
+              <Route
+                path="/account-link/callback"
+                element={<ConnectCallback />}
+              />
+              <Route
+                path={returnTo}
+                element={
+                  <PortalSettingsSectionHost>
+                    <OutcomeSpy />
+                    <div data-testid="settings-destination" />
+                  </PortalSettingsSectionHost>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        </MantineProvider>,
+      );
+      await waitFor(() => expect(lastOutcome()?.state).toBe("linked"));
+      expect(screen.getByTestId("settings-destination")).toBeTruthy();
+      expect(modalMode).toBe("reauth");
+      expect(setSession).toHaveBeenCalledWith({
+        access_token: "at",
+        refresh_token: "rt",
+      });
+      expect(routeState).toBeNull();
+    },
+  );
+
   it("removes the token-bearing fragment from the URL", async () => {
     landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
 
@@ -90,6 +180,33 @@ describe("account-link callback", () => {
     // Before any await: the fragment must not reach the address bar or a history entry.
     expect(window.location.hash).toBe("");
     await waitFor(() => expect(completeConnect).toHaveBeenCalled());
+  });
+
+  it("rejects an approval started by a different local owner", async () => {
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+    localStorage.setItem("stirling.portalSaasOwner", "different-owner");
+    renderFlow();
+    await waitFor(() => expect(lastOutcome()?.state).toBe("malformed"));
+    expect(completeConnect).not.toHaveBeenCalled();
+    expect(setSession).not.toHaveBeenCalled();
+  });
+
+  it("discards a callback when the dialog is dismissed during confirmation", async () => {
+    let resolve!: (value: unknown) => void;
+    completeConnect.mockReturnValue(
+      new Promise((done) => {
+        resolve = done;
+      }),
+    );
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+    renderFlow();
+    await waitFor(() => expect(lastOutcome()?.state).toBe("working"));
+    act(() => lastOutcome()?.cancel?.());
+    await act(async () => {
+      resolve({ phase: "LINKED" });
+    });
+    expect(setSession).not.toHaveBeenCalled();
+    expect(lastOutcome()?.state).toBe("working");
   });
 
   it("lands on the portal rather than leaving the result on a bare page", async () => {
@@ -108,7 +225,7 @@ describe("account-link callback", () => {
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 
-  it("deposits the session and then finishes the link with the nonce", async () => {
+  it("validates the handshake before installing the browser session", async () => {
     landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
 
     renderFlow();
@@ -120,6 +237,10 @@ describe("account-link callback", () => {
       }),
     );
     await waitFor(() => expect(completeConnect).toHaveBeenCalledWith(NONCE));
+    expect(completeConnect.mock.invocationCallOrder[0]).toBeLessThan(
+      setSession.mock.invocationCallOrder[0],
+    );
+    expect(routeState).toBeNull();
   });
 
   it("finishes the link even when the session hand-off fails", async () => {
@@ -195,7 +316,9 @@ describe("account-link callback", () => {
     await waitFor(() => expect(completeConnect).toHaveBeenCalledTimes(1));
     await waitFor(() => expect(lastOutcome()?.state).toBe("retry"));
 
-    act(() => lastOutcome()!.reclaim!());
+    await act(async () => {
+      await lastOutcome()!.reclaim!();
+    });
 
     // Re-claims rather than opening a new handshake, which would spend a leader's approval.
     await waitFor(() => expect(completeConnect).toHaveBeenCalledTimes(2));
@@ -215,5 +338,82 @@ describe("account-link callback", () => {
 
     await waitFor(() => expect(lastOutcome()?.state).toBe("expired"));
     expect(lastOutcome()?.reclaim).toBeUndefined();
+  });
+
+  it.each(["REJECTED", "EXPIRED", "PENDING", "UNAVAILABLE"])(
+    "does not install tokens for a %s handshake",
+    async (phase) => {
+      landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+      completeConnect.mockResolvedValue({ phase });
+      renderFlow();
+      await waitFor(() => expect(completeConnect).toHaveBeenCalled());
+      expect(setSession).not.toHaveBeenCalled();
+    },
+  );
+
+  it("rejects a callback from another browser or a cancelled flow", async () => {
+    sessionStorage.clear();
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+    renderFlow();
+    await waitFor(() => expect(lastOutcome()?.state).toBe("malformed"));
+    expect(setSession).not.toHaveBeenCalled();
+    expect(completeConnect).not.toHaveBeenCalled();
+  });
+
+  it("preserves renewal mode, destination and settings across the full callback", async () => {
+    rememberConnect({
+      mode: "reauth",
+      ownerId: "owner",
+      returnTo: "/processor/usage",
+      settingsSection: "account-link",
+      browserState: "browser-state",
+    });
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+    const screen = renderFlow();
+    await waitFor(() => expect(lastOutcome()?.state).toBe("linked"));
+    expect(modalMode).toBe("reauth");
+    expect(lastOutcome()?.settingsSection).toBe("account-link");
+    expect(screen.getByTestId("usage")).toBeTruthy();
+  });
+
+  it("retries a failed session installation without consuming the handshake again", async () => {
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+    setSession
+      .mockRejectedValueOnce(new Error("offline"))
+      .mockResolvedValue({ error: null });
+    renderFlow();
+    await waitFor(() => expect(lastOutcome()?.state).toBe("retry"));
+    await act(async () => {
+      await lastOutcome()!.reclaim!();
+    });
+    await waitFor(() => expect(lastOutcome()?.sessionRestored).toBe(true));
+    expect(completeConnect).toHaveBeenCalledTimes(1);
+    expect(setSession).toHaveBeenCalledTimes(2);
+  });
+
+  it("offers a fresh sign-in when callback credentials are permanently rejected", async () => {
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=revoked`);
+    setSession.mockResolvedValue({
+      error: new AuthApiError("revoked", 400, "refresh_token_not_found"),
+    });
+    renderFlow();
+    await waitFor(() => expect(setSession).toHaveBeenCalledOnce());
+    await waitFor(() => expect(lastOutcome()?.state).not.toBe("working"));
+    expect(completeConnect).toHaveBeenCalledOnce();
+    expect(lastOutcome()?.sessionRestored).toBe(false);
+    expect(lastOutcome()?.reclaim).toBeUndefined();
+  });
+
+  it("refuses a callback with a mismatched tab correlator", async () => {
+    window.history.replaceState(
+      null,
+      "",
+      `/account-link/callback?state=wrong#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`,
+    );
+    renderFlow();
+    await waitFor(() => expect(lastOutcome()?.state).toBe("malformed"));
+    expect(completeConnect).not.toHaveBeenCalled();
+    expect(setSession).not.toHaveBeenCalled();
+    expect(window.location.hash).toBe("");
   });
 });

@@ -28,9 +28,20 @@ vi.mock("@portal/hooks/usePortalAdmin", () => ({
   usePortalAdmin: () => admin.is,
 }));
 vi.mock("@portal/views/Usage", () => ({
-  Usage: ({ onWalletLoaded }: { onWalletLoaded?: (w: unknown) => void }) => {
+  Usage: ({
+    onWalletLoaded,
+    sessionRecoveryInShell,
+  }: {
+    onWalletLoaded?: (w: unknown) => void;
+    sessionRecoveryInShell?: boolean;
+  }) => {
     onWalletLoaded?.({ status: "free" });
-    return <div data-testid="usage" />;
+    return (
+      <div
+        data-testid="usage"
+        data-session-recovery-in-shell={sessionRecoveryInShell}
+      />
+    );
   },
 }));
 vi.mock("@portal/components/billing/FreeTierPlanView", () => ({
@@ -87,6 +98,10 @@ describe("PortalBillingGate — self-hosted", () => {
     link.is = true;
     renderGate();
     expect(screen.getByTestId("usage")).toBeInTheDocument();
+    expect(screen.getByTestId("usage")).toHaveAttribute(
+      "data-session-recovery-in-shell",
+      "true",
+    );
     expect(screen.queryByTestId("free-tier")).toBeNull();
     expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
   });
