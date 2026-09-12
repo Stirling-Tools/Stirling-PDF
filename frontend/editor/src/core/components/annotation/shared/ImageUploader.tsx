@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import { FileInput, Text, Stack, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
@@ -31,10 +31,42 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
     null,
   );
   const [isProcessing, setIsProcessing] = useState(false);
+  const lastProcessedUrlRef = useRef<string | null>(null);
+  const currentUploadIdRef = useRef<number>(0);
+
+  const dataUrlToBlobUrl = async (dataUrl: string): Promise<string> => {
+    const res = await fetch(dataUrl);
+    const blob = await res.blob();
+    return URL.createObjectURL(blob);
+  };
+
+  const updateProcessedUrl = useCallback(
+    (newUrl: string | null) => {
+      if (
+        lastProcessedUrlRef.current &&
+        lastProcessedUrlRef.current !== newUrl
+      ) {
+        URL.revokeObjectURL(lastProcessedUrlRef.current);
+      }
+      lastProcessedUrlRef.current = newUrl;
+      onProcessedImageData?.(newUrl);
+    },
+    [onProcessedImageData],
+  );
+
+  // Cleanup blob URLs on unmount
+  React.useEffect(() => {
+    return () => {
+      if (lastProcessedUrlRef.current) {
+        URL.revokeObjectURL(lastProcessedUrlRef.current);
+      }
+    };
+  }, []);
 
   const processImage = async (
     imageSource: File | string,
     shouldRemoveBackground: boolean,
+    uploadId: number,
   ): Promise<void> => {
     if (shouldRemoveBackground && allowBackgroundRemoval) {
       setIsProcessing(true);
@@ -46,9 +78,13 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
             tolerance: 15,
           },
         );
-        onProcessedImageData?.(transparentImageDataUrl);
+        if (uploadId !== currentUploadIdRef.current) return;
+        const blobUrl = await dataUrlToBlobUrl(transparentImageDataUrl);
+        if (uploadId !== currentUploadIdRef.current) return;
+        updateProcessedUrl(blobUrl);
       } catch (error) {
         console.error("Error removing background:", error);
+        if (uploadId !== currentUploadIdRef.current) return;
         alert({
           title: t(
             "sign.image.backgroundRemovalFailedTitle",
@@ -60,19 +96,30 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           ),
           alertType: "error",
         });
-        onProcessedImageData?.(null);
+        updateProcessedUrl(null);
       } finally {
-        setIsProcessing(false);
+        if (uploadId === currentUploadIdRef.current) {
+          setIsProcessing(false);
+        }
       }
     } else {
       // When background removal is disabled, return the original image data
       if (typeof imageSource === "string") {
-        onProcessedImageData?.(imageSource);
+        if (imageSource.startsWith("blob:")) {
+          updateProcessedUrl(imageSource);
+        } else {
+          const blobUrl = await dataUrlToBlobUrl(imageSource);
+          if (uploadId !== currentUploadIdRef.current) return;
+          updateProcessedUrl(blobUrl);
+        }
       } else {
         // Convert File to data URL if needed
         const reader = new FileReader();
-        reader.onload = (e) => {
-          onProcessedImageData?.(e.target?.result as string);
+        reader.onload = async (e) => {
+          if (uploadId !== currentUploadIdRef.current) return;
+          const blobUrl = await dataUrlToBlobUrl(e.target?.result as string);
+          if (uploadId !== currentUploadIdRef.current) return;
+          updateProcessedUrl(blobUrl);
         };
         reader.readAsDataURL(imageSource);
       }
@@ -80,6 +127,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   };
 
   const handleImageChange = async (file: File | null) => {
+    const uploadId = ++currentUploadIdRef.current;
     if (file && !disabled) {
       try {
         // Validate that it's actually an image file or SVG
@@ -114,8 +162,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           });
         }
 
+        if (uploadId !== currentUploadIdRef.current) return;
         setOriginalImageData(dataUrlToProcess);
-        await processImage(dataUrlToProcess, removeBackground);
+        await processImage(dataUrlToProcess, removeBackground, uploadId);
       } catch (error) {
         console.error("Error processing image file:", error);
       }
@@ -124,7 +173,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       setCurrentFile(null);
       setOriginalImageData(null);
       onImageChange(null);
-      onProcessedImageData?.(null);
+      updateProcessedUrl(null);
     }
   };
 
@@ -254,9 +303,10 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
 
   const handleBackgroundRemovalChange = async (checked: boolean) => {
     if (isProcessing) return; // Prevent race conditions
+    const uploadId = ++currentUploadIdRef.current;
     setRemoveBackground(checked);
     if (originalImageData) {
-      await processImage(originalImageData, checked);
+      await processImage(originalImageData, checked, uploadId);
     }
   };
 

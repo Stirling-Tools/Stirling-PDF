@@ -184,7 +184,7 @@ export function SelectionAPIBridge() {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
         (event.ctrlKey || event.metaKey) &&
-        event.key === "c" &&
+        event.key.toLowerCase() === "c" &&
         hasSelectionRef.current
       ) {
         selection.copyToClipboard();

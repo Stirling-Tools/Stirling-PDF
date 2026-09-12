@@ -24,8 +24,10 @@ type ConsoleEntry = {
 };
 
 const IGNORED: RegExp[] = [
-  // Add entries here only with a comment explaining why the warning is
-  // unavoidable. Default: keep this list empty.
+  // WebKit warns when link rel="preload" assets (logos, WASM) are not consumed within seconds of window load event
+  /was preloaded using link preload but not used within a few seconds/,
+  // react-i18next emits SUSPENDED_WHILE_LOADING when components suspend on initial async locale fetch
+  /react-i18next::i18next: useTranslation: suspended while translations are loading/,
 ];
 
 function shouldIgnore(text: string): boolean {

@@ -41,6 +41,9 @@ code {
 /* CSS Variables */
 :root {
   --footer-height: 2rem;
+  --pdf-page-bg: var(--c-pdf-page-bg);
+  --pdf-shimmer-mid: var(--c-pdf-shimmer-mid);
+  --pdf-shimmer-peak: var(--c-pdf-shimmer-peak);
 }
 
 /* Footer link styling - make buttons and links look identical */
@@ -84,4 +87,59 @@ code {
     var(--c-tab-active-tint) 50%,
     transparent
   );
+}
+
+/* Page skeleton loader with CSS shimmer */
+.pdf-page-skeleton {
+  background: var(--pdf-page-bg, #ffffff);
+  position: relative;
+  overflow: hidden;
+}
+
+.pdf-page-skeleton::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--pdf-shimmer-mid) 20%,
+    var(--pdf-shimmer-peak) 60%,
+    transparent 100%
+  );
+  animation: pdf-page-shimmer 2.5s infinite;
+  pointer-events: none;
+}
+
+/* Smooth fade-in for lazy-loaded/rendered tile images */
+.pdf-tile-layer img {
+  animation: pdf-tile-fade-in 0.2s ease-out forwards;
+}
+
+@keyframes pdf-page-shimmer {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pdf-tile-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pdf-page-skeleton::after {
+    animation: none;
+  }
+  .pdf-tile-layer img {
+    animation: none;
+  }
 }
