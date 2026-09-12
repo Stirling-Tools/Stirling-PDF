@@ -1,13 +1,14 @@
 /**
  * Read-only Policies state for the editor's enforcement path. The backend
- * (`/api/v1/policies`) is the source of truth: on mount we reconcile the local
- * cache against the stored policies. localStorage is a fast-render cache +
+ * (`/api/v1/policies`) is the source of truth: we reconcile the local cache
+ * against the stored policies on mount and whenever the signed-in user changes. localStorage is a fast-render cache +
  * offline fallback. Managing policies (create/edit/pause/delete) lives on the
  * portal Pipelines page, not here; the editor only reads them and runs them.
  */
 
 import { useState, useEffect, useRef } from "react";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
+import { useAuth } from "@app/auth/UseSession";
 import {
   loadPolicies,
   onPoliciesChange,
@@ -30,6 +31,10 @@ const reconcileRetryDelay = (attempt: number) =>
 export function usePolicies() {
   const [policies, setPolicies] = useState<PoliciesByKey>(loadPolicies);
   const { refetch: refetchAppConfig } = useAppConfig();
+  // Reconciling only on mount leaves the cache in its unconfigured default when the fetch ran
+  // before there was a session, and every consumer reads that default as "no policy".
+  const { user } = useAuth();
+  const sessionKey = user?.id ?? null;
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
 
@@ -94,7 +99,7 @@ export function usePolicies() {
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [sessionKey]);
 
   return { policies };
 }
