@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
 import { AuditTab } from "@portal/components/infrastructure/AuditTab";
-import "@portal/views/Infrastructure.css";
+import "@portal/components/infrastructure/infrastructure.css";
 
 const meta: Meta<typeof AuditTab> = {
   title: "Portal/Infrastructure/AuditTab",

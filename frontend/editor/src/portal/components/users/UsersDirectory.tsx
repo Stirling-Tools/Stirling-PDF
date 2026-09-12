@@ -38,7 +38,8 @@ interface UsersDirectoryProps {
   processorTeamIds: Set<number>;
   onGrantTeamProcessor: (team: TeamGroup) => void;
   onRevokeTeamProcessor: (team: TeamGroup) => void;
-  onAddToTeam: (team: TeamGroup) => void;
+  /** Null when the viewer may not add members; the control is then omitted. */
+  onAddToTeam: ((team: TeamGroup) => void) | null;
   // Per-member admin actions (the row kebab).
   onResetPassword: (member: Member) => void;
   onMoveToTeam: (member: Member) => void;
@@ -160,13 +161,15 @@ export function UsersDirectory({
           onClick: () => onDisableMfa(m),
         });
       }
-      items.push({
-        label: removeLabel,
-        tone: "danger",
-        disabled: m.isSelf,
-        onClick: () => onRemove(m),
-        dividerBefore: items.length > 0,
-      });
+      if (capabilities.removeMember) {
+        items.push({
+          label: removeLabel,
+          tone: "danger",
+          disabled: m.isSelf,
+          onClick: () => onRemove(m),
+          dividerBefore: items.length > 0,
+        });
+      }
       return {
         label: t("users.rowActions", "Actions for {{name}}", { name: m.name }),
         glyph: "kebab",
@@ -271,7 +274,16 @@ export function UsersDirectory({
       );
     }
 
-    cols.push(column.actions({ key: "actions", get: (m) => [rowKebab(m)] }));
+    // A reader gets no kebab at all rather than an empty menu.
+    cols.push(
+      column.actions({
+        key: "actions",
+        get: (m) => {
+          const kebab = rowKebab(m);
+          return kebab.menu && kebab.menu.length > 0 ? [kebab] : [];
+        },
+      }),
+    );
     return cols;
   }, [
     t,
@@ -305,12 +317,15 @@ export function UsersDirectory({
       );
     }
     function teamActions(team: TeamGroup): CellAction[] {
-      const acts: CellAction[] = [
-        {
-          label: t("users.group.addToTeam", "Add to team"),
-          onClick: () => onAddToTeam(team),
-        },
-      ];
+      const add = onAddToTeam;
+      const acts: CellAction[] = add
+        ? [
+            {
+              label: t("users.group.addToTeam", "Add to team"),
+              onClick: () => add(team),
+            },
+          ]
+        : [];
       if (teamKebabHasItems(team)) {
         const items: CellMenuItem[] = [];
         if (capabilities.manageGrants) {
