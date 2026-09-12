@@ -80,6 +80,8 @@ export type ToolRegistryEntry = {
   versionStatus?: "alpha" | "beta";
   // Whether this tool requires premium access
   requiresPremium?: boolean;
+  // Pre-translated override for the generic "unavailable on server" tooltip label
+  unavailableMessage?: string;
 };
 
 export type RegularToolRegistry = Record<RegularToolId, ToolRegistryEntry>;
