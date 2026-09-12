@@ -1,6 +1,8 @@
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import LocalIcon from "@app/components/shared/LocalIcon";
 import {
+  ActionIcon,
   Avatar,
   type CellAction,
   type CellCap,
@@ -9,19 +11,20 @@ import {
   column,
   DataTable,
   type DataTableColumn,
-  type DataTableGroup,
+  Input,
+  renderCellActions,
+  type TabItem,
+  Tabs,
 } from "@app/ui";
 import { type Member, type RoleId } from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
 import { avatarToneForMember } from "@portal/components/users/format";
-import {
-  buildDirectory,
-  type TeamGroup,
-} from "@portal/components/users/directory";
 
-/** Collapse a group's rows past this many, behind a "Show all" expander. */
-const COLLAPSED_LIMIT = 8;
+/** Tab key standing for "no team filter". */
+const ALL_TEAMS = "__all__";
+/** Tab key for members belonging to no team. */
+const UNASSIGNED = "__none__";
 
 /** Teams that can't be renamed/deleted (system-managed). */
 const SYSTEM_TEAMS = new Set(["Default", "Internal"]);
@@ -36,10 +39,10 @@ interface UsersDirectoryProps {
   onRevokeProcessor: (member: Member) => void;
   /** Team ids holding a team-wide Processor grant; members inherit it. */
   processorTeamIds: Set<number>;
-  onGrantTeamProcessor: (team: TeamGroup) => void;
-  onRevokeTeamProcessor: (team: TeamGroup) => void;
+  onGrantTeamProcessor: (team: Team) => void;
+  onRevokeTeamProcessor: (team: Team) => void;
   /** Null when the viewer may not add members; the control is then omitted. */
-  onAddToTeam: ((team: TeamGroup) => void) | null;
+  onAddToTeam: ((team: Team) => void) | null;
   // Per-member admin actions (the row kebab).
   onResetPassword: (member: Member) => void;
   onMoveToTeam: (member: Member) => void;
@@ -47,20 +50,20 @@ interface UsersDirectoryProps {
   onUnlock: (member: Member) => void;
   onDisableMfa: (member: Member) => void;
   onRemove: (member: Member) => void;
-  // Team actions (the team-header kebab).
-  onRenameTeam: (team: TeamGroup) => void;
-  onDeleteTeam: (team: TeamGroup) => void;
+  // Team actions, offered beside the selected team's tab.
+  onRenameTeam: (team: Team) => void;
+  onDeleteTeam: (team: Team) => void;
   /** Show the "Approves policy" capability on org owners (Storybook design doc). */
   showApprover?: boolean;
-  /** Show the Guests group + the "Guest" role option (Storybook design doc). */
+  /** Offer the "Guest" role option (Storybook design doc). */
   showGuests?: boolean;
 }
 
 /**
- * The people roster on the shared DataTable: grouped like the org chart
- * (Organization owners, then each team, then guests), each row carrying its
- * capability chips, a role selector, and a kebab of admin actions. Long groups
- * collapse behind a "Show all".
+ * The people roster: one flat list of everyone, narrowed by the team strip
+ * above it and by search. Each row carries its team, its capability chips, a
+ * role selector and a kebab of admin actions; selecting a team also puts that
+ * team's own actions beside the strip.
  */
 export function UsersDirectory({
   members,
@@ -85,16 +88,6 @@ export function UsersDirectory({
   showGuests = false,
 }: UsersDirectoryProps) {
   const { t } = useTranslation();
-  const dir = useMemo(() => buildDirectory(members, teams), [members, teams]);
-
-  const nameByUsername = useMemo(() => {
-    const m = new Map<string, string>();
-    for (const member of members) {
-      if (member.username) m.set(member.username, member.name);
-    }
-    return m;
-  }, [members]);
-
   const roleOptions = useMemo(
     () => [
       // No SaaS user is ever ROLE_ADMIN, so the Org Owner option is dropped there.
@@ -117,6 +110,80 @@ export function UsersDirectory({
     ],
     [capabilities.adminRole, showGuests, t],
   );
+
+  // The team strip is the roster's one structural filter. It replaces the
+  // per-team sections, which stopped being scannable at the org sizes this page
+  // has to hold: a hundred people is ten headings to scroll past, not a shape.
+  const [teamTab, setTeamTab] = useState<string>(ALL_TEAMS);
+  // A member's tab, keyed by team id. Everyone the team list doesn't account
+  // for lands under "No team", so the strip's counts always sum to the roster.
+  const tabOf = useMemo(() => {
+    const known = new Set(teams.map((team) => String(team.id)));
+    return (m: Member) => {
+      const key = m.teamId != null ? String(m.teamId) : UNASSIGNED;
+      return known.has(key) ? key : UNASSIGNED;
+    };
+  }, [teams]);
+
+  const teamTabs = useMemo<TabItem<string>[]>(() => {
+    const counts = new Map<string, number>();
+    for (const m of members) {
+      const key = tabOf(m);
+      counts.set(key, (counts.get(key) ?? 0) + 1);
+    }
+    const tabs: TabItem<string>[] = [
+      {
+        key: ALL_TEAMS,
+        label: t("users.tabs.all", "All"),
+        count: members.length,
+      },
+      // Empty teams get a tab too, so a newly created one can be found and
+      // given its first member.
+      ...[...teams]
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map((team) => ({
+          key: String(team.id),
+          label: team.name,
+          count: counts.get(String(team.id)) ?? 0,
+        })),
+    ];
+    const orphans = counts.get(UNASSIGNED) ?? 0;
+    if (orphans > 0) {
+      tabs.push({
+        key: UNASSIGNED,
+        label: t("users.tabs.unassigned", "No team"),
+        count: orphans,
+      });
+    }
+    return tabs;
+  }, [members, teams, tabOf, t]);
+
+  const teamScoped = useMemo(
+    () =>
+      teamTab === ALL_TEAMS
+        ? members
+        : members.filter((m) => tabOf(m) === teamTab),
+    [members, teamTab, tabOf],
+  );
+
+  // Search is the only filter beside the team strip: a roster is looked up by
+  // name, and role and status are already visible in their own columns.
+  const [query, setQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
+  const searchRef = useRef<HTMLInputElement>(null);
+  const rows = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return teamScoped;
+    return teamScoped.filter((m) =>
+      `${m.name} ${m.email}`.toLowerCase().includes(q),
+    );
+  }, [teamScoped, query]);
+
+  const teamNameById = useMemo(() => {
+    const byId = new Map<number, string>();
+    for (const team of teams) byId.set(team.id, team.name);
+    return byId;
+  }, [teams]);
 
   const columns = useMemo<DataTableColumn<Member>[]>(() => {
     function rowKebab(m: Member): CellAction {
@@ -193,6 +260,16 @@ export function UsersDirectory({
         header: t("users.columns.email", "Email"),
         // Blank when the name already is the email (no separate display name).
         get: (m) => (m.email !== m.name ? m.email : undefined),
+      }),
+      column.labels({
+        key: "team",
+        header: t("users.columns.team", "Team"),
+        get: (m) => {
+          const name =
+            m.teamName ??
+            (m.teamId != null ? teamNameById.get(m.teamId) : undefined);
+          return name ? [{ label: name, accent: "neutral" }] : [];
+        },
       }),
       column.labels({
         key: "status",
@@ -290,6 +367,7 @@ export function UsersDirectory({
     capabilities,
     roleOptions,
     showApprover,
+    teamNameById,
     onChangeRole,
     onGrantProcessor,
     onRevokeProcessor,
@@ -301,129 +379,74 @@ export function UsersDirectory({
     onRemove,
   ]);
 
-  const groups = useMemo<DataTableGroup<Member>[]>(() => {
-    function ownerNames(owners: string[]): string {
-      return owners.map((u) => nameByUsername.get(u) ?? u).join(", ");
-    }
+  // Null on "All" and "No team", which are not teams to act on.
+  const selectedTeam = useMemo<Team | null>(
+    () => teams.find((tm) => String(tm.id) === teamTab) ?? null,
+    [teams, teamTab],
+  );
+
+  const teamActions = useMemo<CellAction[]>(() => {
+    const team = selectedTeam;
+    if (!team) return [];
+    const add = onAddToTeam;
+    const acts: CellAction[] = add
+      ? [
+          {
+            label: t("users.group.addToTeam", "Add to team"),
+            onClick: () => add(team),
+          },
+        ]
+      : [];
     // A team whose name/membership is system-managed - no rename/delete.
-    function isManagedTeam(team: TeamGroup): boolean {
-      return SYSTEM_TEAMS.has(team.name) || team.isPersonal === true;
-    }
-    function teamKebabHasItems(team: TeamGroup): boolean {
-      return (
-        capabilities.manageGrants ||
-        (!isManagedTeam(team) &&
-          (capabilities.renameTeam || capabilities.deleteTeam))
+    const managed = SYSTEM_TEAMS.has(team.name) || team.isPersonal === true;
+    const items: CellMenuItem[] = [];
+    if (capabilities.manageGrants) {
+      items.push(
+        processorTeamIds.has(team.id)
+          ? {
+              label: t(
+                "users.team.revokeProcessor",
+                "Revoke Processor from team",
+              ),
+              onClick: () => onRevokeTeamProcessor(team),
+            }
+          : {
+              label: t("users.team.grantProcessor", "Grant Processor to team"),
+              onClick: () => onGrantTeamProcessor(team),
+            },
       );
     }
-    function teamActions(team: TeamGroup): CellAction[] {
-      const add = onAddToTeam;
-      const acts: CellAction[] = add
-        ? [
-            {
-              label: t("users.group.addToTeam", "Add to team"),
-              onClick: () => add(team),
-            },
-          ]
-        : [];
-      if (teamKebabHasItems(team)) {
-        const items: CellMenuItem[] = [];
-        if (capabilities.manageGrants) {
-          items.push(
-            processorTeamIds.has(team.id)
-              ? {
-                  label: t(
-                    "users.team.revokeProcessor",
-                    "Revoke Processor from team",
-                  ),
-                  onClick: () => onRevokeTeamProcessor(team),
-                }
-              : {
-                  label: t(
-                    "users.team.grantProcessor",
-                    "Grant Processor to team",
-                  ),
-                  onClick: () => onGrantTeamProcessor(team),
-                },
-          );
-        }
-        if (!isManagedTeam(team)) {
-          const divider = capabilities.manageGrants;
-          if (capabilities.renameTeam) {
-            items.push({
-              label: t("users.action.rename", "Rename team"),
-              onClick: () => onRenameTeam(team),
-              dividerBefore: divider,
-            });
-          }
-          if (capabilities.deleteTeam) {
-            items.push({
-              label: t("users.action.deleteTeam", "Delete team"),
-              tone: "danger",
-              onClick: () => onDeleteTeam(team),
-              dividerBefore: divider && !capabilities.renameTeam,
-            });
-          }
-        }
-        acts.push({
-          label: t("users.teamActions", "Team actions"),
-          glyph: "kebab",
-          iconOnly: true,
-          menu: items,
+    if (!managed) {
+      const divider = capabilities.manageGrants;
+      if (capabilities.renameTeam) {
+        items.push({
+          label: t("users.action.rename", "Rename team"),
+          onClick: () => onRenameTeam(team),
+          dividerBefore: divider,
         });
       }
-      return acts;
+      if (capabilities.deleteTeam) {
+        items.push({
+          label: t("users.action.deleteTeam", "Delete team"),
+          tone: "danger",
+          onClick: () => onDeleteTeam(team),
+          dividerBefore: divider && !capabilities.renameTeam,
+        });
+      }
     }
-
-    const gs: DataTableGroup<Member>[] = [];
-    if (capabilities.orgGroup && dir.organization.length > 0) {
-      gs.push({
-        key: "org",
-        title: t("users.group.org", "Organization"),
-        meta: t("users.group.owners", "{{count}} owner", {
-          count: dir.organization.length,
-        }),
-        rows: dir.organization,
-        collapseAfter: COLLAPSED_LIMIT,
+    if (items.length > 0) {
+      acts.push({
+        label: t("users.teamActions", "Team actions"),
+        glyph: "kebab",
+        iconOnly: true,
+        menu: items,
       });
     }
-    for (const team of dir.teams) {
-      const led =
-        team.owners.length > 0
-          ? ` · ${t("users.group.ledBy", "led by {{owner}}", {
-              owner: ownerNames(team.owners),
-            })}`
-          : "";
-      gs.push({
-        key: `team-${team.id}`,
-        title: t("users.group.team", "{{name}} team", { name: team.name }),
-        meta:
-          t("users.group.teamMeta", "{{count}} people", {
-            count: team.members.length,
-          }) + led,
-        actions: teamActions(team),
-        rows: team.members,
-        collapseAfter: COLLAPSED_LIMIT,
-      });
-    }
-    if (showGuests && dir.guests.length > 0) {
-      gs.push({
-        key: "guests",
-        title: t("users.group.guests", "Guests"),
-        meta: t("users.group.guestCount", "{{count}} guest", {
-          count: dir.guests.length,
-        }),
-        rows: dir.guests,
-        collapseAfter: COLLAPSED_LIMIT,
-      });
-    }
-    return gs;
+    return acts;
   }, [
     t,
-    dir,
-    nameByUsername,
+    selectedTeam,
     capabilities,
-    showGuests,
     processorTeamIds,
     onAddToTeam,
     onGrantTeamProcessor,
@@ -433,14 +456,58 @@ export function UsersDirectory({
   ]);
 
   return (
-    <DataTable<Member>
-      columns={columns}
-      groups={groups}
-      rowKey={(m) => String(m.id)}
-      collapseLabels={{
-        showAll: (count) => t("users.showAll", "Show all {{count}}", { count }),
-        showLess: t("users.showLess", "Show less"),
-      }}
-    />
+    <div className="portal-users__directory">
+      <div className="portal-users__filters">
+        <Tabs
+          items={teamTabs}
+          activeKey={teamTab}
+          onChange={setTeamTab}
+          ariaLabel={t("users.tabs.label", "Filter by team")}
+          className="portal-users__teams"
+        />
+        <div className="portal-users__filter-actions">
+          {teamActions.length > 0 && renderCellActions(teamActions)}
+          <div
+            className="portal-users__search"
+            data-open={searchOpen || undefined}
+          >
+            {searchOpen ? (
+              <Input
+                ref={searchRef}
+                inputSize="sm"
+                value={query}
+                placeholder={t("users.filters.search", "Search people")}
+                aria-label={t("users.filters.search", "Search people")}
+                onChange={(e) => setQuery(e.currentTarget.value)}
+                // Collapses only when it has nothing to show for itself, so a
+                // live filter is never dismissed by looking away from the box.
+                onBlur={() => {
+                  if (query.trim() === "") setSearchOpen(false);
+                }}
+              />
+            ) : (
+              <ActionIcon
+                variant="tertiary"
+                accent="neutral"
+                size="sm"
+                aria-label={t("users.filters.search", "Search people")}
+                onClick={() => {
+                  setSearchOpen(true);
+                  requestAnimationFrame(() => searchRef.current?.focus());
+                }}
+              >
+                <LocalIcon icon="search-rounded" width="1rem" height="1rem" />
+              </ActionIcon>
+            )}
+          </div>
+        </div>
+      </div>
+      <DataTable<Member>
+        columns={columns}
+        rows={rows}
+        rowKey={(m) => String(m.id)}
+        empty={t("users.filters.noMatches", "No one matches these filters.")}
+      />
+    </div>
   );
 }

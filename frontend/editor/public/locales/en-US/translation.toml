@@ -11941,8 +11941,6 @@ learnMore = "Learn more about roles and access."
 locked = "Locked"
 roleFor = "Role for {{name}}"
 rowActions = "Actions for {{name}}"
-showAll = "Show all {{count}}"
-showLess = "Show less"
 subtitle2 = "Your people, teams, and access levels."
 suspended = "Suspended"
 teamActions = "Team actions"
@@ -11987,6 +11985,7 @@ email = "Email"
 person = "Person"
 role = "Role"
 status = "Status"
+team = "Team"
 
 [users.confirm]
 cancelInviteBody = "Cancel the invitation to {{email}}? They won't be able to join with the current link."
@@ -12003,15 +12002,12 @@ removeTitle = "Remove member"
 description = "Invite your team to start collaborating."
 title = "No members yet"
 
+[users.filters]
+noMatches = "No one matches these filters."
+search = "Search people"
+
 [users.group]
 addToTeam = "Add to team"
-guestCount = "{{count}} guest"
-guests = "Guests"
-ledBy = "led by {{owner}}"
-org = "Organization"
-owners = "{{count}} owner"
-team = "{{name}} team"
-teamMeta = "{{count}} people"
 
 [users.invite]
 access = "Access"
@@ -12105,6 +12101,11 @@ guest = "Guest"
 member = "Member"
 orgOwner = "Org Owner"
 teamOwner = "Team Owner"
+
+[users.tabs]
+all = "All"
+label = "Filter by team"
+unassigned = "No team"
 
 [users.team]
 grantProcessor = "Grant Processor to team"

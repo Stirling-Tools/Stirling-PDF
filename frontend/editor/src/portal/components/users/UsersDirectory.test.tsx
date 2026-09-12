@@ -36,6 +36,14 @@ const MEMBER: Member = {
 };
 const TEAMS: Team[] = [{ id: 1, name: "Acme", userCount: 1, owners: [] }];
 
+// Label and count are separate spans, so the accessible name may or may not
+// carry a space between them depending on the accname implementation.
+function teamTab(label: string, count: number) {
+  return screen.getByRole("button", {
+    name: new RegExp(`^${label}\\s*${count}$`),
+  });
+}
+
 function renderDirectory(caps: typeof saasCaps, teams: Team[] = TEAMS) {
   const onRemove = vi.fn();
   render(
@@ -87,21 +95,72 @@ describe("UsersDirectory — remove action gating", () => {
       { id: 1, name: "My Team", userCount: 1, owners: [], isPersonal: true },
     ];
     renderDirectory(saasCaps, personalTeam);
-    // No team-header kebab at all (rename is the only would-be item on SaaS).
+    fireEvent.click(teamTab("My Team", 1));
+    // No team kebab at all (rename is the only would-be item on SaaS).
     expect(
       screen.queryByRole("button", { name: "Team actions" }),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Rename team")).not.toBeInTheDocument();
   });
 
-  it("lists a team with no members yet, so its first member can be added", () => {
+  it("offers a team with no members yet, so its first member can be added", () => {
     renderDirectory(selfHostedCaps, [
       ...TEAMS,
       { id: 2, name: "Brand new", userCount: 0, owners: [] },
     ]);
 
-    expect(screen.getByText("Brand new team")).toBeInTheDocument();
-    expect(screen.getAllByText("Add to team")).toHaveLength(2);
+    const tab = teamTab("Brand new", 0);
+    expect(screen.queryByText("Add to team")).not.toBeInTheDocument();
+    fireEvent.click(tab);
+    expect(screen.getByText("Add to team")).toBeInTheDocument();
+  });
+});
+
+describe("UsersDirectory — team strip", () => {
+  it("narrows the flat roster to the selected team", () => {
+    const other: Member = {
+      ...MEMBER,
+      id: "3",
+      name: "Tom",
+      email: "tom@acme.com",
+      teamId: 2,
+      teamName: "Brand new",
+    };
+    render(
+      <MantineProvider>
+        <UsersDirectory
+          members={[MEMBER, other]}
+          teams={[
+            ...TEAMS,
+            { id: 2, name: "Brand new", userCount: 1, owners: [] },
+          ]}
+          capabilities={selfHostedCaps}
+          processorTeamIds={new Set()}
+          onChangeRole={vi.fn()}
+          onGrantProcessor={vi.fn()}
+          onRevokeProcessor={vi.fn()}
+          onGrantTeamProcessor={vi.fn()}
+          onRevokeTeamProcessor={vi.fn()}
+          onAddToTeam={vi.fn()}
+          onResetPassword={vi.fn()}
+          onMoveToTeam={vi.fn()}
+          onToggleEnabled={vi.fn()}
+          onUnlock={vi.fn()}
+          onDisableMfa={vi.fn()}
+          onRemove={vi.fn()}
+          onRenameTeam={vi.fn()}
+          onDeleteTeam={vi.fn()}
+        />
+      </MantineProvider>,
+    );
+
+    expect(teamTab("All", 2)).toBeInTheDocument();
+    expect(screen.getByText("Priya")).toBeInTheDocument();
+    expect(screen.getByText("Tom")).toBeInTheDocument();
+
+    fireEvent.click(teamTab("Acme", 1));
+    expect(screen.getByText("Priya")).toBeInTheDocument();
+    expect(screen.queryByText("Tom")).not.toBeInTheDocument();
   });
 });
 

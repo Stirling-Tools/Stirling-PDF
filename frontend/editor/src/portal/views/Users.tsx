@@ -18,7 +18,7 @@ import {
   revokeGrant,
   type ResourceGrant,
 } from "@portal/api/access";
-import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
+import { deleteTeam as apiDeleteTeam, type Team } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as buildCaps } from "@app/portal/usersCapabilities";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
@@ -31,7 +31,6 @@ import { MoveToTeamModal } from "@portal/components/users/MoveToTeamModal";
 import { RenameTeamModal } from "@portal/components/users/RenameTeamModal";
 import { ConfirmModal } from "@portal/components/users/ConfirmModal";
 import { seatsLabel } from "@portal/components/users/format";
-import type { TeamGroup } from "@portal/components/users/directory";
 import { useUsersData } from "@portal/views/usersData";
 
 interface Confirm {
@@ -230,7 +229,7 @@ export function Users() {
     run(() => revokeGrant(member.portalGrantId!));
   }
   // Grant/revoke Processor for a whole team (a TEAM-principal PORTAL grant).
-  function grantTeamProcessor(team: TeamGroup) {
+  function grantTeamProcessor(team: Team) {
     run(() =>
       createGrant({
         resourceType: "PORTAL",
@@ -241,7 +240,7 @@ export function Users() {
       }),
     );
   }
-  function revokeTeamProcessor(team: TeamGroup) {
+  function revokeTeamProcessor(team: Team) {
     const grant = grantByTeam.get(team.id);
     if (!grant) return;
     run(() => revokeGrant(grant.id));
@@ -309,7 +308,7 @@ export function Users() {
       action: () => usersBackend.cancelInvitation(invitation.id),
     });
   }
-  function deleteTeamAction(team: TeamGroup) {
+  function deleteTeamAction(team: Team) {
     setConfirm({
       title: t("users.confirm.deleteTeamTitle", "Delete team"),
       body: t(

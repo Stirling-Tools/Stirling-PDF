@@ -536,3 +536,31 @@
   line-height: 1.5;
   color: var(--c-text-subtle);
 }
+
+/* The team strip leads; the selected team's actions and the search sit at the
+   far end. Top-aligned, because the strip wraps to a second row on a big org. */
+.portal-users__filters {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+.portal-users__teams {
+  flex: 1;
+  min-width: 0;
+}
+.portal-users__filter-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+/* A hit-target-sized stub that grows into a field in place. */
+.portal-users__search {
+  width: 2rem;
+  display: flex;
+  justify-content: flex-end;
+  transition: width var(--motion-fast, 120ms);
+}
+.portal-users__search[data-open] {
+  width: 16rem;
+}
