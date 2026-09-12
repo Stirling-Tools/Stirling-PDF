@@ -15,18 +15,22 @@ if [ -d /scripts ] && [[ ":${PATH}:" != *":/scripts:"* ]]; then
   export PATH="/scripts:${PATH}"
 fi
 
+# Convenience aliases only: /scripts is already on PATH, so a read-only /usr or a container
+# started with --user must not take the application down with it.
+link_diagnostics_alias() {
+  ln -sf "$1" "/usr/local/bin/$2" 2>/dev/null || true
+}
 if [ -x /scripts/stirling-diagnostics.sh ]; then
-  mkdir -p /usr/local/bin
-  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostics
-  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/stirling-diagnostics
-  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diag
-  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/debug
-  ln -sf /scripts/stirling-diagnostics.sh /usr/local/bin/diagnostic
+  mkdir -p /usr/local/bin 2>/dev/null || true
+  for _alias in diagnostics stirling-diagnostics diag debug diagnostic; do
+    link_diagnostics_alias /scripts/stirling-diagnostics.sh "$_alias"
+  done
 fi
 if [ -x /scripts/aot-diagnostics.sh ] && [ "${STIRLING_AOT_ENABLE:-false}" = "true" ]; then
-  mkdir -p /usr/local/bin
-  ln -sf /scripts/aot-diagnostics.sh /usr/local/bin/aot-diag
-  ln -sf /scripts/aot-diagnostics.sh /usr/local/bin/aot-diagnostics
+  mkdir -p /usr/local/bin 2>/dev/null || true
+  for _alias in aot-diag aot-diagnostics; do
+    link_diagnostics_alias /scripts/aot-diagnostics.sh "$_alias"
+  done
 fi
 
 print_versions() {
@@ -89,7 +93,7 @@ cleanup() {
   log "Cleanup complete."
 }
 
-trap cleanup SIGTERM
+trap 'SHUTDOWN_REQUESTED=1; cleanup' SIGTERM
 trap cleanup EXIT
 
 print_versions
@@ -179,28 +183,48 @@ UNOSERVER_UNO_PORTS=()
 
 CURRENT_USER="$(id -un)"
 CURRENT_UID="$(id -u)"
-SWITCH_USER_WARNING_EMITTED=false
 
-warn_switch_user_once() {
-  if [ "$SWITCH_USER_WARNING_EMITTED" = false ]; then
-    log "WARNING: Unable to switch to user ${RUNTIME_USER:-stirlingpdfuser}; running command as ${CURRENT_USER}."
-    SWITCH_USER_WARNING_EMITTED=true
-  fi
-}
+# setpriv when root must drop, none when the current user already is the target, root when the
+# drop is impossible. Decided once by resolve_privilege_mode() ahead of the first caller: a
+# per-call decision would announce a failed drop from whichever caller ran first, and callers
+# such as the write probe below discard stderr.
+PRIVILEGE_MODE=""
 
 run_as_runtime_user() {
-  if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
-    "$@"
-  elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+  if [ "$PRIVILEGE_MODE" = setpriv ]; then
     # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
     env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
         USER="$RUNTIME_USER" \
         LOGNAME="$RUNTIME_USER" \
       setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "$@"
   else
-    warn_switch_user_once
     "$@"
   fi
+}
+
+resolve_privilege_mode() {
+  if [ "$RUID" -eq 0 ]; then
+    PRIVILEGE_MODE=none
+    log "Running the application and converters as ${RUNTIME_USER} (uid 0)."
+    return
+  fi
+  if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
+    PRIVILEGE_MODE=none
+    log "Running as ${RUNTIME_USER} (uid ${CURRENT_UID}); no privilege drop needed."
+    return
+  fi
+  if [ "$CURRENT_UID" -ne 0 ]; then
+    PRIVILEGE_MODE=none
+    log "Running as ${CURRENT_USER} (uid ${CURRENT_UID}) rather than ${RUNTIME_USER}; commands run as the current user."
+    return
+  fi
+  if command_exists setpriv; then
+    PRIVILEGE_MODE=setpriv
+    log "Dropping privileges to ${RUNTIME_USER} (uid ${RUID}) for the application, the AI engine and every LibreOffice process."
+    return
+  fi
+  PRIVILEGE_MODE=root
+  log "WARNING: setpriv is not available; running the application and converters as ${CURRENT_USER}."
 }
 
 run_as_runtime_user_with_timeout() {
@@ -283,7 +307,7 @@ start_unoserver_instance() {
   local profile_dir="${LIBREOFFICE_PROFILE}/instance_${port}"
   run_as_runtime_user mkdir -p "$profile_dir"
   # --user-installation is a plain path; unoserver 3.6 crashes if pre-wrapped as file://.
-  run_as_runtime_user "$UNOSERVER_BIN" \
+  run_as_runtime_user env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD"} "$UNOSERVER_BIN" \
     --interface 127.0.0.1 \
     --port "$port" \
     --uno-port "$uno_port" \
@@ -840,9 +864,11 @@ umask "$UMASK_VAL" 2>/dev/null || umask 022
 RUNTIME_USER="stirlingpdfuser"
 if id -u "$RUNTIME_USER" >/dev/null 2>&1; then
   RUID="$(id -u "$RUNTIME_USER")"
+  RGID="$(id -g "$RUNTIME_USER")"
   RGRP="$(id -gn "$RUNTIME_USER")"
 else
   RUID="$(id -u)"
+  RGID="$(id -g)"
   RGRP="$(id -gn)"
   RUNTIME_USER="$(id -un)"
 fi
@@ -882,14 +908,21 @@ if [ "$(id -u)" -eq 0 ]; then
       groupmod -o -g "$PGID" stirlingpdfgroup || true
     fi
   fi
+  RUID="$(id -u "$RUNTIME_USER")"
+  RGID="$(id -g "$RUNTIME_USER")"
+  RGRP="$(id -gn "$RUNTIME_USER")"
 fi
+
+resolve_privilege_mode
 
 # ---------- Permissions ----------
 # Ensure required directories exist and set correct permissions.
 log "Setting permissions..."
 mkdir -p /tmp/stirling-pdf /tmp/stirling-pdf/heap_dumps /logs /configs /configs/heap_dumps /configs/cache /customFiles /pipeline /storage || true
-CHOWN_PATHS=("$HOME" "/logs" "/scripts" "/configs" "/customFiles" "/pipeline" "/storage" "/tmp/stirling-pdf" "/app.jar")
-[ -d /usr/share/fonts/truetype ] && CHOWN_PATHS+=("/usr/share/fonts/truetype")
+# State the runtime writes, and nothing it executes. /scripts and the application jars stay
+# root-owned in the image and are absent here, so a compromised converter running at the runtime
+# uid cannot rewrite the code root executes on the next restart.
+CHOWN_PATHS=("$HOME" "/logs" "/configs" "/customFiles" "/pipeline" "/storage" "/tmp/stirling-pdf")
 # Chowned here rather than at build time so it follows PUID/PGID remapping.
 if [ -d "${STIRLING_ENGINE_HOME:-/opt/stirling-engine}" ]; then
   mkdir -p "${STIRLING_ENGINE_HOME:-/opt/stirling-engine}/data" || true
@@ -899,7 +932,10 @@ CHOWN_OK=true
 for p in "${CHOWN_PATHS[@]}"; do
   if [ -e "$p" ]; then
     chown -R "stirlingpdfuser:stirlingpdfgroup" "$p" 2>/dev/null || CHOWN_OK=false
-    chmod -R 755 "$p" 2>/dev/null || true
+    # u+rwX, never a fixed mode: it gives the owner traversal on directories and read/write on
+    # files without touching the group and other bits, so the 0600 the app writes on
+    # credential-encryption.key and file-encryption.key survives every restart.
+    chmod -R u+rwX "$p" 2>/dev/null || true
   fi
 done
 
@@ -909,10 +945,10 @@ for dir in "${CRITICAL_DIRS[@]}"; do
   if [ -d "$dir" ]; then
     # Test write access as the runtime user
     if ! run_as_runtime_user test -w "$dir" 2>/dev/null; then
-      log "WARNING: ${RUNTIME_USER} cannot write to $dir - attempting to fix permissions"
-      # Try adding group-write and world-write as fallbacks
-      chmod -R o+rwX "$dir" 2>/dev/null \
-        || chmod -R a+rwX "$dir" 2>/dev/null \
+      log "WARNING: ${RUNTIME_USER} cannot write to $dir - attempting to fix directory permissions"
+      # Directories only: opening up existing files here would strip the owner-only mode off any
+      # key already sitting in the mount.
+      find "$dir" -type d -exec chmod o+rwx {} + 2>/dev/null \
         || log "ERROR: Could not grant ${RUNTIME_USER} write access to $dir. Check your volume mount permissions (e.g. set PUID/PGID or fix host directory ownership)."
     fi
   fi
@@ -921,14 +957,38 @@ done
 # ---------- Xvfb ----------
 # Start a virtual framebuffer for GUI-based LibreOffice interactions.
 if command_exists Xvfb; then
-  log "Starting Xvfb on :99"
-  Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset > /dev/null 2>&1 &
+  log "Starting Xvfb on :99 as ${RUNTIME_USER}"
+  # X refuses to create its socket directory once euid is not 0, so it has to exist beforehand.
+  mkdir -p /tmp/.X11-unix 2>/dev/null || true
+  chmod 1777 /tmp/.X11-unix 2>/dev/null || true
+  run_as_runtime_user Xvfb :99 -screen 0 1024x768x24 -nolisten tcp +extension GLX +render -noreset > /dev/null 2>&1 &
   export DISPLAY=:99
   # Brief pause so Xvfb accepts connections before unoserver tries to attach
   sleep 1
 else
   log "Xvfb not installed; skipping virtual display setup"
 fi
+
+# ---------- LibreOffice egress guard ----------
+# LD_PRELOAD connect() guard (SSRF): refuses non-loopback connect(). It does not stop DNS or any
+# path that skips the dynamic symbol, so it narrows the reachable surface rather than isolating the
+# process. Default on; LIBREOFFICE_ALLOW_NETWORK=true opts out.
+OFFICE_GUARD_LIB="/usr/local/lib/stirling/soffice_no_network.so"
+OFFICE_LD_PRELOAD=""
+case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on)
+    log "LibreOffice egress guard DISABLED (LIBREOFFICE_ALLOW_NETWORK=${LIBREOFFICE_ALLOW_NETWORK})"
+    ;;
+  *)
+    if [ -f "$OFFICE_GUARD_LIB" ]; then
+      OFFICE_LD_PRELOAD="$OFFICE_GUARD_LIB"
+      log "LibreOffice egress guard loaded ($OFFICE_GUARD_LIB): non-loopback connect() refused"
+    elif command_exists soffice || command_exists unoserver; then
+      log "WARNING: LibreOffice egress guard missing at $OFFICE_GUARD_LIB; conversions can reach the network"
+    fi
+    ;;
+esac
+export OFFICE_LD_PRELOAD
 
 # ---------- unoserver ----------
 # Start LibreOffice UNO server for document conversions.
@@ -984,9 +1044,7 @@ elif [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
     --app-dir "$STIRLING_ENGINE_HOME/src"
   )
   # init.sh exports PYTHONPATH for unoserver's 3.12 venv; inheriting it breaks the 3.13 engine.
-  if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
-    env -u PYTHONPATH "${ENGINE_CMD[@]}" &
-  elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+  if [ "$PRIVILEGE_MODE" = setpriv ]; then
     env -u PYTHONPATH \
         HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
         USER="$RUNTIME_USER" \
@@ -999,16 +1057,13 @@ elif [ -x "$STIRLING_ENGINE_HOME/.venv/bin/python" ]; then
   log "AI engine started (PID $ENGINE_PID)"
 fi
 
-if [ "$CURRENT_USER" = "$RUNTIME_USER" ]; then
-  "${JAVA_CMD[@]}" &
-elif [ "$CURRENT_UID" -eq 0 ] && command_exists setpriv; then
+if [ "$PRIVILEGE_MODE" = setpriv ]; then
   # Set HOME/USER/LOGNAME to match gosu behavior (setpriv does not touch env vars)
   env HOME="$(getent passwd "$RUNTIME_USER" | cut -d: -f6)" \
       USER="$RUNTIME_USER" \
       LOGNAME="$RUNTIME_USER" \
     setpriv --reuid="$RUNTIME_USER" --regid="$(id -gn "$RUNTIME_USER")" --init-groups -- "${JAVA_CMD[@]}" &
 else
-  warn_switch_user_once
   "${JAVA_CMD[@]}" &
 fi
 
@@ -1109,8 +1164,8 @@ if [ "$AOT_GENERATE_BACKGROUND" = true ]; then
   fi
 fi
 
-wait "$JAVA_PID" || true
-exit_code=$?
+exit_code=0
+wait "$JAVA_PID" || exit_code=$?
 
 if [ -n "$ENGINE_PID" ] && kill -0 "$ENGINE_PID" 2>/dev/null; then
   log "Stopping AI engine (PID $ENGINE_PID)..."
@@ -1120,7 +1175,16 @@ fi
 case "$exit_code" in
   0)   log "Stirling PDF exited normally." ;;
   137) log "Stirling PDF was OOM-killed (exit 137). Check container memory limits." ;;
-  143) log "Stirling PDF terminated by SIGTERM (normal orchestrator shutdown)." ;;
+  143)
+    # An orchestrator stop is a clean shutdown, so it must not exit non-zero: a Kubernetes pod
+    # would report Error and a restartPolicy: OnFailure Job would run again.
+    if [ "${SHUTDOWN_REQUESTED:-0}" = "1" ]; then
+      log "Stirling PDF terminated by SIGTERM (normal orchestrator shutdown)."
+      exit_code=0
+    else
+      log "Stirling PDF was terminated by SIGTERM from inside the container (exit 143)."
+    fi
+    ;;
   *)   log "Stirling PDF exited with code ${exit_code}." ;;
 esac
 # Propagate exit code so orchestrators can detect crashes vs clean shutdowns

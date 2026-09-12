@@ -7,15 +7,19 @@ import java.io.InputStreamReader;
 import java.io.InterruptedIOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 
 import io.github.pixee.security.BoundedLineReader;
 
@@ -31,6 +35,41 @@ public class ProcessExecutor {
     private static final Map<Processes, ProcessExecutor> instances = new ConcurrentHashMap<>();
     private static ApplicationProperties applicationProperties = new ApplicationProperties();
     private static volatile UnoServerPool unoServerPool;
+
+    private static final OfficeNetworkGuard OFFICE_NETWORK_GUARD =
+            OfficeNetworkGuard.resolveAndReport();
+
+    private static String executableBaseName(List<String> command) {
+        if (command == null || command.isEmpty()) {
+            return null;
+        }
+        String executable = command.getFirst();
+        if (executable == null || executable.isBlank()) {
+            return null;
+        }
+        int slash = Math.max(executable.lastIndexOf('/'), executable.lastIndexOf('\\'));
+        String base =
+                (slash >= 0 ? executable.substring(slash + 1) : executable)
+                        .toLowerCase(Locale.ROOT);
+        return base.endsWith(".exe") ? base.substring(0, base.length() - 4) : base;
+    }
+
+    static boolean isUnoClientCommand(List<String> command) {
+        String base = executableBaseName(command);
+        return base != null && (base.contains("unoconvert") || "unoconv".equals(base));
+    }
+
+    /**
+     * Whether a {@link Processes#LIBRE_OFFICE} command is an office engine that must not be allowed
+     * out to the network. Fail-closed: the process type launches only the engine or the unoserver
+     * client, so everything that is not the client is treated as the engine — {@code
+     * system.customPaths.operations.soffice} takes any path, and {@code /usr/bin/libreoffice} is a
+     * symlink to the same wrapper as {@code /usr/bin/soffice}.
+     */
+    static boolean shouldGuardOfficeCommand(List<String> command) {
+        return executableBaseName(command) != null && !isUnoClientCommand(command);
+    }
+
     private final Semaphore semaphore;
     private final boolean liveUpdates;
     private long timeoutDuration;
@@ -224,6 +263,10 @@ public class ProcessExecutor {
             log.info("Running command: {}", String.join(" ", commandToRun));
             ProcessBuilder processBuilder = new ProcessBuilder(commandToRun);
 
+            if (processType == Processes.LIBRE_OFFICE) {
+                OFFICE_NETWORK_GUARD.apply(processBuilder, commandToRun);
+            }
+
             // Use the working directory if it's set
             if (workingDirectory != null) {
                 processBuilder.directory(workingDirectory);
@@ -365,31 +408,7 @@ public class ProcessExecutor {
         if (unoServerPool.isEmpty()) {
             return false;
         }
-        if (command == null || command.isEmpty()) {
-            return false;
-        }
-
-        // Check if this is a UNO conversion by looking for unoconvert executable
-        String executable = command.getFirst();
-        if (executable != null) {
-            // Extract basename from path for matching
-            String basename = executable;
-            int lastSlash = Math.max(executable.lastIndexOf('/'), executable.lastIndexOf('\\'));
-            if (lastSlash >= 0) {
-                basename = executable.substring(lastSlash + 1);
-            }
-            // Strip .exe extension on Windows
-            if (basename.toLowerCase(java.util.Locale.ROOT).endsWith(".exe")) {
-                basename = basename.substring(0, basename.length() - 4);
-            }
-            // Match common unoconvert variants (but NOT soffice)
-            String lowerBasename = basename.toLowerCase(java.util.Locale.ROOT);
-            if (lowerBasename.contains("unoconvert") || "unoconv".equals(lowerBasename)) {
-                return true;
-            }
-        }
-
-        return false;
+        return isUnoClientCommand(command);
     }
 
     private List<String> applyUnoServerEndpoint(
@@ -535,6 +554,122 @@ public class ProcessExecutor {
             }
         }
         // For relative paths, trust that PATH resolution will work or fail appropriately
+    }
+
+    /**
+     * Resolves, and then applies, the {@code LD_PRELOAD} shim that stops a locally launched
+     * LibreOffice engine opening non-loopback sockets.
+     *
+     * <p>Resolution is fail-open on purpose — a missing shim must not stop conversions — so every
+     * path that leaves the engine unguarded carries a reason and is logged rather than returning a
+     * bare null. Linux only: the shim interposes glibc {@code connect}, which macOS ignores for
+     * {@code LD_PRELOAD} entirely and which {@code DYLD_INSERT_LIBRARIES} would need a {@code
+     * __DATA,__interpose} section to reach.
+     */
+    static final class OfficeNetworkGuard {
+
+        static final String DEFAULT_LIBRARY_PATH = "/usr/local/lib/stirling/soffice_no_network.so";
+
+        private static final Set<String> ALLOW_NETWORK_TRUTHY = Set.of("1", "true", "yes", "on");
+
+        private final String libraryPath;
+        private final String unavailableReason;
+        private final Set<String> warnedExecutables = ConcurrentHashMap.newKeySet();
+
+        private OfficeNetworkGuard(String libraryPath, String unavailableReason) {
+            this.libraryPath = libraryPath;
+            this.unavailableReason = unavailableReason;
+        }
+
+        static OfficeNetworkGuard resolve(
+                UnaryOperator<String> env, String osName, Predicate<Path> libraryExists) {
+            String allow = env.apply("LIBREOFFICE_ALLOW_NETWORK");
+            if (allow != null
+                    && ALLOW_NETWORK_TRUTHY.contains(allow.trim().toLowerCase(Locale.ROOT))) {
+                return unavailable("LIBREOFFICE_ALLOW_NETWORK=" + allow.trim() + " turned it off");
+            }
+            if (osName == null || !osName.toLowerCase(Locale.ROOT).startsWith("linux")) {
+                return unavailable(
+                        "LD_PRELOAD interposition needs Linux, this host reports " + osName);
+            }
+            String override = env.apply("LIBREOFFICE_NETWORK_GUARD_LIB");
+            String path =
+                    (override != null && !override.isBlank())
+                            ? override.trim()
+                            : DEFAULT_LIBRARY_PATH;
+            Path libraryPath;
+            try {
+                libraryPath = Path.of(path);
+            } catch (InvalidPathException e) {
+                return unavailable(path + " is not a usable path: " + e.getMessage());
+            }
+            if (!libraryExists.test(libraryPath)) {
+                return unavailable(path + " is missing from this install");
+            }
+            return new OfficeNetworkGuard(path, null);
+        }
+
+        private static OfficeNetworkGuard unavailable(String reason) {
+            return new OfficeNetworkGuard(null, reason);
+        }
+
+        static OfficeNetworkGuard resolveAndReport() {
+            OfficeNetworkGuard guard =
+                    resolve(System::getenv, System.getProperty("os.name"), Files::exists);
+            if (guard.isActive()) {
+                log.info("LibreOffice network guard active: {}", guard.libraryPath);
+            } else {
+                log.info(
+                        "LibreOffice network guard inactive: {}. Office conversion has no egress"
+                                + " control on this install.",
+                        guard.unavailableReason);
+            }
+            return guard;
+        }
+
+        boolean isActive() {
+            return libraryPath != null;
+        }
+
+        String getLibraryPath() {
+            return libraryPath;
+        }
+
+        String getUnavailableReason() {
+            return unavailableReason;
+        }
+
+        /**
+         * Preloads the shim for an office engine command, or warns once per executable that the
+         * engine is running without it. The unoserver client is left alone deliberately: remote-UNO
+         * mode is the client dialling out to another host, which the shim would block.
+         */
+        void apply(ProcessBuilder processBuilder, List<String> command) {
+            if (!shouldGuardOfficeCommand(command)) {
+                return;
+            }
+            if (!isActive()) {
+                warnUnguarded(command.getFirst());
+                return;
+            }
+            Map<String, String> env = processBuilder.environment();
+            String existing = env.get("LD_PRELOAD");
+            env.put(
+                    "LD_PRELOAD",
+                    (existing == null || existing.isBlank())
+                            ? libraryPath
+                            : libraryPath + " " + existing);
+        }
+
+        private void warnUnguarded(String executable) {
+            if (warnedExecutables.add(executable)) {
+                log.warn(
+                        "LibreOffice engine {} is running with no network guard: {}. A converted"
+                                + " document can make it reach the network.",
+                        executable,
+                        unavailableReason);
+            }
+        }
     }
 
     public enum Processes {

@@ -2,11 +2,16 @@ package stirling.software.SPDF.controller.api.converters;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CodingErrorAction;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -40,7 +45,6 @@ import stirling.software.common.util.GeneralUtils;
 import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.ProcessExecutor;
 import stirling.software.common.util.ProcessExecutor.ProcessExecutorResult;
-import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
@@ -49,6 +53,20 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 @Slf4j
 public class ConvertOfficeController {
+
+    private static final Charset WINDOWS_1252 = Charset.forName("windows-1252");
+
+    private record ByteOrderMark(byte[] mark, Charset charset) {}
+
+    private static final List<ByteOrderMark> BYTE_ORDER_MARKS =
+            List.of(
+                    new ByteOrderMark(
+                            new byte[] {(byte) 0xFF, (byte) 0xFE}, StandardCharsets.UTF_16LE),
+                    new ByteOrderMark(
+                            new byte[] {(byte) 0xFE, (byte) 0xFF}, StandardCharsets.UTF_16BE),
+                    new ByteOrderMark(
+                            new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF},
+                            StandardCharsets.UTF_8));
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
     private final RuntimePathConfig runtimePathConfig;
@@ -63,19 +81,19 @@ public class ConvertOfficeController {
     }
 
     public File convertToPdf(MultipartFile inputFile) throws IOException, InterruptedException {
-        // Check for valid file extension and sanitize filename
         String originalFilename = Filenames.toSimpleFileName(inputFile.getOriginalFilename());
         if (originalFilename == null || originalFilename.isBlank()) {
             throw ExceptionUtils.createFileNoNameException();
         }
 
-        // Check for valid file extension
         String extension = FilenameUtils.getExtension(originalFilename);
-        if (extension == null || !isValidFileExtension(extension)) {
+        String extensionLower = extension == null ? "" : extension.toLowerCase(Locale.ROOT).strip();
+        if (OfficeImportFilters.forExtension(extensionLower).isEmpty()) {
+            // Deliberately says nothing about the rejected name: it is attacker-chosen text that
+            // would otherwise be reflected into the response.
             throw ExceptionUtils.createIllegalArgumentException(
-                    "error.invalid.extension", "Invalid file extension: " + extension);
+                    "error.invalid.extension", "Unsupported file type for conversion to PDF");
         }
-        String extensionLower = extension.toLowerCase(Locale.ROOT);
 
         String baseName = FilenameUtils.getBaseName(originalFilename);
         if (baseName == null || baseName.isBlank()) {
@@ -87,17 +105,21 @@ public class ConvertOfficeController {
         Path inputPath = workDir.resolve(baseName + "." + extensionLower);
         Path outputPath = workDir.resolve(baseName + ".pdf");
 
-        // Sanitize input before LibreOffice sees it so embedded URLs can't trigger SSRF.
-        if ("html".equals(extensionLower) || "htm".equals(extensionLower)) {
-            String htmlContent = new String(inputFile.getBytes(), StandardCharsets.UTF_8);
-            String sanitizedHtml = customHtmlSanitizer.sanitize(htmlContent);
-            Files.writeString(inputPath, sanitizedHtml, StandardCharsets.UTF_8);
-        } else if (officeDocumentSanitizer.isSanitizableExtension(extensionLower)) {
-            byte[] sanitized =
-                    officeDocumentSanitizer.sanitize(inputFile.getBytes(), extensionLower);
-            Files.write(inputPath, sanitized);
-        } else {
+        String importFilter;
+        try {
             Files.copy(inputFile.getInputStream(), inputPath, StandardCopyOption.REPLACE_EXISTING);
+            // The staged name and the forced filter come from the same lowercased extension, so
+            // the type LibreOffice is told to read and the one it sees on disk cannot diverge.
+            OfficeImportFilters.Candidate candidate =
+                    OfficeImportFilters.resolve(extensionLower, inputPath);
+            if (candidate == null) {
+                throw invalidContent();
+            }
+            sanitizeInPlace(inputPath, candidate);
+            importFilter = candidate.importFilter();
+        } catch (RuntimeException | IOException e) {
+            FileUtils.deleteQuietly(workDir.toFile());
+            throw e;
         }
 
         Path libreOfficeProfile = null;
@@ -112,6 +134,8 @@ public class ConvertOfficeController {
                     command.add(runtimePathConfig.getUnoConvertPath());
                     command.add("--convert-to");
                     command.add("pdf");
+                    command.add("--input-filter");
+                    command.add(importFilter);
                     command.add(inputPath.toString());
                     command.add(outputPath.toString());
 
@@ -134,6 +158,7 @@ public class ConvertOfficeController {
                 command.add("-env:UserInstallation=" + libreOfficeProfile.toUri().toString());
                 command.add("--headless");
                 command.add("--nologo");
+                command.add("--infilter=" + importFilter);
                 command.add("--convert-to");
                 command.add("pdf");
                 command.add("--outdir");
@@ -200,11 +225,95 @@ public class ConvertOfficeController {
         }
     }
 
-    private boolean isValidFileExtension(String fileExtension) {
-        return RegexPatternUtils.getInstance()
-                .getFileExtensionValidationPattern()
-                .matcher(fileExtension)
-                .matches();
+    /**
+     * Rewrites the staged upload in place with the sanitizer the chosen candidate declares. Routing
+     * is by the candidate, never by a scan of the bytes deciding what they look like: the import
+     * filter is forced from the same candidate, so the type sanitized here is the type LibreOffice
+     * reads, and every defeat of this endpoint so far came from a scan reaching a different
+     * conclusion than LibreOffice did. A candidate with nothing to strip leaves the file as it was
+     * streamed, so a large binary upload is never held in the heap.
+     */
+    private void sanitizeInPlace(Path inputPath, OfficeImportFilters.Candidate candidate)
+            throws IOException {
+        if (Files.size(inputPath) == 0L) {
+            // Nothing to sanitize; let the converter report the empty input as it always has.
+            return;
+        }
+        if (candidate.sanitizer() != OfficeImportFilters.SanitizerKind.HTML
+                && !officeDocumentSanitizer.isSanitizationEnabled()) {
+            return;
+        }
+        try {
+            switch (candidate.sanitizer()) {
+                case NONE -> {}
+                case HTML -> sanitizeHtmlInPlace(inputPath);
+                case MARKDOWN -> sanitizeMarkdownInPlace(inputPath);
+                case OFFICE_XML -> sanitizeOfficeDocumentInPlace(inputPath);
+                case WORD_BINARY -> WordBinarySanitizer.sanitizeInPlace(inputPath);
+            }
+        } catch (OfficeDocumentSanitizer.UnsanitizableDocumentException e) {
+            throw invalidContent();
+        }
+    }
+
+    private void sanitizeOfficeDocumentInPlace(Path inputPath) throws IOException {
+        Files.write(inputPath, officeDocumentSanitizer.sanitize(Files.readAllBytes(inputPath)));
+    }
+
+    private void sanitizeHtmlInPlace(Path inputPath) throws IOException {
+        String htmlContent = readMarkup(inputPath);
+        Files.writeString(
+                inputPath, customHtmlSanitizer.sanitize(htmlContent), StandardCharsets.UTF_8);
+    }
+
+    private void sanitizeMarkdownInPlace(Path inputPath) throws IOException {
+        String markdown = readMarkup(inputPath);
+        Files.writeString(
+                inputPath,
+                MarkdownSanitizer.sanitize(markdown, customHtmlSanitizer),
+                StandardCharsets.UTF_8);
+    }
+
+    /**
+     * Reads a markup upload as text without ever refusing its bytes. A legacy-encoded page is one
+     * of the commonest things this endpoint is handed, and {@code Files.readString} reports
+     * malformed input rather than substituting, so it turns a Windows-1252 apostrophe into a 500.
+     * The fallback is Windows-1252 because that is what a browser and LibreOffice both assume for
+     * markup that declares nothing, and it decodes every byte, so this cannot throw.
+     */
+    private static String readMarkup(Path inputPath) throws IOException {
+        byte[] bytes = Files.readAllBytes(inputPath);
+        for (ByteOrderMark bom : BYTE_ORDER_MARKS) {
+            if (startsWith(bytes, bom.mark())) {
+                int length = bom.mark().length;
+                return new String(bytes, length, bytes.length - length, bom.charset());
+            }
+        }
+        return new String(bytes, isUtf8(bytes) ? StandardCharsets.UTF_8 : WINDOWS_1252);
+    }
+
+    private static boolean startsWith(byte[] bytes, byte[] prefix) {
+        return bytes.length >= prefix.length
+                && Arrays.equals(bytes, 0, prefix.length, prefix, 0, prefix.length);
+    }
+
+    private static boolean isUtf8(byte[] bytes) {
+        try {
+            StandardCharsets.UTF_8
+                    .newDecoder()
+                    .onMalformedInput(CodingErrorAction.REPORT)
+                    .onUnmappableCharacter(CodingErrorAction.REPORT)
+                    .decode(ByteBuffer.wrap(bytes));
+            return true;
+        } catch (CharacterCodingException e) {
+            return false;
+        }
+    }
+
+    private static IllegalArgumentException invalidContent() {
+        return ExceptionUtils.createIllegalArgumentException(
+                "error.invalid.content",
+                "File content does not match its type and cannot be converted");
     }
 
     @AutoJobPostMapping(

@@ -119,17 +119,17 @@ RUN mkdir -p $HOME /configs /logs /customFiles /pipeline/watchedFolders /pipelin
     userdel -r ubuntu 2>/dev/null || true && \
     groupdel ubuntu 2>/dev/null || true && \
     groupadd -g 1000 stirlingpdfgroup && useradd -u 1000 -d $HOME -s /bin/bash -g stirlingpdfgroup stirlingpdfuser && \
-    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /configs /customFiles /pipeline /storage /tmp/stirling-pdf
+    chown -R stirlingpdfuser:stirlingpdfgroup $HOME /configs /logs /customFiles /pipeline /storage /tmp/stirling-pdf
 
 # Copy scripts and built artifacts after OS package layer to maximize cache reuse.
-COPY --chown=1000:1000 scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
-COPY --chown=1000:1000 scripts/installFonts.sh /scripts/installFonts.sh
-COPY --chown=1000:1000 scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
+COPY scripts/init-without-ocr.sh /scripts/init-without-ocr.sh
+COPY scripts/installFonts.sh /scripts/installFonts.sh
+COPY scripts/stirling-diagnostics.sh /scripts/stirling-diagnostics.sh
 
 # Copy built JARs from build stage
-COPY --from=build --chown=1000:1000 \
+COPY --from=build \
      /app/app/core/build/libs/*.jar /app.jar
-COPY --from=build --chown=1000:1000 \
+COPY --from=build \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 
 RUN chmod +x /scripts/*.sh
