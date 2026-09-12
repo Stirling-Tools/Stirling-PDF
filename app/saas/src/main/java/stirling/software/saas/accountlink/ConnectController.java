@@ -73,7 +73,9 @@ public class ConnectController {
             String callbackOrigin,
             boolean insecureTransport,
             String mode,
-            String status) {}
+            String status,
+            boolean canApprove,
+            boolean canDeny) {}
 
     /** Where the approver's browser goes next, and the correlator the instance is waiting on. */
     public record ApproveResponse(String callbackUrl, String nonce) {}
@@ -183,18 +185,26 @@ public class ConnectController {
     /** Detail for the approval page. */
     @GetMapping("/{requestId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<ViewResponse> view(@PathVariable String requestId) {
+    public ResponseEntity<ViewResponse> view(@PathVariable String requestId, Authentication auth) {
         return service.lookup(requestId)
                 .map(
-                        v ->
-                                ResponseEntity.ok(
-                                        new ViewResponse(
-                                                v.requestId(),
-                                                v.name(),
-                                                v.callbackOrigin(),
-                                                v.insecureTransport(),
-                                                v.mode().name(),
-                                                v.status().name())))
+                        v -> {
+                            boolean canDeny = !leaderTeams.resolve(auth).isError();
+                            boolean canApprove =
+                                    v.mode() == ConnectRequest.Mode.REAUTH
+                                            ? !leaderTeams.resolveMember(auth).isError()
+                                            : canDeny;
+                            return ResponseEntity.ok(
+                                    new ViewResponse(
+                                            v.requestId(),
+                                            v.name(),
+                                            v.callbackOrigin(),
+                                            v.insecureTransport(),
+                                            v.mode().name(),
+                                            v.status().name(),
+                                            canApprove,
+                                            canDeny));
+                        })
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
