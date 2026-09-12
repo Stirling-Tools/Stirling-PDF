@@ -20,7 +20,8 @@ interface PlanSelectionStageProps {
   onSelectPlan: (period: "monthly" | "yearly") => void;
   /**
    * The period currently chosen. Supplied when these cards share a page with another control, so
-   * picking one is a selection the buyer can see rather than a step that navigates away.
+   * picking one is a selection the buyer can see rather than a step that navigates away. Absent,
+   * neither card claims to be chosen: both buttons stay secondary.
    */
   selectedPeriod?: "monthly" | "yearly";
 }
@@ -208,8 +209,15 @@ export const PlanSelectionStage: React.FC<PlanSelectionStageProps> = ({
                 )}
 
                 <div style={{ marginTop: "auto", paddingTop: "1rem" }}>
-                  <Button fullWidth>
-                    {t("payment.planStage.selectYearly", "Select Yearly")}
+                  <Button
+                    variant={
+                      selectedPeriod === "yearly" ? "primary" : "secondary"
+                    }
+                    fullWidth
+                  >
+                    {selectedPeriod === "yearly"
+                      ? t("payment.planStage.selectedYearly", "Yearly")
+                      : t("payment.planStage.selectYearly", "Select Yearly")}
                   </Button>
                 </div>
               </Stack>

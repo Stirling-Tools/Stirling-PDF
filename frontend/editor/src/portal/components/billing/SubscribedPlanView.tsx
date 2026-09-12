@@ -46,6 +46,8 @@ export function SubscribedPlanView({
   const portal = useStripePortal(wallet);
 
   const isLeader = wallet.role === "leader";
+  const split = wallet.categoryDocs;
+  const hasCategorySplit = split.api + split.ai + split.automation > 0;
   // Buying/topping up prepaid capacity is a commercial action — leader-only, and
   // needs a resolved team to scope checkout.
   const canBuyBundle = isLeader && wallet.teamId != null;
@@ -109,19 +111,19 @@ export function SubscribedPlanView({
         onBuy={canBuyBundle ? () => setBundleOpen(true) : undefined}
       />
 
-      {/* Kept despite the shared screen also printing a total: only this carries the per-category
-          split, and the total is the axis the split is read against. */}
-      <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
+      {/* Only when there is a split to show. The total on its own is already a cycle row on the
+          shared screen, so an empty-split card would just print it twice. */}
+      {hasCategorySplit && (
+        <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
+      )}
 
       {/* The limit control, which is interactive and has no equivalent on the shared card. */}
-      <div className="portal-billing__spend-row">
-        <SpendLimitCard
-          wallet={wallet}
-          onWalletChange={onWalletChange}
-          adjusting={adjusting}
-          onAdjustingChange={setAdjusting}
-        />
-      </div>
+      <SpendLimitCard
+        wallet={wallet}
+        onWalletChange={onWalletChange}
+        adjusting={adjusting}
+        onAdjustingChange={setAdjusting}
+      />
 
       {portal.error && (
         <Banner
