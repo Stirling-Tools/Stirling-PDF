@@ -20,6 +20,11 @@ import {
   type DiskFileEntry,
 } from "@app/services/localFolderContents";
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { usePolicies } from "@app/hooks/usePolicies";
+import {
+  CLASSIFICATION_POLICY_KEY,
+  runsOnEditorUpload,
+} from "@app/data/classificationPolicy";
 import type { FileId, StirlingFileStub } from "@app/types/fileContext";
 import apiClient from "@app/services/apiClient";
 import "@app/components/policies/DownloadsProcessingWizard.css";
@@ -46,14 +51,8 @@ interface FoundDownloads {
 }
 
 /**
- * Offers to classify the PDFs already in the user's Downloads folder.
- *
- * The folder is read here, on the machine: a connected server has no user Downloads directory to
- * look in, which is why this surface reads the disk itself. Everything after the read is the
- * ordinary upload path — the browser heuristic classifies each file, and only the files it is
- * unsure about escalate to the connected server's AI engine.
- *
- * The files on disk are never modified; reading them into the workspace is the whole job.
+ * Offers to classify the PDFs in the user's Downloads folder, read here because a connected
+ * server has no such directory. Importing them is the whole job; the files on disk are untouched.
  */
 export function DownloadsProcessingWizard({
   active = true,
@@ -73,13 +72,16 @@ export function DownloadsProcessingWizard({
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
   const { fileStubs } = useAllFiles();
+  const { policies } = usePolicies();
   const block = useServerProcessingBlock();
+  // Importing achieves nothing unless the server classifies: a core-flavour self-hosted build
+  // seeds no such policy, and every imported file would sit without a verdict.
+  const willClassify = runsOnEditorUpload(policies[CLASSIFICATION_POLICY_KEY]);
 
-  // Only offer where it can work: a server must be connected to classify and meter, and the
-  // build must be able to read the disk. No retry loop — every question here is answered by the
-  // local filesystem, which does not become reachable later.
+  // Needs a connected server running the classification policy, and a build that can read the
+  // disk. No retry: the filesystem answer is final, and the policy half re-runs on load.
   useEffect(() => {
-    if (!active || block || !canListDirectory) return;
+    if (!active || block || !willClassify || !canListDirectory) return;
     let cancelled = false;
 
     void (async () => {
@@ -100,7 +102,7 @@ export function DownloadsProcessingWizard({
     return () => {
       cancelled = true;
     };
-  }, [active, block]);
+  }, [active, block, willClassify]);
 
   /** Closing resets to the question, so the offer can be reopened and re-run. */
   const close = () => {
