@@ -27,7 +27,6 @@ import { type Team } from "@app/services/teamService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import InviteMembersModal from "@app/components/shared/InviteMembersModal";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { useNavigate } from "react-router-dom";
 import UpdateSeatsButton from "@app/components/shared/UpdateSeatsButton";
 import { useLicense } from "@app/contexts/LicenseContext";
@@ -402,16 +401,6 @@ User: ${user.username}`)
 
   return (
     <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
-      <div>
-        <Text fw={600} size="lg">
-          {t("workspace.people.title")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {t("workspace.people.description")}
-        </Text>
-      </div>
-
       {/* License Information - Compact */}
       {licenseInfo && (
         <Group gap="md" style={{ fontSize: "0.875rem" }}>
