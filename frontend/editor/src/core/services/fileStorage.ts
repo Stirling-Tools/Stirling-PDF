@@ -39,6 +39,9 @@ export interface StoredStirlingFileRecord extends BaseFileMetadata {
   classificationLabels?: string[];
   // See StirlingFileStub.classificationConfidence.
   classificationConfidence?: ClassificationConfidence;
+  // See StirlingFileStub.classificationLocked. Persisted because the guarantee it
+  // carries — that no policy reclassifies this file — has to outlive a reload.
+  classificationLocked?: boolean;
 }
 
 export interface StorageStats {
@@ -341,8 +344,10 @@ class FileStorageService {
       // Folder organisation (root when null)
       folderId: stub.folderId ?? null,
 
-      // Cached classification category, if already known (preserved across re-stores).
+      // Cached classification, if already known (preserved across re-stores).
       classificationLabels: stub.classificationLabels,
+      classificationConfidence: stub.classificationConfidence,
+      classificationLocked: stub.classificationLocked,
     };
 
     try {
@@ -715,6 +720,7 @@ class FileStorageService {
           createdAt: record.createdAt || Date.now(),
           classificationLabels: record.classificationLabels,
           classificationConfidence: record.classificationConfidence,
+          classificationLocked: record.classificationLocked,
         };
 
         resolve(stub);
@@ -783,6 +789,7 @@ class FileStorageService {
               createdAt: record.createdAt || Date.now(),
               classificationLabels: record.classificationLabels,
               classificationConfidence: record.classificationConfidence,
+              classificationLocked: record.classificationLocked,
             });
           }
           cursor.continue();
@@ -883,6 +890,7 @@ class FileStorageService {
               createdAt: record.createdAt || Date.now(),
               classificationLabels: record.classificationLabels,
               classificationConfidence: record.classificationConfidence,
+              classificationLocked: record.classificationLocked,
             });
           }
           cursor.continue();

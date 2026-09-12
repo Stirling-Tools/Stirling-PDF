@@ -5,6 +5,12 @@ import { useSyncExternalStore } from "react";
 import type { ClassificationDemoViewData } from "@app/components/onboarding/classificationDemo/classificationDemoShared";
 
 let run: ClassificationDemoViewData | null = null;
+/** Run tokens already started. Here rather than in the view because a remount would
+ *  otherwise reset a component ref and start the same run a second time. */
+const started = new Set<number>();
+/** Documents this session has taken on, so a remount resumes rather than re-sweeping
+ *  (and re-metering) the same files. */
+const swept = new Set<string>();
 const listeners = new Set<() => void>();
 
 function emit() {
@@ -24,10 +30,28 @@ export function startClassificationDemo(limit: number): void {
   emit();
 }
 
+/** True once per run token: whoever gets it owns starting that sweep. */
+export function claimRun(runToken: number): boolean {
+  if (started.has(runToken)) return false;
+  started.add(runToken);
+  return true;
+}
+
+/** Paths a follow-up batch should skip, accumulated across the whole session. */
+export function sweptPaths(): ReadonlySet<string> {
+  return swept;
+}
+
+export function recordSwept(paths: readonly string[]): void {
+  for (const path of paths) swept.add(path);
+}
+
 /** Hand the canvas back. Called only by an explicit dismissal from the view. */
 export function endClassificationDemo(): void {
   if (run === null) return;
   run = null;
+  started.clear();
+  swept.clear();
   emit();
 }
 

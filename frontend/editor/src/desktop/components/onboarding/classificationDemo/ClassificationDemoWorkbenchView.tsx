@@ -1,7 +1,7 @@
 /** The sweep, rendered in place of the workbench canvas with the rails either side.
  *  A takeover, not a registered view: unregistering an active view ejects mid-sweep. */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
 import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
@@ -9,6 +9,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import { readCachedCredits } from "@app/services/navFooterCache";
+import { claimRun } from "@app/components/onboarding/classificationDemo/classificationDemoSession";
 import { useClassificationDemo } from "@app/components/onboarding/classificationDemo/useClassificationDemo";
 import type { ClassificationDemoViewData } from "@app/components/onboarding/classificationDemo/classificationDemoShared";
 import {
@@ -38,14 +39,11 @@ export function ClassificationDemoWorkbenchView({
   // a mount-time snapshot would size the follow-up (and its copy) from credits already gone.
   const [credits, setCredits] = useState(readCachedCredits);
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  // The run the view has already kicked off, so a re-render does not restart the sweep
-  // and a follow-up batch (new token) does.
-  const startedToken = useRef<number | null>(null);
-
+  // Claimed from the session, not a ref: a remount would reset a ref and run the same
+  // sweep again from zero, re-reading and re-metering every document.
   useEffect(() => {
-    if (startedToken.current === data.runToken) return;
     if (!trick.directory) return;
-    startedToken.current = data.runToken;
+    if (!claimRun(data.runToken)) return;
     setSelectedId(null);
     trick.start(data.limit);
   }, [data.runToken, data.limit, trick]);

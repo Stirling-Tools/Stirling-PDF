@@ -4,6 +4,10 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useFolders } from "@app/contexts/FolderContext";
+import {
+  recordSwept,
+  sweptPaths,
+} from "@app/components/onboarding/classificationDemo/classificationDemoSession";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import {
   CLASSIFICATION_DEMO_BATCH_SIZE,
@@ -46,9 +50,6 @@ export function useClassificationDemo(
   const [outcome, setOutcome] = useState<ClassificationDemoOutcome | null>(
     null,
   );
-  // Held in a ref, not state: a follow-up batch reads it at the moment it starts, and
-  // making it a dependency of `start` would rebuild the callback after every sweep.
-  const sweptPaths = useRef<Set<string>>(new Set());
   const cancelled = useRef(false);
 
   // From the OS, not the backend's `downloads-suggestion`: that endpoint is
@@ -80,13 +81,13 @@ export function useClassificationDemo(
         },
         {
           limit,
-          exclude: sweptPaths.current,
+          exclude: sweptPaths(),
           unclassifiedName: t("classificationDemo.groups.other", "Other"),
         },
       )
         .then((result) => {
           // Recorded even when cancelled: those documents were still taken on.
-          for (const path of result.sweptPaths) sweptPaths.current.add(path);
+          recordSwept(result.sweptPaths);
           if (cancelled.current) return;
           // Folded into what is there: a follow-up continues the same pile, so the
           // chart grows instead of restarting at the last handful.
