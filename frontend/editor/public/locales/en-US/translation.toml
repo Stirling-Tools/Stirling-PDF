@@ -6380,6 +6380,7 @@ paymentCanceled = "Payment was canceled. No charges were made."
 perMonth = "/month"
 preparing = "Preparing your checkout..."
 redirecting = "Redirecting to secure checkout..."
+stepOf = "Step {{n}} of {{total}}"
 success = "Payment Successful!"
 successMessage = "Your subscription has been activated successfully. You will receive a confirmation email shortly."
 syncError = "Payment successful but license sync failed. Your license will be updated shortly. Please contact support if issues persist."
@@ -6389,6 +6390,10 @@ upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your
 upgradeSuccess = "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly."
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
+
+[payment.addCapacity]
+currently = "Currently up to {{users}} users"
+title = "Add capacity"
 
 [payment.capacityStage]
 continue = "Continue to payment"
@@ -6404,6 +6409,8 @@ perMonth = "/mo"
 perYear = "/yr"
 renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
 subheading = "Covers everyone you invite, in blocks of {{users}} users."
+subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
+userDelta = "+{{users}} users"
 usersLabel = "Users"
 userTotal = "{{users}} users"
 
@@ -6412,7 +6419,6 @@ continue = "Continue"
 description = "We'll use this to send your license key and receipts."
 emailLabel = "Email Address"
 emailPlaceholder = "your@email.com"
-modalTitle = "Get Started - {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "Complete Payment - {{planName}}"
@@ -6422,8 +6428,13 @@ billedYearly = "Billed yearly at {{currency}}{{amount}}"
 modalTitle = "Select Billing Period - {{planName}}"
 savePercent = "Save {{percent}}%"
 savingsAmount = "You save {{amount}}"
+selectedMonthly = "Monthly"
+selectedYearly = "Yearly"
 selectMonthly = "Select Monthly"
 selectYearly = "Select Yearly"
+
+[payment.upgradeTeam]
+title = "Upgrade to Team"
 
 [pdfCommentAgent]
 submit = "Generate comments"
@@ -6476,11 +6487,10 @@ REVERSE_ORDER = "Flip the document so the last page becomes first and so on."
 SIDE_STITCH_BOOKLET_SORT = "Arrange pages for side‑stitch booklet printing (optimized for binding on the side)."
 
 [pdfTextEditor]
-confirmReplaceDirty = "You have unsaved changes. Replace the open document and discard them?"
 download = "Download"
 downloadTooltip = "Save and download the edited PDF"
 save = "Save PDF"
-saveTooltip = "Apply changes to the file in your workspace (Ctrl+S)"
+saveTooltip = "Apply changes to the file in your workspace ({{shortcut}})"
 tags = "edit text,modify text,change text,edit content,update text,rewrite,correct,amend,redline,revise,text editor,content editor"
 title = "PDF Text Editor"
 unsaved = "(unsaved)"
@@ -6490,6 +6500,13 @@ workbenchLabel = "Editor"
 freetext = "Annotation text - not page text, so it can't be edited here"
 stamp = "Stamp annotation - not page text, so it can't be edited here"
 widget = "Form field - not page text, so it can't be edited here"
+
+[pdfTextEditor.discard]
+body = "Opening {{name}} closes the document you are editing. Your unsaved changes will be lost."
+cancel = "Cancel"
+confirm = "Discard and open"
+hint = "Cancel, then Save PDF to keep them in your workspace first."
+title = "Discard unsaved changes?"
 
 [pdfTextEditor.drop]
 hint = "Releases on the editor stage replace any open document."
@@ -6510,10 +6527,8 @@ noMatches = "No matches"
 previous = "Previous match"
 replace = "Replace"
 replaceAll = "Replace all"
-replaced = " · {{count}} replaced"
+replaced = "{{count}} replaced"
 replacePlaceholder = "Replace with"
-title = "Find & replace"
-typeToSearch = "Type to search"
 wholeWord = "Whole word"
 
 [pdfTextEditor.fontPicker]
@@ -6557,107 +6572,40 @@ ariaLabel = "Keyboard shortcuts"
 title = "Keyboard shortcuts"
 tooltip = "Keyboard shortcuts (?)"
 
-[pdfTextEditor.help.arrangement]
-alignDesc = "Align edges L / centre / R / T / mid / B"
-alignKey = "Toolbar align"
-distributeDesc = "Equal horizontal / vertical spacing (3+)"
-distributeKey = "Toolbar distribute"
-frontBackDesc = "Bring to front / send to back"
-frontBackKey = "Toolbar front/back"
-heading = "Object arrangement"
-lockDesc = "Lock / unlock selection (session-only)"
-lockKey = "Lock button"
-orderDesc = "Bring forward / send backward (one step)"
-orderKey = "Toolbar ↑ ↓"
-
 [pdfTextEditor.help.clipboard]
 copyDesc = "Copy selected text"
-copyKey = "Ctrl+C"
 cutDesc = "Cut selected (copy + delete)"
-cutKey = "Ctrl+X"
 heading = "Clipboard"
 pasteDesc = "Paste clipboard text as new run"
-pasteKey = "Ctrl+V"
 pastePlainDesc = "Paste as plain text"
-pastePlainKey = "Ctrl+Shift+V"
 
 [pdfTextEditor.help.document]
 escDesc = "Clear selection / close find / close help"
-escKey = "Esc"
 heading = "Document"
 helpDesc = "This help"
-helpKey = "? / F1"
 saveDesc = "Save to your workspace"
-saveKey = "Ctrl+S"
 
 [pdfTextEditor.help.editing]
-clickDesc = "Edit text"
-clickKey = "Click"
 deleteDesc = "Remove selected"
-deleteKey = "Delete"
 duplicateDesc = "Duplicate selected"
-duplicateKey = "Ctrl+D"
-groupDesc = "Group selected runs (Group button)"
-groupKey = "Ctrl+M"
+groupDesc = "Group selected runs into one paragraph"
 heading = "Editing"
 marqueeDesc = "Marquee multi-select"
-marqueeKey = "Ctrl+Shift+drag"
 moveDesc = "Move text run"
-moveKey = "Ctrl+Click + drag"
 selectAllDesc = "Select all"
-selectAllKey = "Ctrl+A"
 shiftClickDesc = "Add / remove a run from selection"
-shiftClickKey = "Ctrl+Click / Shift+Click"
 undoRedoDesc = "Undo / Redo"
-undoRedoKey = "Ctrl+Z / Ctrl+Y"
-ungroupDesc = "Ungroup paragraph: select it, click Ungroup"
-ungroupKey = "-"
 
 [pdfTextEditor.help.find]
-enterFindDesc = "Next match"
-enterFindKey = "Enter (in find)"
-enterReplaceDesc = "Replace one (Shift = Replace All)"
-enterReplaceKey = "Enter (in replace)"
-heading = "Find & Replace"
-nextDesc = "Next match (Shift = previous)"
-nextKey = "F3 / Ctrl+G"
+heading = "Find & replace"
+nextDesc = "Next match (add Shift for previous)"
 openDesc = "Open find bar (and replace)"
-openKey = "Ctrl+F"
-
-[pdfTextEditor.help.formatting]
-caseDesc = "Change case (upper/lower/title/sentence)"
-caseKey = "Toolbar case (Aa)"
-colourDesc = "Change fill colour"
-colourKey = "Toolbar colour"
-fontFamilyDesc = "Swap to base-14 font"
-fontFamilyKey = "Toolbar font family"
-fontSizeDesc = "Change font size"
-fontSizeKey = "Toolbar font size"
-heading = "Text formatting"
-italicDesc = "Italic"
-italicKey = "Toolbar I"
-
-[pdfTextEditor.help.image]
-flipDesc = "Flip horizontally or vertically"
-flipKey = "Toolbar flip"
-heading = "Image"
-moveDesc = "Move image"
-moveKey = "Drag"
-resizeDesc = "Resize image"
-resizeKey = "Corner drag"
-rotateDesc = "Rotate 90° clockwise or counter-clockwise"
-rotateKey = "Toolbar rotate"
 
 [pdfTextEditor.help.navigation]
 firstLastDesc = "First / last page"
-firstLastKey = "Ctrl+Home / Ctrl+End"
 heading = "Navigation"
-pageDesc = "Next / previous page"
-pageKey = "PageDown / PageUp"
-toolbarZoomDesc = "Manual zoom + Fit to width"
-toolbarZoomKey = "Toolbar zoom"
+pageDesc = "Previous / next page"
 zoomDesc = "Zoom in / out"
-zoomKey = "Ctrl+Wheel"
 
 [pdfTextEditor.inspector]
 document = "Document"
@@ -6714,6 +6662,7 @@ title = "Saving will change this PDF"
 [pdfTextEditor.settings]
 advanced = "Advanced"
 find = "Find in document"
+findTooltip = "Find ({{shortcut}})"
 view = "View"
 
 [pdfTextEditor.sidebar]
@@ -6725,7 +6674,7 @@ group = "Group"
 groupingAuto = "Auto"
 groupingAutoHint = "Groups equal-spaced lines into paragraphs. Changing this re-reads the document and clears undo history."
 groupingLine = "Line"
-groupTooltip = "Merge selected runs into one paragraph (Ctrl+M)"
+groupTooltip = "Merge selected runs into one paragraph ({{shortcut}})"
 groupTooltipDisabled = "Select 2+ runs to merge"
 noFile = "No file loaded"
 noFileHint = "Pick a PDF from the Files panel on the left, or drop one in. The editor will open it automatically."
@@ -6754,6 +6703,7 @@ pickPrompt = "Pick a PDF from the Files panel on the left to begin editing."
 renderingPreview = "Rendering preview"
 
 [pdfTextEditor.toolbar]
+addTextTooltip = "Add a text box - then click the page"
 advancedColour = "Advanced colour"
 advancedColourTooltip = "Advanced colour (glyph outline)"
 alignBottom = "Align bottom"
@@ -6782,22 +6732,24 @@ flipHorizontal = "Flip horizontal"
 flipVertical = "Flip vertical"
 fontColour = "Font colour"
 fontSize = "Font size"
+formatting = "Text formatting"
 italic = "Italic"
 italicUnavailable = "This font has no italic version. Load your device fonts or pick another font family."
 lock = "Lock selection"
 lockTooltip = "Lock selection - prevents accidental edits"
+more = "More actions"
 order = "Order"
 outlineColour = "Outline colour"
 outlineWidth = "Outline width (0 = none)"
 redo = "Redo"
-redoTooltip = "Redo (Ctrl+Y)"
+redoTooltip = "Redo ({{shortcut}})"
 replaceImage = "Replace, keeping placement"
 rotateLeft = "Rotate 90° left"
 rotateRight = "Rotate 90° right"
 sendBackward = "Send backward"
 sendToBack = "Send to back"
 undo = "Undo"
-undoTooltip = "Undo (Ctrl+Z)"
+undoTooltip = "Undo ({{shortcut}})"
 unlock = "Unlock selection"
 unlockTooltip = "Unlock selection - makes it editable again"
 
@@ -7092,6 +7044,11 @@ dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
 viewAnyway = "View file (policy still enforcing)"
 
+[policyOption]
+pdfa-1 = "PDF/A-1b"
+pdfa-2b = "PDF/A-2b"
+pdfa-3b = "PDF/A-3b"
+
 [portal]
 comingSoon = "Coming soon"
 
@@ -7116,6 +7073,7 @@ title = "SaaS login not configured"
 
 [portal.accountLink.connect]
 close = "Close"
+exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
 notNow = "Not now"
 start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
@@ -7197,6 +7155,7 @@ never = "never"
 [portal.accountLink.modal]
 cancel = "Cancel"
 continueReauth = "Sign in again"
+exhaustedTitle = "Add more monthly credits"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
 reauthTitle = "Sign in again"
@@ -7222,7 +7181,7 @@ title = "Couldn't load linked instances"
 [portal.accountLink.rail]
 cta = "Connect"
 later = "Not now"
-sub = "Unlocks teams, PDF processor, pipelines, and policies. PDF editing stays free."
+sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
 title = "Connect your Stirling account"
 
 [portal.accountLink.state]
@@ -7296,66 +7255,75 @@ title = "Activating your Processor plan..."
 limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
 limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
-[portal.billing.enterpriseUpsell]
-cta = "Explore Enterprise"
-description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
-eyebrow = "Volume discount · 1M+ PDFs"
-title = "Stirling Enterprise"
+[portal.billing.chip]
+invoices = "Invoices"
+nav = "Sections"
+payment = "Payment"
+plan = "Plan"
+usage = "Usage"
 
-[portal.billing.freeEditors]
-activeThisMonth = "Active this month"
-cost = "Cost"
-editorsDeployed = "Editors deployed"
-inviteTeammates = "Invite teammates"
-pdfsEdited = "PDFs edited"
-subtitle = "Deploy anywhere, for your whole team."
-title = "Free PDF Editors"
+[portal.billing.cycle]
+credits = "Credits"
+creditsNote = "{{units}} · {{rate}} each"
+day = "Day {{day}} of {{of}}"
+editors = "Editors deployed"
+estimated = "estimated · the meter settles at close"
+estimatedPending = "estimated · includes {{pending}} not yet synced from your instances"
+largeFiles = "Large files"
+largeFilesValue = "{{pdfs}} PDFs past the size threshold"
+pdfs = "PDFs processed"
+users = "Users"
+
+[portal.billing.enterprise]
+cta = "Get an enterprise quote"
+sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match."
+title = "Running Stirling in a regulated environment?"
 
 [portal.billing.freePlan]
-anywhere = "Web, desktop & self-hosted"
 checkoutErrorTitle = "Couldn't start checkout"
-currentPlan = "Current plan"
-everyPdfTool = "Every PDF tool"
-freeForever = "Free forever"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
-ownerOnly = "Only the team owner can switch on the Processor plan."
 payInvoice = "Pay invoice to complete"
-planName = "Editor"
-switchOnProcessor = "Switch on the Processor →"
 viewQuote = "View quote"
 
-[portal.billing.invoices]
-columnAmount = "Amount"
-columnDate = "Date"
-columnDescription = "Description"
-columnPdfsProcessed = "PDFs processed"
-columnStatus = "Status"
-descriptionFallback = "Invoice"
-downloadAriaLabel = "Download invoice {{number}} as PDF"
-emptyDescription = "Once your team subscribes and the first cycle closes, your invoices appear here."
-emptyTitle = "No invoices yet"
-fetchLimitNote_one = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
-fetchLimitNote_other = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
-loadError = "Couldn't load invoices: {{error}}"
-pdfLink = "PDF ↓"
-showAll_one = "Show all {{count}}"
-showAll_other = "Show all {{count}}"
-showFewer_one = "Show fewer (top {{count}})"
-showFewer_other = "Show fewer (top {{count}})"
-showMostRecent_one = "Show {{count}} most recent"
-showMostRecent_other = "Show {{count}} most recent"
-title = "Invoice history"
-viewAriaLabel = "View invoice {{number}} in Stripe"
-viewLink = "View ↗"
+[portal.billing.identity.free]
+chipAnywhere = "Web, desktop & self-hosted"
+chipCredits = "{{allowance}} free credits monthly"
+chipTools = "Every PDF tool"
+name = "Free"
+sub = "The full PDF Editor."
 
-[portal.billing.paymentMethod]
-billedMonthly = "Billed monthly"
-cardEnding = "{{brand}} ending {{last4}}"
-cardFallback = "Card"
-expiresBilledMonthly = "Expires {{expiry}} · billed monthly"
-eyebrow = "Payment method"
-managedSub = "Your card and billing details are kept securely in Stripe's customer portal."
-managedTitle = "Managed in Stripe"
+[portal.billing.identity.processor]
+chipMetered = "Metered processing"
+chipPipelines = "Pipelines & API"
+name = "Processor"
+sub = "Team base plus {{rate}} per credit"
+subNoRate = "Team base plus metered processing"
+
+[portal.billing.identity.team]
+chipFleet = "Fleet control"
+chipSso = "SSO"
+name = "Team"
+sub = "Up to {{users}} users"
+subNoLimit = "No user limit"
+
+[portal.billing.invoiceRow]
+current = "Current"
+failed = "Unpaid"
+paid = "Paid"
+undated = "Undated"
+unknownAmount = "Unknown"
+view = "View"
+
+[portal.billing.payment]
+billedTo = "Billed to"
+card = "{{brand}} ending {{last4}}"
+cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
+invoicesTo = "Invoices go to"
+method = "Payment method"
+nextInvoice = "Next invoice"
+nextInvoiceNote = "from this cycle's pace"
+nextInvoiceValue = "{{date}} · {{amount}}"
+noCard = "No card on file"
 update = "Update"
 
 [portal.billing.pdfsProcessed]
@@ -7476,6 +7444,25 @@ exhausted = "Used up"
 healthy = "Plenty left"
 low = "Running low"
 
+[portal.billing.processor]
+activate = "Switch on the Processor"
+capTooltip = "Pauses PDF processing at your spend limit."
+factCapped = "{{pct}}% of {{cap}}"
+factFree = "{{used}} of {{allowance}} used"
+factNoCap = "no limit"
+midFree = "{{rate}} per credit · {{allowance}} free every month"
+midFreeNoRate = "{{allowance}} free every month"
+midMetered = "{{spend}} metered this cycle"
+midMeteredUnknown = "Metered this cycle"
+raiseLimit = "Raise limit"
+rowName = "Processor"
+
+[portal.billing.section]
+cycle = "This cycle"
+invoices = "Invoices"
+payment = "Payment"
+plan = "Your plan"
+
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
 cancel = "Cancel"
@@ -7501,14 +7488,8 @@ body_one = "At {{rate}}/day you reach the cap in ~{{count}} day (~{{monthEnd}} m
 body_other = "At {{rate}}/day you reach the cap in ~{{count}} days (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 label = "Projected to exceed."
 
-[portal.billing.spendThisMonth]
-eyebrow = "Spend this month"
-freeRemaining_one = "{{formatted}} free credit remaining"
-freeRemaining_other = "{{formatted}} free credits remaining"
-processed_one = "{{formattedCount}} PDF processed."
-processed_other = "{{formattedCount}} PDFs processed."
-processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
-processedWithRate_other = "{{formattedCount}} PDFs processed, at {{rate}} each."
+[portal.billing.spendLimitModal]
+title = "Monthly spend limit"
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Raise it now so automated processing never pauses."
@@ -7520,18 +7501,15 @@ reachedTitle = "Monthly spend limit reached"
 [portal.billing.subscribedPlan.portalError]
 title = "Couldn't open Stripe portal"
 
-[portal.billing.walletMeter]
-barAria = "Free credits remaining"
-capSuffix_one = "of {{allowance}} free credit left this month"
-capSuffix_other = "of {{allowance}} free credits left this month"
-eyebrow = "Processor trial"
-statusLabel_one = "{{used}} used"
-statusLabel_other = "{{used}} used"
-sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
-title_one = "{{allowance}} free credit every month"
-title_other = "{{allowance}} free credits every month"
-titleWithRate_one = "{{allowance}} free credit every month, then {{rate}} per PDF"
-titleWithRate_other = "{{allowance}} free credits every month, then {{rate}} per PDF"
+[portal.billing.team]
+addCapacity = "Add capacity"
+fact = "{{users}} of {{licensed}} users"
+factNoLimit = "{{users}} users"
+midFree = "The Team plan covers 100 users"
+midFreeSelfHosted = "The free tier covers your first users"
+midIncluded = "Included with your Team base"
+midPrice = "$99/mo per 100 users"
+rowName = "Users"
 
 [portal.components.billingUnit]
 approval = "approval"
@@ -8156,6 +8134,10 @@ origin = "Raised in"
 source = "Source"
 type = "Type"
 user = "User"
+
+[portal.failures.kind.complianceNotMet]
+description = "The compliance check refused this document because it does not meet the standard the policy validates against. The violation is shown below."
+title = "Compliance standard not met"
 
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."
@@ -8834,7 +8816,7 @@ desc = "Identify each document's type on upload and tag its metadata for filing 
 label = "Classification"
 
 [portal.policies.categories.compliance]
-desc = "Enforce HIPAA, GDPR, SOC 2, or FedRAMP requirements on every document."
+desc = "Strip hidden data, convert to PDF/A for archiving, and validate every document against the standard before it is delivered."
 label = "Compliance"
 
 [portal.policies.categories.ingestion]
@@ -8864,18 +8846,12 @@ summary = "Classifies every uploaded document against your team's labels and tag
 1 = "Tag metadata"
 
 [portal.policies.config.compliance]
-summary = "Validates documents against regulatory frameworks before they leave the system."
-
-[portal.policies.config.compliance.fields]
-accessLog = "Access log"
-auditTrail = "Audit trail"
-frameworks = "Frameworks"
-onViolation = "When non-compliant"
+summary = "Strips hidden data, converts to the PDF/A archival format, and validates the result against the standard."
 
 [portal.policies.config.compliance.rules]
-0 = "Framework scan"
-1 = "Enforce action"
-2 = "Audit trail"
+0 = "Strip hidden data"
+1 = "Convert to PDF/A"
+2 = "Validate compliance"
 
 [portal.policies.config.ingestion]
 summary = "Classifies documents, extracts structured data, enforces naming, and normalizes pages."
@@ -8889,6 +8865,10 @@ minConfidence = "Min confidence"
 1 = "Extract"
 2 = "Name"
 3 = "Normalize"
+
+[portal.policies.config.pdfa.fields.outputFormat]
+help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
+label = "Archival profile"
 
 [portal.policies.config.purview]
 label = "Apply a Microsoft Purview sensitivity label"
@@ -8972,6 +8952,13 @@ cancel = "Cancel"
 confirm = "Clear history"
 title = "Clear processed history?"
 
+[portal.policies.detail.delete]
+bodyActive = "\"{{name}}\" is active and enforcing on your documents. Deleting it stops that immediately and cannot be undone. Pause it instead if you only want it to stop running."
+bodyPaused = "\"{{name}}\" will be removed for everyone. This cannot be undone."
+cancel = "Cancel"
+confirm = "Delete"
+title = "Delete this pipeline?"
+
 [portal.policies.detail.emptyActivity]
 description = "Documents will appear here once this pipeline runs."
 title = "No activity yet"
@@ -8983,7 +8970,9 @@ classifyAndLabel = "Classify"
 compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
+pdfa = "Convert to PDF/A"
 sanitizePdf = "Remove JavaScript"
+validateCompliance = "Validate compliance"
 
 [portal.policies.operations]
 change = "Change what this step does"
@@ -9200,6 +9189,10 @@ saveChanges = "Save changes"
 desc = "Identifies the document's type from your team's labels and tags it, so it files and searches by category."
 label = "Classify the document"
 
+[portal.policies.wizard.capability.complianceCheck]
+desc = "Validates the finished document against PDF/A and stops the run if it does not hold up."
+label = "Check the document meets the standard"
+
 [portal.policies.wizard.capability.compress]
 desc = "Compresses the document to a smaller file size."
 label = "Reduce file size"
@@ -9211,6 +9204,10 @@ label = "Flatten the document"
 [portal.policies.wizard.capability.ocr]
 desc = "Runs OCR so scanned pages become selectable, searchable text."
 label = "Make text searchable"
+
+[portal.policies.wizard.capability.pdfa]
+desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
+label = "Convert to PDF/A for archiving"
 
 [portal.policies.wizard.capability.redact]
 desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."
@@ -9771,14 +9768,21 @@ type = "Type"
 close = "Close"
 
 [portal.usage]
-managePayment = "Manage Payment"
-subtitle = "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console."
-title = "Usage & billing"
+subtitle = "Your plan, your usage, and every invoice."
+title = "Usage & Billing"
 
 [portal.usage.error]
 loadWallet = "Couldn't load wallet"
 openStripePortal = "Couldn't open Stripe portal"
 walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
+
+[portal.usage.freeTier]
+adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+connect = "Connect a Stirling account"
+connectBody = "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor."
+connectTitle = "This server has no Stirling account"
+loadError = "Couldn't read this server's credit usage. Try again in a moment."
+loadErrorTitle = "Couldn't load credit usage"
 
 [portal.usage.sessionExpired]
 action = "Sign in again"

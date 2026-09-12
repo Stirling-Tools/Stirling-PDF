@@ -6,17 +6,17 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import licenseService from "@app/services/licenseService";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { StripeCheckoutProps } from "@app/components/shared/stripeCheckout/types/checkout";
 import {
-  validateEmail,
-  getModalTitle,
-} from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
+  CheckoutStage,
+  StripeCheckoutProps,
+} from "@app/components/shared/stripeCheckout/types/checkout";
+import { StepModalHeader } from "@app/components/shared/StepModalHeader";
+import { getModalTitle } from "@app/components/shared/stripeCheckout/utils/checkoutUtils";
 import { calculateSavings } from "@app/components/shared/stripeCheckout/utils/savingsCalculator";
 import { useCheckoutState } from "@app/components/shared/stripeCheckout/hooks/useCheckoutState";
 import { useCheckoutNavigation } from "@app/components/shared/stripeCheckout/hooks/useCheckoutNavigation";
 import { useLicensePolling } from "@app/components/shared/stripeCheckout/hooks/useLicensePolling";
 import { useCheckoutSession } from "@app/components/shared/stripeCheckout/hooks/useCheckoutSession";
-import { EmailStage } from "@app/components/shared/stripeCheckout/stages/EmailStage";
 import { PlanSelectionStage } from "@app/components/shared/stripeCheckout/stages/PlanSelectionStage";
 import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/CapacityStage";
 import { blocksForUsers } from "@app/components/shared/stripeCheckout/utils/capacity";
@@ -47,6 +47,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   onClose,
   planGroup,
   minimumSeats = 1,
+  combinedChoose = false,
+  currentLimit = null,
   onSuccess,
   onError,
   onLicenseActivated,
@@ -94,20 +96,6 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
   // Calculate savings
   const savings = calculateSavings(planGroup, minimumSeats);
-
-  // Email submission handler
-  const handleEmailSubmit = () => {
-    const validation = validateEmail(checkoutState.emailInput);
-    if (validation.valid) {
-      checkoutState.setState((prev) => ({
-        ...prev,
-        email: checkoutState.emailInput,
-      }));
-      navigation.goToStage("plan-selection");
-    } else {
-      checkoutState.setEmailError(validation.error);
-    }
-  };
 
   // Only the Team tier is sold by capacity. Enterprise is priced per seat and free has nothing to
   // size, so both go straight to payment.
@@ -172,31 +160,24 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       return;
     }
 
-    // Check for existing license to skip email stage
-    const checkExistingLicense = async () => {
+    // Nobody is asked for an email any more: the checkout is minted as the buyer's Stirling
+    // account and the edge function resolves their address from the team's billing owner. The
+    // licence read stays, because an upgrade carries its old key through as Stripe metadata.
+    const openOnFirstChoice = async () => {
+      const landing = combinedChoose ? "choose" : "plan-selection";
       try {
         const licenseInfo = await licenseService.getLicenseInfo();
-        // Only skip email if license is PRO or ENTERPRISE (not NORMAL/free tier)
         if (licenseInfo?.licenseType && licenseInfo.licenseType !== "NORMAL") {
-          // Has valid premium license - skip email stage
-          console.log("Valid premium license detected - skipping email stage");
           checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey || null);
-          checkoutState.setState({
-            currentStage: "plan-selection",
-            loading: false,
-          });
-        } else {
-          // No valid premium license - start at email stage
-          checkoutState.setState({ currentStage: "email", loading: false });
         }
       } catch (error) {
+        // An unreadable licence only costs the upgrade metadata, so the purchase still proceeds.
         console.warn("Could not check for existing license:", error);
-        // Default to email stage if check fails
-        checkoutState.setState({ currentStage: "email", loading: false });
       }
+      checkoutState.setState({ currentStage: landing, loading: false });
     };
 
-    checkExistingLicense();
+    openOnFirstChoice();
   }, [
     opened,
     hostedCheckoutSuccess,
@@ -227,14 +208,39 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     // Don't block checkout - hosted mode works without publishable key
     // The checkout will automatically redirect to Stripe hosted page if key is missing
     switch (checkoutState.state.currentStage) {
-      case "email":
+      // Page 1 of 2: both choices at once, which is how the design puts them in front of a buyer.
+      // The period cards select rather than navigate, and capacity supplies the single continue.
+      case "choose":
         return (
-          <EmailStage
-            emailInput={checkoutState.emailInput}
-            setEmailInput={checkoutState.setEmailInput}
-            emailError={checkoutState.emailError}
-            onSubmit={handleEmailSubmit}
-          />
+          <>
+            <PlanSelectionStage
+              planGroup={planGroup}
+              minimumSeats={minimumSeats}
+              savings={savings}
+              selectedPeriod={checkoutState.selectedPeriod}
+              onSelectPlan={(period) => {
+                checkoutState.setSelectedPeriod(period);
+                if (sellsCapacity) {
+                  checkoutState.setServerQuantity(
+                    Math.max(
+                      blocksForUsers(minimumSeats),
+                      checkoutState.serverQuantity || 1,
+                    ),
+                  );
+                }
+              }}
+            />
+            {sellsCapacity && (
+              <CapacityStage
+                selectedPlan={checkoutState.selectedPlan}
+                serverQuantity={checkoutState.serverQuantity}
+                setServerQuantity={checkoutState.setServerQuantity}
+                currentUsers={minimumSeats}
+                currentLimit={currentLimit}
+                onContinue={() => navigation.goToStage("payment")}
+              />
+            )}
+          </>
         );
 
       case "plan-selection":
@@ -291,32 +297,48 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   };
 
   const canGoBack = checkoutState.stageHistory.length > 0;
+  // The combined flow wears the stepped chrome, counting the pages it actually walks: the email
+  // page only when the caller supplied no address. The separate walk keeps its own title, because
+  // a step count would be a lie about how many pages it has.
+  const steppedPath: CheckoutStage[] | null = combinedChoose
+    ? ["choose", "payment"]
+    : null;
+  const steppedIndex = steppedPath
+    ? steppedPath.indexOf(checkoutState.state.currentStage)
+    : -1;
+  const steppedStep = steppedIndex >= 0 ? steppedIndex + 1 : null;
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
       title={
-        <Group gap="sm" wrap="nowrap">
-          {canGoBack && (
-            <ActionIcon
-              variant="tertiary"
-              size="lg"
-              onClick={navigation.goBack}
-              aria-label={t("common.back", "Back")}
-            >
-              <LocalIcon icon="arrow-back" width={20} height={20} />
-            </ActionIcon>
-          )}
-          <Text fw={600} size="lg">
-            {getModalTitle(checkoutState.state.currentStage, planGroup.name, t)}
-          </Text>
-        </Group>
+        steppedStep ? undefined : (
+          <Group gap="sm" wrap="nowrap">
+            {canGoBack && (
+              <ActionIcon
+                variant="tertiary"
+                size="lg"
+                onClick={navigation.goBack}
+                aria-label={t("common.back", "Back")}
+              >
+                <LocalIcon icon="arrow-back" width={20} height={20} />
+              </ActionIcon>
+            )}
+            <Text fw={600} size="lg">
+              {getModalTitle(
+                checkoutState.state.currentStage,
+                planGroup.name,
+                t,
+              )}
+            </Text>
+          </Group>
+        )
       }
       size={isMobile ? "100%" : 980}
       centered
       radius="lg"
-      withCloseButton={true}
+      withCloseButton={!steppedStep}
       closeOnEscape={true}
       closeOnClickOutside={false}
       fullScreen={isMobile}
@@ -328,6 +350,31 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         },
       }}
     >
+      {steppedStep && (
+        <StepModalHeader
+          title={
+            currentLimit != null
+              ? t("payment.addCapacity.title", "Add capacity")
+              : t("payment.upgradeTeam.title", "Upgrade to Team")
+          }
+          subtitle={
+            currentLimit != null
+              ? t(
+                  "payment.addCapacity.currently",
+                  "Currently up to {{users}} users",
+                  { users: currentLimit },
+                )
+              : undefined
+          }
+          step={steppedStep}
+          total={steppedPath?.length ?? 0}
+          stepLabel={t("payment.stepOf", "Step {{n}} of {{total}}", {
+            n: steppedStep,
+            total: steppedPath?.length ?? 0,
+          })}
+          onClose={handleClose}
+        />
+      )}
       {renderContent()}
     </Modal>
   );

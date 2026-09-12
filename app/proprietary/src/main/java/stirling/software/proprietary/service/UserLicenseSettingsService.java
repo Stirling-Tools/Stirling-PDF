@@ -48,9 +48,8 @@ public class UserLicenseSettingsService {
 
     /**
      * Users an installation gets before it has to buy capacity. The one free-allowance number in
-     * Java: the saas seat reader floors on it, and {@code
-     * pricing_policy.server_free_user_allowance} is seeded to match so the two editions quote the
-     * same figure.
+     * Java: the saas seat reader floors on it, the cloud wallet reports it, and {@code
+     * pricing_policy.server_free_user_allowance} is seeded to match.
      */
     public static final int DEFAULT_USER_LIMIT = 5;
 

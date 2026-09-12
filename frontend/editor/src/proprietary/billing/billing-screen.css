@@ -1,0 +1,449 @@
+/*
+ * The billing screen's own stylesheet, shared by every edition that renders it.
+ *
+ * Colours must go through the semantic tokens, never a literal: that is what makes both themes
+ * come out right, and theme-lint blocks the alternative.
+ */
+
+.billing-page {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.billing-page__head {
+  flex-shrink: 0;
+  padding: 1.75rem 2.5rem 0.75rem;
+}
+
+.billing-page__title {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.billing-page__subtitle {
+  margin: 0.125rem 0 0;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: var(--c-text-subtle);
+}
+
+.billing-page__body {
+  flex: 1;
+  padding: 1rem 2.5rem 1.5rem;
+}
+
+.billing-page__notices:not(:empty) {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.billing-card {
+  overflow: hidden;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.75rem;
+}
+
+.billing-card__chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.625rem 1.125rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+}
+
+.billing-card__chip {
+  padding: 0.3125rem 0.6875rem;
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-text-subtle);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 0.4375rem;
+  transition:
+    background-color 0.12s ease,
+    color 0.12s ease;
+}
+
+.billing-card__chip:hover {
+  color: var(--c-text);
+  background: var(--c-hover);
+}
+
+.billing-sec {
+  padding: 1.25rem 1.625rem 0.125rem;
+  border-top: 1px solid var(--c-border-subtle);
+  /* Chips scroll to these, so clear the sticky page head. */
+  scroll-margin-top: 3.25rem;
+}
+
+.billing-sec:first-of-type {
+  border-top: none;
+}
+
+.billing-sec:last-of-type {
+  padding-bottom: 1.375rem;
+}
+
+.billing-eyebrow {
+  display: block;
+  margin: 0 0 0.625rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--c-text-subtle);
+}
+
+.billing-eyebrow-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.billing-eyebrow-row__fact {
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-subtle);
+}
+
+.billing-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+}
+
+.billing-id__name {
+  font-size: 1.375rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--c-text);
+}
+
+.billing-id__sub {
+  font-size: 0.78125rem;
+  color: var(--c-text-subtle);
+}
+
+.billing-id__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+  margin-top: 0.625rem;
+}
+
+.billing-id__chip {
+  padding: 0.1875rem 0.625rem;
+  font-size: 0.71875rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 1.25rem;
+}
+
+.billing-meters {
+  margin-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.billing-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem 0;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.billing-meter:first-child {
+  border-top: none;
+}
+
+.billing-meter__dot {
+  flex-shrink: 0;
+  width: 0.4375rem;
+  height: 0.4375rem;
+  border-radius: 50%;
+  background: var(--c-primary);
+}
+
+.billing-meter--paid .billing-meter__dot,
+.billing-meter--paid .billing-meter__fill {
+  background: var(--c-success-solid);
+}
+
+.billing-meter--warn .billing-meter__dot,
+.billing-meter--warn .billing-meter__fill {
+  background: var(--c-warning-solid);
+}
+
+.billing-meter__name {
+  flex-shrink: 0;
+  width: 4.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.billing-meter__mid {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.billing-meter__track {
+  flex-shrink: 0;
+  width: 6.875rem;
+  height: 0.3125rem;
+  overflow: hidden;
+  background: var(--c-surface-sunken);
+  border-radius: 0.1875rem;
+}
+
+.billing-meter__fill {
+  display: block;
+  height: 100%;
+  background: var(--c-primary);
+  border-radius: 0.1875rem;
+  transition: width 0.3s ease;
+}
+
+.billing-meter__fact {
+  flex-shrink: 0;
+  width: 7rem;
+  font-size: 0.78125rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text-muted);
+  text-align: right;
+}
+
+.billing-meter__door {
+  flex-shrink: 0;
+  width: 10.625rem;
+  padding: 0;
+  font: inherit;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  text-align: right;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+  cursor: pointer;
+  background: none;
+  border: none;
+}
+
+.billing-meter__door:hover,
+.billing-meter__door:focus-visible {
+  text-decoration: underline;
+}
+
+.billing-bignum-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.625rem;
+  margin-bottom: 0.375rem;
+}
+
+.billing-bignum {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+}
+
+.billing-bignum__note {
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+}
+
+.billing-kv {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5625rem 0;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.billing-kv:first-of-type {
+  border-top: none;
+}
+
+.billing-kv__label {
+  flex-shrink: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--c-text-subtle);
+}
+
+.billing-kv__value {
+  min-width: 0;
+  font-size: 0.75rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+  text-align: right;
+}
+
+.billing-kv__note {
+  margin-right: 0.25rem;
+  font-weight: 400;
+  color: var(--c-text-subtle);
+}
+
+.billing-ent {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 1.125rem 1.625rem;
+  background: var(--c-surface);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.75rem;
+}
+
+.billing-ent__title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.billing-ent__sub {
+  margin-top: 0.1875rem;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+}
+
+@media (max-width: 48rem) {
+  .billing-page__head,
+  .billing-page__body {
+    padding-inline: 1rem;
+  }
+
+  /* The row collapses to two lines rather than crushing the meter: identity above, meter below. */
+  .billing-meter {
+    flex-wrap: wrap;
+  }
+
+  .billing-meter__mid {
+    flex-basis: 100%;
+    order: 3;
+    white-space: normal;
+  }
+
+  .billing-meter__door {
+    width: auto;
+  }
+}
+
+.billing-ent__cta {
+  flex-shrink: 0;
+  padding: 0.5rem 1rem;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+  cursor: pointer;
+  background: transparent;
+  border: 1px solid var(--c-border);
+  border-radius: 0.5625rem;
+  transition: background-color 0.12s ease;
+}
+
+.billing-ent__cta:hover {
+  background: var(--c-hover);
+}
+
+.billing-inv {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5625rem 0;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.billing-inv:first-of-type {
+  border-top: none;
+}
+
+.billing-inv__date {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.billing-inv__desc {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 0.75rem;
+  color: var(--c-text-subtle);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.billing-inv__amount {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--c-text);
+  text-align: right;
+}
+
+.billing-inv__door {
+  flex-shrink: 0;
+  min-width: 2.5rem;
+  font-size: 0.78125rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  text-align: right;
+  text-decoration: none;
+  text-underline-offset: 2px;
+}
+
+.billing-inv__door:hover,
+.billing-inv__door:focus-visible {
+  text-decoration: underline;
+}
+
+.billing-kv__door {
+  margin-left: 0.75rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+}
+
+.billing-kv__door button {
+  padding: 0;
+  font: inherit;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  cursor: pointer;
+  background: none;
+  border: none;
+  text-underline-offset: 2px;
+}
+
+.billing-kv__door button:hover,
+.billing-kv__door button:focus-visible {
+  text-decoration: underline;
+}
