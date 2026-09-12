@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Card, CodeBlock, StatusBadge } from "@app/ui";
 import type { Sdk, SdkStatus } from "@portal/api/docs";
-import { DocsSection } from "@portal/components/docs/DocsSection";
+import { DocsSection } from "@core/components/docs/DocsSection";
 
 /** GA clients carry no badge; only non-stable maturity is called out. */
 const STATUS_BADGE: Partial<

@@ -23,6 +23,7 @@ const FULL_CAPS: UsersCapabilities = {
   seats: false,
   manageGrants: true,
   removeScope: "org",
+  removeMember: true,
   listingRequiresAdmin: true,
 };
 
@@ -45,6 +46,7 @@ const SAAS_CAPS: UsersCapabilities = {
   seats: true,
   manageGrants: false,
   removeScope: "team",
+  removeMember: true,
   listingRequiresAdmin: false,
 };
 
