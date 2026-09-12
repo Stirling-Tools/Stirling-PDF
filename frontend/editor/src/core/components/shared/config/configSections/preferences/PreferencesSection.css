@@ -1,0 +1,5 @@
+.preferences-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6, 2rem);
+}
