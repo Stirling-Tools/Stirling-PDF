@@ -108,12 +108,17 @@ public class AuditAspect {
         // Record start time for latency calculation
         long startTime = System.currentTimeMillis();
         Object result;
+        Integer handlerStatus = null;
         try {
             // Execute the method
             result = joinPoint.proceed();
 
-            // Add success status
-            auditData.put("status", "success");
+            handlerStatus = auditService.responseStatus(result);
+            if (handlerStatus != null && handlerStatus >= 400) {
+                auditData.put("status", "failure");
+            } else {
+                auditData.put("status", "success");
+            }
 
             // Add result only if requested in annotation AND operation result capture is enabled
             boolean includeResult =
@@ -142,8 +147,22 @@ public class AuditAspect {
             auditService.addTimingData(
                     auditData, startTime, resp, auditedAnnotation.level(), isHttpRequest);
 
+            // The aspect wraps the handler, so Spring has not written the ResponseEntity to the
+            // servlet response yet and addTimingData's resp.getStatus() is still 200. The status
+            // the handler returned is the real one, so it lands last.
+            if (handlerStatus != null) {
+                auditData.put("statusCode", handlerStatus);
+            }
+
             // Merge controller-set policy context + the internal-automation marker onto the event.
             auditService.addAutomationContext(auditData, req);
+
+            String subject = AuditContext.subject(req);
+            String actor = subject != null ? subject : capturedPrincipal;
+            String attempted = AuditContext.attemptedSubject(req);
+            if (attempted != null) {
+                auditData.put("attemptedUsername", attempted);
+            }
 
             // Resolve the event type based on annotation and context
             String httpMethod = null;
@@ -166,7 +185,7 @@ public class AuditAspect {
             if (eventType == AuditEventType.HTTP_REQUEST && StringUtils.isNotEmpty(typeString)) {
                 // Use the string type with early-captured values
                 auditService.audit(
-                        capturedPrincipal,
+                        actor,
                         capturedOrigin,
                         capturedIp,
                         typeString,
@@ -175,7 +194,7 @@ public class AuditAspect {
             } else {
                 // Use the enum type with early-captured values
                 auditService.audit(
-                        capturedPrincipal,
+                        actor,
                         capturedOrigin,
                         capturedIp,
                         eventType,

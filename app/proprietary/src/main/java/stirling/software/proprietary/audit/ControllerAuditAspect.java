@@ -195,9 +195,15 @@ public class ControllerAuditAspect {
             }
 
             Object result = null;
+            Integer handlerStatus = null;
             try {
                 result = joinPoint.proceed();
-                data.put("outcome", "success");
+                handlerStatus = auditService.responseStatus(result);
+                if (handlerStatus != null && handlerStatus >= 400) {
+                    data.put("outcome", "failure");
+                } else {
+                    data.put("outcome", "success");
+                }
             } catch (Throwable ex) {
                 data.put("outcome", "failure");
                 data.put("errorType", ex.getClass().getSimpleName());
@@ -213,9 +219,23 @@ public class ControllerAuditAspect {
                 // Call auditService but with isHttpRequest=true to skip additional timing
                 auditService.addTimingData(data, start, resp, level, true);
 
+                // The aspect wraps the handler, so Spring has not written the ResponseEntity to the
+                // servlet response yet and resp.getStatus() above is still 200. The status the
+                // handler returned is the real one, so it lands last.
+                if (handlerStatus != null) {
+                    data.put("statusCode", handlerStatus);
+                }
+
                 // Merge controller-set policy context + the internal-automation marker (set after
                 // the body ran, so it must happen here rather than with the pre-proceed HTTP data).
                 auditService.addAutomationContext(data, req);
+
+                String subject = AuditContext.subject(req);
+                String actor = subject != null ? subject : capturedPrincipal;
+                String attempted = AuditContext.attemptedSubject(req);
+                if (attempted != null) {
+                    data.put("attemptedUsername", attempted);
+                }
 
                 // Add result only if operation result capture is explicitly enabled
                 // Skip result for UI_DATA events to avoid storing large response bodies
@@ -232,26 +252,15 @@ public class ControllerAuditAspect {
                     if (eventType == AuditEventType.HTTP_REQUEST
                             && StringUtils.isNotEmpty(typeString)) {
                         auditService.audit(
-                                capturedPrincipal,
-                                capturedOrigin,
-                                capturedIp,
-                                typeString,
-                                data,
-                                level);
+                                actor, capturedOrigin, capturedIp, typeString, data, level);
                     } else {
                         // Use the enum type with early-captured values
                         auditService.audit(
-                                capturedPrincipal,
-                                capturedOrigin,
-                                capturedIp,
-                                eventType,
-                                data,
-                                level);
+                                actor, capturedOrigin, capturedIp, eventType, data, level);
                     }
                 } else {
                     // Use the enum type with early-captured values
-                    auditService.audit(
-                            capturedPrincipal, capturedOrigin, capturedIp, eventType, data, level);
+                    auditService.audit(actor, capturedOrigin, capturedIp, eventType, data, level);
                 }
             }
 

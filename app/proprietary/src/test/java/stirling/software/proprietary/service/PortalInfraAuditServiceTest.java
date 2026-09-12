@@ -3,7 +3,9 @@ package stirling.software.proprietary.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -34,13 +36,15 @@ class PortalInfraAuditServiceTest {
         service = new PortalInfraAuditService(auditReadService, JsonMapper.builder().build());
     }
 
+    private static final Instant NOW = Instant.now();
+
     private static PortalAuditEventRow row(long id, String data) {
+        return rowAt(id, data, NOW.minusSeconds(60));
+    }
+
+    private static PortalAuditEventRow rowAt(long id, String data, Instant at) {
         return new PortalAuditEventRow(
-                id,
-                "con.yoh13@gmail.com",
-                AuditEventType.PDF_PROCESS.name(),
-                data,
-                Instant.parse("2026-07-09T10:18:24Z"));
+                id, "con.yoh13@gmail.com", AuditEventType.PDF_PROCESS.name(), data, at);
     }
 
     private InfraAuditEventDto onlyEvent(String data) {
@@ -145,5 +149,58 @@ class PortalInfraAuditServiceTest {
         assertThat(e.getCategory()).isEqualTo("security");
         assertThat(e.getTarget()).isEqualTo("secret.pdf");
         assertThat(resp.getSummary().getPolicy()).isEqualTo(0);
+    }
+
+    @Test
+    void failureOutcomeIsNotRenderedAsSuccess() {
+        InfraAuditEventDto e =
+                onlyEvent(
+                        "{\"path\":\"/api/v1/misc/compress-pdf\",\"outcome\":\"failure\","
+                                + "\"errorType\":\"IOException\"}");
+
+        assertThat(e.getStatus()).isEqualTo("danger");
+    }
+
+    @Test
+    void clientErrorStatusCodeIsRenderedAsAWarning() {
+        InfraAuditEventDto e =
+                onlyEvent(
+                        "{\"path\":\"/api/v1/misc/compress-pdf\",\"outcome\":\"failure\","
+                                + "\"statusCode\":401}");
+
+        assertThat(e.getStatus()).isEqualTo("warning");
+    }
+
+    @Test
+    void summaryCountsTheLastDayNotJustTheReturnedPage() {
+        String data = "{\"path\":\"/api/v1/misc/compress-pdf\",\"statusCode\":200}";
+        List<PortalAuditEventRow> rows = new ArrayList<>();
+        for (int i = 0; i < 60; i++) {
+            rows.add(rowAt(i, data, NOW.minusSeconds(60L * (i + 1))));
+        }
+        when(auditReadService.serverEvents()).thenReturn(rows);
+
+        var resp = service.serverAuditLog();
+
+        assertThat(resp.getEvents()).hasSize(40);
+        assertThat(resp.getSummary().getTotalEvents()).isEqualTo(60);
+        assertThat(resp.getSummary().getProcessing()).isEqualTo(60);
+    }
+
+    @Test
+    void summaryLeavesOutEventsOlderThanADay() {
+        String data = "{\"path\":\"/api/v1/misc/compress-pdf\",\"statusCode\":200}";
+        when(auditReadService.serverEvents())
+                .thenReturn(
+                        List.of(
+                                rowAt(1L, data, NOW.minusSeconds(60)),
+                                rowAt(2L, data, NOW.minus(Duration.ofHours(25))),
+                                rowAt(3L, data, NOW.minus(Duration.ofDays(9)))));
+
+        var resp = service.serverAuditLog();
+
+        assertThat(resp.getEvents()).hasSize(3);
+        assertThat(resp.getSummary().getTotalEvents()).isEqualTo(1);
+        assertThat(resp.getSummary().getProcessing()).isEqualTo(1);
     }
 }

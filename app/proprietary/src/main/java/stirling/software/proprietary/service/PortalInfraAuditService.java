@@ -1,5 +1,7 @@
 package stirling.software.proprietary.service;
 
+import java.time.Duration;
+import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
@@ -29,6 +31,8 @@ public class PortalInfraAuditService {
     /** Rows returned to the tab after filtering. */
     private static final int RETURN_LIMIT = 40;
 
+    private static final Duration SUMMARY_WINDOW = Duration.ofHours(24);
+
     private static final DateTimeFormatter TS_FORMAT =
             DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").withZone(ZoneOffset.UTC);
 
@@ -47,23 +51,29 @@ public class PortalInfraAuditService {
 
     private InfraAuditLogResponse buildFromEvents(
             List<PortalAuditEventRow> recent, boolean fullServer) {
+        List<PortalAuditEventRow> relevant =
+                recent.stream().filter(e -> isInfraRelevant(e.type())).toList();
+
         List<InfraAuditEventDto> events =
-                recent.stream()
-                        .filter(e -> isInfraRelevant(e.type()))
+                relevant.stream().limit(RETURN_LIMIT).map(this::toDto).toList();
+
+        Instant since = Instant.now().minus(SUMMARY_WINDOW);
+        List<InfraAuditEventDto> counted =
+                relevant.stream()
+                        .filter(e -> e.timestamp() != null && e.timestamp().isAfter(since))
                         .map(this::toDto)
-                        .limit(RETURN_LIMIT)
                         .toList();
 
-        int policy = (int) events.stream().filter(e -> "policy".equals(e.getCategory())).count();
+        int policy = (int) counted.stream().filter(e -> "policy".equals(e.getCategory())).count();
         int processing =
-                (int) events.stream().filter(e -> "processing".equals(e.getCategory())).count();
+                (int) counted.stream().filter(e -> "processing".equals(e.getCategory())).count();
         int elevation =
-                (int) events.stream().filter(e -> "elevation".equals(e.getCategory())).count();
-        int config = (int) events.stream().filter(e -> "config".equals(e.getCategory())).count();
+                (int) counted.stream().filter(e -> "elevation".equals(e.getCategory())).count();
+        int config = (int) counted.stream().filter(e -> "config".equals(e.getCategory())).count();
 
         InfraAuditSummary summary =
                 InfraAuditSummary.builder()
-                        .totalEvents(events.size())
+                        .totalEvents(counted.size())
                         .policy(policy)
                         .processing(processing)
                         .elevation(elevation)
@@ -280,18 +290,27 @@ public class PortalInfraAuditService {
         if (AuditEventType.USER_FAILED_LOGIN.name().equals(type)) {
             return "danger";
         }
-        String status = asString(data.get("status"));
         Integer code = asInteger(data.get("statusCode"));
-        if ("failure".equalsIgnoreCase(status) || (code != null && code >= 500)) {
+        if (code != null && code >= 500) {
             return "danger";
         }
         if (code != null && code >= 400) {
             return "warning";
         }
+        // "status" is what @Audited methods record, "outcome" what the generic controller aspect
+        // records; a row carrying either without a status code (a thrown exception) is still a
+        // failure.
+        if (isFailure(data.get("status")) || isFailure(data.get("outcome"))) {
+            return "danger";
+        }
         if ("config".equals(category)) {
             return "info";
         }
         return "success";
+    }
+
+    private static boolean isFailure(Object value) {
+        return value != null && "failure".equalsIgnoreCase(String.valueOf(value));
     }
 
     @SuppressWarnings("unchecked")
