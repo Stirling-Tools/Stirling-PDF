@@ -55,6 +55,10 @@ export class AuthService {
     (status: AuthStatus, userInfo: UserInfo | null) => void
   >();
   private refreshPromise: Promise<boolean> | null = null;
+
+  /** A keyring read blocks on an OS prompt that may never be answered, so every wait on one is
+   *  bounded. Long enough that a user still reading the prompt is not cut off mid-decision. */
+  private static readonly KEYRING_TIMEOUT_MS = 20_000;
   private selfHostedDeepLinkFlowActive = false;
 
   static getInstance(): AuthService {
@@ -131,7 +135,15 @@ export class AuthService {
   private async getTokenFromAnySource(): Promise<string | null> {
     // Try Tauri store first
     try {
-      const token = await invoke<string | null>("get_auth_token");
+      const token = await this.bounded(
+        invoke<string | null>("get_auth_token"),
+        () => {
+          console.warn(
+            "[Desktop AuthService] Token read timed out; falling back to local storage",
+          );
+          return null;
+        },
+      );
       if (token) {
         return token;
       }
@@ -652,6 +664,32 @@ export class AuthService {
     }
   }
 
+  private async bounded<T>(work: Promise<T>, onTimeout: () => T): Promise<T> {
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const expired = new Promise<T>((resolve) => {
+      timer = setTimeout(
+        () => resolve(onTimeout()),
+        AuthService.KEYRING_TIMEOUT_MS,
+      );
+    });
+    try {
+      return await Promise.race([work, expired]);
+    } finally {
+      if (timer) clearTimeout(timer);
+    }
+  }
+
+  /** Settle as a failed refresh rather than hanging; the caller then re-authenticates. */
+  private async boundedRefresh(refresh: Promise<boolean>): Promise<boolean> {
+    return this.bounded(refresh, () => {
+      console.warn(
+        "[Desktop AuthService] Refresh timed out; treating the session as signed out",
+      );
+      this.setAuthStatus("unauthenticated", null);
+      return false;
+    });
+  }
+
   async awaitRefreshIfInProgress(): Promise<boolean> {
     if (!this.refreshPromise) {
       return false;
@@ -727,7 +765,7 @@ export class AuthService {
       return this.refreshPromise;
     }
 
-    this.refreshPromise = this._doRefreshToken(serverUrl);
+    this.refreshPromise = this.boundedRefresh(this._doRefreshToken(serverUrl));
     try {
       return await this.refreshPromise;
     } finally {
@@ -800,7 +838,9 @@ export class AuthService {
       return this.refreshPromise;
     }
 
-    this.refreshPromise = this._doRefreshSupabaseToken(authServerUrl);
+    this.refreshPromise = this.boundedRefresh(
+      this._doRefreshSupabaseToken(authServerUrl),
+    );
     try {
       return await this.refreshPromise;
     } finally {
