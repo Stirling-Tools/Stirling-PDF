@@ -15,7 +15,6 @@ import { StatusBadge, type StatusTone } from "@app/ui/StatusBadge";
 import { ProgressBar } from "@app/ui/ProgressBar";
 import { Banner } from "@app/ui/Banner";
 import { Collapsible } from "@app/ui/Collapsible";
-import { Tooltip } from "@app/components/shared/Tooltip";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   useFormDetectionModelStatus,
@@ -359,197 +358,169 @@ export default function AdminFormDetectionSection() {
   };
 
   return (
-    <Paper withBorder p="md" radius="md">
-      <Stack gap="md">
-        <div>
-          <Group justify="space-between" align="center" wrap="nowrap">
-            <Group gap="xs" wrap="nowrap">
-              <Text fw={600} size="sm">
-                {t("admin.formDetection.title", "AI Form Detection")}
-              </Text>
-              <Tooltip
-                content={t(
-                  "admin.formDetection.description",
-                  "Detects text fields, checkboxes and signature areas in a PDF and turns them into fillable form fields. Detection runs on this server with the model you install below.",
-                )}
-                position="top"
-                arrow
-              >
+    <Stack gap="md">
+      <Group justify="space-between" align="center" wrap="nowrap">
+        <Group gap="xs" wrap="nowrap">
+          <Text fw={500} size="sm">
+            {t("admin.formDetection.enableFeature", "Enable feature")}
+          </Text>
+          {status ? (
+            <StatusBadge tone={statusTone} size="sm">
+              {statusLabel}
+            </StatusBadge>
+          ) : null}
+        </Group>
+        <Switch
+          checked={enabled}
+          onChange={(e) => doSetConfig({ enabled: e.currentTarget.checked })}
+          disabled={configBusy || (loading && !status)}
+          size="sm"
+          aria-label={t("admin.formDetection.enableFeature", "Enable feature")}
+        />
+      </Group>
+
+      {loading && !status ? (
+        <Loader />
+      ) : (
+        <Stack gap="md">
+          {anyError ? (
+            <Banner
+              tone="danger"
+              icon={
                 <LocalIcon
-                  icon="info-outline-rounded"
-                  width="1rem"
-                  height="1rem"
-                  style={{ color: "var(--c-text-subtle)", cursor: "help" }}
+                  icon="error-outline-rounded"
+                  width="1.1rem"
+                  height="1.1rem"
                 />
-              </Tooltip>
-              {status ? (
-                <StatusBadge tone={statusTone} size="sm">
-                  {statusLabel}
-                </StatusBadge>
-              ) : null}
-            </Group>
-            <Switch
-              checked={enabled}
-              onChange={(e) =>
-                doSetConfig({ enabled: e.currentTarget.checked })
               }
-              disabled={configBusy || (loading && !status)}
-              size="sm"
-              aria-label={t(
-                "admin.formDetection.enableFeature",
-                "Enable feature",
+              title={t(
+                "admin.formDetection.errorTitle",
+                "Something went wrong",
+              )}
+              description={anyError}
+            />
+          ) : null}
+
+          {status && !status.writable ? (
+            <Banner
+              tone="warning"
+              icon={
+                <LocalIcon
+                  icon="warning-rounded"
+                  width="1.1rem"
+                  height="1.1rem"
+                />
+              }
+              description={t(
+                "admin.formDetection.notWritable",
+                "The model directory is not writable; check the configs volume mount.",
               )}
             />
-          </Group>
-        </div>
+          ) : null}
 
-        {loading && !status ? (
-          <Loader />
-        ) : (
-          <Stack gap="md">
-            {anyError ? (
-              <Banner
-                tone="danger"
-                icon={
-                  <LocalIcon
-                    icon="error-outline-rounded"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                }
-                title={t(
-                  "admin.formDetection.errorTitle",
-                  "Something went wrong",
-                )}
-                description={anyError}
-              />
-            ) : null}
-
-            {status && !status.writable ? (
-              <Banner
-                tone="warning"
-                icon={
-                  <LocalIcon
-                    icon="warning-rounded"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                }
-                description={t(
-                  "admin.formDetection.notWritable",
-                  "The model directory is not writable; check the configs volume mount.",
-                )}
-              />
-            ) : null}
-
-            {!serverEngineAvailable ? (
-              <Banner
-                tone="warning"
-                icon={
-                  <LocalIcon
-                    icon="warning-rounded"
-                    width="1.1rem"
-                    height="1.1rem"
-                  />
-                }
-                description={t(
-                  "admin.formDetection.engineUnavailable",
-                  "This build does not include the detection engine, so the tool stays unavailable even with a model installed.",
-                )}
-              />
-            ) : null}
-
-            <div>
-              <Text fw={500} size="sm" mb={4}>
-                {t("admin.formDetection.modelsLabel", "Detection model")}
-              </Text>
-              <Stack gap="xs">{catalog.map(renderModelCard)}</Stack>
-            </div>
-
-            <Divider />
-
-            <Collapsible
-              open={airgapOpen}
-              onToggle={() => setAirgapOpen((o) => !o)}
-              header={
-                <Group gap={6} wrap="nowrap">
-                  <LocalIcon
-                    icon="download-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                  <Text size="sm">
-                    {t(
-                      "admin.formDetection.airgap.show",
-                      "Offline / air-gapped install",
-                    )}
-                  </Text>
-                </Group>
+          {!serverEngineAvailable ? (
+            <Banner
+              tone="warning"
+              icon={
+                <LocalIcon
+                  icon="warning-rounded"
+                  width="1.1rem"
+                  height="1.1rem"
+                />
               }
-            >
-              <Stack gap="sm" p="sm">
-                <Text size="xs" c="dimmed">
+              description={t(
+                "admin.formDetection.engineUnavailable",
+                "This build does not include the detection engine, so the tool stays unavailable even with a model installed.",
+              )}
+            />
+          ) : null}
+
+          <div>
+            <Text fw={500} size="sm" mb={4}>
+              {t("admin.formDetection.modelsLabel", "Detection model")}
+            </Text>
+            <Stack gap="xs">{catalog.map(renderModelCard)}</Stack>
+          </div>
+
+          <Divider />
+
+          <Collapsible
+            open={airgapOpen}
+            onToggle={() => setAirgapOpen((o) => !o)}
+            header={
+              <Group gap={6} wrap="nowrap">
+                <LocalIcon icon="download-rounded" width="1rem" height="1rem" />
+                <Text size="sm">
                   {t(
-                    "admin.formDetection.airgap.intro",
-                    "No internet on the server? Download the model elsewhere, verify it, and copy it into the model directory. It is picked up on restart.",
+                    "admin.formDetection.airgap.show",
+                    "Offline / air-gapped install",
                   )}
                 </Text>
-                {catalog
-                  .filter((c) => c.onnxUrl)
-                  .map((c) => (
-                    <Stack gap={6} key={c.id}>
-                      <Text size="xs" fw={600}>
-                        {c.displayName}
-                      </Text>
-                      <Text size="xs" c="dimmed">
-                        {t(
-                          "admin.formDetection.airgap.step1",
-                          "1. Download on a machine with internet:",
-                        )}
-                      </Text>
-                      <CommandRow
-                        code={`curl -L -o ${c.id}.onnx "${c.onnxUrl}"`}
-                        copyLabel={copyLabel}
-                      />
-                      <Text size="xs" c="dimmed">
-                        {t(
-                          "admin.formDetection.airgap.step2",
-                          "2. Check the SHA-256 checksum matches:",
-                        )}
-                      </Text>
-                      <CommandRow
-                        code={
-                          c.sha256 ||
-                          t(
-                            "admin.formDetection.airgap.noSha",
-                            "(checksum not set)",
-                          )
-                        }
-                        copyLabel={copyLabel}
-                      />
-                      <Text size="xs" c="dimmed">
-                        {t(
-                          "admin.formDetection.airgap.step3",
-                          "3. Copy it into the model directory on this server:",
-                        )}
-                      </Text>
-                      <CommandRow
-                        code={`<configs>/models/form-detection/${c.id}.onnx`}
-                        copyLabel={copyLabel}
-                      />
-                    </Stack>
-                  ))}
-                <Text size="xs" c="dimmed">
-                  {t(
-                    "admin.formDetection.airgap.step4",
-                    "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed.",
-                  )}
-                </Text>
-              </Stack>
-            </Collapsible>
-          </Stack>
-        )}
-      </Stack>
-    </Paper>
+              </Group>
+            }
+          >
+            <Stack gap="sm" p="sm">
+              <Text size="xs" c="dimmed">
+                {t(
+                  "admin.formDetection.airgap.intro",
+                  "No internet on the server? Download the model elsewhere, verify it, and copy it into the model directory. It is picked up on restart.",
+                )}
+              </Text>
+              {catalog
+                .filter((c) => c.onnxUrl)
+                .map((c) => (
+                  <Stack gap={6} key={c.id}>
+                    <Text size="xs" fw={600}>
+                      {c.displayName}
+                    </Text>
+                    <Text size="xs" c="dimmed">
+                      {t(
+                        "admin.formDetection.airgap.step1",
+                        "1. Download on a machine with internet:",
+                      )}
+                    </Text>
+                    <CommandRow
+                      code={`curl -L -o ${c.id}.onnx "${c.onnxUrl}"`}
+                      copyLabel={copyLabel}
+                    />
+                    <Text size="xs" c="dimmed">
+                      {t(
+                        "admin.formDetection.airgap.step2",
+                        "2. Check the SHA-256 checksum matches:",
+                      )}
+                    </Text>
+                    <CommandRow
+                      code={
+                        c.sha256 ||
+                        t(
+                          "admin.formDetection.airgap.noSha",
+                          "(checksum not set)",
+                        )
+                      }
+                      copyLabel={copyLabel}
+                    />
+                    <Text size="xs" c="dimmed">
+                      {t(
+                        "admin.formDetection.airgap.step3",
+                        "3. Copy it into the model directory on this server:",
+                      )}
+                    </Text>
+                    <CommandRow
+                      code={`<configs>/models/form-detection/${c.id}.onnx`}
+                      copyLabel={copyLabel}
+                    />
+                  </Stack>
+                ))}
+              <Text size="xs" c="dimmed">
+                {t(
+                  "admin.formDetection.airgap.step4",
+                  "4. Set formDetection.activeModelId to the model's id in settings.yml and restart. <configs> is the configs volume (e.g. /configs in Docker). The air-gapped image ships with a model already installed.",
+                )}
+              </Text>
+            </Stack>
+          </Collapsible>
+        </Stack>
+      )}
+    </Stack>
   );
 }

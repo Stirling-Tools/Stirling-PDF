@@ -7,6 +7,12 @@
         "../../src/proprietary/*",
         "../../src/core/*"
       ],
+      "@app/portal/*": [
+        "../../src/cloud/portal/*",
+        "../../src/proprietary/portal/*",
+        "../../src/core/portal/*",
+        "../../src/portal/*"
+      ],
       "@portal/*": ["../../src/portal/*"],
       "@cloud/*": ["../../src/cloud/*"],
       "@proprietary/*": ["../../src/proprietary/*"],

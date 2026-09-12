@@ -20,7 +20,7 @@ export function rememberConnect(pending: PendingConnect): void {
   );
 }
 
-/** Returns a router-relative destination confined to this portal. */
+/** Returns a same-origin portal or settings destination in router-relative form. */
 export function readPendingConnect(): PendingConnect | null {
   try {
     const value = JSON.parse(sessionStorage.getItem(KEY) ?? "null");
@@ -37,7 +37,9 @@ export function readPendingConnect(): PendingConnect | null {
       url.origin !== window.location.origin ||
       !(
         url.pathname === PORTAL_BASENAME ||
-        url.pathname.startsWith(`${PORTAL_BASENAME}/`)
+        url.pathname.startsWith(`${PORTAL_BASENAME}/`) ||
+        url.pathname === "/settings" ||
+        url.pathname.startsWith("/settings/")
       )
     )
       return null;

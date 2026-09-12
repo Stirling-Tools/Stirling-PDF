@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom";
 import { withBasePath } from "@app/constants/app";
 import { startConnect, startReauth } from "@portal/api/link";
 import { rememberConnect } from "@portal/auth/pendingConnect";
-import { useUI } from "@portal/contexts/UIContext";
 
 interface ConnectHandoff {
   /** Stays true through a successful hand-off: the page is leaving, so nothing resolves. */
@@ -16,7 +15,6 @@ interface ConnectHandoff {
 export function useConnectHandoff(reauth: boolean): ConnectHandoff {
   const { t } = useTranslation();
   const location = useLocation();
-  const { linkReturnSection } = useUI();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const mounted = useRef(false);
@@ -77,7 +75,7 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
             ownerId,
             mode: reauth ? "reauth" : "link",
             returnTo: `${location.pathname}${location.search}`,
-            settingsSection: linkReturnSection,
+            settingsSection: null,
             browserState,
           });
           window.location.assign(status.authorizeUrl);
@@ -104,7 +102,7 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
         inFlight.current = false;
       }
     })();
-  }, [reauth, t, location.pathname, location.search, linkReturnSection]);
+  }, [reauth, t, location.pathname, location.search]);
 
   return { busy, error, begin };
 }

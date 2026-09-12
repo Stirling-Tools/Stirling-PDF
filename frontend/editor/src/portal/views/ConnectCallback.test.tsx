@@ -1,4 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
+import { PortalSettingsSectionHost } from "@app/portal/components/settings/PortalSettingsSectionHost";
 import { act, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
@@ -29,7 +31,22 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
   clearSupabaseSession: vi.fn(),
 }));
 vi.mock("@portal/contexts/AccountLinkContext", () => ({
+  AccountLinkProvider: ({ children }: { children: ReactNode }) => children,
   useAccountLinkContext: () => ({ refresh }),
+}));
+
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({ user: { id: "owner" }, isAdmin: true }),
+}));
+vi.mock("@app/portal/auth/accountLinkSession", () => ({
+  bindAccountLinkSession: vi.fn(),
+  clearAccountLinkSession: vi.fn(),
+}));
+vi.mock("@app/portal/components/account-link/SaasSessionBanner", () => ({
+  SaasSessionBanner: () => null,
+}));
+vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
+  LinkAccountModal: () => null,
 }));
 
 import ConnectCallback from "@portal/views/ConnectCallback";
@@ -111,6 +128,49 @@ describe("account-link callback", () => {
     });
     setSession.mockResolvedValue({ error: null });
   });
+
+  it.each(["/settings/billing", "/settings/account-link"])(
+    "restores renewal through the settings host at %s",
+    async (returnTo) => {
+      rememberConnect({
+        ownerId: "owner",
+        mode: "reauth",
+        returnTo,
+        settingsSection: null,
+        browserState: "browser-state",
+      });
+      landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+      const screen = render(
+        <MantineProvider>
+          <MemoryRouter initialEntries={["/account-link/callback"]}>
+            <Routes>
+              <Route
+                path="/account-link/callback"
+                element={<ConnectCallback />}
+              />
+              <Route
+                path={returnTo}
+                element={
+                  <PortalSettingsSectionHost>
+                    <OutcomeSpy />
+                    <div data-testid="settings-destination" />
+                  </PortalSettingsSectionHost>
+                }
+              />
+            </Routes>
+          </MemoryRouter>
+        </MantineProvider>,
+      );
+      await waitFor(() => expect(lastOutcome()?.state).toBe("linked"));
+      expect(screen.getByTestId("settings-destination")).toBeTruthy();
+      expect(modalMode).toBe("reauth");
+      expect(setSession).toHaveBeenCalledWith({
+        access_token: "at",
+        refresh_token: "rt",
+      });
+      expect(routeState).toBeNull();
+    },
+  );
 
   it("removes the token-bearing fragment from the URL", async () => {
     landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);

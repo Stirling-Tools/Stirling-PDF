@@ -25,12 +25,22 @@ describe("renewal return destinations", () => {
     "https://attacker.example/processor",
     "//attacker.example/processor",
     "/processor-fake",
+    "/settings-fake",
+    "/settings/../login",
+    "https://attacker.example/settings/billing",
     "/processor/../login",
     "javascript:alert(1)",
   ])("rejects unsafe destination %s", (returnTo) => {
     rememberConnect({ ...pending, returnTo });
     expect(readPendingConnect()).toBeNull();
   });
+  it.each(["/settings/billing?period=month", "/settings/account-link"])(
+    "retains settings destination %s",
+    (returnTo) => {
+      rememberConnect({ ...pending, returnTo });
+      expect(readPendingConnect()?.returnTo).toBe(returnTo);
+    },
+  );
   it("rejects corrupt saved state", () => {
     sessionStorage.setItem("stirling.portalConnect", "{invalid");
     expect(readPendingConnect()).toBeNull();
