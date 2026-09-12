@@ -555,6 +555,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-epub");
         addEndpointToGroup("Java", "eml-to-pdf");
         addEndpointToGroup("Java", "handleData");
+        addEndpointToGroup("Java", "form-detection");
         addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript
@@ -655,6 +656,10 @@ public class EndpointConfiguration {
             disableEndpoint("pdf-to-ua");
             disableEndpoint("accessibility-report");
         }
+
+        // Only FormDetectionModelManager (proprietary) can enable this; default it off so a core
+        // build does not advertise a tool whose controller is not on the classpath.
+        disableEndpoint("form-detection", DisableReason.DEPENDENCY);
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");
