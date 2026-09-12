@@ -173,9 +173,11 @@ class IndexedDBManager {
         // Create or update object stores
         config.stores.forEach((storeConfig) => {
           let store: IDBObjectStore | undefined;
+          let storeExisted = false;
 
           if (db.objectStoreNames.contains(storeConfig.name)) {
             // Store exists - get reference for migration
+            storeExisted = true;
             console.log(`Object store '${storeConfig.name}' already exists`);
             store = transaction?.objectStore(storeConfig.name);
 
@@ -218,11 +220,14 @@ class IndexedDBManager {
             }
           }
 
-          // Perform data migration for files database
+          // Perform data migration for files database. A store we just
+          // created is empty, so there is nothing to walk - skipping also
+          // avoids the openCursor() throw on a brand-new database (oldVersion 0).
           if (
             config.name === "stirling-pdf-files" &&
             storeConfig.name === "files" &&
-            store
+            store &&
+            storeExisted
           ) {
             this.migrateFilesStore(store, oldVersion);
           }
@@ -271,7 +276,17 @@ class IndexedDBManager {
   private migrateFilesStore(store: IDBObjectStore, oldVersion: number): void {
     if (oldVersion >= 9) return; // nothing to migrate at the current schema
 
-    const cursor = store.openCursor();
+    let cursor: IDBRequest<IDBCursorWithValue | null>;
+    try {
+      cursor = store.openCursor();
+    } catch (error) {
+      // iOS WebKit throws "Attempt to open a cursor ... without an in-progress
+      // transaction" once the versionchange transaction has gone inactive.
+      // Abort so the open rejects through request.onerror instead of the throw
+      // escaping onupgradeneeded uncaught.
+      this.abortMigration(store, "open cursor", error);
+      return;
+    }
     let migrated = 0;
 
     cursor.onsuccess = (event) => {
@@ -319,33 +334,46 @@ class IndexedDBManager {
         needsUpdate = true;
       }
 
-      if (needsUpdate) {
-        try {
+      try {
+        if (needsUpdate) {
           result.update(record);
           migrated += 1;
-        } catch (error) {
-          // Aborting the upgrade transaction here forces IndexedDB to roll back
-          // the schema version bump too - the user retries on next page load
-          // instead of silently losing folderId / isLeaf / etc on partial rows.
-          console.error("Failed to migrate record:", record.id, error);
-          store.transaction.abort();
-          return;
         }
+        result.continue();
+      } catch (error) {
+        // update()/continue() throw the same dead-transaction error as
+        // openCursor above. Aborting rolls back the schema version bump too, so
+        // the user retries on next page load instead of silently losing
+        // folderId / isLeaf / etc on partial rows.
+        this.abortMigration(store, "write record", error);
       }
-      result.continue();
     };
 
     cursor.onerror = (event) => {
-      // Same reasoning as the per-record catch above: abort the upgrade so the
-      // schema doesn't get marked as v9 with rows still on the older shape.
-      const err = (event.target as IDBRequest).error;
-      console.error("Files-store migration cursor failed:", err);
-      try {
-        store.transaction.abort();
-      } catch {
-        // Already aborted - ignore.
-      }
+      this.abortMigration(
+        store,
+        "walk cursor",
+        (event.target as IDBRequest).error,
+      );
     };
+  }
+
+  /**
+   * Roll back a files-store migration by aborting its upgrade transaction, so
+   * the schema is not marked at the new version with rows still on the old shape.
+   * Safe to call after the transaction has already aborted.
+   */
+  private abortMigration(
+    store: IDBObjectStore,
+    phase: string,
+    error: unknown,
+  ): void {
+    console.error(`Files-store migration failed to ${phase}:`, error);
+    try {
+      store.transaction.abort();
+    } catch {
+      // Already aborted - ignore.
+    }
   }
 
   /**
