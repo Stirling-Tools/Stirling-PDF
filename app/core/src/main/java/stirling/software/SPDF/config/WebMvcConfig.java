@@ -226,7 +226,8 @@ public class WebMvcConfig implements WebMvcConfigurer {
                             "Content-Disposition",
                             "Content-Type",
                             "X-Stirling-Skipped-Field-Edits",
-                            "X-Stirling-Skipped-Field-Edits-Total")
+                            "X-Stirling-Skipped-Field-Edits-Total",
+                            "X-Stirling-Detected-Fields")
                     .allowCredentials(true)
                     .maxAge(3600);
         }
