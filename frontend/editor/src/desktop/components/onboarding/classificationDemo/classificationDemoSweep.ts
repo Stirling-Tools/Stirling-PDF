@@ -21,6 +21,14 @@ import { accentColor, accentCycleColor } from "@app/utils/accentColors";
  *  sweep free server-side without touching how uploads are charged. */
 const ONBOARDING_METER_NAME = "Onboarding classification";
 
+/**
+ * Longest the sweep waits for one document to be stored before moving on. addFiles only
+ * resolves once the bytes are durably written, so a storage stall would otherwise hold
+ * the whole run — which is what happened when IndexedDB refused a Blob mid-sweep. The
+ * write is not cancelled, just stopped being waited on.
+ */
+const STORE_TIMEOUT_MS = 10_000;
+
 /** How many PDFs one sweep covers. The rest of the folder waits for a follow-up batch. */
 export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
 
@@ -232,7 +240,7 @@ async function classifyAndAdd(
   }
   // Storage failing does not invalidate the verdict: the tally still counts the document,
   // it just will not appear in the library.
-  await deps
+  const stored = deps
     .addFiles([file], {
       // The sidebar reads IndexedDB, so this still groups in the library without
       // becoming an open file — nothing selected, user's workspace untouched.
@@ -245,6 +253,10 @@ async function classifyAndAdd(
       },
     })
     .catch(() => []);
+  await Promise.race([
+    stored,
+    new Promise((resolve) => setTimeout(resolve, STORE_TIMEOUT_MS)),
+  ]);
   return verdict.labels;
 }
 
