@@ -283,7 +283,13 @@
 
 /* A refresh in progress, on a row that has no room for a spinner beside its label. */
 .file-sidebar-spin {
-  animation: file-sidebar-spin 0.9s linear infinite;
+  animation: file-sidebar-refresh-spin 0.9s linear infinite;
+}
+
+@keyframes file-sidebar-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
