@@ -208,7 +208,7 @@ export function Usage({ onWalletLoaded, onReauth }: UsageProps = {}) {
           >
             {t(
               "portal.usage.sessionExpired.body",
-              "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
+              "Your Stirling account session has expired. Sign in again to view billing - your instance stays linked.",
             )}
           </Banner>
         )}

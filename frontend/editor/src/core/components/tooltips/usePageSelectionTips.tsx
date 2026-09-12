@@ -45,11 +45,11 @@ export const usePageSelectionTips = (): TooltipContent => {
         bullets: [
           t(
             "pageSelection.tooltip.ranges.bullet1",
-            "<strong>3-6</strong> → selects pages 3–6",
+            "<strong>3-6</strong> → selects pages 3-6",
           ),
           t(
             "pageSelection.tooltip.ranges.bullet2",
-            "<strong>10-15</strong> → selects pages 10–15",
+            "<strong>10-15</strong> → selects pages 10-15",
           ),
           t(
             "pageSelection.tooltip.ranges.bullet3",
@@ -103,7 +103,7 @@ export const usePageSelectionTips = (): TooltipContent => {
         bullets: [
           t(
             "pageSelection.tooltip.complex.bullet1",
-            "<strong>1,3-5,8,2n</strong> → pages 1, 3–5, 8, plus evens",
+            "<strong>1,3-5,8,2n</strong> → pages 1, 3-5, 8, plus evens",
           ),
           t(
             "pageSelection.tooltip.complex.bullet2",

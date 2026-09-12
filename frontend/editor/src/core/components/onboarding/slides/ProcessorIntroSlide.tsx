@@ -7,7 +7,7 @@ const ProcessorIntroBody = () => (
     <Trans
       i18nKey="onboarding.processorIntro.body"
       components={{ strong: <strong /> }}
-      defaults="Stirling now runs <strong>Policies</strong> — automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
+      defaults="Stirling now runs <strong>Policies</strong> - automated rules that classify, secure, and process every document as it arrives. Set them up and monitor runs in the <strong>Processor</strong>."
     />
   </span>
 );
