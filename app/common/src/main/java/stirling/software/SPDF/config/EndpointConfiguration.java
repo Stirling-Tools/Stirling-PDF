@@ -415,6 +415,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Other", "remove-annotations");
         addEndpointToGroup("Other", "get-info-on-pdf");
         addEndpointToGroup("Other", "add-attachments");
+        addEndpointToGroup("Other", "batch-process-attachments");
+        addEndpointToGroup("Other", "list-attachments");
+        addEndpointToGroup("Other", "extract-single-attachment");
         addEndpointToGroup("Other", "replace-invert-pdf");
         addEndpointToGroup("Other", "edit-table-of-contents");
         addEndpointToGroup("Other", "text-editor-pdf");
@@ -531,6 +534,9 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-text");
         addEndpointToGroup("Java", "pdf-to-markdown");
         addEndpointToGroup("Java", "add-attachments");
+        addEndpointToGroup("Java", "batch-process-attachments");
+        addEndpointToGroup("Java", "list-attachments");
+        addEndpointToGroup("Java", "extract-single-attachment");
         addEndpointToGroup("Java", "compress-pdf");
         addEndpointToGroup("Java", "cbz-to-pdf");
         addEndpointToGroup("Java", "pdf-to-cbz");

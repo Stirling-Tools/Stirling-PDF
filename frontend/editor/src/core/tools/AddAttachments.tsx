@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useViewScopedFiles } from "@app/hooks/tools/shared/useViewScopedFiles";
+import { useFileContext } from "@app/contexts/file/fileHooks";
 import {
   createToolFlow,
   type MiddleStepConfig,
@@ -20,13 +21,18 @@ const AddAttachments = ({
 }: BaseToolProps) => {
   const { t } = useTranslation();
   const selectedFiles = useViewScopedFiles();
+  const { addFiles } = useFileContext();
   const addAttachmentsTips = useAddAttachmentsTips();
 
   const params = useAddAttachmentsParameters();
   const operation = useAddAttachmentsOperation();
 
-  const { enabled: endpointEnabled, loading: endpointLoading } =
+  const { enabled: addEndpointEnabled, loading: endpointLoading } =
     useEndpointEnabled("add-attachments");
+  const { enabled: batchEndpointEnabled } = useEndpointEnabled(
+    "batch-process-attachments",
+  );
+  const endpointEnabled = addEndpointEnabled && batchEndpointEnabled;
 
   useEffect(() => {
     operation.resetResults();
@@ -88,6 +94,14 @@ const AddAttachments = ({
           parameters={params.parameters}
           onParameterChange={params.updateParameter}
           disabled={endpointLoading}
+          activeFile={selectedFiles[0] || null}
+          onFileUpdated={(updatedFile) => {
+            void addFiles([updatedFile], { selectFiles: true });
+            if (onComplete) {
+              onComplete([updatedFile]);
+            }
+          }}
+          onError={(msg) => onError?.(msg)}
         />
       ),
     });
@@ -105,7 +119,7 @@ const AddAttachments = ({
     steps: getSteps(),
     executeButton: {
       text: t("AddAttachmentsRequest.submit", "Add Attachments"),
-      isVisible: !hasResults,
+      isVisible: false,
       loadingText: t("loading"),
       onClick: handleExecute,
       endpointEnabled: endpointEnabled,

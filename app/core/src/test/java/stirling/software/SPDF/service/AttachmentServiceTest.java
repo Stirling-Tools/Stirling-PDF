@@ -297,6 +297,52 @@ class AttachmentServiceTest {
     }
 
     @Test
+    void renameAttachment_MatchesCaseInsensitively() throws IOException {
+        try (var document = new PDDocument()) {
+            var file =
+                    new MockMultipartFile(
+                            "file",
+                            "Report.PDF",
+                            MediaType.APPLICATION_PDF_VALUE,
+                            "data".getBytes());
+            attachmentService.addAttachment(document, List.of(file));
+            PDDocument result =
+                    attachmentService.renameAttachment(document, "report.pdf", "renamed.txt");
+            assertNotNull(result);
+            List<AttachmentInfo> attachments = attachmentService.listAttachments(result);
+            assertEquals(1, attachments.size());
+            assertEquals("renamed.txt", attachments.get(0).getFilename());
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_ReturnsMatchingBytes() throws IOException {
+        try (var document = new PDDocument()) {
+            var file =
+                    new MockMultipartFile(
+                            "file", "notes.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+            attachmentService.addAttachment(document, List.of(file));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "notes.txt");
+            assertTrue(extracted.isPresent());
+            assertEquals("hello", new String(extracted.get()));
+        }
+    }
+
+    @Test
+    void extractSingleAttachment_EmptyWhenNameNotFound() throws IOException {
+        try (var document = new PDDocument()) {
+            var file =
+                    new MockMultipartFile(
+                            "file", "notes.txt", MediaType.TEXT_PLAIN_VALUE, "hello".getBytes());
+            attachmentService.addAttachment(document, List.of(file));
+            Optional<byte[]> extracted =
+                    attachmentService.extractSingleAttachment(document, "missing.txt");
+            assertTrue(extracted.isEmpty());
+        }
+    }
+
+    @Test
     void renameAttachment_EmptyDocumentThrowsException() throws IOException {
         try (var document = new PDDocument()) {
             var file =
