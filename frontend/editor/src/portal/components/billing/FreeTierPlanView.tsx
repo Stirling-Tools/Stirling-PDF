@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Card } from "@app/ui";
 import { BillingScreen } from "@app/billing";
@@ -74,7 +74,11 @@ function localWallet(balance: FreeTierBalance, seats: Seats | null): Wallet {
  * <p>Reads local endpoints only. Loading a wallet here would assert a linkage the browser's SaaS
  * session cannot vouch for.
  */
-export function FreeTierPlanView() {
+export function FreeTierPlanView({
+  licenseSection,
+}: {
+  licenseSection?: ReactNode;
+}) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
   // An outcome, not a rendered message: the effect must not depend on `t`, whose identity is
@@ -122,6 +126,7 @@ export function FreeTierPlanView() {
 
   return (
     <BillingScreen
+      licenseSection={licenseSection}
       wallet={wallet}
       loading={load.state === "loading"}
       selfHosted

@@ -16,6 +16,7 @@ export function ProcessorPlanRow({
   wallet,
   pendingUnits = 0,
   onActivate,
+  activateLabel,
   onGovern,
   governLabel,
 }: {
@@ -28,6 +29,8 @@ export function ProcessorPlanRow({
   pendingUnits?: number;
   /** Leader-only, while off: the activation door. Omit for members. */
   onActivate?: () => void;
+  /** Overrides activation with the host's quote or invoice resume label. */
+  activateLabel?: ReactNode;
   /** Leader-only, while on: the spend-limit door. Omit for members. */
   onGovern?: () => void;
   /** Overrides the governing door's label, e.g. "Top up" for a prepaid team. */
@@ -76,7 +79,8 @@ export function ProcessorPlanRow({
         )}
         door={
           onActivate
-            ? t("portal.billing.processor.activate", "Switch on the Processor")
+            ? (activateLabel ??
+              t("portal.billing.processor.activate", "Switch on the Processor"))
             : undefined
         }
         onDoor={onActivate}

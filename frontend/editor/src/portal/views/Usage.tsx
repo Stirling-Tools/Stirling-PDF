@@ -1,7 +1,18 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
+import { useSearchParams } from "react-router-dom";
 import { Banner, Button } from "@app/ui";
 import { BillingScreen } from "@app/billing";
+import { useUI } from "@portal/contexts/UIContext";
+import { useProcurement } from "@portal/components/procurement/useProcurement";
+import { ControlledDealStatusHero } from "@portal/components/procurement/ProcurementBanner";
+import { ProcurementFlow } from "@portal/components/procurement/ProcurementFlow";
 import {
   fetchWallet,
   refreshWalletCache,
@@ -13,6 +24,7 @@ import {
   type LocalUsage,
 } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
+import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { PaymentSection } from "@portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
@@ -41,9 +53,8 @@ export interface UsageProps {
    * is owned by the app, so this path never triggers).
    */
   onReauth?: () => void;
-  /** A prop rather than a hook, as {@link onReauth} is: reaching for a router here would make
-   * this view unrenderable wherever one is absent. */
-  onEnterpriseQuote?: () => void;
+  /** Only the self-hosted host supplies local license management; notify after activation. */
+  renderLicenseSection?: (onSaved: () => void) => ReactNode;
 }
 
 /**
@@ -58,10 +69,55 @@ export interface UsageProps {
 export function Usage({
   onWalletLoaded,
   onReauth,
-  onEnterpriseQuote,
+  renderLicenseSection,
 }: UsageProps = {}) {
   const { t } = useTranslation();
   const [wallet, setWallet] = useState<Wallet | null>(null);
+  const procurement = useProcurement();
+  const { trialSetupRequested, clearTrialSetupRequest } = useUI();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const handledProcurementRequest = useRef(false);
+  const canManageProcurement = wallet?.role === "leader";
+  const bundleFlow = useBundleFlowState(
+    wallet?.teamId,
+    canManageProcurement && wallet?.status === "free",
+  );
+
+  useEffect(() => {
+    const requested =
+      trialSetupRequested || searchParams.get("procurement") === "start";
+    if (!requested) {
+      handledProcurementRequest.current = false;
+      return;
+    }
+    if (
+      handledProcurementRequest.current ||
+      !wallet ||
+      !procurement.isLinked ||
+      procurement.loading ||
+      procurement.loadError
+    )
+      return;
+    handledProcurementRequest.current = true;
+    clearTrialSetupRequest();
+    if (searchParams.get("procurement") === "start") {
+      const next = new URLSearchParams(searchParams);
+      next.delete("procurement");
+      setSearchParams(next, { replace: true });
+    }
+    if (!canManageProcurement) return;
+    if (!procurement.started) procurement.onExploreEnterprise();
+    else if (procurement.stage === "exploring") procurement.onStartTrial();
+    else procurement.setOpen(true);
+  }, [
+    trialSetupRequested,
+    searchParams,
+    setSearchParams,
+    wallet,
+    procurement,
+    canManageProcurement,
+    clearTrialSetupRequest,
+  ]);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
   const [localUsage, setLocalUsage] = useState<LocalUsage | null>(null);
@@ -70,6 +126,22 @@ export function Usage({
   // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
   const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  const previousDeal = useRef(procurement.data);
+  useEffect(() => {
+    const previous = previousDeal.current;
+    previousDeal.current = procurement.data;
+    if (!previous || previous === procurement.data) return;
+    // A trial or agreement can change entitlements while the buyer stays on this page.
+    let cancelled = false;
+    void refreshWalletCache()
+      .catch(() => {})
+      .then(() => {
+        if (!cancelled) setRefreshKey((key) => key + 1);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [procurement.data]);
   // From fleet-stats, not the wallet. Null when the backend cannot compute it, which omits the row.
   const [editorsDeployed, setEditorsDeployed] = useState<number | null>(null);
   // A team never billed has none, and the section and its chip then drop out.
@@ -148,6 +220,13 @@ export function Usage({
   }, [refreshKey, onWalletLoaded, t]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  const refreshAfterLicense = useCallback(() => {
+    void refreshWalletCache()
+      .catch(() => {})
+      .then(() => {
+        if (mounted.current) refresh();
+      });
+  }, [refresh]);
   const onInvoicesEmpty = useCallback(() => setHasInvoices(false), []);
 
   // The same flow the settings plan section uses, so there is one purchase implementation.
@@ -209,6 +288,28 @@ export function Usage({
       pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
       notices={
         <>
+          {procurement.loadError && (
+            <Banner
+              tone="danger"
+              title={t("portal.procurement.error.title")}
+              action={
+                <Button size="sm" onClick={procurement.retry}>
+                  {t("portal.accountLink.gate.retry", "Try again")}
+                </Button>
+              }
+            >
+              {procurement.loadError}
+            </Banner>
+          )}
+          {procurement.error && !procurement.open && (
+            <Banner
+              tone="danger"
+              title={t("portal.procurement.error.title")}
+              onDismiss={() => procurement.setError(null)}
+            >
+              {procurement.error}
+            </Banner>
+          )}
           {sessionExpired && (
             <Banner
               tone="warning"
@@ -251,20 +352,47 @@ export function Usage({
         </>
       }
       editorsDeployed={editorsDeployed}
+      licenseSection={renderLicenseSection?.(refreshAfterLicense)}
       onAddCapacity={
         checkout && wallet?.role === "leader" ? addCapacity : undefined
       }
       onActivateProcessor={
         wallet?.role === "leader" && !wallet?.processor?.active
-          ? () => setActivationStep("choose")
+          ? () =>
+              setActivationStep(
+                bundleFlow.status === "none" ? "choose" : "prepay",
+              )
           : undefined
+      }
+      activateLabel={
+        bundleFlow.status === "invoice"
+          ? t("portal.billing.freePlan.payInvoice", "Pay invoice to complete")
+          : bundleFlow.status === "quote"
+            ? t("portal.billing.freePlan.viewQuote", "View quote")
+            : undefined
       }
       onGovernSpend={
         wallet?.role === "leader" && wallet?.processor?.active
           ? () => setAdjustingLimit(true)
           : undefined
       }
-      onEnterpriseQuote={onEnterpriseQuote}
+      procurementSection={
+        procurement.isLinked && procurement.started ? (
+          <ControlledDealStatusHero
+            controller={procurement}
+            readOnly={!canManageProcurement}
+          />
+        ) : undefined
+      }
+      onEnterpriseQuote={
+        canManageProcurement &&
+        procurement.isLinked &&
+        !procurement.loading &&
+        !procurement.loadError &&
+        !procurement.started
+          ? procurement.onExploreEnterprise
+          : undefined
+      }
       paymentSection={
         paying && wallet ? (
           <PaymentSection
@@ -281,12 +409,14 @@ export function Usage({
       }
       extras={
         <>
+          {canManageProcurement && <ProcurementFlow controller={procurement} />}
           {wallet && wallet.status === "free" && (
             <FreePlanView
               wallet={wallet}
               step={activationStep}
               onStepChange={setActivationStep}
               onSubscribed={confirmSubscription}
+              onActivationClosed={bundleFlow.refresh}
             />
           )}
 

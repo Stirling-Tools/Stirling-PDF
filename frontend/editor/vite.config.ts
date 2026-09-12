@@ -269,6 +269,10 @@ export default defineConfig(async ({ mode, command }) => {
       "node_modules",
       `.vite-${effectiveMode}`,
     ),
+    resolve: {
+      // Linked workspace dependencies must share the renderer's React instance.
+      dedupe: ["react", "react-dom"],
+    },
     define: {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },

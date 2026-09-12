@@ -1,13 +1,12 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button } from "@app/ui";
+import { Banner } from "@app/ui";
 import type { Wallet } from "@portal/api/billing";
 import type { SaasCurrency } from "@portal/billing/stripe";
 import { StripeCheckoutModal } from "@portal/components/billing/StripeCheckoutModal";
 import { ActivationChoiceModal } from "@portal/components/billing/ActivationChoiceModal";
 import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
 import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
-import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
 
 interface Props {
   wallet: Wallet;
@@ -24,22 +23,21 @@ interface Props {
    * modal awaits this to stay open through activation.
    */
   onSubscribed?: () => Promise<boolean>;
+  /** Refresh the host's quote status when an activation dialog closes. */
+  onActivationClosed?: () => void;
 }
 
 function isSaasCurrency(c: string | null): c is SaasCurrency {
   return c === "usd" || c === "eur" || c === "gbp";
 }
 
-/**
- * Linked, not yet subscribed — the "Editor" current plan. Shows the team's free
- * editor fleet, the Processor trial meter (with the inline "Switch on the
- * Processor" CTA → embedded Stripe Checkout), and the Enterprise upsell.
- */
+/** Owns activation dialogs and prepaid capacity; the host supplies the Processor row action. */
 export function FreePlanView({
   wallet,
   step: controlledStep,
   onStepChange,
   onSubscribed,
+  onActivationClosed,
 }: Props) {
   const { t } = useTranslation();
   // Activation fork (demo D97): choose → the metered checkout (payg) or the
@@ -55,11 +53,6 @@ export function FreePlanView({
   const currency: SaasCurrency = isSaasCurrency(wallet.currency)
     ? wallet.currency
     : "usd";
-
-  // Where this team sits in the prepaid-bundle flow, read on load so the CTA names
-  // the resume action rather than always restarting the fork. Leader + team gated
-  // (the RPC 403s otherwise). Refreshed when any activation modal closes.
-  const flow = useBundleFlowState(wallet.teamId, isLeader);
 
   function requireTeam(): boolean {
     if (wallet.teamId == null) {
@@ -85,23 +78,8 @@ export function FreePlanView({
   // freshly-minted quote / invoice without a full page reload.
   function closeModals() {
     setStep(null);
-    flow.refresh();
+    onActivationClosed?.();
   }
-
-  // Starting the Processor is the row's own door. What survives here is the case that door
-  // cannot express: a quote or invoice already raised, which resumes rather than starts.
-  const resumeAction =
-    isLeader && flow.status !== "none" ? (
-      <Button
-        variant="primary"
-        onClick={resumeBundle}
-        disabled={wallet.teamId == null}
-      >
-        {flow.status === "invoice"
-          ? t("portal.billing.freePlan.payInvoice", "Pay invoice to complete")
-          : t("portal.billing.freePlan.viewQuote", "View quote")}
-      </Button>
-    ) : null;
 
   return (
     <div className="portal-billing__stack">
@@ -112,10 +90,6 @@ export function FreePlanView({
           wallet={wallet}
           onBuy={isLeader ? resumeBundle : undefined}
         />
-      )}
-
-      {resumeAction && (
-        <div className="portal-billing__prepaid-foot">{resumeAction}</div>
       )}
 
       {missingTeam && (
@@ -140,6 +114,7 @@ export function FreePlanView({
         <StripeCheckoutModal
           open={step === "payg"}
           onClose={closeModals}
+          onBack={() => setStep("choose")}
           teamId={wallet.teamId}
           currency={currency}
           pricePerDocMinor={wallet.pricePerDocMinor}
@@ -158,6 +133,7 @@ export function FreePlanView({
         <BundleCheckoutModal
           open={step === "prepay"}
           onClose={closeModals}
+          onBack={() => setStep("choose")}
           wallet={wallet}
           onComplete={() => {
             closeModals();

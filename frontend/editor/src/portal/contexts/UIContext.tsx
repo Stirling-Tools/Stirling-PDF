@@ -58,8 +58,7 @@ interface UIContextValue {
   clearConnectOutcome: () => void;
   /**
    * A request to begin the enterprise trial, raised from wherever the buyer said yes (the billing
-   * upsell, a sales link). The deal controller lives on Home, so this is a one-shot signal rather
-   * than a direct call: Home consumes it, opens trial setup, and clears it.
+   * upsell). Usage & Billing consumes it once the deal is loaded, then starts or resumes the flow.
    */
   trialSetupRequested: boolean;
   requestTrialSetup: () => void;

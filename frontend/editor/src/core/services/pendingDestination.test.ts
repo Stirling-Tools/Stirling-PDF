@@ -19,8 +19,8 @@ afterEach(() => {
 
 describe("pendingDestination", () => {
   it("returns the remembered path", () => {
-    rememberPendingDestination("/processor/procurement");
-    expect(takePendingDestination()).toBe("/processor/procurement");
+    rememberPendingDestination("/procurement");
+    expect(takePendingDestination()).toBe("/procurement");
   });
 
   it("keeps the query string, which carries the destination's own intent", () => {
@@ -35,22 +35,22 @@ describe("pendingDestination", () => {
   });
 
   it("survives a new page load", () => {
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     resetPendingDestinationForTests();
-    expect(takePendingDestination()).toBe("/processor/procurement");
+    expect(takePendingDestination()).toBe("/procurement");
   });
 
   it("consumes the intent, so it redirects one sign-in only", () => {
-    rememberPendingDestination("/processor/procurement");
-    expect(takePendingDestination()).toBe("/processor/procurement");
+    rememberPendingDestination("/procurement");
+    expect(takePendingDestination()).toBe("/procurement");
     resetPendingDestinationForTests();
     expect(takePendingDestination()).toBeNull();
   });
 
   it("gives the same answer twice within a page load", () => {
-    rememberPendingDestination("/processor/procurement");
-    expect(takePendingDestination()).toBe("/processor/procurement");
-    expect(takePendingDestination()).toBe("/processor/procurement");
+    rememberPendingDestination("/procurement");
+    expect(takePendingDestination()).toBe("/procurement");
+    expect(takePendingDestination()).toBe("/procurement");
   });
 
   it("refuses to store an unsafe path", () => {
@@ -78,7 +78,7 @@ describe("pendingDestination", () => {
 
   it("expires an intent older than the window", () => {
     vi.useFakeTimers();
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     vi.advanceTimersByTime(25 * 60 * 60 * 1000);
     resetPendingDestinationForTests();
     expect(takePendingDestination()).toBeNull();
@@ -86,10 +86,10 @@ describe("pendingDestination", () => {
 
   it("keeps an intent inside the window", () => {
     vi.useFakeTimers();
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     vi.advanceTimersByTime(23 * 60 * 60 * 1000);
     resetPendingDestinationForTests();
-    expect(takePendingDestination()).toBe("/processor/procurement");
+    expect(takePendingDestination()).toBe("/procurement");
   });
 
   it("survives a corrupt entry", () => {
@@ -98,14 +98,14 @@ describe("pendingDestination", () => {
   });
 
   it("clears without reading", () => {
-    rememberPendingDestination("/processor/procurement");
+    rememberPendingDestination("/procurement");
     clearPendingDestination();
     expect(takePendingDestination()).toBeNull();
   });
 
   it("re-remembering replaces a taken intent in the same page load", () => {
-    rememberPendingDestination("/processor/procurement");
-    expect(takePendingDestination()).toBe("/processor/procurement");
+    rememberPendingDestination("/procurement");
+    expect(takePendingDestination()).toBe("/procurement");
     rememberPendingDestination("/processor/users");
     expect(takePendingDestination()).toBe("/processor/users");
   });

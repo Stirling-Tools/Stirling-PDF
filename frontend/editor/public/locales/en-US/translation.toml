@@ -7127,6 +7127,9 @@ going = "Taking you to stirling.com"
 reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
 title = "Connecting"
 
+[portal.accountLink.gate]
+retry = "Try again"
+
 [portal.accountLink.instances]
 active = "Active"
 revoke = "Revoke"
@@ -7261,6 +7264,7 @@ invoices = "Invoices"
 nav = "Sections"
 payment = "Payment"
 plan = "Plan"
+procurement = "Procurement"
 usage = "Usage"
 
 [portal.billing.cycle]
@@ -7313,6 +7317,15 @@ failed = "Unpaid"
 paid = "Paid"
 undated = "Undated"
 unknownAmount = "Unknown"
+view = "View"
+
+[portal.billing.license]
+add = "Add"
+addTitle = "Add license"
+empty = "No license installed"
+label = "License key"
+update = "Update"
+updateTitle = "Update license"
 view = "View"
 
 [portal.billing.payment]
@@ -9438,6 +9451,7 @@ sentenceTrial = "set up your trial workspace"
 [portal.procurement.journey]
 daysLeft_one = "{{count}} day left"
 daysLeft_other = "{{count}} days left"
+expired = "Trial expired"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "One signature covers MSA, order form, EULA and DPA."

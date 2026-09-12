@@ -1,4 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { ServerLicenseSection } from "@portal/components/billing/ServerLicenseSection";
 import {
   useApplyLinkFacts,
   useLinkOptional,
@@ -7,7 +9,6 @@ import { useUI } from "@portal/contexts/UIContext";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
 import { FreeTierPlanView } from "@portal/components/billing/FreeTierPlanView";
-import { useView } from "@portal/contexts/ViewContext";
 import { Usage } from "@portal/views/Usage";
 import type { Wallet } from "@portal/api/billing";
 
@@ -20,23 +21,28 @@ import type { Wallet } from "@portal/api/billing";
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
-  const { openLinkModal, requestTrialSetup } = useUI();
-  const { loading } = useConnectGate();
+  const { openLinkModal, trialSetupRequested } = useUI();
+  const { loading, gated, connect } = useConnectGate();
   const isAdmin = usePortalAdmin();
   const link = useLinkOptional();
-  const { setActiveView } = useView();
+  const [searchParams] = useSearchParams();
+  const prompted = useRef(false);
+  const procurementRequested =
+    trialSetupRequested || searchParams.get("procurement") === "start";
+
+  useEffect(() => {
+    if (!procurementRequested || link?.isLinked) prompted.current = false;
+    else if (isAdmin && !loading && gated && !prompted.current) {
+      prompted.current = true;
+      connect();
+    }
+  }, [procurementRequested, link?.isLinked, isAdmin, loading, gated, connect]);
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
     [applyLinkFacts],
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
-  // Enterprise is a conversation, not a plan to click into, so this raises the request and lands
-  // the buyer on Home where the deal lives.
-  const onEnterpriseQuote = useCallback(() => {
-    requestTrialSetup();
-    setActiveView("home");
-  }, [requestTrialSetup, setActiveView]);
 
   // Administrators only: the figures are instance-wide and the endpoints ADMIN-gated. The nav
   // hides the entry to match, so this is the backstop for a typed URL.
@@ -46,12 +52,19 @@ export function PortalBillingGate() {
   if (loading) return null;
   // A positively known link, not merely "not gated": linking turned off and a failed status
   // check are neither, and must not reach a SaaS this instance has no address for.
-  if (!link?.isLinked) return <FreeTierPlanView />;
+  if (!link?.isLinked)
+    return (
+      <FreeTierPlanView
+        licenseSection={<ServerLicenseSection onSaved={() => {}} />}
+      />
+    );
   return (
     <Usage
       onWalletLoaded={onWalletLoaded}
       onReauth={onReauth}
-      onEnterpriseQuote={onEnterpriseQuote}
+      renderLicenseSection={(onSaved) => (
+        <ServerLicenseSection onSaved={onSaved} />
+      )}
     />
   );
 }
