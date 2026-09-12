@@ -4,6 +4,7 @@ import React, {
   useMemo,
   useRef,
   useEffect,
+  useLayoutEffect,
   forwardRef,
 } from "react";
 import { Loader, Tooltip } from "@mantine/core";
@@ -21,6 +22,7 @@ import {
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
+import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@app/hooks/useFreeCreditsSummary";
@@ -175,6 +177,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     // even if a stub carries labels from an imported PDF; keeps the row plain.
     const classificationEnabled = useClassificationEnabled();
     const nativeFileInputRef = useRef<HTMLInputElement>(null);
+    const initialSidebarPreferenceAppliedRef = useRef(false);
     // State (not ref) so setting it triggers a re-render - avoids racing addFiles state updates.
     const [pendingViewFileId, setPendingViewFileId] = useState<string | null>(
       null,
@@ -182,6 +185,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
 
     const navigate = useNavigate();
     const { config } = useAppConfig();
+    const { preferences } = usePreferences();
     const {
       isEnabled: isGoogleDriveEnabled,
       openPicker: openGoogleDrivePicker,
@@ -258,6 +262,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       useAccountIdentity();
     const credits = useFreeCreditsSummary();
     const openPlan = useOpenPlan();
+
+    useLayoutEffect(() => {
+      if (initialSidebarPreferenceAppliedRef.current) return;
+
+      initialSidebarPreferenceAppliedRef.current = true;
+      if (preferences.hideFilesSidebarByDefault && !collapsed) {
+        onToggleCollapse?.();
+      }
+    }, [collapsed, onToggleCollapse, preferences.hideFilesSidebarByDefault]);
 
     // Leaf files = user-visible files (excludes intermediate tool outputs)
     const [allFileStubs, setAllFileStubs] = useState<StirlingFileStub[]>([]);
