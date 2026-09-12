@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,17 @@ import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Absent from the desktop bundle. The bundled backend is core-flavour and unmetered, so a pipeline
+ * that ran there would process documents off the books; on desktop pipelines belong to the
+ * connected server. Keyed on the JVM's own {@code STIRLING_PDF_TAURI_MODE} property, which only the
+ * Tauri sidecar sets.
+ */
 @Service
+@ConditionalOnProperty(
+        name = "STIRLING_PDF_TAURI_MODE",
+        havingValue = "false",
+        matchIfMissing = true)
 @Slf4j
 public class PipelineDirectoryProcessor {
 
