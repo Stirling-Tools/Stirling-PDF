@@ -113,8 +113,13 @@ describe("flavor capabilities — invitations + remove scope", () => {
     expect(saasCaps.adminRole).toBe(false);
   });
 
-  it("self-hosted has no pending-invite management and removes at org scope", () => {
-    expect(selfHostedCaps.manageInvitations).toBe(false);
+  it("self-hosted manages its invite links and removes at org scope", () => {
+    expect(selfHostedCaps.manageInvitations).toBe(true);
+    expect(selfHostedCaps.inviteLink).toBe(true);
     expect(selfHostedCaps.removeScope).toBe("org");
+  });
+
+  it("SaaS has no invite-link endpoint to offer", () => {
+    expect(saasCaps.inviteLink).toBe(false);
   });
 });

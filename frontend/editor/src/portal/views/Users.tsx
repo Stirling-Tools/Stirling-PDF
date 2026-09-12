@@ -286,13 +286,18 @@ export function Users() {
   }
   function cancelInvite(invitation: PendingInvitation) {
     setConfirm({
-      title: t("users.confirm.cancelInviteTitle", "Cancel invitation"),
-      body: t(
-        "users.confirm.cancelInviteBody",
-        "Cancel the invitation to {{email}}? They won't be able to join with the current link.",
-        { email: invitation.email },
-      ),
-      confirmLabel: t("users.action.cancelInvite", "Cancel invitation"),
+      title: t("users.confirm.cancelInviteTitle", "Revoke invitation"),
+      body: invitation.email
+        ? t(
+            "users.confirm.cancelInviteBody",
+            "Revoke the invitation to {{email}}? The link they were sent stops working.",
+            { email: invitation.email },
+          )
+        : t(
+            "users.confirm.cancelLinkBody",
+            "Revoke this invite link? Anyone still holding it will no longer be able to join.",
+          ),
+      confirmLabel: t("users.action.cancelInvite", "Revoke invitation"),
       danger: true,
       action: () => usersBackend.cancelInvitation(invitation.id),
     });
@@ -422,6 +427,9 @@ export function Users() {
         defaultTeamId={inviteTeamId}
         canDirectCreate={caps.directCreate && authState.data?.canDirectCreate}
         canEmailInvite={canEmailInvite}
+        canInviteLink={
+          caps.inviteLink && (usersState.data?.inviteLinksEnabled ?? false)
+        }
         hasOauth={authState.data?.hasOauth}
         hasSaml={authState.data?.hasSaml}
         adminRole={caps.adminRole}

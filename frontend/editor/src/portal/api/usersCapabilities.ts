@@ -30,10 +30,15 @@ export interface UsersCapabilities {
   emailInvite: boolean;
   /**
    * Manage pending invitations (list + cancel). On SaaS an invite is a pending
-   * TeamInvitation until accepted; self-hosted invites create the account at once,
-   * so there's nothing pending to manage - off there.
+   * TeamInvitation until accepted; self-hosted lists its unredeemed invite links,
+   * which are pending in the same sense and revoked the same way.
    */
   manageInvitations: boolean;
+  /**
+   * Issue a shareable invite link. Self-hosted only - the SaaS backend has no
+   * token-link endpoint, only email invitations.
+   */
+  inviteLink: boolean;
   /** Create an account directly with a password (self-hosted password login). */
   directCreate: boolean;
   /** Admin password reset. */

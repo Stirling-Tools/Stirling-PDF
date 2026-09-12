@@ -281,6 +281,7 @@ function makeUsersResponse(members: Member[]): UsersResponse {
     },
     mailEnabled: true,
     emailInvitesEnabled: true,
+    inviteLinksEnabled: true,
   };
 }
 

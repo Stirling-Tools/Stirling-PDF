@@ -160,6 +160,7 @@ export const usersBackend: UsersBackend = {
         access: { tier, seatsUsed: 0, seatLimit: null },
         mailEnabled: true,
         emailInvitesEnabled: true,
+        inviteLinksEnabled: false,
         invitations: [],
       };
     }
@@ -198,6 +199,7 @@ export const usersBackend: UsersBackend = {
       // SaaS always has email (Supabase); no self-hosted SMTP gate.
       mailEnabled: true,
       emailInvitesEnabled: true,
+      inviteLinksEnabled: false,
       invitations,
     };
   },

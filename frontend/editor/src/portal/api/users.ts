@@ -66,14 +66,14 @@ export interface Role {
 }
 
 /**
- * A pending team invitation (SaaS only). Mapped from SaasTeamController's
- * InvitationDTO; self-hosted has no pending-invite concept (invites create the
- * account immediately) so the roster's `invitations` list stays empty there.
+ * A pending invitation: a SaaS TeamInvitation, or a self-hosted invite link that
+ * has been issued but not yet redeemed. Both are a promise of an account that
+ * does not exist yet, and both are cancelled the same way from the roster.
  */
 export interface PendingInvitation {
-  /** Backend invitationId, used for cancel. */
+  /** Backend invitationId (SaaS) or invite-token id (self-hosted), used for cancel. */
   id: number;
-  /** Invitee email. */
+  /** Invitee email; empty on a self-hosted link anyone may redeem. */
   email: string;
   /** Who sent it (inviter email), for context. */
   invitedBy?: string;
@@ -141,6 +141,8 @@ export interface UsersResponse {
   /** Whether email invites will work: SMTP on AND mail.enableInvites=true. Gates the
    * "Invite by email" option on self-hosted. */
   emailInvitesEnabled: boolean;
+  /** Whether invite links can be issued (mail.enableInvites, no SMTP needed). */
+  inviteLinksEnabled: boolean;
 }
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -235,6 +237,8 @@ interface AdminSettingsDto {
   lockedUsers?: string[];
   mailEnabled?: boolean;
   emailInvitesEnabled?: boolean;
+  inviteLinksEnabled?: boolean;
+  pendingInvites?: number;
   totalUsers?: number;
   maxAllowedUsers?: number;
   currentUsername?: string;
@@ -308,7 +312,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
   return {
     summary: {
       totalMembers: members.length,
-      pendingInvites: 0,
+      pendingInvites: data.pendingInvites ?? 0,
       seatsUsed,
       seatLimit,
     },
@@ -317,6 +321,7 @@ export async function fetchUsers(tier: Tier): Promise<UsersResponse> {
     access: { tier, seatsUsed, seatLimit },
     mailEnabled: data.mailEnabled === true,
     emailInvitesEnabled: data.emailInvitesEnabled === true,
+    inviteLinksEnabled: data.inviteLinksEnabled === true,
   };
 }
 

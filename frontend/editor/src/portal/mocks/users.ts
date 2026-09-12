@@ -226,6 +226,7 @@ export function buildUsersResponse(tier: Tier): UsersResponse {
     access: accessFor(tier),
     mailEnabled: false,
     emailInvitesEnabled: false,
+    inviteLinksEnabled: false,
   };
 }
 
