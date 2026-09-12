@@ -1363,6 +1363,10 @@ export type SecurityRemoveCertSignRequest = Record<string, never>;
 export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
+   * Whether to embed an RFC 3161 trusted timestamp alongside the signature, recording when the signature was applied. Uses the admin-configured default TSA server.
+   */
+  addTimestamp?: boolean;
+  /**
    * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
    */
   alias?: string;

@@ -30,6 +30,9 @@ export interface CertSignParameters extends BaseParameters {
   name: string;
   pageNumber: number;
   showLogo: boolean;
+
+  // Whether to embed an RFC 3161 trusted timestamp alongside the signature.
+  addTimestamp: boolean;
 }
 
 export const defaultParameters: CertSignParameters = {
@@ -42,6 +45,7 @@ export const defaultParameters: CertSignParameters = {
   name: "",
   pageNumber: 1,
   showLogo: true,
+  addTimestamp: true,
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;

@@ -15,7 +15,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -24,8 +23,10 @@ import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 
 import stirling.software.SPDF.model.api.security.TimestampPdfRequest;
+import stirling.software.SPDF.pdf.signature.TsaUrlResolver;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.CustomPDFDocumentFactory;
+import stirling.software.common.util.TempFileManager;
 
 @DisplayName("TimestampController security tests")
 @ExtendWith(MockitoExtension.class)
@@ -34,8 +35,9 @@ class TimestampControllerTest {
 
     @Mock private CustomPDFDocumentFactory pdfDocumentFactory;
     @Mock private ApplicationProperties applicationProperties;
+    @Mock private TempFileManager tempFileManager;
 
-    @InjectMocks private TimestampController controller;
+    private TimestampController controller;
 
     private ApplicationProperties.Security security;
     private ApplicationProperties.Security.Timestamp tsConfig;
@@ -48,6 +50,10 @@ class TimestampControllerTest {
         security.setTimestamp(tsConfig);
 
         when(applicationProperties.getSecurity()).thenReturn(security);
+
+        // TsaUrlResolver is not mocked - the allowlist logic under test lives there now.
+        TsaUrlResolver tsaUrlResolver = new TsaUrlResolver(applicationProperties);
+        controller = new TimestampController(pdfDocumentFactory, tsaUrlResolver, tempFileManager);
 
         mockPdfFile =
                 new MockMultipartFile(
