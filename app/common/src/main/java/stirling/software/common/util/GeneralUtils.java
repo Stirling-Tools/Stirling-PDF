@@ -659,7 +659,8 @@ public class GeneralUtils {
         int offset = oneBased ? 1 : 0;
         int maxSize = Math.max(1000, totalPages * 3);
         for (String page : pages) {
-            if ("all".equalsIgnoreCase(page)) {
+            String trimmedPage = page == null ? "" : page.trim();
+            if ("all".equalsIgnoreCase(trimmedPage)) {
 
                 for (int i = 0; i < totalPages; i++) {
                     result.add(i + offset);
@@ -801,23 +802,27 @@ public class GeneralUtils {
 
     private List<Integer> handlePart(String part, int totalPages, int offset) {
         List<Integer> partResult = new ArrayList<>();
+        String trimmedPart = part == null ? "" : part.trim();
+        if (trimmedPart.isEmpty()) {
+            return partResult;
+        }
 
         // First check for n-syntax because it should not be processed as a range
-        if (part.contains("n")) {
-            partResult = evaluateNFunc(part, totalPages);
+        if (trimmedPart.contains("n")) {
+            partResult = evaluateNFunc(trimmedPart, totalPages);
             // Adjust the results according to the offset
             for (int i = 0; i < partResult.size(); i++) {
                 int adjustedValue = partResult.get(i) - 1 + offset;
                 partResult.set(i, adjustedValue);
             }
-        } else if (part.contains("-")) {
+        } else if (trimmedPart.contains("-")) {
             // Process ranges only if it's not n-syntax
-            String[] rangeParts = part.split("-");
+            String[] rangeParts = trimmedPart.split("-");
             try {
-                int start = Integer.parseInt(rangeParts[0]);
+                int start = Integer.parseInt(rangeParts[0].trim());
                 int end =
-                        (rangeParts.length > 1 && !rangeParts[1].isEmpty())
-                                ? Integer.parseInt(rangeParts[1])
+                        (rangeParts.length > 1 && !rangeParts[1].trim().isEmpty())
+                                ? Integer.parseInt(rangeParts[1].trim())
                                 : totalPages;
                 for (int i = start; i <= end; i++) {
                     if (i >= 1 && i <= totalPages) {
@@ -825,17 +830,17 @@ public class GeneralUtils {
                     }
                 }
             } catch (NumberFormatException e) {
-                log.debug("Invalid range: {}", part);
+                log.debug("Invalid range: {}", trimmedPart);
             }
         } else {
             // This is a single page number
             try {
-                int pageNum = Integer.parseInt(part.trim());
+                int pageNum = Integer.parseInt(trimmedPart);
                 if (pageNum >= 1 && pageNum <= totalPages) {
                     partResult.add(pageNum - 1 + offset);
                 }
             } catch (NumberFormatException e) {
-                log.debug("Invalid page number: {}", part);
+                log.debug("Invalid page number: {}", trimmedPart);
             }
         }
         return partResult;
