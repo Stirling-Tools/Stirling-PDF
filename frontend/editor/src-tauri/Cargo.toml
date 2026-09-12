@@ -46,6 +46,7 @@ urlencoding = "2.1"
 sha2 = "0.11"
 base64 = "0.23"
 rand = "0.10"
+lru = "0.18.0"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 core-foundation = "0.10"
@@ -62,3 +63,13 @@ windows = { version = "0.62", features = [
     "Win32_UI_Shell",
     "Win32_System_ApplicationInstallationAndServicing",
 ] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.release.package."*"]
+opt-level = 3
