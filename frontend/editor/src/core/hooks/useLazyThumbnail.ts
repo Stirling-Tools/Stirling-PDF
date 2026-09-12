@@ -91,8 +91,8 @@ export function useLazyThumbnail(
         const file = await indexedDB.loadFile(fileId);
         if (!file || cancelled) return;
         const thumbnail = await generateThumbnailForFile(file);
-        if (cancelled || !thumbnail) return;
-        setThumb(thumbnail);
+        if (!thumbnail) return;
+        if (!cancelled) setThumb(thumbnail);
         void indexedDB.updateThumbnail(fileId, thumbnail);
         queueStubThumbUpdate(fileId, thumbnail, (id, url) =>
           updateStirlingFileStub(id, { thumbnailUrl: url }),

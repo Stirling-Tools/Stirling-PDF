@@ -18,7 +18,10 @@ function itemKeys(sections: Sections): string[] {
 // Admin AI settings pages exist only in the self-hosted proprietary flavor; this locks in that
 // the AI group can never leak into the SaaS nav (fails loudly if wired into the SaaS cascade).
 describe("saasConfigNavSections", () => {
+  // The four AI rows merged into one; the old keys stay listed so this still
+  // fails if an older nav is ever wired back in.
   const AI_ITEM_KEYS = [
+    "adminAi",
     "adminAiGeneral",
     "adminAiModels",
     "adminAiDocuments",

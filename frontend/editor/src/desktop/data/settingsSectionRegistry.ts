@@ -44,7 +44,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelKey: "settings.legal.label",
     labelFallback: "Legal",
     keywords: ["legal", "terms", "privacy", "licenses"],
-    groupLabelKey: "settings.legal.title",
-    groupLabelFallback: "Legal",
+    groupLabelKey: "settings.about.title",
+    groupLabelFallback: "About",
   },
 ];
