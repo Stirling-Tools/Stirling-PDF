@@ -1311,12 +1311,10 @@ const EmbedPdfViewerContent = ({
             background: "transparent",
           }}
         >
-          <div style={{ pointerEvents: "auto" }}>
-            <PdfViewerToolbar
-              currentPage={scrollState.currentPage}
-              totalPages={scrollState.totalPages}
-            />
-          </div>
+          <PdfViewerToolbar
+            currentPage={scrollState.currentPage}
+            totalPages={scrollState.totalPages}
+          />
         </div>
       )}
 
