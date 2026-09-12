@@ -21,6 +21,17 @@ public interface WorkflowParticipantRepository extends JpaRepository<WorkflowPar
     /** Find participant by share token */
     Optional<WorkflowParticipant> findByShareToken(String shareToken);
 
+    /**
+     * Find participant by share token with its session, the session owner and the peer participants
+     * eagerly loaded. Participant endpoints read all three after the loading transaction has ended.
+     */
+    @Query(
+            "SELECT p FROM WorkflowParticipant p LEFT JOIN FETCH p.workflowSession ws LEFT JOIN"
+                    + " FETCH ws.owner LEFT JOIN FETCH ws.participants WHERE p.shareToken ="
+                    + " :shareToken")
+    Optional<WorkflowParticipant> findByShareTokenWithSession(
+            @Param("shareToken") String shareToken);
+
     /** Find all participants in a workflow session */
     List<WorkflowParticipant> findByWorkflowSession(WorkflowSession session);
 

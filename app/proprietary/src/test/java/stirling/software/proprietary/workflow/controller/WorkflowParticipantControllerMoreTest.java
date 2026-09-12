@@ -93,7 +93,8 @@ class WorkflowParticipantControllerMoreTest {
 
         @Test
         void invalidToken_throwsForbidden() {
-            when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
+            when(participantRepository.findByShareTokenWithSession("bad"))
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> controller.getSessionByToken("bad"))
                     .isInstanceOf(ResponseStatusException.class)
@@ -104,7 +105,8 @@ class WorkflowParticipantControllerMoreTest {
         @Test
         void pendingParticipant_marksViewedAndReturnsSession() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
 
             ResponseEntity<WorkflowSessionResponse> response = controller.getSessionByToken(TOKEN);
 
@@ -116,7 +118,8 @@ class WorkflowParticipantControllerMoreTest {
         void expiredParticipant_throwsForbidden() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
             p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
 
             assertThatThrownBy(() -> controller.getSessionByToken(TOKEN))
                     .isInstanceOf(ResponseStatusException.class)
@@ -127,7 +130,8 @@ class WorkflowParticipantControllerMoreTest {
         @Test
         void signedParticipant_doesNotUpdateStatus() {
             WorkflowParticipant p = participant(ParticipantStatus.SIGNED);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
 
             controller.getSessionByToken(TOKEN);
 
@@ -193,7 +197,8 @@ class WorkflowParticipantControllerMoreTest {
 
         @Test
         void invalidToken_throwsForbidden() {
-            when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
+            when(participantRepository.findByShareTokenWithSession("bad"))
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> controller.submitSignature(request("bad")))
                     .isInstanceOf(ResponseStatusException.class)
@@ -204,7 +209,8 @@ class WorkflowParticipantControllerMoreTest {
         @Test
         void alreadyCompleted_throwsBadRequest() {
             WorkflowParticipant p = participant(ParticipantStatus.SIGNED);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
 
             assertThatThrownBy(() -> controller.submitSignature(request(TOKEN)))
                     .isInstanceOf(ResponseStatusException.class)
@@ -216,7 +222,8 @@ class WorkflowParticipantControllerMoreTest {
         void inactiveSession_throwsBadRequest() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
             p.getWorkflowSession().setFinalized(true); // isActive() false
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
 
             assertThatThrownBy(() -> controller.submitSignature(request(TOKEN)))
                     .isInstanceOf(ResponseStatusException.class)
@@ -227,7 +234,8 @@ class WorkflowParticipantControllerMoreTest {
         @Test
         void serverCert_savesParticipantSigned() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
             when(metadataEncryptionService.encrypt(org.mockito.ArgumentMatchers.any()))
                     .thenReturn("enc");
             when(participantRepository.save(org.mockito.ArgumentMatchers.any()))
@@ -251,7 +259,8 @@ class WorkflowParticipantControllerMoreTest {
 
         @Test
         void invalidToken_throwsForbidden() {
-            when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
+            when(participantRepository.findByShareTokenWithSession("bad"))
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> controller.declineParticipation("bad", null))
                     .isInstanceOf(ResponseStatusException.class)
@@ -262,7 +271,8 @@ class WorkflowParticipantControllerMoreTest {
         @Test
         void alreadyCompleted_throwsBadRequest() {
             WorkflowParticipant p = participant(ParticipantStatus.DECLINED);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
 
             assertThatThrownBy(() -> controller.declineParticipation(TOKEN, null))
                     .isInstanceOf(ResponseStatusException.class)
@@ -273,7 +283,8 @@ class WorkflowParticipantControllerMoreTest {
         @Test
         void withReason_setsDeclinedAndNotifies() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
             when(participantRepository.save(org.mockito.ArgumentMatchers.any()))
                     .thenAnswer(i -> i.getArgument(0));
 
@@ -288,7 +299,8 @@ class WorkflowParticipantControllerMoreTest {
         @Test
         void withoutReason_usesDefaultNotification() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
             when(participantRepository.save(org.mockito.ArgumentMatchers.any()))
                     .thenAnswer(i -> i.getArgument(0));
 
@@ -308,7 +320,8 @@ class WorkflowParticipantControllerMoreTest {
 
         @Test
         void invalidToken_throwsForbidden() {
-            when(participantRepository.findByShareToken("bad")).thenReturn(Optional.empty());
+            when(participantRepository.findByShareTokenWithSession("bad"))
+                    .thenReturn(Optional.empty());
 
             assertThatThrownBy(() -> controller.getDocument("bad"))
                     .isInstanceOf(ResponseStatusException.class)
@@ -320,7 +333,8 @@ class WorkflowParticipantControllerMoreTest {
         void expiredParticipant_throwsForbidden() {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
             p.setExpiresAt(java.time.LocalDateTime.now().minusDays(1));
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
 
             assertThatThrownBy(() -> controller.getDocument(TOKEN))
                     .isInstanceOf(ResponseStatusException.class)
@@ -331,7 +345,8 @@ class WorkflowParticipantControllerMoreTest {
         @Test
         void validParticipant_returnsPdf() throws Exception {
             WorkflowParticipant p = participant(ParticipantStatus.PENDING);
-            when(participantRepository.findByShareToken(TOKEN)).thenReturn(Optional.of(p));
+            when(participantRepository.findByShareTokenWithSession(TOKEN))
+                    .thenReturn(Optional.of(p));
             when(workflowSessionService.getOriginalFile("s1")).thenReturn(new byte[] {1, 2, 3});
 
             ResponseEntity<byte[]> response = controller.getDocument(TOKEN);
