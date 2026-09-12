@@ -7233,6 +7233,7 @@ minutesAgo_other = "{{count}}m ago"
 never = "never"
 
 [portal.accountLink.modal]
+callbackMismatch = "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again."
 cancel = "Cancel"
 continueReauth = "Sign in again"
 exhaustedTitle = "Add more monthly credits"

@@ -14,6 +14,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -76,6 +78,77 @@ class ConnectServiceTest {
                         anyString(),
                         // A first link carries no credential; that is what makes it a first link.
                         org.mockito.ArgumentMatchers.isNull());
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void start_refusesThePreviewOriginMismatchBeforeContactingSaaS(boolean reauth)
+            throws Exception {
+        configureFrontendUrl("https://7952.ssl.stirlingpdf.cloud");
+        if (reauth) {
+            when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
+        }
+        ConnectService.CallbackHint hint =
+                new ConnectService.CallbackHint(
+                        "http://54.175.155.236:7952/account-link/callback?state=browser-state",
+                        "http://54.175.155.236:7952",
+                        "http://localhost:8080");
+
+        ConnectService.ConnectStatus result =
+                reauth ? service.startReauth(hint) : service.start("preview", hint);
+
+        assertThat(result.phase()).isEqualTo(Phase.CALLBACK_MISMATCH);
+        assertThat(result.authorizeUrl()).isNull();
+        verifyNoInteractions(client, stateRepo, entitlementCache);
+        verify(credentialStore, never()).save(anyString(), anyString(), any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "http://pdf.example.com/account-link/callback?state=browser-state",
+                "https://pdf.example.com:8443/account-link/callback?state=browser-state",
+                "https://pdf.example.com/base/account-link/callback?state=browser-state",
+                "https://other.example.com/account-link/callback?state=browser-state"
+            })
+    void start_refusesARewrittenBrowserCallback(String requested) throws Exception {
+        configureFrontendUrl("https://pdf.example.com");
+
+        ConnectService.ConnectStatus result =
+                service.start(
+                        "instance",
+                        new ConnectService.CallbackHint(
+                                requested, "https://pdf.example.com", null));
+
+        assertThat(result.phase()).isEqualTo(Phase.CALLBACK_MISMATCH);
+        assertThat(result.authorizeUrl()).isNull();
+        verifyNoInteractions(client, stateRepo);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void start_preservesBrowserStateWhenThePreviewAddressMatches(boolean reauth) throws Exception {
+        configureFrontendUrl("http://54.175.155.236:7952/");
+        if (reauth) {
+            when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
+        }
+        stubCreate();
+        String requested = "http://54.175.155.236:7952/account-link/callback?state=browser-state";
+        ConnectService.CallbackHint hint =
+                new ConnectService.CallbackHint(
+                        requested, "http://54.175.155.236:7952", "http://localhost:8080");
+
+        ConnectService.ConnectStatus result =
+                reauth ? service.startReauth(hint) : service.start("preview", hint);
+
+        assertThat(result.phase()).isEqualTo(Phase.PENDING);
+        assertThat(result.authorizeUrl()).isEqualTo(AUTHORIZE_URL);
+        ArgumentCaptor<String> callback = ArgumentCaptor.forClass(String.class);
+        verify(client).connectRequest(any(), callback.capture(), anyString(), anyString(), any());
+        assertThat(callback.getValue()).isEqualTo(requested);
+        ArgumentCaptor<ConnectState> saved = ArgumentCaptor.forClass(ConnectState.class);
+        verify(stateRepo).save(saved.capture());
+        assertThat(saved.getValue().getCallbackUrl()).isEqualTo(requested);
     }
 
     @Test

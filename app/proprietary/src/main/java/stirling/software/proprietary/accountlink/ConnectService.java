@@ -67,6 +67,8 @@ public class ConnectService {
         EXPIRED,
         /** Declined or already used; start a new one. */
         REJECTED,
+        /** The browser callback would be rewritten, losing its origin or connection state. */
+        CALLBACK_MISMATCH,
         /** SaaS could not be reached; the handshake is still valid and can be retried. */
         UNAVAILABLE
     }
@@ -115,6 +117,10 @@ public class ConnectService {
         if (callbackUrl == null) {
             throw new IOException(
                     "Cannot determine where to send the admin back to; set system.frontendUrl");
+        }
+        if (hint.requestedCallbackUrl() != null
+                && !callbackUrl.equals(hint.requestedCallbackUrl().strip())) {
+            return ConnectStatus.of(Phase.CALLBACK_MISMATCH);
         }
         String nonce = randomSecret();
         String claimSecret = randomSecret();

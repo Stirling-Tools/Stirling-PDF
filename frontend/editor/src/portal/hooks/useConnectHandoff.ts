@@ -61,6 +61,17 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
           ? await startReauth(callbackUrl)
           : await startConnect(window.location.hostname, callbackUrl);
         if (!mounted.current) return;
+        if (status.phase === "CALLBACK_MISMATCH") {
+          setError(
+            t(
+              "portal.accountLink.modal.callbackMismatch",
+              "This server's configured frontend address does not match the address you opened. Open the server at its configured address, or update Frontend URL in General settings, then try again.",
+            ),
+          );
+          setBusy(false);
+          inFlight.current = false;
+          return;
+        }
         if (status.authorizeUrl) {
           rememberConnect({
             ownerId,

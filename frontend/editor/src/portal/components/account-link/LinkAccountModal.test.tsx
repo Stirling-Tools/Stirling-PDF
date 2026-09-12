@@ -71,6 +71,7 @@ describe("LinkAccountModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    sessionStorage.clear();
     localStorage.setItem("stirling.portalSaasOwner", "owner");
     fetchWallet.mockResolvedValue(freeWallet);
     startConnect.mockResolvedValue({
@@ -205,6 +206,46 @@ describe("LinkAccountModal", () => {
     expect(screen.getByText(BENEFITS)).toBeTruthy();
     expect(filledSteps()).toBe(1);
   });
+
+  it.each(["link", "reauth"] as const)(
+    "explains a callback address mismatch during %s and allows retry after correction",
+    async (mode) => {
+      const start = mode === "reauth" ? startReauth : startConnect;
+      const button = mode === "reauth" ? /Sign in again/ : CONNECT;
+      start.mockResolvedValue({
+        phase: "CALLBACK_MISMATCH",
+        authorizeUrl: null,
+        secondsRemaining: null,
+        teamId: null,
+      });
+      renderModal(mode);
+      click(button);
+
+      expect(
+        await screen.findByText(/configured frontend address does not match/),
+      ).toBeTruthy();
+      expect(assign).not.toHaveBeenCalled();
+      expect(sessionStorage.getItem("stirling.portalConnect")).toBeNull();
+      expect(screen.queryByText(GHOST)).toBeNull();
+
+      start.mockResolvedValue({
+        phase: "PENDING",
+        authorizeUrl: AUTHORIZE,
+        secondsRemaining: 900,
+        teamId: null,
+      });
+      click(button);
+      await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+      const callbackUrl = start.mock.calls[1][mode === "reauth" ? 0 : 1];
+      const pending = JSON.parse(
+        sessionStorage.getItem("stirling.portalConnect")!,
+      );
+      expect(pending.browserState).toBe(
+        new URL(callbackUrl).searchParams.get("state"),
+      );
+      expect(pending.mode).toBe(mode);
+    },
+  );
 
   it("does not navigate when there is nothing to navigate to", async () => {
     // Already linked: the backend reports status without an authorize URL.
