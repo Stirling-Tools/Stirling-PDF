@@ -1,13 +1,10 @@
-import posthog from "posthog-js";
+import { loadPosthog } from "@app/services/posthogLoader";
+import type { PosthogClient } from "@app/services/posthogLoader";
 
 const DEV = process.env.NODE_ENV === "development";
 
-function canCapture(): boolean {
+function canCapture(ph: PosthogClient): boolean {
   if (typeof window === "undefined") return false;
-  const ph = posthog as unknown as {
-    __loaded?: boolean;
-    has_opted_in_capturing?: () => boolean;
-  };
   if (!ph.__loaded) return false;
   return (
     typeof ph.has_opted_in_capturing !== "function" ||
@@ -15,21 +12,27 @@ function canCapture(): boolean {
   );
 }
 
-export function trackPdfUploaded(files: File[]): void {
+export async function trackPdfUploaded(files: File[]): Promise<void> {
   try {
-    if (!canCapture() || !files) return;
+    if (!files) return;
+    const ph = await loadPosthog();
+    if (!ph || !canCapture(ph)) return;
     for (let i = 0; i < files.length; i++) {
-      posthog.capture("editor_pdf_uploaded", { source: "editor" });
+      ph.capture("editor_pdf_uploaded", { source: "editor" });
     }
   } catch (error) {
     if (DEV) console.warn("[analytics] trackPdfUploaded failed", error);
   }
 }
 
-export function trackEditorOperation(toolId: string, fileCount: number): void {
+export async function trackEditorOperation(
+  toolId: string,
+  fileCount: number,
+): Promise<void> {
   try {
-    if (!canCapture()) return;
-    posthog.capture("editor_operation", {
+    const ph = await loadPosthog();
+    if (!ph || !canCapture(ph)) return;
+    ph.capture("editor_operation", {
       source: "editor",
       tool: toolId,
       file_count: fileCount,

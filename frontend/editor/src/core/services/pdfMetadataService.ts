@@ -5,7 +5,7 @@ import {
   CustomMetadataEntry,
   ExtractedPDFMetadata,
 } from "@app/types/metadata";
-import { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
+import type { PDFDocumentProxy } from "pdfjs-dist/types/src/display/api";
 
 export interface MetadataExtractionResult {
   success: true;

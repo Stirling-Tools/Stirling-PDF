@@ -1,0 +1,11 @@
+{
+  "ci": {
+    "collect": {
+      "staticDistDir": "./frontend/editor/dist",
+      "url": ["http://localhost:5173/", "http://localhost:5173/compress", "http://localhost:5173/settings"]
+    },
+    "assert": {
+      "budgetsFile": "./frontend/editor/.lighthouse-budgets.json"
+    }
+  }
+}

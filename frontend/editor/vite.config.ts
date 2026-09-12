@@ -3,72 +3,142 @@ import { compression, defineAlgorithm } from "vite-plugin-compression2";
 import fs from "node:fs/promises";
 import path, { resolve } from "node:path";
 import { constants, brotliCompress, gzip } from "node:zlib";
-import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
+import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Let the two precompression passes saturate more than the default 4 libuv
+// threads. Must be set before zlib first uses the threadpool, so it lives at
+// the top of the config module.
+process.env.UV_THREADPOOL_SIZE ??= "64";
+
+function resolveBase(runSubpath: string): string {
+  if (runSubpath) return `/${runSubpath}/`;
+  return process.env.VITE_BUILD_FOR_PREVIEW === "1" ? "/" : "./";
+}
+
+// Extensions never precompressed by either compression pass. Both
+// vite-plugin-compression2 (regex) and compressStaticCopyPlugin (Set) derive
+// from this single list.
+const COMPRESSION_EXCLUDED_EXTENSIONS = [
+  ".gz",
+  ".br",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".woff",
+  ".woff2",
+];
+const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
+const COMPRESSION_EXCLUDE_REGEX = new RegExp(
+  `\\.(${COMPRESSION_EXCLUDED_EXTENSIONS.map((e) => e.slice(1)).join("|")})$`,
+);
+
+// Write .gz and .br siblings for a file. Brotli quality 11 is 10-100x slower
+// than gzip, so back off to quality 10 above 1 MB and hint the input size so
+// the encoder can size its window up front. wasm keeps q11 with the largest
+// window: it is the heaviest asset and brotli Content-Encoding is compatible
+// with WebAssembly.instantiateStreaming (the browser decompresses natively).
+async function compressOne(file: string, root: string) {
+  // Only ever read inside the build output dir. All inputs derive from
+  // fs.readdir(distDir), but this guard keeps any stray path from escaping it.
+  const resolved = path.resolve(file);
+  if (!resolved.startsWith(`${path.resolve(root)}${path.sep}`)) return;
+
+  const ext = path.extname(resolved).toLowerCase();
+  if (EXCLUDED_EXTENSION_SET.has(ext)) return;
+  const content = await fs.readFile(resolved);
+  if (content.length < 1024) return;
+
+  // Run both encoders concurrently. With UV_THREADPOOL_SIZE raised above they
+  // share the libuv pool and parallelize across cores instead of serializing
+  // gzip then brotli per file.
+  const isWasm = ext === ".wasm";
+  const brotliQuality = isWasm ? 11 : content.length > 1_000_000 ? 10 : 11;
+  const [gz, br] = await Promise.all([
+    gzipPromise(content, { level: 9 }),
+    brotliPromise(content, {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: brotliQuality,
+        [constants.BROTLI_PARAM_SIZE_HINT]: content.length,
+        // Largest window (16 MB) so wasm gains are kept across versions.
+        ...(isWasm && { [constants.BROTLI_PARAM_LGWIN]: 24 }),
+      },
+    }),
+  ]);
+  await Promise.all([
+    fs.writeFile(`${resolved}.gz`, gz),
+    fs.writeFile(`${resolved}.br`, br),
+  ]);
+}
+
+// Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
+// extension (not MIME type) and its default list omits .mjs, so those assets
+// bypassed the edge cache on every request. The extension is irrelevant to a
+// `type: "module"` worker. Renaming at emission time lets Rollup substitute the
+// final filename into every `new URL(..., import.meta.url)` reference itself.
+// Shared by the main build and Vite's worker sub-builds, which do not inherit
+// the main build's output options.
+const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
+  assetInfo.names.some((name) => name.endsWith(".mjs"))
+    ? "assets/[name]-[hash].js"
+    : "assets/[name]-[hash][extname]";
+
+// The entry module script is the critical render-blocking resource. Mark it
+// fetchpriority=high so the browser fetches it ahead of the vendor preloads.
+function entryFetchPriorityPlugin(): PluginOption {
+  return {
+    name: "entry-fetch-priority",
+    apply: "build" as const,
+    transformIndexHtml(html) {
+      return html.replace(
+        /<script type="module"([^>]*)>/,
+        '<script type="module"$1 fetchpriority="high">',
+      );
+    },
+  };
+}
 
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
     apply: "build" as const,
     async closeBundle() {
-      const distDir = path.resolve(__dirname, "dist");
+      const distDir = path.resolve(import.meta.dirname, "dist");
       const targets = ["pdfium", "vendor", "pdfjs"];
 
-      const excludedExtensions = [
-        ".gz",
-        ".br",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".webp",
-        ".woff",
-        ".woff2",
-      ];
-
-      async function walkAndCompress(dirOrFile: string) {
-        let stat;
+      // Collect first, then compress with bounded concurrency. zlib's async API
+      // runs on libuv's threadpool, so a serial loop idles most cores on the
+      // build's most CPU-heavy step.
+      const files: string[] = [];
+      const walk = async (dir: string) => {
+        let entries;
         try {
-          stat = await fs.stat(dirOrFile);
+          entries = await fs.readdir(dir, { withFileTypes: true });
         } catch {
           return;
         }
-
-        if (stat.isFile()) {
-          const ext = path.extname(dirOrFile).toLowerCase();
-          if (stat.size >= 1024 && !excludedExtensions.includes(ext)) {
-            const content = await fs.readFile(dirOrFile);
-
-            // Gzip (level 9)
-            const gzipped = await gzipPromise(content, { level: 9 });
-            await fs.writeFile(`${dirOrFile}.gz`, gzipped);
-
-            // Brotli (quality 11)
-            const brotlied = await brotliPromise(content, {
-              params: {
-                [constants.BROTLI_PARAM_QUALITY]: 11,
-              },
-            });
-            await fs.writeFile(`${dirOrFile}.br`, brotlied);
-          }
-        } else if (stat.isDirectory()) {
-          const files = await fs.readdir(dirOrFile);
-          for (const file of files) {
-            await walkAndCompress(path.join(dirOrFile, file));
-          }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walk(p);
+          else files.push(p);
         }
-      }
+      };
+      for (const target of targets) await walk(path.join(distDir, target));
 
-      for (const target of targets) {
-        await walkAndCompress(path.join(distDir, target));
+      const POOL = 8;
+      for (let i = 0; i < files.length; i += POOL) {
+        await Promise.all(
+          files.slice(i, i + POOL).map((f) => compressOne(f, distDir)),
+        );
       }
     },
   };
@@ -111,7 +181,10 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
       let manifest;
       try {
         manifest = JSON.parse(
-          await fs.readFile(path.resolve(__dirname, manifestFile), "utf8"),
+          await fs.readFile(
+            path.resolve(import.meta.dirname, manifestFile),
+            "utf8",
+          ),
         );
       } catch {
         console.warn(
@@ -120,23 +193,52 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         );
         return;
       }
-      const distDir = path.resolve(__dirname, "dist");
-      const count = await prerenderOg({ distDir, manifest, ogBase, baseHref });
-      console.log(
-        `[prerender-og] wrote ${count} prerendered route pages` +
-          (ogBase
-            ? ` (absolute URLs, base=${ogBase})`
-            : " (root-relative URLs)"),
-      );
+      const distDir = path.resolve(import.meta.dirname, "dist");
+      try {
+        await fs.access(path.join(distDir, "index.html"));
+      } catch {
+        return;
+      }
+      await prerenderOg({ distDir, manifest, ogBase, baseHref });
+
+      // closeBundle hooks run concurrently in Vite, not in plugin order, so a
+      // sibling plugin cannot reliably compress files written here. Compress the
+      // freshly written route HTML here instead (index.html is already handled by
+      // the main compression plugin) so Spring's EncodedResourceResolver can serve
+      // it precompressed. Nested routes (e.g. dist/settings/people.html) are
+      // included, so walk the whole dist tree.
+      const htmlFiles: string[] = [];
+      const walkHtml = async (dir: string) => {
+        let entries;
+        try {
+          entries = await fs.readdir(dir, { withFileTypes: true });
+        } catch {
+          return;
+        }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walkHtml(p);
+          else if (
+            entry.name.endsWith(".html") &&
+            entry.name !== "index.html"
+          ) {
+            htmlFiles.push(p);
+          }
+        }
+      };
+      await walkHtml(distDir);
+      await Promise.all(htmlFiles.map((f) => compressOne(f, distDir)));
     },
   };
 }
 
 /**
- * When the app is served under a subpath (RUN_SUBPATH → base like "/app/"), Vite
- * serves index.html at "/app/" and redirects "/" → the base, but a bare "/app"
- * (no trailing slash) 404s. This middleware redirects "/app" → "/app/" so either
+ * When the app is served under a subpath (RUN_SUBPATH to base like "/app/"), Vite
+ * serves index.html at "/app/" and redirects "/" to the base, but a bare "/app"
+ * (no trailing slash) 404s. This middleware redirects "/app" to "/app/" so either
  * form loads the app in dev and `vite preview`. Query strings are preserved.
+ * 302 (not 301) so a changed RUN_SUBPATH never leaves a permanently cached
+ * redirect in a dev browser.
  */
 function subpathBareRedirectPlugin(subpath: string): PluginOption {
   const bare = `/${subpath}`;
@@ -146,7 +248,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
     const q = url.indexOf("?");
     const pathname = q === -1 ? url : url.slice(0, q);
     if (pathname === bare) {
-      res.statusCode = 301;
+      res.statusCode = 302;
       res.setHeader("Location", withSlash + (q === -1 ? "" : url.slice(q)));
       res.end();
       return;
@@ -164,7 +266,7 @@ function subpathBareRedirectPlugin(subpath: string): PluginOption {
   };
 }
 
-// NOTE: cloud/ is a SHARED layer, not a runnable build flavor — it's compiled
+// NOTE: cloud/ is a SHARED layer, not a runnable build flavor. It's compiled
 // into the saas and desktop builds. It has no entry here and no vite tsconfig;
 // it is only typechecked standalone via editor/src/cloud/tsconfig.json
 // (task frontend:typecheck:cloud) to prove it carries no saas/desktop-only deps.
@@ -188,8 +290,8 @@ const TSCONFIG_MAP: Record<BuildMode, string> = {
 export default defineConfig(async ({ mode, command }) => {
   // Dev-only browser-tab label (worktree folder basename) surfaced by the
   // top-level dev tasks so concurrent worktrees have distinguishable tabs.
-  // Only injected during `vite` (dev serve) — never baked into a production
-  // build — and carries only the folder name, no path/host/user info.
+  // Only injected during `vite` (dev serve), never baked into a production
+  // build, and carries only the folder name, no path/host/user info.
   const devWorktreeLabel =
     command === "serve" ? (process.env.STIRLING_DEV_LABEL ?? "") : "";
   // Load env files relative to this config (frontend/editor/), regardless of
@@ -259,10 +361,6 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
-    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
-    // different modes re-optimize over each other and the browser 504s on a stale dep
-    // hash. Anchored to frontend/ because a relative path resolves against the vite
-    // root (editor/) and would create a second node_modules there.
     cacheDir: resolve(
       import.meta.dirname,
       "..",
@@ -280,7 +378,7 @@ export default defineConfig(async ({ mode, command }) => {
       }),
       compression({
         threshold: 1024,
-        exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
+        exclude: [COMPRESSION_EXCLUDE_REGEX],
         algorithms: [
           defineAlgorithm("gzip", { level: 9 }),
           defineAlgorithm("brotliCompress", {
@@ -342,14 +440,10 @@ export default defineConfig(async ({ mode, command }) => {
           },
         ],
       }),
-      compressStaticCopyPlugin(),
       prerenderOgPlugin(effectiveMode === "saas"),
+      entryFetchPriorityPlugin(),
+      compressStaticCopyPlugin(),
     ],
-    // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
-    // so without this `@app/*` resolves in the app and fails in a worker.
-    worker: {
-      plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
-    },
     server: {
       host: true,
       allowedHosts: allowedHosts.length > 0 ? allowedHosts : undefined,
@@ -372,19 +466,36 @@ export default defineConfig(async ({ mode, command }) => {
     },
     build: {
       target: "esnext",
+      // The build already precompresses for real and ships a visualizer; the
+      // per-chunk gzip measurement Vite does for the log is wasted CI time.
+      reportCompressedSize: false,
+      // Vite 7 defaults cssMinify to esbuild; lightningcss (Rust) minifies in
+      // one pass and can drop prefixes for browsers esnext already excludes.
+      cssMinify: "lightningcss" as const,
       rollupOptions: {
         output: {
-          manualChunks(id) {
+          assetFileNames: mjsToJsAssetFileNames,
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
+              // Leaf UI packages: they import react/emotion but are not imported
+              // by them, so they split without creating a chunk cycle. Keeping
+              // them separate stops icon edits from invalidating the whole
+              // vendor-ui chunk.
+              if (id.includes("@mui/icons-material")) return "vendor-mui-icons";
+              if (id.includes("@iconify/react")) return "vendor-iconify";
+              // react/react-dom/scheduler/emotion/mui/mantine are mutually
+              // circular, so they must stay in one chunk or module init order
+              // breaks at runtime (TDZ ReferenceError).
               if (
                 id.includes("react") ||
+                id.includes("scheduler") ||
                 id.includes("@mantine") ||
-                id.includes("@emotion") ||
                 id.includes("@mui") ||
+                id.includes("@emotion") ||
                 id.includes("@iconify")
               ) {
                 return "vendor-ui";
@@ -411,6 +522,17 @@ export default defineConfig(async ({ mode, command }) => {
     optimizeDeps: {
       exclude: ["@embedpdf/pdfium"],
     },
+    // Worker sub-builds do not inherit the main build's output.assetFileNames.
+    // Without this, the pdf.js worker referenced from inside a worker would be
+    // emitted as .mjs (see mjsToJsAssetFileNames above).
+    worker: {
+      plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+      rollupOptions: {
+        output: {
+          assetFileNames: mjsToJsAssetFileNames,
+        },
+      },
+    },
     // base: "./" produces relative asset URLs which work when dist/ is served
     // at any path (e.g. Spring Boot bundling the frontend at /). But under
     // `vite preview` for deep SPA routes (e.g. /workflow/sign/<token>), the
@@ -420,10 +542,6 @@ export default defineConfig(async ({ mode, command }) => {
     // an absolute base so deep-route asset paths resolve to /assets/...
     // Trailing slash required: it becomes `<base href>`, and browsers resolve
     // relative URLs (manifest.json, favicon) against the base's *directory*.
-    base: runSubpath
-      ? `/${runSubpath}/`
-      : process.env.VITE_BUILD_FOR_PREVIEW === "1"
-        ? "/"
-        : "./",
+    base: resolveBase(runSubpath),
   };
 });
