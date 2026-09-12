@@ -12,6 +12,7 @@
 
 import { loadPolicies } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { editorTriggerOf } from "@app/policies/runOn";
 import {
   runStoredPolicy,
   getPolicyRun,
@@ -64,14 +65,7 @@ function activeExportPolicies(): ExportPolicy[] {
   );
   return (
     Object.entries(loadPolicies())
-      .filter(
-        ([, s]) =>
-          s.configured &&
-          s.enabled &&
-          s.backendId &&
-          s.runsOnEditor &&
-          s.runOn === "export",
-      )
+      .filter(([, s]) => editorTriggerOf(s) === "export")
       // Same team-wide run order the upload path uses: enforcement is not commutative (a watermark
       // then a flatten is not a flatten then a watermark), so both paths must agree on the sequence.
       .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))

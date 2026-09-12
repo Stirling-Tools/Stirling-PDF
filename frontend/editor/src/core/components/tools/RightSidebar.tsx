@@ -6,6 +6,7 @@ import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
+import { EditorPipelinesPanel } from "@app/components/policies/EditorPipelinesPanel";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
 import type { SubcategoryGroup } from "@app/hooks/useToolSections";
@@ -223,6 +224,7 @@ export default function RightSidebar() {
           }}
         >
           <>
+            {policiesEnabled && <EditorPipelinesPanel />}
             {activeTool ? (
               <ToolPanelHeader
                 icon={
