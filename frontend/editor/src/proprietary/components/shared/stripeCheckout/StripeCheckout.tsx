@@ -6,7 +6,11 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import licenseService from "@app/services/licenseService";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
-import { StripeCheckoutProps } from "@app/components/shared/stripeCheckout/types/checkout";
+import {
+  CheckoutStage,
+  StripeCheckoutProps,
+} from "@app/components/shared/stripeCheckout/types/checkout";
+import { StepModalHeader } from "@app/components/shared/StepModalHeader";
 import {
   validateEmail,
   getModalTitle,
@@ -47,6 +51,9 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   onClose,
   planGroup,
   minimumSeats = 1,
+  initialEmail,
+  combinedChoose = false,
+  currentLimit = null,
   onSuccess,
   onError,
   onLicenseActivated,
@@ -103,7 +110,16 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         ...prev,
         email: checkoutState.emailInput,
       }));
-      navigation.goToStage("plan-selection");
+      if (combinedChoose) {
+        // Arrive on the capacity an installation already needs rather than on a blocked minimum,
+        // the same seeding the separate walk does when a period is picked.
+        if (sellsCapacity) {
+          checkoutState.setServerQuantity(blocksForUsers(minimumSeats));
+        }
+        navigation.goToStage("choose");
+      } else {
+        navigation.goToStage("plan-selection");
+      }
     } else {
       checkoutState.setEmailError(validation.error);
     }
@@ -175,6 +191,19 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     // Check for existing license to skip email stage
     const checkExistingLicense = async () => {
       try {
+        // A caller that already holds the email (a linked instance does, from the account link)
+        // never needs to be asked for it, whatever the licence says.
+        if (initialEmail) {
+          checkoutState.setEmailInput(initialEmail);
+          checkoutState.setState((prev) => ({
+            ...prev,
+            email: initialEmail,
+            currentStage: combinedChoose ? "choose" : "plan-selection",
+            loading: false,
+          }));
+          return;
+        }
+
         const licenseInfo = await licenseService.getLicenseInfo();
         // Only skip email if license is PRO or ENTERPRISE (not NORMAL/free tier)
         if (licenseInfo?.licenseType && licenseInfo.licenseType !== "NORMAL") {
@@ -237,6 +266,41 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           />
         );
 
+      // Page 1 of 2: both choices at once, which is how the design puts them in front of a buyer.
+      // The period cards select rather than navigate, and capacity supplies the single continue.
+      case "choose":
+        return (
+          <>
+            <PlanSelectionStage
+              planGroup={planGroup}
+              minimumSeats={minimumSeats}
+              savings={savings}
+              selectedPeriod={checkoutState.selectedPeriod}
+              onSelectPlan={(period) => {
+                checkoutState.setSelectedPeriod(period);
+                if (sellsCapacity) {
+                  checkoutState.setServerQuantity(
+                    Math.max(
+                      blocksForUsers(minimumSeats),
+                      checkoutState.serverQuantity || 1,
+                    ),
+                  );
+                }
+              }}
+            />
+            {sellsCapacity && (
+              <CapacityStage
+                selectedPlan={checkoutState.selectedPlan}
+                serverQuantity={checkoutState.serverQuantity}
+                setServerQuantity={checkoutState.setServerQuantity}
+                currentUsers={minimumSeats}
+                currentLimit={currentLimit}
+                onContinue={() => navigation.goToStage("payment")}
+              />
+            )}
+          </>
+        );
+
       case "plan-selection":
         return (
           <PlanSelectionStage
@@ -291,32 +355,52 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   };
 
   const canGoBack = checkoutState.stageHistory.length > 0;
+  // The combined flow wears the stepped chrome, counting the pages it actually walks: the email
+  // page only when the caller supplied no address. The separate walk keeps its own title, because
+  // a step count would be a lie about how many pages it has.
+  const steppedPath: CheckoutStage[] | null = combinedChoose
+    ? [
+        ...(initialEmail ? [] : (["email"] as CheckoutStage[])),
+        "choose",
+        "payment",
+      ]
+    : null;
+  const steppedIndex = steppedPath
+    ? steppedPath.indexOf(checkoutState.state.currentStage)
+    : -1;
+  const steppedStep = steppedIndex >= 0 ? steppedIndex + 1 : null;
 
   return (
     <Modal
       opened={opened}
       onClose={handleClose}
       title={
-        <Group gap="sm" wrap="nowrap">
-          {canGoBack && (
-            <ActionIcon
-              variant="tertiary"
-              size="lg"
-              onClick={navigation.goBack}
-              aria-label={t("common.back", "Back")}
-            >
-              <LocalIcon icon="arrow-back" width={20} height={20} />
-            </ActionIcon>
-          )}
-          <Text fw={600} size="lg">
-            {getModalTitle(checkoutState.state.currentStage, planGroup.name, t)}
-          </Text>
-        </Group>
+        steppedStep ? undefined : (
+          <Group gap="sm" wrap="nowrap">
+            {canGoBack && (
+              <ActionIcon
+                variant="tertiary"
+                size="lg"
+                onClick={navigation.goBack}
+                aria-label={t("common.back", "Back")}
+              >
+                <LocalIcon icon="arrow-back" width={20} height={20} />
+              </ActionIcon>
+            )}
+            <Text fw={600} size="lg">
+              {getModalTitle(
+                checkoutState.state.currentStage,
+                planGroup.name,
+                t,
+              )}
+            </Text>
+          </Group>
+        )
       }
       size={isMobile ? "100%" : 980}
       centered
       radius="lg"
-      withCloseButton={true}
+      withCloseButton={!steppedStep}
       closeOnEscape={true}
       closeOnClickOutside={false}
       fullScreen={isMobile}
@@ -328,6 +412,31 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         },
       }}
     >
+      {steppedStep && (
+        <StepModalHeader
+          title={
+            currentLimit != null
+              ? t("payment.addCapacity.title", "Add capacity")
+              : t("payment.upgradeTeam.title", "Upgrade to Team")
+          }
+          subtitle={
+            currentLimit != null
+              ? t(
+                  "payment.addCapacity.currently",
+                  "Currently up to {{users}} users",
+                  { users: currentLimit },
+                )
+              : undefined
+          }
+          step={steppedStep}
+          total={steppedPath?.length ?? 0}
+          stepLabel={t("payment.stepOf", "Step {{n}} of {{total}}", {
+            n: steppedStep,
+            total: steppedPath?.length ?? 0,
+          })}
+          onClose={handleClose}
+        />
+      )}
       {renderContent()}
     </Modal>
   );

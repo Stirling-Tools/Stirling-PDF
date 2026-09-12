@@ -1,7 +1,7 @@
 import { apiClient } from "@portal/api/http";
 
 /**
- * Free-editor fleet usage for the {@link FreePdfEditorsCard}.
+ * Free-editor fleet usage for the billing screen's editors-deployed row.
  *
  * Self-hosted (this module) reads the local Stirling backend — the figures come
  * from this instance's audit trail, filtered to free UI tool runs. The SaaS build

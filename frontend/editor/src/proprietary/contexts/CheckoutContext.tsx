@@ -41,6 +41,17 @@ export interface CheckoutOptions {
   currency?: string; // Optional currency override (auto-detected from locale)
   onSuccess?: (sessionId: string) => void; // Callback after successful payment
   onError?: (error: string) => void; // Callback on error
+  /**
+   * Supplying it skips the email step. No caller does today: the only address a self-hosted
+   * instance holds is its Spring username. #7945 removes the step instead, by buying as the
+   * signed-in account.
+   */
+  email?: string;
+  /** Put the period and capacity choices on one page rather than walking them separately. */
+  combinedChoose?: boolean;
+  /** Users the current plan covers. Its presence is what makes this "add capacity", not a first
+   * upgrade, so the capacity step states the delta. */
+  currentLimit?: number | null;
 }
 
 interface CheckoutContextValue {
@@ -446,6 +457,9 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             onClose={closeCheckout}
             planGroup={selectedPlanGroup}
             minimumSeats={minimumSeats}
+            initialEmail={currentOptions.email}
+            combinedChoose={currentOptions.combinedChoose}
+            currentLimit={currentOptions.currentLimit ?? null}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             onLicenseActivated={handleLicenseActivated}
@@ -455,6 +469,14 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
       )}
     </CheckoutContext.Provider>
   );
+};
+
+/**
+ * The checkout, or null where no provider is mounted. A build may mount none, and a hard {@link
+ * useCheckout} would turn that into a blank page instead of a missing door.
+ */
+export const useCheckoutOptional = (): CheckoutContextValue | null => {
+  return useContext(CheckoutContext) ?? null;
 };
 
 export const useCheckout = (): CheckoutContextValue => {
