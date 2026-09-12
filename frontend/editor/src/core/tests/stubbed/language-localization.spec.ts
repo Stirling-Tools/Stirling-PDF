@@ -1,4 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { openSettings } from "@app/tests/helpers/ui-helpers";
 
 test.describe("13. Language / Localization", () => {
   test.use({
@@ -28,11 +29,7 @@ test.describe("13. Language / Localization", () => {
         !(await languageButton.isVisible({ timeout: 1000 }).catch(() => false))
       ) {
         // Open Settings to access the language selector in the General section
-        await page.locator('[data-testid="config-button"]').first().click();
-        await page
-          .locator(".mantine-Modal-content")
-          .first()
-          .waitFor({ state: "visible", timeout: 5000 });
+        await openSettings(page, /^General$/);
         languageButton = page
           .locator('[data-testid="language-selector-button"]')
           .first();

@@ -3,6 +3,11 @@ repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
+ext {
+    // CPU build with self-extracting natives for linux/win/mac x64+arm64. Must stay >=1.21: the
+    // model exports are stamped ai.onnx opset 22, which 1.19/1.20 reject outright.
+    onnxruntimeVersion = '1.26.0'
+}
 bootRun {
     enabled = false
 }
@@ -47,6 +52,14 @@ dependencies {
     runtimeOnly 'com.sun.xml.bind:jaxb-core:4.0.9'
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
+
+    // ONNX Runtime (Java) runs Auto Form Detection. The ~42MB multi-platform native is bundled
+    // only with -PbundleOnnxRuntime=true (Docker); without it the tool reports unavailable.
+    compileOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    testImplementation "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    if ((project.findProperty('bundleOnnxRuntime') ?: 'false').toString().toBoolean()) {
+        runtimeOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    }
 
     // jinjava/jjwt transitively request older Jackson 2 versions; declare the current
     // version directly so it is selected consistently (root build.gradle pins are the fallback).
