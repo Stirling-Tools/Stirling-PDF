@@ -9,15 +9,8 @@ function isServerMode(mode: ConnectionMode | null): boolean {
   return mode === "saas" || mode === "selfhosted";
 }
 
-/**
- * Whether the desktop app is signed in to a server that serves the non-core API —
- * Stirling Cloud or a self-hosted instance. The bundled backend is core-flavour, so
- * local mode is never one however the user arrived there.
- *
- * Starts false and only becomes true once both signals resolve. This gates surfaces
- * that fetch on mount, and an optimistic default fires those requests at the bundled
- * backend, which answers 404 for every one of them.
- */
+/** Whether the app is signed in to Stirling Cloud or a self-hosted server. Starts false: this
+ *  gates surfaces that fetch on mount, and the bundled backend 404s every one of those calls. */
 export function useConnectedServer(): boolean {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isServer, setIsServer] = useState(() =>
@@ -27,10 +20,8 @@ export function useConnectedServer(): boolean {
   useEffect(
     () =>
       authService.subscribeToAuth((status, userInfo) => {
-        // subscribeToAuth replays on subscribe, so an instance mounting mid-refresh sees
-        // only "refreshing". That status carries the live user when a session already
-        // exists and null when one never did, which separates a warm token refresh from
-        // a cold OAuth handshake — without it a refresh reads as signed out.
+        // subscribeToAuth replays, so a mount mid-refresh sees only "refreshing"; the live user
+        // it carries is what separates a warm refresh from a cold OAuth handshake.
         if (status === "authenticated") {
           setIsAuthenticated(true);
         } else if (status === "unauthenticated") {

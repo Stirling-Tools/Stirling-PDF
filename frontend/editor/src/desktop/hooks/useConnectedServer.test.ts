@@ -99,8 +99,8 @@ describe("useConnectedServer", () => {
   });
 
   it("is connected when it mounts midway through a token refresh", async () => {
-    // subscribeToAuth replays, so a fresh mount sees only "refreshing"; the live user
-    // it carries is what separates that from a cold start.
+    // A fresh mount sees only the replayed "refreshing"; its live user distinguishes that
+    // from a cold start.
     withAuthStatus("refreshing", { username: "ada" });
     getCurrentModeMock.mockResolvedValue("selfhosted");
     const { result } = renderHook(() => useConnectedServer());

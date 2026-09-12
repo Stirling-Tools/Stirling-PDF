@@ -23,10 +23,8 @@ vi.mock("@app/services/apiClient", () => ({
 
 import { meterClassificationRun } from "@app/services/classificationMeter";
 
-/**
- * Lives under src/desktop so @app/* resolves through the desktop cascade — the only
- * place the shared meter is seen with the desktop base-URL resolvers behind it.
- */
+/** Lives under src/desktop because that is the only project where @app/* puts the desktop
+ *  base-URL resolvers behind the shared meter. */
 describe("classification metering — which server gets billed", () => {
   beforeEach(() => {
     mocks.mode = null;
