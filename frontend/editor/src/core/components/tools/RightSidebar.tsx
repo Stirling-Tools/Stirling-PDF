@@ -64,15 +64,13 @@ export default function RightSidebar() {
   });
 
   const handleExpand = () => {
-    withViewTransition(() => {
-      if (readerMode) setReaderMode(false);
-      if (leftPanelView === "hidden") setLeftPanelView("toolPicker");
-      if (!sidebarsVisible) setSidebarsVisible(true);
-    });
+    if (readerMode) setReaderMode(false);
+    if (leftPanelView === "hidden") setLeftPanelView("toolPicker");
+    if (!sidebarsVisible) setSidebarsVisible(true);
   };
 
   const handleCollapse = () => {
-    withViewTransition(() => setLeftPanelView("hidden"));
+    setLeftPanelView("hidden");
   };
 
   const [allToolsView, setAllToolsView] = useState(false);
