@@ -2941,11 +2941,11 @@ text = "Fai una domanda sui tuoi documenti o chiedi aiuto con gli strumenti PDF.
 
 [chat.fab]
 close = "Chiudi chat"
-open = "Apri Stirling assistente IA"
+open = "Apri assistente IA di Stirling"
 
 [chat.header]
 agentMenu = "Opzioni agente Stirling"
-assistant = "AI Assistant"
+assistant = "Assistente IA"
 clearChat = "Cancella chat"
 
 [chat.input]
@@ -3013,7 +3013,7 @@ saturation = "Saturazione e luminosità"
 title = "Scegli il colore"
 
 [common]
-actions = "Actions"
+actions = "Azioni"
 back = "Indietro"
 cancel = "Annulla"
 close = "Chiudi"
@@ -3319,7 +3319,7 @@ description = "Il Model Context Protocol (MCP) consente agli assistenti IA come 
 guestInfo = "Gli utenti ospite non possono connettere client MCP. Crea un account per utilizzare il server MCP e consentire al tuo assistente IA di eseguire gli strumenti Stirling PDF per tuo conto."
 navLabel = "Server MCP"
 tip = "Ogni azione eseguita dal tuo assistente viene effettuata con il tuo account e viene conteggiata nel tuo consumo, esattamente come quando usi Stirling PDF direttamente."
-title = "MCP Server"
+title = "Server MCP"
 viewApiKeys = "Visualizza API key"
 
 [config.mcp.copy]
@@ -7109,7 +7109,7 @@ label = "Basic auth"
 label = "Header auth"
 
 [portal.connections.types.n8n.fields.authType.options.none]
-label = "None"
+label = "Nessuna"
 
 [portal.connections.types.n8n.fields.headerName]
 helperText = "The header name from the n8n credential, not its value."
@@ -7301,7 +7301,7 @@ title = "Leggi il risultato strutturato"
 
 [portal.docs.rateLimits]
 burst = "Burst"
-codeCaption = "429 Too Many Requests"
+codeCaption = "429 Troppe richieste"
 concurrency = "Concorrenza"
 eyebrow = "PER INIZIARE"
 lead = "I limiti scalano con il tuo piano. Una risposta 429 include un header Retry-After; gli SDK applicano automaticamente il backoff."
@@ -7425,7 +7425,7 @@ sensitiveLabel = "Sensibile"
 [portal.documents.table.columns]
 action = "Pipeline / Azione"
 document = "Documento"
-labels = "Labels"
+labels = "Etichette"
 product = "Prodotto"
 status = "Stato"
 time = "Ora"
@@ -7895,9 +7895,9 @@ undeclared-operation = "Impossibile verificare cosa accetta questo passaggio"
 [portal.pipelines.composer]
 addTool = "Aggiungi strumento"
 create = "Crea pipeline"
-createPaused = "Create paused"
+createPaused = "Crea in pausa"
 editingUnsupported = "La visualizzazione di questi parametri dello strumento per la modifica non è ancora supportata."
-editSource = "Edit source"
+editSource = "Modifica sorgente"
 name = "Nome"
 namePlaceholder = "es. Scansione redazione"
 noToolSettings = "Questo strumento non ha impostazioni configurabili."
@@ -8896,7 +8896,7 @@ unused = "Non usata"
 documents = "Documenti"
 source = "Origine"
 status = "Stato"
-type = "Type"
+type = "Tipo"
 usedBy = "Criteri"
 
 [portal.sources.types.box]
@@ -9053,7 +9053,7 @@ summary = "Governance completa su workspace, impostazioni e membri."
 3 = "Tutto ciò che può fare Team Owner"
 
 [portal.users.roles.guest]
-label = "Guest"
+label = "Ospite"
 summary = "Accesso limitato o solo web; non può avere configurazioni personali."
 
 [portal.users.roles.guest.permissions]
