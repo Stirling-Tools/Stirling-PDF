@@ -24,7 +24,7 @@ import { updateSupportedLanguages } from "@app/i18n";
 import SpringLoginForm from "@app/auth/ui/SpringLoginForm";
 import AuthDefaultCredentials from "@app/auth/ui/AuthDefaultCredentials";
 import { useSpringLogin } from "@app/auth/ui/useSpringLogin";
-import LoggedInState from "@app/routes/login/LoggedInState";
+import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -161,7 +161,6 @@ export default function Login() {
     onConfigLoaded: (data) => {
       // If login is disabled, redirect to home (anonymous mode)
       if (data.enableLogin === false) {
-        console.debug("[Login] Login disabled, going to the editor");
         navigate(EDITOR_BASENAME);
         return;
       }
@@ -220,11 +219,17 @@ export default function Login() {
     // processor. Resolved here rather than by bouncing through "/" so the app
     // isn't torn down and remounted on the way.
     let active = true;
-    void resolveLandingPath().then((path) => {
-      if (!active) return;
-      console.debug("[Login] Authenticated, landing on", path);
-      navigate(path, { replace: true });
-    });
+    // Warm the editor chunk while /me resolves so the landing paints at once.
+    void import("@app/routes/Landing").catch(() => {});
+    void resolveLandingPath().then(
+      (path) => {
+        if (!active) return;
+        navigate(path, { replace: true });
+      },
+      () => {
+        if (active) navigate(EDITOR_BASENAME, { replace: true });
+      },
+    );
     return () => {
       active = false;
     };
@@ -242,12 +247,6 @@ export default function Login() {
       return () => clearTimeout(id);
     }
   }, [backendProbe.loginDisabled, navigate]);
-
-  useEffect(() => {
-    if (backendProbe.status === "up") {
-      void refetch();
-    }
-  }, [backendProbe.status, refetch]);
 
   // The email/password form is always shown when username/password auth is
   // allowed; SSO-only mode hides it.
@@ -407,9 +406,17 @@ export default function Login() {
     return <Navigate to={EDITOR_BASENAME} replace />;
   }
 
-  // Show logged in state if authenticated
-  if (session && !loading) {
-    return <LoggedInState />;
+  // The form is only for visitors known to be signed out; splash until then.
+  if (loading) {
+    return <LoadingFallback />;
+  }
+
+  if (session) {
+    return <LoadingFallback />;
+  }
+
+  if (backendProbe.loading) {
+    return <LoadingFallback />;
   }
 
   // If backend isn't ready yet, show a lightweight status screen instead of the form

@@ -51,7 +51,6 @@ export function RootGate({ children }: { children: ReactNode }) {
     void resolveRootTarget().then((target) => {
       // Ignore a stale lookup cancelled by a re-run; the live one decides.
       if (!active) return;
-      console.debug("[root-gate] decision", { target });
       setDecision({ visit: location.key, target });
     });
     return () => {
