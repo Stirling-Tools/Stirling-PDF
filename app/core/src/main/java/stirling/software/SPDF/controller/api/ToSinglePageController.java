@@ -46,8 +46,8 @@ public class ToSinglePageController {
             summary = "Convert a multi-page PDF into a single long page PDF",
             description =
                     "This endpoint converts a multi-page PDF document into a single paged PDF"
-                            + " document. The width of the single page will be same as the input's width, but"
-                            + " the height will be the sum of all the pages' heights.")
+                            + " document. The width of the single page will be same as the input's"
+                            + " width, but the height will be the sum of all the pages' heights.")
     public ResponseEntity<Resource> pdfToSinglePage(@ModelAttribute PDFFile request)
             throws IOException {
 

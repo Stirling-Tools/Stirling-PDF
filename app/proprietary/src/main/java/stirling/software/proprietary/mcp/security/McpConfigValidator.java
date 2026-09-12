@@ -30,9 +30,9 @@ public final class McpConfigValidator {
             findings.add(
                     info(
                             "auth mode = apikey - clients send a Stirling API key via X-API-KEY (or"
-                                    + " Authorization: Bearer <key>); no external IdP needed. The key"
-                                    + " must belong to a provisioned, enabled account (Account -> API"
-                                    + " Keys)."));
+                                + " Authorization: Bearer <key>); no external IdP needed. The key"
+                                + " must belong to a provisioned, enabled account (Account -> API"
+                                + " Keys)."));
             return findings;
         }
 
@@ -53,10 +53,10 @@ public final class McpConfigValidator {
         if (isBlank(auth.getIssuerUri())) {
             findings.add(
                     warn(
-                            "mcp.auth.issuer-uri is not set: the JWT decoder fails closed and rejects"
-                                    + " every token. Set it to your IdP issuer that publishes"
-                                    + " /.well-known/openid-configuration (e.g."
-                                    + " https://login.microsoftonline.com/<tenant>/v2.0)."));
+                            "mcp.auth.issuer-uri is not set: the JWT decoder fails closed and"
+                                + " rejects every token. Set it to your IdP issuer that publishes"
+                                + " /.well-known/openid-configuration (e.g."
+                                + " https://login.microsoftonline.com/<tenant>/v2.0)."));
         } else if (!looksLikeUrl(auth.getIssuerUri())) {
             findings.add(
                     warn(
@@ -72,10 +72,11 @@ public final class McpConfigValidator {
         if (!hasResourceId && !hasAcceptedAudiences) {
             findings.add(
                     warn(
-                            "neither mcp.auth.resource-id nor mcp.auth.accepted-audiences is set: the"
-                                    + " audience validator fails closed and rejects every token (RFC"
-                                    + " 8707). Set resource-id to this server's public /mcp URL, or"
-                                    + " accepted-audiences to the audience your IdP actually mints."));
+                            "neither mcp.auth.resource-id nor mcp.auth.accepted-audiences is set:"
+                                + " the audience validator fails closed and rejects every token"
+                                + " (RFC 8707). Set resource-id to this server's public /mcp URL,"
+                                + " or accepted-audiences to the audience your IdP actually"
+                                + " mints."));
         } else {
             if (hasResourceId && !looksLikeUrl(auth.getResourceId())) {
                 findings.add(
@@ -98,18 +99,18 @@ public final class McpConfigValidator {
                         info(
                                 "mcp.auth.accepted-audiences="
                                         + auth.getAcceptedAudiences()
-                                        + " - tokens whose aud matches any of these are accepted, the"
-                                        + " escape hatch for IdPs that can't mint a resource-specific"
-                                        + " audience (e.g. an Entra ID app id, or Supabase's"
-                                        + " aud=authenticated)."));
+                                        + " - tokens whose aud matches any of these are accepted,"
+                                        + " the escape hatch for IdPs that can't mint a"
+                                        + " resource-specific audience (e.g. an Entra ID app id, or"
+                                        + " Supabase's aud=authenticated)."));
             } else {
                 findings.add(
                         info(
                                 "audience binding is strict (token aud must equal"
-                                        + " mcp.auth.resource-id). If your IdP can't mint that - e.g."
-                                        + " Entra ID issues aud=<client-id> - set"
-                                        + " mcp.auth.accepted-audiences to the audience it actually"
-                                        + " emits."));
+                                    + " mcp.auth.resource-id). If your IdP can't mint that - e.g."
+                                    + " Entra ID issues aud=<client-id> - set"
+                                    + " mcp.auth.accepted-audiences to the audience it actually"
+                                    + " emits."));
             }
         }
 
@@ -124,26 +125,27 @@ public final class McpConfigValidator {
             findings.add(
                     warn(
                             "mcp.auth.username-claim='sub' with require-existing-account=true: many"
-                                    + " IdPs (e.g. Entra ID, Google) set 'sub' to an opaque id that won't"
-                                    + " match a Stirling username. Set mcp.auth.username-claim to 'email'"
-                                    + " or 'preferred_username', or provision accounts keyed by sub."));
+                                + " IdPs (e.g. Entra ID, Google) set 'sub' to an opaque id that"
+                                + " won't match a Stirling username. Set mcp.auth.username-claim to"
+                                + " 'email' or 'preferred_username', or provision accounts keyed by"
+                                + " sub."));
         }
 
         if (!auth.isRequireExistingAccount()) {
             findings.add(
                     warn(
                             "mcp.auth.require-existing-account=false: any token your IdP signs can"
-                                    + " invoke MCP tools even if its subject has no Stirling account. Set"
-                                    + " it true unless you intend open access for every IdP-valid"
-                                    + " token."));
+                                + " invoke MCP tools even if its subject has no Stirling account."
+                                + " Set it true unless you intend open access for every IdP-valid"
+                                + " token."));
         }
 
         if (mcp.isScopesEnabled()) {
             findings.add(
                     info(
                             "mcp.scopes-enabled=true - the IdP must mint 'mcp.tools.read' and"
-                                    + " 'mcp.tools.write' scopes or clients are rejected; set"
-                                    + " mcp.scopes-enabled=false if it can only issue coarse tokens."));
+                                + " 'mcp.tools.write' scopes or clients are rejected; set"
+                                + " mcp.scopes-enabled=false if it can only issue coarse tokens."));
         }
 
         List<String> allowed = mcp.getAllowedOperations();

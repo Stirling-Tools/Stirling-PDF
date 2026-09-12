@@ -30,11 +30,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                                     type = "string",
                                                     format = "binary",
                                                     description =
-                                                            "Microsoft PowerPoint presentation (PPTX)"))),
+                                                            "Microsoft PowerPoint presentation"
+                                                                    + " (PPTX)"))),
             @ApiResponse(
                     responseCode = "400",
                     description =
-                            "Bad request - Invalid input parameters, unsupported format, or corrupted PDF",
+                            "Bad request - Invalid input parameters, unsupported format, or"
+                                    + " corrupted PDF",
                     content =
                             @Content(
                                     mediaType = "application/json",
@@ -49,7 +51,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
             @ApiResponse(
                     responseCode = "422",
                     description =
-                            "Unprocessable entity - PDF is valid but cannot be converted to PowerPoint format",
+                            "Unprocessable entity - PDF is valid but cannot be converted to"
+                                    + " PowerPoint format",
                     content =
                             @Content(
                                     mediaType = "application/json",

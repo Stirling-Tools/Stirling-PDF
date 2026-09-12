@@ -74,7 +74,8 @@ public class PdfUaTagger {
 
         if (structure.isEmpty()) {
             structure.warn(
-                    "No taggable content was found; the document may be a scan with no text layer.");
+                    "No taggable content was found; the document may be a scan with no text"
+                            + " layer.");
         }
 
         injectMarkedContent(document, structure, pages);

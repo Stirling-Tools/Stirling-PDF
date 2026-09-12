@@ -207,7 +207,8 @@ public class SigningFinalizationService {
         List<WetSignatureMetadata> wetSignatures = extractAllWetSignatures(session);
         if (wetSignatures.isEmpty()) {
             log.warn(
-                    "No wet signatures to apply for session {} - participants may not have placed signatures",
+                    "No wet signatures to apply for session {} - participants may not have placed"
+                            + " signatures",
                     session.getSessionId());
             return pdfBytes;
         }
@@ -779,7 +780,8 @@ public class SigningFinalizationService {
             throws Exception {
 
         log.info(
-                "Applying digital signature for participant {} - showSignature={}, pageNumber={}, reason='{}', location='{}', showLogo={}",
+                "Applying digital signature for participant {} - showSignature={}, pageNumber={},"
+                        + " reason='{}', location='{}', showLogo={}",
                 participant.getEmail(),
                 showSignature,
                 pageNumber,
@@ -833,7 +835,8 @@ public class SigningFinalizationService {
                 } catch (Exception e) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
-                            "Failed to open P12 keystore — check that the file is valid and the password is correct");
+                            "Failed to open P12 keystore — check that the file is valid and the"
+                                    + " password is correct");
                 }
 
             case "JKS":
@@ -850,7 +853,8 @@ public class SigningFinalizationService {
                 } catch (Exception e) {
                     throw new ResponseStatusException(
                             HttpStatus.BAD_REQUEST,
-                            "Failed to open JKS keystore — check that the file is valid and the password is correct");
+                            "Failed to open JKS keystore — check that the file is valid and the"
+                                    + " password is correct");
                 }
 
             case "SERVER":

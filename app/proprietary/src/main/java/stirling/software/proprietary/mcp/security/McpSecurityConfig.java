@@ -130,7 +130,11 @@ public class McpSecurityConfig {
                                             response.setContentType("application/json");
                                             response.getWriter()
                                                     .write(
-                                                            "{\"error\":\"unauthorized\",\"message\":\"Provide a valid Stirling API key via the X-API-KEY header (or Authorization: Bearer <key>).\"}");
+                                                            "{\"error\":\"unauthorized\",\"message\":\"Provide"
+                                                                + " a valid Stirling API key via"
+                                                                + " the X-API-KEY header (or"
+                                                                + " Authorization: Bearer"
+                                                                + " <key>).\"}");
                                         }))
                 .addFilterBefore(
                         new McpRequestSizeFilter(

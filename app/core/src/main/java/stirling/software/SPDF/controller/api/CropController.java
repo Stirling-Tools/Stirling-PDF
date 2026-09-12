@@ -150,7 +150,8 @@ public class CropController {
                 || request.getWidth() == null
                 || request.getHeight() == null) {
             throw new IllegalArgumentException(
-                    "Crop coordinates (x, y, width, height) are required when auto-crop is not enabled");
+                    "Crop coordinates (x, y, width, height) are required when auto-crop is not"
+                            + " enabled");
         }
 
         if (request.isRemoveDataOutsideCrop() && isGhostscriptEnabled()) {

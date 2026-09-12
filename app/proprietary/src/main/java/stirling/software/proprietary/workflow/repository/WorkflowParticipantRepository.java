@@ -49,17 +49,20 @@ public interface WorkflowParticipantRepository extends JpaRepository<WorkflowPar
 
     /** Find expired participants that haven't completed */
     @Query(
-            "SELECT p FROM WorkflowParticipant p WHERE p.expiresAt < CURRENT_TIMESTAMP AND p.status NOT IN ('SIGNED', 'DECLINED')")
+            "SELECT p FROM WorkflowParticipant p WHERE p.expiresAt < CURRENT_TIMESTAMP AND p.status"
+                    + " NOT IN ('SIGNED', 'DECLINED')")
     List<WorkflowParticipant> findExpiredIncompleteParticipants();
 
     /** Find all participants pending notification */
     @Query(
-            "SELECT p FROM WorkflowParticipant p WHERE p.status = 'PENDING' AND p.workflowSession.status = 'IN_PROGRESS'")
+            "SELECT p FROM WorkflowParticipant p WHERE p.status = 'PENDING' AND"
+                    + " p.workflowSession.status = 'IN_PROGRESS'")
     List<WorkflowParticipant> findPendingNotifications();
 
     /** Delete participant by ID and session owner (for authorization) */
     @Query(
-            "DELETE FROM WorkflowParticipant p WHERE p.id = :participantId AND p.workflowSession.owner = :owner")
+            "DELETE FROM WorkflowParticipant p WHERE p.id = :participantId AND"
+                    + " p.workflowSession.owner = :owner")
     void deleteByIdAndSessionOwner(
             @Param("participantId") Long participantId, @Param("owner") User owner);
 

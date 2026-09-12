@@ -60,8 +60,8 @@ public class SplitPDFController {
             summary = "Split a PDF file into separate documents",
             description =
                     "This endpoint splits a given PDF file into separate documents based on the"
-                            + " specified page numbers or ranges. Users can specify pages using individual"
-                            + " numbers, ranges, or 'all' for every page.")
+                            + " specified page numbers or ranges. Users can specify pages using"
+                            + " individual numbers, ranges, or 'all' for every page.")
     public ResponseEntity<Resource> splitPdf(@ModelAttribute SplitPagesRequest request)
             throws IOException {
 

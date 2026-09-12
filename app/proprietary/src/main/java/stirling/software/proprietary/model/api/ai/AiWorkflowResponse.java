@@ -101,9 +101,9 @@ public class AiWorkflowResponse {
     @Schema(
             description =
                     "Optional structured report from the tool (e.g. math-auditor Verdict, PDF"
-                            + " comment-agent summary). Tools surface this either via a JSON response"
-                            + " body or via the X-Stirling-Tool-Report header. May be null for tools"
-                            + " that produce only a file.")
+                        + " comment-agent summary). Tools surface this either via a JSON response"
+                        + " body or via the X-Stirling-Tool-Report header. May be null for tools"
+                        + " that produce only a file.")
     private JsonNode report;
 
     @Schema(
@@ -116,8 +116,8 @@ public class AiWorkflowResponse {
 
     @Schema(
             description =
-                    "Whether the team is subscribed, carried from a downstream usage-limit response."
-                            + " Selects which limit modal the client shows (free → subscribe,"
-                            + " subscribed → raise cap). Null when the downstream body omitted it.")
+                    "Whether the team is subscribed, carried from a downstream usage-limit"
+                        + " response. Selects which limit modal the client shows (free → subscribe,"
+                        + " subscribed → raise cap). Null when the downstream body omitted it.")
     private Boolean errorSubscribed;
 }

@@ -224,10 +224,10 @@ public class JobController {
             summary = "Release finished jobs and their stored files now",
             description =
                     "Force-expires this node's finished jobs instead of waiting out the retention"
-                            + " window, deleting their result files and the persistent copies made of"
-                            + " their inputs. Only jobs the caller may access are touched, and jobs"
-                            + " still running are left alone. Admins can sweep every user's jobs"
-                            + " with POST /api/v1/admin/job/cleanup?force=true.")
+                        + " window, deleting their result files and the persistent copies made of"
+                        + " their inputs. Only jobs the caller may access are touched, and jobs"
+                        + " still running are left alone. Admins can sweep every user's jobs with"
+                        + " POST /api/v1/admin/job/cleanup?force=true.")
     public ResponseEntity<?> cleanupFinishedJobs() {
         TaskManager.CleanupSummary summary =
                 taskManager.cleanupFinishedJobsNow(this::validateJobAccess);

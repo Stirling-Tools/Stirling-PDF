@@ -19,7 +19,8 @@ public class EnterpriseEndpointAspect {
     }
 
     @Around(
-            "@annotation(stirling.software.proprietary.security.config.EnterpriseEndpoint) || @within(stirling.software.proprietary.security.config.EnterpriseEndpoint)")
+            "@annotation(stirling.software.proprietary.security.config.EnterpriseEndpoint) ||"
+                    + " @within(stirling.software.proprietary.security.config.EnterpriseEndpoint)")
     public Object checkEnterpriseAccess(ProceedingJoinPoint joinPoint) throws Throwable {
         if (!runningEE) {
             throw new ResponseStatusException(

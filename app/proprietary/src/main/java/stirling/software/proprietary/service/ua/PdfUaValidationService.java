@@ -168,12 +168,14 @@ public class PdfUaValidationService {
         table.put(
                 "7.1",
                 new ClauseInfo(
-                        "Document is not tagged, or some content is neither tagged nor marked as an artifact.",
+                        "Document is not tagged, or some content is neither tagged nor marked as an"
+                                + " artifact.",
                         true));
         table.put(
                 "7.2",
                 new ClauseInfo(
-                        "Text cannot be mapped to Unicode, or the document language is not declared.",
+                        "Text cannot be mapped to Unicode, or the document language is not"
+                                + " declared.",
                         true));
         table.put(
                 "7.3",

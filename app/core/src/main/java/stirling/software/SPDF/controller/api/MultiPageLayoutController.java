@@ -220,8 +220,9 @@ public class MultiPageLayoutController {
                             "error.invalidFormat",
                             "Invalid {0} format: {1}",
                             "margin/layout configuration",
-                            "Invalid margin or layout configuration: resulting cell size is non-positive. "
-                                    + "Please reduce outer margins or adjust rows/columns.");
+                            "Invalid margin or layout configuration: resulting cell size is"
+                                    + " non-positive. Please reduce outer margins or adjust"
+                                    + " rows/columns.");
                 }
 
                 float innerWidth = cellWidth - 2 * innerMargin;

@@ -57,7 +57,8 @@ class OAuth2ConfigurationTest {
                     expectedRedirectUri,
                     actualRedirectUri,
                     String.format(
-                            "Redirect URI for provider '%s' must use provider name, not hardcoded 'oidc'",
+                            "Redirect URI for provider '%s' must use provider name, not hardcoded"
+                                    + " 'oidc'",
                             providerName));
         }
     }

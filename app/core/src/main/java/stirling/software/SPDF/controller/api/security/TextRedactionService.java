@@ -129,7 +129,8 @@ class TextRedactionService {
                     result != null ? result.totalMatches() : -1);
             if (result == null) {
                 log.warn(
-                        "JPDFium PdfRedactor.redact returned null result, falling back to box-only redaction mode");
+                        "JPDFium PdfRedactor.redact returned null result, falling back to box-only"
+                                + " redaction mode");
                 return true;
             }
 
@@ -153,7 +154,8 @@ class TextRedactionService {
             return false;
         } catch (Exception e) {
             log.warn(
-                    "JPDFium native text replacement failed, falling back to box-only redaction mode: {}",
+                    "JPDFium native text replacement failed, falling back to box-only redaction"
+                            + " mode: {}",
                     e.getMessage());
             return true;
         } finally {

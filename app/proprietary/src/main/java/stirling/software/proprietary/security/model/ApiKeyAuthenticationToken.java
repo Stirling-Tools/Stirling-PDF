@@ -40,7 +40,8 @@ public class ApiKeyAuthenticationToken extends AbstractAuthenticationToken {
     public void setAuthenticated(boolean isAuthenticated) throws IllegalArgumentException {
         if (isAuthenticated) {
             throw new IllegalArgumentException(
-                    "Cannot set this token to trusted. Use constructor which takes a GrantedAuthority list instead.");
+                    "Cannot set this token to trusted. Use constructor which takes a"
+                            + " GrantedAuthority list instead.");
         }
         super.setAuthenticated(false);
     }

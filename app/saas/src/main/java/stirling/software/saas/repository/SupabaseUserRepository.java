@@ -21,7 +21,8 @@ public interface SupabaseUserRepository extends JpaRepository<SupabaseUser, UUID
      * anonymous sessions in batch (avoids long-running transactions on a single big delete).
      */
     @Query(
-            "SELECT s.id FROM SupabaseUser s WHERE s.isAnonymous = true AND s.createdAt < :cutoffDate")
+            "SELECT s.id FROM SupabaseUser s WHERE s.isAnonymous = true AND s.createdAt <"
+                    + " :cutoffDate")
     Stream<UUID> findByCreatedAtBeforeAndIsAnonymousTrue(
             @Param("cutoffDate") LocalDateTime cutoffDate);
 

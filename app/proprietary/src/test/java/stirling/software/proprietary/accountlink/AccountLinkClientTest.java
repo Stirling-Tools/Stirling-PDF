@@ -72,7 +72,7 @@ class AccountLinkClientTest {
                 response(
                         201,
                         "{\"requestId\":\"req-1\",\"expiresIn\":900,"
-                                + "\"authorizeUrl\":\"https://app.example.com/link?request=req-1\"}");
+                            + "\"authorizeUrl\":\"https://app.example.com/link?request=req-1\"}");
         ArgumentCaptor<HttpRequest> captor = ArgumentCaptor.forClass(HttpRequest.class);
         when(httpClient.send(captor.capture(), any(HttpResponse.BodyHandler.class)))
                 .thenReturn(resp);
