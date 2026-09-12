@@ -7348,11 +7348,11 @@ eyebrow = "Volume discount · 1M+ PDFs"
 title = "Stirling Enterprise"
 
 [portal.billing.freeEditors]
-activeThisMonth = "Active this month"
+activeThisMonth = "Active editors (30 days)"
 cost = "Cost"
 editorsDeployed = "Editors deployed"
 inviteTeammates = "Invite teammates"
-pdfsEdited = "PDFs edited"
+pdfsEdited = "Edit operations (30 days)"
 subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
@@ -8296,7 +8296,7 @@ tagline = "Native app for Microsoft Windows"
 title = "Windows"
 
 [portal.home.editor]
-activeOfDeployed = "{{active}} of {{total}} active this month"
+activeOfDeployed = "{{active}} of {{total}} active in the last 30 days"
 name = "PDF Editor"
 open = "Open in browser"
 updated = "updated {{time}}"
