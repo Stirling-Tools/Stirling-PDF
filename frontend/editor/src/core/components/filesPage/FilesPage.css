@@ -505,29 +505,24 @@
   letter-spacing: -0.005em;
 }
 
+/* Values wrap as whole units onto their own lines rather than breaking
+   mid-value ("239.26 / KB") around a stranded separator. */
 .files-page-card-meta {
   font-size: 0.76rem;
   color: var(--c-text-subtle);
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.4rem;
+  row-gap: 0.05rem;
 }
 
-/* Narrow cards: let the values wrap as whole units onto their own lines rather
-   than breaking mid-value ("239.26 / KB") around a stranded separator. */
-@media (max-width: 64rem) {
-  .files-page-card-meta {
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: 0.4rem;
-    row-gap: 0.05rem;
-  }
-  .files-page-card-meta > span {
-    white-space: nowrap;
-  }
-  .files-page-card-meta-sep {
-    display: none;
-  }
+.files-page-card-meta > span {
+  white-space: nowrap;
+}
+
+.files-page-card-meta-sep {
+  display: none;
 }
 
 /* Marks a folder that runs a pipeline over anything added to it. Replaces the
