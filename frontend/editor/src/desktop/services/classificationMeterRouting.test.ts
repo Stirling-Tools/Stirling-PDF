@@ -2,13 +2,17 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   mode: null as "saas" | "selfhosted" | "local" | null,
+  serverConfig: null as { url: string } | null,
   post: vi.fn(),
 }));
 
 // NB: vi.mock factories are hoisted above top-level consts, so they must use
 // literals to avoid a TDZ ReferenceError.
 vi.mock("@app/services/connectionModeService", () => ({
-  connectionModeService: { getCachedMode: () => mocks.mode },
+  connectionModeService: {
+    getCachedMode: () => mocks.mode,
+    getCachedServerConfig: () => mocks.serverConfig,
+  },
 }));
 vi.mock("@app/constants/connection", () => ({
   STIRLING_SAAS_BACKEND_API_URL: "https://api.saas.test",
@@ -26,6 +30,7 @@ import { meterClassificationRun } from "@app/services/classificationMeter";
 describe("classification metering — which server gets billed", () => {
   beforeEach(() => {
     mocks.mode = null;
+    mocks.serverConfig = { url: "https://pdf.example.internal" };
     mocks.post.mockReset().mockResolvedValue({ status: 202 });
   });
 
@@ -42,9 +47,9 @@ describe("classification metering — which server gets billed", () => {
   it("bills the self-hosted server, never the cloud", () => {
     mocks.mode = "selfhosted";
     meterClassificationRun({ documentCount: 1 });
-    // Relative, so the router resolves it to the connected server. An absolute cloud
-    // URL here would carry the user's self-hosted token to Stirling Cloud.
-    expect(meterUrl()).toBe("/api/v1/policies/classify/meter");
+    expect(meterUrl()).toBe(
+      "https://pdf.example.internal/api/v1/policies/classify/meter",
+    );
     expect(meterUrl()).not.toContain("saas.test");
   });
 
