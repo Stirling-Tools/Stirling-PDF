@@ -12,7 +12,7 @@ engine = [
     "fastapi>=0.141.1",
     "opentelemetry-sdk>=1.39.1",
     "pgvector>=0.5.0",
-    "posthog>=7.38.3",
+    "posthog>=7.44.2",
     "psycopg[binary,pool]>=3.3.4",
     "pydantic>=2.13.4",
     # <2 cap: 1.99.0 patches CVE-2026-46678; 2.0 is an untested major migration.
