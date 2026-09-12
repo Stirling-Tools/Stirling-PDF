@@ -35,6 +35,38 @@ public class UnoServerPool {
         return endpoints.isEmpty();
     }
 
+    public boolean hasLocalEndpoints() {
+        if (endpoints.isEmpty()) {
+            return true;
+        }
+        for (ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep : endpoints) {
+            if (isLocalEndpoint(ep)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isLocalEndpoint(
+            ApplicationProperties.ProcessExecutor.UnoServerEndpoint ep) {
+        if (ep == null) {
+            return true;
+        }
+        String loc = ep.getHostLocation();
+        if ("remote".equalsIgnoreCase(loc)) {
+            return false;
+        }
+        if ("local".equalsIgnoreCase(loc)) {
+            return true;
+        }
+        String host = ep.getHost();
+        if (host == null || host.isBlank()) {
+            return true;
+        }
+        host = host.trim().toLowerCase(Locale.ROOT);
+        return "127.0.0.1".equals(host) || "localhost".equals(host) || "::1".equals(host);
+    }
+
     public UnoServerLease acquireEndpoint() throws InterruptedException {
         if (endpoints.isEmpty()) {
             return new UnoServerLease(defaultEndpoint(), null, this);

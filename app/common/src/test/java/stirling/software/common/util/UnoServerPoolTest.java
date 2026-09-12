@@ -259,6 +259,31 @@ public class UnoServerPoolTest {
         }
     }
 
+    @Test
+    void testHasLocalEndpoints() {
+        // Empty pool defaults to local
+        assertTrue(new UnoServerPool(Collections.emptyList()).hasLocalEndpoints());
+
+        // Pool with 127.0.0.1 (default auto) is local
+        assertTrue(new UnoServerPool(createEndpoints(1)).hasLocalEndpoints());
+
+        // Pool with explicit remote location is not local
+        ApplicationProperties.ProcessExecutor.UnoServerEndpoint remoteEp =
+                new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+        remoteEp.setHost("unoserver1");
+        remoteEp.setHostLocation("remote");
+        UnoServerPool remotePool = new UnoServerPool(Collections.singletonList(remoteEp));
+        assertFalse(remotePool.hasLocalEndpoints());
+
+        // Pool with explicit local location is local
+        ApplicationProperties.ProcessExecutor.UnoServerEndpoint localEp =
+                new ApplicationProperties.ProcessExecutor.UnoServerEndpoint();
+        localEp.setHost("unoserver1");
+        localEp.setHostLocation("local");
+        UnoServerPool localPool = new UnoServerPool(Collections.singletonList(localEp));
+        assertTrue(localPool.hasLocalEndpoints());
+    }
+
     private List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> createEndpoints(
             int count) {
         List<ApplicationProperties.ProcessExecutor.UnoServerEndpoint> endpoints = new ArrayList<>();
