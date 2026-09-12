@@ -102,13 +102,14 @@ export function buildPortalSettingsSections(
   if (includeAccountLink && AccountLinkSection) {
     workspace.push({
       key: "account-link",
-      label: t("portal.settings.sections.account-link", "Account link"),
+      label: t("portal.settings.sections.account-link", "Account connection"),
       description: t(
         "portal.accountLink.panel.sub",
-        "Link this self-hosted org to its Stirling account so unattended processing bills against your org wallet.",
+        "Manage this server’s connection to your Stirling Cloud account.",
       ),
       icon: "link-rounded",
       component: <AccountLinkSection />,
+      fullBleed: true,
     });
   }
   const groups: ConfigNavSection[] = [
