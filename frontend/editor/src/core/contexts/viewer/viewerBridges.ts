@@ -55,7 +55,6 @@ export interface PanAPIWrapper {
   enable: () => void;
   disable: () => void;
   toggle: () => void;
-  makePanDefault: () => void;
 }
 
 export interface SelectionAPIWrapper {

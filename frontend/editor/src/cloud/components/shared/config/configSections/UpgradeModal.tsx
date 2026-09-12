@@ -16,7 +16,7 @@
  * <p>Cap state is held locally — nothing reaches the backend until the user
  * commits in step 2. A user who cancels mid-modal leaves no side effects.
  */
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useState } from "react";
 import { createPortal } from "react-dom";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -29,18 +29,6 @@ import { useTranslation } from "react-i18next";
 import "./UpgradeModal.css";
 // oxlint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
-
-/**
- * Tell the AppConfigModal (or any other full-screen surface listening) that an
- * upgrade overlay is opening/closing so it can hide itself rather than stack
- * under us. Same window-event pattern the config modal already uses for
- * appConfig:navigate / appConfig:notice.
- */
-function dispatchOverlay(open: boolean) {
-  window.dispatchEvent(
-    new CustomEvent("appConfig:overlay", { detail: { open } }),
-  );
-}
 
 // Lazy-loaded so the @stripe/stripe-js bundle only downloads when the user
 // reaches step 2. See StripeCheckoutPanel.tsx for the full pattern + the
@@ -113,15 +101,6 @@ export default function UpgradeModal({
   const [step, setStep] = useState<Step>("cap");
   const [capUsd, setCapUsd] = useState<number>(500);
   const [noCap, setNoCap] = useState<boolean>(false);
-
-  // The config modal hides itself while we're open (it listens for this event)
-  // so the upgrade flow visually REPLACES it instead of stacking inside it.
-  // Cleanup fires open=false on unmount too, so the config modal can't get
-  // stuck hidden if we unmount without a clean close.
-  useEffect(() => {
-    dispatchOverlay(open);
-    return () => dispatchOverlay(false);
-  }, [open]);
 
   if (!open) {
     return null;
