@@ -551,6 +551,15 @@ public class GetInfoOnPDF {
             ArrayNode attachmentsArray = extractAttachments(document);
             other.set("Attachments", attachmentsArray);
 
+            // Portfolio (Adobe PDF Collection): a /Collection dictionary in the catalog
+            org.apache.pdfbox.cos.COSBase collectionBase =
+                    catalog.getCOSObject().getDictionaryObject(COSName.getPDFName("Collection"));
+            other.put("IsPortfolio", collectionBase != null);
+            if (collectionBase instanceof org.apache.pdfbox.cos.COSDictionary collectionDict) {
+                COSName view = collectionDict.getCOSName(COSName.getPDFName("View"));
+                other.put("PortfolioView", view != null ? view.getName() : null);
+            }
+
             // JavaScript with security analysis
             ArrayNode javascriptArray = extractJavaScript(catalog);
             other.set("JavaScript", javascriptArray);

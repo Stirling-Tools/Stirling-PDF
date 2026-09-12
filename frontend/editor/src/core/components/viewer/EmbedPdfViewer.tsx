@@ -65,6 +65,8 @@ export interface EmbedPdfViewerProps {
   signaturePlacementType?: "canvas" | "image" | "text";
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
+  /** Viewer is showing the pinned portfolio panel; don't render a second one. */
+  portfolioPinned?: boolean;
 }
 
 const EmbedPdfViewerContent = ({
@@ -79,6 +81,7 @@ const EmbedPdfViewerContent = ({
   signaturePlacementType,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
+  portfolioPinned,
 }: EmbedPdfViewerProps) => {
   const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
@@ -1332,13 +1335,15 @@ const EmbedPdfViewerContent = ({
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
       />
-      <AttachmentSidebar
-        visible={isAttachmentSidebarVisible}
-        thumbnailVisible={isThumbnailSidebarVisible}
-        bookmarkVisible={isBookmarkSidebarVisible}
-        documentCacheKey={bookmarkCacheKey}
-        preloadCacheKeys={allBookmarkCacheKeys}
-      />
+      {!portfolioPinned && (
+        <AttachmentSidebar
+          visible={isAttachmentSidebarVisible}
+          thumbnailVisible={isThumbnailSidebarVisible}
+          bookmarkVisible={isBookmarkSidebarVisible}
+          documentCacheKey={bookmarkCacheKey}
+          preloadCacheKeys={allBookmarkCacheKeys}
+        />
+      )}
       <LayerSidebar
         visible={isLayerSidebarVisible}
         rightOffset={
