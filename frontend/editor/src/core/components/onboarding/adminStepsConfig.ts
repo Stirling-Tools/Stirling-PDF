@@ -76,16 +76,14 @@ const NAV = {
   ],
   adminGeneral: [
     '[data-tour="admin-adminGeneral-nav"]',
-    '[data-tour="admin-adminFeatures-nav"]',
-    '[data-tour="admin-adminEndpoints-nav"]',
     '[data-tour="settings-content-area"]',
   ],
-  adminDatabase: [
-    '[data-tour="admin-adminDatabase-nav"]',
+  adminAdvanced: [
+    '[data-tour="admin-adminAdvanced-nav"]',
     '[data-tour="settings-content-area"]',
   ],
-  adminConnections: [
-    '[data-tour="admin-adminConnections-nav"]',
+  adminSecurity: [
+    '[data-tour="admin-adminSecurity-nav"]',
     '[data-tour="settings-content-area"]',
   ],
   adminTools: [
@@ -148,25 +146,25 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
   },
   {
     step: AdminTourStep.DATABASE_SECTION,
-    selector: '[data-tour="admin-adminDatabase-nav"]',
+    selector: '[data-tour="admin-adminAdvanced-nav"]',
     contentKey: "adminOnboarding.databaseSection",
     contentDefault:
       "For advanced production environments, we have settings to allow <strong>external database hookups</strong> so you can integrate with your existing infrastructure.",
     position: "right",
-    section: "adminDatabase",
-    glow: [...NAV.adminDatabase],
-    highlightedSelectors: [...NAV.adminDatabase],
+    section: "adminAdvanced",
+    glow: [...NAV.adminAdvanced],
+    highlightedSelectors: [...NAV.adminAdvanced],
   },
   {
     step: AdminTourStep.CONNECTIONS_SECTION,
-    selector: '[data-tour="admin-adminConnections-nav"]',
+    selector: '[data-tour="admin-adminSecurity-nav"]',
     contentKey: "adminOnboarding.connectionsSection",
     contentDefault:
       "The <strong>Connections</strong> section supports various login methods including custom SSO and SAML providers like Google and GitHub, plus email integrations for notifications and communications.",
     position: "right",
-    section: "adminConnections",
-    glow: [...NAV.adminConnections],
-    highlightedSelectors: [...NAV.adminConnections],
+    section: "adminSecurity",
+    glow: [...NAV.adminSecurity],
+    highlightedSelectors: [...NAV.adminSecurity],
     scrollToAfter: "adminAudit",
   },
   {
@@ -182,12 +180,12 @@ const ADMIN_STEP_SPECS: AdminStepSpec[] = [
   },
   {
     step: AdminTourStep.WRAP_UP,
-    selector: '[data-tour="admin-help-nav"]',
+    selector: '[data-tour="admin-about-nav"]',
     contentKey: "adminOnboarding.wrapUp",
     contentDefault:
-      "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here in the <strong>Tours</strong> section under Help.",
+      "That's the admin tour! You've seen the enterprise features that make Stirling PDF a powerful, customisable solution for organisations. You can replay it anytime — just open <strong>Settings</strong> and find it here under <strong>About</strong>.",
     position: "right",
-    section: "help",
+    section: "about",
     waitForSelectorOnEnter: true,
   },
 ];

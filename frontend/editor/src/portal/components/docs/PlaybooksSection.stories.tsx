@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { docsContentFor } from "@portal/mocks/docs";
 import { PlaybooksSection } from "@portal/components/docs/PlaybooksSection";
-import "@portal/views/DeveloperDocs.css";
+import "@core/components/docs/DeveloperDocs.css";
 
 const meta: Meta<typeof PlaybooksSection> = {
   title: "Portal/DeveloperDocs/PlaybooksSection",
