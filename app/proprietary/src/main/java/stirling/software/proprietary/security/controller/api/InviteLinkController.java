@@ -22,7 +22,7 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
-import stirling.software.proprietary.security.service.SaveUserRequest;
+import stirling.software.proprietary.security.service.InviteRedemptionService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -38,6 +38,7 @@ public class InviteLinkController {
     private final ApplicationProperties applicationProperties;
     private final Optional<EmailService> emailService;
     private final UserLicenseSettingsService userLicenseSettingsService;
+    private final InviteRedemptionService inviteRedemptionService;
 
     /**
      * Generate a new invite link (admin only)
@@ -469,19 +470,11 @@ public class InviteLinkController {
                                                 + " then use this link again."));
             }
 
-            // Create the user account
-            SaveUserRequest.Builder builder =
-                    SaveUserRequest.builder()
-                            .username(effectiveEmail)
-                            .password(password)
-                            .teamId(invite.getTeamId())
-                            .role(invite.getRole());
-            userService.saveUserCore(builder.build());
-
-            // Mark invite as used
-            invite.setUsed(true);
-            invite.setUsedAt(LocalDateTime.now());
-            inviteTokenRepository.save(invite);
+            // Consume the token and create the account together, so two redemptions racing on
+            // one single-use link cannot both produce an account.
+            if (!inviteRedemptionService.redeem(invite, effectiveEmail, password)) {
+                return invalidInviteResponse();
+            }
 
             log.info(
                     "User account created via invite link: {} with role: {}",
