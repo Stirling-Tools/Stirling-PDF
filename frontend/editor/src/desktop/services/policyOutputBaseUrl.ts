@@ -1,12 +1,8 @@
-import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
+import { connectedServerBaseUrl } from "@app/services/connectedServerBaseUrl";
 import type { PolicyExecutionTarget } from "@app/services/policyPipeline";
 
-/**
- * Desktop: a policy run's outputs live on the backend that executed it.
- */
+/** Desktop: a run's outputs live on the server that executed it. Absolute, because outputs come
+ *  from a tool endpoint the router would otherwise divert to the bundled backend when offline. */
 export function getPolicyOutputBaseUrl(target: PolicyExecutionTarget): string {
-  if (target === "saas") {
-    return (STIRLING_SAAS_BACKEND_API_URL ?? "").replace(/\/$/, "");
-  }
-  return "";
+  return target === "saas" ? connectedServerBaseUrl() : "";
 }
