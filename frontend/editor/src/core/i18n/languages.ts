@@ -20,6 +20,7 @@ export const supportedLanguages: Record<string, string> = {
   "fa-IR": "فارسی",
   "fr-FR": "Français",
   "ga-IE": "Gaeilge",
+  "he-IL": "עברית",
   "hi-IN": "हिंदी",
   "hr-HR": "Hrvatski",
   "hu-HU": "Magyar",
@@ -49,7 +50,7 @@ export const supportedLanguages: Record<string, string> = {
 };
 
 /** Right-to-left languages (drives `document.dir`). */
-export const rtlLanguages = ["ar-AR", "fa-IR"];
+export const rtlLanguages = ["ar-AR", "fa-IR", "he-IL"];
 
 /** LocalStorage keys for i18next language persistence. */
 export const I18N_STORAGE_KEYS = {
