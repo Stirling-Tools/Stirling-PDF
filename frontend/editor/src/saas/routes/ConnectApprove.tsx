@@ -89,7 +89,8 @@ export default function ConnectApprove() {
 
   const onDecide = useCallback(
     async (approve: boolean) => {
-      if (!requestId) return;
+      if (!requestId || !(approve ? pending?.canApprove : pending?.canDeny))
+        return;
       setBusy(true);
       setError(null);
       const path = `/api/v1/account-link/connect/${encodeURIComponent(requestId)}`;
@@ -115,7 +116,7 @@ export default function ConnectApprove() {
         setBusy(false);
       }
     },
-    [requestId, session, t],
+    [requestId, pending, session, t],
   );
 
   /**
@@ -124,6 +125,12 @@ export default function ConnectApprove() {
   const onSwitchAccount = useCallback(() => {
     void signOut();
   }, [signOut]);
+
+  const onDismiss = useCallback(() => {
+    if (!pending || pending.canDeny) return;
+    clearPendingConnect();
+    navigate("/", { replace: true });
+  }, [pending, navigate]);
 
   if (loading || !session) return null;
 
@@ -153,6 +160,7 @@ export default function ConnectApprove() {
         error={error}
         onDecide={(approve) => void onDecide(approve)}
         onSwitchAccount={onSwitchAccount}
+        onDismiss={onDismiss}
       />
     </AuthLayout>
   );
