@@ -19,10 +19,7 @@ import stirling.software.common.util.TempFileManager;
 
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * The pipeline engine must never run on the desktop bundle: that backend is core-flavour and
- * unmetered, so work done there is invisible to the connected server that owns the user's credits.
- */
+/** The pipeline engine must never run on the desktop bundle, where work would go unmetered. */
 class PipelineDesktopExclusionTest {
 
     private static final String TAURI_PROP = "STIRLING_PDF_TAURI_MODE";

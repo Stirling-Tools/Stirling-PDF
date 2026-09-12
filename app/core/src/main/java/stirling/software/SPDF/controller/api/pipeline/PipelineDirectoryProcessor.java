@@ -41,12 +41,7 @@ import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Absent from the desktop bundle. The bundled backend is core-flavour and unmetered, so a pipeline
- * that ran there would process documents off the books; on desktop pipelines belong to the
- * connected server. Keyed on the JVM's own {@code STIRLING_PDF_TAURI_MODE} property, which only the
- * Tauri sidecar sets.
- */
+/** Absent from the desktop bundle: that backend is unmetered, so a run there is off the books. */
 @Service
 @ConditionalOnProperty(
         name = "STIRLING_PDF_TAURI_MODE",

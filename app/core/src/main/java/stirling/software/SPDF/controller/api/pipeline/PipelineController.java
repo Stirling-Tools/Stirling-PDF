@@ -38,10 +38,7 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.ObjectMapper;
 
-/**
- * Absent from the desktop bundle, for the same reason as {@link PipelineDirectoryProcessor}: a
- * pipeline run on the bundled backend is unmetered work the connected server never sees.
- */
+/** Absent from the desktop bundle for the same reason as {@link PipelineDirectoryProcessor}. */
 @PipelineApi
 @ConditionalOnProperty(
         name = "STIRLING_PDF_TAURI_MODE",
