@@ -423,7 +423,6 @@ export function Usage({
           {wallet && wallet.status === "subscribed" && (
             <SubscribedPlanView
               wallet={wallet}
-              unsynced={localUsage}
               onWalletChange={refresh}
               adjusting={adjustingLimit}
               onAdjustingChange={setAdjustingLimit}

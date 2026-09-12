@@ -83,8 +83,8 @@ export function FreePlanView({
 
   return (
     <div className="portal-billing__stack">
-      {/* Prepaid capacity is usable independent of a metered subscription, so surface it here on the
-          free plan too (not just the subscribed dashboard) whenever the team holds a live pool. */}
+      {/* A live pool is usable without a metered subscription, so it surfaces on the free plan
+          too. The no-pool upsell face never does. */}
       {wallet.prepaidUnitsRemaining > 0 && (
         <PrepaidCapacityCard
           wallet={wallet}
@@ -103,15 +103,6 @@ export function FreePlanView({
           {missingTeam}
         </Banner>
       )}
-      {!isLeader && (
-        <p className="portal-billing__plan-readonly">
-          {t(
-            "portal.billing.freePlan.ownerOnly",
-            "Only the team owner can switch on the Processor plan.",
-          )}
-        </p>
-      )}
-
       <ActivationChoiceModal
         open={step === "choose"}
         onClose={closeModals}

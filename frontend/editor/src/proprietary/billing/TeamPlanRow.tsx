@@ -48,7 +48,8 @@ export function TeamPlanRow({
     ? licensedUsers
     : (licensedUsers ?? wallet.freeUserAllowance ?? null);
 
-  if (limit == null) {
+  // A non-positive limit is an absent one, not a full meter: nothing to divide by either way.
+  if (limit == null || limit <= 0) {
     return (
       <MeterRow
         name={name}

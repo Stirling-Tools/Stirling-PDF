@@ -3,17 +3,12 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@app/ui";
 import { meterState } from "@app/billing";
 import type { Wallet } from "@portal/api/billing";
-import type { LocalUsage } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
-import { PdfsProcessedCard } from "@portal/components/billing/PdfsProcessedCard";
-import { PrepaidCapacityCard } from "@portal/components/billing/PrepaidCapacityCard";
 import { BundleCheckoutModal } from "@portal/components/billing/BundleCheckoutModal";
-import { SpendLimitCard } from "@portal/components/billing/SpendLimitCard";
+import { SpendLimitModal } from "@portal/components/billing/SpendLimitModal";
 
 interface Props {
   wallet: Wallet;
-  /** Instance-local usage not yet synced to SaaS; folded into the PDFs-processed card. */
-  unsynced?: LocalUsage | null;
   onWalletChange?: () => void;
   /**
    * Whether the spend-limit editor is open, when the host drives it. Lets the Processor row's
@@ -24,14 +19,14 @@ interface Props {
 }
 
 /**
- * What a subscribed team needs beyond {@link BillingScreen}: prepaid capacity, the per-category
- * split of what was processed, the leader-only spend-limit editor, and the bundle checkout. The
- * fleet count, invoices and the payment method are not repeated here; the shared screen states
- * those already.
+ * The flows a subscribed team needs that {@link BillingScreen} has no room for: the spend-limit
+ * dialog its Processor row opens, and the bundle checkout.
+ *
+ * <p>Nothing renders here at rest. Every card this view used to stack under the page either
+ * restated the screen above it or was an upsell, and both now live inside a dialog or not at all.
  */
 export function SubscribedPlanView({
   wallet,
-  unsynced,
   onWalletChange,
   adjusting: controlledAdjusting,
   onAdjustingChange,
@@ -46,8 +41,6 @@ export function SubscribedPlanView({
   const portal = useStripePortal(wallet);
 
   const isLeader = wallet.role === "leader";
-  const split = wallet.categoryDocs;
-  const hasCategorySplit = split.api + split.ai + split.automation > 0;
   // Buying/topping up prepaid capacity is a commercial action — leader-only, and
   // needs a resolved team to scope checkout.
   const canBuyBundle = isLeader && wallet.teamId != null;
@@ -59,9 +52,6 @@ export function SubscribedPlanView({
 
   function raiseLimit() {
     setAdjusting(true);
-    document
-      .getElementById("portal-spend-limit")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -106,23 +96,12 @@ export function SubscribedPlanView({
         </Banner>
       )}
 
-      <PrepaidCapacityCard
-        wallet={wallet}
-        onBuy={canBuyBundle ? () => setBundleOpen(true) : undefined}
-      />
-
-      {/* Only when there is a split to show. The total on its own is already a cycle row on the
-          shared screen, so an empty-split card would just print it twice. */}
-      {hasCategorySplit && (
-        <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
-      )}
-
-      {/* The limit control, which is interactive and has no equivalent on the shared card. */}
-      <SpendLimitCard
+      <SpendLimitModal
+        open={adjusting}
+        onClose={() => setAdjusting(false)}
         wallet={wallet}
         onWalletChange={onWalletChange}
-        adjusting={adjusting}
-        onAdjustingChange={setAdjusting}
+        onBuyBundle={canBuyBundle ? () => setBundleOpen(true) : undefined}
       />
 
       {portal.error && (

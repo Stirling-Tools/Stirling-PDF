@@ -15,30 +15,39 @@ import { BillingScreen } from "@app/billing/BillingScreen";
 import { subscribedWallet } from "@app/billing/walletFixtures";
 
 /**
- * The cycle figures, which are the ones a customer reconciles against an invoice. A linked
- * instance's locally-accrued units are real spend the cloud has not billed yet, so leaving them
- * out under-reports what the period has actually cost.
+ * Units a linked instance has accrued that the cloud has not billed yet are real spend, and every
+ * figure on this screen counts them. Two totals disagreeing by an undisclosed amount is the bug
+ * these pin: a customer reconciling against an invoice has no way to explain the gap.
  */
-describe("BillingScreen credits", () => {
+describe("BillingScreen and units pending sync", () => {
   const wallet = {
     ...subscribedWallet,
     spendUnitsThisPeriod: 1000,
+    estimatedBillMinor: 1000,
     pricePerDocMinor: 1,
   };
 
-  it("counts units the cloud has not billed yet, and says how many", () => {
+  it("counts them in both the estimate and the credit line, and says so once", () => {
     render(<BillingScreen wallet={wallet} pendingUnits={250} />);
 
-    expect(screen.getByText("$12.50")).toBeInTheDocument();
+    // 1000 synced + 250 pending, at 1 minor unit each. Twice on purpose: the cycle estimate and
+    // the credit line are the two figures that used to disagree.
+    expect(screen.getAllByText("$12.50")).toHaveLength(2);
+    expect(screen.getByText("1,250 · $0.01 each")).toBeInTheDocument();
     expect(
-      screen.getByText("1,250 · $0.01 each · 250 pending sync"),
+      screen.getByText(
+        "estimated · includes 250 not yet synced from your instances",
+      ),
     ).toBeInTheDocument();
   });
 
-  it("drops the pending clause when there is nothing waiting", () => {
+  it("says nothing about syncing when there is nothing waiting", () => {
     render(<BillingScreen wallet={wallet} pendingUnits={0} />);
 
-    expect(screen.getByText("$10.00")).toBeInTheDocument();
+    expect(screen.getAllByText("$10.00")).toHaveLength(2);
     expect(screen.getByText("1,000 · $0.01 each")).toBeInTheDocument();
+    expect(
+      screen.getByText("estimated · the meter settles at close"),
+    ).toBeInTheDocument();
   });
 });

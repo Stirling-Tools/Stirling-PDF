@@ -197,10 +197,25 @@ export function BillingScreen({
     };
   }, [wallet, paying, teamHeld, t]);
 
-  // A linked instance's locally-accrued units are real spend the cloud has not billed yet, so the
-  // credit count includes them. The estimate above stays the server's own figure, which is what
-  // "the meter settles at close" is telling the reader.
+  // One rule for the whole screen: a linked instance's locally-accrued units are real spend the
+  // cloud has not billed yet, so every figure counts them. Showing some totals with and some
+  // without is what leaves two numbers on one page and no way to reconcile them. The server
+  // cannot do this itself -- it has not seen these units -- so the fold happens here, once.
+  const rate = wallet?.pricePerDocMinor ?? null;
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
+  // A host with no user figures at all -- an unlinked instance whose admin endpoint refused -- has
+  // nothing true to put in this row, and "0 users" is not nothing, it is wrong.
+  const showTeam = Boolean(
+    wallet &&
+    (wallet.team.held ||
+      wallet.team.usersInUse > 0 ||
+      wallet.freeUserAllowance > 0),
+  );
+  const pendingMinor = rate != null ? pendingUnits * rate : 0;
+  const estimatedMinor =
+    wallet?.estimatedBillMinor != null
+      ? wallet.estimatedBillMinor + pendingMinor
+      : null;
 
   const cycle = wallet
     ? cycleDay(wallet.billingPeriodStart, wallet.billingPeriodEnd)
@@ -275,7 +290,7 @@ export function BillingScreen({
                     ))}
                   </div>
                   <div className="billing-meters">
-                    {wallet.team && (
+                    {showTeam && (
                       <TeamPlanRow
                         wallet={wallet}
                         selfHosted={selfHosted}
@@ -316,19 +331,22 @@ export function BillingScreen({
 
                   {/* The bill leads only once there is a bill. On the free tier the estimate is zero
                   by definition, and a zero hero would read as a figure rather than as a state. */}
-                  {paying && wallet.estimatedBillMinor != null && (
+                  {paying && estimatedMinor != null && (
                     <div className="billing-bignum-row">
                       <span className="billing-bignum">
-                        {formatMinor(
-                          wallet.estimatedBillMinor,
-                          wallet.currency,
-                        )}
+                        {formatMinor(estimatedMinor, wallet.currency)}
                       </span>
                       <span className="billing-bignum__note">
-                        {t(
-                          "portal.billing.cycle.estimated",
-                          "estimated · the meter settles at close",
-                        )}
+                        {pendingUnits > 0
+                          ? t(
+                              "portal.billing.cycle.estimatedPending",
+                              "estimated · includes {{pending}} not yet synced from your instances",
+                              { pending: pendingUnits.toLocaleString() },
+                            )
+                          : t(
+                              "portal.billing.cycle.estimated",
+                              "estimated · the meter settles at close",
+                            )}
                       </span>
                     </div>
                   )}
@@ -337,10 +355,12 @@ export function BillingScreen({
                     label={t("portal.billing.cycle.pdfs", "PDFs processed")}
                     value={wallet.docsProcessedThisPeriod.toLocaleString()}
                   />
-                  <KvRow
-                    label={t("portal.billing.cycle.users", "Users")}
-                    value={wallet.team.usersInUse.toLocaleString()}
-                  />
+                  {showTeam && (
+                    <KvRow
+                      label={t("portal.billing.cycle.users", "Users")}
+                      value={wallet.team.usersInUse.toLocaleString()}
+                    />
+                  )}
                   {editorsDeployed != null && (
                     <KvRow
                       label={t(
@@ -355,30 +375,17 @@ export function BillingScreen({
                       label={t("portal.billing.cycle.credits", "Credits")}
                       note={
                         wallet.pricePerDocMinor != null
-                          ? pendingUnits > 0
-                            ? t(
-                                "portal.billing.cycle.creditsNotePending",
-                                "{{units}} · {{rate}} each · {{pending}} pending sync",
-                                {
-                                  units: creditUnits.toLocaleString(),
-                                  rate: formatMinor(
-                                    wallet.pricePerDocMinor,
-                                    wallet.currency,
-                                  ),
-                                  pending: pendingUnits.toLocaleString(),
-                                },
-                              )
-                            : t(
-                                "portal.billing.cycle.creditsNote",
-                                "{{units}} · {{rate}} each",
-                                {
-                                  units: creditUnits.toLocaleString(),
-                                  rate: formatMinor(
-                                    wallet.pricePerDocMinor,
-                                    wallet.currency,
-                                  ),
-                                },
-                              )
+                          ? t(
+                              "portal.billing.cycle.creditsNote",
+                              "{{units}} · {{rate}} each",
+                              {
+                                units: creditUnits.toLocaleString(),
+                                rate: formatMinor(
+                                  wallet.pricePerDocMinor,
+                                  wallet.currency,
+                                ),
+                              },
+                            )
                           : undefined
                       }
                       value={

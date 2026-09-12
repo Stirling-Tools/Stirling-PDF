@@ -38,6 +38,7 @@ export function ProcessorPlanRow({
 }) {
   const { t } = useTranslation();
   const name = t("portal.billing.processor.rowName", "Processor");
+  const rate = wallet.pricePerDocMinor;
 
   if (!wallet.processor.active) {
     const used = Math.min(
@@ -46,7 +47,6 @@ export function ProcessorPlanRow({
     );
     const pct =
       wallet.freeAllowance > 0 ? (used / wallet.freeAllowance) * 100 : 0;
-    const rate = wallet.pricePerDocMinor;
     const mid =
       rate != null
         ? t(
@@ -88,7 +88,12 @@ export function ProcessorPlanRow({
     );
   }
 
-  const spentMinor = wallet.estimatedBillMinor;
+  // Same fold the cycle figures use: units the cloud has not billed yet are still spend, and a
+  // row disagreeing with the total above it is worse than a slightly early number.
+  const spentMinor =
+    wallet.estimatedBillMinor != null
+      ? wallet.estimatedBillMinor + (rate != null ? pendingUnits * rate : 0)
+      : null;
   const capped = !wallet.noCap && wallet.capUsd != null;
   // One conversion, in one place: the estimate is minor units, the limit is major.
   const spentMajor = spentMinor != null ? spentMinor / 100 : null;
