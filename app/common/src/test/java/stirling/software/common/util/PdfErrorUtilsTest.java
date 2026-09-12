@@ -82,4 +82,32 @@ class PdfErrorUtilsTest {
         IOException e = new IOException("");
         assertFalse(PdfErrorUtils.isCorruptedPdfError(e));
     }
+
+    @Test
+    void isCorruptedPdfError_findsCauseBehindFixedWrapperMessage() {
+        IOException wrapped =
+                new IOException(
+                        "JPDFium merge failed", new RuntimeException("Invalid/corrupt PDF"));
+        assertTrue(PdfErrorUtils.isCorruptedPdfError(wrapped));
+    }
+
+    @Test
+    void isCorruptedPdfError_recognisesJpdfiumCorruptWording() {
+        assertTrue(PdfErrorUtils.isCorruptedPdfError(new IOException("Invalid/corrupt PDF")));
+    }
+
+    @Test
+    void isCorruptedPdfError_unrelatedCauseChainStaysFalse() {
+        IOException wrapped =
+                new IOException("JPDFium merge failed", new RuntimeException("disk full"));
+        assertFalse(PdfErrorUtils.isCorruptedPdfError(wrapped));
+    }
+
+    @Test
+    void isCorruptedPdfError_cyclicCauseChainDoesNotSpin() {
+        IOException first = new IOException("nothing to see");
+        IOException second = new IOException("nor here", first);
+        first.initCause(second);
+        assertFalse(PdfErrorUtils.isCorruptedPdfError(first));
+    }
 }
