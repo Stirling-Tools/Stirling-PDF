@@ -39,26 +39,44 @@ vi.mock("@portal/components/billing/SubscribedPlanView", () => ({
 import { Usage } from "@portal/views/Usage";
 
 describe("Usage — link-free wallet renderer", () => {
+  // Enough of a wallet for BillingScreen to render; the bare {status} fixture predates it.
+  const walletOf = (status: string) => ({
+    status,
+    role: "member",
+    currency: "usd",
+    freeAllowance: 500,
+    freeRemaining: 500,
+    spendUnitsThisPeriod: 0,
+    docsProcessedThisPeriod: 0,
+    sizeMultiplierPdfsThisPeriod: 0,
+    estimatedBillMinor: 0,
+    pricePerDocMinor: 1,
+    billingPeriodStart: "2026-09-01T00:00:00",
+    billingPeriodEnd: "2026-10-01T00:00:00",
+    team: { held: false, licensedUsers: null, usersInUse: 1 },
+    processor: { active: false },
+  });
+
   beforeEach(() => {
     fetchWallet.mockReset();
     refreshWalletCache.mockReset();
   });
 
   it("loads the wallet on mount and reports it via onWalletLoaded (no link gate)", async () => {
-    fetchWallet.mockResolvedValue({ status: "free" });
+    fetchWallet.mockResolvedValue(walletOf("free"));
     const onWalletLoaded = vi.fn();
 
     renderUsage(<Usage onWalletLoaded={onWalletLoaded} />);
 
     // Renders immediately (no link prompt / login) and loads unconditionally.
-    expect(screen.getByText("Usage & billing")).toBeInTheDocument();
+    expect(screen.getByText("Usage & Billing")).toBeInTheDocument();
     await waitFor(() =>
-      expect(onWalletLoaded).toHaveBeenCalledWith({ status: "free" }),
+      expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),
     );
   });
 
   it("works with no callbacks (SaaS passes none)", async () => {
-    fetchWallet.mockResolvedValue({ status: "subscribed" });
+    fetchWallet.mockResolvedValue(walletOf("subscribed"));
 
     renderUsage(<Usage />);
 

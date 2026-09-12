@@ -76,6 +76,11 @@ export interface Wallet {
   billableLimit: number | null;
   /** Free grant size per billing period; unused units don't carry over. */
   freeAllowance: number;
+  /**
+   * Users the team may have with no Team plan. The server enforces this, so the capacity row shows
+   * it as the denominator rather than any surface restating the number.
+   */
+  freeUserAllowance: number;
   /** Free grant left in this period; 0 = exhausted. */
   freeRemaining: number;
   /** Paid per-document rate in minor units (may be fractional); null = unknown (render "unknown", never substitute). */

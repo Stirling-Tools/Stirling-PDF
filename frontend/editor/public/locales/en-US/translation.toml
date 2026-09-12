@@ -6480,6 +6480,7 @@ paymentCanceled = "Payment was canceled. No charges were made."
 perMonth = "/month"
 preparing = "Preparing your checkout..."
 redirecting = "Redirecting to secure checkout..."
+stepOf = "Step {{n}} of {{total}}"
 success = "Payment Successful!"
 successMessage = "Your subscription has been activated successfully. You will receive a confirmation email shortly."
 syncError = "Payment successful but license sync failed. Your license will be updated shortly. Please contact support if issues persist."
@@ -6489,6 +6490,10 @@ upgradeCompleteMessage = "Your subscription has been upgraded successfully. Your
 upgradeSuccess = "Payment successful! Your subscription has been upgraded. The license has been updated on your server. You will receive a confirmation email shortly."
 upgradeTitle = "Upgrade to {{planName}}"
 yearly = "Yearly"
+
+[payment.addCapacity]
+currently = "Currently up to {{users}} users"
+title = "Add capacity"
 
 [payment.capacityStage]
 continue = "Continue to payment"
@@ -6504,6 +6509,8 @@ perMonth = "/mo"
 perYear = "/yr"
 renewalNote = "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing."
 subheading = "Covers everyone you invite, in blocks of {{users}} users."
+subheadingAdd = "Your plan covers {{current}} users today. Choose the new total."
+userDelta = "+{{users}} users"
 usersLabel = "Users"
 userTotal = "{{users}} users"
 
@@ -6512,7 +6519,6 @@ continue = "Continue"
 description = "We'll use this to send your license key and receipts."
 emailLabel = "Email Address"
 emailPlaceholder = "your@email.com"
-modalTitle = "Get Started - {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "Complete Payment - {{planName}}"
@@ -6522,8 +6528,13 @@ billedYearly = "Billed yearly at {{currency}}{{amount}}"
 modalTitle = "Select Billing Period - {{planName}}"
 savePercent = "Save {{percent}}%"
 savingsAmount = "You save {{amount}}"
+selectedMonthly = "Monthly"
+selectedYearly = "Yearly"
 selectMonthly = "Select Monthly"
 selectYearly = "Select Yearly"
+
+[payment.upgradeTeam]
+title = "Upgrade to Team"
 
 [pdfCommentAgent]
 submit = "Generate comments"
@@ -7341,66 +7352,75 @@ title = "Activating your Processor plan..."
 limit = "Monthly spend limit {{amount}}/mo. Processing pauses at the limit."
 limitNoCap = "No spend limit. Processing won't pause. Invoices post monthly."
 
-[portal.billing.enterpriseUpsell]
-cta = "Explore Enterprise"
-description = "Committed volume discounts, air-gapped deployment, custom MSA and security reviews, and 3rd-party distributor partnerships."
-eyebrow = "Volume discount · 1M+ PDFs"
-title = "Stirling Enterprise"
+[portal.billing.chip]
+invoices = "Invoices"
+nav = "Sections"
+payment = "Payment"
+plan = "Plan"
+usage = "Usage"
 
-[portal.billing.freeEditors]
-activeThisMonth = "Active this month"
-cost = "Cost"
-editorsDeployed = "Editors deployed"
-inviteTeammates = "Invite teammates"
-pdfsEdited = "PDFs edited"
-subtitle = "Deploy anywhere, for your whole team."
-title = "Free PDF Editors"
+[portal.billing.cycle]
+credits = "Credits"
+creditsNote = "{{units}} · {{rate}} each"
+day = "Day {{day}} of {{of}}"
+editors = "Editors deployed"
+estimated = "estimated · the meter settles at close"
+estimatedPending = "estimated · includes {{pending}} not yet synced from your instances"
+largeFiles = "Large files"
+largeFilesValue = "{{pdfs}} PDFs past the size threshold"
+pdfs = "PDFs processed"
+users = "Users"
+
+[portal.billing.enterprise]
+cta = "Get an enterprise quote"
+sub = "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match."
+title = "Running Stirling in a regulated environment?"
 
 [portal.billing.freePlan]
-anywhere = "Web, desktop & self-hosted"
 checkoutErrorTitle = "Couldn't start checkout"
-currentPlan = "Current plan"
-everyPdfTool = "Every PDF tool"
-freeForever = "Free forever"
 noTeamResolved = "No team is resolved on your wallet yet — refresh and try again."
-ownerOnly = "Only the team owner can switch on the Processor plan."
 payInvoice = "Pay invoice to complete"
-planName = "Editor"
-switchOnProcessor = "Switch on the Processor →"
 viewQuote = "View quote"
 
-[portal.billing.invoices]
-columnAmount = "Amount"
-columnDate = "Date"
-columnDescription = "Description"
-columnPdfsProcessed = "PDFs processed"
-columnStatus = "Status"
-descriptionFallback = "Invoice"
-downloadAriaLabel = "Download invoice {{number}} as PDF"
-emptyDescription = "Once your team subscribes and the first cycle closes, your invoices appear here."
-emptyTitle = "No invoices yet"
-fetchLimitNote_one = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
-fetchLimitNote_other = "Showing your {{count}} most recent invoices. Older invoices are in the Stripe portal."
-loadError = "Couldn't load invoices: {{error}}"
-pdfLink = "PDF ↓"
-showAll_one = "Show all {{count}}"
-showAll_other = "Show all {{count}}"
-showFewer_one = "Show fewer (top {{count}})"
-showFewer_other = "Show fewer (top {{count}})"
-showMostRecent_one = "Show {{count}} most recent"
-showMostRecent_other = "Show {{count}} most recent"
-title = "Invoice history"
-viewAriaLabel = "View invoice {{number}} in Stripe"
-viewLink = "View ↗"
+[portal.billing.identity.free]
+chipAnywhere = "Web, desktop & self-hosted"
+chipCredits = "{{allowance}} free credits monthly"
+chipTools = "Every PDF tool"
+name = "Free"
+sub = "The full PDF Editor."
 
-[portal.billing.paymentMethod]
-billedMonthly = "Billed monthly"
-cardEnding = "{{brand}} ending {{last4}}"
-cardFallback = "Card"
-expiresBilledMonthly = "Expires {{expiry}} · billed monthly"
-eyebrow = "Payment method"
-managedSub = "Your card and billing details are kept securely in Stripe's customer portal."
-managedTitle = "Managed in Stripe"
+[portal.billing.identity.processor]
+chipMetered = "Metered processing"
+chipPipelines = "Pipelines & API"
+name = "Processor"
+sub = "Team base plus {{rate}} per credit"
+subNoRate = "Team base plus metered processing"
+
+[portal.billing.identity.team]
+chipFleet = "Fleet control"
+chipSso = "SSO"
+name = "Team"
+sub = "Up to {{users}} users"
+subNoLimit = "No user limit"
+
+[portal.billing.invoiceRow]
+current = "Current"
+failed = "Unpaid"
+paid = "Paid"
+undated = "Undated"
+unknownAmount = "Unknown"
+view = "View"
+
+[portal.billing.payment]
+billedTo = "Billed to"
+card = "{{brand}} ending {{last4}}"
+cardWithExpiry = "{{brand}} ending {{last4}} · expires {{month}} / {{year}}"
+invoicesTo = "Invoices go to"
+method = "Payment method"
+nextInvoice = "Next invoice"
+nextInvoiceNote = "from this cycle's pace"
+nextInvoiceValue = "{{date}} · {{amount}}"
+noCard = "No card on file"
 update = "Update"
 
 [portal.billing.pdfsProcessed]
@@ -7521,6 +7541,25 @@ exhausted = "Used up"
 healthy = "Plenty left"
 low = "Running low"
 
+[portal.billing.processor]
+activate = "Switch on the Processor"
+capTooltip = "Pauses PDF processing at your spend limit."
+factCapped = "{{pct}}% of {{cap}}"
+factFree = "{{used}} of {{allowance}} used"
+factNoCap = "no limit"
+midFree = "{{rate}} per credit · {{allowance}} free every month"
+midFreeNoRate = "{{allowance}} free every month"
+midMetered = "{{spend}} metered this cycle"
+midMeteredUnknown = "Metered this cycle"
+raiseLimit = "Raise limit"
+rowName = "Processor"
+
+[portal.billing.section]
+cycle = "This cycle"
+invoices = "Invoices"
+payment = "Payment"
+plan = "Your plan"
+
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"
 cancel = "Cancel"
@@ -7546,14 +7585,8 @@ body_one = "At {{rate}}/day you reach the cap in ~{{count}} day (~{{monthEnd}} m
 body_other = "At {{rate}}/day you reach the cap in ~{{count}} days (~{{monthEnd}} month-end). Suggested limit ~{{suggested}}."
 label = "Projected to exceed."
 
-[portal.billing.spendThisMonth]
-eyebrow = "Spend this month"
-freeRemaining_one = "{{formatted}} free credit remaining"
-freeRemaining_other = "{{formatted}} free credits remaining"
-processed_one = "{{formattedCount}} PDF processed."
-processed_other = "{{formattedCount}} PDFs processed."
-processedWithRate_one = "{{formattedCount}} PDF processed, at {{rate}} each."
-processedWithRate_other = "{{formattedCount}} PDFs processed, at {{rate}} each."
+[portal.billing.spendLimitModal]
+title = "Monthly spend limit"
 
 [portal.billing.subscribedPlan.capWarn]
 approachingBody = "Raise it now so automated processing never pauses."
@@ -7565,18 +7598,15 @@ reachedTitle = "Monthly spend limit reached"
 [portal.billing.subscribedPlan.portalError]
 title = "Couldn't open Stripe portal"
 
-[portal.billing.walletMeter]
-barAria = "Free credits remaining"
-capSuffix_one = "of {{allowance}} free credit left this month"
-capSuffix_other = "of {{allowance}} free credits left this month"
-eyebrow = "Processor trial"
-statusLabel_one = "{{used}} used"
-statusLabel_other = "{{used}} used"
-sub = "Use the PDF Editor for free. Pay to process PDFs automatically."
-title_one = "{{allowance}} free credit every month"
-title_other = "{{allowance}} free credits every month"
-titleWithRate_one = "{{allowance}} free credit every month, then {{rate}} per PDF"
-titleWithRate_other = "{{allowance}} free credits every month, then {{rate}} per PDF"
+[portal.billing.team]
+addCapacity = "Add capacity"
+fact = "{{users}} of {{licensed}} users"
+factNoLimit = "{{users}} users"
+midFree = "The Team plan covers 100 users"
+midFreeSelfHosted = "The free tier covers your first users"
+midIncluded = "Included with your Team base"
+midPrice = "$99/mo per 100 users"
+rowName = "Users"
 
 [portal.components.billingUnit]
 approval = "approval"
@@ -9819,9 +9849,8 @@ type = "Type"
 close = "Close"
 
 [portal.usage]
-managePayment = "Manage Payment"
-subtitle = "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console."
-title = "Usage & billing"
+subtitle = "Your plan, your usage, and every invoice."
+title = "Usage & Billing"
 
 [portal.usage.error]
 loadWallet = "Couldn't load wallet"
@@ -9830,18 +9859,11 @@ walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 
 [portal.usage.freeTier]
 adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
-barAria = "Free credits remaining"
-capSuffix_one = "of {{allowance}} free credit left this month"
-capSuffix_other = "of {{allowance}} free credits left this month"
 connect = "Connect a Stirling account"
+connectBody = "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor."
+connectTitle = "This server has no Stirling account"
 loadError = "Couldn't read this server's credit usage. Try again in a moment."
 loadErrorTitle = "Couldn't load credit usage"
-resets = "Resets {{date}}"
-statusLabel_one = "{{used}} used"
-statusLabel_other = "{{used}} used"
-subtitle = "What this server has processed against its monthly credits."
-title_one = "{{allowance}} free credit every month"
-title_other = "{{allowance}} free credits every month"
 
 [portal.usage.sessionExpired]
 action = "Sign in again"

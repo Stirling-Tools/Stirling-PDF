@@ -36,6 +36,9 @@ public class LicenseKeyChecker {
     // the latest tier rather than a stale cached value.
     private volatile License premiumEnabledResult = License.NORMAL;
 
+    /** The licence key's own tier, before any Team-plan promotion. Same volatile contract. */
+    private volatile License licenseKeyResult = License.NORMAL;
+
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService,
             ApplicationProperties applicationProperties,
@@ -50,8 +53,18 @@ public class LicenseKeyChecker {
         evaluateLicense();
     }
 
+    /**
+     * Applies the Team-plan promotion and syncs the licence row.
+     *
+     * <p>The promotion is redone here rather than only in {@link #init()} because it reads a
+     * persisted row: the datasource does not exist yet when {@code @PostConstruct} runs, since
+     * {@code DatabaseConfig} builds it from the {@code runningProOrHigher} bean this class
+     * produces. Re-verifying the licence key is deliberately not repeated — that is a Keygen round
+     * trip and the key cannot have changed since boot.
+     */
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
+        applyTeamPlanPromotion();
         synchronizeLicenseSettings();
     }
 
@@ -69,23 +82,83 @@ public class LicenseKeyChecker {
     }
 
     private void evaluateLicense() {
+        licenseKeyResult = verifyLicenseKey();
+        applyTeamPlanPromotion();
+    }
+
+    private License verifyLicenseKey() {
         if (!applicationProperties.getPremium().isEnabled()) {
-            premiumEnabledResult = License.NORMAL;
+            return License.NORMAL;
+        }
+        String licenseKey = getLicenseKeyContent(applicationProperties.getPremium().getKey());
+        if (licenseKey == null) {
+            log.error("Failed to obtain license key content.");
+            return License.NORMAL;
+        }
+        License verified = licenseService.verifyLicense(licenseKey);
+        if (License.ENTERPRISE == verified) {
+            log.info("License key is Enterprise.");
+        } else if (License.SERVER == verified) {
+            log.info("License key is Server.");
         } else {
-            String licenseKey = getLicenseKeyContent(applicationProperties.getPremium().getKey());
-            if (licenseKey != null) {
-                premiumEnabledResult = licenseService.verifyLicense(licenseKey);
-                if (License.ENTERPRISE == premiumEnabledResult) {
-                    log.info("License key is Enterprise.");
-                } else if (License.SERVER == premiumEnabledResult) {
-                    log.info("License key is Server.");
-                } else {
-                    log.info("License key is invalid, defaulting to non pro license.");
-                }
-            } else {
-                log.error("Failed to obtain license key content.");
-                premiumEnabledResult = License.NORMAL;
-            }
+            log.info("License key is invalid, defaulting to non pro license.");
+        }
+        return verified;
+    }
+
+    /**
+     * Raises the effective tier to SERVER when the linked cloud team holds a Team plan.
+     *
+     * <p>Team is sold on a SaaS account and issues no licence key, so without this the whole of
+     * what a SERVER licence unlocks would be unreachable to a customer who paid for it. Every
+     * licence consumer reads {@link #getPremiumLicenseEnabledResult()}, so promoting the one field
+     * is what lights them up.
+     *
+     * <p>Deliberately outside the {@code premium.enabled} gate. That flag is how an operator
+     * declares they hold a licence and wants the licence machinery on; a Team buyer has no licence
+     * to declare and never edits {@code settings.yml}, so gating on it would withhold what they
+     * bought until they found a YAML flag. Holding a Team plan is itself the declaration.
+     *
+     * <p>Never promotes to ENTERPRISE. Enterprise is contracted and stays licence-only, so {@code
+     * runningEE} and every {@code @EnterpriseEndpoint} keep requiring a real key. Precedence is an
+     * OR, not a replacement: a licence key that already grants more keeps its tier.
+     */
+    private void applyTeamPlanPromotion() {
+        if (licenseKeyResult != License.NORMAL) {
+            premiumEnabledResult = licenseKeyResult;
+            return;
+        }
+        Integer users = purchasedTeamUsers();
+        // A plan for no users is not a plan. SaaS already reports an unpurchased team as no
+        // allowance at all, so this only guards against a zero reaching us some other way.
+        boolean entitled = users != null && users > 0;
+        if (entitled) {
+            log.info("Linked cloud team holds a Team plan for {} users; running as Server.", users);
+        }
+        premiumEnabledResult = entitled ? License.SERVER : License.NORMAL;
+    }
+
+    /**
+     * Users the linked cloud team has bought, or null when it has bought none or cannot be asked.
+     *
+     * <p>Fails soft on purpose. The read goes to the licence row, and {@link #init()} runs before
+     * the datasource exists — {@code DatabaseConfig} builds it from the {@code runningProOrHigher}
+     * bean, which needs this bean fully constructed — so resolving the settings service there
+     * throws rather than returning nothing. Treating that as "no plan" keeps boot working and
+     * leaves {@link #onApplicationReady()} to apply the promotion once the row is readable.
+     */
+    private Integer purchasedTeamUsers() {
+        try {
+            return licenseSettingsService.refreshLinkedTeamUsers();
+        } catch (RuntimeException e) {
+            // Every boot lands here: the datasource does not exist yet, so the licence row cannot
+            // be read. The cached figure is what makes a purchase survive a restart at all.
+            Integer cached = applicationProperties.getPremium().getLinkedTeamUsers();
+            log.debug(
+                    "Linked team allowance unreadable ({}); falling back to the cached {}",
+                    e.getMessage(),
+                    cached);
+            return cached;
         }
     }
 
@@ -134,6 +207,17 @@ public class LicenseKeyChecker {
 
     public License getPremiumLicenseEnabledResult() {
         return premiumEnabledResult;
+    }
+
+    /**
+     * The tier the installed licence key grants on its own, ignoring any Team-plan promotion.
+     *
+     * <p>For the seat arithmetic only: {@code premium.maxUsers} is a licence figure, so a caller
+     * that reads it has to know whether a licence is what produced the tier. Feature gates want
+     * {@link #getPremiumLicenseEnabledResult()}.
+     */
+    public License getLicenseKeyResult() {
+        return licenseKeyResult;
     }
 
     /**
