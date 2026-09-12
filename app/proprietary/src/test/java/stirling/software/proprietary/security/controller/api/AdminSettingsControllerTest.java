@@ -1,8 +1,10 @@
 package stirling.software.proprietary.security.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
@@ -429,7 +431,36 @@ class AdminSettingsControllerTest {
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 assertThat(response.getBody().get("message").toString()).contains("Successfully");
-                mocked.verify(() -> GeneralUtils.saveKeyToSettings("ui.appName", "New"));
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        Map.of("ui.appName", "New")));
+            }
+        }
+
+        @Test
+        @DisplayName("flattens nested blocks to leaf keys so partial saves keep siblings")
+        void flattensNestedBlocks() {
+            java.util.Map<String, Object> section = new java.util.HashMap<>();
+            section.put("sharing", new java.util.HashMap<>(Map.of("emailEnabled", true)));
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        controller.updateSettingsSection("storage", section);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        Map.of("storage.sharing.emailEnabled", true)));
+                // The whole "storage.sharing" block is never written, so its siblings survive.
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        argThat(
+                                                (Map<String, Object> m) ->
+                                                        m.containsKey("storage.sharing"))),
+                        never());
             }
         }
 
@@ -445,7 +476,37 @@ class AdminSettingsControllerTest {
 
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
                 // enabled flag auto-added and persisted
-                mocked.verify(() -> GeneralUtils.saveKeyToSettings("premium.enabled", true));
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        argThat(
+                                                (Map<String, Object> m) ->
+                                                        Boolean.TRUE.equals(
+                                                                m.get("premium.enabled")))));
+            }
+        }
+
+        @Test
+        @DisplayName("a null leaf value is persisted and does not blow up pendingChanges")
+        void nullLeafValueStillReturns200() {
+            String leafKey = "storage.sharing.emailEnabled";
+            java.util.Map<String, Object> sharing = new java.util.HashMap<>();
+            sharing.put("emailEnabled", null);
+            java.util.Map<String, Object> section = new java.util.HashMap<>();
+            section.put("sharing", sharing);
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        controller.updateSettingsSection("storage", section);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                mocked.verify(
+                        () ->
+                                GeneralUtils.updateSettingsTransactional(
+                                        argThat(
+                                                (Map<String, Object> m) ->
+                                                        m.containsKey(leafKey)
+                                                                && m.get(leafKey) == null)));
             }
         }
 
@@ -453,7 +514,7 @@ class AdminSettingsControllerTest {
         @DisplayName("returns 500 when persistence throws IOException")
         void persistenceIOException() {
             try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
-                mocked.when(() -> GeneralUtils.saveKeyToSettings("ui.appName", "New"))
+                mocked.when(() -> GeneralUtils.updateSettingsTransactional(any()))
                         .thenThrow(new IOException("io"));
 
                 ResponseEntity<Map<String, Object>> response =

@@ -6,6 +6,7 @@ import static org.mockito.Mockito.mockStatic;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -54,6 +55,45 @@ class ConfigInitializerRestartTest {
             assertEquals("true", read(settings, "premium", "proFeatures", "ssoAutoLogin"));
             assertEquals(
                     "acme", read(settings, "premium", "proFeatures", "customMetadata", "author"));
+        }
+    }
+
+    /**
+     * The admin UI only submits the fields it changed, so a nested block such as storage.sharing
+     * arrives as a partial map. Persisting it must not drop the siblings, otherwise the next
+     * restart resets them to the template defaults - the bug behind "enabling email sharing turns
+     * Enable Sharing back off after a restart".
+     */
+    @Test
+    void partialSharingSave_keepsSiblingsAcrossRestart(@TempDir Path tmp) throws Exception {
+        Path settings = tmp.resolve("settings.yml");
+        Path custom = tmp.resolve("custom_settings.yml");
+
+        try (MockedStatic<InstallationPathConfig> paths =
+                mockStatic(InstallationPathConfig.class)) {
+            paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+            paths.when(InstallationPathConfig::getCustomSettingsPath).thenReturn(custom.toString());
+
+            ConfigInitializer init = new ConfigInitializer();
+            init.ensureConfigExists();
+
+            // Admin turns on storage and sharing, then restarts.
+            GeneralUtils.saveKeyToSettings("storage.enabled", true);
+            GeneralUtils.saveKeyToSettings("storage.sharing.enabled", true);
+            init.ensureConfigExists();
+
+            // Admin now flips only "Enable Email Sharing", then restarts again. Both the leaf key
+            // the controller writes today and the whole-block map an older client may send have to
+            // leave the siblings alone.
+            GeneralUtils.saveKeyToSettings("storage.sharing.emailEnabled", true);
+            GeneralUtils.saveKeyToSettings("storage.sharing", Map.of("emailEnabled", true));
+            init.ensureConfigExists();
+
+            assertEquals("true", read(settings, "storage", "enabled"));
+            assertEquals("true", read(settings, "storage", "sharing", "enabled"));
+            assertEquals("true", read(settings, "storage", "sharing", "emailEnabled"));
+            assertEquals("true", read(settings, "storage", "sharing", "linkEnabled"));
+            assertEquals("3", read(settings, "storage", "sharing", "linkExpirationDays"));
         }
     }
 

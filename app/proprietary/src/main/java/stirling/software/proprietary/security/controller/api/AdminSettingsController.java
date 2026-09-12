@@ -364,12 +364,11 @@ public class AdminSettingsController {
                 }
             }
 
-            int updatedCount = 0;
-            for (Map.Entry<String, Object> entry : sectionData.entrySet()) {
-                String propertyKey = entry.getKey();
-                String fullKey = sectionName + "." + propertyKey;
-                Object value = entry.getValue();
+            Map<String, Object> flattened = new LinkedHashMap<>();
+            flattenSectionData(sectionName, sectionData, flattened);
 
+            // Validate every key before writing, so an invalid one cannot half-update the file.
+            for (String fullKey : flattened.keySet()) {
                 if (!isValidSettingKey(fullKey)) {
                     return ResponseEntity.badRequest()
                             .body(
@@ -378,18 +377,23 @@ public class AdminSettingsController {
                                             "Invalid setting key format: "
                                                     + HtmlUtils.htmlEscape(fullKey)));
                 }
+            }
 
+            // Load once, apply all, save once instead of one full rewrite per leaf key.
+            GeneralUtils.updateSettingsTransactional(flattened);
+
+            for (Map.Entry<String, Object> entry : flattened.entrySet()) {
+                String fullKey = entry.getKey();
+                Object value = entry.getValue();
                 log.info(
                         "Admin updating section setting: {} = {}",
                         fullKey,
                         logSafeValue(fullKey, value));
-                GeneralUtils.saveKeyToSettings(fullKey, value);
-
-                // Track this as a pending change
-                pendingChanges.put(fullKey, value);
-
-                updatedCount++;
+                // pendingChanges is a ConcurrentHashMap and rejects null values.
+                pendingChanges.put(fullKey, value != null ? value : "");
             }
+
+            int updatedCount = flattened.size();
 
             String escapedSectionName = HtmlUtils.htmlEscape(sectionName);
             return ResponseEntity.ok(
@@ -1023,6 +1027,26 @@ public class AdminSettingsController {
         }
 
         return result;
+    }
+
+    /**
+     * Flattens a section payload to dotted leaf keys. The UI submits only the fields it changed, so
+     * a nested block arrives as a partial map - keeping it whole would make {@link #pendingChanges}
+     * forget the siblings a previous save of the same block set.
+     */
+    private void flattenSectionData(
+            String prefix, Map<String, Object> sectionData, Map<String, Object> flattened) {
+        for (Map.Entry<String, Object> entry : sectionData.entrySet()) {
+            String key = prefix + "." + entry.getKey();
+            Object value = entry.getValue();
+            if (value instanceof Map<?, ?> nested && !nested.isEmpty()) {
+                @SuppressWarnings("unchecked")
+                Map<String, Object> nestedMap = (Map<String, Object>) nested;
+                flattenSectionData(key, nestedMap, flattened);
+            } else {
+                flattened.put(key, value);
+            }
+        }
     }
 
     /**
