@@ -10,8 +10,6 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
-import tools.jackson.databind.ObjectMapper;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -21,6 +19,8 @@ import stirling.software.saas.procurement.model.ProcurementQuote;
 import stirling.software.saas.procurement.pricing.ProcurementPricingService;
 import stirling.software.saas.procurement.pricing.QuoteConfig;
 import stirling.software.saas.procurement.pricing.QuoteLineItem;
+
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Builds the full Stirling Enterprise Agreement for a specific quote: the static MSA (Part A) and

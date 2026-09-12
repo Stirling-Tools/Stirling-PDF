@@ -55,6 +55,7 @@ import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 import stirling.software.proprietary.security.service.LoginAttemptService;
 import stirling.software.proprietary.security.service.MfaService;
 import stirling.software.proprietary.security.service.TeamService;
+import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -374,7 +375,14 @@ public class ProprietaryUIDataController {
                 resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
-                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
+                        .map(
+                                user ->
+                                        convertUserToSummary(
+                                                user,
+                                                leaderUserIds,
+                                                portalAccessUserIds,
+                                                UserService.isInvitePending(
+                                                        settingsByUserId.get(user.getId()))))
                         .toList();
 
         AdminSettingsData data = new AdminSettingsData();
@@ -600,7 +608,10 @@ public class ProprietaryUIDataController {
      * Convert a User to AdminUserSummary (excludes sensitive fields); portal access is passed in.
      */
     private AdminUserSummary convertUserToSummary(
-            User user, Set<Long> leaderUserIds, Set<Long> portalAccessUserIds) {
+            User user,
+            Set<Long> leaderUserIds,
+            Set<Long> portalAccessUserIds,
+            boolean invitePending) {
         AdminUserSummary summary = new AdminUserSummary();
         summary.setId(user.getId());
         summary.setTeamLead(leaderUserIds.contains(user.getId()));
@@ -612,6 +623,7 @@ public class ProprietaryUIDataController {
         summary.setRolesAsString(user.getRolesAsString());
         summary.setEnabled(user.isEnabled());
         summary.setIsFirstLogin(user.isFirstLogin());
+        summary.setInvitePending(invitePending);
         summary.setAuthenticationType(user.getAuthenticationType());
         summary.setCreatedAt(user.getCreatedAt());
         summary.setUpdatedAt(user.getUpdatedAt());
