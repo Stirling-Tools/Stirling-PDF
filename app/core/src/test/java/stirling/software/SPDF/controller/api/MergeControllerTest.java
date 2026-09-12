@@ -305,4 +305,43 @@ class MergeControllerTest {
         assertEquals(mockMergedDocument, result);
         verify(mockMergedDocument, never()).addPage(any(PDPage.class));
     }
+
+    @Test
+    void isImageFile_detectsByContentType() throws Exception {
+        MockMultipartFile jpg =
+                new MockMultipartFile(
+                        "file", "scan", MediaType.IMAGE_JPEG_VALUE, new byte[] {1, 2, 3});
+        assertTrue(invokeIsImageFile(jpg));
+    }
+
+    @Test
+    void isImageFile_detectsByExtension_whenContentTypeMissing() throws Exception {
+        // Uppercase extension and no content type: extension check must still match.
+        MockMultipartFile png = new MockMultipartFile("file", "photo.PNG", null, new byte[] {1});
+        assertTrue(invokeIsImageFile(png));
+    }
+
+    @Test
+    void isImageFile_returnsFalseForPdf() throws Exception {
+        // mockFile1 is document1.pdf with application/pdf content type.
+        assertFalse(invokeIsImageFile(mockFile1));
+    }
+
+    @Test
+    void isImageFile_returnsFalseWhenNoExtensionAndNotImageContentType() throws Exception {
+        MockMultipartFile noExt =
+                new MockMultipartFile(
+                        "file",
+                        "document_no_ext",
+                        MediaType.APPLICATION_PDF_VALUE,
+                        new byte[] {1});
+        assertFalse(invokeIsImageFile(noExt));
+    }
+
+    private boolean invokeIsImageFile(MultipartFile file) throws Exception {
+        Method isImageFileMethod =
+                MergeController.class.getDeclaredMethod("isImageFile", MultipartFile.class);
+        isImageFileMethod.setAccessible(true);
+        return (boolean) isImageFileMethod.invoke(mergeController, file);
+    }
 }
