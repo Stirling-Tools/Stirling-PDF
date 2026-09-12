@@ -436,6 +436,7 @@ describe("Login", () => {
         options: { redirectTo: "/auth/callback" },
       });
     });
+    await waitFor(() => expect(oauthButton).not.toBeDisabled());
   });
 
   it("should use actual provider ID for OAuth login (custom provider)", async () => {
@@ -483,6 +484,10 @@ describe("Login", () => {
         options: { redirectTo: "/auth/callback" },
       });
     });
+
+    // The async handler clears isSubmitting after the OAuth mock resolves. Wait
+    // for that final render so Mantine's transition cannot update after teardown.
+    await waitFor(() => expect(oauthButton).not.toBeDisabled());
   });
 
   it("should use oidc provider ID when explicitly configured", async () => {
@@ -529,6 +534,7 @@ describe("Login", () => {
         options: { redirectTo: "/auth/callback" },
       });
     });
+    await waitFor(() => expect(oauthButton).not.toBeDisabled());
   });
 
   it("should show error on failed login", async () => {
@@ -865,6 +871,9 @@ describe("Login", () => {
     await waitFor(() => {
       expect(springAuth.signInWithOAuth).toHaveBeenCalled();
     });
+    await waitFor(() =>
+      expect(screen.getByText(/Authentik/)).not.toBeDisabled(),
+    );
 
     // Must be stashed before the cross-origin SSO redirect wipes location.state.
     expect(sessionStorage.getItem("stirling_post_login_path")).toBe(
