@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -37,7 +38,15 @@ import tools.jackson.core.JacksonException;
 import tools.jackson.databind.DatabindException;
 import tools.jackson.databind.ObjectMapper;
 
+/**
+ * Absent from the desktop bundle, for the same reason as {@link PipelineDirectoryProcessor}: a
+ * pipeline run on the bundled backend is unmetered work the connected server never sees.
+ */
 @PipelineApi
+@ConditionalOnProperty(
+        name = "STIRLING_PDF_TAURI_MODE",
+        havingValue = "false",
+        matchIfMissing = true)
 @Slf4j
 @RequiredArgsConstructor
 public class PipelineController {
