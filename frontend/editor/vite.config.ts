@@ -14,6 +14,19 @@ const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
+// extension (not MIME type) and its default list omits .mjs, so those assets
+// bypassed the edge cache on every request. The extension is irrelevant to a
+// `type: "module"` worker. Renaming at emission time lets Rollup substitute the
+// final filename into every `new URL(..., import.meta.url)` reference itself.
+// Shared by the main build and Vite's worker sub-builds, which do not inherit
+// the main build's output options.
+const mjsToJsAssetFileNames = (assetInfo: { names: string[] }) =>
+  assetInfo.names.length > 0 &&
+  assetInfo.names.every((name) => name.endsWith(".mjs"))
+    ? "assets/[name]-[hash].js"
+    : "assets/[name]-[hash][extname]";
+
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
@@ -347,8 +360,15 @@ export default defineConfig(async ({ mode, command }) => {
     ],
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`,
     // so without this `@app/*` resolves in the app and fails in a worker.
+    // They also do not inherit the main build's output.assetFileNames, so the
+    // .mjs-to-.js emission rule lives here too (see mjsToJsAssetFileNames).
     worker: {
       plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+      rollupOptions: {
+        output: {
+          assetFileNames: mjsToJsAssetFileNames,
+        },
+      },
     },
     server: {
       host: true,
@@ -374,7 +394,8 @@ export default defineConfig(async ({ mode, command }) => {
       target: "esnext",
       rollupOptions: {
         output: {
-          manualChunks(id) {
+          assetFileNames: mjsToJsAssetFileNames,
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {
