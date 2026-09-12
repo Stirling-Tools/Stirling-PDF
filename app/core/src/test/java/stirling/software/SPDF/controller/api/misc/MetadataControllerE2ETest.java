@@ -436,8 +436,8 @@ class MetadataControllerE2ETest {
     }
 
     @Test
-    @DisplayName("Custom metadata deletion: removed keys are purged from both /Info and XMP")
-    void testCustomMetadataDeletion() throws Exception {
+    @DisplayName("Custom metadata patch: unlisted keys are preserved in both /Info and XMP")
+    void testCustomMetadataPreservedWhenUnlisted() throws Exception {
         byte[] inputBytes = createBlankPdf();
         MockMultipartFile file1 =
                 new MockMultipartFile("fileInput", "initial.pdf", "application/pdf", inputBytes);
@@ -484,24 +484,28 @@ class MetadataControllerE2ETest {
 
         try (PDDocument resultDoc = loadResponsePdf(res2)) {
             PDDocumentInformation info = resultDoc.getDocumentInformation();
-            assertNull(
+            assertEquals(
+                    "ValueA",
                     info.getCustomMetadataValue("FieldA"),
-                    "FieldA must be removed from /Info dictionary");
-            assertNull(
+                    "FieldA must be preserved in /Info dictionary");
+            assertEquals(
+                    "ValueC",
                     info.getCustomMetadataValue("FieldC"),
-                    "FieldC must be removed from /Info dictionary");
+                    "FieldC must be preserved in /Info dictionary");
             assertEquals("ValueB_Updated", info.getCustomMetadataValue("FieldB"));
             assertEquals("ValueD_New", info.getCustomMetadataValue("FieldD"));
 
             XMPMetadata xmp = loadXmp(resultDoc);
             XMPSchema pdfx = xmp.getSchema(PdfMetadataService.PDFX_NAMESPACE);
             assertNotNull(pdfx);
-            assertNull(
+            assertEquals(
+                    "ValueA",
                     pdfx.getUnqualifiedTextPropertyValue("FieldA"),
-                    "FieldA must be removed from XMP pdfx schema");
-            assertNull(
+                    "FieldA must be preserved in XMP pdfx schema");
+            assertEquals(
+                    "ValueC",
                     pdfx.getUnqualifiedTextPropertyValue("FieldC"),
-                    "FieldC must be removed from XMP pdfx schema");
+                    "FieldC must be preserved in XMP pdfx schema");
             assertEquals("ValueB_Updated", pdfx.getUnqualifiedTextPropertyValue("FieldB"));
             assertEquals("ValueD_New", pdfx.getUnqualifiedTextPropertyValue("FieldD"));
         }
