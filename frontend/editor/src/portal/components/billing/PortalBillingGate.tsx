@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   useApplyLinkFacts,
   useLinkOptional,
@@ -7,7 +8,7 @@ import { useUI } from "@portal/contexts/UIContext";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
 import { FreeTierPlanView } from "@portal/components/billing/FreeTierPlanView";
-import { useView } from "@portal/contexts/ViewContext";
+import { toPortalPath } from "@portal/contexts/ViewContext";
 import { Usage } from "@portal/views/Usage";
 import type { Wallet } from "@portal/api/billing";
 
@@ -20,23 +21,21 @@ import type { Wallet } from "@portal/api/billing";
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
-  const { openLinkModal, requestTrialSetup } = useUI();
+  const { openLinkModal } = useUI();
   const { loading } = useConnectGate();
   const isAdmin = usePortalAdmin();
   const link = useLinkOptional();
-  const { setActiveView } = useView();
+  const navigate = useNavigate();
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
     [applyLinkFacts],
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
-  // Enterprise is a conversation, not a plan to click into, so this raises the request and lands
-  // the buyer on Home where the deal lives.
+  // The processor owns a separate UIProvider, so its entry route must raise the trial request.
   const onEnterpriseQuote = useCallback(() => {
-    requestTrialSetup();
-    setActiveView("home");
-  }, [requestTrialSetup, setActiveView]);
+    navigate(toPortalPath("/procurement"));
+  }, [navigate]);
 
   // Administrators only: the figures are instance-wide and the endpoints ADMIN-gated. The nav
   // hides the entry to match, so this is the backstop for a typed URL.

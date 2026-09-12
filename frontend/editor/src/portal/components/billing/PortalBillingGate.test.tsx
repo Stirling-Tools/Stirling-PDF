@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, useLocation } from "react-router-dom";
 
 /**
  * Which usage page this instance has one of. The unlinked half must not go anywhere near the
@@ -28,21 +28,36 @@ vi.mock("@portal/hooks/usePortalAdmin", () => ({
   usePortalAdmin: () => admin.is,
 }));
 vi.mock("@portal/views/Usage", () => ({
-  Usage: ({ onWalletLoaded }: { onWalletLoaded?: (w: unknown) => void }) => {
+  Usage: ({
+    onWalletLoaded,
+    onEnterpriseQuote,
+  }: {
+    onWalletLoaded?: (w: unknown) => void;
+    onEnterpriseQuote?: () => void;
+  }) => {
     onWalletLoaded?.({ status: "free" });
-    return <div data-testid="usage" />;
+    return (
+      <div data-testid="usage">
+        <button onClick={onEnterpriseQuote}>Get enterprise quote</button>
+      </div>
+    );
   },
 }));
 vi.mock("@portal/components/billing/FreeTierPlanView", () => ({
   FreeTierPlanView: () => <div data-testid="free-tier" />,
 }));
 
-import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
+import { BillingSettingsSection } from "@portal/components/settings/BillingSettingsSection";
+
+function Location() {
+  return <output>{useLocation().pathname}</output>;
+}
 
 const renderGate = () =>
   render(
-    <MemoryRouter initialEntries={["/processor/usage"]}>
-      <PortalBillingGate />
+    <MemoryRouter initialEntries={["/settings/billing"]}>
+      <BillingSettingsSection />
+      <Location />
     </MemoryRouter>,
   );
 
@@ -61,6 +76,15 @@ describe("PortalBillingGate — self-hosted", () => {
     renderGate();
     expect(screen.getByTestId("free-tier")).toBeInTheDocument();
     expect(screen.queryByTestId("usage")).toBeNull();
+  });
+
+  it("starts enterprise through the processor entry route across the settings provider boundary", () => {
+    link.is = true;
+    renderGate();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Get enterprise quote" }),
+    );
+    expect(screen.getByText("/processor/procurement")).toBeInTheDocument();
   });
 
   it("asks for nothing on the way in", () => {
