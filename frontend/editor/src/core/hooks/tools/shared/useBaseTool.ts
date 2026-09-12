@@ -80,6 +80,22 @@ export function useBaseTool<
   const params = useParams();
   const operation = useOperation();
 
+  // Abort any in-flight backend request when the tool unmounts — e.g. the user
+  // navigates away or switches tools mid-operation. Without this the request
+  // keeps running and the UI has no way to stop it. A ref keeps the cleanup
+  // pointed at the latest operation without re-subscribing on every render, and
+  // we only cancel while something is actually in flight so a normal unmount
+  // (and React strict-mode's dev remount) stays a no-op.
+  const operationRef = useRef(operation);
+  operationRef.current = operation;
+  useEffect(() => {
+    return () => {
+      if (operationRef.current.isLoading) {
+        operationRef.current.cancelOperation();
+      }
+    };
+  }, []);
+
   // Endpoint validation using parameters hook
   const { enabled: endpointEnabled, loading: endpointLoading } =
     useEndpointEnabled(params.getEndpointName());
