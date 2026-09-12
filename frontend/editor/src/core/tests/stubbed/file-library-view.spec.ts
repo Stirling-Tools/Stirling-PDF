@@ -1,4 +1,11 @@
+import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
+import { dismissTourTooltip, uploadFiles } from "@app/tests/helpers/ui-helpers";
+
+const SAMPLE_PDF = path.join(
+  import.meta.dirname,
+  "../test-fixtures/sample.pdf",
+);
 
 /**
  * The file library is a view, not a route: which view is on screen is state, and the
@@ -84,5 +91,33 @@ test.describe("The file library behaves like the other views", () => {
     await page.waitForTimeout(500);
     await expect(page).toHaveURL(/\/files/);
     await expect(tree).toBeVisible();
+  });
+
+  /** The library is a view, so reaching it runs the same unsaved-changes check a view
+   *  switch runs. Asking a second time around that one leaves the confirm with nothing
+   *  to act on: the prompt closes and the click is swallowed. */
+  test("discarding unsaved changes opens the library on the first ask", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await page.goto("/editor", { waitUntil: "domcontentloaded" });
+    await uploadFiles(page, SAMPLE_PDF);
+    await dismissTourTooltip(page);
+    await page.getByText("PDF Multi Tool", { exact: true }).first().click();
+    const firstPage = page.locator("[data-page-id]").first();
+    await expect(firstPage).toBeVisible({ timeout: 60_000 });
+    await firstPage.hover();
+    await firstPage.getByRole("button", { name: "Rotate Right" }).click();
+
+    await railButton(page, /^File library$/i).click();
+    await expect(page.getByTestId("unsaved-discard")).toBeVisible({
+      timeout: 10_000,
+    });
+    await page.getByTestId("unsaved-discard").click();
+
+    await expect(page.getByRole("tree", { name: /Folders/i })).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page).toHaveURL(/\/files/);
   });
 });

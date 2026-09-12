@@ -156,9 +156,9 @@ export function QuickNavRailHost() {
       // prompt.
       onClick: () => {
         const show = host?.actions.current?.showFileLibrary;
-        // Guarded like the routed path it replaces: the library is another view to
-        // leave a half-finished document for.
-        if (show) guarded(show);
+        // Unwrapped: setting the view runs the app's own unsaved-changes check, and
+        // asking twice leaves the second ask with nowhere to prompt.
+        if (show) show();
         else go("/files");
       },
     },
