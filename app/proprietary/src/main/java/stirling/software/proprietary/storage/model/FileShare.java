@@ -69,6 +69,11 @@ public class FileShare implements Serializable {
     @Column(name = "access_role")
     private ShareAccessRole accessRole;
 
+    // Opt-in collaborative write. Null on shares that predate it, so upgrades stay read-only
+    // until the owner re-grants editor access.
+    @Column(name = "write_enabled")
+    private Boolean writeEnabled;
+
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 

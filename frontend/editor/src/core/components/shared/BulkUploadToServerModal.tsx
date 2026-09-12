@@ -8,6 +8,7 @@ import { alert } from "@app/components/toast";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { uploadHistoryChains } from "@app/services/serverStorageUpload";
+import { SharedFileConflictError } from "@app/services/sharedFileSave";
 import { fileStorage } from "@app/services/fileStorage";
 import { useFileActions } from "@app/contexts/FileContext";
 import type { FileId } from "@app/types/file";
@@ -57,10 +58,22 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
       );
       const existingRemoteId =
         remoteIds.length === 1 ? remoteIds[0] : undefined;
+      // Only guard when the selected files agree on one base version.
+      const baseVersions = Array.from(
+        new Set(
+          files
+            .filter((file) => file.remoteStorageId === existingRemoteId)
+            .map((file) => file.remoteVersionBase)
+            .filter((v): v is number => typeof v === "number"),
+        ),
+      );
 
-      const { remoteId, updatedAt, chain } = await uploadHistoryChains(
+      const { remoteId, updatedAt, version, chain } = await uploadHistoryChains(
         rootIds,
         existingRemoteId,
+        {
+          baseVersion: baseVersions.length === 1 ? baseVersions[0] : undefined,
+        },
       );
 
       for (const stub of chain) {
@@ -69,12 +82,16 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
           remoteStorageUpdatedAt: updatedAt,
           remoteOwnedByCurrentUser: true,
           remoteSharedViaLink: false,
+          remoteVersionBase: version,
+          remoteVersionLatest: version,
         });
         await fileStorage.updateFileMetadata(stub.id, {
           remoteStorageId: remoteId,
           remoteStorageUpdatedAt: updatedAt,
           remoteOwnedByCurrentUser: true,
           remoteSharedViaLink: false,
+          remoteVersionBase: version,
+          remoteVersionLatest: version,
         });
       }
 
@@ -89,6 +106,15 @@ const BulkUploadToServerModal: React.FC<BulkUploadToServerModalProps> = ({
       }
       onClose();
     } catch (error) {
+      if (error instanceof SharedFileConflictError) {
+        setErrorMessage(
+          t(
+            "storageCollab.conflictBody",
+            "Someone else saved a newer version since you last synced. You can fetch their version to merge manually, or overwrite it with yours.",
+          ),
+        );
+        return;
+      }
       console.error("Failed to upload files to server:", error);
       // A 403 means the server has storage turned off (or login disabled,
       // which gates storage). Say so plainly instead of the generic

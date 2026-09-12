@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
+import { Badge, Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
@@ -28,6 +28,8 @@ import TuneIcon from "@mui/icons-material/Tune";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import CloudSyncIcon from "@mui/icons-material/CloudSync";
+import FileDownloadIcon from "@mui/icons-material/FileDownload";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import SearchIcon from "@mui/icons-material/Search";
 
@@ -69,6 +71,13 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
+import SaveToSharedModal from "@app/components/shared/SaveToSharedModal";
+import {
+  canEditSharedFile,
+  hasNewerSharedVersion,
+  useSharedFileActions,
+} from "@app/hooks/useSharedFileActions";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 /**
  * The origin badge a folder wears, mirroring the one its files would: a server folder
@@ -1136,6 +1145,23 @@ const NO_BADGES: FileItemPolicyRef[] = [];
 
 /** Per-file actions. Shared verbatim by the grid card and the list row, and
  *  kept in step with the file sidebar's kebab so both surfaces offer the same. */
+/** Sharing state for one file: may I write back, is it shared with me, and is
+ *  the server copy newer than the one these local bytes came from. */
+function useSharedFileFlags(file: StirlingFileStub) {
+  const { config } = useAppConfig();
+  const sharingEnabled =
+    config?.storageEnabled === true && config?.storageSharingEnabled === true;
+  const isSharedWithYou =
+    sharingEnabled &&
+    (file.remoteOwnedByCurrentUser === false ||
+      Boolean(file.remoteSharedViaLink));
+  return {
+    isSharedEditor: sharingEnabled && canEditSharedFile(file),
+    isSharedWithYou,
+    hasRemoteUpdate: isSharedWithYou && hasNewerSharedVersion(file),
+  };
+}
+
 interface FileActionsMenuProps {
   file: StirlingFileStub;
   triggerRef: React.RefObject<HTMLButtonElement | null>;
@@ -1166,140 +1192,187 @@ function FileActionsMenu({
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const DownloadIcon = useFileActionIcons().download;
+  const [showSaveToSharedModal, setShowSaveToSharedModal] = useState(false);
+  const { fetchLatestCopy } = useSharedFileActions();
+  const { isSharedEditor, isSharedWithYou, hasRemoteUpdate } =
+    useSharedFileFlags(file);
   const showSaveToServer =
     saveToServerAvailable && file.remoteStorageId == null;
   const showVersionHistory =
     versionHistoryAvailable && (file.versionNumber ?? 1) > 1;
   return (
-    <Menu shadow="md" position="bottom-end" withinPortal width={220}>
-      <Menu.Target>
-        <ActionIcon
-          ref={triggerRef}
-          variant="tertiary"
-          size="sm"
-          onClick={(e) => e.stopPropagation()}
-          aria-label={t("filesPage.fileMenu", "File actions")}
-          data-testid="file-card-actions"
-        >
-          <MoreVertIcon fontSize="small" />
-        </ActionIcon>
-      </Menu.Target>
-      <Menu.Dropdown>
-        <Menu.Item
-          leftSection={<OpenInNewIcon fontSize="small" />}
-          onClick={(e) => {
-            e.stopPropagation();
-            actions.openFile(file);
-          }}
-        >
-          {t("filesPage.addToWorkspace", "Add to workspace")}
-        </Menu.Item>
-        <OpenInNewWindowMenuItem file={file} />
-        <Menu.Item
-          leftSection={<DriveFileMoveIcon fontSize="small" />}
-          onClick={(e) => {
-            e.stopPropagation();
-            actions.requestMoveFile(file.id);
-          }}
-          data-testid="file-menu-move-to"
-        >
-          {t("filesPage.moveTo", "Move to…")}
-        </Menu.Item>
+    <>
+      <Menu shadow="md" position="bottom-end" withinPortal width={220}>
+        <Menu.Target>
+          <ActionIcon
+            ref={triggerRef}
+            variant="tertiary"
+            size="sm"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={t("filesPage.fileMenu", "File actions")}
+            data-testid="file-card-actions"
+          >
+            <MoreVertIcon fontSize="small" />
+          </ActionIcon>
+        </Menu.Target>
+        <Menu.Dropdown>
+          <Menu.Item
+            leftSection={<OpenInNewIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              actions.openFile(file);
+            }}
+          >
+            {t("filesPage.addToWorkspace", "Add to workspace")}
+          </Menu.Item>
+          <OpenInNewWindowMenuItem file={file} />
+          <Menu.Item
+            leftSection={<DriveFileMoveIcon fontSize="small" />}
+            onClick={(e) => {
+              e.stopPropagation();
+              actions.requestMoveFile(file.id);
+            }}
+            data-testid="file-menu-move-to"
+          >
+            {t("filesPage.moveTo", "Move to…")}
+          </Menu.Item>
 
-        {(downloadAvailable || renameAvailable || duplicateAvailable) && (
-          <Menu.Divider />
-        )}
-        {downloadAvailable && (
-          <Menu.Item
-            leftSection={<DownloadIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.downloadFile(file);
-            }}
-            data-testid="file-menu-download"
-          >
-            {terminology.download}
-          </Menu.Item>
-        )}
-        {renameAvailable && (
-          <Menu.Item
-            leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.renameFile(file);
-            }}
-            data-testid="file-menu-rename"
-          >
-            {t("filesPage.rename", "Rename")}
-          </Menu.Item>
-        )}
-        {duplicateAvailable && (
-          <Menu.Item
-            leftSection={<ContentCopyOutlinedIcon fontSize="small" />}
-            onClick={(e) => {
-              e.stopPropagation();
-              actions.duplicateFile(file);
-            }}
-            data-testid="file-menu-duplicate"
-          >
-            {t("filesPage.duplicate", "Duplicate")}
-          </Menu.Item>
-        )}
-
-        {(showSaveToServer || showVersionHistory) && <Menu.Divider />}
-        {/* Per-file Save to server; shown for local-only files. When
-            storage is off it stays visible but disabled with a tooltip. */}
-        {showSaveToServer && (
-          <Tooltip
-            label={saveToServerDisabledReason}
-            disabled={!saveToServerDisabledReason}
-            withinPortal
-            position="left"
-            multiline
-            w={240}
-          >
+          {(downloadAvailable || renameAvailable || duplicateAvailable) && (
+            <Menu.Divider />
+          )}
+          {downloadAvailable && (
             <Menu.Item
-              leftSection={<CloudUploadIcon fontSize="small" />}
-              disabled={Boolean(saveToServerDisabledReason)}
+              leftSection={<DownloadIcon fontSize="small" />}
               onClick={(e) => {
                 e.stopPropagation();
-                actions.saveToServer(file);
+                actions.downloadFile(file);
               }}
-              style={
-                saveToServerDisabledReason
-                  ? { pointerEvents: "auto" }
-                  : undefined
-              }
+              data-testid="file-menu-download"
             >
-              {t("filesPage.saveToServer", "Save to server")}
+              {terminology.download}
             </Menu.Item>
-          </Tooltip>
-        )}
-        {showVersionHistory && (
+          )}
+          {renameAvailable && (
+            <Menu.Item
+              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                actions.renameFile(file);
+              }}
+              data-testid="file-menu-rename"
+            >
+              {t("filesPage.rename", "Rename")}
+            </Menu.Item>
+          )}
+          {duplicateAvailable && (
+            <Menu.Item
+              leftSection={<ContentCopyOutlinedIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                actions.duplicateFile(file);
+              }}
+              data-testid="file-menu-duplicate"
+            >
+              {t("filesPage.duplicate", "Duplicate")}
+            </Menu.Item>
+          )}
+
+          {(showSaveToServer ||
+            showVersionHistory ||
+            isSharedEditor ||
+            isSharedWithYou) && <Menu.Divider />}
+          {/* Per-file Save to server; shown for local-only files. When
+            storage is off it stays visible but disabled with a tooltip. */}
+          {showSaveToServer && (
+            <Tooltip
+              label={saveToServerDisabledReason}
+              disabled={!saveToServerDisabledReason}
+              withinPortal
+              position="left"
+              multiline
+              w={240}
+            >
+              <Menu.Item
+                leftSection={<CloudUploadIcon fontSize="small" />}
+                disabled={Boolean(saveToServerDisabledReason)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actions.saveToServer(file);
+                }}
+                style={
+                  saveToServerDisabledReason
+                    ? { pointerEvents: "auto" }
+                    : undefined
+                }
+              >
+                {t("filesPage.saveToServer", "Save to server")}
+              </Menu.Item>
+            </Tooltip>
+          )}
+          {isSharedEditor && (
+            <Menu.Item
+              leftSection={<CloudSyncIcon fontSize="small" />}
+              data-testid="file-menu-save-to-shared"
+              onClick={(e) => {
+                e.stopPropagation();
+                setShowSaveToSharedModal(true);
+              }}
+            >
+              {t("storageCollab.saveToShared", "Save to shared file")}
+            </Menu.Item>
+          )}
+          {isSharedWithYou && (
+            <Menu.Item
+              leftSection={<FileDownloadIcon fontSize="small" />}
+              rightSection={
+                hasRemoteUpdate ? (
+                  <Badge size="xs" color="orange" variant="filled">
+                    {t("storageCollab.newBadge", "New")}
+                  </Badge>
+                ) : undefined
+              }
+              data-testid="file-menu-get-latest"
+              onClick={(e) => {
+                e.stopPropagation();
+                void fetchLatestCopy(file);
+              }}
+            >
+              {t("storageCollab.getLatest", "Get latest version")}
+            </Menu.Item>
+          )}
+          {showVersionHistory && (
+            <Menu.Item
+              leftSection={<HistoryIcon fontSize="small" />}
+              onClick={(e) => {
+                e.stopPropagation();
+                actions.versionHistory(file);
+              }}
+            >
+              {t("filesPage.versionHistory", "Version history")}
+            </Menu.Item>
+          )}
+
+          <Menu.Divider />
           <Menu.Item
-            leftSection={<HistoryIcon fontSize="small" />}
+            color="red"
+            leftSection={<DeleteIcon fontSize="small" />}
             onClick={(e) => {
               e.stopPropagation();
-              actions.versionHistory(file);
+              actions.removeFile(file.id);
             }}
           >
-            {t("filesPage.versionHistory", "Version history")}
+            {t("filesPage.remove", "Delete")}
           </Menu.Item>
-        )}
-
-        <Menu.Divider />
-        <Menu.Item
-          color="red"
-          leftSection={<DeleteIcon fontSize="small" />}
-          onClick={(e) => {
-            e.stopPropagation();
-            actions.removeFile(file.id);
-          }}
-        >
-          {t("filesPage.remove", "Delete")}
-        </Menu.Item>
-      </Menu.Dropdown>
-    </Menu>
+        </Menu.Dropdown>
+      </Menu>
+      {isSharedEditor && (
+        <SaveToSharedModal
+          opened={showSaveToSharedModal}
+          onClose={() => setShowSaveToSharedModal(false)}
+          file={file}
+        />
+      )}
+    </>
   );
 }
 
@@ -1349,6 +1422,7 @@ const FileCard = React.memo(function FileCard({
     () => getFileDate({ lastModified: file.lastModified }),
     [file.lastModified],
   );
+  const { hasRemoteUpdate } = useSharedFileFlags(file);
 
   const onClick = useCallback(
     (e: React.MouseEvent) =>
@@ -1412,6 +1486,17 @@ const FileCard = React.memo(function FileCard({
         >
           <span className="files-page-card-open-dot" />
           {t("filesPage.inWorkspace", "Open")}
+        </span>
+      )}
+      {hasRemoteUpdate && (
+        <span
+          className="files-page-card-update-badge"
+          title={t(
+            "storageCollab.updateAvailableHint",
+            "A newer version of this shared file exists on the server.",
+          )}
+        >
+          {t("storageCollab.updateAvailable", "Update available")}
         </span>
       )}
       {/* Checkbox only renders once the user is explicitly in multi-select

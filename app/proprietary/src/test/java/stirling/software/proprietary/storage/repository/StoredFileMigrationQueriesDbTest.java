@@ -142,6 +142,64 @@ class StoredFileMigrationQueriesDbTest {
                 .containsExactly(file.getId());
     }
 
+    @Test
+    void bumpContentVersionIfMatches_rejectsStaleExpectationAndIncrementsOnMatch() {
+        StoredFile file = persistFile("k-version", null);
+        entityManager.clear();
+
+        // Legacy rows have no version at all; 0 is the expectation that matches them.
+        assertThat(repository.bumpContentVersionIfMatches(file.getId(), 3L)).isZero();
+        assertThat(repository.bumpContentVersionIfMatches(file.getId(), 0L)).isEqualTo(1);
+        entityManager.clear();
+
+        assertThat(repository.findById(file.getId()).orElseThrow().getContentVersion())
+                .isEqualTo(1L);
+        // The expectation that just won is now stale, so a replayed save must lose.
+        assertThat(repository.bumpContentVersionIfMatches(file.getId(), 0L)).isZero();
+        assertThat(repository.bumpContentVersionIfMatches(file.getId(), 1L)).isEqualTo(1);
+        entityManager.clear();
+
+        assertThat(repository.findById(file.getId()).orElseThrow().getContentVersion())
+                .isEqualTo(2L);
+    }
+
+    @Test
+    void bumpContentVersion_incrementsLegacyNullVersion() {
+        StoredFile file = persistFile("k-unconditional", null);
+        entityManager.clear();
+
+        assertThat(repository.bumpContentVersion(file.getId())).isEqualTo(1);
+        entityManager.clear();
+
+        assertThat(repository.findById(file.getId()).orElseThrow().getContentVersion())
+                .isEqualTo(1L);
+    }
+
+    @Test
+    void findContentVersionById_readsTheBumpedValueNotTheCachedEntity() {
+        StoredFile file = persistFile("k-projection", null);
+        file.setContentVersion(5L);
+        entityManager.merge(file);
+        entityManager.flush();
+        entityManager.clear();
+
+        StoredFile loaded = repository.findById(file.getId()).orElseThrow();
+        repository.bumpContentVersion(loaded.getId());
+        repository.bumpContentVersion(loaded.getId());
+
+        // The entity loaded before the bulk update stays stale; the projection reads the DB.
+        assertThat(loaded.getContentVersion()).isEqualTo(5L);
+        assertThat(repository.findContentVersionById(loaded.getId())).isEqualTo(7L);
+    }
+
+    @Test
+    void findContentVersionById_legacyNullVersionReadsAsZero() {
+        StoredFile file = persistFile("k-projection-legacy", null);
+        entityManager.clear();
+
+        assertThat(repository.findContentVersionById(file.getId())).isEqualTo(0L);
+    }
+
     @SpringBootConfiguration
     @AutoConfigurationPackage(basePackages = "stirling.software.proprietary")
     static class TestApp {}
