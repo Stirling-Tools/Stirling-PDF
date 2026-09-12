@@ -11,12 +11,14 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -93,14 +95,18 @@ class SaasFleetUsageControllerTest {
         TeamMembership leader = memberOf(42L, "leader@acme.test");
         TeamMembership bob = memberOf(42L, "bob@acme.test");
         when(memberRepo.findByTeamId(42L)).thenReturn(List.of(leader, bob));
-        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(true);
-        when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
-                        eq("WEB"), eq("UI_DATA"), anyList(), any(Instant.class)))
+        when(auditConfig.isLevelEnabled(AuditLevel.BASIC)).thenReturn(true);
+        when(auditRepository.countDistinctPrincipalsBySourceAndTypeInAndPrincipalInAfter(
+                        eq("WEB"),
+                        eq(List.of("PDF_PROCESS", "FILE_OPERATION")),
+                        anyList(),
+                        any(Instant.class)))
                 .thenReturn(1L);
         when(auditRepository.countByTypeInAndSourceAndPrincipalInAndTimestampAfter(
                         anyList(), eq("WEB"), anyList(), any(Instant.class)))
                 .thenReturn(88L);
 
+        Instant earliest = Instant.now().minus(30, ChronoUnit.DAYS);
         ResponseEntity<FleetUsageStats> res = controller.fleetStats(auth);
         FleetUsageStats stats = res.getBody();
 
@@ -108,21 +114,29 @@ class SaasFleetUsageControllerTest {
         assertThat(stats.editorsDeployed()).isEqualTo(2L);
         assertThat(stats.activeThisMonth()).isEqualTo(1L);
         assertThat(stats.pdfsProcessed()).isEqualTo(88L);
+        ArgumentCaptor<Instant> since = ArgumentCaptor.forClass(Instant.class);
         verify(auditRepository)
                 .countByTypeInAndSourceAndPrincipalInAndTimestampAfter(
                         eq(List.of("PDF_PROCESS", "FILE_OPERATION")),
                         eq("WEB"),
                         eq(List.of("leader@acme.test", "bob@acme.test")),
-                        any(Instant.class));
+                        since.capture());
+        assertThat(since.getValue()).isBetween(earliest, Instant.now().minus(30, ChronoUnit.DAYS));
+        verify(auditRepository)
+                .countDistinctPrincipalsBySourceAndTypeInAndPrincipalInAfter(
+                        "WEB",
+                        List.of("PDF_PROCESS", "FILE_OPERATION"),
+                        List.of("leader@acme.test", "bob@acme.test"),
+                        since.getValue());
     }
 
     @Test
-    @DisplayName("audit-derived figures are null when auditing is below STANDARD")
+    @DisplayName("audit-derived figures are null when auditing is disabled or below BASIC")
     void auditOffYieldsNulls() {
         Authentication auth = authFor(1L, 42L);
         TeamMembership leader = memberOf(42L, "leader@acme.test");
         when(memberRepo.findByTeamId(42L)).thenReturn(List.of(leader));
-        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(false);
+        when(auditConfig.isLevelEnabled(AuditLevel.BASIC)).thenReturn(false);
 
         FleetUsageStats stats = controller.fleetStats(auth).getBody();
 
@@ -141,9 +155,12 @@ class SaasFleetUsageControllerTest {
         Authentication auth = authFor(1L, 42L);
         TeamMembership leader = memberOf(42L, "leader@acme.test");
         when(memberRepo.findByTeamId(42L)).thenReturn(List.of(leader));
-        when(auditConfig.isLevelEnabled(AuditLevel.STANDARD)).thenReturn(true);
-        when(auditRepository.countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
-                        eq("WEB"), eq("UI_DATA"), anyList(), any(Instant.class)))
+        when(auditConfig.isLevelEnabled(AuditLevel.BASIC)).thenReturn(true);
+        when(auditRepository.countDistinctPrincipalsBySourceAndTypeInAndPrincipalInAfter(
+                        eq("WEB"),
+                        eq(List.of("PDF_PROCESS", "FILE_OPERATION")),
+                        anyList(),
+                        any(Instant.class)))
                 .thenReturn(5L);
         when(auditRepository.countByTypeInAndSourceAndPrincipalInAndTimestampAfter(
                         anyList(), eq("WEB"), anyList(), any(Instant.class)))

@@ -8,8 +8,8 @@ import { apiClient } from "@portal/api/http";
  * shadows this module (src/portal-saas/api/fleetStats.ts) to read the team-scoped
  * SaaS backend instead.
  *
- * Any field may be null when the backend can't compute it (e.g. EE auditing is
- * disabled); the card renders null as "N/A" rather than a misleading 0.
+ * Activity counts cover document operations in the last 30 days of retained
+ * history. Disabled recording returns null; the card renders it as "N/A".
  */
 export interface FleetStats {
   editorsDeployed: number | null;
@@ -17,7 +17,12 @@ export interface FleetStats {
   pdfsProcessed: number | null;
 }
 
-export function fetchFleetStats(signal?: AbortSignal): Promise<FleetStats> {
+/** Prefer useFleetStats; direct callers must pass the resolved access gate before any request. */
+export async function fetchFleetStats(
+  enabled: boolean,
+  signal?: AbortSignal,
+): Promise<FleetStats | null> {
+  if (!enabled) return null;
   return apiClient.local.json<FleetStats>("/api/v1/usage/fleet-stats", {
     signal,
   });
