@@ -7,6 +7,7 @@ import { expectConsole } from "@app/tests/failOnConsole";
 import {
   convertToAutomationConfig,
   convertToFolderScanningConfig,
+  detectAutomationFileFormat,
   detectAutomationFormat,
   parseAutomationConfigJson,
   parseAutomationFile,
@@ -364,7 +365,123 @@ describe("automationConverter", () => {
     test("rejects unrecognized shape", () => {
       expect(() =>
         parseAutomationFile(JSON.stringify({ foo: "bar" }), registry),
-      ).toThrow(/Unrecognized JSON/);
+      ).toThrow(/Unrecognized file/);
+    });
+
+    test("JSON imports carry an empty warning list", () => {
+      const text = JSON.stringify({
+        name: "x",
+        operations: [{ operation: "merge", parameters: {} }],
+      });
+      expect(parseAutomationFile(text, registry).warnings).toEqual([]);
+    });
+  });
+
+  describe("parseAutomationFile - Adobe migration formats", () => {
+    const ACROBAT_ACTION = `<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://ns.adobe.com/acrobat/workflow/2012" title="Sanitise and OCR" description="" majorVersion="1" minorVersion="0">
+\t<Group label="Clean">
+\t\t<Command name="DIGSIG:SanitizeDocument" pauseBefore="false" promptUser="false"/>
+\t\t<Command name="JavaScript" pauseBefore="false" promptUser="false">
+\t\t\t<Items>
+\t\t\t\t<Item name="ScriptCode" type="text" value="this.flattenPages();"/>
+\t\t\t\t<Item name="ScriptName" type="text" value="Flatten"/>
+\t\t\t</Items>
+\t\t</Command>
+\t</Group>
+</Workflow>
+`;
+
+    const JOB_OPTIONS = `<<
+  /AutoRotatePages /None
+  /ColorImageResolution 150
+  /GrayImageResolution 150
+  /DownsampleColorImages true
+  /EmbedAllFonts true
+  /Optimize true
+  /CompatibilityLevel 1.4
+>> setdistillerparams
+`;
+
+    test("auto-detects an Acrobat Action", () => {
+      const result = parseAutomationFile(ACROBAT_ACTION, registry);
+      expect(result.format).toBe("acrobatSequence");
+      expect(result.automation.name).toBe("Sanitise and OCR");
+      expect(result.automation.operations.map((op) => op.operation)).toEqual([
+        "sanitize",
+      ]);
+    });
+
+    test("reports Acrobat commands that need manual work", () => {
+      const result = parseAutomationFile(ACROBAT_ACTION, registry);
+      expect(result.unresolvedOperations).toEqual(["JavaScript"]);
+      expect(result.warnings.some((w) => w.startsWith("JavaScript:"))).toBe(
+        true,
+      );
+    });
+
+    test("exposes the per-command mapping for the import summary", () => {
+      const result = parseAutomationFile(ACROBAT_ACTION, registry);
+      if (result.format !== "acrobatSequence") throw new Error("wrong format");
+      expect(result.mappings.map((m) => m.confidence)).toEqual([
+        "exact",
+        "manual",
+      ]);
+    });
+
+    test("auto-detects Distiller job options and names them from the file", () => {
+      const result = parseAutomationFile(
+        JOB_OPTIONS,
+        registry,
+        undefined,
+        "Press Quality.joboptions",
+      );
+      expect(result.format).toBe("distillerJobOptions");
+      expect(result.automation.name).toBe("Press Quality");
+      expect(result.automation.operations).toEqual([
+        {
+          operation: "compress",
+          parameters: {
+            compressionMethod: "quality",
+            compressionLevel: 3,
+            grayscale: false,
+            linearize: true,
+          },
+        },
+      ]);
+    });
+
+    test("job options report the settings that were not carried over", () => {
+      const result = parseAutomationFile(JOB_OPTIONS, registry);
+      expect(result.unresolvedOperations).toEqual([]);
+      expect(
+        result.warnings.some((w) => w.startsWith("CompatibilityLevel:")),
+      ).toBe(true);
+    });
+
+    test("rejects a file whose declared format does not match its contents", () => {
+      expect(() =>
+        parseAutomationFile(ACROBAT_ACTION, registry, "distillerJobOptions"),
+      ).toThrow(/Acrobat Action/);
+    });
+  });
+
+  describe("detectAutomationFileFormat", () => {
+    test.each([
+      ['{"operations":[]}', "automate"],
+      ['{"pipeline":[]}', "folderScanning"],
+      [
+        '<Workflow xmlns="http://ns.adobe.com/acrobat/workflow/2012"/>',
+        "acrobatSequence",
+      ],
+      [
+        "<< /CompatibilityLevel 1.4 >> setdistillerparams",
+        "distillerJobOptions",
+      ],
+      ["not a file at all", "unknown"],
+      ["", "unknown"],
+    ])("detects %s as %s", (text, expected) => {
+      expect(detectAutomationFileFormat(text)).toBe(expected);
     });
   });
 });
