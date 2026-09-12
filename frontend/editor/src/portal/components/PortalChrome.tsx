@@ -3,7 +3,6 @@ import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
 import { AppShell } from "@portal/components/AppShell";
-import { PortalSettingsHost } from "@portal/components/PortalSettingsHost";
 import { ViewRouter } from "@portal/ViewRouter";
 
 /**
@@ -29,8 +28,8 @@ function RoutedContent() {
  */
 export function PortalChrome() {
   return (
-    // One app-config instance for every portal consumer (search gates, the
-    // settings modal) so they can't fetch twice or disagree.
+    // One app-config instance for every portal consumer (the search gates, the
+    // sidebar) so they can't fetch twice or disagree.
     <AppConfigProvider bootstrapMode="non-blocking">
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
@@ -38,7 +37,6 @@ export function PortalChrome() {
           <RoutedContent />
         </AppShell>
       </ToolRegistryProvider>
-      <PortalSettingsHost />
     </AppConfigProvider>
   );
 }

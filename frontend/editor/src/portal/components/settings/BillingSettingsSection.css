@@ -1,0 +1,6 @@
+/* The ask sits where the wallet would, at the same measure as a settings section. */
+.billing-settings__gate {
+  max-width: 60rem;
+  margin-inline: auto;
+  padding: 3rem 2rem;
+}
