@@ -44,7 +44,11 @@ function teamTab(label: string, count: number) {
   });
 }
 
-function renderDirectory(caps: typeof saasCaps, teams: Team[] = TEAMS) {
+function renderDirectory(
+  caps: typeof saasCaps,
+  teams: Team[] = TEAMS,
+  seatsFull = false,
+) {
   const onRemove = vi.fn();
   render(
     <MantineProvider>
@@ -52,6 +56,7 @@ function renderDirectory(caps: typeof saasCaps, teams: Team[] = TEAMS) {
         members={[MEMBER]}
         teams={teams}
         capabilities={caps}
+        seatsFull={seatsFull}
         processorTeamIds={new Set()}
         onChangeRole={vi.fn()}
         onGrantProcessor={vi.fn()}
@@ -113,6 +118,12 @@ describe("UsersDirectory — remove action gating", () => {
     expect(screen.queryByText("Add to team")).not.toBeInTheDocument();
     fireEvent.click(tab);
     expect(screen.getByText("Add to team")).toBeInTheDocument();
+  });
+
+  it("blocks 'Add to team' once every licensed seat is taken", () => {
+    renderDirectory(selfHostedCaps, TEAMS, true);
+    fireEvent.click(teamTab("Acme", 1));
+    expect(screen.getByText("Add to team").closest("button")).toBeDisabled();
   });
 });
 

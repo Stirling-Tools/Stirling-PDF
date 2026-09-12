@@ -537,6 +537,13 @@
   color: var(--c-text-subtle);
 }
 
+/* A disabled button dispatches no pointer events, so the tooltip explaining why
+   it is disabled would never open. Letting the hit test fall through to the
+   Tooltip's wrapper span is what makes the explanation reachable. */
+.portal-users__blocked:disabled {
+  pointer-events: none;
+}
+
 /* The team strip leads; the selected team's actions and the search sit at the
    far end. Top-aligned, because the strip wraps to a second row on a big org. */
 .portal-users__filters {

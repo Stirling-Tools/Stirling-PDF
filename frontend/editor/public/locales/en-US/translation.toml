@@ -12102,6 +12102,10 @@ member = "Member"
 orgOwner = "Org Owner"
 teamOwner = "Team Owner"
 
+[users.seats]
+full = "Every licensed seat is in use. Free one up, or raise the seat count, to add anyone else."
+update = "Update seats"
+
 [users.tabs]
 all = "All"
 label = "Filter by team"

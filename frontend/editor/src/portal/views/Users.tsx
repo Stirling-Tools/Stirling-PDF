@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Button, EmptyState, Skeleton, StatusBadge } from "@app/ui";
+import { Button, EmptyState, Skeleton, StatusBadge, Tooltip } from "@app/ui";
 import {
   changeMemberRole,
   disableMemberMfa,
@@ -22,6 +22,7 @@ import { deleteTeam as apiDeleteTeam, type Team } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
 import { usersCapabilities as buildCaps } from "@app/portal/usersCapabilities";
 import type { UsersCapabilities } from "@portal/api/usersCapabilities";
+import { useSeatManagement } from "@app/portal/seatManagement";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
 import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
@@ -197,6 +198,14 @@ export function Users() {
           summary.seatLimit !== null && summary.seatsUsed >= summary.seatLimit,
       }
     : null;
+  const seatManagement = useSeatManagement();
+  // A full licence blocks every route to a new member: the backend rejects the
+  // create/invite either way, so the controls say so instead of failing late.
+  const seatsFull = seats?.full === true;
+  const seatsFullHint = t(
+    "users.seats.full",
+    "Every licensed seat is in use. Free one up, or raise the seat count, to add anyone else.",
+  );
   const loading = usersState.loading && usersState.data === null;
   const loadError = !usersState.loading && usersState.error !== null;
   const isEmpty = !usersState.loading && !loadError && members.length === 0;
@@ -340,16 +349,33 @@ export function Users() {
               {seatsLabel(t, seats.used, seats.limit)}
             </StatusBadge>
           )}
+          {seatManagement.available && (
+            <Button
+              fat
+              variant="secondary"
+              loading={seatManagement.busy}
+              onClick={() => seatManagement.open(refresh)}
+            >
+              {t("users.seats.update", "Update seats")}
+            </Button>
+          )}
           {caps.createTeam && (
             <Button fat variant="secondary" onClick={openNewTeam}>
               {t("users.newTeam.action", "+ New team")}
             </Button>
           )}
-          {canAddMembers && (
-            <Button fat onClick={() => openInvite(null)}>
-              {t("users.invite.action", "Invite people")}
-            </Button>
-          )}
+          {canAddMembers &&
+            (seatsFull ? (
+              <Tooltip content={seatsFullHint} placement="bottom">
+                <Button fat disabled className="portal-users__blocked">
+                  {t("users.invite.action", "Invite people")}
+                </Button>
+              </Tooltip>
+            ) : (
+              <Button fat onClick={() => openInvite(null)}>
+                {t("users.invite.action", "Invite people")}
+              </Button>
+            ))}
         </div>
       </header>
 
@@ -390,7 +416,7 @@ export function Users() {
             "Invite your team to start collaborating.",
           )}
           actions={
-            canAddMembers ? (
+            canAddMembers && !seatsFull ? (
               <Button onClick={() => openInvite(null)}>
                 {t("users.invite.action", "Invite people")}
               </Button>
@@ -416,6 +442,7 @@ export function Users() {
             onGrantTeamProcessor={grantTeamProcessor}
             onRevokeTeamProcessor={revokeTeamProcessor}
             onAddToTeam={canAddMembers ? (team) => openInvite(team.id) : null}
+            seatsFull={seatsFull}
             onResetPassword={setResetPwMember}
             onMoveToTeam={setMoveMember}
             onToggleEnabled={toggleEnabled}

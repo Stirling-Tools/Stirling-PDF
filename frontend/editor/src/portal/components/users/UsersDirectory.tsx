@@ -43,6 +43,8 @@ interface UsersDirectoryProps {
   onRevokeTeamProcessor: (team: Team) => void;
   /** Null when the viewer may not add members; the control is then omitted. */
   onAddToTeam: ((team: Team) => void) | null;
+  /** Every licensed seat is taken, so adding anyone would be rejected. */
+  seatsFull?: boolean;
   // Per-member admin actions (the row kebab).
   onResetPassword: (member: Member) => void;
   onMoveToTeam: (member: Member) => void;
@@ -76,6 +78,7 @@ export function UsersDirectory({
   onGrantTeamProcessor,
   onRevokeTeamProcessor,
   onAddToTeam,
+  seatsFull = false,
   onResetPassword,
   onMoveToTeam,
   onToggleEnabled,
@@ -393,6 +396,7 @@ export function UsersDirectory({
       ? [
           {
             label: t("users.group.addToTeam", "Add to team"),
+            disabled: seatsFull,
             onClick: () => add(team),
           },
         ]
@@ -448,6 +452,7 @@ export function UsersDirectory({
     selectedTeam,
     capabilities,
     processorTeamIds,
+    seatsFull,
     onAddToTeam,
     onGrantTeamProcessor,
     onRevokeTeamProcessor,
