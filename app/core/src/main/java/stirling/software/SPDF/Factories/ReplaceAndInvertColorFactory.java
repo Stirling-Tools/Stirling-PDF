@@ -36,7 +36,8 @@ public class ReplaceAndInvertColorFactory {
         if (replaceAndInvertOption == ReplaceAndInvert.COLOR_SPACE_CONVERSION
                 && !endpointConfiguration.isGroupEnabled("Ghostscript")) {
             throw new IllegalStateException(
-                    "CMYK color space conversion requires Ghostscript, which is not available on this system");
+                    "CMYK color space conversion requires Ghostscript, which is not available on"
+                            + " this system");
         }
 
         return switch (replaceAndInvertOption) {

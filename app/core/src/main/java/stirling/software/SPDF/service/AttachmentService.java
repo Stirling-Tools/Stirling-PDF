@@ -173,7 +173,8 @@ public class AttachmentService implements AttachmentServiceInterface {
                 Optional<byte[]> attachmentData = readAttachmentData(embeddedFile);
                 if (attachmentData.isEmpty()) {
                     log.warn(
-                            "Skipping attachment '{}' because it exceeds the size limit of {} bytes",
+                            "Skipping attachment '{}' because it exceeds the size limit of {}"
+                                    + " bytes",
                             sanitizedFilename,
                             maxAttachmentSizeBytes);
                     continue;

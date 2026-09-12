@@ -342,26 +342,26 @@ public class EmlProcessingUtils {
 
     private String getFallbackStyles() {
         return """
-            /* Minimal fallback - main CSS resource failed to load */
-            body {
-                font-family: var(--font-family, Helvetica, sans-serif);
-                font-size: var(--font-size, 12px);
-                line-height: var(--line-height, 1.4);
-                color: var(--text-color, #202124);
-                margin: 0;
-                padding: 20px;
-                word-wrap: break-word;
-            }
-            .email-container { max-width: 100%; }
-            .email-header { border-bottom: 1px solid #ccc; margin-bottom: 16px; padding-bottom: 12px; }
-            .email-header h1 { margin: 0 0 8px 0; font-size: 18px; }
-            .email-meta { font-size: 12px; color: #666; }
-            .email-body { line-height: 1.6; }
-            .attachment-section { margin-top: 20px; padding: 12px; background: #f5f5f5; border-radius: 4px; }
-            .attachment-item { padding: 6px 0; border-bottom: 1px solid #ddd; }
-            .no-content { padding: 20px; text-align: center; color: #888; font-style: italic; }
-            img { max-width: 100%; height: auto; }
-            """;
+        /* Minimal fallback - main CSS resource failed to load */
+        body {
+            font-family: var(--font-family, Helvetica, sans-serif);
+            font-size: var(--font-size, 12px);
+            line-height: var(--line-height, 1.4);
+            color: var(--text-color, #202124);
+            margin: 0;
+            padding: 20px;
+            word-wrap: break-word;
+        }
+        .email-container { max-width: 100%; }
+        .email-header { border-bottom: 1px solid #ccc; margin-bottom: 16px; padding-bottom: 12px; }
+        .email-header h1 { margin: 0 0 8px 0; font-size: 18px; }
+        .email-meta { font-size: 12px; color: #666; }
+        .email-body { line-height: 1.6; }
+        .attachment-section { margin-top: 20px; padding: 12px; background: #f5f5f5; border-radius: 4px; }
+        .attachment-item { padding: 6px 0; border-bottom: 1px solid #ddd; }
+        .no-content { padding: 20px; text-align: center; color: #888; font-style: italic; }
+        img { max-width: 100%; height: auto; }
+        """;
     }
 
     private void appendAttachmentsSection(

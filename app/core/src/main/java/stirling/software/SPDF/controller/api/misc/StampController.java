@@ -98,7 +98,8 @@ public class StampController {
             summary = "Add stamp to a PDF file",
             description =
                     "This endpoint adds a stamp to a given PDF file. Users can specify the stamp"
-                            + " type (text or image), rotation, opacity, width spacer, and height spacer.")
+                            + " type (text or image), rotation, opacity, width spacer, and height"
+                            + " spacer.")
     public ResponseEntity<Resource> addStamp(@ModelAttribute AddStampRequest request)
             throws IOException, Exception {
         MultipartFile pdfFile = request.getFileInput();

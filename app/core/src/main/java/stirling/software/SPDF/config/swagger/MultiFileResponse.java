@@ -21,7 +21,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
             @ApiResponse(
                     responseCode = "200",
                     description =
-                            "Files processed successfully. Returns single file or ZIP archive containing multiple files.",
+                            "Files processed successfully. Returns single file or ZIP archive"
+                                    + " containing multiple files.",
                     content = {
                         @Content(
                                 mediaType = "application/pdf",
@@ -37,7 +38,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
                                                 type = "string",
                                                 format = "binary",
                                                 description =
-                                                        "ZIP archive containing multiple output files")),
+                                                        "ZIP archive containing multiple output"
+                                                                + " files")),
                         @Content(
                                 mediaType = "image/png",
                                 schema =

@@ -456,7 +456,8 @@ public class FormUtils {
                 || !Float.isFinite(finalW)
                 || !Float.isFinite(finalH)) {
             log.warn(
-                    "Widget coordinates are not finite for field '{}': page={}, x={}, y={}, w={}, h={}",
+                    "Widget coordinates are not finite for field '{}': page={}, x={}, y={}, w={},"
+                            + " h={}",
                     field.getFullyQualifiedName(),
                     pageIndex,
                     finalX,

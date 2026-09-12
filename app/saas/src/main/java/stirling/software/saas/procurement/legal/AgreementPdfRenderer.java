@@ -45,8 +45,8 @@ public class AgreementPdfRenderer {
         } catch (Exception e) {
             org.slf4j.LoggerFactory.getLogger(AgreementPdfRenderer.class)
                     .warn(
-                            "[legal] agreement PDF render unavailable; recording signature without a"
-                                    + " stored PDF: {}",
+                            "[legal] agreement PDF render unavailable; recording signature without"
+                                    + " a stored PDF: {}",
                             e.getMessage());
             return null;
         }

@@ -24,7 +24,8 @@ public class SplitPdfBySectionsRequest extends PDFFile {
             implementation = SplitTypes.class,
             description =
                     "Modes for page split. Valid values are:\n"
-                            + "SPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the last pages.\n"
+                            + "SPLIT_ALL_EXCEPT_FIRST_AND_LAST: Splits all except the first and the"
+                            + " last pages.\n"
                             + "SPLIT_ALL_EXCEPT_FIRST: Splits all except the first page.\n"
                             + "SPLIT_ALL_EXCEPT_LAST: Splits all except the last page.\n"
                             + "SPLIT_ALL: Splits all pages.\n"

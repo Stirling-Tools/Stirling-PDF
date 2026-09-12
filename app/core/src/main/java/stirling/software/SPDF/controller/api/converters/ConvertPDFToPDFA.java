@@ -453,32 +453,32 @@ public class ConvertPDFToPDFA {
         String pdfaDefContent =
                 String.format(
                         """
-                %% This is a sample prefix file for creating a PDF/A document.
-                %% Feel free to modify entries marked with "Customize".
+                        %% This is a sample prefix file for creating a PDF/A document.
+                        %% Feel free to modify entries marked with "Customize".
 
-                %% Define entries in the document Info dictionary.
-                [/Title (%s)
-                 /DOCINFO pdfmark
+                        %% Define entries in the document Info dictionary.
+                        [/Title (%s)
+                         /DOCINFO pdfmark
 
-                %% Define an ICC profile.
-                [/_objdef {icc_PDFA} /type /stream /OBJ pdfmark
-                [{icc_PDFA} <<
-                  /N 3
-                >> /PUT pdfmark
-                [{icc_PDFA} (%s) (r) file /PUT pdfmark
+                        %% Define an ICC profile.
+                        [/_objdef {icc_PDFA} /type /stream /OBJ pdfmark
+                        [{icc_PDFA} <<
+                          /N 3
+                        >> /PUT pdfmark
+                        [{icc_PDFA} (%s) (r) file /PUT pdfmark
 
-                %% Define the output intent dictionary.
-                [/_objdef {OutputIntent_PDFA} /type /dict /OBJ pdfmark
-                [{OutputIntent_PDFA} <<
-                  /Type /OutputIntent
-                  /S /GTS_PDFA1
-                  /DestOutputProfile {icc_PDFA}
-                  /OutputConditionIdentifier (sRGB IEC61966-2.1)
-                  /Info (sRGB IEC61966-2.1)
-                  /RegistryName (http://www.color.org)
-                >> /PUT pdfmark
-                [{Catalog} <</OutputIntents [ {OutputIntent_PDFA} ]>> /PUT pdfmark
-                """,
+                        %% Define the output intent dictionary.
+                        [/_objdef {OutputIntent_PDFA} /type /dict /OBJ pdfmark
+                        [{OutputIntent_PDFA} <<
+                          /Type /OutputIntent
+                          /S /GTS_PDFA1
+                          /DestOutputProfile {icc_PDFA}
+                          /OutputConditionIdentifier (sRGB IEC61966-2.1)
+                          /Info (sRGB IEC61966-2.1)
+                          /RegistryName (http://www.color.org)
+                        >> /PUT pdfmark
+                        [{Catalog} <</OutputIntents [ {OutputIntent_PDFA} ]>> /PUT pdfmark
+                        """,
                         title, rgbProfilePath);
 
         Files.writeString(pdfaDefFile, pdfaDefContent);
@@ -598,8 +598,9 @@ public class ConvertPDFToPDFA {
             summary = "Convert a PDF to a PDF/A or PDF/X",
             description =
                     "This endpoint converts a PDF file to a PDF/A or PDF/X file using Ghostscript"
-                            + " (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format designed for"
-                            + " long-term archiving, while PDF/X is optimized for print production.")
+                        + " (preferred) or PDFBox/LibreOffice (fallback). PDF/A is a format"
+                        + " designed for long-term archiving, while PDF/X is optimized for print"
+                        + " production.")
     public ResponseEntity<Resource> pdfToPdfA(@ModelAttribute PdfToPdfARequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();
@@ -661,7 +662,8 @@ public class ConvertPDFToPDFA {
             if (!isGhostscriptAvailable()) {
                 log.error("Ghostscript is required for PDF/X conversion");
                 throw new IOException(
-                        "Ghostscript is required for PDF/X conversion but is not available on the system");
+                        "Ghostscript is required for PDF/X conversion but is not available on the"
+                                + " system");
             }
 
             log.info("Using Ghostscript for PDF/X conversion to {}", profile.getDisplayName());
@@ -743,7 +745,8 @@ public class ConvertPDFToPDFA {
                             if (fontNameStr.contains("+") || fontNameStr.contains("Subset")) {
                                 descDict.removeItem(COSName.CHAR_SET);
                                 log.debug(
-                                        "Removed potentially invalid CharSet from subsetted Type1 font: {}",
+                                        "Removed potentially invalid CharSet from subsetted Type1"
+                                                + " font: {}",
                                         fontNameStr);
                             } else if (!hasFontFile && fontEmbedded) {
                                 // Font is embedded but we can't verify CharSet, remove it
@@ -761,7 +764,8 @@ public class ConvertPDFToPDFA {
                                 if (!glyphSet.isEmpty()) {
                                     descDict.setString(COSName.CHAR_SET, glyphSet);
                                     log.debug(
-                                            "Added missing CharSet for Type1 font {} with {} glyphs",
+                                            "Added missing CharSet for Type1 font {} with {}"
+                                                    + " glyphs",
                                             fontNameStr,
                                             countGlyphs(glyphSet));
                                 }
@@ -1935,7 +1939,8 @@ public class ConvertPDFToPDFA {
                     return WebResponseUtils.pdfFileToWebResponse(tempOut, outputFilename);
                 } catch (IOException | InterruptedException e) {
                     log.warn(
-                            "Ghostscript conversion failed, falling back to PDFBox/LibreOffice method",
+                            "Ghostscript conversion failed, falling back to PDFBox/LibreOffice"
+                                    + " method",
                             e);
                 }
             } else {
@@ -2536,7 +2541,8 @@ public class ConvertPDFToPDFA {
                     return converted;
                 } catch (IOException | InterruptedException e) {
                     log.warn(
-                            "Ghostscript conversion failed, falling back to PDFBox/LibreOffice method",
+                            "Ghostscript conversion failed, falling back to PDFBox/LibreOffice"
+                                    + " method",
                             e);
                 }
             } else {

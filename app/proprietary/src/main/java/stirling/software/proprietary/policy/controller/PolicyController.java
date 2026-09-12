@@ -209,14 +209,14 @@ public class PolicyController {
     @Operation(
             summary = "List the caller's stored-policy runs",
             description =
-                    "Returns the caller's in-flight and recently-finished stored-policy runs (within"
-                            + " the run-retention window), optionally narrowed to one policy via"
-                            + " `policyId` — a client following a single sweep polls this every"
-                            + " second, and the unfiltered list grows with every other policy's"
-                            + " runs. The frontend reconciles the unfiltered list on load so a run"
-                            + " started before a refresh/crash is rediscovered and its outputs"
-                            + " collected, rather than orphaned on the backend. Ad-hoc runs (no"
-                            + " policy id) are excluded.")
+                    "Returns the caller's in-flight and recently-finished stored-policy runs"
+                        + " (within the run-retention window), optionally narrowed to one policy"
+                        + " via `policyId` — a client following a single sweep polls this every"
+                        + " second, and the unfiltered list grows with every other policy's runs."
+                        + " The frontend reconciles the unfiltered list on load so a run started"
+                        + " before a refresh/crash is rediscovered and its outputs collected,"
+                        + " rather than orphaned on the backend. Ad-hoc runs (no policy id) are"
+                        + " excluded.")
     public List<PolicyRunView> listRuns(
             @RequestParam(name = "policyId", required = false) String policyId) {
         // Local runs first (they carry live step state); keyed by runId to dedupe shared entries.
@@ -311,9 +311,9 @@ public class PolicyController {
             summary = "Set the team's policy run order",
             description =
                     "Persists the team-wide order policies run in, from the given ordered list of"
-                            + " policy ids (position → order). The per-trigger order shown in the UI"
-                            + " is this one sequence filtered by trigger. Team-leader/admin only;"
-                            + " ids outside the caller's team are ignored.")
+                        + " policy ids (position → order). The per-trigger order shown in the UI is"
+                        + " this one sequence filtered by trigger. Team-leader/admin only; ids"
+                        + " outside the caller's team are ignored.")
     public ResponseEntity<Void> reorderPolicies(@RequestBody List<String> orderedPolicyIds) {
         requirePolicyEditingAllowed();
         policyStore.reorder(policyAccessGuard.teamForNewPolicy(), orderedPolicyIds);
@@ -526,9 +526,9 @@ public class PolicyController {
     @Operation(
             summary = "Pipelines overview",
             description =
-                    "Returns the KPI strip plus one row per policy the caller's team owns, each with"
-                            + " its referenced sources resolved to names, its pipeline steps, and a"
-                            + " trigger/output summary. Backs the portal's all-pipelines surface.")
+                    "Returns the KPI strip plus one row per policy the caller's team owns, each"
+                        + " with its referenced sources resolved to names, its pipeline steps, and"
+                        + " a trigger/output summary. Backs the portal's all-pipelines surface.")
     public PoliciesOverviewResponse overview() {
         return policyOverviewService.overview();
     }
@@ -551,9 +551,9 @@ public class PolicyController {
     @Operation(
             summary = "The caller's policy-management permissions",
             description =
-                    "Whether the caller may create, edit, or delete pipelines and policies, so the UI"
-                            + " can gate those controls; other team members may view but not change"
-                            + " them.")
+                    "Whether the caller may create, edit, or delete pipelines and policies, so the"
+                        + " UI can gate those controls; other team members may view but not change"
+                        + " them.")
     public PolicyPermissions permissions() {
         return new PolicyPermissions(policyEditingAllowed());
     }

@@ -447,7 +447,8 @@ public class PdfJsonFallbackFontService {
                 String styledFontId = applyWeightStyle(aliasedFontId, isBold, isItalic);
 
                 log.debug(
-                        "Matched font '{}' (normalized: '{}', base: '{}', bold: {}, italic: {}) to fallback '{}'",
+                        "Matched font '{}' (normalized: '{}', base: '{}', bold: {}, italic: {}) to"
+                                + " fallback '{}'",
                         originalFontName,
                         normalized,
                         baseName,

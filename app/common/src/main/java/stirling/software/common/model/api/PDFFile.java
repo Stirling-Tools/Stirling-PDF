@@ -24,7 +24,8 @@ public class PDFFile {
 
     @Schema(
             description =
-                    "File ID for server-side files (can be used instead of fileInput if job was previously done on file in async mode)")
+                    "File ID for server-side files (can be used instead of fileInput if job was"
+                            + " previously done on file in async mode)")
     private String fileId;
 
     @AssertTrue(message = "Either fileInput or fileId must be provided")

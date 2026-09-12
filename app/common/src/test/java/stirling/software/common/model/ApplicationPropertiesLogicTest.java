@@ -237,6 +237,7 @@ class ApplicationPropertiesLogicTest {
 
         assertTrue(
                 oauth2.isValid(oneBlank, "scopes"),
-                "Dokumentiert aktuelles Verhalten: nicht-leere Liste gilt als gültig, auch wenn Element leer/blank ist");
+                "Dokumentiert aktuelles Verhalten: nicht-leere Liste gilt als gültig, auch wenn"
+                        + " Element leer/blank ist");
     }
 }

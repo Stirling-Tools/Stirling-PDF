@@ -559,8 +559,8 @@ public class DatabaseService implements DatabaseServiceInterface {
                             "Unrecognized SQL statement in backup file: {}",
                             statement.substring(0, Math.min(50, statement.length())));
                     throw new IllegalArgumentException(
-                            "SQL script contains unrecognized or disallowed SQL statements. File may be"
-                                    + " corrupted or tampered with.");
+                            "SQL script contains unrecognized or disallowed SQL statements. File"
+                                    + " may be corrupted or tampered with.");
                 }
             }
 

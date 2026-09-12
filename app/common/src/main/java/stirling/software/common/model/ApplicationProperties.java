@@ -145,7 +145,8 @@ public class ApplicationProperties {
                                     sizeInMB);
                         } else {
                             log.warn(
-                                    "SYSTEM_MAXFILESIZE value {} is out of valid range (1-999), ignoring",
+                                    "SYSTEM_MAXFILESIZE value {} is out of valid range (1-999),"
+                                            + " ignoring",
                                     sizeInMB);
                         }
                     } catch (NumberFormatException e) {

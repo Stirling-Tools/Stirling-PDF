@@ -24,7 +24,8 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
     @Modifying
     @Transactional
     @Query(
-            "UPDATE SessionEntity s SET s.expired = :expired, s.lastRequest = :lastRequest WHERE s.principalName = :principalName")
+            "UPDATE SessionEntity s SET s.expired = :expired, s.lastRequest = :lastRequest WHERE"
+                    + " s.principalName = :principalName")
     void saveByPrincipalName(
             @Param("expired") boolean expired,
             @Param("lastRequest") Instant lastRequest,
@@ -48,7 +49,8 @@ public interface SessionRepository extends JpaRepository<SessionEntity, String> 
 
     /** Latest request instant per principal. */
     @Query(
-            "SELECT s.principalName, MAX(s.lastRequest) FROM SessionEntity s GROUP BY s.principalName")
+            "SELECT s.principalName, MAX(s.lastRequest) FROM SessionEntity s GROUP BY"
+                    + " s.principalName")
     List<Object[]> findLatestRequestPerPrincipal();
 
     /** Principals with a live (non-expired, within-window) session. */

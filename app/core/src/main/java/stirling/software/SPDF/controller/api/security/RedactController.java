@@ -99,8 +99,8 @@ public class RedactController {
             summary = "Redacts areas and pages in a PDF document",
             description =
                     "This endpoint redacts content from a PDF file based on manually specified"
-                            + " areas. Users can specify areas to redact and optionally convert the PDF to an"
-                            + " image.")
+                        + " areas. Users can specify areas to redact and optionally convert the PDF"
+                        + " to an image.")
     public ResponseEntity<Resource> redactPDF(@ModelAttribute ManualRedactPdfRequest request)
             throws IOException {
 
@@ -146,8 +146,8 @@ public class RedactController {
             operationId = "redactPdfAuto",
             description =
                     "This endpoint automatically redacts text from a PDF file based on specified"
-                            + " patterns. Users can provide text patterns to redact, with options for regex"
-                            + " and whole word matching.")
+                        + " patterns. Users can provide text patterns to redact, with options for"
+                        + " regex and whole word matching.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
         if (request.getFileInput() == null || request.getFileInput().isEmpty()) {
             log.error("File input is null or empty");
@@ -299,7 +299,7 @@ public class RedactController {
             summary = "Execute a unified redaction plan on a PDF",
             description =
                     "Unified redaction endpoint that accepts exact strings, regex patterns, and"
-                            + " page numbers in a single request. Supports execution strategy hints.")
+                        + " page numbers in a single request. Supports execution strategy hints.")
     public ResponseEntity<Resource> executeRedaction(@ModelAttribute RedactExecuteRequest request)
             throws IOException {
 

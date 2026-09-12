@@ -775,7 +775,8 @@ public class GlobalExceptionHandler {
                 getLocalizedMessage(
                         "error.methodNotAllowed.detail",
                         String.format(
-                                "HTTP method '%s' is not supported for this endpoint. Supported methods: %s",
+                                "HTTP method '%s' is not supported for this endpoint. Supported"
+                                        + " methods: %s",
                                 ex.getMethod(), String.join(", ", ex.getSupportedMethods())),
                         ex.getMethod(),
                         String.join(", ", ex.getSupportedMethods()));
@@ -899,13 +900,15 @@ public class GlobalExceptionHandler {
         errorMap.put("status", 406);
         errorMap.put(
                 "detail",
-                "The requested resource could not be returned in an acceptable format. Error responses are returned as JSON.");
+                "The requested resource could not be returned in an acceptable format. Error"
+                        + " responses are returned as JSON.");
         errorMap.put("instance", request.getRequestURI());
         errorMap.put("timestamp", Instant.now().toString());
         errorMap.put(
                 "hints",
                 java.util.Arrays.asList(
-                        "Error responses are always returned as application/json or application/problem+json",
+                        "Error responses are always returned as application/json or"
+                                + " application/problem+json",
                         "Set Accept header to include application/json for proper error handling"));
 
         String errorJson = mapper.writeValueAsString(errorMap);
@@ -1272,7 +1275,8 @@ public class GlobalExceptionHandler {
             String message =
                     getLocalizedMessage(
                             "error.tempFileNotFound.detail",
-                            "The temporary file was not found. This may indicate a processing error or cleanup issue. Please try again.");
+                            "The temporary file was not found. This may indicate a processing error"
+                                    + " or cleanup issue. Please try again.");
             String title =
                     getLocalizedMessage("error.tempFileNotFound.title", "Temporary File Not Found");
 
@@ -1284,7 +1288,8 @@ public class GlobalExceptionHandler {
             problemDetail.setProperty("errorCode", "E999");
             problemDetail.setProperty(
                     "hint.1",
-                    "This error usually occurs when temporary files are cleaned up before processing completes.");
+                    "This error usually occurs when temporary files are cleaned up before"
+                            + " processing completes.");
             problemDetail.setProperty("hint.2", "Try submitting your request again.");
             return new ResponseEntity<>(problemDetail, HttpStatus.INTERNAL_SERVER_ERROR);
         }

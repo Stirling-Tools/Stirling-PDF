@@ -218,7 +218,8 @@ class CompressControllerTest {
 
         @Test
         @DisplayName(
-                "line art requested with service present but ImageMagick disabled throws IOException")
+                "line art requested with service present but ImageMagick disabled throws"
+                        + " IOException")
         void lineArt_imageMagickDisabled_throwsIOException() throws Exception {
             OptimizePdfRequest request = new OptimizePdfRequest();
             request.setFileInput(multipart(textOnlyPdfBytes()));

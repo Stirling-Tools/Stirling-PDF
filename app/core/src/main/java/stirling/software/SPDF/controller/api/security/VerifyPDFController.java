@@ -38,8 +38,8 @@ public class VerifyPDFController {
             summary = "Verify PDF Standards Compliance",
             description =
                     "Validates PDF files against the standards declared in their metadata."
-                            + " Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards from the"
-                            + " document's XMP metadata and validates compliance.")
+                        + " Automatically detects PDF/A, PDF/UA-1, PDF/UA-2, and WTPDF standards"
+                        + " from the document's XMP metadata and validates compliance.")
     @AutoJobPostMapping(
             value = "/verify-pdf",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
