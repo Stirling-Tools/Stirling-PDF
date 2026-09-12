@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { resilientNavigatorLock } from "@app/auth/resilientNavigatorLock";
 
 const config = {
   url: import.meta.env.VITE_SUPABASE_URL,
@@ -20,6 +21,12 @@ export const supabase = createClient(config.url, config.key, {
     persistSession: true, // keep session in localStorage
     autoRefreshToken: true,
     detectSessionInUrl: true, // helpful on first load after redirect
+    // Replace the default navigatorLock, which throws on a 10s acquisition
+    // timeout, with one that degrades to a best-effort unguarded run. Without
+    // this, a hung/backgrounded tab holding the auth-token lock (or a burst of
+    // concurrent getSession/refreshSession callers) surfaces the timeout as an
+    // uncaught exception on the sign-in / refresh path. See resilientNavigatorLock.
+    lock: resilientNavigatorLock,
     // debug: import.meta.env.DEV, // Enable debug logs in development
   },
 });
