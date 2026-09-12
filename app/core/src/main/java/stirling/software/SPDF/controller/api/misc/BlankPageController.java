@@ -16,7 +16,6 @@ import org.apache.pdfbox.pdmodel.PDPageTree;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -189,12 +188,6 @@ public class BlankPageController {
 
             log.info("Returning ZIP file: {}", filename + "_processed.zip");
             return WebResponseUtils.zipFileToWebResponse(tempOut, filename + "_processed.zip");
-
-        } catch (ExceptionUtils.OutOfMemoryDpiException e) {
-            throw e;
-        } catch (IOException e) {
-            log.error("exception", e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
