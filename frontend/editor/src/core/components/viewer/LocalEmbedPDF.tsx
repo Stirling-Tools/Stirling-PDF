@@ -25,11 +25,7 @@ import {
   ZoomMode,
   ZoomGestureWrapper,
 } from "@embedpdf/plugin-zoom/react";
-import {
-  InteractionManagerPluginPackage,
-  PagePointerProvider,
-  GlobalPointerProvider,
-} from "@embedpdf/plugin-interaction-manager/react";
+import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
   SelectionLayer,
   SelectionPluginPackage,
@@ -39,6 +35,11 @@ import {
   TilingPluginPackage,
 } from "@embedpdf/plugin-tiling/react";
 import { PanPluginPackage } from "@embedpdf/plugin-pan/react";
+import { VIEWER_PAN_CONFIG } from "@app/components/viewer/viewerPanConfig";
+import {
+  ViewerGlobalPointerProvider,
+  ViewerPagePointerProvider,
+} from "@app/components/viewer/ViewerPointerProviders";
 import { SpreadPluginPackage, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { SearchPluginPackage } from "@embedpdf/plugin-search/react";
 import { ThumbnailPluginPackage } from "@embedpdf/plugin-thumbnail/react";
@@ -390,12 +391,7 @@ export function LocalEmbedPDF({
         drawBlackBoxes: false,
       }),
 
-      // Register pan plugin (depends on Viewport, InteractionManager).
-      // Keep the default mode ("never"). Do NOT set defaultMode: "mobile" - the pan
-      // react layer makes pan the default interaction on any touch-capable device
-      // (navigator.maxTouchPoints > 0), e.g. Windows touchscreen laptops, which then
-      // permanently locks the viewer in pan mode and blocks all text selection.
-      createPluginRegistration(PanPluginPackage),
+      createPluginRegistration(PanPluginPackage, VIEWER_PAN_CONFIG),
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
@@ -1061,7 +1057,7 @@ export function LocalEmbedPDF({
             >
               {(documentId) => (
                 <>
-                  <GlobalPointerProvider documentId={documentId}>
+                  <ViewerGlobalPointerProvider documentId={documentId}>
                     <Viewport
                       documentId={documentId}
                       style={{
@@ -1088,7 +1084,7 @@ export function LocalEmbedPDF({
                                 documentId={documentId}
                                 pageIndex={pageIndex}
                               >
-                                <PagePointerProvider
+                                <ViewerPagePointerProvider
                                   documentId={documentId}
                                   pageIndex={pageIndex}
                                 >
@@ -1251,14 +1247,14 @@ export function LocalEmbedPDF({
                                       />
                                     )}
                                   </ViewerPageContainer>
-                                </PagePointerProvider>
+                                </ViewerPagePointerProvider>
                               </Rotate>
                             );
                           }}
                         />
                       </ZoomGestureWrapper>
                     </Viewport>
-                  </GlobalPointerProvider>
+                  </ViewerGlobalPointerProvider>
                   {enableAnnotations && (
                     <CommentAuthorProvider displayName={commentAuthorName}>
                       <CommentsSidebar
