@@ -174,6 +174,14 @@ export function BillingScreen({
   // cannot do this itself -- it has not seen these units -- so the fold happens here, once.
   const rate = wallet?.pricePerDocMinor ?? null;
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
+  // A host with no user figures at all -- an unlinked instance whose admin endpoint refused -- has
+  // nothing true to put in this row, and "0 users" is not nothing, it is wrong.
+  const showTeam = Boolean(
+    wallet &&
+    (wallet.team.held ||
+      wallet.team.usersInUse > 0 ||
+      wallet.freeUserAllowance > 0),
+  );
   const pendingMinor = rate != null ? pendingUnits * rate : 0;
   const estimatedMinor =
     wallet?.estimatedBillMinor != null
@@ -241,7 +249,7 @@ export function BillingScreen({
                 ))}
               </div>
               <div className="billing-meters">
-                {wallet.team && (
+                {showTeam && (
                   <TeamPlanRow
                     wallet={wallet}
                     selfHosted={selfHosted}
@@ -301,10 +309,12 @@ export function BillingScreen({
                 label={t("portal.billing.cycle.pdfs", "PDFs processed")}
                 value={wallet.docsProcessedThisPeriod.toLocaleString()}
               />
-              <KvRow
-                label={t("portal.billing.cycle.users", "Users")}
-                value={wallet.team.usersInUse.toLocaleString()}
-              />
+              {showTeam && (
+                <KvRow
+                  label={t("portal.billing.cycle.users", "Users")}
+                  value={wallet.team.usersInUse.toLocaleString()}
+                />
+              )}
               {editorsDeployed != null && (
                 <KvRow
                   label={t("portal.billing.cycle.editors", "Editors deployed")}
