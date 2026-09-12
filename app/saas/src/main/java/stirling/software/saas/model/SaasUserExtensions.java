@@ -3,12 +3,15 @@ package stirling.software.saas.model;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.data.domain.Persistable;
 
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -36,6 +39,8 @@ import stirling.software.proprietary.security.model.User;
  */
 @Entity
 @Table(name = "saas_user_extensions")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "saas-user-extensions")
 @NoArgsConstructor
 @Getter
 @Setter
