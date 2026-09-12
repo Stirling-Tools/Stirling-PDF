@@ -33,7 +33,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
   const [isProcessing, setIsProcessing] = useState(false);
 
   const processImage = async (
-    imageSource: File | string,
+    imageSource: string,
     shouldRemoveBackground: boolean,
   ): Promise<void> => {
     if (shouldRemoveBackground && allowBackgroundRemoval) {
@@ -66,16 +66,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       }
     } else {
       // When background removal is disabled, return the original image data
-      if (typeof imageSource === "string") {
-        onProcessedImageData?.(imageSource);
-      } else {
-        // Convert File to data URL if needed
-        const reader = new FileReader();
-        reader.onload = (e) => {
-          onProcessedImageData?.(e.target?.result as string);
-        };
-        reader.readAsDataURL(imageSource);
-      }
+      onProcessedImageData?.(imageSource);
     }
   };
 
@@ -92,6 +83,7 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
         }
 
         setCurrentFile(file);
+        setOriginalImageData(null);
         onImageChange(file);
 
         let dataUrlToProcess: string;
@@ -105,13 +97,9 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
           // For SVG, convert to PNG so it can be embedded in PDF
           dataUrlToProcess = await convertSvgToPng(file);
         } else {
-          // For other images, read as data URL directly
-          dataUrlToProcess = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target?.result as string);
-            reader.onerror = () => reject(reader.error);
-            reader.readAsDataURL(file);
-          });
+          // Bake the browser-decoded orientation into the pixels and discard
+          // metadata that downstream image handling may interpret differently.
+          dataUrlToProcess = await normalizeRasterImage(file);
         }
 
         setOriginalImageData(dataUrlToProcess);
@@ -126,6 +114,49 @@ export const ImageUploader: React.FC<ImageUploaderProps> = ({
       onImageChange(null);
       onProcessedImageData?.(null);
     }
+  };
+
+  const normalizeRasterImage = async (file: File): Promise<string> => {
+    const sourceDataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => resolve(event.target?.result as string);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(file);
+    });
+
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+
+      img.onload = () => {
+        try {
+          const width = img.naturalWidth || img.width;
+          const height = img.naturalHeight || img.height;
+
+          if (!width || !height || !isFinite(width) || !isFinite(height)) {
+            reject(new Error("Image has invalid dimensions"));
+            return;
+          }
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width;
+          canvas.height = height;
+
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            reject(new Error("Failed to get canvas context"));
+            return;
+          }
+
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/png"));
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      img.onerror = () => reject(new Error("Failed to load image"));
+      img.src = sourceDataUrl;
+    });
   };
 
   // Helper function to convert SVG to PNG
