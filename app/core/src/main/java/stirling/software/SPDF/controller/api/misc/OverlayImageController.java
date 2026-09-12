@@ -7,7 +7,6 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.graphics.image.PDImageXObject;
 import org.springframework.core.io.Resource;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -53,67 +52,61 @@ public class OverlayImageController {
                             + " Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG). SVG"
                             + " files are rendered as vector graphics for crisp output at any resolution. The"
                             + " image can be overlaid on every page of the PDF if specified.")
-    public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
+    public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request)
+            throws IOException {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();
         float x = request.getX();
         float y = request.getY();
         boolean everyPage = Boolean.TRUE.equals(request.getEveryPage());
 
-        try {
-            byte[] pdfBytes = pdfFile.getBytes();
-            byte[] imageBytes = imageFile.getBytes();
+        byte[] pdfBytes = pdfFile.getBytes();
+        byte[] imageBytes = imageFile.getBytes();
 
-            boolean isSvg = SvgOverlayUtil.isSvgImage(imageBytes);
-            if (isSvg) {
-                imageBytes = svgSanitizer.sanitize(imageBytes);
-            }
+        boolean isSvg = SvgOverlayUtil.isSvgImage(imageBytes);
+        if (isSvg) {
+            imageBytes = svgSanitizer.sanitize(imageBytes);
+        }
 
-            try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
-                int pages = document.getNumberOfPages();
-                for (int i = 0; i < pages; i++) {
-                    PDPage page = document.getPage(i);
+        try (PDDocument document = pdfDocumentFactory.load(pdfBytes)) {
+            int pages = document.getNumberOfPages();
+            for (int i = 0; i < pages; i++) {
+                PDPage page = document.getPage(i);
 
-                    if (isSvg) {
-                        SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
-                    } else {
-                        try (PDPageContentStream contentStream =
-                                new PDPageContentStream(
-                                        document,
-                                        page,
-                                        PDPageContentStream.AppendMode.APPEND,
-                                        true,
-                                        true)) {
-                            PDImageXObject image =
-                                    PDImageXObject.createFromByteArray(document, imageBytes, "");
-                            contentStream.drawImage(image, x, y);
-                            log.info("Image successfully overlaid onto PDF page {}", i);
-                        }
-                    }
-
-                    if (!everyPage && i == 0) {
-                        break;
+                if (isSvg) {
+                    SvgOverlayUtil.overlaySvgOnPage(document, page, imageBytes, x, y);
+                } else {
+                    try (PDPageContentStream contentStream =
+                            new PDPageContentStream(
+                                    document,
+                                    page,
+                                    PDPageContentStream.AppendMode.APPEND,
+                                    true,
+                                    true)) {
+                        PDImageXObject image =
+                                PDImageXObject.createFromByteArray(document, imageBytes, "");
+                        contentStream.drawImage(image, x, y);
+                        log.info("Image successfully overlaid onto PDF page {}", i);
                     }
                 }
 
-                TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
-                try {
-                    document.save(tempOut.getFile());
-                } catch (IOException e) {
-                    tempOut.close();
-                    throw e;
+                if (!everyPage && i == 0) {
+                    break;
                 }
-                log.info("PDF with overlaid image successfully created");
-
-                return WebResponseUtils.pdfFileToWebResponse(
-                        tempOut,
-                        GeneralUtils.generateFilename(
-                                pdfFile.getOriginalFilename(), "_overlayed.pdf"));
             }
 
-        } catch (IOException e) {
-            log.error("Failed to add image to PDF", e);
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            TempFile tempOut = tempFileManager.createManagedTempFile(".pdf");
+            try {
+                document.save(tempOut.getFile());
+            } catch (IOException e) {
+                tempOut.close();
+                throw e;
+            }
+            log.info("PDF with overlaid image successfully created");
+
+            return WebResponseUtils.pdfFileToWebResponse(
+                    tempOut,
+                    GeneralUtils.generateFilename(pdfFile.getOriginalFilename(), "_overlayed.pdf"));
         }
     }
 }
