@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.Resource;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -40,7 +41,12 @@ import stirling.software.common.util.FileReadinessChecker;
 
 import tools.jackson.databind.ObjectMapper;
 
+/** Absent from the desktop bundle: that backend is unmetered, so a run there is off the books. */
 @Service
+@ConditionalOnProperty(
+        name = "STIRLING_PDF_TAURI_MODE",
+        havingValue = "false",
+        matchIfMissing = true)
 @Slf4j
 public class PipelineDirectoryProcessor {
 
