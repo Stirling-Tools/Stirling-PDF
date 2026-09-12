@@ -21,16 +21,30 @@ export function createCloudPlanNavItem(t: Translate): ConfigNavItem {
   return {
     key: "plan",
     label: t("config.plan", "Plan"),
+    description: t(
+      "config.planDescription",
+      "Your plan, credits and spend limit, and the invoices behind them.",
+    ),
     icon: "credit-card",
     component: <Plan />,
   };
 }
 
-/** The Team nav item — shared SaaS team management (invite/rename/members). */
+/**
+ * The workspace roster — shared SaaS team management (invite/rename/members).
+ *
+ * Same key, name and route as the processor's roster, which supersedes this one
+ * for anyone with processor access: gaining that access must not rename the
+ * section or move it to a different URL under the reader.
+ */
 export function createCloudTeamNavItem(t: Translate): ConfigNavItem {
   return {
-    key: "teams",
-    label: t("config.team", "Team"),
+    key: "users",
+    label: t("portal.nav.users", "Users"),
+    description: t(
+      "config.teamDescription",
+      "Who shares this workspace, and invitations still waiting on an answer.",
+    ),
     icon: "groups-rounded",
     component: <TeamSection />,
   };
