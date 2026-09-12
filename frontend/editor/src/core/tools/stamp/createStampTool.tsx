@@ -18,6 +18,7 @@ import { useSignature } from "@app/contexts/SignatureContext";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { flattenSignatures } from "@app/utils/signatureFlattening";
+import { trackEditorOperation } from "@app/services/analytics";
 import SharedSigningLauncher from "@app/components/shared/signing/SharedSigningLauncher";
 import { SuggestedToolsSection } from "@app/components/tools/shared/SuggestedToolsSection";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
@@ -178,6 +179,12 @@ export const createStampTool = (config: StampToolConfig) => {
           setActiveFileIndex(0);
           setSignaturesApplied(true);
           handleDeactivateSignature();
+
+          // Signing is applied client-side (endpoint: null in useSignOperation),
+          // so it never reaches the shared execute path that emits
+          // editor_operation. Emit it here so completions of this flow are
+          // measurable rather than invisible.
+          trackEditorOperation(toolId, 1);
 
           const hasSignatureReady = (() => {
             const params = base.params.parameters;

@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import {
   Alert,
@@ -26,8 +33,8 @@ interface SavedSignaturesSectionProps {
   maxLimit: number;
   storageType?: StorageType | null;
   isAdmin?: boolean;
-  onUseSignature: (signature: SavedSignature) => void;
-  onDeleteSignature: (signature: SavedSignature) => void;
+  onUseSignature: (signature: SavedSignature) => void | Promise<void>;
+  onDeleteSignature: (signature: SavedSignature) => void | Promise<void>;
   onRenameSignature: (id: string, label: string) => void;
   translationScope?: string;
 }
@@ -36,6 +43,335 @@ const typeBadgeColor: Record<SavedSignatureType, string> = {
   canvas: "indigo",
   image: "teal",
   text: "grape",
+};
+
+// How long the "Selected ✓" confirmation stays on the Use button after a click.
+const USE_FEEDBACK_DURATION = 1500;
+
+type TranslateFn = (
+  key: string,
+  defaultValue: string,
+  options?: Record<string, unknown>,
+) => string;
+
+const renderPreview = (signature: SavedSignature) => {
+  if (signature.type === "text") {
+    return (
+      <Box
+        component="div"
+        style={{
+          fontFamily: signature.fontFamily,
+          fontSize: `${signature.fontSize}px`,
+          color: signature.textColor,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          height: "120px",
+          borderRadius: "0.5rem",
+          backgroundColor: "#ffffff",
+          padding: "0.5rem",
+          textAlign: "center",
+          overflow: "hidden",
+        }}
+      >
+        <Text
+          size="lg"
+          style={{
+            fontFamily: signature.fontFamily,
+            color: signature.textColor,
+            whiteSpace: "nowrap",
+          }}
+        >
+          {signature.signerName}
+        </Text>
+      </Box>
+    );
+  }
+
+  return (
+    <Box
+      component="div"
+      style={{
+        backgroundColor: "#ffffff",
+        borderRadius: "0.5rem",
+        height: "120px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "0.5rem",
+      }}
+    >
+      <Box
+        component="img"
+        src={signature.dataUrl}
+        alt={signature.label}
+        style={{
+          maxWidth: "100%",
+          maxHeight: "100%",
+          objectFit: "contain",
+        }}
+      />
+    </Box>
+  );
+};
+
+const typeLabel = (type: SavedSignatureType, translate: TranslateFn) => {
+  switch (type) {
+    case "canvas":
+      return translate("saved.type.canvas", "Drawing");
+    case "image":
+      return translate("saved.type.image", "Upload");
+    case "text":
+      return translate("saved.type.text", "Text");
+    default:
+      return type;
+  }
+};
+
+interface SignatureCategoryProps {
+  header: ReactNode;
+  signatures: SavedSignature[];
+  disabled: boolean;
+  allowDelete: boolean;
+  translate: TranslateFn;
+  onUseSignature: (signature: SavedSignature) => void | Promise<void>;
+  onDeleteSignature: (signature: SavedSignature) => void | Promise<void>;
+  onRenameSignature: (id: string, label: string) => void;
+}
+
+// A single category (personal / shared / browser-storage) carousel. Owns its
+// carousel index, per-signature label drafts, and the transient in-flight
+// feedback that stops users re-clicking the icon-only Use/Remove controls.
+const SignatureCategory = ({
+  header,
+  signatures,
+  disabled,
+  allowDelete,
+  translate,
+  onUseSignature,
+  onDeleteSignature,
+  onRenameSignature,
+}: SignatureCategoryProps) => {
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [justUsedId, setJustUsedId] = useState<string | null>(null);
+  const useFeedbackTimer = useRef<number | null>(null);
+
+  const total = signatures.length;
+  const canCycle = total > 1;
+
+  // Keep the active index in range as signatures are added/removed.
+  useEffect(() => {
+    setActiveIndex((prev) => Math.min(prev, Math.max(total - 1, 0)));
+  }, [total]);
+
+  useEffect(() => {
+    setLabelDrafts((prev) => {
+      const nextDrafts: Record<string, string> = {};
+      signatures.forEach((sig) => {
+        nextDrafts[sig.id] = prev[sig.id] ?? sig.label ?? "";
+      });
+      return nextDrafts;
+    });
+  }, [signatures]);
+
+  useEffect(
+    () => () => {
+      if (useFeedbackTimer.current !== null) {
+        window.clearTimeout(useFeedbackTimer.current);
+      }
+    },
+    [],
+  );
+
+  const active = signatures[activeIndex];
+
+  const goPrev = useCallback(() => {
+    setActiveIndex((prev) => (prev - 1 + total) % total);
+  }, [total]);
+
+  const goNext = useCallback(() => {
+    setActiveIndex((prev) => (prev + 1) % total);
+  }, [total]);
+
+  const handleUse = useCallback(
+    async (signature: SavedSignature) => {
+      // Immediate, visible confirmation so the icon-only control doesn't feel dead.
+      if (useFeedbackTimer.current !== null) {
+        window.clearTimeout(useFeedbackTimer.current);
+      }
+      setJustUsedId(signature.id);
+      useFeedbackTimer.current = window.setTimeout(() => {
+        setJustUsedId((current) => (current === signature.id ? null : current));
+        useFeedbackTimer.current = null;
+      }, USE_FEEDBACK_DURATION);
+
+      try {
+        await onUseSignature(signature);
+      } catch (error) {
+        console.error("[SavedSignatures] Failed to use signature:", error);
+      }
+    },
+    [onUseSignature],
+  );
+
+  const handleDelete = useCallback(
+    async (signature: SavedSignature) => {
+      // Guard against the rapid re-clicks that were firing several delete
+      // requests for the same signature; show a spinner while it resolves.
+      if (deletingId) {
+        return;
+      }
+      setDeletingId(signature.id);
+      try {
+        await onDeleteSignature(signature);
+      } catch (error) {
+        console.error("[SavedSignatures] Failed to delete signature:", error);
+      } finally {
+        setDeletingId(null);
+      }
+    },
+    [deletingId, onDeleteSignature],
+  );
+
+  const handleLabelChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    signature: SavedSignature,
+  ) => {
+    const { value } = event.currentTarget;
+    setLabelDrafts((prev) => ({ ...prev, [signature.id]: value }));
+  };
+
+  const handleLabelBlur = (signature: SavedSignature) => {
+    const nextValue = labelDrafts[signature.id]?.trim() ?? "";
+    if (!nextValue || nextValue === signature.label) {
+      setLabelDrafts((prev) => ({ ...prev, [signature.id]: signature.label }));
+      return;
+    }
+    onRenameSignature(signature.id, nextValue);
+  };
+
+  const handleLabelKeyDown = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+    signature: SavedSignature,
+  ) => {
+    if (event.key === "Enter") {
+      event.currentTarget.blur();
+    }
+    if (event.key === "Escape") {
+      setLabelDrafts((prev) => ({ ...prev, [signature.id]: signature.label }));
+      event.currentTarget.blur();
+    }
+  };
+
+  if (!active) {
+    return null;
+  }
+
+  const isDeleting = deletingId === active.id;
+  const isJustUsed = justUsedId === active.id;
+  const controlsDisabled = disabled || Boolean(deletingId);
+
+  return (
+    <Stack gap="xs">
+      {header}
+
+      <Group justify="space-between" align="center">
+        <Text size="sm" c="dimmed">
+          {translate("saved.carouselPosition", "{{current}} of {{total}}", {
+            current: activeIndex + 1,
+            total,
+          })}
+        </Text>
+        <Group gap={4}>
+          <ActionIcon
+            variant="secondary"
+            aria-label={translate("saved.prev", "Previous")}
+            onClick={goPrev}
+            disabled={controlsDisabled || !canCycle}
+          >
+            <LocalIcon icon="chevron-left-rounded" width={18} height={18} />
+          </ActionIcon>
+          <ActionIcon
+            variant="secondary"
+            aria-label={translate("saved.next", "Next")}
+            onClick={goNext}
+            disabled={controlsDisabled || !canCycle}
+          >
+            <LocalIcon icon="chevron-right-rounded" width={18} height={18} />
+          </ActionIcon>
+        </Group>
+      </Group>
+
+      <Card withBorder padding="sm">
+        <Stack gap="sm">
+          <Group justify="space-between" align="center">
+            <Badge color={typeBadgeColor[active.type]} variant="light">
+              {typeLabel(active.type, translate)}
+            </Badge>
+            <Group gap="xs">
+              <Tooltip
+                label={
+                  isJustUsed
+                    ? translate(
+                        "saved.used",
+                        "Selected — click the PDF to place it",
+                      )
+                    : translate("saved.use", "Use signature")
+                }
+              >
+                <ActionIcon
+                  variant="tertiary"
+                  accent={isJustUsed ? "success" : undefined}
+                  aria-label={translate("saved.use", "Use signature")}
+                  onClick={() => handleUse(active)}
+                  disabled={controlsDisabled}
+                >
+                  <LocalIcon
+                    icon={
+                      isJustUsed
+                        ? "check-circle-rounded"
+                        : "check-circle-outline-rounded"
+                    }
+                    width={18}
+                    height={18}
+                  />
+                </ActionIcon>
+              </Tooltip>
+              {allowDelete && (
+                <Tooltip label={translate("saved.delete", "Remove")}>
+                  <ActionIcon
+                    variant="tertiary"
+                    accent="danger"
+                    aria-label={translate("saved.delete", "Remove")}
+                    loading={isDeleting}
+                    onClick={() => handleDelete(active)}
+                    disabled={controlsDisabled}
+                  >
+                    <LocalIcon
+                      icon="delete-outline-rounded"
+                      width={18}
+                      height={18}
+                    />
+                  </ActionIcon>
+                </Tooltip>
+              )}
+            </Group>
+          </Group>
+          {renderPreview(active)}
+          <TextInput
+            label={translate("saved.label", "Label")}
+            value={labelDrafts[active.id] ?? active.label}
+            onChange={(event) => handleLabelChange(event, active)}
+            onBlur={() => handleLabelBlur(active)}
+            onKeyDown={(event) => handleLabelKeyDown(event, active)}
+            disabled={disabled}
+          />
+        </Stack>
+      </Card>
+    </Stack>
+  );
 };
 
 export const SavedSignaturesSection = ({
@@ -51,12 +387,11 @@ export const SavedSignaturesSection = ({
   translationScope = "sign",
 }: SavedSignaturesSectionProps) => {
   const { t } = useTranslation();
-  const translate = useCallback(
-    (key: string, defaultValue: string, options?: Record<string, unknown>) =>
+  const translate = useCallback<TranslateFn>(
+    (key, defaultValue, options) =>
       t(`${translationScope}.${key}`, { defaultValue, ...options }),
     [t, translationScope],
   );
-  const [labelDrafts, setLabelDrafts] = useState<Record<string, string>>({});
 
   // Group signatures by scope
   const groupedSignatures = useMemo(() => {
@@ -67,113 +402,6 @@ export const SavedSignaturesSection = ({
     );
     return { personal, shared, localStorage };
   }, [signatures]);
-
-  // Separate carousel state for each category
-  const [activePersonalIndex, setActivePersonalIndex] = useState(0);
-  const [activeSharedIndex, setActiveSharedIndex] = useState(0);
-  const [activeLocalStorageIndex, setActiveLocalStorageIndex] = useState(0);
-
-  const activePersonalSignature =
-    groupedSignatures.personal[activePersonalIndex];
-  const activeSharedSignature = groupedSignatures.shared[activeSharedIndex];
-  const activeLocalStorageSignature =
-    groupedSignatures.localStorage[activeLocalStorageIndex];
-
-  const onUseSignatureRef = useRef(onUseSignature);
-
-  useEffect(() => {
-    onUseSignatureRef.current = onUseSignature;
-  }, [onUseSignature]);
-
-  useEffect(() => {
-    setLabelDrafts((prev) => {
-      const nextDrafts: Record<string, string> = {};
-      signatures.forEach((sig) => {
-        nextDrafts[sig.id] = prev[sig.id] ?? sig.label ?? "";
-      });
-      return nextDrafts;
-    });
-  }, [signatures]);
-
-  // Reset carousel indices when categories change
-  useEffect(() => {
-    setActivePersonalIndex((prev) =>
-      Math.min(prev, Math.max(groupedSignatures.personal.length - 1, 0)),
-    );
-  }, [groupedSignatures.personal.length]);
-
-  useEffect(() => {
-    setActiveSharedIndex((prev) =>
-      Math.min(prev, Math.max(groupedSignatures.shared.length - 1, 0)),
-    );
-  }, [groupedSignatures.shared.length]);
-
-  useEffect(() => {
-    setActiveLocalStorageIndex((prev) =>
-      Math.min(prev, Math.max(groupedSignatures.localStorage.length - 1, 0)),
-    );
-  }, [groupedSignatures.localStorage.length]);
-
-  const renderPreview = (signature: SavedSignature) => {
-    if (signature.type === "text") {
-      return (
-        <Box
-          component="div"
-          style={{
-            fontFamily: signature.fontFamily,
-            fontSize: `${signature.fontSize}px`,
-            color: signature.textColor,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "120px",
-            borderRadius: "0.5rem",
-            backgroundColor: "#ffffff",
-            padding: "0.5rem",
-            textAlign: "center",
-            overflow: "hidden",
-          }}
-        >
-          <Text
-            size="lg"
-            style={{
-              fontFamily: signature.fontFamily,
-              color: signature.textColor,
-              whiteSpace: "nowrap",
-            }}
-          >
-            {signature.signerName}
-          </Text>
-        </Box>
-      );
-    }
-
-    return (
-      <Box
-        component="div"
-        style={{
-          backgroundColor: "#ffffff",
-          borderRadius: "0.5rem",
-          height: "120px",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          padding: "0.5rem",
-        }}
-      >
-        <Box
-          component="img"
-          src={signature.dataUrl}
-          alt={signature.label}
-          style={{
-            maxWidth: "100%",
-            maxHeight: "100%",
-            objectFit: "contain",
-          }}
-        />
-      </Box>
-    );
-  };
 
   const emptyState = (
     <Card withBorder>
@@ -191,49 +419,6 @@ export const SavedSignaturesSection = ({
       </Stack>
     </Card>
   );
-
-  const typeLabel = (type: SavedSignatureType) => {
-    switch (type) {
-      case "canvas":
-        return translate("saved.type.canvas", "Drawing");
-      case "image":
-        return translate("saved.type.image", "Upload");
-      case "text":
-        return translate("saved.type.text", "Text");
-      default:
-        return type;
-    }
-  };
-
-  const handleLabelBlur = (signature: SavedSignature) => {
-    const nextValue = labelDrafts[signature.id]?.trim() ?? "";
-    if (!nextValue || nextValue === signature.label) {
-      setLabelDrafts((prev) => ({ ...prev, [signature.id]: signature.label }));
-      return;
-    }
-    onRenameSignature(signature.id, nextValue);
-  };
-
-  const handleLabelChange = (
-    event: React.ChangeEvent<HTMLInputElement>,
-    signature: SavedSignature,
-  ) => {
-    const { value } = event.currentTarget;
-    setLabelDrafts((prev) => ({ ...prev, [signature.id]: value }));
-  };
-
-  const handleLabelKeyDown = (
-    event: React.KeyboardEvent<HTMLInputElement>,
-    signature: SavedSignature,
-  ) => {
-    if (event.key === "Enter") {
-      event.currentTarget.blur();
-    }
-    if (event.key === "Escape") {
-      setLabelDrafts((prev) => ({ ...prev, [signature.id]: signature.label }));
-      event.currentTarget.blur();
-    }
-  };
 
   return (
     <Stack gap="sm">
@@ -273,267 +458,70 @@ export const SavedSignaturesSection = ({
       ) : (
         <Stack gap="md">
           {/* Personal Signatures */}
-          {groupedSignatures.personal.length > 0 && activePersonalSignature && (
-            <Stack gap="xs">
-              <Group gap="xs">
-                <LocalIcon icon="person-rounded" width={18} height={18} />
-                <Text fw={600} size="sm">
-                  {translate("saved.personalHeading", "Personal Signatures")}
-                </Text>
-              </Group>
-              <Text size="xs" c="dimmed">
-                {translate(
-                  "saved.personalDescription",
-                  "Only you can see these signatures.",
-                )}
-              </Text>
-
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
-                  {translate(
-                    "saved.carouselPosition",
-                    "{{current}} of {{total}}",
-                    {
-                      current: activePersonalIndex + 1,
-                      total: groupedSignatures.personal.length,
-                    },
-                  )}
-                </Text>
-                <Group gap={4}>
-                  <ActionIcon
-                    variant="secondary"
-                    aria-label={translate("saved.prev", "Previous")}
-                    onClick={() =>
-                      setActivePersonalIndex((prev) => Math.max(0, prev - 1))
-                    }
-                    disabled={disabled || activePersonalIndex === 0}
-                  >
-                    <LocalIcon
-                      icon="chevron-left-rounded"
-                      width={18}
-                      height={18}
-                    />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="secondary"
-                    aria-label={translate("saved.next", "Next")}
-                    onClick={() =>
-                      setActivePersonalIndex((prev) =>
-                        Math.min(
-                          groupedSignatures.personal.length - 1,
-                          prev + 1,
-                        ),
-                      )
-                    }
-                    disabled={
-                      disabled ||
-                      activePersonalIndex >=
-                        groupedSignatures.personal.length - 1
-                    }
-                  >
-                    <LocalIcon
-                      icon="chevron-right-rounded"
-                      width={18}
-                      height={18}
-                    />
-                  </ActionIcon>
-                </Group>
-              </Group>
-
-              <Card withBorder padding="sm">
-                <Stack gap="sm">
-                  <Group justify="space-between" align="center">
-                    <Badge
-                      color={typeBadgeColor[activePersonalSignature.type]}
-                      variant="light"
-                    >
-                      {typeLabel(activePersonalSignature.type)}
-                    </Badge>
-                    <Group gap="xs">
-                      <ActionIcon
-                        variant="tertiary"
-                        aria-label={t("sign.saved.use", "Use signature")}
-                        onClick={() => onUseSignature(activePersonalSignature)}
-                        disabled={disabled}
-                      >
-                        <LocalIcon
-                          icon="check-circle-outline-rounded"
-                          width={18}
-                          height={18}
-                        />
-                      </ActionIcon>
-                      <Tooltip label={translate("saved.delete", "Remove")}>
-                        <ActionIcon
-                          variant="tertiary"
-                          accent="danger"
-                          aria-label={translate("saved.delete", "Remove")}
-                          onClick={() =>
-                            onDeleteSignature(activePersonalSignature)
-                          }
-                          disabled={disabled}
-                        >
-                          <LocalIcon
-                            icon="delete-outline-rounded"
-                            width={18}
-                            height={18}
-                          />
-                        </ActionIcon>
-                      </Tooltip>
-                    </Group>
+          {groupedSignatures.personal.length > 0 && (
+            <SignatureCategory
+              header={
+                <>
+                  <Group gap="xs">
+                    <LocalIcon icon="person-rounded" width={18} height={18} />
+                    <Text fw={600} size="sm">
+                      {translate(
+                        "saved.personalHeading",
+                        "Personal Signatures",
+                      )}
+                    </Text>
                   </Group>
-                  {renderPreview(activePersonalSignature)}
-                  <TextInput
-                    label={translate("saved.label", "Label")}
-                    value={
-                      labelDrafts[activePersonalSignature.id] ??
-                      activePersonalSignature.label
-                    }
-                    onChange={(event) =>
-                      handleLabelChange(event, activePersonalSignature)
-                    }
-                    onBlur={() => handleLabelBlur(activePersonalSignature)}
-                    onKeyDown={(event) =>
-                      handleLabelKeyDown(event, activePersonalSignature)
-                    }
-                    disabled={disabled}
-                  />
-                </Stack>
-              </Card>
-            </Stack>
+                  <Text size="xs" c="dimmed">
+                    {translate(
+                      "saved.personalDescription",
+                      "Only you can see these signatures.",
+                    )}
+                  </Text>
+                </>
+              }
+              signatures={groupedSignatures.personal}
+              disabled={disabled}
+              allowDelete
+              translate={translate}
+              onUseSignature={onUseSignature}
+              onDeleteSignature={onDeleteSignature}
+              onRenameSignature={onRenameSignature}
+            />
           )}
 
           {/* Shared Signatures */}
-          {groupedSignatures.shared.length > 0 && activeSharedSignature && (
-            <Stack gap="xs">
-              <Group gap="xs">
-                <LocalIcon icon="groups-rounded" width={18} height={18} />
-                <Text fw={600} size="sm">
-                  {translate("saved.sharedHeading", "Shared Signatures")}
-                </Text>
-              </Group>
-              <Text size="xs" c="dimmed">
-                {translate(
-                  "saved.sharedDescription",
-                  "All users can see and use these signatures.",
-                )}
-              </Text>
-
-              <Group justify="space-between" align="center">
-                <Text size="sm" c="dimmed">
-                  {translate(
-                    "saved.carouselPosition",
-                    "{{current}} of {{total}}",
-                    {
-                      current: activeSharedIndex + 1,
-                      total: groupedSignatures.shared.length,
-                    },
-                  )}
-                </Text>
-                <Group gap={4}>
-                  <ActionIcon
-                    variant="secondary"
-                    aria-label={translate("saved.prev", "Previous")}
-                    onClick={() =>
-                      setActiveSharedIndex((prev) => Math.max(0, prev - 1))
-                    }
-                    disabled={disabled || activeSharedIndex === 0}
-                  >
-                    <LocalIcon
-                      icon="chevron-left-rounded"
-                      width={18}
-                      height={18}
-                    />
-                  </ActionIcon>
-                  <ActionIcon
-                    variant="secondary"
-                    aria-label={translate("saved.next", "Next")}
-                    onClick={() =>
-                      setActiveSharedIndex((prev) =>
-                        Math.min(groupedSignatures.shared.length - 1, prev + 1),
-                      )
-                    }
-                    disabled={
-                      disabled ||
-                      activeSharedIndex >= groupedSignatures.shared.length - 1
-                    }
-                  >
-                    <LocalIcon
-                      icon="chevron-right-rounded"
-                      width={18}
-                      height={18}
-                    />
-                  </ActionIcon>
-                </Group>
-              </Group>
-
-              <Card withBorder padding="sm">
-                <Stack gap="sm">
-                  <Group justify="space-between" align="center">
-                    <Badge
-                      color={typeBadgeColor[activeSharedSignature.type]}
-                      variant="light"
-                    >
-                      {typeLabel(activeSharedSignature.type)}
-                    </Badge>
-                    <Group gap="xs">
-                      <ActionIcon
-                        variant="tertiary"
-                        aria-label={t("sign.saved.use", "Use signature")}
-                        onClick={() => onUseSignature(activeSharedSignature)}
-                        disabled={disabled}
-                      >
-                        <LocalIcon
-                          icon="check-circle-outline-rounded"
-                          width={18}
-                          height={18}
-                        />
-                      </ActionIcon>
-                      {isAdmin && (
-                        <Tooltip label={translate("saved.delete", "Remove")}>
-                          <ActionIcon
-                            variant="tertiary"
-                            accent="danger"
-                            aria-label={translate("saved.delete", "Remove")}
-                            onClick={() =>
-                              onDeleteSignature(activeSharedSignature)
-                            }
-                            disabled={disabled}
-                          >
-                            <LocalIcon
-                              icon="delete-outline-rounded"
-                              width={18}
-                              height={18}
-                            />
-                          </ActionIcon>
-                        </Tooltip>
-                      )}
-                    </Group>
+          {groupedSignatures.shared.length > 0 && (
+            <SignatureCategory
+              header={
+                <>
+                  <Group gap="xs">
+                    <LocalIcon icon="groups-rounded" width={18} height={18} />
+                    <Text fw={600} size="sm">
+                      {translate("saved.sharedHeading", "Shared Signatures")}
+                    </Text>
                   </Group>
-                  {renderPreview(activeSharedSignature)}
-                  <TextInput
-                    label={translate("saved.label", "Label")}
-                    value={
-                      labelDrafts[activeSharedSignature.id] ??
-                      activeSharedSignature.label
-                    }
-                    onChange={(event) =>
-                      handleLabelChange(event, activeSharedSignature)
-                    }
-                    onBlur={() => handleLabelBlur(activeSharedSignature)}
-                    onKeyDown={(event) =>
-                      handleLabelKeyDown(event, activeSharedSignature)
-                    }
-                    disabled={disabled}
-                  />
-                </Stack>
-              </Card>
-            </Stack>
+                  <Text size="xs" c="dimmed">
+                    {translate(
+                      "saved.sharedDescription",
+                      "All users can see and use these signatures.",
+                    )}
+                  </Text>
+                </>
+              }
+              signatures={groupedSignatures.shared}
+              disabled={disabled}
+              allowDelete={isAdmin}
+              translate={translate}
+              onUseSignature={onUseSignature}
+              onDeleteSignature={onDeleteSignature}
+              onRenameSignature={onRenameSignature}
+            />
           )}
 
           {/* Browser Storage (localStorage) - Temporary */}
-          {groupedSignatures.localStorage.length > 0 &&
-            activeLocalStorageSignature && (
-              <Stack gap="xs">
+          {groupedSignatures.localStorage.length > 0 && (
+            <SignatureCategory
+              header={
                 <Alert
                   color="blue"
                   title={translate(
@@ -548,126 +536,16 @@ export const SavedSignaturesSection = ({
                     )}
                   </Text>
                 </Alert>
-
-                <Group justify="space-between" align="center">
-                  <Text size="sm" c="dimmed">
-                    {translate(
-                      "saved.carouselPosition",
-                      "{{current}} of {{total}}",
-                      {
-                        current: activeLocalStorageIndex + 1,
-                        total: groupedSignatures.localStorage.length,
-                      },
-                    )}
-                  </Text>
-                  <Group gap={4}>
-                    <ActionIcon
-                      variant="secondary"
-                      aria-label={translate("saved.prev", "Previous")}
-                      onClick={() =>
-                        setActiveLocalStorageIndex((prev) =>
-                          Math.max(0, prev - 1),
-                        )
-                      }
-                      disabled={disabled || activeLocalStorageIndex === 0}
-                    >
-                      <LocalIcon
-                        icon="chevron-left-rounded"
-                        width={18}
-                        height={18}
-                      />
-                    </ActionIcon>
-                    <ActionIcon
-                      variant="secondary"
-                      aria-label={translate("saved.next", "Next")}
-                      onClick={() =>
-                        setActiveLocalStorageIndex((prev) =>
-                          Math.min(
-                            groupedSignatures.localStorage.length - 1,
-                            prev + 1,
-                          ),
-                        )
-                      }
-                      disabled={
-                        disabled ||
-                        activeLocalStorageIndex >=
-                          groupedSignatures.localStorage.length - 1
-                      }
-                    >
-                      <LocalIcon
-                        icon="chevron-right-rounded"
-                        width={18}
-                        height={18}
-                      />
-                    </ActionIcon>
-                  </Group>
-                </Group>
-
-                <Card withBorder padding="sm">
-                  <Stack gap="sm">
-                    <Group justify="space-between" align="center">
-                      <Badge
-                        color={typeBadgeColor[activeLocalStorageSignature.type]}
-                        variant="light"
-                      >
-                        {typeLabel(activeLocalStorageSignature.type)}
-                      </Badge>
-                      <Group gap="xs">
-                        <ActionIcon
-                          variant="tertiary"
-                          aria-label={t("sign.saved.use", "Use signature")}
-                          onClick={() =>
-                            onUseSignature(activeLocalStorageSignature)
-                          }
-                          disabled={disabled}
-                        >
-                          <LocalIcon
-                            icon="check-circle-outline-rounded"
-                            width={18}
-                            height={18}
-                          />
-                        </ActionIcon>
-                        <Tooltip label={translate("saved.delete", "Remove")}>
-                          <ActionIcon
-                            variant="tertiary"
-                            accent="danger"
-                            aria-label={translate("saved.delete", "Remove")}
-                            onClick={() =>
-                              onDeleteSignature(activeLocalStorageSignature)
-                            }
-                            disabled={disabled}
-                          >
-                            <LocalIcon
-                              icon="delete-outline-rounded"
-                              width={18}
-                              height={18}
-                            />
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                    </Group>
-                    {renderPreview(activeLocalStorageSignature)}
-                    <TextInput
-                      label={translate("saved.label", "Label")}
-                      value={
-                        labelDrafts[activeLocalStorageSignature.id] ??
-                        activeLocalStorageSignature.label
-                      }
-                      onChange={(event) =>
-                        handleLabelChange(event, activeLocalStorageSignature)
-                      }
-                      onBlur={() =>
-                        handleLabelBlur(activeLocalStorageSignature)
-                      }
-                      onKeyDown={(event) =>
-                        handleLabelKeyDown(event, activeLocalStorageSignature)
-                      }
-                      disabled={disabled}
-                    />
-                  </Stack>
-                </Card>
-              </Stack>
-            )}
+              }
+              signatures={groupedSignatures.localStorage}
+              disabled={disabled}
+              allowDelete
+              translate={translate}
+              onUseSignature={onUseSignature}
+              onDeleteSignature={onDeleteSignature}
+              onRenameSignature={onRenameSignature}
+            />
+          )}
         </Stack>
       )}
     </Stack>
