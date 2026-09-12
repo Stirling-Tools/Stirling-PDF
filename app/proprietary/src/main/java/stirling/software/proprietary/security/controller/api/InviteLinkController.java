@@ -144,7 +144,9 @@ public class InviteLinkController {
             Long effectiveTeamId = teamId;
             if (effectiveTeamId == null) {
                 Team defaultTeam =
-                        teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME).orElse(null);
+                        teamRepository
+                                .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
+                                .orElse(null);
                 if (defaultTeam != null) {
                     effectiveTeamId = defaultTeam.getId();
                 }

@@ -14,6 +14,11 @@ import io.github.bucket4j.distributed.proxy.ProxyManager;
 import io.github.bucket4j.redis.lettuce.Bucket4jLettuce;
 import io.lettuce.core.AbstractRedisClient;
 import io.lettuce.core.RedisClient;
+import io.lettuce.core.api.StatefulConnection;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.cluster.RedisClusterClient;
+import io.lettuce.core.cluster.api.StatefulRedisClusterConnection;
+import io.lettuce.core.codec.ByteArrayCodec;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
@@ -21,9 +26,8 @@ import jakarta.annotation.PreDestroy;
 import stirling.software.common.cluster.RateLimitStore;
 
 /**
- * Valkey-backed token-bucket rate limiting via Bucket4j's Lettuce ProxyManager. The token bucket
- * refills continuously and enforces one global limit across nodes, with the same semantics as the
- * in-process {@code InProcessRateLimitStore} (which also uses Bucket4j).
+ * Bucket4j CAS scripts are {@code KEYS[1]}-only, so each bucket stays linearizable on one slot with
+ * no hash tag needed - correct on standalone, sentinel and cluster.
  */
 @Component
 @ConditionalOnValkeyBackplane
@@ -32,6 +36,7 @@ public class ValkeyRateLimitStore implements RateLimitStore {
     private static final String PREFIX = "stirling:rl:";
 
     private final LettuceConnectionFactory connectionFactory;
+    private StatefulConnection<byte[], byte[]> connection;
     private ProxyManager<byte[]> proxyManager;
 
     public ValkeyRateLimitStore(LettuceConnectionFactory connectionFactory) {
@@ -41,18 +46,30 @@ public class ValkeyRateLimitStore implements RateLimitStore {
     @PostConstruct
     void initProxyManager() {
         AbstractRedisClient client = connectionFactory.getNativeClient();
-        if (!(client instanceof RedisClient redisClient)) {
+        // Own the connection (rather than the client overloads) so it is closed at shutdown; it
+        // inherits the RedisURI client name, so CLIENT LIST still attributes it to this node.
+        Bucket4jLettuce.LettuceBasedProxyManagerBuilder<byte[]> builder;
+        if (client instanceof RedisClusterClient clusterClient) {
+            StatefulRedisClusterConnection<byte[], byte[]> conn =
+                    clusterClient.connect(ByteArrayCodec.INSTANCE);
+            this.connection = conn;
+            builder = Bucket4jLettuce.casBasedBuilder(conn);
+        } else if (client instanceof RedisClient redisClient) {
+            // Sentinel also yields a plain RedisClient, so this arm covers standalone + sentinel.
+            StatefulRedisConnection<byte[], byte[]> conn =
+                    redisClient.connect(ByteArrayCodec.INSTANCE);
+            this.connection = conn;
+            builder = Bucket4jLettuce.casBasedBuilder(conn);
+        } else {
             throw new IllegalStateException(
-                    "ValkeyRateLimitStore requires a standalone Lettuce RedisClient; got "
+                    "ValkeyRateLimitStore needs a Lettuce RedisClient or RedisClusterClient; got "
                             + (client == null ? "null" : client.getClass().getName())
-                            + " (cluster client not supported by this rate limit impl)");
+                            + ". This is a Stirling bug - please report it.");
         }
-        // Expire idle bucket keys so they do not accumulate forever in Valkey (one key per
-        // user / API-key / IP). TTL tracks the time to refill the bucket from empty, capped at
-        // 25h to cover the longest (daily) rate-limit window; an idle bucket evicts after that.
+        // One key per user/API-key/IP, so idle buckets must expire. 25h cap covers the longest
+        // (daily) rate-limit window.
         this.proxyManager =
-                Bucket4jLettuce.casBasedBuilder(redisClient)
-                        .expirationAfterWrite(
+                builder.expirationAfterWrite(
                                 ExpirationAfterWriteStrategy.basedOnTimeForRefillingBucketUpToMax(
                                         Duration.ofHours(25)))
                         .build();
@@ -61,6 +78,10 @@ public class ValkeyRateLimitStore implements RateLimitStore {
     @PreDestroy
     void shutdown() {
         proxyManager = null;
+        if (connection != null) {
+            connection.close();
+            connection = null;
+        }
     }
 
     @Override

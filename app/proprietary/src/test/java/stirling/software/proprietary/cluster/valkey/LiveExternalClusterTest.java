@@ -28,14 +28,8 @@ import stirling.software.common.cluster.RateLimitStore.RateLimitDecision;
 import stirling.software.common.model.ApplicationProperties;
 
 /**
- * Opt-in live cluster test against an EXTERNAL Valkey/Redis given by {@code
- * STIRLING_TEST_VALKEY_URL} (e.g. a managed {@code rediss://} endpoint). Unlike {@link
- * LiveValkeyIntegrationTest} (no-auth local container) this drives three independent node stacks
- * through the production {@link ValkeyConnectionConfiguration#valkeyConnectionFactory()} bean - so
- * a {@code rediss://} URL exercises the real TLS handshake (verifyPeer=FULL) and credential path
- * end to end.
- *
- * <p>Skips unless the env var is set, so it never runs in normal CI. No secrets are committed.
+ * Opt-in: skipped unless {@code STIRLING_TEST_VALKEY_URL} is set, so it never runs in CI. A {@code
+ * rediss://} URL exercises the real TLS handshake (verifyPeer=FULL).
  */
 @EnabledIfEnvironmentVariable(named = "STIRLING_TEST_VALKEY_URL", matches = "rediss?://.+")
 class LiveExternalClusterTest {

@@ -48,7 +48,7 @@ public class DefaultClassificationPolicySeeder {
     @EventListener(ApplicationReadyEvent.class)
     public void seedDefaultTeamOnStartup() {
         teamRepository
-                .findByName(TeamService.DEFAULT_TEAM_NAME)
+                .findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME)
                 .ifPresent(team -> seedIfMissing(team.getId(), team.getName()));
     }
 

@@ -1,5 +1,5 @@
-# Multi-node Stirling-PDF processor test stack: shared Postgres/MinIO/Valkey behind an nginx LB fronting N app nodes, with enterprise features unlocked via a local test licence key.
-# Bring up: ./start-multinode-test.sh   Validate: ./validate-multinode-test.sh   Access: http://localhost:8080 (admin / stirling)
+# Multi-node test stack. Up: ./start-multinode-test.sh [--valkey sentinel|cluster] - default is
+# standalone. Every topology keeps container 'multinode-valkey', so docker-exec steps still work.
 
 x-stirling-node: &stirling-node
   build:
@@ -67,11 +67,24 @@ x-stirling-node: &stirling-node
     CLUSTER_BACKPLANE: "valkey"
     CLUSTER_ARTIFACTSTORE: "s3"
     CLUSTER_VALKEY_URL: "redis://valkey:6379"
+    # Named connections so CLIENT LIST attributes load per node in any Valkey monitor; overridden per node below.
+    CLUSTER_VALKEY_CLIENTNAME: "stirling-node-base"
+    # Pinned to the shipped settings.yml.template defaults so the test stack exercises what users run.
+    CLUSTER_VALKEY_POOL_ENABLED: "true"
+    CLUSTER_VALKEY_POOL_MAXACTIVE: "16"
+    CLUSTER_VALKEY_POOL_MAXIDLE: "16"
+    CLUSTER_VALKEY_POOL_MINIDLE: "0"
+    CLUSTER_VALKEY_POOL_MAXWAITMILLIS: "2000"
     # SPRING_DATA_REDIS_REPOSITORIES_ENABLED is not needed: DataRedisRepositoriesAutoConfiguration is excluded (see application.properties, multinode/README.md).
 
     # --- Shared credential-encryption key (REQUIRED in cluster mode) ---
     # AES-256 key that encrypts stored integration/S3 secrets - must match on every node or secrets encrypted on one can't decrypt on another; boot fails if unset with cluster.enabled=true (test-only value; JWT keys persist separately in the shared DB).
     STIRLING_CREDENTIAL_ENCRYPTION_KEY: "dMobekyUEnEV7WHBah2FkbboP4Coqifd3JRXB00LiIY="
+
+    # --- Shared AutomaticallyGenerated key/UUID (REQUIRED in cluster mode) ---
+    # Left unset, each node mints its own UUID into its local settings.yml: workflow metadata encrypted on one node then fails to decrypt on another and licence-seat HMACs do not verify across nodes. Must be valid UUIDs (anything else is replaced at startup); boot fails if unset with cluster.enabled=true (test-only values).
+    AUTOMATICALLYGENERATED_KEY: "11111111-1111-1111-1111-111111111111"
+    AUTOMATICALLYGENERATED_UUID: "22222222-2222-2222-2222-222222222222"
 
     # --- Policy / processor subsystem (the thing under test) ---
     POLICIES_ENABLED: "true"
@@ -166,6 +179,9 @@ services:
     environment:
       <<: *stirling-env
       SYSTEM_NODEID: "node-1"
+      # Pinned instead of the per-boot UUID default so tests can assert on registered node ids.
+      CLUSTER_NODE_ID: "multinode-1"
+      CLUSTER_VALKEY_CLIENTNAME: "stirling-node-1"
 
   # ---- App node 2 -----------------------------------------------------------
   # No ordering vs node-1 needed - each node mints its own signing key at boot and publishes the public half to the shared DB, so both verify each other's tokens.
@@ -175,6 +191,9 @@ services:
     environment:
       <<: *stirling-env
       SYSTEM_NODEID: "node-2"
+      # Pinned instead of the per-boot UUID default so tests can assert on registered node ids.
+      CLUSTER_NODE_ID: "multinode-2"
+      CLUSTER_VALKEY_CLIENTNAME: "stirling-node-2"
 
   # ---- One-shot seeder: teams, ~40 users, S3 connection, policies -----------
   # Profile-gated so plain `docker compose up` skips it; the start script runs it once, using postgres:alpine for psql with curl+jq added for the HTTP calls.
