@@ -144,6 +144,22 @@ export function onRecordUnreadable(
 const PROBE_UNANSWERED = { unanswered: true } as const;
 const PROBE_DEADLINE_MS = 3000;
 
+/**
+ * Bytes for a record whose blob the engine will not store. Probes the backing store
+ * first: WebKit can lose a File's handle and then never answer a read (see
+ * {@link maintenanceMayRewrite}), which would hold every caller awaiting the write. A
+ * plain timeout cannot help — it could not tell that apart from a legitimately slow read
+ * of a very large file, which this app supports.
+ */
+export async function copyBlobBytes(source: Blob): Promise<ArrayBuffer> {
+  const failure = await withProbeDeadline(blobReadFailure(source));
+  if (failure === PROBE_UNANSWERED) {
+    throw new Error("Blob backing store did not answer a read probe");
+  }
+  if (failure) throw failure;
+  return source.arrayBuffer();
+}
+
 function withProbeDeadline(
   probe: Promise<unknown>,
 ): Promise<unknown | typeof PROBE_UNANSWERED> {
@@ -301,7 +317,7 @@ class FileStorageService {
       // Engines that reject blob values fall back to a copy — see addFileRecord.
       data: this.blobValuesSupported
         ? stirlingFile
-        : await stirlingFile.arrayBuffer(),
+        : await copyBlobBytes(stirlingFile),
       thumbnail: stub.thumbnailUrl,
       thumbnailStoredAt: stub.thumbnailUrl ? Date.now() : undefined,
       isLeaf: stub.isLeaf ?? true,
@@ -337,7 +353,7 @@ class FileStorageService {
       if (!(record.data instanceof Blob) || !this.noteBlobRefusal(error)) {
         throw error;
       }
-      record.data = await record.data.arrayBuffer();
+      record.data = await copyBlobBytes(record.data);
       await this.addFileRecord(db, record);
       return;
     }

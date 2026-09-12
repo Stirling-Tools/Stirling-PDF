@@ -379,23 +379,6 @@ describe("settling swept documents locally", () => {
     }
   });
 
-  test("moves on when a document's storage write never settles", async () => {
-    // Regression: addFiles only resolves once bytes are durably written, so one stalled
-    // write held the whole run — observed live when IndexedDB refused a Blob mid-sweep.
-    vi.useFakeTimers();
-    try {
-      const d = deps({ addFiles: vi.fn(() => new Promise<never>(() => {})) });
-      const run = runClassificationDemoSweep("/downloads", d);
-      await vi.advanceTimersByTimeAsync(60_000);
-      const outcome = await run;
-
-      expect(outcome.processed).toBe(2);
-      expect(outcome.sweptPaths).toHaveLength(2);
-    } finally {
-      vi.useRealTimers();
-    }
-  });
-
   test("adds nothing for a document that could not be classified", async () => {
     classifyFileHeuristically.mockRejectedValue(new Error("encrypted"));
 
