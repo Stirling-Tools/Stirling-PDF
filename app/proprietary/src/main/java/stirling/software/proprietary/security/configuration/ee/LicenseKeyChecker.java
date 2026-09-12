@@ -151,8 +151,14 @@ public class LicenseKeyChecker {
         try {
             return licenseSettingsService.refreshLinkedTeamUsers();
         } catch (RuntimeException e) {
-            log.debug("Linked team allowance unavailable; not promoting", e);
-            return null;
+            // Every boot lands here: the datasource does not exist yet, so the licence row cannot
+            // be read. The cached figure is what makes a purchase survive a restart at all.
+            Integer cached = applicationProperties.getPremium().getLinkedTeamUsers();
+            log.debug(
+                    "Linked team allowance unreadable ({}); falling back to the cached {}",
+                    e.getMessage(),
+                    cached);
+            return cached;
         }
     }
 

@@ -1,5 +1,6 @@
 package stirling.software.proprietary.service;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -20,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.GeneralUtils;
 import stirling.software.proprietary.accountlink.EntitlementCache;
 import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.model.UserLicenseSettings;
@@ -392,6 +394,27 @@ public class UserLicenseSettingsService {
      * grandfathered limit. When SaaS is merely unreachable {@link EntitlementCache} answers from
      * the freshest snapshot it has, and this fallback covers the boot before it has one.
      */
+    /**
+     * Mirrors the allowance into settings.yml, where a boot can read it before the datasource
+     * exists. The database stays the working copy; this is only what the next start begins from.
+     *
+     * <p>Written on every change, including to null. A cancellation that reached the database but
+     * not the file would leave the plan granted on every subsequent boot, which is the one failure
+     * the customer has no reason to report.
+     *
+     * <p>Best-effort: an unwritable settings file must not fail the refresh that produced the
+     * figure, since the database copy is what this process goes on to use.
+     */
+    private void cacheForNextBoot(Integer purchased) {
+        try {
+            GeneralUtils.saveKeyToSettings("premium.linkedTeamUsers", purchased);
+        } catch (IOException | RuntimeException e) {
+            log.warn(
+                    "Could not cache the linked team allowance for the next boot: {}",
+                    e.getMessage());
+        }
+    }
+
     private Integer linkedTeamAllowance() {
         Integer live = currentEntitlement().map(InstanceEntitlement::licensedUsers).orElse(null);
         return live != null ? live : getOrCreateSettings().getLinkedTeamUsers();
@@ -429,6 +452,7 @@ public class UserLicenseSettingsService {
         if (!Objects.equals(settings.getLinkedTeamUsers(), purchased)) {
             settings.setLinkedTeamUsers(purchased);
             settingsRepository.save(settings);
+            cacheForNextBoot(purchased);
             log.info("Linked team user allowance is now {}", purchased);
         }
         return purchased;

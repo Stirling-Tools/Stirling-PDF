@@ -1540,6 +1540,18 @@ public class ApplicationProperties {
 
         private int userBlockSize;
 
+        /**
+         * Users the linked cloud team has bought, cached here so a boot can see it.
+         *
+         * <p>Machine-written, not a setting to edit: {@code UserLicenseSettingsService} rewrites it
+         * from {@code /instance/entitlement} on every refresh, and SaaS is the authority within
+         * minutes of every start. It exists because the allowance otherwise lives only in the
+         * database, and the tier has to be known before the database is built.
+         *
+         * <p>Null means no Team plan, which is also what a cancelled one leaves behind.
+         */
+        private Integer linkedTeamUsers;
+
         private ProFeatures proFeatures = new ProFeatures();
         private EnterpriseFeatures enterpriseFeatures = new EnterpriseFeatures();
 
