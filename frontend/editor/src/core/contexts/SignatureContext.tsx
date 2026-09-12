@@ -21,7 +21,9 @@ interface SignatureState {
   isPlacementMode: boolean;
   // Whether signatures have been applied (allows export)
   signaturesApplied: boolean;
-  // Size (in screen units) we want newly placed signatures to use
+  // Size (in PDF units) we want newly placed signatures to use
+  placementSize: { width: number; height: number } | null;
+  // Size (in screen units) used by the general annotation stamp flow
   placementPreviewSize: { width: number; height: number } | null;
 }
 
@@ -39,6 +41,7 @@ interface SignatureActions {
   storeImageData: (id: string, data: string) => void;
   getImageData: (id: string) => string | undefined;
   setSignaturesApplied: (applied: boolean) => void;
+  setPlacementSize: (size: { width: number; height: number } | null) => void;
   setPlacementPreviewSize: (
     size: { width: number; height: number } | null,
   ) => void;
@@ -61,8 +64,21 @@ const initialState: SignatureState = {
   signatureConfig: null,
   isPlacementMode: false,
   signaturesApplied: true, // Start as true (no signatures placed yet)
+  placementSize: null,
   placementPreviewSize: null,
 };
+
+const hasSameSignatureAppearance = (
+  previous: SignParameters | null,
+  next: SignParameters | null,
+): boolean =>
+  previous?.signatureType === next?.signatureType &&
+  previous?.signatureData === next?.signatureData &&
+  previous?.signerName === next?.signerName &&
+  previous?.fontFamily === next?.fontFamily &&
+  previous?.fontSize === next?.fontSize &&
+  previous?.textColor === next?.textColor &&
+  previous?.textAlign === next?.textAlign;
 
 // Provider component
 export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
@@ -79,6 +95,9 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     setState((prev) => ({
       ...prev,
       signatureConfig: config,
+      placementSize: hasSameSignatureAppearance(prev.signatureConfig, config)
+        ? prev.placementSize
+        : null,
     }));
   }, []);
 
@@ -150,10 +169,10 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     }));
   }, []);
 
-  const setPlacementPreviewSize = useCallback(
+  const setPlacementSize = useCallback(
     (size: { width: number; height: number } | null) => {
       setState((prev) => {
-        const prevSize = prev.placementPreviewSize;
+        const prevSize = prev.placementSize;
         const same =
           (prevSize === null && size === null) ||
           (prevSize !== null &&
@@ -167,9 +186,16 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
 
         return {
           ...prev,
-          placementPreviewSize: size,
+          placementSize: size,
         };
       });
+    },
+    [],
+  );
+
+  const setPlacementPreviewSize = useCallback(
+    (size: { width: number; height: number } | null) => {
+      setState((prev) => ({ ...prev, placementPreviewSize: size }));
     },
     [],
   );
@@ -193,6 +219,7 @@ export const SignatureProvider: React.FC<{ children: ReactNode }> = ({
     storeImageData,
     getImageData,
     setSignaturesApplied,
+    setPlacementSize,
     setPlacementPreviewSize,
   };
 
