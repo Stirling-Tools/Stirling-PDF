@@ -58,6 +58,7 @@ import { RenameFileDialog } from "@app/components/shared/RenameFileDialog";
 import { duplicateStoredFile } from "@app/utils/duplicateFile";
 import { SidebarChecklistSlot } from "@app/components/shared/SidebarChecklistSlot";
 import { SidebarProcessingSlot } from "@app/components/shared/SidebarProcessingSlot";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 import {
   deleteServerFile,
   type DeleteScope,
@@ -169,6 +170,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
     ref,
   ) {
     const { t } = useTranslation();
+    const connectedServer = useConnectedServer();
     // Resolves a file's stored classification label id to its display name.
     const labelName = useLabelName();
     // Classification off (non-SaaS / AI-off) → never show the per-row label chip,
@@ -1165,7 +1167,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
 
             {/* Watched Folders entry */}
-            {WATCHED_FOLDERS_ENABLED && (
+            {WATCHED_FOLDERS_ENABLED && connectedServer && (
               <div
                 className="file-sidebar-action-row"
                 data-testid="watchedFolders-button"

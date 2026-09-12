@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Loader } from "@mantine/core";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -6,222 +6,189 @@ import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import { Button } from "@app/ui/Button";
 import { Modal } from "@app/ui/Modal";
 import {
-  CLASSIFY_OPERATION,
-  cancelProcessingRuns,
-  fetchDownloadsSuggestion,
-  fetchProcessingFolders,
-  fetchMountedFiles,
-  saveProcessingFolder,
-  type DownloadsSuggestion,
-} from "@app/services/processingFolderApi";
-import {
-  currentRunIds,
-  deliverSweepResults,
-} from "@app/services/processingRunDelivery";
-import {
-  mergeRunsIntoCards,
   SweepRunWall,
   type SweepWallCard,
 } from "@app/components/policies/SweepRunWall";
-import { refreshProcessingFolders } from "@app/hooks/useProcessingFolders";
-import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFolders } from "@app/contexts/FolderContext";
-import { canListDirectory } from "@app/services/localFolderContents";
+import { useAllFiles } from "@app/contexts/FileContext";
+import { getDownloadsDirectory } from "@app/services/downloadsDirectory";
+import {
+  canListDirectory,
+  listDirectory,
+  readDiskFile,
+  type DiskFileEntry,
+} from "@app/services/localFolderContents";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { usePolicies } from "@app/hooks/usePolicies";
+import {
+  CLASSIFICATION_POLICY_KEY,
+  runsOnEditorUpload,
+} from "@app/data/classificationPolicy";
+import type { FileId, StirlingFileStub } from "@app/types/fileContext";
 import apiClient from "@app/services/apiClient";
 import "@app/components/policies/DownloadsProcessingWizard.css";
 
 type Phase = "asking" | "working" | "done" | "failed";
+
+/** Newest PDFs one offer takes on. Matches the server sweep's own cap, so the number the offer
+ *  has always shown does not move. */
+const SCAN_LIMIT = 100;
+
+/** Files read at once. readDiskFile holds each file's bytes twice while building the File, so
+ *  the whole folder must not be read in one go. */
+const READ_BATCH = 4;
 
 interface DownloadsProcessingWizardProps {
   /** Renders nothing until true, so the offer never competes with a first load. */
   active?: boolean;
 }
 
+interface FoundDownloads {
+  directory: string;
+  /** Newest first, so a capped offer takes the files the user most likely wants. */
+  entries: DiskFileEntry[];
+}
+
 /**
- * Offers to process the PDFs already in the user's Downloads folder, then shows what it is
- * doing: the server names its own Downloads directory and counts what waits, and approving
- * composes a processing folder over it. While the sweep runs the dialog is a wall of cards
- * built from the runs feed itself, so it never promises a file the sweep skipped.
+ * Offers to classify the PDFs in the user's Downloads folder, read here because a connected
+ * server has no such directory. Importing them is the whole job; the files on disk are untouched.
  */
 export function DownloadsProcessingWizard({
   active = true,
 }: DownloadsProcessingWizardProps) {
   const { t } = useTranslation();
-  const [suggestion, setSuggestion] = useState<DownloadsSuggestion | null>(
-    null,
-  );
+  const [found, setFound] = useState<FoundDownloads | null>(null);
   const [open, setOpen] = useState(false);
   const [phase, setPhase] = useState<Phase>("asking");
-  const [processed, setProcessed] = useState(0);
-  const [failed, setFailed] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  // Read once when the sweep settles: the sweep runs behind the create response,
-  // so there are no upfront counts to show - the folder's own states close it out.
-  const [summary, setSummary] = useState<{
-    done: number;
-    failed: number;
-  } | null>(null);
-  const [stalled, setStalled] = useState(false);
-  const [opened, setOpened] = useState(0);
-  const [cards, setCards] = useState<SweepWallCard[]>([]);
-  const [activeFolderId, setActiveFolderId] = useState<string | null>(null);
-  // Set when the user cancels; the delivery loop polls it and stands down.
+  /** Workspace ids this run took on; their stubs carry the verdict as it arrives. */
+  const [trackedIds, setTrackedIds] = useState<FileId[]>([]);
+  /** Names still waiting to be read, so the wall shows the whole job from the first frame. */
+  const [queued, setQueued] = useState<string[]>([]);
+  const [unreadable, setUnreadable] = useState(0);
+  // Set when the user cancels; the read loop checks it between batches.
   const cancelRequested = useRef(false);
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
+  const { fileStubs } = useAllFiles();
+  const { policies } = usePolicies();
+  const block = useServerProcessingBlock();
+  // Importing achieves nothing unless the server classifies: a core-flavour self-hosted build
+  // seeds no such policy, and every imported file would sit without a verdict.
+  const willClassify = runsOnEditorUpload(policies[CLASSIFICATION_POLICY_KEY]);
 
-  // Only offer where it can work: the build must be able to read a file on disk, and Downloads
-  // must exist, be permitted, and hold something. Without canListDirectory the results are
-  // unreadable here (fetchRunOutputFile throws), so the offer would rewrite the server's own
-  // Downloads in place and show the user nothing. Retried because the window can open before
-  // the bundled backend is reachable, with a bounded wait so a genuine "no" stops asking.
+  // Needs a connected server running the classification policy, and a build that can read the
+  // disk. No retry: the filesystem answer is final, and the policy half re-runs on load.
   useEffect(() => {
-    if (!active || !canListDirectory) return;
+    if (!active || block || !willClassify || !canListDirectory) return;
     let cancelled = false;
-    let attempts = 0;
-    let timer: ReturnType<typeof setTimeout> | undefined;
 
-    const ask = () => {
-      void fetchDownloadsSuggestion()
-        .then((next) => {
-          if (cancelled) return;
-          if (next.available && next.pdfCount > 0) {
-            setSuggestion(next);
-            // Warm the AI engine while the user reads the offer, so the first classify
-            // pays no cold start. Best-effort.
-            void apiClient.get("/api/v1/ai/health").catch(() => {});
-            return;
-          }
-          // A definite answer: Downloads is missing, not permitted, or empty. Nothing to wait for.
-        })
-        .catch(() => {
-          // Backend not up yet, access off, or unauthenticated; only the first resolves
-          // itself, so retry a while.
-          if (cancelled || (attempts += 1) >= 20) return;
-          timer = setTimeout(ask, 1500);
-        });
-    };
-    ask();
+    void (async () => {
+      const directory = await getDownloadsDirectory();
+      if (cancelled || !directory) return;
+      const listing = await listDirectory(directory).catch(() => null);
+      if (cancelled || !listing) return;
+      const pdfs = listing.files
+        .filter((entry) => entry.name.toLowerCase().endsWith(".pdf"))
+        .sort((a, b) => b.lastModified - a.lastModified);
+      if (pdfs.length === 0) return;
+      setFound({ directory, entries: pdfs });
+      // Warm the AI engine while the user reads the offer, so the first escalation pays no
+      // cold start. Best-effort.
+      void apiClient.get("/api/v1/ai/health").catch(() => {});
+    })();
 
     return () => {
       cancelled = true;
-      if (timer) clearTimeout(timer);
     };
-  }, [active]);
+  }, [active, block, willClassify]);
 
   /** Closing resets to the question, so the offer can be reopened and re-run. */
   const close = () => {
     setOpen(false);
     setPhase("asking");
-    setProcessed(0);
-    setFailed(0);
     setError(null);
-    setSummary(null);
-    setStalled(false);
-    setOpened(0);
-    setCards([]);
-    setActiveFolderId(null);
+    setTrackedIds([]);
+    setQueued([]);
+    setUnreadable(0);
   };
 
-  const cancelSweep = async () => {
+  const cancelSweep = () => {
     cancelRequested.current = true;
-    if (activeFolderId) {
-      await cancelProcessingRuns(activeFolderId).catch(() => {
-        // The loop is already standing down; a failed cancel just lets the
-        // remaining runs finish into a folder that is paused anyway.
-      });
-    }
     close();
   };
 
-  /**
-   * Deliver the sweep's results into the workbench as they settle, mirroring the shared
-   * delivery's progress onto the card wall and the counts line.
-   */
-  const trackRuns = useCallback(
-    async (policyId: string, excludeRunIds: ReadonlySet<string>) => {
-      await deliverSweepResults(policyId, null, addFiles, {
-        excludeRunIds,
-        isCancelled: () => cancelRequested.current,
-        onProgress: (progress) => {
-          setProcessed(progress.processed);
-          setFailed(progress.failed);
-          setOpened(progress.opened);
-          if (progress.stalled) setStalled(true);
-        },
-        // One card per run the sweep actually started, switching state as its run moves.
-        onRuns: (runs) => {
-          setCards((prev) => mergeRunsIntoCards(prev, runs));
-        },
-        // Read the discovered document type off the delivered result's metadata.
-        onSettled: (settlement) => {
-          const name = settlement.fileName?.trim();
-          if (!name || settlement.failed || settlement.files.length === 0) {
-            return;
-          }
-          void readClassificationLabelsFromFile(settlement.files[0]).then(
-            (labels) => {
-              if (!labels || labels.length === 0) return;
-              setCards((prev) =>
-                prev.map((card) =>
-                  card.name === name ? { ...card, labels } : card,
-                ),
-              );
-            },
-          );
-        },
-      });
-    },
-    [addFiles],
+  const tracked = useMemo<StirlingFileStub[]>(() => {
+    const byId = new Map(fileStubs.map((stub) => [stub.id, stub]));
+    return trackedIds
+      .map((id) => byId.get(id))
+      .filter((stub): stub is StirlingFileStub => stub != null);
+  }, [fileStubs, trackedIds]);
+
+  // A verdict, including a deliberate "nothing found" empty array, means that file is done.
+  const classified = tracked.filter(
+    (stub) => stub.classificationLabels !== undefined,
+  ).length;
+
+  const cards = useMemo<SweepWallCard[]>(
+    () => [
+      ...tracked.map((stub) => ({
+        name: stub.name,
+        state:
+          stub.classificationLabels === undefined
+            ? ("running" as const)
+            : ("done" as const),
+        labels: stub.classificationLabels ?? [],
+      })),
+      ...queued.map((name) => ({
+        name,
+        state: "pending" as const,
+        labels: [],
+      })),
+    ],
+    [tracked, queued],
   );
 
   const approve = async () => {
-    if (!suggestion) return;
+    if (!found) return;
     cancelRequested.current = false;
     setPhase("working");
+    setUnreadable(0);
+    const batch = found.entries.slice(0, SCAN_LIMIT);
+    setQueued(batch.map((entry) => entry.name));
+
     try {
-      // A folder may already exist over Downloads (the create then adopts it as-is);
-      // capture its current runs so the delivery below ignores that history.
-      const priorFolder = (await fetchProcessingFolders().catch(() => [])).find(
-        (candidate) => candidate.directory === suggestion.directory,
+      // readDiskFile refuses a path outside a mounted directory, so the mount comes first. It
+      // also puts Downloads in the file manager, which is where the user looks next.
+      const segments = found.directory.split(/[/\\]/).filter(Boolean);
+      await mountLocalFolder(
+        found.directory,
+        segments[segments.length - 1] ?? found.directory,
       );
-      const baseline = priorFolder
-        ? await currentRunIds(priorFolder.id)
-        : new Set<string>();
-      // Born paused: the offer's promise is one sweep over what is already there.
-      // Creation sweeps regardless of the flag; enabled only gates the watch.
-      const folder = await saveProcessingFolder({
-        directory: suggestion.directory,
-        enabled: false,
-        steps: [{ operation: CLASSIFY_OPERATION, parameters: {}, assets: {} }],
-      });
-      setActiveFolderId(folder.id);
-      if (cancelRequested.current) {
-        // Cancelled during the scan: the runs only exist now, so stop them here or the
-        // cancel would be silently outlived.
-        await cancelProcessingRuns(folder.id).catch(() => {});
-        return;
+
+      for (let index = 0; index < batch.length; index += READ_BATCH) {
+        if (cancelRequested.current) return;
+        const slice = batch.slice(index, index + READ_BATCH);
+        const read = await Promise.all(
+          slice.map((entry) => readDiskFile(entry).catch(() => null)),
+        );
+        const files = read.filter((file): file is File => file != null);
+        if (files.length < slice.length) {
+          setUnreadable((count) => count + (slice.length - files.length));
+        }
+        if (files.length > 0) {
+          // selectFiles:false: a couple of dozen auto-selected files would take the workbench
+          // away from whatever the user was doing.
+          const added = await addFiles(files, { selectFiles: false });
+          setTrackedIds((prev) => [
+            ...prev,
+            ...added.map((file) => file.fileId),
+          ]);
+        }
+        const names = new Set(slice.map((entry) => entry.name));
+        setQueued((prev) => prev.filter((name) => !names.has(name)));
       }
-      // Mount the directory so Downloads exists in the file manager, only where this build can
-      // read it (desktop); a plain browser would show a forever-empty folder. Best-effort.
-      if (canListDirectory) {
-        const segments = suggestion.directory.split(/[/\\]/).filter(Boolean);
-        await mountLocalFolder(
-          suggestion.directory,
-          segments[segments.length - 1] ?? suggestion.directory,
-        ).catch(() => {});
-      }
-      // Created outside the hook's own actions; refresh the shared list.
-      void refreshProcessingFolders();
-      // The sweep runs behind the create response; delivery stops once the runs settle.
-      await trackRuns(folder.id, baseline);
-      // Close out from the folder's own per-file states.
-      const states = await fetchMountedFiles(folder.id).catch(() => []);
-      setSummary({
-        done: states.filter((f) => f.state === "done").length,
-        failed: states.filter((f) => f.state === "failed").length,
-      });
       setPhase("done");
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
@@ -237,12 +204,12 @@ export function DownloadsProcessingWizard({
     return ids.size;
   }, [cards]);
 
-  if (!suggestion) return null;
+  if (!found) return null;
 
-  const capped = suggestion.pdfCount > suggestion.limit;
-  const total = Math.min(suggestion.pdfCount, suggestion.limit);
-  const sweepTotal = cards.length || total;
-  const settled = processed + failed;
+  const capped = found.entries.length > SCAN_LIMIT;
+  const total = Math.min(found.entries.length, SCAN_LIMIT);
+  const settled = classified + unreadable;
+  const outstanding = tracked.length - classified;
 
   if (!open) {
     return (
@@ -254,7 +221,7 @@ export function DownloadsProcessingWizard({
           leftSection={<FolderSpecialIcon fontSize="small" />}
         >
           {t("processingFolders.downloads.trigger", {
-            count: suggestion.pdfCount,
+            count: found.entries.length,
             defaultValue: "Process {{count}} PDFs in Downloads",
           })}
         </Button>
@@ -267,7 +234,7 @@ export function DownloadsProcessingWizard({
   return (
     <Modal
       open
-      // Closing hides the modal while the sweep carries on; reopening shows progress.
+      // Closing hides the modal while the reads carry on; reopening shows progress.
       onClose={phase === "working" ? () => setOpen(false) : close}
       width={phase === "asking" ? "sm" : "lg"}
       title={
@@ -293,11 +260,7 @@ export function DownloadsProcessingWizard({
           )}
           {phase === "working" && (
             <>
-              <Button
-                variant="tertiary"
-                size="sm"
-                onClick={() => void cancelSweep()}
-              >
+              <Button variant="tertiary" size="sm" onClick={cancelSweep}>
                 {t("processingFolders.downloads.cancelSweep", "Cancel")}
               </Button>
               <Button size="sm" disabled loading>
@@ -322,19 +285,19 @@ export function DownloadsProcessingWizard({
                 "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here.",
             })}
           </p>
-          <p className="downloads-wizard__path">{suggestion.directory}</p>
+          <p className="downloads-wizard__path">{found.directory}</p>
           <ul className="downloads-wizard__facts">
             <li>
               {t(
-                "processingFolders.downloads.keepsOriginals",
-                "Files are processed in place - and each original is kept, so you can restore it any time.",
+                "processingFolders.downloads.notModified",
+                "Your files in Downloads are not changed - Stirling reads them and opens them here.",
               )}
             </li>
             {capped && (
               <li>
                 {t("processingFolders.downloads.capped", {
-                  limit: suggestion.limit,
-                  found: suggestion.pdfCount,
+                  limit: SCAN_LIMIT,
+                  found: found.entries.length,
                   defaultValue:
                     "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow.",
                 })}
@@ -349,7 +312,7 @@ export function DownloadsProcessingWizard({
           <p className="downloads-wizard__counts">
             <strong>{settled}</strong>{" "}
             {t("processingFolders.downloads.progressCounts", {
-              total: sweepTotal,
+              total,
               defaultValue: "of {{total}} processed",
             })}
             {typesFound > 0 && (
@@ -365,7 +328,7 @@ export function DownloadsProcessingWizard({
           <div className="downloads-wizard__bar" role="progressbar">
             <span
               style={{
-                width: `${sweepTotal === 0 ? 0 : Math.round((settled / sweepTotal) * 100)}%`,
+                width: `${total === 0 ? 0 : Math.round((settled / total) * 100)}%`,
               }}
             />
           </div>
@@ -384,21 +347,15 @@ export function DownloadsProcessingWizard({
               className="downloads-wizard__tick"
               fontSize="inherit"
             />{" "}
-            {processed + failed === 0
-              ? (summary?.failed ?? 0) > 0
-                ? t("processingFolders.downloads.stillParked", {
-                    count: summary?.failed ?? 0,
-                    defaultValue:
-                      "{{count}} files failed earlier and were not retried - fix the cause, then run again.",
-                  })
-                : t("processingFolders.downloads.nothingNew", {
-                    count: summary?.done ?? 0,
-                    defaultValue:
-                      "Nothing new to process - these {{count}} files have already been through.",
-                  })
+            {tracked.length === 0
+              ? t("processingFolders.downloads.nothingNew", {
+                  count: 0,
+                  defaultValue:
+                    "Nothing new to process - these {{count}} files have already been through.",
+                })
               : t("processingFolders.downloads.finished", {
-                  count: processed,
-                  opened,
+                  count: classified,
+                  opened: tracked.length,
                   defaultValue:
                     "Classified {{count}} files and opened {{opened}} of them here, ready to work on.",
                 })}
@@ -412,16 +369,16 @@ export function DownloadsProcessingWizard({
               </>
             )}
           </p>
-          {failed > 0 && (
+          {unreadable > 0 && (
             <p className="downloads-wizard__warn">
               {t("processingFolders.downloads.someFailed", {
-                count: failed,
+                count: unreadable,
                 defaultValue:
                   "{{count}} could not be processed and were left untouched.",
               })}
             </p>
           )}
-          {stalled && (
+          {outstanding > 0 && (
             <p className="downloads-wizard__warn">
               {t(
                 "processingFolders.downloads.stillRunning",
