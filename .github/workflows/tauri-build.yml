@@ -124,7 +124,6 @@ jobs:
       matrix: ${{ fromJson(needs.determine-matrix.outputs.matrix) }}
     runs-on: ${{ matrix.platform }}
     env:
-      # Finder must save the background and icon positions even under CI.
       TAURI_BUNDLER_DMG_IGNORE_CI: "true"
       SM_API_KEY: ${{ secrets.SM_API_KEY }}
       APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}

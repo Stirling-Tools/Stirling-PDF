@@ -455,7 +455,6 @@ jobs:
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@1deb371b0cd8bd54025b384f1cd735e725c4060f # v1.0.0
         env:
-          # Finder must save the background and icon positions even under CI.
           TAURI_BUNDLER_DMG_IGNORE_CI: "true"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
