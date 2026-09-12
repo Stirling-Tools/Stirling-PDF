@@ -1,5 +1,7 @@
 package stirling.software.SPDF.model.api.security;
 
+import java.util.List;
+
 import org.springframework.web.multipart.MultipartFile;
 
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -93,4 +95,66 @@ public class SignPDFWithCertRequest extends PDFFile {
             defaultValue = "true",
             requiredMode = Schema.RequiredMode.REQUIRED)
     private Boolean showLogo;
+
+    @Schema(
+            description =
+                    "Image drawn inside the signature box when showLogo is set, typically the"
+                            + " signer's organisation logo. PNG or JPEG. Omit to keep the bundled"
+                            + " mark.")
+    private MultipartFile logoImage;
+
+    @Schema(
+            description =
+                    "Where the logo sits inside the signature box. BEHIND draws it under the text"
+                            + " as a watermark; the others give it a strip of its own. Sending it"
+                            + " without a signature box is allowed and applies the same layout to"
+                            + " the default box.",
+            defaultValue = "LEFT")
+    private SignatureLogoPosition logoPosition;
+
+    @Schema(
+            description =
+                    "Distance in PDF points from the left edge of the page to the left edge of the"
+                            + " signature box. Omit to keep the legacy bottom-left placement.")
+    private Float signatureX;
+
+    @Schema(
+            description =
+                    "Distance in PDF points from the bottom edge of the page to the bottom edge of"
+                            + " the signature box. PDF user space, same convention as the crop"
+                            + " endpoint: the origin is the bottom-left corner and y grows"
+                            + " upwards.")
+    private Float signatureY;
+
+    @Schema(description = "Width of the signature box in PDF points.", defaultValue = "200")
+    private Float signatureWidth;
+
+    @Schema(description = "Height of the signature box in PDF points.", defaultValue = "50")
+    private Float signatureHeight;
+
+    @Schema(
+            description =
+                    "Certificate fields to draw inside the signature box, in the order given. Omit"
+                            + " to keep the legacy content (signer name, date and reason). Fields"
+                            + " the certificate does not carry are skipped rather than drawn"
+                            + " blank.")
+    private List<CertificateAttribute> visibleAttributes;
+
+    @Schema(
+            description =
+                    "Labels to draw in front of each of visibleAttributes, in the same order. The"
+                            + " application holds its own translations, and the signature is baked"
+                            + " into the document, so the caller says what the reader should see."
+                            + " Omit to get English.")
+    private List<String> visibleAttributeLabels;
+
+    @Schema(
+            description =
+                    "Repeat the signature's appearance on every page. A PDF signature has one"
+                            + " widget on one page, so only the page given by pageNumber carries"
+                            + " the actual signature; the other pages get a visual mark with the"
+                            + " same content that is NOT a signature. Tell the user that, or the"
+                            + " document looks signed in more places than it is.",
+            defaultValue = "false")
+    private Boolean markAllPages;
 }

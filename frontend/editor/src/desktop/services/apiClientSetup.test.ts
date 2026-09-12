@@ -236,6 +236,86 @@ describe("desktop request interceptor - auth for SaaS-backend requests", () => {
   });
 });
 
+// In self-hosted mode every request carries the server's token, because the
+// server is where they all go. Device-local ones do not go there, so they must
+// not carry it either: the auth decision has to follow the destination rather
+// than the connection mode.
+describe("desktop request interceptor - device-local requests", () => {
+  type ReqConfig = {
+    url: string;
+    method: string;
+    headers: Record<string, string>;
+    deviceLocal?: boolean;
+  };
+
+  async function runRequestInterceptor(config: ReqConfig): Promise<ReqConfig> {
+    const { client, handlers } = makeMockClient();
+    setupApiInterceptors(client as unknown as AxiosInstance);
+    const handler = handlers.request[0];
+    expect(handler).toBeTypeOf("function");
+    return (await handler(config)) as ReqConfig;
+  }
+
+  beforeEach(() => {
+    getAccessTokenMock.mockReset();
+    getAccessTokenMock.mockResolvedValue("server-jwt");
+    // Connected to a self-hosted server: everything else would be authenticated.
+    vi.mocked(operationRouter.isSelfHostedMode).mockResolvedValue(true);
+    vi.mocked(operationRouter.isSaaSMode).mockResolvedValue(false);
+    vi.mocked(operationRouter.getBaseUrl).mockResolvedValue(
+      "http://localhost:8080",
+    );
+    vi.mocked(operationRouter.shouldSkipBackendReadyCheck).mockResolvedValue(
+      true,
+    );
+  });
+
+  test("a hardware endpoint carries no server token", async () => {
+    const result = await runRequestInterceptor({
+      url: "/api/v1/security/cert-sign/hardware/capabilities",
+      method: "get",
+      headers: {},
+    });
+
+    expect(result.headers.Authorization).toBeUndefined();
+  });
+
+  test("a request marked device-local carries no server token", async () => {
+    const result = await runRequestInterceptor({
+      url: "/api/v1/security/cert-sign",
+      method: "post",
+      headers: {},
+      deviceLocal: true,
+    });
+
+    expect(result.headers.Authorization).toBeUndefined();
+  });
+
+  test("the mark reaches the router, so it can override the mode", async () => {
+    await runRequestInterceptor({
+      url: "/api/v1/security/cert-sign",
+      method: "post",
+      headers: {},
+      deviceLocal: true,
+    });
+
+    expect(operationRouter.getBaseUrl).toHaveBeenCalledWith(
+      "/api/v1/security/cert-sign",
+      true,
+    );
+  });
+
+  test("an ordinary signing request still authenticates against the server", async () => {
+    const result = await runRequestInterceptor({
+      url: "/api/v1/security/cert-sign",
+      method: "post",
+      headers: {},
+    });
+
+    expect(result.headers.Authorization).toBe("Bearer server-jwt");
+  });
+});
+
 describe("desktop getAuthHeaders (raw fetch / AI SSE stream)", () => {
   beforeEach(() => getAccessTokenMock.mockReset());
 

@@ -3,6 +3,7 @@ import { alert } from "@app/components/toast";
 import { setupApiInterceptors as coreSetup } from "@core/services/apiClientSetup";
 import { tauriBackendService } from "@app/services/tauriBackendService";
 import { createBackendNotReadyError } from "@app/constants/backendErrors";
+import { isDeviceLocalEndpoint } from "@app/constants/deviceLocalEndpoints";
 import { operationRouter } from "@app/services/operationRouter";
 import { authService } from "@app/services/authService";
 import { getAccessToken } from "@app/auth/session";
@@ -37,6 +38,8 @@ interface ExtendedRequestConfig extends InternalAxiosRequestConfig {
   operationName?: string;
   skipBackendReadyCheck?: boolean;
   skipAuthRedirect?: boolean;
+  /** Must run on the user's own machine — see @app/constants/deviceLocalEndpoints. */
+  deviceLocal?: boolean;
   _retry?: boolean;
   _isSaaSRequest?: boolean;
 }
@@ -66,7 +69,10 @@ export function setupApiInterceptors(client: AxiosInstance): void {
 
       try {
         // Get the appropriate base URL for this request
-        const baseUrl = await operationRouter.getBaseUrl(originalUrl);
+        const baseUrl = await operationRouter.getBaseUrl(
+          originalUrl,
+          extendedConfig.deviceLocal === true,
+        );
 
         // Build the full URL
         if (extendedConfig.url && !extendedConfig.url.startsWith("http")) {
@@ -80,7 +86,14 @@ export function setupApiInterceptors(client: AxiosInstance): void {
         // - Local bundled backend: No auth (security disabled)
         // - SaaS backend: Needs auth token
         // - Self-hosted backend: Needs auth token
-        const isRemote = await operationRouter.isSelfHostedMode();
+        // Follow the destination, not the mode: a request the router sent to the
+        // local backend gets no remote token, even in self-hosted mode. Without
+        // this, device-local calls would carry the server's JWT to loopback.
+        const routedLocally =
+          extendedConfig.deviceLocal === true ||
+          isDeviceLocalEndpoint(originalUrl);
+        const isRemote =
+          !routedLocally && (await operationRouter.isSelfHostedMode());
         // A request targets the SaaS backend either because operationRouter
         // routed a relative path there, OR because the caller passed an absolute
         // SaaS URL. The latter matters for the AI result-file download: it hits
