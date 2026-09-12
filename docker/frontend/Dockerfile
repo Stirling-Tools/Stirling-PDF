@@ -11,7 +11,7 @@ RUN npm ci
 
 COPY frontend .
 
-# Generate material-symbols icon subset (normally done by task prepare:icons).
+# Generate the material-symbols icon subset (normally done by task prepare:icons).
 RUN node editor/scripts/generate-icons.js
 
 # Defaults match prior behaviour. Supabase values are client-publishable build args.

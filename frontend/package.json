@@ -63,6 +63,7 @@
     "i18next-browser-languagedetector": "^8.2.1",
     "jszip": "^3.10.1",
     "license-report": "^6.8.5",
+    "lucide-static": "^1.41.0",
     "pdfjs-dist": "^5.4.149",
     "peerjs": "^1.5.5",
     "pixelmatch": "^7.1.0",
@@ -158,6 +159,7 @@
     "vite": "^7.3.2",
     "vite-plugin-compression2": "^2.5.3",
     "vite-plugin-static-copy": "^3.1.4",
+    "vite-plugin-svgr": "^5.2.0",
     "vite-tsconfig-paths": "^5.1.4",
     "vitest": "3.2.7"
   },
