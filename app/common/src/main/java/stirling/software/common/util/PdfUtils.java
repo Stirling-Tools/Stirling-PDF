@@ -493,7 +493,7 @@ public class PdfUtils {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
         }
 
-        if ("fitDocumentToImage".equals(fitOption)) {
+        if ("fitDocumentToImage".equals(fitOption) || "fitDocumentToPage".equals(fitOption)) {
             pageSize = new PDRectangle(image.getWidth(), image.getHeight());
         }
 
@@ -505,7 +505,9 @@ public class PdfUtils {
 
         try (PDPageContentStream contentStream =
                 new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
-            if ("fillPage".equals(fitOption) || "fitDocumentToImage".equals(fitOption)) {
+            if ("fillPage".equals(fitOption)
+                    || "fitDocumentToImage".equals(fitOption)
+                    || "fitDocumentToPage".equals(fitOption)) {
                 contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
             } else if ("maintainAspectRatio".equals(fitOption)) {
                 float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();

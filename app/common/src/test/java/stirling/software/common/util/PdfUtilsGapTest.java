@@ -352,6 +352,26 @@ class PdfUtilsGapTest {
         }
 
         @Test
+        @DisplayName("fitDocumentToPage sizes the page to the image and non-empty PDF")
+        void fitDocumentToPage() throws IOException {
+            MockMultipartFile file =
+                    new MockMultipartFile(
+                            "file",
+                            "image.png",
+                            MediaType.IMAGE_PNG_VALUE,
+                            imageBytes("png", Color.GREEN));
+
+            byte[] pdfOut = runImageToPdf(new MultipartFile[] {file}, "fitDocumentToPage", false);
+
+            try (PDDocument doc = org.apache.pdfbox.Loader.loadPDF(pdfOut)) {
+                assertEquals(1, doc.getNumberOfPages());
+                PDRectangle box = doc.getPage(0).getMediaBox();
+                assertEquals(20f, box.getWidth(), 0.5f);
+                assertEquals(20f, box.getHeight(), 0.5f);
+            }
+        }
+
+        @Test
         @DisplayName("multiple images become multiple pages")
         void multipleImages() throws IOException {
             MockMultipartFile a =
@@ -418,6 +438,17 @@ class PdfUtilsGapTest {
         void fitDocumentToImage() throws IOException {
             try (PDDocument doc = new PDDocument()) {
                 PdfUtils.addImageToDocument(doc, portraitImage(doc), "fitDocumentToImage", false);
+                PDRectangle box = doc.getPage(0).getMediaBox();
+                assertEquals(40f, box.getWidth(), 0.5f);
+                assertEquals(80f, box.getHeight(), 0.5f);
+            }
+        }
+
+        @Test
+        @DisplayName("fitDocumentToPage sizes the page to the image bounds")
+        void fitDocumentToPage() throws IOException {
+            try (PDDocument doc = new PDDocument()) {
+                PdfUtils.addImageToDocument(doc, portraitImage(doc), "fitDocumentToPage", false);
                 PDRectangle box = doc.getPage(0).getMediaBox();
                 assertEquals(40f, box.getWidth(), 0.5f);
                 assertEquals(80f, box.getHeight(), 0.5f);
