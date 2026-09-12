@@ -2,18 +2,9 @@
  * Per-page select/move/resize layer for "modify" mode. Geometry is staged in
  * CropBox-relative, lower-left-origin points on FormFieldOverlay's scale basis.
  */
-import React, {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  useEffect,
-} from "react";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
-import {
-  pendingIdFrom,
-  pendingSelectionName,
-} from "@app/tools/formFill/pendingSelection";
+import { pendingIdFrom, pendingSelectionName } from "@app/tools/formFill/pendingSelection";
 import type { FormField } from "@app/tools/formFill/types";
 import {
   pixelsToBackendRect,
@@ -24,17 +15,8 @@ import {
   roundPdfRect,
   type PixelRect,
 } from "@app/tools/formFill/formCoordinateUtils";
-import {
-  collectSnapTargets,
-  snapMove,
-  snapResize,
-  type SnapGuide,
-} from "@app/tools/formFill/formSnapUtils";
-import {
-  usePageScale,
-  getLocalPoint,
-  isTextEntryTarget,
-} from "@app/tools/formFill/usePageScale";
+import { collectSnapTargets, snapMove, snapResize, type SnapGuide } from "@app/tools/formFill/formSnapUtils";
+import { usePageScale, getLocalPoint, isTextEntryTarget } from "@app/tools/formFill/usePageScale";
 import { SnapGuides } from "@app/tools/formFill/SnapGuides";
 import { FORM_COLORS } from "@app/tools/formFill/formFieldColors";
 
@@ -100,26 +82,13 @@ function handlePosition(h: HandleId, rect: PixelRect) {
  * What a queued field will look like once applied. Without this a drawn box is empty, so the
  * default text and a radio group's options are invisible until after saving.
  */
-function PendingPreview({
-  field,
-  rect,
-}: {
-  field: FormField;
-  rect: PixelRect;
-}) {
+function PendingPreview({ field, rect }: { field: FormField; rect: PixelRect }) {
   // Blank entries are dropped server-side (sanitizeOptions), so counting them here would
   // preview one more button than actually gets written.
-  const options = (field.options ?? [])
-    .map((o) => o?.trim() ?? "")
-    .filter((o) => o.length > 0);
+  const options = (field.options ?? []).map((o) => o?.trim() ?? "").filter((o) => o.length > 0);
   if (field.type === "radio" && options.length > 0) {
     // The drawn box is the whole group; radioOptionRects splits it exactly as the backend does.
-    const rows = radioOptionRects(
-      rect,
-      options.length,
-      field.optionGap,
-      field.optionSize,
-    );
+    const rows = radioOptionRects(rect, options.length, field.optionGap, field.optionSize);
     return (
       <>
         {rows.map((row, i) => (
@@ -165,11 +134,7 @@ function PendingPreview({
     );
   }
 
-  const sample =
-    field.value ||
-    (field.type === "combobox" || field.type === "listbox"
-      ? (options[0] ?? "")
-      : "");
+  const sample = field.value || (field.type === "combobox" || field.type === "listbox" ? (options[0] ?? "") : "");
   if (!sample) return null;
   return (
     <span
@@ -191,13 +156,7 @@ function PendingPreview({
   );
 }
 
-export function FormFieldEditOverlay({
-  documentId,
-  pageIndex,
-  pageWidth,
-  pageHeight,
-  fileId,
-}: FormFieldEditOverlayProps) {
+export function FormFieldEditOverlay({ documentId, pageIndex, pageWidth, pageHeight, fileId }: FormFieldEditOverlayProps) {
   const {
     mode,
     state,
@@ -218,8 +177,7 @@ export function FormFieldEditOverlay({
   const [liveRect, setLiveRect] = useState<PixelRect | null>(null);
   const [guides, setGuides] = useState<SnapGuide[]>([]);
 
-  const { scaleX, scaleY, pageHeightPts, pageWidthPts, rotation } =
-    usePageScale(documentId, pageIndex, pageWidth, pageHeight);
+  const { scaleX, scaleY, pageHeightPts, pageWidthPts, rotation } = usePageScale(documentId, pageIndex, pageWidth, pageHeight);
 
   /** First-widget pixel rect for a field on this page, honouring staged geometry. */
   const fieldRect = useCallback(
@@ -242,13 +200,7 @@ export function FormFieldEditOverlay({
         );
       }
       const staged = modifiedFields[field.name];
-      if (
-        staged &&
-        staged.x != null &&
-        staged.y != null &&
-        staged.width != null &&
-        staged.height != null
-      ) {
+      if (staged && staged.x != null && staged.y != null && staged.width != null && staged.height != null) {
         return backendRectToPixels(
           {
             x: staged.x,
@@ -272,47 +224,41 @@ export function FormFieldEditOverlay({
     () =>
       pendingFields
         .filter((f) => f.pageIndex === pageIndex)
-        .map((f): FormField => ({
-          name: pendingSelectionName(f.id),
-          label: f.label || f.name,
-          type: f.type,
-          value: f.defaultValue ?? "",
-          options: f.options ?? null,
-          displayOptions: null,
-          required: f.required ?? false,
-          readOnly: f.readOnly ?? false,
-          multiSelect: f.multiSelect ?? false,
-          multiline: f.multiline ?? false,
-          tooltip: f.tooltip ?? null,
-          widgets: [
-            {
-              pageIndex: f.pageIndex,
-              x: f.x,
-              y: f.y,
-              width: f.width,
-              height: f.height,
-            },
-          ],
-        })),
+        .map(
+          (f): FormField => ({
+            name: pendingSelectionName(f.id),
+            label: f.label || f.name,
+            type: f.type,
+            value: f.defaultValue ?? "",
+            options: f.options ?? null,
+            displayOptions: null,
+            required: f.required ?? false,
+            readOnly: f.readOnly ?? false,
+            multiSelect: f.multiSelect ?? false,
+            multiline: f.multiline ?? false,
+            tooltip: f.tooltip ?? null,
+            widgets: [
+              {
+                pageIndex: f.pageIndex,
+                x: f.x,
+                y: f.y,
+                width: f.width,
+                height: f.height,
+              },
+            ],
+          }),
+        ),
     [pendingFields, pageIndex],
   );
 
   const fieldsOnPage = useMemo(
-    () => [
-      ...state.fields.filter((f) =>
-        f.widgets?.some((w) => w.pageIndex === pageIndex),
-      ),
-      ...pendingOnPage,
-    ],
+    () => [...state.fields.filter((f) => f.widgets?.some((w) => w.pageIndex === pageIndex)), ...pendingOnPage],
     [state.fields, pageIndex, pendingOnPage],
   );
 
   /** Pending geometry lives in the queue; committed geometry is staged as a modification. */
   const commitGeometry = useCallback(
-    (
-      fieldName: string,
-      pdf: { x: number; y: number; width: number; height: number },
-    ) => {
+    (fieldName: string, pdf: { x: number; y: number; width: number; height: number }) => {
       const pendingId = pendingIdFrom(fieldName);
       if (pendingId) {
         updatePendingField(pendingId, { pageIndex, ...pdf });
@@ -328,8 +274,7 @@ export function FormFieldEditOverlay({
     [fieldsOnPage, selectedFieldName],
   );
 
-  const selectedSingleWidget =
-    !!selectedField && (selectedField.widgets?.length ?? 0) === 1;
+  const selectedSingleWidget = !!selectedField && (selectedField.widgets?.length ?? 0) === 1;
 
   const snapRects = useMemo<PixelRect[]>(() => {
     const rects: PixelRect[] = [];
@@ -344,18 +289,10 @@ export function FormFieldEditOverlay({
   // Precompute snap edges once (not on every pointermove).
   const snapTargets = useMemo(() => collectSnapTargets(snapRects), [snapRects]);
 
-  const localPoint = useCallback(
-    (e: React.PointerEvent) => getLocalPoint(e, rootRef.current, rotation),
-    [rotation],
-  );
+  const localPoint = useCallback((e: React.PointerEvent) => getLocalPoint(e, rootRef.current, rotation), [rotation]);
 
   const beginInteraction = useCallback(
-    (
-      e: React.PointerEvent,
-      field: FormField,
-      kind: "move" | "resize",
-      handle?: HandleId,
-    ) => {
+    (e: React.PointerEvent, field: FormField, kind: "move" | "resize", handle?: HandleId) => {
       const rect = fieldRect(field);
       if (!rect) return;
       e.stopPropagation();
@@ -415,8 +352,7 @@ export function FormFieldEditOverlay({
         }
         // Keep a positive minimum, anchoring the opposite edge.
         if (width < MIN_PX) {
-          if (edges.left)
-            left = it.startRect.left + it.startRect.width - MIN_PX;
+          if (edges.left) left = it.startRect.left + it.startRect.width - MIN_PX;
           width = MIN_PX;
         }
         if (height < MIN_PX) {
@@ -481,9 +417,7 @@ export function FormFieldEditOverlay({
         Math.abs(rect.height - it.startRect.height) > 0.5;
       if (!moved) return;
       const clamped = clampPixelRect(rect, pageWidth, pageHeight);
-      const pdf = roundPdfRect(
-        pixelsToBackendRect(clamped, scaleX, scaleY, pageHeightPts),
-      );
+      const pdf = roundPdfRect(pixelsToBackendRect(clamped, scaleX, scaleY, pageHeightPts));
       commitGeometry(it.fieldName, {
         x: pdf.x,
         y: pdf.y,
@@ -491,16 +425,7 @@ export function FormFieldEditOverlay({
         height: pdf.height,
       });
     },
-    [
-      liveRect,
-      pageWidth,
-      pageHeight,
-      scaleX,
-      scaleY,
-      pageHeightPts,
-      pageIndex,
-      stageModification,
-    ],
+    [liveRect, pageWidth, pageHeight, scaleX, scaleY, pageHeightPts, pageIndex, stageModification],
   );
 
   // Arrow keys nudge the selected field; Escape cancels an in-progress drag.
@@ -523,11 +448,7 @@ export function FormFieldEditOverlay({
       }
       if (dragging) return;
 
-      if (
-        !selectedField ||
-        !selectedSingleWidget ||
-        deletedFieldNames.includes(selectedField.name)
-      ) {
+      if (!selectedField || !selectedSingleWidget || deletedFieldNames.includes(selectedField.name)) {
         return;
       }
       const step = e.shiftKey ? 10 : 1;
@@ -552,14 +473,8 @@ export function FormFieldEditOverlay({
       const base = fieldRect(selectedField);
       if (!base) return; // selected field's widget isn't on this page
       e.preventDefault();
-      const moved = clampPixelRect(
-        { ...base, left: base.left + dx, top: base.top + dy },
-        pageWidth,
-        pageHeight,
-      );
-      const pdf = roundPdfRect(
-        pixelsToBackendRect(moved, scaleX, scaleY, pageHeightPts),
-      );
+      const moved = clampPixelRect({ ...base, left: base.left + dx, top: base.top + dy }, pageWidth, pageHeight);
+      const pdf = roundPdfRect(pixelsToBackendRect(moved, scaleX, scaleY, pageHeightPts));
       commitGeometry(selectedField.name, {
         x: pdf.x,
         y: pdf.y,
@@ -585,8 +500,7 @@ export function FormFieldEditOverlay({
     stageModification,
   ]);
 
-  const fileMismatch =
-    fileId != null && forFileId != null && fileId !== forFileId;
+  const fileMismatch = fileId != null && forFileId != null && fileId !== forFileId;
   const creating = mode === "create";
   if ((mode !== "modify" && !creating) || fileMismatch || !pageWidthPts) {
     return null;
@@ -620,10 +534,7 @@ export function FormFieldEditOverlay({
                 height: rect.height,
                 // A radio group has no box of its own; its buttons are the whole visual, so a
                 // frame around them is chrome the finished PDF will not have.
-                border:
-                  field.type === "radio"
-                    ? undefined
-                    : `1px solid ${FORM_COLORS.neutralBorder}`,
+                border: field.type === "radio" ? undefined : `1px solid ${FORM_COLORS.neutralBorder}`,
                 borderRadius: 2,
                 boxSizing: "border-box",
               }}
@@ -637,9 +548,7 @@ export function FormFieldEditOverlay({
     );
   }
 
-  const selectedRect = selectedField
-    ? (liveRect ?? fieldRect(selectedField))
-    : null;
+  const selectedRect = selectedField ? (liveRect ?? fieldRect(selectedField)) : null;
 
   return (
     <div
@@ -668,10 +577,7 @@ export function FormFieldEditOverlay({
       }}
     >
       {fieldsOnPage.map((field) => {
-        const rect =
-          field.name === selectedFieldName && selectedRect
-            ? selectedRect
-            : fieldRect(field);
+        const rect = field.name === selectedFieldName && selectedRect ? selectedRect : fieldRect(field);
         if (!rect) return null;
         const isSelected = field.name === selectedFieldName;
         const isDeleted = deletedFieldNames.includes(field.name);
@@ -684,8 +590,7 @@ export function FormFieldEditOverlay({
               e.stopPropagation();
               // Select and start moving in one gesture; a click without movement
               // just selects, since endInteraction ignores a zero delta.
-              if (field.name !== selectedFieldName)
-                setSelectedField(field.name);
+              if (field.name !== selectedFieldName) setSelectedField(field.name);
               // Moving is safe for a group too: the backend applies the delta to every widget
               // on the anchor page. Only resizing is still single-widget, so the handles stay off.
               beginInteraction(e, field, "move");
@@ -704,11 +609,7 @@ export function FormFieldEditOverlay({
                   ? `2px solid ${FORM_COLORS.accent}`
                   : `1.5px solid ${FORM_COLORS.neutralBorder}`,
               outlineOffset: 0,
-              background: isDeleted
-                ? FORM_COLORS.dangerFill
-                : isSelected
-                  ? FORM_COLORS.accentFill
-                  : FORM_COLORS.neutralFill,
+              background: isDeleted ? FORM_COLORS.dangerFill : isSelected ? FORM_COLORS.accentFill : FORM_COLORS.neutralFill,
               borderRadius: 2,
               boxSizing: "border-box",
               // Claim the gesture only where a drag can actually start, so touch users can
@@ -719,9 +620,7 @@ export function FormFieldEditOverlay({
               textDecoration: isDeleted ? "line-through" : undefined,
             }}
           >
-            {pendingIdFrom(field.name) && (
-              <PendingPreview field={field} rect={rect} />
-            )}
+            {pendingIdFrom(field.name) && <PendingPreview field={field} rect={rect} />}
             <span
               style={{
                 position: "absolute",
@@ -730,12 +629,8 @@ export function FormFieldEditOverlay({
                 fontSize: 10,
                 lineHeight: "14px",
                 padding: "0 4px",
-                background: isDeleted
-                  ? FORM_COLORS.danger
-                  : isSelected
-                    ? FORM_COLORS.accent
-                    : FORM_COLORS.neutralChip,
-                color: "#fff",
+                background: isDeleted ? FORM_COLORS.danger : isSelected ? FORM_COLORS.accent : FORM_COLORS.neutralChip,
+                color: "var(--c-text-on-primary)",
                 borderRadius: 2,
                 whiteSpace: "nowrap",
                 opacity: isSelected || isDeleted ? 1 : 0.75,
@@ -760,17 +655,14 @@ export function FormFieldEditOverlay({
             <div
               key={h.id}
               data-testid={`form-edit-handle-${h.id}`}
-              onPointerDown={(e) =>
-                selectedField &&
-                beginInteraction(e, selectedField, "resize", h.id)
-              }
+              onPointerDown={(e) => selectedField && beginInteraction(e, selectedField, "resize", h.id)}
               style={{
                 position: "absolute",
                 left: pos.x - HANDLE_SIZE / 2,
                 top: pos.y - HANDLE_SIZE / 2,
                 width: HANDLE_SIZE,
                 height: HANDLE_SIZE,
-                background: "#fff",
+                background: "var(--c-surface-raised)",
                 border: `1.5px solid ${FORM_COLORS.accent}`,
                 borderRadius: 2,
                 touchAction: "none",
