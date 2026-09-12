@@ -549,12 +549,12 @@ public class AdminSettingsController {
             Path helperJar = JarPathUtil.restartHelperJar();
 
             if (appJar == null) {
-                log.error("Cannot restart: not running from JAR (likely development mode)");
-                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
-                        .body(
-                                Map.of(
-                                        "error",
-                                        "Restart not available in development mode. Please restart the application manually."));
+                if (helperJar == null || !Files.isRegularFile(helperJar)) {
+                    return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                            .body(Map.of("error", "Restart helper not found."));
+                }
+                restartInDevelopmentMode(helperJar, AppArgsCapture.APP_ARGS.get());
+                return ResponseEntity.ok(Map.of("message", "Application restart initiated."));
             }
 
             if (helperJar == null || !Files.isRegularFile(helperJar)) {
@@ -630,6 +630,51 @@ public class AdminSettingsController {
                                     "error",
                                     "Failed to initiate application restart: " + e.getMessage()));
         }
+    }
+
+    void restartInDevelopmentMode(Path helperJar, List<String> appArgs) throws IOException {
+        Path argsFile = Files.createTempFile("stirling-app-args-", ".txt");
+        Path classpathFile = Files.createTempFile("stirling-app-classpath-", ".txt");
+        Files.write(argsFile, appArgs, StandardCharsets.UTF_8);
+        Files.writeString(
+                classpathFile, System.getProperty("java.class.path"), StandardCharsets.UTF_8);
+
+        long pid = ProcessHandle.current().pid();
+        List<String> cmd =
+                List.of(
+                        JarPathUtil.javaExecutable(),
+                        "-jar",
+                        helperJar.toString(),
+                        "--pid",
+                        Long.toString(pid),
+                        "--mainClass",
+                        "stirling.software.SPDF.SPDFApplication",
+                        "--classpathFile",
+                        classpathFile.toString(),
+                        "--argsFile",
+                        argsFile.toString(),
+                        "--backoffMs",
+                        "1000");
+        log.info("Launching local restart helper");
+        new ProcessBuilder(cmd)
+                .directory(Path.of(System.getProperty("user.dir")).toFile())
+                .inheritIO()
+                .start();
+
+        pendingChanges.clear();
+        Thread.ofVirtual()
+                .name("local-application-shutdown")
+                .start(
+                        () -> {
+                            try {
+                                Thread.sleep(1000);
+                                SpringApplication.exit(applicationContext, () -> 0);
+                                System.exit(0);
+                            } catch (InterruptedException e) {
+                                log.error("Local restart interrupted", e);
+                                Thread.currentThread().interrupt();
+                            }
+                        });
     }
 
     /**

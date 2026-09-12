@@ -19,12 +19,19 @@ public class RestartHelper {
             Map<String, String> cli = parseArgs(args);
 
             long pid = Long.parseLong(req(cli, "pid"));
-            Path appJar = Path.of(req(cli, "app")).toAbsolutePath().normalize();
             String javaBin = cli.getOrDefault("java", "java");
             Path argsFile = cli.containsKey("argsFile") ? Path.of(cli.get("argsFile")) : null;
+            Path classpathFile =
+                    cli.containsKey("classpathFile") ? Path.of(cli.get("classpathFile")) : null;
+            String mainClass = cli.get("mainClass");
             long backoffMs = Long.parseLong(cli.getOrDefault("backoffMs", "1000"));
 
-            if (!Files.isRegularFile(appJar)) {
+            boolean classpathLaunch = mainClass != null && classpathFile != null;
+            Path appJar =
+                    cli.containsKey("app")
+                            ? Path.of(cli.get("app")).toAbsolutePath().normalize()
+                            : null;
+            if (!classpathLaunch && (appJar == null || !Files.isRegularFile(appJar))) {
                 fail("App jar not found: " + appJar);
             }
 
@@ -38,8 +45,17 @@ public class RestartHelper {
 
             List<String> cmd = new ArrayList<>();
             cmd.add(javaBin);
-            cmd.add("-jar");
-            cmd.add(appJar.toString());
+            if (classpathLaunch) {
+                if (!Files.isRegularFile(classpathFile)) {
+                    fail("Classpath file not found: " + classpathFile);
+                }
+                cmd.add("-cp");
+                cmd.add(Files.readString(classpathFile).trim());
+                cmd.add(mainClass);
+            } else {
+                cmd.add("-jar");
+                cmd.add(appJar.toString());
+            }
 
             // Load application arguments from file if provided
             if (argsFile != null && Files.isRegularFile(argsFile)) {

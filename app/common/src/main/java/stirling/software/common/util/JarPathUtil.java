@@ -1,9 +1,13 @@
 package stirling.software.common.util;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.jar.JarFile;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -27,8 +31,9 @@ public class JarPathUtil {
                                             .toURI())
                             .toAbsolutePath();
 
-            // Check if we're actually running from a JAR (not from IDE/classes directory)
-            if (jar.toString().endsWith(".jar")) {
+            // Check if this is the executable Stirling JAR, rather than a dependency JAR such as
+            // common-*-plain.jar that is present on the bootRun classpath.
+            if (jar.toString().endsWith(".jar") && isApplicationJar(jar)) {
                 log.debug("Current JAR located at: {}", jar);
                 return jar;
             } else {
@@ -38,6 +43,18 @@ public class JarPathUtil {
         } catch (URISyntaxException e) {
             log.error("Failed to determine current JAR location", e);
             return null;
+        }
+    }
+
+    private static boolean isApplicationJar(Path jar) {
+        try (JarFile jarFile = new JarFile(jar.toFile())) {
+            return jarFile.getEntry("stirling/software/SPDF/SPDFApplication.class") != null
+                    || jarFile.getEntry(
+                                    "BOOT-INF/classes/stirling/software/SPDF/SPDFApplication.class")
+                            != null;
+        } catch (IOException e) {
+            log.debug("Could not inspect JAR while identifying the application", e);
+            return false;
         }
     }
 
@@ -52,22 +69,29 @@ public class JarPathUtil {
         Path appJar = currentJar();
 
         // Define possible locations to check (in order of preference)
-        Path[] possibleLocations = new Path[4];
+        List<Path> possibleLocations = new ArrayList<>();
 
         // Location 1: Same directory as main JAR (production)
         if (appJar != null) {
-            possibleLocations[0] = appJar.getParent().resolve("restart-helper.jar");
+            possibleLocations.add(appJar.getParent().resolve("restart-helper.jar"));
         }
 
-        // Location 2: ./build/libs/ (development build)
-        possibleLocations[1] = Path.of("build", "libs", "restart-helper.jar").toAbsolutePath();
-
-        // Location 3: app/common/build/libs/ (multi-module build)
-        possibleLocations[2] =
-                Path.of("app", "common", "build", "libs", "restart-helper.jar").toAbsolutePath();
-
-        // Location 4: Current working directory
-        possibleLocations[3] = Path.of("restart-helper.jar").toAbsolutePath();
+        // In development, Gradle may set the JVM working directory to a module directory.
+        // Walk both the working directory and the compiled classes directory upwards so the
+        // root project's build/libs/restart-helper.jar is found regardless of the launch task.
+        addAncestorLocations(possibleLocations, Path.of(System.getProperty("user.dir")));
+        try {
+            Path codeSource =
+                    Path.of(
+                            JarPathUtil.class
+                                    .getProtectionDomain()
+                                    .getCodeSource()
+                                    .getLocation()
+                                    .toURI());
+            addAncestorLocations(possibleLocations, codeSource);
+        } catch (URISyntaxException e) {
+            log.debug("Could not inspect code source while locating restart helper", e);
+        }
 
         // Check each location
         for (Path location : possibleLocations) {
@@ -81,6 +105,15 @@ public class JarPathUtil {
 
         log.warn("Restart helper JAR not found in any expected location");
         return null;
+    }
+
+    private static void addAncestorLocations(List<Path> locations, Path start) {
+        Path current = start.toAbsolutePath().normalize();
+        while (current != null) {
+            locations.add(current.resolve(Path.of("build", "libs", "restart-helper.jar")));
+            locations.add(current.resolve("restart-helper.jar"));
+            current = current.getParent();
+        }
     }
 
     /**
