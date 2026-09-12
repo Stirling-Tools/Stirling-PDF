@@ -9,14 +9,24 @@ import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVeri
 
 /**
  * Service that provides dynamic license checking instead of cached beans. This ensures that when
- * admins update the license key, the changes are immediately reflected in the UI and config
- * endpoints without requiring a restart.
+ * admins update the license key, the changes are immediately reflected in the UI, config endpoints
+ * and the premium/enterprise endpoint gates without requiring a restart.
  *
- * <p>Note: Some components (EnterpriseEndpointAspect, PremiumEndpointAspect, filters) still inject
- * cached beans at startup for performance. These will require a restart to reflect license changes.
- * This is acceptable because: 1. Most deployments add licenses during initial setup 2. License
- * changes in production typically warrant a restart anyway 3. UI reflects changes immediately
- * (banner disappears, license status updates)
+ * <p>Hazard: this is not the only reader of the license. Everything below still resolves it once at
+ * startup from the {@code runningProOrHigher} / {@code runningEE} beans, so a license change
+ * reaches them only on restart.
+ *
+ * <ul>
+ *   <li>Structures built at boot: the datasource selection in DatabaseConfig, the security filter
+ *       chain in SecurityConfiguration, the {@code enterprise} endpoint group EndpointConfiguration
+ *       disables in its constructor, and ClusterLicenseGate.
+ *   <li>Request-time checks against the frozen flag: AuditService (which events it records),
+ *       AuditCleanupService (retention cap), DatabaseNotificationService and PdfMetadataService.
+ * </ul>
+ *
+ * <p>TODO(#7848): AuditService keeps dropping every event outside PDF_PROCESS and FILE_OPERATION
+ * after a post-boot activation, so the audit dashboard the live gate has just unlocked shows a
+ * truncated trail until restart.
  */
 @Service
 @RequiredArgsConstructor
