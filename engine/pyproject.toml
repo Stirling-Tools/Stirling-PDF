@@ -27,11 +27,11 @@ engine = [
 # Type checking, testing, model generation, and formatting tools for the engine.
 engine-dev = [
     "anyio>=4.14.2",
-    "datamodel-code-generator[ruff]==0.64.0",
+    "datamodel-code-generator[ruff]==0.74.0",
     "pyright>=1.1.411",
     "pytest>=9.1.1",
     "referencing>=0.37.0",
-    "ruff==0.15.5",
+    "ruff==0.16.3",
 ]
 # Dependencies for the Cucumber/Python integration test suite.
 cucumber = [
@@ -66,7 +66,7 @@ updater-signatures = [
 # Pinned repository-wide pre-commit tooling.
 pre-commit = [
     "codespell==2.4.3",
-    "ruff==0.15.5",
+    "ruff==0.16.3",
     "tomli-w==1.2.0",
 ]
 

@@ -116,12 +116,11 @@ def write_readme(progress_list: list[tuple[str, int]]) -> None:
     for i, line in enumerate(content[2:], start=2):
         for progress in progress_list:
             language, value = progress
-            if language in line:
-                if match := re.search(r"\!\[(\d+(\.\d+)?)%\]\(.*\)", line):
-                    content[i] = line.replace(
-                        match.group(0),
-                        f"![{value}%](https://geps.dev/progress/{value})",
-                    )
+            if language in line and (match := re.search(r"\!\[(\d+(\.\d+)?)%\]\(.*\)", line)):
+                content[i] = line.replace(
+                    match.group(0),
+                    f"![{value}%](https://geps.dev/progress/{value})",
+                )
 
     with open(
         os.path.join(os.getcwd(), "devGuide", "HowToAddNewLanguage.md"),
@@ -261,12 +260,11 @@ def compare_files(
                 # Missing translation (same as default and not ignored)
                 fails += 1
                 missing_str_keys.append(default_key)
-            if default_value != file_value:
-                if default_key in sort_ignore_translation[language]["ignore"]:
-                    if default_key == "language.direction":
-                        continue
-                    # Remove from ignore if actually translated
-                    sort_ignore_translation[language]["ignore"].remove(default_key)
+            if default_value != file_value and default_key in sort_ignore_translation[language]["ignore"]:
+                if default_key == "language.direction":
+                    continue
+                # Remove from ignore if actually translated
+                sort_ignore_translation[language]["ignore"].remove(default_key)
 
         if show_missing_keys:
             if len(missing_str_keys) > 0:

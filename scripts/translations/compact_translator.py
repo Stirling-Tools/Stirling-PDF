@@ -38,7 +38,7 @@ class CompactTranslationExtractor:
         except FileNotFoundError:
             print(f"Error: File not found: {file_path}", file=sys.stderr)
             sys.exit(1)
-        except Exception as e:
+        except (OSError, tomllib.TOMLDecodeError) as e:
             print(f"Error: Invalid TOML file {file_path}: {e}", file=sys.stderr)
             sys.exit(1)
 
@@ -51,7 +51,7 @@ class CompactTranslationExtractor:
             with open(self.ignore_file, "rb") as f:
                 ignore_data = tomllib.load(f)
             return {lang: set(data.get("ignore", [])) for lang, data in ignore_data.items()}
-        except Exception as e:
+        except (OSError, tomllib.TOMLDecodeError, TypeError, AttributeError) as e:
             print(
                 f"Warning: Could not load ignore file {self.ignore_file}: {e}",
                 file=sys.stderr,

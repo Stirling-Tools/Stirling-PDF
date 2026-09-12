@@ -100,7 +100,7 @@ def normalize_source_path(pdf_path: str | None) -> str | None:
     try:
         source = Path(pdf_path)
         rel = source.relative_to(REPO_ROOT)
-    except Exception:
+    except ValueError:
         rel = Path(pdf_path)
     return str(rel).replace("\\", "/")
 

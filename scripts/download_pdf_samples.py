@@ -150,7 +150,7 @@ def download_pdf(
         output_dir.mkdir(parents=True, exist_ok=True)
         dest.write_bytes(content)
         return url, dest, None
-    except Exception as exc:  # pylint: disable=broad-except
+    except (OSError, ValueError, requests.RequestException) as exc:
         return url, None, str(exc)
 
 
