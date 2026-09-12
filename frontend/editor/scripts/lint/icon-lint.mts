@@ -18,9 +18,14 @@ const BANNED_IMPORTS = [
   "components/icons",
 ];
 
+const ICON_SVG_DIR = path.join(ICONS_DIR, "svg");
+
+/** The frame every icon is drawn on, so one `size` renders them all alike. */
+const ICON_FRAME = "0 0 24 24";
+
 /** Directories where a .svg file is allowed to live. */
 const SVG_ALLOWED = [
-  path.join(ICONS_DIR, "svg"),
+  ICON_SVG_DIR,
   path.join(SRC, "core/assets"),
   path.join(SRC, "assets"),
   path.join(SRC, "core/tests"),
@@ -149,6 +154,23 @@ for (const file of files) {
         `${rel(file)}: .svg outside src/core/icons/svg/. Icons belong there so ` +
           `icons.ts can map them; other artwork belongs under assets/.`,
       );
+    }
+    if (file.startsWith(ICON_SVG_DIR)) {
+      const viewBox = fs
+        .readFileSync(file, "utf8")
+        .match(/<svg\b[^>]*\bviewBox="([^"]*)"/)?.[1]
+        ?.trim()
+        .split(/[\s,]+/)
+        .join(" ");
+      if (viewBox !== ICON_FRAME) {
+        problems.push(
+          `${rel(file)}: viewBox is ${viewBox ? `"${viewBox}"` : "missing"}, not ` +
+            `"${ICON_FRAME}". <Icon> gives every icon the same width and height, and a ` +
+            `stroke weight is measured in viewBox units, so another frame renders at the ` +
+            `wrong size and weight. Redraw it on the 24 grid, or wrap brand art in a ` +
+            `transform that fits it there.`,
+        );
+      }
     }
     continue;
   }
