@@ -37,6 +37,7 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.model.exception.UserLimitExceededException;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.session.SessionPersistentRegistry;
+import stirling.software.proprietary.security.util.EmailAddresses;
 import stirling.software.proprietary.storage.model.FileShare;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
@@ -290,6 +291,26 @@ class UserServiceTest {
     void isUsernameValidRejectsReservedAndAcceptsEmail() {
         assertFalse(userService.isUsernameValid("ALL_USERS"));
         assertTrue(userService.isUsernameValid("valid@example.com"));
+    }
+
+    @Test
+    void saveUserCoreAcceptsEveryAddressTheInviteGateLetsThrough() {
+        for (String address :
+                List.of(
+                        "a@b.co",
+                        "first.last+tag@sub.example.co.uk",
+                        "o'brien@example.com",
+                        "a!b@ex.com",
+                        "a@ex..com",
+                        "-a@ex.com",
+                        "admin@localhost",
+                        "a@b")) {
+            if (EmailAddresses.isValidAccountAddress(address)) {
+                assertTrue(
+                        userService.isUsernameValid(address.trim()),
+                        address + " passes the invite gate but saveUserCore would reject it");
+            }
+        }
     }
 
     @Test

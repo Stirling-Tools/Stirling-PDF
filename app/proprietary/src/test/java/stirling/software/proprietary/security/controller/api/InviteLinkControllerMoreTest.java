@@ -96,6 +96,50 @@ class InviteLinkControllerMoreTest {
         }
 
         @Test
+        @DisplayName("rejects an address that has no deliverable domain")
+        void rejectsMalformedEmail() throws Exception {
+            mockMvc.perform(
+                            post("/api/v1/invite/generate")
+                                    .principal(adminPrincipal)
+                                    .param("email", "a@"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("Invalid email address"));
+
+            verify(inviteTokenRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("rejects an address that could not become an account")
+        void rejectsEmailThatCannotBecomeAUsername() throws Exception {
+            mockMvc.perform(
+                            post("/api/v1/invite/generate")
+                                    .principal(adminPrincipal)
+                                    .param("email", "o'brien@example.com"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("Invalid email address"));
+
+            verify(inviteTokenRepository, never()).save(any());
+        }
+
+        @Test
+        @DisplayName("rejects a team that does not exist")
+        void rejectsUnknownTeam() throws Exception {
+            when(userService.usernameExistsIgnoreCase("new@ex.com")).thenReturn(false);
+            when(inviteTokenRepository.findByEmail("new@ex.com")).thenReturn(Optional.empty());
+            when(teamRepository.findById(999_999L)).thenReturn(Optional.empty());
+
+            mockMvc.perform(
+                            post("/api/v1/invite/generate")
+                                    .principal(adminPrincipal)
+                                    .param("email", "new@ex.com")
+                                    .param("teamId", "999999"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("Team not found"));
+
+            verify(inviteTokenRepository, never()).save(any());
+        }
+
+        @Test
         @DisplayName("returns conflict when the user already exists")
         void userAlreadyExists() throws Exception {
             when(userService.usernameExistsIgnoreCase("dup@ex.com")).thenReturn(true);
@@ -286,6 +330,23 @@ class InviteLinkControllerMoreTest {
             mockMvc.perform(post("/api/v1/invite/accept/noemail").param("password", "secret123"))
                     .andExpect(status().isBadRequest())
                     .andExpect(jsonPath("$.error").value("Email address is required"));
+        }
+
+        @Test
+        @DisplayName("rejects a malformed email on a general link")
+        void rejectsMalformedEmailOnAccept() throws Exception {
+            InviteToken invite = validInvite("general");
+            invite.setEmail(null);
+            when(inviteTokenRepository.findByToken("general")).thenReturn(Optional.of(invite));
+
+            mockMvc.perform(
+                            post("/api/v1/invite/accept/general")
+                                    .param("email", "a@")
+                                    .param("password", "secret123"))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.error").value("Invalid email address"));
+
+            verify(userService, never()).saveUserCore(any());
         }
 
         @Test
