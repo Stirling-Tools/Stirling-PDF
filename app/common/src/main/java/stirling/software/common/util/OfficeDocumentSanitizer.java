@@ -91,10 +91,12 @@ public class OfficeDocumentSanitizer {
                                 new ByteArrayInputStream(documentBytes));
                 ZipOutputStream zipOut = new ZipOutputStream(out)) {
 
+            ZipBombGuard.Budget budget =
+                    new ZipBombGuard.Budget(applicationProperties.getSystem().getArchiveLimits());
             ZipEntry entry;
             while ((entry = zipIn.getNextEntry()) != null) {
                 String name = entry.getName();
-                byte[] bytes = entry.isDirectory() ? new byte[0] : zipIn.readAllBytes();
+                byte[] bytes = entry.isDirectory() ? new byte[0] : budget.readEntry(zipIn);
 
                 if (!entry.isDirectory()) {
                     bytes = sanitizeEntry(name, bytes);

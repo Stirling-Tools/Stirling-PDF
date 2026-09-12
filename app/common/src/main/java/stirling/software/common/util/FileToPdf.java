@@ -47,7 +47,10 @@ public class FileToPdf {
                 } else if (fileName.toLowerCase(Locale.ROOT).endsWith(".zip")) {
                     Files.write(tempInputFile.getPath(), fileBytes);
                     sanitizeHtmlFilesInZip(
-                            tempInputFile.getPath(), tempFileManager, customHtmlSanitizer);
+                            tempInputFile.getPath(),
+                            tempFileManager,
+                            customHtmlSanitizer,
+                            new ZipBombGuard.Budget());
                 } else {
                     throw ExceptionUtils.createHtmlFileRequiredException();
                 }
@@ -75,10 +78,11 @@ public class FileToPdf {
         return customHtmlSanitizer.sanitize(htmlContent);
     }
 
-    private static void sanitizeHtmlFilesInZip(
+    static void sanitizeHtmlFilesInZip(
             Path zipFilePath,
             TempFileManager tempFileManager,
-            CustomHtmlSanitizer customHtmlSanitizer)
+            CustomHtmlSanitizer customHtmlSanitizer,
+            ZipBombGuard.Budget budget)
             throws IOException {
         try (TempDirectory tempUnzippedDir = new TempDirectory(tempFileManager)) {
             try (ZipInputStream zipIn =
@@ -99,12 +103,12 @@ public class FileToPdf {
                         if (entry.getName().toLowerCase(Locale.ROOT).endsWith(".html")
                                 || entry.getName().toLowerCase(Locale.ROOT).endsWith(".htm")) {
                             String content =
-                                    new String(zipIn.readAllBytes(), StandardCharsets.UTF_8);
+                                    new String(budget.readEntry(zipIn), StandardCharsets.UTF_8);
                             String sanitizedContent =
                                     sanitizeHtmlContent(content, customHtmlSanitizer);
                             Files.writeString(filePath, sanitizedContent);
                         } else {
-                            Files.copy(zipIn, filePath);
+                            budget.copyEntry(zipIn, filePath);
                         }
                     }
                     zipIn.closeEntry();

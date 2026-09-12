@@ -84,21 +84,31 @@ public class CbrUtils {
 
                 List<ImageEntryData> imageEntries = new ArrayList<>();
 
+                ZipBombGuard.Budget budget = new ZipBombGuard.Budget();
                 try {
                     for (FileHeader fileHeader : archive) {
                         if (!fileHeader.isDirectory() && isImageFile(fileHeader.getFileName())) {
+                            String entryName = fileHeader.getFileName();
+                            byte[] imageBytes;
                             try (InputStream is = archive.getInputStream(fileHeader)) {
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                is.transferTo(baos);
-                                imageEntries.add(
-                                        new ImageEntryData(
-                                                fileHeader.getFileName(), baos.toByteArray()));
-                            } catch (Exception e) {
-                                log.warn(
-                                        "Error reading image {}: {}",
-                                        fileHeader.getFileName(),
+                                imageBytes = budget.readEntry(is);
+                            } catch (ZipBombGuard.ZipBombException e) {
+                                throw ExceptionUtils.createCbrInvalidFormatException(
                                         e.getMessage());
+                            } catch (Exception e) {
+                                log.warn("Error reading image {}: {}", entryName, e.getMessage());
+                                continue;
                             }
+                            if (ImageProcessingUtils.exceedsPixelLimit(
+                                    imageBytes, ImageProcessingUtils.MAX_DECODED_IMAGE_PIXELS)) {
+                                throw ExceptionUtils.createCbrInvalidFormatException(
+                                        "Image "
+                                                + entryName
+                                                + " exceeds the maximum decoded size of "
+                                                + ImageProcessingUtils.MAX_DECODED_IMAGE_PIXELS
+                                                + " pixels");
+                            }
+                            imageEntries.add(new ImageEntryData(entryName, imageBytes));
                         }
                     }
                 } finally {

@@ -90,4 +90,33 @@ class ConfigInitializerRestartTest {
                             .getValueByExactKeyPath("premium", "proFeatures", "SSOAutoLogin"));
         }
     }
+
+    @Test
+    void handEditedSystemSetting_survivesRestart(@TempDir Path tmp) throws Exception {
+        Path settings = tmp.resolve("settings.yml");
+        Path custom = tmp.resolve("custom_settings.yml");
+
+        try (MockedStatic<InstallationPathConfig> paths =
+                mockStatic(InstallationPathConfig.class)) {
+            paths.when(InstallationPathConfig::getSettingsPath).thenReturn(settings.toString());
+            paths.when(InstallationPathConfig::getCustomSettingsPath).thenReturn(custom.toString());
+
+            ConfigInitializer init = new ConfigInitializer();
+
+            init.ensureConfigExists();
+
+            // An operator hand-edits settings.yml, as they must for any setting the admin UI does
+            // not expose.
+            Files.writeString(
+                    settings,
+                    Files.readString(settings)
+                            .replace(
+                                    "\nsystem:\n",
+                                    "\nsystem:\n  archiveLimits:\n    maxTotalBytes: 1048576\n"));
+
+            init.ensureConfigExists();
+
+            assertEquals("1048576", read(settings, "system", "archiveLimits", "maxTotalBytes"));
+        }
+    }
 }
