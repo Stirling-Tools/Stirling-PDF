@@ -27,25 +27,21 @@ const PROVISIONING_FILE_NAME: &str = "stirling-provisioning.json";
 
 /// How the desktop auto-updater should behave on startup.
 ///
-/// * `Prompt`   – default. Show the update popup when a new version is available
-///               and let the user decide whether to install.
-/// * `Auto`     – silently download and install updates on startup, then restart.
-///               Intended for managed deployments (Intune/MDM) where the user
-///               cannot (or should not) be prompted.
-/// * `Disabled` – never check for updates, never show the update UI. Administrators
-///                are expected to push updates through their normal packaging flow.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+/// * `Prompt` – default. Show the update popup when a new version is available
+///   and let the user decide whether to install.
+/// * `Auto` – silently download and install updates on startup, then restart.
+///   Intended for managed deployments (Intune/MDM) where the user cannot (or
+///   should not) be prompted.
+/// * `Disabled` – never check for updates, never show the update UI.
+///   Administrators are expected to push updates through their normal
+///   packaging flow.
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum UpdateMode {
+    #[default]
     Prompt,
     Auto,
     Disabled,
-}
-
-impl Default for UpdateMode {
-    fn default() -> Self {
-        UpdateMode::Prompt
-    }
 }
 
 /// Current update mode plus whether the UI is allowed to change it. Returned
@@ -309,7 +305,7 @@ pub fn apply_provisioning_if_present(app_handle: &AppHandle) -> Result<(), Strin
     if let Some(mode) = parsed.update_mode {
         store.set(
             UPDATE_MODE_KEY,
-            serde_json::to_value(&mode)
+            serde_json::to_value(mode)
                 .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
         );
         // Only lock the UI when the provisioning file came from a path that
@@ -445,7 +441,7 @@ pub async fn set_update_mode(
 
     store.set(
         UPDATE_MODE_KEY,
-        serde_json::to_value(&mode)
+        serde_json::to_value(mode)
             .map_err(|e| format!("Failed to serialize update mode: {}", e))?,
     );
     store

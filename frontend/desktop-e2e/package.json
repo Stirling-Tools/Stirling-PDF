@@ -1,0 +1,16 @@
+{
+  "name": "stirling-desktop-e2e",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Desktop E2E suite - drives the built Tauri app through tauri-driver. Deliberately kept out of the frontend npm workspace so WebdriverIO never lands in the shared install.",
+  "scripts": {
+    "test": "wdio run wdio.conf.mjs"
+  },
+  "devDependencies": {
+    "@wdio/cli": "^9.20.0",
+    "@wdio/jasmine-framework": "^9.20.0",
+    "@wdio/local-runner": "^9.20.0",
+    "@wdio/spec-reporter": "^9.20.0"
+  }
+}

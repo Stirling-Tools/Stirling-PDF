@@ -10,6 +10,17 @@ vars:
   # fails at launch with UnsupportedClassVersionError. Enforced by jlink:verify.
   REQUIRED_JAVA: "25"
 
+  # tauri.conf.json's `resources` globs point at the bundled JAR and the jlink
+  # runtime, and tauri-build hard-fails when a glob matches nothing ("glob
+  # pattern libs/*.jar path not found"). Emptying `resources` via TAURI_CONFIG
+  # lets the Rust crate compile on its own, turning the ~20min jlink + bootJar
+  # prepare into a ~2min check. Only bundling actually needs those files.
+  RUST_ONLY_CONFIG: '{"bundle":{"resources":[]}}'
+
+  # Pinned so CI and local runs drive the app through the same WebDriver
+  # bridge. Bump deliberately alongside the tauri crate.
+  TAURI_DRIVER_VERSION: "2.0.6"
+
   # Override via JPDFIUM_PLATFORMS env (csv of platform keys, or 'all').
   JPDFIUM_PLATFORMS:
     sh: |
@@ -92,6 +103,89 @@ tasks:
     dir: editor/src-tauri
     cmds:
       - cargo test
+
+  # ============================================================
+  # Rust checks — no JRE/JAR needed, so they run in ~2min
+  # ============================================================
+
+  test:rust:
+    desc: "Run Tauri/Cargo tests without building the JRE/JAR (fast)"
+    dir: editor/src-tauri
+    env:
+      TAURI_CONFIG: '{{.RUST_ONLY_CONFIG}}'
+    cmds:
+      - cargo test --locked {{.CLI_ARGS}}
+
+  lint:
+    desc: "Clippy the Tauri Rust sources"
+    dir: editor/src-tauri
+    env:
+      TAURI_CONFIG: '{{.RUST_ONLY_CONFIG}}'
+    cmds:
+      - cargo clippy --locked --all-targets -- -D warnings
+
+  check:
+    desc: "Fast desktop Rust gate (clippy + tests, no bundle)"
+    cmds:
+      - task: lint
+      - task: test:rust
+
+  # ============================================================
+  # E2E — drives the real built app through tauri-driver
+  # ============================================================
+
+  e2e:install:
+    desc: "Install the desktop E2E harness (WebdriverIO + tauri-driver)"
+    deps: [e2e:install:npm, e2e:install:driver]
+
+  e2e:install:npm:
+    internal: true
+    dir: desktop-e2e
+    cmds:
+      - '{{ if eq .CI "true" }}npm ci{{ else }}npm install{{ end }}'
+    env:
+      CI: '{{ .CI | default "false" }}'
+    status:
+      - test -d node_modules
+
+  e2e:install:driver:
+    internal: true
+    cmds:
+      - cargo install tauri-driver --version {{.TAURI_DRIVER_VERSION}} --locked
+    # Version-aware so a bumped TAURI_DRIVER_VERSION actually reinstalls,
+    # while a matching install skips the recompile.
+    status:
+      - cargo install --list | grep -q "tauri-driver v{{.TAURI_DRIVER_VERSION}}"
+
+  smoke:
+    desc: "Headless desktop smoke against the built app (all platforms)"
+    summary: |
+      Launches the built binary, waits for the bundled backend, and runs real
+      tools through it. Needs no webview driver, so unlike desktop:e2e this
+      also covers macOS.
+
+        task desktop:build:dev
+        task desktop:smoke
+    dir: desktop-e2e
+    cmds:
+      - node smoke/run-smoke.mjs
+
+  e2e:
+    desc: "Run desktop UI E2E against the built app (Linux/Windows only)"
+    summary: |
+      Requires a non-bundled release build to exist:
+        task desktop:build:dev
+        task desktop:e2e
+
+      macOS is unsupported: there is no WebDriver for WKWebView, so
+      tauri-driver has no macOS backend.
+
+      Pass extra WebdriverIO flags via -- :
+        task desktop:e2e -- --spec specs/app-boot.e2e.js
+    deps: [e2e:install]
+    dir: desktop-e2e
+    cmds:
+      - npx wdio run wdio.conf.mjs {{.CLI_ARGS}}
 
   clean:
     desc: "Clean Tauri/Cargo build artifacts"
