@@ -1,8 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-const { invokeMock, postMock } = vi.hoisted(() => ({
+const { invokeMock, postMock, axiosPostMock } = vi.hoisted(() => ({
   invokeMock: vi.fn(),
   postMock: vi.fn(),
+  axiosPostMock: vi.fn(),
+}));
+
+vi.mock("axios", () => ({
+  default: { post: axiosPostMock, get: vi.fn(), isAxiosError: () => false },
 }));
 
 vi.mock("@tauri-apps/api/core", () => ({
@@ -71,6 +76,20 @@ describe("keyring timeouts", () => {
     await expect(authService.refreshToken("https://server.test")).resolves.toBe(
       false,
     );
+  });
+
+  it("bounds the Supabase refresh request, the call that gates the desktop boot", async () => {
+    invokeMock.mockResolvedValue("stored-refresh-token");
+    axiosPostMock.mockImplementation(() => new Promise(() => {}));
+
+    expectConsole.warn(/Refresh timed out/);
+    const refresh = authService.refreshSupabaseToken("https://auth.test");
+    await vi.advanceTimersByTimeAsync(25_000);
+
+    await expect(refresh).resolves.toBe(false);
+    expect(axiosPostMock.mock.calls[0]?.[2]).toMatchObject({
+      timeout: expect.any(Number),
+    });
   });
 
   it("settles a refresh whose server never answers, once the keyring has returned", async () => {

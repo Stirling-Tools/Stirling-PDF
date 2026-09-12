@@ -59,6 +59,10 @@ export class AuthService {
   /** A keyring read blocks on an OS prompt that may never be answered, so every wait on one is
    *  bounded. Long enough that a user still reading the prompt is not cut off mid-decision. */
   private static readonly KEYRING_TIMEOUT_MS = 20_000;
+
+  /** Axios waits forever by default. Kept under the bound above so a stalled refresh fails
+   *  through the normal error path, which clears credentials, rather than the outer race. */
+  private static readonly REFRESH_REQUEST_TIMEOUT_MS = 15_000;
   private selfHostedDeepLinkFlowActive = false;
 
   static getInstance(): AuthService {
@@ -873,6 +877,7 @@ export class AuthService {
             apikey: SUPABASE_KEY,
             "Content-Type": "application/json",
           },
+          timeout: AuthService.REFRESH_REQUEST_TIMEOUT_MS,
         },
       );
 
