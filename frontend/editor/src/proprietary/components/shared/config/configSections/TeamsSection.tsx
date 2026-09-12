@@ -27,7 +27,6 @@ import {
   useFetchAdminUsers,
   useAdminMutation,
 } from "@app/hooks/useAdminDirectory";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 
 const EXAMPLE_TEAMS: Team[] = [
   { id: 1, name: "Engineering", userCount: 3 },
@@ -213,16 +212,6 @@ export default function TeamsSection() {
 
   return (
     <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
-      <div>
-        <Text fw={600} size="lg">
-          {t("workspace.teams.title")}
-        </Text>
-        <Text size="sm" c="dimmed">
-          {t("workspace.teams.description")}
-        </Text>
-      </div>
-
       {/* Header Actions */}
       <Group justify="flex-end">
         <Button

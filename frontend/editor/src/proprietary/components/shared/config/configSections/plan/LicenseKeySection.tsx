@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import {
   Collapse,
   Alert,
@@ -264,11 +266,16 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
               {inputMethod === "text" ? (
                 /* Text input */
                 <TextInput
-                  label={t("admin.settings.premium.key.label", "License Key")}
-                  description={t(
-                    "admin.settings.premium.key.description",
-                    "Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.",
-                  )}
+                  label={
+                    <SettingsFieldLabel
+                      info={t(
+                        "admin.settings.premium.key.description",
+                        "Enter your premium or enterprise license key. Premium features will be automatically enabled when a key is provided.",
+                      )}
+                    >
+                      {t("admin.settings.premium.key.label", "License Key")}
+                    </SettingsFieldLabel>
+                  }
                   value={licenseKeyInput}
                   onChange={(e) => setLicenseKeyInput(e.target.value)}
                   placeholder={
@@ -285,13 +292,13 @@ const LicenseKeySection: React.FC<LicenseKeySectionProps> = ({
                     {t(
                       "admin.settings.premium.file.label",
                       "License Certificate File",
-                    )}
-                  </Text>
-                  <Text size="xs" c="dimmed" mb="md">
-                    {t(
-                      "admin.settings.premium.file.description",
-                      "Upload your .lic or .cert license file",
-                    )}
+                    )}{" "}
+                    <InfoTooltip
+                      label={t(
+                        "admin.settings.premium.file.description",
+                        "Upload your .lic or .cert license file",
+                      )}
+                    />
                   </Text>
                   <FilePicker
                     onChange={setLicenseFile}
