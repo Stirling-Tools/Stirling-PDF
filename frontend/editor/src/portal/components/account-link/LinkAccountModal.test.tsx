@@ -18,6 +18,9 @@ vi.mock("@portal/auth/saasSupabase", () => ({
   // Step 3 reads the connected account's email off this session.
   ensureSaasSupabase: () => ({
     auth: {
+      onAuthStateChange: () => ({
+        data: { subscription: { unsubscribe: () => {} } },
+      }),
       getSession: () =>
         Promise.resolve({ data: { session: { user: { email: EMAIL } } } }),
     },

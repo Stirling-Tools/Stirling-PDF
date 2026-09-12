@@ -7139,23 +7139,24 @@ pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
-billingNote = "Unattended processing bills against your org wallet."
-eyebrow = "Account link"
-linkButton = "Link your Stirling account"
-linked = "Linked"
-linkedAs = "Linked as {{name}}."
-linkedGeneric = "This instance is linked."
-notLinked = "Not linked"
-title = "Link this org to its Stirling account"
-unlink = "Unlink"
+billingNote = "This server shares your team’s processing allowance in Stirling Cloud."
+connectDescription = "Connect this server to use your team’s processing allowance in Stirling Cloud."
+eyebrow = "This instance"
+linkButton = "Connect your Stirling account"
+linked = "Connected"
+loading = "Checking account connection"
+notLinked = "Not connected"
+signedInAs = "Signed in to Stirling Cloud as"
+statusError = "Couldn’t check the account connection"
+title = "Stirling Cloud"
+unlink = "Disconnect this instance"
 
 [portal.accountLink.card.error]
-title = "Couldn't link"
+title = "Couldn’t update the connection"
 
 [portal.accountLink.card.loginNotConfigured]
-after = "to enable account linking against the hosted Stirling account. In dev you can simulate sign-in from the link dialog."
-before = "Set"
-title = "SaaS login not configured"
+description = "Ask your server administrator to enable the connection to Stirling Cloud."
+title = "Account connection unavailable"
 
 [portal.accountLink.connect]
 close = "Close"
@@ -7213,30 +7214,11 @@ reauthLede = "Your Stirling session expired. Signing in again keeps usage and bi
 title = "Connecting"
 
 [portal.accountLink.instances]
-active = "Active"
-revoke = "Revoke"
-revoked = "Revoked"
 unnamed = "Unnamed instance"
 
-[portal.accountLink.instances.columns]
-instance = "Instance"
-lastSeen = "Last seen"
-linked = "Linked"
-status = "Status"
-
 [portal.accountLink.instances.empty]
-description = "Link this org's account, then register your self-hosted instances to see them here."
-title = "No linked instances"
-
-[portal.accountLink.instances.time]
-daysAgo_one = "{{count}}d ago"
-daysAgo_other = "{{count}}d ago"
-hoursAgo_one = "{{count}}h ago"
-hoursAgo_other = "{{count}}h ago"
-justNow = "just now"
-minutesAgo_one = "{{count}}m ago"
-minutesAgo_other = "{{count}}m ago"
-never = "never"
+description = "Connect a self-hosted server to your team to see it here."
+title = "No connected instances"
 
 [portal.accountLink.modal]
 cancel = "Cancel"
@@ -7254,15 +7236,15 @@ before = "Set"
 title = "Stirling connection not configured"
 
 [portal.accountLink.panel]
-instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."
-instancesTitle = "Linked instances"
+instancesSub = "Self-hosted servers connected to the same team."
+instancesTitle = "Connected instances"
 revokeError = "Couldn't revoke instance"
-sub = "Link this self-hosted org to its Stirling account so unattended processing bills against your org wallet."
+sub = "Manage this server’s connection to your Stirling Cloud account."
 
 [portal.accountLink.panel.loadError]
-forbidden = "Only the team owner can view the org's linked instances."
-generic = "Couldn't load the team's linked instances. Try again in a moment."
-title = "Couldn't load linked instances"
+forbidden = "Only the team owner can manage connected instances."
+generic = "Your connections could not be checked. Try again."
+title = "Couldn’t load connected instances"
 
 [portal.accountLink.rail]
 cta = "Connect"
@@ -9610,7 +9592,7 @@ subtitle = "Anything from your policy runs and your team's editors that needs yo
 title = "Review"
 
 [portal.settings.sections]
-account-link = "Account link"
+account-link = "Account connection"
 
 [portal.shell.sidebar]
 appEditor = "Editor"
@@ -10694,6 +10676,36 @@ integrations = "Integrations"
 mcp = "MCP Server"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
+
+[settings.connectedInstances]
+confirmBody = "This revokes the instance’s access to your team in Stirling Cloud. It does not delete local files or remove usage already recorded. To connect again, follow the original connection steps on the instance."
+confirmTitle = "Remove {{name}}?"
+connectedDate = "Connected"
+connectHelp = "To connect a server, open Settings → Account connection on your self-hosted instance and follow the connection steps."
+copied = "ID copied"
+copyError = "Couldn’t copy the ID. Select it to copy manually."
+copyId = "Copy ID"
+details = "Details"
+displayName = "Display name (optional)"
+editName = "Edit name"
+empty = "No connected instances"
+id = "Instance ID"
+lastSeen = "Last seen: {{date}}"
+loadError = "Couldn’t load connected instances"
+loadErrorBody = "Your connections could not be checked. Try again."
+loading = "Loading connected instances"
+ownerOnly = "Only the team owner can manage connected instances."
+remove = "Remove connection"
+removedSuccess = "{{name}} has been disconnected from your team."
+removeError = "Couldn’t remove the connection. Try again."
+renameError = "Couldn’t save the name. Try again."
+retry = "Try again"
+saveName = "Save name"
+subtitle = "Manage the self-hosted servers connected to your team."
+teamNote = "These instances share your team’s processing allowance."
+title = "Connected instances"
+unknown = "Not available"
+yourTeam = "Your team"
 
 [settings.connection]
 description = "Work locally on this machine or connect the app to a Stirling server."

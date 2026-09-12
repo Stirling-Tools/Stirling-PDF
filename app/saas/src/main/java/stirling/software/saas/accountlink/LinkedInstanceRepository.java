@@ -27,6 +27,16 @@ public interface LinkedInstanceRepository extends JpaRepository<LinkedInstance, 
     /** Active (non-revoked) linked instances on a team — the orphan guard's count. */
     long countByTeamIdAndRevokedAtIsNull(Long teamId);
 
+    /** Updates only the label so a concurrent credential revocation cannot be overwritten. */
+    @Modifying
+    @Query(
+            "UPDATE LinkedInstance li SET li.name = :name "
+                    + "WHERE li.instanceId = :instanceId AND li.teamId = :teamId")
+    int renameForTeam(
+            @Param("teamId") Long teamId,
+            @Param("instanceId") Long instanceId,
+            @Param("name") String name);
+
     /**
      * Stamps liveness on a single instance. A targeted single-column UPDATE rather than a
      * full-entity {@code save}: the auth filter loads the instance outside a transaction, so a full

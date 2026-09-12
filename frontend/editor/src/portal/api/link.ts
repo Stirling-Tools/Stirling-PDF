@@ -1,4 +1,7 @@
 import { apiClient } from "@portal/api/http";
+import type { LinkedInstanceRow } from "@app/types/linkedInstance";
+
+export type { LinkedInstanceRow };
 
 /** Link status for this instance (GET /api/v1/account-link/status). */
 export interface LinkStatus {
@@ -28,18 +31,6 @@ export interface FreeTierBalance {
   periodStart: string;
   /** ISO local timestamp, exclusive — when the grant resets. */
   periodEnd: string;
-}
-
-/** A linked instance row (GET /api/v1/account-link/instances). */
-export interface LinkedInstanceRow {
-  instanceId: number;
-  deviceId: string;
-  name: string | null;
-  /** ISO timestamp the instance was registered. */
-  createdAt: string | null;
-  /** ISO timestamp the instance last presented its credential; null if never. */
-  lastSeenAt: string | null;
-  revoked: boolean;
 }
 
 /** Account-link client (combined billing). */
