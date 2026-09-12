@@ -21,6 +21,9 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/filter/",
   "/api/v1/integration/",
   "/api/v1/ai/tools/classify-and-label",
+  // Admitted on its own rather than the whole form namespace: this is the only /form/ endpoint
+  // that takes a document and returns one, so it is the only one a pipeline can chain.
+  "/api/v1/form/form-detection/detect",
 ];
 
 // File plumbing, not user parameters: `fileInput` and `file` are the uploaded primary document
@@ -256,6 +259,9 @@ export type ToolFormat = ${union(formats)};
 /** Every format, for iteration. */
 export const TOOL_FORMATS = ${JSON.stringify(formats)} as const satisfies readonly ToolFormat[];
 
+/** Filename extensions from the backend ToolFormat declarations. */
+export const TOOL_FORMAT_EXTENSIONS: Record<ToolFormat, readonly string[]> = ${JSON.stringify(vocabulary.extensions)};
+
 /** How many files go in and come out. A multi-output tool returns its results zipped, and the caller unpacks them. */
 export type ToolArity = ${union(vocabulary.arities as string[])};
 
@@ -277,6 +283,8 @@ export interface ToolIOCase {
 /** What one endpoint accepts and produces. */
 export interface ToolIOSpec {
   accepts: ToolFormat[];
+  /** Overrides the broad format categories for filename-based input checks. */
+  inputExtensions?: string[];
   produces: ToolFormat;
   arity: ToolArity;
   cases?: ToolIOCase[];

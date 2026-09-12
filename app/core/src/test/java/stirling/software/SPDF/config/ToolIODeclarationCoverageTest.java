@@ -45,7 +45,10 @@ class ToolIODeclarationCoverageTest {
                     "/api/v1/security/",
                     "/api/v1/convert/",
                     "/api/v1/filter/",
-                    "/api/v1/integration/");
+                    "/api/v1/integration/",
+                    // Just this corner of /api/v1/form/: the only endpoint there that takes a
+                    // document and returns one, so the only one a chain can contain.
+                    "/api/v1/form/form-detection/");
 
     /**
      * Not document transforms, so nothing to declare. A path exempts everything nested under it.
@@ -57,6 +60,8 @@ class ToolIODeclarationCoverageTest {
                     // documents.
                     "/api/v1/convert/pdf/text-editor",
                     "/api/v1/convert/text-editor/pdf",
+                    // Charcode lookup for the v2 editor: returns glyph mappings, not a document.
+                    "/api/v1/general/pdf-text-editor",
                     // Signing sessions, certificate checks and hardware token enumeration; the
                     // signing tool itself is /api/v1/security/cert-sign, which is declared.
                     "/api/v1/security/cert-sign/sessions",

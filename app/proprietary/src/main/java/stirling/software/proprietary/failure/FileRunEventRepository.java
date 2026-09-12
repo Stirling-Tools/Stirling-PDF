@@ -64,16 +64,17 @@ public interface FileRunEventRepository extends JpaRepository<FileRunEventEntity
     int fold(@Param("id") String id, @Param("now") Instant now, @Param("detail") String detail);
 
     /**
-     * Reopen a resolved incident whose failure has recurred. Guarded on the current status so only
-     * {@code RESOLVED} flips; a concurrent dismiss is never overwritten back to {@code NEW}.
+     * A recurrence reopens {@code RESOLVED} (the fix did not hold) and {@code FILE_REMOVED} (the
+     * document is back). Guarded, so a reviewer's {@code DISMISSED} is never overwritten.
      */
     @Modifying(clearAutomatically = true)
     @Transactional
     @Query(
             "update FileRunEventEntity e set"
                     + " e.status = stirling.software.proprietary.failure.FileRunEventStatus.NEW,"
-                    + " e.statusActor = null, e.statusAt = null where e.id = :id and e.status ="
-                    + " stirling.software.proprietary.failure.FileRunEventStatus.RESOLVED")
+                    + " e.statusActor = null, e.statusAt = null where e.id = :id and e.status in"
+                    + " (stirling.software.proprietary.failure.FileRunEventStatus.RESOLVED,"
+                    + " stirling.software.proprietary.failure.FileRunEventStatus.FILE_REMOVED)")
     int reopenIfResolved(@Param("id") String id);
 
     /**

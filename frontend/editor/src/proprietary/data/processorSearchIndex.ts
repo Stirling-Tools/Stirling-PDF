@@ -1,4 +1,8 @@
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import {
+  PORTAL_BASENAME,
+  PORTAL_REVIEW_PATH,
+} from "@app/routes/portalBasename";
+import { DOCS_PATH } from "@app/routes/docsRoute";
 // A static leaf module (its portal import is type-only), so it doesn't pull
 // the lazy portal chunk into the main bundle the way @portal/* values would.
 import { usersCapabilities } from "@app/portal/usersCapabilities";
@@ -20,13 +24,6 @@ const VIEWS: ProcessorSearchEntry[] = [
     labelFallback: "Home",
     path: PORTAL_BASENAME,
     keywords: ["portal", "processor", "admin"],
-  },
-  {
-    id: "users",
-    labelKey: "portal.nav.users",
-    labelFallback: "Users",
-    path: `${PORTAL_BASENAME}/users`,
-    keywords: ["team", "members", "roles", "admin"],
   },
   {
     id: "sources",
@@ -57,6 +54,13 @@ const VIEWS: ProcessorSearchEntry[] = [
     keywords: ["audit", "files"],
   },
   {
+    id: "review",
+    labelKey: "portal.nav.review",
+    labelFallback: "Review",
+    path: `${PORTAL_BASENAME}${PORTAL_REVIEW_PATH}`,
+    keywords: ["failures", "errors", "triage", "retry"],
+  },
+  {
     id: "integrations",
     labelKey: "portal.nav.integrations",
     labelFallback: "Integrations",
@@ -64,24 +68,10 @@ const VIEWS: ProcessorSearchEntry[] = [
     keywords: ["connections", "external", "api", "webhooks"],
   },
   {
-    id: "infrastructure",
-    labelKey: "portal.nav.infrastructure",
-    labelFallback: "Infrastructure",
-    path: `${PORTAL_BASENAME}/infrastructure`,
-    keywords: ["deployment", "instances", "health"],
-  },
-  {
-    id: "usage",
-    labelKey: "portal.nav.usage",
-    labelFallback: "Usage & Billing",
-    path: `${PORTAL_BASENAME}/usage`,
-    keywords: ["billing", "invoices", "plan", "wallet", "payg", "bundles"],
-  },
-  {
     id: "docs",
     labelKey: "portal.nav.docs",
     labelFallback: "Documentation",
-    path: `${PORTAL_BASENAME}/docs`,
+    path: DOCS_PATH,
     keywords: ["api", "documentation", "reference", "guides"],
   },
 ];

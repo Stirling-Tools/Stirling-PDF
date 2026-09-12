@@ -3,28 +3,66 @@ import {
   fireEvent,
   render as baseRender,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
-import type { PipelinesOverviewResponse } from "@portal/api/pipelines";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
+import type { PipelinesOverviewResponse, Policy } from "@portal/api/pipelines";
 import { Pipelines } from "@portal/views/Pipelines";
+
+/** The builder route: shows the draft handed in navigation state, so the Customise hand-off can be
+ * asserted without rendering the real builder. */
+function DraftProbe() {
+  const draft = (useLocation().state as { draft?: Policy } | null)?.draft;
+  return (
+    <div>
+      pipeline page
+      <span data-testid="draft-icon">{draft?.icon ?? ""}</span>
+      <span data-testid="draft-name">{draft?.name ?? ""}</span>
+      <span data-testid="draft-enabled">{String(draft?.enabled ?? "")}</span>
+    </div>
+  );
+}
 
 const render = (
   ui: Parameters<typeof baseRender>[0],
   options?: Parameters<typeof baseRender>[1],
 ) => baseRender(ui, { wrapper: PortalTestProviders, ...options });
 
-// Deterministic i18n: keys returned verbatim.
+// Deterministic i18n: keys returned verbatim. initReactI18next/Trans are exported too because the
+// unified page pulls in modules (the policy wizard/catalogue) that reference them at import time.
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
     i18n: { changeLanguage: vi.fn() },
   }),
+  initReactI18next: { type: "3rdParty", init: () => {} },
+  Trans: (props: { children?: unknown }) => props.children,
 }));
 
 const fetchPipelines = vi.fn();
+const fetchPipeline = vi.fn();
+const savePipeline = vi.fn();
+const fetchPolicyPermissions = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipelines: () => fetchPipelines(),
+  fetchPipeline: (id: string) => fetchPipeline(id),
+  savePipeline: (policy: unknown) => savePipeline(policy),
+  fetchPolicyPermissions: () => fetchPolicyPermissions(),
+}));
+
+// Spy the wizard's save without stubbing the rest of the module (parseSimplePolicy et al. stay real).
+const savePolicy = vi.fn();
+vi.mock("@portal/api/policies", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@portal/api/policies")>();
+  return { ...actual, savePolicy: (body: unknown) => savePolicy(body) };
+});
+
+// The template gallery is out of scope here: keep the catalogue empty so the test focuses on the
+// pipelines list.
+vi.mock("@portal/queries/policies", () => ({
+  usePoliciesOverview: () => ({ data: null, loading: false, error: null }),
+  usePolicyRuns: () => ({ data: [], loading: false, error: null }),
 }));
 
 const RESPONSE: PipelinesOverviewResponse = {
@@ -38,6 +76,8 @@ const RESPONSE: PipelinesOverviewResponse = {
       id: "plc-redaction",
       name: "Redaction sweep",
       enabled: true,
+      required: false,
+      icon: "security",
       status: "active",
       trigger: "schedule",
       sources: [{ id: "src-claims", name: "Claims intake" }],
@@ -57,10 +97,7 @@ function renderView(initial = "/processor/pipelines") {
           path="/processor/pipelines/new"
           element={<div>builder new</div>}
         />
-        <Route
-          path="/processor/pipelines/:id"
-          element={<div>pipeline page</div>}
-        />
+        <Route path="/processor/pipelines/:id" element={<DraftProbe />} />
       </Routes>
     </MemoryRouter>,
   );
@@ -70,28 +107,234 @@ describe("Pipelines view", () => {
   beforeEach(() => {
     fetchPipelines.mockReset();
     fetchPipelines.mockResolvedValue(RESPONSE);
+    fetchPipeline.mockReset();
+    // A plain pipeline (no template origin) - parseSimplePolicy returns null, so the row opens the
+    // full builder page.
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: {} },
+      outputIds: [],
+    });
+    savePipeline.mockReset();
+    savePipeline.mockResolvedValue(undefined);
+    savePolicy.mockReset();
+    savePolicy.mockResolvedValue(undefined);
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: true });
   });
+
+  /** A template-representable, currently-paused policy. */
+  const pausedPolicy = {
+    id: "plc-redaction",
+    name: "Redaction sweep",
+    enabled: false,
+    required: false,
+    icon: "shield",
+    inputs: [],
+    steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+    output: { type: "inline", options: { categoryId: "security" } },
+    outputIds: [],
+    editor: { allowed: true, runOn: "upload" },
+  };
 
   it("opens the builder when creating a pipeline", async () => {
     renderView();
     await screen.findByText("Redaction sweep");
-    fireEvent.click(screen.getByText("portal.pipelines.actions.newPipeline"));
+    fireEvent.click(
+      screen.getByText("portal.pipelines.actions.newCustomPipeline"),
+    );
     expect(await screen.findByText("builder new")).toBeInTheDocument();
   });
 
-  it("opens a pipeline's own page when its row is clicked", async () => {
+  it("opens the full builder when a plain pipeline row is clicked", async () => {
     renderView();
     fireEvent.click(await screen.findByText("Redaction sweep"));
     expect(await screen.findByText("pipeline page")).toBeInTheDocument();
   });
 
-  it("shows the KPI stat boxes when pipelines exist", async () => {
+  it("pausing re-saves the stored record verbatim, only flipping enabled", async () => {
+    // Template-representable, so the row opens the simple detail panel (not the builder). It carries
+    // first-class fields the decoded view drops - a custom name and an icon - which pausing must not
+    // rewrite.
+    const policy = {
+      id: "plc-redaction",
+      name: "My custom redaction",
+      enabled: true,
+      required: false,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
+    };
+    fetchPipeline.mockResolvedValue(policy);
+
     renderView();
-    await screen.findByText("Redaction sweep");
-    expect(screen.getByText("portal.pipelines.kpi.total")).toBeInTheDocument();
+    fireEvent.click(await screen.findByText("Redaction sweep"));
+    fireEvent.click(
+      await screen.findByText("portal.policies.detail.actions.pause"),
+    );
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalled());
+    // The whole record round-trips with only `enabled` flipped: name and icon survive.
+    expect(savePipeline).toHaveBeenCalledWith({ ...policy, enabled: false });
   });
 
-  it("hides the stat boxes and shows create + connect-source CTAs when empty", async () => {
+  it("keeps the custom icon and name when customising from the wizard", async () => {
+    const policy = {
+      id: "plc-redaction",
+      name: "My custom redaction",
+      enabled: true,
+      required: false,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "export" },
+    };
+    fetchPipeline.mockResolvedValue(policy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // open detail panel
+    fireEvent.click(
+      await screen.findByText("portal.policies.detail.actions.editSettings"),
+    ); // open wizard
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.customise"),
+    ); // hand off to the builder
+
+    // The draft carried into the builder keeps the stored icon and name, not the category default.
+    expect(await screen.findByTestId("draft-icon")).toHaveTextContent("shield");
+    expect(screen.getByTestId("draft-name")).toHaveTextContent(
+      "My custom redaction",
+    );
+  });
+
+  it("keeps a paused policy paused when saved from the wizard", async () => {
+    fetchPipeline.mockResolvedValue(pausedPolicy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // detail panel
+    fireEvent.click(
+      await screen.findByText("portal.policies.detail.actions.editSettings"),
+    ); // wizard
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.saveChanges"),
+    );
+
+    await waitFor(() => expect(savePolicy).toHaveBeenCalled());
+    // The wizard has no enabled control, so a save must not silently re-enable a paused policy.
+    expect(savePolicy.mock.calls[0][0]).toMatchObject({ enabled: false });
+  });
+
+  it("keeps a paused policy paused when customising from the wizard", async () => {
+    fetchPipeline.mockResolvedValue(pausedPolicy);
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // detail panel
+    fireEvent.click(
+      await screen.findByText("portal.policies.detail.actions.editSettings"),
+    ); // wizard
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.actions.customise"),
+    ); // hand off to the builder
+
+    expect(await screen.findByTestId("draft-enabled")).toHaveTextContent(
+      "false",
+    );
+  });
+
+  it("locks a required policy for a non-manager (read-only detail)", async () => {
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: false });
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      required: true,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
+    });
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // detail panel
+
+    // The manager-only note shows and the modify actions are locked.
+    expect(
+      await screen.findByText("portal.policies.detail.managerOnly"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", {
+        name: "portal.policies.detail.actions.editSettings",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", {
+        name: "portal.policies.detail.actions.pause",
+      }),
+    ).toBeDisabled();
+  });
+
+  it("withholds the manager-only note while the permission check is still loading", async () => {
+    // A check that never settles: canManage stays fail-closed false, isLoading stays true.
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockReturnValue(new Promise(() => {}));
+    fetchPipeline.mockResolvedValue({
+      id: "plc-redaction",
+      name: "Redaction sweep",
+      enabled: true,
+      required: true,
+      icon: "shield",
+      inputs: [],
+      steps: [{ operation: "/api/v1/security/auto-redact", parameters: {} }],
+      output: { type: "inline", options: { categoryId: "security" } },
+      outputIds: [],
+      editor: { allowed: true, runOn: "upload" },
+    });
+
+    renderView();
+    fireEvent.click(await screen.findByText("Redaction sweep")); // detail panel
+
+    // Controls stay locked (fail-closed), but a still-loading manager isn't told they're not allowed.
+    expect(
+      await screen.findByRole("button", {
+        name: "portal.policies.detail.actions.editSettings",
+      }),
+    ).toBeDisabled();
+    expect(
+      screen.queryByText("portal.policies.detail.managerOnly"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("warns with a retry when the permission check fails, instead of locking silently", async () => {
+    fetchPolicyPermissions.mockReset();
+    fetchPolicyPermissions.mockRejectedValueOnce(new Error("boom"));
+    fetchPolicyPermissions.mockResolvedValue({ canManagePolicies: true });
+
+    renderView();
+    expect(
+      await screen.findByText("portal.pipelines.permissionsUnavailable"),
+    ).toBeInTheDocument();
+
+    // Retry refetches; on success the warning clears.
+    fireEvent.click(screen.getByText("portal.pipelines.permissionsRetry"));
+    await waitFor(() =>
+      expect(
+        screen.queryByText("portal.pipelines.permissionsUnavailable"),
+      ).not.toBeInTheDocument(),
+    );
+  });
+
+  it("shows create + connect-source CTAs when empty", async () => {
     fetchPipelines.mockResolvedValue({
       kpis: [
         { value: 0, description: "" },
@@ -107,9 +350,5 @@ describe("Pipelines view", () => {
     expect(
       screen.getByText("portal.pipelines.empty.connectSource"),
     ).toBeInTheDocument();
-    // The KPI strip is gone: no stat-box labels over an empty page.
-    expect(
-      screen.queryByText("portal.pipelines.kpi.total"),
-    ).not.toBeInTheDocument();
   });
 });

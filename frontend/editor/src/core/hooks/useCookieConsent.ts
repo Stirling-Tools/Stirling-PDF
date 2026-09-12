@@ -13,12 +13,12 @@ import { getCookieConsentOverrides } from "@app/extensions/cookieConsentConfig";
 declare global {
   interface Window {
     CookieConsent?: {
-      run: (config: any) => void;
+      run: (config: Record<string, unknown>) => void;
       show: (show?: boolean) => void;
       hide: () => void;
       showPreferences: () => void;
       hidePreferences: () => void;
-      getCookie: (name?: string) => any;
+      getCookie: (name?: string) => unknown;
       acceptedCategory: (category: string) => boolean;
       acceptedService: (serviceName: string, category: string) => boolean;
     };
@@ -28,16 +28,6 @@ declare global {
 interface CookieConsentConfig {
   analyticsEnabled?: boolean;
 }
-
-// Shard so Mantine's scroll-lock doesn't swallow events on the consent dialog;
-// lazy because #cc-main only exists post-load.
-export const COOKIE_CONSENT_SCROLL_SHARD = {
-  get current(): HTMLElement | null {
-    return typeof document === "undefined"
-      ? null
-      : document.getElementById("cc-main");
-  },
-};
 
 export const useCookieConsent = ({
   analyticsEnabled = false,

@@ -4,7 +4,12 @@ import { render, screen, waitFor, act } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
 import { FolderProvider, useFolders } from "@app/contexts/FolderContext";
-import { createFolderId, FolderId, FolderRecord } from "@app/types/folder";
+import {
+  createFolderId,
+  diskFolderId,
+  FolderId,
+  FolderRecord,
+} from "@app/types/folder";
 import { expectConsole } from "@app/tests/failOnConsole";
 
 /**
@@ -67,11 +72,22 @@ vi.mock("@app/auth/UseSession", () => ({
 // Stateful IDB mock - the revision-driven refresh re-reads getAllFolders
 // after every state change, so a stateless [] mock would clobber pull results.
 const { mockIdb } = vi.hoisted(() => ({
-  mockIdb: { folders: [] as { id: string }[] },
+  mockIdb: {
+    folders: [] as { id: string }[],
+    nextReadGate: null as Promise<void> | null,
+    reads: 0,
+  },
 }));
 vi.mock("@app/services/folderStorage", () => ({
   folderStorage: {
-    getAllFolders: vi.fn(() => Promise.resolve([...mockIdb.folders])),
+    getAllFolders: vi.fn(async () => {
+      const snapshot = [...mockIdb.folders];
+      const gate = mockIdb.nextReadGate;
+      mockIdb.nextReadGate = null;
+      mockIdb.reads += 1;
+      if (gate) await gate;
+      return snapshot;
+    }),
     replaceAll: vi.fn((next: { id: string }[]) => {
       mockIdb.folders = [...next];
       return Promise.resolve();
@@ -92,6 +108,36 @@ vi.mock("@app/services/folderStorage", () => ({
     }),
   },
 }));
+
+// The virtual store is exercised by its own suite (virtualFolderStorage.test);
+// here it only needs to exist and be empty so the merged load resolves.
+vi.mock("@app/services/virtualFolderStorage", () => ({
+  virtualFolderStorage: {
+    getAllFolders: vi.fn(() => Promise.resolve([])),
+    createFolder: vi.fn(),
+    updateFolder: vi.fn(),
+    moveFolder: vi.fn(),
+    deleteFolder: vi.fn(() => Promise.resolve([])),
+  },
+}));
+
+// `directoryKey` is a pure path normaliser that FolderContext imports from here, so
+// the mock keeps the real one - the disk-folder tests depend on its exact answers.
+const { mockLocal } = vi.hoisted(() => ({
+  mockLocal: { folders: [] as unknown[] },
+}));
+vi.mock("@app/services/localFolderStorage", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@app/services/localFolderStorage")>();
+  return {
+    directoryKey: actual.directoryKey,
+    localFolderStorage: {
+      getAllFolders: vi.fn(() => Promise.resolve([...mockLocal.folders])),
+      mountDirectory: vi.fn(),
+      removeFolder: vi.fn(() => Promise.resolve()),
+    },
+  };
+});
 
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({
@@ -244,6 +290,8 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     mockDelete.mockReset();
     // Reset the stateful IDB mock so each test starts with an empty cache.
     mockIdb.folders = [];
+    mockIdb.nextReadGate = null;
+    mockIdb.reads = 0;
     // Signed-in, non-anonymous user so pullFromServer runs.
     mockAuth.user = { id: "test-user", is_anonymous: false };
     mockAuth.isAnonymous = false;
@@ -270,7 +318,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
 
   function ApiProbe(props: { onReady: (api: ProbeApi) => void }) {
     const f = useFolders();
-    React.useEffect(() => {
+    React.useLayoutEffect(() => {
       props.onReady({
         error: f.error,
         folderCount: f.folders.length,
@@ -303,12 +351,14 @@ describe("FolderContext stale-folder 404 cleanup", () => {
         </FolderProvider>
       </MemoryRouter>,
     );
+    // Wait on the captured api, not just the DOM: the count renders on commit
+    // but apiRef is filled by a passive effect, so asserting the text alone can
+    // hand back the initial render's api, whose folder map is still empty.
     await waitFor(() =>
-      expect(screen.getByTestId("count").textContent).toBe(
-        String(initial.length),
-      ),
+      expect(apiRef.current?.folderCount).toBe(initial.length),
     );
     if (!apiRef.current) throw new Error("ApiProbe never reported ready");
+    expect(apiRef.current.folderCount).toBe(initial.length);
     return apiRef as { current: ProbeApi };
   }
 
@@ -332,6 +382,29 @@ describe("FolderContext stale-folder 404 cleanup", () => {
       expect(screen.getByTestId("count").textContent).toBe("1"),
     );
     expect(screen.getByTestId("reachable").textContent).toBe("true");
+  });
+
+  test("a late initial cache read cannot replace a newer server snapshot", async () => {
+    const folder = makeFolder("server folder");
+    let releaseCacheRead: (() => void) | undefined;
+    mockIdb.nextReadGate = new Promise<void>((resolve) => {
+      releaseCacheRead = resolve;
+    });
+
+    const api = await setupWithFolders([folder]);
+    await waitFor(() => expect(mockIdb.reads).toBeGreaterThanOrEqual(2));
+
+    await act(async () => {
+      releaseCacheRead?.();
+    });
+
+    expect(screen.getByTestId("count").textContent).toBe("1");
+    mockUpdate.mockResolvedValueOnce({ ...folder, name: "renamed" });
+    let renamed: unknown;
+    await act(async () => {
+      renamed = await api.current.rename(folder.id, "renamed");
+    });
+    expect(renamed).toMatchObject({ name: "renamed" });
   });
 
   test("deleteFolder 404 is treated as already-deleted, returns [id], no banner", async () => {
@@ -398,5 +471,101 @@ describe("FolderContext stale-folder 404 cleanup", () => {
     expect(threw).toBe(true);
     expect(screen.getByTestId("count").textContent).toBe("1");
     expect(screen.getByTestId("error").textContent).not.toBe("<null>");
+  });
+});
+
+/**
+ * A mounted directory's subfolders are synthesised from the path rather than stored,
+ * so `resolveDiskFolder` is a setState reached from an effect that re-runs on every
+ * folder change. It has to be a no-op the second time or the pair spins until React
+ * gives up with "Maximum update depth exceeded".
+ */
+describe("FolderContext disk subfolder resolution", () => {
+  const MOUNT_DIR = "C:\\Users\\test\\Docs";
+
+  function mountRecord(): FolderRecord {
+    return {
+      id: diskFolderId(MOUNT_DIR),
+      kind: "local",
+      name: "Docs",
+      parentFolderId: null,
+      directory: MOUNT_DIR,
+      createdAt: 0,
+      updatedAt: 0,
+    } as FolderRecord;
+  }
+
+  type DiskProbeApi = {
+    resolveDiskFolder: (id: FolderId) => boolean;
+    knows: (id: FolderId) => boolean;
+  };
+
+  let renders = 0;
+
+  function DiskProbe(props: { onReady: (api: DiskProbeApi) => void }) {
+    const f = useFolders();
+    renders += 1;
+    React.useEffect(() => {
+      props.onReady({
+        resolveDiskFolder: f.resolveDiskFolder,
+        knows: (id) => f.foldersById.has(id),
+      });
+    }, [f, props]);
+    return <div data-testid="count">{f.folders.length}</div>;
+  }
+
+  async function setupWithMount(): Promise<{ current: DiskProbeApi }> {
+    mockList.mockResolvedValue([]);
+    mockLocal.folders = [mountRecord()];
+    const apiRef: { current: DiskProbeApi | null } = { current: null };
+    render(
+      <MemoryRouter>
+        <FolderProvider>
+          <DiskProbe onReady={(api) => (apiRef.current = api)} />
+        </FolderProvider>
+      </MemoryRouter>,
+    );
+    await waitFor(() =>
+      expect(screen.getByTestId("count").textContent).toBe("1"),
+    );
+    if (!apiRef.current) throw new Error("DiskProbe never reported ready");
+    return apiRef as { current: DiskProbeApi };
+  }
+
+  beforeEach(() => {
+    mockList.mockReset();
+    mockIdb.folders = [];
+    mockLocal.folders = [];
+    mockAuth.user = { id: "test-user", is_anonymous: false };
+    mockAuth.isAnonymous = false;
+    renders = 0;
+  });
+
+  test("resolving the same subdirectory twice renders once", async () => {
+    const api = await setupWithMount();
+    const childId = diskFolderId(`${MOUNT_DIR}\\Invoices`);
+
+    await act(async () => {
+      expect(api.current.resolveDiskFolder(childId)).toBe(true);
+    });
+    await waitFor(() => expect(api.current.knows(childId)).toBe(true));
+
+    const settled = renders;
+    await act(async () => {
+      expect(api.current.resolveDiskFolder(childId)).toBe(true);
+    });
+    expect(renders).toBe(settled);
+  });
+
+  test("a path that rebuilds to a different id is refused, not registered", async () => {
+    const api = await setupWithMount();
+    // Trailing separator: the id encodes the path verbatim, so the chain rebuilt
+    // from its segments can never carry this id.
+    const trailing = diskFolderId(`${MOUNT_DIR}\\Invoices\\`);
+
+    await act(async () => {
+      expect(api.current.resolveDiskFolder(trailing)).toBe(false);
+    });
+    expect(api.current.knows(trailing)).toBe(false);
   });
 });

@@ -77,6 +77,7 @@ public class ApplicationProperties {
     private ProcessExecutor processExecutor = new ProcessExecutor();
     private PdfEditor pdfEditor = new PdfEditor();
     private AiEngine aiEngine = new AiEngine();
+    private FormDetection formDetection = new FormDetection();
     private Mcp mcp = new Mcp();
     private InternalApi internalApi = new InternalApi();
     private Cluster cluster = new Cluster();
@@ -212,9 +213,19 @@ public class ApplicationProperties {
          * write to. Empty (the default) disables folder access except to implicitly defined
          * folders, such as server storage folders (if enabled) and the pipeline watched folders.
          * Stirling's own config directory is always off-limits, and folder access is always
-         * disabled in SaaS mode regardless of this list.
+         * disabled in SaaS mode regardless of this list. Processing folders let every authenticated
+         * user, not only team leaders, read and replace files under these roots.
          */
         private List<String> allowedFolderRoots = new java.util.ArrayList<>();
+
+        /**
+         * How many of one sweep's runs may execute at once; further runs queue, visible as pending.
+         * A folder dispatched all at once piles up at the pipeline's slowest tool and nothing
+         * visibly finishes until the end, so the cap keeps completions arriving steadily. The
+         * default suits API-bound pipelines; turn it down for a heavyweight local engine, 0 =
+         * unbounded.
+         */
+        private int sweepConcurrency = 6;
 
         /** How often (seconds) the schedule trigger checks for policies whose schedule is due. */
         private long scheduleSweepSeconds = 60;
@@ -439,6 +450,28 @@ public class ApplicationProperties {
             private boolean pdfComment = true;
             private boolean classify = true;
         }
+    }
+
+    /**
+     * Auto Form Detection settings. The model itself is downloaded on demand by an admin (see
+     * {@code /api/v1/form/form-detection-model/*}); only lightweight pointers are persisted here.
+     */
+    @Data
+    public static class FormDetection {
+        /** Master on/off switch for the whole feature (admin-controlled). */
+        private boolean enabled = true;
+
+        /** Id of the installed model; blank means none installed. */
+        private String activeModelId = "";
+
+        /** Optional override dir; blank uses {@code <configs>/models/form-detection}. */
+        private String modelDir = "";
+
+        /**
+         * Read-only dir of image-baked models, activated on startup when none is active and read in
+         * place rather than copied. Blank disables seeding.
+         */
+        private String preinstalledModelDir = "";
     }
 
     /**
@@ -1030,6 +1063,7 @@ public class ApplicationProperties {
         private Boolean enablePosthog;
         private Boolean enableScarf;
         private Boolean enableDesktopInstallSlide = true;
+        private boolean enableEasterEggs = true;
         private Datasource datasource;
         private boolean disableSanitize;
         private int maxDPI = 500;
@@ -1518,6 +1552,18 @@ public class ApplicationProperties {
         private boolean enabled;
         @ToString.Exclude private String key;
         private int maxUsers;
+
+        /**
+         * Servers purchased, and the users each one grants. Both come from licence metadata and are
+         * presentation only: {@code maxUsers} is the limit that is actually enforced. They exist so
+         * the UI can say "2 servers, 100 users each" rather than a bare 200, and so the
+         * add-capacity flow knows what a single additional server buys. Zero means the licence
+         * predates the cap and carries no server breakdown.
+         */
+        private int serverQuantity;
+
+        private int userBlockSize;
+
         private ProFeatures proFeatures = new ProFeatures();
         private EnterpriseFeatures enterpriseFeatures = new EnterpriseFeatures();
 

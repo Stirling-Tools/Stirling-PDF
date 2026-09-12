@@ -212,6 +212,7 @@ export function Integrations() {
     return counts;
   }, [catalogue]);
 
+  // Stable identities: both land in the row-building useMemo deps below.
   const openCreate = useCallback((typeId: string) => {
     setModal({ open: true, editing: null, fixedTypeId: typeId });
   }, []);

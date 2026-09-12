@@ -13,10 +13,8 @@ function toCredits(
   freeRemaining: number,
   freeAllowance: number,
 ): CachedCredits {
-  // Free teams only. The grant is a lifetime pool that survives subscribing, so
-  // a paying team would otherwise sit on a permanent "0 of 500" in red while
-  // nothing is wrong. Plan draws the same line — subscribed teams get the
-  // spend-vs-cap meter there, and admins get usage in the processor.
+  // Free teams only: a payer's headline number is spend against cap, and a
+  // draining free meter beside a live invoice reads as a problem.
   if (status === "subscribed") return null;
   return { remaining: freeRemaining, total: freeAllowance };
 }

@@ -2,11 +2,16 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type {
   AnnotationAPI,
   AnnotationToolId,
+  AnnotationSelection,
+  AnnotationObject,
+  AnnotationEvent,
 } from "@app/components/viewer/viewerTypes";
 
 interface UseAnnotationSelectionParams {
   annotationApiRef: React.RefObject<AnnotationAPI | null>;
-  deriveToolFromAnnotation: (annotation: any) => AnnotationToolId | undefined;
+  deriveToolFromAnnotation: (
+    annotation: AnnotationSelection | null | undefined,
+  ) => AnnotationToolId | undefined;
   activeToolRef: React.MutableRefObject<AnnotationToolId>;
   setActiveTool: (toolId: AnnotationToolId) => void;
   setSelectedTextDraft: (text: string) => void;
@@ -43,27 +48,25 @@ const MARKUP_TOOL_IDS = [
 const DRAWING_TOOL_IDS = ["ink", "inkHighlighter"] as const;
 const STAY_ACTIVE_TOOL_IDS = [...MARKUP_TOOL_IDS, ...DRAWING_TOOL_IDS] as const;
 
-const isTextMarkupAnnotation = (annotation: any): boolean => {
+const isTextMarkupAnnotation = (
+  annotation: AnnotationSelection | null | undefined,
+): boolean => {
   const toolId =
     annotation?.customData?.annotationToolId ||
     annotation?.customData?.toolId ||
     annotation?.object?.customData?.annotationToolId ||
     annotation?.object?.customData?.toolId;
-  if (toolId && MARKUP_TOOL_IDS.includes(toolId)) return true;
+  if (toolId && (MARKUP_TOOL_IDS as readonly string[]).includes(toolId))
+    return true;
 
   const type = annotation?.type ?? annotation?.object?.type;
   if (typeof type === "number" && [9, 10, 11, 12].includes(type)) return true;
 
-  const subtype = annotation?.subtype ?? annotation?.object?.subtype;
-  if (typeof subtype === "string") {
-    const lower = subtype.toLowerCase();
-    if (MARKUP_TOOL_IDS.some((t) => lower.includes(t))) return true;
-  }
   return false;
 };
 
 const shouldStayOnPlacementTool = (
-  annotation: any,
+  annotation: AnnotationSelection | null | undefined,
   derivedTool?: string | null | undefined,
 ): boolean => {
   // Text markup tools (highlight, underline, strikeout, squiggly) and drawing tools (ink, inkHighlighter) stay active
@@ -77,7 +80,7 @@ const shouldStayOnPlacementTool = (
     annotation?.object?.customData?.toolId;
 
   // Check if it's a tool that should stay active
-  if (toolId && STAY_ACTIVE_TOOL_IDS.includes(toolId as any)) {
+  if (toolId && (STAY_ACTIVE_TOOL_IDS as readonly string[]).includes(toolId)) {
     return true;
   }
 
@@ -119,26 +122,29 @@ export function useAnnotationSelection({
   setTextAlignment,
   setFreehandHighlighterWidth,
 }: UseAnnotationSelectionParams) {
-  const [selectedAnn, setSelectedAnn] = useState<any | null>(null);
+  const [selectedAnn, setSelectedAnn] = useState<{
+    object: AnnotationObject;
+  } | null>(null);
   const [selectedAnnId, setSelectedAnnId] = useState<string | null>(null);
   const selectedAnnIdRef = useRef<string | null>(null);
 
   const applySelectionFromAnnotation = useCallback(
-    (ann: any | null) => {
+    (ann: AnnotationSelection | null) => {
       const annObject = ann?.object ?? ann ?? null;
       const annId = annObject?.id ?? null;
-      const type = annObject?.type;
+      const type = annObject?.type ?? -1;
       const derivedTool = annObject
         ? deriveToolFromAnnotation(annObject)
         : undefined;
       selectedAnnIdRef.current = annId;
       setSelectedAnnId(annId);
       // Normalize selected annotation to always expose .object for edit panels
-      const normalizedSelection = ann?.object
-        ? ann
-        : annObject
-          ? { object: annObject }
-          : null;
+      const normalizedSelection: { object: AnnotationObject } | null =
+        ann?.object
+          ? { object: ann.object }
+          : annObject
+            ? { object: annObject }
+            : null;
       setSelectedAnn(normalizedSelection);
 
       if (annObject?.contents !== undefined) {
@@ -315,11 +321,11 @@ export function useAnnotationSelection({
   );
 
   useEffect(() => {
-    const api = annotationApiRef.current as any;
+    const api = annotationApiRef.current;
     if (!api) return;
 
     const checkSelection = () => {
-      let ann: any = null;
+      let ann: AnnotationSelection | null = null;
       if (typeof api.getSelectedAnnotation === "function") {
         try {
           ann = api.getSelectedAnnotation();
@@ -349,9 +355,17 @@ export function useAnnotationSelection({
     let interval: ReturnType<typeof setInterval> | null = null;
 
     if (typeof api.onAnnotationEvent === "function") {
-      const handler = (event: any) => {
-        const ann = event?.annotation ?? event?.selectedAnnotation ?? null;
-        const eventType = event?.type;
+      const handler = (event: AnnotationEvent) => {
+        // The handler defends against annotation-event shapes broader than the
+        // installed plugin's typed union (extra event types, a selectedAnnotation
+        // field) across plugin versions; read those structurally.
+        const ev = event as {
+          type?: string;
+          annotation?: AnnotationSelection;
+          selectedAnnotation?: AnnotationSelection;
+        };
+        const ann = ev.annotation ?? ev.selectedAnnotation ?? null;
+        const eventType = ev.type;
         switch (eventType) {
           case "create":
           case "add":
@@ -365,9 +379,7 @@ export function useAnnotationSelection({
             const currentTool = activeToolRef.current;
             const tool =
               deriveToolFromAnnotation(
-                (eventAnn as any)?.object ??
-                  eventAnn ??
-                  api.getSelectedAnnotation?.(),
+                eventAnn?.object ?? eventAnn ?? api.getSelectedAnnotation?.(),
               ) || currentTool;
             const stayOnPlacement = shouldStayOnPlacementTool(eventAnn, tool);
             if (activeToolRef.current !== "select" && !stayOnPlacement) {
@@ -381,7 +393,7 @@ export function useAnnotationSelection({
               applySelectionFromAnnotation(selected ?? eventAnn ?? null);
               const derivedAfter =
                 deriveToolFromAnnotation(
-                  (selected as any)?.object ?? selected ?? eventAnn ?? null,
+                  selected?.object ?? selected ?? eventAnn ?? null,
                 ) || activeToolRef.current;
               const stayOnPlacementAfter = shouldStayOnPlacementTool(
                 selected ?? eventAnn ?? null,

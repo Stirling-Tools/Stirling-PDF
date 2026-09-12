@@ -356,6 +356,26 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle a document that failed the compliance standard it was checked against.
+     *
+     * @param ex the ComplianceNotMetException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 422 UNPROCESSABLE_ENTITY: the request was understood and the
+     *     service worked, the document simply does not meet the standard
+     */
+    @ExceptionHandler(ComplianceNotMetException.class)
+    public ResponseEntity<ProblemDetail> handleComplianceNotMet(
+            ComplianceNotMetException ex, HttpServletRequest request) {
+        logException("warn", "Compliance", request, ex, ex.getErrorCode());
+
+        String title =
+                getLocalizedMessage(
+                        "error.complianceNotMet.title", ErrorTitles.COMPLIANCE_NOT_MET_DEFAULT);
+        return createProblemDetailResponse(
+                ex, HttpStatus.UNPROCESSABLE_ENTITY, ErrorTypes.COMPLIANCE_NOT_MET, title, request);
+    }
+
+    /**
      * Handle FFmpeg dependency missing errors when media conversion endpoints are invoked.
      *
      * @param ex the FfmpegRequiredException
@@ -1135,6 +1155,8 @@ public class GlobalExceptionHandler {
             // Delegate to specific BaseAppException handlers
             if (appEx instanceof PdfPasswordException) {
                 return handlePdfPassword((PdfPasswordException) appEx, request);
+            } else if (appEx instanceof ComplianceNotMetException complianceEx) {
+                return handleComplianceNotMet(complianceEx, request);
             } else if (appEx instanceof PdfCorruptedException
                     || appEx instanceof PdfEncryptionException
                     || appEx instanceof OutOfMemoryDpiException) {
@@ -1464,6 +1486,7 @@ public class GlobalExceptionHandler {
         static final String NOT_FOUND = "/errors/not-found";
         static final String INVALID_ARGUMENT = "/errors/invalid-argument";
         static final String IO_ERROR = "/errors/io-error";
+        static final String COMPLIANCE_NOT_MET = "/errors/compliance-not-met";
         static final String UNEXPECTED = "/errors/unexpected";
     }
 
@@ -1476,6 +1499,7 @@ public class GlobalExceptionHandler {
         static final String PDF_CORRUPTED_DEFAULT = "PDF File Corrupted";
         static final String PDF_ENCRYPTION_DEFAULT = "PDF Encryption Error";
         static final String APPLICATION_DEFAULT = "Application Error";
+        static final String COMPLIANCE_NOT_MET_DEFAULT = "Compliance Standard Not Met";
         static final String CBR_FORMAT_DEFAULT = "Invalid CBR File Format";
         static final String CBZ_FORMAT_DEFAULT = "Invalid CBZ File Format";
         static final String EML_FORMAT_DEFAULT = "Invalid EML File Format";

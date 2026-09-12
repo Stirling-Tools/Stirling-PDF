@@ -35,13 +35,12 @@ import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import {
   getStartupNavigationAction,
   getDefaultWorkbenchForFileCount,
 } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { stripBasePath } from "@app/constants/app";
+import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
@@ -56,6 +55,9 @@ import {
   useFilesPage,
 } from "@app/contexts/FilesPageContext";
 import { useFolders } from "@app/contexts/FolderContext";
+import { folderKind } from "@app/types/folder";
+import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
+import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
@@ -124,7 +126,6 @@ export default function HomePage() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
-  const [configModalOpen, setConfigModalOpen] = useState(false);
   const otherApp = useOtherAppSwitch();
   const location = useLocation();
   // Persisted user preference for the FileSidebar collapsed state. Auto-
@@ -132,45 +133,15 @@ export default function HomePage() {
   // doesn't write to storage, so deep-linking to /files won't overwrite what
   // the user actually chose last time.
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
-    readPersistedSidebarCollapsed,
+    // Reader mode outlives this page (settings swaps it out and back), and it
+    // collapses the sidebar without persisting that, so it wins on mount too.
+    () => readerMode || readPersistedSidebarCollapsed(),
   );
 
-  // Open the config modal whenever the URL is /settings/* (e.g. from the admin
-  // tour's openConfigModal action which navigates to /settings/overview).
-  useEffect(() => {
-    const isSettings = location.pathname.startsWith("/settings");
-    setConfigModalOpen(isSettings);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const handler = () => setConfigModalOpen(true);
-    window.addEventListener("appConfig:open", handler);
-    return () => window.removeEventListener("appConfig:open", handler);
-  }, []);
-
-  // Where the user was before settings opened, so close can restore it. Null
-  // when opened directly on a /settings URL (deep link) - close falls back to
-  // the editor root.
-  const settingsOriginRef = useRef<string | null>(null);
-  const wasConfigOpenRef = useRef(false);
-  useEffect(() => {
-    if (configModalOpen && !wasConfigOpenRef.current) {
-      settingsOriginRef.current = location.pathname.startsWith("/settings")
-        ? null
-        : location.pathname;
-    }
-    wasConfigOpenRef.current = configModalOpen;
-  }, [configModalOpen, location.pathname]);
-
-  const handleCloseConfig = useCallback(() => {
-    // Restore the URL before clearing the flag, or a late /settings commit
-    // re-opens the modal. Read window.location, not useLocation: a tab switch
-    // updates the URL synchronously while the router's commit lags. Replace to
-    // the origin rather than navigate(-1), which webkit can drop.
-    if (stripBasePath(window.location.pathname).startsWith("/settings")) {
-      navigate(settingsOriginRef.current ?? EDITOR_BASENAME, { replace: true });
-    }
-    setConfigModalOpen(false);
+  // Settings is its own page; it restores the recorded origin on Back.
+  const openSettings = useCallback(() => {
+    rememberSettingsOrigin();
+    navigate("/settings");
   }, [navigate]);
 
   const { activeFiles } = useFileContext();
@@ -519,7 +490,6 @@ export default function HomePage() {
       <HomePageExtensions />
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
-        onOpenSettings={() => setConfigModalOpen(true)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
         onSetReaderMode={setReaderMode}
@@ -684,7 +654,7 @@ export default function HomePage() {
                 variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.config", "Config")}
-                onClick={() => setConfigModalOpen(true)}
+                onClick={openSettings}
               >
                 <LocalIcon
                   icon="settings-rounded"
@@ -697,10 +667,6 @@ export default function HomePage() {
               </Button>
             </div>
             <FileManager selectedTool={selectedTool} />
-            <AppConfigModal
-              opened={configModalOpen}
-              onClose={handleCloseConfig}
-            />
           </div>
         ) : (
           <Group
@@ -731,17 +697,13 @@ export default function HomePage() {
                   fileSidebarCollapsed
                 }
                 onToggleCollapse={handleSidebarToggle}
-                onOpenSettings={() => setConfigModalOpen(true)}
+                onOpenSettings={openSettings}
               />
             </div>
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
-            <AppConfigModal
-              opened={configModalOpen}
-              onClose={handleCloseConfig}
-            />
           </Group>
         )}
       </FilesPageProvider>
@@ -771,6 +733,8 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const filesPage = useFilesPage();
     const folders = useFolders();
     const { addFiles } = useFileHandler();
+    const { createFolderHere, createFolderHereBlockedReason } =
+      useNewFolderFlow();
 
     const handleUpload = useCallback(
       async (files: File[]) => {
@@ -787,12 +751,19 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
       [addFiles, filesPage, folders.currentFolderId],
     );
 
-    const newFolderDisabledReason = !folders.serverReachable
-      ? t(
-          "filesPage.newFolderStorageDisabled",
-          "Server folder storage isn't enabled. Ask your admin to turn it on.",
-        )
+    // Kind-aware: only a server folder's subfolder needs the server, and a mounted
+    // directory takes no subfolders from here at all.
+    const railCurrentFolder = folders.currentFolderId
+      ? folders.foldersById.get(folders.currentFolderId)
+      : undefined;
+    const railCurrentKind = railCurrentFolder
+      ? folderKind(railCurrentFolder)
       : null;
+    const serverFolderBlock = useServerFolderBlock();
+    const newFolderDisabledReason =
+      railCurrentKind === "server"
+        ? serverFolderBlock
+        : createFolderHereBlockedReason;
 
     return (
       <FileSidebar
@@ -803,7 +774,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
         extraAction={{
           icon: <CreateNewFolderIcon />,
           label: t("filesPage.newFolder", "New folder"),
-          onClick: () => filesPage.openNewFolderDialog(),
+          onClick: createFolderHere,
           disabled: newFolderDisabledReason !== null,
           disabledTooltip: newFolderDisabledReason ?? undefined,
           testId: "files-rail-new-folder",

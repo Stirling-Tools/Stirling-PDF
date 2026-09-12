@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
 import { containsEncryptMarker } from "@app/utils/thumbnailUtils";
+import {
+  PdfiumOpenError,
+  FPDF_ERR_PASSWORD,
+} from "@app/services/pdfiumService";
 
 /**
  * The only signal that a PDF too large to fully parse is password-protected.
@@ -49,5 +53,30 @@ describe("containsEncryptMarker — trailer probe for large PDFs", () => {
 
   it("reports nothing for an empty read", () => {
     expect(containsEncryptMarker(new Uint8Array(0))).toBe(false);
+  });
+});
+
+/**
+ * thumbnailUtils identifies password-protected PDFs from the error that
+ * openRawDocumentSafe throws. That guard used to regex the error *message* for
+ * "error 4"; when the message changed the detection silently stopped firing
+ * with no test failing. These pin the contract it now relies on instead.
+ */
+describe("encrypted-PDF identification contract", () => {
+  it("marks a password failure with the password code", () => {
+    const err = new PdfiumOpenError(FPDF_ERR_PASSWORD);
+    expect(err).toBeInstanceOf(PdfiumOpenError);
+    expect(err.code).toBe(FPDF_ERR_PASSWORD);
+  });
+
+  it("does not mistake another open failure for a password prompt", () => {
+    expect(new PdfiumOpenError(2).code).not.toBe(FPDF_ERR_PASSWORD);
+  });
+
+  it("carries the code out of band, not in the message", () => {
+    // Guarding on message text is what broke before - assert it stays unrelied on.
+    expect(new PdfiumOpenError(FPDF_ERR_PASSWORD).message).not.toContain(
+      `error ${FPDF_ERR_PASSWORD}`,
+    );
   });
 });

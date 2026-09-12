@@ -144,7 +144,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
               </Text>
               <Text size="sm" c="dimmed" mt="xs">
                 {t("plan.perMonth", "/month")}{" "}
-                {t("plan.withServer", "+ Server Plan")}
+                {t("plan.withServer", "+ Team plan")}
               </Text>
             </>
           ) : (
@@ -185,7 +185,7 @@ const PlanCard: React.FC<PlanCardProps> = ({
 
           {/* Single Upgrade Button */}
           <Tooltip
-            label={t("plan.enterprise.requiresServer", "Requires Server plan")}
+            label={t("plan.enterprise.requiresServer", "Requires Team plan")}
             disabled={!isEnterpriseBlockedForFree}
             position="top"
             withArrow
