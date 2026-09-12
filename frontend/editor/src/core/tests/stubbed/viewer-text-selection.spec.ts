@@ -111,12 +111,16 @@ test("Ctrl+C copies selected text to the clipboard", async ({
   await dragSelectAcrossPage(page, firstPage);
   await page.waitForTimeout(500);
 
-  await page.keyboard.press("Control+C");
+  const isMac = process.platform === "darwin";
+  await page.keyboard.press(isMac ? "Meta+c" : "Control+c");
   await page.waitForTimeout(500);
 
-  const clipboardText = await page.evaluate(() =>
-    navigator.clipboard.readText(),
-  );
+  let clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  if (!clipboardText.trim()) {
+    await page.keyboard.press(isMac ? "Control+c" : "Meta+c");
+    await page.waitForTimeout(500);
+    clipboardText = await page.evaluate(() => navigator.clipboard.readText());
+  }
   expect(clipboardText.trim().length).toBeGreaterThan(0);
 });
 

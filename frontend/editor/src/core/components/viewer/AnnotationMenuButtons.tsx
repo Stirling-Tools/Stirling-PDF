@@ -8,22 +8,21 @@ import AddCommentIcon from "@mui/icons-material/AddCommentOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNewRounded";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import type { FirstLinkTarget } from "@app/components/viewer/useAnnotationMenuHandlers";
+import "@app/components/viewer/TextSelectionMenu.css";
 
 export function DeleteButton({ onDelete }: { onDelete: () => void }) {
   const { t } = useTranslation();
   return (
-    <Tooltip label={t("annotation.delete", "Delete")}>
-      <ActionIcon
-        aria-label={t("annotation.delete", "Delete")}
-        variant="secondary"
-        accent="danger"
-        size="md"
+    <Tooltip label={t("annotation.delete", "Delete")} withArrow>
+      <button
+        type="button"
+        className="embedpdf-floating-btn embedpdf-floating-btn-danger"
         onClick={onDelete}
+        aria-label={t("annotation.delete", "Delete")}
       >
         <DeleteIcon style={{ fontSize: 18 }} />
-      </ActionIcon>
+      </button>
     </Tooltip>
   );
 }
@@ -31,16 +30,15 @@ export function DeleteButton({ onDelete }: { onDelete: () => void }) {
 export function EditTextButton({ onEdit }: { onEdit: () => void }) {
   const { t } = useTranslation();
   return (
-    <Tooltip label={t("annotation.editText", "Edit Text")}>
-      <ActionIcon
-        aria-label={t("annotation.editText", "Edit Text")}
-        variant="secondary"
-        accent="neutral"
-        size="md"
+    <Tooltip label={t("annotation.editText", "Edit Text")} withArrow>
+      <button
+        type="button"
+        className="embedpdf-floating-btn"
         onClick={onEdit}
+        aria-label={t("annotation.editText", "Edit Text")}
       >
         <EditIcon style={{ fontSize: 18 }} />
-      </ActionIcon>
+      </button>
     </Tooltip>
   );
 }
@@ -61,16 +59,15 @@ export function AttachCommentButton({
     ? t("viewer.comments.viewComment", "View comment")
     : t("viewer.comments.addComment", "Add comment");
   return (
-    <Tooltip label={label}>
-      <ActionIcon
-        aria-label={label}
-        variant={isInSidebar ? "primary" : "secondary"}
-        accent={isInSidebar ? undefined : "neutral"}
-        size="md"
+    <Tooltip label={label} withArrow>
+      <button
+        type="button"
+        className={`embedpdf-floating-btn ${isInSidebar ? "embedpdf-floating-btn-active" : ""}`}
         onClick={isInSidebar ? onView : onAdd}
+        aria-label={label}
       >
         <AddCommentIcon style={{ fontSize: 18 }} />
-      </ActionIcon>
+      </button>
     </Tooltip>
   );
 }
@@ -86,16 +83,15 @@ export function CommentButton({ hasContent, onClick }: CommentButtonProps) {
     ? t("viewer.comments.viewComment", "View comment")
     : t("viewer.comments.addComment", "Add comment");
   return (
-    <Tooltip label={label}>
-      <ActionIcon
-        aria-label={label}
-        variant="secondary"
-        accent="neutral"
-        size="md"
+    <Tooltip label={label} withArrow>
+      <button
+        type="button"
+        className="embedpdf-floating-btn"
         onClick={onClick}
+        aria-label={label}
       >
         <CommentIcon style={{ fontSize: 18 }} />
-      </ActionIcon>
+      </button>
     </Tooltip>
   );
 }
@@ -117,33 +113,36 @@ export function LinkButton({
 
   if (firstLinkTarget) {
     return (
-      <Tooltip label={t("viewer.comments.goToLink", "Go to link")}>
-        <ActionIcon
-          aria-label={t("viewer.comments.goToLink", "Go to link")}
-          variant="secondary"
-          accent="neutral"
-          size="md"
+      <Tooltip label={t("viewer.comments.goToLink", "Go to link")} withArrow>
+        <button
+          type="button"
+          className="embedpdf-floating-btn"
           onClick={onGoToLink}
+          aria-label={t("viewer.comments.goToLink", "Go to link")}
         >
           <OpenInNewIcon style={{ fontSize: 18 }} />
-        </ActionIcon>
+        </button>
       </Tooltip>
     );
   }
 
   return (
-    <Popover opened={open} onClose={() => setOpen(false)} position="top">
+    <Popover
+      opened={open}
+      onClose={() => setOpen(false)}
+      position="top"
+      withArrow
+    >
       <Popover.Target>
-        <Tooltip label={t("viewer.comments.addLink", "Add link")}>
-          <ActionIcon
-            aria-label={t("viewer.comments.addLink", "Add link")}
-            variant="secondary"
-            accent="neutral"
-            size="md"
+        <Tooltip label={t("viewer.comments.addLink", "Add link")} withArrow>
+          <button
+            type="button"
+            className="embedpdf-floating-btn"
             onClick={() => setOpen((o) => !o)}
+            aria-label={t("viewer.comments.addLink", "Add link")}
           >
-            <LocalIcon icon="link" width="1.25rem" height="1.25rem" />
-          </ActionIcon>
+            <LocalIcon icon="link" width="1.15rem" height="1.15rem" />
+          </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

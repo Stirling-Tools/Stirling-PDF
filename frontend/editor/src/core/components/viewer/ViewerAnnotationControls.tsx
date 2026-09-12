@@ -60,6 +60,7 @@ export default function ViewerAnnotationControls({
   const {
     setRedactionMode,
     activateRedact,
+    deactivateRedact,
     setRedactionConfig,
     setRedactionsApplied,
     redactionApiRef,
@@ -119,7 +120,14 @@ export default function ViewerAnnotationControls({
     setLeftPanelView("toolPicker");
     setRedactionMode(false);
     setActiveType(null);
-  }, [navActions, setLeftPanelView, setRedactionMode, setActiveType]);
+    deactivateRedact();
+  }, [
+    navActions,
+    setLeftPanelView,
+    setRedactionMode,
+    setActiveType,
+    deactivateRedact,
+  ]);
 
   // Handle redaction mode toggle
   const handleRedactionToggle = async () => {

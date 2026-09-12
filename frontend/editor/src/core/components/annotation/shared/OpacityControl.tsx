@@ -2,7 +2,6 @@ import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import OpacityIcon from "@mui/icons-material/Opacity";
-import { ActionIcon } from "@app/ui/ActionIcon";
 
 interface OpacityControlProps {
   value: number; // 0-100
@@ -21,17 +20,16 @@ export function OpacityControl({
   return (
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
       <Popover.Target>
-        <Tooltip label={t("annotation.opacity", "Opacity")}>
-          <ActionIcon
-            aria-label={t("annotation.opacity", "Opacity")}
-            variant="secondary"
-            accent="neutral"
-            size="md"
+        <Tooltip label={t("annotation.opacity", "Opacity")} withArrow>
+          <button
+            type="button"
+            className="embedpdf-floating-btn"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
+            aria-label={t("annotation.opacity", "Opacity")}
           >
             <OpacityIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
+          </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>

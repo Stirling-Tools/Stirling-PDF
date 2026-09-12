@@ -2,7 +2,6 @@ import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 import LineWeightIcon from "@mui/icons-material/LineWeight";
-import { ActionIcon } from "@app/ui/ActionIcon";
 
 interface WidthControlProps {
   value: number;
@@ -25,17 +24,16 @@ export function WidthControl({
   return (
     <Popover opened={opened} onChange={setOpened} position="top" withArrow>
       <Popover.Target>
-        <Tooltip label={t("annotation.width", "Width")}>
-          <ActionIcon
-            aria-label={t("annotation.width", "Width")}
-            variant="secondary"
-            accent="neutral"
-            size="md"
+        <Tooltip label={t("annotation.width", "Width")} withArrow>
+          <button
+            type="button"
+            className="embedpdf-floating-btn"
             onClick={() => setOpened(!opened)}
             disabled={disabled}
+            aria-label={t("annotation.width", "Width")}
           >
             <LineWeightIcon style={{ fontSize: 18 }} />
-          </ActionIcon>
+          </button>
         </Tooltip>
       </Popover.Target>
       <Popover.Dropdown>
