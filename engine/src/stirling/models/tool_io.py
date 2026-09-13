@@ -222,7 +222,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         accepts=[ToolFormat.PDF], produces=ToolFormat.ZIP, arity=ToolArity.SISO
     ),
     ToolEndpoint.EXTRACT_IMAGE_SCANS: ToolIOSpec(
-        accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO
+        accepts=[ToolFormat.PDF, ToolFormat.IMAGE], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO
     ),
     ToolEndpoint.EXTRACT_IMAGES: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.IMAGE, arity=ToolArity.SIMO),
     ToolEndpoint.FLATTEN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),

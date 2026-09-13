@@ -214,6 +214,8 @@ export default function RightSidebar() {
             transition: "opacity 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
             height: "100%",
             width: isMobile ? "100%" : expandedWidth,
+            maxWidth: isMobile ? "44rem" : undefined,
+            marginInline: isMobile ? "auto" : undefined,
             flexShrink: 0,
             display: "flex",
             flexDirection: "column",

@@ -117,7 +117,8 @@ public class FileRunEventStore {
      *
      * <p>With no status asked for this is the <em>open</em> queue rather than every row ever
      * recorded: a dismissed failure has been dealt with, and leaving it in the default view means
-     * the list can never be cleared. Ask for a status to see closed rows.
+     * the list can never be cleared. {@code closed} asks for the settled rows instead, and a {@code
+     * status} for exactly one disposition; an explicit status wins over {@code closed}.
      *
      * <p>Both filters live in the query, before the limit: filtering an already-limited page could
      * return nothing while matching rows exist.
@@ -127,12 +128,18 @@ public class FileRunEventStore {
      */
     @Transactional(readOnly = true)
     public List<FileRunEvent> list(
-            Long teamId, FileRunEventStatus status, String kindId, String actor, int limit) {
+            Long teamId,
+            FileRunEventStatus status,
+            boolean closed,
+            String kindId,
+            String actor,
+            int limit) {
         Pageable page = PageRequest.of(0, Math.max(1, limit));
+        List<FileRunEventStatus> statuses =
+                closed ? FileRunEventStatus.closed() : FileRunEventStatus.open();
         List<FileRunEventEntity> rows =
                 status == null
-                        ? repository.findByTeamAndStatusIn(
-                                teamId, FileRunEventStatus.open(), kindId, actor, page)
+                        ? repository.findByTeamAndStatusIn(teamId, statuses, kindId, actor, page)
                         : repository.findByTeamAndStatus(teamId, status, kindId, actor, page);
         return rows.stream().map(FileRunEvent::of).toList();
     }

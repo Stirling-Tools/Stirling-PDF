@@ -67,11 +67,17 @@ public class FileReadinessChecker {
             return false;
         }
 
-        if (!hasSettled(path, config.getSettleTimeMillis())) {
+        Long ageMillis = fileAgeMillis(path);
+        if (ageMillis == null || ageMillis < config.getSettleTimeMillis()) {
             return false;
         }
 
-        if (!hasSizeStabilized(path, config.getSizeCheckDelayMillis())) {
+        // The size-stability wait exists to catch an active copy whose writer pauses
+        // between chunks. A file untouched for twice the settle window has provably
+        // stopped changing, and the wait sleeps per file - paying it for old files
+        // turns a backlog scan over a folder-sized directory into minutes of dead time.
+        if (ageMillis < config.getSettleTimeMillis() * 2
+                && !hasSizeStabilized(path, config.getSizeCheckDelayMillis())) {
             return false;
         }
 
@@ -123,30 +129,16 @@ public class FileReadinessChecker {
         return allowed;
     }
 
-    /**
-     * Returns {@code true} when the file's last-modified timestamp is at least {@code
-     * settleTimeMillis} milliseconds in the past, indicating the write has completed and the file
-     * has "settled".
-     */
-    private boolean hasSettled(Path path, long settleTimeMillis) {
+    /** Milliseconds since the file was last modified; null when the timestamp cannot be read. */
+    private Long fileAgeMillis(Path path) {
         try {
-            long lastModified = Files.getLastModifiedTime(path).toMillis();
-            long ageMillis = System.currentTimeMillis() - lastModified;
-            boolean settled = ageMillis >= settleTimeMillis;
-            if (!settled) {
-                log.debug(
-                        "File '{}' was modified {}ms ago (settle threshold: {}ms), not yet ready",
-                        path.getFileName(),
-                        ageMillis,
-                        settleTimeMillis);
-            }
-            return settled;
+            return System.currentTimeMillis() - Files.getLastModifiedTime(path).toMillis();
         } catch (IOException e) {
             log.warn(
                     "Could not read last-modified time for '{}', treating as not settled: {}",
                     path,
                     e.getMessage());
-            return false;
+            return null;
         }
     }
 

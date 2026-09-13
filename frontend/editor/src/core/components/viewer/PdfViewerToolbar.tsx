@@ -167,6 +167,7 @@ export function PdfViewerToolbar({
         <ActionIcon
           variant="tertiary"
           size={buttonSize}
+          className="pdf-viewer-toolbar-wide-only"
           onClick={handleFirstPage}
           disabled={scrollState.currentPage === 1}
           style={{ minWidth: buttonMinWidth }}
@@ -238,6 +239,7 @@ export function PdfViewerToolbar({
         <ActionIcon
           variant="tertiary"
           size={buttonSize}
+          className="pdf-viewer-toolbar-wide-only"
           onClick={handleLastPage}
           disabled={scrollState.currentPage === scrollState.totalPages}
           style={{ minWidth: buttonMinWidth }}
@@ -262,6 +264,7 @@ export function PdfViewerToolbar({
           <ActionIcon
             variant={isDualPageActive ? "primary" : "secondary"}
             size={buttonSize}
+            className="pdf-viewer-toolbar-wide-only"
             onClick={handleDualPageToggle}
             disabled={scrollState.totalPages <= 1}
             style={{ minWidth: buttonMinWidth }}
@@ -296,6 +299,7 @@ export function PdfViewerToolbar({
           <ActionIcon
             variant={pdfRenderMode !== "normal" ? "primary" : "secondary"}
             size={buttonSize}
+            className="pdf-viewer-toolbar-wide-only"
             onClick={cyclePdfRenderMode}
             style={{ minWidth: buttonMinWidth }}
             aria-label={
@@ -329,6 +333,7 @@ export function PdfViewerToolbar({
             <ZoomOutIcon fontSize="small" />
           </ActionIcon>
           <Slider
+            className="pdf-viewer-toolbar-zoom-slider"
             value={Math.min(Math.max(displayZoomPercent, 20), 500)}
             min={20}
             max={500}
