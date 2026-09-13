@@ -111,6 +111,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // The variables catalogue (variables.ts) mirrors it: every def/group key is assembled
       // from the const "portal.policies.variables" prefix and the variable's own path.
       /^portal\.policies\.variables\./,
+      // Failure-kind copy is keyed off the server's FailureKind enum and arrives as data, so no
+      // frontend source names it. FailureKindTest asserts every kind has copy here.
+      /^portal\.failures\.kind\./,
       // Server-sent keys rendered with t(thatKey), so nothing in source names them.
       /^portal\.failures\.disabled\./,
       /^portal\.failures\.action\./,

@@ -5,24 +5,27 @@ import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
 import "@app/components/shared/quickNav/QuickNavRailAccount.css";
 
 export interface QuickNavRailAccountProps {
-  onOpenSettings: () => void;
+  onOpen: () => void;
   /** Null between apps; the disc still renders, so the bar keeps its shape. */
   identity: QuickNavIdentity | null;
+  /** Drawn as the current destination while the settings page is open. */
+  active?: boolean;
 }
 
-/** The avatar opens settings, so there is no separate gear beside it. */
+/** The avatar is the only way into settings, and lands on your own account. */
 export function QuickNavRailAccount({
-  onOpenSettings,
+  onOpen,
   identity,
+  active = false,
 }: QuickNavRailAccountProps) {
   const { t } = useTranslation();
   const displayName =
     identity?.displayName ?? t("auth.displayName.user", "User");
   const profilePictureUrl = identity?.profilePictureUrl ?? null;
-  const label = `${displayName} — ${t("fileSidebar.openSettings", "Open settings")}`;
+  const label = `${displayName} — ${t("quickNav.account", "Account")}`;
 
   return (
-    <div className="quick-nav-rail-account">
+    <div className="quick-nav-rail-account" data-active={active || undefined}>
       <Tooltip content={label} position="right" arrow>
         {/* A span, not the Avatar: Tooltip binds by cloning its child. */}
         <span
@@ -34,8 +37,9 @@ export function QuickNavRailAccount({
             src={profilePictureUrl ?? undefined}
             name={displayName}
             size="sm"
-            onClick={onOpenSettings}
+            onClick={onOpen}
             ariaLabel={label}
+            ariaCurrent={active ? "page" : undefined}
             className="quick-nav-rail-avatar"
           />
         </span>
