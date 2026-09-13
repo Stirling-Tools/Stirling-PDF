@@ -7224,6 +7224,9 @@ going = "Taking you to stirling.com"
 reauthLede = "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way."
 title = "Connecting"
 
+[portal.accountLink.gate]
+retry = "Try again"
+
 [portal.accountLink.instances]
 active = "Active"
 revoke = "Revoke"
@@ -7358,6 +7361,7 @@ invoices = "Invoices"
 nav = "Sections"
 payment = "Payment"
 plan = "Plan"
+procurement = "Procurement"
 usage = "Usage"
 
 [portal.billing.cycle]
@@ -7410,6 +7414,15 @@ failed = "Unpaid"
 paid = "Paid"
 undated = "Undated"
 unknownAmount = "Unknown"
+view = "View"
+
+[portal.billing.license]
+add = "Add"
+addTitle = "Add license"
+empty = "No license installed"
+label = "License key"
+update = "Update"
+updateTitle = "Update license"
 view = "View"
 
 [portal.billing.payment]
@@ -7560,6 +7573,15 @@ cycle = "This cycle"
 invoices = "Invoices"
 payment = "Payment"
 plan = "Your plan"
+
+[portal.billing.serverPlan]
+active = "Active self-hosted license"
+connectBody = "Connect to add cloud processing credits. Your server license stays active."
+enterprise = "Enterprise"
+included = "Included with your license"
+seats = "{{seats}} licensed seats"
+server = "Server"
+unlimited = "Unlimited users"
 
 [portal.billing.spendLimit]
 adjustLimit = "Adjust limit"

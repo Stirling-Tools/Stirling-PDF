@@ -6,6 +6,11 @@ import { formatMinor } from "@app/billing/format";
 import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
 import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
+import {
+  estimatedBillWithPending,
+  pendingMeteredUnits,
+} from "@app/billing/pendingUsage";
+import type { ServerPlan } from "@app/billing/serverPlan";
 import type { Wallet } from "@app/billing/types";
 import "@app/billing/billing-screen.css";
 
@@ -19,18 +24,28 @@ export interface BillingScreenProps {
   loading?: boolean;
   /** Self-hosted phrases its free tier differently. */
   selfHosted?: boolean;
+  /** Local licence takes precedence over the cloud product names and user capacity. */
+  serverPlan?: ServerPlan;
+  /** Subscription management for the installed licence. */
+  serverPlanAction?: ReactNode;
   /** Units a linked instance has accrued that the cloud has not billed yet. */
   pendingUnits?: number;
   /** Leader-only: sells Team capacity from the Users row. */
   onAddCapacity?: () => void;
   /** Leader-only: switches the Processor on from its row. */
   onActivateProcessor?: () => void;
+  /** Overrides activation with a quote or invoice resume action. */
+  activateLabel?: ReactNode;
   /** Leader-only: opens the spend limit from the Processor row once it is on. */
   onGovernSpend?: () => void;
   /** Overrides the governing door's label, e.g. "Top up" for a prepaid team. */
   governLabel?: ReactNode;
   /** Banners above the card: a lapsed session, a failed wallet read. Host-owned. */
   notices?: ReactNode;
+  /** An existing deal stays above the plan, even when the wallet cannot be loaded. */
+  procurementSection?: ReactNode;
+  /** Local server license management, supplied only by self-hosted admin views. */
+  licenseSection?: ReactNode;
   /** Omit where the edition has no payment surface; the chip drops out with the section. */
   paymentSection?: ReactNode;
   /** Omit where there are no invoices, for the same reason. */
@@ -71,12 +86,17 @@ export function BillingScreen({
   wallet,
   loading = false,
   selfHosted = false,
+  serverPlan,
+  serverPlanAction,
   pendingUnits = 0,
   onAddCapacity,
   onActivateProcessor,
+  activateLabel,
   onGovernSpend,
   governLabel,
   notices,
+  procurementSection,
+  licenseSection,
   editorsDeployed,
   paymentSection,
   invoicesSection,
@@ -95,18 +115,48 @@ export function BillingScreen({
   const teamHeld = Boolean(wallet?.team?.held);
 
   const chips = useMemo(() => {
-    const out: Array<[string, string]> = [
-      ["ub-plan", t("portal.billing.chip.plan", "Plan")],
-      ["ub-usage", t("portal.billing.chip.usage", "Usage")],
-    ];
-    if (paymentSection)
+    const out: Array<[string, string]> = [];
+    if (procurementSection)
+      out.push([
+        "ub-procurement",
+        t("portal.billing.chip.procurement", "Procurement"),
+      ]);
+    if (wallet || serverPlan)
+      out.push(["ub-plan", t("portal.billing.chip.plan", "Plan")]);
+    if (wallet) out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
+    if (wallet && paymentSection)
       out.push(["ub-pay", t("portal.billing.chip.payment", "Payment")]);
-    if (invoicesSection)
+    if (wallet && invoicesSection)
       out.push(["ub-inv", t("portal.billing.chip.invoices", "Invoices")]);
+    if (licenseSection)
+      out.push([
+        "ub-license",
+        t("admin.settings.premium.inputMethod.text", "License Key"),
+      ]);
     return out;
-  }, [paymentSection, invoicesSection, t]);
+  }, [
+    wallet,
+    serverPlan,
+    procurementSection,
+    licenseSection,
+    paymentSection,
+    invoicesSection,
+    t,
+  ]);
 
   const identity = useMemo(() => {
+    if (serverPlan)
+      return {
+        name:
+          serverPlan.licenseType === "SERVER"
+            ? t("portal.billing.serverPlan.server", "Server")
+            : t("portal.billing.serverPlan.enterprise", "Enterprise"),
+        sub: t(
+          "portal.billing.serverPlan.active",
+          "Active self-hosted license",
+        ),
+        chips: [],
+      };
     if (!wallet) return null;
     const rate = wallet.pricePerDocMinor;
     if (paying) {
@@ -117,7 +167,9 @@ export function BillingScreen({
             ? t(
                 "portal.billing.identity.processor.sub",
                 "Team base plus {{rate}} per credit",
-                { rate: formatMinor(rate, wallet.currency) },
+                {
+                  rate: formatMinor(rate, wallet.currency),
+                },
               )
             : t(
                 "portal.billing.identity.processor.subNoRate",
@@ -162,31 +214,24 @@ export function BillingScreen({
         t(
           "portal.billing.identity.free.chipCredits",
           "{{allowance}} free credits monthly",
-          { allowance: wallet.freeAllowance.toLocaleString() },
+          {
+            allowance: wallet.freeAllowance.toLocaleString(),
+          },
         ),
       ],
     };
-  }, [wallet, paying, teamHeld, t]);
+  }, [wallet, paying, teamHeld, serverPlan, t]);
 
-  // One rule for the whole screen: a linked instance's locally-accrued units are real spend the
-  // cloud has not billed yet, so every figure counts them. Showing some totals with and some
-  // without is what leaves two numbers on one page and no way to reconcile them. The server
-  // cannot do this itself -- it has not seen these units -- so the fold happens here, once.
-  const rate = wallet?.pricePerDocMinor ?? null;
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
-  // A host with no user figures at all -- an unlinked instance whose admin endpoint refused -- has
-  // nothing true to put in this row, and "0 users" is not nothing, it is wrong.
   const showTeam = Boolean(
     wallet &&
     (wallet.team.held ||
       wallet.team.usersInUse > 0 ||
       wallet.freeUserAllowance > 0),
   );
-  const pendingMinor = rate != null ? pendingUnits * rate : 0;
-  const estimatedMinor =
-    wallet?.estimatedBillMinor != null
-      ? wallet.estimatedBillMinor + pendingMinor
-      : null;
+  const estimatedMinor = wallet
+    ? estimatedBillWithPending(wallet, pendingUnits)
+    : null;
 
   const cycle = wallet
     ? cycleDay(wallet.billingPeriodStart, wallet.billingPeriodEnd)
@@ -215,7 +260,7 @@ export function BillingScreen({
           </div>
         )}
 
-        {wallet && identity && (
+        {(procurementSection || licenseSection || identity) && (
           <div className="billing-card">
             <nav
               className="billing-card__chips"
@@ -233,157 +278,210 @@ export function BillingScreen({
               ))}
             </nav>
 
-            <section id="ub-plan" className="billing-sec">
-              <span className="billing-eyebrow">
-                {t("portal.billing.section.plan", "Your plan")}
-              </span>
-              <div className="billing-id">
-                <span className="billing-id__name">{identity.name}</span>
-                <span className="billing-id__sub">{identity.sub}</span>
-              </div>
-              <div className="billing-id__chips">
-                {identity.chips.map((c) => (
-                  <span key={c} className="billing-id__chip">
-                    {c}
-                  </span>
-                ))}
-              </div>
-              <div className="billing-meters">
-                {showTeam && (
-                  <TeamPlanRow
-                    wallet={wallet}
-                    selfHosted={selfHosted}
-                    onAddCapacity={onAddCapacity}
-                  />
-                )}
-                {wallet.processor && (
-                  <ProcessorPlanRow
-                    wallet={wallet}
-                    pendingUnits={pendingUnits}
-                    onActivate={onActivateProcessor}
-                    onGovern={onGovernSpend}
-                    governLabel={governLabel}
-                  />
-                )}
-              </div>
-            </section>
-
-            <section id="ub-usage" className="billing-sec">
-              <div className="billing-eyebrow-row">
-                <span className="billing-eyebrow">
-                  {t("portal.billing.section.cycle", "This cycle")}
-                </span>
-                {cycle && (
-                  <span className="billing-eyebrow-row__fact">
-                    {t("portal.billing.cycle.day", "Day {{day}} of {{of}}", {
-                      day: cycle.day,
-                      of: cycle.of,
-                    })}
-                  </span>
-                )}
-              </div>
-
-              {/* The bill leads only once there is a bill. On the free tier the estimate is zero
-                  by definition, and a zero hero would read as a figure rather than as a state. */}
-              {paying && estimatedMinor != null && (
-                <div className="billing-bignum-row">
-                  <span className="billing-bignum">
-                    {formatMinor(estimatedMinor, wallet.currency)}
-                  </span>
-                  <span className="billing-bignum__note">
-                    {pendingUnits > 0
-                      ? t(
-                          "portal.billing.cycle.estimatedPending",
-                          "estimated · includes {{pending}} not yet synced from your instances",
-                          { pending: pendingUnits.toLocaleString() },
-                        )
-                      : t(
-                          "portal.billing.cycle.estimated",
-                          "estimated · the meter settles at close",
-                        )}
-                  </span>
-                </div>
-              )}
-
-              <KvRow
-                label={t("portal.billing.cycle.pdfs", "PDFs processed")}
-                value={wallet.docsProcessedThisPeriod.toLocaleString()}
-              />
-              {showTeam && (
-                <KvRow
-                  label={t("portal.billing.cycle.users", "Users")}
-                  value={wallet.team.usersInUse.toLocaleString()}
-                />
-              )}
-              {editorsDeployed != null && (
-                <KvRow
-                  label={t("portal.billing.cycle.editors", "Editors deployed")}
-                  value={editorsDeployed.toLocaleString()}
-                />
-              )}
-              {paying && (
-                <KvRow
-                  label={t("portal.billing.cycle.credits", "Credits")}
-                  note={
-                    wallet.pricePerDocMinor != null
-                      ? t(
-                          "portal.billing.cycle.creditsNote",
-                          "{{units}} · {{rate}} each",
-                          {
-                            units: creditUnits.toLocaleString(),
-                            rate: formatMinor(
-                              wallet.pricePerDocMinor,
-                              wallet.currency,
-                            ),
-                          },
-                        )
-                      : undefined
-                  }
-                  value={
-                    wallet.pricePerDocMinor != null
-                      ? formatMinor(
-                          creditUnits * wallet.pricePerDocMinor,
-                          wallet.currency,
-                        )
-                      : creditUnits.toLocaleString()
-                  }
-                />
-              )}
-              {wallet.sizeMultiplierPdfsThisPeriod > 0 && (
-                <KvRow
-                  label={t("portal.billing.cycle.largeFiles", "Large files")}
-                  value={t(
-                    "portal.billing.cycle.largeFilesValue",
-                    "{{pdfs}} PDFs past the size threshold",
-                    {
-                      pdfs: wallet.sizeMultiplierPdfsThisPeriod.toLocaleString(),
-                    },
-                  )}
-                />
-              )}
-            </section>
-
-            {paymentSection && (
-              <section id="ub-pay" className="billing-sec">
-                <span className="billing-eyebrow">
-                  {t("portal.billing.section.payment", "Payment")}
-                </span>
-                {paymentSection}
+            {procurementSection && (
+              <section
+                id="ub-procurement"
+                className="billing-sec billing-sec--procurement"
+                aria-label={t("portal.billing.chip.procurement", "Procurement")}
+              >
+                {procurementSection}
               </section>
             )}
 
-            {invoicesSection && (
-              <section id="ub-inv" className="billing-sec">
-                <span className="billing-eyebrow">
-                  {t("portal.billing.section.invoices", "Invoices")}
-                </span>
-                {invoicesSection}
+            {identity && (
+              <>
+                <section id="ub-plan" className="billing-sec">
+                  <span className="billing-eyebrow">
+                    {t("portal.billing.section.plan", "Your plan")}
+                  </span>
+                  <div className="billing-id">
+                    <span className="billing-id__name">{identity.name}</span>
+                    <span className="billing-id__sub">{identity.sub}</span>
+                    {serverPlanAction && (
+                      <div className="billing-id__action">
+                        {serverPlanAction}
+                      </div>
+                    )}
+                  </div>
+                  <div className="billing-id__chips">
+                    {identity.chips.map((c) => (
+                      <span key={c} className="billing-id__chip">
+                        {c}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="billing-meters">
+                    {(showTeam || serverPlan) && (
+                      <TeamPlanRow
+                        wallet={wallet}
+                        selfHosted={selfHosted}
+                        serverPlan={serverPlan}
+                        onAddCapacity={onAddCapacity}
+                      />
+                    )}
+                    {wallet?.processor && (
+                      <ProcessorPlanRow
+                        wallet={wallet}
+                        pendingUnits={pendingUnits}
+                        onActivate={onActivateProcessor}
+                        activateLabel={activateLabel}
+                        onGovern={onGovernSpend}
+                        governLabel={governLabel}
+                      />
+                    )}
+                  </div>
+                </section>
+
+                {wallet && (
+                  <>
+                    <section id="ub-usage" className="billing-sec">
+                      <div className="billing-eyebrow-row">
+                        <span className="billing-eyebrow">
+                          {t("portal.billing.section.cycle", "This cycle")}
+                        </span>
+                        {cycle && (
+                          <span className="billing-eyebrow-row__fact">
+                            {t(
+                              "portal.billing.cycle.day",
+                              "Day {{day}} of {{of}}",
+                              {
+                                day: cycle.day,
+                                of: cycle.of,
+                              },
+                            )}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* The bill leads only once there is a bill. On the free tier the estimate is zero
+                  by definition, and a zero hero would read as a figure rather than as a state. */}
+                      {paying && estimatedMinor != null && (
+                        <div className="billing-bignum-row">
+                          <span className="billing-bignum">
+                            {formatMinor(estimatedMinor, wallet.currency)}
+                          </span>
+                          <span className="billing-bignum__note">
+                            {pendingUnits > 0
+                              ? t(
+                                  "portal.billing.cycle.estimatedPending",
+                                  "estimated · includes {{pending}} not yet synced from your instances",
+                                  { pending: pendingUnits.toLocaleString() },
+                                )
+                              : t(
+                                  "portal.billing.cycle.estimated",
+                                  "estimated · the meter settles at close",
+                                )}
+                          </span>
+                        </div>
+                      )}
+
+                      <KvRow
+                        label={t("portal.billing.cycle.pdfs", "PDFs processed")}
+                        value={wallet.docsProcessedThisPeriod.toLocaleString()}
+                      />
+                      {(serverPlan
+                        ? serverPlan.usersInUse != null
+                        : showTeam) && (
+                        <KvRow
+                          label={t("portal.billing.cycle.users", "Users")}
+                          value={(
+                            serverPlan?.usersInUse ?? wallet.team.usersInUse
+                          ).toLocaleString()}
+                        />
+                      )}
+                      {editorsDeployed != null && (
+                        <KvRow
+                          label={t(
+                            "portal.billing.cycle.editors",
+                            "Editors deployed",
+                          )}
+                          value={editorsDeployed.toLocaleString()}
+                        />
+                      )}
+                      {paying && (
+                        <KvRow
+                          label={t("portal.billing.cycle.credits", "Credits")}
+                          note={
+                            wallet.pricePerDocMinor != null
+                              ? t(
+                                  "portal.billing.cycle.creditsNote",
+                                  "{{units}} · {{rate}} each",
+                                  {
+                                    units: creditUnits.toLocaleString(),
+                                    rate: formatMinor(
+                                      wallet.pricePerDocMinor,
+                                      wallet.currency,
+                                    ),
+                                  },
+                                )
+                              : undefined
+                          }
+                          value={
+                            wallet.pricePerDocMinor != null
+                              ? formatMinor(
+                                  (wallet.spendUnitsThisPeriod +
+                                    pendingMeteredUnits(wallet, pendingUnits)) *
+                                    wallet.pricePerDocMinor,
+                                  wallet.currency,
+                                )
+                              : creditUnits.toLocaleString()
+                          }
+                        />
+                      )}
+                      {wallet.sizeMultiplierPdfsThisPeriod > 0 && (
+                        <KvRow
+                          label={t(
+                            "portal.billing.cycle.largeFiles",
+                            "Large files",
+                          )}
+                          value={t(
+                            "portal.billing.cycle.largeFilesValue",
+                            "{{pdfs}} PDFs past the size threshold",
+                            {
+                              pdfs: wallet.sizeMultiplierPdfsThisPeriod.toLocaleString(),
+                            },
+                          )}
+                        />
+                      )}
+                    </section>
+
+                    {paymentSection && (
+                      <section id="ub-pay" className="billing-sec">
+                        <span className="billing-eyebrow">
+                          {t("portal.billing.section.payment", "Payment")}
+                        </span>
+                        {paymentSection}
+                      </section>
+                    )}
+
+                    {invoicesSection && (
+                      <section id="ub-inv" className="billing-sec">
+                        <span className="billing-eyebrow">
+                          {t("portal.billing.section.invoices", "Invoices")}
+                        </span>
+                        {invoicesSection}
+                      </section>
+                    )}
+                  </>
+                )}
+              </>
+            )}
+            {licenseSection && (
+              <section
+                id="ub-license"
+                className="billing-sec billing-sec--license"
+                aria-label={t(
+                  "admin.settings.premium.inputMethod.text",
+                  "License Key",
+                )}
+              >
+                {licenseSection}
               </section>
             )}
           </div>
         )}
 
-        {onEnterpriseQuote && (
+        {onEnterpriseQuote && serverPlan?.licenseType !== "ENTERPRISE" && (
           <div className="billing-ent">
             <div>
               <div className="billing-ent__title">

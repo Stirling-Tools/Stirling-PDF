@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+import type { ServerPlan } from "@app/billing/serverPlan";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@app/ui";
@@ -28,6 +30,9 @@ import "@portal/views/Usage.css";
 import "@portal/components/billing/billing.css";
 
 export interface UsageProps {
+  serverPlan?: ServerPlan;
+  serverPlanAction?: ReactNode;
+  renderLicenseSection?: (onSaved: () => void) => ReactNode;
   /**
    * Called with the wallet whenever it loads (initial fetch + post-checkout
    * flip). A flavor-agnostic hook the composition uses for cross-cutting state —
@@ -56,6 +61,9 @@ export interface UsageProps {
  * products render from their own holdings, which that axis cannot express.
  */
 export function Usage({
+  serverPlan,
+  serverPlanAction,
+  renderLicenseSection,
   onWalletLoaded,
   onReauth,
   onEnterpriseQuote,
@@ -205,6 +213,9 @@ export function Usage({
   return (
     <BillingScreen
       wallet={wallet}
+      serverPlan={serverPlan}
+      serverPlanAction={serverPlanAction}
+      licenseSection={renderLicenseSection?.(refresh)}
       loading={loading}
       pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
       notices={
@@ -268,6 +279,7 @@ export function Usage({
       paymentSection={
         paying && wallet ? (
           <PaymentSection
+            pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
             wallet={wallet}
             onManage={portal.open}
             managing={portal.opening}
@@ -292,6 +304,7 @@ export function Usage({
 
           {wallet && wallet.status === "subscribed" && (
             <SubscribedPlanView
+              pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
               wallet={wallet}
               onWalletChange={refresh}
               adjusting={adjustingLimit}

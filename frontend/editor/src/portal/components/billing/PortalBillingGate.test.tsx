@@ -1,3 +1,10 @@
+vi.mock("@portal/hooks/useServerPlan", () => ({
+  useServerPlan: () => ({ serverPlan: undefined, loading: false }),
+}));
+vi.mock("@portal/components/billing/ServerLicenseSection", () => ({
+  ServerLicenseSection: () => null,
+}));
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";

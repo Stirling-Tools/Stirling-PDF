@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+import type { ServerPlan } from "@app/billing/serverPlan";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, Card } from "@app/ui";
@@ -75,7 +77,15 @@ function localWallet(balance: FreeTierBalance, seats: Seats | null): Wallet {
  * <p>Reads local endpoints only. Loading a wallet here would assert a linkage the browser's SaaS
  * session cannot vouch for.
  */
-export function FreeTierPlanView() {
+export function FreeTierPlanView({
+  licenseSection,
+  serverPlan,
+  serverPlanAction,
+}: {
+  licenseSection?: ReactNode;
+  serverPlan?: ServerPlan;
+  serverPlanAction?: ReactNode;
+}) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
   // An outcome, not a rendered message: the effect must not depend on `t`, whose identity is
@@ -126,6 +136,9 @@ export function FreeTierPlanView() {
       wallet={wallet}
       loading={load.state === "loading"}
       selfHosted
+      licenseSection={licenseSection}
+      serverPlan={serverPlan}
+      serverPlanAction={serverPlanAction}
       editorsDeployed={editorsDeployed}
       onAddCapacity={() => openLinkModal()}
       onActivateProcessor={() => openLinkModal()}
@@ -147,10 +160,15 @@ export function FreeTierPlanView() {
               </Button>
             }
           >
-            {t(
-              "portal.usage.freeTier.connectBody",
-              "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor.",
-            )}
+            {serverPlan
+              ? t(
+                  "portal.billing.serverPlan.connectBody",
+                  "Connect to add cloud processing credits. Your server license stays active.",
+                )
+              : t(
+                  "portal.usage.freeTier.connectBody",
+                  "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor.",
+                )}
           </Banner>
 
           {load.state === "failed" && (

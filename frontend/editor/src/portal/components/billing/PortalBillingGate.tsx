@@ -1,3 +1,6 @@
+import { ServerLicenseSection } from "@portal/components/billing/ServerLicenseSection";
+import { useServerPlan } from "@portal/hooks/useServerPlan";
+import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
 import { useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -24,6 +27,8 @@ export function PortalBillingGate() {
   const { openLinkModal } = useUI();
   const { loading } = useConnectGate();
   const isAdmin = usePortalAdmin();
+  const { serverPlan, loading: licenseLoading } = useServerPlan(isAdmin);
+  const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
   const navigate = useNavigate();
 
@@ -42,12 +47,24 @@ export function PortalBillingGate() {
   if (!isAdmin) return null;
   // Neither page while the answer is unknown: showing the local meter to a linked instance would
   // present a dormant ledger as its live one.
-  if (loading) return null;
+  if (loading || licenseLoading) return null;
   // A positively known link, not merely "not gated": linking turned off and a failed status
   // check are neither, and must not reach a SaaS this instance has no address for.
-  if (!link?.isLinked) return <FreeTierPlanView />;
+  if (!link?.isLinked)
+    return (
+      <FreeTierPlanView
+        serverPlan={serverPlan}
+        serverPlanAction={serverPlanAction}
+        licenseSection={<ServerLicenseSection onSaved={() => {}} />}
+      />
+    );
   return (
     <Usage
+      serverPlan={serverPlan}
+      serverPlanAction={serverPlanAction}
+      renderLicenseSection={(onSaved) => (
+        <ServerLicenseSection onSaved={onSaved} />
+      )}
       onWalletLoaded={onWalletLoaded}
       onReauth={onReauth}
       onEnterpriseQuote={onEnterpriseQuote}

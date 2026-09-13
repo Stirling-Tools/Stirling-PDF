@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { MeterRow } from "@app/billing/MeterRow";
+import type { ServerPlan } from "@app/billing/serverPlan";
 import type { Wallet } from "@app/billing/types";
 
 /**
@@ -14,15 +15,58 @@ import type { Wallet } from "@app/billing/types";
 export function TeamPlanRow({
   wallet,
   selfHosted = false,
+  serverPlan,
   onAddCapacity,
 }: {
-  wallet: Wallet;
+  wallet: Wallet | null;
+  serverPlan?: ServerPlan;
   /** Self-hosted phrases its free tier differently: that allowance is its own. */
   selfHosted?: boolean;
   /** Leader-only: the door that sells Team capacity. Omit for members. */
   onAddCapacity?: () => void;
 }) {
   const { t } = useTranslation();
+  if (serverPlan) {
+    const unlimited = serverPlan.licenseType === "SERVER";
+    const users = serverPlan.usersInUse;
+    return (
+      <MeterRow
+        name={t("portal.billing.team.rowName", "Users")}
+        mid={t(
+          "portal.billing.serverPlan.included",
+          "Included with your license",
+        )}
+        tone="paid"
+        showTrack={!unlimited && users != null && serverPlan.maxUsers > 0}
+        pct={
+          users != null && serverPlan.maxUsers > 0
+            ? (users / serverPlan.maxUsers) * 100
+            : 0
+        }
+        fact={
+          unlimited
+            ? t("portal.billing.serverPlan.unlimited", "Unlimited users")
+            : users == null
+              ? t(
+                  "portal.billing.serverPlan.seats",
+                  "{{seats}} licensed seats",
+                  {
+                    seats: serverPlan.maxUsers.toLocaleString(),
+                  },
+                )
+              : t(
+                  "portal.billing.team.fact",
+                  "{{users}} of {{licensed}} users",
+                  {
+                    users: users.toLocaleString(),
+                    licensed: serverPlan.maxUsers.toLocaleString(),
+                  },
+                )
+        }
+      />
+    );
+  }
+  if (!wallet) return null;
   const { held, licensedUsers, usersInUse } = wallet.team;
   const processorActive = Boolean(wallet.processor?.active);
 

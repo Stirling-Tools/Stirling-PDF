@@ -193,6 +193,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       try {
         // A caller that already holds the email (a linked instance does, from the account link)
         // never needs to be asked for it, whatever the licence says.
+        if (combinedChoose && sellsCapacity)
+          checkoutState.setServerQuantity(blocksForUsers(minimumSeats));
         if (initialEmail) {
           checkoutState.setEmailInput(initialEmail);
           checkoutState.setState((prev) => ({
@@ -211,7 +213,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
           console.log("Valid premium license detected - skipping email stage");
           checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey || null);
           checkoutState.setState({
-            currentStage: "plan-selection",
+            currentStage: combinedChoose ? "choose" : "plan-selection",
             loading: false,
           });
         } else {
@@ -229,6 +231,12 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   }, [
     opened,
     hostedCheckoutSuccess,
+    initialEmail,
+    combinedChoose,
+    sellsCapacity,
+    minimumSeats,
+    checkoutState.setServerQuantity,
+    checkoutState.setEmailInput,
     checkoutState.setCurrentLicenseKey,
     checkoutState.setPollingStatus,
     checkoutState.setLicenseKey,
@@ -360,7 +368,9 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   // a step count would be a lie about how many pages it has.
   const steppedPath: CheckoutStage[] | null = combinedChoose
     ? [
-        ...(initialEmail ? [] : (["email"] as CheckoutStage[])),
+        ...(initialEmail || checkoutState.currentLicenseKey
+          ? []
+          : (["email"] as CheckoutStage[])),
         "choose",
         "payment",
       ]
