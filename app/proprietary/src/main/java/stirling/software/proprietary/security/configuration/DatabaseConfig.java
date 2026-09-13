@@ -65,18 +65,23 @@ public class DatabaseConfig {
     public static final String DEFAULT_USERNAME = "sa";
 
     private final ApplicationProperties.Datasource datasource;
-    private final boolean runningProOrHigher;
+    private final boolean customDatabaseAllowed;
 
+    /**
+     * Takes the licence-key tier rather than the effective one. The effective tier now includes a
+     * Team plan read from the database this class builds, so reading it here would be a cycle; an
+     * external datasource is licence-only as a consequence.
+     */
     public DatabaseConfig(
             ApplicationProperties.Datasource datasource,
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher) {
+            @Qualifier("customDatabaseAllowed") boolean customDatabaseAllowed) {
         DATASOURCE_DEFAULT_URL =
                 "jdbc:h2:file:"
                         + InstallationPathConfig.getConfigPath()
                         + "stirling-pdf-DB-2.3.232;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE;MODE=PostgreSQL";
         log.debug("Database URL: {}", DATASOURCE_DEFAULT_URL);
         this.datasource = datasource;
-        this.runningProOrHigher = runningProOrHigher;
+        this.customDatabaseAllowed = customDatabaseAllowed;
     }
 
     /**
@@ -94,7 +99,7 @@ public class DatabaseConfig {
     public DataSource dataSource() throws UnsupportedProviderException {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
-        if (!runningProOrHigher || !datasource.isEnableCustomDatabase()) {
+        if (!customDatabaseAllowed || !datasource.isEnableCustomDatabase()) {
             return useDefaultDataSource(dataSourceBuilder);
         }
 

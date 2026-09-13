@@ -4,6 +4,7 @@ import static stirling.software.proprietary.security.configuration.ee.KeygenLice
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -27,23 +28,49 @@ public class EEAppConfig {
         migrateEnterpriseSettingsToPremium(this.applicationProperties);
     }
 
+    /**
+     * The tier every feature gate reads, built after the datasource so a Team plan bought in the
+     * cloud is visible to it.
+     *
+     * <p>{@code @DependsOn} is what makes that true. These beans were created before the datasource
+     * existed, so the promotion could not have run yet and each captured NORMAL for the life of the
+     * process -- a restart included, since every boot took the same path. Reversing the order is
+     * possible only because {@link #customDatabaseAllowed()} took this bean's place in {@code
+     * DatabaseConfig}.
+     */
     @Profile("security & !saas")
     @Bean(name = "runningProOrHigher")
+    @DependsOn("entityManagerFactory")
     public boolean runningProOrHigher() {
-        License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
+        License license = licenseKeyChecker.premiumTier();
         return license == License.SERVER || license == License.ENTERPRISE;
     }
 
     @Profile("security & !saas")
     @Bean(name = "license")
+    @DependsOn("entityManagerFactory")
     public String licenseType() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult().name();
+        return licenseKeyChecker.premiumTier().name();
     }
 
+    /** Never promoted: Enterprise is contracted, so this stays what the licence key itself says. */
     @Profile("security & !saas")
     @Bean(name = "runningEE")
+    @DependsOn("entityManagerFactory")
     public boolean runningEnterprise() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;
+        return licenseKeyChecker.premiumTier() == License.ENTERPRISE;
+    }
+
+    /**
+     * Whether an external database may be used. Licence-key only, and necessarily so: the
+     * datasource is built before any row can be read, so a Team plan recorded in the database
+     * cannot be what decides which database to open.
+     */
+    @Profile("security & !saas")
+    @Bean(name = "customDatabaseAllowed")
+    public boolean customDatabaseAllowed() {
+        License license = licenseKeyChecker.getLicenseKeyResult();
+        return license == License.SERVER || license == License.ENTERPRISE;
     }
 
     @Profile("security & !saas")

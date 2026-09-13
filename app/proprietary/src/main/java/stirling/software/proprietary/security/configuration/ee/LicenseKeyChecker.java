@@ -151,14 +151,8 @@ public class LicenseKeyChecker {
         try {
             return licenseSettingsService.refreshLinkedTeamUsers();
         } catch (RuntimeException e) {
-            // Every boot lands here: the datasource does not exist yet, so the licence row cannot
-            // be read. The cached figure is what makes a purchase survive a restart at all.
-            Integer cached = applicationProperties.getPremium().getLinkedTeamUsers();
-            log.debug(
-                    "Linked team allowance unreadable ({}); falling back to the cached {}",
-                    e.getMessage(),
-                    cached);
-            return cached;
+            log.debug("Linked team allowance unavailable; not promoting", e);
+            return null;
         }
     }
 
@@ -203,6 +197,22 @@ public class LicenseKeyChecker {
     public void resyncLicense() {
         evaluateLicense();
         synchronizeLicenseSettings();
+    }
+
+    /**
+     * The effective tier with the Team-plan promotion applied, for beans created while the context
+     * is still building.
+     *
+     * <p>{@link #init()} cannot promote: it runs before a datasource exists, so the licence row is
+     * unreadable and {@link #purchasedTeamUsers()} returns nothing. Bean methods that
+     * {@code @DependsOn("entityManagerFactory")} call this instead, by which point the row can be
+     * read.
+     *
+     * <p>Idempotent, so each such bean may ask.
+     */
+    public License premiumTier() {
+        applyTeamPlanPromotion();
+        return premiumEnabledResult;
     }
 
     public License getPremiumLicenseEnabledResult() {

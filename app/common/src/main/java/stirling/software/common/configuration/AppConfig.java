@@ -246,6 +246,13 @@ public class AppConfig {
         return false;
     }
 
+    /** No licence, so no external database. Mirrors the premium bean of the same name. */
+    @Bean(name = "customDatabaseAllowed")
+    @Profile("default")
+    public boolean customDatabaseAllowed() {
+        return false;
+    }
+
     @Bean(name = "license")
     @Profile("default")
     public String licenseType() {
