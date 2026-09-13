@@ -76,7 +76,7 @@ vi.mock("@portal/components/billing/FreeTierPlanView", () => ({
   ),
 }));
 
-import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
+import { BillingSettingsSection } from "@portal/components/settings/BillingSettingsSection";
 
 function Location() {
   const location = useLocation();
@@ -87,12 +87,12 @@ function Location() {
     </output>
   );
 }
-function GateTree({ entry = "/processor/usage" }: { entry?: string }) {
+function GateTree({ entry = "/settings/billing" }: { entry?: string }) {
   return (
     <MantineProvider>
       <MemoryRouter initialEntries={[entry]}>
         <Location />
-        <PortalBillingGate />
+        <BillingSettingsSection />
       </MemoryRouter>
     </MantineProvider>
   );
@@ -334,17 +334,17 @@ describe("PortalBillingGate — self-hosted", () => {
   it("prompts once for a procurement link and preserves it when linking completes", () => {
     gate.gated = true;
     const view = render(
-      <GateTree entry="/processor/usage?procurement=start" />,
+      <GateTree entry="/settings/billing?procurement=start" />,
     );
     expect(connect).toHaveBeenCalledTimes(1);
-    view.rerender(<GateTree entry="/processor/usage?procurement=start" />);
+    view.rerender(<GateTree entry="/settings/billing?procurement=start" />);
     expect(connect).toHaveBeenCalledTimes(1);
     link.is = true;
     gate.gated = false;
-    view.rerender(<GateTree entry="/processor/usage?procurement=start" />);
+    view.rerender(<GateTree entry="/settings/billing?procurement=start" />);
     expect(screen.getByTestId("usage")).toBeInTheDocument();
     expect(screen.getByTestId("location")).toHaveTextContent(
-      "/processor/usage?procurement=start",
+      "/settings/billing?procurement=start",
     );
   });
 });

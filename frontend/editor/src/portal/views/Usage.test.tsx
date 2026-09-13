@@ -19,7 +19,7 @@ function Location() {
   );
 }
 
-const renderUsage = (ui: ReactElement, entry = "/processor/usage") =>
+const renderUsage = (ui: ReactElement, entry = "/settings/billing") =>
   render(
     <StrictMode>
       <MemoryRouter initialEntries={[entry]}>
@@ -283,7 +283,7 @@ describe("Usage — link-free wallet renderer", () => {
     );
     expect(procurement.onExploreEnterprise).toHaveBeenCalledTimes(1);
     expect(screen.getByTestId("location")).toHaveTextContent(
-      "/processor/usage",
+      "/settings/billing",
     );
   });
 
@@ -299,10 +299,10 @@ describe("Usage — link-free wallet renderer", () => {
     procurement.stage = stage;
     procurement.started = stage !== null;
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
-    renderUsage(<Usage />, "/processor/usage?procurement=start&source=sales");
+    renderUsage(<Usage />, "/settings/billing?procurement=start&source=sales");
     await waitFor(() => expect(procurement[action]).toHaveBeenCalledTimes(1));
     expect(screen.getByTestId("location")).toHaveTextContent(
-      "/processor/usage?source=sales",
+      "/settings/billing?source=sales",
     );
     if (stage) expect(procurement.onExploreEnterprise).not.toHaveBeenCalled();
   });
@@ -310,7 +310,7 @@ describe("Usage — link-free wallet renderer", () => {
   it("keeps a failed snapshot's start request pending instead of creating another deal", async () => {
     procurement.loadError = "Snapshot unavailable";
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
-    renderUsage(<Usage />, "/processor/usage?procurement=start");
+    renderUsage(<Usage />, "/settings/billing?procurement=start");
     await screen.findByText("The full PDF Editor.");
     expect(screen.getByText("Snapshot unavailable")).toBeInTheDocument();
     expect(procurement.onExploreEnterprise).not.toHaveBeenCalled();
@@ -343,7 +343,7 @@ describe("Usage — link-free wallet renderer", () => {
     procurement.started = true;
     procurement.stage = "trial";
     fetchWallet.mockResolvedValue(walletOf("free"));
-    renderUsage(<Usage />, "/processor/usage?procurement=start");
+    renderUsage(<Usage />, "/settings/billing?procurement=start");
     await screen.findByText("The full PDF Editor.");
     expect(screen.getByText("Read-only deal")).toBeInTheDocument();
     expect(screen.queryByTestId("procurement-flow")).not.toBeInTheDocument();

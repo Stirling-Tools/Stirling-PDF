@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { Suspense } from "react";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter, Routes, useLocation } from "react-router-dom";
+import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { ViewRouter } from "@portal/ViewRouter";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 
@@ -18,17 +18,14 @@ vi.mock("@portal/views/PipelineBuilder", () => ({
 }));
 vi.mock("@portal/views/Sources", () => ({ Sources: () => null }));
 vi.mock("@portal/views/Integrations", () => ({ Integrations: () => null }));
-vi.mock("@portal/views/Infrastructure", () => ({ Infrastructure: () => null }));
-vi.mock("@portal/components/billing/PortalBillingGate", () => ({
-  PortalBillingGate: BillingLocation,
-}));
 
 function BillingLocation() {
-  const { pathname, search } = useLocation();
+  const { pathname, search, hash } = useLocation();
   return (
     <output>
       {pathname}
       {search}
+      {hash}
     </output>
   );
 }
@@ -45,13 +42,42 @@ describe("procurement sales links", () => {
           ]}
         >
           <Suspense fallback={null}>
-            <Routes>{getAdminRouteExtensions()}</Routes>
+            <Routes>
+              {getAdminRouteExtensions()}
+              <Route path="/settings/billing" element={<BillingLocation />} />
+            </Routes>
           </Suspense>
         </MemoryRouter>,
       );
       expect(
         await screen.findByText(
-          "/processor/usage?source=sales&procurement=start",
+          "/settings/billing?source=sales&procurement=start",
+        ),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it.each(["/", "/app"])(
+    "keeps the old usage bookmark's query and section under %s",
+    async (basename) => {
+      render(
+        <MemoryRouter
+          basename={basename}
+          initialEntries={[
+            `${basename === "/" ? "" : basename}/processor/usage?procurement=start#ub-license`,
+          ]}
+        >
+          <Suspense fallback={null}>
+            <Routes>
+              {getAdminRouteExtensions()}
+              <Route path="/settings/billing" element={<BillingLocation />} />
+            </Routes>
+          </Suspense>
+        </MemoryRouter>,
+      );
+      expect(
+        await screen.findByText(
+          "/settings/billing?procurement=start#ub-license",
         ),
       ).toBeInTheDocument();
     },
