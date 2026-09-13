@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Group, SegmentedControl, Stack, Paper, Text } from "@mantine/core";
+import { Group, Stack, Paper, Text } from "@mantine/core";
+import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
 import PendingBadge from "@app/components/shared/config/PendingBadge";
 import type { UiDefaultsCardProps } from "@app/components/shared/config/configSections/server/serverCardProps";
@@ -89,16 +90,13 @@ export function UserDefaultsCard({
               "Choose whether the tool picker opens in fullscreen or sidebar by default",
             )}
           </Text>
-          <SegmentedControl
+          <SegmentedControl<ToolPanelMode>
             value={toolPanelModeValue}
-            onChange={(value: string) => {
+            onChange={(value) => {
               if (!loginEnabled) return;
-              setSettings({
-                ...settings,
-                defaultToolPanelMode: value as ToolPanelMode,
-              });
+              setSettings({ ...settings, defaultToolPanelMode: value });
             }}
-            data={[
+            options={[
               {
                 label: t("settings.general.mode.sidebar", "Sidebar"),
                 value: "sidebar",
@@ -130,16 +128,13 @@ export function UserDefaultsCard({
               "Choose which view is active when the app starts",
             )}
           </Text>
-          <SegmentedControl
+          <SegmentedControl<StartupView>
             value={startupViewValue}
-            onChange={(value: string) => {
+            onChange={(value) => {
               if (!loginEnabled) return;
-              setSettings({
-                ...settings,
-                defaultStartupView: value as StartupView,
-              });
+              setSettings({ ...settings, defaultStartupView: value });
             }}
-            data={[
+            options={[
               {
                 label: t("settings.general.startupView.tools", "Tools"),
                 value: "tools",
