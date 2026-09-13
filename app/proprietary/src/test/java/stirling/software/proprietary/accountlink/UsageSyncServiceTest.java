@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.scheduling.config.ScheduledTaskRegistrar;
 
 @ExtendWith(MockitoExtension.class)
@@ -30,6 +31,8 @@ class UsageSyncServiceTest {
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private AccountLinkClient client;
     @Mock private EntitlementCache entitlementCache;
+
+    @Mock private ApplicationEventPublisher events;
 
     private UsageSyncService service;
     private final LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
@@ -43,7 +46,8 @@ class UsageSyncServiceTest {
                         credentialStore,
                         client,
                         entitlementCache,
-                        new AccountLinkProperties());
+                        new AccountLinkProperties(),
+                        events);
     }
 
     @Test
@@ -52,7 +56,13 @@ class UsageSyncServiceTest {
         props.getMetering().setSyncIntervalHours(6);
         UsageSyncService svc =
                 new UsageSyncService(
-                        counters, syncState, credentialStore, client, entitlementCache, props);
+                        counters,
+                        syncState,
+                        credentialStore,
+                        client,
+                        entitlementCache,
+                        props,
+                        events);
 
         ScheduledTaskRegistrar registrar = new ScheduledTaskRegistrar();
         svc.configureTasks(registrar);

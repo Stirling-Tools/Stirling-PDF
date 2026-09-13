@@ -16,6 +16,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.util.GeneralUtils;
+import stirling.software.proprietary.accountlink.EntitlementRefreshedEvent;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -69,20 +70,17 @@ public class LicenseKeyChecker {
     }
 
     /**
-     * Picks up a Team plan bought, resized or cancelled since the last check.
+     * Re-reads the plan whenever the entitlement is refreshed, which costs nothing: the instance
+     * has just spoken to SaaS for its own reasons.
      *
-     * <p>Deliberately not {@link #checkLicensePeriodically()}: that re-verifies the licence key
-     * with Keygen, which is a network round trip and rightly weekly. The promotion only reads an
-     * entitlement this instance already caches, so it can run at that cache's own freshness. Both
-     * used to share the weekly job, which is why a purchase could go unnoticed for seven days.
-     *
-     * <p>Cheap when nothing changed: a cache read and a comparison. The write only happens when the
-     * allowance actually moved.
+     * <p>Deliberately not a schedule of its own. The instance talks to SaaS daily by design, so it
+     * can be offline for reasonable stretches without interruption, and a timer for this would undo
+     * that. A purchase made from this instance refreshes the entitlement on the checkout return,
+     * one made elsewhere is picked up by the next daily sync or the next restart -- the same three
+     * moments a licence key was ever noticed at.
      */
-    @Scheduled(
-            initialDelayString = "${stirling.billing.account-link.plan-check-seconds:300}000",
-            fixedDelayString = "${stirling.billing.account-link.plan-check-seconds:300}000")
-    public void checkTeamPlanPeriodically() {
+    @EventListener(EntitlementRefreshedEvent.class)
+    public void onEntitlementRefreshed() {
         try {
             applyTeamPlanPromotion();
         } catch (RuntimeException e) {
