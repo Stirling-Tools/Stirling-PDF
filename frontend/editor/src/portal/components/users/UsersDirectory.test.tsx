@@ -93,6 +93,16 @@ describe("UsersDirectory — remove action gating", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Rename team")).not.toBeInTheDocument();
   });
+
+  it("lists a team with no members yet, so its first member can be added", () => {
+    renderDirectory(selfHostedCaps, [
+      ...TEAMS,
+      { id: 2, name: "Brand new", userCount: 0, owners: [] },
+    ]);
+
+    expect(screen.getByText("Brand new team")).toBeInTheDocument();
+    expect(screen.getAllByText("Add to team")).toHaveLength(2);
+  });
 });
 
 describe("flavor capabilities — invitations + remove scope", () => {

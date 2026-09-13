@@ -66,7 +66,15 @@ public class ExtractImageScansController {
             value = "/extract-image-scans",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @MultiFileResponse
-    @ToolIO(produces = ToolFormat.IMAGE, arity = ToolArity.SIMO)
+    // split_photos.py uses OpenCV imread, which cannot read the vector/PSD formats in IMAGE.
+    @ToolIO(
+            accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
+            inputExtensions = {
+                "pdf", "bmp", "dib", "gif", "jpeg", "jpg", "jpe", "jp2", "png", "webp", "avif",
+                "pbm", "pgm", "ppm", "pxm", "pnm", "pfm", "sr", "ras", "tiff", "tif", "hdr", "pic"
+            },
+            produces = ToolFormat.IMAGE,
+            arity = ToolArity.SIMO)
     @Operation(
             summary = "Extract image scans from an input file",
             description =

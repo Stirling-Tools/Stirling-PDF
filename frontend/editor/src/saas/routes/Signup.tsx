@@ -5,6 +5,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getBaseUrl, withBasePath } from "@app/constants/app";
+import { rememberPendingDestination } from "@app/services/pendingDestination";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
 import "@app/auth/ui/auth.css";
 import "@app/routes/authShared/saas-auth.css";
@@ -35,6 +36,18 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(true);
   const [fieldErrors, setFieldErrors] = useState<SignupFieldErrors>({});
+
+  // Stashed rather than threaded onward: Supabase builds the confirmation link and
+  // it cannot carry a `next`.
+  useEffect(() => {
+    try {
+      rememberPendingDestination(
+        new URL(window.location.href).searchParams.get("next"),
+      );
+    } catch (_) {
+      // Unparseable URL; the visitor just lands on the default.
+    }
+  }, []);
 
   // Check if we were redirected here with an auto-auth error
   useEffect(() => {
@@ -95,7 +108,6 @@ export default function Signup() {
 
   const baseUrl = getBaseUrl();
 
-  // Set document meta
   useDocumentMeta({
     title: `${t("signup.title", "Create an account")} - Stirling PDF`,
     description: t(

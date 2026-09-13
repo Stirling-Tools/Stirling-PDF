@@ -108,8 +108,14 @@ export async function flattenSignatures(
           const pageAnnotations =
             await signatureApiRef.current.getPageAnnotations(pageIndex);
           if (pageAnnotations && pageAnnotations.length > 0) {
-            const sessionAnnotations = pageAnnotations.filter((annotation) =>
-              Boolean(getAnnotationImageData(annotation, getImageData)),
+            const sessionAnnotations = pageAnnotations.filter(
+              (annotation): annotation is SignatureAnnotation =>
+                Boolean(
+                  getAnnotationImageData(
+                    annotation as SignatureAnnotation,
+                    getImageData,
+                  ),
+                ),
             );
 
             if (sessionAnnotations.length > 0) {

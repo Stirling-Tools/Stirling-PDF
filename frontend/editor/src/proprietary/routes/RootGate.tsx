@@ -6,14 +6,14 @@ import { resolveRootTarget } from "@app/utils/loginLanding";
 /** A decision, tagged with the visit it was made for so it can never go stale. */
 interface Decision {
   visit: string;
-  /** Where to send them, or null for "no role to route on - render the app". */
+  /** Where to send them, or null for "no account to route on - render the app". */
   target: string | null;
 }
 
 /**
- * Makes "/" a role-based router instead of a page: signed-in users are sent on
- * to the processor or the editor, with a per-user override in Settings and the
- * VITE_LOGIN_LANDING_MODE soft-release flag. Every other path renders the app
+ * Makes "/" a router instead of a page: signed-in users are sent on to the
+ * editor, or to the processor if their account has opted in, subject to the
+ * VITE_LOGIN_LANDING_MODE kill switch. Every other path renders the app
  * untouched.
  *
  * Wraps the app rather than being a route of its own, which buys two things:
@@ -35,9 +35,9 @@ interface Decision {
  * so signing in never tears the app back down.
  *
  * Context-free by necessity, since it sits above the providers: apiClient
- * resolves its own auth token and the per-user override is read straight from
- * localStorage. Builds with no processor (core, desktop) use the pass-through
- * override.
+ * resolves its own auth token, and the opt-in arrives on the same
+ * `/api/v1/auth/me` response. Builds with no processor (core, desktop) use the
+ * pass-through override.
  */
 export function RootGate({ children }: { children: ReactNode }) {
   const location = useLocation();
