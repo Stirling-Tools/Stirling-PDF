@@ -870,12 +870,23 @@ public class GeneralUtils {
      *                  Internal Implementation Details                       *
      *------------------------------------------------------------------------*/
 
+    /**
+     * Guards the read-modify-write cycle below. Every writer reloads the whole file, edits one key
+     * and writes it all back, so two unsynchronised writers would silently drop one another's keys.
+     */
+    private final Object SETTINGS_WRITE_LOCK = new Object();
+
+    /** Dotted-notation separator for settings keys; a literal, so compile it once. */
+    private final Pattern SETTINGS_KEY_SEPARATOR = Pattern.compile("\\.");
+
     public void saveKeyToSettings(String key, Object newValue) throws IOException {
-        String[] keyArray = key.split("\\.");
-        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
-        YamlHelper settingsYaml = new YamlHelper(settingsPath);
-        settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
-        settingsYaml.saveOverride(settingsPath);
+        synchronized (SETTINGS_WRITE_LOCK) {
+            String[] keyArray = SETTINGS_KEY_SEPARATOR.split(key);
+            Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
+            YamlHelper settingsYaml = new YamlHelper(settingsPath);
+            settingsYaml.updateValue(Arrays.asList(keyArray), newValue);
+            settingsYaml.saveOverride(settingsPath);
+        }
     }
 
     /**
@@ -893,19 +904,21 @@ public class GeneralUtils {
             return;
         }
 
-        Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
-        YamlHelper settingsYaml = new YamlHelper(settingsPath);
+        synchronized (SETTINGS_WRITE_LOCK) {
+            Path settingsPath = Path.of(InstallationPathConfig.getSettingsPath());
+            YamlHelper settingsYaml = new YamlHelper(settingsPath);
 
-        // Apply all updates to the same YamlHelper instance
-        for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
-            String key = entry.getKey();
-            Object value = entry.getValue();
-            String[] keyArray = key.split("\\.");
-            settingsYaml.updateValue(Arrays.asList(keyArray), value);
+            // Apply all updates to the same YamlHelper instance
+            for (Map.Entry<String, Object> entry : settingsMap.entrySet()) {
+                String key = entry.getKey();
+                Object value = entry.getValue();
+                String[] keyArray = SETTINGS_KEY_SEPARATOR.split(key);
+                settingsYaml.updateValue(Arrays.asList(keyArray), value);
+            }
+
+            // Save only once after all updates are applied
+            settingsYaml.saveOverride(settingsPath);
         }
-
-        // Save only once after all updates are applied
-        settingsYaml.saveOverride(settingsPath);
     }
 
     /*
