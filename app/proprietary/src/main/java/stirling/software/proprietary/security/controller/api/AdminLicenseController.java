@@ -152,9 +152,12 @@ public class AdminLicenseController {
     }
 
     /**
-     * Resync the current license with Keygen. This endpoint re-validates the existing license key
-     * and updates the max users setting. Used after subscription upgrades to sync the new license
-     * limits.
+     * Re-reads everything that decides this instance's tier: the linked cloud team's plan, fetched
+     * fresh rather than from cache, and the licence key if one is installed.
+     *
+     * <p>Deliberately does not require a licence key. A Team plan is bought on a SaaS account and
+     * issues no key, so a key check here would reject the one customer this path exists for and
+     * leave their purchase waiting for the next daily sync.
      *
      * @return Response with updated license information
      */
@@ -173,15 +176,8 @@ public class AdminLicenseController {
                         .body(Map.of("success", false, "error", "License checker not available"));
             }
 
-            String currentKey = applicationProperties.getPremium().getKey();
-            if (currentKey == null || currentKey.trim().isEmpty()) {
-                return ResponseEntity.badRequest()
-                        .body(Map.of("success", false, "error", "No license key configured"));
-            }
+            log.info("Resyncing entitlements");
 
-            log.info("Resyncing license with Keygen");
-
-            // Re-validate license and sync settings
             licenseKeyChecker.resyncLicense();
 
             // Get updated license status

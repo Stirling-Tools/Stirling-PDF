@@ -202,9 +202,9 @@ class LicenseKeyCheckerTest {
     }
 
     /**
-     * init() runs before the datasource exists, because DatabaseConfig builds it from the
-     * runningProOrHigher bean this class produces. The row read therefore throws rather than
-     * answering, and boot has to survive it.
+     * init() is a @PostConstruct, so it runs long before the datasource exists. The row read
+     * therefore throws rather than answering, and boot has to survive it -- the promotion is the
+     * tier beans' job, not this one's.
      */
     @Test
     void unreadableHolding_doesNotBreakBoot() {
@@ -220,7 +220,7 @@ class LicenseKeyCheckerTest {
         assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
     }
 
-    /** ApplicationReadyEvent is where the promotion actually lands, once the row is readable. */
+    /** ApplicationReadyEvent is the backstop for an instance whose row was unreadable earlier. */
     @Test
     void applicationReady_appliesThePromotionTheBootReadCouldNotSee() {
         ApplicationProperties props = new ApplicationProperties();

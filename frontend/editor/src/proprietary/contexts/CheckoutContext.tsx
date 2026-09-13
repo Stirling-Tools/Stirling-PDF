@@ -155,7 +155,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         // Always resync, whichever branch follows. A cloud Team purchase mints no licence key,
         // so the upgrade branch never runs for one and the new-subscription branch polls for a key
         // that will not arrive. This is what moves the tier in seconds: it drops the cached
-        // entitlement and re-reads the linked team's plan, rather than waiting out the plan check.
+        // entitlement and re-reads the linked team's plan, instead of leaving the purchase to be
+        // noticed on the next daily sync.
         const activation = await resyncExistingLicense();
 
         // Check if this is an upgrade or new subscription
