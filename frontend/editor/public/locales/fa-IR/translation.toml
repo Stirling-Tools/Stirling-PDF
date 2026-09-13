@@ -6464,10 +6464,7 @@ thirtyDays = "۳۰ روز"
 threeYears = "۳ سال"
 webhook = "Webhook"
 
-[printFile]
-title = "چاپ فایل"
-
-[processor]
+[portal]
 comingSoon = "به‌زودی"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "مالک یک تیم است — منابع اعضا و پیکربند
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · نامحدود"
+
+[printFile]
+title = "چاپ فایل"
 
 [provider.googledrive]
 name = "Google Drive"

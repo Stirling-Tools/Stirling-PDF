@@ -6464,10 +6464,7 @@ thirtyDays = "30 天"
 threeYears = "3 年"
 webhook = "Webhook"
 
-[printFile]
-title = "打印文件"
-
-[processor]
+[portal]
 comingSoon = "即将推出"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "拥有一个团队——管理其成员资源和共享配置。"
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 无限"
+
+[printFile]
+title = "打印文件"
 
 [provider.googledrive]
 name = "Google Drive"

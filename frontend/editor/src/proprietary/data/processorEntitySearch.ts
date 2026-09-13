@@ -3,15 +3,15 @@ import type { TFunction } from "i18next";
 import { useScopedFetchCache } from "@app/hooks/useScopedFetchCache";
 import type { SuperSearchGroup } from "@app/types/superSearch";
 import type {
-  PortalEntityItems,
-  PortalEntityScopeId,
+  ProcessorEntityItems,
+  ProcessorEntityScopeId,
 } from "@processor/search/entitySearch";
 import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 
 type EntitySearchModule = typeof import("@processor/search/entitySearch");
 
 const NO_GROUPS: SuperSearchGroup[] = [];
-const NO_SCOPES: readonly PortalEntityScopeId[] = [];
+const NO_SCOPES: readonly ProcessorEntityScopeId[] = [];
 
 /**
  * Processor entity results for the editor's super search. The portal's
@@ -23,7 +23,7 @@ const NO_SCOPES: readonly PortalEntityScopeId[] = [];
  * lazily loaded module, which useQuery's static-key shape handles awkwardly.
  *
  * `tier` shapes only presentational fields on the users payload, never the
- * lists (see fetchPortalEntityScope), so the editor passes "free" rather than
+ * lists (see fetchProcessorEntityScope), so the editor passes "free" rather than
  * mounting the portal's TierContext.
  */
 export function useProcessorEntityGroups(
@@ -53,20 +53,20 @@ export function useProcessorEntityGroups(
     };
   }, [active]);
 
-  const requestedScopes = useMemo<readonly PortalEntityScopeId[]>(() => {
+  const requestedScopes = useMemo<readonly ProcessorEntityScopeId[]>(() => {
     if (!active || !hasQuery || !mod) return NO_SCOPES;
-    return mod.withPortalEntityDependencies(
+    return mod.withProcessorEntityDependencies(
       mod
-        .defaultPortalEntityScopes(isAdmin)
+        .defaultProcessorEntityScopes(isAdmin)
         .filter((scopeId) => scopeEnabled(scopeId)),
     );
   }, [active, hasQuery, mod, scopeEnabled, isAdmin]);
 
   const fetchScope = useCallback(
-    async (scopeId: PortalEntityScopeId): Promise<PortalEntityItems> => {
+    async (scopeId: ProcessorEntityScopeId): Promise<ProcessorEntityItems> => {
       const loaded =
         modRef.current ?? (await import("@processor/search/entitySearch"));
-      return loaded.fetchPortalEntityScope(scopeId, "free");
+      return loaded.fetchProcessorEntityScope(scopeId, "free");
     },
     [],
   );

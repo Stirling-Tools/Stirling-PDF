@@ -6464,10 +6464,7 @@ thirtyDays = "30 días"
 threeYears = "3 años"
 webhook = "Webhook"
 
-[printFile]
-title = "Imprimir archivo"
-
-[processor]
+[portal]
 comingSoon = "Próximamente"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Posee un equipo — gestiona los recursos de sus miembros y las confi
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Ilimitado"
+
+[printFile]
+title = "Imprimir archivo"
 
 [provider.googledrive]
 name = "Google Drive"

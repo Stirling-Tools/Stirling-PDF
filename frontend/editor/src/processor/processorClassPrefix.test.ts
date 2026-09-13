@@ -7,9 +7,9 @@ import { describe, it, expect } from "vitest";
 // silently drops every rule in the block.
 
 const PROCESSOR_ROOT = path.resolve(__dirname);
-const CSS_CLASS_SELECTOR = /\.portal-[A-Za-z0-9_-]+/g;
+const CSS_CLASS_SELECTOR = /\.processor-[A-Za-z0-9_-]+/g;
 const CLASS_NAME_ATTRIBUTE =
-  /class(?:Name)?\s*=\s*\{?[^\n]*?portal-[A-Za-z0-9_-]+/g;
+  /class(?:Name)?\s*=\s*\{?[^\n]*?processor-[A-Za-z0-9_-]+/g;
 
 function collectFiles(
   dir: string,
@@ -44,13 +44,13 @@ function hits(file: string, pattern: RegExp): string[] {
 }
 
 describe("processor styling prefix", () => {
-  it("declares no legacy portal- class selectors", () => {
+  it("declares no legacy processor- class selectors", () => {
     const stylesheets = collectFiles(PROCESSOR_ROOT, new Set([".css"]));
     expect(stylesheets.length).toBeGreaterThan(0);
     expect(stylesheets.flatMap((f) => hits(f, CSS_CLASS_SELECTOR))).toEqual([]);
   });
 
-  it("renders no legacy portal- class names", () => {
+  it("renders no legacy processor- class names", () => {
     const markup = collectFiles(PROCESSOR_ROOT, new Set([".tsx"]));
     expect(markup.length).toBeGreaterThan(0);
     expect(markup.flatMap((f) => hits(f, CLASS_NAME_ATTRIBUTE))).toEqual([]);

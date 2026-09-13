@@ -25,6 +25,11 @@ vi.mock("@app/auth", () => ({
   AuthProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@app/auth/context", () => ({ useAuth: () => authState }));
+// Passthrough too — the real one builds a Supabase client at import time, which
+// needs env this suite deliberately does not set.
+vi.mock("@app/auth/UseSession", () => ({
+  AuthProvider: ({ children }: { children: ReactNode }) => children,
+}));
 vi.mock("@app/ui", () => ({ Spinner: () => null }));
 vi.mock("@processor/auth/saasSupabase", () => ({
   ensureSaasSupabase: vi.fn(),
@@ -35,7 +40,7 @@ import { ProcessorAuthBoundary } from "@processor/auth/ProcessorAuthBoundary";
 function renderBoundary() {
   render(
     <ProcessorAuthBoundary>
-      <div data-testid="processor">PORTAL</div>
+      <div data-testid="processor">PROCESSOR</div>
     </ProcessorAuthBoundary>,
   );
 }

@@ -6464,10 +6464,7 @@ thirtyDays = "30 de zile"
 threeYears = "3 ani"
 webhook = "Webhook"
 
-[printFile]
-title = "Tipărește Fișier"
-
-[processor]
+[portal]
 comingSoon = "În curând"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Deține o echipă — gestionează resursele membrilor și configură
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Nelimitat"
+
+[printFile]
+title = "Tipărește Fișier"
 
 [provider.googledrive]
 name = "Google Drive"

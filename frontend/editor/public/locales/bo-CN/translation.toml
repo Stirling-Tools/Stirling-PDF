@@ -6464,10 +6464,7 @@ thirtyDays = "ཉིན་ 30"
 threeYears = "ལོ་ 3"
 webhook = "Webhook"
 
-[printFile]
-title = "པར་སྐྲུན།"
-
-[processor]
+[portal]
 comingSoon = "མགྱོགས་པོར་ཡོང་རྒྱུ"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "རུ་ཁག་ཅིག་བདག་སྐྱོང་བྱེ
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · ཚད་མེད"
+
+[printFile]
+title = "པར་སྐྲུན།"
 
 [provider.googledrive]
 name = "Google Drive"

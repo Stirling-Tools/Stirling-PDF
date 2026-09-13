@@ -14,7 +14,7 @@ const meta: Meta<typeof AppShell> = {
   component: AppShell,
   parameters: { layout: "fullscreen" },
   decorators: [
-    // The shell hosts the portal search bar, which reads the tool registry.
+    // The shell hosts the processor search bar, which reads the tool registry.
     (Story) => (
       <ToolRegistryProvider>
         <Story />

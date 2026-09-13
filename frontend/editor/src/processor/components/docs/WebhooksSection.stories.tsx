@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { WebhooksSection } from "@processor/components/docs/WebhooksSection";
-import "@processor/views/DeveloperDocs.css";
+import "@core/components/docs/DeveloperDocs.css";
 
 const meta: Meta<typeof WebhooksSection> = {
   title: "Processor/DeveloperDocs/WebhooksSection",

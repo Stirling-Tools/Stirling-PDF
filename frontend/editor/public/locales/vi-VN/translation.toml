@@ -6464,10 +6464,7 @@ thirtyDays = "30 ngày"
 threeYears = "3 năm"
 webhook = "Webhook"
 
-[printFile]
-title = "In tệp"
-
-[processor]
+[portal]
 comingSoon = "Sắp ra mắt"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Sở hữu một đội — quản lý tài nguyên và cấu hình d
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Không giới hạn"
+
+[printFile]
+title = "In tệp"
 
 [provider.googledrive]
 name = "Google Drive"

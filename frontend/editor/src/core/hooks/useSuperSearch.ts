@@ -15,6 +15,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import { useProcessorAccess } from "@app/hooks/useProcessorAccess";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
@@ -39,7 +40,7 @@ import {
 } from "@app/data/settingsContentSearch";
 import {
   PROCESSOR_SEARCH_INDEX,
-  isPortalEntityScopeAccessible,
+  isProcessorEntityScopeAccessible,
   type ProcessorSearchEntry,
 } from "@app/data/processorSearchIndex";
 import { useProcessorEntityGroups } from "@app/data/processorEntitySearch";
@@ -97,23 +98,21 @@ export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
 export function useSuperSearchGates(): SuperSearchGates | null {
   const authState = useAuth();
   const { config } = useAppConfig();
+  // Through the seam, not authState: on SaaS the editor's Supabase session
+  // carries no permission flags, so reading it here hid every processor lane.
+  const processorAccessible = useProcessorAccess();
   return useMemo(
     () =>
       config
         ? {
             isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
-            processorAccessible: authState.processorAccess ?? false,
+            processorAccessible,
             isAnonymous: authState.isAnonymous,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
-    [
-      authState.isAdmin,
-      authState.isAnonymous,
-      authState.processorAccess,
-      config,
-    ],
+    [authState.isAdmin, authState.isAnonymous, processorAccessible, config],
   );
 }
 
@@ -157,8 +156,13 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
             },
             ...PORTAL_ENTITY_SCOPE_DEFS.filter(
               (def) =>
-                visibleViewIds.has(def.viewId) &&
-                isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false),
+                // A settings-hosted entity is reachable wherever the processor is.
+                (def.settingsKey !== undefined ||
+                  visibleViewIds.has(def.viewId)) &&
+                isProcessorEntityScopeAccessible(
+                  def.id,
+                  gates?.isAdmin ?? false,
+                ),
             ).map((def) => ({
               id: def.id,
               label: t(def.labelKey, def.labelFallback),
@@ -304,17 +308,13 @@ export function rankSettingsResults(
   gates: SuperSearchGates | null,
   openSettings: (section: string, anchor?: string) => void,
   limit = GROUP_RESULT_CEILING,
-  /** Sections the host's settings modal refuses to show (e.g. the portal's
-   * hiddenSectionKeys) — offering them would deep-link into a blank modal. */
-  excludeSections?: readonly string[],
 ): SuperSearchResult[] {
   if (!trimmed) return [];
 
-  // Sections gated like the modal nav. The registry resolves per build
+  // Sections gated like the settings nav. The registry resolves per build
   // (core / proprietary / saas / desktop), so this only ever sees sections
-  // the current build's settings modal can actually show.
+  // the current build's settings page can actually show.
   const visibleSections = SETTINGS_SECTION_REGISTRY.filter((s) => {
-    if (excludeSections?.includes(s.key)) return false;
     // Null gates (config still loading): hide every gated section.
     // requiresLogin keys off the deployment's login *mode*, mirroring the nav
     // builder: with login on the editor is login-walled (an unauthenticated
@@ -332,6 +332,9 @@ export function rankSettingsResults(
     // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
     if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
       return false;
+    // The processor's own sections mirror its nav builder's processorAccess gate.
+    if (s.requiresProcessorAccess && gates?.processorAccessible !== true)
+      return false;
     return true;
   });
   // Row context: the display label of the section the row lives in.
@@ -339,7 +342,7 @@ export function rankSettingsResults(
     visibleSections.map((s) => [s.key, t(s.labelKey, s.labelFallback)]),
   );
 
-  // Row-level entries (deep-link with ?focus=) take priority. Rows for
+  // Row-level entries (deep-link by slug) take priority. Rows for
   // sections this build/user can't open are dropped with them.
   const rowMatches = rankByFuzzy(
     SETTINGS_SEARCH_INDEX.filter((e) => sectionLabelFor.has(e.section)),
@@ -574,7 +577,7 @@ export function useSuperSearch(
   const openSettings = useCallback(
     (section: string, anchor?: string) => {
       const path = anchor
-        ? `/settings/${section}?focus=${encodeURIComponent(anchor)}`
+        ? `/settings/${section}#${encodeURIComponent(anchor)}`
         : `/settings/${section}`;
       navigate(path);
     },

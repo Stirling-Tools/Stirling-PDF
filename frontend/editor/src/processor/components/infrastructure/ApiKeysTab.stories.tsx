@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { http, HttpResponse, delay } from "msw";
 import { ApiKeysTab } from "@processor/components/infrastructure/ApiKeysTab";
-import "@processor/views/Infrastructure.css";
+import "@processor/components/infrastructure/infrastructure.css";
 
 const meta: Meta<typeof ApiKeysTab> = {
   title: "Processor/Infrastructure/ApiKeysTab",

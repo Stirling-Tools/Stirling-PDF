@@ -168,7 +168,7 @@ export function SupabaseAuthProvider({
       })
         .then((res) => {
           // Must throw, not resolve null: swallowing a non-ok leaves
-          // portalAccess undefined and hangs the portal gate on a spinner.
+          // processorAccess undefined and hangs the portal gate on a spinner.
           if (!res.ok) throw new Error(`auth/me responded ${res.status}`);
           return res.json();
         })

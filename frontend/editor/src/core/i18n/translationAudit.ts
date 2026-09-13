@@ -108,6 +108,9 @@ export const I18N_PROJECTS: TranslationProject[] = [
       // "processor.policies.operations" - the shape heuristic treats that interpolation as one
       // segment, so this whole catalogue-driven family is matched here instead.
       /^processor\.policies\.operations\./,
+      // Failure-kind copy is keyed off the server's FailureKind enum and arrives as data, so no
+      // frontend source names it. FailureKindTest asserts every kind has copy here.
+      /^processor\.failures\.kind\./,
       // Server-sent keys rendered with t(thatKey), so nothing in source names them.
       /^processor\.failures\.disabled\./,
       /^processor\.failures\.action\./,

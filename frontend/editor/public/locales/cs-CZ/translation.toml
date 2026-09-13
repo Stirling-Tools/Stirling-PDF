@@ -6464,10 +6464,7 @@ thirtyDays = "30 dní"
 threeYears = "3 roky"
 webhook = "Webhook"
 
-[printFile]
-title = "Tisk souboru"
-
-[processor]
+[portal]
 comingSoon = "Již brzy"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Vlastní tým — spravuje prostředky jeho členů a sdílené konfi
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neomezeně"
+
+[printFile]
+title = "Tisk souboru"
 
 [provider.googledrive]
 name = "Google Drive"

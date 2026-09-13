@@ -1,12 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter, Route, Routes } from "react-router-dom";
+import { MemoryRouter } from "react-router-dom";
 
 /**
- * Usage must not render while unlinked: it reports `linked` as a fact from its wallet read, so a
- * browser holding a SaaS session with no link to this server would flip the whole processor to linked.
+ * Which usage page this instance has one of. The unlinked half must not go anywhere near the
+ * wallet: {@code onWalletLoaded} reports `linked` as a fact, and a browser can hold a SaaS session
+ * with no link to this server, so loading a wallet there would flip the whole processor to linked.
  */
 const gate = { gated: false, loading: false, available: true };
+// Administrator by default: the page is theirs, and one case below is the member.
+const admin = { is: true };
+const link = { is: false };
 const connect = vi.fn();
 const applyLinkFacts = vi.fn();
 
@@ -15,9 +19,13 @@ vi.mock("@processor/hooks/useConnectGate", () => ({
 }));
 vi.mock("@processor/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => applyLinkFacts,
+  useLinkOptional: () => ({ isLinked: link.is }),
 }));
 vi.mock("@processor/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
+}));
+vi.mock("@processor/hooks/useProcessorAdmin", () => ({
+  useProcessorAdmin: () => admin.is,
 }));
 vi.mock("@processor/views/Usage", () => ({
   Usage: ({ onWalletLoaded }: { onWalletLoaded?: (w: unknown) => void }) => {
@@ -25,58 +33,82 @@ vi.mock("@processor/views/Usage", () => ({
     return <div data-testid="usage" />;
   },
 }));
+vi.mock("@processor/components/billing/FreeTierPlanView", () => ({
+  FreeTierPlanView: () => <div data-testid="free-tier" />,
+}));
 
 import { ProcessorBillingGate } from "@processor/components/billing/ProcessorBillingGate";
 
 const renderGate = () =>
   render(
     <MemoryRouter initialEntries={["/processor/usage"]}>
-      <Routes>
-        <Route path="/processor/usage" element={<ProcessorBillingGate />} />
-        <Route path="/processor" element={<div data-testid="home" />} />
-      </Routes>
+      <ProcessorBillingGate />
     </MemoryRouter>,
   );
 
 describe("ProcessorBillingGate — self-hosted", () => {
   beforeEach(() => {
+    admin.is = true;
+    link.is = false;
     connect.mockReset();
     applyLinkFacts.mockReset();
     gate.gated = false;
     gate.loading = false;
   });
 
-  it("asks for the connection when reached unconnected", () => {
+  it("shows the instance's own meter when there is no account, rather than a bounce", () => {
     gate.gated = true;
     renderGate();
-    expect(connect).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("free-tier")).toBeInTheDocument();
+    expect(screen.queryByTestId("usage")).toBeNull();
   });
 
-  it("sends them back rather than onto a page about an account they lack", () => {
+  it("asks for nothing on the way in", () => {
     gate.gated = true;
     renderGate();
-    expect(screen.queryByTestId("usage")).toBeNull();
-    expect(screen.getByTestId("home")).toBeInTheDocument();
+    expect(connect).not.toHaveBeenCalled();
   });
 
   it("never reports the instance as linked while it is not", () => {
     gate.gated = true;
     renderGate();
-    // Not rendering the page is what stops the claim.
+    // Keeping the unlinked page off the wallet is what stops the claim.
     expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 
-  it("holds while the capability is still unknown, rather than bouncing", () => {
+  it("commits to neither page while the answer is unknown", () => {
     gate.loading = true;
     renderGate();
     expect(screen.queryByTestId("usage")).toBeNull();
-    expect(screen.queryByTestId("home")).toBeNull();
+    expect(screen.queryByTestId("free-tier")).toBeNull();
   });
 
-  it("renders the page once connected", () => {
+  it("renders the wallet page, unchanged, once linked", () => {
+    link.is = true;
     renderGate();
-    expect(connect).not.toHaveBeenCalled();
     expect(screen.getByTestId("usage")).toBeInTheDocument();
+    expect(screen.queryByTestId("free-tier")).toBeNull();
     expect(applyLinkFacts).toHaveBeenCalledWith(true, false);
+  });
+
+  it("keeps an unlinked instance off the wallet even when nothing gates it", () => {
+    // Linking turned off, or a status check that failed: neither is "gated", and neither may
+    // reach a SaaS this instance has no address for.
+    gate.gated = false;
+    renderGate();
+
+    expect(screen.getByTestId("free-tier")).toBeInTheDocument();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    expect(applyLinkFacts).not.toHaveBeenCalled();
+  });
+
+  it("gives a member no page at all, whatever the link state", async () => {
+    admin.is = false;
+    gate.gated = true;
+    renderGate();
+
+    expect(screen.queryByTestId("free-tier")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("usage")).not.toBeInTheDocument();
+    expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 });

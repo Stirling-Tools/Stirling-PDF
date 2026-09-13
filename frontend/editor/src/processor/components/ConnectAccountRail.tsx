@@ -43,7 +43,7 @@ export function ConnectAccountRail() {
         <span className="processor-connect-rail__sub">
           {t(
             "processor.accountLink.rail.sub",
-            "Unlocks teams, PDF processor, pipelines, and policies. PDF editing stays free.",
+            "Adds monthly credits and room for more users. Everything on this server already works without one.",
           )}
         </span>
       </div>

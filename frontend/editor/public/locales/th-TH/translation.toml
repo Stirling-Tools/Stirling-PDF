@@ -6464,10 +6464,7 @@ thirtyDays = "30 วัน"
 threeYears = "3 ปี"
 webhook = "Webhook"
 
-[printFile]
-title = "พิมพ์ไฟล์"
-
-[processor]
+[portal]
 comingSoon = "เร็วๆ นี้"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "เป็นเจ้าของทีม — จัดการท�
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · ไม่จำกัด"
+
+[printFile]
+title = "พิมพ์ไฟล์"
 
 [provider.googledrive]
 name = "Google Drive"

@@ -354,9 +354,9 @@
 }
 /* Deep-link landing flash (?member=<id>). */
 .processor-users__row--flash {
-  animation: portal-users-row-flash 1.6s ease-out;
+  animation: processor-users-row-flash 1.6s ease-out;
 }
-@keyframes portal-users-row-flash {
+@keyframes processor-users-row-flash {
   from {
     background: var(--c-hover);
   }

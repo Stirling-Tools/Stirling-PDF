@@ -38,5 +38,7 @@ export function usePoliciesOverview(): AsyncState<PoliciesResponse> {
     () => (list.data ? assemblePolicies(list.data, runs.data ?? []) : null),
     [list.data, runs.data],
   );
-  return { data, loading: list.loading, error: list.error };
+  // The runs failure is reported too. The catalogue still renders without it, but activity
+  // silently reading empty is what made a broken history look like an unused policy.
+  return { data, loading: list.loading, error: list.error ?? runs.error };
 }

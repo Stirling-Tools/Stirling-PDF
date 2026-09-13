@@ -6464,10 +6464,7 @@ thirtyDays = "30 dni"
 threeYears = "3 leta"
 webhook = "Webhook"
 
-[printFile]
-title = "Natisni datoteko"
-
-[processor]
+[portal]
 comingSoon = "Kmalu na voljo"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Ima ekipo — upravlja vire njenih članov in deljene konfiguracije."
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neomejeno"
+
+[printFile]
+title = "Natisni datoteko"
 
 [provider.googledrive]
 name = "Google Drive"

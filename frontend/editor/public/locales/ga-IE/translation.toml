@@ -6464,10 +6464,7 @@ thirtyDays = "30 lá"
 threeYears = "3 bliana"
 webhook = "Webhook"
 
-[printFile]
-title = "Priontáil Comhad"
-
-[processor]
+[portal]
 comingSoon = "Ag teacht go luath"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Is leis/léi foireann — bainistíonn sé/sí acmhainní a ball agus
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Gan teorainn"
+
+[printFile]
+title = "Priontáil Comhad"
 
 [provider.googledrive]
 name = "Google Drive"

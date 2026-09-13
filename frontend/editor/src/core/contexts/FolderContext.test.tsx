@@ -318,7 +318,7 @@ describe("FolderContext stale-folder 404 cleanup", () => {
 
   function ApiProbe(props: { onReady: (api: ProbeApi) => void }) {
     const f = useFolders();
-    React.useEffect(() => {
+    React.useLayoutEffect(() => {
       props.onReady({
         error: f.error,
         folderCount: f.folders.length,
@@ -351,12 +351,14 @@ describe("FolderContext stale-folder 404 cleanup", () => {
         </FolderProvider>
       </MemoryRouter>,
     );
+    // Wait on the captured api, not just the DOM: the count renders on commit
+    // but apiRef is filled by a passive effect, so asserting the text alone can
+    // hand back the initial render's api, whose folder map is still empty.
     await waitFor(() =>
-      expect(screen.getByTestId("count").textContent).toBe(
-        String(initial.length),
-      ),
+      expect(apiRef.current?.folderCount).toBe(initial.length),
     );
     if (!apiRef.current) throw new Error("ApiProbe never reported ready");
+    expect(apiRef.current.folderCount).toBe(initial.length);
     return apiRef as { current: ProbeApi };
   }
 

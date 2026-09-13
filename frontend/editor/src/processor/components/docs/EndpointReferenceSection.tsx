@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { MethodBadge, Tabs, type TabItem } from "@app/ui";
 import { VERTICALS, ALL_ENDPOINTS } from "@processor/data/endpoints";
-import { DocsSection } from "@processor/components/docs/DocsSection";
+import { DocsSection } from "@core/components/docs/DocsSection";
 import "@processor/theme/surface.css";
 
 type VerticalFilter = "all" | (typeof VERTICALS)[number]["key"];

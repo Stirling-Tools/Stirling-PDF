@@ -140,7 +140,7 @@ vi.mock("@app/data/processorSearchIndex", () => ({
   ],
   // Tests run as an org admin; per-scope access gating has its own coverage
   // in the stubbed suite.
-  isPortalEntityScopeAccessible: () => true,
+  isProcessorEntityScopeAccessible: () => true,
 }));
 
 // The roster is fetched through the flavor-resolved usersBackend (the same
@@ -176,8 +176,8 @@ import type { Member, UsersResponse } from "@processor/api/users";
 import { usersBackend } from "@app/processor/usersBackend";
 import {
   rankDocsResults,
-  rankPortalPipelineResults,
-  rankPortalPolicyResults,
+  rankProcessorPipelineResults,
+  rankProcessorPolicyResults,
 } from "@processor/search/entitySearch";
 import { useProcessorSearchResults } from "@processor/hooks/useProcessorSearchResults";
 
@@ -319,7 +319,7 @@ describe("useProcessorSearchResults helpers", () => {
 
   it("ranks configured policies under the policies group", () => {
     const openPolicy = vi.fn();
-    const results = rankPortalPolicyResults(
+    const results = rankProcessorPolicyResults(
       [makePolicyEntry()],
       "security policy",
       (key: string, options?: Record<string, unknown>) =>
@@ -331,7 +331,7 @@ describe("useProcessorSearchResults helpers", () => {
 
     expect(results).toHaveLength(1);
     expect(results[0]).toMatchObject({
-      key: "portal-policy:security",
+      key: "processor-policy:security",
       group: "portal-policies",
       title: "Security Policy",
     });
@@ -342,7 +342,7 @@ describe("useProcessorSearchResults helpers", () => {
 
   it("filters policy-backed records out of the pipelines group", () => {
     const openPipeline = vi.fn();
-    const results = rankPortalPipelineResults(
+    const results = rankProcessorPipelineResults(
       [
         makePipelineView("policy-security", "Security Policy"),
         makePipelineView("custom-pipeline", "Nightly OCR"),
@@ -353,7 +353,7 @@ describe("useProcessorSearchResults helpers", () => {
     );
 
     expect(results.map((result) => result.key)).toEqual([
-      "portal-pipeline:custom-pipeline",
+      "processor-pipeline:custom-pipeline",
     ]);
   });
 

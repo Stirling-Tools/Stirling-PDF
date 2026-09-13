@@ -6464,10 +6464,7 @@ thirtyDays = "30 dní"
 threeYears = "3 roky"
 webhook = "Webhook"
 
-[printFile]
-title = "Vytlačiť súbor"
-
-[processor]
+[portal]
 comingSoon = "Už čoskoro"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Vlastní tím — spravuje zdroje jeho členov a zdieľané konfigur�
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neobmedzené"
+
+[printFile]
+title = "Vytlačiť súbor"
 
 [provider.googledrive]
 name = "Google Drive"

@@ -10,6 +10,7 @@ import {
   type ConnectOutcome,
 } from "@processor/components/account-link/ConnectCallbackView";
 import { useConnectHandoff } from "@processor/hooks/useConnectHandoff";
+import type { LinkModalMode } from "@processor/contexts/UIContext";
 import "@processor/views/ConnectCallback.css";
 
 /**
@@ -24,7 +25,7 @@ interface Props {
   open: boolean;
   onClose: () => void;
   /** "reauth" only re-establishes the browser session, so it stays one step with no pitch. */
-  mode?: "link" | "reauth";
+  mode?: LinkModalMode;
   /** Published by the callback route; present means the admin is returning from Stirling. */
   outcome?: ConnectOutcome | null;
 }
@@ -41,6 +42,7 @@ export function LinkAccountModal({
 }: Props) {
   const { t } = useTranslation();
   const reauth = mode === "reauth";
+  const exhausted = mode === "exhausted";
   const handoff = useConnectHandoff(reauth);
 
   // Busy outranks a stale outcome, or a retry sits on the old result until the browser leaves.
@@ -87,10 +89,15 @@ export function LinkAccountModal({
       return t("processor.accountLink.modal.reauthTitle", "Sign in again");
     }
     if (step === "ask") {
-      return t(
-        "processor.accountLink.modal.linkTitle",
-        "Connect your Stirling account",
-      );
+      return exhausted
+        ? t(
+            "processor.accountLink.modal.exhaustedTitle",
+            "Add more monthly credits",
+          )
+        : t(
+            "processor.accountLink.modal.linkTitle",
+            "Connect your Stirling account",
+          );
     }
     if (step === "handoff") {
       return t("processor.accountLink.connect.handoff.title", "Connecting");
@@ -104,7 +111,13 @@ export function LinkAccountModal({
   function stepBody() {
     switch (step) {
       case "ask":
-        return <ConnectAskStep reauth={reauth} error={handoff.error} />;
+        return (
+          <ConnectAskStep
+            reauth={reauth}
+            exhausted={exhausted}
+            error={handoff.error}
+          />
+        );
       case "handoff":
         return <ConnectHandoffGhost />;
       case "outcome":

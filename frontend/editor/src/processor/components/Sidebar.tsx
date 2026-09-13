@@ -6,12 +6,12 @@ import { Logo } from "@app/ui/Logo";
 import { NavFooter } from "@app/components/shared/navFooter/NavFooter";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import { useFreeCreditsSummary } from "@processor/hooks/useFreeCreditsSummary";
+import { useAdminNavVisible } from "@processor/hooks/useAdminNavVisible";
 import { useOpenPlan } from "@processor/hooks/useOpenPlan";
 import { useTranslation } from "react-i18next";
 import { useView, type ViewId } from "@processor/contexts/ViewContext";
 import { useUI } from "@processor/contexts/UIContext";
 import { LinkAccountFooterItem } from "@processor/components/LinkAccountFooterItem";
-import { useConnectGate } from "@processor/hooks/useConnectGate";
 import { CloseIcon } from "@processor/components/icons";
 import {
   GROUP_PROCESSOR,
@@ -21,10 +21,12 @@ import {
 } from "@processor/components/sidebarGroups";
 import "@processor/components/Sidebar.css";
 
+// Empty groups are dropped: a flavor (or a move to the settings page) can leave
+// one with nothing in it, and an empty card is not a section.
 const NAV_SECTIONS: NavGroup[] = [
   { labelKey: "processor.nav.section.processor", entries: GROUP_PROCESSOR },
   { labelKey: "processor.nav.section.platform", entries: GROUP_PLATFORM },
-];
+].filter((section) => section.entries.length > 0);
 
 /** Must match the shell breakpoint in AppShell.css / Sidebar.css. */
 export const MOBILE_QUERY = "(max-width: 48rem)";
@@ -43,8 +45,8 @@ export function Sidebar() {
   });
   const { displayName, profilePictureUrl } = useAccountIdentity();
   const credits = useFreeCreditsSummary();
+  const adminNavVisible = useAdminNavVisible();
   const openPlan = useOpenPlan();
-  const { gated, connect } = useConnectGate();
 
   // Collapse is a desktop-only affordance: on mobile the sidebar is an
   // off-canvas drawer, so the icon-rail state never applies there.
@@ -54,38 +56,37 @@ export function Sidebar() {
   // a takeover modal (matching the marketing prototype).
 
   function renderGroup(entries: NavEntry[]) {
-    return entries.map((entry) => {
-      const label = t(`processor.nav.${entry.id}`);
-      const item = (
-        <NavItem
-          key={entry.id}
-          id={entry.id}
-          label={label}
-          icon={entry.icon}
-          isActive={activeView === entry.id}
-          onClick={(id) => {
-            // Route changes also close the drawer (AppShell), but re-selecting the
-            // active view or opening an external tab changes no route — close here.
-            closeMobileNav();
-            if (entry.externalUrl) {
-              window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
-            } else if (entry.requiresLink && gated) {
-              // Ask here: navigating first strands them on a page with nothing on it.
-              connect();
-            } else {
-              setActiveView(id as ViewId);
-            }
-          }}
-        />
-      );
-      return collapsed ? (
-        <Tooltip key={entry.id} label={label} position="right" withinPortal>
-          <div className="processor-sidebar__navtip">{item}</div>
-        </Tooltip>
-      ) : (
-        item
-      );
-    });
+    return entries
+      .filter((entry) => adminNavVisible || !entry.requiresAdmin)
+      .map((entry) => {
+        const label = t(`processor.nav.${entry.id}`);
+        const item = (
+          <NavItem
+            key={entry.id}
+            id={entry.id}
+            label={label}
+            icon={entry.icon}
+            isActive={activeView === entry.id}
+            onClick={(id) => {
+              // Route changes also close the drawer (AppShell), but re-selecting the
+              // active view or opening an external tab changes no route — close here.
+              closeMobileNav();
+              if (entry.externalUrl) {
+                window.open(entry.externalUrl, "_blank", "noopener,noreferrer");
+              } else {
+                setActiveView(id as ViewId);
+              }
+            }}
+          />
+        );
+        return collapsed ? (
+          <Tooltip key={entry.id} label={label} position="right" withinPortal>
+            <div className="processor-sidebar__navtip">{item}</div>
+          </Tooltip>
+        ) : (
+          item
+        );
+      });
   }
 
   return (

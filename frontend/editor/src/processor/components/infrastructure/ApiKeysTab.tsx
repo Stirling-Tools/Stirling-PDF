@@ -12,6 +12,7 @@ import { errorMessage } from "@processor/api/http";
 import { ApiKeyCard } from "@processor/components/infrastructure/ApiKeyCard";
 import { CreateKeyModal } from "@processor/components/infrastructure/CreateKeyModal";
 import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
+import "@processor/components/infrastructure/infrastructure.css";
 
 export function ApiKeysTab() {
   const { t } = useTranslation();

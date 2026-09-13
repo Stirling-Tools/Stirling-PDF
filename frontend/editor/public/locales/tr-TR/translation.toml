@@ -6464,10 +6464,7 @@ thirtyDays = "30 gün"
 threeYears = "3 yıl"
 webhook = "Webhook"
 
-[printFile]
-title = "Dosya Yazdır"
-
-[processor]
+[portal]
 comingSoon = "Yakında"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Bir takımın sahibidir — takım üyelerinin kaynaklarını ve payl
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Sınırsız"
+
+[printFile]
+title = "Dosya Yazdır"
 
 [provider.googledrive]
 name = "Google Drive"

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { ApiKeyCard } from "@processor/components/infrastructure/ApiKeyCard";
 import type { ApiKey } from "@processor/api/infrastructure";
-import "@processor/views/Infrastructure.css";
+import "@processor/components/infrastructure/infrastructure.css";
 
 const BASE: ApiKey = {
   id: "key-1",

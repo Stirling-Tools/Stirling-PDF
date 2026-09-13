@@ -6464,10 +6464,7 @@ thirtyDays = "30 dana"
 threeYears = "3 godine"
 webhook = "Webhook"
 
-[printFile]
-title = "Ispis datoteke"
-
-[processor]
+[portal]
 comingSoon = "Uskoro"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Vlasnik je tima — upravlja resursima njegovih članova i dijeljenim
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neograničeno"
+
+[printFile]
+title = "Ispis datoteke"
 
 [provider.googledrive]
 name = "Google Drive"

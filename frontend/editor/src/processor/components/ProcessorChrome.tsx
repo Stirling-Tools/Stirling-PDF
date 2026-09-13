@@ -3,7 +3,6 @@ import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { ErrorBoundary } from "@processor/components/ErrorBoundary";
 import { AppShell } from "@processor/components/AppShell";
-import { ProcessorSettingsHost } from "@processor/components/ProcessorSettingsHost";
 import { ViewRouter } from "@processor/ViewRouter";
 
 /**
@@ -25,12 +24,12 @@ function RoutedContent() {
  * view) plus the global overlays that every flavor shares. Requires only the
  * Tier and UI contexts above it — both flavors provide those. Flavor-specific
  * overlays (e.g. the self-hosted account-link modal) are mounted by
- * PortalProviders, not here.
+ * ProcessorProviders, not here.
  */
 export function ProcessorChrome() {
   return (
-    // One app-config instance for every portal consumer (search gates, the
-    // settings modal) so they can't fetch twice or disagree.
+    // One app-config instance for every portal consumer (the search gates, the
+    // sidebar) so they can't fetch twice or disagree.
     <AppConfigProvider bootstrapMode="non-blocking">
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
@@ -38,7 +37,6 @@ export function ProcessorChrome() {
           <RoutedContent />
         </AppShell>
       </ToolRegistryProvider>
-      <ProcessorSettingsHost />
     </AppConfigProvider>
   );
 }

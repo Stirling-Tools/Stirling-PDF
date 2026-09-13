@@ -23,5 +23,6 @@ export const usersCapabilities: UsersCapabilities = {
   seats: true,
   manageGrants: false,
   removeScope: "team",
+  removeMember: true,
   listingRequiresAdmin: false,
 };

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { docsContentFor } from "@processor/mocks/docs";
 import { ErrorsSection } from "@processor/components/docs/ErrorsSection";
-import "@processor/views/DeveloperDocs.css";
+import "@core/components/docs/DeveloperDocs.css";
 
 const meta: Meta<typeof ErrorsSection> = {
   title: "Processor/DeveloperDocs/ErrorsSection",

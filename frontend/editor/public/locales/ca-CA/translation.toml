@@ -6464,10 +6464,7 @@ thirtyDays = "30 dies"
 threeYears = "3 anys"
 webhook = "Webhook"
 
-[printFile]
-title = "Imprimir Fitxer"
-
-[processor]
+[portal]
 comingSoon = "Properament"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Posseeix un equip — en gestiona els recursos dels membres i les con
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Il·limitat"
+
+[printFile]
+title = "Imprimir Fitxer"
 
 [provider.googledrive]
 name = "Google Drive"

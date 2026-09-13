@@ -6464,10 +6464,7 @@ thirtyDays = "30 ημέρες"
 threeYears = "3 έτη"
 webhook = "Webhook"
 
-[printFile]
-title = "Εκτύπωση αρχείου"
-
-[processor]
+[portal]
 comingSoon = "Προσεχώς"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Κατέχει μια ομάδα — διαχειρίζεται το�
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Απεριόριστα"
+
+[printFile]
+title = "Εκτύπωση αρχείου"
 
 [provider.googledrive]
 name = "Google Drive"

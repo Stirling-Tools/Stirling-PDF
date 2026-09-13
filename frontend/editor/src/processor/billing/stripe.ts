@@ -513,7 +513,7 @@ export async function createPortalSession(
   req: PortalSessionRequest,
 ): Promise<string> {
   const res = await invoke<ProcessorResponse>(
-    "create-customer-portal-session",
+    "create-customer-processor-session",
     {
       team_id: req.teamId,
       return_url: req.returnUrl,
@@ -521,7 +521,7 @@ export async function createPortalSession(
   );
   if (!res.success || !res.url) {
     throw new StripeFunctionError(
-      res.error ?? "create-customer-portal-session failed",
+      res.error ?? "create-customer-processor-session failed",
     );
   }
   return res.url;

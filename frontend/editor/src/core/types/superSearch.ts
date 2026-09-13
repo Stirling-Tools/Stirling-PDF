@@ -82,7 +82,7 @@ export interface SuperSearchGates {
  * can't drift apart; it lives in the types leaf because the editor's chip
  * list must not import portal code.
  */
-export interface PortalEntityScopeDef {
+export interface ProcessorEntityScopeDef {
   id:
     | "portal-users"
     | "portal-policies"
@@ -90,6 +90,8 @@ export interface PortalEntityScopeDef {
     | "portal-sources";
   /** Portal view id the scope targets (visibility check vs the page index). */
   viewId: string;
+  /** Set when the entities now live in a settings section rather than on that page. */
+  settingsKey?: string;
   labelKey: string;
   labelFallback: string;
   aliases: readonly string[];
@@ -102,10 +104,11 @@ export interface PortalEntityScopeDef {
  */
 export const PORTAL_DOCS_SCOPE_ID = "portal-docs";
 
-export const PORTAL_ENTITY_SCOPE_DEFS: readonly PortalEntityScopeDef[] = [
+export const PORTAL_ENTITY_SCOPE_DEFS: readonly ProcessorEntityScopeDef[] = [
   {
     id: "portal-users",
     viewId: "users",
+    settingsKey: "users",
     labelKey: "processor.nav.users",
     labelFallback: "Users",
     aliases: ["user", "users", "member", "members"],

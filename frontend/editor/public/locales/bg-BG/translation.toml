@@ -6464,10 +6464,7 @@ thirtyDays = "30 дни"
 threeYears = "3 години"
 webhook = "Webhook"
 
-[printFile]
-title = "Печат на файл"
-
-[processor]
+[portal]
 comingSoon = "Очаквайте скоро"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Притежава екип — управлява ресурсите
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Неограничено"
+
+[printFile]
+title = "Печат на файл"
 
 [provider.googledrive]
 name = "Google Drive"

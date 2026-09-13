@@ -6464,10 +6464,7 @@ thirtyDays = "30 hari"
 threeYears = "3 tahun"
 webhook = "Webhook"
 
-[printFile]
-title = "Cetak File"
-
-[processor]
+[portal]
 comingSoon = "Segera hadir"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Memiliki tim — mengelola sumber daya anggota dan konfigurasi bersam
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Tidak terbatas"
+
+[printFile]
+title = "Cetak File"
 
 [provider.googledrive]
 name = "Google Drive"

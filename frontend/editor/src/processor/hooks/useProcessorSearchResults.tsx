@@ -3,9 +3,8 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getToolUrlPath } from "@app/data/toolsTaxonomy";
-import { isPortalEntityScopeAccessible } from "@app/data/processorSearchIndex";
+import { isProcessorEntityScopeAccessible } from "@app/data/processorSearchIndex";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { PORTAL_HIDDEN_SECTION_KEYS } from "@processor/components/ProcessorSettingsHost";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import {
   assembleSuperSearchGroups,
@@ -39,10 +38,10 @@ import { useUI } from "@processor/contexts/UIContext";
 import { qk } from "@processor/queries/keys";
 import {
   buildProcessorEntityGroups,
-  defaultPortalEntityScopes,
+  defaultProcessorEntityScopes,
   isDocsSearchable,
   isVisiblePortalScope,
-  withPortalEntityDependencies,
+  withProcessorEntityDependencies,
   type ProcessorEntities,
 } from "@processor/search/entitySearch";
 
@@ -73,7 +72,7 @@ function externalEditorHref(path: string): string {
  * refuses this session (the users roster for non-admins on self-hosted) get
  * no chip — an offered lane must be able to return results.
  */
-export function usePortalSearchScopes(): SuperSearchScope[] {
+export function useProcessorSearchScopes(): SuperSearchScope[] {
   const { t } = useTranslation();
   const { config } = useAppConfig();
   const isAdmin = config?.isAdmin ?? false;
@@ -83,7 +82,7 @@ export function usePortalSearchScopes(): SuperSearchScope[] {
       ...PORTAL_ENTITY_SCOPE_DEFS.filter(
         (def) =>
           isVisiblePortalScope(def.id) &&
-          isPortalEntityScopeAccessible(def.id, isAdmin),
+          isProcessorEntityScopeAccessible(def.id, isAdmin),
       ).map((def) => ({
         id: def.id,
         label: t(def.labelKey, def.labelFallback),
@@ -117,7 +116,7 @@ export function usePortalSearchScopes(): SuperSearchScope[] {
  * The portal's results provider for the shared super search bar: files stay
  * editor-only, portal entity results are grouped under a Processor section,
  * and the shared tools/settings lanes sit under an Editor section. Portal page
- * routes themselves stay out of the portal search — once you're in the portal,
+ * routes themselves stay out of the processor search — once you're in the processor,
  * the entities are the useful targets.
  */
 export function useProcessorSearchResults(
@@ -136,13 +135,13 @@ export function useProcessorSearchResults(
   const { scopeEnabled } = useSearchScopeFilter(options);
   const requestedEntityScopes = useMemo(() => {
     if (!active || trimmed.length === 0) return new Set<string>();
-    const enabled = defaultPortalEntityScopes(config?.isAdmin ?? false).filter(
-      (scopeId) => scopeEnabled(scopeId),
-    );
-    return new Set<string>(withPortalEntityDependencies(enabled));
+    const enabled = defaultProcessorEntityScopes(
+      config?.isAdmin ?? false,
+    ).filter((scopeId) => scopeEnabled(scopeId));
+    return new Set<string>(withProcessorEntityDependencies(enabled));
   }, [active, scopeEnabled, trimmed, config?.isAdmin]);
 
-  // Entity data rides the portal's shared query layer — the same keys the
+  // Entity data rides the processor's shared query layer — the same keys the
   // views use, so searching warms the view (and vice versa) and the client's
   // staleTime/retry policy replaces bespoke fetch discipline. `enabled` keeps
   // each lane's fetch behind its scope chip and the active-query gate.
@@ -236,6 +235,8 @@ export function useProcessorSearchResults(
         ? {
             isAdmin: config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
+            // Being in the processor is proof of access to it.
+            processorAccessible: true,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
@@ -255,14 +256,7 @@ export function useProcessorSearchResults(
     const settingsGroups = assembleSuperSearchGroups(
       {
         settings: scopeEnabled("settings")
-          ? rankSettingsResults(
-              trimmed,
-              t,
-              gates,
-              openSettingsSection,
-              undefined,
-              PORTAL_HIDDEN_SECTION_KEYS,
-            )
+          ? rankSettingsResults(trimmed, t, gates, openSettingsSection)
           : [],
       },
       t,

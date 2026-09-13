@@ -22,7 +22,7 @@
 }
 
 /* The dropdown is portalled to <body>, so it can't inherit portal styling by
-   nesting — this class (passed via dropdownClassName) is the portal's hook.
+   nesting — this class (passed via dropdownClassName) is the processor's hook.
    Colours come from the shared semantic tokens; only the roomier padding
    differs from the editor dropdown. */
 .processor-search-dropdown.super-search-dropdown {

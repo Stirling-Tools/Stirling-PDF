@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { buildDocsNav } from "@processor/mocks/docs";
-import { DocsNav, DocsNavSkeleton } from "@processor/components/docs/DocsNav";
-import "@processor/views/DeveloperDocs.css";
+import { DocsNav, DocsNavSkeleton } from "@core/components/docs/DocsNav";
+import "@core/components/docs/DeveloperDocs.css";
 
 const meta: Meta<typeof DocsNav> = {
   title: "Processor/DeveloperDocs/DocsNav",

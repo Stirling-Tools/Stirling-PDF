@@ -6464,10 +6464,7 @@ thirtyDays = "30 nap"
 threeYears = "3 év"
 webhook = "Webhook"
 
-[printFile]
-title = "Fájl nyomtatása"
-
-[processor]
+[portal]
 comingSoon = "Hamarosan"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Egy csapat tulajdonosa — kezeli a tagok erőforrásait és megoszto
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Korlátlan"
+
+[printFile]
+title = "Fájl nyomtatása"
 
 [provider.googledrive]
 name = "Google Drive"

@@ -6,5 +6,5 @@
 export type { ProcessorSearchEntry } from "@core/data/processorSearchIndex";
 export {
   PROCESSOR_SEARCH_INDEX,
-  isPortalEntityScopeAccessible,
+  isProcessorEntityScopeAccessible,
 } from "@core/data/processorSearchIndex";

@@ -403,6 +403,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Security", "redact");
         addEndpointToGroup("Security", "verify-pdf");
         addEndpointToGroup("Security", "accessibility-report");
+        addEndpointToGroup("Security", "validate-compliance");
         addEndpointToGroup("Security", "sign");
 
         // Adding endpoints to "Other" group
@@ -539,6 +540,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "verify-pdf");
         addEndpointToGroup("Java", "pdf-to-ua");
         addEndpointToGroup("Java", "accessibility-report");
+        addEndpointToGroup("Java", "validate-compliance");
         addEndpointToGroup("Java", "flatten");
         addEndpointToGroup("Java", "unlock-pdf-forms");
         addEndpointToGroup("Java", "validate-signature");
@@ -547,6 +549,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("Java", "pdf-to-epub");
         addEndpointToGroup("Java", "eml-to-pdf");
         addEndpointToGroup("Java", "handleData");
+        addEndpointToGroup("Java", "form-detection");
         addEndpointToGroup("rar", "pdf-to-cbr");
 
         // Javascript
@@ -612,6 +615,7 @@ public class EndpointConfiguration {
         addEndpointToGroup("veraPDF", "verify-pdf");
         addEndpointToGroup("veraPDF", "pdf-to-ua");
         addEndpointToGroup("veraPDF", "accessibility-report");
+        addEndpointToGroup("veraPDF", "validate-compliance");
 
         // Pdftohtml dependent endpoints
         addEndpointToGroup("Pdftohtml", "pdf-to-html");
@@ -646,6 +650,10 @@ public class EndpointConfiguration {
             disableEndpoint("pdf-to-ua");
             disableEndpoint("accessibility-report");
         }
+
+        // Only FormDetectionModelManager (proprietary) can enable this; default it off so a core
+        // build does not advertise a tool whose controller is not on the classpath.
+        disableEndpoint("form-detection", DisableReason.DEPENDENCY);
 
         if (!applicationProperties.getSystem().isEnableUrlToPDF()) {
             disableEndpoint("url-to-pdf");

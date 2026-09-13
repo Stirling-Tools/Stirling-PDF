@@ -94,6 +94,15 @@
   margin-top: 0.75rem;
 }
 
+/* A capability's revealed settings. Neither FormField nor SettingsRow carries an
+ * outer margin, so without this the controls butt straight into each other. */
+.processor-policies__capability-config,
+.processor-policies__capability-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
 .processor-policies__link {
   border: none;
   background: none;

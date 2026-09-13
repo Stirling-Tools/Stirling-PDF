@@ -32,16 +32,6 @@ const render = (
   options?: Parameters<typeof baseRender>[1],
 ) => baseRender(ui, { wrapper: ProcessorTestProviders, ...options });
 
-vi.mock("@processor/hooks/useConnectGate", () => ({
-  useConnectGate: () => ({
-    gated: false,
-    loading: false,
-    available: false,
-    connect: vi.fn(),
-    guard: (fn: unknown) => fn,
-  }),
-}));
-
 // Deterministic i18n: keys returned verbatim. initReactI18next/Trans are exported too because the
 // unified page pulls in modules (the policy wizard/catalogue) that reference them at import time.
 vi.mock("react-i18next", () => ({
@@ -76,6 +66,7 @@ vi.mock("@processor/api/policies", async (importOriginal) => {
 // pipelines list.
 vi.mock("@processor/queries/policies", () => ({
   usePoliciesOverview: () => ({ data: null, loading: false, error: null }),
+  usePolicyRuns: () => ({ data: [], loading: false, error: null }),
 }));
 
 const RESPONSE: PipelinesOverviewResponse = {

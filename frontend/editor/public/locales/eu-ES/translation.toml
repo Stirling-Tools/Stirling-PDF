@@ -6464,10 +6464,7 @@ thirtyDays = "30 egun"
 threeYears = "3 urte"
 webhook = "Webhook"
 
-[printFile]
-title = "Inprimatu fitxategia"
-
-[processor]
+[portal]
 comingSoon = "Laster"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "Talde baten jabea da — kideen baliabideak eta partekatutako konfigu
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Mugagabea"
+
+[printFile]
+title = "Inprimatu fitxategia"
 
 [provider.googledrive]
 name = "Google Drive"

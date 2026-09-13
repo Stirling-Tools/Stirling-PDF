@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { CreateKeyModal } from "@processor/components/infrastructure/CreateKeyModal";
-import "@processor/views/Infrastructure.css";
+import "@processor/components/infrastructure/infrastructure.css";
 
 const meta: Meta<typeof CreateKeyModal> = {
   title: "Processor/Infrastructure/CreateKeyModal",

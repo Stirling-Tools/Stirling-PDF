@@ -48,9 +48,8 @@ export function ProcessorFlow({ dataOverride }: ProcessorFlowProps = {}) {
       `${toProcessorPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(key)}`,
     );
 
-  /** Deep-link to Infrastructure with the audit-log tab open. */
-  const openAuditLog = () =>
-    navigate(`${toProcessorPath(VIEW_PATHS.infrastructure)}?tab=audit`);
+  /** Deep-link to the audit log in settings (a build-neutral key; see PORTAL_SECTION_ALIASES). */
+  const openAuditLog = () => navigate("/settings/audit");
 
   const sources = data?.sources ?? [];
   const policies = data?.policies ?? [];

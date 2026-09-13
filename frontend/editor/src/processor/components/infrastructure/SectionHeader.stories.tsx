@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { SectionHeader } from "@processor/components/infrastructure/SectionHeader";
-import "@processor/views/Infrastructure.css";
+import "@processor/components/infrastructure/infrastructure.css";
 
 const meta: Meta<typeof SectionHeader> = {
   title: "Processor/Infrastructure/SectionHeader",

@@ -6464,10 +6464,7 @@ thirtyDays = "30日"
 threeYears = "3年"
 webhook = "Webhook"
 
-[printFile]
-title = "ファイルの印刷"
-
-[processor]
+[portal]
 comingSoon = "近日公開"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "チームを所有し、そのメンバーのリソースと共有設
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 無制限"
+
+[printFile]
+title = "ファイルの印刷"
 
 [provider.googledrive]
 name = "Google Drive"

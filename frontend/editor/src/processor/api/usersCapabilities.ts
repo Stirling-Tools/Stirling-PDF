@@ -56,12 +56,14 @@ export interface UsersCapabilities {
   manageGrants: boolean;
   /** Whether "remove" takes the member out of the whole org or just the team. */
   removeScope: "org" | "team";
+  /** Offer the remove action at all. Off for viewers who may only read. */
+  removeMember: boolean;
   /**
    * Listing the roster needs the org-admin role. Self-hosted reads the
    * admin-only endpoints (`@PreAuthorize(hasRole('ADMIN'))`), which refuse
    * the non-admin sessions portal access also admits (team owners, ACL
    * grantees). SaaS lists through the team-leader endpoints, which every
-   * portal-eligible session can call.
+   * processor-eligible session can call.
    */
   listingRequiresAdmin: boolean;
 }

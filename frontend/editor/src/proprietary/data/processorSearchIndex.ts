@@ -2,8 +2,9 @@ import {
   PROCESSOR_BASENAME,
   PROCESSOR_REVIEW_PATH,
 } from "@app/routes/processorBasename";
-// A static leaf module (its processor import is type-only), so it doesn't pull
-// the lazy processor chunk into the main bundle the way @processor/* values would.
+import { DOCS_PATH } from "@app/routes/docsRoute";
+// A static leaf module (its portal import is type-only), so it doesn't pull
+// the lazy portal chunk into the main bundle the way @processor/* values would.
 import { usersCapabilities } from "@app/processor/usersCapabilities";
 import type { ProcessorSearchEntry } from "@core/data/processorSearchIndex";
 import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
@@ -23,13 +24,6 @@ const VIEWS: ProcessorSearchEntry[] = [
     labelFallback: "Home",
     path: PROCESSOR_BASENAME,
     keywords: ["portal", "processor", "admin"],
-  },
-  {
-    id: "users",
-    labelKey: "processor.nav.users",
-    labelFallback: "Users",
-    path: `${PROCESSOR_BASENAME}/users`,
-    keywords: ["team", "members", "roles", "admin"],
   },
   {
     id: "sources",
@@ -74,24 +68,10 @@ const VIEWS: ProcessorSearchEntry[] = [
     keywords: ["connections", "external", "api", "webhooks"],
   },
   {
-    id: "infrastructure",
-    labelKey: "processor.nav.infrastructure",
-    labelFallback: "Infrastructure",
-    path: `${PROCESSOR_BASENAME}/infrastructure`,
-    keywords: ["deployment", "instances", "health"],
-  },
-  {
-    id: "usage",
-    labelKey: "processor.nav.usage",
-    labelFallback: "Usage & Billing",
-    path: `${PROCESSOR_BASENAME}/usage`,
-    keywords: ["billing", "invoices", "plan", "wallet", "payg", "bundles"],
-  },
-  {
     id: "docs",
     labelKey: "processor.nav.docs",
     labelFallback: "Documentation",
-    path: `${PROCESSOR_BASENAME}/docs`,
+    path: DOCS_PATH,
     keywords: ["api", "documentation", "reference", "guides"],
   },
 ];
@@ -108,7 +88,7 @@ export const PROCESSOR_SEARCH_INDEX: ProcessorSearchEntry[] = HAS_PROCESSOR
  * UsersCapabilities.listingRequiresAdmin) — offering the lane anyway renders
  * a permanently-empty chip that fires a doomed request on every search.
  */
-export function isPortalEntityScopeAccessible(
+export function isProcessorEntityScopeAccessible(
   scopeId: string,
   isAdmin: boolean,
 ): boolean {

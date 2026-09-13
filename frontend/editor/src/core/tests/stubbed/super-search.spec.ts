@@ -146,27 +146,28 @@ test.describe("Super search — bar basics", () => {
     await expect(page).toHaveURL(/\/merge/);
   });
 
-  test("Ctrl+K inside the settings modal closes it and focuses the bar", async ({
+  test("a settings result deep-links to the settings page", async ({
     page,
   }) => {
     const input = page.locator(INPUT);
     await expect(input).toBeVisible();
-    await openSettings(page);
 
-    // The modal traps focus, so the bar's own shortcut is inert; the modal
-    // cedes: it closes itself and hands focus to the bar.
-    await page.keyboard.press("Control+KeyK");
-    await expect(page.locator(".modal-container")).not.toBeVisible();
-    await expect(input).toBeFocused();
-    await expect(input).toHaveAttribute("aria-expanded", "true");
-
-    // Full loop: a settings result deep-links straight back into the modal.
     await input.fill("general");
     await page
       .getByRole("option", { name: /General/ })
       .first()
       .click();
-    await expect(page.locator(".modal-container")).toBeVisible();
+    await expect(page.locator(".settings-page")).toBeVisible();
+    await expect(page).toHaveURL(/\/settings\/general/);
+  });
+
+  test("Ctrl+K on the settings page focuses the shared search bar", async ({
+    page,
+  }) => {
+    await openSettings(page);
+    // Same bar as the editor and the processor, its own input id.
+    await page.keyboard.press("Control+KeyK");
+    await expect(page.locator("#settings-search-input")).toBeFocused();
   });
 });
 
@@ -284,10 +285,10 @@ test.describe("Super search — portal access without admin", () => {
     }
 
     const input = await openSearch(page);
-    const portalShips =
+    const processorShips =
       (await page.getByRole("button", { name: "Pages", exact: true }).count()) >
       0;
-    test.skip(!portalShips, "this build ships no portal — no lanes to gate");
+    test.skip(!processorShips, "this build ships no portal — no lanes to gate");
 
     for (const lane of ["Policies", "Pipelines", "Sources"]) {
       await expect(
@@ -345,10 +346,10 @@ test.describe("Super search — admin with Processor access", () => {
 
     // The Processor lanes only exist in builds that ship the portal (dev,
     // VITE_INCLUDE_PROCESSOR) — the CI preview build has none to show.
-    const portalShips =
+    const processorShips =
       (await page.getByRole("button", { name: "Pages", exact: true }).count()) >
       0;
-    test.skip(!portalShips, "this build ships no portal — no lanes to gate");
+    test.skip(!processorShips, "this build ships no portal — no lanes to gate");
 
     for (const lane of ["Users", "Policies", "Pipelines", "Sources"]) {
       await expect(
@@ -404,11 +405,14 @@ test.describe("Portal bar — tool results hop into the editor", () => {
     // The portal only ships in dev / VITE_INCLUDE_PROCESSOR builds — on the CI
     // preview build /processor falls through to the editor and there is no
     // portal bar to hop from.
-    const portalShips = await input
+    const processorShips = await input
       .waitFor({ state: "visible", timeout: 20000 })
       .then(() => true)
       .catch(() => false);
-    test.skip(!portalShips, "this build ships no portal — no bar to hop from");
+    test.skip(
+      !processorShips,
+      "this build ships no portal — no bar to hop from",
+    );
 
     // A full page load would drop this marker — and on bundled deploys it
     // would also 401: document GETs carry no Authorization header, so the

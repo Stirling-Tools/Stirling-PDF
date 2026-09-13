@@ -26,6 +26,7 @@ import {
   AUDIT_STATUS_LABEL,
   AUDIT_TONE,
 } from "@processor/components/infrastructure/infraFormat";
+import "@processor/components/infrastructure/infrastructure.css";
 
 type AuditFilter = "all" | AuditCategory;
 

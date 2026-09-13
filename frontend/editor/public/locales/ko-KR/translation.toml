@@ -6464,10 +6464,7 @@ thirtyDays = "30일"
 threeYears = "3년"
 webhook = "Webhook"
 
-[printFile]
-title = "파일 인쇄"
-
-[processor]
+[portal]
 comingSoon = "곧 제공 예정"
 
 [processor.accountLink.card]
@@ -9088,6 +9085,9 @@ summary = "팀을 소유하며, 팀 구성원의 리소스와 공유 구성을 �
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 무제한"
+
+[printFile]
+title = "파일 인쇄"
 
 [provider.googledrive]
 name = "Google Drive"

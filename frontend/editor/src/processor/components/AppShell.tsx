@@ -61,7 +61,7 @@ function MobileTopbar() {
  * prop-free.
  */
 export function AppShell({ children }: { children: ReactNode }) {
-  const { mobileNavOpen, closeMobileNav, openSettings } = useUI();
+  const { mobileNavOpen, closeMobileNav } = useUI();
   const { pathname } = useLocation();
   // Below this width the rail, and the bell it carries, is gone.
   const isPhone = useIsPhone();
@@ -85,10 +85,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="processor-shell">
       {/* processorAccess: being here is proof the processor is available. */}
-      <QuickNavHostBridge
-        processorAccess
-        onOpenSettings={() => openSettings()}
-      />
+      <QuickNavHostBridge processorAccess />
       <div className="workspace-frame">
         <Sidebar />
       </div>

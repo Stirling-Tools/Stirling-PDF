@@ -42,6 +42,7 @@
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
 import { getProcessorSaasToken } from "@processor/auth/processorSaasSession";
+import { reportAccountLinkBlock } from "@processor/services/accountLinkBlock";
 import { resolveDemoResponse } from "@processor/api/demoData";
 import { saasApiBase } from "@processor/api/saasApiBase";
 import {
@@ -130,7 +131,12 @@ async function unwrap<T>(res: Response): Promise<T> {
     } catch {
       // ignore — non-JSON error response
     }
-    throw new HttpError(res.status, res.statusText, body);
+    const error = new HttpError(res.status, res.statusText, body);
+    // The instance's entitlement gate answers a spent free grant here, and the prompt it raises is
+    // the actionable surface. Reported for every domain rather than only the local one because the
+    // classifier keys on a sentinel only the local backend sends, so a SaaS 402 cannot reach it.
+    reportAccountLinkBlock(error);
+    throw error;
   }
   // 204 / empty-body responses have nothing to parse.
   if (res.status === 204 || res.headers.get("Content-Length") === "0") {

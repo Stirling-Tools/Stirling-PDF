@@ -1,6 +1,6 @@
 import {
   PROCESSOR_SEARCH_INDEX,
-  isPortalEntityScopeAccessible,
+  isProcessorEntityScopeAccessible,
 } from "@app/data/processorSearchIndex";
 import {
   PORTAL_ENTITY_SCOPE_DEFS,
@@ -31,29 +31,26 @@ import {
 } from "@processor/components/icons";
 import type { Tier } from "@processor/contexts/TierContext";
 import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
-import { allDocs, loadDocsNav } from "@processor/docs/manifest/registry";
-import {
-  searchDocs,
-  toPlainText,
-  type SearchDoc,
-} from "@processor/docs/search";
+import { DOCS_PATH } from "@app/routes/docsRoute";
+import { allDocs, loadDocsNav } from "@core/docs/manifest/registry";
+import { searchDocs, toPlainText, type SearchDoc } from "@core/docs/search";
 
 /**
  * The Processor's entity search: users, policies, pipelines and sources,
  * fetched per scope and fuzzy-ranked client-side. Shared by both super search
- * hosts — the portal bar imports it statically, the editor bar loads it on
+ * hosts — the processor bar imports it statically, the editor bar loads it on
  * demand through the processorEntitySearch seam (a static import there would
- * pull the portal into the main bundle).
+ * pull the processor into the main bundle).
  */
 
 export const PORTAL_ENTITY_SCOPE_IDS = PORTAL_ENTITY_SCOPE_DEFS.map(
   (def) => def.id,
 );
 
-export type PortalEntityScopeId =
+export type ProcessorEntityScopeId =
   (typeof PORTAL_ENTITY_SCOPE_DEFS)[number]["id"];
 
-export type PortalEntityItems =
+export type ProcessorEntityItems =
   | Member[]
   | CatalogueEntry[]
   | PipelineView[]
@@ -77,14 +74,14 @@ export const ENTITY_REFRESH_MS = 30_000;
 
 const PORTAL_VIEW_BY_SCOPE_ID = Object.fromEntries(
   PORTAL_ENTITY_SCOPE_DEFS.map((def) => [def.id, def.viewId]),
-) as Record<PortalEntityScopeId, string>;
+) as Record<ProcessorEntityScopeId, string>;
 
 const VISIBLE_PORTAL_VIEW_IDS = new Set(
   PROCESSOR_SEARCH_INDEX.map((entry) => entry.id),
 );
 
 /** Whether the flavor's portal nav ships the view an entity scope targets. */
-export function isVisiblePortalScope(scopeId: PortalEntityScopeId): boolean {
+export function isVisiblePortalScope(scopeId: ProcessorEntityScopeId): boolean {
   return VISIBLE_PORTAL_VIEW_IDS.has(PORTAL_VIEW_BY_SCOPE_ID[scopeId]);
 }
 
@@ -116,7 +113,7 @@ export function rankDocsResults(
 ): SuperSearchResult[] {
   if (!isDocsSearchable()) return [];
   return searchDocs(getDocsSearchIndex(), trimmed, limit).map((result) => ({
-    key: `portal-doc:${result.id}`,
+    key: `processor-doc:${result.id}`,
     group: PORTAL_DOCS_SCOPE_ID,
     title: result.title,
     // The matched-content snippet (full text is what makes docs worth
@@ -128,14 +125,13 @@ export function rankDocsResults(
         .trim() || result.sectionLabel,
     icon: <DocsIcon />,
     score: result.score,
-    onSelect: () =>
-      navigate(`${toProcessorPath(VIEW_PATHS.docs)}#${result.id}`),
+    onSelect: () => navigate(`${DOCS_PATH}#${result.id}`),
   }));
 }
 
-export function withPortalEntityDependencies(
-  scopes: readonly PortalEntityScopeId[],
-): readonly PortalEntityScopeId[] {
+export function withProcessorEntityDependencies(
+  scopes: readonly ProcessorEntityScopeId[],
+): readonly ProcessorEntityScopeId[] {
   // Pipeline rows must exclude policy-backed records, so they depend on the
   // policy catalogue even when the user only scoped into pipelines.
   if (
@@ -148,28 +144,28 @@ export function withPortalEntityDependencies(
 }
 
 /** Every entity scope the flavor ships AND the session can actually query
- * (see isPortalEntityScopeAccessible), dependencies included — the request
+ * (see isProcessorEntityScopeAccessible), dependencies included — the request
  * set for an unscoped search. */
-export function defaultPortalEntityScopes(
+export function defaultProcessorEntityScopes(
   isAdmin: boolean,
-): readonly PortalEntityScopeId[] {
-  return withPortalEntityDependencies(
+): readonly ProcessorEntityScopeId[] {
+  return withProcessorEntityDependencies(
     PORTAL_ENTITY_SCOPE_IDS.filter(
       (scopeId) =>
         isVisiblePortalScope(scopeId) &&
-        isPortalEntityScopeAccessible(scopeId, isAdmin),
+        isProcessorEntityScopeAccessible(scopeId, isAdmin),
     ),
   );
 }
 
 /** One entity scope's fetch, for the editor seam (which has no QueryClient —
- * the portal bar reads the shared query layer instead). `tier` shapes only
+ * the processor bar reads the shared query layer instead). `tier` shapes only
  * presentational fields on the users payload, never the lists — hosts without
  * a TierContext pass "free". */
-export async function fetchPortalEntityScope(
-  scopeId: PortalEntityScopeId,
+export async function fetchProcessorEntityScope(
+  scopeId: ProcessorEntityScopeId,
   tier: Tier,
-): Promise<PortalEntityItems> {
+): Promise<ProcessorEntityItems> {
   switch (scopeId) {
     case "portal-users":
       return (await usersBackend.fetchUsers(tier)).members;
@@ -188,9 +184,9 @@ export async function fetchPortalEntityScope(
 }
 
 /** Assembles per-scope cache values into the typed entity sets. The casts are
- * sound because fetchPortalEntityScope keys each item type to its scope. */
+ * sound because fetchProcessorEntityScope keys each item type to its scope. */
 export function toProcessorEntities(
-  values: Partial<Record<PortalEntityScopeId, PortalEntityItems>>,
+  values: Partial<Record<ProcessorEntityScopeId, ProcessorEntityItems>>,
 ): ProcessorEntities {
   return {
     users: (values["portal-users"] as Member[] | undefined) ?? [],
@@ -209,7 +205,7 @@ function policyResultTitle(entry: CatalogueEntry, t: Translate) {
     : category;
 }
 
-export function rankPortalPolicyResults(
+export function rankProcessorPolicyResults(
   entries: CatalogueEntry[],
   trimmed: string,
   t: Translate,
@@ -227,7 +223,7 @@ export function rankPortalPolicyResults(
   )
     .slice(0, limit)
     .map(({ item, score }) => ({
-      key: `portal-policy:${item.category.id}`,
+      key: `processor-policy:${item.category.id}`,
       group: "portal-policies",
       title: policyResultTitle(item, t),
       subtitle: t(item.category.desc),
@@ -237,7 +233,7 @@ export function rankPortalPolicyResults(
     }));
 }
 
-export function rankPortalPipelineResults(
+export function rankProcessorPipelineResults(
   entries: PipelineView[],
   trimmed: string,
   excludedIds: ReadonlySet<string>,
@@ -251,7 +247,7 @@ export function rankPortalPipelineResults(
   )
     .slice(0, limit)
     .map(({ item, score }) => ({
-      key: `portal-pipeline:${item.id}`,
+      key: `processor-pipeline:${item.id}`,
       group: "portal-pipelines",
       title: item.name,
       subtitle: item.trigger,
@@ -268,7 +264,7 @@ export interface BuildEntityGroupsOptions {
 
 /**
  * Ranks the entity sets into display groups. Selects navigate to the entity's
- * portal route (deep links where the views support them) — the portal is a
+ * portal route (deep links where the views support them) — the processor is a
  * route-set of the same SPA, so this works from either app.
  */
 export function buildProcessorEntityGroups(
@@ -282,7 +278,7 @@ export function buildProcessorEntityGroups(
   const scopeEnabled = options.scopeEnabled ?? (() => true);
   const groups: SuperSearchGroup[] = [];
 
-  const includeScope = (scopeId: PortalEntityScopeId) =>
+  const includeScope = (scopeId: ProcessorEntityScopeId) =>
     isVisiblePortalScope(scopeId) && scopeEnabled(scopeId);
 
   const users = includeScope("portal-users")
@@ -292,16 +288,14 @@ export function buildProcessorEntityGroups(
       ])
         .slice(0, ENTITY_GROUP_LIMIT)
         .map(({ item, score }) => ({
-          key: `portal-user:${item.id}`,
+          key: `processor-user:${item.id}`,
           group: "portal-users",
           title: item.name,
           subtitle: item.email,
           icon: <UsersIcon />,
           score,
           onSelect: () =>
-            navigate(
-              `${toProcessorPath(VIEW_PATHS.users)}?member=${encodeURIComponent(item.id)}`,
-            ),
+            navigate(`/settings/users?member=${encodeURIComponent(item.id)}`),
         }))
     : [];
   if (users.length > 0) {
@@ -313,7 +307,7 @@ export function buildProcessorEntityGroups(
   }
 
   const policies = includeScope("portal-policies")
-    ? rankPortalPolicyResults(
+    ? rankProcessorPolicyResults(
         entities.policies,
         trimmed,
         t,
@@ -340,7 +334,7 @@ export function buildProcessorEntityGroups(
     ),
   );
   const pipelines = includeScope("portal-pipelines")
-    ? rankPortalPipelineResults(
+    ? rankProcessorPipelineResults(
         entities.pipelines,
         trimmed,
         policyPipelineIds,
@@ -364,7 +358,7 @@ export function buildProcessorEntityGroups(
       ])
         .slice(0, ENTITY_GROUP_LIMIT)
         .map(({ item, score }) => ({
-          key: `portal-source:${item.id}`,
+          key: `processor-source:${item.id}`,
           group: "portal-sources",
           title: item.name,
           subtitle: item.type,
