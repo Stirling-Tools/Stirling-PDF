@@ -8,6 +8,7 @@
         "../../src/core/*"
       ],
       "@proprietary/*": ["../../src/proprietary/*"],
+      "@portal/*": ["../../src/portal/*"],
       "@core/*": ["../../src/core/*"]
     }
   },

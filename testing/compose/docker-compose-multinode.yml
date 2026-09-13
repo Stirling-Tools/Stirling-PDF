@@ -123,7 +123,7 @@ services:
 
   # ---- MinIO: shared S3 (platform storage + policy connections + webhook staging) ----
   minio:
-    image: minio/minio:latest
+    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: multinode-minio
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
