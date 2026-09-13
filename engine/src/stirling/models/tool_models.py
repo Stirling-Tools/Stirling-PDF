@@ -576,6 +576,7 @@ class FitOption(StrEnum):
 
     fill_page = "fillPage"
     fit_document_to_image = "fitDocumentToImage"
+    fit_document_to_page = "fitDocumentToPage"
     maintain_aspect_ratio = "maintainAspectRatio"
 
 
