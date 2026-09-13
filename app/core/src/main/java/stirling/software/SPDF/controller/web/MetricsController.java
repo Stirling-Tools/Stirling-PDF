@@ -58,7 +58,8 @@ public class MetricsController {
     @Operation(
             summary = "Application health check",
             description =
-                    "This endpoint returns the health status of the application and its version number. Mirrors /api/v1/info/status.")
+                    "This endpoint returns the health status of the application and its version"
+                            + " number. Mirrors /api/v1/info/status.")
     public ResponseEntity<?> getHealth() {
         return getApplicationStatus();
     }
@@ -91,7 +92,8 @@ public class MetricsController {
     @Operation(
             summary = "GET request count",
             description =
-                    "This endpoint returns the total count of GET requests for a specific endpoint or all endpoints.")
+                    "This endpoint returns the total count of GET requests for a specific endpoint"
+                            + " or all endpoints.")
     public ResponseEntity<?> getPageLoads(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -110,7 +112,8 @@ public class MetricsController {
     @Operation(
             summary = "Unique users count for GET requests",
             description =
-                    "This endpoint returns the count of unique users for GET requests for a specific endpoint or all endpoints.")
+                    "This endpoint returns the count of unique users for GET requests for a"
+                            + " specific endpoint or all endpoints.")
     public ResponseEntity<?> getUniquePageLoads(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -145,7 +148,8 @@ public class MetricsController {
     @Operation(
             summary = "Unique users count for GET requests for all endpoints",
             description =
-                    "This endpoint returns the count of unique users for GET requests for each endpoint.")
+                    "This endpoint returns the count of unique users for GET requests for each"
+                            + " endpoint.")
     public ResponseEntity<?> getAllUniqueEndpointLoads() {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
@@ -162,7 +166,8 @@ public class MetricsController {
     @Operation(
             summary = "POST request count",
             description =
-                    "This endpoint returns the total count of POST requests for a specific endpoint or all endpoints.")
+                    "This endpoint returns the total count of POST requests for a specific endpoint"
+                            + " or all endpoints.")
     public ResponseEntity<?> getTotalRequests(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -181,7 +186,8 @@ public class MetricsController {
     @Operation(
             summary = "Unique users count for POST requests",
             description =
-                    "This endpoint returns the count of unique users for POST requests for a specific endpoint or all endpoints.")
+                    "This endpoint returns the count of unique users for POST requests for a"
+                            + " specific endpoint or all endpoints.")
     public ResponseEntity<?> getUniqueTotalRequests(
             @RequestParam(required = false, name = "endpoint") @Parameter(description = "endpoint")
                     Optional<String> endpoint) {
@@ -216,7 +222,8 @@ public class MetricsController {
     @Operation(
             summary = "Unique users count for POST requests for all endpoints",
             description =
-                    "This endpoint returns the count of unique users for POST requests for each endpoint.")
+                    "This endpoint returns the count of unique users for POST requests for each"
+                            + " endpoint.")
     public ResponseEntity<?> getAllUniquePostRequests() {
         if (!metricsEnabled) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("This endpoint is disabled.");
@@ -397,7 +404,8 @@ public class MetricsController {
         if (wauService.isEmpty()) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND)
                     .body(
-                            "WAU tracking is only available when security is disabled (no-login mode)");
+                            "WAU tracking is only available when security is disabled (no-login"
+                                    + " mode)");
         }
 
         WeeklyActiveUsersService service = wauService.get();

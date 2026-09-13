@@ -265,7 +265,8 @@ class TextFinderTest {
         @DisplayName("Should handle various regex patterns")
         void handleVariousRegexPatterns(String regexPattern) throws IOException {
             String testContent =
-                    "Date: 2023-12-25, Email: test@domain.com, Price: $250, Code: ABC123, Number: 1234";
+                    "Date: 2023-12-25, Email: test@domain.com, Price: $250, Code: ABC123, Number:"
+                            + " 1234";
             addTextToPage(testContent);
 
             TextFinder textFinder = new TextFinder(regexPattern, true, false);
@@ -560,7 +561,8 @@ class TextFinderTest {
             assertEquals(
                     1,
                     foundTexts.size(),
-                    "Should find exactly one standalone '1', not the ones embedded in other numbers/codes");
+                    "Should find exactly one standalone '1', not the ones embedded in other"
+                            + " numbers/codes");
             assertEquals("1", foundTexts.get(0).getText());
         }
 
@@ -576,7 +578,8 @@ class TextFinderTest {
 
             assertTrue(
                     foundTexts.size() >= 3,
-                    "Should find multiple instances of '1' including standalone, in '1234', and in 'A1B'");
+                    "Should find multiple instances of '1' including standalone, in '1234', and in"
+                            + " 'A1B'");
         }
 
         @Test
@@ -611,7 +614,8 @@ class TextFinderTest {
             assertEquals(
                     1,
                     foundTexts1.size(),
-                    "Should find only the standalone '1'; do not count the '1' in '1.0' or in 'Item1'.");
+                    "Should find only the standalone '1'; do not count the '1' in '1.0' or in"
+                            + " 'Item1'.");
 
             TextFinder textFinder2 = new TextFinder("2", false, true);
             textFinder2.getText(document);

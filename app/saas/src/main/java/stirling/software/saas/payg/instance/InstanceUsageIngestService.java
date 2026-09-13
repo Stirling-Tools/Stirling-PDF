@@ -101,7 +101,8 @@ public class InstanceUsageIngestService {
             // The cumulative counter went backwards — a reset or tampering. Refuse to credit; don't
             // advance, so the discrepancy stays visible and a corrected resend can reconcile.
             log.warn(
-                    "Instance usage regression team={} category={} reported {} < last {}; ignoring.",
+                    "Instance usage regression team={} category={} reported {} < last {};"
+                            + " ignoring.",
                     teamId,
                     category,
                     cumulative,

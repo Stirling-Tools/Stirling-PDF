@@ -591,7 +591,8 @@ class CropControllerTest {
             assertThatThrownBy(() -> cropController.cropPdf(request))
                     .isInstanceOf(IllegalArgumentException.class)
                     .hasMessage(
-                            "Crop coordinates (x, y, width, height) are required when auto-crop is not enabled");
+                            "Crop coordinates (x, y, width, height) are required when auto-crop is"
+                                    + " not enabled");
         }
 
         @Test

@@ -45,7 +45,8 @@ public class ControllerAuditAspect {
     private final AuditConfigurationProperties auditConfig;
 
     @Around(
-            "execution(* org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
+            "execution(*"
+                + " org.springframework.web.servlet.resource.ResourceHttpRequestHandler.handleRequest(..))")
     public Object auditStaticResource(ProceedingJoinPoint jp) throws Throwable {
         return auditController(jp, "GET");
     }

@@ -27,7 +27,8 @@ public class ReplaceAndInvertColorRequest extends PDFFile {
 
     @Schema(
             description =
-                    "If HIGH_CONTRAST_COLOR option selected, then pick the default color option for text and background.",
+                    "If HIGH_CONTRAST_COLOR option selected, then pick the default color option for"
+                            + " text and background.",
             requiredMode = Schema.RequiredMode.REQUIRED,
             defaultValue = "WHITE_TEXT_ON_BLACK",
             allowableValues = {

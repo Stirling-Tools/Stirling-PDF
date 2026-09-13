@@ -178,7 +178,7 @@ class TelegramPipelineBotMoreTest {
                                                             && sm.getText()
                                                                     .contains(
                                                                             "No JSON"
-                                                                                    + " configuration")));
+                                                                                + " configuration")));
         }
 
         @Test
@@ -198,7 +198,7 @@ class TelegramPipelineBotMoreTest {
                                                             && sm.getText()
                                                                     .contains(
                                                                             "No JSON"
-                                                                                    + " configuration")));
+                                                                                + " configuration")));
         }
 
         @Test
@@ -217,7 +217,7 @@ class TelegramPipelineBotMoreTest {
                                                             && sm.getText()
                                                                     .contains(
                                                                             "No JSON"
-                                                                                    + " configuration")));
+                                                                                + " configuration")));
         }
     }
 
@@ -247,7 +247,7 @@ class TelegramPipelineBotMoreTest {
                                                             && sm.getText()
                                                                     .contains(
                                                                             "Starting"
-                                                                                    + " processing")));
+                                                                                + " processing")));
             // The Telegram API error reply was sent.
             verify(bot)
                     .execute(
@@ -282,7 +282,7 @@ class TelegramPipelineBotMoreTest {
                                                             && sm.getText()
                                                                     .contains(
                                                                             "Starting"
-                                                                                    + " processing")));
+                                                                                + " processing")));
         }
 
         @Test

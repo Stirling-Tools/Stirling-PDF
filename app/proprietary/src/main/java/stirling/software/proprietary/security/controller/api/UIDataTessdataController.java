@@ -214,7 +214,8 @@ public class UIDataTessdataController {
                 String reset = connection.getHeaderField("X-RateLimit-Reset");
                 if (status == HttpURLConnection.HTTP_FORBIDDEN && remaining != null) {
                     log.warn(
-                            "GitHub tessdata listing rate limited. Remaining={}, resetEpochSeconds={}",
+                            "GitHub tessdata listing rate limited. Remaining={},"
+                                    + " resetEpochSeconds={}",
                             remaining,
                             reset);
                 } else {

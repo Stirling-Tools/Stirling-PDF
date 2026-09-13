@@ -209,7 +209,8 @@ public class ResourceMonitor {
                     return (double) m.invoke(osMXBean);
                 } catch (Exception e2) {
                     log.trace(
-                            "Could not get CPU load through reflection, assuming moderate load (0.5)");
+                            "Could not get CPU load through reflection, assuming moderate load"
+                                    + " (0.5)");
                     return 0.5;
                 }
             }

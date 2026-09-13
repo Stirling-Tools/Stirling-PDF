@@ -193,7 +193,8 @@ public final class S3Clients {
                     value.trim().toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             log.warn(
-                    "Unknown storage.s3.request-checksum-calculation value '{}', falling back to WHEN_SUPPORTED",
+                    "Unknown storage.s3.request-checksum-calculation value '{}', falling back to"
+                            + " WHEN_SUPPORTED",
                     value);
             return RequestChecksumCalculation.WHEN_SUPPORTED;
         }
@@ -208,7 +209,8 @@ public final class S3Clients {
                     value.trim().toUpperCase(java.util.Locale.ROOT));
         } catch (IllegalArgumentException ex) {
             log.warn(
-                    "Unknown storage.s3.response-checksum-validation value '{}', falling back to WHEN_SUPPORTED",
+                    "Unknown storage.s3.response-checksum-validation value '{}', falling back to"
+                            + " WHEN_SUPPORTED",
                     value);
             return ResponseChecksumValidation.WHEN_SUPPORTED;
         }

@@ -44,7 +44,7 @@ public class McpAudienceValidator implements OAuth2TokenValidator<Jwt> {
                     new OAuth2Error(
                             "invalid_token",
                             "MCP audience binding is not configured; rejecting all tokens until"
-                                    + " mcp.auth.resource-id or mcp.auth.accepted-audiences is set.",
+                                + " mcp.auth.resource-id or mcp.auth.accepted-audiences is set.",
                             null));
         }
         List<String> aud = token.getAudience();

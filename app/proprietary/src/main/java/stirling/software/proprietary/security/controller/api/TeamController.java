@@ -100,7 +100,8 @@ public class TeamController {
                     .body(
                             Map.of(
                                     "error",
-                                    "Team must be empty before deletion. Please remove all members first."));
+                                    "Team must be empty before deletion. Please remove all members"
+                                            + " first."));
         }
 
         if (integrationConfigRepository.existsByOwnerTeam_Id(teamId)) {
@@ -108,7 +109,8 @@ public class TeamController {
                     .body(
                             Map.of(
                                     "error",
-                                    "Team still owns integration configurations. Delete or reassign them first."));
+                                    "Team still owns integration configurations. Delete or reassign"
+                                            + " them first."));
         }
 
         // Team grants and membership rows would dangle once the team row is gone

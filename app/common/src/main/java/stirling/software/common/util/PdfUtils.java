@@ -395,9 +395,9 @@ public class PdfUtils {
                             && e.getMessage().contains("Maximum size of image exceeded")) {
                         throw ExceptionUtils.createIllegalArgumentException(
                                 "error.pageTooBigFor300Dpi",
-                                "PDF page {0} is too large to render at 300 DPI. The resulting image"
-                                        + " would exceed Java's maximum array size. Please use a lower DPI"
-                                        + " value for PDF-to-image conversion.",
+                                "PDF page {0} is too large to render at 300 DPI. The resulting"
+                                    + " image would exceed Java's maximum array size. Please use a"
+                                    + " lower DPI value for PDF-to-image conversion.",
                                 pageIndex + 1);
                     }
                     throw e;

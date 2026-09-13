@@ -22,8 +22,8 @@ public class AddCommentsRequest extends PDFFile {
     @Schema(
             description =
                     "JSON array of comment specs. Each element has: {pageIndex, x, y, width,"
-                            + " height, text, author?, subject?}. Coordinates are PDF user-space with"
-                            + " origin at the page's bottom-left.",
+                        + " height, text, author?, subject?}. Coordinates are PDF user-space with"
+                        + " origin at the page's bottom-left.",
             example =
                     "[{\"pageIndex\":0,\"x\":72,\"y\":720,\"width\":20,\"height\":20,"
                             + "\"text\":\"Check this paragraph\",\"author\":\"Reviewer\","

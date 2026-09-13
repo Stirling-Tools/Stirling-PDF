@@ -172,7 +172,7 @@ class McpServerControllerTest {
         JsonNode body =
                 mapper.readTree(
                         "{\"jsonrpc\":\"2.0\",\"id\":4,\"method\":\"tools/call\","
-                                + "\"params\":{\"name\":\"stirling_does_not_exist\",\"arguments\":{}}}");
+                            + "\"params\":{\"name\":\"stirling_does_not_exist\",\"arguments\":{}}}");
 
         ResponseEntity<?> response = controller.handle(body);
 

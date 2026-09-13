@@ -41,7 +41,8 @@ public class AttachmentUtils {
                 viewerPrefs.setBoolean(COSName.getPDFName("DisplayDocTitle"), true);
 
                 log.info(
-                        "Set PDF PageMode to UseAttachments to automatically show attachments pane");
+                        "Set PDF PageMode to UseAttachments to automatically show attachments"
+                                + " pane");
             }
         } catch (Exception e) {
             log.error("Failed to set catalog viewer preferences for attachments", e);

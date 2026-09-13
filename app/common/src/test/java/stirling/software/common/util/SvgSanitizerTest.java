@@ -38,7 +38,8 @@ class SvgSanitizerTest {
     @Test
     void testSanitize_removesScriptElement() throws IOException {
         String svg =
-                "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert('xss')</script><circle r=\"10\"/></svg>";
+                "<svg xmlns=\"http://www.w3.org/2000/svg\"><script>alert('xss')</script><circle"
+                        + " r=\"10\"/></svg>";
         byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
         String output = new String(result, StandardCharsets.UTF_8);
         assertFalse(output.contains("script"));
@@ -48,7 +49,8 @@ class SvgSanitizerTest {
     @Test
     void testSanitize_removesEventHandler() throws IOException {
         String svg =
-                "<svg xmlns=\"http://www.w3.org/2000/svg\"><circle r=\"10\" onclick=\"alert('xss')\"/></svg>";
+                "<svg xmlns=\"http://www.w3.org/2000/svg\"><circle r=\"10\""
+                        + " onclick=\"alert('xss')\"/></svg>";
         byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
         String output = new String(result, StandardCharsets.UTF_8);
         assertFalse(output.contains("onclick"));
@@ -57,7 +59,8 @@ class SvgSanitizerTest {
     @Test
     void testSanitize_removesJavascriptUrl() throws IOException {
         String svg =
-                "<svg xmlns=\"http://www.w3.org/2000/svg\"><a href=\"javascript:alert('xss')\"><circle r=\"10\"/></a></svg>";
+                "<svg xmlns=\"http://www.w3.org/2000/svg\"><a"
+                        + " href=\"javascript:alert('xss')\"><circle r=\"10\"/></a></svg>";
         byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
         String output = new String(result, StandardCharsets.UTF_8);
         assertFalse(output.contains("javascript"));
@@ -86,7 +89,8 @@ class SvgSanitizerTest {
     @Test
     void testSanitize_removesForeignObject() throws IOException {
         String svg =
-                "<svg xmlns=\"http://www.w3.org/2000/svg\"><foreignObject><body>evil</body></foreignObject><rect width=\"10\" height=\"10\"/></svg>";
+                "<svg xmlns=\"http://www.w3.org/2000/svg\"><foreignObject><body>evil</body></foreignObject><rect"
+                    + " width=\"10\" height=\"10\"/></svg>";
         byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
         String output = new String(result, StandardCharsets.UTF_8);
         assertFalse(output.toLowerCase().contains("foreignobject"));
@@ -113,8 +117,8 @@ class SvgSanitizerTest {
     void testSanitize_removesRelativeLocalPath() throws IOException {
         when(ssrfProtectionService.isUrlAllowed(anyString())).thenReturn(false);
         String svg =
-                "<svg xmlns=\"http://www.w3.org/2000/svg\">"
-                        + "<image href=\"../../assets/image.png\" width=\"10\" height=\"10\"/></svg>";
+                "<svg xmlns=\"http://www.w3.org/2000/svg\"><image href=\"../../assets/image.png\""
+                        + " width=\"10\" height=\"10\"/></svg>";
         byte[] result = sanitizer.sanitize(svg.getBytes(StandardCharsets.UTF_8));
         String output = new String(result, StandardCharsets.UTF_8);
         assertFalse(output.contains("assets/image.png"), "Relative local path must be stripped");

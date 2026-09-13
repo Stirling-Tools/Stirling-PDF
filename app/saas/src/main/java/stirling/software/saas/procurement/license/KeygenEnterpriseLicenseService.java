@@ -16,12 +16,12 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
-import tools.jackson.databind.JsonNode;
-import tools.jackson.databind.ObjectMapper;
-
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.saas.procurement.config.KeygenConfigurationProperties;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Real {@link EnterpriseLicenseService}: manages the team's enterprise licence directly against the
@@ -53,8 +53,9 @@ public class KeygenEnterpriseLicenseService implements EnterpriseLicenseService 
         // caught at startup, not at the first trial/provision. (Flag off → Mock bean, never here.)
         if (!config.isConfigured()) {
             throw new IllegalStateException(
-                    "stirling.keygen.enabled=true but Keygen is not fully configured — set "
-                            + "STIRLING_KEYGEN_ACCOUNT_ID / _API_TOKEN / _POLICY_ID, or turn the flag off");
+                    "stirling.keygen.enabled=true but Keygen is not fully configured — set"
+                        + " STIRLING_KEYGEN_ACCOUNT_ID / _API_TOKEN / _POLICY_ID, or turn the flag"
+                        + " off");
         }
     }
 

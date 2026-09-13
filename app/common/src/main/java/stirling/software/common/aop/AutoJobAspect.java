@@ -85,7 +85,8 @@ public class AutoJobAspect {
                                     return joinPoint.proceed(args);
                                 } catch (Throwable ex) {
                                     log.error(
-                                            "AutoJobAspect caught exception during job execution: {}",
+                                            "AutoJobAspect caught exception during job execution:"
+                                                    + " {}",
                                             ex.getMessage(),
                                             ex);
                                     // Rethrow RuntimeException as-is to preserve exception type
@@ -165,8 +166,8 @@ public class AutoJobAspect {
                                 } catch (Throwable ex) {
                                     lastException = ex;
                                     log.error(
-                                            "AutoJobAspect caught exception during job execution (attempt"
-                                                    + " {}/{}): {}",
+                                            "AutoJobAspect caught exception during job execution"
+                                                    + " (attempt {}/{}): {}",
                                             currentAttempt,
                                             maxRetries,
                                             ex.getMessage(),
@@ -183,7 +184,8 @@ public class AutoJobAspect {
                                             String jobId = jobIdRef.get();
                                             if (jobId != null) {
                                                 log.debug(
-                                                        "Recording retry attempt for job {} in TaskManager",
+                                                        "Recording retry attempt for job {} in"
+                                                                + " TaskManager",
                                                         jobId);
                                                 // Retry info is tracked in TaskManager for REST API
                                                 // access

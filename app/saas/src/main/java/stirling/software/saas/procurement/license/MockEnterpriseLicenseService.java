@@ -55,7 +55,8 @@ public class MockEnterpriseLicenseService implements EnterpriseLicenseService {
         String ref = existingRef != null ? existingRef : "mock-annual-" + UUID.randomUUID();
         // Owner email is deliberately not logged — it's PII and adds nothing to the mock trace.
         log.info(
-                "[procurement][mock-license] issue annual team={} seats={} volume={} deployment={} expires={} ref={} upgrade={}",
+                "[procurement][mock-license] issue annual team={} seats={} volume={} deployment={}"
+                        + " expires={} ref={} upgrade={}",
                 teamId,
                 ent.seats(),
                 ent.volume(),

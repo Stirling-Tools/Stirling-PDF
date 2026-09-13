@@ -133,9 +133,9 @@ class PortalInfraAuditServiceTest {
                         List.of(
                                 row(
                                         1L,
-                                        "{\"path\":\"/api/v1/security/remove-password\","
-                                                + "\"policyName\":\"Daily cleanup\",\"files\":"
-                                                + "[{\"name\":\"secret.pdf\"}],\"statusCode\":200}")));
+                                        "{\"path\":\"/api/v1/security/remove-password\",\"policyName\":\"Daily"
+                                            + " cleanup\",\"files\":"
+                                            + "[{\"name\":\"secret.pdf\"}],\"statusCode\":200}")));
 
         var resp = service.serverAuditLog();
         InfraAuditEventDto e = resp.getEvents().get(0);

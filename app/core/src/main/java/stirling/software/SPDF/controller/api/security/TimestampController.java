@@ -91,8 +91,8 @@ public class TimestampController {
             summary = "Add RFC 3161 document timestamp to a PDF",
             description =
                     "Contacts a trusted Time Stamp Authority (TSA) server and embeds an RFC 3161"
-                            + " document timestamp into the PDF. Only a SHA-256 hash of the document is sent"
-                            + " to the TSA - the PDF itself never leaves the server.")
+                        + " document timestamp into the PDF. Only a SHA-256 hash of the document is"
+                        + " sent to the TSA - the PDF itself never leaves the server.")
     public ResponseEntity<Resource> timestampPdf(@ModelAttribute TimestampPdfRequest request)
             throws Exception {
         MultipartFile inputFile = request.getFileInput();

@@ -43,8 +43,8 @@ public class ReplaceAndInvertColorController {
             summary = "Replace-Invert Color PDF",
             description =
                     "This endpoint accepts a PDF file and provides options to invert all colors,"
-                            + " replace text and background colors, or convert to CMYK color space for"
-                            + " printing.")
+                        + " replace text and background colors, or convert to CMYK color space for"
+                        + " printing.")
     public ResponseEntity<Resource> replaceAndInvertColor(
             @ModelAttribute ReplaceAndInvertColorRequest request) throws IOException {
 

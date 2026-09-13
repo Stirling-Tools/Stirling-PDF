@@ -69,7 +69,8 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
 
     /** Sum of signed amounts over a team's entries — the wallet's current balance in units. */
     @Query(
-            "SELECT COALESCE(SUM(e.amountUnits), 0) FROM WalletLedgerEntry e WHERE e.teamId = :teamId")
+            "SELECT COALESCE(SUM(e.amountUnits), 0) FROM WalletLedgerEntry e WHERE e.teamId ="
+                    + " :teamId")
     long sumBalanceForTeam(@Param("teamId") Long teamId);
 
     /** Period-bounded spend for one team in units (debits only). */
@@ -92,12 +93,11 @@ public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry,
      * monthly bill + cap.
      */
     @Query(
-            "SELECT COALESCE(SUM(e.amountUnits), 0) FROM WalletLedgerEntry e"
-                    + " WHERE e.teamId = :teamId"
-                    + " AND e.entryType IN (stirling.software.saas.payg.model.LedgerEntryType.DEBIT,"
-                    + " stirling.software.saas.payg.model.LedgerEntryType.REFUND)"
-                    + " AND e.occurredAt >= :periodStart"
-                    + " AND e.occurredAt < :periodEnd")
+            "SELECT COALESCE(SUM(e.amountUnits), 0) FROM WalletLedgerEntry e WHERE e.teamId ="
+                + " :teamId AND e.entryType IN"
+                + " (stirling.software.saas.payg.model.LedgerEntryType.DEBIT,"
+                + " stirling.software.saas.payg.model.LedgerEntryType.REFUND) AND e.occurredAt >="
+                + " :periodStart AND e.occurredAt < :periodEnd")
     long sumPeriodNetBillable(
             @Param("teamId") Long teamId,
             @Param("periodStart") LocalDateTime periodStart,

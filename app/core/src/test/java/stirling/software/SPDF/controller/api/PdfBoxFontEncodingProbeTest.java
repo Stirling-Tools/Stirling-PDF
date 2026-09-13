@@ -50,7 +50,8 @@ import org.junit.jupiter.api.Test;
  * </ol>
  */
 @Disabled(
-        "Diagnostic probe: dumps PDFBox font encoding tables to stdout and asserts nothing. Kept for font debugging; run manually.")
+        "Diagnostic probe: dumps PDFBox font encoding tables to stdout and asserts nothing. Kept"
+                + " for font debugging; run manually.")
 public class PdfBoxFontEncodingProbeTest {
 
     private static final Path PROJECT_ROOT =
@@ -358,11 +359,11 @@ public class PdfBoxFontEncodingProbeTest {
                 if (f instanceof PDType3Font) {
                     System.out.println(
                             "    -> Type3 has CharProc streams, NOT a FontFile binary."
-                                    + " getFontStream() returns null. Round-trip rehab is impossible:");
+                                + " getFontStream() returns null. Round-trip rehab is impossible:");
                     System.out.println(
                             "       each glyph is a mini content stream, not a glyph outline in a"
-                                    + " standard font format. We'd need to rasterize each CharProc to"
-                                    + " glyph outlines + build a fresh TTF/CFF from scratch.");
+                                + " standard font format. We'd need to rasterize each CharProc to"
+                                + " glyph outlines + build a fresh TTF/CFF from scratch.");
                 }
             }
         }
@@ -497,9 +498,9 @@ public class PdfBoxFontEncodingProbeTest {
         }
         System.out.println(
                 "  (PDFBox bundles ONLY LiberationSans-Regular.ttf as a binary; the AFMs cover"
-                        + " metrics for the 14 standard fonts but rendering Helvetica/Times/Courier"
-                        + " glyphs falls back to LiberationSans glyphs at runtime when no system font"
-                        + " is found.)");
+                    + " metrics for the 14 standard fonts but rendering Helvetica/Times/Courier"
+                    + " glyphs falls back to LiberationSans glyphs at runtime when no system font"
+                    + " is found.)");
     }
 
     private static int streamBytes(InputStream is) {

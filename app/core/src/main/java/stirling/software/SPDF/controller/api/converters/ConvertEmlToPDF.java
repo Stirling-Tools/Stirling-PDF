@@ -56,9 +56,9 @@ public class ConvertEmlToPDF {
             summary = "Convert EML/MSG to PDF",
             description =
                     "This endpoint converts EML (email) and MSG (Outlook) files to PDF format with"
-                            + " extensive customization options. Features include font settings, image"
-                            + " constraints, display modes, attachment handling, and HTML debug output. or MSG"
-                            + " file, or HTML file.")
+                        + " extensive customization options. Features include font settings, image"
+                        + " constraints, display modes, attachment handling, and HTML debug output."
+                        + " or MSG file, or HTML file.")
     public ResponseEntity<Resource> convertEmlToPdf(@ModelAttribute EmlToPdfRequest request) {
 
         MultipartFile inputFile = request.getFileInput();

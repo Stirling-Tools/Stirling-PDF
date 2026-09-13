@@ -38,7 +38,8 @@ class FailureClassifierTest {
                 """
                 {"type":"/errors/pdf-password","title":"PDF password required",\
                 "status":%d,"detail":"The PDF Document is passworded",\
-                "errorCode":"%s","timestamp":"2026-01-01T00:00:00Z"}"""
+                "errorCode":"%s","timestamp":"2026-01-01T00:00:00Z"}\
+                """
                         .formatted(status.value(), errorCode);
         return HttpClientErrorException.create(
                 status,

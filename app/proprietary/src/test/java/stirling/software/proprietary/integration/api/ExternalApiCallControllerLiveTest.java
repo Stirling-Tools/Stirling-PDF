@@ -397,7 +397,7 @@ class ExternalApiCallControllerLiveTest {
                 step().path("/v1/scan")
                         .fields(
                                 "{\"sha256\":\"{{document.sha256}}\",\"label\":\"{{sensitivityLabel.name}}\","
-                                        + "\"class\":\"{{classification.label}}\",\"pages\":\"{{document.pageCount}}\"}")
+                                    + "\"class\":\"{{classification.label}}\",\"pages\":\"{{document.pageCount}}\"}")
                         .includeContext(true)
                         .run("Outbound review", "run-42")
                         .go();
@@ -558,8 +558,8 @@ class ExternalApiCallControllerLiveTest {
                 .bodyMode("json")
                 .bodyTemplate(
                         "{\"name\":\"{{document.filename}}\",\"status\":1,"
-                                + "\"documents\":[{\"name\":\"{{document.filename}}\",\"data\":\"{{document.base64}}\"}],"
-                                + "\"actions\":[{\"mode\":\"remote\",\"signer\":{\"type\":\"certifio\"}}]}")
+                            + "\"documents\":[{\"name\":\"{{document.filename}}\",\"data\":\"{{document.base64}}\"}],"
+                            + "\"actions\":[{\"mode\":\"remote\",\"signer\":{\"type\":\"certifio\"}}]}")
                 .go();
 
         assertThat(receivedContentType).isEqualTo("application/json");

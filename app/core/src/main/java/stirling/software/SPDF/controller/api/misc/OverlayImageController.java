@@ -50,9 +50,10 @@ public class OverlayImageController {
             summary = "Overlay image onto a PDF file",
             description =
                     "This endpoint overlays an image onto a PDF file at the specified coordinates."
-                            + " Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG). SVG"
-                            + " files are rendered as vector graphics for crisp output at any resolution. The"
-                            + " image can be overlaid on every page of the PDF if specified.")
+                        + " Supports both raster formats (PNG, JPEG, etc.) and vector format (SVG)."
+                        + " SVG files are rendered as vector graphics for crisp output at any"
+                        + " resolution. The image can be overlaid on every page of the PDF if"
+                        + " specified.")
     public ResponseEntity<Resource> overlayImage(@ModelAttribute OverlayImageRequest request) {
         MultipartFile pdfFile = request.getFileInput();
         MultipartFile imageFile = request.getImageFile();

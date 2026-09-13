@@ -148,9 +148,10 @@ class SvgToPdfTest {
 
         try {
             String svg =
-                    "<svg xmlns=\"http://www.w3.org/2000/svg\" "
-                            + "xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"100\" height=\"100\">"
-                            + "<image x=\"0\" y=\"0\" width=\"100\" height=\"100\" xlink:href=\""
+                    "<svg xmlns=\"http://www.w3.org/2000/svg\""
+                            + " xmlns:xlink=\"http://www.w3.org/1999/xlink\" width=\"100\""
+                            + " height=\"100\"><image x=\"0\" y=\"0\" width=\"100\" height=\"100\""
+                            + " xlink:href=\""
                             + external.toUri()
                             + "\"/></svg>";
 

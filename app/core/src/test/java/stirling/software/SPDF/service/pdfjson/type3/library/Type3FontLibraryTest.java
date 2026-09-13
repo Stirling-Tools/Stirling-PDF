@@ -204,8 +204,8 @@ class Type3FontLibraryTest {
         void initialise_resourcePayload_loaded() throws Exception {
             String json =
                     "[{\"id\":\"res\",\"label\":\"Res\","
-                            + "\"program\":{\"resource\":\"type3/library/fonts/dejavu/DejaVuSans.ttf\","
-                            + "\"format\":\"ttf\"}}]";
+                        + "\"program\":{\"resource\":\"type3/library/fonts/dejavu/DejaVuSans.ttf\","
+                        + "\"format\":\"ttf\"}}]";
             ResourceLoader loader = new DefaultResourceLoader();
             Resource indexResource = mock(Resource.class);
             ResourceLoader spyLoader = spy(loader);

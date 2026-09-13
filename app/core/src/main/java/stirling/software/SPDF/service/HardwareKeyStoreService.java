@@ -166,7 +166,8 @@ public class HardwareKeyStoreService {
             candidates.put(
                     "OpenSC",
                     List.of(
-                            "C:\\Program Files\\OpenSC Project\\OpenSC\\pkcs11\\opensc-pkcs11.dll"));
+                            "C:\\Program Files\\OpenSC"
+                                    + " Project\\OpenSC\\pkcs11\\opensc-pkcs11.dll"));
             candidates.put(
                     "YubiKey (ykcs11)",
                     List.of("C:\\Program Files\\Yubico\\Yubico PIV Tool\\bin\\libykcs11.dll"));

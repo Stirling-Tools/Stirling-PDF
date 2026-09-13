@@ -45,7 +45,8 @@ public class TauriProcessMonitor {
             startMonitoring();
         } else {
             logger.warn(
-                    "TAURI_PARENT_PID environment variable not found. Tauri process monitoring disabled.");
+                    "TAURI_PARENT_PID environment variable not found. Tauri process monitoring"
+                            + " disabled.");
         }
     }
 
@@ -74,7 +75,8 @@ public class TauriProcessMonitor {
         try {
             if (!isProcessAlive(parentProcessId)) {
                 logger.warn(
-                        "Parent Tauri process (PID: {}) is no longer alive. Initiating graceful shutdown...",
+                        "Parent Tauri process (PID: {}) is no longer alive. Initiating graceful"
+                                + " shutdown...",
                         parentProcessId);
                 initiateGracefulShutdown();
             }
@@ -118,7 +120,8 @@ public class TauriProcessMonitor {
                                 } else {
                                     // Fallback to system exit
                                     logger.warn(
-                                            "Unable to shutdown Spring context gracefully, using System.exit");
+                                            "Unable to shutdown Spring context gracefully, using"
+                                                    + " System.exit");
                                     System.exit(0);
                                 }
                             } catch (Exception e) {

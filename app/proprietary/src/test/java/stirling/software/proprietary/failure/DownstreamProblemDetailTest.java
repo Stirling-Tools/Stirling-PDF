@@ -32,7 +32,8 @@ class DownstreamProblemDetailTest {
                 """
                 {"type":"/errors/application","title":"Application error","status":500,\
                 "detail":"Document is not PDF/A compliant (PDF/A-2B): 1 rule(s) failed",\
-                "errorCode":"E074"}""";
+                "errorCode":"E074"}\
+                """;
 
         assertThat(DownstreamProblemDetail.detailOf(response(body)))
                 .isEqualTo("Document is not PDF/A compliant (PDF/A-2B): 1 rule(s) failed");
@@ -59,7 +60,8 @@ class DownstreamProblemDetailTest {
         String body =
                 """
                 {"type":"/errors/compliance-not-met","status":422,\
-                "detail":"Document is not PDF/A compliant","errorCode":"E074"}""";
+                "detail":"Document is not PDF/A compliant","errorCode":"E074"}\
+                """;
 
         assertThat(DownstreamProblemDetail.errorCodeOf(response(body))).isEqualTo("E074");
     }

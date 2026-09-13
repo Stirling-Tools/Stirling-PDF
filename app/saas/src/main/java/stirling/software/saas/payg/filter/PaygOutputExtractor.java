@@ -181,7 +181,8 @@ public class PaygOutputExtractor {
             // ZipException extends IOException; IllegalArgumentException covers ZipEntry
             // "MALFORMED" surfaces from zlib. Fail-open: caller still serves the response.
             log.debug(
-                    "ZIP unpack failed for response body {} ({}); skipping per-PDF OUTPUT recording",
+                    "ZIP unpack failed for response body {} ({}); skipping per-PDF OUTPUT"
+                            + " recording",
                     bodyPath,
                     e.getClass().getSimpleName());
             // Close anything we already opened.

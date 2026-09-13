@@ -50,7 +50,8 @@ import org.junit.jupiter.api.Test;
  * output.
  */
 @Disabled(
-        "Diagnostic probe: dumps Sample.pdf font internals to stdout and asserts nothing. Kept for font debugging; run manually.")
+        "Diagnostic probe: dumps Sample.pdf font internals to stdout and asserts nothing. Kept for"
+                + " font debugging; run manually.")
 public class SamplePdfFontDumpTest {
 
     private static final Path SAMPLE =

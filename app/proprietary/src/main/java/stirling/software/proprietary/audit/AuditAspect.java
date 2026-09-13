@@ -84,7 +84,8 @@ public class AuditAspect {
             // File operation details logged at DEBUG level for verification
             if (auditData.containsKey("files") || auditData.containsKey("filename")) {
                 log.debug(
-                        "@Audited method file operation - Principal: {}, Origin: {}, IP: {}, Method: {}, Path: {}, Files: {}",
+                        "@Audited method file operation - Principal: {}, Origin: {}, IP: {},"
+                                + " Method: {}, Path: {}, Files: {}",
                         capturedPrincipal,
                         capturedOrigin,
                         capturedIp,

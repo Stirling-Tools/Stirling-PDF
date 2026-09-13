@@ -483,7 +483,8 @@ public class WorkflowSessionService {
         if (session.isFinalized()) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Cannot delete a finalized session. The signed PDF remains accessible from your session history.");
+                    "Cannot delete a finalized session. The signed PDF remains accessible from your"
+                            + " session history.");
         }
 
         // Delete physical storage files (non-fatal; may already be absent)
@@ -853,7 +854,8 @@ public class WorkflowSessionService {
         // 4. Store metadata in participant (JPA converter handles JSON serialization)
         participant.setParticipantMetadata(metadata);
         log.info(
-                "Stored signature metadata for participant ID {}, email {}: {} wet signatures, cert type: {}",
+                "Stored signature metadata for participant ID {}, email {}: {} wet signatures, cert"
+                        + " type: {}",
                 participant.getId(),
                 user.getUsername(),
                 metadata.containsKey("wetSignatures")
@@ -943,7 +945,8 @@ public class WorkflowSessionService {
             log.error("Failed to build keystore from PEM certificate", e);
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
-                    "Failed to read PEM certificate — check the key/certificate files and password");
+                    "Failed to read PEM certificate — check the key/certificate files and"
+                            + " password");
         }
     }
 

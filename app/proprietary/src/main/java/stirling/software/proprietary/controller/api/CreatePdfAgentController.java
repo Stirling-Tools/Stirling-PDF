@@ -132,9 +132,9 @@ public class CreatePdfAgentController {
             } catch (IOException e) {
                 if (isMissingDependencyError(e)) {
                     throw new IOException(
-                            "AI document creation is not available on this server because a required"
-                                    + " system dependency is not installed. Please contact your"
-                                    + " system administrator.");
+                            "AI document creation is not available on this server because a"
+                                    + " required system dependency is not installed. Please contact"
+                                    + " your system administrator.");
                 }
                 throw e;
             }
