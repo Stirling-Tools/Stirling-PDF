@@ -7166,7 +7166,6 @@ copyAdminMessage = "Copy message for administrator"
 exhaustedLede = "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance."
 manualTools = "Manual PDF tools are still available. Your local allowance renews automatically."
 notNow = "Not now"
-sharedAllowance = "Available credits are shared with your team. Linking does not start a paid plan."
 start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
 
@@ -7279,13 +7278,9 @@ title = "Couldn't load linked instances"
 [portal.accountLink.rail]
 adminCta = "How to get more credits"
 adminSub = "Ask your server administrator to link a Stirling account for more credits. Manual PDF tools are still available."
-cta = "Connect"
 exhaustedCta = "Link account for more credits"
 exhaustedSub = "Link for monthly credits, shared billing and the option to grow with a Team plan."
 exhaustedTitle = "This server’s free credits are used up"
-later = "Not now"
-sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
-title = "Connect your Stirling account"
 
 [portal.accountLink.state]
 free = "Editor plan"

@@ -124,6 +124,7 @@ describe("auto-run ordered chaining", () => {
       "backend-sec",
       [{ size: 100 }],
       "file-1",
+      "background",
     );
   });
 
@@ -142,6 +143,7 @@ describe("auto-run ordered chaining", () => {
       "backend-comp",
       [{ size: 100 }],
       "file-1-v2",
+      "background",
     );
   });
 
@@ -160,6 +162,7 @@ describe("auto-run ordered chaining", () => {
       "backend-cls",
       expect.anything(),
       expect.anything(),
+      "background",
     );
   });
 
