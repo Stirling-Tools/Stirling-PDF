@@ -1,4 +1,4 @@
-"""Step definitions for the multi-node regression suite: drive the stack (testing/compose/docker-compose-multinode.yml) via the LB, docker exec curl/psql on individual nodes, and a throwaway minio/mc container."""
+"""Step definitions for the multi-node regression suite: drive the stack (testing/compose/docker-compose-multinode.yml) via the LB, docker exec curl/psql on individual nodes, and a throwaway Silo client container."""
 
 import io
 import json
@@ -169,12 +169,12 @@ def _pdf_bytes(marker):
 
 
 def _mc(context, script, stdin=None):
-    """Run an mc script in a throwaway minio/mc container on the cluster network."""
+    """Run an mc script in a throwaway Silo client container on the cluster network."""
     net = getattr(context, "_net", None) or _network()
     context._net = net
     full = f"mc alias set local http://minio:9000 minioadmin minioadmin >/dev/null 2>&1 && {script}"
     args = ["docker", "run", "-i", "--rm", "--network", net, "--entrypoint", "/bin/sh",
-            "minio/mc", "-c", full]
+            "pgsty/mc:RELEASE.2026-09-13T00-00-00Z", "-c", full]
     return _sh(args, stdin=stdin, timeout=90)
 
 
