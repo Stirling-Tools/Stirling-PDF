@@ -106,7 +106,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       multiTool: {
-        icon: <Icon name="layout-dashboard" size="1.5rem" />,
+        icon: <Icon name="grid-2x2-plus" size="1.5rem" />,
         name: t("home.multiTool.title", "Multi-Tool"),
         component: null,
         workbench: "pageEditor",
@@ -258,7 +258,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Document Security
 
       addPassword: {
-        icon: <Icon name="file-lock" size="1.5rem" />,
+        icon: <Icon name="password" size="1.5rem" />,
         name: t("home.addPassword.title", "Add Password"),
         component: lazy(() => import("@app/tools/AddPassword")),
         description: t(
@@ -295,7 +295,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "watermark"),
       },
       addStamp: {
-        icon: <Icon name="badge-check" size="1.5rem" />,
+        icon: <Icon name="stamp" size="1.5rem" />,
         name: t("home.addStamp.title", "Add Stamp to PDF"),
         component: lazy(() => import("@app/tools/AddStamp")),
         description: t(
@@ -350,7 +350,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "flatten"),
       },
       unlockPDFForms: {
-        icon: <Icon name="lock-open" size="1.5rem" />,
+        icon: <Icon name="file-lock-open" size="1.5rem" />,
         name: t("home.unlockPDFForms.title", "Unlock PDF Forms"),
         component: lazy(() => import("@app/tools/UnlockPdfForms")),
         description: t(
@@ -366,7 +366,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       formFill: {
-        icon: <Icon name="type" size="1.5rem" />,
+        icon: <Icon name="form-input" size="1.5rem" />,
         name: t("home.formFill.title", "Form Editor"),
         component: lazy(() => import("@app/tools/formFill/FormFill")),
         description: t(
@@ -394,7 +394,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         ],
       },
       autoFormDetection: {
-        icon: <Icon name="file-search" size="1.5rem" />,
+        icon: <Icon name="form-scan" size="1.5rem" />,
         name: t("home.autoFormDetection.title", "Auto Form Detection"),
         component: lazy(
           () => import("@app/tools/autoFormDetection/AutoFormDetection"),
@@ -861,7 +861,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       removePassword: {
-        icon: <Icon name="lock-open" size="1.5rem" />,
+        icon: <Icon name="lock-open-password" size="1.5rem" />,
         name: t("home.removePassword.title", "Remove Password"),
         component: lazy(() => import("@app/tools/RemovePassword")),
         description: t(
@@ -899,7 +899,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       // Automation
 
       automate: {
-        icon: <Icon name="workflow" size="1.5rem" />,
+        icon: <Icon name="waypoints" size="1.5rem" />,
         name: t("home.automate.title", "Automate"),
         component: lazy(() => import("@app/tools/Automate")),
         description: t(
@@ -968,7 +968,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: null,
       },
       scannerImageSplit: {
-        icon: <Icon name="scan-line" size="1.5rem" />,
+        icon: <Icon name="table-columns-split" size="1.5rem" />,
         name: t(
           "home.scannerImageSplit.title",
           "Detect & Split Scanned Photos",
@@ -990,7 +990,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "scannerImageSplit"),
       },
       overlayPdfs: {
-        icon: <Icon name="layers" size="1.5rem" />,
+        icon: <Icon name="overlay-pages" size="1.5rem" />,
         name: t("home.overlay-pdfs.title", "Overlay PDFs"),
         component: lazy(() => import("@app/tools/OverlayPdfs")),
         description: t(
@@ -1146,7 +1146,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
 
       // Recommended Tools
       compare: {
-        icon: <Icon name="columns-2" size="1.5rem" />,
+        icon: <Icon name="image-compare" size="1.5rem" />,
         name: t("home.compare.title", "Compare"),
         component: lazy(() => import("@app/tools/Compare")),
         description: t(
@@ -1199,7 +1199,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "compress"),
       },
       convert: {
-        icon: <Icon name="refresh-cw" size="1.5rem" />,
+        icon: <Icon name="file-convert" size="1.5rem" />,
         name: t("home.convert.title", "Convert"),
         component: lazy(() => import("@app/tools/Convert")),
         description: t(
@@ -1237,7 +1237,7 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
       },
 
       ocr: {
-        icon: <Icon name="file-search" size="1.5rem" />,
+        icon: <Icon name="scan-text" size="1.5rem" />,
         name: t("home.ocr.title", "OCR"),
         component: lazy(() => import("@app/tools/OCR")),
         description: t(
