@@ -94,7 +94,7 @@ class UsageSyncServiceTest {
 
         service.syncNow();
 
-        verifyNoInteractions(client, entitlementCache);
+        verifyNoInteractions(client, entitlementCache, events);
         verify(counters, never()).findPeriodsWithUnsyncedUsage();
     }
 
@@ -113,6 +113,7 @@ class UsageSyncServiceTest {
         verify(entitlementCache, never()).accept(any());
         verify(entitlementCache).invalidate();
         verify(entitlementCache).current();
+        verify(events).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 
     @Test
@@ -142,6 +143,7 @@ class UsageSyncServiceTest {
         // Two saves: the pre-report seq reservation + the post-success timestamp.
         verify(syncState, times(2)).save(state);
         verify(entitlementCache).accept(fresh);
+        verify(events).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 
     @Test
@@ -160,6 +162,9 @@ class UsageSyncServiceTest {
         verify(counters, never()).markSynced(any(), any(), anyLong());
         verify(syncState, times(1)).save(state); // seq reserved, success not recorded
         verify(entitlementCache).accept(null); // nothing fresh adopted
+        // accept() no-ops on null, so saying the entitlement was refreshed would be a lie: the
+        // licence tier listens to this and would re-read a plan nobody fetched.
+        verify(events, never()).publishEvent(any(EntitlementRefreshedEvent.class));
     }
 
     @Test

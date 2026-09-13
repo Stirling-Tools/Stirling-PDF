@@ -124,7 +124,11 @@ public class UsageSyncService implements SchedulingConfigurer {
         }
         // Adopt the freshest entitlement the sync returned, saving the cache a redundant fetch.
         entitlementCache.accept(latest);
-        events.publishEvent(new EntitlementRefreshedEvent());
+        if (latest != null) {
+            // Only when a reply actually arrived. accept() no-ops on null, so announcing a refresh
+            // here would tell listeners the plan had been re-read when every period had failed.
+            events.publishEvent(new EntitlementRefreshedEvent());
+        }
     }
 
     /** Reports one period; returns the fresh entitlement, or null on a transport/server failure. */
