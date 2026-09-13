@@ -66,38 +66,27 @@ if [ ${#PYTHON_PATH_ENTRIES[@]} -gt 0 ]; then
   export PYTHONPATH
 fi
 
-# # === tessdata ===
-# # Prepare Tesseract OCR data directory.
-# In Debian, tesseract looks in /usr/share/tesseract-ocr/5/tessdata
-# For backwards compatibility, copy any user-mounted files from /usr/share/tessdata
 TESSDATA_SYSTEM="/usr/share/tesseract-ocr/5/tessdata"
 TESSDATA_MOUNT="/usr/share/tessdata"
 
-log_warn() {
-  echo "[init][warn] $*" >&2
-}
-
-# Ensure system tessdata directory exists
-mkdir -p "$TESSDATA_SYSTEM" 2>/dev/null || true
-
-# For backwards compatibility: if user mounted custom languages to /usr/share/tessdata,
-# copy them to the system location where Tesseract actually looks
-if [ -d "$TESSDATA_MOUNT" ] && [ "$(ls -A "$TESSDATA_MOUNT" 2>/dev/null)" ]; then
-  log_warn "Found user-mounted tessdata in $TESSDATA_MOUNT, copying to system location $TESSDATA_SYSTEM"
-  cp -rn "$TESSDATA_MOUNT"/* "$TESSDATA_SYSTEM"/ 2>/dev/null || true
+# An explicit prefix is authoritative. The legacy mount overlays the bundled languages
+# through readable symlinks, so it also works with a non-root or read-only container.
+if [ -z "${TESSDATA_PREFIX:-}" ]; then
+  export TESSDATA_PREFIX="$TESSDATA_SYSTEM"
+  if [ -d "$TESSDATA_MOUNT" ] && [ "$(ls -A "$TESSDATA_MOUNT")" ]; then
+    STIRLING_TESSDATA_TEMP=$(mktemp -d /tmp/stirling-tessdata.XXXXXX)
+    chmod 755 "$STIRLING_TESSDATA_TEMP"
+    for dir in "$TESSDATA_SYSTEM" "$TESSDATA_MOUNT"; do
+      for entry in "$dir"/*; do
+        [ -e "$entry" ] || continue
+        ln -sfn "$entry" "$STIRLING_TESSDATA_TEMP/$(basename "$entry")"
+      done
+    done
+    export STIRLING_TESSDATA_TEMP
+    export TESSDATA_PREFIX="$STIRLING_TESSDATA_TEMP"
+  fi
 fi
-
-# Set TESSDATA_PREFIX to system location
-export TESSDATA_PREFIX="$TESSDATA_SYSTEM"
-log_warn "Using TESSDATA_PREFIX=$TESSDATA_PREFIX"
-
-# === Temp dir ===
-# Ensure the temporary directory exists and has proper permissions.
-mkdir -p /tmp/stirling-pdf
-chown -R stirlingpdfuser:stirlingpdfgroup /tmp/stirling-pdf || true
-# u+rwX rather than a fixed mode: uploads and temp files stay owner-only instead of being
-# republished world-readable on every start.
-chmod -R u+rwX /tmp/stirling-pdf || true
+printf '[init] Using TESSDATA_PREFIX=%s\n' "$TESSDATA_PREFIX" >&2
 
 # === Start application ===
 # Run the main init script that handles the full startup logic.

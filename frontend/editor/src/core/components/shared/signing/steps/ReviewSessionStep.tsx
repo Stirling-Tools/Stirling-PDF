@@ -9,6 +9,7 @@ import SendIcon from "@mui/icons-material/Send";
 import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
 import type { SignatureSettings } from "@app/components/tools/certSign/SignatureSettingsInput";
 import type { FileState } from "@app/types/file";
+import { formatFileSize } from "@app/utils/fileUtils";
 
 interface ReviewSessionStepProps {
   selectedFile: FileState;
@@ -62,7 +63,7 @@ export const ReviewSessionStep: React.FC<ReviewSessionStepProps> = ({
           </Text>
           {selectedFile.size && (
             <Text size="xs" c="dimmed">
-              {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
+              {formatFileSize(selectedFile.size)}
             </Text>
           )}
         </div>

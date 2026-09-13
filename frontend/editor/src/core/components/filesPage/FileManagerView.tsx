@@ -66,11 +66,29 @@ import { StirlingFileStub } from "@app/types/fileContext";
 import {
   FolderBreadcrumbEntry,
   FolderId,
+  FolderRecord,
   ROOT_FOLDER_ID,
   folderKind,
 } from "@app/types/folder";
 
-import { FileGrid, FilesPageEntry } from "@app/components/filesPage/FileGrid";
+import {
+  FileGrid,
+  FilesPageEntry,
+  type DiskFileState,
+} from "@app/components/filesPage/FileGrid";
+import AutoModeIcon from "@mui/icons-material/AutoMode";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import PauseIcon from "@mui/icons-material/Pause";
+import ReplayIcon from "@mui/icons-material/Replay";
+import TuneIcon from "@mui/icons-material/Tune";
+import HistoryIcon from "@mui/icons-material/History";
+import PaletteIcon from "@mui/icons-material/Palette";
+import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
+import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
+import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
+import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
+import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -474,6 +492,11 @@ export default function FileManagerView() {
     currentFolder && folderKind(currentFolder) === "local"
       ? currentFolder.directory
       : undefined;
+  const headerEditsDisabled = Boolean(
+    currentFolder &&
+    folderKind(currentFolder) === "server" &&
+    !folders.serverReachable,
+  );
   const { setError: setFolderError, registerDiskSubfolders } = folders;
   const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
   const [diskLoading, setDiskLoading] = useState(false);
@@ -488,11 +511,17 @@ export default function FileManagerView() {
       return;
     }
     let cancelled = false;
-    setDiskLoading(true);
-    listDirectory(currentLocalDirectory)
-      .then((listed) => {
+    // The directory is the disk's and anything can write to it, so poll while open and let
+    // outside changes appear on their own; only a changed listing re-renders.
+    const load = async (background: boolean) => {
+      if (!background) setDiskLoading(true);
+      try {
+        const listed = await listDirectory(currentLocalDirectory);
         if (cancelled) return;
-        setDiskEntries(listed?.files ?? []);
+        const files = listed?.files ?? [];
+        setDiskEntries((prev) =>
+          listingSignature(prev) === listingSignature(files) ? prev : files,
+        );
         if (currentFolderId !== null) {
           registerDiskSubfolders(
             currentFolderId,
@@ -508,10 +537,11 @@ export default function FileManagerView() {
             })),
           );
         }
-      })
-      .catch((err) => {
+      } catch (err) {
         console.warn("[FileManagerView] disk listing failed", err);
-        if (!cancelled) {
+        // Background ticks stay quiet: a transient lock (a sync client holding
+        // the directory) would otherwise pop an error banner every few seconds.
+        if (!cancelled && !background) {
           setDiskEntries([]);
           setFolderError(
             err instanceof Error
@@ -525,12 +555,15 @@ export default function FileManagerView() {
                 ),
           );
         }
-      })
-      .finally(() => {
-        if (!cancelled) setDiskLoading(false);
-      });
+      } finally {
+        if (!cancelled && !background) setDiskLoading(false);
+      }
+    };
+    void load(false);
+    const timer = setInterval(() => void load(true), 4000);
     return () => {
       cancelled = true;
+      clearInterval(timer);
     };
     // The stable setter, not the context: its identity changes on every folder
     // mutation, including the setError above, so a failing listing would re-trigger.
@@ -570,6 +603,201 @@ export default function FileManagerView() {
     [addFiles, navActions, navigate, folders, t],
   );
 
+  // A working folder lists its real contents; each file wears its pipeline state and a state
+  // filter narrows the listing. Files the pipeline never claims carry no state at all.
+  const processingApi = useProcessingFolders();
+  const currentProcessing = currentFolder
+    ? processingApi.stateFor(currentFolder)
+    : undefined;
+  const outputDirectory = currentLocalDirectory
+    ? currentProcessing?.outputDirectory
+    : undefined;
+  // Per-file state from the backend's ledger: processing in place leaves no output folder to
+  // infer it from. Polled while the folder is open so badges follow the sweep live.
+  const [fileStates, setFileStates] = useState<Map<string, DiskFileState>>(
+    new Map(),
+  );
+  // Files whose pre-processing original is archived and can be restored.
+  const [revertables, setRevertables] = useState<ReadonlySet<string>>(
+    new Set(),
+  );
+  const processingRecordId = currentProcessing?.id;
+  // The state layer applies inside any working folder: a mount's directory listing or a
+  // server folder's stored files, both joined to the same ledger behind listFiles.
+  const processingView = Boolean(
+    processingRecordId && (outputDirectory || !currentLocalDirectory),
+  );
+  const { listFiles, retryFile, revertFile } = processingApi;
+  useEffect(() => {
+    if (!processingView || !processingRecordId) {
+      // Keep the empty value when it is already empty: a fresh Map/Set is never Object.is equal,
+      // so setting one unconditionally re-renders, on every render of a folder with no processing.
+      setFileStates((prev) => (prev.size === 0 ? prev : new Map()));
+      setRevertables((prev) => (prev.size === 0 ? prev : new Set()));
+      return;
+    }
+    let cancelled = false;
+    const tick = async () => {
+      const files = await listFiles(processingRecordId).catch(() => []);
+      if (!cancelled) {
+        setFileStates(new Map(files.map((f) => [f.name, f.state])));
+        setRevertables(
+          new Set(files.filter((f) => f.hasOriginal).map((f) => f.name)),
+        );
+      }
+    };
+    void tick();
+    const timer = setInterval(() => void tick(), 3000);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
+  }, [processingView, processingRecordId, listFiles]);
+
+  const [processingSetupFolder, setProcessingSetupFolder] =
+    useState<FolderRecord | null>(null);
+  // Restores wait on a confirmation, since they also pause the folder.
+  const [revertConfirmName, setRevertConfirmName] = useState<string | null>(
+    null,
+  );
+  const [revertAllTarget, setRevertAllTarget] = useState<FolderRecord | null>(
+    null,
+  );
+
+  const [diskStateFilter, setDiskStateFilter] = useState<DiskFileState | "all">(
+    "all",
+  );
+  const diskStateFor = useCallback(
+    (name: string): DiskFileState | undefined => fileStates.get(name),
+    [fileStates],
+  );
+  // Counts for the filter chips, from the same states the badges wear.
+  const stateCounts = useMemo(() => {
+    const counts: Record<DiskFileState, number> = {
+      done: 0,
+      processing: 0,
+      failed: 0,
+      waiting: 0,
+    };
+    for (const state of fileStates.values()) counts[state] += 1;
+    return counts;
+  }, [fileStates]);
+  const retryDiskFile = useCallback(
+    (name: string) => {
+      if (!processingRecordId) return;
+      void retryFile(processingRecordId, name)
+        .then(() =>
+          // Show the retry took, ahead of the next poll.
+          setFileStates((prev) => {
+            const next = new Map(prev);
+            next.set(name, "processing");
+            return next;
+          }),
+        )
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.retryFailedDetail", {
+                  name,
+                  message: err.message,
+                  defaultValue: `Could not retry ${name}: ${err.message}`,
+                })
+              : t("filesPage.error.retryFailed", {
+                  name,
+                  defaultValue: `Could not retry ${name}.`,
+                }),
+          ),
+        );
+    },
+    [processingRecordId, retryFile, folders, t],
+  );
+  const revertFolderFile = useCallback(
+    (name: string) => {
+      if (!processingRecordId) return;
+      void revertFile(processingRecordId, name)
+        .then(() => {
+          // Reflect the restore ahead of the next poll.
+          setFileStates((prev) => {
+            const next = new Map(prev);
+            next.set(name, "waiting");
+            return next;
+          });
+          setRevertables((prev) => {
+            const next = new Set(prev);
+            next.delete(name);
+            return next;
+          });
+        })
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.revertFailedDetail", {
+                  name,
+                  message: err.message,
+                  defaultValue: `Could not restore ${name}: ${err.message}`,
+                })
+              : t("filesPage.error.revertFailed", {
+                  name,
+                  defaultValue: `Could not restore ${name}.`,
+                }),
+          ),
+        );
+    },
+    [processingRecordId, revertFile, folders, t],
+  );
+  const revertAllInFolder = useCallback(
+    (folder: FolderRecord) => {
+      void processingApi
+        .revertAll(folder)
+        .then((outcome) => {
+          if (outcome && outcome.restored === 0 && outcome.skipped === 0) {
+            folders.setError(
+              t(
+                "filesPage.processing.nothingToRestore",
+                "No originals to restore - these files are already their originals.",
+              ),
+            );
+          }
+        })
+        .catch((err) =>
+          folders.setError(
+            err instanceof Error
+              ? t("filesPage.error.revertAllFailedDetail", {
+                  message: err.message,
+                  defaultValue: `Could not restore originals: ${err.message}`,
+                })
+              : t(
+                  "filesPage.error.revertAllFailed",
+                  "Could not restore originals.",
+                ),
+          ),
+        );
+    },
+    [processingApi, folders, t],
+  );
+  // The open folder's own actions: everything its card kebab offers from the
+  // listing outside must be reachable from inside the folder too.
+  const runFolderAction = useCallback(
+    (action: (folder: FolderRecord) => Promise<void>, label: string) => {
+      if (!currentFolder) return;
+      void action(currentFolder).catch((err) =>
+        folders.setError(
+          err instanceof Error
+            ? t("filesPage.error.actionFailedDetail", {
+                action: label,
+                message: err.message,
+                defaultValue: `Could not ${label}: ${err.message}`,
+              })
+            : t("filesPage.error.actionFailed", {
+                action: label,
+                defaultValue: `Could not ${label}.`,
+              }),
+        ),
+      );
+    },
+    [currentFolder, folders, t],
+  );
+
   const entries = useMemo<FilesPageEntry[]>(() => {
     // When searching, items may come from anywhere in the subtree, so we
     // expose a "parentPath" subtitle whenever the item's parent differs from
@@ -590,16 +818,31 @@ export default function FileManagerView() {
         "modified-asc": (a, b) => a.lastModified - b.lastModified,
         "modified-desc": (a, b) => b.lastModified - a.lastModified,
       };
+      const toDiskEntries = (list: DiskFileEntry[]) =>
+        list
+          .filter((disk) => !needle || disk.name.toLowerCase().includes(needle))
+          .sort(compare[filesPage.sortMode] ?? compare["modified-desc"]!)
+          .map<FilesPageEntry>((disk) => ({
+            kind: "diskFile",
+            disk,
+            diskState: outputDirectory ? diskStateFor(disk.name) : undefined,
+            hasOriginal: outputDirectory
+              ? revertables.has(disk.name)
+              : undefined,
+          }))
+          .filter(
+            (entry) =>
+              diskStateFilter === "all" ||
+              entry.diskState === undefined ||
+              entry.diskState === diskStateFilter,
+          );
       return [
         ...visibleFolders.map<FilesPageEntry>((folder) => ({
           kind: "folder",
           folder,
           folderFileCount: 0,
         })),
-        ...diskEntries
-          .filter((disk) => !needle || disk.name.toLowerCase().includes(needle))
-          .sort(compare[filesPage.sortMode] ?? compare["modified-desc"]!)
-          .map<FilesPageEntry>((disk) => ({ kind: "diskFile", disk })),
+        ...toDiskEntries(diskEntries),
       ];
     }
     return [
@@ -612,14 +855,22 @@ export default function FileManagerView() {
             ? pathForFolderId(folder.parentFolderId) || undefined
             : undefined,
       })),
-      ...visibleFiles.map<FilesPageEntry>((file) => ({
-        kind: "file",
-        file,
-        parentPath:
-          inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
-            ? pathForFolderId(file.folderId ?? null) || undefined
-            : undefined,
-      })),
+      ...visibleFiles
+        .map<FilesPageEntry>((file) => ({
+          kind: "file",
+          file,
+          diskState: processingView ? diskStateFor(file.name) : undefined,
+          parentPath:
+            inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
+              ? pathForFolderId(file.folderId ?? null) || undefined
+              : undefined,
+        }))
+        .filter(
+          (entry) =>
+            diskStateFilter === "all" ||
+            entry.diskState === undefined ||
+            entry.diskState === diskStateFilter,
+        ),
     ];
   }, [
     visibleFolders,
@@ -629,6 +880,11 @@ export default function FileManagerView() {
     currentFolderId,
     currentLocalDirectory,
     diskEntries,
+    outputDirectory,
+    processingView,
+    diskStateFor,
+    revertables,
+    diskStateFilter,
     filesPage.sortMode,
     pathForFolderId,
   ]);
@@ -1425,6 +1681,282 @@ export default function FileManagerView() {
               selectedCount={selectedFiles.length}
               selectionOnly={mobileSelection}
             />
+            {currentFolder && !mobileSelection && (
+              <div className="files-page-folder-actions">
+                {!currentProcessing ? (
+                  <Tooltip
+                    label={t(
+                      "filesPage.processing.start",
+                      "Process files in this folder...",
+                    )}
+                    withinPortal
+                  >
+                    <ActionIcon
+                      size="sm"
+                      variant="secondary"
+                      onClick={() => setProcessingSetupFolder(currentFolder)}
+                      aria-label={t(
+                        "filesPage.processing.start",
+                        "Process files in this folder...",
+                      )}
+                    >
+                      <AutoModeIcon fontSize="small" />
+                    </ActionIcon>
+                  </Tooltip>
+                ) : (
+                  <>
+                    {currentProcessing.enabled ? (
+                      <>
+                        {folderKind(currentFolder) !== "virtual" &&
+                          stateCounts.failed > 0 && (
+                            <Tooltip
+                              label={t(
+                                "filesPage.processing.sweep",
+                                "Retry failed files",
+                              )}
+                              withinPortal
+                            >
+                              <ActionIcon
+                                size="sm"
+                                variant="secondary"
+                                onClick={() =>
+                                  runFolderAction(
+                                    processingApi.sweep,
+                                    "process folder now",
+                                  )
+                                }
+                                aria-label={t(
+                                  "filesPage.processing.sweep",
+                                  "Retry failed files",
+                                )}
+                              >
+                                <ReplayIcon fontSize="small" />
+                              </ActionIcon>
+                            </Tooltip>
+                          )}
+                        <Tooltip
+                          label={t(
+                            "filesPage.processing.stop",
+                            "Pause processing",
+                          )}
+                          withinPortal
+                        >
+                          <ActionIcon
+                            size="sm"
+                            variant="secondary"
+                            onClick={() =>
+                              runFolderAction(
+                                processingApi.disable,
+                                "pause processing folder",
+                              )
+                            }
+                            aria-label={t(
+                              "filesPage.processing.stop",
+                              "Pause processing",
+                            )}
+                          >
+                            <PauseIcon fontSize="small" />
+                          </ActionIcon>
+                        </Tooltip>
+                      </>
+                    ) : (
+                      <Tooltip
+                        label={t(
+                          "filesPage.processing.resume",
+                          "Resume processing",
+                        )}
+                        withinPortal
+                      >
+                        <ActionIcon
+                          size="sm"
+                          variant="secondary"
+                          onClick={() =>
+                            runFolderAction(
+                              processingApi.enable,
+                              "resume processing",
+                            )
+                          }
+                          aria-label={t(
+                            "filesPage.processing.resume",
+                            "Resume processing",
+                          )}
+                        >
+                          <PlayArrowIcon fontSize="small" />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                    <Tooltip
+                      label={t(
+                        "filesPage.processing.edit",
+                        "Edit processing...",
+                      )}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => setProcessingSetupFolder(currentFolder)}
+                        aria-label={t(
+                          "filesPage.processing.edit",
+                          "Edit processing...",
+                        )}
+                      >
+                        <TuneIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                    {folderKind(currentFolder) === "local" && (
+                      <Tooltip
+                        label={t(
+                          "filesPage.processing.restoreAll",
+                          "Restore all originals",
+                        )}
+                        withinPortal
+                      >
+                        <ActionIcon
+                          size="sm"
+                          variant="secondary"
+                          onClick={() => setRevertAllTarget(currentFolder)}
+                          aria-label={t(
+                            "filesPage.processing.restoreAll",
+                            "Restore all originals",
+                          )}
+                        >
+                          <HistoryIcon fontSize="small" />
+                        </ActionIcon>
+                      </Tooltip>
+                    )}
+                    <Tooltip
+                      label={t(
+                        "filesPage.processing.remove",
+                        "Remove processing",
+                      )}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() =>
+                          runFolderAction(
+                            processingApi.remove,
+                            "remove processing folder",
+                          )
+                        }
+                        aria-label={t(
+                          "filesPage.processing.remove",
+                          "Remove processing",
+                        )}
+                      >
+                        <AutoModeIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                  </>
+                )}
+                {folderKind(currentFolder) === "local" ? (
+                  currentFolder.parentFolderId === null && (
+                    <Tooltip
+                      label={t(
+                        "filesPage.removeLocalFolder",
+                        "Unmount from Stirling",
+                      )}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => promptDeleteFolder(currentFolder)}
+                        aria-label={t(
+                          "filesPage.removeLocalFolder",
+                          "Unmount from Stirling",
+                        )}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                  )
+                ) : (
+                  <>
+                    <Tooltip
+                      label={t("filesPage.rename", "Rename")}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => openRenameFolderDialog(currentFolder)}
+                        disabled={headerEditsDisabled}
+                        aria-label={t("filesPage.rename", "Rename")}
+                      >
+                        <DriveFileRenameOutlineIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                    <Menu shadow="md" position="bottom-start" withinPortal>
+                      <Menu.Target>
+                        <Tooltip
+                          label={t("filesPage.appearance.title", "Appearance")}
+                          withinPortal
+                        >
+                          <ActionIcon
+                            size="sm"
+                            variant="secondary"
+                            disabled={headerEditsDisabled}
+                            aria-label={t(
+                              "filesPage.appearance.title",
+                              "Appearance",
+                            )}
+                          >
+                            <PaletteIcon fontSize="small" />
+                          </ActionIcon>
+                        </Tooltip>
+                      </Menu.Target>
+                      <Menu.Dropdown>
+                        <FolderAppearancePicker
+                          folder={currentFolder}
+                          onChange={(appearance) => {
+                            setFolderAppearance(
+                              currentFolder.id,
+                              appearance,
+                            ).catch((err) =>
+                              folders.setError(
+                                err instanceof Error
+                                  ? t(
+                                      "filesPage.error.folderAppearanceFailedDetail",
+                                      {
+                                        message: err.message,
+                                        defaultValue: `Could not update folder appearance: ${err.message}`,
+                                      },
+                                    )
+                                  : t(
+                                      "filesPage.error.folderAppearanceFailed",
+                                      "Could not update folder appearance.",
+                                    ),
+                              ),
+                            );
+                          }}
+                          disabled={headerEditsDisabled}
+                        />
+                      </Menu.Dropdown>
+                    </Menu>
+                    <Tooltip
+                      label={t("filesPage.deleteFolder", "Delete folder")}
+                      withinPortal
+                    >
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        onClick={() => promptDeleteFolder(currentFolder)}
+                        disabled={headerEditsDisabled}
+                        aria-label={t(
+                          "filesPage.deleteFolder",
+                          "Delete folder",
+                        )}
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </ActionIcon>
+                    </Tooltip>
+                  </>
+                )}
+              </div>
+            )}
             {(() => {
               // Select all / Clear toggle over visible files.
               if (visibleFiles.length === 0) return null;
@@ -1847,6 +2379,31 @@ export default function FileManagerView() {
             className="files-page-content"
             onClick={handleContentBackgroundClick}
           >
+            {processingView && (
+              <div className="files-page-state-filters">
+                {(
+                  ["all", "done", "processing", "failed", "waiting"] as const
+                ).map((value) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={diskStateFilter === value ? "is-active" : ""}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setDiskStateFilter(value);
+                    }}
+                  >
+                    {t(`filesPage.diskState.${value}`, value)}
+                    {value !== "all" && stateCounts[value] > 0 && (
+                      <span className="files-page-state-count">
+                        {stateCounts[value]}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            )}
+            <FolderSweepWall policyId={processingRecordId} />
             <FileGrid
               entries={entries}
               loading={loading || diskLoading}
@@ -1862,7 +2419,11 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
+              onStartProcessing={setProcessingSetupFolder}
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
+              onRetryFile={retryDiskFile}
+              onRevertFile={setRevertConfirmName}
+              onRequestRevertAll={setRevertAllTarget}
               onOpenFile={handleOpenFile}
               onMoveFiles={moveFilesTo}
               onMoveFolder={moveFolderTo}
@@ -1954,6 +2515,23 @@ export default function FileManagerView() {
           />
         )}
       </div>
+
+      <RestoreOriginalsDialog
+        opened={revertConfirmName !== null || revertAllTarget !== null}
+        fileName={revertConfirmName ?? undefined}
+        onClose={() => {
+          setRevertConfirmName(null);
+          setRevertAllTarget(null);
+        }}
+        onConfirm={() => {
+          if (revertConfirmName) revertFolderFile(revertConfirmName);
+          if (revertAllTarget) revertAllInFolder(revertAllTarget);
+        }}
+      />
+      <FolderProcessingSetup
+        folder={processingSetupFolder}
+        onClose={() => setProcessingSetupFolder(null)}
+      />
 
       {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (
@@ -2107,6 +2685,18 @@ export default function FileManagerView() {
       />
     </div>
   );
+}
+
+/**
+ * A cheap identity for a directory listing, so a background re-read only re-renders the
+ * grid when something actually changed on disk.
+ */
+function listingSignature(
+  files: { path: string; sizeBytes: number; lastModified: number }[],
+): string {
+  return files
+    .map((file) => `${file.path}|${file.sizeBytes}|${file.lastModified}`)
+    .join("\n");
 }
 
 function Breadcrumbs() {

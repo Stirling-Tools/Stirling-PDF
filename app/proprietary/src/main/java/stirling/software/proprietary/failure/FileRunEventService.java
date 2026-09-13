@@ -118,12 +118,13 @@ public class FileRunEventService {
      * The events the caller may read, newest first: the team's for a leader, their own for everyone
      * else. Empty when their team cannot be resolved.
      */
-    public List<FileRunEvent> list(FileRunEventStatus status, String kindId, int limit) {
+    public List<FileRunEvent> list(
+            FileRunEventStatus status, boolean closed, String kindId, int limit) {
         ReadScope scope = readScope();
         if (!scope.permitted()) {
             return List.of();
         }
-        return store.list(scope.teamId(), status, kindId, scope.actor(), limit);
+        return store.list(scope.teamId(), status, closed, kindId, scope.actor(), limit);
     }
 
     /**

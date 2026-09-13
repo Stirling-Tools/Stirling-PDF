@@ -1,0 +1,2 @@
+requests>=2.32,<3
+pypdf>=6,<7
