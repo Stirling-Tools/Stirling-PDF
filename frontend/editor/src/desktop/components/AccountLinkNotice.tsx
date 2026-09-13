@@ -13,6 +13,7 @@ import { useAuth } from "@app/auth";
 import apiClient from "@app/services/apiClient";
 import { openExternal } from "@app/platform/openExternal";
 import { alert } from "@app/components/toast";
+import type { FreeTierBalance } from "@app/components/account-link/FreeTierBalanceSummary";
 
 function billingUrl(config: ConnectionConfig): string | null {
   if (config.mode !== "selfhosted" || !config.server_config?.url) return null;
@@ -36,6 +37,7 @@ export function AccountLinkNotice() {
   const { isAdmin, loading } = useAuth();
   const { exhausted } = useAccountLinkBlock();
   const [target, setTarget] = useState<string | null>(null);
+  const [balance, setBalance] = useState<FreeTierBalance>();
 
   useEffect(() => {
     let active = true;
@@ -46,6 +48,7 @@ export function AccountLinkNotice() {
       const next = billingUrl(config);
       if (previous !== undefined && previous !== next) clearAccountLinkBlock();
       previous = next;
+      setBalance(undefined);
       setTarget(next);
     };
     const unsubscribe = connectionModeService.subscribeToModeChanges(
@@ -81,12 +84,16 @@ export function AccountLinkNotice() {
           clearAccountLinkBlock();
           return;
         }
-        const balance = await apiClient.get<{ remainingUnits: number }>(
+        const balance = await apiClient.get<FreeTierBalance>(
           new URL("../api/v1/account-link/free-tier", target).href,
           options,
         );
-        if (active && balance.data.remainingUnits > 0) clearAccountLinkBlock();
+        if (active) {
+          setBalance(balance.data);
+          if (balance.data.remainingUnits > 0) clearAccountLinkBlock();
+        }
       } catch {
+        if (active) setBalance(undefined);
         // An unavailable balance is not evidence that the server's allowance recovered.
       } finally {
         refreshing = false;
@@ -116,6 +123,10 @@ export function AccountLinkNotice() {
   }, [target, t]);
 
   return target ? (
-    <SelfHostedAccountLinkNotice key={target} onShowOptions={showOptions} />
+    <SelfHostedAccountLinkNotice
+      key={target}
+      onShowOptions={showOptions}
+      balance={balance}
+    />
   ) : null;
 }

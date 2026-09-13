@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import { AccountLinkNotice } from "@app/components/AccountLinkNotice";
 import {
@@ -8,15 +9,21 @@ import {
   reportFreeTierExhausted,
 } from "@app/services/accountLinkBlock";
 
-const { alert, dismissToast } = vi.hoisted(() => ({
+const { alert, begin, auth, get } = vi.hoisted(() => ({
   alert: vi.fn(),
-  dismissToast: vi.fn(),
+  begin: vi.fn(),
+  get: vi.fn(),
+  auth: { isAdmin: true, loading: false },
 }));
-
-vi.mock("@app/auth", () => ({
-  useAuth: () => ({ isAdmin: true, loading: false }),
+vi.mock("@app/auth", () => ({ useAuth: () => auth }));
+vi.mock("@app/components/toast", () => ({ alert }));
+vi.mock("@app/services/apiClient", () => ({ default: { get } }));
+vi.mock("@portal/hooks/useConnectHandoff", () => ({
+  useConnectHandoff: () => ({ begin, busy: false, error: null }),
 }));
-vi.mock("@app/components/toast", () => ({ alert, dismissToast }));
+vi.mock("@portal/auth/saasSupabase", () => ({
+  isSaasSupabaseConfigured: true,
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
     t: (key: string, fallback?: string) => fallback ?? key,
@@ -25,30 +32,42 @@ vi.mock("react-i18next", () => ({
 vi.mock("@app/ui", async () => ({
   ...(await import("@app/ui/Button")),
   ...(await import("@app/ui/Modal")),
+  ...(await import("@app/ui/Banner")),
 }));
 
 function LocationProbe() {
-  const location = useLocation();
-  return <output>{JSON.stringify(location)}</output>;
+  return <output>{useLocation().pathname}</output>;
 }
-
 function mount(path: string) {
   return render(
-    <MantineProvider>
-      <MemoryRouter initialEntries={[path]}>
-        <AccountLinkNotice />
-        <LocationProbe />
-      </MemoryRouter>
-    </MantineProvider>,
+    <QueryClientProvider
+      client={
+        new QueryClient({ defaultOptions: { queries: { retry: false } } })
+      }
+    >
+      <MantineProvider>
+        <MemoryRouter initialEntries={[path]}>
+          <AccountLinkNotice />
+          <LocationProbe />
+        </MemoryRouter>
+      </MantineProvider>
+    </QueryClientProvider>,
   );
 }
 
-describe("editor account-link notice routing", () => {
+describe("editor shared account-link modal", () => {
   beforeEach(() => {
     clearAccountLinkBlock();
     vi.clearAllMocks();
+    auth.isAdmin = true;
+    get.mockResolvedValue({
+      data: {
+        grantUnits: 500,
+        remainingUnits: 0,
+        periodEnd: "2026-10-01T00:00:00",
+      },
+    });
   });
-
   it.each(["/processor", "/settings/billing", "/settings/account-link"])(
     "leaves %s to its existing link dialog",
     (path) => {
@@ -58,28 +77,56 @@ describe("editor account-link notice routing", () => {
       expect(alert).not.toHaveBeenCalled();
     },
   );
-
-  it("carries an explicit prompt request to the Processor destination", () => {
+  it("opens the administrator modal in the editor and invokes the existing handoff", async () => {
     mount("/editor");
-    act(() => reportFreeTierExhausted());
+    await act(async () => reportFreeTierExhausted());
+    expect(
+      screen.getByRole("dialog", { name: "Keep your workflows running" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByText("Add more users with a paid Team plan"),
+    ).toBeTruthy();
     fireEvent.click(
-      screen.getByRole("button", { name: "View linking options" }),
+      screen.getByRole("button", { name: "Link account for more credits" }),
     );
-    const location = JSON.parse(screen.getByRole("status").textContent ?? "{}");
-    expect(location.pathname).toBe("/processor");
-    expect(location.state).toEqual({ accountLinkPrompt: "exhausted" });
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(begin).toHaveBeenCalledOnce();
+    expect(screen.getByRole("status").textContent).toBe("/editor");
   });
-
-  it("keeps background failures in a persistent actionable notice", () => {
+  it("keeps repeated automatic policy failures silent", async () => {
     mount("/editor");
-    act(() => reportFreeTierExhausted("background"));
+    await act(async () => {
+      reportFreeTierExhausted("background");
+      reportFreeTierExhausted("background");
+    });
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(alert).toHaveBeenCalledWith(
-      expect.objectContaining({
-        isPersistentPopup: true,
-        buttonText: "View linking options",
-      }),
-    );
+    expect(alert).not.toHaveBeenCalled();
+  });
+  it("does not replace a dismissed modal with a toast or reopen it on subsequent failures", async () => {
+    const view = mount("/editor");
+    await act(async () => reportFreeTierExhausted());
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
+    await act(async () => {
+      reportFreeTierExhausted();
+      reportFreeTierExhausted("background");
+    });
+    view.unmount();
+    mount("/editor");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(alert).not.toHaveBeenCalled();
+  });
+  it("uses the same member modal and never reads the administrator balance", async () => {
+    auth.isAdmin = false;
+    mount("/editor");
+    await act(async () => reportFreeTierExhausted());
+    expect(
+      screen.getByRole("dialog", { name: "Ask your server administrator" }),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Copy message for administrator" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Link account for more credits" }),
+    ).toBeNull();
+    expect(get).not.toHaveBeenCalled();
   });
 });

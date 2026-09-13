@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter, useLocation } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { MantineProvider } from "@mantine/core";
 import { AccountLinkNotice } from "@app/components/AccountLinkNotice";
 import { handleHttpError } from "@app/services/httpErrorHandler";
@@ -49,6 +50,7 @@ vi.mock("react-i18next", () => ({
 vi.mock("@app/ui", async () => ({
   ...(await import("@app/ui/Button")),
   ...(await import("@app/ui/Modal")),
+  ...(await import("@app/ui/Banner")),
 }));
 
 function config(
@@ -65,10 +67,12 @@ function LocationProbe() {
 async function mount(path = "/editor") {
   const view = render(
     <MantineProvider>
-      <MemoryRouter initialEntries={[path]}>
-        <AccountLinkNotice />
-        <LocationProbe />
-      </MemoryRouter>
+      <QueryClientProvider client={new QueryClient()}>
+        <MemoryRouter initialEntries={[path]}>
+          <AccountLinkNotice />
+          <LocationProbe />
+        </MemoryRouter>
+      </QueryClientProvider>
     </MantineProvider>,
   );
   await act(async () => {});
@@ -101,7 +105,14 @@ describe("desktop self-hosted account-link triggers", () => {
     auth.isAdmin = true;
     getCurrentConfig.mockResolvedValue(config());
     openExternal.mockResolvedValue(undefined);
-    get.mockResolvedValue({ data: { linked: false, remainingUnits: 0 } });
+    get.mockResolvedValue({
+      data: {
+        linked: false,
+        remainingUnits: 0,
+        grantUnits: 500,
+        periodEnd: "2026-10-01T00:00:00",
+      },
+    });
   });
 
   it.each(["/editor", "/settings/billing", "/settings/account-link"])(
@@ -111,7 +122,7 @@ describe("desktop self-hosted account-link triggers", () => {
       await exhaust();
       expect(screen.getByRole("dialog")).toBeTruthy();
       fireEvent.click(
-        screen.getByRole("button", { name: "View linking options" }),
+        screen.getByRole("button", { name: "Link account for more credits" }),
       );
       expect(openExternal).toHaveBeenCalledWith(
         "https://server.example/stirling/settings/billing",
@@ -120,19 +131,12 @@ describe("desktop self-hosted account-link triggers", () => {
     },
   );
 
-  it("keeps background exhaustion actionable without interrupting work", async () => {
+  it("keeps background exhaustion silent", async () => {
     await mount();
     await exhaust("background");
     expect(screen.queryByRole("dialog")).toBeNull();
-    const notice = alert.mock.calls.at(-1)?.[0];
-    expect(notice).toMatchObject({
-      isPersistentPopup: true,
-      buttonText: "View linking options",
-    });
-    act(() => notice.buttonCallback());
-    expect(openExternal).toHaveBeenCalledWith(
-      "https://server.example/stirling/settings/billing",
-    );
+    expect(alert).not.toHaveBeenCalled();
+    expect(openExternal).not.toHaveBeenCalled();
   });
 
   it("does not reopen a dismissed modal for repeated exhaustion", async () => {
@@ -141,18 +145,18 @@ describe("desktop self-hosted account-link triggers", () => {
     fireEvent.click(screen.getByRole("button", { name: "Not now" }));
     await exhaust();
     expect(screen.queryByRole("dialog")).toBeNull();
-    expect(alert).toHaveBeenCalledWith(
-      expect.objectContaining({ isPersistentPopup: true }),
-    );
+    expect(alert).not.toHaveBeenCalled();
   });
 
   it("tells members to contact their server administrator", async () => {
     auth.isAdmin = false;
     await mount();
     await exhaust();
-    expect(screen.getByText(/Ask your server administrator/)).toBeTruthy();
     expect(
-      screen.queryByRole("button", { name: "View linking options" }),
+      screen.getByRole("dialog", { name: "Ask your server administrator" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Link account for more credits" }),
     ).toBeNull();
     expect(openExternal).not.toHaveBeenCalled();
     expect(get).not.toHaveBeenCalled();
@@ -178,11 +182,11 @@ describe("desktop self-hosted account-link triggers", () => {
         listener(config("selfhosted", "https://other.example")),
       ),
     );
-    expect(dismissToast).toHaveBeenCalled();
+    expect(alert).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
     await exhaust();
     fireEvent.click(
-      screen.getByRole("button", { name: "View linking options" }),
+      screen.getByRole("button", { name: "Link account for more credits" }),
     );
     expect(openExternal).toHaveBeenLastCalledWith(
       "https://other.example/settings/billing",
@@ -221,7 +225,7 @@ describe("desktop self-hosted account-link triggers", () => {
     await exhaust();
     await act(async () =>
       fireEvent.click(
-        screen.getByRole("button", { name: "View linking options" }),
+        screen.getByRole("button", { name: "Link account for more credits" }),
       ),
     );
     expect(alert).toHaveBeenCalledWith(

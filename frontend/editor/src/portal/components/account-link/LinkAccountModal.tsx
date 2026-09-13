@@ -1,10 +1,11 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth";
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@app/ui";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+import { ExhaustedAccountLinkModal } from "@app/components/account-link/ExhaustedAccountLinkModal";
 import { ConnectAskStep } from "@portal/components/account-link/connect/ConnectAskStep";
 import { ConnectHandoffGhost } from "@portal/components/account-link/connect/ConnectHandoffGhost";
 import {
@@ -31,6 +32,8 @@ interface Props {
   mode?: LinkModalMode;
   /** Published by the callback route; present means the admin is returning from Stirling. */
   outcome?: ConnectOutcome | null;
+  /** Editor hosts supply their own balance without mounting the Processor providers. */
+  summary?: ReactNode;
 }
 
 /**
@@ -42,6 +45,7 @@ export function LinkAccountModal({
   onClose,
   mode = "link",
   outcome = null,
+  summary,
 }: Props) {
   // This dialog unmounts on close, so retain its trigger before FocusTrap moves focus.
   const trigger = useRef(document.activeElement);
@@ -91,6 +95,23 @@ export function LinkAccountModal({
             },
           ),
         };
+
+  if (exhausted && step === "ask") {
+    return (
+      <ExhaustedAccountLinkModal
+        open={open}
+        onClose={onClose}
+        onStart={handoff.begin}
+      >
+        <ConnectAskStep
+          reauth={false}
+          exhausted
+          error={handoff.error}
+          summary={summary}
+        />
+      </ExhaustedAccountLinkModal>
+    );
+  }
 
   return (
     <FlowModal
@@ -150,6 +171,7 @@ export function LinkAccountModal({
             reauth={reauth}
             exhausted={exhausted}
             error={handoff.error}
+            summary={summary}
           />
         );
       case "handoff":

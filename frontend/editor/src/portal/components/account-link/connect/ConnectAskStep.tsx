@@ -1,9 +1,11 @@
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
 import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
 import { ConnectBenefitsSlide } from "@portal/components/account-link/connect/ConnectBenefitsSlide";
 import { FreeTierExhaustedSummary } from "@portal/components/account-link/connect/FreeTierExhaustedSummary";
-import "@portal/components/account-link/connect/connect.css";
+import { ExhaustedAccountLinkContent } from "@app/components/account-link/ExhaustedAccountLinkModal";
+import "@app/components/account-link/connect.css";
 
 interface Props {
   /** Re-auth says why it is being asked; a first link is pitched instead. */
@@ -15,9 +17,16 @@ interface Props {
   exhausted?: boolean;
   /** A hand-off that failed to start drops back here, so this is where its reason belongs. */
   error?: string | null;
+  /** Undefined uses the Processor ledger; null deliberately omits unavailable figures. */
+  summary?: ReactNode;
 }
 
-export function ConnectAskStep({ reauth, exhausted = false, error }: Props) {
+export function ConnectAskStep({
+  reauth,
+  exhausted = false,
+  error,
+  summary,
+}: Props) {
   const { t } = useTranslation();
 
   return (
@@ -31,16 +40,15 @@ export function ConnectAskStep({ reauth, exhausted = false, error }: Props) {
         </p>
       ) : (
         <>
-          {exhausted && (
-            <p className="portal-connect__lede">
-              {t(
-                "portal.accountLink.connect.exhaustedLede",
-                "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance.",
-              )}
-            </p>
+          {exhausted ? (
+            <ExhaustedAccountLinkContent
+              summary={
+                summary === undefined ? <FreeTierExhaustedSummary /> : summary
+              }
+            />
+          ) : (
+            <ConnectBenefitsSlide />
           )}
-          {exhausted && <FreeTierExhaustedSummary />}
-          <ConnectBenefitsSlide />
         </>
       )}
 

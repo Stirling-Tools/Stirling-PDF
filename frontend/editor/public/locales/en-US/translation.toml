@@ -7164,7 +7164,6 @@ close = "Close"
 copied = "Copied"
 copyAdminMessage = "Copy message for administrator"
 exhaustedLede = "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance."
-manualTools = "Manual PDF tools are still available. Your local allowance renews automatically."
 notNow = "Not now"
 start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
@@ -7262,7 +7261,6 @@ title = "Stirling connection not configured"
 
 [portal.accountLink.notice]
 openFailed = "Could not open your browser. Open Usage & billing on your connected server to link an account."
-options = "View linking options"
 
 [portal.accountLink.panel]
 instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."

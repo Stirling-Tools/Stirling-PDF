@@ -93,7 +93,12 @@ async function runToCompletion(
   file: File,
 ): Promise<PolicyRunResult> {
   const target = resolvePolicyRunTarget();
-  const runId = await runStoredPolicy(backendId, [file]);
+  const runId = await runStoredPolicy(
+    backendId,
+    [file],
+    undefined,
+    "background",
+  );
   for (let i = 0; i < MAX_POLLS; i++) {
     await delay(POLL_MS);
     let view;

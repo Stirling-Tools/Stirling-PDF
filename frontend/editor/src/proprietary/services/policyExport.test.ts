@@ -8,9 +8,13 @@ vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => loadPolicies(),
 }));
 
-const runStoredPolicy = vi.fn(async (_id: string) => "run-1");
+const runStoredPolicy = vi.fn(
+  async (_id: string, _files: File[], _fileId?: string, _source?: string) =>
+    "run-1",
+);
 vi.mock("@app/services/policyApi", () => ({
-  runStoredPolicy: (id: string) => runStoredPolicy(id),
+  runStoredPolicy: (...args: Parameters<typeof runStoredPolicy>) =>
+    runStoredPolicy(...args),
   // One output, so a run completes rather than throwing "produced no output" - which would abort
   // the per-file policy loop after the first policy and hide the order under test.
   getPolicyRun: async () => ({
@@ -29,9 +33,10 @@ vi.mock("@app/components/policies/policyRunStore", () => ({
 vi.mock("@app/components/policies/enforcementQueue", () => ({
   runQueued: <T>(_meta: unknown, task: () => Promise<T>) => task(),
 }));
+const { updateToast } = vi.hoisted(() => ({ updateToast: vi.fn() }));
 vi.mock("@app/components/toast", () => ({
   alert: () => "toast-1",
-  updateToast: vi.fn(),
+  updateToast,
   dismissToast: vi.fn(),
 }));
 vi.mock("@app/i18n", () => ({ default: { t: (key: string) => key } }));
@@ -60,7 +65,36 @@ const pdf = () =>
   new File(["%PDF-1.4"], "doc.pdf", { type: "application/pdf" });
 
 describe("export-time policy selection", () => {
-  beforeEach(() => runStoredPolicy.mockClear());
+  beforeEach(() => {
+    runStoredPolicy.mockClear();
+    updateToast.mockClear();
+  });
+
+  it("retains the policy failure warning when an automatic export run has insufficient credits", async () => {
+    loadPolicies.mockReturnValue({
+      security: exportPolicy({ runsOnEditor: true }),
+    } as unknown as PoliciesByKey);
+    runStoredPolicy.mockRejectedValueOnce({
+      response: {
+        status: 402,
+        data: { error: "ACCOUNT_LINK_REQUIRED", reason: "FREE_TIER_EXHAUSTED" },
+      },
+    });
+    await enforceExportPolicies([pdf()], ["file-1"]);
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-1",
+      expect.any(Array),
+      undefined,
+      "background",
+    );
+    expect(updateToast).toHaveBeenCalledWith(
+      "toast-1",
+      expect.objectContaining({
+        alertType: "warning",
+        title: "policies.enforcement.failureTitle",
+      }),
+    );
+  });
 
   it("enforces an editor pipeline set to run on export", async () => {
     loadPolicies.mockReturnValue({
@@ -73,7 +107,12 @@ describe("export-time policy selection", () => {
 
     await enforceExportPolicies([pdf()], ["file-1"]);
 
-    expect(runStoredPolicy).toHaveBeenCalledWith("backend-editor");
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-editor",
+      expect.any(Array),
+      undefined,
+      "background",
+    );
   });
 
   it("leaves a swept pipeline alone, even though its source list is blank", async () => {
@@ -102,7 +141,12 @@ describe("export-time policy selection", () => {
 
     await enforceExportPolicies([pdf()], ["file-1"]);
 
-    expect(runStoredPolicy).toHaveBeenCalledWith("backend-security");
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-security",
+      expect.any(Array),
+      undefined,
+      "background",
+    );
   });
 
   it("enforces in the team's run order, not object order", async () => {

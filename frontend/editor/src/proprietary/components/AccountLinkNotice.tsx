@@ -1,28 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@app/auth";
-import { Modal, Button } from "@app/ui";
-import { alert, dismissToast } from "@app/components/toast";
+import apiClient from "@app/services/apiClient";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { EditorLinkModal } from "@app/components/account-link/EditorLinkModal";
+import { FreeTierBalanceSummary } from "@app/components/account-link/FreeTierBalanceSummary";
+import type { FreeTierBalance } from "@app/components/account-link/FreeTierBalanceSummary";
+
 import {
   acknowledgeAccountLinkPrompt,
+  clearAccountLinkBlock,
   useAccountLinkBlock,
 } from "@app/services/accountLinkBlock";
-
-const NOTICE_ID = "server-free-credits-exhausted";
 
 interface Props {
   /** Hosts without a Processor route open the connected server's billing page externally. */
   onShowOptions?: () => void;
+  /** Native hosts fetch the connected server's ledger through their own HTTP client. */
+  balance?: FreeTierBalance;
 }
 
-/** Editor failures retain an actionable notice; the Processor owns the account-link handshake. */
-export function AccountLinkNotice({ onShowOptions }: Props = {}) {
-  const { t } = useTranslation();
+/** Only explicit foreground failures open the shared linking modal; automatic policies retain their own failure feedback. */
+export function AccountLinkNotice({ onShowOptions, balance }: Props = {}) {
   const { isAdmin, loading } = useAuth();
   const { pathname } = useLocation();
-  const navigate = useNavigate();
   const { exhausted, promptPending } = useAccountLinkBlock();
   const [open, setOpen] = useState(false);
   const hasLinkDialog =
@@ -31,31 +33,32 @@ export function AccountLinkNotice({ onShowOptions }: Props = {}) {
       pathname.startsWith(`${PORTAL_BASENAME}/`) ||
       pathname === "/settings/billing" ||
       pathname === "/settings/account-link");
-  const title = t(
-    "portal.accountLink.rail.exhaustedTitle",
-    "This server’s free credits are used up",
-  );
-  const body = isAdmin
-    ? t(
-        "portal.accountLink.rail.exhaustedSub",
-        "Link for monthly credits, shared billing and the option to grow with a Team plan.",
-      )
-    : t(
-        "portal.accountLink.connect.adminRequired",
-        "Ask your server administrator to open Usage & billing and link a Stirling account for more monthly credits. Manual PDF tools are still available.",
-      );
-  const cta = t("portal.accountLink.notice.options", "View linking options");
+  const readsBalance =
+    !onShowOptions && !hasLinkDialog && isAdmin && !loading && exhausted;
+  const ledger = useQuery({
+    queryKey: ["accountLink", "editorFreeTier"],
+    queryFn: async () =>
+      (
+        await apiClient.get<FreeTierBalance>("/api/v1/account-link/free-tier", {
+          suppressErrorToast: true,
+          skipAuthRedirect: true,
+        })
+      ).data,
+    enabled: readsBalance,
+    retry: false,
+    refetchInterval: 60_000,
+  });
 
-  const showOptions = useCallback(() => {
-    setOpen(false);
-    if (onShowOptions) {
-      onShowOptions();
-    } else {
-      navigate(PORTAL_BASENAME, {
-        state: { accountLinkPrompt: "exhausted" },
-      });
+  useEffect(() => {
+    if (
+      readsBalance &&
+      ledger.isSuccess &&
+      !ledger.isFetching &&
+      ledger.data.remainingUnits > 0
+    ) {
+      clearAccountLinkBlock();
     }
-  }, [navigate, onShowOptions]);
+  }, [readsBalance, ledger.isSuccess, ledger.isFetching, ledger.data]);
 
   useEffect(() => {
     if (!exhausted || hasLinkDialog) setOpen(false);
@@ -67,66 +70,20 @@ export function AccountLinkNotice({ onShowOptions }: Props = {}) {
     setOpen(true);
   }, [hasLinkDialog, loading, promptPending]);
 
-  useEffect(() => {
-    if (hasLinkDialog || loading || !exhausted || open || promptPending) return;
-    alert({
-      id: NOTICE_ID,
-      alertType: "neutral",
-      title,
-      body,
-      isPersistentPopup: true,
-      ...(isAdmin
-        ? {
-            buttonText: cta,
-            buttonCallback: showOptions,
-          }
-        : {}),
-    });
-    return () => dismissToast(NOTICE_ID);
-  }, [
-    hasLinkDialog,
-    loading,
-    exhausted,
-    open,
-    promptPending,
-    isAdmin,
-    title,
-    body,
-    cta,
-    showOptions,
-  ]);
-
+  if (!open || !exhausted || hasLinkDialog) return null;
   return (
-    <Modal
-      open={open && exhausted && !hasLinkDialog}
+    <EditorLinkModal
+      open
+
       onClose={() => setOpen(false)}
-      title={title}
-      footer={
-        <>
-          <Button
-            variant="quiet"
-            accent="neutral"
-            onClick={() => setOpen(false)}
-          >
-            {t("portal.accountLink.connect.notNow", "Not now")}
-          </Button>
-          {isAdmin && (
-            <Button variant="primary" onClick={showOptions}>
-              {cta}
-            </Button>
-          )}
-        </>
+      onStart={onShowOptions}
+      summary={
+        <FreeTierBalanceSummary
+          balance={
+            onShowOptions ? balance : ledger.isSuccess ? ledger.data : undefined
+          }
+        />
       }
-    >
-      <p>{body}</p>
-      {isAdmin && (
-        <p>
-          {t(
-            "portal.accountLink.connect.manualTools",
-            "Manual PDF tools are still available. Your local allowance renews automatically.",
-          )}
-        </p>
-      )}
-    </Modal>
+    />
   );
 }
