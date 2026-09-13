@@ -81,6 +81,8 @@ public final class SaasSchemaOwnership {
             Set.of(
                     "account_link_connect_state",
                     "account_link_device_credential",
+                    "account_link_free_tier_period",
+                    "account_link_free_tier_usage",
                     "account_link_metered_signature",
                     "account_link_sync_state",
                     "account_link_usage_counter",

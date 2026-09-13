@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { EndpointReferenceSection } from "@portal/components/docs/EndpointReferenceSection";
-import "@portal/views/DeveloperDocs.css";
+import "@core/components/docs/DeveloperDocs.css";
 
 const meta: Meta<typeof EndpointReferenceSection> = {
   title: "Portal/DeveloperDocs/EndpointReferenceSection",

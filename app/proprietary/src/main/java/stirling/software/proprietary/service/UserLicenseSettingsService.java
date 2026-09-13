@@ -12,12 +12,15 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.accountlink.EntitlementCache;
+import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -42,7 +45,14 @@ import stirling.software.proprietary.security.service.UserService;
 @RequiredArgsConstructor
 public class UserLicenseSettingsService {
 
-    private static final int DEFAULT_USER_LIMIT = 5;
+    /**
+     * Users an installation gets before it has to buy capacity. The one free-allowance number in
+     * Java: the saas seat reader floors on it, and {@code
+     * pricing_policy.server_free_user_allowance} is seeded to match so the two editions quote the
+     * same figure.
+     */
+    public static final int DEFAULT_USER_LIMIT = 5;
+
     private static final String SIGNATURE_SEPARATOR = ":";
     private static final String DEFAULT_INTEGRITY_SECRET = "stirling-pdf-user-license-guard";
 
@@ -50,6 +60,9 @@ public class UserLicenseSettingsService {
     private final UserService userService;
     private final ApplicationProperties applicationProperties;
     private final ObjectProvider<LicenseKeyChecker> licenseKeyChecker;
+
+    /** Absent unless this instance is linked to SaaS (account-link disabled by default). */
+    private final ObjectProvider<EntitlementCache> entitlementCache;
 
     /**
      * Gets the current user license settings, creating them if they don't exist.
@@ -296,12 +309,14 @@ public class UserLicenseSettingsService {
      *
      * <ul>
      *   <li>Grandfathered limit = max(5, existing user count at V1→V2 migration)
-     *   <li>No license: Uses grandfathered limit only
+     *   <li>No license, not linked: Uses grandfathered limit only
+     *   <li>No license, linked: max(grandfathered limit, the linked team's allowance)
      *   <li>SERVER license (maxUsers=0): Unlimited users (Integer.MAX_VALUE)
      *   <li>ENTERPRISE license (maxUsers>0): License seats only (NO grandfathering added)
      * </ul>
      *
-     * <p>IMPORTANT: Paid licenses REPLACE the limit, they don't add to grandfathering.
+     * <p>IMPORTANT: Paid licenses REPLACE the limit, they don't add to grandfathering. A linked
+     * team's allowance does not: linking is monotonic, so it can only raise the ceiling.
      *
      * @return Maximum number of users allowed (Integer.MAX_VALUE for unlimited)
      */
@@ -316,8 +331,24 @@ public class UserLicenseSettingsService {
             grandfatheredLimit = DEFAULT_USER_LIMIT;
         }
 
-        // No license: use grandfathered limit
+        // A valid licence answers first. Team is moving to being sold on SaaS with no licence at
+        // all, so in the end state only Enterprise holds one, and Enterprise should outrank SaaS:
+        // it is contracted and has to keep working offline. Until then a legacy licence keeps
+        // whatever it granted, and a customer worse off under it can simply remove it.
         if (!hasPaidLicense()) {
+            Integer fromSaas = linkedTeamAllowance();
+            if (fromSaas != null) {
+                // Floored at the grandfathered limit, so linking can only raise the ceiling.
+                // Otherwise a solo cloud account, whose team the instance binds to before any
+                // invitation is accepted, hands back its own seat count and refuses every user.
+                int allowed = Math.max(grandfatheredLimit, fromSaas);
+                log.debug(
+                        "No licence; linked team allowance {} against grandfathered {}: {} users",
+                        fromSaas,
+                        grandfatheredLimit,
+                        allowed);
+                return allowed;
+            }
             log.debug("No license: using grandfathered limit of {}", grandfatheredLimit);
             return grandfatheredLimit;
         }
@@ -336,6 +367,25 @@ public class UserLicenseSettingsService {
                 licenseMaxUsers,
                 grandfatheredLimit);
         return licenseMaxUsers;
+    }
+
+    /**
+     * Users this instance's linked team is entitled to, or null when SaaS is not the authority
+     * here.
+     *
+     * <p>Only consulted when no licence is installed. Null covers three indistinguishable cases
+     * that all fall through to the grandfathered limit: the instance is not linked, SaaS has never
+     * answered, or it answered with no user limit — which is also what an older SaaS sends.
+     *
+     * <p>When SaaS is merely unreachable, {@link EntitlementCache} keeps serving the freshest
+     * snapshot it has, so a linked instance holds its last known allowance rather than losing it.
+     */
+    private Integer linkedTeamAllowance() {
+        EntitlementCache cache = entitlementCache.getIfAvailable();
+        if (cache == null) {
+            return null;
+        }
+        return cache.current().map(InstanceEntitlement::licensedUsers).orElse(null);
     }
 
     /**
@@ -410,6 +460,21 @@ public class UserLicenseSettingsService {
                 "User {} NOT eligible for SAML2: no ENTERPRISE license and not grandfathered",
                 username);
         return false;
+    }
+
+    /**
+     * Serialises user admission against the licensed limit.
+     *
+     * <p>Takes a write lock on the licence row, held until the caller's transaction commits. The
+     * count in {@link #wouldExceedLimit(int)} is only meaningful while nobody else can insert a
+     * user, so a caller must take this lock first and perform its insert in the same transaction.
+     * Declared {@code MANDATORY} because joining the caller's transaction is the whole point: in a
+     * transaction of its own the lock would be released immediately and admission would silently go
+     * back to being racy.
+     */
+    @Transactional(propagation = Propagation.MANDATORY)
+    public void lockForUserAdmission() {
+        settingsRepository.lockSettings();
     }
 
     /**

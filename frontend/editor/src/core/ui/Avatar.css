@@ -60,6 +60,12 @@
   display: block;
 }
 
+/* Ground for a picture, which brings its own. Opaque uploads cover it entirely;
+   a logo with an alpha channel gets the app surface rather than a tone. */
+.sui-avatar--image {
+  background: var(--c-surface);
+}
+
 .sui-avatar--blue {
   background: var(--grad-blue-btn);
 }
