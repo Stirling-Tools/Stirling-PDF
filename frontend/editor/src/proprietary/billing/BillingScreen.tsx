@@ -430,21 +430,6 @@ export function BillingScreen({
                           }
                         />
                       )}
-                      {wallet.sizeMultiplierPdfsThisPeriod > 0 && (
-                        <KvRow
-                          label={t(
-                            "portal.billing.cycle.largeFiles",
-                            "Large files",
-                          )}
-                          value={t(
-                            "portal.billing.cycle.largeFilesValue",
-                            "{{pdfs}} PDFs past the size threshold",
-                            {
-                              pdfs: wallet.sizeMultiplierPdfsThisPeriod.toLocaleString(),
-                            },
-                          )}
-                        />
-                      )}
                     </section>
 
                     {paymentSection && (
