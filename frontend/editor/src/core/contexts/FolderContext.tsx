@@ -323,7 +323,10 @@ export function FolderProvider({ children }: FolderProviderProps) {
     };
   }, []);
 
+  const serverSnapshotVersion = useRef(0);
+
   const refresh = useCallback(async () => {
+    const versionAtStart = serverSnapshotVersion.current;
     setLoading(true);
     try {
       // Three systems of record behind one list; kind says which rules a row follows.
@@ -333,7 +336,15 @@ export function FolderProvider({ children }: FolderProviderProps) {
         localFolderStorage.getAllFolders(),
       ]);
       if (!mountedRef.current) return;
-      setFolders([...server, ...virtual, ...local]);
+      setFolders((current) =>
+        serverSnapshotVersion.current === versionAtStart
+          ? [...server, ...virtual, ...local]
+          : [
+              ...current.filter((folder) => folderKind(folder) === "server"),
+              ...virtual,
+              ...local,
+            ],
+      );
     } catch (err) {
       console.error("[FolderContext] cache read failed", err);
       if (mountedRef.current) {
@@ -404,6 +415,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         console.warn("[FolderContext] cache replace failed", cacheErr);
       }
       if (mountedRef.current) {
+        serverSnapshotVersion.current += 1;
         // Server-wins is for server rows: the other kinds have no server copy.
         setFolders((prev) => [
           ...remote,

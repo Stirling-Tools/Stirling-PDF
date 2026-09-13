@@ -531,10 +531,7 @@ function TreeNodeRow({
                 }
               >
                 {kind === "local"
-                  ? t(
-                      "filesPage.removeLocalFolder",
-                      "Remove (files stay on disk)",
-                    )
+                  ? t("filesPage.removeLocalFolder", "Unmount from Stirling")
                   : t("filesPage.treeMenu.delete", "Delete folder")}
               </Menu.Item>
             )}

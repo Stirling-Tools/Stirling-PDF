@@ -396,7 +396,11 @@ export interface ConvertToPdfRequest {
   /**
    * Option to determine how the image will fit onto the page
    */
-  fitOption?: "fillPage" | "fitDocumentToImage" | "maintainAspectRatio";
+  fitOption?:
+    | "fillPage"
+    | "fitDocumentToImage"
+    | "fitDocumentToPage"
+    | "maintainAspectRatio";
 }
 export interface CropPdfForm {
   /**
@@ -541,6 +545,10 @@ export interface FlattenRequest {
    * Optional DPI for page rendering when flattening the full document.
    */
   renderDpi?: number;
+}
+export interface FormFormDetectionDetectRequest {
+  applyToPdf?: boolean;
+  confThreshold?: number;
 }
 export type GeneralExtractBookmarksRequest = Record<string, never>;
 export type GeneralFile = Record<string, never>;
@@ -1356,6 +1364,7 @@ export interface SecurityCertSignValidateCertificateRequest {
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
+export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
    * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
@@ -1536,6 +1545,7 @@ export type ToolEndpoint =
   | "/api/v1/filter/filter-page-count"
   | "/api/v1/filter/filter-page-rotation"
   | "/api/v1/filter/filter-page-size"
+  | "/api/v1/form/form-detection/detect"
   | "/api/v1/general/booklet-imposition"
   | "/api/v1/general/crop"
   | "/api/v1/general/edit-table-of-contents"
@@ -1599,6 +1609,7 @@ export type ToolEndpoint =
   | "/api/v1/security/remove-password"
   | "/api/v1/security/sanitize-pdf"
   | "/api/v1/security/timestamp-pdf"
+  | "/api/v1/security/validate-compliance"
   | "/api/v1/security/validate-signature"
   | "/api/v1/security/verify-pdf";
 
@@ -1640,6 +1651,7 @@ export interface ToolApiParams {
   "/api/v1/filter/filter-page-count": PDFComparisonAndCount;
   "/api/v1/filter/filter-page-rotation": PageRotationRequest;
   "/api/v1/filter/filter-page-size": PageSizeRequest;
+  "/api/v1/form/form-detection/detect": FormFormDetectionDetectRequest;
   "/api/v1/general/booklet-imposition": BookletImpositionRequest;
   "/api/v1/general/crop": CropPdfForm;
   "/api/v1/general/edit-table-of-contents": EditTableOfContentsRequest;
@@ -1703,6 +1715,7 @@ export interface ToolApiParams {
   "/api/v1/security/remove-password": PDFPasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
+  "/api/v1/security/validate-compliance": SecurityValidateComplianceRequest;
   "/api/v1/security/validate-signature": SignatureValidationRequest;
   "/api/v1/security/verify-pdf": PDFVerificationRequest;
 }
@@ -1745,6 +1758,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/filter/filter-page-count",
   "/api/v1/filter/filter-page-rotation",
   "/api/v1/filter/filter-page-size",
+  "/api/v1/form/form-detection/detect",
   "/api/v1/general/booklet-imposition",
   "/api/v1/general/crop",
   "/api/v1/general/edit-table-of-contents",
@@ -1808,6 +1822,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/remove-password",
   "/api/v1/security/sanitize-pdf",
   "/api/v1/security/timestamp-pdf",
+  "/api/v1/security/validate-compliance",
   "/api/v1/security/validate-signature",
   "/api/v1/security/verify-pdf",
 ] as const satisfies readonly ToolEndpoint[];

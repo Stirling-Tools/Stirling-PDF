@@ -136,6 +136,9 @@
   background: transparent;
   padding: 0;
   cursor: pointer;
+  /* Repeated fast clicks otherwise read as a double/triple click and start a
+     text selection in the surrounding chrome. */
+  user-select: none;
 }
 
 .quick-nav-brand-button:focus-visible {
