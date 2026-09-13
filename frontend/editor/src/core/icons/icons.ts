@@ -127,6 +127,7 @@ import FolderPlus from "lucide-static/icons/folder-plus.svg?react";
 import FolderUp from "lucide-static/icons/folder-up.svg?react";
 import Folders from "lucide-static/icons/folders.svg?react";
 import Forklift from "lucide-static/icons/forklift.svg?react";
+import FormInput from "lucide-static/icons/form-input.svg?react";
 import Fullscreen from "lucide-static/icons/fullscreen.svg?react";
 import Gauge from "lucide-static/icons/gauge.svg?react";
 import Gavel from "lucide-static/icons/gavel.svg?react";
@@ -136,6 +137,7 @@ import GitBranch from "lucide-static/icons/git-branch.svg?react";
 import GitFork from "lucide-static/icons/git-fork.svg?react";
 import Globe from "lucide-static/icons/globe.svg?react";
 import Grape from "lucide-static/icons/grape.svg?react";
+import Grid2x2Plus from "lucide-static/icons/grid-2x2-plus.svg?react";
 import GripVertical from "lucide-static/icons/grip-vertical.svg?react";
 import Hand from "lucide-static/icons/hand.svg?react";
 import Handshake from "lucide-static/icons/handshake.svg?react";
@@ -247,6 +249,7 @@ import SaveAll from "lucide-static/icons/save-all.svg?react";
 import Scale from "lucide-static/icons/scale.svg?react";
 import Scan from "lucide-static/icons/scan.svg?react";
 import ScanLine from "lucide-static/icons/scan-line.svg?react";
+import ScanText from "lucide-static/icons/scan-text.svg?react";
 import School from "lucide-static/icons/school.svg?react";
 import Scissors from "lucide-static/icons/scissors.svg?react";
 import ScrollText from "lucide-static/icons/scroll-text.svg?react";
@@ -289,6 +292,7 @@ import Sun from "lucide-static/icons/sun.svg?react";
 import Sunset from "lucide-static/icons/sunset.svg?react";
 import Syringe from "lucide-static/icons/syringe.svg?react";
 import Table from "lucide-static/icons/table.svg?react";
+import TableColumnsSplit from "lucide-static/icons/table-columns-split.svg?react";
 import TableOfContents from "lucide-static/icons/table-of-contents.svg?react";
 import TabletSmartphone from "lucide-static/icons/tablet-smartphone.svg?react";
 import Tag from "lucide-static/icons/tag.svg?react";
@@ -327,6 +331,7 @@ import Volume2 from "lucide-static/icons/volume-2.svg?react";
 import Wallet from "lucide-static/icons/wallet.svg?react";
 import WalletCards from "lucide-static/icons/wallet-cards.svg?react";
 import Warehouse from "lucide-static/icons/warehouse.svg?react";
+import Waypoints from "lucide-static/icons/waypoints.svg?react";
 import WholeWord from "lucide-static/icons/whole-word.svg?react";
 import Workflow from "lucide-static/icons/workflow.svg?react";
 import Webhook from "lucide-static/icons/webhook.svg?react";
@@ -340,11 +345,18 @@ import AnnotationOff from "@app/icons/svg/stirling/annotation-off.svg?react";
 import Api from "@app/icons/svg/stirling/api.svg?react";
 import Cpu from "@app/icons/svg/stirling/cpu.svg?react";
 import Editor from "@app/icons/svg/stirling/editor.svg?react";
+import FileConvert from "@app/icons/svg/stirling/file-convert.svg?react";
 import FileHtml from "@app/icons/svg/stirling/file-html.svg?react";
+import FileLockOpen from "@app/icons/svg/stirling/file-lock-open.svg?react";
+import FormScan from "@app/icons/svg/stirling/form-scan.svg?react";
 import FilePdf from "@app/icons/svg/stirling/file-pdf.svg?react";
 import Ftp from "@app/icons/svg/stirling/ftp.svg?react";
+import ImageCompare from "@app/icons/svg/stirling/image-compare.svg?react";
 import LineWeight from "@app/icons/svg/stirling/line-weight.svg?react";
+import LockOpenPassword from "@app/icons/svg/stirling/lock-open-password.svg?react";
 import MoveItemDown from "@app/icons/svg/stirling/move-item-down.svg?react";
+import OverlayPages from "@app/icons/svg/stirling/overlay-pages.svg?react";
+import Password from "@app/icons/svg/stirling/password.svg?react";
 import Polyline from "@app/icons/svg/stirling/polyline.svg?react";
 import RadioChecked from "@app/icons/svg/stirling/radio-checked.svg?react";
 import RemoveSelection from "@app/icons/svg/stirling/remove-selection.svg?react";
@@ -519,6 +531,7 @@ export const ICONS = {
   "folder-up": { Component: FolderUp, kind: "lucide" },
   folders: { Component: Folders, kind: "lucide" },
   forklift: { Component: Forklift, kind: "lucide" },
+  "form-input": { Component: FormInput, kind: "lucide" },
   fullscreen: { Component: Fullscreen, kind: "lucide" },
   gauge: { Component: Gauge, kind: "lucide" },
   gavel: { Component: Gavel, kind: "lucide" },
@@ -528,6 +541,7 @@ export const ICONS = {
   "git-fork": { Component: GitFork, kind: "lucide" },
   globe: { Component: Globe, kind: "lucide" },
   grape: { Component: Grape, kind: "lucide" },
+  "grid-2x2-plus": { Component: Grid2x2Plus, kind: "lucide" },
   "grip-vertical": { Component: GripVertical, kind: "lucide" },
   hand: { Component: Hand, kind: "lucide" },
   handshake: { Component: Handshake, kind: "lucide" },
@@ -639,6 +653,7 @@ export const ICONS = {
   scale: { Component: Scale, kind: "lucide" },
   scan: { Component: Scan, kind: "lucide" },
   "scan-line": { Component: ScanLine, kind: "lucide" },
+  "scan-text": { Component: ScanText, kind: "lucide" },
   school: { Component: School, kind: "lucide" },
   scissors: { Component: Scissors, kind: "lucide" },
   "scroll-text": { Component: ScrollText, kind: "lucide" },
@@ -681,6 +696,7 @@ export const ICONS = {
   sunset: { Component: Sunset, kind: "lucide" },
   syringe: { Component: Syringe, kind: "lucide" },
   table: { Component: Table, kind: "lucide" },
+  "table-columns-split": { Component: TableColumnsSplit, kind: "lucide" },
   "table-of-contents": { Component: TableOfContents, kind: "lucide" },
   "tablet-smartphone": { Component: TabletSmartphone, kind: "lucide" },
   tag: { Component: Tag, kind: "lucide" },
@@ -719,6 +735,7 @@ export const ICONS = {
   wallet: { Component: Wallet, kind: "lucide" },
   "wallet-cards": { Component: WalletCards, kind: "lucide" },
   warehouse: { Component: Warehouse, kind: "lucide" },
+  waypoints: { Component: Waypoints, kind: "lucide" },
   "whole-word": { Component: WholeWord, kind: "lucide" },
   workflow: { Component: Workflow, kind: "lucide" },
   webhook: { Component: Webhook, kind: "lucide" },
@@ -731,11 +748,18 @@ export const ICONS = {
   api: { Component: Api, kind: "stirling" },
   cpu: { Component: Cpu, kind: "stirling" },
   editor: { Component: Editor, kind: "stirling" },
+  "file-convert": { Component: FileConvert, kind: "stirling" },
   "file-html": { Component: FileHtml, kind: "stirling" },
+  "file-lock-open": { Component: FileLockOpen, kind: "stirling" },
   "file-pdf": { Component: FilePdf, kind: "stirling" },
+  "form-scan": { Component: FormScan, kind: "stirling" },
   ftp: { Component: Ftp, kind: "stirling" },
+  "image-compare": { Component: ImageCompare, kind: "stirling" },
   "line-weight": { Component: LineWeight, kind: "stirling" },
+  "lock-open-password": { Component: LockOpenPassword, kind: "stirling" },
   "move-item-down": { Component: MoveItemDown, kind: "stirling" },
+  "overlay-pages": { Component: OverlayPages, kind: "stirling" },
+  password: { Component: Password, kind: "stirling" },
   polyline: { Component: Polyline, kind: "stirling" },
   "radio-checked": { Component: RadioChecked, kind: "stirling" },
   "remove-selection": { Component: RemoveSelection, kind: "stirling" },
