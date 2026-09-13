@@ -56,7 +56,7 @@ export interface WirePolicy {
   name: string;
   owner?: string;
   enabled: boolean;
-  /** Org-mandated policy; first-class on the record (see the pipeline `Policy.required`). */
+  /** A policy (blocking on failure) rather than an ordinary pipeline (see `Policy.required`). */
   required?: boolean;
   trigger: null;
   steps: WirePipelineStep[];
@@ -102,7 +102,7 @@ export interface PolicyDecodedState {
   id: string;
   name: string;
   enabled: boolean;
-  /** Org-mandated policy; first-class on the record, not part of the options bag. */
+  /** A policy (blocking on failure) rather than an ordinary pipeline; first-class, not in options. */
   required: boolean;
   policyKey: string;
   sources: string[];

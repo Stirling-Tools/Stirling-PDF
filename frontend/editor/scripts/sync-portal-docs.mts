@@ -3,7 +3,7 @@
  *
  * Fetches the docs repo tarball, extracts `docs/**` in-process (no external tar
  * binary, no per-file GitHub rate limits), shapes it with the pure transforms in
- * src/portal/docs/manifest/transform.ts, and writes the committed manifest that
+ * src/core/docs/manifest/transform.ts, and writes the committed manifest that
  * the portal docs view renders. Re-run with `npm run docs:sync`.
  *
  * Env: DOCS_REPO, DOCS_REF, DOCS_ROOT override the defaults below.
@@ -18,7 +18,7 @@ import {
   buildManifest,
   type CategoryMap,
   type RawDoc,
-} from "../src/portal/docs/manifest/transform.ts";
+} from "../src/core/docs/manifest/transform.ts";
 
 const REPO = process.env.DOCS_REPO ?? "Stirling-Tools/Stirling-Tools.github.io";
 const REF = process.env.DOCS_REF ?? "main";
@@ -26,7 +26,7 @@ const ROOT = process.env.DOCS_ROOT ?? "docs";
 const SITE = "https://docs.stirlingpdf.com";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const OUT = resolve(HERE, "../src/portal/generated/docsManifest.json");
+const OUT = resolve(HERE, "../src/core/generated/docsManifest.json");
 
 /* ── Minimal tar reader (ustar + pax/GNU long names) ─────────────────────── */
 
