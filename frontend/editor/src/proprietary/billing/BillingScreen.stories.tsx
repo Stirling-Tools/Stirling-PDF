@@ -1,3 +1,4 @@
+import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { BillingScreen } from "@app/billing/BillingScreen";
 import { KvRow } from "@app/billing/KvRow";
@@ -71,6 +72,12 @@ export const SelfHostedLicenseDark: Story = {
 
 export const SelfHostedInstalledLicense: Story = {
   ...SelfHostedLicense,
+  args: {
+    ...SelfHostedLicense.args,
+    serverPlan: { licenseType: "ENTERPRISE", maxUsers: 100, usersInUse: 1 },
+    serverPlanAction: <ManageBillingButton />,
+    onActivateProcessor: () => {},
+  },
   parameters: {
     msw: {
       handlers: [
