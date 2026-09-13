@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.MinIOContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.utility.DockerImageName;
 
 import stirling.software.common.cluster.FileStore;
 
@@ -40,7 +41,10 @@ class S3FileStoreTest {
 
     @Container
     static MinIOContainer minio =
-            new MinIOContainer("minio/minio:latest")
+            new MinIOContainer(
+                            DockerImageName.parse(
+                                            "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z")
+                                    .asCompatibleSubstituteFor("minio/minio"))
                     .withUserName(ACCESS_KEY)
                     .withPassword(SECRET_KEY);
 
