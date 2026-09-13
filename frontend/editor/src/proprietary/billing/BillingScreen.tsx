@@ -111,7 +111,8 @@ export function BillingScreen({
       ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, []);
 
-  const paying = Boolean(wallet?.processor?.active);
+  const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
+  const paying = Boolean(wallet?.processor?.active) && !enterpriseProcessor;
   const teamHeld = Boolean(wallet?.team?.held);
 
   const chips = useMemo(() => {
@@ -319,8 +320,9 @@ export function BillingScreen({
                         onAddCapacity={onAddCapacity}
                       />
                     )}
-                    {wallet?.processor && (
+                    {(wallet?.processor || enterpriseProcessor) && (
                       <ProcessorPlanRow
+                        included={enterpriseProcessor}
                         wallet={wallet}
                         pendingUnits={pendingUnits}
                         onActivate={onActivateProcessor}

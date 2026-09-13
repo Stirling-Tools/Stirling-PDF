@@ -284,6 +284,7 @@ export function Usage({
     return false;
   }, [onWalletLoaded]);
 
+  const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
 
   return (
@@ -364,7 +365,9 @@ export function Usage({
         checkout && wallet?.role === "leader" ? addCapacity : undefined
       }
       onActivateProcessor={
-        wallet?.role === "leader" && !wallet?.processor?.active
+        !enterpriseProcessor &&
+        wallet?.role === "leader" &&
+        !wallet?.processor?.active
           ? () =>
               setActivationStep(
                 bundleFlow.status === "none" ? "choose" : "prepay",
@@ -379,7 +382,9 @@ export function Usage({
             : undefined
       }
       onGovernSpend={
-        wallet?.role === "leader" && wallet?.processor?.active
+        !enterpriseProcessor &&
+        wallet?.role === "leader" &&
+        wallet?.processor?.active
           ? () => setAdjustingLimit(true)
           : undefined
       }
@@ -418,7 +423,7 @@ export function Usage({
       extras={
         <>
           {canManageProcurement && <ProcurementFlow controller={procurement} />}
-          {wallet && wallet.status === "free" && (
+          {!enterpriseProcessor && wallet && wallet.status === "free" && (
             <FreePlanView
               wallet={wallet}
               step={activationStep}
@@ -428,7 +433,7 @@ export function Usage({
             />
           )}
 
-          {wallet && wallet.status === "subscribed" && (
+          {!enterpriseProcessor && wallet && wallet.status === "subscribed" && (
             <SubscribedPlanView
               pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
               wallet={wallet}

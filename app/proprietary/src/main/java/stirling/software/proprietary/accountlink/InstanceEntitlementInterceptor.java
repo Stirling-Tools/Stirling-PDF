@@ -127,6 +127,9 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             HttpServletResponse response,
             Object handler,
             Exception ex) {
+        if (request.getAttribute(ATTR_REASON) == GateDecision.Reason.ENTERPRISE_LICENSE) {
+            return;
+        }
         // Meter successful billable ops only.
         if (ex != null || response.getStatus() >= 400) {
             return;

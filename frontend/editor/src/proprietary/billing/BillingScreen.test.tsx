@@ -94,8 +94,30 @@ describe("installed server licences", () => {
     expect(screen.getByText("Enterprise")).toBeInTheDocument();
     expect(screen.getByText("37 of 250 users")).toBeInTheDocument();
     expect(screen.getByText("37")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Raise limit" }));
-    expect(govern).toHaveBeenCalledOnce();
+    expect(screen.getByText("Included in your license")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Raise limit" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Credits")).not.toBeInTheDocument();
+    expect(govern).not.toHaveBeenCalled();
+  });
+  it("includes Enterprise processing even when the cloud Processor is off", () => {
+    render(
+      <BillingScreen
+        wallet={freeWallet}
+        serverPlan={{ licenseType: "ENTERPRISE", maxUsers: 100, usersInUse: 1 }}
+        onActivateProcessor={() => {}}
+        activateLabel="View quote"
+      />,
+    );
+    expect(screen.getByText("Included in your license")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Switch on the Processor" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "View quote" }),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText(/of 500 used/)).not.toBeInTheDocument();
   });
   it("keeps the installed licence visible if the credit wallet is unavailable", () => {
     render(
@@ -111,6 +133,7 @@ describe("installed server licences", () => {
     );
     expect(screen.getByText("Enterprise")).toBeInTheDocument();
     expect(screen.getByText("80 licensed seats")).toBeInTheDocument();
+    expect(screen.getByText("Included in your license")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Manage Billing" }),
     ).toBeInTheDocument();

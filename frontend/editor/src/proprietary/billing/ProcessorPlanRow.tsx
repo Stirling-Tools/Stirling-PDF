@@ -15,13 +15,16 @@ import type { Wallet } from "@app/billing/types";
  */
 export function ProcessorPlanRow({
   wallet,
+  included = false,
   pendingUnits = 0,
   onActivate,
   activateLabel,
   onGovern,
   governLabel,
 }: {
-  wallet: Wallet;
+  wallet: Wallet | null;
+  /** A validated local Enterprise licence includes processing independently of the wallet. */
+  included?: boolean;
   /**
    * Units accrued locally that the cloud has not billed yet. Subtracted rather than shown beside
    * the total, because the entitlement gate blocks against this same pending delta: reporting more
@@ -39,6 +42,17 @@ export function ProcessorPlanRow({
 }) {
   const { t } = useTranslation();
   const name = t("portal.billing.processor.rowName", "Processor");
+  if (included)
+    return (
+      <MeterRow
+        name={name}
+        mid={t("portal.billing.processor.included", "Included in your license")}
+        fact=""
+        tone="paid"
+        showTrack={false}
+      />
+    );
+  if (!wallet) return null;
   const rate = wallet.pricePerDocMinor;
 
   if (!wallet.processor.active) {

@@ -160,15 +160,20 @@ export function FreeTierPlanView({
               </Button>
             }
           >
-            {serverPlan
+            {serverPlan?.licenseType === "ENTERPRISE"
               ? t(
-                  "portal.billing.serverPlan.connectBody",
-                  "Connect to add cloud processing credits. Your server license stays active.",
+                  "portal.billing.serverPlan.enterpriseConnectBody",
+                  "Your Enterprise license includes processing on this server. Connecting an account is optional.",
                 )
-              : t(
-                  "portal.usage.freeTier.connectBody",
-                  "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor.",
-                )}
+              : serverPlan
+                ? t(
+                    "portal.billing.serverPlan.connectBody",
+                    "Connect to add cloud processing credits. Your server license stays active.",
+                  )
+                : t(
+                    "portal.usage.freeTier.connectBody",
+                    "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor.",
+                  )}
           </Banner>
 
           {load.state === "failed" && (
