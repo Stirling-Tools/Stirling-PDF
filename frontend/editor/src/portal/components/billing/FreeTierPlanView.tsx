@@ -8,6 +8,7 @@ import { fetchFleetStats } from "@portal/api/fleetStats";
 import { usersBackend } from "@app/portal/usersBackend";
 import { HttpError } from "@portal/api/http";
 import { useUI } from "@portal/contexts/UIContext";
+import "@portal/components/billing/FreeTierPlanView.css";
 
 /** {@code forbidden} is an outcome, not a failure: the endpoint is admin-only. */
 type Load =
@@ -126,9 +127,12 @@ export function FreeTierPlanView() {
       loading={load.state === "loading"}
       selfHosted
       editorsDeployed={editorsDeployed}
+      onAddCapacity={() => openLinkModal()}
+      onActivateProcessor={() => openLinkModal()}
       notices={
         <>
           <Banner
+            className="billing-connect"
             tone="info"
             title={t(
               "portal.usage.freeTier.connectTitle",
