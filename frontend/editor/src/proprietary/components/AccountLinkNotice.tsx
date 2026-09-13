@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth";
@@ -12,8 +12,13 @@ import {
 
 const NOTICE_ID = "server-free-credits-exhausted";
 
+interface Props {
+  /** Hosts without a Processor route open the connected server's billing page externally. */
+  onShowOptions?: () => void;
+}
+
 /** Editor failures retain an actionable notice; the Processor owns the account-link handshake. */
-export function AccountLinkNotice() {
+export function AccountLinkNotice({ onShowOptions }: Props = {}) {
   const { t } = useTranslation();
   const { isAdmin, loading } = useAuth();
   const { pathname } = useLocation();
@@ -21,10 +26,11 @@ export function AccountLinkNotice() {
   const { exhausted, promptPending } = useAccountLinkBlock();
   const [open, setOpen] = useState(false);
   const hasLinkDialog =
-    pathname === PORTAL_BASENAME ||
-    pathname.startsWith(`${PORTAL_BASENAME}/`) ||
-    pathname === "/settings/billing" ||
-    pathname === "/settings/account-link";
+    !onShowOptions &&
+    (pathname === PORTAL_BASENAME ||
+      pathname.startsWith(`${PORTAL_BASENAME}/`) ||
+      pathname === "/settings/billing" ||
+      pathname === "/settings/account-link");
   const title = t(
     "portal.accountLink.rail.exhaustedTitle",
     "This server’s free credits are used up",
@@ -39,6 +45,17 @@ export function AccountLinkNotice() {
         "Ask your server administrator to open Usage & billing and link a Stirling account for more monthly credits. Manual PDF tools are still available.",
       );
   const cta = t("portal.accountLink.notice.options", "View linking options");
+
+  const showOptions = useCallback(() => {
+    setOpen(false);
+    if (onShowOptions) {
+      onShowOptions();
+    } else {
+      navigate(PORTAL_BASENAME, {
+        state: { accountLinkPrompt: "exhausted" },
+      });
+    }
+  }, [navigate, onShowOptions]);
 
   useEffect(() => {
     if (!exhausted || hasLinkDialog) setOpen(false);
@@ -61,11 +78,7 @@ export function AccountLinkNotice() {
       ...(isAdmin
         ? {
             buttonText: cta,
-            buttonCallback: () => {
-              navigate(PORTAL_BASENAME, {
-                state: { accountLinkPrompt: "exhausted" },
-              });
-            },
+            buttonCallback: showOptions,
           }
         : {}),
     });
@@ -80,15 +93,8 @@ export function AccountLinkNotice() {
     title,
     body,
     cta,
-    navigate,
+    showOptions,
   ]);
-
-  const showOptions = () => {
-    setOpen(false);
-    navigate(PORTAL_BASENAME, {
-      state: { accountLinkPrompt: "exhausted" },
-    });
-  };
 
   return (
     <Modal

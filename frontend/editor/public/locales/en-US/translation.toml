@@ -7262,6 +7262,7 @@ before = "Set"
 title = "Stirling connection not configured"
 
 [portal.accountLink.notice]
+openFailed = "Could not open your browser. Open Usage & billing on your connected server to link an account."
 options = "View linking options"
 
 [portal.accountLink.panel]
