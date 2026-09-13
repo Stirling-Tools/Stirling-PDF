@@ -3,6 +3,7 @@ import { errorMessage } from "@portal/api/http";
 import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
 import { fetchStatus, unlinkInstance, type LinkStatus } from "@portal/api/link";
 import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
+import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
 
 /** Reads and clears THIS instance's link status. */
 
@@ -37,7 +38,10 @@ export function useAccountLink(): UseAccountLink {
       const s = await fetchStatus();
       setStatus(s);
       // A linked instance is at least linked-free; subscription comes from the wallet.
-      if (s.linked) applyLinkFacts(true, false);
+      if (s.linked) {
+        clearAccountLinkBlock();
+        applyLinkFacts(true, false);
+      }
       // Success only: marking this in the catch would read "could not ask" as "not linked".
       markStatusKnown();
     } catch (e) {

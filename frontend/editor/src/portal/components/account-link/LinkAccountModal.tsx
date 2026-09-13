@@ -1,4 +1,7 @@
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth";
+import { useClipboard } from "@mantine/hooks";
 import { Button } from "@app/ui";
 import { FlowModal } from "@portal/components/shared/FlowModal";
 import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
@@ -40,7 +43,26 @@ export function LinkAccountModal({
   mode = "link",
   outcome = null,
 }: Props) {
+  // This dialog unmounts on close, so retain its trigger before FocusTrap moves focus.
+  const trigger = useRef(document.activeElement);
+  useEffect(
+    () => () => {
+      if (
+        trigger.current instanceof HTMLElement &&
+        trigger.current.isConnected
+      ) {
+        trigger.current.focus({ preventScroll: true });
+      }
+    },
+    [],
+  );
   const { t } = useTranslation();
+  const { isAdmin, loading: authLoading } = useAuth();
+  const clipboard = useClipboard();
+  const adminMessage = t(
+    "portal.accountLink.connect.adminRequired",
+    "Ask your server administrator to open Usage & billing and link a Stirling account for more monthly credits. Manual PDF tools are still available.",
+  );
   const reauth = mode === "reauth";
   const exhausted = mode === "exhausted";
   const handoff = useConnectHandoff(reauth);
@@ -54,17 +76,21 @@ export function LinkAccountModal({
   const current = STEP_ORDER.indexOf(step) + 1;
 
   // Re-auth is one step, so it carries no count and no progress bar.
-  const stepChrome = reauth
-    ? {}
-    : {
-        step: current,
-        total: STEP_ORDER.length,
-        stepLabel: t(
-          "portal.accountLink.connect.step",
-          "Step {{current}} of {{total}}",
-          { current, total: STEP_ORDER.length },
-        ),
-      };
+  const stepChrome =
+    reauth || !isAdmin || (exhausted && step === "ask")
+      ? {}
+      : {
+          step: current,
+          total: STEP_ORDER.length,
+          stepLabel: t(
+            "portal.accountLink.connect.step",
+            "Step {{current}} of {{total}}",
+            {
+              current,
+              total: STEP_ORDER.length,
+            },
+          ),
+        };
 
   return (
     <FlowModal
@@ -85,6 +111,11 @@ export function LinkAccountModal({
   );
 
   function stepTitle(): string {
+    if (!isAdmin && !reauth)
+      return t(
+        "portal.accountLink.connect.adminTitle",
+        "Ask your server administrator",
+      );
     if (reauth) {
       return t("portal.accountLink.modal.reauthTitle", "Sign in again");
     }
@@ -92,7 +123,7 @@ export function LinkAccountModal({
       return exhausted
         ? t(
             "portal.accountLink.modal.exhaustedTitle",
-            "Add more monthly credits",
+            "Keep your workflows running",
           )
         : t(
             "portal.accountLink.modal.linkTitle",
@@ -111,6 +142,9 @@ export function LinkAccountModal({
   function stepBody() {
     switch (step) {
       case "ask":
+        if (!isAdmin && !reauth) {
+          return <p className="portal-connect__lede">{adminMessage}</p>;
+        }
         return (
           <ConnectAskStep
             reauth={reauth}
@@ -149,18 +183,44 @@ export function LinkAccountModal({
 
   function stepFooter() {
     if (step === "ask") {
+      if (!isAdmin && !reauth)
+        return (
+          <>
+            {closeButton()}
+            <Button
+              variant="secondary"
+              onClick={() => clipboard.copy(adminMessage)}
+            >
+              {clipboard.copied
+                ? t("portal.accountLink.connect.copied", "Copied")
+                : t(
+                    "portal.accountLink.connect.copyAdminMessage",
+                    "Copy message for administrator",
+                  )}
+            </Button>
+          </>
+        );
       const dismiss = reauth
         ? t("portal.accountLink.modal.cancel", "Cancel")
         : t("portal.accountLink.connect.notNow", "Not now");
       const start = reauth
         ? t("portal.accountLink.modal.continueReauth", "Sign in again")
-        : t("portal.accountLink.connect.start", "Connect Stirling account");
+        : exhausted
+          ? t(
+              "portal.accountLink.rail.exhaustedCta",
+              "Link account for more credits",
+            )
+          : t("portal.accountLink.connect.start", "Connect Stirling account");
       return (
         <>
           <Button variant="quiet" accent="neutral" onClick={onClose}>
             {dismiss}
           </Button>
-          <Button variant="primary" onClick={handoff.begin}>
+          <Button
+            variant="primary"
+            onClick={handoff.begin}
+            disabled={authLoading}
+          >
             {start}
           </Button>
         </>

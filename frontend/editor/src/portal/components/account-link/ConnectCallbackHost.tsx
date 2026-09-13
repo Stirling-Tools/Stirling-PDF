@@ -4,6 +4,7 @@ import { completeConnect, type ConnectPhase } from "@portal/api/link";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
 import { useUI } from "@portal/contexts/UIContext";
+import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
 import type { ConnectCallbackState } from "@portal/components/account-link/ConnectCallbackView";
 
 /** What the callback route hands over, read from the URL fragment before stripping it. */
@@ -92,7 +93,10 @@ export function ConnectCallbackHost() {
           reclaim: state === "retry" ? again : undefined,
         });
         // Without this the page behind the dialog says unlinked until a reload.
-        if (state === "linked") await refreshRef.current();
+        if (state === "linked") {
+          clearAccountLinkBlock();
+          await refreshRef.current();
+        }
       } catch {
         // Our own backend is unreachable; the handshake is untouched, so retrying beats restarting.
         publishRef.current({ state: "retry", sessionRestored, reclaim: again });

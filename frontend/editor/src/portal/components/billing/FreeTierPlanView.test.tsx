@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 
@@ -11,6 +11,14 @@ import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 const { fetchFreeTier, openLinkModal } = vi.hoisted(() => ({
   fetchFreeTier: vi.fn(),
   openLinkModal: vi.fn(),
+}));
+
+vi.mock("@app/auth", () => ({ useAuth: () => ({ isAdmin: true }) }));
+vi.mock("@app/ui", async () => ({
+  ...(await import("@app/ui/Button")),
+  ...(await import("@app/ui/Banner")),
+  ...(await import("@app/ui/Card")),
+  ...(await import("@app/ui/Skeleton")),
 }));
 
 vi.mock("@portal/api/link", () => ({ fetchFreeTier }));
@@ -98,5 +106,20 @@ describe("FreeTierPlanView", () => {
     expect(
       await screen.findByText("Couldn't load credit usage"),
     ).toBeInTheDocument();
+  });
+
+  it("puts a recovery CTA beside an exhausted meter", async () => {
+    fetchFreeTier.mockResolvedValue({
+      ...BALANCE,
+      remainingUnits: 0,
+      usedUnits: 500,
+    });
+    renderView();
+    fireEvent.click(
+      await screen.findByRole("button", {
+        name: "Link account for more credits",
+      }),
+    );
+    expect(openLinkModal).toHaveBeenCalledWith("exhausted");
   });
 });

@@ -68,7 +68,12 @@ export async function runPolicyOnFile(
     const target = resolvePolicyRunTarget();
     // Recorded against a document this browser can resolve. One file per run, which is the only
     // shape the server keeps a reference for.
-    const runId = await runStoredPolicy(backendId, [file], fileId);
+    const runId = await runStoredPolicy(
+      backendId,
+      [file],
+      fileId,
+      "background",
+    );
     // recordRunStart marks this (policy, file) dispatched as it records the run.
     recordRunStart({
       runId,

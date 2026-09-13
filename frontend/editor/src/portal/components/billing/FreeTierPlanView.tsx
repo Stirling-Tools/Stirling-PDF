@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { qk } from "@portal/queries/keys";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth";
 import { Banner, Button, Card, Skeleton } from "@app/ui";
 import { formatPeriodDate, MeterBar, remainingMeter } from "@app/billing";
 import { fetchFreeTier, type FreeTierBalance } from "@portal/api/link";
@@ -20,27 +22,23 @@ type Load =
  */
 export function FreeTierPlanView() {
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
   const { openLinkModal } = useUI();
-  // An outcome, not a rendered message: the effect must not depend on `t`, whose identity is
-  // not stable across renders.
-  const [load, setLoad] = useState<Load>({ state: "loading" });
-
-  useEffect(() => {
-    let cancelled = false;
-    fetchFreeTier()
-      .then((balance) => {
-        if (!cancelled) setLoad({ state: "ready", balance });
-      })
-      .catch((e: unknown) => {
-        if (cancelled) return;
-        const denied =
-          e instanceof HttpError && (e.status === 401 || e.status === 403);
-        setLoad({ state: denied ? "forbidden" : "failed" });
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  const query = useQuery({
+    queryKey: qk.freeTier(),
+    queryFn: fetchFreeTier,
+    enabled: isAdmin,
+    refetchInterval: 60_000,
+    retry: false,
+  });
+  let load: Load = { state: "loading" };
+  if (!isAdmin) load = { state: "forbidden" };
+  else if (query.isError) {
+    const denied =
+      query.error instanceof HttpError &&
+      (query.error.status === 401 || query.error.status === 403);
+    load = { state: denied ? "forbidden" : "failed" };
+  } else if (query.data) load = { state: "ready", balance: query.data };
 
   return (
     <div className="portal-usage portal-billing">
@@ -57,9 +55,21 @@ export function FreeTierPlanView() {
               )}
             </p>
           </div>
-          <Button variant="secondary" fat onClick={() => openLinkModal()}>
-            {t("portal.usage.freeTier.connect", "Connect a Stirling account")}
-          </Button>
+          {isAdmin && (
+            <Button
+              variant="secondary"
+              fat
+              onClick={() =>
+                openLinkModal(
+                  load.state === "ready" && load.balance.remainingUnits === 0
+                    ? "exhausted"
+                    : "link",
+                )
+              }
+            >
+              {t("portal.usage.freeTier.connect", "Connect a Stirling account")}
+            </Button>
+          )}
         </div>
       </header>
 
@@ -107,6 +117,8 @@ export function FreeTierPlanView() {
 
 function FreeTierMeter({ balance }: { balance: FreeTierBalance }) {
   const { t } = useTranslation();
+  const { isAdmin } = useAuth();
+  const { openLinkModal } = useUI();
   const { state, pct } = remainingMeter(
     balance.remainingUnits,
     balance.grantUnits,
@@ -159,6 +171,14 @@ function FreeTierMeter({ balance }: { balance: FreeTierBalance }) {
           }
         />
       </div>
+      {isAdmin && balance.remainingUnits === 0 && (
+        <Button variant="primary" onClick={() => openLinkModal("exhausted")}>
+          {t(
+            "portal.accountLink.rail.exhaustedCta",
+            "Link account for more credits",
+          )}
+        </Button>
+      )}
     </Card>
   );
 }

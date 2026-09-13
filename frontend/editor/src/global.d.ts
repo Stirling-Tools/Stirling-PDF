@@ -51,6 +51,8 @@ declare global {
 declare module "axios" {
   export interface AxiosRequestConfig<_D = unknown> {
     suppressErrorToast?: boolean;
+    /** Background automation records exhaustion without interrupting the current user action. */
+    accountLinkBlockSource?: "foreground" | "background";
     skipAuthRedirect?: boolean;
     skipBackendReadyCheck?: boolean;
   }

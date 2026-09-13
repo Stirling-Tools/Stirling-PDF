@@ -12,6 +12,7 @@ import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHost
 import "@portal/components/AppShell.css";
 import { NotificationBell } from "@app/components/notifications/NotificationBell";
 import { useIsPhone } from "@app/hooks/useIsMobile";
+import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
 
 /**
  * Compact header shown only under the mobile breakpoint (CSS-hidden on
@@ -105,6 +106,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
         )}
+        <ConnectAccountRail />
         <main className="portal-shell__view">{children}</main>
       </div>
     </div>

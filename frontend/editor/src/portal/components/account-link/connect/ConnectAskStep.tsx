@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Banner } from "@app/ui";
 import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
 import { ConnectBenefitsSlide } from "@portal/components/account-link/connect/ConnectBenefitsSlide";
+import { FreeTierExhaustedSummary } from "@portal/components/account-link/connect/FreeTierExhaustedSummary";
 import "@portal/components/account-link/connect/connect.css";
 
 interface Props {
@@ -34,10 +35,11 @@ export function ConnectAskStep({ reauth, exhausted = false, error }: Props) {
             <p className="portal-connect__lede">
               {t(
                 "portal.accountLink.connect.exhaustedLede",
-                "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top.",
+                "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance.",
               )}
             </p>
           )}
+          {exhausted && <FreeTierExhaustedSummary />}
           <ConnectBenefitsSlide />
         </>
       )}

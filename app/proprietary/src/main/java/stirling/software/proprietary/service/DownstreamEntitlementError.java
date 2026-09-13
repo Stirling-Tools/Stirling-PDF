@@ -27,6 +27,9 @@ public final class DownstreamEntitlementError {
     private static final Pattern ERROR_CODE_FIELD =
             Pattern.compile("\"error\"\\s*:\\s*\"([^\"]+)\"");
 
+    private static final Pattern REASON_FIELD =
+            Pattern.compile("\"reason\"\\s*:\\s*\"([^\"]+)\"");
+
     /** Matches the {@code "subscribed":true|false} field of a small JSON error body. */
     private static final Pattern SUBSCRIBED_FIELD =
             Pattern.compile("\"subscribed\"\\s*:\\s*(true|false)");
@@ -45,7 +48,17 @@ public final class DownstreamEntitlementError {
             return null;
         }
         Matcher m = ERROR_CODE_FIELD.matcher(body);
-        return m.find() ? m.group(1) : null;
+        if (!m.find()) {
+            return null;
+        }
+        String code = m.group(1);
+        if (status == 402 && "ACCOUNT_LINK_REQUIRED".equals(code)) {
+            Matcher reason = REASON_FIELD.matcher(body);
+            if (reason.find() && "FREE_TIER_EXHAUSTED".equals(reason.group(1))) {
+                return "FREE_TIER_EXHAUSTED";
+            }
+        }
+        return code;
     }
 
     /**

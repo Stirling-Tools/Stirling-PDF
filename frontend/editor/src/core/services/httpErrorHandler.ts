@@ -14,6 +14,7 @@ import {
 } from "@app/services/httpErrorUtils";
 import { stripBasePath, withBasePath } from "@app/constants/app";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import { reportAccountLinkBlock } from "@app/services/accountLinkBlock";
 
 // Module-scoped state to reduce global variable usage
 const recentSpecialByEndpoint: Record<string, number> = {};
@@ -82,6 +83,18 @@ if (typeof window !== "undefined") {
  */
 export async function handleHttpError(error: unknown): Promise<boolean> {
   const axiosError = axios.isAxiosError(error) ? error : undefined;
+  if (axiosError?.response?.status === 402) {
+    const body = await normalizeAxiosErrorData(axiosError.response.data).catch(
+      () => undefined,
+    );
+    if (
+      reportAccountLinkBlock(
+        { status: 402, body },
+        axiosError.config?.accountLinkBlockSource ?? "foreground",
+      )
+    )
+      return true;
+  }
   const skipAuthRedirect = axiosError?.config?.skipAuthRedirect === true;
   // Check if this error should skip the global toast (component will handle it)
   if (axiosError?.config?.suppressErrorToast === true) {

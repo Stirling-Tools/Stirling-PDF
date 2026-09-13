@@ -26,6 +26,7 @@
 }
 
 .portal-connect__row-label {
+  flex-shrink: 0;
   font-size: 0.8125rem;
   font-weight: 600;
   color: var(--c-text);
@@ -36,6 +37,17 @@
   font-size: 0.8125rem;
   color: var(--c-text-muted);
   text-align: right;
+}
+
+@media (max-width: 30rem) {
+  .portal-connect__row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .portal-connect__row-detail {
+    text-align: left;
+  }
 }
 
 /* ── Step 2: the ghost ──────────────────────────────────────────────────── */

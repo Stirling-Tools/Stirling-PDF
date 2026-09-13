@@ -4,11 +4,32 @@ import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
-const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
-  startConnect: vi.fn(),
-  startReauth: vi.fn(),
-  fetchWallet: vi.fn(),
-  EMAIL: "admin@acme.example",
+const { startConnect, startReauth, fetchWallet, EMAIL, auth } = vi.hoisted(
+  () => ({
+    startConnect: vi.fn(),
+    startReauth: vi.fn(),
+    fetchWallet: vi.fn(),
+    EMAIL: "admin@acme.example",
+    auth: { isAdmin: true },
+  }),
+);
+
+vi.mock("@app/auth", () => ({ useAuth: () => ({ ...auth, loading: false }) }));
+vi.mock("@portal/hooks/useFreeTierBalance", () => ({
+  useFreeTierBalance: () => ({
+    data: {
+      grantUnits: 500,
+      remainingUnits: 0,
+      periodEnd: "2026-10-01T00:00:00",
+    },
+  }),
+}));
+vi.mock("@app/ui", async () => ({
+  ...(await import("@app/ui/Button")),
+  ...(await import("@app/ui/Banner")),
+  ...(await import("@app/ui/Modal")),
+  ...(await import("@app/ui/Skeleton")),
+  ...(await import("@app/ui/Spinner")),
 }));
 
 vi.mock("@portal/api/link", () => ({ startConnect, startReauth }));
@@ -30,12 +51,12 @@ import { freeWallet } from "@portal/components/billing/walletFixtures";
 
 const AUTHORIZE = "http://localhost:5174/link?request=req-1";
 
-const BENEFITS = "Pipelines, policies, sources and audit";
+const BENEFITS = "Add more users with a paid Team plan";
 const GHOST = /Taking you to stirling\.com/;
 const CONNECT = /Connect Stirling account/;
 
 function renderModal(
-  mode?: "link" | "reauth",
+  mode?: "link" | "reauth" | "exhausted",
   outcome: ConnectOutcome | null = null,
 ) {
   return render(
@@ -66,8 +87,20 @@ function filledSteps(): number {
 describe("LinkAccountModal", () => {
   let assign: ReturnType<typeof vi.fn>;
 
+  it("returns keyboard focus to the trigger when the dialog unmounts", () => {
+    const trigger = document.createElement("button");
+    document.body.append(trigger);
+    trigger.focus();
+    const view = renderModal("exhausted");
+    view.unmount();
+    expect(document.activeElement).toBe(trigger);
+    trigger.remove();
+  });
+
   beforeEach(() => {
     vi.clearAllMocks();
+    auth.isAdmin = true;
+    sessionStorage.clear();
     fetchWallet.mockResolvedValue(freeWallet);
     startConnect.mockResolvedValue({
       phase: "PENDING",
@@ -87,6 +120,7 @@ describe("LinkAccountModal", () => {
       value: {
         origin: "http://localhost:5173",
         hostname: "localhost",
+        pathname: "/processor/pipelines",
         href: "http://localhost:5173/app",
         search: "",
         assign,
@@ -250,5 +284,35 @@ describe("LinkAccountModal", () => {
       ).toBeTruthy();
       expect(screen.queryByRole("button", { name: /Try again/ })).toBeNull();
     });
+  });
+
+  it("leads with credits and explains which benefits need a paid plan", async () => {
+    renderModal("exhausted");
+    expect(screen.getByText("Keep your workflows running")).toBeTruthy();
+    expect(screen.getByText(BENEFITS)).toBeTruthy();
+    expect(screen.queryByText(/Linking does not start a paid plan/)).toBeNull();
+    expect(
+      screen.queryByText(/Manual PDF tools are still available/),
+    ).toBeNull();
+    expect(screen.queryByText("500 free per month")).toBeNull();
+    expect(filledSteps()).toBe(0);
+    click("Link account for more credits");
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+    expect(sessionStorage.getItem("stirling.accountLinkReturnPath")).toBe(
+      "/processor/pipelines",
+    );
+  });
+
+  it("offers members an administrator message rather than a handshake", () => {
+    auth.isAdmin = false;
+    renderModal("exhausted");
+    expect(screen.getByText(/open Usage & billing/)).toBeTruthy();
+    expect(
+      screen.getByRole("button", { name: "Copy message for administrator" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Link account for more credits" }),
+    ).toBeNull();
+    expect(startConnect).not.toHaveBeenCalled();
   });
 });
