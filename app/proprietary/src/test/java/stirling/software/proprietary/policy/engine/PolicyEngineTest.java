@@ -532,6 +532,54 @@ class PolicyEngineTest {
     }
 
     @Test
+    void runPolicyBillsTheTriggeringUserWhenThePolicyIsUnowned() throws Exception {
+        // Regression: an unowned policy (the seeded Classification policy) must bill the triggering
+        // user, not a null principal that reverts its tool sub-steps to the team-less
+        // INTERNAL_API_USER and draws a usage-limit 402.
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        int[] counter = {0};
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenAnswer(
+                        inv ->
+                                new StoredFile(
+                                        "file-" + ++counter[0],
+                                        ((InputStream) inv.getArgument(0)).readAllBytes().length));
+
+        String[] principalAtDispatch = {"<none>"};
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        inv -> {
+                            principalAtDispatch[0] = MDC.get("auditPrincipal");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+
+        Policy unowned =
+                new Policy(
+                        "p1",
+                        "rotate",
+                        null, // unowned, like the seeded Classification policy
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep(ROTATE, Map.of())),
+                        OutputSpec.inline());
+
+        MDC.put("auditPrincipal", "bob"); // the user whose upload triggered the run
+        try {
+            engine.runPolicy(
+                            unowned,
+                            PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                            PolicyProgressListener.NOOP)
+                    .completion()
+                    .get(10, TimeUnit.SECONDS);
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+
+        assertEquals("bob", principalAtDispatch[0]);
+    }
+
+    @Test
     void adHocRunDispatchesToolCallsAsTheSubmittingUser() throws Exception {
         // Ad-hoc runs (no stored policy) bill whoever kicked them off; the principal is captured on
         // the request thread (here simulated via MDC) and re-established on the worker thread.

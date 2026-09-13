@@ -28,7 +28,10 @@ import tools.jackson.databind.node.ObjectNode;
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AccountLinkClient {
 
     static final String HEADER_DEVICE_ID = "X-Device-Id";

@@ -2,8 +2,8 @@ package stirling.software.proprietary.accountlink;
 
 /**
  * Outcome of {@link InstanceEntitlementGate}. {@link #allowed} is what the interceptor enforces;
- * {@link #reason} carries the machine-readable signal the FE maps to a prompt (e.g. "link to
- * activate"). Manual-tool and fail-open allows carry an informational reason but never block.
+ * {@link #reason} is the only thing distinguishing "your grant is spent, linking buys more" from
+ * "your linked team is over its limit". Allows carry one too, informationally.
  */
 public record GateDecision(boolean allowed, Reason reason) {
 
@@ -14,6 +14,7 @@ public record GateDecision(boolean allowed, Reason reason) {
         MANUAL_FREE,
         /** Linked + within entitlement — billable work allowed. */
         ENTITLED,
+        FREE_TIER,
         /** Entitlement source unreachable — fail open, allow. */
         FAIL_OPEN,
         /**
@@ -21,8 +22,11 @@ public record GateDecision(boolean allowed, Reason reason) {
          * fail-open backstop expired) so unbounded free/unbilled billable work can't continue.
          */
         GRACE_EXPIRED,
-        /** Not linked — block billable work; FE should prompt to link. */
-        NOT_LINKED,
+        /**
+         * Blocked until the period rolls. The FE must offer linking as <em>more</em> allowance, not
+         * as what switches the feature on: nothing here needed an account.
+         */
+        FREE_TIER_EXHAUSTED,
         /** Linked but over the limit / no subscription — block billable work. */
         OVER_LIMIT,
         /** Credential revoked/invalid on the SaaS side — block billable work. */

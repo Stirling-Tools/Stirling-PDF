@@ -275,6 +275,11 @@
       "title": "Fill PDF Forms - Stirling PDF",
       "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
     },
+    "autoFormDetection": {
+      "image": "/og_images/home.png",
+      "title": "Auto Form Detection - Stirling PDF",
+      "description": "Automatically detect form fields with AI and make your PDF fillable."
+    },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
       "title": "PDF Page Editor - Stirling PDF",
@@ -554,6 +559,12 @@
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
       "noindex": true
     },
+    "/settings/adminAi": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
     "/settings/help": {
       "image": "/og_images/home.png",
       "title": "Help Settings - Stirling PDF",
@@ -578,6 +589,12 @@
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
       "noindex": true
     },
+    "/settings/about": {
+      "image": "/og_images/home.png",
+      "title": "About Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
     "/settings/payg": {
       "image": "/og_images/home.png",
       "title": "Payg Settings - Stirling PDF",
@@ -587,6 +604,30 @@
     "/settings/account-link": {
       "image": "/og_images/home.png",
       "title": "Account Link Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
+    "/settings/users": {
+      "image": "/og_images/home.png",
+      "title": "Users Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
+    "/settings/billing": {
+      "image": "/og_images/home.png",
+      "title": "Billing Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
+    "/settings/audit": {
+      "image": "/og_images/home.png",
+      "title": "Audit Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "noindex": true
+    },
+    "/settings/storage": {
+      "image": "/og_images/home.png",
+      "title": "Storage Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
       "noindex": true
     },
@@ -741,6 +782,7 @@
     "/booklet-imposition": "bookletImposition",
     "/pdf-text-editor": "pdfTextEditor",
     "/form-fill": "formFill",
+    "/auto-form-detection": "autoFormDetection",
     "/multi-tool": "multiTool",
     "/read": "read",
     "/automate": "automate",
@@ -841,12 +883,18 @@
     "/settings/adminAiModels": "/settings/adminAiModels",
     "/settings/adminAiDocuments": "/settings/adminAiDocuments",
     "/settings/adminAiLimits": "/settings/adminAiLimits",
+    "/settings/adminAi": "/settings/adminAi",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
+    "/settings/about": "/settings/about",
     "/settings/payg": "/settings/payg",
-    "/settings/account-link": "/settings/account-link"
+    "/settings/account-link": "/settings/account-link",
+    "/settings/users": "/settings/users",
+    "/settings/billing": "/settings/billing",
+    "/settings/audit": "/settings/audit",
+    "/settings/storage": "/settings/storage"
   },
   "canonicalByPath": {
     "/annotate": "/annotations",
@@ -916,6 +964,10 @@
     {
       "path": "/annotations",
       "label": "Annotate PDF"
+    },
+    {
+      "path": "/auto-form-detection",
+      "label": "Auto Form Detection"
     },
     {
       "path": "/auto-rename",

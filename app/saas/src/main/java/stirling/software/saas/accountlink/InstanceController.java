@@ -231,18 +231,13 @@ public class InstanceController {
     }
 
     /**
-     * Users the team's Team plan covers, or null when it has no user limit.
-     *
-     * <p>Read from the seat cap the subscription writes, so the instance and the cloud team enforce
-     * one number. {@code Integer.MAX_VALUE} is the historic "unlimited" sentinel and becomes null
-     * here: the wire contract expresses no-limit as absence, so nothing downstream can accidentally
-     * do arithmetic on it.
+     * Users the team's Team plan covers, or null when it has no user limit. Read from the seat cap
+     * the subscription writes, so the instance and the cloud team enforce one number.
      */
     private Integer licensedUsers(Long teamId) {
         return teamExtensionsRepository
                 .findByTeamId(teamId)
-                .map(SaasTeamExtensions::getMaxSeats)
-                .filter(max -> max != null && max > 0 && max < Integer.MAX_VALUE)
+                .map(SaasTeamExtensions::licensedUsers)
                 .orElse(null);
     }
 

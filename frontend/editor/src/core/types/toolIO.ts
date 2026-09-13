@@ -392,6 +392,18 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/form/form-detection/detect": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+    cases: [
+      {
+        when: [{ param: "applyToPdf", matches: ["false"] }],
+        produces: "JSON",
+        arity: "SISO",
+      },
+    ],
+  },
   "/api/v1/general/booklet-imposition": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -720,6 +732,11 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SISO",
   },
   "/api/v1/security/timestamp-pdf": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
+  "/api/v1/security/validate-compliance": {
     accepts: ["PDF"],
     produces: "PDF",
     arity: "SISO",
