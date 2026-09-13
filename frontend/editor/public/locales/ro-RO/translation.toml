@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "În curând"
 
+[printFile]
+title = "Tipărește Fișier"
+
 [processor.accountLink.card]
 billingNote = "Procesarea nesupravegheată este facturată din portofelul organizației tale."
 eyebrow = "Conectare cont"
@@ -9085,9 +9088,6 @@ summary = "Deține o echipă — gestionează resursele membrilor și configură
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Nelimitat"
-
-[printFile]
-title = "Tipărește Fișier"
 
 [provider.googledrive]
 name = "Google Drive"

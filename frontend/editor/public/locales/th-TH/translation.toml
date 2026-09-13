@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "เร็วๆ นี้"
 
+[printFile]
+title = "พิมพ์ไฟล์"
+
 [processor.accountLink.card]
 billingNote = "การประมวลผลแบบไม่ต้องดูแลจะเรียกเก็บเงินจากกระเป๋าเงินองค์กรของคุณ"
 eyebrow = "การเชื่อมโยงบัญชี"
@@ -9085,9 +9088,6 @@ summary = "เป็นเจ้าของทีม — จัดการท�
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · ไม่จำกัด"
-
-[printFile]
-title = "พิมพ์ไฟล์"
 
 [provider.googledrive]
 name = "Google Drive"

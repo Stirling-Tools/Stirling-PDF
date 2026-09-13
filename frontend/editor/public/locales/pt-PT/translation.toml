@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Em breve"
 
+[printFile]
+title = "Imprimir Ficheiro"
+
 [processor.accountLink.card]
 billingNote = "O processamento sem supervisão é faturado na carteira da sua organização."
 eyebrow = "Associação de conta"
@@ -9085,9 +9088,6 @@ summary = "Detém uma equipa — gere os recursos dos seus membros e configuraç
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Ilimitado"
-
-[printFile]
-title = "Imprimir Ficheiro"
 
 [provider.googledrive]
 name = "Google Drive"

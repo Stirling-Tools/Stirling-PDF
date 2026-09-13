@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Hamarosan"
 
+[printFile]
+title = "Fájl nyomtatása"
+
 [processor.accountLink.card]
 billingNote = "A felügyelet nélküli feldolgozás költsége a szervezeti tárcát terheli."
 eyebrow = "Fiók összekapcsolása"
@@ -9085,9 +9088,6 @@ summary = "Egy csapat tulajdonosa — kezeli a tagok erőforrásait és megoszto
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Korlátlan"
-
-[printFile]
-title = "Fájl nyomtatása"
 
 [provider.googledrive]
 name = "Google Drive"

@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Wkrótce"
 
+[printFile]
+title = "Drukuj plik"
+
 [processor.accountLink.card]
 billingNote = "Przetwarzanie nienadzorowane jest rozliczane z portfela Twojej organizacji."
 eyebrow = "Połączenie konta"
@@ -9085,9 +9088,6 @@ summary = "Jest właścicielem zespołu — zarządza zasobami jego członków i
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Bez limitu"
-
-[printFile]
-title = "Drukuj plik"
 
 [provider.googledrive]
 name = "Google Drive"

@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Προσεχώς"
 
+[printFile]
+title = "Εκτύπωση αρχείου"
+
 [processor.accountLink.card]
 billingNote = "Η μη επιτηρούμενη επεξεργασία χρεώνεται στο πορτοφόλι του οργανισμού σας."
 eyebrow = "Σύνδεση λογαριασμού"
@@ -9085,9 +9088,6 @@ summary = "Κατέχει μια ομάδα — διαχειρίζεται το�
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Απεριόριστα"
-
-[printFile]
-title = "Εκτύπωση αρχείου"
 
 [provider.googledrive]
 name = "Google Drive"

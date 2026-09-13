@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Disponibile a breve"
 
+[printFile]
+title = "Stampa file"
+
 [processor.accountLink.card]
 billingNote = "L'elaborazione non presidiata viene addebitata al portafoglio della tua organizzazione."
 eyebrow = "Collegamento account"
@@ -9085,9 +9088,6 @@ summary = "Possiede un team — gestisce le risorse dei membri e le configurazio
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Illimitati"
-
-[printFile]
-title = "Stampa file"
 
 [provider.googledrive]
 name = "Google Drive"

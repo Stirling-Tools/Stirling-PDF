@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "به‌زودی"
 
+[printFile]
+title = "چاپ فایل"
+
 [processor.accountLink.card]
 billingNote = "پردازش بدون نظارت از کیف پول سازمان شما هزینه می‌شود."
 eyebrow = "پیوند حساب"
@@ -9085,9 +9088,6 @@ summary = "مالک یک تیم است — منابع اعضا و پیکربند
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · نامحدود"
-
-[printFile]
-title = "چاپ فایل"
 
 [provider.googledrive]
 name = "Google Drive"

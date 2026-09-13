@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "མགྱོགས་པོར་ཡོང་རྒྱུ"
 
+[printFile]
+title = "པར་སྐྲུན།"
+
 [processor.accountLink.card]
 billingNote = "ལྟ་སྐྱོང་མེད་པའི་ལས་སྣོན་གྱི་རིན་འབབ་ཁྱེད་ཀྱི་ཚོགས་པའི་དངུལ་ཁུག་ནས་རྩིས་འབུལ་བྱེད།"
 eyebrow = "རྩིས་ཐོ་སྦྲེལ་མཐུད"
@@ -9085,9 +9088,6 @@ summary = "རུ་ཁག་ཅིག་བདག་སྐྱོང་བྱེ
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · ཚད་མེད"
-
-[printFile]
-title = "པར་སྐྲུན།"
 
 [provider.googledrive]
 name = "Google Drive"

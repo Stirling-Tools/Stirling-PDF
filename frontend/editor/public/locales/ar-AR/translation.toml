@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "قريبًا"
 
+[printFile]
+title = "طباعة ملف"
+
 [processor.accountLink.card]
 billingNote = "تتم فوترة المعالجة غير المراقبة من محفظة مؤسستك."
 eyebrow = "ربط الحساب"
@@ -9085,9 +9088,6 @@ summary = "يمتلك فريقًا — يدير موارد أعضائه والت
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · غير محدود"
-
-[printFile]
-title = "طباعة ملف"
 
 [provider.googledrive]
 name = "Google Drive"

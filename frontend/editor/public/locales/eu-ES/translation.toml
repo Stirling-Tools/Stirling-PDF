@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Laster"
 
+[printFile]
+title = "Inprimatu fitxategia"
+
 [processor.accountLink.card]
 billingNote = "Gainbegiratu gabeko prozesamendua zure erakundearen zorroari fakturatzen zaio."
 eyebrow = "Kontu-lotura"
@@ -9085,9 +9088,6 @@ summary = "Talde baten jabea da — kideen baliabideak eta partekatutako konfigu
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Mugagabea"
-
-[printFile]
-title = "Inprimatu fitxategia"
 
 [provider.googledrive]
 name = "Google Drive"

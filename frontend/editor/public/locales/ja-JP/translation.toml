@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "近日公開"
 
+[printFile]
+title = "ファイルの印刷"
+
 [processor.accountLink.card]
 billingNote = "無人処理は組織ウォレットに請求されます。"
 eyebrow = "アカウントリンク"
@@ -9085,9 +9088,6 @@ summary = "チームを所有し、そのメンバーのリソースと共有設
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 無制限"
-
-[printFile]
-title = "ファイルの印刷"
 
 [provider.googledrive]
 name = "Google Drive"

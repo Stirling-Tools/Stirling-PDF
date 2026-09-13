@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Již brzy"
 
+[printFile]
+title = "Tisk souboru"
+
 [processor.accountLink.card]
 billingNote = "Bezobslužné zpracování se účtuje z peněženky vaší organizace."
 eyebrow = "Propojení účtu"
@@ -9085,9 +9088,6 @@ summary = "Vlastní tým — spravuje prostředky jeho členů a sdílené konfi
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neomezeně"
-
-[printFile]
-title = "Tisk souboru"
 
 [provider.googledrive]
 name = "Google Drive"

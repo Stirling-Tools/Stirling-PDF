@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "即将推出"
 
+[printFile]
+title = "ཡིག་ཆ་པར་འདེབས།"
+
 [processor.accountLink.card]
 billingNote = "无人值守处理费用将从您的组织钱包中扣除。"
 eyebrow = "账户链接"
@@ -9085,9 +9088,6 @@ summary = "拥有团队——管理其成员的资源和共享配置。"
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 无限"
-
-[printFile]
-title = "ཡིག་ཆ་པར་འདེབས།"
 
 [provider.googledrive]
 name = "Google Drive"

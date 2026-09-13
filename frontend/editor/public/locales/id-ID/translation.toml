@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Segera hadir"
 
+[printFile]
+title = "Cetak File"
+
 [processor.accountLink.card]
 billingNote = "Pemrosesan tanpa pengawasan ditagihkan ke dompet organisasi Anda."
 eyebrow = "Tautan akun"
@@ -9085,9 +9088,6 @@ summary = "Memiliki tim — mengelola sumber daya anggota dan konfigurasi bersam
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Tidak terbatas"
-
-[printFile]
-title = "Cetak File"
 
 [provider.googledrive]
 name = "Google Drive"

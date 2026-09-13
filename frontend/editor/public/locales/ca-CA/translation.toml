@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Properament"
 
+[printFile]
+title = "Imprimir Fitxer"
+
 [processor.accountLink.card]
 billingNote = "El processament desatès es factura al moneder de la teva organització."
 eyebrow = "Enllaç del compte"
@@ -9085,9 +9088,6 @@ summary = "Posseeix un equip — en gestiona els recursos dels membres i les con
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Il·limitat"
-
-[printFile]
-title = "Imprimir Fitxer"
 
 [provider.googledrive]
 name = "Google Drive"

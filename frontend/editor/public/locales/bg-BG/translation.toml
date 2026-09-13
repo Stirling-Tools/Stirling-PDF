@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Очаквайте скоро"
 
+[printFile]
+title = "Печат на файл"
+
 [processor.accountLink.card]
 billingNote = "Автоматичната обработка се таксува към портфейла на вашата организация."
 eyebrow = "Свързване на акаунт"
@@ -9085,9 +9088,6 @@ summary = "Притежава екип — управлява ресурсите
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Неограничено"
-
-[printFile]
-title = "Печат на файл"
 
 [provider.googledrive]
 name = "Google Drive"

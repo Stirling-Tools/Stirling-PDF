@@ -7138,6 +7138,42 @@ pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
+[printFile]
+title = "Print File"
+
+[processingFolders.downloads]
+approve = "Process my Downloads"
+cancelSweep = "Cancel"
+capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
+close = "Done"
+explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."
+explain_other = "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here."
+failed = "Could not set that up. Your files have not been changed."
+finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
+finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
+keepsOriginals = "Files are processed in place - and each original is kept, so you can restore it any time."
+nothingNew_one = "Nothing new to process - this {{count}} file has already been through."
+nothingNew_other = "Nothing new to process - these {{count}} files have already been through."
+notNow = "Not now"
+progressCounts = "of {{total}} processed"
+someFailed_one = "{{count}} could not be processed and was left untouched."
+someFailed_other = "{{count}} could not be processed and were left untouched."
+stillParked_one = "{{count}} file failed earlier and was not retried - fix the cause, then run again."
+stillParked_other = "{{count}} files failed earlier and were not retried - fix the cause, then run again."
+stillRunning = "Some files are still being processed in the background."
+title = "Organize your Downloads?"
+trigger_one = "Process {{count}} PDF in Downloads"
+trigger_other = "Process {{count}} PDFs in Downloads"
+typesFound_one = "{{count}} document type found"
+typesFound_other = "{{count}} document types found"
+working = "Processing ..."
+
+[processingFolders.wall]
+done = "Done"
+failed = "Failed"
+title = "Processing this folder"
+waiting = "Queued ..."
+
 [processor.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."
 eyebrow = "Account link"
@@ -9894,42 +9930,6 @@ summary = "Owns a team — manages its members' resources and shared configs."
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Unlimited"
-
-[printFile]
-title = "Print File"
-
-[processingFolders.downloads]
-approve = "Process my Downloads"
-cancelSweep = "Cancel"
-capped = "You have {{found}} PDFs; the first {{limit}} are processed now and the rest follow."
-close = "Done"
-explain_one = "Stirling can classify the {{count}} PDF already in your Downloads folder and open the results here."
-explain_other = "Stirling can classify the {{count}} PDFs already in your Downloads folder and open the results here."
-failed = "Could not set that up. Your files have not been changed."
-finished_one = "Classified {{count}} file and opened {{opened}} of them here, ready to work on."
-finished_other = "Classified {{count}} files and opened {{opened}} of them here, ready to work on."
-keepsOriginals = "Files are processed in place - and each original is kept, so you can restore it any time."
-nothingNew_one = "Nothing new to process - this {{count}} file has already been through."
-nothingNew_other = "Nothing new to process - these {{count}} files have already been through."
-notNow = "Not now"
-progressCounts = "of {{total}} processed"
-someFailed_one = "{{count}} could not be processed and was left untouched."
-someFailed_other = "{{count}} could not be processed and were left untouched."
-stillParked_one = "{{count}} file failed earlier and was not retried - fix the cause, then run again."
-stillParked_other = "{{count}} files failed earlier and were not retried - fix the cause, then run again."
-stillRunning = "Some files are still being processed in the background."
-title = "Organize your Downloads?"
-trigger_one = "Process {{count}} PDF in Downloads"
-trigger_other = "Process {{count}} PDFs in Downloads"
-typesFound_one = "{{count}} document type found"
-typesFound_other = "{{count}} document types found"
-working = "Processing ..."
-
-[processingFolders.wall]
-done = "Done"
-failed = "Failed"
-title = "Processing this folder"
-waiting = "Queued ..."
 
 [provider.googledrive]
 name = "Google Drive"

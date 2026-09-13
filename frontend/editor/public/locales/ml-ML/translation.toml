@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "ഉടൻ വരുന്നു"
 
+[printFile]
+title = "ഫയൽ അച്ചടിക്കുക"
+
 [processor.accountLink.card]
 billingNote = "Unattended processing നിങ്ങളുടെ org wallet-ലേക്ക് ബിൽ ചെയ്യപ്പെടും."
 eyebrow = "അക്കൗണ്ട് ലിങ്ക്"
@@ -9085,9 +9088,6 @@ summary = "ഒരു team-ന്റെ ഉടമ — അതിന്റെ membe
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Unlimited"
-
-[printFile]
-title = "ഫയൽ അച്ചടിക്കുക"
 
 [provider.googledrive]
 name = "Google Drive"

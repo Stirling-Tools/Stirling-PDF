@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Sắp ra mắt"
 
+[printFile]
+title = "In tệp"
+
 [processor.accountLink.card]
 billingNote = "Xử lý không giám sát được tính phí vào ví tổ chức của bạn."
 eyebrow = "Liên kết tài khoản"
@@ -9085,9 +9088,6 @@ summary = "Sở hữu một đội — quản lý tài nguyên và cấu hình d
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Không giới hạn"
-
-[printFile]
-title = "In tệp"
 
 [provider.googledrive]
 name = "Google Drive"

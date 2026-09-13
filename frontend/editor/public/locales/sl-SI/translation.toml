@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Kmalu na voljo"
 
+[printFile]
+title = "Natisni datoteko"
+
 [processor.accountLink.card]
 billingNote = "Nenadzorovana obdelava se zaračuna denarnici vaše organizacije."
 eyebrow = "Povezava računa"
@@ -9085,9 +9088,6 @@ summary = "Ima ekipo — upravlja vire njenih članov in deljene konfiguracije."
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neomejeno"
-
-[printFile]
-title = "Natisni datoteko"
 
 [provider.googledrive]
 name = "Google Drive"

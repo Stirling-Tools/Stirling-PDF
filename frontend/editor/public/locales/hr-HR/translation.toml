@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Uskoro"
 
+[printFile]
+title = "Ispis datoteke"
+
 [processor.accountLink.card]
 billingNote = "Nenadzirana obrada naplaćuje se s novčanika vaše organizacije."
 eyebrow = "Povezivanje računa"
@@ -9085,9 +9088,6 @@ summary = "Vlasnik je tima — upravlja resursima njegovih članova i dijeljenim
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neograničeno"
-
-[printFile]
-title = "Ispis datoteke"
 
 [provider.googledrive]
 name = "Google Drive"

@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Em breve"
 
+[printFile]
+title = "Imprimir arquivo"
+
 [processor.accountLink.card]
 billingNote = "O processamento autônomo é cobrado da carteira da sua organização."
 eyebrow = "Vínculo da conta"
@@ -9085,9 +9088,6 @@ summary = "Possui uma equipe — gerencia os recursos e configurações comparti
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Ilimitado"
-
-[printFile]
-title = "Imprimir arquivo"
 
 [provider.googledrive]
 name = "Google Drive"

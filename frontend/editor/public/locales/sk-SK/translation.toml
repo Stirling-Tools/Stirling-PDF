@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Už čoskoro"
 
+[printFile]
+title = "Vytlačiť súbor"
+
 [processor.accountLink.card]
 billingNote = "Bezobslužné spracovanie sa účtuje z peňaženky vašej organizácie."
 eyebrow = "Prepojenie účtu"
@@ -9085,9 +9088,6 @@ summary = "Vlastní tím — spravuje zdroje jeho členov a zdieľané konfigur�
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Neobmedzené"
-
-[printFile]
-title = "Vytlačiť súbor"
 
 [provider.googledrive]
 name = "Google Drive"

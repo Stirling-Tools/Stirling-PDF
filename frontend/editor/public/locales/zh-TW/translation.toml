@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "即將推出"
 
+[printFile]
+title = "列印檔案"
+
 [processor.accountLink.card]
 billingNote = "自動處理會從您的組織錢包扣款。"
 eyebrow = "帳戶連結"
@@ -9085,9 +9088,6 @@ summary = "擁有團隊 — 管理其成員資源和共用設定。"
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · 無限制"
-
-[printFile]
-title = "列印檔案"
 
 [provider.googledrive]
 name = "Google Drive"

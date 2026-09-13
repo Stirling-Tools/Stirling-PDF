@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Bientôt disponible"
 
+[printFile]
+title = "Imprimer le fichier"
+
 [processor.accountLink.card]
 billingNote = "Le traitement sans surveillance est facturé sur le portefeuille de votre organisation."
 eyebrow = "Liaison de compte"
@@ -9085,9 +9088,6 @@ summary = "Possède une équipe — gère les ressources de ses membres et les c
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Illimité"
-
-[printFile]
-title = "Imprimer le fichier"
 
 [provider.googledrive]
 name = "Google Drive"

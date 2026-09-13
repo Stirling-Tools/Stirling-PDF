@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Ag teacht go luath"
 
+[printFile]
+title = "Priontáil Comhad"
+
 [processor.accountLink.card]
 billingNote = "Billeálann próiseáil gan freastal ar sparán d’eagraíochta."
 eyebrow = "Nasc cuntais"
@@ -9085,9 +9088,6 @@ summary = "Is leis/léi foireann — bainistíonn sé/sí acmhainní a ball agus
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Gan teorainn"
-
-[printFile]
-title = "Priontáil Comhad"
 
 [provider.googledrive]
 name = "Google Drive"

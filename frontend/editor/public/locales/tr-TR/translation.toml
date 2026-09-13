@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Yakında"
 
+[printFile]
+title = "Dosya Yazdır"
+
 [processor.accountLink.card]
 billingNote = "Gözetimsiz işleme, kuruluş cüzdanınıza faturalandırılır."
 eyebrow = "Hesap bağlantısı"
@@ -9085,9 +9088,6 @@ summary = "Bir takımın sahibidir — takım üyelerinin kaynaklarını ve payl
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Sınırsız"
-
-[printFile]
-title = "Dosya Yazdır"
 
 [provider.googledrive]
 name = "Google Drive"

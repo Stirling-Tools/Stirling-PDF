@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Demnächst"
 
+[printFile]
+title = "Datei drucken"
+
 [processor.accountLink.card]
 billingNote = "Unbeaufsichtigte Verarbeitung wird Ihrem Organisations-Wallet berechnet."
 eyebrow = "Kontoverknüpfung"
@@ -9085,9 +9088,6 @@ summary = "Besitzt ein Team — verwaltet die Ressourcen seiner Mitglieder und f
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Unbegrenzt"
-
-[printFile]
-title = "Datei drucken"
 
 [provider.googledrive]
 name = "Google Drive"

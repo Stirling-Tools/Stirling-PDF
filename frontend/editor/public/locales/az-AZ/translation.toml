@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Tezliklə"
 
+[printFile]
+title = "Faylı çap edin"
+
 [processor.accountLink.card]
 billingNote = "Nəzarətsiz emal təşkilatınızın pul kisəsindən hesablanır."
 eyebrow = "Hesab bağlantısı"
@@ -9085,9 +9088,6 @@ summary = "Komandaya sahibdir — onun üzvlərinin resurslarını və paylaşı
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Limitsiz"
-
-[printFile]
-title = "Faylı çap edin"
 
 [provider.googledrive]
 name = "Google Drive"

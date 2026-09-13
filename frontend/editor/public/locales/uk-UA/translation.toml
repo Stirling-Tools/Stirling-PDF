@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Незабаром"
 
+[printFile]
+title = "Роздрукувати файл"
+
 [processor.accountLink.card]
 billingNote = "Автоматична обробка списується з гаманця вашої організації."
 eyebrow = "Прив’язка облікового запису"
@@ -9085,9 +9088,6 @@ summary = "Володіє командою — керує ресурсами ї�
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Без обмежень"
-
-[printFile]
-title = "Роздрукувати файл"
 
 [provider.googledrive]
 name = "Google Drive"

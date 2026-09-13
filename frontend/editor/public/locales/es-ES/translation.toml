@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Próximamente"
 
+[printFile]
+title = "Imprimir archivo"
+
 [processor.accountLink.card]
 billingNote = "El procesamiento desatendido se factura contra la cartera de tu organización."
 eyebrow = "Vinculación de cuenta"
@@ -9085,9 +9088,6 @@ summary = "Posee un equipo — gestiona los recursos de sus miembros y las confi
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Ilimitado"
-
-[printFile]
-title = "Imprimir archivo"
 
 [provider.googledrive]
 name = "Google Drive"

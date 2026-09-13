@@ -6467,6 +6467,9 @@ webhook = "Webhook"
 [portal]
 comingSoon = "Kommer snart"
 
+[printFile]
+title = "Skriv ut fil"
+
 [processor.accountLink.card]
 billingNote = "Obemannad bearbetning faktureras mot din organisationsplånbok."
 eyebrow = "Kontolänk"
@@ -9085,9 +9088,6 @@ summary = "Äger ett team — hanterar dess medlemmars resurser och delade konfi
 [processor.users.seats]
 limited = "{{used}} / {{limit}}"
 unlimited = "{{used}} · Obegränsat"
-
-[printFile]
-title = "Skriv ut fil"
 
 [provider.googledrive]
 name = "Google Drive"
