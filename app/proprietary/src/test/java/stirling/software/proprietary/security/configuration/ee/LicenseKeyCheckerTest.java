@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -237,6 +238,72 @@ class LicenseKeyCheckerTest {
 
         assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
         verify(userLicenseSettingsService).updateLicenseMaxUsers();
+    }
+
+    /**
+     * The seam between the daily sync and the tier. The sync refreshes the entitlement for its own
+     * reasons and says so; nothing re-read the plan on the back of it, which is how a purchase
+     * could sit unnoticed until the weekly Keygen recheck.
+     */
+    @Test
+    void entitlementRefresh_promotesWithoutWaitingForTheLicenceRecheck() {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getPremium().setEnabled(false);
+        // Unreadable at boot, as it is on a real start: no datasource yet.
+        when(userLicenseSettingsService.refreshLinkedTeamUsers())
+                .thenThrow(new IllegalStateException("no datasource"));
+
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        checker.init();
+        assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
+
+        // What the sync's event stands for: the plan is now readable and says 100 users.
+        reset(userLicenseSettingsService);
+        when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(100);
+        checker.onEntitlementRefreshed();
+
+        assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
+        // Still no Keygen round trip: the whole point is that this is the cheap path.
+        verifyNoInteractions(verifier);
+    }
+
+    /** A cancellation travels the same seam, and must not need a restart either. */
+    @Test
+    void entitlementRefresh_demotesWhenThePlanIsGone() {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getPremium().setEnabled(false);
+        when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(100);
+
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        checker.init();
+        assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
+
+        reset(userLicenseSettingsService);
+        when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(null);
+        checker.onEntitlementRefreshed();
+
+        assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
+    }
+
+    /** A read that throws leaves the tier where it was rather than silently demoting a payer. */
+    @Test
+    void entitlementRefresh_keepsTheTierWhenTheReadFails() {
+        ApplicationProperties props = new ApplicationProperties();
+        props.getPremium().setEnabled(false);
+        when(userLicenseSettingsService.refreshLinkedTeamUsers()).thenReturn(100);
+
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, props, userLicenseSettingsService);
+        checker.init();
+
+        reset(userLicenseSettingsService);
+        when(userLicenseSettingsService.refreshLinkedTeamUsers())
+                .thenThrow(new IllegalStateException("SaaS unreachable"));
+        checker.onEntitlementRefreshed();
+
+        assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
     }
 
     private LicenseKeyChecker checkerWithLicense(License level) {

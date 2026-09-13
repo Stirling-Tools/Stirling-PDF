@@ -57,11 +57,11 @@ public class LicenseKeyChecker {
     /**
      * Applies the Team-plan promotion and syncs the licence row.
      *
-     * <p>The promotion is redone here rather than only in {@link #init()} because it reads a
-     * persisted row: the datasource does not exist yet when {@code @PostConstruct} runs, since
-     * {@code DatabaseConfig} builds it from the {@code runningProOrHigher} bean this class
-     * produces. Re-verifying the licence key is deliberately not repeated — that is a Keygen round
-     * trip and the key cannot have changed since boot.
+     * <p>A backstop rather than the first attempt: the tier beans have already promoted while they
+     * were built. This catches an instance whose entitlement was unreadable then — SaaS unreachable
+     * at startup, say — without waiting for the first daily sync. Re-verifying the licence key is
+     * deliberately not repeated: that is a Keygen round trip and the key cannot have changed since
+     * boot.
      */
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
@@ -148,7 +148,16 @@ public class LicenseKeyChecker {
             premiumEnabledResult = licenseKeyResult;
             return;
         }
-        Integer users = purchasedTeamUsers();
+        Integer users;
+        try {
+            users = purchasedTeamUsers();
+        } catch (RuntimeException e) {
+            // Could not ask is not the same answer as no plan. Demoting here would drop a paying
+            // customer to NORMAL because their database was busy or SaaS was briefly unreachable,
+            // so the tier stays where it was and the next refresh decides.
+            log.debug("Linked team allowance unreadable; keeping the current tier", e);
+            return;
+        }
         // A plan for no users is not a plan. SaaS already reports an unpurchased team as no
         // allowance at all, so this only guards against a zero reaching us some other way.
         boolean entitled = users != null && users > 0;
@@ -159,21 +168,14 @@ public class LicenseKeyChecker {
     }
 
     /**
-     * Users the linked cloud team has bought, or null when it has bought none or cannot be asked.
+     * Users the linked cloud team has bought; null when it has bought none.
      *
-     * <p>Fails soft on purpose. The read goes to the licence row, and {@link #init()} runs before
-     * the datasource exists — {@code DatabaseConfig} builds it from the {@code runningProOrHigher}
-     * bean, which needs this bean fully constructed — so resolving the settings service there
-     * throws rather than returning nothing. Treating that as "no plan" keeps boot working and
-     * leaves {@link #onApplicationReady()} to apply the promotion once the row is readable.
+     * <p>Throws rather than returning null when the allowance cannot be read at all — {@link
+     * #init()} runs before the datasource exists, so it always does there. The caller keeps the two
+     * apart, because "no plan" and "could not ask" must not mean the same thing to a tier.
      */
     private Integer purchasedTeamUsers() {
-        try {
-            return licenseSettingsService.refreshLinkedTeamUsers();
-        } catch (RuntimeException e) {
-            log.debug("Linked team allowance unavailable; not promoting", e);
-            return null;
-        }
+        return licenseSettingsService.refreshLinkedTeamUsers();
     }
 
     private void synchronizeLicenseSettings() {
