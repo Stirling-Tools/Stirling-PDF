@@ -76,6 +76,7 @@ import stirling.software.proprietary.workflow.service.UserServerCertificateServi
 public class UserService implements UserServiceInterface {
 
     private final UserRepository userRepository;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
     private final TeamRepository teamRepository;
     private final AuthorityRepository authorityRepository;
 
@@ -264,6 +265,7 @@ public class UserService implements UserServiceInterface {
                     return;
                 }
             }
+            orgOwnerService.protect(user.getId(), false);
             deleteUserRelatedData(user);
             userRepository.delete(user);
             persistentLoginRepository.deleteByUsername(username);
@@ -407,18 +409,22 @@ public class UserService implements UserServiceInterface {
         return authorityRepository.findByUserId(user.getId());
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void changeUsername(User user, String newUsername)
             throws IllegalArgumentException, SQLException, UnsupportedProviderException {
         if (!isUsernameValid(newUsername)) {
             throw new IllegalArgumentException(getInvalidUsernameMessage());
         }
+        orgOwnerService.renamed(user.getId(), newUsername);
         user.setUsername(newUsername);
         userRepository.save(user);
         databaseService.exportDatabase();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void changePassword(User user, String newPassword)
             throws SQLException, UnsupportedProviderException {
+        orgOwnerService.protect(user.getId(), true);
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
         databaseService.exportDatabase();
@@ -431,16 +437,20 @@ public class UserService implements UserServiceInterface {
         databaseService.exportDatabase();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void changeRole(User user, String newRole)
             throws SQLException, UnsupportedProviderException {
+        if (!Role.ADMIN.getRoleId().equals(newRole)) orgOwnerService.protect(user.getId(), false);
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
         databaseService.exportDatabase();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     public void changeUserEnabled(User user, Boolean enbeled)
             throws SQLException, UnsupportedProviderException {
+        if (Boolean.FALSE.equals(enbeled)) orgOwnerService.protect(user.getId(), false);
         user.setEnabled(enbeled);
         userRepository.save(user);
         databaseService.exportDatabase();
@@ -569,6 +579,7 @@ public class UserService implements UserServiceInterface {
         // Save user
         userRepository.save(user);
         teamMembershipService.syncMembership(user);
+        orgOwnerService.reconcileAfterCommit();
 
         exportAfterCommit();
 

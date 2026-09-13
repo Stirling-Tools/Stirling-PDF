@@ -81,7 +81,38 @@ class UserServiceTest {
                     stirling.software.proprietary.service.UserLicenseSettingsService>
             licenseSettingsService;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @Spy @InjectMocks private UserService userService;
+
+    @Test
+    void ownershipRefusalsPreventAllFourUserMutations() throws Exception {
+        User owner = new User();
+        owner.setId(1L);
+        owner.setUsername("owner");
+        owner.addAuthority(new Authority(Role.ADMIN.getRoleId(), owner));
+        doThrow(
+                        new org.springframework.web.server.ResponseStatusException(
+                                org.springframework.http.HttpStatus.BAD_REQUEST))
+                .when(orgOwnerService)
+                .protect(eq(1L), anyBoolean());
+        assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> userService.changeRole(owner, Role.USER.getRoleId()));
+        assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> userService.changeUserEnabled(owner, false));
+        assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> userService.changePassword(owner, "replacement"));
+        when(userRepository.findByUsernameIgnoreCase("owner")).thenReturn(Optional.of(owner));
+        assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> userService.deleteUser("owner"));
+        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).delete(any());
+        verifyNoInteractions(passwordEncoder, sessionRegistry);
+    }
 
     @Test
     void saveUserCore_populatesFieldsAndPersists()
