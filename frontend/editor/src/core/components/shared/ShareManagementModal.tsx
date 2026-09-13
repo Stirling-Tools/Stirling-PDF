@@ -226,7 +226,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
           durationMs: 2500,
         });
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to create share link:", error);
       setErrorMessage(
         t(

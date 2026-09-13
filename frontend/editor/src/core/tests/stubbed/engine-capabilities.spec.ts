@@ -107,6 +107,12 @@ test.describe("engine capabilities", { tag: "@engine-capability" }, () => {
 
     await uploadFiles(page, SAMPLE_PDF);
 
+    // Dropped before the reload boots, so it cannot reopen the file for us: the eye
+    // below toggles, and whether the restore runs is a build flag this spec does not own.
+    await page.addInitScript(() =>
+      sessionStorage.removeItem("stirling.workbench.session"),
+    );
+
     // Full reload: FileContext rehydrates from IndexedDB, not from memory.
     await page.reload({ waitUntil: "domcontentloaded" });
 

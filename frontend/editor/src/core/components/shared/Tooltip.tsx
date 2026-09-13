@@ -13,10 +13,22 @@ import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
 import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
 import { TooltipTip } from "@app/types/tips";
 import { TooltipContent } from "@app/components/shared/tooltip/TooltipContent";
-import { useSidebarContext } from "@app/contexts/SidebarContext";
+import { useOptionalSidebarContext } from "@app/contexts/SidebarContext";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import styles from "@app/components/shared/tooltip/Tooltip.module.css";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+
+// The wrapped child's own event handlers, which Tooltip forwards to after
+// running its own trigger logic. Kept partial since any given child may set none.
+interface ForwardedHandlers {
+  onPointerEnter?: React.PointerEventHandler;
+  onPointerLeave?: React.PointerEventHandler;
+  onMouseDown?: React.MouseEventHandler;
+  onMouseUp?: React.MouseEventHandler;
+  onClick?: React.MouseEventHandler;
+  onFocus?: React.FocusEventHandler;
+  onBlur?: React.FocusEventHandler;
+}
 
 export interface TooltipProps {
   sidebarTooltip?: boolean;
@@ -47,6 +59,29 @@ export interface TooltipProps {
   showCloseButton?: boolean;
 }
 
+/** Split out so only tooltips with a header need the logo and the providers behind it. */
+function TooltipHeader({
+  header,
+}: {
+  header: NonNullable<TooltipProps["header"]>;
+}) {
+  const { tooltipLogo } = useLogoAssets();
+  return (
+    <div className={styles["tooltip-header"]}>
+      <div className={styles["tooltip-logo"]}>
+        {header.logo || (
+          <img
+            src={tooltipLogo}
+            alt="Stirling PDF"
+            style={{ width: "1.4rem", height: "1.4rem", display: "block" }}
+          />
+        )}
+      </div>
+      <span className={styles["tooltip-title"]}>{header.title}</span>
+    </div>
+  );
+}
+
 export const Tooltip: React.FC<TooltipProps> = ({
   sidebarTooltip = false,
   position,
@@ -73,7 +108,6 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const { t } = useTranslation();
   const [internalOpen, setInternalOpen] = useState(false);
   const [isPinned, setIsPinned] = useState(false);
-  const { tooltipLogo } = useLogoAssets();
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const tooltipRef = useRef<HTMLDivElement | null>(null);
@@ -93,9 +127,9 @@ export const Tooltip: React.FC<TooltipProps> = ({
   }, []);
 
   // Always call the hook unconditionally to satisfy React's rules of hooks.
-  // The context is only used when sidebarTooltip is true.
-  const sidebarContextValue = useSidebarContext();
-  const sidebarContext = sidebarTooltip ? sidebarContextValue : null;
+  // Optional: the plain tooltip renders outside the provider.
+  const sidebarContextValue = useOptionalSidebarContext();
+  const sidebarContext = sidebarTooltip ? (sidebarContextValue ?? null) : null;
 
   const isControlled = controlledOpen !== undefined;
   const open = (isControlled ? !!controlledOpen : internalOpen) && !disabled;
@@ -218,7 +252,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handlePointerEnter = useCallback(
     (e: React.PointerEvent) => {
       if (!isPinned && !disabled) openWithDelay();
-      (children.props as any)?.onPointerEnter?.(e);
+      (children.props as ForwardedHandlers).onPointerEnter?.(e);
     },
     [isPinned, openWithDelay, children.props, disabled],
   );
@@ -233,19 +267,19 @@ export const Tooltip: React.FC<TooltipProps> = ({
         tooltipRef.current &&
         tooltipRef.current.contains(related)
       ) {
-        (children.props as any)?.onPointerLeave?.(e);
+        (children.props as ForwardedHandlers).onPointerLeave?.(e);
         return;
       }
 
       // Ignore transient leave between mousedown and click
       if (clickPendingRef.current) {
-        (children.props as any)?.onPointerLeave?.(e);
+        (children.props as ForwardedHandlers).onPointerLeave?.(e);
         return;
       }
 
       clearTimers();
       if (allowAutoClose && !isPinned) setOpen(false);
-      (children.props as any)?.onPointerLeave?.(e);
+      (children.props as ForwardedHandlers).onPointerLeave?.(e);
     },
     [clearTimers, isPinned, setOpen, children.props, allowAutoClose],
   );
@@ -253,7 +287,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       clickPendingRef.current = true;
-      (children.props as any)?.onMouseDown?.(e);
+      (children.props as ForwardedHandlers).onMouseDown?.(e);
     },
     [children.props],
   );
@@ -262,7 +296,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     (e: React.MouseEvent) => {
       // allow microtask turn so click can see this false
       queueMicrotask(() => (clickPendingRef.current = false));
-      (children.props as any)?.onMouseUp?.(e);
+      (children.props as ForwardedHandlers).onMouseUp?.(e);
     },
     [children.props],
   );
@@ -279,7 +313,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
         return;
       }
       clickPendingRef.current = false;
-      (children.props as any)?.onClick?.(e);
+      (children.props as ForwardedHandlers).onClick?.(e);
     },
     [clearTimers, pinOnClick, open, setOpen, children.props],
   );
@@ -288,7 +322,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
   const handleFocus = useCallback(
     (e: React.FocusEvent) => {
       if (!isPinned && !disabled && openOnFocus) openWithDelay();
-      (children.props as any)?.onFocus?.(e);
+      (children.props as ForwardedHandlers).onFocus?.(e);
     },
     [isPinned, openWithDelay, children.props, disabled, openOnFocus],
   );
@@ -301,12 +335,12 @@ export const Tooltip: React.FC<TooltipProps> = ({
         tooltipRef.current &&
         tooltipRef.current.contains(related)
       ) {
-        (children.props as any)?.onBlur?.(e);
+        (children.props as ForwardedHandlers).onBlur?.(e);
         return;
       }
       clearTimers();
       if (allowAutoClose && !isPinned) setOpen(false);
-      (children.props as any)?.onBlur?.(e);
+      (children.props as ForwardedHandlers).onBlur?.(e);
     },
     [isPinned, setOpen, children.props, allowAutoClose, clearTimers],
   );
@@ -339,24 +373,30 @@ export const Tooltip: React.FC<TooltipProps> = ({
   );
 
   // Enhance child with handlers and ref
-  const childWithHandlers = React.cloneElement(children as any, {
-    ref: (node: HTMLElement | null) => {
-      triggerRef.current = node || null;
-      const originalRef = (children as any).ref;
-      if (typeof originalRef === "function") originalRef(node);
-      else if (originalRef && typeof originalRef === "object")
-        (originalRef as any).current = node;
+  const childWithHandlers = React.cloneElement(
+    children as React.ReactElement<Record<string, unknown>>,
+    {
+      ref: (node: HTMLElement | null) => {
+        triggerRef.current = node || null;
+        const originalRef = (
+          children as React.ReactElement & { ref?: React.Ref<HTMLElement> }
+        ).ref;
+        if (typeof originalRef === "function") originalRef(node);
+        else if (originalRef && typeof originalRef === "object")
+          (originalRef as React.MutableRefObject<HTMLElement | null>).current =
+            node;
+      },
+      "aria-describedby": open ? tooltipIdRef.current : undefined,
+      onPointerEnter: handlePointerEnter,
+      onPointerLeave: handlePointerLeave,
+      onMouseDown: handleMouseDown,
+      onMouseUp: handleMouseUp,
+      onClick: handleClick,
+      onFocus: handleFocus,
+      onBlur: handleBlur,
+      onKeyDown: handleKeyDown,
     },
-    "aria-describedby": open ? tooltipIdRef.current : undefined,
-    onPointerEnter: handlePointerEnter,
-    onPointerLeave: handlePointerLeave,
-    onMouseDown: handleMouseDown,
-    onMouseUp: handleMouseUp,
-    onClick: handleClick,
-    onFocus: handleFocus,
-    onBlur: handleBlur,
-    onKeyDown: handleKeyDown,
-  });
+  );
 
   const shouldShowTooltip = open;
   const shouldShowCloseButton = showCloseButton || isPinned;
@@ -425,20 +465,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           }
         />
       )}
-      {header && (
-        <div className={styles["tooltip-header"]}>
-          <div className={styles["tooltip-logo"]}>
-            {header.logo || (
-              <img
-                src={tooltipLogo}
-                alt="Stirling PDF"
-                style={{ width: "1.4rem", height: "1.4rem", display: "block" }}
-              />
-            )}
-          </div>
-          <span className={styles["tooltip-title"]}>{header.title}</span>
-        </div>
-      )}
+      {header && <TooltipHeader header={header} />}
       <TooltipContent
         content={content}
         tips={tips}

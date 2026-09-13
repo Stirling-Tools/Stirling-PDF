@@ -46,12 +46,8 @@ export default function SignupRequiredBootstrap() {
         return true;
       });
     };
-    window.addEventListener("payg:signupRequired", handler as EventListener);
-    return () =>
-      window.removeEventListener(
-        "payg:signupRequired",
-        handler as EventListener,
-      );
+    window.addEventListener("payg:signupRequired", handler);
+    return () => window.removeEventListener("payg:signupRequired", handler);
   }, []);
 
   // Map the server's gate categories to user-facing nouns. The server
@@ -97,7 +93,7 @@ export default function SignupRequiredBootstrap() {
         <Text>
           {t(
             "payg.signupRequired.body",
-            "Stirling PDF gives every signed-up account 500 free operations — enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing.",
+            "Stirling PDF gives every signed-up account 500 free operations a month, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing.",
           )}
         </Text>
         <Text size="sm" c="dimmed">

@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import type { ClassificationConfidence } from "@app/types/fileContext";
 
 /**
- * Batch integration test (61 files, two chained upload policies) driving the real
- * store + hook effects, IO mocked. Classification is forced last (see the sort).
+ * Batch integration test (61 files, Security then Classification) driving the real store + both
+ * hooks, IO mocked. The auto-run engine dispatches the file-producing Security policy and versions
+ * its output in place; the Classification policy runs itself (useClassificationPolicy) on each settled
+ * output - here a confident local verdict, so it stamps labels without escalating to the AI.
  */
 
 const FILE_COUNT = 61;
@@ -12,7 +15,14 @@ const FILE_COUNT = 61;
 // the workbench, mirrored into useAllFiles. consumeFiles mutates it in place
 // (input id → output id) exactly as the real silent reducer would.
 const mocks = vi.hoisted(() => ({
-  workspace: [] as Array<{ id: string; classificationLabels?: string[] }>,
+  workspace: [] as Array<{
+    id: string;
+    name?: string;
+    size?: number;
+    derivedFromTool?: boolean;
+    classificationLabels?: string[];
+    classificationConfidence?: ClassificationConfidence;
+  }>,
   consumeSilentCalls: 0,
   consumeNonSilentCalls: 0,
   persistCalls: 0,
@@ -34,12 +44,24 @@ const mocks = vi.hoisted(() => ({
   addFiles: vi.fn(),
   updateStirlingFileStub: vi.fn(),
   consumeFiles: vi.fn(),
+  classify: vi.fn(),
+  meter: vi.fn(),
 }));
 
-// Classification chains server-side only when the AI engine is on (else it runs
-// client-side); this batch exercises the server chain, so force the engine on.
+// The second (file-producing) policy's timing, flippable per test to prove classification's local
+// pass is independent of when the rewriter runs.
+const securityRunOn = vi.hoisted(() => ({
+  value: "upload" as "upload" | "export",
+}));
+
 vi.mock("@app/hooks/useAiEngineEnabled", () => ({
   useAiEngineEnabled: () => true,
+}));
+vi.mock("@app/hooks/useClassificationEnabled", () => ({
+  useClassificationEnabled: () => true,
+}));
+vi.mock("@app/contexts/AppConfigContext", () => ({
+  useAppConfig: () => ({ config: {}, loading: false }),
 }));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: mocks.workspace }),
@@ -55,11 +77,10 @@ vi.mock("@app/contexts/IndexedDBContext", () => ({
 vi.mock("@app/hooks/usePolicies", () => ({
   usePolicies: () => ({
     policies: {
-      // Classification is configured first (order 0) but is FORCED to run last
-      // by the orchestrator; Security (order 1) therefore runs first.
       classification: {
         configured: true,
-        status: "active",
+        runsOnEditor: true,
+        enabled: true,
         backendId: "backend-classification",
         runOn: "upload",
         order: 0,
@@ -68,9 +89,10 @@ vi.mock("@app/hooks/usePolicies", () => ({
       },
       security: {
         configured: true,
-        status: "active",
+        runsOnEditor: true,
+        enabled: true,
         backendId: "backend-security",
-        runOn: "upload",
+        runOn: securityRunOn.value,
         order: 1,
         outputMode: "new_version",
         outputName: "",
@@ -97,30 +119,55 @@ vi.mock("@app/services/fileStubHelpers", () => ({
   createStirlingFilesAndStubs: mocks.createStirlingFilesAndStubs,
 }));
 vi.mock("@app/services/fileClassification", () => ({
-  // Classification always resolves labels here, so the metadata-only import path
-  // stamps them onto the stub.
+  // The AI import path (if ever reached) resolves labels from the output PDF.
   readClassificationLabelsFromFile: vi.fn().mockResolvedValue(["Invoice"]),
+}));
+vi.mock("@app/services/heuristic/heuristicClassification", () => ({
+  classifyFileHeuristically: (file: File) => mocks.classify(file),
+}));
+vi.mock("@app/services/classificationMeter", () => ({
+  meterClassificationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
+import { usePolicyLocalPasses } from "@app/components/policies/usePolicyLocalPasses";
 import {
   usePolicyRuns,
   resetPolicyRuns,
 } from "@app/components/policies/policyRunStore";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
+// Run idle callbacks immediately so the local-pass engine's batches start without timer waits.
+vi.stubGlobal("requestIdleCallback", (cb: () => void) => {
+  cb();
+  return 1;
+});
+vi.stubGlobal("cancelIdleCallback", () => {});
+
 /** A stable snapshot of the store, read after the flow settles. */
 let latestRuns: PolicyRunRecord[] = [];
 function Harness() {
   usePolicyAutoRun();
+  usePolicyLocalPasses();
   latestRuns = usePolicyRuns();
   return null;
 }
 
 function replaceInWorkspace(inputIds: string[], outputIds: string[]) {
+  // A versioned output inherits its input's classification verdict, exactly as the real CONSUME_FILES
+  // reducer does - so a label put on the upload rides forward without re-classifying the output.
+  const donor = mocks.workspace.find((s) => inputIds.includes(s.id));
   mocks.workspace = mocks.workspace
     .filter((s) => !inputIds.includes(s.id))
-    .concat(outputIds.map((id) => ({ id })));
+    .concat(
+      outputIds.map((id) => ({
+        id,
+        name: "doc.pdf",
+        derivedFromTool: true,
+        classificationLabels: donor?.classificationLabels,
+        classificationConfidence: donor?.classificationConfidence,
+      })),
+    );
 }
 
 beforeEach(() => {
@@ -135,9 +182,11 @@ beforeEach(() => {
   mocks.backendOutCounter = 0;
   mocks.dispatchInFlight = 0;
   mocks.maxDispatchInFlight = 0;
+  securityRunOn.value = "upload";
 
   mocks.workspace = Array.from({ length: FILE_COUNT }, (_, i) => ({
     id: `file-${i}`,
+    name: `doc-${i}.pdf`,
   }));
 
   mocks.listPolicyRuns.mockResolvedValue([]);
@@ -153,8 +202,14 @@ beforeEach(() => {
   mocks.downloadPolicyOutput.mockResolvedValue(
     new Blob(["x"], { type: "application/pdf" }),
   );
-  // Apply stub updates to the shared workspace, as the real reducer does — the
-  // label stamp's second pass reads them back to stay idempotent.
+  // A confident local verdict: classification stamps labels and does NOT escalate to the AI.
+  mocks.classify.mockResolvedValue({
+    labels: ["Invoice"],
+    confidence: "high",
+    isEnglish: true,
+    score: 5,
+  });
+  // Apply stub updates to the shared workspace, as the real reducer does.
   mocks.updateStirlingFileStub.mockImplementation(
     (id: string, updates: Record<string, unknown>) => {
       const stub = mocks.workspace.find((s) => s.id === id);
@@ -189,7 +244,7 @@ beforeEach(() => {
     ],
   }));
   // Deliver a unique workspace child stub per output, derived from the parent so
-  // the chain's second policy can find + version it.
+  // classification can find + tag it.
   mocks.createStirlingFilesAndStubs.mockImplementation(
     async (files: File[], parentStub: { id: string }) => {
       const stubs = files.map(() => ({
@@ -221,7 +276,7 @@ beforeEach(() => {
   );
 });
 
-/** Drive the hook until the store shows the expected number of imported runs. */
+/** Drive the hooks until the store shows the expected number of imported runs. */
 async function runUntilSettled(expectedRuns: number) {
   renderHook(() => Harness());
   await act(async () => {
@@ -240,13 +295,15 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     await runUntilSettled(FILE_COUNT * 2);
 
     const classification = latestRuns.filter(
-      (r) => r.categoryId === "classification",
+      (r) => r.policyKey === "classification",
     );
-    const security = latestRuns.filter((r) => r.categoryId === "security");
+    const security = latestRuns.filter((r) => r.policyKey === "security");
 
     expect(classification).toHaveLength(FILE_COUNT);
     expect(security).toHaveLength(FILE_COUNT);
     expect(latestRuns).toHaveLength(FILE_COUNT * 2);
+    // A confident local verdict stands on its own: no AI dispatch for classification.
+    expect(classification.every((r) => r.target === "local")).toBe(true);
   });
 
   it("bounds concurrent dispatch uploads so polls/downloads keep connections", async () => {
@@ -264,7 +321,10 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     // Classification never forks a version — it only stamps labels onto the stub.
     expect(mocks.updateStirlingFileStub).toHaveBeenCalledTimes(FILE_COUNT);
     for (const call of mocks.updateStirlingFileStub.mock.calls) {
-      expect(call[1]).toEqual({ classificationLabels: ["Invoice"] });
+      expect(call[1]).toEqual({
+        classificationLabels: ["Invoice"],
+        classificationConfidence: "high",
+      });
     }
     // Never added as brand-new files either.
     expect(mocks.addFilesCalls).toBe(0);
@@ -287,18 +347,45 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     await act(async () => {
       await vi.waitFor(
         () => {
-          const imported = latestRuns.filter((r) => r.imported).length;
-          expect(imported).toBe(FILE_COUNT * 2);
+          const security = latestRuns.filter(
+            (r) => r.policyKey === "security" && r.imported,
+          );
+          expect(security).toHaveLength(FILE_COUNT);
         },
         { timeout: 8000, interval: 20 },
       );
     });
 
-    // Still fully processed (chain intact), but Security's versions went to
-    // STORAGE, never re-added to the workbench — the workspace stays empty.
-    expect(latestRuns).toHaveLength(FILE_COUNT * 2);
+    // Security's versions went to STORAGE, never re-added to the workbench, so the
+    // workspace stays empty. (Classification may have tagged the few files still open
+    // when the workbench was cleared; the point here is the runner does not re-open them.)
     expect(mocks.workspace).toHaveLength(0);
     expect(mocks.consumeSilentCalls).toBe(0);
     expect(mocks.persistCalls).toBeGreaterThan(0);
+  });
+
+  it("classifies uploads even when the other editor policy runs on export, not upload", async () => {
+    // Repro: with a file-producing policy set to export, the auto-run engine dispatches nothing on
+    // upload - but classification's local pass is independent and must still run on every upload.
+    securityRunOn.value = "export";
+
+    renderHook(() => Harness());
+    await act(async () => {
+      await vi.waitFor(
+        () => {
+          const classification = latestRuns.filter(
+            (r) => r.policyKey === "classification" && r.imported,
+          );
+          expect(classification).toHaveLength(FILE_COUNT);
+        },
+        { timeout: 8000, interval: 20 },
+      );
+    });
+
+    // The export policy did not run on upload; nothing versioned in place.
+    expect(latestRuns.filter((r) => r.policyKey === "security")).toHaveLength(
+      0,
+    );
+    expect(mocks.consumeSilentCalls).toBe(0);
   });
 });

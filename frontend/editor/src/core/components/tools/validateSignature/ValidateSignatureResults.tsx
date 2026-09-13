@@ -294,7 +294,7 @@ const ValidateSignatureResults = ({
         </Text>
         <SegmentedControl
           value={selectedType}
-          onChange={(v) => setSelectedType(v as "pdf" | "csv" | "json")}
+          onChange={(v) => setSelectedType(v)}
           options={downloadTypeOptions}
         />
         <Button

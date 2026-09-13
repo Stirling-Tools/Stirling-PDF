@@ -21,11 +21,7 @@ import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
 import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
 import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
-import {
-  InteractionManagerPluginPackage,
-  PagePointerProvider,
-  GlobalPointerProvider,
-} from "@embedpdf/plugin-interaction-manager/react";
+import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
   SelectionLayer,
   SelectionPluginPackage,
@@ -35,6 +31,11 @@ import {
   TilingPluginPackage,
 } from "@embedpdf/plugin-tiling/react";
 import { PanPluginPackage } from "@embedpdf/plugin-pan/react";
+import { VIEWER_PAN_CONFIG } from "@app/components/viewer/viewerPanConfig";
+import {
+  ViewerGlobalPointerProvider,
+  ViewerPagePointerProvider,
+} from "@app/components/viewer/ViewerPointerProviders";
 import { SpreadPluginPackage, SpreadMode } from "@embedpdf/plugin-spread/react";
 import { SearchPluginPackage } from "@embedpdf/plugin-search/react";
 import { ThumbnailPluginPackage } from "@embedpdf/plugin-thumbnail/react";
@@ -101,6 +102,9 @@ import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrappe
 import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
 import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
+import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
+import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationOverlay";
+import { FormFieldEditOverlay } from "@app/tools/formFill/FormFieldEditOverlay";
 import { ButtonAppearanceOverlay } from "@app/tools/formFill/ButtonAppearanceOverlay";
 import SignatureFieldOverlay from "@app/components/viewer/SignatureFieldOverlay";
 import { CommentsSidebar } from "@app/components/viewer/CommentsSidebar";
@@ -114,12 +118,14 @@ interface LocalEmbedPDFProps {
   enableAnnotations?: boolean;
   enableRedaction?: boolean;
   enableFormFill?: boolean;
+  /** Structural create/modify overlays only mount while the Form tool owns the viewer. */
+  formEditingActive?: boolean;
   isManualRedactionMode?: boolean;
   showBakedAnnotations?: boolean;
   onSignatureAdded?: (annotation: PdfAnnotationObject) => void;
-  signatureApiRef?: React.RefObject<SignatureAPI>;
-  annotationApiRef?: React.RefObject<AnnotationAPI>;
-  historyApiRef?: React.RefObject<HistoryAPI>;
+  signatureApiRef?: React.RefObject<SignatureAPI | null>;
+  annotationApiRef?: React.RefObject<AnnotationAPI | null>;
+  historyApiRef?: React.RefObject<HistoryAPI | null>;
   redactionTrackerRef?: React.RefObject<RedactionPendingTrackerAPI>;
   /** File identity passed through to FormFieldOverlay for stale-field guards */
   fileId?: string | null;
@@ -207,6 +213,7 @@ export function LocalEmbedPDF({
   enableAnnotations = false,
   enableRedaction = false,
   enableFormFill = false,
+  formEditingActive = false,
   isManualRedactionMode = false,
   showBakedAnnotations = true,
   onSignatureAdded,
@@ -380,12 +387,7 @@ export function LocalEmbedPDF({
         drawBlackBoxes: false,
       }),
 
-      // Register pan plugin (depends on Viewport, InteractionManager).
-      // Keep the default mode ("never"). Do NOT set defaultMode: "mobile" - the pan
-      // react layer makes pan the default interaction on any touch-capable device
-      // (navigator.maxTouchPoints > 0), e.g. Windows touchscreen laptops, which then
-      // permanently locks the viewer in pan mode and blocks all text selection.
-      createPluginRegistration(PanPluginPackage),
+      createPluginRegistration(PanPluginPackage, VIEWER_PAN_CONFIG),
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
@@ -1006,6 +1008,7 @@ export function LocalEmbedPDF({
             <ZoomAPIBridge />
             <ScrollAPIBridge />
             <SelectionAPIBridge />
+            <FormCreationInteractionLock />
             <PanAPIBridge />
             <SpreadAPIBridge />
             <SearchAPIBridge />
@@ -1050,7 +1053,7 @@ export function LocalEmbedPDF({
             >
               {(documentId) => (
                 <>
-                  <GlobalPointerProvider documentId={documentId}>
+                  <ViewerGlobalPointerProvider documentId={documentId}>
                     <Viewport
                       documentId={documentId}
                       style={{
@@ -1076,7 +1079,7 @@ export function LocalEmbedPDF({
                               documentId={documentId}
                               pageIndex={pageIndex}
                             >
-                              <PagePointerProvider
+                              <ViewerPagePointerProvider
                                 documentId={documentId}
                                 pageIndex={pageIndex}
                               >
@@ -1153,6 +1156,28 @@ export function LocalEmbedPDF({
                                     />
                                   )}
 
+                                  {/* Create-mode: drag to place new fields */}
+                                  {enableFormFill && formEditingActive && (
+                                    <FormFieldCreationOverlay
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                      fileId={fileId}
+                                    />
+                                  )}
+
+                                  {/* Modify-mode: select / move / resize existing fields */}
+                                  {enableFormFill && formEditingActive && (
+                                    <FormFieldEditOverlay
+                                      documentId={documentId}
+                                      pageIndex={pageIndex}
+                                      pageWidth={width}
+                                      pageHeight={height}
+                                      fileId={fileId}
+                                    />
+                                  )}
+
                                   {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
                                   {file && (
                                     <SignatureFieldOverlay
@@ -1217,13 +1242,13 @@ export function LocalEmbedPDF({
                                     />
                                   )}
                                 </ViewerPageContainer>
-                              </PagePointerProvider>
+                              </ViewerPagePointerProvider>
                             </Rotate>
                           );
                         }}
                       />
                     </Viewport>
-                  </GlobalPointerProvider>
+                  </ViewerGlobalPointerProvider>
                   {enableAnnotations && (
                     <CommentAuthorProvider displayName={commentAuthorName}>
                       <CommentsSidebar

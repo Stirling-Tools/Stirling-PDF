@@ -9,15 +9,20 @@ import { generateId } from "@app/utils/generateId";
 // Re-export FileId for convenience
 export type { FileId };
 
+/** How sure a classifier was about the labels it produced. */
+export type ClassificationConfidence = "none" | "low" | "medium" | "high";
+
 // Normalized state types
 export interface ProcessedFilePage {
   thumbnail?: string;
   pageNumber?: number;
+  originalPageNumber?: number;
   rotation?: number;
   splitBefore?: boolean;
+  splitAfter?: boolean;
   width?: number;
   height?: number;
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 export interface ProcessedFileMetadata {
@@ -25,7 +30,8 @@ export interface ProcessedFileMetadata {
   totalPages?: number;
   lastProcessed?: number;
   isEncrypted?: boolean;
-  [key: string]: any;
+  thumbnailUrl?: string;
+  [key: string]: unknown;
 }
 
 /**
@@ -62,6 +68,11 @@ export interface StirlingFileStub extends BaseFileMetadata {
    */
   classificationLabels?: string[];
   /**
+   * How sure the local heuristic was about {@link classificationLabels}: a confident verdict
+   * stands, an unsure one escalates to the AI. Undefined when the labels came from the AI.
+   */
+  classificationConfidence?: ClassificationConfidence;
+  /**
    * This session proved the stored bytes unreadable (WebKit losing a blob's
    * backing store). The row renders as "data lost" instead of pretending the
    * file can open; re-uploading is the only recovery.
@@ -93,12 +104,13 @@ export interface StirlingFile extends File {
 
 // Type guard to check if a File object has an embedded fileId
 export function isStirlingFile(file: File | Blob): file is StirlingFile {
+  const candidate = file as { fileId?: unknown; quickKey?: unknown };
   return (
     file instanceof File &&
     "fileId" in file &&
-    typeof (file as any).fileId === "string" &&
+    typeof candidate.fileId === "string" &&
     "quickKey" in file &&
-    typeof (file as any).quickKey === "string"
+    typeof candidate.quickKey === "string"
   );
 }
 
@@ -121,7 +133,7 @@ export function getFormFillFileId(
   }
 
   // Fallback for Blobs or other objects
-  return `blob-${(file as any).size || 0}`;
+  return `blob-${file.size || 0}`;
 }
 
 // Create a StirlingFile from a regular File object
@@ -173,14 +185,21 @@ export function extractFiles(files: StirlingFile[]): File[] {
 }
 
 // Check if an object is a File or StirlingFile (replaces instanceof File checks)
-export function isFileObject(obj: any): obj is File | StirlingFile {
+export function isFileObject(obj: unknown): obj is File | StirlingFile {
+  const o = obj as {
+    name?: unknown;
+    size?: unknown;
+    type?: unknown;
+    lastModified?: unknown;
+    arrayBuffer?: unknown;
+  };
   return (
-    obj &&
-    typeof obj.name === "string" &&
-    typeof obj.size === "number" &&
-    typeof obj.type === "string" &&
-    typeof obj.lastModified === "number" &&
-    typeof obj.arrayBuffer === "function"
+    !!obj &&
+    typeof o.name === "string" &&
+    typeof o.size === "number" &&
+    typeof o.type === "string" &&
+    typeof o.lastModified === "number" &&
+    typeof o.arrayBuffer === "function"
   );
 }
 
@@ -329,6 +348,11 @@ export interface FileContextActions {
       insertAfterPageId?: string;
       selectFiles?: boolean;
       skipUploadTracking?: boolean;
+      /**
+       * Produced in-app rather than uploaded, which stops the policy auto-run enforcing an upload
+       * policy on it. Set by anything adding a file already through a policy or a tool.
+       */
+      derivedFromTool?: boolean;
     },
   ) => Promise<StirlingFile[]>;
   addFilesWithOptions: (

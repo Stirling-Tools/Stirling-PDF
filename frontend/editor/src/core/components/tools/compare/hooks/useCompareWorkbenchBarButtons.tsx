@@ -3,7 +3,6 @@ import type React from "react";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { alert } from "@app/components/toast";
-import type { ToastLocation } from "@app/components/toast/types";
 import type { WorkbenchBarButtonWithAction } from "@app/hooks/useWorkbenchBarButtons";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 
@@ -179,7 +178,7 @@ export const useCompareWorkbenchBarButtons = ({
                   "Tip: Arrow Up/Down scroll both panes when unlinked is off.",
                 ),
                 durationMs: 5000,
-                location: "bottom-center" as ToastLocation,
+                location: "bottom-center",
                 expandable: false,
               });
             }

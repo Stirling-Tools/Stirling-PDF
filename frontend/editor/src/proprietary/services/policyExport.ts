@@ -42,7 +42,7 @@ const isPdf = (f: File) =>
   f.type === "application/pdf" || /\.pdf$/i.test(f.name);
 
 interface ExportPolicy {
-  categoryId: string;
+  policyKey: string;
   backendId: string;
   label: string;
   outputMode: "new_file" | "new_version";
@@ -62,22 +62,28 @@ function activeExportPolicies(): ExportPolicy[] {
   const labels = new Map(
     loadPolicyCatalog().categories.map((c) => [c.id, c.label]),
   );
-  return Object.entries(loadPolicies())
-    .filter(
-      ([, s]) =>
-        s.configured &&
-        s.status === "active" &&
-        s.backendId &&
-        (s.sources.length === 0 || s.sources.includes("editor")) &&
-        s.runOn === "export",
-    )
-    .map(([id, s]) => ({
-      categoryId: id,
-      backendId: s.backendId as string,
-      label: labels.get(id) ?? "Policy",
-      outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
-      accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
-    }));
+  return (
+    Object.entries(loadPolicies())
+      .filter(
+        ([, s]) =>
+          s.configured &&
+          s.enabled &&
+          s.backendId &&
+          s.runsOnEditor &&
+          s.runOn === "export",
+      )
+      // Same team-wide run order the upload path uses: enforcement is not commutative (a watermark
+      // then a flatten is not a flatten then a watermark), so both paths must agree on the sequence.
+      .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
+      .map(([id, s]) => ({
+        policyKey: id,
+        backendId: s.backendId as string,
+        // A builder pipeline has no built-in category, so it labels by its own name.
+        label: labels.get(id) ?? s.name ?? "Policy",
+        outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
+        accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
+      }))
+  );
 }
 
 /** Run one policy on a file and resolve the enforced bytes + run info (throws on
@@ -155,7 +161,7 @@ export async function enforceExportPolicies(
   // non-idempotent policy would stack watermarks/flattens. Editing produces a
   // new file id that isn't dispatched, so an edited file enforces afresh.
   const pendingFor = (fileId: string | undefined) =>
-    active.filter((p) => !(fileId && isDispatched(p.categoryId, fileId)));
+    active.filter((p) => !(fileId && isDispatched(p.policyKey, fileId)));
   if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0)) return files;
 
   const names = active.map((p) => p.label).join(", ");
@@ -200,12 +206,12 @@ export async function enforceExportPolicies(
         let current = file;
         // The last "new version" policy's output is what versions the editor
         // file (recording every policy would double-consume the same input).
-        let versionRun: (PolicyRunResult & { categoryId: string }) | undefined;
+        let versionRun: (PolicyRunResult & { policyKey: string }) | undefined;
         for (const policy of toRun) {
           const result = await runToCompletion(policy.backendId, current);
           current = result.file;
           if (policy.outputMode === "new_version" && fileId) {
-            versionRun = { ...result, categoryId: policy.categoryId };
+            versionRun = { ...result, policyKey: policy.policyKey };
           }
         }
         out[i] = current;
@@ -218,11 +224,11 @@ export async function enforceExportPolicies(
         if (versionRun && fileId) {
           recordRunStart({
             runId: versionRun.runId,
-            categoryId: versionRun.categoryId,
+            policyKey: versionRun.policyKey,
             fileId,
             fileName: file.name,
             fileSize: file.size,
-            target: versionRun!.target,
+            target: versionRun.target,
             status: "COMPLETED",
             outputs: versionRun.outputs,
             error: null,

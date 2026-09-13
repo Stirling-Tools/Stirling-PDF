@@ -186,7 +186,7 @@ export const getFileFromSelection = (
 ): StirlingFile | null => {
   if (explicit) return explicit;
   if (!fileId) return null;
-  return (selectors.getFile(fileId) as StirlingFile | undefined | null) ?? null;
+  return selectors.getFile(fileId) ?? null;
 };
 
 export const getStubFromSelection = (

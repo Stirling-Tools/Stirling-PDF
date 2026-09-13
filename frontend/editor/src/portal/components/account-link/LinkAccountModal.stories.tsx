@@ -8,16 +8,19 @@ const meta: Meta<typeof LinkAccountModal> = {
   args: {
     open: true,
     onClose: () => {},
-    onLinked: async () => {},
   },
 };
 export default meta;
 type Story = StoryObj<typeof LinkAccountModal>;
 
-/** Default "link" mode — sign in to register this instance against a Stirling account. */
+/**
+ * "link" mode — explains the trip to Stirling and starts the handshake. There is no
+ * sign-in form: a sign-in started on a self-hosted origin cannot complete, because
+ * the provider will not redirect back to a hostname it does not know.
+ */
 export const Default: Story = {};
 
-/** "reauth" mode — an already-linked instance's session expired and needs a fresh sign-in. */
+/** "reauth" mode — the server stays linked; only the browser session is renewed. */
 export const Reauth: Story = {
   args: { mode: "reauth" },
 };

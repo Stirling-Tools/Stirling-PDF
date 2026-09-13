@@ -41,7 +41,7 @@ false = "Falskt"
 fileNotSavedToDisk = "Inte sparad till disk"
 fileSavedToDisk = "Fil sparad till disk"
 fileSelected = "Vald: {{filename}}"
-filesSelected = "filer valda"
+filesSelected = "{{count}} filer"
 font = "Teckensnitt"
 fontSizeTooltip = "Storlek på sidnummertext i punkter. Större tal ger större text."
 fontTypeTooltip = "Typsnittsfamilj för sidnummer. Välj utifrån dokumentets stil."
@@ -3526,7 +3526,6 @@ label = "Y-position"
 
 [crop.error]
 failed = "Det gick inte att beskära PDF"
-invalidArea = "Beskärningsområdet sträcker sig utanför PDF:ens gränser"
 
 [crop.preview]
 title = "Val av beskärningsområde"
@@ -3969,6 +3968,7 @@ back = "Tillbaka"
 backToFolder = "Tillbaka till {{folder}}"
 backToMyFiles = "Tillbaka till Mina filer"
 breadcrumbs = "Mappsökväg"
+bulkActions = "Åtgärder"
 cancel = "Avbryt"
 classification = "Klassificering"
 clearSelection = "Rensa markering"
@@ -4142,6 +4142,11 @@ totalSize = "Total storlek"
 type = "Typ"
 versionHistory = "Versionsresa"
 
+[filesPage.filters]
+activeCount = "{{count}} filter aktiva"
+clearAll = "Rensa filter"
+label = "Filter"
+
 [filesPage.folderName]
 cancel = "Avbryt"
 error = "Kunde inte spara mappen. Försök igen."
@@ -4176,6 +4181,7 @@ label = "Filter files by name"
 placeholder = "Filter files…"
 
 [filesPage.sort]
+label = "Sortera filer"
 modifiedAsc = "Äldst först"
 modifiedDesc = "Senaste först"
 nameAsc = "Namn A→Ö"
@@ -4305,11 +4311,14 @@ issues = "GitHub"
 [formFill]
 allSaved = "Allt sparat"
 analyzingFields = "Analysing form fields..."
+applyFailed = "Det gick inte att tillämpa ändringarna"
 extractCsvError = "Kunde inte extrahera CSV"
 extractXlsxError = "Kunde inte extrahera XLSX"
 filled = "filled"
 flattenAfterFilling = "Platta ut efter ifyllning"
+goToPage = "Gå till den här sidan"
 noFields = "No fillable form fields found in this PDF."
+page = "Sida"
 placeholderEnter = "Enter"
 placeholderSelect = "Select"
 requiredAbbreviation = "obl"
@@ -4318,7 +4327,82 @@ rescanFields = "Skanna fält igen"
 rescanFormFields = "Skanna formulärfält igen"
 save = "Spara"
 saveShortcut = "Ctrl+S för att spara"
+skippedEdits_one = "1 ändring kunde inte tillämpas:"
+skippedEdits_other = "{{count}} ändringar kunde inte tillämpas:"
+skippedEditsTruncated = "{{count}} fler visas inte."
 unsavedChanges = "Osparade ändringar"
+
+[formFill.create]
+commit = "Lägg till {{count}} fält i PDF"
+empty = "Inga fält har ritats ännu."
+failed = "Det gick inte att lägga till fält"
+goToField = "Gå till det här fältet"
+hint = "Välj en fälttyp och rita den sedan på sidan."
+placing = "Rita ett {{type}}-fält på sidan. Tryck på Esc för att stoppa."
+preview = "Håll ned för att förhandsgranska"
+previewHelp = "Håll ned för att se fälten så som de kommer att se ut när de har lagts till, utan redigeringskonturerna."
+removeField = "Ta bort fält"
+
+[formFill.editor]
+action = "Knappåtgärd"
+actionHelp = "Vad knappen gör när den klickas."
+actionNone = "Ingen"
+actionPrint = "Skriv ut"
+actionReset = "Återställ formulär"
+actionSubmit = "Skicka till URL"
+actionUri = "Öppna URL"
+actionUrl = "URL"
+actionUrlHelp = "Adressen som knappen öppnar eller skickar till."
+addOption = "Lägg till alternativ"
+caption = "Knapptext"
+captionHelp = "Texten som skrivs ut på knappen."
+defaultValue = "Standardvärde"
+defaultValueHelp = "Vad fältet innehåller innan någon fyller i det. Lämna tomt för ett tomt fält."
+fontSize = "Teckenstorlek"
+fontSizeHelp = "Textstorlek inuti fältet. Lämna tomt för att låta läsaren anpassa storleken så att den passar."
+label = "Etikett"
+labelHelp = "Texten som visas för den som fyller i formuläret. Lämna tomt för att använda fältnamnet istället."
+maxLength = "Maxlängd (comb)"
+maxLengthHelp = "Begränsar hur många tecken som får plats, ritade som jämnt fördelade rutor."
+multiline = "Flera rader"
+multilineHelp = "Tillåter mer än en textrad och radbryter vid fältets kant."
+multiSelect = "Tillåt flera val"
+multiSelectHelp = "Gör att mer än ett alternativ kan väljas samtidigt."
+name = "Fältnamn"
+nameHelp = "Fältets interna namn. Används vid export av data eller när formuläret fylls i från ett annat system, så håll det unikt och utan mellanslag."
+optionGap = "Alternativavstånd"
+optionGapHelp = "Avstånd mellan knappar, i punkter. Lämna tomt för att fördela dem jämnt nedåt i rutan."
+optionPlaceholder = "Alternativ {{n}}"
+options = "Alternativ"
+optionsEmpty = "Lägg till minst ett alternativ."
+optionsHelp = "Valen som erbjuds i listan. Varje val lagras som det skrivs, så håll dem korta och tydliga."
+optionSize = "Alternativstorlek"
+optionSizeHelp = "Bredd och höjd för varje knapp, i punkter. Lämna tomt för att anpassa dem till rutan du ritade."
+readOnly = "Skrivskyddad"
+readOnlyHelp = "Visar ett värde men hindrar någon från att redigera det."
+removeOption = "Ta bort alternativ"
+required = "Obligatoriskt"
+requiredHelp = "Formuläret kan inte skickas förrän det här fältet är ifyllt."
+signatureNote = "Endast platshållare – du signerar inte här. Den markerar var en signatur ska vara så att en PDF-signerare (Adobe Acrobat, en signeringstjänst osv.) placerar signaturen på denna plats när dokumentet signeras."
+tooltip = "Verktygstips"
+tooltipHelp = "Tipset som visas när någon håller muspekaren över fältet i en PDF-läsare."
+type = "Typ"
+typeHelp = "Vilken typ av fält detta är. Om du ändrar det byggs fältet om, så dess aktuella värde följer inte med."
+
+[formFill.mode]
+create = "Skapa"
+fill = "Fyll i"
+label = "Formulärredigeringsläge"
+modify = "Ändra"
+
+[formFill.modify]
+commit = "Spara {{count}} ändring(ar)"
+delete = "Ta bort"
+empty = "Denna PDF har inga formulärfält ännu."
+failed = "Det gick inte att spara ändringar"
+groupSizeHint = "Använd alternativstorlek"
+hint = "Välj ett fält för att redigera dess egenskaper, dra det på sidan eller ta bort det."
+restore = "Återställ"
 
 [formFill.sidebar]
 close = "Stäng sidofält"
@@ -4584,6 +4668,10 @@ title = "Ändra metadata"
 desc = "Ändra dokumentrestriktioner och behörigheter"
 tags = "permissions,restrictions,rights,access control,allow,deny,printing,copying,editing,modify permissions,security settings,user rights"
 title = "Ändra behörigheter"
+
+[home.classify]
+desc = "Identifiera vilken typ av dokument detta är och tagga det."
+title = "Klassificera"
 
 [home.compare]
 desc = "Jämför och visar skillnaderna mellan 2 PDF-dokument"
@@ -5097,6 +5185,30 @@ openProcessor = "Open PDF Processor"
 [navFooter.credits]
 count = "{{remaining}} of {{total}}"
 label = "Free credits"
+
+[notifications]
+empty = "Inget att rapportera."
+handoffUnavailable = "Den här webbläsaren låter inte bearbetaren skicka dokumentet till redigeraren. Öppna det från redigeraren istället."
+noDocumentLinked = "Det här felet är inte kopplat till ett specifikt dokument, så det finns inget att öppna här."
+notOnThisDevice = "Det här dokumentet finns inte på den här enheten, så det kan inte öppnas här."
+occurrences = "{{count}} gånger"
+open = "Aviseringar"
+title = "Aviseringar"
+unread = "Olästa"
+
+[notifications.action]
+failed = "Det fungerade inte. Försök igen om en stund."
+unavailable = "Inte tillgängligt för den här aviseringen."
+
+[notifications.detail]
+copied = "Kopierat"
+copy = "Kopiera fel"
+less = "Visa mindre"
+more = "Visa hela meddelandet"
+
+[notifications.section]
+earlier = "Tidigare"
+new = "Nya"
 
 [oauth.error]
 message = "Autentiseringen lyckades inte. Du kan stänga detta fönster och försöka igen."
@@ -6735,8 +6847,8 @@ barAria = "Free PDFs remaining"
 capSuffix_one = "av {{allowance}} gratis PDF:er använda"
 capSuffix_other = "av {{allowance}} gratis PDF:er använda"
 eyebrow = "Processor-provperiod"
-statusLabel_one = "{{remaining}} kvar"
-statusLabel_other = "{{remaining}} kvar"
+statusLabel_one = "{{used}} använd"
+statusLabel_other = "{{used}} använda"
 sub = "Använd PDF Editor gratis. Betala för att bearbeta PDF:er automatiskt."
 title_one = "Bearbeta {{allowance}} PDF:er gratis"
 title_other = "Bearbeta {{allowance}} PDF:er gratis"
@@ -7417,6 +7529,8 @@ acknowledge = "Acknowledge"
 confirm = "Are you sure?"
 dismiss = "Dismiss"
 dismissSkipFile = "Skip this file"
+viewFile = "Visa fil"
+viewInProcessor = "Visa i bearbetaren"
 
 [portal.failures.debug]
 copyJson = "Copy JSON"
@@ -7428,6 +7542,8 @@ showJson = "Show raw JSON ({{total}})"
 
 [portal.failures.disabled]
 closed = "This failure is already closed."
+noDocument = "Det här felet registrerades inte mot ett specifikt dokument, så det finns inget här att öppna."
+unattended = "Den här filen matades in av en mapp, bucket eller webhook, så ingen webbläsare håller den för öppning."
 unavailable = "Not available for this failure."
 
 [portal.failures.empty]
@@ -8716,7 +8832,9 @@ title = "Källor"
 connectSource = "Anslut källa"
 
 [portal.sources.builder]
+advanced = "Avancerat"
 back = "Tillbaka till källor"
+backToSource = "Tillbaka till källkonfiguration"
 backToTypes = "Alla källtyper"
 cancel = "Avbryt"
 chooseHint = "Välj var dokument kommer ifrån. Gråmarkerade kopplingar är på väg."
@@ -8726,7 +8844,6 @@ create = "Skapa källa"
 createTitle = "Anslut en källa"
 delete = "Ta bort"
 editTitle = "Redigera källa"
-enabled = "Aktiverad"
 save = "Spara ändringar"
 
 [portal.sources.builder.folderAccess]
@@ -8763,6 +8880,7 @@ consume = "Förbruka: bearbeta varje fil en gång"
 snapshot = "Ögonblicksbild: läs om mappen vid varje körning"
 
 [portal.sources.networkFields.recursive]
+helperText = "Inkludera undermappar om dina filer är organiserade i nästlade mappar, eller övervaka endast översta nivån."
 label = "Mappdjup"
 
 [portal.sources.networkFields.recursive.options]
@@ -8816,6 +8934,7 @@ hash = "Storlek, datum och innehållskontroll"
 stat = "Storlek och ändringsdatum"
 
 [portal.sources.types.folder.fields.mode]
+helperText = "Om originalfilen ska lämnas kvar efter att den har bearbetats. Om originalfilen lämnas kvar kommer den att bearbetas igen nästa gång pipelinen skannar källan."
 label = "Läsläge"
 
 [portal.sources.types.folder.fields.mode.options]
@@ -8823,6 +8942,7 @@ consume = "Förbruka: bearbeta varje fil en gång"
 snapshot = "Snapshot: läs om mappen vid varje körning"
 
 [portal.sources.types.folder.fields.recursive]
+helperText = "Inkludera undermappar om dina filer är organiserade i nästlade mappar, eller övervaka endast översta nivån."
 label = "Mappdjup"
 
 [portal.sources.types.folder.fields.recursive.options]
@@ -9696,7 +9816,9 @@ toolNotAvailableLocally = "Din Stirling-PDF-server är offline och \"{{endpoint}
 expired = "Din session har löpt ut. Uppdatera sidan och försök igen."
 
 [settings]
+backToSections = "Alla inställningar"
 close = "Stäng"
+title = "Inställningar"
 
 [settings.ai]
 documents = "Dokument och RAG"
@@ -10635,6 +10757,7 @@ ariaLabel = "Super search"
 filtersAriaLabel = "Search filters"
 hint = "Type to search"
 placeholder = "Search Stirling"
+placeholderShort = "Sök"
 showLess = "Show less"
 showMore = "Show {{count}} more"
 
@@ -10831,6 +10954,7 @@ searchPlaceholder = "Sök verktyg..."
 
 [toolPicker.subcategories]
 advancedFormatting = "Avancerad formatering"
+ai = "AI"
 automation = "Automatisering"
 developerTools = "Utvecklarverktyg"
 documentReview = "Dokumentgranskning"
@@ -11335,8 +11459,11 @@ columnDefault = "Kolumn {{index}}"
 convertToPdf = "Konvertera till PDF"
 csvStats = "{{rows}} rader · {{columns}} kolumner · {{size}}"
 emptyFile = "Tom fil"
+htmlHidePreview = "Dölj förhandsgranskning"
 htmlPreview = "HTML-förhandsvisning"
+htmlPreviewMobileHidden = "HTML-sidor är utformade för skrivbordsbredder, så förhandsgranskningen är avstängd som standard här."
 htmlPreviewWarning = "HTML-förhandsvisning — externa resurser kanske inte läses in · {{size}}"
+htmlShowPreview = "Visa förhandsgranskning ändå"
 invalidJson = "Ogiltig JSON — visar rått innehåll"
 lineNumbers = "Radnummer"
 loading = "Läser in..."
@@ -11683,6 +11810,7 @@ exportAll = "Exportera PDF"
 exportSelected = "Exportera valda sidor"
 formFill = "Fyll i formulär"
 hideToolbar = "Hide toolbar"
+moreActions = "Fler åtgärder"
 multiTool = "Multiverktyg"
 panMode = "Panoreringsläge"
 print = "Skriv ut PDF"
@@ -11703,6 +11831,8 @@ selectAll = "Markera alla"
 selectByNumber = "Markera efter sidnummer"
 selectLanguage = "Välj språk"
 share = "Dela"
+showAllTools = "Visa alla verktyg"
+showFewerTools = "Fäll ihop verktygsfält"
 showToolbar = "Show toolbar"
 toggleAnnotations = "Visa/dölj anteckningar"
 toggleAttachments = "Visa/dölj bilagor"

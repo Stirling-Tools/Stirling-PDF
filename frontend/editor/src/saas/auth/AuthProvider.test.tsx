@@ -1,6 +1,7 @@
 import { act, render, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Session, User } from "@supabase/supabase-js";
+import { expectConsole } from "@app/tests/failOnConsole";
 
 /**
  * Request-count tests for {@link AuthProvider}'s data loading. It used to fetch
@@ -16,6 +17,7 @@ const createSignedUrl = vi.fn();
 const storageFrom = vi.fn((_bucket: string) => ({ createSignedUrl }));
 const getSession = vi.fn();
 const onAuthStateChange = vi.fn();
+const supabaseSignOut = vi.fn();
 const unsubscribe = vi.fn();
 
 vi.mock("@app/auth/supabase", () => ({
@@ -26,7 +28,7 @@ vi.mock("@app/auth/supabase", () => ({
       refreshSession: vi
         .fn()
         .mockResolvedValue({ data: { session: null }, error: null }),
-      signOut: vi.fn().mockResolvedValue({ error: null }),
+      signOut: () => supabaseSignOut(),
     },
     rpc: (...args: unknown[]) => rpc(...args),
     storage: { from: (bucket: string) => storageFrom(bucket) },
@@ -53,6 +55,8 @@ vi.mock("@app/services/userService", () => ({
 
 // Imported after the mocks so the provider picks them up.
 const { AuthProvider, useAuth } = await import("@app/auth/UseSession");
+const { writeWorkbenchSession, readWorkbenchSession, resumeWorkbenchSession } =
+  await import("@app/services/workbenchSession");
 
 /** Surfaces `loading` so a test can assert on it rather than on the container. */
 function LoadingProbe() {
@@ -335,5 +339,57 @@ describe("AuthProvider user-data loading", () => {
       expect(getByTestId("loading").textContent).toBe("false"),
     );
     expect(rpc).toHaveBeenCalledTimes(1);
+  });
+});
+
+/**
+ * Signing out suspends workbench recording before the request, so a teardown cannot write the
+ * record back for whoever signs in next. When the request fails the session stands, and a
+ * still-signed-in user must not be left silently not recording.
+ */
+describe("a sign-out that fails", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    sessionStorage.clear();
+    resumeWorkbenchSession();
+    getSession.mockResolvedValue({
+      data: { session: makeSession() },
+      error: null,
+    });
+    onAuthStateChange.mockImplementation(() => ({
+      data: { subscription: { unsubscribe } },
+    }));
+    rpc.mockResolvedValue({ data: null, error: null });
+    getProfilePictureMetadata.mockResolvedValue(null);
+    syncOAuthAvatar.mockResolvedValue(undefined);
+    synchronizeUserUpgrade.mockResolvedValue(undefined);
+  });
+
+  it("leaves the workbench still being recorded", async () => {
+    expectConsole.error(/\[Auth Debug\] Sign out error/);
+    supabaseSignOut.mockResolvedValue({ error: new Error("network down") });
+
+    let signOut: (() => Promise<void>) | null = null;
+    function SignOutProbe() {
+      signOut = useAuth().signOut;
+      return null;
+    }
+    render(
+      <AuthProvider>
+        <SignOutProbe />
+      </AuthProvider>,
+    );
+    await waitFor(() => expect(signOut).not.toBeNull());
+
+    await act(async () => {
+      await signOut!();
+    });
+
+    writeWorkbenchSession({
+      fileIds: ["still-here"],
+      selectedFileIds: [],
+      userId: "user-a",
+    });
+    expect(readWorkbenchSession()?.fileIds).toEqual(["still-here"]);
   });
 });

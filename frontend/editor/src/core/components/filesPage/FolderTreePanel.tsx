@@ -1,6 +1,6 @@
 /** Folder tree navigator panel rendered next to FileSidebar on /files. */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
@@ -39,15 +39,8 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
     const persisted = loadPersistedWidth();
     return persisted ?? 256;
   });
-  const userSetRef = useRef<boolean>(loadPersistedWidth() !== null);
-
-  // Auto-fit to the longest folder name on first render and whenever the
-  // folder list grows; skipped once the user manually resizes.
-  useEffect(() => {
-    if (userSetRef.current) return;
-    const auto = computeAutoFitWidth(folders.folders, rootLabel);
-    setWidth(auto);
-  }, [folders.folders, rootLabel]);
+  // The width is the user's, never the content's: a folder with a long name
+  // truncates in the row rather than widening the column it sits in.
 
   const dragStateRef = useRef<{
     startX: number;
@@ -69,7 +62,6 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
     document.removeEventListener("mouseup", onMouseUp);
     document.body.style.removeProperty("cursor");
     document.body.style.removeProperty("user-select");
-    userSetRef.current = true;
     setWidth((current) => {
       savePersistedWidth(current);
       return current;
@@ -98,7 +90,6 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
       else if (e.key === "End") next = MAX_WIDTH;
       if (next === null) return;
       e.preventDefault();
-      userSetRef.current = true;
       setWidth(next);
       savePersistedWidth(next);
     },
@@ -121,7 +112,7 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
       <div className="folder-tree-panel-inner">
         <div className="folder-tree-panel-header">
           <span className="folder-tree-panel-title">
-            {t("filesPage.myFiles", "My Files")}
+            {t("fileSidebar.myFiles", "File library")}
           </span>
         </div>
 
@@ -158,7 +149,6 @@ export function FolderTreePanel({ active }: FolderTreePanelProps) {
           onKeyDown={onKeyDown}
           onDoubleClick={() => {
             const auto = computeAutoFitWidth(folders.folders, rootLabel);
-            userSetRef.current = false;
             setWidth(auto);
             savePersistedWidth(auto);
           }}

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { Box, Center, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import ArticleIcon from "@mui/icons-material/Article";
@@ -99,12 +99,17 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
   return (
     <Stack
       gap={0}
-      style={{
-        height: "100%",
-        flex: 1,
-        overflow: "hidden",
-        position: "relative",
-      }}
+      style={
+        {
+          height: "100%",
+          flex: 1,
+          overflow: "hidden",
+          position: "relative",
+          // The Convert button floats over the content; viewers that draw their
+          // own top bar read this to keep their text clear of it.
+          "--nonpdf-action-inset": isConvertAvailable ? "11rem" : "0rem",
+        } as React.CSSProperties
+      }
     >
       <NonPdfBanner
         onConvertToPdf={isConvertAvailable ? handleConvertToPdf : undefined}

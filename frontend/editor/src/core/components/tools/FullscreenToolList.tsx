@@ -108,7 +108,7 @@ const FullscreenToolList = ({
         window.open(tool.link, "_blank", "noopener,noreferrer");
         return;
       }
-      onSelect(id as ToolId);
+      onSelect(id);
     };
 
     if (showDescriptions) {
@@ -274,15 +274,11 @@ const FullscreenToolList = ({
 
             {showDescriptions ? (
               <div className="tool-panel__fullscreen-grid tool-panel__fullscreen-grid--detailed">
-                {tools.map(({ id, tool }) =>
-                  renderToolItem(id as ToolId, tool),
-                )}
+                {tools.map(({ id, tool }) => renderToolItem(id, tool))}
               </div>
             ) : (
               <div className="tool-panel__fullscreen-list">
-                {tools.map(({ id, tool }) =>
-                  renderToolItem(id as ToolId, tool),
-                )}
+                {tools.map(({ id, tool }) => renderToolItem(id, tool))}
               </div>
             )}
           </section>

@@ -16,11 +16,11 @@ import lombok.NoArgsConstructor;
 
 /**
  * The last time the instance metered a given input set this period — the local equivalent of the
- * cloud's lineage join (combined-billing "Mode A"). The meter dedups on a rolling <b>workflow
- * window</b>: an identical input set re-submitted within the window (see {@link
- * AccountLinkProperties.Metering}) is treated as workflow chaining and not re-charged, while the
- * same inputs run again after the window are billed afresh — matching the cloud's 5-minute open-job
- * window so the same operation costs the same on the instance and in the cloud.
+ * cloud's lineage join (combined billing). The meter dedups on a rolling <b>workflow window</b>: an
+ * identical input set re-submitted within the window (see {@link AccountLinkProperties.Metering})
+ * is treated as workflow chaining and not re-charged, while the same inputs run again after the
+ * window are billed afresh — matching the cloud's 5-minute open-job window so the same operation
+ * costs the same on the instance and in the cloud.
  *
  * <p>{@code lastMeteredAt} is refreshed on every sighting (the window slides, as recording a cloud
  * artifact touches its job). One row per {@code (period, signature)}; the unique constraint also

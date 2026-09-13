@@ -34,6 +34,12 @@ interface BookmarkSidebarProps {
 
 type BookmarkNode = PdfBookmarkObject & { id: string };
 
+interface BookmarkPayload {
+  title: string;
+  pageNumber: number;
+  children: BookmarkPayload[];
+}
+
 type BookmarkCacheStatus = "idle" | "loading" | "success" | "error";
 
 interface BookmarkCacheEntry {
@@ -249,11 +255,9 @@ export const BookmarkSidebar = ({
             continue;
           }
           return Array.isArray(result) ? result : [];
-        } catch (error: any) {
+        } catch (error) {
           const message =
-            typeof error?.message === "string"
-              ? error.message.toLowerCase()
-              : "";
+            error instanceof Error ? error.message.toLowerCase() : "";
           const notReady =
             message.includes("document") &&
             message.includes("not") &&
@@ -377,13 +381,7 @@ export const BookmarkSidebar = ({
     try {
       // Convert existing PDF bookmarks (from embedpdf) to the backend's
       // payload shape, then append the new one.
-      const toPayload = (
-        b: PdfBookmarkObject,
-      ): {
-        title: string;
-        pageNumber: number;
-        children: any[];
-      } => ({
+      const toPayload = (b: PdfBookmarkObject): BookmarkPayload => ({
         title: b.title ?? "",
         pageNumber: resolvePageNumber(b) ?? 1,
         children: (b.children ?? []).map(toPayload),
@@ -521,7 +519,7 @@ export const BookmarkSidebar = ({
 
   const handleBookmarkClick = (
     bookmark: PdfBookmarkObject,
-    event: React.MouseEvent,
+    event: React.SyntheticEvent,
   ) => {
     const target = bookmark.target;
     if (target?.type === "action") {
@@ -605,7 +603,7 @@ export const BookmarkSidebar = ({
                 ? (event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      handleBookmarkClick(node, event as any);
+                      handleBookmarkClick(node, event);
                     }
                   }
                 : undefined

@@ -1,0 +1,326 @@
+/** Left panel for "create" mode; drawing happens in FormFieldCreationOverlay. */
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Stack,
+  Text,
+  Group,
+  Alert,
+  Collapse,
+  Paper,
+  Tooltip,
+} from "@mantine/core";
+import { Button } from "@app/ui/Button";
+import { ActionIcon } from "@app/ui/ActionIcon";
+import { useTranslation } from "react-i18next";
+import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
+import MyLocationIcon from "@mui/icons-material/MyLocation";
+import { useViewer } from "@app/contexts/ViewerContext";
+import {
+  pendingSelectionName,
+  pendingIdFrom,
+} from "@app/tools/formFill/pendingSelection";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import { useFormFill } from "@app/tools/formFill/FormFillContext";
+import {
+  CREATABLE_FIELD_TYPES,
+  type CreatableFieldType,
+  type NewFieldDefinition,
+} from "@app/tools/formFill/types";
+import {
+  FIELD_TYPE_ICON,
+  FIELD_TYPE_COLOR,
+} from "@app/tools/formFill/fieldMeta";
+import { FormFieldPropertyEditor } from "@app/tools/formFill/FormFieldPropertyEditor";
+import { SkippedEditsAlert } from "@app/tools/formFill/SkippedEditsAlert";
+import { useFormCommit } from "@app/tools/formFill/useFormCommit";
+import styles from "@app/tools/formFill/FormFill.module.css";
+
+interface FormFieldCreatePanelProps {
+  currentFile: File | Blob | null;
+  onApplied?: (blob: Blob) => void;
+}
+
+const TYPE_LABEL: Record<CreatableFieldType, string> = {
+  text: "Text",
+  checkbox: "Checkbox",
+  combobox: "Dropdown",
+  listbox: "List box",
+  radio: "Radio",
+  button: "Button",
+  signature: "Signature",
+};
+
+export function FormFieldCreatePanel({
+  currentFile,
+  onApplied,
+}: FormFieldCreatePanelProps) {
+  const { t } = useTranslation();
+  const {
+    creationType,
+    setCreationType,
+    pendingFields,
+    updatePendingField,
+    removePendingField,
+    commitNewFields,
+    setPreviewing,
+    selectedFieldName,
+    setSelectedField,
+  } = useFormFill();
+
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const { scrollActions } = useViewer();
+  const goToPage = (pageIndex: number) =>
+    scrollActions.scrollToPage(pageIndex + 1);
+  const { committing, error, commit } = useFormCommit(onApplied);
+
+  // Auto-expand the property editor of a freshly-drawn field so its settings
+  // (especially options for choice/radio) are visible immediately.
+  const prevCountRef = useRef(0);
+  const expandedRowRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (pendingFields.length > prevCountRef.current) {
+      setExpandedId(pendingFields[pendingFields.length - 1].id);
+    }
+    prevCountRef.current = pendingFields.length;
+  }, [pendingFields]);
+
+  // Clicking a box on the page should land you on its settings, not leave you hunting the list.
+  useEffect(() => {
+    const id = selectedFieldName ? pendingIdFrom(selectedFieldName) : null;
+    if (id) setExpandedId(id);
+  }, [selectedFieldName]);
+
+  // Newly drawn fields land at the bottom while the panel stays at the top, so their settings
+  // open somewhere the user cannot see.
+  useEffect(() => {
+    if (!expandedId) return;
+    expandedRowRef.current?.scrollIntoView({ block: "nearest" });
+  }, [expandedId]);
+
+  const handleCommit = useCallback(() => {
+    if (!currentFile || pendingFields.length === 0) return;
+    commit(
+      () => commitNewFields(currentFile),
+      "formFill.create.failed",
+      "Failed to add fields",
+    );
+  }, [currentFile, pendingFields, commitNewFields, commit]);
+
+  return (
+    <div className={styles.root}>
+      <div className={styles.header}>
+        <Text size="xs" c="dimmed">
+          {t(
+            "formFill.create.hint",
+            "Pick a field type, then draw it on the page.",
+          )}
+        </Text>
+
+        {/* Type palette */}
+        <Group gap={6} wrap="wrap">
+          {CREATABLE_FIELD_TYPES.map((type) => {
+            const armed = creationType === type;
+            return (
+              <Button
+                key={type}
+                size="sm"
+                variant={armed ? "primary" : "secondary"}
+                leftSection={FIELD_TYPE_ICON[type]}
+                onClick={() => setCreationType(armed ? null : type)}
+                data-testid={`form-create-type-${type}`}
+              >
+                {TYPE_LABEL[type]}
+              </Button>
+            );
+          })}
+        </Group>
+
+        {creationType && (
+          <Alert color="blue" variant="light" p="xs" radius="sm">
+            <Text size="xs">
+              {t(
+                "formFill.create.placing",
+                "Draw a {{type}} field on the page. Press Esc to stop.",
+                { type: TYPE_LABEL[creationType] },
+              )}
+            </Text>
+          </Alert>
+        )}
+
+        {error && (
+          <Alert
+            icon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
+            color="red"
+            variant="light"
+            p="xs"
+            radius="sm"
+          >
+            <Text size="xs">{error}</Text>
+          </Alert>
+        )}
+
+        <SkippedEditsAlert />
+      </div>
+
+      {/* Content stacks naturally; ToolPanel's own ScrollArea does the scrolling. */}
+      <div className={styles.fieldListInner}>
+        {pendingFields.length === 0 ? (
+          <Text size="xs" c="dimmed" ta="center" py="md">
+            {t("formFill.create.empty", "No fields drawn yet.")}
+          </Text>
+        ) : (
+          <Stack gap={6}>
+            {pendingFields.map((pf) => {
+              const expanded = expandedId === pf.id;
+              return (
+                <Paper
+                  key={pf.id}
+                  withBorder
+                  p={6}
+                  radius="sm"
+                  ref={expanded ? expandedRowRef : undefined}
+                  data-testid={`form-pending-row-${pf.id}`}
+                  // The whole row opens its settings: hunting for the small pencil is a
+                  // needless step when the row is the thing you just clicked.
+                  onClick={() => setExpandedId(expanded ? null : pf.id)}
+                  style={{ cursor: "pointer" }}
+                >
+                  <Group gap={6} wrap="nowrap" justify="space-between">
+                    <Group gap={6} wrap="nowrap" style={{ minWidth: 0 }}>
+                      <span
+                        style={{
+                          color: `var(--mantine-color-${FIELD_TYPE_COLOR[pf.type]}-6)`,
+                          display: "flex",
+                        }}
+                      >
+                        {FIELD_TYPE_ICON[pf.type]}
+                      </span>
+                      <Text size="xs" truncate>
+                        {pf.name}
+                      </Text>
+                      <Text size="xs" c="dimmed">
+                        p{pf.pageIndex + 1}
+                      </Text>
+                    </Group>
+                    <Group gap={2} wrap="nowrap">
+                      <Tooltip
+                        label={t(
+                          "formFill.create.goToField",
+                          "Go to this field",
+                        )}
+                        withArrow
+                      >
+                        <ActionIcon
+                          size="sm"
+                          variant="tertiary"
+                          aria-label={t(
+                            "formFill.create.goToField",
+                            "Go to this field",
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedField(pendingSelectionName(pf.id));
+                            setExpandedId(pf.id);
+                            goToPage(pf.pageIndex);
+                          }}
+                          data-testid={`form-pending-goto-${pf.id}`}
+                        >
+                          <MyLocationIcon sx={{ fontSize: 16 }} />
+                        </ActionIcon>
+                      </Tooltip>
+                      <Tooltip
+                        label={t("formFill.create.removeField", "Remove field")}
+                        withArrow
+                      >
+                        <ActionIcon
+                          size="sm"
+                          variant="tertiary"
+                          accent="danger"
+                          aria-label={t(
+                            "formFill.create.removeField",
+                            "Remove field",
+                          )}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            removePendingField(pf.id);
+                          }}
+                          data-testid={`form-pending-remove-${pf.id}`}
+                        >
+                          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                        </ActionIcon>
+                      </Tooltip>
+                    </Group>
+                  </Group>
+                  <Collapse in={expanded}>
+                    {/* The row toggles on click, so the settings must not bubble into it or
+                        every field you touch closes the panel you are typing in. */}
+                    <div
+                      style={{ marginTop: 8 }}
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <FormFieldPropertyEditor
+                        value={pf}
+                        onChange={(patch) =>
+                          updatePendingField(
+                            pf.id,
+                            patch as Partial<NewFieldDefinition>,
+                          )
+                        }
+                        showName
+                      />
+                    </div>
+                  </Collapse>
+                </Paper>
+              );
+            })}
+          </Stack>
+        )}
+      </div>
+
+      <div className={styles.footer}>
+        <Tooltip
+          label={t(
+            "formFill.create.previewHelp",
+            "Hold to see the fields as they will look once added, without the editing outlines.",
+          )}
+          openDelay={250}
+          withArrow
+        >
+          <Button
+            size="sm"
+            variant="secondary"
+            accent="neutral"
+            fullWidth
+            disabled={pendingFields.length === 0}
+            data-testid="form-create-preview"
+            // Held, not toggled: releasing always restores the editing view, so preview
+            // cannot be left switched on by accident.
+            onPointerDown={() => setPreviewing(true)}
+            onPointerUp={() => setPreviewing(false)}
+            onPointerLeave={() => setPreviewing(false)}
+            onPointerCancel={() => setPreviewing(false)}
+            onBlur={() => setPreviewing(false)}
+            leftSection={<VisibilityOutlinedIcon fontSize="small" />}
+          >
+            {t("formFill.create.preview", "Hold to preview")}
+          </Button>
+        </Tooltip>
+        <Button
+          size="sm"
+          onClick={handleCommit}
+          loading={committing}
+          disabled={!currentFile || pendingFields.length === 0}
+          data-testid="form-create-commit"
+        >
+          {t("formFill.create.commit", "Add {{count}} field(s) to PDF", {
+            count: pendingFields.length,
+          })}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+export default FormFieldCreatePanel;

@@ -51,6 +51,9 @@ function toFolderRecord(dto: ServerFolder): FolderRecord {
     dto.parentFolderId === null ? null : parseFolderId(dto.parentFolderId);
   return {
     id,
+    // Everything that comes off this wire is a server folder by definition;
+    // virtual and local folders never round-trip through the server at all.
+    kind: "server",
     name: dto.name,
     parentFolderId,
     color: dto.color ?? undefined,
