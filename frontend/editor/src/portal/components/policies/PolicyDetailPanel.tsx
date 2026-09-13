@@ -113,6 +113,7 @@ export function PolicyDetailPanel({
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   if (!policy) return null;
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
@@ -155,7 +156,7 @@ export function PolicyDetailPanel({
                 variant="tertiary"
                 accent="danger"
                 size="sm"
-                onClick={onDelete}
+                onClick={() => setConfirmingDelete(true)}
                 disabled={busy}
                 style={{ marginRight: "auto" }}
               >
@@ -352,6 +353,43 @@ export function PolicyDetailPanel({
         }
       >
         {t("portal.policies.detail.clearHistory.body")}
+      </Modal>
+      <Modal
+        open={confirmingDelete}
+        onClose={() => setConfirmingDelete(false)}
+        width="sm"
+        title={t("portal.policies.detail.delete.title")}
+        footer={
+          <div className="portal-policies__detail-foot">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setConfirmingDelete(false)}
+              disabled={busy}
+            >
+              {t("portal.policies.detail.delete.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              accent="danger"
+              size="sm"
+              disabled={busy}
+              onClick={() => {
+                setConfirmingDelete(false);
+                onDelete();
+              }}
+            >
+              {t("portal.policies.detail.delete.confirm")}
+            </Button>
+          </div>
+        }
+      >
+        {t(
+          isPaused
+            ? "portal.policies.detail.delete.bodyPaused"
+            : "portal.policies.detail.delete.bodyActive",
+          { name: state.name?.trim() || t(category.label) },
+        )}
       </Modal>
     </>
   );

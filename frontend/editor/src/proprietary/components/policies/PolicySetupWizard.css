@@ -69,3 +69,12 @@
   padding-top: 0.75rem;
   margin-top: 0.75rem;
 }
+
+/* A capability's revealed settings. Neither FormField nor SettingsRow carries an
+ * outer margin, so without this the controls butt straight into each other. */
+.portal-policies__capability-config,
+.portal-policies__capability-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}

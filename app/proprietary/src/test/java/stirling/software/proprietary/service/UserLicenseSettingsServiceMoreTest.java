@@ -159,6 +159,42 @@ class UserLicenseSettingsServiceMoreTest {
 
             assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
         }
+
+        /**
+         * users.team_id points at the personal team until an invitation is accepted, so a solo
+         * cloud account's own team size must not become the instance's ceiling.
+         */
+        @Test
+        @DisplayName("a SaaS allowance below the grandfathered limit does not lower it")
+        void lowerAllowanceDoesNotShrinkTheInstance() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(1));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        @Test
+        @DisplayName("a SaaS allowance above the grandfathered limit raises it")
+        void higherAllowanceRaisesTheCeiling() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(100));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(100);
+        }
+
+        /**
+         * The grandfathered count is re-floored at the default on every read, so the floor holds
+         * even for an instance that never had more than the free allowance.
+         */
+        @Test
+        @DisplayName("a SaaS allowance below the default never drops the instance under it")
+        void neverBelowTheDefault() {
+            lockedSettings(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+            cacheReturns(withAllowance(1));
+
+            assertThat(service.calculateMaxAllowedUsers())
+                    .isEqualTo(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+        }
     }
 
     @Nested
