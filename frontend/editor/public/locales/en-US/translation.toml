@@ -7261,6 +7261,9 @@ and = "and"
 before = "Set"
 title = "Stirling connection not configured"
 
+[portal.accountLink.notice]
+options = "View linking options"
+
 [portal.accountLink.panel]
 instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."
 instancesTitle = "Linked instances"
@@ -7271,9 +7274,6 @@ sub = "Link this self-hosted org to its Stirling account so unattended processin
 forbidden = "Only the team owner can view the org's linked instances."
 generic = "Couldn't load the team's linked instances. Try again in a moment."
 title = "Couldn't load linked instances"
-
-[portal.accountLink.notice]
-options = "View linking options"
 
 [portal.accountLink.rail]
 adminCta = "How to get more credits"

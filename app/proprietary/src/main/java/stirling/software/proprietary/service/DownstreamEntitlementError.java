@@ -27,8 +27,7 @@ public final class DownstreamEntitlementError {
     private static final Pattern ERROR_CODE_FIELD =
             Pattern.compile("\"error\"\\s*:\\s*\"([^\"]+)\"");
 
-    private static final Pattern REASON_FIELD =
-            Pattern.compile("\"reason\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern REASON_FIELD = Pattern.compile("\"reason\"\\s*:\\s*\"([^\"]+)\"");
 
     /** Matches the {@code "subscribed":true|false} field of a small JSON error body. */
     private static final Pattern SUBSCRIBED_FIELD =
