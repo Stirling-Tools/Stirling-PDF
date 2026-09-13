@@ -1,0 +1,581 @@
+<title>One owner, recorded, transferable</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+:root{
+  --paper:#F6F7F8; --surface:#FFFFFF; --raise:#FFFFFF;
+  --ink:#191C21; --strong:#0D1013; --muted:#666E78; --faint:#8B939C;
+  --line:#DCE0E4; --line-soft:#E9ECEF;
+  --accent:#2F6F6B; --accent-ink:#245854; --accent-soft:#E3EFED;
+  --warn:#8A5A16; --danger:#9E3B36; --ok:#3F6B4A;
+  --code-bg:#F1F3F4;
+  --sans:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --mono:"JetBrains Mono",ui-monospace,"SFMono-Regular",Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#101316; --surface:#171B1F; --raise:#1C2126;
+    --ink:#DEE2E6; --strong:#F2F5F7; --muted:#949CA5; --faint:#727B84;
+    --line:#282E35; --line-soft:#20262C;
+    --accent:#5FA9A2; --accent-ink:#7CC3BC; --accent-soft:#182A29;
+    --warn:#C99442; --danger:#D4776F; --ok:#7FB08C;
+    --code-bg:#12171B;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#101316; --surface:#171B1F; --raise:#1C2126;
+  --ink:#DEE2E6; --strong:#F2F5F7; --muted:#949CA5; --faint:#727B84;
+  --line:#282E35; --line-soft:#20262C;
+  --accent:#5FA9A2; --accent-ink:#7CC3BC; --accent-soft:#182A29;
+  --warn:#C99442; --danger:#D4776F; --ok:#7FB08C;
+  --code-bg:#12171B;
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif); font-size:17px; line-height:1.62;
+  -webkit-font-smoothing:antialiased;
+}
+
+.shell{display:grid; grid-template-columns:264px minmax(0,1fr); align-items:start}
+.rail{
+  position:sticky; top:0; height:100vh; overflow-y:auto;
+  padding:34px 20px 40px 30px; border-right:1px solid var(--line);
+  background:var(--surface);
+}
+.rail .kicker{
+  font-family:var(--sans); font-size:10px; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--faint); margin:0 0 14px;
+}
+.railnav{display:flex; flex-direction:column}
+.railnav a{
+  display:grid; grid-template-columns:24px minmax(0,1fr); gap:6px; align-items:baseline;
+  font-family:var(--sans); font-size:12.5px; line-height:1.4; text-decoration:none;
+  color:var(--muted); padding:6px 8px 6px 0; border-radius:4px;
+}
+.railnav a:hover{color:var(--accent-ink)}
+.railnav a .n{
+  font-variant-numeric:tabular-nums; font-size:10.5px; font-weight:600; color:var(--faint);
+}
+.railnav a:hover .n{color:var(--accent)}
+
+.main{min-width:0; padding:0 0 100px}
+.wrap{max-width:760px; margin:0 auto; padding:0 32px}
+
+.hero{
+  border-bottom:1px solid var(--line); background:var(--surface);
+  padding:56px 0 44px; margin-bottom:10px;
+}
+.hero .wrap{max-width:860px}
+.eyebrow{
+  font-family:var(--sans); font-size:10.5px; font-weight:600; letter-spacing:.15em;
+  text-transform:uppercase; color:var(--accent); margin:0 0 16px;
+}
+h1.title{
+  font-family:var(--sans); font-weight:600; font-size:clamp(30px,4.4vw,46px);
+  line-height:1.08; letter-spacing:-.022em; color:var(--strong);
+  margin:0 0 16px; text-wrap:balance; max-width:16ch;
+}
+.standfirst{font-size:19px; line-height:1.55; color:var(--muted); margin:0 0 30px; max-width:60ch}
+.meta{
+  display:flex; flex-wrap:wrap; gap:10px 26px; font-family:var(--sans); font-size:11.5px;
+  color:var(--faint); border-top:1px solid var(--line-soft); padding-top:18px;
+}
+.meta b{color:var(--ink); font-weight:600; font-variant-numeric:tabular-nums}
+
+.thesis{margin:34px 0 0; border:1px solid var(--line); border-radius:6px; overflow:hidden; background:var(--raise)}
+.thesis .cap{
+  font-family:var(--sans); font-size:10.5px; font-weight:600; letter-spacing:.12em;
+  text-transform:uppercase; color:var(--faint); padding:11px 16px;
+  border-bottom:1px solid var(--line-soft); background:var(--surface);
+}
+.thesis .scroll{overflow-x:auto}
+.thesis table{border-collapse:collapse; width:100%; font-family:var(--mono); font-size:12.5px}
+.thesis th{
+  text-align:left; font-weight:500; color:var(--faint); padding:9px 16px; white-space:nowrap;
+  border-bottom:1px solid var(--line-soft); font-size:11px;
+}
+.thesis td{padding:11px 16px; white-space:nowrap; color:var(--ink); font-variant-numeric:tabular-nums; border:0}
+.thesis td.pk{color:var(--accent); font-weight:700}
+.thesis .note{
+  padding:11px 16px; border-top:1px solid var(--line-soft); font-family:var(--sans);
+  font-size:12px; line-height:1.5; color:var(--muted); background:var(--surface);
+}
+.thesis .note b{color:var(--accent-ink); font-weight:600}
+
+.main h2{
+  font-family:var(--sans); font-weight:600; font-size:26px; letter-spacing:-.015em;
+  color:var(--strong); line-height:1.2; margin:60px 0 18px; text-wrap:balance;
+  padding-top:24px; border-top:1px solid var(--line);
+}
+.main h3{
+  font-family:var(--sans); font-weight:600; font-size:17.5px; letter-spacing:-.005em;
+  color:var(--strong); margin:38px 0 12px; text-wrap:balance;
+}
+.main h4{
+  font-family:var(--sans); font-weight:600; font-size:13px; letter-spacing:.04em;
+  text-transform:uppercase; color:var(--muted); margin:28px 0 10px;
+}
+.main p{margin:0 0 17px}
+.main strong{color:var(--strong); font-weight:600}
+.main a{color:var(--accent-ink); text-decoration:underline; text-decoration-thickness:1px; text-underline-offset:2px}
+.main a:hover{text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--accent); outline-offset:2px; border-radius:2px}
+
+.main ul,.main ol{margin:0 0 18px; padding-left:22px}
+.main li{margin:0 0 8px}
+.main li::marker{color:var(--faint)}
+.main hr{border:0; border-top:1px solid var(--line-soft); margin:44px 0}
+
+.main code{
+  font-family:var(--mono); font-size:.84em; background:var(--code-bg);
+  padding:.14em .38em; border-radius:3px; color:var(--ink); overflow-wrap:break-word;
+}
+.main pre{
+  font-family:var(--mono); font-size:12.5px; line-height:1.62; background:var(--code-bg);
+  border:1px solid var(--line-soft); border-radius:6px; padding:16px 18px;
+  overflow-x:auto; margin:0 0 22px;
+}
+.main pre code{background:none; padding:0; font-size:inherit}
+.main blockquote{margin:0 0 20px; padding:2px 0 2px 18px; border-left:2px solid var(--accent); color:var(--muted)}
+
+.tablewrap{overflow-x:auto; margin:0 0 24px; border:1px solid var(--line); border-radius:6px; background:var(--raise)}
+.tablewrap table{border-collapse:collapse; width:100%; font-family:var(--sans); font-size:13px; line-height:1.5}
+.tablewrap th{
+  text-align:left; font-weight:600; font-size:11px; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--faint); padding:11px 14px; border-bottom:1px solid var(--line);
+  white-space:nowrap; background:var(--surface);
+}
+.tablewrap td{padding:12px 14px; border-bottom:1px solid var(--line-soft); vertical-align:top; color:var(--ink)}
+.tablewrap tr:last-child td{border-bottom:0}
+.tablewrap td code,.tablewrap th code{font-size:11.5px}
+.tablewrap td strong{color:var(--strong)}
+
+.figure{
+  margin:0 0 26px; padding:22px 18px; border:1px solid var(--line); border-radius:6px;
+  background:var(--raise); overflow-x:auto;
+}
+.figure pre.mermaid{background:none; border:0; padding:0; margin:0; text-align:center}
+
+@media (max-width:1000px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  .rail{position:static; height:auto; border-right:0; border-bottom:1px solid var(--line); padding:20px 24px}
+  .railnav{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:0 14px}
+  .wrap{padding:0 24px}
+  .hero{padding:40px 0 34px}
+}
+@media (max-width:560px){
+  body{font-size:16px}
+  .wrap{padding:0 18px}
+  .main h2{font-size:22px; margin-top:46px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important; transition:none !important}
+  html{scroll-behavior:auto}
+}
+html{scroll-behavior:smooth}
+.main h2,.main h3{scroll-margin-top:20px}
+</style>
+<div class="shell">
+  <nav class="rail" aria-label="Contents">
+    <p class="kicker">Contents</p>
+    <div class="railnav">
+<a href="#1-tl-dr"><span class="n">1</span><span>TL;DR</span></a>
+<a href="#2-what-changes-per-flavor"><span class="n">2</span><span>What changes, per flavor</span></a>
+<a href="#3-the-three-prs"><span class="n">3</span><span>The three PRs</span></a>
+<a href="#4-data-model"><span class="n">4</span><span>Data model</span></a>
+<a href="#5-first-user-stamping-and-existing-installs"><span class="n">5</span><span>First-user stamping and existing installs</span></a>
+<a href="#6-the-two-way-link-gate"><span class="n">6</span><span>The two-way link gate</span></a>
+<a href="#7-owner-protection"><span class="n">7</span><span>Owner protection</span></a>
+<a href="#8-transfer-flow"><span class="n">8</span><span>Transfer flow</span></a>
+<a href="#9-tests-and-commands"><span class="n">9</span><span>Tests and commands</span></a>
+<a href="#10-deliberately-not-in-this-plan"><span class="n">10</span><span>Deliberately NOT in this plan</span></a>
+<a href="#11-open-decisions"><span class="n">11</span><span>Open decisions</span></a>
+    </div>
+  </nav>
+  <div class="main">
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Stirling-PDF &middot; implementation plan</p>
+    <h1 class="title">One owner, recorded, transferable</h1>
+    <p class="standfirst">The first user to start Stirling-PDF self-hosted becomes the org owner, and stays an
+      admin. Ownership can be handed over on both flavors. Account linking becomes an org-owner-to-org-owner
+      handshake, and nothing else narrows.</p>
+    <div class="meta">
+      <span>Branch <b>claude/org-ownership-transfer-8b63e6</b></span>
+      <span>Scope <b>3 PRs</b></span>
+      <span>New tables <b>1</b></span>
+      <span>Columns added to existing tables <b>0</b></span>
+      <span>Supabase migrations <b>0</b></span>
+      <span>Existing <code>hasRole(&#39;ADMIN&#39;)</code> gates changed <b>0</b></span>
+    </div>
+
+    <div class="thesis">
+      <div class="cap">org_owner - the whole data model</div>
+      <div class="scroll">
+      <table>
+        <thead><tr><th>id</th><th>owner_user_id</th><th>owner_username</th><th>claimed_at</th><th>transferred_by</th><th>source</th></tr></thead>
+        <tbody><tr><td class="pk">1</td><td>42</td><td>admin</td><td>2026-09-06 09:14:02</td><td>-</td><td>BACKFILL</td></tr></tbody>
+      </table>
+      </div>
+      <div class="note"><b>The primary key is the invariant.</b> One deployment, one org, one row pinned at
+        <code>id = 1</code>, so &ldquo;exactly one owner&rdquo; needs no filtered unique index - which
+        <code>ddl-auto</code> could not have emitted anyway.</div>
+    </div>
+  </div>
+</header>
+
+    <div class="wrap">
+
+<h2 id="1-tl-dr">1. TL;DR</h2>
+<ul>
+<li><strong>Three PRs, split by flavor, not by lifecycle.</strong> PR1 is entirely self-hosted (pointer, protection, transfer, UI). PR2 is entirely SaaS (leader resolution fix, leadership transfer). PR3 is the gate, and is self-hosted only. Each PR needs one boot and one vitest scope instead of two. The ordering rule survives: transfer ships in PR1 and PR2, the gate closes in PR3.</li>
+<li><strong>Self-hosted owner = lowest <code>user_id</code> holding <code>ROLE_ADMIN</code> and enabled,</strong> stored in a one-row <code>org_owner</code> table pinned by <strong>both id and username</strong>, validated and self-healed at every boot. Stamped at first-user creation where that event exists; derived silently otherwise. No banner, no ceremony.</li>
+<li><strong>The API is split in two: <code>ownerId()</code> never writes, <code>resolveOwner()</code> is the only writer.</strong> Both short-circuit on the <code>saas</code> profile inside the service, not just in the bootstrap bean. This is load-bearing: SaaS <em>does</em> have <code>ROLE_ADMIN</code> principals (<code>UserRoleWebhookController.java:55,87,120,153</code>, <code>PricingPolicyAdminController.java:54-126</code>, <code>ProcurementController.java:488,513</code>), and <code>SaasTeamController.java:354,395</code> calls the shared <code>UserService.changeRole</code>. A deriving read on that path would stamp a service account as owner and permanently break SaaS role management.</li>
+<li><strong><code>/admin/changePasswordForUser</code> is the fourth refusal, and it is not optional.</strong> <code>UserController.java:657</code> is <code>hasRole('ADMIN')</code> with only a self-check (<code>:676-680</code>), then calls <code>changePassword</code> (<code>:696</code>) and <code>invalidateUserSessions</code> (<code>:699</code>). Without a target-side guard, any second admin resets the owner's password, logs in as them, and transfers ownership. Every other protection in this plan is a two-call bypass until that lands.</li>
+<li><strong>New table, not a column on <code>users</code>.</strong> <code>users</code> is <code>MIGRATION_OWNED</code> (<code>app/saas/src/main/java/stirling/software/saas/config/SaasSchemaOwnership.java</code>), so a new column would never exist on SaaS and every user query would break there.</li>
+<li><strong>Naming collision, found in the code, must be fixed in PR1.</strong> <code>UsersDirectory.tsx:104</code> already labels the <em>admin role</em> as <code>t("users.role.orgOwner", "Org Owner")</code> in the role dropdown. Every admin currently reads as "Org Owner". Add <code>[users.role] admin = "Admin"</code> for the dropdown and reuse the existing <code>users.role.orgOwner</code> key for the real owner chip.</li>
+<li><strong>Placement is free.</strong> <code>stirling.software.proprietary.model</code> is in <code>@EntityScan</code> and <code>stirling.software.proprietary.security.repository</code> is in <code>@EnableJpaRepositories</code> (<code>DatabaseConfig.java:29-58</code>, both verified). <strong>No <code>DatabaseConfig</code> edit.</strong></li>
+<li><strong>Recovery is <code>STIRLING_ORG_OWNER_BREAK_GLASS=&lt;username&gt;</code>, read via <code>System.getenv()</code> only.</strong> Any settings.yml-backed control is self-service for the exact population it fences out: settings.yml is <code>addFirst</code>ed above <code>systemEnvironment</code> on non-saas (<code>ApplicationProperties.java:104-111</code>), and <code>isValidSettingKey</code> allowlists only the <em>first</em> path segment against <code>VALID_SECTION_NAMES</code> (<code>AdminSettingsController.java:685-706, :735</code>) - and <code>security</code> is on that list, so <code>security.orgOwner.*</code> is admin-writable.</li>
+</ul>
+<hr />
+<h2 id="2-what-changes-per-flavor">2. What changes, per flavor</h2>
+<p><strong>Self-hosted.</strong> A new singleton table <code>org_owner</code> holds one <code>owner_user_id</code> plus <code>owner_username</code>. <code>OrgOwnerService.resolveOwner()</code> reads it, validates that the pointed-at user still exists, still carries that username, still holds <code>ROLE_ADMIN</code> and is still enabled, and otherwise re-derives and rewrites. That runs on <code>ApplicationReadyEvent</code>, after a UI database restore, and from the transfer endpoint. The owner is an extra title on top of <code>ROLE_ADMIN</code>, never a replacement, so <code>Role</code>, <code>Authority</code> and every existing <code>hasRole('ADMIN')</code> check are untouched. The owner cannot be demoted, disabled, deleted, or have their password reset by another admin; they can transfer the title; and after PR3 they are the only account that may mutate the account link.</p>
+<p><strong>SaaS.</strong> No new marker, no new rights, no <code>org_owner</code> row ever. The org owner is the <code>TeamRole.LEADER</code> of the team <code>users.team_id</code> points at. Two things change: <code>LeaderTeamResolver</code> resolves that membership instead of the oldest one, and a new leader-only endpoint transfers <code>LEADER</code> atomically. Both the stamp and the derive are hard-disabled under the <code>saas</code> profile, and a test asserts the table stays empty.</p>
+<hr />
+<h2 id="3-the-three-prs">3. The three PRs</h2>
+<h3 id="pr-1-self-hosted-org-owner-pointer-protection-transfer-ui">PR 1 - Self-hosted org owner: pointer, protection, transfer, UI</h3>
+<p><strong>Scope.</strong> Everything self-hosted, end to end. This PR adds refusals, so it changes behaviour from day one. Test it in one H2 boot plus one portal vitest scope.</p>
+<p><strong>Backend (new)</strong>
+- <code>app/proprietary/src/main/java/stirling/software/proprietary/model/OrgOwner.java</code> - singleton entity, <code>@Table(name = "org_owner")</code>, <code>SINGLETON_ID = 1L</code> assigned <code>@Id</code> per <code>UserLicenseSettings.java:25-29</code>, <code>implements Persistable&lt;Long&gt;</code> with <code>isNew() == true</code>. Two-line comment pointing at <code>SourceDocTotalEntity.java:20-25</code> as the precedent; the full rationale goes in the PR body.
+- <code>app/proprietary/src/main/java/stirling/software/proprietary/security/repository/OrgOwnerRepository.java</code> - sits beside <code>UserLicenseSettingsRepository</code>, already inside <code>@EnableJpaRepositories</code>. Carries the <code>@Modifying</code> update query.
+- <code>app/proprietary/src/main/java/stirling/software/proprietary/service/OrgOwnerService.java</code>:
+  - <code>ownerId()</code> / <code>isOwner(Long)</code> / <code>isCurrentUser(Authentication)</code> - <strong>pure reads. Never derive, never write.</strong> Return empty when the row is absent or invalid.
+  - <code>resolveOwner()</code> - the only writer. Returns early with no write when the <code>saas</code> profile is active (the <code>InitialSecuritySetup.isSaas()</code> pattern, <code>:51-53</code>).
+  - <code>stampIfAbsent(User, Reason)</code> - same saas short-circuit.
+  - <code>isCurrentUser</code> resolves strictly by <code>authentication.getName()</code> then <code>findByUsernameIgnoreCase</code>, then compares by id. Never casts to <code>UserDetails</code>: <code>UserController.java:763-770</code> already has to switch over four principal shapes (<code>UserDetails</code>, <code>OAuth2User</code>, <code>CustomSaml2AuthenticatedPrincipal</code>, <code>String</code>), and an API-key or SAML admin must not 403.
+- <code>app/proprietary/src/main/java/stirling/software/proprietary/service/OrgOwnerBootstrap.java</code> - <code>@Profile("!saas")</code>, <code>@EventListener(ApplicationReadyEvent.class)</code>, <code>@Order(3)</code>. Handles break-glass, then calls <code>resolveOwner()</code>.</p>
+<p><strong>Backend (edit)</strong>
+- <code>app/saas/src/main/java/stirling/software/saas/config/SaasSchemaOwnership.java</code> - add <code>"org_owner"</code> to <code>HIBERNATE_MANAGED</code>. <strong>Do this first or the build is red</strong>; <code>SaasSchemaOwnershipTest</code> derives its scan from the two <code>@EntityScan</code> declarations and fails on any unowned entity.
+- <code>UserRepository.java</code> - add:
+  <code>java
+  @Query("SELECT u FROM User u JOIN u.authorities a WHERE a.authority = 'ROLE_ADMIN' "
+       + "AND (u.enabled IS NULL OR u.enabled = true) ORDER BY u.id ASC")
+  List&lt;User&gt; findEnabledAdminsByIdAsc();</code>
+  Order by <code>u.id</code>, never <code>createdAt</code>. The authority filter is what excludes the internal API user: <code>Role.INTERNAL_API_USER</code>'s roleId is the literal <code>"STIRLING-PDF-BACKEND-API-USER"</code> with no <code>ROLE_</code> prefix (<code>Role.java:32-36</code>), so a username exclusion is redundant. Add it as a one-line belt-and-braces with a comment saying why.
+- <code>InitialSecuritySetup.java</code> - capture the discarded return of <code>userService.saveUserCore(...)</code> at <code>:147</code> and <code>:168</code> and stamp it. <strong>Not <code>:188</code></strong> (internal API user). <strong>Guard the stamp with the existing <code>isSaas()</code></strong>: the class is a bare <code>@Component</code> with no <code>@Profile</code> (<code>:30-33</code>) and its <code>if (!userService.hasUsers())</code> branch (<code>:59-65</code>) is <em>not</em> behind <code>isSaas()</code>, so on a fresh SaaS preview branch <code>createDefaultAdminUser()</code> runs and would otherwise write an <code>org_owner</code> row on SaaS. The stamping call must catch <code>Throwable</code> and log only: <code>init()</code> catches <code>IllegalArgumentException</code> and calls <code>System.exit(1)</code> (<code>:76-80</code>), and anything else escaping <code>@PostConstruct</code> fails context startup.
+- <code>DatabaseService</code> - call <code>resolveOwner()</code> at the end of <code>importDatabaseFromUI</code> (<code>:261-270</code>), not only at boot.
+- <code>AdminUserSummary.java</code> - add <code>private boolean orgOwner;</code> beside <code>teamLead</code> (<code>:54</code>) and <code>portalAccess</code> (<code>:59</code>).
+- <code>ProprietaryUIDataController.convertUserToSummary</code> (<code>:602-628</code>) - populate from a per-request validating read, not a boot-cached id, so a deleted or demoted owner drops out of the roster immediately.
+- <code>AuthController.buildUserResponse</code> (<code>:631-660</code>) - add <code>orgOwner</code> beside <code>portalAccess</code> (<code>:638</code>) and <code>teamLead</code> (<code>:639</code>). PR3 depends on this.</p>
+<p><strong>Backend (refusals - four, all by <code>user_id</code>)</strong>
+| Refusal | Service | Controller mirror |
+|---|---|---|
+| Role change away from <code>ROLE_ADMIN</code> | <code>UserService.java:431</code> | <code>UserController.java:613</code> |
+| Disable | <code>UserService.java:439</code> | <code>UserController.java:757</code> |
+| Delete | <code>UserService.java:256</code>, in the <code>INTERNAL_API_USER</code> guard block at <code>:261</code> | <code>UserController.java:805</code>, <strong>before</strong> the session-expiry loop at <code>:807-813</code> |
+| Password reset by a non-owner | <code>UserService.java:417</code> | <code>UserController.java:676-680</code>, <strong>before</strong> <code>changePassword</code> at <code>:696</code> |</p>
+<p>All four are inert when the row is absent, which is what keeps <code>UserService</code> safe on SaaS even in the paths shared with <code>SaasTeamService.java:342</code>. Refusals throw a checked, message-carrying exception the controller maps to 400, never a bare <code>RuntimeException</code> - <code>deleteUser</code> is reachable from callers that have already invalidated sessions. <code>/admin/saveUser</code> needs no guard (create-only, 409s on an existing username). <code>/admin/unlockUser</code> (<code>:783</code>) needs none either: unlocking is not a takeover.</p>
+<p><strong>Backend (transfer + break-glass)</strong>
+- <code>POST /admin/transferOwnership</code> in <code>UserController</code> - <code>hasRole('ADMIN')</code> plus caller-is-owner. <strong>One <code>@Transactional</code> method</strong>: promote the target to <code>ROLE_ADMIN</code> if needed, flush, re-read the authority to confirm, <em>then</em> write the pointer with reason <code>TRANSFER</code>. Refuse outright if the target cannot be promoted. If the pointer commits and the promote does not, the next <code>resolveOwner()</code> re-derives to an arbitrary third admin.
+- Break-glass in <code>OrgOwnerBootstrap</code>: <code>System.getenv("STIRLING_ORG_OWNER_BREAK_GLASS")</code>, resolve the user, ensure <code>ROLE_ADMIN</code> and enabled, re-stamp with reason <code>BREAK_GLASS</code>, WARN log plus audit event. <strong>Unknown username, blank value, and the internal API user must all WARN and continue booting.</strong> Never throw.</p>
+<p><strong>Frontend</strong>
+- <code>frontend/editor/src/portal/api/users.ts</code> - <code>orgOwner?: boolean</code> on <code>Member</code> and <code>AdminUserSummaryDto</code>, mapped in <code>fetchUsers</code>.
+- <code>frontend/editor/src/portal/api/users.ts</code> - add <code>transferOwnership</code>. <strong>Not <code>usersBackend.ts</code></strong>: that file's own header (<code>:15-18</code>) says self-hosted-only actions stay in <code>@portal/api/{users,teams}</code> and are gated via <code>usersCapabilities</code>, and the SaaS impl would only ever be a throw-stub like <code>cancelInvitation</code> (<code>:47-51</code>).
+- <code>usersCapabilities.ts</code> x3 (<code>portal/api/</code>, <code>proprietary/portal/</code>, <code>saas/portal/</code>) - add <code>transferOwnership</code>. Five files total including the two story literals; mechanical.
+- <code>frontend/editor/src/portal/components/users/UsersDirectory.tsx</code>:
+  - <code>:104</code> - change the admin role option to <code>t("users.role.admin", "Admin")</code>. It currently says "Org Owner" for every admin.
+  - <code>column.caps</code> block (<code>:211-248</code>) - an owner chip using the freed <code>t("users.role.orgOwner", "Org Owner")</code>, next to the <code>showApprover</code> chip at <code>:240-245</code>.
+  - <code>rowKebab</code> (<code>:121-176</code>) - one new item gated on <code>capabilities.transferOwnership &amp;&amp; viewerIsOwner &amp;&amp; !m.isSelf &amp;&amp; m.role !== "guest"</code>. Not a second kebab, not in the role <code>Select</code>.
+- <code>frontend/editor/src/portal/components/users/directory.ts</code> - <strong>sort</strong> the organization group owner-first at <code>:29</code>. Do not filter it: the team loop <code>continue</code>s on <code>role === "admin"</code> at <code>:34</code>, so narrowing the group would delete every non-owner admin from the roster.
+- <code>frontend/editor/src/portal/views/Users.tsx</code> - a <code>setConfirm({... danger: true})</code> block next to <code>removeUser</code>, using the existing <code>ConfirmModal</code> (<code>:39-45</code>). <strong>No type-to-confirm component exists in this codebase and this PR does not add one.</strong>
+- <code>frontend/editor/src/proprietary/auth/types.ts</code>, <code>proprietary/auth/supabase/UseSession.tsx</code> - thread <code>orgOwner</code> through the path <code>portalAccess</code>/<code>teamLead</code> already use.
+- <code>frontend/editor/public/locales/en-US/translation.toml</code> - add <code>[users.role] admin</code>, <code>[users.action] transferOwnership</code>, <code>[users.confirm] transferOwnershipTitle/Body</code>. <strong>en-US only.</strong> Do not touch <code>[users.group] owners</code> (see §10).</p>
+<p><strong>Tests</strong>
+- <code>app/proprietary/src/test/java/stirling/software/proprietary/service/OrgOwnerServiceTest.java</code> - the boot matrix from §5, plus: disabled admin is skipped; <code>saas</code> profile leaves the table empty; break-glass with an unknown/blank/internal username warns and continues.
+- <code>app/proprietary/src/test/java/stirling/software/proprietary/security/service/UserServiceOrgOwnerGuardTest.java</code> - all four refusals, inert when the row is absent, and a saas-profile case asserting <code>changeRole</code>/<code>changeUserEnabled</code>/<code>deleteUser</code> leave <code>org_owner</code> empty.
+- <code>UsersDirectory.test.tsx</code>, <code>UsersDirectory.stories.tsx</code> (<code>orgOwner: true</code> on the first admin in <code>MEMBERS</code>/<code>STATE_MEMBERS</code>/<code>BIG_MEMBERS</code>, plus a <code>SecondAdminNotOwner</code> story), <code>portal/mocks/users.ts</code>, <code>Users.saas.test.tsx</code> (asserts the chip and kebab item are <strong>absent</strong> on SaaS).
+- Existing, will need touching: <code>SaasSchemaOwnershipTest</code> (red until <code>org_owner</code> is registered), <code>AdminSettingsQueryPerfTest.java:160,172</code>.</p>
+<p><strong>Test in this order.</strong> Break-glass first, then the refusals, then transfer. Break-glass is the only recovery path from the refusals this same PR introduces.</p>
+<p><strong>Testable on its own by.</strong> Fresh boot (owner is id 1); upgraded H2 with three admins and <code>created_at</code> NULL (owner is lowest id, zero writes to <code>users</code>); delete the owner and reboot (re-resolves); try to demote/disable/delete/password-reset the owner (four readable 400s); transfer to a second admin and watch the chip move; set the env var and reboot.</p>
+<p><strong>Size.</strong> ~1100-1300 lines. It is the biggest PR, and it is one flavor, one boot, one vitest scope.</p>
+<hr />
+<h3 id="pr-2-saas-correct-leader-resolution-and-let-leadership-move">PR 2 - SaaS: correct leader resolution, and let leadership move</h3>
+<p><strong>Scope.</strong> SaaS only. No <code>org_owner</code>, no self-hosted file, no shared <code>UserService</code> edit.</p>
+<p><strong>Backend</strong>
+- <code>app/saas/src/main/java/stirling/software/saas/accountlink/LeaderTeamResolver.java:51-66</code> - prefer the membership whose team matches <code>users.team_id</code> via <code>memberRepo.findByTeamIdAndUserId</code>, falling back to today's <code>findPrimaryMembership(...).getFirst()</code> when <code>users.team_id</code> is null or has no matching row. <strong>Do not touch the <code>findPrimaryMembership</code> query</strong> (<code>TeamMembershipRepository.java:59-63</code>): re-pointing it would silently move invoices, payment methods, fleet stats, legal consent and procurement signatures for every invited user in one commit. The other six call sites stay untouched.
+- <code>SaasTeamController</code> - <code>POST /{teamId}/members/{memberId}/transfer-leadership</code>, <code>@PreAuthorize("@teamSecurity.isTeamLeader(#teamId)")</code>, <code>@Transactional</code>, mirroring <code>removeTeamMember</code> (<code>:327-368</code>) including the <code>setRollbackOnly()</code> + <code>BAD_REQUEST Map.of("error", ...)</code> style.
+- <code>SaasTeamService.transferLeadership(teamId, memberId, caller)</code> - promote target to <code>LEADER</code> and demote caller to <code>MEMBER</code> <strong>in one transaction</strong>. The unique constraint is <code>(team_id, user_id)</code> only (<code>TeamMembership.java:27</code>), so a partial failure leaves two leaders. Refuse on a personal team.</p>
+<p><strong>Frontend</strong>
+- <code>frontend/editor/src/cloud/contexts/SaaSTeamContext.tsx:244</code> - <code>transferLeadership</code> beside <code>removeMember</code>.
+- <code>frontend/editor/src/cloud/components/shared/config/configSections/TeamSection.tsx:466-482</code> - "Make owner" above the existing "Remove from Team", gated on the <code>isTeamLeader &amp;&amp; !isPersonalTeam</code> the context already exposes (<code>:263-264</code>).
+- <code>frontend/editor/public/locales/en-US/translation.toml</code> - <code>[team] makeOwner</code> plus its confirm/success/error triple.</p>
+<p><strong>Desktop is fine, verified.</strong> <code>cloud/</code> compiles into saas and desktop (<code>vite.config.ts:167-170</code>), but <code>TeamSection</code> only mounts when <code>isSaasMode &amp;&amp; isAuthenticated</code> (<code>desktop/components/shared/config/configNavSections.tsx:108-117</code>), and in SaaS mode the desktop client talks to the SaaS backend where the endpoint exists. No flavor gate needed beyond the leader/personal check above.</p>
+<p><strong>Tests</strong>
+- <code>app/saas/src/test/java/stirling/software/saas/accountlink/LeaderTeamResolverTest.java</code> - invited MEMBER 403s; leader binds to the org team id; user with null <code>users.team_id</code> falls back unchanged.
+- <code>app/saas/src/test/java/stirling/software/saas/service/SaasTeamServiceTransferLeadershipTest.java</code> - promote+demote atomic, exactly one leader after, refused on a personal team, refused for a MEMBER caller.
+- <code>portal/mocks/handlers/teamSaas.ts</code>.</p>
+<p><strong>Testable on its own by.</strong> Invited member is refused approval; leader approves and the instance binds to the org team; transfer leadership and confirm the old leader loses the kebab.</p>
+<p><strong>Size.</strong> ~400-550 lines.</p>
+<hr />
+<h3 id="pr-3-the-self-hosted-owner-only-link-gate">PR 3 - The self-hosted owner-only link gate</h3>
+<p><strong>Scope.</strong> Four annotations and a UI gate. Smallest diff, largest blast radius, its own release.</p>
+<p><strong>Backend</strong>
+- <code>app/proprietary/src/main/java/stirling/software/proprietary/accountlink/AccountLinkController.java</code> - method-level <code>@PreAuthorize("hasRole('ADMIN') and @orgOwnerService.isCurrentUser(authentication)")</code> on exactly four methods: <code>connectStart</code> (<code>:59</code>), <code>connectReauth</code> (<code>:78</code>), <code>connectComplete</code> (<code>:95</code>), <code>unlink</code> (<code>:143</code>). <strong>Restate <code>hasRole('ADMIN')</code> on each</strong> - a method-level annotation <em>replaces</em> the class-level one at <code>:29</code>.
+- <code>status</code> (<code>:138</code>), <code>usage</code> (<code>:153</code>) and <code>sync-now</code> (<code>:159</code>) stay on the class rule. Any admin keeps read visibility and manual sync.
+- Return <code>{"error":"orgOwnerRequired"}</code> on the 403 so the UI can explain itself.</p>
+<p><strong>Frontend</strong>
+- <code>frontend/editor/src/portal/hooks/useConnectGate.ts:44</code> - combine the existing <code>accountLinkAvailable</code> with the session's <code>orgOwner</code> flag PR1 added to <code>AuthController.buildUserResponse</code>, so non-owner admins never see the connect card.
+- <strong>No <code>ConfigController</code> change.</strong> <code>ConfigController</code> is in <code>:core</code>, has zero <code>stirling.software.proprietary</code> imports, and <code>:core</code>'s <code>:proprietary</code> dependency is conditional (<code>app/core/build.gradle:12-15</code>). Its own comment at <code>:341-346</code> says exactly this. A caller-is-owner value cannot be resolved there without a new <code>:common</code> interface, which is scope this plan does not budget.</p>
+<p><strong>Tests</strong>
+- <code>app/proprietary/src/test/java/stirling/software/proprietary/accountlink/AccountLinkControllerAuthTest.java</code> - <strong>must set <code>stirling.billing.account-link.enabled=true</code> and assert the bean exists before the auth cases run.</strong> The controller is <code>@ConditionalOnProperty(..., havingValue = "true")</code> and <code>@Profile("!saas")</code>; without the property there is no bean and the test passes vacuously, which is precisely the failure this test exists to catch. Cases: admin-but-not-owner 403s on all four methods; owner passes; a non-admin who somehow matches the pointer still 403s. Parameterise over <code>UsernamePasswordAuthenticationToken</code>, <code>ApiKeyAuthenticationToken</code>, OAuth2 and SAML principals.</p>
+<p><strong>Testable on its own by.</strong> Owner links; second admin gets 403 <code>orgOwnerRequired</code> and never sees the card; SSO admin with an API key still passes as owner.</p>
+<p><strong>Rollback is revert. There is no flag.</strong> Do not ship PR3 in the same release as PR1 - operators need the transfer endpoint live and exercised before the gate closes.</p>
+<p><strong>Size.</strong> ~150-250 lines.</p>
+<hr />
+<h2 id="4-data-model">4. Data model</h2>
+<p><strong>One row, two columns that matter, no foreign key.</strong></p>
+<div class="figure"><pre class="mermaid">erDiagram
+    USERS ||--o{ AUTHORITIES : has
+    ORG_OWNER }o..|| USERS : &quot;points at (no FK, by design)&quot;
+
+    USERS {
+        bigint user_id PK &quot;IDENTITY - the only monotonic creation-order signal&quot;
+        string username
+        boolean enabled &quot;nullable; NULL means enabled&quot;
+        timestamp created_at &quot;NULL on every V1-era row&quot;
+    }
+    AUTHORITIES {
+        bigint authority_id PK
+        bigint user_id FK
+        string authority &quot;ROLE_ADMIN / ROLE_USER / ...&quot;
+    }
+    ORG_OWNER {
+        bigint id PK &quot;always 1 - singleton&quot;
+        bigint owner_user_id &quot;plain Long, not a @ManyToOne&quot;
+        string owner_username &quot;pinned alongside the id; both must match&quot;
+        timestamp assigned_at
+        string assigned_reason &quot;enum: FIRST_USER RECONCILE TRANSFER BREAK_GLASS&quot;
+    }
+</pre></div>
+<p><strong>The invariant.</strong> At most one row, <code>id = 1</code>. <code>owner_user_id</code> names a user that exists, <strong>still carries <code>owner_username</code></strong>, holds <code>ROLE_ADMIN</code>, and is <strong>enabled</strong>. When any of that stops being true, the next <code>resolveOwner()</code> rewrites it.</p>
+<p><strong>Why the username is pinned too.</strong> Without it, a restored pre-feature backup launders drift into a valid-looking pointer. <code>exportDatabase</code> emits <code>SCRIPT SIMPLE COLUMNS DROP</code> (<code>DatabaseService.java:294</code>) and <code>importDatabaseFromUI</code> (<code>:261-270</code>) RUNSCRIPTs it. A pre-feature dump drops and recreates <code>USERS</code> with its own explicit identity values but never names <code>ORG_OWNER</code>, so the stale pointer survives. Id N now resolves to a different human; if they are any admin, an id-only check passes and hands them ownership silently. Both-must-match plus a post-import <code>resolveOwner()</code> closes it.</p>
+<p><strong>Why <code>enabled</code> is in the check.</strong> <code>User.enabled</code> is a boxed <code>Boolean</code> where null means enabled (<code>User.java:51-53, :118</code>). A disabled admin satisfies exists-and-is-admin forever and never self-heals, so ownership freezes on a dead account. The disable refusal prevents this prospectively; the validity check is what recovers from it.</p>
+<p><strong>Why a new table, not a column on <code>users</code>.</strong> <code>users</code> is <code>MIGRATION_OWNED</code>; its migrations live in a separate Supabase repo, and <code>MigrationOwnedSchemaFilter</code> hides it from Hibernate DDL but not DML. A new <code>User</code> field would compile and then fail every user query on SaaS. Second reason: a restore's <code>CREATE TABLE USERS</code> predates the column and would silently erase it.</p>
+<p><strong>Why no FK.</strong> A real FK turns an attempted owner delete into a raw constraint violation surfacing as a 500 from deep inside <code>deleteUser</code>'s flush, and <code>deleteUserRelatedData</code> (<code>:272-300</code>) does not enumerate it. The service refusal is the fence.</p>
+<p><strong>Why <code>Persistable</code> with <code>isNew() == true</code>.</strong> Spring Data's <code>save()</code> on an assigned non-null <code>@Id</code> is <code>merge()</code>, a silent UPDATE. Precedent: <code>SourceDocTotalEntity.java:20-25, :54-58</code>. Consequences: the first stamp is <code>saveAndFlush</code> inside its own <code>TransactionTemplate</code> catching <code>DataIntegrityViolationException</code> (the <code>FileEncryptionKeyService.java:327-343</code> shape, needed because <code>@PostConstruct</code> has no ambient transaction), and <strong>every subsequent write is an explicit <code>@Modifying</code> UPDATE, never <code>save()</code>.</strong></p>
+<hr />
+<h2 id="5-first-user-stamping-and-existing-installs">5. First-user stamping and existing installs</h2>
+<p><strong>Read this before writing code.</strong></p>
+<h3 id="the-exact-rule-orgownerservice-resolveowner">The exact rule (<code>OrgOwnerService.resolveOwner()</code>)</h3>
+<ol start="0">
+<li>If the <code>saas</code> profile is active, return immediately. No read, no write.</li>
+<li>Read the row <code>id = 1</code>. If <code>owner_user_id</code> is set, that user exists, <strong>their username still equals <code>owner_username</code></strong>, they hold <code>ROLE_ADMIN</code>, and they are <strong>enabled</strong> - that is the owner. Done. No write.</li>
+<li>Otherwise the owner is the lowest-id enabled <code>ROLE_ADMIN</code>, <strong>preferring one whose <code>firstLogin</code> is not true</strong> and falling back to the lowest-id enabled admin overall. Write the row (insert if absent, <code>@Modifying</code> UPDATE if invalid). Log at INFO with the username; WARN when it replaced a dangling or drifted pointer.</li>
+<li>No admin at all: no owner. Owner-gated endpoints 403. That is what <code>hasRole('ADMIN')</code> already produces, so nothing regresses. <strong>Do not add an "owner unset means any admin" fallback</strong> - that reopens the gate on every login-enabled install.</li>
+</ol>
+<p><code>ownerId()</code> / <code>isOwner()</code> / <code>isCurrentUser()</code> execute step 1 only. <strong>They never derive and never write.</strong> <code>resolveOwner()</code> is called from exactly three places: the <code>@Profile("!saas")</code> bootstrap, the end of <code>importDatabaseFromUI</code>, and <code>/admin/transferOwnership</code>. Step 1's single primary-key lookup is the idempotence guard, so no <code>CompletedMigrations</code> marker is needed, and unlike a completion marker it keeps working after a runtime restore.</p>
+<p>Zero-owner recovery: if an install reaches zero admins and one is created later, <code>saveUserCore</code> stamps when no valid owner exists, on <code>!saas</code> only. No other write path derives.</p>
+<h3 id="where-the-instruction-had-to-be-interpreted">Where the instruction had to be interpreted</h3>
+<p><em>Stamped at first-user creation, no elected-on-upgrade ceremony.</em> Both halves are honoured, but the first is not sufficient on its own.</p>
+<p>For installs that already exist there is <strong>no first-user-creation event left to hook</strong>. Worse, <code>saveUserCore</code> calls <code>exportDatabase()</code> on every user creation (<code>UserService.java:570</code>), so essentially every install that ever made a user has a backup on disk, and <code>InitialSecuritySetup.init</code> takes <code>importDatabase()</code> <strong>instead of</strong> <code>initializeAdminUser()</code> when one exists (<code>:59-65</code>). Even a wiped database directory with an intact backup folder never reaches the creation path.</p>
+<p><strong>So "stamp at first-user creation" becomes "stamp at first-user creation where that event exists, and derive silently otherwise".</strong> Not an election: nobody chooses, nothing is offered, no banner, no claim. It is a deterministic reconstruction from data that already exists.</p>
+<p><strong>The creation stamp is the nicety. The boot reconcile is the mechanism.</strong> Both <code>InitialSecuritySetup</code> stamp sites are reachable only when <code>!hasUsers()</code> <em>and</em> <code>!hasBackup()</code>, which is a minority of installs. Say that in the PR description or a reviewer will assume the stamp is sufficient.</p>
+<h3 id="created-at-is-unusable-do-not-reach-for-it"><code>created_at</code> is unusable - do not reach for it</h3>
+<p>It did not exist in V1; it arrived with <code>848ff9688b</code>. With <code>ddl-auto=update</code> a V1 upgrade adds it nullable, and <code>@CreationTimestamp @Column(updatable = false)</code> (<code>User.java:104-106</code>) only writes on INSERT. <strong>Every V1-era row carries <code>created_at = NULL</code> permanently.</strong> <code>user_id</code> is <code>@GeneratedValue(IDENTITY)</code>, monotonic within a database lineage, and survives backup/restore verbatim.</p>
+<p>(This concern is specific to <code>users</code>. <code>TeamMembership.createdAt</code> is <code>@CreationTimestamp @Column(nullable = false)</code> (<code>:77-79</code>), so §6's ordering is deterministic - that bug is "oldest membership is the parked personal team", not a NULL-ordering hazard.)</p>
+<h3 id="lockout-vectors-exhaustive">Lockout vectors - exhaustive</h3>
+<div class="tablewrap"><table>
+<thead>
+<tr>
+<th>#</th>
+<th>Vector</th>
+<th>Outcome</th>
+<th>Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Owner deleted or demoted</td>
+<td>Pointer dangles</td>
+<td>Step 1 re-derives; PR1's refusals prevent it prospectively.</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Owner disabled or brute-force locked</td>
+<td>Ownership freezes on a dead account</td>
+<td><code>enabled</code> is in step 1; disable refusal ships in PR1. A locked sole owner is recoverable only via break-glass. Say so in the runbook.</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Historical first admin deleted years ago</td>
+<td>Ownership lands on the oldest <em>surviving</em> admin</td>
+<td><strong>Accepted, unrecoverable without <code>created_at</code>.</strong> Log at INFO with the username so an operator can transfer.</td>
+</tr>
+<tr>
+<td>4</td>
+<td>No <code>ROLE_ADMIN</code> at all</td>
+<td>No owner; link endpoints 403</td>
+<td>Not a regression. Do not fail open.</td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>security.enableLogin=false</code></td>
+<td>No authenticated principal</td>
+<td><code>UserAuthenticationFilter</code> chains through without an Authentication while <code>@EnableMethodSecurity</code> stays on, so account-link is <strong>already</strong> unreachable there today. Pointer still written (free); nothing reads it. <strong>Do not fail open.</strong></td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Derived owner is the dormant <code>admin</code>/<code>stirling</code> account</strong></td>
+<td>Billing control concentrated on the weakest credential on the box</td>
+<td><code>createDefaultAdminUser</code> (<code>:154-171</code>) creates <code>admin</code>/<code>stirling</code> with <code>firstLogin(true)</code> before any human, whenever <code>initialLogin</code> is not fully configured. Step 2 prefers a non-<code>firstLogin</code> admin; when it cannot, WARN naming the account and surface a portal notice. <strong>PR1 must ship transfer, and an operator must demonstrate a successful transfer on such an install, before PR3 gates anything.</strong></td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>SSO migration strands the bootstrap admin</strong></td>
+<td>Owner cannot log in</td>
+<td><code>CustomOAuth2AuthenticationSuccessHandler:119-126</code> bounces an existing password-holding non-SSO user to <code>/logout</code> when <code>autoCreateUser</code> is on. Break-glass (§7) is the answer.</td>
+</tr>
+<tr>
+<td>8</td>
+<td>Old backup restored via the UI</td>
+<td>Pointer may dangle or drift</td>
+<td>Username pinning plus a post-import <code>resolveOwner()</code>. Known limitation: a crafted backup carrying its own <code>org_owner</code> row is an unguarded transfer path, but an admin who can restore a database already owns the box.</td>
+</tr>
+<tr>
+<td>9</td>
+<td>Multi-node concurrent first boot</td>
+<td>Duplicate singleton insert</td>
+<td><code>saveAndFlush</code> in its own <code>TransactionTemplate</code>, catch <code>DataIntegrityViolationException</code>, re-read the winner, treat as success.</td>
+</tr>
+<tr>
+<td>10</td>
+<td>Stamping throws</td>
+<td><strong>JVM exits</strong></td>
+<td><code>init()</code> catches <code>IllegalArgumentException</code> and calls <code>System.exit(1)</code> (<code>:76-80</code>). The stamping and break-glass calls must catch everything and log only.</td>
+</tr>
+</tbody>
+</table></div>
+<hr />
+<h2 id="6-the-two-way-link-gate">6. The two-way link gate</h2>
+<p><strong>Self-host org owner starts and completes the link; SaaS team leader approves it.</strong> Neither end is enforced today.</p>
+<div class="figure"><pre class="mermaid">sequenceDiagram
+    autonumber
+    actor SH as Self-host org owner&lt;br/&gt;(ROLE_ADMIN + org_owner)
+    participant I as Instance&lt;br/&gt;/api/v1/account-link
+    participant B as Browser
+    participant S as SaaS /connect
+    actor SO as SaaS team leader&lt;br/&gt;(LEADER of users.team_id)
+
+    SH-&gt;&gt;I: POST /connect/start
+    Note over I: hasRole(&#x27;ADMIN&#x27;) AND&lt;br/&gt;@orgOwnerService.isCurrentUser(auth)
+    I--xSH: 403 orgOwnerRequired if merely an admin
+    I--&gt;&gt;B: handoff URL + state
+    B-&gt;&gt;S: GET /connect?state=...
+    SO-&gt;&gt;S: POST /connect/{id}/approve
+    Note over S: LeaderTeamResolver.resolve()&lt;br/&gt;membership matching users.team_id,&lt;br/&gt;role must be LEADER
+    S--xSO: 403 if MEMBER (today: wrongly passes)
+    S-&gt;&gt;S: request.setTeamId(orgTeamId); mint()
+    S--&gt;&gt;B: redirect with code
+    B-&gt;&gt;I: POST /connect/complete
+    Note over I: same owner conjunct restated
+    I-&gt;&gt;I: credentialStore.save(deviceId, secret, orgTeamId)
+</pre></div>
+<h3 id="the-personal-team-problem-pr2-narrows-it-it-does-not-close-it">The personal-team problem: PR2 narrows it, it does not close it</h3>
+<p><code>LeaderTeamResolver</code> resolves via <code>findPrimaryMembership(...).getFirst()</code> (<code>:57-58</code>), which is <code>ORDER BY tm.createdAt ASC</code> - the <strong>oldest</strong> membership. <code>SaasTeamService.acceptInvitation</code> deliberately parks the personal team on join (<code>:398-405</code>), and <code>createPersonalTeam</code> made the user LEADER of it (<code>:137</code>) while the org membership it creates is <code>MEMBER</code> (<code>:439</code>). <strong>Every invited SaaS user passes the leader check today, on a team of one.</strong> The SaaS-side rule is effectively "any authenticated SaaS user".</p>
+<p>What that costs: the approver's team is written onto the handshake (<code>ConnectRequestService.java:236</code>) and into the registered instance (<code>:305</code>), and every money decision keys off it - <code>/entitlement</code>, <code>ingest</code>, <code>billingService.forTeam</code>. An employee can bind the company's fleet to their one-seat personal wallet, which then caps and DEGRADEs the company's server, while the real leader's linked-instances list never shows it.</p>
+<p><strong>Be precise about what PR2 fixes.</strong> After it, the test is "LEADER of the team <code>users.team_id</code> points at". <code>createPersonalTeam</code> makes every user LEADER of their own personal team and points <code>users.team_id</code> at it, and <code>returnUserToHome</code> (<code>SaasTeamService.java:190</code>, called from <code>:503, :590, :808</code>) re-points a removed user back there with a LEADER membership. So an ex-employee, or anyone who never accepted an invite, can still bind a fleet to a one-seat personal wallet. <strong>PR2 closes the hole for current org members and narrows it to solo/ex-member accounts.</strong> Refusing personal teams outright would break legitimate solo customers, so it is not done here. See §11.</p>
+<p>Founders are unaffected either way: on SaaS the only <code>new Team()</code> is <code>createPersonalTeam</code> (<code>:124</code>) and org teams are personal teams converted in place (<code>:240-247</code>), so a founder has exactly one membership and old and new resolution return the identical row.</p>
+<hr />
+<h2 id="7-owner-protection">7. Owner protection</h2>
+<p><strong>Four service-layer refusals are the fence; the controller mirrors exist for message quality.</strong> All compare by <code>user_id</code>, never username (<code>changeUsername</code> at <code>:407</code> does not touch the pointer). All are inert when the row is absent. The table is in §3, PR1.</p>
+<p>The fourth one is the important one. Without a target-side guard on <code>/admin/changePasswordForUser</code>, ownership is a two-call bypass and every other control in this plan is decorative. It also gives a rogue admin an unlimited session-denial weapon against the owner via <code>invalidateUserSessions</code>.</p>
+<p><strong>Break-glass: <code>STIRLING_ORG_OWNER_BREAK_GLASS=&lt;username&gt;</code>, read with <code>System.getenv()</code> directly. Never through <code>ApplicationProperties</code>, <code>@Value</code> or <code>Environment</code>.</strong></p>
+<p><code>AdminSettingsController.updateSettingValue</code> (<code>:466-490</code>) lets any <code>ROLE_ADMIN</code> write any dotted key whose first segment is in <code>VALID_SECTION_NAMES</code> (<code>:685-706, :735</code>), and <code>security</code> is on that list. <code>POST /restart</code> sits beside it at <code>:530</code>. And on self-hosted, settings.yml is <code>addFirst</code>ed <strong>above</strong> <code>systemEnvironment</code> (<code>ApplicationProperties.java:104-111</code>). So a property-backed break-glass is self-service for exactly the population it fences out, and settings.yml would even beat the operator's env var. <strong>Do not add a break-glass key to <code>settings.yml.template</code>.</strong></p>
+<p>On boot with the var set: resolve the user, ensure <code>ROLE_ADMIN</code> and enabled, re-stamp with reason <code>BREAK_GLASS</code>, WARN plus audit event. Unknown, blank, or internal-API-user values WARN and boot normally. Setting it requires the compose file or systemd unit, which is genuinely out-of-band.</p>
+<hr />
+<h2 id="8-transfer-flow">8. Transfer flow</h2>
+<p><strong>Self-hosted (PR1).</strong> Owner opens the Users page, uses the per-member kebab on another admin, confirms in the existing danger <code>ConfirmModal</code>. <code>POST /admin/transferOwnership</code> runs one transaction: promote to <code>ROLE_ADMIN</code> if needed, flush, re-read to confirm, write the pointer with reason <code>TRANSFER</code>. The old owner keeps <code>ROLE_ADMIN</code> and immediately becomes demotable, disable-able and deletable again. One owner at all times, because the pointer is a single column.</p>
+<p><strong>SaaS (PR2).</strong> Team leader opens Settings, Account, Team, uses the member kebab, confirms. <code>POST /api/v1/teams/{teamId}/members/{memberId}/transfer-leadership</code> sets the target <code>LEADER</code> and the caller <code>MEMBER</code> in one transaction. Refused on a personal team. <code>team_memberships</code> is <code>MIGRATION_OWNED</code>, so this is a pure data change on the existing <code>role</code> column: <strong>no schema edit, no Supabase migration.</strong></p>
+<hr />
+<h2 id="9-tests-and-commands">9. Tests and commands</h2>
+<p><strong>New test files</strong></p>
+<ul>
+<li><code>app/proprietary/src/test/java/stirling/software/proprietary/service/OrgOwnerServiceTest.java</code> (PR1)</li>
+<li><code>app/proprietary/src/test/java/stirling/software/proprietary/security/service/UserServiceOrgOwnerGuardTest.java</code> (PR1)</li>
+<li><code>app/saas/src/test/java/stirling/software/saas/accountlink/LeaderTeamResolverTest.java</code> (PR2)</li>
+<li><code>app/saas/src/test/java/stirling/software/saas/service/SaasTeamServiceTransferLeadershipTest.java</code> (PR2)</li>
+<li><code>app/proprietary/src/test/java/stirling/software/proprietary/accountlink/AccountLinkControllerAuthTest.java</code> (PR3)</li>
+</ul>
+<p><strong>Existing, will need touching:</strong> <code>SaasSchemaOwnershipTest</code> (PR1), <code>AdminSettingsQueryPerfTest.java:160,172</code> (PR1), <code>UsersDirectory.test.tsx</code> / <code>.stories.tsx</code> / <code>portal/mocks/users.ts</code> / <code>Users.saas.test.tsx</code> (PR1), <code>portal/mocks/handlers/teamSaas.ts</code> (PR2).</p>
+<p><strong>Commands (PowerShell, from the repo root)</strong></p>
+<pre><code class="language-powershell"># Backend - proprietary only (fast loop)
+cmd /c &quot;.\gradlew.bat :proprietary:test --tests '*OrgOwner*' --tests '*AccountLinkControllerAuth*'&quot;
+
+# Backend - SaaS module must be put in the graph explicitly
+$env:STIRLING_FLAVOR = &quot;saas&quot;
+cmd /c &quot;.\gradlew.bat :saas:test --tests '*SaasSchemaOwnership*' --tests '*LeaderTeamResolver*' --tests '*TransferLeadership*'&quot;
+Remove-Item Env:\STIRLING_FLAVOR
+
+# Frontend - scoped
+npx vitest run --root frontend/editor src/portal/components/users
+npx vitest run --root frontend/editor src/portal/views/Users
+
+# Storybook stories (separate vitest project; port 63315 has bitten this repo before)
+npx vitest run --config frontend/.storybook/vitest.config.ts
+
+# i18n gate - --branch is required=True, the command fails on argparse without it
+python .github/scripts/check_language_toml.py `
+  --reference-file frontend/editor/public/locales/en-US/translation.toml --branch main
+
+# Before pushing, per house rules
+task fix
+task check
+</code></pre>
+<p><strong>Manual boot matrix for PR1</strong> (five boots, no UI needed):</p>
+<ol>
+<li>Fresh H2, no backup folder: owner is id 1, reason <code>FIRST_USER</code>.</li>
+<li>Upgraded H2, three admins, <code>created_at</code> NULL: owner is the lowest-id non-<code>firstLogin</code> admin, reason <code>RECONCILE</code>, zero writes to <code>users</code>.</li>
+<li>Empty DB with an intact backup folder: takes the <code>importDatabase</code> branch, reconcile still stamps.</li>
+<li>Delete the owner, reboot: re-resolves to the next-lowest enabled admin.</li>
+<li>Disable the owner directly in H2, reboot: re-resolves (proves the <code>enabled</code> check).</li>
+</ol>
+<p>Plus one saas-profile boot asserting <code>org_owner</code> is empty, and one restore of a pre-feature dump whose id-2 row is a different username, asserting a re-derive.</p>
+<hr />
+<h2 id="10-deliberately-not-in-this-plan">10. Deliberately NOT in this plan</h2>
+<p>Do not re-add any of these.</p>
+<ul>
+<li><strong>Narrowing PORTAL / processor access to the org owner.</strong></li>
+<li><strong>Narrowing SERVER-scope resource ownership to the org owner.</strong></li>
+<li><strong><code>security.orgOwner.adminBypassesOwnership</code></strong> or any staged flag.</li>
+<li><strong>Rerouting the seven <code>findPrimaryMembership</code> call sites.</strong> The fix stays inside <code>LeaderTeamResolver</code>.</li>
+<li><strong>Any claim banner or "any admin may claim" ceremony.</strong></li>
+<li><strong>A one-time bulk backfill.</strong> It writes once and is then blind.</li>
+<li><strong>A column on <code>users</code></strong>, and any Supabase migration in the separate repo.</li>
+<li><strong>A break-glass settings.yml key</strong>, or any property-backed org-owner control.</li>
+<li><strong>A type-to-confirm component.</strong> <code>ConfirmModal</code> with <code>danger</code> is the house pattern.</li>
+<li><strong>Narrowing <code>directory.ts</code>'s organization group.</strong> Sort and chip only.</li>
+<li><strong>A general last-admin guard</strong> on <code>/admin/changeRole</code>.</li>
+<li><strong>New rights for SaaS org owners.</strong> Only transfer is new.</li>
+<li><strong><code>ConfigController.accountLinkOwnerOnly</code>.</strong> <code>:core</code> cannot reach <code>:proprietary</code>; the session's <code>orgOwner</code> flag does the job.</li>
+<li><strong><code>ConnectController.deny</code> switching to <code>resolveMember</code></strong>, the team name on <code>ConnectView</code>, and the <code>ConnectApprove</code> / <code>ConnectApproveView</code> copy change. All three are UX niceties on the highest-blast-radius PR. File as follow-ups.</li>
+<li><strong>The <code>[users.group] owners = "{{count}} owner"</code> pluralisation fix.</strong> Pre-existing breakage, unrelated, its own one-line locale PR.</li>
+<li><strong><code>transferOwnership</code> on the <code>UsersBackend</code> interface.</strong> It goes in <code>@portal/api/users.ts</code> per that file's own convention.</li>
+</ul>
+<hr />
+<h2 id="11-open-decisions">11. Open decisions</h2>
+<ol>
+<li><strong>SaaS transfer produces exactly one LEADER.</strong> The unique constraint is <code>(team_id, user_id)</code> only, so co-leaders are physically possible. My call: atomic promote-then-demote, single leader. Confirm, or the endpoint becomes a pure promote.</li>
+<li><strong>Solo and ex-member SaaS accounts can still bind a fleet to a personal wallet after PR2.</strong> Closing it means refusing personal teams outright, which breaks legitimate solo customers. My call: narrow, do not close, and say so in the PR body. Confirm.</li>
+<li><strong>Existing SaaS instances already bound to personal teams get force-relinked, not migrated.</strong> There is no admin path to re-point a <code>LinkedInstance</code>. Before PR3, query <code>LinkedInstance</code> rows whose <code>teamId</code> points at an <code>isPersonal</code> team; those are already billing the wrong wallet. My call: they break on the next reauth and re-link. Confirm, or a one-off re-point script goes in PR2.</li>
+<li><strong><code>ProcurementController.requireLeader</code> (<code>:566-575</code>) carries the identical personal-team hole</strong> and lets an invited member act commercially bound to their personal team. My call: file separately rather than widen PR2. Confirm, or fold it in.</li>
+<li><strong>Should the owner's API key be able to unlink billing?</strong> <code>isCurrentUser</code> resolves by <code>authentication.getName()</code>, so an <code>ApiKeyAuthenticationToken</code> for the owner passes. My call: yes, allow it - the alternative silently breaks headless operators. Confirm.</li>
+</ol>
+    </div>
+  </div>
+</div>
