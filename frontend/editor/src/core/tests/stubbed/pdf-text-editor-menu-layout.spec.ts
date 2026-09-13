@@ -206,8 +206,9 @@ test.describe("PDF text editor - inspector layout", () => {
     page,
   }) => {
     await open(page, 0);
-    await expect(page.getByTestId("pdf-editor-save")).toBeVisible();
-    await expect(page.getByTestId("pdf-editor-download")).toBeVisible();
+    const footer = page.getByTestId("pdf-editor-panel-actions");
+    await expect(footer.getByTestId("pdf-editor-save")).toBeVisible();
+    await expect(footer.getByTestId("pdf-editor-download")).toBeVisible();
     // Zoom sits over the pages it scales, not in the far rail.
     const zoom = page.getByTestId("pdf-editor-zoom-controls");
     await expect(zoom).toBeVisible();
@@ -224,7 +225,6 @@ test.describe("PDF text editor - inspector layout", () => {
   }) => {
     await open(page);
     // Find and the shortcuts sheet are everyday controls, not settings: they
-    // sit in the panel header, one click from anywhere.
     await expect(page.getByTestId("pdf-editor-open-find")).toBeVisible();
     await expect(page.getByTestId("pdf-editor-help")).toBeVisible();
 
@@ -250,7 +250,7 @@ test.describe("PDF text editor - inspector layout", () => {
     ).toBeVisible();
   });
 
-  test("Add text toggles its label and inserts from the panel", async ({
+  test("Add text toggles its label and inserts from the toolbar", async ({
     page,
   }) => {
     await open(page, 0);

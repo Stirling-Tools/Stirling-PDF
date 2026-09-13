@@ -21,6 +21,7 @@ import {
   policyStepFromWire,
   type PolicyToolId,
 } from "@app/policies/operations";
+import { HttpError } from "@portal/api/http";
 import type { Policy } from "@portal/api/pipelines";
 import type {
   PolicyDecodedState,
@@ -94,11 +95,22 @@ export function fetchPoliciesList(): Promise<WirePolicy[]> {
   return apiClient.local.json<WirePolicy[]>("/api/v1/policies");
 }
 
-/** GET /api/v1/policies/runs — best-effort (empty on a backend without runs). */
+/**
+ * GET /api/v1/policies/runs.
+ *
+ * <p>Only a 404 means "this backend has no run history", which is the case worth treating as an
+ * empty list. Swallowing every failure made an unreachable or forbidden endpoint render exactly
+ * like a policy that has never run, so a missing activity list could not be told from a broken one.
+ */
 export function fetchPolicyRuns(): Promise<PolicyRunView[]> {
   return apiClient.local
     .json<PolicyRunView[]>("/api/v1/policies/runs")
-    .catch(() => [] as PolicyRunView[]);
+    .catch((e: unknown) => {
+      if (e instanceof HttpError && e.status === 404) {
+        return [] as PolicyRunView[];
+      }
+      throw e;
+    });
 }
 
 /**
@@ -155,7 +167,7 @@ function isOrderedSubset<T>(inner: T[], outer: T[]): boolean {
  */
 export function parseSimplePolicy(
   policy: Policy,
-  runs: PolicyRunView[] = [],
+  runs: PolicyRunView[],
 ): CatalogueEntry | null {
   const rawCategory = policy.output?.options?.categoryId;
   const categoryId = typeof rawCategory === "string" ? rawCategory : "";

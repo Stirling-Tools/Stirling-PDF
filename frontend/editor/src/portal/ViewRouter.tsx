@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect } from "react";
+import { useEffect } from "react";
 import {
   Navigate,
   Route,
@@ -7,25 +7,21 @@ import {
   useNavigate,
 } from "react-router-dom";
 import { Home } from "@portal/views/Home";
-import { Users } from "@portal/views/Users";
 import { Documents } from "@portal/views/Documents";
 import { Review } from "@portal/views/Review";
 import { Pipelines } from "@portal/views/Pipelines";
 import { PipelineBuilder } from "@portal/views/PipelineBuilder";
 import { Sources } from "@portal/views/Sources";
 import { Integrations } from "@portal/views/Integrations";
-import { Infrastructure } from "@portal/views/Infrastructure";
-import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
-import { ConnectGuardedRoute } from "@portal/components/account-link/ConnectGuardedRoute";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
+import { DOCS_PATH } from "@app/routes/docsRoute";
 import { useUI } from "@portal/contexts/UIContext";
 
-// Lazy so the generated docs manifest (bundled JSON) lands in its own chunk.
-const DeveloperDocs = lazy(() =>
-  import("@portal/views/DeveloperDocs").then((m) => ({
-    default: m.DeveloperDocs,
-  })),
-);
+/** Keeps the query and hash a moved tab's deep links carry (?tab=, #doc-id). */
+function MovedTo({ to }: { to: string }) {
+  const { search, hash } = useLocation();
+  return <Navigate to={`${to}${search}${hash}`} replace />;
+}
 
 // The portal mounts as a route-set under /processor/* in the editor app, so these
 // child routes are relative to that base: strip the leading slash from the
@@ -63,26 +59,14 @@ export function ViewRouter() {
   return (
     <Routes>
       <Route index element={<Home />} />
-      <Route path={rel(VIEW_PATHS.users)} element={<Users />} />
       <Route path={rel(VIEW_PATHS.pipelines)} element={<Pipelines />} />
-      {/* Building and editing need a linked account. Gated at the route so every way in is
-          covered: the list, the Documents review queue, the Connect flow's next steps, and a
-          typed URL. */}
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/new`}
-        element={
-          <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.pipelines)}>
-            <PipelineBuilder />
-          </ConnectGuardedRoute>
-        }
+        element={<PipelineBuilder />}
       />
       <Route
         path={`${rel(VIEW_PATHS.pipelines)}/:id`}
-        element={
-          <ConnectGuardedRoute fallback={toPortalPath(VIEW_PATHS.pipelines)}>
-            <PipelineBuilder />
-          </ConnectGuardedRoute>
-        }
+        element={<PipelineBuilder />}
       />
       <Route path={rel(VIEW_PATHS.sources)} element={<Sources />} />
       {/* Source create/edit is a modal on the list now; old deep links land there. */}
@@ -102,27 +86,28 @@ export function ViewRouter() {
       <Route path={rel(VIEW_PATHS.policies)} element={<PoliciesRedirect />} />
       <Route path={rel(VIEW_PATHS.documents)} element={<Documents />} />
       <Route path={rel(VIEW_PATHS.review)} element={<Review />} />
+      {/* Server administration and the docs browser are product-wide, so they
+          left the processor. Their old URLs still resolve. */}
+      <Route
+        path={rel(VIEW_PATHS.users)}
+        element={<MovedTo to="/settings/users" />}
+      />
       <Route
         path={rel(VIEW_PATHS.infrastructure)}
-        element={<Infrastructure />}
+        element={<MovedTo to="/settings/api-keys" />}
       />
-      <Route path={rel(VIEW_PATHS.usage)} element={<PortalBillingGate />} />
       <Route
-        path={rel(VIEW_PATHS.docs)}
-        element={
-          <Suspense fallback={null}>
-            <DeveloperDocs />
-          </Suspense>
-        }
+        path={rel(VIEW_PATHS.usage)}
+        element={<MovedTo to="/settings/billing" />}
       />
+      <Route path={rel(VIEW_PATHS.docs)} element={<MovedTo to={DOCS_PATH} />} />
       {/* A bare path, not a VIEW_PATHS entry: nothing should list it as a view. */}
       <Route path="procurement" element={<ProcurementRedirect />} />
-      {/* Account-link is now a Settings panel; redirect legacy bookmarks home. */}
+      {/* Account-link is a settings section now. */}
       <Route
         path="account-link"
-        element={<Navigate to={toPortalPath(VIEW_PATHS.home)} replace />}
+        element={<MovedTo to="/settings/account-link" />}
       />
-      {/* Settings is a modal overlay, not a route (see AppShell + UIContext). */}
       {/* Unknown paths land on Home. */}
       <Route
         path="*"
