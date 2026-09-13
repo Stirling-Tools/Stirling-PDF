@@ -1,4 +1,10 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import {
   Alert,
@@ -22,7 +28,10 @@ import { QRCodeSVG } from "qrcode.react";
 import { useAccountLogout } from "@app/extensions/accountLogout";
 import { BASE_PATH, withBasePath } from "@app/constants/app";
 import { MfaSetupResponse } from "@app/responses/Mfa/MfaResponse";
-import ProfilePictureCard from "@app/components/shared/config/ProfilePictureCard";
+
+interface AccountCardsProps {
+  renderProfilePicture?: (displayName: string) => ReactNode;
+}
 
 /** The signed-in user's shape is layer-specific, so read fields defensively. */
 function userField(source: unknown, key: string): string | undefined {
@@ -37,7 +46,7 @@ function userField(source: unknown, key: string): string | undefined {
  * page's `accountSlot` by the flavors that have accounts; each card carries the
  * id its retired nav row had, so old deep links still resolve.
  */
-export function AccountCards() {
+export function AccountCards({ renderProfilePicture }: AccountCardsProps = {}) {
   const { t } = useTranslation();
   const { user, signOut } = useAuth();
   const accountLogout = useAccountLogout();
@@ -421,7 +430,7 @@ export function AccountCards() {
           </Stack>
         </Paper>
 
-        <ProfilePictureCard displayName={userIdentifier} />
+        {renderProfilePicture?.(userIdentifier)}
       </SettingsCard>
 
       <SettingsCard
