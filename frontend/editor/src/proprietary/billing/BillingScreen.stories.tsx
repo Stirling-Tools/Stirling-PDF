@@ -305,3 +305,32 @@ export const NoLimits: Story = {
 export const Loading: Story = {
   args: { wallet: null, loading: true },
 };
+
+export const ServerLicense: Story = {
+  args: {
+    wallet: freeWallet,
+    selfHosted: true,
+    serverPlan: { licenseType: "SERVER", maxUsers: 9999, usersInUse: 34 },
+    serverPlanAction: (
+      <button className="billing-ent__cta">Manage Billing</button>
+    ),
+    onActivateProcessor: () => {},
+    licenseSection: (
+      <KvRow
+        label="License key"
+        value="••••••••••••••••"
+        door={<button>Update</button>}
+      />
+    ),
+  },
+};
+
+export const EnterpriseLicense: Story = {
+  args: {
+    ...ServerLicense.args,
+    wallet: subscribedWallet,
+    serverPlan: { licenseType: "ENTERPRISE", maxUsers: 250, usersInUse: 37 },
+    onGovernSpend: () => {},
+    paymentSection: payment,
+  },
+};

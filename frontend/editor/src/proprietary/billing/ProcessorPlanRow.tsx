@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { formatMinor, formatMoneyMajor } from "@app/billing/format";
 import { MeterRow } from "@app/billing/MeterRow";
+import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import type { Wallet } from "@app/billing/types";
 
 /**
@@ -60,7 +61,9 @@ export function ProcessorPlanRow({
         : t(
             "portal.billing.processor.midFreeNoRate",
             "{{allowance}} free every month",
-            { allowance: wallet.freeAllowance.toLocaleString() },
+            {
+              allowance: wallet.freeAllowance.toLocaleString(),
+            },
           );
 
     return (
@@ -88,12 +91,7 @@ export function ProcessorPlanRow({
     );
   }
 
-  // Same fold the cycle figures use: units the cloud has not billed yet are still spend, and a
-  // row disagreeing with the total above it is worse than a slightly early number.
-  const spentMinor =
-    wallet.estimatedBillMinor != null
-      ? wallet.estimatedBillMinor + (rate != null ? pendingUnits * rate : 0)
-      : null;
+  const spentMinor = estimatedBillWithPending(wallet, pendingUnits);
   const capped = !wallet.noCap && wallet.capUsd != null;
   // One conversion, in one place: the estimate is minor units, the limit is major.
   const spentMajor = spentMinor != null ? spentMinor / 100 : null;

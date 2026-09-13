@@ -465,3 +465,7 @@
   overflow-wrap: anywhere;
   user-select: all;
 }
+
+.billing-id__action {
+  margin-left: auto;
+}

@@ -1,3 +1,4 @@
+import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { KvRow, formatMinor, formatPeriodDate } from "@app/billing";
@@ -17,16 +18,19 @@ import {
  */
 export function PaymentSection({
   wallet,
+  pendingUnits = 0,
   onManage,
   managing = false,
 }: {
   /** Supplies the next-invoice date and estimate. */
   wallet: Wallet;
+  pendingUnits?: number;
   /** Opens the Stripe customer portal, which is where all of these are edited. */
   onManage?: () => void;
   managing?: boolean;
 }) {
   const { t } = useTranslation();
+  const estimatedMinor = estimatedBillWithPending(wallet, pendingUnits);
   const [pm, setPm] = useState<PaymentMethod | null>(null);
   const [details, setDetails] = useState<BillingDetails | null>(null);
 
@@ -57,7 +61,7 @@ export function PaymentSection({
       ? pm.expMonth && pm.expYear
         ? t(
             "portal.billing.payment.cardWithExpiry",
-            "{{brand}} ending {{last4}} · expires {{month}} / {{year}}",
+            "{{brand}} ending {{last4}} Â· expires {{month}} / {{year}}",
             {
               brand: pm.brand,
               last4: pm.last4,
@@ -96,18 +100,15 @@ export function PaymentSection({
             : undefined
         }
         value={
-          wallet.estimatedBillMinor != null
+          estimatedMinor != null
             ? t(
                 "portal.billing.payment.nextInvoiceValue",
-                "{{date}} · {{amount}}",
+                "{{date}} Â· {{amount}}",
                 {
                   date: formatPeriodDate(wallet.billingPeriodEnd, {
                     year: true,
                   }),
-                  amount: formatMinor(
-                    wallet.estimatedBillMinor,
-                    wallet.currency,
-                  ),
+                  amount: formatMinor(estimatedMinor, wallet.currency),
                 },
               )
             : formatPeriodDate(wallet.billingPeriodEnd, { year: true })

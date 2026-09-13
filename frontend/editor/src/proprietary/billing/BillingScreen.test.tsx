@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -12,7 +12,7 @@ vi.mock("react-i18next", () => ({
 }));
 
 import { BillingScreen } from "@app/billing/BillingScreen";
-import { subscribedWallet } from "@app/billing/walletFixtures";
+import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 
 /**
  * Units a linked instance has accrued that the cloud has not billed yet are real spend, and every
@@ -48,6 +48,71 @@ describe("BillingScreen and units pending sync", () => {
     expect(screen.getByText("1,000 · $0.01 each")).toBeInTheDocument();
     expect(
       screen.getByText("estimated · the meter settles at close"),
+    ).toBeInTheDocument();
+  });
+});
+
+describe("installed server licences", () => {
+  it("keeps Server unlimited while allowing Processor activation", () => {
+    const activate = vi.fn();
+    render(
+      <BillingScreen
+        wallet={freeWallet}
+        serverPlan={{ licenseType: "SERVER", maxUsers: 9999, usersInUse: 34 }}
+        onActivateProcessor={activate}
+        onAddCapacity={() => {}}
+        serverPlanAction={<button>Manage Billing</button>}
+      />,
+    );
+    expect(screen.getByText("Server")).toBeInTheDocument();
+    expect(screen.getByText("Unlimited users")).toBeInTheDocument();
+    expect(screen.queryByText("Free")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Add capacity" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Manage Billing" }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Switch on the Processor" }),
+    );
+    expect(activate).toHaveBeenCalledOnce();
+  });
+  it("uses Enterprise seats and local users even with an active cloud Processor", () => {
+    const govern = vi.fn();
+    render(
+      <BillingScreen
+        wallet={subscribedWallet}
+        serverPlan={{
+          licenseType: "ENTERPRISE",
+          maxUsers: 250,
+          usersInUse: 37,
+        }}
+        onGovernSpend={govern}
+      />,
+    );
+    expect(screen.getByText("Enterprise")).toBeInTheDocument();
+    expect(screen.getByText("37 of 250 users")).toBeInTheDocument();
+    expect(screen.getByText("37")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Raise limit" }));
+    expect(govern).toHaveBeenCalledOnce();
+  });
+  it("keeps the installed licence visible if the credit wallet is unavailable", () => {
+    render(
+      <BillingScreen
+        wallet={null}
+        serverPlan={{
+          licenseType: "ENTERPRISE",
+          maxUsers: 80,
+          usersInUse: null,
+        }}
+        serverPlanAction={<button>Manage Billing</button>}
+      />,
+    );
+    expect(screen.getByText("Enterprise")).toBeInTheDocument();
+    expect(screen.getByText("80 licensed seats")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Manage Billing" }),
     ).toBeInTheDocument();
   });
 });

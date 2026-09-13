@@ -1,3 +1,4 @@
+import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@app/ui";
@@ -9,6 +10,7 @@ import { SpendLimitModal } from "@portal/components/billing/SpendLimitModal";
 
 interface Props {
   wallet: Wallet;
+  pendingUnits?: number;
   onWalletChange?: () => void;
   /**
    * Whether the spend-limit editor is open, when the host drives it. Lets the Processor row's
@@ -27,11 +29,13 @@ interface Props {
  */
 export function SubscribedPlanView({
   wallet,
+  pendingUnits = 0,
   onWalletChange,
   adjusting: controlledAdjusting,
   onAdjustingChange,
 }: Props) {
   const { t } = useTranslation();
+  const estimatedMinor = estimatedBillWithPending(wallet, pendingUnits);
   const [ownAdjusting, setOwnAdjusting] = useState(false);
   const adjusting = onAdjustingChange
     ? (controlledAdjusting ?? false)
@@ -41,11 +45,10 @@ export function SubscribedPlanView({
   const portal = useStripePortal(wallet);
 
   const isLeader = wallet.role === "leader";
-  // Buying/topping up prepaid capacity is a commercial action — leader-only, and
+  // Buying/topping up prepaid capacity is a commercial action â€” leader-only, and
   // needs a resolved team to scope checkout.
   const canBuyBundle = isLeader && wallet.teamId != null;
-  const spent =
-    wallet.estimatedBillMinor != null ? wallet.estimatedBillMinor / 100 : 0;
+  const spent = estimatedMinor != null ? estimatedMinor / 100 : 0;
   const capActive = !wallet.noCap && wallet.capUsd != null;
   const { state, pct } = meterState(spent, wallet.capUsd ?? 0);
   const showCapWarn = capActive && state !== "FULL";
