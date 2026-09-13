@@ -160,10 +160,12 @@ public class AdminLicenseController {
      */
     @PostMapping("/license/resync")
     @Operation(
-            summary = "Resync license with Keygen",
+            summary = "Resync entitlements",
             description =
-                    "Re-validates the existing license key with Keygen and updates local settings."
-                            + " Used after subscription upgrades.")
+                    "Re-reads what decides this instance's tier: the linked cloud team's plan,"
+                            + " fetched fresh rather than from cache, and the licence key if one is"
+                            + " installed. Used after a purchase, and as the recovery when the"
+                            + " automatic check has not caught up.")
     public ResponseEntity<Map<String, Object>> resyncLicense() {
         try {
             if (licenseKeyChecker == null) {

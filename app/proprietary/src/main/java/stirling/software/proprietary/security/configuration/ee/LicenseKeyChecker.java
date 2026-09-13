@@ -68,6 +68,28 @@ public class LicenseKeyChecker {
         synchronizeLicenseSettings();
     }
 
+    /**
+     * Picks up a Team plan bought, resized or cancelled since the last check.
+     *
+     * <p>Deliberately not {@link #checkLicensePeriodically()}: that re-verifies the licence key
+     * with Keygen, which is a network round trip and rightly weekly. The promotion only reads an
+     * entitlement this instance already caches, so it can run at that cache's own freshness. Both
+     * used to share the weekly job, which is why a purchase could go unnoticed for seven days.
+     *
+     * <p>Cheap when nothing changed: a cache read and a comparison. The write only happens when the
+     * allowance actually moved.
+     */
+    @Scheduled(
+            initialDelayString = "${stirling.billing.account-link.plan-check-seconds:300}000",
+            fixedDelayString = "${stirling.billing.account-link.plan-check-seconds:300}000")
+    public void checkTeamPlanPeriodically() {
+        try {
+            applyTeamPlanPromotion();
+        } catch (RuntimeException e) {
+            log.debug("Team plan check failed; keeping the current tier: {}", e.getMessage());
+        }
+    }
+
     @Scheduled(initialDelay = 604800000, fixedRate = 604800000) // 7 days in milliseconds
     public void checkLicensePeriodically() {
         try {
@@ -194,7 +216,15 @@ public class LicenseKeyChecker {
         synchronizeLicenseSettings();
     }
 
+    /**
+     * Re-reads everything that decides the tier, for a caller who knows something just changed.
+     *
+     * <p>Drops the cached entitlement first, so a purchase made seconds ago is seen rather than
+     * waited out: the cache is otherwise reused for its full TTL, and the whole point of an
+     * explicit resync is not to wait.
+     */
     public void resyncLicense() {
+        licenseSettingsService.forgetEntitlement();
         evaluateLicense();
         synchronizeLicenseSettings();
     }

@@ -152,13 +152,16 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
           console.warn("Could not fetch license info:", err);
         }
 
+        // Always resync, whichever branch follows. A cloud Team purchase mints no licence key,
+        // so the upgrade branch never runs for one and the new-subscription branch polls for a key
+        // that will not arrive. This is what moves the tier in seconds: it drops the cached
+        // entitlement and re-reads the linked team's plan, rather than waiting out the plan check.
+        const activation = await resyncExistingLicense();
+
         // Check if this is an upgrade or new subscription
         // Only treat as upgrade if there's a valid PRO/ENTERPRISE license (not NORMAL/free tier)
         if (licenseInfo?.licenseType && licenseInfo.licenseType !== "NORMAL") {
-          // UPGRADE: Resync existing license with Keygen
           console.log("Upgrade detected - resyncing existing license");
-
-          const activation = await resyncExistingLicense();
 
           if (activation.success) {
             console.log(

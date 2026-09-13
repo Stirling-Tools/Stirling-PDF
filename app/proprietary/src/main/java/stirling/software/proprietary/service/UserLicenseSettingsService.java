@@ -398,6 +398,17 @@ public class UserLicenseSettingsService {
     }
 
     /** The linked team's entitlement, or empty when unlinked or never yet fetched. */
+    /**
+     * Drops the cached entitlement so the next read goes to SaaS. For a caller with reason to
+     * believe the plan just changed; the ordinary path waits out the cache's own TTL.
+     */
+    public void forgetEntitlement() {
+        EntitlementCache cache = entitlementCache.getIfAvailable();
+        if (cache != null) {
+            cache.invalidate();
+        }
+    }
+
     private Optional<InstanceEntitlement> currentEntitlement() {
         EntitlementCache cache = entitlementCache.getIfAvailable();
         return cache == null ? Optional.empty() : cache.current();

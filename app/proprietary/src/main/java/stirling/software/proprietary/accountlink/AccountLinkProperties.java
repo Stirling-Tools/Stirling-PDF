@@ -31,6 +31,15 @@ public class AccountLinkProperties {
     /** Cached entitlement is reused for this long before a refresh is attempted. */
     private long entitlementCacheSeconds = 300;
 
+    /**
+     * How often the instance checks whether its cloud team's plan changed, in seconds.
+     *
+     * <p>Separate from the weekly licence recheck, which is a Keygen round trip. This one reads the
+     * entitlement the instance already holds, so it is cheap enough to run at the cache's own
+     * freshness. 0 disables it, leaving a purchase to be noticed on the next restart.
+     */
+    private long planCheckSeconds = 300;
+
     /** Connect/read timeout for the outbound SaaS calls. */
     private int requestTimeoutSeconds = 10;
 
