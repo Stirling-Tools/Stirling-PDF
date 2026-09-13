@@ -39,8 +39,8 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 /**
- * End-to-end {@link S3InputSource} test against a real S3 API (Silo), through the production
- * client factory: listing, claiming, streaming, consensus delete, and save-time validation.
+ * End-to-end {@link S3InputSource} test against a real S3 API (Silo), through the production client
+ * factory: listing, claiming, streaming, consensus delete, and save-time validation.
  */
 @Testcontainers(disabledWithoutDocker = true)
 class S3InputSourceMinioTest {
