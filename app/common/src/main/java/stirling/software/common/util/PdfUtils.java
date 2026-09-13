@@ -47,6 +47,9 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class PdfUtils {
 
+    // Print-quality raster for flattening a page to an image; capped by system maxDPI
+    private static final int PDF_TO_IMAGE_DPI = 300;
+
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
 
     public PDRectangle textToPageSize(String size) {
@@ -370,12 +373,12 @@ public class PdfUtils {
                 final int pageIndex = page;
                 BufferedImage bim;
 
-                // Use global maximum DPI setting, fallback to 300 if not set
-                int renderDpi = 300; // Default fallback
+                // maxDPI is a safety ceiling for user-supplied values, not a target resolution
+                int renderDpi = PDF_TO_IMAGE_DPI;
                 ApplicationProperties properties =
                         ApplicationContextProvider.getBean(ApplicationProperties.class);
                 if (properties != null && properties.getSystem() != null) {
-                    renderDpi = properties.getSystem().getMaxDPI();
+                    renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
                 }
                 final int dpi = renderDpi;
 

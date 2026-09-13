@@ -18,9 +18,11 @@ vi.mock("@app/services/notifications", () => ({
 
 // Counted here so "resolved once per list, not once per row" is observable.
 const hasLocalFile = vi.fn((_fileId: string) => Promise.resolve(true));
+const loadRetryPayload = vi.fn((_fileId: string) => Promise.resolve(null));
 
-vi.mock("@app/services/localFilePresence", () => ({
+vi.mock("@app/services/notificationRetry", () => ({
   hasLocalFile: (fileId: string) => hasLocalFile(fileId),
+  loadRetryPayload: (fileId: string) => loadRetryPayload(fileId),
 }));
 
 const {
@@ -75,6 +77,7 @@ describe("useNotifications", () => {
     window.localStorage.clear();
     fetchNotifications.mockReset().mockResolvedValue(feed([]));
     hasLocalFile.mockReset().mockResolvedValue(true);
+    loadRetryPayload.mockReset().mockResolvedValue(null);
   });
 
   it("reads the list once however many bells are mounted", async () => {
@@ -103,6 +106,7 @@ describe("useNotifications", () => {
 
     await waitFor(() => expect(result.current.notifications).toHaveLength(3));
     expect(hasLocalFile).toHaveBeenCalledTimes(2);
+    expect(loadRetryPayload).toHaveBeenCalledTimes(2);
   });
 
   it("looks up an attended run's document but never an unattended run's", async () => {
@@ -160,8 +164,7 @@ describe("useNotifications", () => {
   });
 
   it("hides a member's unattended row even when its id happens to be stored here", async () => {
-    // A source-fed row's fileId is a content hash from another id space. Storage answering for it
-    // is a collision, not the document, so the row must go on being filtered as unresolvable.
+    // Storage answering for a source-fed row's hash is a collision, not the document.
     hasLocalFile.mockResolvedValue(true);
     fetchNotifications.mockResolvedValue(
       feed(
@@ -251,8 +254,6 @@ describe("useNotifications", () => {
   });
 
   it("keeps one viewer's read state off another's on a shared browser", async () => {
-    // A timestamp is legible to whoever reads it next, so an unscoped marker would leave the
-    // incoming user's older failures silently pre-read.
     fetchNotifications.mockResolvedValue(feed([notification("a")]));
     const first = renderHook(() => useNotifications());
     await waitFor(() => expect(first.result.current.unreadCount).toBe(1));
@@ -270,7 +271,6 @@ describe("useNotifications", () => {
   });
 
   it("marks nothing when the server names no viewer", async () => {
-    // Unscoped would be worse than unsaved: the next viewer here would inherit it.
     fetchNotifications.mockResolvedValue(feed([notification("a")], true, null));
     const { result } = renderHook(() => useNotifications());
     await waitFor(() => expect(result.current.unreadCount).toBe(1));

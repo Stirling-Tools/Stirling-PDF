@@ -8,23 +8,24 @@ import {
   StatTile,
   StatusBadge,
 } from "@app/ui";
-import {
-  humanizeEndpoint,
-  type DecoratedPolicy,
-  type PolicyActivityItem,
-} from "@portal/api/policies";
+import { humanizeEndpoint, type DecoratedPolicy } from "@portal/api/policies";
 import "@portal/views/Policies.css";
 
 interface PolicyDetailPanelProps {
   policy: DecoratedPolicy | null;
   busy?: boolean;
+  /** Whether the user may manage required policies; a required policy is read-only when false. */
+  canManagePolicies?: boolean;
+  /**
+   * The permission check has not resolved yet. Controls stay locked (fail-closed), but the
+   * manager-only note is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
   onClose: () => void;
   onEdit: () => void;
-  onRun?: () => void;
   onTogglePause: () => void;
   onDelete: () => void;
   onClearHistory?: () => void;
-  onRetry?: (item: PolicyActivityItem) => void;
 }
 
 function CheckIcon() {
@@ -102,26 +103,28 @@ function ActivityError({ message }: { message: string }) {
 export function PolicyDetailPanel({
   policy,
   busy = false,
+  canManagePolicies = true,
+  permissionsLoading = false,
   onClose,
   onEdit,
-  onRun,
   onTogglePause,
   onDelete,
   onClearHistory,
-  onRetry,
 }: PolicyDetailPanelProps) {
   const { t } = useTranslation();
   const [confirmingClear, setConfirmingClear] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   if (!policy) return null;
   const { category, config, state, steps, stats, activity } = policy;
   const isPaused = state.status === "paused";
-  const canDelete = state.isDefault !== true;
+  const readOnly = !canManagePolicies;
+  const canDelete = state.isDefault !== true && !readOnly;
   // Editor participation is its own flag (runsOnEditor), not a source. A legacy policy still carries
   // "editor" in its stored sources until re-saved, so drop it here to count only real watched sources.
   const realSources = state.sources.filter((s) => s !== "editor");
   // Processed history only exists for watched sources; editor uploads are never ledgered.
   const canClearHistory =
-    onClearHistory !== undefined && realSources.length > 0;
+    onClearHistory !== undefined && realSources.length > 0 && !readOnly;
 
   const enforceItems = steps.length > 0 ? steps.map((s) => s.operation) : null;
   const hasEditorSource = state.runsOnEditor === true;
@@ -143,27 +146,21 @@ export function PolicyDetailPanel({
         title={t(category.label)}
         footer={
           <div className="portal-policies__detail-foot">
+            {readOnly && !permissionsLoading && (
+              <span className="portal-policies__detail-readonly">
+                {t("portal.policies.detail.managerOnly")}
+              </span>
+            )}
             {canDelete && (
               <Button
                 variant="tertiary"
                 accent="danger"
                 size="sm"
-                onClick={onDelete}
+                onClick={() => setConfirmingDelete(true)}
                 disabled={busy}
                 style={{ marginRight: "auto" }}
               >
                 {t("portal.policies.detail.actions.delete")}
-              </Button>
-            )}
-            {onRun && (
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={onRun}
-                disabled={busy}
-                style={canDelete ? undefined : { marginRight: "auto" }}
-              >
-                {t("portal.policies.detail.actions.runNow")}
               </Button>
             )}
             {canClearHistory && (
@@ -180,13 +177,13 @@ export function PolicyDetailPanel({
               variant="secondary"
               size="sm"
               onClick={onTogglePause}
-              disabled={busy}
+              disabled={busy || readOnly}
             >
               {isPaused
                 ? t("portal.policies.detail.actions.resume")
                 : t("portal.policies.detail.actions.pause")}
             </Button>
-            <Button size="sm" onClick={onEdit} disabled={busy}>
+            <Button size="sm" onClick={onEdit} disabled={busy || readOnly}>
               {t("portal.policies.detail.actions.editSettings")}
             </Button>
           </div>
@@ -295,16 +292,6 @@ export function PolicyDetailPanel({
                 <span className="portal-policies__activity-time">
                   {item.time}
                 </span>
-                {item.status === "flagged" && onRetry && (
-                  <Button
-                    type="button"
-                    variant="quiet"
-                    className="portal-policies__link portal-policies__activity-retry"
-                    onClick={() => onRetry(item)}
-                  >
-                    {t("portal.policies.detail.retry")}
-                  </Button>
-                )}
               </div>
             ))}
           </Card>
@@ -366,6 +353,43 @@ export function PolicyDetailPanel({
         }
       >
         {t("portal.policies.detail.clearHistory.body")}
+      </Modal>
+      <Modal
+        open={confirmingDelete}
+        onClose={() => setConfirmingDelete(false)}
+        width="sm"
+        title={t("portal.policies.detail.delete.title")}
+        footer={
+          <div className="portal-policies__detail-foot">
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => setConfirmingDelete(false)}
+              disabled={busy}
+            >
+              {t("portal.policies.detail.delete.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              accent="danger"
+              size="sm"
+              disabled={busy}
+              onClick={() => {
+                setConfirmingDelete(false);
+                onDelete();
+              }}
+            >
+              {t("portal.policies.detail.delete.confirm")}
+            </Button>
+          </div>
+        }
+      >
+        {t(
+          isPaused
+            ? "portal.policies.detail.delete.bodyPaused"
+            : "portal.policies.detail.delete.bodyActive",
+          { name: state.name?.trim() || t(category.label) },
+        )}
       </Modal>
     </>
   );

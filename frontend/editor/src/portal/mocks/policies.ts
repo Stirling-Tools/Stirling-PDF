@@ -39,6 +39,7 @@ export function seedPolicies(): WirePolicy[] {
       name: "Security Policy",
       owner: "security@acme.com",
       enabled: true,
+      required: true,
       trigger: null,
       steps: SECURITY_STEPS,
       output: {

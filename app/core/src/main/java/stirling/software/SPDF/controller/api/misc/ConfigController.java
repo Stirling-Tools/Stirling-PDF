@@ -334,6 +334,8 @@ public class ConfigController {
             configData.put(
                     "enableDesktopInstallSlide",
                     applicationProperties.getSystem().getEnableDesktopInstallSlide());
+            configData.put(
+                    "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
 
             // Premium/Enterprise settings
             configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());

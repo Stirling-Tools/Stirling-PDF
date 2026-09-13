@@ -5,7 +5,9 @@ import {
   NOTIFICATIONS_PANEL_ID,
 } from "@app/components/notifications/NotificationPanel";
 import { useNotificationActions } from "@app/components/notifications/notificationActions";
+import { useNotificationPasswordPrompt } from "@app/components/notifications/useNotificationPasswordPrompt";
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
+import { useBrandFlourish } from "@app/components/easterEgg/useBrandFlourish";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import {
@@ -18,7 +20,6 @@ export interface QuickNavHostBridgeProps {
   portalAccess?: boolean;
   readerMode?: boolean;
   onSetReaderMode?: (on: boolean) => void;
-  onOpenSettings: () => void;
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
@@ -32,7 +33,6 @@ export function QuickNavHostBridge({
   portalAccess = false,
   readerMode = false,
   onSetReaderMode,
-  onOpenSettings,
   requestNavigation,
   onSelectTool,
   activeTool = null,
@@ -52,8 +52,11 @@ export function QuickNavHostBridge({
     if (!endpointReasons && !extra) return undefined;
     return { ...endpointReasons, ...extra };
   }, [endpointReasons, toolReasons]);
+  const brandFlourish = useBrandFlourish();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
   const closeNotifications = useCallback(() => setNotificationsOpen(false), []);
+  const { requestPassword, promptModal } =
+    useNotificationPasswordPrompt(closeNotifications);
 
   useRegisterQuickNavHost(
     {
@@ -66,23 +69,34 @@ export function QuickNavHostBridge({
       toolReasons: mergedToolReasons,
     },
     {
-      openSettings: onOpenSettings,
       requestNavigation,
       selectTool: onSelectTool,
       setReaderMode: onSetReaderMode,
       goToDefaultState: onGoToDefaultState,
       toggleNotifications: () => setNotificationsOpen((open) => !open),
+      onBrandFlourish: brandFlourish.trigger,
     },
   );
 
-  // Mounted only while open, so a closed panel never subscribes to the poll.
-  if (!notificationsAvailable || !notificationsOpen) return null;
   return (
-    <NotificationPanel
-      id={NOTIFICATIONS_PANEL_ID}
-      onClose={closeNotifications}
-      registry={notificationActions}
-      className="notification-bell__panel--rail"
-    />
+    <>
+      {notificationsAvailable && (
+        <>
+          {/* Mounted only while open, so a closed panel never subscribes to the poll. */}
+          {notificationsOpen && (
+            <NotificationPanel
+              id={NOTIFICATIONS_PANEL_ID}
+              onClose={closeNotifications}
+              registry={notificationActions}
+              onRequestPassword={requestPassword}
+              className="notification-bell__panel--rail"
+            />
+          )}
+          {/* Outside the panel: an unlock closes it, and the prompt reports back afterwards. */}
+          {promptModal}
+        </>
+      )}
+      {brandFlourish.overlay}
+    </>
   );
 }

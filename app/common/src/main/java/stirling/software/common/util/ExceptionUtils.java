@@ -701,6 +701,17 @@ public class ExceptionUtils {
         return new IOException(message);
     }
 
+    /**
+     * A document failed the compliance standard it was checked against. Carries an error code so
+     * the policy review surface can name the failure instead of recording it as unrecognised.
+     *
+     * @param detail the whole sentence, already naming the standard and the failing rules
+     */
+    public static ComplianceNotMetException createComplianceNotMetException(String detail) {
+        String message = getMessage(ErrorCode.COMPLIANCE_NOT_MET, detail);
+        return new ComplianceNotMetException(message, ErrorCode.COMPLIANCE_NOT_MET.getCode());
+    }
+
     /** Create system requirement exceptions. */
     public static FfmpegRequiredException createFfmpegRequiredException() {
         String message = getMessage(ErrorCode.FFMPEG_REQUIRED);
@@ -1216,6 +1227,10 @@ public class ExceptionUtils {
                 "error.invalidComparator",
                 "Invalid comparator format: only 'greater', 'equal', and 'less' are supported"),
 
+        // Compliance errors. The caller builds the whole sentence: only it knows the standard,
+        // profile and failing rules.
+        COMPLIANCE_NOT_MET("E074", "error.complianceNotMet", "{0}"),
+
         // System errors
         MD5_ALGORITHM("E080", "error.md5Algorithm", "MD5 algorithm not available"),
         OUT_OF_MEMORY_DPI(
@@ -1274,6 +1289,13 @@ public class ExceptionUtils {
     public static class GhostscriptException extends BaseAppException {
         public GhostscriptException(String message, Throwable cause, String errorCode) {
             super(message, cause, errorCode);
+        }
+    }
+
+    /** Exception thrown when a document fails a compliance standard it was checked against. */
+    public static class ComplianceNotMetException extends BaseAppException {
+        public ComplianceNotMetException(String message, String errorCode) {
+            super(message, null, errorCode);
         }
     }
 

@@ -14,7 +14,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       security: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-1",
         runOn: "upload",
       },
@@ -86,7 +86,7 @@ describe("auto-run queue-rejection retry", () => {
 
     recordRunStart({
       runId: "run-1",
-      categoryId: "security",
+      policyKey: "security",
       fileId: "file-1",
       fileName: "doc.pdf",
       fileSize: 1234,

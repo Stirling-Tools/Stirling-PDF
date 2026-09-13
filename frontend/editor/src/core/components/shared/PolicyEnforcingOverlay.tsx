@@ -5,7 +5,7 @@ export function PolicyEnforcingOverlay(_props: {
   /** CSS colour var for the enforcing policy's accent; tints the icon/spinner. */
   accentVar?: string;
   /** Category of the enforcing policy — picks its icon in the real overlay. */
-  categoryId?: string;
+  policyKey?: string;
   /** Shows a dismiss control in the real overlay, so a run that never settles
    *  can't leave the surface underneath permanently unclickable. */
   onDismiss?: () => void;

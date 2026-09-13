@@ -28,11 +28,14 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.model.Team;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.AuthenticationType;
+import stirling.software.proprietary.security.model.LoginLandingView;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.model.api.user.UpdateLoginLandingView;
 import stirling.software.proprietary.security.model.api.user.UsernameAndPass;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
 import stirling.software.proprietary.security.service.LoginAttemptService;
+import stirling.software.proprietary.security.service.LoginLandingService;
 import stirling.software.proprietary.security.service.TeamMembershipService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
@@ -55,6 +58,7 @@ class UserControllerTest {
     @Mock private UserLicenseSettingsService licenseSettingsService;
     @Mock private LoginAttemptService loginAttemptService;
     @Mock private TeamMembershipService teamMembershipService;
+    @Mock private LoginLandingService loginLandingService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -75,7 +79,8 @@ class UserControllerTest {
                         Optional.of(emailService),
                         licenseSettingsService,
                         loginAttemptService,
-                        teamMembershipService);
+                        teamMembershipService,
+                        loginLandingService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -147,6 +152,39 @@ class UserControllerTest {
         mockMvc.perform(post("/api/v1/user/admin/deleteUser/ghost").principal(authentication))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.error").value("User not found."));
+    }
+
+    @Test
+    void updateLoginLandingViewStoresTheOptIn() throws Exception {
+        UpdateLoginLandingView payload = new UpdateLoginLandingView();
+        payload.setLoginLandingView("processor");
+        Authentication authentication = new UsernamePasswordAuthenticationToken("lead", "pw");
+
+        mockMvc.perform(
+                        post("/api/v1/user/login-landing-view")
+                                .principal(authentication)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.loginLandingView").value("processor"));
+
+        verify(loginLandingService).setLandingView("lead", LoginLandingView.PROCESSOR);
+    }
+
+    @Test
+    void updateLoginLandingViewRejectsAnUnknownView() throws Exception {
+        UpdateLoginLandingView payload = new UpdateLoginLandingView();
+        payload.setLoginLandingView("portal");
+        Authentication authentication = new UsernamePasswordAuthenticationToken("lead", "pw");
+
+        mockMvc.perform(
+                        post("/api/v1/user/login-landing-view")
+                                .principal(authentication)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(objectMapper.writeValueAsString(payload)))
+                .andExpect(status().isBadRequest());
+
+        verify(loginLandingService, never()).setLandingView(any(), any());
     }
 
     @Test

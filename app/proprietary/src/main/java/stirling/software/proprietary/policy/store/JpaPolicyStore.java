@@ -17,6 +17,7 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.source.EditorSource;
 
+import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.node.ArrayNode;
@@ -47,12 +48,15 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.name(),
                         policy.owner(),
                         policy.enabled(),
+                        policy.required(),
+                        policy.icon(),
                         policy.inputs(),
                         policy.steps(),
                         policy.output(),
                         policy.outputIds(),
                         policy.teamId(),
-                        policy.editor());
+                        policy.editor(),
+                        policy.surface());
 
         PolicyEntity entity = new PolicyEntity();
         entity.setId(id);
@@ -153,9 +157,18 @@ public class JpaPolicyStore implements PolicyStore {
     private Optional<Policy> toPolicy(PolicyEntity entity) {
         try {
             JsonNode node =
-                    liftEditorConfig(
-                            upgradeLegacyShape(objectMapper.readTree(entity.getPolicyJson())));
-            return Optional.of(objectMapper.treeToValue(node, Policy.class));
+                    liftSurface(
+                            liftEditorConfig(
+                                    upgradeLegacyShape(
+                                            objectMapper.readTree(entity.getPolicyJson()))));
+            // A blob written by an older version won't carry fields added since (e.g. required,
+            // icon). Default absent primitives rather than rejecting the whole policy, so upgrades
+            // don't drop existing pipelines.
+            return Optional.of(
+                    objectMapper
+                            .readerFor(Policy.class)
+                            .without(DeserializationFeature.FAIL_ON_NULL_FOR_PRIMITIVES)
+                            .readValue(node));
         } catch (Exception e) {
             log.error(
                     "Skipping unreadable policy id={} name={}: stored JSON could not be parsed"
@@ -238,6 +251,24 @@ public class JpaPolicyStore implements PolicyStore {
         editor.put("allowed", allowed);
         editor.put("runOn", legacyRunOn(options, categoryId));
         obj.set("editor", editor);
+        return obj;
+    }
+
+    /**
+     * Stamp {@code surface} on a blob written before it was a first-class field, from the marker
+     * processing folders used to carry in their output options. Absent both, the row is an ordinary
+     * policy.
+     */
+    private JsonNode liftSurface(JsonNode root) {
+        if (!(root instanceof ObjectNode obj) || obj.hasNonNull("surface")) {
+            return root;
+        }
+        String marker = text(obj.path("output").path("options"), "surface");
+        obj.put(
+                "surface",
+                Policy.SURFACE_PROCESSING_FOLDER.equals(marker)
+                        ? Policy.SURFACE_PROCESSING_FOLDER
+                        : Policy.SURFACE_POLICY);
         return obj;
     }
 
