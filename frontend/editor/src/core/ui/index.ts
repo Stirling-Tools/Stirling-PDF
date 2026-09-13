@@ -47,6 +47,7 @@ export * from "@app/ui/Tabs";
 export * from "@app/ui/Dropdown";
 export * from "@app/ui/Drawer";
 export * from "@app/ui/DataTable";
+export * from "@app/ui/DataTableFilterBar";
 
 // Forms
 export * from "@app/ui/FormField";

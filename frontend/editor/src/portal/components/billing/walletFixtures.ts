@@ -4,6 +4,8 @@ import type { Wallet } from "@portal/api/billing";
 export const freeWallet: Wallet = {
   teamId: 42,
   status: "free",
+  team: { held: false, licensedUsers: null, usersInUse: 1 },
+  processor: { active: false },
   role: "leader",
   billingPeriodStart: "2026-06-01",
   billingPeriodEnd: "2026-06-30",
@@ -36,6 +38,8 @@ export const freeWallet: Wallet = {
 export const subscribedWallet: Wallet = {
   teamId: 42,
   status: "subscribed",
+  team: { held: false, licensedUsers: null, usersInUse: 4 },
+  processor: { active: true },
   role: "leader",
   billingPeriodStart: "2026-06-01",
   billingPeriodEnd: "2026-06-30",

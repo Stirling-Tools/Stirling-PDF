@@ -55,7 +55,8 @@ public class JpaPolicyStore implements PolicyStore {
                         policy.output(),
                         policy.outputIds(),
                         policy.teamId(),
-                        policy.editor());
+                        policy.editor(),
+                        policy.surface());
 
         PolicyEntity entity = new PolicyEntity();
         entity.setId(id);
@@ -156,8 +157,10 @@ public class JpaPolicyStore implements PolicyStore {
     private Optional<Policy> toPolicy(PolicyEntity entity) {
         try {
             JsonNode node =
-                    liftEditorConfig(
-                            upgradeLegacyShape(objectMapper.readTree(entity.getPolicyJson())));
+                    liftSurface(
+                            liftEditorConfig(
+                                    upgradeLegacyShape(
+                                            objectMapper.readTree(entity.getPolicyJson()))));
             // A blob written by an older version won't carry fields added since (e.g. required,
             // icon). Default absent primitives rather than rejecting the whole policy, so upgrades
             // don't drop existing pipelines.
@@ -248,6 +251,24 @@ public class JpaPolicyStore implements PolicyStore {
         editor.put("allowed", allowed);
         editor.put("runOn", legacyRunOn(options, categoryId));
         obj.set("editor", editor);
+        return obj;
+    }
+
+    /**
+     * Stamp {@code surface} on a blob written before it was a first-class field, from the marker
+     * processing folders used to carry in their output options. Absent both, the row is an ordinary
+     * policy.
+     */
+    private JsonNode liftSurface(JsonNode root) {
+        if (!(root instanceof ObjectNode obj) || obj.hasNonNull("surface")) {
+            return root;
+        }
+        String marker = text(obj.path("output").path("options"), "surface");
+        obj.put(
+                "surface",
+                Policy.SURFACE_PROCESSING_FOLDER.equals(marker)
+                        ? Policy.SURFACE_PROCESSING_FOLDER
+                        : Policy.SURFACE_POLICY);
         return obj;
     }
 
