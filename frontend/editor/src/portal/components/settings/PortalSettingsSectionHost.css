@@ -1,0 +1,20 @@
+/* Portal views assume the shell's full-height scroll column; as a settings
+   section the page owns the scrolling, so their height goes back to content and
+   their own max-width gives way to the pane's. */
+.portal-settings-section {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.portal-settings-section .portal-users {
+  max-width: none;
+}
+
+/* Former tab panels: their host supplied the page gutter, so this does now. */
+.portal-settings-section__padded {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  padding: 1.5rem;
+}

@@ -22,6 +22,7 @@ import { resolveRunOn } from "@app/policies/runOn";
 import { PolicyCategoryBadge } from "@app/components/policies/PolicyCategoryBadge";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
+import { PolicyPdfaConfig } from "@app/components/policies/PolicyPdfaConfig";
 import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
 import "@app/components/policies/PolicySetupWizard.css";
 
@@ -148,6 +149,20 @@ const CAPABILITY_META: Record<
     labelEn: "Reduce file size",
     descKey: "portal.policies.wizard.capability.compress.desc",
     descEn: "Compresses the document to a smaller file size.",
+  },
+  pdfa: {
+    labelKey: "portal.policies.wizard.capability.pdfa.label",
+    labelEn: "Convert to PDF/A for archiving",
+    descKey: "portal.policies.wizard.capability.pdfa.desc",
+    descEn:
+      "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures.",
+  },
+  complianceCheck: {
+    labelKey: "portal.policies.wizard.capability.complianceCheck.label",
+    labelEn: "Check the document meets the standard",
+    descKey: "portal.policies.wizard.capability.complianceCheck.desc",
+    descEn:
+      "Validates the finished document against PDF/A and stops the run if it does not hold up.",
   },
   classify: {
     labelKey: "portal.policies.wizard.capability.classify.label",
@@ -450,7 +465,7 @@ function PolicySetupWizardBody({
                           onChange={(checked) =>
                             setToolEnabled(tl.toolId, checked)
                           }
-                          label=""
+                          aria-label={label}
                         />
                       }
                     />
@@ -470,6 +485,12 @@ function PolicySetupWizardBody({
                             onChange={(params) =>
                               setToolParams("watermark", params)
                             }
+                          />
+                        )}
+                        {tl.toolId === "pdfa" && (
+                          <PolicyPdfaConfig
+                            parameters={tl.params}
+                            onChange={(params) => setToolParams("pdfa", params)}
                           />
                         )}
                         {tl.toolId === "purviewApplyLabel" &&

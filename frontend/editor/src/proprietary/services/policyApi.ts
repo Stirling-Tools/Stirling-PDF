@@ -38,7 +38,6 @@ export async function runStoredPolicy(
   fileId?: string,
 ): Promise<string> {
   const form = new FormData();
-  // Wrapped: WebKit uploads a File restored from IndexedDB as an empty body.
   for (const file of files) form.append("fileInput", uploadableFile(file));
   if (fileId) form.append("fileId", fileId);
   // Don't set Content-Type: the HTTP client must generate multipart/form-data
