@@ -61,10 +61,8 @@ export class OperationRouter {
       /^\/api\/v1\/payg\//, // PAYG wallet / spend-cap / billing
       /^\/api\/v1\/policies(?:\/|$)/, // Policy runs — must bill via the cloud
       /^\/api\/v1\/ai\//, // AI engine (orchestrate, etc.) — runs in the cloud
-      // The roster is the signed-in org's, so it follows the account rather than
-      // the bundled backend. Listed path by path: the /proprietary/ui-data/ and
-      // /admin/ prefixes they sit under also carry this instance's own settings,
-      // database and licence, which must stay local.
+      // The roster follows the signed-in org. Listed path by path: their
+      // prefixes also carry this instance's settings and licence, which stay local.
       /^\/api\/v1\/proprietary\/ui-data\/admin-settings(?:\/|$)/,
       /^\/api\/v1\/proprietary\/ui-data\/teams(?:\/|$)/,
       /^\/api\/v1\/user\/admin\//,

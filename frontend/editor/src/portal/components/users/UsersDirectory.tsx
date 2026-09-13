@@ -61,12 +61,8 @@ interface UsersDirectoryProps {
   showGuests?: boolean;
 }
 
-/**
- * The people roster: one flat list of everyone, narrowed by the team strip
- * above it and by search. Each row carries its team, its capability chips, a
- * role selector and a kebab of admin actions; selecting a team also puts that
- * team's own actions beside the strip.
- */
+/** One flat list of everyone, narrowed by the team strip above it and by search.
+ *  Selecting a team also puts that team's own actions beside the strip. */
 export function UsersDirectory({
   members,
   teams,
@@ -114,9 +110,8 @@ export function UsersDirectory({
     [capabilities.adminRole, showGuests, t],
   );
 
-  // The team strip is the roster's one structural filter. It replaces the
-  // per-team sections, which stopped being scannable at the org sizes this page
-  // has to hold: a hundred people is ten headings to scroll past, not a shape.
+  // The one structural filter, replacing per-team sections: at a hundred people
+  // those were ten headings to scroll past, not a shape.
   const [teamTab, setTeamTab] = useState<string>(ALL_TEAMS);
   // A member's tab, keyed by team id. Everyone the team list doesn't account
   // for lands under "No team", so the strip's counts always sum to the roster.

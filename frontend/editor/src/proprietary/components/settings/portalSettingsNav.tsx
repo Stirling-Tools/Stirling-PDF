@@ -35,9 +35,8 @@ function portalSection(
   };
 }
 
-// The roster is org administration, not a processor surface, so it is the one
-// section a build without the processor still gets. Still lazy: a build that
-// never opens it never pulls the chunk.
+// Org administration, not a processor surface, so it is the one section a build
+// without the processor still gets. Still lazy: unopened means unpulled.
 const UsersSection = portalSection((m) => m.PortalUsersSection, {
   requiresProcessor: false,
 });
@@ -47,30 +46,10 @@ const EncryptionSection = portalSection((m) => m.PortalEncryptionSection);
 const BillingSection = portalSection((m) => m.PortalBillingSection);
 const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
 
-/**
- * The processor's Users / Infrastructure / Usage & Billing views as settings
- * sections: administration of the whole deployment rather than a pipeline
- * step. Empty in builds without the portal.
- *
- * @param includeAccountLink self-hosted links the instance to a Stirling
- *   account; SaaS has nothing to link, so it passes false.
- * @param includeAudit SaaS has no other audit surface; self-hosted has the
- *   admin one under Monitoring and passes false.
- * @param includeEncryption encryption at rest is deployment-wide server
- *   configuration, so only a self-hosted admin can act on it. SaaS operates
- *   the storage itself and passes false for every user.
- * @param includeBilling what the deployment spends is the operator's business,
- *   not every member's, so self-hosted passes its admin flag. On SaaS the
- *   signed-in account owns the wallet, so it stays on.
- * @param includeRoster off for a viewer with no business administering people.
- *   Unlike the rest, this one does not need the processor: it is the build's
- *   only roster.
- * @param includeApiKeys the processor's keys tab, which supersedes the build's
- *   own. Off without processor access, so the build keeps its own.
- *
- * These flags only decide what is offered: the endpoints behind each section
- * enforce the same rule server-side.
- */
+/** The processor's deployment-administration views as settings sections; empty
+ *  without the portal. The include* flags only decide what is offered - the
+ *  endpoints enforce the same rules server-side. includeRoster is the one that
+ *  does not need the processor, being the build's only roster. */
 export function buildPortalSettingsSections(
   t: TFunction<"translation", undefined>,
   {
@@ -133,10 +112,8 @@ export function buildPortalSettingsSections(
       items: workspace,
     },
   ];
-  // Keys belong to you, not to the server, so they join your own settings
-  // rather than standing alone under a heading of their own. Only the
-  // processor's keys tab supersedes the build's own, so a build without it
-  // keeps that one rather than losing the section.
+  // Keys belong to you, not the server, so they join your own settings. Only the
+  // processor's tab supersedes the build's own; without it the build keeps its own.
   if (ApiKeysSection && includeApiKeys) {
     groups.push({
       id: "preferences",
@@ -203,14 +180,8 @@ export function buildPortalSettingsSections(
   return groups;
 }
 
-/**
- * Settings sections the given portal sections supersede, to drop from the
- * build's own nav.
- *
- * <p>Derived from what was actually built rather than listed once: a build
- * without the processor still gets the roster but not the processor's keys tab,
- * and dropping a key nothing replaces would delete the section outright.
- */
+/** Settings sections the given portal sections supersede, to drop from the build's
+ *  own nav. Derived from what was built: dropping an unreplaced key deletes it. */
 export function portalSupersededSectionKeys(
   sections: readonly ConfigNavSection[],
 ): NavKey[] {

@@ -37,8 +37,8 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     groupLabelFallback: "Preferences",
   },
   // --- Workspace ---
-  // One roster in every build, so it is listed unconditionally. Carries the
-  // words the retired People and Teams sections were found by.
+  // One roster in every build, listed unconditionally. Carries the words the
+  // retired People and Teams sections were found by.
   {
     key: "users",
     labelKey: "portal.nav.users",

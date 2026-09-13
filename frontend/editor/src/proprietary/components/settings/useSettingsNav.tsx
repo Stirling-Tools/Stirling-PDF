@@ -32,9 +32,8 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { granted: portalAccess, settled: accessSettled } =
     usePortalAccessState();
   const { isAdmin } = useAuth();
-  // The roster stands where People and Teams did, so it answers to the same
-  // admin flag the rest of the nav is built from, not the session's — the two
-  // disagree while /me is still in flight.
+  // Answers to the same admin flag the rest of the nav is built from, not the
+  // session's - the two disagree while /me is still in flight.
   const { config } = useAppConfig();
   const navAdmin = config?.isAdmin ?? false;
   const rosterAvailable = useRosterAvailable();

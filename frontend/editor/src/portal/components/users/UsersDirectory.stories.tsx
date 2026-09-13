@@ -268,10 +268,8 @@ type Story = StoryObj<typeof UsersDirectory>;
 /** Organization owner plus two teams, each with a leader. */
 export const Default: Story = {};
 
-/**
- * SaaS build (team-leader scope): no role select, no password/suspend actions -
- * just invite / rename / remove-from-team.
- */
+/** SaaS build (team-leader scope): no role select, no password/suspend actions -
+ *  just invite / rename / remove-from-team. */
 export const SaasTeamLeader: Story = {
   args: {
     members: MEMBERS.filter((m) => m.role !== "admin"),

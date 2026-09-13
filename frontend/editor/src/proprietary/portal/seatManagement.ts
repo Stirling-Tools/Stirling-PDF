@@ -2,16 +2,20 @@ import { useOptionalUpdateSeats } from "@app/contexts/UpdateSeatsContext";
 import { useOptionalLicense } from "@app/contexts/LicenseContext";
 import type { SeatManagement } from "@portal/api/seatManagement";
 
-/**
- * Self-hosted: the seat picker behind UpdateSeatsProvider. Only an Enterprise
- * licence is seat-metered, so every other licence type reports unavailable, as
- * does a host that mounts the roster without the seat provider.
- */
+/** Licence types sold with a seat count, i.e. the ones seats can be bought for.
+ *  SERVER is the licence behind the plan the pricing page calls "Team". */
+const SEATED_LICENCES = new Set(["SERVER", "ENTERPRISE"]);
+
+/** Self-hosted: the seat picker, offered to the plans that sell seats. A free
+ *  licence upgrades instead; `maxUsers: 0` is legacy unlimited, nothing to raise. */
 export function useSeatManagement(): SeatManagement {
   const seats = useOptionalUpdateSeats();
-  const license = useOptionalLicense();
+  const info = useOptionalLicense()?.licenseInfo;
   const available =
-    seats !== undefined && license?.licenseInfo?.licenseType === "ENTERPRISE";
+    seats !== undefined &&
+    info?.enabled === true &&
+    SEATED_LICENCES.has(info.licenseType) &&
+    info.maxUsers > 0;
   return {
     available,
     busy: seats?.isLoading ?? false,

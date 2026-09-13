@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderHook } from "@testing-library/react";
+import type { LicenseInfo } from "@app/types/license";
 
 const updateSeats = vi.hoisted(() => ({
   value: undefined as
@@ -7,9 +8,7 @@ const updateSeats = vi.hoisted(() => ({
     | undefined,
 }));
 const license = vi.hoisted(() => ({
-  value: undefined as
-    | { licenseInfo: { licenseType?: string } | null }
-    | undefined,
+  value: undefined as { licenseInfo: LicenseInfo | null } | undefined,
 }));
 
 vi.mock("@app/contexts/UpdateSeatsContext", () => ({
@@ -23,11 +22,23 @@ import { useSeatManagement } from "@app/portal/seatManagement";
 
 const provider = { openUpdateSeats: vi.fn(async () => {}), isLoading: false };
 
+function withLicence(info: Partial<LicenseInfo>) {
+  updateSeats.value = provider;
+  license.value = {
+    licenseInfo: {
+      licenseType: "SERVER",
+      enabled: true,
+      maxUsers: 100,
+      hasKey: true,
+      ...info,
+    },
+  };
+  return renderHook(() => useSeatManagement()).result;
+}
+
 describe("self-hosted seat management", () => {
-  it("offers the seat picker on an Enterprise licence", () => {
-    updateSeats.value = provider;
-    license.value = { licenseInfo: { licenseType: "ENTERPRISE" } };
-    const { result } = renderHook(() => useSeatManagement());
+  it("offers the seat picker on Team (SERVER), which is sold with seats", () => {
+    const result = withLicence({ licenseType: "SERVER", maxUsers: 100 });
     expect(result.current.available).toBe(true);
 
     const onChanged = vi.fn();
@@ -37,20 +48,37 @@ describe("self-hosted seat management", () => {
     });
   });
 
-  it("withholds it on a licence that is not seat-metered", () => {
-    updateSeats.value = provider;
-    license.value = { licenseInfo: { licenseType: "SERVER" } };
-    const { result } = renderHook(() => useSeatManagement());
-    expect(result.current.available).toBe(false);
+  it("offers it on Enterprise too", () => {
+    expect(
+      withLicence({ licenseType: "ENTERPRISE", maxUsers: 500 }).current
+        .available,
+    ).toBe(true);
+  });
+
+  // A free licence is capped, not extendable: the route off it is an upgrade.
+  it("withholds it on a free licence", () => {
+    expect(
+      withLicence({ licenseType: "NORMAL", maxUsers: 5 }).current.available,
+    ).toBe(false);
+  });
+
+  it("withholds it on a disabled licence", () => {
+    expect(withLicence({ enabled: false }).current.available).toBe(false);
+  });
+
+  // maxUsers 0 is a legacy unlimited licence - there is no seat count to raise.
+  it("withholds it on a legacy unlimited licence", () => {
+    expect(withLicence({ maxUsers: 0 }).current.available).toBe(false);
   });
 
   // The roster renders inside hosts that mount only part of the provider tree
   // (settings), so a missing provider must read as "no seat flow", not throw.
   it("withholds it, without throwing, when no seat provider is mounted", () => {
+    const result = withLicence({});
     updateSeats.value = undefined;
-    license.value = { licenseInfo: { licenseType: "ENTERPRISE" } };
-    const { result } = renderHook(() => useSeatManagement());
-    expect(result.current.available).toBe(false);
-    expect(() => result.current.open(vi.fn())).not.toThrow();
+    const { result: noProvider } = renderHook(() => useSeatManagement());
+    expect(result.current.available).toBe(true);
+    expect(noProvider.current.available).toBe(false);
+    expect(() => noProvider.current.open(vi.fn())).not.toThrow();
   });
 });

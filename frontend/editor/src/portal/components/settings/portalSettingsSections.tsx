@@ -73,18 +73,8 @@ function hosted(View: ComponentType, { padded = false } = {}) {
   };
 }
 
-/**
- * The processor's server administration as settings sections: the org roster,
- * API keys, audit, encryption at rest, and the account's billing. They
- * configure the whole deployment rather than a step in a document pipeline, so
- * they belong on the settings page and the processor keeps only its workflow.
- *
- * Each is a portal-authored view wrapped in the host supplying the contexts it
- * expects. The nav entries that mount these (labels, keys, aliases) live in the
- * proprietary layer, and every section but the roster is gated on the build
- * shipping the processor - so a build without it pulls this module for the
- * roster alone, and the rest resolve to null.
- */
+/** The processor's server administration as settings sections, each a portal view
+ *  in its host. All but the roster are gated on the build shipping the processor. */
 export const PortalUsersSection = rosterHosted(Users);
 export const PortalApiKeysSection = hosted(ApiKeys, { padded: true });
 export const PortalAuditSection = hosted(Audit, { padded: true });

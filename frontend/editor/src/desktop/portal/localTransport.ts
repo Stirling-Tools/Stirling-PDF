@@ -12,18 +12,8 @@ function toResponse(res: TauriHttpResponse<ArrayBuffer>): Response {
   });
 }
 
-/**
- * Desktop transport for {@code apiClient.local}. Goes through the native HTTP
- * client rather than the webview's fetch: only the native client runs the
- * operation router, which resolves the backend for the current connection mode
- * (local bundled, self-hosted server, or the cloud when signed into it), and a
- * webview fetch would be same-origin against the app itself.
- *
- * <p>Non-2xx is returned rather than thrown, and the error toast suppressed,
- * because the portal's own unwrap turns the Response into an HttpError and
- * raises the 401 and entitlement paths from it. Throwing here would bypass both
- * and report the failure twice.
- */
+/** Native client, not webview fetch: only it runs the operation router that picks
+ *  the backend. Non-2xx returns, so the portal's unwrap raises it once, not twice. */
 export async function localFetch(
   url: string,
   init: RequestInit,

@@ -1,15 +1,8 @@
 import { useEffect, useState } from "react";
 import { connectionModeService } from "@app/services/connectionModeService";
 
-/**
- * Local mode is not signed into anything: the only backend is the bundled one,
- * whose accounts are this machine's rather than an organisation's. Offer the
- * roster only once connected to a server or to the cloud — the same reason the
- * local-mode nav keeps nothing but preferences, connection and about.
- *
- * <p>Answers false until the mode resolves, so an unconnected launch never
- * flashes a section it is about to take away.
- */
+/** Local mode's accounts are this machine's, not an org's, so the roster waits
+ *  for a server or cloud connection - and for the mode, to avoid a flash. */
 export function useRosterAvailable(): boolean {
   const [mode, setMode] = useState<string | null>(null);
 
