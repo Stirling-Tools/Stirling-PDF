@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   act,
   fireEvent,
@@ -71,6 +71,7 @@ function mount() {
 
 describe("Self-hosted account connection", () => {
   beforeEach(() => {
+    vi.stubEnv("VITE_SAAS_FRONTEND_URL", "https://cloud.example/app/");
     state.fetchInstances.mockReset().mockResolvedValue([instance]);
     state.revokeInstance.mockReset().mockResolvedValue(undefined);
     state.openLinkModal.mockReset();
@@ -79,6 +80,59 @@ describe("Self-hosted account connection", () => {
     state.status = { linked: true, name: "Production" };
     state.statusError = null;
     state.email = "owner@example.com";
+  });
+
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("opens cloud management at the configured app path", async () => {
+    await act(async () => {
+      mount();
+    });
+    const manage = screen.getByRole("link", { name: "Manage on stirling.com" });
+    expect(manage).toHaveAttribute(
+      "href",
+      "https://cloud.example/app/settings/account-link",
+    );
+    expect(manage).toHaveAttribute("target", "_blank");
+    expect(manage).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("identifies this server by device ID while retaining another server with the same name", async () => {
+    state.status = { linked: true, deviceId: "device-42" };
+    state.fetchInstances.mockResolvedValue([
+      instance,
+      { ...instance, instanceId: 43, deviceId: "device-43" },
+    ]);
+    mount();
+    expect(
+      await screen.findByRole("heading", { name: "Production", level: 2 }),
+    ).toBeVisible();
+    expect(
+      screen.getAllByRole("heading", { name: "Production", level: 3 }),
+    ).toHaveLength(1);
+    expect(screen.getByText("device-43")).toBeInTheDocument();
+    expect(screen.queryByText("device-42")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Other connected instances" }),
+    ).toBeVisible();
+    expect(
+      screen.getAllByRole("button", { name: "Remove connection" }),
+    ).toHaveLength(1);
+  });
+
+  it("shows an empty other-instances list when this is the only connected server", async () => {
+    state.status = { linked: true, deviceId: "device-42" };
+    mount();
+    expect(
+      await screen.findByRole("heading", { name: "Production", level: 2 }),
+    ).toBeVisible();
+    expect(screen.getByText("No other connected instances")).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Remove connection" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Disconnect this instance" }),
+    ).toBeVisible();
   });
 
   it("shows instance names and only revokes after confirmation", async () => {

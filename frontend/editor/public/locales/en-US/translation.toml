@@ -7145,7 +7145,6 @@ disconnectBody = "This server will stop using your team’s processing allowance
 disconnectTitle = "Disconnect this instance?"
 eyebrow = "This instance"
 linkButton = "Connect your Stirling account"
-linked = "Connected"
 loading = "Checking account connection"
 notLinked = "Not connected"
 signedInAs = "Signed in to Stirling Cloud as"
@@ -7220,6 +7219,8 @@ unnamed = "Unnamed instance"
 
 [portal.accountLink.instances.empty]
 description = "Connect a self-hosted server to your team to see it here."
+otherDescription = "This is the only connected instance shown for your team."
+otherTitle = "No other connected instances"
 title = "No connected instances"
 
 [portal.accountLink.modal]
@@ -7240,6 +7241,9 @@ title = "Stirling connection not configured"
 [portal.accountLink.panel]
 instancesSub = "Self-hosted servers connected to the same team."
 instancesTitle = "Connected instances"
+manageCloud = "Manage on stirling.com"
+otherInstancesSub = "Other self-hosted servers connected to the same team in Stirling Cloud."
+otherInstancesTitle = "Other connected instances"
 revokeError = "Couldn't revoke instance"
 sub = "Manage this server’s connection to your Stirling Cloud account."
 

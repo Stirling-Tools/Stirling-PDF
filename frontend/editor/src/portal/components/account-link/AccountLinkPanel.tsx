@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Skeleton } from "@app/ui";
+import { Icon } from "@app/ui/Icon";
 import { AccountConnectionLayout } from "@app/components/settings/AccountConnectionLayout";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
@@ -32,6 +33,20 @@ export function AccountLinkPanel() {
 
   const [revokingId, setRevokingId] = useState<number | null>(null);
   const [revokeError, setRevokeError] = useState<string | null>(null);
+  const deviceId = link.status?.deviceId;
+  const currentInstance = deviceId
+    ? instancesState.data?.find((instance) => instance.deviceId === deviceId)
+    : undefined;
+  const otherInstances = (instancesState.data ?? []).filter(
+    (instance) => !deviceId || instance.deviceId !== deviceId,
+  );
+  const cloudBaseUrl = import.meta.env.VITE_SAAS_FRONTEND_URL?.replace(
+    /\/+$/,
+    "",
+  );
+  const cloudSettingsUrl = cloudBaseUrl
+    ? `${cloudBaseUrl}/settings/account-link`
+    : null;
 
   const revoke = useCallback(async (instance: LinkedInstanceRow) => {
     setRevokingId(instance.instanceId);
@@ -53,22 +68,45 @@ export function AccountLinkPanel() {
         "portal.accountLink.panel.sub",
         "Manage this server’s connection to your Stirling Cloud account.",
       )}
+      actions={
+        cloudSettingsUrl && (
+          <Button
+            fat
+            as="a"
+            href={cloudSettingsUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            rightSection={<Icon name="external-link" size={20} />}
+          >
+            {t(
+              "portal.accountLink.panel.manageCloud",
+              "Manage on stirling.com",
+            )}
+          </Button>
+        )
+      }
     >
-      <LinkAccountCard link={link} />
+      <LinkAccountCard link={link} instanceName={currentInstance?.name} />
 
       {linked && (
         <section className="account-connection__body">
           <div className="portal-link__section-head">
             <h2 className="portal-link__section-title">
               {t(
-                "portal.accountLink.panel.instancesTitle",
-                "Connected instances",
+                deviceId
+                  ? "portal.accountLink.panel.otherInstancesTitle"
+                  : "portal.accountLink.panel.instancesTitle",
+                deviceId ? "Other connected instances" : "Connected instances",
               )}
             </h2>
             <InfoTooltip
               label={t(
-                "portal.accountLink.panel.instancesSub",
-                "Self-hosted servers connected to the same team.",
+                deviceId
+                  ? "portal.accountLink.panel.otherInstancesSub"
+                  : "portal.accountLink.panel.instancesSub",
+                deviceId
+                  ? "Other self-hosted servers connected to the same team in Stirling Cloud."
+                  : "Self-hosted servers connected to the same team.",
               )}
             />
           </div>
@@ -108,7 +146,8 @@ export function AccountLinkPanel() {
             </Banner>
           ) : (
             <LinkedInstancesTable
-              instances={instancesState.data ?? []}
+              instances={otherInstances}
+              excludingCurrent={Boolean(deviceId)}
               onRevoke={revoke}
               revokingId={revokingId}
             />

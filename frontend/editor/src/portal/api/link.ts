@@ -6,8 +6,9 @@ export type { LinkedInstanceRow };
 /** Link status for this instance (GET /api/v1/account-link/status). */
 export interface LinkStatus {
   linked: boolean;
-  /** Display name the local backend stored at link time; null when unset. */
-  name: string | null;
+  /** Matches the cloud instance row; older status responses may omit it. */
+  deviceId?: string | null;
+  name?: string | null;
 }
 
 /** Locally-accrued usage not yet reported to SaaS (GET /api/v1/account-link/usage). */

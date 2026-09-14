@@ -5,17 +5,22 @@ import "@app/components/settings/AccountConnectionLayout.css";
 export function AccountConnectionLayout({
   title,
   description,
+  actions,
   children,
 }: {
   title: string;
   description: string;
+  actions?: ReactNode;
   children: ReactNode;
 }) {
   return (
     <div className="account-connection">
       <header className="account-connection__header">
-        <h1>{title}</h1>
-        <p>{description}</p>
+        <div>
+          <h1>{title}</h1>
+          <p>{description}</p>
+        </div>
+        {actions}
       </header>
       <div className="account-connection__sheet">{children}</div>
     </div>

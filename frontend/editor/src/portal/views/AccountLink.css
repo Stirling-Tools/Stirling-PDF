@@ -5,7 +5,7 @@
 }
 
 .portal-link__card-head,
-.portal-link__actions {
+.portal-link__account-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -20,8 +20,14 @@
   gap: 1rem;
 }
 
-.portal-link__actions {
-  justify-content: flex-end;
+.portal-link__account-row > button {
+  margin-left: auto;
+}
+
+.portal-link__account-row p {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 18rem;
 }
 
 .portal-link__section-head {

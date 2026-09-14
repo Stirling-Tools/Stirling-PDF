@@ -8,6 +8,7 @@ interface Props {
   instances: LinkedInstanceRow[];
   onRevoke: (instance: LinkedInstanceRow) => void;
   revokingId?: number | null;
+  excludingCurrent?: boolean;
 }
 
 /** Uses the shared cloud row design while retaining the portal's owner-authorized revoke API. */
@@ -15,6 +16,7 @@ export function LinkedInstancesTable({
   instances,
   onRevoke,
   revokingId,
+  excludingCurrent = false,
 }: Props) {
   const { t } = useTranslation();
   const [selected, setSelected] = useState<LinkedInstanceRow | null>(null);
@@ -36,12 +38,20 @@ export function LinkedInstancesTable({
         <EmptyState
           size="compact"
           title={t(
-            "portal.accountLink.instances.empty.title",
-            "No connected instances",
+            excludingCurrent
+              ? "portal.accountLink.instances.empty.otherTitle"
+              : "portal.accountLink.instances.empty.title",
+            excludingCurrent
+              ? "No other connected instances"
+              : "No connected instances",
           )}
           description={t(
-            "portal.accountLink.instances.empty.description",
-            "Connect a self-hosted server to your team to see it here.",
+            excludingCurrent
+              ? "portal.accountLink.instances.empty.otherDescription"
+              : "portal.accountLink.instances.empty.description",
+            excludingCurrent
+              ? "This is the only connected instance shown for your team."
+              : "Connect a self-hosted server to your team to see it here.",
           )}
         />
       )}

@@ -9,10 +9,11 @@ import { useLinkedAccountEmail } from "@portal/hooks/useLinkedAccountEmail";
 
 interface Props {
   link: UseAccountLink;
+  instanceName?: string | null;
 }
 
 /** Uses the existing top-level connection flow; device credentials stay on the server. */
-export function LinkAccountCard({ link }: Props) {
+export function LinkAccountCard({ link, instanceName }: Props) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
   const email = useLinkedAccountEmail();
@@ -68,7 +69,8 @@ export function LinkAccountCard({ link }: Props) {
           </span>
           <div className="portal-link__section-head">
             <h2>
-              {link.status?.name ??
+              {instanceName ??
+                link.status?.name ??
                 t("portal.accountLink.card.title", "Stirling Cloud")}
             </h2>
             {linked && (
@@ -81,26 +83,37 @@ export function LinkAccountCard({ link }: Props) {
             )}
           </div>
         </div>
-        <span className="portal-link__status">
-          {linked ? (
-            <Icon name="circle-check" size={20} />
-          ) : (
+        {!linked && (
+          <span className="portal-link__status">
             <Icon name="unlink" size={20} />
-          )}
-          {linked
-            ? t("portal.accountLink.card.linked", "Connected")
-            : t("portal.accountLink.card.notLinked", "Not connected")}
-        </span>
+            {t("portal.accountLink.card.notLinked", "Not connected")}
+          </span>
+        )}
       </div>
 
-      {email && (
-        <p className="portal-link__account">
-          {t(
-            "portal.accountLink.card.signedInAs",
-            "Signed in to Stirling Cloud as",
-          )}{" "}
-          <strong>{email}</strong>
-        </p>
+      {(email || linked) && (
+        <div className="portal-link__account-row">
+          {email && (
+            <p className="portal-link__account">
+              {t(
+                "portal.accountLink.card.signedInAs",
+                "Signed in to Stirling Cloud as",
+              )}{" "}
+              <strong>{email}</strong>
+            </p>
+          )}
+          {linked && (
+            <Button
+              variant="quiet"
+              accent="neutral"
+              leftSection={<Icon name="unlink" size={20} />}
+              loading={linking}
+              onClick={() => setConfirmDisconnect(true)}
+            >
+              {t("portal.accountLink.card.unlink", "Disconnect this instance")}
+            </Button>
+          )}
+        </div>
       )}
 
       {!link.loginConfigured && !linked && (
@@ -130,19 +143,7 @@ export function LinkAccountCard({ link }: Props) {
         </Banner>
       )}
 
-      {linked ? (
-        <div className="portal-link__actions">
-          <Button
-            variant="quiet"
-            accent="neutral"
-            leftSection={<Icon name="unlink" size={20} />}
-            loading={linking}
-            onClick={() => setConfirmDisconnect(true)}
-          >
-            {t("portal.accountLink.card.unlink", "Disconnect this instance")}
-          </Button>
-        </div>
-      ) : (
+      {!linked && (
         <div className="portal-link__connect">
           <p>
             {t(
