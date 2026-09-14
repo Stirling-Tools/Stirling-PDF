@@ -402,7 +402,6 @@ export function FileDetailsPanel({
       <div className="files-page-details-actions">
         <Button
           leftSection={<OpenInNewIcon fontSize="small" />}
-          justify="start"
           onClick={() => onAddToWorkspace(selectedFileIds)}
         >
           {files.length === 1
@@ -414,7 +413,6 @@ export function FileDetailsPanel({
         <Button
           leftSection={<DownloadIcon fontSize="small" />}
           variant="secondary"
-          justify="start"
           onClick={handleDownload}
           loading={downloading}
         >
@@ -442,7 +440,6 @@ export function FileDetailsPanel({
             <Button
               leftSection={<LinkIcon fontSize="small" />}
               variant="secondary"
-              justify="start"
               disabled={!sharingEnabled}
               onClick={() => setShareModalOpen(true)}
               style={{
@@ -457,7 +454,6 @@ export function FileDetailsPanel({
         <Button
           leftSection={<DriveFileMoveIcon fontSize="small" />}
           variant="secondary"
-          justify="start"
           onClick={() => onMove(selectedFileIds)}
         >
           {t("filesPage.moveTo", "Move to…")}
@@ -476,7 +472,6 @@ export function FileDetailsPanel({
             <Button
               leftSection={<CloudUploadIcon fontSize="small" />}
               variant="secondary"
-              justify="start"
               disabled={Boolean(saveToServerDisabledReason)}
               onClick={() => onSaveToServer(localOnlyFiles)}
               style={{
@@ -491,7 +486,6 @@ export function FileDetailsPanel({
         <Button
           leftSection={<DeleteIcon fontSize="small" />}
           accent="danger"
-          justify="start"
           onClick={() => onRemove(selectedFileIds)}
         >
           {t("filesPage.remove", "Delete")}
