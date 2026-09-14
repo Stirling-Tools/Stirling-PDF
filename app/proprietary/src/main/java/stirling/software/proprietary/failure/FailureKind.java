@@ -3,6 +3,7 @@ package stirling.software.proprietary.failure;
 import static stirling.software.proprietary.failure.FailureActionId.DECRYPT;
 import static stirling.software.proprietary.failure.FailureActionId.DISMISS;
 import static stirling.software.proprietary.failure.FailureActionId.OPEN_IN_TOOL;
+import static stirling.software.proprietary.failure.FailureActionId.REPAIR;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_FILE;
 import static stirling.software.proprietary.failure.FailureActionId.VIEW_IN_PROCESSOR;
 import static stirling.software.proprietary.failure.FailureActionSlot.OVERFLOW;
@@ -39,6 +40,26 @@ public enum FailureKind {
             fallback("This document is password-protected, so the pipeline could not read it."),
             // The password is the fix; the owner's own document is the runner-up.
             resolution(DECRYPT, OWNER),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(OPEN_IN_TOOL, OWNER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
+     * E003 rides along. PDFBox swallows every decryption failure during lazy dereference, so it is
+     * not expected to render; claiming it only guarantees a known code never lands on {@link
+     * #UNKNOWN} if that ever changes.
+     */
+    INPUT_CORRUPTED(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.NEEDS_FILE_FIX,
+            FailureScope.FILE,
+            errorCodes("E001", "E002", "E003"),
+            fallback("This document is damaged, so the pipeline could not read it."),
+            // Opening the tool is offered but not promoted: the same bytes fail the same way, so
+            // it only helps when the upload itself truncated them.
+            resolution(REPAIR, OWNER),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
             global(OPEN_IN_TOOL, OWNER, OVERFLOW),
