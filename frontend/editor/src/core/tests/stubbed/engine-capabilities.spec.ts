@@ -106,7 +106,6 @@ test.describe("engine capabilities", { tag: "@engine-capability" }, () => {
     const missingApis = recordMissingApiErrors(page);
 
     await uploadFiles(page, SAMPLE_PDF);
-    await page.waitForTimeout(500);
 
     // Dropped before the reload boots, so it cannot reopen the file for us: the eye
     // below toggles, and whether the restore runs is a build flag this spec does not own.
