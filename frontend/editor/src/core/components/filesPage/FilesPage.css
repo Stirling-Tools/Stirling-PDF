@@ -530,6 +530,176 @@
   }
 }
 
+/* Marks a folder that runs a pipeline over anything added to it. Replaces the
+   item count so a processing folder reads as a different kind of thing. */
+.files-page-processing-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.05rem 0.4rem;
+  border-radius: var(--radius-sm, 4px);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--c-success-text, var(--c-primary));
+  background: color-mix(
+    in srgb,
+    var(--c-success, var(--c-primary)) 14%,
+    transparent
+  );
+}
+
+.files-page-processing-tag::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Per-file processing state on a working folder's listing. The badge names the
+   state; a not-yet-processed file is also inert (no open, no menu) until its
+   result exists, and reads that way. */
+.files-page-state-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: var(--c-surface-raised);
+  border: 1px solid var(--c-border-subtle);
+  color: var(--c-text-muted);
+}
+
+.files-page-state-badge.is-failed {
+  color: var(--c-danger, var(--c-text));
+  border-color: color-mix(
+    in srgb,
+    var(--c-danger, var(--c-text)) 40%,
+    transparent
+  );
+}
+
+.files-page-state-badge.is-done {
+  color: var(--c-success, var(--c-primary));
+  border-color: color-mix(
+    in srgb,
+    var(--c-success, var(--c-primary)) 40%,
+    transparent
+  );
+}
+
+.files-page-card.is-locked,
+.files-page-list-row.is-locked {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.files-page-card.is-locked .files-page-card-actions {
+  display: none;
+}
+
+/* The open folder's own actions, inline beside the items count. */
+.files-page-folder-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  margin-left: 0.6rem;
+  padding-left: 0.6rem;
+  border-left: 1px solid var(--c-border-subtle);
+}
+
+/* State filter chips above a working folder's listing. */
+.files-page-state-filters {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0 0 0.6rem;
+  flex-wrap: wrap;
+}
+
+.files-page-state-filters button {
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+  background: var(--c-surface-raised);
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 999px;
+  padding: 0.15rem 0.7rem;
+  cursor: pointer;
+}
+
+.files-page-state-filters button.is-active {
+  color: var(--c-text);
+  border-color: var(--c-primary);
+  background: var(--c-primary-subtle, var(--c-surface));
+}
+
+/* Count on a filter chip ("Failed 3"). */
+.files-page-state-count {
+  margin-left: 0.3rem;
+  font-variant-numeric: tabular-nums;
+  opacity: 0.75;
+}
+
+/* Retry on a failed file's badge; must stay clickable inside an inert card. */
+.files-page-state-retry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  margin-left: 0.3rem;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  text-decoration: underline;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+/* A working folder's per-state counts, one dotted chip per non-zero state. */
+.files-page-folder-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.3rem;
+}
+
+.files-page-folder-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--c-text-muted);
+}
+
+.files-page-folder-stat::before {
+  content: "";
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--c-border-strong);
+}
+
+.files-page-folder-stat.is-done::before {
+  background: var(--c-success, var(--c-primary));
+}
+
+.files-page-folder-stat.is-processing::before {
+  background: var(--c-primary);
+}
+
+.files-page-folder-stat.is-failed::before {
+  background: var(--c-danger, var(--c-text));
+}
+
 /* Parent-folder breadcrumb shown on cards/rows during recursive search so
    the user can tell which folder each hit lives in without navigating. */
 .files-page-card-path {

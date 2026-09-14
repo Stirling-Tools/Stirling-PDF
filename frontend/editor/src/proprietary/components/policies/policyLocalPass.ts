@@ -7,7 +7,7 @@
 
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import { CLASSIFICATION_CATEGORY_ID } from "@app/data/classificationPolicy";
+import { CLASSIFICATION_POLICY_KEY } from "@app/data/classificationPolicy";
 import { classificationLocalPass } from "@app/components/policies/classificationLocalPass";
 
 export interface LocalPassResult {
@@ -15,6 +15,8 @@ export interface LocalPassResult {
   stubUpdates: Partial<StirlingFileStub>;
   /** Whether the policy's server run should still be dispatched after this pass. */
   needsServerRun: boolean;
+  /** Charge this local pass as the billable run. */
+  meter?: () => void;
 }
 
 export interface LocalPass {
@@ -28,7 +30,7 @@ export interface LocalPass {
 }
 
 /** The local fast path a policy declares, if any. The default (most policies) is none. */
-export function localPassFor(categoryId: string): LocalPass | undefined {
-  if (categoryId === CLASSIFICATION_CATEGORY_ID) return classificationLocalPass;
+export function localPassFor(policyKey: string): LocalPass | undefined {
+  if (policyKey === CLASSIFICATION_POLICY_KEY) return classificationLocalPass;
   return undefined;
 }

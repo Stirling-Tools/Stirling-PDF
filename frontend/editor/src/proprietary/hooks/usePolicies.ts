@@ -19,7 +19,7 @@ import {
   fetchPoliciesByCategory,
   decodedToState,
 } from "@app/services/policyBackend";
-import type { PoliciesByCategory } from "@app/types/policies";
+import type { PoliciesByKey } from "@app/types/policies";
 
 /** Cold-start reconcile retry budget + capped backoff (≈0.5s→5s, ~1 min total),
  *  enough to outlast a backend that starts a little after the frontend. */
@@ -28,7 +28,7 @@ const reconcileRetryDelay = (attempt: number) =>
   Math.min(500 * 2 ** attempt, 5000);
 
 export function usePolicies() {
-  const [policies, setPolicies] = useState<PoliciesByCategory>(loadPolicies);
+  const [policies, setPolicies] = useState<PoliciesByKey>(loadPolicies);
   const { refetch: refetchAppConfig } = useAppConfig();
 
   useEffect(() => onPoliciesChange(() => setPolicies(loadPolicies())), []);
@@ -56,7 +56,7 @@ export function usePolicies() {
       }
       if (cancelled) return;
       const local = loadPolicies();
-      const reconciled: PoliciesByCategory = {};
+      const reconciled: PoliciesByKey = {};
       for (const cat of loadPolicyCatalog().categories) {
         const decoded = byCategory.get(cat.id);
         reconciled[cat.id] = decoded

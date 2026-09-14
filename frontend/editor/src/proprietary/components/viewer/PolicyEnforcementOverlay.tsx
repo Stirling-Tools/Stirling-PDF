@@ -55,7 +55,7 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
             // close button there, and the badge must never swallow its clicks.
             right: 56,
             zIndex: 1100,
-            color: policyAccentVar(inFlight.categoryId),
+            color: policyAccentVar(inFlight.policyKey),
           }}
         >
           <AutorenewIcon style={{ fontSize: 16 }} />
@@ -70,8 +70,8 @@ export function PolicyEnforcementOverlay({ runs }: Props) {
       zIndex={1100}
       progress={progress}
       onDismiss={() => setDismissed(true)}
-      accentVar={policyAccentVar(inFlight.categoryId)}
-      categoryId={inFlight.categoryId}
+      accentVar={policyAccentVar(inFlight.policyKey)}
+      policyKey={inFlight.policyKey}
     />
   );
 }

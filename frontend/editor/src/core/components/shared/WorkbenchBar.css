@@ -98,6 +98,7 @@
   order: 2;
   flex: 1 1 auto;
   min-width: 0;
+  container-type: inline-size;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,6 +121,12 @@
 
 [data-mantine-color-scheme="dark"] .workbench-bar-search .super-search input {
   background-color: transparent;
+}
+
+@container (max-width: 9rem) {
+  .workbench-bar-search .super-search input::placeholder {
+    color: transparent;
+  }
 }
 
 /* Crowded: drops to its own full-width row between the top row and the tools. */

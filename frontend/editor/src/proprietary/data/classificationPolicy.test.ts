@@ -1,12 +1,12 @@
 import { describe, it, expect } from "vitest";
 import {
-  isClassificationCategory,
+  isClassificationPolicy,
   localVerdictNeedsEscalation,
-  orderedRewritingCategories,
+  orderedRewritingPolicies,
   policyDeliversOutputFiles,
   policyRewritesDocument,
 } from "@app/data/classificationPolicy";
-import type { PoliciesByCategory } from "@app/types/policies";
+import type { PoliciesByKey } from "@app/types/policies";
 
 const rewriter = (order: number) =>
   ({
@@ -16,13 +16,13 @@ const rewriter = (order: number) =>
     runsOnEditor: true,
     runOn: "upload",
     order,
-  }) as unknown as PoliciesByCategory[string];
+  }) as unknown as PoliciesByKey[string];
 
-describe("isClassificationCategory", () => {
+describe("isClassificationPolicy", () => {
   it("recognises the classification category and nothing else", () => {
-    expect(isClassificationCategory("classification")).toBe(true);
-    expect(isClassificationCategory("security")).toBe(false);
-    expect(isClassificationCategory("")).toBe(false);
+    expect(isClassificationPolicy("classification")).toBe(true);
+    expect(isClassificationPolicy("security")).toBe(false);
+    expect(isClassificationPolicy("")).toBe(false);
   });
 });
 
@@ -40,15 +40,15 @@ describe("policy capabilities", () => {
   });
 });
 
-describe("orderedRewritingCategories", () => {
+describe("orderedRewritingPolicies", () => {
   it("lists only file-producing policies, ordered by order, excluding classification", () => {
     const policies = {
       classification: rewriter(0), // annotating: excluded despite being active
       security: rewriter(2),
       compliance: rewriter(1),
-    } as unknown as PoliciesByCategory;
+    } as unknown as PoliciesByKey;
     // classification is filtered by policyDeliversOutputFiles, not by the shape above.
-    expect(orderedRewritingCategories(policies)).toEqual([
+    expect(orderedRewritingPolicies(policies)).toEqual([
       "compliance",
       "security",
     ]);
@@ -62,15 +62,15 @@ describe("orderedRewritingCategories", () => {
       onExport: { ...rewriter(3), runOn: "export" },
       unconfigured: { ...rewriter(4), configured: false },
       noBackend: { ...rewriter(5), backendId: undefined },
-    } as unknown as PoliciesByCategory;
-    expect(orderedRewritingCategories(mixed)).toEqual(["security"]);
+    } as unknown as PoliciesByKey;
+    expect(orderedRewritingPolicies(mixed)).toEqual(["security"]);
   });
 
   it("is empty when classification is the only policy", () => {
     const only = {
       classification: rewriter(0),
-    } as unknown as PoliciesByCategory;
-    expect(orderedRewritingCategories(only)).toEqual([]);
+    } as unknown as PoliciesByKey;
+    expect(orderedRewritingPolicies(only)).toEqual([]);
   });
 });
 

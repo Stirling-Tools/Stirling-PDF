@@ -77,13 +77,13 @@ function setFileStubs(next: typeof fileStubs) {
 
 function completeRun(
   runId: string,
-  categoryId: string,
+  policyKey: string,
   fileId: string,
   outputFileIds: string[],
 ) {
   recordRunStart({
     runId,
-    categoryId,
+    policyKey,
     fileId,
     fileName: "doc.pdf",
     fileSize: 100,
@@ -192,7 +192,7 @@ describe("auto-run ordered chaining", () => {
     // A browser-local heuristic run and a real server run, both left in flight.
     recordRunStart({
       runId: "local-1",
-      categoryId: "classification",
+      policyKey: "classification",
       fileId: "f1",
       fileName: "d.pdf",
       fileSize: 1,
@@ -205,7 +205,7 @@ describe("auto-run ordered chaining", () => {
     });
     recordRunStart({
       runId: "srv-1",
-      categoryId: "security",
+      policyKey: "security",
       fileId: "f2",
       fileName: "d.pdf",
       fileSize: 1,

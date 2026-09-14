@@ -43,7 +43,7 @@ export function toWirePolicy(state: PolicyDecodedState): WirePolicy {
     position: state.outputNamePosition,
     maxRetries: state.maxRetries,
     retryDelayMinutes: state.retryDelayMinutes,
-    categoryId: state.categoryId,
+    categoryId: state.policyKey,
     sources: state.sources,
     scopeTypes: state.scopeTypes,
     reviewerEmail: state.reviewerEmail,
@@ -78,13 +78,13 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
       : raw.position === "auto-number"
         ? "auto-number"
         : "prefix";
-  const categoryId = str(raw.categoryId);
+  const policyKey = str(raw.categoryId);
   return {
     id: policy.id,
     name: policy.name,
     enabled: policy.enabled,
     required: policy.required ?? false,
-    categoryId,
+    policyKey,
     sources: Array.isArray(raw.sources) ? raw.sources : [],
     runsOnEditor: policy.editor?.allowed === true,
     scopeTypes: Array.isArray(raw.scopeTypes) ? raw.scopeTypes : [],
@@ -95,7 +95,7 @@ export function fromWirePolicy(policy: WirePolicy): PolicyDecodedState {
     // to the legacy options bag otherwise so the wizard still shows what was chosen.
     runOn: resolveRunOn(
       policy.editor?.allowed ? policy.editor.runOn : raw.runOn,
-      categoryId,
+      policyKey,
     ),
     outputMode: raw.mode === "new_file" ? "new_file" : "new_version",
     outputName: str(raw.name),

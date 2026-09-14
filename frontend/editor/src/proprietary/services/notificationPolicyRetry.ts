@@ -1,10 +1,10 @@
 import {
-  appliedCategoriesFor,
+  appliedPoliciesFor,
   recordRunStart,
 } from "@app/components/policies/policyRunStore";
-import { orderedRewritingCategories } from "@app/data/classificationPolicy";
+import { orderedRewritingPolicies } from "@app/data/classificationPolicy";
 import { fileStorage } from "@app/services/fileStorage";
-import { loadPolicies } from "@app/services/policyStorage";
+import { loadPolicies, rawStoredPolicies } from "@app/services/policyStorage";
 import {
   resolvePolicyRunTarget,
   runStoredPolicy,
@@ -29,6 +29,46 @@ export type PolicyRerunOutcome =
   | { ok: false; reason: "missingFile" }
   /** The server refused the run. `message` is its own, or null when it gave nothing usable. */
   | { ok: false; reason: "rejected"; message: string | null };
+
+/**
+ * Whether this browser still holds the policy the failure names. A run has to be filed against a
+ * local policy for {@code usePolicyAutoRun} to poll it and collect what it makes, so a run
+ * submitted without one is billed, produces output nobody here receives, and leaves the row open
+ * to be pressed and billed again. Callers gate the offer on this rather than discovering it after
+ * the run has gone.
+ *
+ * <p>False after a team switch, or against a cache written before the policy was renamed.
+ */
+export function canPlacePolicy(policyId: string): boolean {
+  return placeableBackendIds().has(policyId);
+}
+
+/**
+ * The placeable ids, rebuilt only when the stored policies actually change. Every notification
+ * row asks this while rendering, and the underlying read parses storage and reconciles it
+ * against the catalogue, which is far too much to repeat per row per render.
+ */
+let placeableCache: { raw: string | null; ids: Set<string> } | null = null;
+
+function placeableBackendIds(): Set<string> {
+  const raw = rawStoredPolicies();
+  if (placeableCache && placeableCache.raw === raw) {
+    return placeableCache.ids;
+  }
+
+  let ids = new Set<string>();
+  try {
+    ids = new Set(
+      Object.values(loadPolicies())
+        .map((state) => state.backendId)
+        .filter((backendId): backendId is string => backendId !== undefined),
+    );
+  } catch {
+    // Unreadable storage places nothing, which withholds the offer rather than misplacing it.
+  }
+  placeableCache = { raw, ids };
+  return ids;
+}
 
 /** Re-run on the document still in this browser's storage, under the reference the failure named. */
 export async function rerunPolicy(
@@ -56,10 +96,10 @@ export async function rechainPolicyOnDocument(
   return submit(target, document, workspaceFileId, resumePointFor(target));
 }
 
-/** Which policy a retry should actually run, and the category to file its run under. */
+/** Which policy a retry should actually run, and the key to file its run under. */
 interface ChainEntry {
   policyId: string;
-  categoryId: string;
+  policyKey: string;
 }
 
 /**
@@ -68,17 +108,17 @@ interface ChainEntry {
  */
 function resumePointFor(target: PolicyRetryTarget): ChainEntry | null {
   const policies = loadPolicies();
-  const chain = orderedRewritingCategories(policies);
-  const failed = categoryForPolicy(target.policyId);
+  const chain = orderedRewritingPolicies(policies);
+  const failed = policyKeyForBackendId(target.policyId);
   if (!failed || !chain.includes(failed)) return null;
 
-  const applied = appliedCategoriesFor(target.fileId);
-  const categoryId = chain.find((category) => !applied.has(category));
-  if (!categoryId) return null;
+  const applied = appliedPoliciesFor(target.fileId);
+  const policyKey = chain.find((key) => !applied.has(key));
+  if (!policyKey) return null;
   const policyId = Object.entries(policies).find(
-    ([id]) => id === categoryId,
+    ([id]) => id === policyKey,
   )?.[1]?.backendId;
-  return policyId ? { policyId, categoryId } : null;
+  return policyId ? { policyId, policyKey } : null;
 }
 
 /** Recorded because `usePolicyAutoRun` polls the store; an unrecorded run delivers nothing. */
@@ -89,7 +129,7 @@ async function submit(
   resume: ChainEntry | null = null,
 ): Promise<PolicyRerunOutcome> {
   // Resolved before the run, so a lookup that throws cannot leave a live run unrecorded.
-  const categoryId = resume?.categoryId ?? categoryForPolicy(target.policyId);
+  const policyKey = resume?.policyKey ?? policyKeyForBackendId(target.policyId);
   // At the resume point where there is one, so the rest of the chain carries on from there.
   const policyId = resume?.policyId ?? target.policyId;
   const runTarget = resolvePolicyRunTarget();
@@ -102,12 +142,12 @@ async function submit(
   }
 
   // The run already went, so it is left to run: refusing now only wastes a second submission.
-  if (!categoryId || !workspaceFileId) return { ok: true, tracked: false };
+  if (!policyKey || !workspaceFileId) return { ok: true, tracked: false };
 
-  // Marks (category, file) dispatched as it records: the pair has run once, and this is it again.
+  // Marks (policy, file) dispatched as it records: the pair has run once, and this is it again.
   recordRunStart({
     runId,
-    categoryId,
+    policyKey,
     fileId: workspaceFileId,
     fileName: document.name,
     fileSize: document.size,
@@ -121,7 +161,7 @@ async function submit(
 }
 
 /** Non-hook read: `usePolicies` needs contexts the bell's shell may not have. */
-function categoryForPolicy(policyId: string): string | undefined {
+function policyKeyForBackendId(policyId: string): string | undefined {
   try {
     return Object.entries(loadPolicies()).find(
       ([, state]) => state.backendId === policyId,

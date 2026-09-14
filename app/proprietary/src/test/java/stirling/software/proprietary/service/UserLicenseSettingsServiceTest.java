@@ -19,6 +19,7 @@ import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.accountlink.EntitlementCache;
 import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -36,6 +37,7 @@ class UserLicenseSettingsServiceTest {
     @Mock private ApplicationProperties.AutomaticallyGenerated automaticallyGenerated;
     @Mock private LicenseKeyChecker licenseKeyChecker;
     @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
+    @Mock private ObjectProvider<EntitlementCache> entitlementCacheProvider;
 
     private UserLicenseSettingsService service;
     private UserLicenseSettings mockSettings;
@@ -66,7 +68,8 @@ class UserLicenseSettingsServiceTest {
                         settingsRepository,
                         userService,
                         applicationProperties,
-                        licenseKeyCheckerProvider) {
+                        licenseKeyCheckerProvider,
+                        entitlementCacheProvider) {
                     @Override
                     public void validateSettingsIntegrity() {
                         // Override to do nothing in tests - avoid HMAC signature validation

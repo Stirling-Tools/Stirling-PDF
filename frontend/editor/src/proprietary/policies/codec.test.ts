@@ -7,7 +7,7 @@ const FULL_STATE: PolicyDecodedState = {
   name: "Security Policy",
   enabled: true,
   required: true,
-  categoryId: "security",
+  policyKey: "security",
   sources: ["editor", "gdrive"],
   runsOnEditor: true,
   scopeTypes: ["Contracts", "Invoices"],
@@ -86,7 +86,7 @@ describe("fromWirePolicy → round-trip", () => {
     const decoded = fromWirePolicy(wire);
     expect(decoded.id).toBe(FULL_STATE.id);
     expect(decoded.required).toBe(FULL_STATE.required);
-    expect(decoded.categoryId).toBe(FULL_STATE.categoryId);
+    expect(decoded.policyKey).toBe(FULL_STATE.policyKey);
     expect(decoded.sources).toEqual(FULL_STATE.sources);
     expect(decoded.scopeTypes).toEqual(FULL_STATE.scopeTypes);
     expect(decoded.reviewerEmail).toBe(FULL_STATE.reviewerEmail);
@@ -116,7 +116,7 @@ describe("fromWirePolicy → round-trip", () => {
   it("defaults a missing runOn to upload for other categories", () => {
     const wire = withNoStoredRunOn({
       ...FULL_STATE,
-      categoryId: "classification",
+      policyKey: "classification",
     });
     expect(fromWirePolicy(wire).runOn).toBe("upload");
   });
@@ -180,11 +180,31 @@ describe("fromWirePolicy → round-trip", () => {
       steps: [],
       output: { type: "inline", options: {} },
     });
-    expect(decoded.categoryId).toBe("");
+    expect(decoded.policyKey).toBe("");
     expect(decoded.sources).toEqual([]);
     expect(decoded.runsOnEditor).toBe(false);
     expect(decoded.runOn).toBe("upload");
     expect(decoded.outputMode).toBe("new_version");
+  });
+
+  it("decodes a policy stored before the in-memory rename", () => {
+    // The wire key is frozen as categoryId and every stored policy already carries it, so a
+    // decode that looked for policyKey would read every existing policy as unconfigured.
+    const decoded = fromWirePolicy({
+      id: "legacy",
+      name: "Security Policy",
+      enabled: true,
+      trigger: null,
+      steps: [],
+      output: { type: "inline", options: { categoryId: "security" } },
+    });
+    expect(decoded.policyKey).toBe("security");
+  });
+
+  it("writes the key back under the name the backend reads", () => {
+    expect(toWirePolicy(FULL_STATE).output.options).toMatchObject({
+      categoryId: "security",
+    });
   });
 
   it("defaults fieldValues to empty object when missing", () => {
