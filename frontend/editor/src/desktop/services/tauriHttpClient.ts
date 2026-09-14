@@ -35,6 +35,7 @@ export interface TauriHttpRequestConfig {
   skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
+  accountLinkBlockSource?: "foreground" | "background";
   cancelToken?: any;
   signal?: AbortSignal;
 }

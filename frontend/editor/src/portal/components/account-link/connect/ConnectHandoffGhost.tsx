@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Skeleton } from "@app/ui";
-import "@portal/components/account-link/connect/connect.css";
+import "@app/components/account-link/connect.css";
 
 /**
  * A ghost rather than a screen: the admin has already decided. It earns its place when the local

@@ -1,4 +1,6 @@
 import type { ReactNode } from "react";
+import { useLocation } from "react-router-dom";
+import { useFreeTierExhaustedPrompt } from "@portal/hooks/useFreeTierExhaustedPrompt";
 import { LinkProvider } from "@portal/contexts/LinkContext";
 import { TierProvider } from "@portal/contexts/TierContext";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
@@ -8,6 +10,10 @@ import { LinkAccountModal } from "@portal/components/account-link/LinkAccountMod
 function LinkModalHost() {
   const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
     useUI();
+  const { pathname } = useLocation();
+  useFreeTierExhaustedPrompt(
+    pathname === "/settings/billing" || pathname === "/settings/account-link",
+  );
   if (!linkModalOpen) return null;
   return (
     <LinkAccountModal

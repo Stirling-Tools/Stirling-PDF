@@ -1,6 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { alert } from "@app/components/toast";
 import { handleHttpError } from "@app/services/httpErrorHandler";
+import {
+  clearAccountLinkBlock,
+  useAccountLinkBlock,
+} from "@app/services/accountLinkBlock";
+import { act, renderHook } from "@testing-library/react";
 
 // Only the toast surface matters here; the rest of the handler's graph is
 // heavy UI that these cases never reach.
@@ -60,5 +65,64 @@ describe("handleHttpError - suppressErrorToast", () => {
     expect(suppressed).toBe(false);
     expect(alert).not.toHaveBeenCalled();
     expect(window.location.href).toBe(before);
+  });
+});
+
+describe("local free allowance failures", () => {
+  beforeEach(() => {
+    clearAccountLinkBlock();
+    vi.clearAllMocks();
+  });
+
+  it("recognizes a blob 402 before generic toast suppression", async () => {
+    const probe = renderHook(() => useAccountLinkBlock());
+    const error = {
+      ...axiosError({ suppressErrorToast: true }, 402),
+      response: {
+        status: 402,
+        data: {
+          text: async () =>
+            JSON.stringify({
+              error: "ACCOUNT_LINK_REQUIRED",
+              reason: "FREE_TIER_EXHAUSTED",
+            }),
+        },
+      },
+    };
+    await act(async () => {
+      expect(await handleHttpError(error)).toBe(true);
+    });
+    expect(probe.result.current.promptPending).toBe(true);
+    expect(alert).not.toHaveBeenCalled();
+  });
+
+  it("records background exhaustion without requesting a modal", async () => {
+    const probe = renderHook(() => useAccountLinkBlock());
+    const error = {
+      ...axiosError({ accountLinkBlockSource: "background" }, 402),
+      response: {
+        status: 402,
+        data: { error: "ACCOUNT_LINK_REQUIRED", reason: "FREE_TIER_EXHAUSTED" },
+      },
+    };
+    await act(async () => {
+      await handleHttpError(error);
+    });
+    expect(probe.result.current.exhausted).toBe(true);
+    expect(probe.result.current.promptPending).toBe(false);
+    expect(alert).not.toHaveBeenCalled();
+  });
+
+  it("does not offer linking for a linked team's exhausted wallet", async () => {
+    const probe = renderHook(() => useAccountLinkBlock());
+    await handleHttpError({
+      ...axiosError({}, 402),
+      response: {
+        status: 402,
+        data: { error: "ACCOUNT_LINK_REQUIRED", reason: "OVER_LIMIT" },
+      },
+    });
+    expect(probe.result.current.exhausted).toBe(false);
+    expect(alert).toHaveBeenCalled();
   });
 });

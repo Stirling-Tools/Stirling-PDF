@@ -7255,19 +7255,25 @@ before = "Set"
 title = "SaaS login not configured"
 
 [portal.accountLink.connect]
+adminRequired = "Ask your server administrator to open Usage & billing and link a Stirling account for more monthly credits. Manual PDF tools are still available."
+adminTitle = "Ask your server administrator"
 close = "Close"
-exhaustedLede = "This server has used its free credits for the month. They reset when the period rolls over. Connecting a Stirling account adds a further monthly allowance on top."
+copied = "Copied"
+copyAdminMessage = "Copy message for administrator"
+exhaustedLede = "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance."
 notNow = "Not now"
 start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
 
 [portal.accountLink.connect.benefits]
-creditsDetail = "500 free per month"
-creditsLabel = "Credits"
-processorDetail = "Pipelines, policies, sources and audit"
-processorLabel = "Processor"
-teamsDetail = "Free for up to 5 users"
-teamsLabel = "Teams"
+billingDetail = "Manage usage, billing and linked servers together"
+billingLabel = "One account"
+creditsDetail = "Access your team’s free monthly allowance"
+creditsLabel = "Monthly credits"
+processingDetail = "Buy more credits for API, AI and automation as you grow"
+processingLabel = "More processing"
+teamsDetail = "Add more users with a paid Team plan"
+teamsLabel = "Larger teams"
 
 [portal.accountLink.connect.callback]
 linkedNotSignedIn = "You are not signed in to Stirling in this browser, so usage and billing will ask you to sign in."
@@ -7341,7 +7347,7 @@ never = "never"
 [portal.accountLink.modal]
 cancel = "Cancel"
 continueReauth = "Sign in again"
-exhaustedTitle = "Add more monthly credits"
+exhaustedTitle = "Keep your workflows running"
 linkTitle = "Connect your Stirling account"
 noAuthorizeUrl = "Stirling did not return somewhere to continue. Try again in a moment."
 reauthTitle = "Sign in again"
@@ -7352,6 +7358,9 @@ after = "so this server can finish the connection when you come back."
 and = "and"
 before = "Set"
 title = "Stirling connection not configured"
+
+[portal.accountLink.notice]
+openFailed = "Could not open your browser. Open Usage & billing on your connected server to link an account."
 
 [portal.accountLink.panel]
 instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."
@@ -7365,10 +7374,11 @@ generic = "Couldn't load the team's linked instances. Try again in a moment."
 title = "Couldn't load linked instances"
 
 [portal.accountLink.rail]
-cta = "Connect"
-later = "Not now"
-sub = "Adds monthly credits and room for more users. Everything on this server already works without one."
-title = "Connect your Stirling account"
+adminCta = "How to get more credits"
+adminSub = "Ask your server administrator to link a Stirling account for more credits. Manual PDF tools are still available."
+exhaustedCta = "Link account for more credits"
+exhaustedSub = "Link for monthly credits, shared billing and the option to grow with a Team plan."
+exhaustedTitle = "This server’s free credits are used up"
 
 [portal.accountLink.state]
 free = "Editor plan"
@@ -9993,11 +10003,15 @@ walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 
 [portal.usage.freeTier]
 adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
 connect = "Connect a Stirling account"
 connectBody = "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor."
 connectTitle = "This server has no Stirling account"
 loadError = "Couldn't read this server's credit usage. Try again in a moment."
 loadErrorTitle = "Couldn't load credit usage"
+resets = "Resets {{date}}"
 
 [portal.usage.sessionExpired]
 action = "Sign in again"

@@ -34,6 +34,7 @@ import type {
   PolicyRunView,
 } from "@app/services/policyPipeline";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import { reportFreeTierExhausted } from "@app/services/accountLinkBlock";
 import {
   dispatchableFileId,
   type DispatchableFileId,
@@ -232,6 +233,13 @@ export function usePolicyAutoRun(): void {
       // Read now rather than leaving them a poll interval to hear about their own upload.
       if (view.status === "FAILED") refreshNotificationsNow();
       const code = view.errorCode;
+      if (code === "FREE_TIER_EXHAUSTED") {
+        if (!firedLimitModal.current.has(view.runId)) {
+          firedLimitModal.current.add(view.runId);
+          reportFreeTierExhausted("background");
+        }
+        return;
+      }
       if (code !== "PAYG_LIMIT_REACHED" && code !== "FEATURE_DEGRADED") return;
       if (firedLimitModal.current.has(view.runId)) return;
       firedLimitModal.current.add(view.runId);
@@ -352,7 +360,10 @@ export function usePolicyAutoRun(): void {
           run,
           () =>
             classificationLabelTargetStubs(run.fileId, fileStubsRef.current),
-          { updateStirlingFileStub, bumpRevision },
+          {
+            updateStirlingFileStub,
+            bumpRevision,
+          },
         ).finally(() => importing.current.delete(run.runId));
         continue;
       }

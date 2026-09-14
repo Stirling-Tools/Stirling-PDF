@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Banner, Spinner } from "@app/ui";
 import { ConnectDoneSlide } from "@portal/components/account-link/connect/ConnectDoneSlide";
-import "@portal/components/account-link/connect/connect.css";
+import "@app/components/account-link/connect.css";
 
 /** Outcomes of returning from the approval page. */
 export type ConnectCallbackState =

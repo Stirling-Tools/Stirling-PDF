@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { consumeAccountLinkReturn } from "@portal/services/accountLinkReturn";
 import type { AccountLinkReturn } from "@portal/components/account-link/ConnectCallbackHost";
 
 /**
@@ -34,7 +34,10 @@ export default function ConnectCallback() {
       refreshToken: params.get("refresh_token"),
     };
     // Router state, not the URL: the tokens are live and must not be re-shareable.
-    navigate(PORTAL_BASENAME, { replace: true, state: { accountLinkReturn } });
+    navigate(consumeAccountLinkReturn(), {
+      replace: true,
+      state: { accountLinkReturn },
+    });
   }, [navigate]);
 
   return null;

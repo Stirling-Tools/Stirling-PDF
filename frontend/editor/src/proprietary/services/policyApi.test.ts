@@ -64,4 +64,17 @@ describe("runStoredPolicy", () => {
     expect(sent.name).toBe(source.name);
     expect(await textOf(sent)).toBe(await textOf(source));
   });
+
+  it("marks automatic dispatches as background while manual retries stay foreground", async () => {
+    await runStoredPolicy("policy-1", [document()], "file-1", "background");
+    expect(post.mock.calls.at(-1)?.[2]).toEqual({
+      suppressErrorToast: true,
+      accountLinkBlockSource: "background",
+    });
+    await runStoredPolicy("policy-1", [document()], "file-1");
+    expect(post.mock.calls.at(-1)?.[2]).toEqual({
+      suppressErrorToast: true,
+      accountLinkBlockSource: "foreground",
+    });
+  });
 });
