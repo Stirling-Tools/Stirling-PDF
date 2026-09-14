@@ -1,7 +1,7 @@
 package stirling.software.proprietary.service;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.*;
 
 import java.util.*;
 import java.util.concurrent.*;
@@ -21,22 +21,27 @@ import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.accountlink.*;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.*;
 import stirling.software.proprietary.security.repository.OrgOwnerRepository;
 import stirling.software.proprietary.security.service.DatabaseServiceInterface;
 
 @DataJpaTest(properties = "spring.jpa.show-sql=false")
-@Import(OrgOwnerService.class)
+@Import({OrgOwnerService.class, OwnershipHandoverService.class})
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 class OrgOwnerServiceTest {
     @Autowired OrgOwnerService owners;
     @Autowired OrgOwnerRepository ownerRepository;
     @Autowired UserRepository users;
     @Autowired PlatformTransactionManager transactions;
+    @Autowired OwnershipHandoverService handovers;
+    @Autowired DeviceCredentialRepository credentials;
+    @Autowired AccountLinkClient cloud;
 
     @BeforeEach
     void clear() {
+        reset(credentials, cloud);
         new TransactionTemplate(transactions)
                 .executeWithoutResult(
                         s -> {
@@ -195,6 +200,56 @@ class OrgOwnerServiceTest {
         assertEquals(Optional.of(target.getId()), owners.ownerId());
     }
 
+    @Test
+    void linkedHandoverPersistsAndOriginalEndpointEnforcesCloudFirst() throws Exception {
+        User first = user("first", Role.ADMIN.getRoleId(), false, true);
+        User second = user("second", Role.USER.getRoleId(), false, true);
+        second.setEmail("second@example.com");
+        users.saveAndFlush(second);
+        owners.resolveOwner();
+        DeviceCredential device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setTeamId(9L);
+        when(credentials.findCredential()).thenReturn(Optional.of(device));
+        when(cloud.ownership(any(), eq("second@example.com"), isNull(), eq("status"), isNull()))
+                .thenReturn(
+                        new CloudOwnershipStatus(
+                                9L,
+                                "Cloud team",
+                                10L,
+                                20L,
+                                2L,
+                                true,
+                                CloudOwnershipStatus.State.READY));
+        assertThrows(
+                ResponseStatusException.class, () -> owners.transfer(second.getId(), auth(first)));
+        handovers.prepare(second.getId(), auth(first));
+        assertEquals(
+                second.getId(), ownerRepository.findById(1L).orElseThrow().getHandoverTargetId());
+        assertThrows(
+                ResponseStatusException.class, () -> owners.transfer(second.getId(), auth(first)));
+        assertEquals(Optional.of(first.getId()), owners.ownerId());
+        when(cloud.ownership(any(), eq("second@example.com"), isNull(), eq("status"), isNull()))
+                .thenReturn(
+                        new CloudOwnershipStatus(
+                                9L,
+                                "Cloud team",
+                                20L,
+                                20L,
+                                2L,
+                                true,
+                                CloudOwnershipStatus.State.TRANSFERRED));
+        owners.transfer(second.getId(), auth(first));
+        assertEquals(Optional.of(second.getId()), owners.ownerId());
+        assertNull(ownerRepository.findById(1L).orElseThrow().getHandoverTargetId());
+        assertEquals(
+                Role.ADMIN.getRoleId(),
+                users.findById(first.getId()).orElseThrow().getRolesAsString());
+        assertEquals(
+                Role.ADMIN.getRoleId(),
+                users.findById(second.getId()).orElseThrow().getRolesAsString());
+    }
+
     @SpringBootConfiguration
     @EntityScan(
             basePackages = {
@@ -207,6 +262,16 @@ class OrgOwnerServiceTest {
                 "stirling.software.proprietary.security.repository"
             })
     static class TestApp {
+        @Bean
+        DeviceCredentialRepository credentials() {
+            return mock(DeviceCredentialRepository.class);
+        }
+
+        @Bean
+        AccountLinkClient cloud() {
+            return mock(AccountLinkClient.class);
+        }
+
         @Bean
         AuditService auditService() {
             return mock(AuditService.class);

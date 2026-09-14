@@ -45,6 +45,9 @@ public class OrgOwnerService {
     private final ObjectProvider<DatabaseServiceInterface> database;
     private final ObjectProvider<AuditService> audit;
 
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    private OwnershipHandoverService handovers;
+
     private boolean saas() {
         return environment.acceptsProfiles(Profiles.of("saas"));
     }
@@ -242,6 +245,7 @@ public class OrgOwnerService {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
                     "Choose an enabled user who has completed first login.");
+        if (handovers != null) handovers.validateCompletion(row, targetId);
         promote(target);
         assign(row, target, "TRANSFER", authentication.getName());
     }
@@ -264,6 +268,7 @@ public class OrgOwnerService {
         row.setOwnerUsername(target.getUsername());
         row.setAssignedAt(LocalDateTime.now());
         row.setAssignedReason(reason);
+        OwnershipHandoverService.clear(row);
         audit.getObject().audit(actor, AuditEventType.ORG_OWNERSHIP_CHANGE, data, AuditLevel.BASIC);
         log.info("Organization owner is {} ({})", target.getUsername(), reason);
         if (target.isFirstLogin())

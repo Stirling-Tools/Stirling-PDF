@@ -51,8 +51,52 @@ class AccountLinkClientTest {
         return resp;
     }
 
-    // register() is gone with the JWT relay, and with it the two tests that asserted this client
-    // sends an Authorization: Bearer header. Nothing here carries a user token any more.
+    @Test
+    @SuppressWarnings("unchecked")
+    void ownershipReadsUseDeviceIdentityAndMutationsAlsoCarryHumanAuthorization() throws Exception {
+        HttpResponse<String> resp =
+                response(
+                        200,
+                        "{\"teamId\":9,\"teamName\":\"Team\",\"leaderUserId\":1,\"targetUserId\":2,\"linkedInstances\":3,\"subscribed\":true,\"state\":\"READY\"}");
+        ArgumentCaptor<HttpRequest> requests = ArgumentCaptor.forClass(HttpRequest.class);
+        when(httpClient.send(requests.capture(), any(HttpResponse.BodyHandler.class)))
+                .thenReturn(resp);
+        DeviceCredential device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setDeviceSecret("secret");
+        device.setTeamId(9L);
+        assertEquals(
+                CloudOwnershipStatus.State.READY,
+                client.ownership(device, "new@example.com", null, "status", null).state());
+        assertEquals("/api/v1/instance/ownership/status", requests.getValue().uri().getPath());
+        assertEquals(
+                java.util.Optional.empty(),
+                requests.getValue().headers().firstValue("Authorization"));
+        client.ownership(device, "new@example.com", "Bearer human", "transfer", 1L);
+        HttpRequest transfer = requests.getValue();
+        assertEquals("/api/v1/account-link/ownership/transfer", transfer.uri().getPath());
+        assertEquals("Bearer human", transfer.headers().firstValue("Authorization").orElseThrow());
+        assertEquals("device", transfer.headers().firstValue("X-Device-Id").orElseThrow());
+        assertEquals("secret", transfer.headers().firstValue("X-Device-Secret").orElseThrow());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void ownershipRejectsUpstreamFailureInsteadOfAssumingSuccess() throws Exception {
+        HttpResponse<String> resp = response(503, "unavailable");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+        DeviceCredential device = new DeviceCredential();
+        device.setDeviceId("device");
+        device.setDeviceSecret("secret");
+        assertEquals(
+                503,
+                assertThrows(
+                                AccountLinkClient.UpstreamException.class,
+                                () ->
+                                        client.ownership(
+                                                device, "new@example.com", null, "status", null))
+                        .status());
+    }
 
     @Test
     @SuppressWarnings("unchecked")

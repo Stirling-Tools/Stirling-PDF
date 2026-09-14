@@ -51,6 +51,7 @@ export function useUsersData(): UsersData {
     queryClient.invalidateQueries({ queryKey: qk.usersGrants(tier) });
     queryClient.invalidateQueries({ queryKey: qk.usersTeams(tier) });
     queryClient.invalidateQueries({ queryKey: qk.teamMy() });
+    queryClient.invalidateQueries({ queryKey: qk.wallet(true) });
   }, [queryClient, tier]);
 
   return {

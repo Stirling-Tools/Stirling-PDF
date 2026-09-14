@@ -38,7 +38,9 @@ public class AccountLinkService {
      * Unlinks this instance — best-effort tells SaaS to revoke first (so the row gets {@code
      * revoked_at} set), then clears locally regardless.
      */
+    @org.springframework.transaction.annotation.Transactional
     public void unlink() {
+        credentialStore.assertNoHandover();
         credentialStore
                 .get()
                 .ifPresent(

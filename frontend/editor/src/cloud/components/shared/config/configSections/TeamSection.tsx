@@ -8,7 +8,6 @@ import {
   Table,
   Badge,
   Menu,
-  Modal,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -16,8 +15,12 @@ import { StatusBadge } from "@app/ui/StatusBadge";
 import { useTranslation } from "react-i18next";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
+import {
+  OwnershipTransferModal,
+  type CloudOwnershipStatus,
+} from "@app/components/shared/ownership/OwnershipTransferModal";
 import apiClient from "@app/services/apiClient";
+import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 
 const TeamSection: React.FC = () => {
   const { t } = useTranslation();
@@ -225,62 +228,44 @@ const TeamSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <Modal
-        opened={transferTarget !== null}
-        onClose={() => !transferring && setTransferTarget(null)}
-        title={t("team.transferTitle", "Transfer team ownership")}
-        zIndex={Z_INDEX_OVER_CONFIG_MODAL + 1}
-      >
-        <Stack>
-          {error && <Alert color="red">{error}</Alert>}
-          <Text>
-            {t(
-              "team.transferBody",
-              "Make {{email}} the team owner? They will control team membership and organization billing settings. You will become a member. The team's subscription and wallet stay with the team.",
-              { email: transferTarget?.email },
-            )}
-          </Text>
-          <Group justify="flex-end">
-            <Button
-              variant="tertiary"
-              disabled={transferring}
-              onClick={() => setTransferTarget(null)}
-            >
-              {t("common.cancel", "Cancel")}
-            </Button>
-            <Button
-              accent="danger"
-              disabled={transferring}
-              onClick={async () => {
-                if (!transferTarget) return;
-                setTransferring(true);
-                setError(null);
-                try {
-                  await transferLeadership(transferTarget.id);
-                  setTransferTarget(null);
-                  setSuccess(
-                    t(
-                      "team.transferSuccess",
-                      "Team ownership transferred. Your role is now member.",
-                    ),
-                  );
-                } catch {
-                  setError(
-                    t(
-                      "team.transferError",
-                      "Ownership could not be transferred. Refresh the team and try again.",
-                    ),
-                  );
-                } finally {
-                  setTransferring(false);
-                }
-              }}
-            >
-              {t("team.makeOwner", "Make owner")}
-            </Button>
-          </Group>
-        </Stack>
-      </Modal>
+      {transferTarget && (
+        <OwnershipTransferModal
+          key={transferTarget.id}
+          adapter={{
+            local: false,
+            prepare: async () => ({
+              targetId: transferTarget.id,
+              targetName: transferTarget.email,
+              targetEmail: transferTarget.email,
+              cloud: (
+                await apiClient.post<CloudOwnershipStatus>(
+                  `/api/v1/team/${currentTeam.teamId}/ownership/status`,
+                  { email: transferTarget.email },
+                )
+              ).data,
+            }),
+            transferCloud: async (state) => {
+              await transferLeadership(
+                transferTarget.email,
+                state.cloud!.leaderUserId,
+              );
+              return {
+                ...state,
+                cloud: { ...state.cloud!, state: "TRANSFERRED" },
+              };
+            },
+          }}
+          onClose={() => setTransferTarget(null)}
+          onTransferred={() =>
+            setSuccess(
+              t(
+                "team.transferSuccess",
+                "Team ownership transferred. Your role is now member.",
+              ),
+            )
+          }
+        />
+      )}
 
       {!isPersonalTeam &&
         teamMembers.length > 0 &&

@@ -221,9 +221,34 @@ public class AccountLinkClient {
         }
     }
 
-    /**
-     * Revokes this instance's own credential on the SaaS side, authenticated by that credential.
-     */
+    /** Status uses the device identity; invite and transfer additionally require a human bearer. */
+    public CloudOwnershipStatus ownership(
+            DeviceCredential credential, String email, String token, String action, Long leaderId)
+            throws IOException {
+        ObjectNode body = mapper.createObjectNode();
+        body.put("email", email);
+        if (leaderId != null) body.put("expectedLeaderId", leaderId);
+        String path =
+                "status".equals(action)
+                        ? "/api/v1/instance/ownership/status"
+                        : "/api/v1/account-link/ownership/" + action;
+        HttpRequest.Builder request =
+                HttpRequest.newBuilder()
+                        .uri(uri(path))
+                        .header(HEADER_DEVICE_ID, credential.getDeviceId())
+                        .header(HEADER_DEVICE_SECRET, credential.getDeviceSecret())
+                        .header("Content-Type", "application/json")
+                        .timeout(timeout())
+                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)));
+        if (token != null && !token.isBlank()) request.header("Authorization", token);
+        HttpResponse<String> response = send(request.build());
+        if (response.statusCode() / 100 != 2) {
+            throw new UpstreamException(response.statusCode(), response.body());
+        }
+        return mapper.readValue(response.body(), CloudOwnershipStatus.class);
+    }
+
+    /** Revokes only the instance presenting this device credential. */
     public boolean revokeSelf(String deviceId, String deviceSecret) {
         try {
             HttpRequest request =
