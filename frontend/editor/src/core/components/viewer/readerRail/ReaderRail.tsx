@@ -149,10 +149,6 @@ export function ReaderRail() {
         .map((file) => ({ id: file.fileId as string, name: file.name })),
     [files],
   );
-  const currentName =
-    documents.find((doc) => doc.id === activeFileId)?.name ??
-    documents[0]?.name ??
-    "";
 
   const registered = useMemo(
     () => new Map(buttons.map((button) => [button.id, button])),
@@ -205,23 +201,14 @@ export function ReaderRail() {
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
-            {currentName && <Menu.Label>{currentName}</Menu.Label>}
             {documents.map((doc) => (
               <Menu.Item
                 key={doc.id}
+                className="reader-rail__doc"
+                // The stripe is what marks the one you are reading, so the row
+                // says it rather than a tick column beside every name.
+                data-current={doc.id === activeFileId || undefined}
                 onClick={() => setActiveFileId(doc.id)}
-                leftSection={
-                  doc.id === activeFileId ? (
-                    <LocalIcon
-                      icon="check-rounded"
-                      width={SIZE}
-                      height={SIZE}
-                    />
-                  ) : (
-                    // Holds the column so the names line up either way.
-                    <span className="reader-rail__tick-space" />
-                  )
-                }
               >
                 <span className="reader-rail__doc-name">{doc.name}</span>
               </Menu.Item>

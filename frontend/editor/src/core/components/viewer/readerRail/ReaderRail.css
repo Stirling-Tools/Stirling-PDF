@@ -38,13 +38,26 @@
   flex-shrink: 0;
 }
 
-/* Holds the tick column so names line up whether or not a row is the current one. */
-.reader-rail__tick-space {
-  display: inline-block;
-  width: 1.125rem;
-}
-
 /* A long filename wraps rather than widening the dropdown past its set width. */
 .reader-rail__doc-name {
   overflow-wrap: anywhere;
+}
+
+/* The document you are reading, marked down its leading edge. The stripe is
+   inset rather than drawn as a border so the row's own hover fill still reaches
+   the edge of the dropdown. */
+.reader-rail__doc[data-current] {
+  position: relative;
+  background: var(--c-primary-tint);
+  font-weight: 500;
+}
+
+.reader-rail__doc[data-current]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0.25rem;
+  inset-inline-start: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--c-primary);
 }
