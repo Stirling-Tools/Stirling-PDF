@@ -378,6 +378,28 @@ describe("NotificationBell", () => {
     expect(screen.getByText("Unrecognised failure")).toBeTruthy();
   });
 
+  it("re-reads the list once an action has run, rather than waiting for the next poll", async () => {
+    // A resolution closes its row server-side. The panel polls every 30s, so without a re-read
+    // the row a reader just fixed stays on screen, and reopening the panel does not shift it.
+    const run = vi.fn();
+    h.specs = { REPAIR: { available: () => true, run } };
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Damaged document", { actions: [offer("REPAIR")] }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // Repaired: the server no longer reports it.
+    fetchNotifications.mockResolvedValue([]);
+    fireEvent.click(
+      screen.getByRole("button", { name: "REPAIR: Damaged document" }),
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByText("Damaged document")).toBeNull(),
+    );
+  });
+
   it("closes the panel on its way to a destination behind it", async () => {
     const run = vi.fn();
     h.specs = { VIEW_FILE: { available: () => true, run, closesPanel: true } };

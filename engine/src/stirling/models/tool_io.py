@@ -220,6 +220,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO
     ),
     ToolEndpoint.COMPRESS_PDF: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.CREATE_PORTFOLIO: ToolIOSpec(accepts=[ToolFormat.ANY], produces=ToolFormat.PDF, arity=ToolArity.MISO),
     ToolEndpoint.DELETE_ATTACHMENT: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.EXTRACT_ATTACHMENTS: ToolIOSpec(
         accepts=[ToolFormat.PDF], produces=ToolFormat.ZIP, arity=ToolArity.SISO
@@ -232,6 +233,7 @@ TOOL_IO: dict[ToolEndpoint, ToolIOSpec] = {
         accepts=[ToolFormat.PDF], produces=ToolFormat.ANY, arity=ToolArity.SISO
     ),
     ToolEndpoint.FLATTEN: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
+    ToolEndpoint.FLATTEN_PORTFOLIO: ToolIOSpec(accepts=[ToolFormat.PDF], produces=ToolFormat.PDF, arity=ToolArity.SISO),
     ToolEndpoint.OCR_PDF: ToolIOSpec(
         accepts=[ToolFormat.PDF],
         produces=ToolFormat.PDF,
