@@ -9,8 +9,8 @@ import { useFleetStats } from "@portal/queries/infrastructure";
  * "Free PDF Editors" team-fleet card. Editors-deployed / active-this-month /
  * PDFs-edited come from the instance's usage endpoint
  * ({@code GET /api/v1/usage/fleet-stats}), derived from the audit trail filtered
- * to free UI tool runs. A figure the backend can't compute (e.g. EE auditing is
- * off) arrives as null and renders "N/A". Cost is always $0.
+ * to free UI tool runs. A figure the backend can't compute (e.g. document recording is
+ * off) arrives as null and renders "N/A". Activity covers the last 30 days of retained history.
  */
 function fmtMetric(value: number | null | undefined, loading: boolean): string {
   if (loading) return "—";
@@ -52,12 +52,15 @@ export function FreePdfEditorsCard() {
           <MetricCard
             label={t(
               "portal.billing.freeEditors.activeThisMonth",
-              "Active this month",
+              "Active editors (30 days)",
             )}
             value={fmtMetric(data?.activeThisMonth, loading)}
           />
           <MetricCard
-            label={t("portal.billing.freeEditors.pdfsEdited", "PDFs edited")}
+            label={t(
+              "portal.billing.freeEditors.pdfsEdited",
+              "Edit operations (30 days)",
+            )}
             value={fmtMetric(data?.pdfsProcessed, loading)}
           />
           <MetricCard
