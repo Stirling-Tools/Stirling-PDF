@@ -7,6 +7,7 @@ import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { Logo } from "@app/ui/Logo";
 import { LandingActions } from "@app/components/shared/LandingActions";
+import { CreateProcessingFolderButton } from "@app/components/policies/CreateProcessingFolderButton";
 import "@app/components/shared/LandingPage.css";
 
 const LandingPage = () => {
@@ -93,6 +94,7 @@ const LandingPage = () => {
             onFileSelect={handleFileSelect}
           />
         </div>
+        <CreateProcessingFolderButton placement="home" />
       </Dropzone>
 
       <MobileUploadModal

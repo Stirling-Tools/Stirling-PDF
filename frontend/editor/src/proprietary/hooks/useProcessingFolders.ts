@@ -19,6 +19,7 @@ import {
   deliverSweepResults,
 } from "@app/services/processingRunDelivery";
 import { folderKind, type FolderRecord } from "@app/types/folder";
+import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
@@ -41,6 +42,8 @@ export type {
 /** One shared list for every consumer: the files page calls this once per folder row, so
  *  per-instance state would mean a request per row and stale siblings after a mutation. */
 let folders: ProcessingFolder[] = [];
+let loaded = false;
+let loadError: string | null = null;
 let inFlight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
@@ -61,12 +64,15 @@ function load(force = false): Promise<void> {
   const request = fetchProcessingFolders()
     .then((next) => {
       folders = next;
+      loadError = null;
     })
-    .catch(() => {
+    .catch((error: unknown) => {
       // Storage or login off, or unauthenticated: the files page works without these.
       folders = [];
+      loadError = extractErrorMessage(error);
     })
     .finally(() => {
+      loaded = true;
       if (inFlight === request) inFlight = null;
       listeners.forEach((listener) => listener());
     });
@@ -87,6 +93,8 @@ function directoryKey(directory: string): string {
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const loading = !loaded;
+  const error = loadError;
   const { addFiles } = useFileHandler();
 
   useEffect(() => {
@@ -305,6 +313,8 @@ export function useProcessingFolders(): ProcessingFoldersApi {
 
   return useMemo(
     () => ({
+      loading,
+      loadError: error,
       stateFor,
       recordFor: recordSummaryFor,
       enabledFolderIds,
@@ -320,6 +330,8 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       sweep,
     }),
     [
+      loading,
+      error,
       stateFor,
       recordSummaryFor,
       enabledFolderIds,

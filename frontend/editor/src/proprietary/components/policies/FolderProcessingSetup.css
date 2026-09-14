@@ -1,117 +1,211 @@
-.folder-setup__title {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.45rem;
-}
-
-.folder-setup__body {
+.folder-setup__progress {
   display: flex;
-  flex-direction: column;
-  gap: 0.8rem;
+  gap: 1.5rem;
+  list-style: none;
+  margin: 0 0 1.5rem;
+  padding: 0 0 1rem;
+  border-bottom: 1px solid var(--c-border-subtle);
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
 }
-
-.folder-setup__lead {
-  margin: 0;
-  font-size: 0.85rem;
-  color: var(--c-text-muted);
-}
-
-.folder-setup__recipes {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+.folder-setup__progress li,
+.folder-setup__inline,
+.folder-setup__review-steps li {
+  display: flex;
+  align-items: center;
   gap: 0.5rem;
 }
-
-/* A miniature OptionCard: same anatomy (icon tile, title, clamped blurb),
-   sized for a dialog and carrying a selected state the gallery doesn't need. */
-.folder-setup__recipe {
+.folder-setup__progress li > span,
+.folder-setup__review-steps li > span {
+  display: grid;
+  place-items: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--c-surface-sunken);
+  color: var(--c-text-muted);
+  font-size: 0.75rem;
+}
+.folder-setup__progress [aria-current="step"] {
+  color: var(--c-text);
+  font-weight: 600;
+}
+.folder-setup__progress [aria-current="step"] > span {
+  background: var(--c-primary);
+  color: var(--c-text-on-primary);
+}
+.folder-setup__heading {
+  color: var(--c-text);
+  font-size: 1rem;
+  font-weight: 600;
+  margin: 0 0 0.5rem;
+}
+.folder-setup__lead {
+  margin: 0;
+  color: var(--c-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.folder-setup__picker {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+.folder-setup__destination {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+  color: var(--c-text);
+}
+.folder-setup__destination > div {
+  flex: 1;
+  min-width: 0;
+  font-size: 0.875rem;
+}
+.folder-setup__path {
+  display: block;
+  margin: 0.25rem 0 0;
+  overflow-wrap: anywhere;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+}
+.folder-setup__presets {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+.folder-setup__preset {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 0.3rem;
-  padding: 0.6rem 0.7rem;
-  background: var(--c-surface-raised);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-md, 8px);
+  gap: 0.625rem;
+  padding: 1rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-md);
+  background: var(--c-surface);
+  color: var(--c-text);
+  font: inherit;
   text-align: left;
   cursor: pointer;
-  font: inherit;
-  color: var(--c-text);
 }
-
-.folder-setup__recipe.is-selected {
+.folder-setup__preset[aria-pressed="true"] {
   border-color: var(--c-primary);
-  background: var(--c-primary-subtle, var(--c-surface));
-}
-
-.folder-setup__recipe:focus-visible {
-  outline: 2px solid var(--c-primary);
-  outline-offset: 1px;
-}
-
-.folder-setup__recipe-icon {
-  width: 1.9rem;
-  height: 1.9rem;
-  border-radius: var(--radius-md, 8px);
   background: var(--c-primary-subtle);
-  color: var(--c-accent-text, var(--c-primary));
+}
+.folder-setup__preset:hover:not(:disabled) {
+  border-color: var(--c-primary);
+}
+.folder-setup__preset:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.folder-setup__preset:focus-visible {
+  outline: 2px solid var(--c-primary);
+  outline-offset: 3px;
+}
+.folder-setup__preset strong {
+  font-size: 0.875rem;
+}
+.folder-setup__preset span {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--c-text-muted);
+}
+.folder-setup__chain {
+  counter-reset: processing-step;
+}
+.folder-setup__chain .portal-policies__capability[data-on] {
+  counter-increment: processing-step;
+  display: grid;
+  grid-template-columns: 1.5rem minmax(0, 1fr);
+  column-gap: 0.75rem;
+}
+.folder-setup__chain .portal-policies__capability[data-on]::before {
+  content: counter(processing-step);
   display: grid;
   place-items: center;
-}
-
-.folder-setup__recipe-name {
-  font-size: 0.85rem;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  background: var(--c-primary-subtle);
+  font-size: 0.8125rem;
   font-weight: 600;
+  color: var(--c-accent-fg);
 }
-
-.folder-setup__recipe-blurb {
-  font-size: 0.72rem;
-  line-height: 1.4;
-  color: var(--c-text-subtle);
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+.folder-setup__chain .portal-policies__capability-config {
+  grid-column: 2;
 }
-
-.folder-setup__steps {
+.folder-setup details > summary {
+  cursor: pointer;
+  color: var(--c-accent-fg);
+  font-size: 0.8125rem;
+}
+.folder-setup details[open] > summary {
+  margin-bottom: 1rem;
+}
+.folder-setup__review-steps {
+  list-style: none;
   display: flex;
   flex-direction: column;
+  gap: 0.875rem;
+  padding: 0;
+  margin: 1rem 0 1.5rem;
+  color: var(--c-text);
+  font-size: 0.875rem;
 }
-
-.folder-setup__step {
+.folder-setup__outcome {
+  margin: 0;
+  padding: 1rem;
+  background: var(--c-surface-sunken);
+  border-radius: var(--radius-md);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+}
+.folder-setup__outcome > div + div {
+  margin-top: 0.875rem;
+}
+.folder-setup__outcome dt {
+  color: var(--c-text);
+  font-weight: 600;
+}
+.folder-setup__outcome dd {
+  margin: 0.25rem 0 0;
+  color: var(--c-text-muted);
+}
+.folder-setup__foot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0.5rem 0.15rem;
-  border-bottom: 1px solid var(--c-border);
+  width: 100%;
 }
-
-.folder-setup__step:last-child {
-  border-bottom: 0;
+.folder-setup-cta--home {
+  margin-top: 1.5rem;
+  text-align: center;
 }
-
-.folder-setup__step-label {
-  display: flex;
-  flex-direction: column;
-  font-size: 0.86rem;
+.folder-setup-cta--home p {
+  margin: 0.25rem 0 0;
+  color: var(--c-text-muted);
+  font-size: 0.8125rem;
 }
-
-.folder-setup__step-label small {
-  color: var(--c-text-subtle);
-  font-size: 0.75rem;
+.folder-setup-cta--sidebar {
+  padding: 0.5rem 0;
 }
-
-.folder-setup__error {
-  margin: 0;
-  font-size: 0.82rem;
-  color: var(--c-danger, var(--c-text));
-}
-
-.folder-setup__foot {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 0.5rem;
+@media (max-width: 36rem) {
+  .folder-setup__presets {
+    grid-template-columns: 1fr;
+  }
+  .folder-setup__preset {
+    gap: 0.375rem;
+    padding: 0.75rem;
+  }
+  .folder-setup__progress {
+    gap: 0.75rem;
+  }
 }

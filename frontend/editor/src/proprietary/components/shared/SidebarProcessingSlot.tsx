@@ -2,16 +2,18 @@ import { type SidebarProcessingSlotProps } from "@core/components/shared/Sidebar
 export { type SidebarProcessingSlotProps };
 
 import { DownloadsProcessingWizard } from "@app/components/policies/DownloadsProcessingWizard";
+import { CreateProcessingFolderButton } from "@app/components/policies/CreateProcessingFolderButton";
 
 /**
- * The Downloads offer, beside the sidebar's other file-entry actions — one more way of
- * getting files in. Not gated on policies being available: it gates itself by asking the
- * server for a readable Downloads directory, and renders nothing without one. Hidden on
- * the collapsed rail — it is a sentence, not an icon.
+ * Creation stays available on the collapsed rail; the sentence-length Downloads offer does not.
  */
 export function SidebarProcessingSlot({
   collapsed,
 }: SidebarProcessingSlotProps) {
-  if (collapsed) return null;
-  return <DownloadsProcessingWizard />;
+  return (
+    <>
+      <CreateProcessingFolderButton placement="sidebar" collapsed={collapsed} />
+      {!collapsed && <DownloadsProcessingWizard />}
+    </>
+  );
 }

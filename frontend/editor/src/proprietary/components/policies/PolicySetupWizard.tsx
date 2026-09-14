@@ -31,6 +31,8 @@ import "@app/components/policies/PolicySetupWizard.css";
 /** What a host frame needs to wrap the form: the middle content plus submit state. */
 export interface PolicySetupFrame {
   content: ReactNode;
+  /** Current enabled steps, in execution order, for a host's review screen. */
+  steps: PipelineStep[];
   submit: () => void;
   submitting: boolean;
   error: string | null;
@@ -75,6 +77,8 @@ interface PolicySetupWizardProps {
   formatError?: (e: unknown) => string;
   /** Whether the org-enforcement choice applies on this surface (it doesn't for folders). */
   enforceControl?: boolean;
+  /** Folder setup shows an ordered chain with expandable per-step settings. */
+  folderSetup?: boolean;
   /** False locks saving and the enforce toggle. Defaults true: only the portal gates on the role. */
   canManagePolicies?: boolean;
   /** The role check is still in flight, so the manager-only tooltip is withheld. */
@@ -85,6 +89,25 @@ interface PolicySetupWizardProps {
 }
 
 type ToolState = PolicyToolStep & { enabled: boolean };
+
+function StepSettings({
+  collapsible,
+  label,
+  children,
+}: {
+  collapsible: boolean;
+  label: string;
+  children: ReactNode;
+}) {
+  return collapsible ? (
+    <details className="portal-policies__capability-config">
+      <summary>{label}</summary>
+      {children}
+    </details>
+  ) : (
+    <div className="portal-policies__capability-config">{children}</div>
+  );
+}
 
 /** Resolve each field's effective value: saved override, else definition default. */
 function resolveFieldValues(
@@ -248,6 +271,7 @@ export function PolicySetupWizard({
   routingConfig,
   formatError,
   enforceControl,
+  folderSetup,
   canManagePolicies,
   permissionsLoading,
   children,
@@ -265,6 +289,7 @@ export function PolicySetupWizard({
       routingConfig={routingConfig}
       formatError={formatError}
       enforceControl={enforceControl}
+      folderSetup={folderSetup}
       canManagePolicies={canManagePolicies}
       permissionsLoading={permissionsLoading}
     >
@@ -283,6 +308,7 @@ function PolicySetupWizardBody({
   routingConfig,
   formatError,
   enforceControl = true,
+  folderSetup = false,
   canManagePolicies = true,
   permissionsLoading = false,
   children,
@@ -302,6 +328,7 @@ function PolicySetupWizardBody({
   }) => ReactNode;
   formatError?: (e: unknown) => string;
   enforceControl?: boolean;
+  folderSetup?: boolean;
   canManagePolicies?: boolean;
   permissionsLoading?: boolean;
   children?: (frame: PolicySetupFrame) => ReactNode;
@@ -310,7 +337,7 @@ function PolicySetupWizardBody({
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
-  const isClassification = category.id === "classification";
+  const isClassification = !folderSetup && category.id === "classification";
   const isRouting = category.id === "routing";
   const [routing, setRouting] = useState<RoutingSetup>(() => ({
     sourceId: policy?.state.sources?.[0] ?? "",
@@ -452,7 +479,7 @@ function PolicySetupWizardBody({
   const canSubmit = enabledTools.length > 0;
   const content = (
     <>
-      {error && (
+      {error && !folderSetup && (
         <Banner
           tone="danger"
           description={error}
@@ -484,12 +511,22 @@ function PolicySetupWizardBody({
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(
-              "portal.policies.wizard.workflow.description",
-              "Choose what this policy does to every document it processes.",
+              folderSetup
+                ? "processingFolders.setup.stepsHint"
+                : "portal.policies.wizard.workflow.description",
+              folderSetup
+                ? "Steps run from top to bottom. Expand a step to adjust its settings."
+                : "Choose what this policy does to every document it processes.",
             )}
           </p>
           <Card padding="none">
-            <div className="portal-policies__capabilities">
+            <div
+              className={
+                folderSetup
+                  ? "portal-policies__capabilities folder-setup__chain"
+                  : "portal-policies__capabilities"
+              }
+            >
               {visibleTools.map((tl) => {
                 const meta = CAPABILITY_META[tl.toolId];
                 const label = meta
@@ -518,38 +555,55 @@ function PolicySetupWizardBody({
                         />
                       }
                     />
-                    {tl.enabled && (
-                      <div className="portal-policies__capability-config">
-                        {tl.toolId === "redact" && (
-                          <PolicyRedactConfig
-                            parameters={tl.params}
-                            onChange={(params) =>
-                              setToolParams("redact", params)
-                            }
-                          />
-                        )}
-                        {tl.toolId === "watermark" && (
-                          <PolicyWatermarkConfig
-                            parameters={tl.params}
-                            onChange={(params) =>
-                              setToolParams("watermark", params)
-                            }
-                          />
-                        )}
-                        {tl.toolId === "pdfa" && (
-                          <PolicyPdfaConfig
-                            parameters={tl.params}
-                            onChange={(params) => setToolParams("pdfa", params)}
-                          />
-                        )}
-                        {tl.toolId === "purviewApplyLabel" &&
-                          purviewConfig?.({
-                            parameters: tl.params,
-                            onChange: (params) =>
-                              setToolParams("purviewApplyLabel", params),
-                          })}
-                      </div>
-                    )}
+                    {tl.enabled &&
+                      (tl.toolId === "redact" ||
+                        tl.toolId === "watermark" ||
+                        tl.toolId === "pdfa" ||
+                        tl.toolId === "purviewApplyLabel" ||
+                        (folderSetup && tl.toolId === "classify")) && (
+                        <StepSettings
+                          collapsible={folderSetup}
+                          label={t(
+                            tl.toolId === "classify"
+                              ? "processingFolders.setup.viewLabels"
+                              : "processingFolders.setup.settings",
+                          )}
+                        >
+                          {folderSetup && tl.toolId === "classify" && (
+                            <ClassificationLabelsSection />
+                          )}
+                          {tl.toolId === "redact" && (
+                            <PolicyRedactConfig
+                              parameters={tl.params}
+                              onChange={(params) =>
+                                setToolParams("redact", params)
+                              }
+                            />
+                          )}
+                          {tl.toolId === "watermark" && (
+                            <PolicyWatermarkConfig
+                              parameters={tl.params}
+                              onChange={(params) =>
+                                setToolParams("watermark", params)
+                              }
+                            />
+                          )}
+                          {tl.toolId === "pdfa" && (
+                            <PolicyPdfaConfig
+                              parameters={tl.params}
+                              onChange={(params) =>
+                                setToolParams("pdfa", params)
+                              }
+                            />
+                          )}
+                          {tl.toolId === "purviewApplyLabel" &&
+                            purviewConfig?.({
+                              parameters: tl.params,
+                              onChange: (params) =>
+                                setToolParams("purviewApplyLabel", params),
+                            })}
+                        </StepSettings>
+                      )}
                   </div>
                 );
               })}
@@ -571,7 +625,14 @@ function PolicySetupWizardBody({
     </>
   );
   if (children) {
-    return children({ content, submit, submitting, error, canSubmit });
+    return children({
+      content,
+      steps: collectResult().steps,
+      submit,
+      submitting,
+      error,
+      canSubmit,
+    });
   }
   return (
     <Modal
