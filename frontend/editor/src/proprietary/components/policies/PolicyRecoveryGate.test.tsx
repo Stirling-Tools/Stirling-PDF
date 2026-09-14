@@ -158,7 +158,7 @@ describe("editor policy recovery", () => {
     expect(
       screen.getByRole("dialog", { name: "Policy enforcement failed" }),
     ).toHaveAttribute("open");
-    expect(screen.getByText("1 file is affected.")).toBeVisible();
+    expect(screen.getByText("1 file affected.")).toBeVisible();
     expect(screen.getByText("failed.pdf")).not.toBeVisible();
     expect(
       screen.getByText("Technical details").closest("details"),
@@ -319,7 +319,7 @@ describe("editor policy recovery", () => {
     harness.files.push(second);
     harness.files.forEach((file) => recordRunStart(failed(file)));
     render(app());
-    expect(screen.getByText("2 files are affected.")).toBeVisible();
+    expect(screen.getByText("2 files affected.")).toBeVisible();
     expect(screen.getByRole("button", { name: "Retry 2 files" })).toBeVisible();
     expect(screen.getAllByRole("button")).toHaveLength(2);
     act(() =>
@@ -332,7 +332,7 @@ describe("editor policy recovery", () => {
         }),
       ),
     );
-    expect(screen.getByText("1 file is affected.")).toBeVisible();
+    expect(screen.getByText("1 file affected.")).toBeVisible();
     expect(screen.getByRole("button", { name: "Retry file" })).toBeVisible();
     expect(screen.getByRole("button", { name: "Close file" })).toBeVisible();
   });
@@ -380,7 +380,7 @@ describe("editor policy recovery", () => {
     act(() =>
       updateRun(`retry-${first.id}`, { status: "COMPLETED", imported: true }),
     );
-    expect(screen.getByText("1 file is affected.")).toBeVisible();
+    expect(screen.getByText("1 file affected.")).toBeVisible();
     expect(
       screen.getByRole("button", { name: "Retrying file..." }),
     ).toBeDisabled();
@@ -411,7 +411,7 @@ describe("editor policy recovery", () => {
         }),
     );
     render(app());
-    expect(screen.getByText("2 files are affected.")).toBeVisible();
+    expect(screen.getByText("2 files affected.")).toBeVisible();
     expect(screen.getAllByRole("button")).toHaveLength(2);
     fireEvent.click(screen.getByRole("button", { name: "Close 2 files" }));
     expect(
