@@ -1,4 +1,4 @@
-import { describe, expect, test, beforeEach } from "vitest";
+import { describe, expect, test, beforeEach, vi } from "vitest";
 import "fake-indexeddb/auto";
 import { expectConsole } from "@app/tests/failOnConsole";
 
@@ -284,6 +284,25 @@ describe("IndexedDB migration (FILES store)", () => {
       TARGET_VERSION,
     );
     indexedDBManager.closeDatabase(DB_NAME);
+  });
+
+  test("fresh install skips the files-store migration walk", async () => {
+    // The reported iOS WebKit crash was migrateFilesStore running openCursor()
+    // on the just-created empty store at oldVersion 0. A new store has nothing
+    // to migrate, so the walk must not run at all.
+    const walk = vi.spyOn(
+      Object.getPrototypeOf(indexedDBManager) as {
+        migrateFilesStore: (...args: unknown[]) => void;
+      },
+      "migrateFilesStore",
+    );
+    try {
+      await indexedDBManager.openDatabase(DATABASE_CONFIGS.FILES);
+      indexedDBManager.closeDatabase(DB_NAME);
+      expect(walk).not.toHaveBeenCalled();
+    } finally {
+      walk.mockRestore();
+    }
   });
 
   test("SaaS v8 -> latest backfills folderId, preserves files, drops orphan stores", async () => {
