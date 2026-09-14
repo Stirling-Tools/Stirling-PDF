@@ -105,6 +105,10 @@ export function ReaderRail() {
   // Through the guard, because closing what you are reading is a way out of it and
   // unsaved changes still deserve their prompt. Storage keeps its copy: this closes
   // the document, it does not delete it. The viewer falls to the next one open.
+  //
+  // Always pressable, and a no-op with nothing open: whether a document is open is
+  // not always something the rail can read correctly, and a control greyed out when
+  // it should not be is worse than one that quietly does nothing.
   const closeDocument = useCallback(() => {
     if (!openFileId) return;
     requestNavigation(() => {
@@ -169,7 +173,6 @@ export function ReaderRail() {
             size="md"
             shape="circle"
             aria-label={closeLabel}
-            disabled={!openFileId}
             onClick={closeDocument}
           >
             <LocalIcon icon="close-rounded" width={SIZE} height={SIZE} />
