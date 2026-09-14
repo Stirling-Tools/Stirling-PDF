@@ -12,7 +12,6 @@ import { NavSurface } from "@app/ui/NavSurface";
 import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
@@ -34,7 +33,6 @@ import {
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
@@ -75,6 +73,9 @@ import {
   clearWatchedFolderDraggedFileIds,
 } from "@app/components/watchedFolders/watchedFolderDragState";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import { FolderTreeSidebar } from "@app/components/filesPage/FolderTreeSidebar";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
+import type { FolderId, FolderRecord } from "@app/types/folder";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import "@app/components/shared/FileSidebar.css";
@@ -102,23 +103,22 @@ export interface FileSidebarProps {
   onOpenSettings?: () => void;
   /** The quick nav rail owns the account control, so the footer drops its own row. */
   accountHoisted?: boolean;
-  /** Accessible name override for the collapse toggle. */
-  toggleAriaLabel?: string;
-  /** Icon override for the collapse toggle (e.g. back-arrow on /files). */
-  toggleIcon?: React.ReactNode;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
-  /** Extra action row inserted under Open-from-computer (e.g. New folder). */
-  extraAction?: {
+  /** Action rows inserted under Open-from-computer (New folder, Refresh). A
+   *  control with more than one destination renders itself instead, given the
+   *  collapse state the row would have used. */
+  extraActions?: Array<{
     icon: React.ReactNode;
     label: string;
     onClick: () => void;
     disabled?: boolean;
     disabledTooltip?: string;
     testId?: string;
-  };
+    render?: (ctx: { collapsed: boolean }) => React.ReactNode;
+  }>;
 }
 
 /**
@@ -153,6 +153,41 @@ function BulkAddProgressRow() {
   );
 }
 
+/**
+ * The library's folder tree, as a section of the file sidebar. Separate so the
+ * subscription to the library's state belongs to the only part that reads it: that
+ * state changes on every keystroke in the library's filter, and the sidebar renders
+ * in every view.
+ */
+function FolderTreeSection() {
+  const { t } = useTranslation();
+  const filesPage = useFilesPage();
+  return (
+    <div className="file-sidebar-folders-section sidebar-content-fade">
+      <div className="file-sidebar-section-header">
+        <span className="file-sidebar-section-label">
+          {t("filesPage.tree", "Folders")}
+        </span>
+      </div>
+      <FolderTreeSidebar
+        fileCounts={filesPage.fileCountsByFolder}
+        onRequestNewFolder={filesPage.openNewFolderDialog}
+        onRenameFolder={(folder: FolderRecord) =>
+          filesPage.openRenameFolderDialog(folder)
+        }
+        onDeleteFolder={filesPage.promptDeleteFolder}
+        onMoveFilesIntoFolder={async (
+          targetId: FolderId | null,
+          fileIds: FileId[],
+        ) => {
+          if (fileIds.length === 0) return;
+          await filesPage.moveFilesTo(fileIds, targetId);
+        }}
+      />
+    </div>
+  );
+}
+
 const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
   function FileSidebar(
     {
@@ -160,11 +195,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onToggleCollapse,
       onOpenSettings,
       accountHoisted = false,
-      toggleAriaLabel,
-      toggleIcon,
       onUploadFiles,
       onPickGoogleDriveFiles,
-      extraAction,
+      extraActions,
     },
     ref,
   ) {
@@ -180,7 +213,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       null,
     );
 
-    const navigate = useNavigate();
     const { config } = useAppConfig();
     const {
       isEnabled: isGoogleDriveEnabled,
@@ -962,8 +994,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           <SidebarHeader
             collapsed={collapsed}
             onToggleCollapse={onToggleCollapse}
-            toggleAriaLabel={toggleAriaLabel}
-            toggleIcon={toggleIcon}
           />
 
           {/* Box 1 — top controls (open / my files / cloud). No title. File
@@ -1031,88 +1061,61 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               </div>
             </Tooltip>
 
-            {extraAction && (
-              <Tooltip
-                label={extraAction.disabledTooltip ?? extraAction.label}
-                position="right"
-                withinPortal
-                // Only force a wide multiline box when the long disabled
-                // reason is shown; the short label fits one line.
-                multiline={Boolean(
-                  extraAction.disabled && extraAction.disabledTooltip,
-                )}
-                w={
-                  extraAction.disabled && extraAction.disabledTooltip
-                    ? 220
-                    : undefined
-                }
-                disabled={
-                  !collapsed &&
-                  !(extraAction.disabled && extraAction.disabledTooltip)
-                }
-              >
-                <div
-                  className={`file-sidebar-action-row${extraAction.disabled ? " disabled" : ""}`}
-                  data-testid={extraAction.testId}
-                  onClick={() => {
-                    if (extraAction.disabled) return;
-                    extraAction.onClick();
-                  }}
-                  role="button"
-                  tabIndex={extraAction.disabled ? -1 : 0}
-                  aria-disabled={extraAction.disabled}
-                  aria-label={extraAction.label}
-                  onKeyDown={(e) => {
-                    if (extraAction.disabled) return;
-                    if (e.key === "Enter" || e.key === " ") {
-                      e.preventDefault();
-                      extraAction.onClick();
+            {extraActions?.map((action) => (
+              <React.Fragment key={action.label}>
+                {action.render ? (
+                  action.render({ collapsed })
+                ) : (
+                  <Tooltip
+                    label={action.disabledTooltip ?? action.label}
+                    position="right"
+                    withinPortal
+                    // Only force a wide multiline box when the long disabled
+                    // reason is shown; the short label fits one line.
+                    multiline={Boolean(
+                      action.disabled && action.disabledTooltip,
+                    )}
+                    w={
+                      action.disabled && action.disabledTooltip
+                        ? 220
+                        : undefined
                     }
-                  }}
-                >
-                  <span className="file-sidebar-action-icon">
-                    {extraAction.icon}
-                  </span>
-                  {!collapsed && (
-                    <span className="file-sidebar-action-label sidebar-content-fade">
-                      {extraAction.label}
-                    </span>
-                  )}
-                </div>
-              </Tooltip>
-            )}
-
-            <Tooltip
-              label={t("fileSidebar.myFiles", "File library")}
-              position="right"
-              withinPortal
-              disabled={!collapsed}
-            >
-              <div
-                className="file-sidebar-action-row"
-                data-testid="my-files-button"
-                onClick={() => {
-                  if (collapsed && onToggleCollapse) onToggleCollapse();
-                  navigate("/files");
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={t("fileSidebar.myFiles", "File library")}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    navigate("/files");
-                  }
-                }}
-              >
-                <FolderOpenIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.myFiles", "File library")}
-                  </span>
+                    disabled={
+                      !collapsed && !(action.disabled && action.disabledTooltip)
+                    }
+                  >
+                    <div
+                      className={`file-sidebar-action-row${action.disabled ? " disabled" : ""}`}
+                      data-testid={action.testId}
+                      onClick={() => {
+                        if (action.disabled) return;
+                        action.onClick();
+                      }}
+                      role="button"
+                      tabIndex={action.disabled ? -1 : 0}
+                      aria-disabled={action.disabled}
+                      aria-label={action.label}
+                      onKeyDown={(e) => {
+                        if (action.disabled) return;
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          action.onClick();
+                        }
+                      }}
+                    >
+                      <span className="file-sidebar-action-icon">
+                        {action.icon}
+                      </span>
+                      {!collapsed && (
+                        <span className="file-sidebar-action-label sidebar-content-fade">
+                          {action.label}
+                        </span>
+                      )}
+                    </div>
+                  </Tooltip>
                 )}
-              </div>
-            </Tooltip>
+              </React.Fragment>
+            ))}
 
             {!shouldHideGoogleDrive && (
               <Tooltip
@@ -1194,8 +1197,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
           {/* Box 2 — the file tree (this box scrolls). */}
           <NavSurface className="file-sidebar-files-box">
             <div className="file-sidebar-scroll">
-              {/* Files section - always visible when expanded */}
-              {!collapsed && (
+              {/* The library browses folders, so there the box carries the tree the
+                  file list would otherwise fill: one sidebar, its contents following
+                  the view. */}
+              {!collapsed && currentWorkbench === "myFiles" && (
+                <FolderTreeSection />
+              )}
+
+              {/* Files section - visible when expanded, outside the library */}
+              {!collapsed && currentWorkbench !== "myFiles" && (
                 <div className="file-sidebar-files-section sidebar-content-fade">
                   <div className="file-sidebar-section-header">
                     <span className="file-sidebar-section-label">
@@ -1205,7 +1215,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-external"
-                      onClick={() => navigate("/files")}
+                      onClick={() => navActions.setWorkbench("myFiles")}
                       title={t(
                         "fileSidebar.openFileManager",
                         "Browse all files & folders",
@@ -1306,7 +1316,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                             fullWidth
                             justify="between"
                             className="file-sidebar-view-all"
-                            onClick={() => navigate("/files")}
+                            onClick={() => navActions.setWorkbench("myFiles")}
                             rightSection={
                               <KeyboardArrowRightIcon
                                 sx={{ fontSize: "1rem" }}
