@@ -8,6 +8,8 @@ import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
@@ -286,6 +288,7 @@ export default defineConfig(async ({ mode, command }) => {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
+      iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({
@@ -352,6 +355,11 @@ export default defineConfig(async ({ mode, command }) => {
           {
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
+          },
+          {
+            // Fallback TrueType fonts for PDFium (Noto Sans, CJK, Arabic, etc.)
+            src: "../../app/core/src/main/resources/static/fonts/*.ttf",
+            dest: "fonts",
           },
         ],
       }),
