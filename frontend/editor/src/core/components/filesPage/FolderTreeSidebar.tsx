@@ -28,6 +28,7 @@ import {
   serialiseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
+import "@app/components/filesPage/FolderTreeSidebar.css";
 import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 
 /**
@@ -56,14 +57,9 @@ interface FolderTreeSidebarProps {
   ) => Promise<void> | void;
 }
 
-// This component is always rendered inside FolderTreePanel, which supplies
-// its own <aside> chrome and "New folder at root" toolbar control. An
-// earlier `embed` prop selected between an embedded list and a standalone
-// aside+header layout; the standalone layout was unused and its "New
-// folder at root" ActionIcon was not gated by `serverReachable`, so if
-// anyone re-wired the component into a non-embed surface they'd ship an
-// always-enabled mutation button against a possibly-offline server.
-// Deleted to remove the trap.
+// A list, not a surface: the section around it owns the heading, and root-level
+// folder mutations belong there too - they need a serverReachable gate that a bare
+// list has no way to apply.
 /**
  * A name that gives way in the middle when the row is too narrow for it, keeping both
  * ends readable - folder names tend to differ at the end, where a plain end-ellipsis

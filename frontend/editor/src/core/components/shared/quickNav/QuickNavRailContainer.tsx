@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { NavSurface } from "@app/ui/NavSurface";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { QuickNavBrand } from "@app/components/shared/quickNav/QuickNavBrand";
 import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
 import {
@@ -66,34 +66,16 @@ export function QuickNavRailContainer({
               {onInvite && (
                 <RailButton
                   label={t("quickNav.invite", "Invite")}
-                  icon={
-                    <LocalIcon
-                      icon="person-add-outline-rounded"
-                      width="1.125rem"
-                      height="1.125rem"
-                    />
-                  }
+                  icon={<Icon name="user-plus" size="1.125rem" />}
                   onClick={onInvite}
                 />
               )}
               {onOpenDocs && (
                 <RailButton
                   label={t("quickNav.docs", "Documentation")}
-                  icon={
-                    docsActive ? (
-                      <LocalIcon
-                        icon="help-rounded"
-                        width="1.125rem"
-                        height="1.125rem"
-                      />
-                    ) : (
-                      <LocalIcon
-                        icon="help-outline-rounded"
-                        width="1.125rem"
-                        height="1.125rem"
-                      />
-                    )
-                  }
+                  // No `filled`: the mark is a ring around a stroked glyph, so a
+                  // fill swallows the question mark and leaves a blank disc.
+                  icon={<Icon name="circle-question-mark" size="1.125rem" />}
                   current={docsActive}
                   testId="docs-button"
                   onClick={onOpenDocs}

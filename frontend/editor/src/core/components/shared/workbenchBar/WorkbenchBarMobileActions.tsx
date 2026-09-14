@@ -13,7 +13,7 @@ import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/ty
  */
 export default function WorkbenchBarMobileActions({
   currentView,
-  isCustomView,
+  showsFileActions,
   actionsDisabled,
   policyEnforcing,
   downloadLabel,
@@ -26,7 +26,7 @@ export default function WorkbenchBarMobileActions({
   const { t } = useTranslation();
   const exportDisabled = actionsDisabled || policyEnforcing;
   const showPrint = currentView === "viewer";
-  const showFileActions = !isCustomView;
+  const showFileActions = showsFileActions;
 
   // Custom workbench views own their content, so none of these apply. The
   // desktop cluster renders nothing at all in that case; without this the

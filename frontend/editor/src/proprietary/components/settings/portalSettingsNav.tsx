@@ -192,6 +192,8 @@ export const PORTAL_SUPERSEDED_SECTION_KEYS: readonly NavKey[] = [
   // the superset, so it replaces rather than duplicates it.
   "users",
   "api-keys",
+  "plan",
+  "adminPlan",
 ];
 
 /** Where a superseded section's bookmarks and search results now land. */
@@ -199,6 +201,8 @@ export const PORTAL_SECTION_ALIASES: Partial<Record<string, NavKey>> = {
   people: "users",
   teams: "users",
   infrastructure: "api-keys",
+  plan: "billing",
+  adminPlan: "billing",
   // The processor links to a build-neutral "audit"; self-hosted's is the admin one.
   audit: "adminAudit",
 };
