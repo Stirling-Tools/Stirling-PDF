@@ -295,7 +295,7 @@ const UpgradeBanner: React.FC = () => {
 
     return (
       <AppBanner
-        icon="warning-rounded"
+        icon="triangle-alert"
         tone="warning"
         title={t(
           "upgradeBanner.attentionTitle",
@@ -303,7 +303,7 @@ const UpgradeBanner: React.FC = () => {
         )}
         message={attentionMessage}
         buttonText={buttonText}
-        buttonIcon="info-rounded"
+        buttonIcon="info"
         onButtonClick={buttonText ? handleSeeInfo : undefined}
         dismissible={false}
       />
@@ -329,14 +329,14 @@ const UpgradeBanner: React.FC = () => {
     <>
       {friendlyVisible && (
         <AppBanner
-          icon="stars-rounded"
+          icon="sparkles"
           title={t("upgradeBanner.title", "Upgrade to the Team plan")}
           message={t(
             "upgradeBanner.message",
             "Get the most out of Stirling PDF with 100 users, SSO, and advanced features.",
           )}
           buttonText={t("upgradeBanner.upgradeButton", "Upgrade Now")}
-          buttonIcon="upgrade-rounded"
+          buttonIcon="circle-arrow-up"
           onButtonClick={handleUpgrade}
           onDismiss={handleFriendlyDismiss}
           show={friendlyVisible}
