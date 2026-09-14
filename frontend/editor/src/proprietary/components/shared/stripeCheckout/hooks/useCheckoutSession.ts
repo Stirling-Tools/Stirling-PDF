@@ -7,7 +7,6 @@ import {
   type ServerPlanCheckoutSession,
 } from "@app/services/serverPlanCheckout";
 import { getCheckoutMode } from "@app/utils/protocolDetection";
-import { absoluteWithBasePath } from "@app/constants/app";
 import {
   CheckoutState,
   PollingStatus,
@@ -91,7 +90,11 @@ export const useCheckoutSession = (
       // Stripe's embedded iframe needs a secure context, so a plain-HTTP instance sends the buyer
       // to Stripe's own page and needs the two return URLs up front.
       const uiMode = getCheckoutMode();
-      const returnTo = absoluteWithBasePath("/settings/adminPlan");
+      // Back to the page the buyer left, whichever it was: this modal opens from the settings
+      // plan section and from the portal's billing screen, and a fixed path lands half of them
+      // somewhere they were not. CheckoutProvider reads the return params wherever it is mounted,
+      // and both hosts mount it. The current pathname already carries any base path.
+      const returnTo = window.location.origin + window.location.pathname;
       const response = await createSession({
         lookupKey: selectedPlan.lookupKey,
         serverQuantity: Math.max(1, serverQuantity || 1),

@@ -41,12 +41,6 @@ export interface CheckoutOptions {
   currency?: string; // Optional currency override (auto-detected from locale)
   onSuccess?: (sessionId: string) => void; // Callback after successful payment
   onError?: (error: string) => void; // Callback on error
-  /**
-   * Supplying it skips the email step. No caller does today: the only address a self-hosted
-   * instance holds is its Spring username. #7945 removes the step instead, by buying as the
-   * signed-in account.
-   */
-  email?: string;
   /** Put the period and capacity choices on one page rather than walking them separately. */
   combinedChoose?: boolean;
   /** Users the current plan covers. Its presence is what makes this "add capacity", not a first
@@ -461,7 +455,6 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             onClose={closeCheckout}
             planGroup={selectedPlanGroup}
             minimumSeats={minimumSeats}
-            initialEmail={currentOptions.email}
             combinedChoose={currentOptions.combinedChoose}
             currentLimit={currentOptions.currentLimit ?? null}
             onSuccess={handlePaymentSuccess}

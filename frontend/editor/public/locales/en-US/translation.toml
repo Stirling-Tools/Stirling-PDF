@@ -6545,7 +6545,6 @@ continue = "Continue"
 description = "We'll use this to send your license key and receipts."
 emailLabel = "Email Address"
 emailPlaceholder = "your@email.com"
-modalTitle = "Get Started - {{planName}}"
 
 [payment.paymentStage]
 modalTitle = "Complete Payment - {{planName}}"
