@@ -1,0 +1,89 @@
+/* Styles for the icon registry story. */
+
+.icon-registry {
+  padding: 1.5rem 2rem 5rem;
+  color: var(--c-text);
+  background: var(--c-bg);
+  font-size: 0.875rem;
+}
+
+.icon-registry__h1 {
+  margin: 0 0 0.25rem;
+  font-size: 1.25rem;
+}
+
+.icon-registry__note {
+  max-width: 60ch;
+  margin: 0 0 1rem;
+  color: var(--c-text-muted);
+}
+
+.icon-registry__cell {
+  width: 2.75rem;
+  line-height: 0;
+  text-align: center;
+}
+
+.icon-registry__grid {
+  display: grid;
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(8.5rem, 1fr));
+}
+
+.icon-registry__tile {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  align-items: center;
+  padding: 0.625rem 0.5rem;
+  border: 1px solid var(--c-border-subtle);
+  border-radius: 0.375rem;
+  background: var(--c-surface);
+}
+
+.icon-registry__sizes {
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-end;
+  min-height: 1.5rem;
+}
+
+.icon-registry__tile code {
+  overflow: hidden;
+  width: 100%;
+  color: var(--c-text-muted);
+  font-size: 0.625rem;
+  text-align: center;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.icon-registry__search {
+  width: 100%;
+  max-width: 22rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--c-border);
+  border-radius: 0.375rem;
+  background: var(--c-input-bg);
+  color: var(--c-text);
+  font: inherit;
+}
+
+.icon-registry__tag {
+  padding: 0 0.375rem;
+  border-radius: 0.25rem;
+  font-size: 0.5625rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.icon-registry__tag--custom {
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg, var(--c-primary));
+}
+
+.icon-registry__tag--brand {
+  background: var(--c-surface-raised);
+  color: var(--c-text-subtle);
+}
