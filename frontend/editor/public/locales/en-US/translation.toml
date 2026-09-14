@@ -10005,11 +10005,15 @@ walletUnavailable = "Wallet unavailable: {{status}} {{statusText}}"
 
 [portal.usage.freeTier]
 adminOnly = "This server's monthly credits are shared by everyone on it, so only an administrator can see the figures. Everything you can run stays available."
+barAria = "Free credits remaining"
+capSuffix_one = "of {{allowance}} free credit left this month"
+capSuffix_other = "of {{allowance}} free credits left this month"
 connect = "Connect a Stirling account"
 connectBody = "Connecting adds a second monthly allowance, raises the users this server can have, and turns on the Processor."
 connectTitle = "This server has no Stirling account"
 loadError = "Couldn't read this server's credit usage. Try again in a moment."
 loadErrorTitle = "Couldn't load credit usage"
+resets = "Resets {{date}}"
 
 [portal.usage.sessionExpired]
 action = "Sign in again"
