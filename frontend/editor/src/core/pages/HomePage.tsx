@@ -40,6 +40,7 @@ import {
   getDefaultWorkbenchForFileCount,
 } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { READER_PATH } from "@app/routes/readerRoute";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
@@ -209,6 +210,33 @@ export default function HomePage() {
       navigate(EDITOR_BASENAME);
     }
   }, [navigationState.workbench, location.pathname, navigate]);
+
+  // Reading is a surface too, so the path names it and the same two-effect
+  // discipline applies: each side moves the other on a transition only.
+
+  // Path moved, so the path is the cause. Mount included, which is what makes a
+  // reload land back in reading - and what takes you out of it when the library
+  // moves the path to its own, since the two surfaces cannot both be on screen.
+  const readerDerivedFromPath = useRef<string | null>(null);
+  useEffect(() => {
+    if (readerDerivedFromPath.current === location.pathname) return;
+    readerDerivedFromPath.current = location.pathname;
+    const onReadPath = location.pathname.startsWith(READER_PATH);
+    if (onReadPath !== readerMode) setReaderMode(onReadPath);
+  }, [location.pathname, readerMode, setReaderMode]);
+
+  // Reading moved, so the path follows. Pushed, not replaced, so Back leaves it.
+  const wasReadingRef = useRef(readerMode);
+  useEffect(() => {
+    if (readerMode === wasReadingRef.current) return;
+    wasReadingRef.current = readerMode;
+    const onReadPath = location.pathname.startsWith(READER_PATH);
+    if (readerMode && !onReadPath) {
+      navigate(READER_PATH);
+    } else if (!readerMode && onReadPath) {
+      navigate(EDITOR_BASENAME);
+    }
+  }, [readerMode, location.pathname, navigate]);
 
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
