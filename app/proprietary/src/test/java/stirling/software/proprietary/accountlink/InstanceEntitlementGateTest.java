@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.proprietary.accountlink.GateDecision.Reason;
 
 /**
@@ -29,6 +30,7 @@ class InstanceEntitlementGateTest {
     @Mock private AccountLinkSyncStateRepository syncStateRepository;
     @Mock private LocalUsageService localUsageService;
     @Mock private FreeTierUsageService freeTierUsageService;
+    @Mock private LicenseServiceInterface licenseService;
 
     private static FreeTierUsageService.FreeTierBalance grant(long remaining) {
         LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
@@ -266,7 +268,8 @@ class InstanceEntitlementGateTest {
                 entitlementCache,
                 syncStateRepository,
                 localUsageService,
-                freeTierUsageService);
+                freeTierUsageService,
+                licenseService);
     }
 
     private static AccountLinkProperties props(boolean meteringEnabled, int graceDays) {

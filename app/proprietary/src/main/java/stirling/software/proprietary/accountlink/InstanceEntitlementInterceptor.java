@@ -40,12 +40,13 @@ import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
 
 /**
  * Request-time gate + meter for combined billing. {@code preHandle} blocks billable (API / AI /
- * automation) work once the applicable allowance is spent; manual tools pass through. {@code
- * afterCompletion} costs the op and accrues it.
+ * automation) work once the applicable allowance is spent; Enterprise licenses and manual tools
+ * pass through. {@code afterCompletion} costs the op and accrues it.
  *
  * <p>The ledger follows the gate's own reason rather than re-deriving linked-ness, so the two
  * cannot disagree. Only the cloud one sits behind {@code …metering.enabled}: with it off a linked
- * instance accrues nothing while the free tier still meters and holds.
+ * instance accrues nothing while the free tier still meters and holds. Enterprise usage stays in
+ * the local ledger even when linked, so it cannot become PAYG spend.
  */
 @Slf4j
 @Component
@@ -136,7 +137,9 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
             return;
         }
         try {
-            if (request.getAttribute(ATTR_REASON) == GateDecision.Reason.FREE_TIER) {
+            Object reason = request.getAttribute(ATTR_REASON);
+            if (reason == GateDecision.Reason.FREE_TIER
+                    || reason == GateDecision.Reason.ENTERPRISE) {
                 MeteredOp op = measure(request, UnitCalcPolicy.DEFAULT);
                 freeTierUsageService.accrue(category, op.units(), op.opSignature());
                 return;

@@ -19,7 +19,8 @@ import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.ContentHasher;
 
 /**
- * The local free-tier ledger an unlinked instance meters itself against.
+ * Local monthly usage for unlinked and Enterprise instances. Only non-Enterprise requests enforce
+ * the free-tier balance; Enterprise usage accrues without a ceiling.
  *
  * <p>Touches only {@link FreeTierUsageCounter} / {@link FreeTierPeriod}, which {@link
  * UsageSyncService} never reads, so local usage never reaches SaaS and a link/unlink cycle cannot

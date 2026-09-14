@@ -12,6 +12,8 @@ public record GateDecision(boolean allowed, Reason reason) {
         FLAG_OFF,
         /** Operation is a manual tool — always free, never gated. */
         MANUAL_FREE,
+        /** Enterprise license permits processing with local-only usage metering. */
+        ENTERPRISE,
         /** Linked + within entitlement — billable work allowed. */
         ENTITLED,
         FREE_TIER,

@@ -23,6 +23,8 @@ import org.apache.pdfbox.pdmodel.PDPage;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
@@ -80,12 +82,12 @@ class InstanceEntitlementInterceptorTest {
         assertTrue(response.getContentAsString().contains("FREE_TIER_EXHAUSTED"));
     }
 
-    @Test
-    void metersTheFreeTierLedgerWhenUnlinked() throws Exception {
-        // FREE_TIER is the gate saying "unlinked, inside the grant", so the op must land on the
-        // local ledger with the compiled-in policy and never touch the cloud one.
-        when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
+    @ParameterizedTest
+    @EnumSource(
+            value = GateDecision.Reason.class,
+            names = {"FREE_TIER", "ENTERPRISE"})
+    void metersLocallyWithoutConsultingCloudBilling(GateDecision.Reason reason) throws Exception {
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(reason));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/x");
