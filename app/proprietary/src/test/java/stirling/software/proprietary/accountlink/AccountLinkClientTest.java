@@ -16,6 +16,9 @@ import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import tools.jackson.databind.ObjectMapper;
@@ -141,10 +144,25 @@ class AccountLinkClientTest {
         assertEquals(10, e.periodSpendUnits());
         assertEquals(100L, e.periodCapUnits());
         assertEquals(EntitlementState.OK, e.state());
+        assertEquals(10, e.automationStepLimit());
 
         HttpRequest sent = captor.getValue();
         assertEquals("dev-1", sent.headers().firstValue("X-Device-Id").orElse(null));
         assertEquals("sec-1", sent.headers().firstValue("X-Device-Secret").orElse(null));
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(ints = {-1, 0, 1, 20, Integer.MAX_VALUE})
+    @SuppressWarnings("unchecked")
+    void fetchEntitlementParsesAutomationStepLimit(Integer limit) throws Exception {
+        HttpResponse<String> resp = response(200, "{\"automationStepLimit\":" + limit + "}");
+        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(resp);
+
+        InstanceEntitlement entitlement = client.fetchEntitlement("dev-1", "sec-1");
+
+        assertNotNull(entitlement);
+        assertEquals(limit != null && limit > 0 ? limit : 10, entitlement.automationStepLimit());
     }
 
     @Test

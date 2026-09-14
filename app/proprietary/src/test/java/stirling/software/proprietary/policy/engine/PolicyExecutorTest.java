@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.engine;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -39,6 +40,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.util.MultiValueMap;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
@@ -376,6 +378,35 @@ class PolicyExecutorTest {
 
     private static PipelineDefinition definition(PipelineStep... steps) {
         return new PipelineDefinition("test", List.of(steps), OutputSpec.inline());
+    }
+
+    @Test
+    void perFileStepScopesADistinctDocumentIdForEachFile() throws IOException {
+        // Within a run over several documents, each file's dispatch carries a distinct, run-scoped
+        // document id so a linked instance bills each source document once - not the whole run
+        // once.
+        when(toolMetadataService.isMultiInput(ROTATE)).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(ROTATE)).thenReturn(false);
+        List<String> docIds = new ArrayList<>();
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        inv -> {
+                            docIds.add(AutomationRunContext.currentDocument());
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+
+        try (AutomationRunContext.Scope run = AutomationRunContext.open("run-x")) {
+            executor.execute(
+                    definition(new PipelineStep(ROTATE, Map.of())),
+                    PolicyInputs.of(List.of(pdf("a", "a.pdf"), pdf("b", "b.pdf"))),
+                    PolicyProgressListener.NOOP);
+        }
+
+        assertEquals(2, docIds.size());
+        assertNotNull(docIds.get(0));
+        assertNotNull(docIds.get(1));
+        assertNotEquals(docIds.get(0), docIds.get(1)); // distinct per source document
+        assertTrue(docIds.get(0).startsWith("run-x:")); // run-scoped
     }
 
     private void stubEndpoint(String endpoint, Resource body) {
