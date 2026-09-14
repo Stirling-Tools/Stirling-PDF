@@ -5,6 +5,8 @@ import static org.mockito.Mockito.*;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -84,6 +86,46 @@ class CleanUrlInterceptorTest {
         // allowedParameters has 1 entry (lang=en) but queryParameters.length is 2
         // So it redirects
         assertFalse(interceptor.preHandle(request, response, new Object()));
+    }
+
+    @ParameterizedTest
+    @ValueSource(
+            strings = {
+                "https://untrusted.invalid/path",
+                "http://untrusted.invalid",
+                "//untrusted.invalid/path",
+                "///untrusted.invalid/path",
+                "/\\untrusted.invalid/path",
+                "\\\\untrusted.invalid/path",
+                "\t//untrusted.invalid/path",
+                "/\t/untrusted.invalid/path",
+                "/\r\n/untrusted.invalid/path",
+                "javascript:alert(1)",
+                "settings"
+            })
+    void rejectsUnsafeRedirectTargets(String requestUri) throws Exception {
+        when(request.getRequestURI()).thenReturn(requestUri);
+        when(request.getContextPath()).thenReturn("");
+        when(request.getQueryString()).thenReturn("unknown=discard");
+
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+
+        verify(response).sendError(HttpServletResponse.SC_BAD_REQUEST);
+        verify(response, never()).sendRedirect(anyString());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"/", "/folder%20name/page", "/caf%C3%A9"})
+    void preservesLocalPathsAndEncodedQueryValues(String requestUri) throws Exception {
+        String fileUrl = "https%3A%2F%2Fexample.invalid%2Fdocument.pdf";
+        when(request.getRequestURI()).thenReturn(requestUri);
+        when(request.getContextPath()).thenReturn("");
+        when(request.getQueryString()).thenReturn("file=" + fileUrl + "&unknown=discard");
+
+        assertFalse(interceptor.preHandle(request, response, new Object()));
+
+        verify(response).sendRedirect(requestUri + "?file=" + fileUrl);
+        verify(response, never()).sendError(anyInt());
     }
 
     @Test

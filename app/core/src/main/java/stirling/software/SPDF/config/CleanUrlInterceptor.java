@@ -1,5 +1,7 @@
 package stirling.software.SPDF.config;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -80,7 +82,20 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                 // Redirect to the URL with only allowed query parameters
                 String redirectUrl = requestURI + "?" + newQueryString;
 
-                response.sendRedirect(redirectUrl);
+                try {
+                    URI redirectUri = new URI(redirectUrl);
+                    // Relative URIs can still name another host through a leading //.
+                    if (redirectUri.isAbsolute()
+                            || redirectUri.getRawAuthority() != null
+                            || !redirectUrl.startsWith("/")
+                            || redirectUrl.startsWith("//")) {
+                        response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                        return false;
+                    }
+                    response.sendRedirect(redirectUri.toString());
+                } catch (URISyntaxException ex) {
+                    response.sendError(HttpServletResponse.SC_BAD_REQUEST);
+                }
                 return false;
             }
         }
