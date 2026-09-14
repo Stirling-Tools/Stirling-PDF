@@ -304,8 +304,10 @@ describe("Usage — link-free wallet renderer", () => {
     fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
     renderUsage(<Usage />, "/settings/billing?procurement=start&source=sales");
     await waitFor(() => expect(procurement[action]).toHaveBeenCalledTimes(1));
-    expect(screen.getByTestId("location")).toHaveTextContent(
-      "/settings/billing?source=sales",
+    await waitFor(() =>
+      expect(screen.getByTestId("location")).toHaveTextContent(
+        "/settings/billing?source=sales",
+      ),
     );
     if (stage) expect(procurement.onExploreEnterprise).not.toHaveBeenCalled();
   });
