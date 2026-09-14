@@ -1,17 +1,8 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
-import BookmarksOutlinedIcon from "@mui/icons-material/BookmarksOutlined";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import ViewListIcon from "@mui/icons-material/ViewList";
-import SearchIcon from "@mui/icons-material/Search";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import ChatBubbleOutlinedIcon from "@mui/icons-material/ChatBubbleOutlined";
-import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 
+import LocalIcon from "@app/components/shared/LocalIcon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
@@ -20,6 +11,9 @@ import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useAllFiles, useFileManagement } from "@app/contexts/file/fileHooks";
 import { isStirlingFile } from "@app/types/fileContext";
 import "@app/components/viewer/readerRail/ReaderRail.css";
+
+/** The quick-nav rail's icon size, so the two rails read as one family. */
+const SIZE = "1.125rem";
 
 interface RailItem {
   /** The viewer's id for this control, where the viewer has one. */
@@ -46,21 +40,48 @@ const RAIL_GROUPS: readonly (readonly RailItem[])[] = [
   [
     {
       id: "viewer-toggle-bookmarks",
-      icon: <BookmarksOutlinedIcon fontSize="small" />,
+      icon: (
+        <LocalIcon icon="bookmarks-outline-rounded" width={SIZE} height={SIZE} />
+      ),
     },
-    { id: "viewer-toggle-sidebar", icon: <ViewListIcon fontSize="small" /> },
-    { id: "viewer-search", icon: <SearchIcon fontSize="small" /> },
+    {
+      id: "viewer-toggle-sidebar",
+      icon: (
+        <LocalIcon icon="view-list-outline-rounded" width={SIZE} height={SIZE} />
+      ),
+    },
+    {
+      id: "viewer-search",
+      icon: <LocalIcon icon="search-rounded" width={SIZE} height={SIZE} />,
+    },
   ],
   [
-    { id: "viewer-rotate-left", icon: <RotateLeftIcon fontSize="small" /> },
-    { id: "viewer-rotate-right", icon: <RotateRightIcon fontSize="small" /> },
+    {
+      id: "viewer-rotate-left",
+      icon: <LocalIcon icon="rotate-left-rounded" width={SIZE} height={SIZE} />,
+    },
+    {
+      id: "viewer-rotate-right",
+      icon: <LocalIcon icon="rotate-right-rounded" width={SIZE} height={SIZE} />,
+    },
   ],
   [
     {
       id: "viewer-toggle-comments",
-      icon: <ChatBubbleOutlinedIcon fontSize="small" />,
+      icon: (
+        <LocalIcon
+          icon="chat-bubble-outline-rounded"
+          width={SIZE}
+          height={SIZE}
+        />
+      ),
     },
-    { id: "viewer-read-aloud", icon: <VolumeUpIcon fontSize="small" /> },
+    {
+      id: "viewer-read-aloud",
+      icon: (
+        <LocalIcon icon="volume-up-outline-rounded" width={SIZE} height={SIZE} />
+      ),
+    },
   ],
 ];
 
@@ -141,7 +162,7 @@ export function ReaderRail() {
             disabled={!openFileId}
             onClick={closeDocument}
           >
-            <CloseIcon fontSize="small" />
+            <LocalIcon icon="close-rounded" width={SIZE} height={SIZE} />
           </ActionIcon>
         </AppTooltip>
         {hasChoice && (
@@ -154,7 +175,11 @@ export function ReaderRail() {
                 // The name is in the dropdown; the trigger says what it opens.
                 aria-label={t("reader.rail.switchDocument", "Switch document")}
               >
-                <DescriptionOutlinedIcon fontSize="small" />
+                <LocalIcon
+                  icon="description-outline-rounded"
+                  width={SIZE}
+                  height={SIZE}
+                />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
@@ -165,7 +190,11 @@ export function ReaderRail() {
                   onClick={() => setActiveFileId(doc.id)}
                   leftSection={
                     doc.id === activeFileId ? (
-                      <CheckIcon fontSize="small" />
+                      <LocalIcon
+                        icon="check-rounded"
+                        width={SIZE}
+                        height={SIZE}
+                      />
                     ) : (
                       // Holds the column so the names line up either way.
                       <span className="reader-rail__tick-space" />

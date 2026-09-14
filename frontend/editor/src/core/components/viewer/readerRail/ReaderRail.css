@@ -41,7 +41,7 @@
 /* Holds the tick column so names line up whether or not a row is the current one. */
 .reader-rail__tick-space {
   display: inline-block;
-  width: 1.25rem;
+  width: 1.125rem;
 }
 
 /* A long filename wraps rather than widening the dropdown past its set width. */
