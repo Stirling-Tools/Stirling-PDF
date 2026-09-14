@@ -21,6 +21,7 @@ import {
   resolvePolicyRunTarget,
 } from "@app/services/policyApi";
 import type { PolicyExecutionTarget } from "@app/services/policyPipeline";
+import type { PolicyState } from "@app/types/policies";
 import {
   recordRunStart,
   isDispatched,
@@ -40,10 +41,9 @@ const MAX_POLLS = 75;
 const TOAST_LINGER_MS = 10_000;
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-interface ExportPolicy {
+interface ExportPolicy extends Pick<PolicyState, "firstOperation"> {
   policyKey: string;
   backendId: string;
-  firstOperation?: string | null;
   label: string;
   outputMode: "new_file" | "new_version";
   /** The policy's accent as a CSS colour, for the toast glow. */

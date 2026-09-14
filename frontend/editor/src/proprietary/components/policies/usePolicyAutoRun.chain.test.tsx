@@ -1,14 +1,19 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
+import type { PolicyState } from "@app/types/policies";
 
 // Two active file-producing upload policies, so the auto-run should CHAIN them: fire the first on
 // the upload, then the second on the first's output. A classification policy is also present to
 // assert the engine leaves it alone - annotating policies run themselves (see useClassificationPolicy),
 // so they are never in this server chain. Stub the contexts + network to drive dispatch against the
 // REAL run store.
-const inputOperations = vi.hoisted(() => ({
-  security: "/api/v1/misc/compress-pdf" as string | null | undefined,
-  compliance: "/api/v1/misc/compress-pdf" as string | undefined,
+const inputOperations = vi.hoisted<{
+  security: PolicyState["firstOperation"];
+  compliance: PolicyState["firstOperation"];
+  archiveEnabled: boolean;
+}>(() => ({
+  security: "/api/v1/misc/compress-pdf",
+  compliance: "/api/v1/misc/compress-pdf",
   archiveEnabled: false,
 }));
 const fileStubs: {
