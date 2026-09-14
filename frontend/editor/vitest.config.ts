@@ -1,6 +1,8 @@
 import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react-swc";
 import tsconfigPaths from "vite-tsconfig-paths";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 
 // Projects do NOT inherit the root test.testTimeout, so every project silently
 // ran at vitest's 5s default. Spread this into each one instead.
@@ -41,6 +43,7 @@ export default defineConfig({
           setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
+          iconSvgr(),
           react(),
           tsconfigPaths({
             projects: ["./tsconfig.core.vite.json"],
@@ -60,6 +63,7 @@ export default defineConfig({
           setupFiles: ["./src/portal/setupTests.ts"],
         },
         plugins: [
+          iconSvgr(),
           react(),
           tsconfigPaths({
             // Broad project so @app/@portal resolve in every editor file the
@@ -81,6 +85,7 @@ export default defineConfig({
           setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
+          iconSvgr(),
           react(),
           tsconfigPaths({
             projects: ["./tsconfig.proprietary.vite.json"],
@@ -100,6 +105,7 @@ export default defineConfig({
           setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
+          iconSvgr(),
           react(),
           tsconfigPaths({
             projects: ["./tsconfig.desktop.vite.json"],
@@ -125,6 +131,7 @@ export default defineConfig({
           setupFiles: ["./src/saas/setupTests.ts"],
         },
         plugins: [
+          iconSvgr(),
           react(),
           tsconfigPaths({
             projects: ["./tsconfig.saas.vite.json"],
@@ -144,6 +151,7 @@ export default defineConfig({
           setupFiles: ["./src/core/setupTests.ts"],
         },
         plugins: [
+          iconSvgr(),
           react(),
           tsconfigPaths({
             projects: ["./tsconfig.prototypes.vite.json"],

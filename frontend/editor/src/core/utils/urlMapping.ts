@@ -88,6 +88,7 @@ export const URL_TO_TOOL_MAP: Record<string, ToolId> = {
   "/change-metadata": "changeMetadata",
   "/get-pdf-info": "getPdfInfo",
   "/add-attachments": "addAttachments",
+  "/create-portfolio": "createPortfolio",
 
   // Advanced tools
   "/overlay-pdfs": "overlayPdfs",
