@@ -41,13 +41,6 @@ tasks:
       - editor/.env.local
       - editor/.env{{if .MODE}}.{{.MODE}}{{end}}.local
 
-  prepare:icons:
-    internal: true
-    run: once
-    deps: [install]
-    cmds:
-      - node editor/scripts/generate-icons.js
-
   prepare:og:
     internal: true
     run: when_changed
@@ -71,7 +64,6 @@ tasks:
     deps:
       - task: prepare:env
         vars: { MODE: '{{.MODE}}' }
-      - prepare:icons
       - prepare:og
 
   # ============================================================
@@ -522,8 +514,9 @@ tasks:
   check:all:
     desc: "Full CI quality gate"
     cmds:
-      # Runs first, before prepare regenerates: guards the committed og-metadata.json /
-      # ogImageMap.json that the Cloudflare Pages (plain `vite build`) deploy relies on.
+      # Run first, before prepare regenerates: guard the committed og-metadata.json /
+      # ogImageMap.json and icon registry that the Cloudflare Pages (plain `vite build`)
+      # deploy relies on.
       - task: og:check
       - task: typecheck:all
       - task: lint
