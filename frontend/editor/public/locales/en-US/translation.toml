@@ -10185,6 +10185,7 @@ reader = "Reader"
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
 
 [reader.rail]
+addDocument = "Add file"
 bookmarks = "Bookmarks"
 close = "Close document"
 comment = "Comments"

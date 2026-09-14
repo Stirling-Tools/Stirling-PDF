@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 
@@ -9,6 +9,7 @@ import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useAllFiles, useFileManagement } from "@app/contexts/file/fileHooks";
+import { useFileHandler } from "@app/hooks/useFileHandler";
 import { isStirlingFile } from "@app/types/fileContext";
 import "@app/components/viewer/readerRail/ReaderRail.css";
 
@@ -90,6 +91,7 @@ export function ReaderRail() {
   const { buttons, actions } = useWorkbenchBar();
   const { activeFileId, setActiveFileId } = useViewer();
   const { removeFiles } = useFileManagement();
+  const { addFiles } = useFileHandler();
   const { requestNavigation } = useNavigationGuard();
   const { files, fileIds } = useAllFiles();
 
@@ -125,8 +127,21 @@ export function ReaderRail() {
 
   const closeLabel = t("reader.rail.close", "Close document");
 
-  // One document is just the one you are reading, so the picker only earns its
-  // place once there is a choice to make.
+  // The picker is also the way to open something, so it reaches the OS chooser
+  // through an input of its own rather than borrowing the sidebar's - reading
+  // is the one surface where that sidebar is not on screen.
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const addDocument = useCallback(
+    async (event: React.ChangeEvent<HTMLInputElement>) => {
+      const chosen = Array.from(event.target.files ?? []);
+      // Cleared before the await, so the same file can be picked twice running.
+      event.target.value = "";
+      if (chosen.length === 0) return;
+      await addFiles(chosen);
+    },
+    [addFiles],
+  );
+
   const documents = useMemo(
     () =>
       files
@@ -134,7 +149,6 @@ export function ReaderRail() {
         .map((file) => ({ id: file.fileId as string, name: file.name })),
     [files],
   );
-  const hasChoice = documents.length > 1;
   const currentName =
     documents.find((doc) => doc.id === activeFileId)?.name ??
     documents[0]?.name ??
@@ -165,48 +179,64 @@ export function ReaderRail() {
             <LocalIcon icon="close-rounded" width={SIZE} height={SIZE} />
           </ActionIcon>
         </AppTooltip>
-        {hasChoice && (
-          <Menu shadow="md" width={260} position="left-start">
-            <Menu.Target>
-              <ActionIcon
-                variant="tertiary"
-                size="md"
-                shape="circle"
-                // The name is in the dropdown; the trigger says what it opens.
-                aria-label={t("reader.rail.switchDocument", "Switch document")}
+        {/* No `accept`: this feeds the workspace rather than one tool, so what
+            can be opened is the workspace's business, not the rail's. */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          style={{ display: "none" }}
+          onChange={addDocument}
+        />
+        <Menu shadow="md" width={260} position="left-start">
+          <Menu.Target>
+            <ActionIcon
+              variant="tertiary"
+              size="md"
+              shape="circle"
+              // The name is in the dropdown; the trigger says what it opens.
+              aria-label={t("reader.rail.switchDocument", "Switch document")}
+            >
+              <LocalIcon
+                icon="description-outline-rounded"
+                width={SIZE}
+                height={SIZE}
+              />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            {currentName && <Menu.Label>{currentName}</Menu.Label>}
+            {documents.map((doc) => (
+              <Menu.Item
+                key={doc.id}
+                onClick={() => setActiveFileId(doc.id)}
+                leftSection={
+                  doc.id === activeFileId ? (
+                    <LocalIcon
+                      icon="check-rounded"
+                      width={SIZE}
+                      height={SIZE}
+                    />
+                  ) : (
+                    // Holds the column so the names line up either way.
+                    <span className="reader-rail__tick-space" />
+                  )
+                }
               >
-                <LocalIcon
-                  icon="description-outline-rounded"
-                  width={SIZE}
-                  height={SIZE}
-                />
-              </ActionIcon>
-            </Menu.Target>
-            <Menu.Dropdown>
-              <Menu.Label>{currentName}</Menu.Label>
-              {documents.map((doc) => (
-                <Menu.Item
-                  key={doc.id}
-                  onClick={() => setActiveFileId(doc.id)}
-                  leftSection={
-                    doc.id === activeFileId ? (
-                      <LocalIcon
-                        icon="check-rounded"
-                        width={SIZE}
-                        height={SIZE}
-                      />
-                    ) : (
-                      // Holds the column so the names line up either way.
-                      <span className="reader-rail__tick-space" />
-                    )
-                  }
-                >
-                  <span className="reader-rail__doc-name">{doc.name}</span>
-                </Menu.Item>
-              ))}
-            </Menu.Dropdown>
-          </Menu>
-        )}
+                <span className="reader-rail__doc-name">{doc.name}</span>
+              </Menu.Item>
+            ))}
+            {documents.length > 0 && <Menu.Divider />}
+            <Menu.Item
+              leftSection={
+                <LocalIcon icon="add-rounded" width={SIZE} height={SIZE} />
+              }
+              onClick={() => fileInputRef.current?.click()}
+            >
+              {t("reader.rail.addDocument", "Add file")}
+            </Menu.Item>
+          </Menu.Dropdown>
+        </Menu>
         <div className="reader-rail__divider" />
       </div>
       {RAIL_GROUPS.map((group, index) => (
