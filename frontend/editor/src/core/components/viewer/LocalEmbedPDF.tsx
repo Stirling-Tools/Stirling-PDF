@@ -4,12 +4,11 @@ import React, {
   useImperativeHandle,
   useMemo,
   useState,
-  useRef,
 } from "react";
 import { createPluginRegistration } from "@embedpdf/core";
 import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
-import { useEngineContext } from "@embedpdf/engines/react";
+import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 
@@ -20,10 +19,7 @@ import {
 } from "@embedpdf/plugin-viewport/react";
 import { Scroller, ScrollPluginPackage } from "@embedpdf/plugin-scroll/react";
 import { DocumentManagerPluginPackage } from "@embedpdf/plugin-document-manager/react";
-import {
-  RenderLayer,
-  RenderPluginPackage,
-} from "@embedpdf/plugin-render/react";
+import { RenderPluginPackage } from "@embedpdf/plugin-render/react";
 import { ZoomPluginPackage, ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { InteractionManagerPluginPackage } from "@embedpdf/plugin-interaction-manager/react";
 import {
@@ -59,30 +55,6 @@ import type {
 } from "@embedpdf/plugin-annotation";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject, Rect } from "@embedpdf/models";
-
-// Blob URL cache: keyed by `filename-size`. Capped at 10 entries so long
-// sessions with many distinct PDFs don't accumulate unbounded object URLs.
-const BLOB_CACHE_MAX = 10;
-const globalBlobUrlCache = new Map<string, string>();
-
-function cacheBlobUrl(key: string, url: string): void {
-  // Evict the oldest entry when at capacity
-  if (globalBlobUrlCache.size >= BLOB_CACHE_MAX) {
-    const oldestKey = globalBlobUrlCache.keys().next().value;
-    if (oldestKey !== undefined) {
-      const oldUrl = globalBlobUrlCache.get(oldestKey);
-      globalBlobUrlCache.delete(oldestKey);
-      // Only revoke if it's not the URL we're about to add
-      if (oldUrl && oldUrl !== url) {
-        URL.revokeObjectURL(oldUrl);
-      }
-    }
-  }
-  globalBlobUrlCache.set(key, url);
-}
-
-// Viewport gap in pixels (equivalent to 3.5rem at standard 16px root font size)
-const VIEWPORT_GAP = 56;
 
 type LooseAnnotationTool = {
   id: string;
@@ -393,8 +365,7 @@ import {
 } from "@embedpdf/plugin-redaction/react";
 import { CustomSearchLayer } from "@app/components/viewer/CustomSearchLayer";
 import { ZoomAPIBridge } from "@app/components/viewer/ZoomAPIBridge";
-import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
-import { Center, Stack, Text } from "@mantine/core";
+import { Center, Loader, Stack, Text } from "@mantine/core";
 import { ScrollAPIBridge } from "@app/components/viewer/ScrollAPIBridge";
 import { SelectionAPIBridge } from "@app/components/viewer/SelectionAPIBridge";
 import { PanAPIBridge } from "@app/components/viewer/PanAPIBridge";
@@ -431,7 +402,9 @@ import {
 import { RedactionAPIBridge } from "@app/components/viewer/RedactionAPIBridge";
 import { DocumentPermissionsAPIBridge } from "@app/components/viewer/DocumentPermissionsAPIBridge";
 import { DocumentReadyWrapper } from "@app/components/viewer/DocumentReadyWrapper";
-import { ActiveDocumentProvider } from "@app/components/viewer/ActiveDocumentContext";
+import ToolLoadingFallback from "@app/components/tools/ToolLoadingFallback";
+import { getLocalFontFallbackConfig } from "@app/services/pdfiumFontFallback";
+import { pdfiumWasmUrl } from "@app/services/wasmPrecompiler";
 import { FormFieldOverlay } from "@app/tools/formFill/FormFieldOverlay";
 import { FormCreationInteractionLock } from "@app/tools/formFill/FormCreationInteractionLock";
 import { FormFieldCreationOverlay } from "@app/tools/formFill/FormFieldCreationOverlay";
@@ -484,94 +457,12 @@ interface LocalEmbedPDFProps {
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
 }
 
-interface TiledPageBackgroundProps {
+interface ViewerPageContainerProps {
   documentId: string;
-  pageIndex: number;
-  pdfRenderMode?: "normal" | "dark" | "sepia";
-}
-
-interface LazyPageContentProps {
   pageIndex: number;
   width: number;
   height: number;
   children: React.ReactNode;
-}
-
-const LazyPageContent = ({
-  pageIndex: _pageIndex,
-  width: _width,
-  height: _height,
-  children,
-}: LazyPageContentProps) => {
-  const [isVisible, setIsVisible] = useState(false);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        setIsVisible(entry.isIntersecting);
-      },
-      {
-        rootMargin: "300px", // Pre-render pages within 300px margin to avoid flashes and save DOM node memory
-      },
-    );
-
-    observer.observe(el);
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  return (
-    <div
-      ref={containerRef}
-      style={{ width: "100%", height: "100%", position: "relative" }}
-    >
-      {isVisible ? (
-        children
-      ) : (
-        <div
-          className="pdf-page-skeleton"
-          style={{
-            position: "absolute",
-            inset: 0,
-            backgroundColor: "var(--pdf-page-bg)",
-          }}
-        />
-      )}
-    </div>
-  );
-};
-
-// Module-scope memoized component that renders all layers for a single PDF page.
-// Lifting it out of LocalEmbedPDF means React can skip re-rendering individual
-// pages when the parent re-renders for unrelated state (e.g. commentAuthorName).
-interface PageContentProps {
-  documentId: string;
-  pageIndex: number;
-  width: number;
-  height: number;
-  pdfRenderMode: "normal" | "dark" | "sepia";
-  enableFormFill: boolean;
-  formEditingActive?: boolean;
-  enableAnnotations: boolean;
-  enableRedaction: boolean;
-  showBakedAnnotations: boolean;
-  file: File | Blob | undefined;
-  fileId: string | null | undefined;
-  signatureOverlayEnabled: boolean;
-  signaturePreviews: SignaturePreview[];
-  signaturePreviewsReadOnly: boolean;
-  signaturePlacementMode: boolean;
-  signaturePlacementData?: string;
-  signaturePlacementType?: "canvas" | "image" | "text";
-  onSignaturePreviewsChange: (previews: SignaturePreview[]) => void;
-  selectedSignatureId: string | null;
-  onSelectSignature: (id: string | null) => void;
 }
 
 function normalizePageRotation(rotation: number | null | undefined): number {
@@ -580,248 +471,45 @@ function normalizePageRotation(rotation: number | null | undefined): number {
   return ((Math.round(value) % 4) + 4) % 4;
 }
 
-const PageContent = React.memo(function PageContent({
+function ViewerPageContainer({
   documentId,
   pageIndex,
   width,
   height,
-  pdfRenderMode,
-  enableFormFill,
-  formEditingActive = false,
-  enableAnnotations,
-  enableRedaction,
-  showBakedAnnotations,
-  file,
-  fileId,
-  signatureOverlayEnabled,
-  signaturePreviews,
-  signaturePreviewsReadOnly,
-  signaturePlacementMode,
-  signaturePlacementData,
-  signaturePlacementType,
-  onSignaturePreviewsChange,
-  selectedSignatureId,
-  onSelectSignature,
-}: PageContentProps) {
+  children,
+}: ViewerPageContainerProps) {
   const documentState = useDocumentState(documentId);
   const pageRotation = normalizePageRotation(
     documentState?.document?.pages?.[pageIndex]?.rotation,
   );
 
   return (
-    <Rotate
-      key={`${documentId}-${pageIndex}`}
-      documentId={documentId}
-      pageIndex={pageIndex}
-    >
-      <ViewerPagePointerProvider documentId={documentId} pageIndex={pageIndex}>
-        <div
-          data-page-index={pageIndex}
-          data-page-width={width}
-          data-page-height={height}
-          data-page-rotation={pageRotation}
-          style={{
-            width,
-            height,
-            position: "relative",
-            overflow: "hidden",
-            contain: "layout style paint",
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            MozUserSelect: "none",
-            msUserSelect: "none",
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-          }}
-          draggable={false}
-          onDragStart={(e) => e.preventDefault()}
-          onDrop={(e) => e.preventDefault()}
-          onDragOver={(e) => e.preventDefault()}
-        >
-          <LazyPageContent pageIndex={pageIndex} width={width} height={height}>
-            <TiledPageBackground
-              documentId={documentId}
-              pageIndex={pageIndex}
-              pdfRenderMode={pdfRenderMode}
-            />
-          </LazyPageContent>
-
-          <CustomSearchLayer documentId={documentId} pageIndex={pageIndex} />
-
-          <div
-            className="pdf-selection-layer"
-            style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
-          >
-            <SelectionLayer
-              documentId={documentId}
-              pageIndex={pageIndex}
-              background="var(--pdf-selection-bg)"
-              selectionMenu={(props) => <TextSelectionMenu {...props} />}
-            />
-          </div>
-          <TextSelectionHandler documentId={documentId} pageIndex={pageIndex} />
-
-          {/* ButtonAppearanceOverlay, renders PDF-native button visuals as bitmaps */}
-          {enableFormFill && file && (
-            <ButtonAppearanceOverlay
-              pageIndex={pageIndex}
-              pdfSource={file}
-              pageWidth={width}
-              pageHeight={height}
-            />
-          )}
-
-          {/* FormFieldOverlay for interactive form filling */}
-          {enableFormFill && (
-            <FormFieldOverlay
-              documentId={documentId}
-              pageIndex={pageIndex}
-              pageWidth={width}
-              pageHeight={height}
-              fileId={fileId}
-            />
-          )}
-
-          {/* Create-mode: drag to place new fields */}
-          {enableFormFill && formEditingActive && (
-            <FormFieldCreationOverlay
-              documentId={documentId}
-              pageIndex={pageIndex}
-              pageWidth={width}
-              pageHeight={height}
-              fileId={fileId}
-            />
-          )}
-
-          {/* Modify-mode: select / move / resize existing fields */}
-          {enableFormFill && formEditingActive && (
-            <FormFieldEditOverlay
-              documentId={documentId}
-              pageIndex={pageIndex}
-              pageWidth={width}
-              pageHeight={height}
-              fileId={fileId}
-            />
-          )}
-
-          {/* SignatureFieldOverlay, bitmaps of digital-signature appearances */}
-          {file && (
-            <SignatureFieldOverlay
-              documentId={documentId}
-              pageIndex={pageIndex}
-              pdfSource={file}
-              pageWidth={width}
-              pageHeight={height}
-            />
-          )}
-
-          {/* AnnotationLayer, for annotation editing and annotation-based redactions */}
-          {(enableAnnotations || enableRedaction) && (
-            <AnnotationLayer
-              documentId={documentId}
-              pageIndex={pageIndex}
-              selectionOutline={{ color: "#007ACC" }}
-              selectionMenu={(props) => <AnnotationSelectionMenu {...props} />}
-              style={
-                !showBakedAnnotations
-                  ? { opacity: 0, pointerEvents: "none" }
-                  : undefined
-              }
-            />
-          )}
-
-          {enableRedaction && (
-            <RedactionLayer
-              documentId={documentId}
-              pageIndex={pageIndex}
-              selectionMenu={(props) => <RedactionSelectionMenu {...props} />}
-            />
-          )}
-
-          {/* LinkLayer, uses EmbedPDF annotation state for link rendering */}
-          <LinkLayer documentId={documentId} pageIndex={pageIndex} />
-
-          {/* Signature preview overlay (opt-in; off by default) */}
-          {signatureOverlayEnabled && (
-            <SignaturePreviewLayer
-              pageIndex={pageIndex}
-              pageWidth={width}
-              pageHeight={height}
-              previews={signaturePreviews}
-              readOnly={signaturePreviewsReadOnly}
-              placementMode={signaturePlacementMode}
-              placementData={signaturePlacementData}
-              placementType={signaturePlacementType}
-              onChange={onSignaturePreviewsChange}
-              selectedId={selectedSignatureId}
-              onSelect={onSelectSignature}
-            />
-          )}
-        </div>
-      </ViewerPagePointerProvider>
-    </Rotate>
-  );
-});
-
-const TiledPageBackground = ({
-  documentId,
-  pageIndex,
-  pdfRenderMode = "normal",
-}: TiledPageBackgroundProps) => {
-  return (
     <div
+      data-page-index={pageIndex}
+      data-page-width={width}
+      data-page-height={height}
+      data-page-rotation={pageRotation}
       style={{
-        position: "absolute",
-        inset: 0,
-        backgroundColor: "var(--pdf-page-bg)",
-        transition: "filter 0.25s ease",
-        filter:
-          pdfRenderMode === "dark"
-            ? "invert(1) hue-rotate(180deg)"
-            : pdfRenderMode === "sepia"
-              ? "sepia(0.7) brightness(0.85)"
-              : undefined,
+        width,
+        height,
+        position: "relative",
+        overflow: "hidden", // clip overlays (buttons, fields) that extend beyond the page rect
+        userSelect: "none",
+        WebkitUserSelect: "none",
+        MozUserSelect: "none",
+        msUserSelect: "none",
+        boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
       }}
+      draggable={false}
+      onDragStart={(e) => e.preventDefault()}
+      onDrop={(e) => e.preventDefault()}
+      onDragOver={(e) => e.preventDefault()}
     >
-      <RenderLayer
-        documentId={documentId}
-        pageIndex={pageIndex}
-        scale={0.2}
-        dpr={1.0}
-        style={{ position: "absolute", inset: 0 }}
-      />
-      <div className="pdf-tile-layer">
-        <TilingLayer documentId={documentId} pageIndex={pageIndex} />
-      </div>
+      {children}
     </div>
   );
-};
-
-// DocumentScroller binds documentId to the renderPageFactory so that the
-// Scroller's renderPage prop stays referentially stable across parent
-// re-renders that don't touch the feature flags or file reference.
-interface DocumentScrollerProps {
-  documentId: string;
-  renderPageFactory: (
-    documentId: string,
-  ) => (props: {
-    width: number;
-    height: number;
-    pageIndex: number;
-  }) => React.ReactNode;
 }
 
-const DocumentScroller = React.memo(function DocumentScroller({
-  documentId,
-  renderPageFactory,
-}: DocumentScrollerProps) {
-  const renderPage = useCallback(
-    (props: { width: number; height: number; pageIndex: number }) =>
-      renderPageFactory(documentId)(props),
-    [documentId, renderPageFactory],
-  );
-
-  return <Scroller documentId={documentId} renderPage={renderPage} />;
-});
 export function LocalEmbedPDF({
   file,
   url,
@@ -843,16 +531,16 @@ export function LocalEmbedPDF({
   isSignMode = false,
   pdfRenderMode = "normal",
   signaturePreviews,
-  signaturePreviewsReadOnly: _signaturePreviewsReadOnly = false,
+  signaturePreviewsReadOnly = false,
   signaturePlacementMode = false,
-  signaturePlacementData: _signaturePlacementData,
-  signaturePlacementType: _signaturePlacementType,
+  signaturePlacementData,
+  signaturePlacementType,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
   const { config } = useAppConfig();
-  const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfUrl, setPdfUrl] = useState<string | null>(() => url ?? null);
   const [, setAnnotations] = useState<
     Array<{ id: string; pageIndex: number; rect: Rect }>
   >([]);
@@ -864,7 +552,7 @@ export function LocalEmbedPDF({
 
   // Mount the overlay for controlled previews, placement mode, or once any
   // signature is placed — so leaving placement mode doesn't hide placements.
-  const _signatureOverlayEnabled =
+  const signatureOverlayEnabled =
     signaturePreviews !== undefined ||
     signaturePlacementMode ||
     localSignaturePreviews.length > 0;
@@ -879,7 +567,7 @@ export function LocalEmbedPDF({
     }
   }, [signaturePreviews]);
 
-  const _handleSignaturePreviewsChange = useCallback(
+  const handleSignaturePreviewsChange = useCallback(
     (next: SignaturePreview[]) => {
       setLocalSignaturePreviews(next);
       onSignaturePreviewsChange?.(next);
@@ -932,19 +620,58 @@ export function LocalEmbedPDF({
   useEffect(() => {
     if (url) {
       setPdfUrl(url);
-    } else if (file && fileStableKey) {
-      let objectUrl = globalBlobUrlCache.get(fileStableKey);
-      if (!objectUrl) {
-        objectUrl = URL.createObjectURL(file);
-        cacheBlobUrl(fileStableKey, objectUrl);
-      }
-      setPdfUrl(objectUrl);
+      return;
     }
-    // Do not revoke object URL synchronously on cleanup since the worker/PDFium
-    // might still be asynchronously fetching it during React unmount/remount cycles.
-    // Depend on both the stable file key and the URL: a URL change must reload even
-    // while the same file object is set.
-  }, [fileStableKey, url]);
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      setPdfUrl(objectUrl);
+      return () => URL.revokeObjectURL(objectUrl);
+    }
+    // When file is present, use the stable key to avoid blob URL churn from FileContext
+    // re-renders. When only url is provided, depend on url directly so changes are picked up.
+  }, [url, file ? fileStableKey : null]);
+
+  const [pdfBuffer, setPdfBuffer] = useState<ArrayBuffer | null>(null);
+
+  // Read file/url directly into an ArrayBuffer on the main thread so EmbedPDF's worker
+  // receives the document data via buffer rather than failing to fetch partitioned blob URLs.
+  useEffect(() => {
+    let cancelled = false;
+    setPdfBuffer(null);
+    if (file && typeof (file as Blob).arrayBuffer === "function") {
+      (file as Blob)
+        .arrayBuffer()
+        .then((buf) => {
+          if (!cancelled) setPdfBuffer(buf);
+        })
+        .catch((err) => {
+          console.error(
+            "[LocalEmbedPDF] Failed to read file arrayBuffer:",
+            err,
+          );
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (url) {
+      fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((buf) => {
+          if (!cancelled) setPdfBuffer(buf);
+        })
+        .catch((err) => {
+          console.error(
+            "[LocalEmbedPDF] Failed to fetch url arrayBuffer:",
+            err,
+          );
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+    setPdfBuffer(null);
+  }, [file ? fileStableKey : null, url]);
 
   // Keyed by fileStableKey to avoid recomputing on every FileContext re-render.
   const exportFileName = useMemo(() => {
@@ -955,7 +682,11 @@ export function LocalEmbedPDF({
   }, [fileStableKey, fileName, url]);
 
   const plugins = useMemo(() => {
-    if (!pdfUrl) return [];
+    // When a File object is the source, we MUST wait for the buffer, the
+    // worker cannot fetch partitioned blob: URLs.  pdfUrl is still created
+    // (for thumbnails etc.) but plugins must not start until the buffer lands.
+    if (file && !pdfBuffer) return [];
+    if (!pdfBuffer && !pdfUrl) return [];
 
     const deviceMemory =
       typeof navigator !== "undefined"
@@ -963,23 +694,42 @@ export function LocalEmbedPDF({
           4)
         : 4;
     const bufferSize = deviceMemory >= 4 ? 4 : 2;
+    // Calculate 3.5rem in pixels dynamically based on root font size
+    const rootFontSize = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    );
+    const viewportGap = rootFontSize * 3.5;
 
     return [
       createPluginRegistration(DocumentManagerPluginPackage, {
-        initialDocuments: [
-          {
-            url: pdfUrl,
-            name: exportFileName,
-          },
-        ],
+        initialDocuments: pdfBuffer
+          ? [
+              {
+                buffer: pdfBuffer,
+                name: exportFileName,
+              },
+            ]
+          : pdfUrl
+            ? [
+                {
+                  url: pdfUrl,
+                  name: exportFileName,
+                },
+              ]
+            : [],
       }),
       createPluginRegistration(ViewportPluginPackage, {
-        viewportGap: VIEWPORT_GAP,
+        viewportGap,
         scrollEndDelay: 150,
       }),
       createPluginRegistration(ScrollPluginPackage, {
         defaultBufferSize: bufferSize,
       }),
+      // Register spread plugin before scroll and zoom plugins that depend on it
+      createPluginRegistration(SpreadPluginPackage, {
+        defaultSpreadMode: SpreadMode.None,
+      }),
+      createPluginRegistration(ScrollPluginPackage),
       createPluginRegistration(RenderPluginPackage, {
         withForms: !enableFormFill,
         withAnnotations: !enableAnnotations, // Show baked annotations only when annotation layer is OFF; live layer visibility is controlled via CSS
@@ -1020,7 +770,7 @@ export function LocalEmbedPDF({
 
       // Register zoom plugin with configuration
       createPluginRegistration(ZoomPluginPackage, {
-        defaultZoomLevel: ZoomMode.FitWidth, // Start with FitWidth, will be adjusted in ZoomAPIBridge
+        defaultZoomLevel: ZoomMode.FitWidth,
         minZoom: 0.2,
         maxZoom: 5.0,
       }),
@@ -1031,11 +781,6 @@ export function LocalEmbedPDF({
         overlapPx: 2.5,
         extraRings: 0,
         defaultImageType: "image/bmp", // BMP is faster for local processing than WebP
-      }),
-
-      // Register spread plugin for dual page layout
-      createPluginRegistration(SpreadPluginPackage, {
-        defaultSpreadMode: SpreadMode.None, // Start with single page view
       }),
 
       // Register search plugin for text search
@@ -1058,75 +803,31 @@ export function LocalEmbedPDF({
         defaultFileName: exportFileName,
       }),
 
-      // Register print plugin for printing PDFs
       createPluginRegistration(PrintPluginPackage),
     ];
-  }, [pdfUrl, enableAnnotations, exportFileName]);
+  }, [!!file, pdfBuffer, pdfUrl, enableAnnotations, exportFileName]);
 
-  // Retrieve the global engine instance from context
-  const { engine, isLoading, error } = useEngineContext();
+  const fontFallbackConfig = useMemo(() => getLocalFontFallbackConfig(), []);
 
-  // renderPageFactory creates a stable per-page renderer that closes over
-  // feature flags and file reference. Only recreates when those actually change.
-  // DocumentScroller (below) binds documentId and produces the final renderPage
-  // callback that Scroller expects, keeping documentId in the right closure.
-  const renderPageFactory = useCallback(
-    (documentId: string) =>
-      ({
-        width,
-        height,
-        pageIndex,
-      }: {
-        width: number;
-        height: number;
-        pageIndex: number;
-      }) => (
-        <PageContent
-          key={`${documentId}-${pageIndex}`}
-          documentId={documentId}
-          pageIndex={pageIndex}
-          width={width}
-          height={height}
-          pdfRenderMode={pdfRenderMode}
-          enableFormFill={enableFormFill}
-          formEditingActive={formEditingActive}
-          enableAnnotations={enableAnnotations}
-          enableRedaction={enableRedaction}
-          showBakedAnnotations={showBakedAnnotations}
-          file={file}
-          fileId={fileId}
-          signatureOverlayEnabled={_signatureOverlayEnabled}
-          signaturePreviews={localSignaturePreviews}
-          signaturePreviewsReadOnly={_signaturePreviewsReadOnly}
-          signaturePlacementMode={signaturePlacementMode}
-          signaturePlacementData={_signaturePlacementData}
-          signaturePlacementType={_signaturePlacementType}
-          onSignaturePreviewsChange={_handleSignaturePreviewsChange}
-          selectedSignatureId={selectedSignatureId}
-          onSelectSignature={setSelectedSignatureId}
-        />
-      ),
-    [
-      enableAnnotations,
-      enableRedaction,
-      enableFormFill,
-      formEditingActive,
-      showBakedAnnotations,
-      pdfRenderMode,
-      file,
-      fileId,
-      _signatureOverlayEnabled,
-      localSignaturePreviews,
-      _signaturePreviewsReadOnly,
-      signaturePlacementMode,
-      _signaturePlacementData,
-      _signaturePlacementType,
-      _handleSignaturePreviewsChange,
-      selectedSignatureId,
-    ],
-  );
+  const { engine, isLoading, error } = usePdfiumEngine({
+    wasmUrl: pdfiumWasmUrl,
+    fontFallback: fontFallbackConfig,
+  });
 
-  // Early return if no file or URL provided
+  const [engineTimeout, setEngineTimeout] = useState(false);
+  useEffect(() => {
+    if (!isLoading) {
+      setEngineTimeout(false);
+      return;
+    }
+    const timer = setTimeout(() => {
+      if (isLoading) {
+        setEngineTimeout(true);
+      }
+    }, 15000);
+    return () => clearTimeout(timer);
+  }, [isLoading]);
+
   if (!file && !url) {
     return (
       <Center h="100%" w="100%">
@@ -1167,21 +868,47 @@ export function LocalEmbedPDF({
     );
   }
 
-  if (isLoading || !engine || !pdfUrl) {
-    return <ToolLoadingFallback toolName="PDF Engine" />;
+  const hasInput = Boolean(file || url);
+  const isInputReady = Boolean(pdfBuffer || (!file && pdfUrl));
+
+  if (isLoading || !engine || (hasInput && !isInputReady)) {
+    return (
+      <Center h="100%" w="100%">
+        <Stack align="center" gap="md">
+          <Loader size="lg" />
+          <Text c="dimmed" size="sm">
+            {t("viewer.loadingEngine", "Loading PDF Engine...")}
+          </Text>
+          {engineTimeout && (
+            <Text
+              c="var(--color-red-dark)"
+              size="xs"
+              style={{ textAlign: "center", maxWidth: "360px" }}
+            >
+              {t(
+                "viewer.engineSlowWarning",
+                "PDF engine initialization is taking longer than expected. Please check your browser WebAssembly and Worker settings, or reload the page.",
+              )}
+            </Text>
+          )}
+        </Stack>
+      </Center>
+    );
   }
 
   if (error) {
     return (
       <Center h="100%" w="100%">
         <Stack align="center" gap="md">
-          <div style={{ fontSize: "24px" }}>❌</div>
-          <Text
-            c="var(--color-red-dark)"
-            size="sm"
-            style={{ textAlign: "center" }}
-          >
-            Error loading PDF engine: {error.message}
+          <div style={{ fontSize: "24px" }}>⚠️</div>
+          <Text c="red" size="sm">
+            {t(
+              "viewer.engineLoadError",
+              "Failed to initialize PDF viewer engine",
+            )}
+          </Text>
+          <Text c="dimmed" size="xs">
+            {error.message}
           </Text>
         </Stack>
       </Center>
@@ -1296,91 +1023,251 @@ export function LocalEmbedPDF({
             }
           }}
         >
-          <ActiveDocumentProvider>
-            <ZoomAPIBridge />
-            <ScrollAPIBridge />
-            <SelectionAPIBridge />
-            <FormCreationInteractionLock />
-            <PanAPIBridge />
-            <SpreadAPIBridge />
-            <SearchAPIBridge />
-            <ThumbnailAPIBridge />
-            <RotateAPIBridge />
-            {(enableAnnotations ||
-              enableRedaction ||
-              isManualRedactionMode) && (
-              <HistoryAPIBridge ref={historyApiRef} />
-            )}
-            {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
-            {(enableRedaction || isManualRedactionMode) && (
-              <RedactionAPIBridge />
-            )}
-            {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
-            {(enableAnnotations ||
-              enableRedaction ||
-              isManualRedactionMode) && (
-              <SignatureAPIBridge
-                ref={signatureApiRef}
-                isSignMode={isSignMode}
-              />
-            )}
-            {(enableRedaction || isManualRedactionMode) && (
-              <RedactionPendingTracker ref={redactionTrackerRef} />
-            )}
-            {enableAnnotations && (
-              <AnnotationAPIBridge ref={annotationApiRef} />
-            )}
+          <ZoomAPIBridge />
+          <ScrollAPIBridge />
+          <SelectionAPIBridge />
+          <FormCreationInteractionLock />
+          <PanAPIBridge />
+          <SpreadAPIBridge />
+          <SearchAPIBridge />
+          <ThumbnailAPIBridge />
+          <RotateAPIBridge />
+          {(enableAnnotations || enableRedaction || isManualRedactionMode) && (
+            <HistoryAPIBridge ref={historyApiRef} />
+          )}
+          {/* Always render RedactionAPIBridge when in manual redaction mode so buttons can switch from annotation mode */}
+          {(enableRedaction || isManualRedactionMode) && <RedactionAPIBridge />}
+          {/* Always render SignatureAPIBridge so annotation tools (draw) can be activated even when starting in redaction mode */}
+          {(enableAnnotations || enableRedaction || isManualRedactionMode) && (
+            <SignatureAPIBridge ref={signatureApiRef} isSignMode={isSignMode} />
+          )}
+          {(enableRedaction || isManualRedactionMode) && (
+            <RedactionPendingTracker ref={redactionTrackerRef} />
+          )}
+          {enableAnnotations && <AnnotationAPIBridge ref={annotationApiRef} />}
 
-            <ExportAPIBridge />
-            <BookmarkAPIBridge />
-            <AttachmentAPIBridge />
-            <PrintAPIBridge file={file} url={pdfUrl} fileName={fileName} />
-            <DocumentPermissionsAPIBridge />
-            <DocumentReadyWrapper
-              fallback={
-                <Center style={{ height: "100%", width: "100%" }}>
-                  <ToolLoadingFallback />
-                </Center>
-              }
-            >
-              {(documentId) => (
-                <>
-                  <ViewerGlobalPointerProvider documentId={documentId}>
-                    <Viewport
+          <ExportAPIBridge />
+          <BookmarkAPIBridge />
+          <AttachmentAPIBridge />
+          <PrintAPIBridge file={file} url={pdfUrl} fileName={fileName} />
+          <DocumentPermissionsAPIBridge />
+          <DocumentReadyWrapper
+            fallback={
+              <Center style={{ height: "100%", width: "100%" }}>
+                <ToolLoadingFallback />
+              </Center>
+            }
+          >
+            {(documentId) => (
+              <>
+                <ViewerGlobalPointerProvider documentId={documentId}>
+                  <Viewport
+                    documentId={documentId}
+                    style={{
+                      backgroundColor: "var(--c-bg)",
+                      height: "100%",
+                      width: "100%",
+                      maxHeight: "100%",
+                      maxWidth: "100%",
+                      overflow: "auto",
+                      position: "relative",
+                      flex: 1,
+                      minHeight: 0,
+                      minWidth: 0,
+                      contain: "strict",
+                    }}
+                  >
+                    <Scroller
                       documentId={documentId}
-                      style={{
-                        backgroundColor: "var(--c-bg)",
-                        height: "100%",
-                        width: "100%",
-                        maxHeight: "100%",
-                        maxWidth: "100%",
-                        overflow: "auto",
-                        position: "relative",
-                        flex: 1,
-                        minHeight: 0,
-                        minWidth: 0,
-                        contain: "strict",
+                      renderPage={({ width, height, pageIndex }) => {
+                        return (
+                          <Rotate
+                            key={`${documentId}-${pageIndex}`}
+                            documentId={documentId}
+                            pageIndex={pageIndex}
+                          >
+                            <ViewerPagePointerProvider
+                              documentId={documentId}
+                              pageIndex={pageIndex}
+                            >
+                              <ViewerPageContainer
+                                documentId={documentId}
+                                pageIndex={pageIndex}
+                                width={width}
+                                height={height}
+                              >
+                                <div
+                                  style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    transition: "filter 0.25s ease",
+                                    filter:
+                                      pdfRenderMode === "dark"
+                                        ? "invert(1) hue-rotate(180deg)"
+                                        : pdfRenderMode === "sepia"
+                                          ? "sepia(0.7) brightness(0.85)"
+                                          : undefined,
+                                  }}
+                                >
+                                  <TilingLayer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                  />
+                                </div>
+
+                                <CustomSearchLayer
+                                  documentId={documentId}
+                                  pageIndex={pageIndex}
+                                />
+
+                                <div
+                                  className="pdf-selection-layer"
+                                  style={{
+                                    position: "absolute",
+                                    inset: 0,
+                                    pointerEvents: "none",
+                                  }}
+                                >
+                                  <SelectionLayer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    background="var(--pdf-selection-bg)"
+                                    selectionMenu={(props) => (
+                                      <TextSelectionMenu {...props} />
+                                    )}
+                                  />
+                                </div>
+                                <TextSelectionHandler
+                                  documentId={documentId}
+                                  pageIndex={pageIndex}
+                                />
+
+                                {/* ButtonAppearanceOverlay — renders PDF-native button visuals as bitmaps */}
+                                {enableFormFill && file && (
+                                  <ButtonAppearanceOverlay
+                                    pageIndex={pageIndex}
+                                    pdfSource={file}
+                                    pageWidth={width}
+                                    pageHeight={height}
+                                  />
+                                )}
+
+                                {/* FormFieldOverlay for interactive form filling */}
+                                {enableFormFill && (
+                                  <FormFieldOverlay
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    pageWidth={width}
+                                    pageHeight={height}
+                                    fileId={fileId}
+                                  />
+                                )}
+
+                                {/* Create-mode: drag to place new fields */}
+                                {enableFormFill && formEditingActive && (
+                                  <FormFieldCreationOverlay
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    pageWidth={width}
+                                    pageHeight={height}
+                                    fileId={fileId}
+                                  />
+                                )}
+
+                                {/* Modify-mode: select / move / resize existing fields */}
+                                {enableFormFill && formEditingActive && (
+                                  <FormFieldEditOverlay
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    pageWidth={width}
+                                    pageHeight={height}
+                                    fileId={fileId}
+                                  />
+                                )}
+
+                                {/* SignatureFieldOverlay — bitmaps of digital-signature appearances */}
+                                {file && (
+                                  <SignatureFieldOverlay
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    pdfSource={file}
+                                    pageWidth={width}
+                                    pageHeight={height}
+                                  />
+                                )}
+
+                                {/* AnnotationLayer for annotation editing and annotation-based redactions */}
+                                {(enableAnnotations || enableRedaction) && (
+                                  <AnnotationLayer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    selectionOutline={{ color: "#007ACC" }}
+                                    selectionMenu={(props) => (
+                                      <AnnotationSelectionMenu {...props} />
+                                    )}
+                                    style={
+                                      !showBakedAnnotations
+                                        ? {
+                                            opacity: 0,
+                                            pointerEvents: "none",
+                                          }
+                                        : undefined
+                                    }
+                                  />
+                                )}
+
+                                {enableRedaction && (
+                                  <RedactionLayer
+                                    documentId={documentId}
+                                    pageIndex={pageIndex}
+                                    selectionMenu={(props) => (
+                                      <RedactionSelectionMenu {...props} />
+                                    )}
+                                  />
+                                )}
+
+                                {/* LinkLayer – uses EmbedPDF annotation state for link rendering */}
+                                <LinkLayer
+                                  documentId={documentId}
+                                  pageIndex={pageIndex}
+                                />
+
+                                {/* Signature preview overlay (opt-in; off by default) */}
+                                {signatureOverlayEnabled && (
+                                  <SignaturePreviewLayer
+                                    pageIndex={pageIndex}
+                                    pageWidth={width}
+                                    pageHeight={height}
+                                    previews={localSignaturePreviews}
+                                    readOnly={signaturePreviewsReadOnly}
+                                    placementMode={signaturePlacementMode}
+                                    placementData={signaturePlacementData}
+                                    placementType={signaturePlacementType}
+                                    onChange={handleSignaturePreviewsChange}
+                                    selectedId={selectedSignatureId}
+                                    onSelect={setSelectedSignatureId}
+                                  />
+                                )}
+                              </ViewerPageContainer>
+                            </ViewerPagePointerProvider>
+                          </Rotate>
+                        );
                       }}
-                    >
-                      <DocumentScroller
-                        documentId={documentId}
-                        renderPageFactory={renderPageFactory}
-                      />
-                    </Viewport>
-                  </ViewerGlobalPointerProvider>
-                  {enableAnnotations && (
-                    <CommentAuthorProvider displayName={commentAuthorName}>
-                      <CommentsSidebar
-                        documentId={documentId}
-                        visible={isCommentsSidebarVisible}
-                        rightOffset={commentsSidebarRightOffset}
-                      />
-                    </CommentAuthorProvider>
-                  )}
-                </>
-              )}
-            </DocumentReadyWrapper>
-          </ActiveDocumentProvider>
+                    />
+                  </Viewport>
+                </ViewerGlobalPointerProvider>
+                {enableAnnotations && (
+                  <CommentAuthorProvider displayName={commentAuthorName}>
+                    <CommentsSidebar
+                      documentId={documentId}
+                      visible={isCommentsSidebarVisible}
+                      rightOffset={commentsSidebarRightOffset}
+                    />
+                  </CommentAuthorProvider>
+                )}
+              </>
+            )}
+          </DocumentReadyWrapper>
         </EmbedPDF>
       </div>
     </PrivateContent>
