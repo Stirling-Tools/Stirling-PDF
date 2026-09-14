@@ -1,7 +1,6 @@
 import { useSyncExternalStore } from "react";
 import { useAuth } from "@app/auth/UseSession";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
+import { useGroupSigningState } from "@app/hooks/useGroupSigningEnabled";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
 import {
   getLastSeenSignedCount,
@@ -18,8 +17,7 @@ import {
  */
 export function useSigningBadgeState(): { count: number; settled: boolean } {
   const { loading: authLoading } = useAuth();
-  const { loading: configLoading } = useAppConfig();
-  const enabled = useGroupSigningEnabled();
+  const { enabled, settled: availabilitySettled } = useGroupSigningState();
   const { signRequests, mySessions, settled } = useSigningSessions({
     enabled,
     autoRefreshInterval: enabled ? 60000 : 0,
@@ -45,7 +43,7 @@ export function useSigningBadgeState(): { count: number; settled: boolean } {
 
   return {
     count: enabled ? incoming + ownerUpdates : 0,
-    settled: !authLoading && !configLoading && (!enabled || settled),
+    settled: !authLoading && availabilitySettled && (!enabled || settled),
   };
 }
 
