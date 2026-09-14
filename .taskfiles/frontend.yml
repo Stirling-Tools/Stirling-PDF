@@ -342,7 +342,20 @@ tasks:
     cmds:
       - task: lint:oxlint
       - task: lint:colors
+      - task: lint:icons
       - task: lint:css
+
+  lint:icons:
+    desc: "Enforce one icon system - no inline svg, no retired icon libraries"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/lint/icon-lint.mts
+
+  lint:unused-icons:
+    desc: "Report icons we draw ourselves that nothing renders"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/lint/icon-lint.mts unused
 
   lint:css:
     desc: "Lint stylesheets for duplicate selectors"
