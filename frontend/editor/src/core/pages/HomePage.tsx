@@ -609,7 +609,7 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <Icon name="workflow" size="1.5rem" />
+                  <Icon name="waypoints" size="1.5rem" />
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
