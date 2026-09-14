@@ -158,14 +158,16 @@ describe("InviteMemberModal — direct account creation", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("hides password-change controls for an SSO account", async () => {
+  it("hides and clears password-account controls for an SSO account", async () => {
     const user = userEvent.setup();
+    vi.mocked(createMember).mockResolvedValue("ConnorYoh");
     renderModal({
       canDirectCreate: true,
       canEmailInvite: false,
       hasOauth: true,
     });
 
+    await user.click(screen.getByLabelText("Require MFA setup on first login"));
     await user.click(screen.getByLabelText("Sign-in method"));
     await user.click(screen.getByText("OAuth2 / SSO"));
 
@@ -173,5 +175,23 @@ describe("InviteMemberModal — direct account creation", () => {
     expect(
       screen.queryByLabelText("Require a password change on first login"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Require MFA setup on first login"),
+    ).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/Username/), "ConnorYoh");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() =>
+      expect(createMember).toHaveBeenCalledWith({
+        username: "ConnorYoh",
+        password: undefined,
+        role: "member",
+        teamId: 1,
+        authType: "OAUTH2",
+        forceChange: false,
+        forceMFA: false,
+      }),
+    );
   });
 });
