@@ -1579,6 +1579,9 @@ function ListView({
             {sortIndicator("name-asc", "name-desc")}
           </span>
         </span>
+        <span role="columnheader">
+          {t("filesPage.column.status", "Status")}
+        </span>
         <span role="columnheader">{t("filesPage.column.type", "Type")}</span>
         <span role="columnheader">
           <span {...headerProps("size-asc", "size-desc")}>
@@ -1793,20 +1796,22 @@ const FolderRow = React.memo(function FolderRow({
           compact
         />
       </span>
+      <span role="gridcell" className="files-page-list-status">
+        {processing && (
+          <ProcessingFolderStats
+            recordId={processing.id}
+            listFiles={listProcessingFiles}
+            compact
+          />
+        )}
+      </span>
       <span role="gridcell">
         {processing ? (
-          <>
-            <span className="files-page-processing-tag">
-              {processing.enabled
-                ? t("filesPage.processing.active", "Processing folder")
-                : t("filesPage.processing.paused", "Processing paused")}
-            </span>
-            <ProcessingFolderStats
-              recordId={processing.id}
-              listFiles={listProcessingFiles}
-              compact
-            />
-          </>
+          <span className="files-page-processing-tag">
+            {processing.enabled
+              ? t("filesPage.processing.active", "Processing folder")
+              : t("filesPage.processing.paused", "Processing paused")}
+          </span>
         ) : kind === "virtual" ? (
           t("filesPage.folderKind.virtual", "Browser folder")
         ) : kind === "local" ? (
@@ -2088,16 +2093,18 @@ const FileRow = React.memo(function FileRow({
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
         <PolicyBadgeRow policies={badges} />
-        <FileStateBadge
-          state={processingState}
-          onRetry={() => actions.retryFile(file.name)}
-        />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
             <span className="files-page-card-open-dot" />
             {t("filesPage.inWorkspace", "Open")}
           </span>
         )}
+      </span>
+      <span role="gridcell" className="files-page-list-status">
+        <FileStateBadge
+          state={processingState}
+          onRetry={() => actions.retryFile(file.name)}
+        />
       </span>
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{fileSize}</span>
@@ -2323,6 +2330,8 @@ const DiskFileRow = React.memo(function DiskFileRow({
           )}
           compact
         />
+      </span>
+      <span role="gridcell" className="files-page-list-status">
         <FileStateBadge
           state={state}
           onRetry={() => actions.retryFile(entry.name)}

@@ -4599,6 +4599,7 @@ useColour = "Use color {{c}}"
 modified = "Modified"
 name = "Name"
 size = "Size"
+status = "Status"
 type = "Type"
 
 [filesPage.deleteScope]

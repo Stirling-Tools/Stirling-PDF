@@ -280,7 +280,10 @@
 
 .files-page-list-row {
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 3fr) 1fr 1fr 1fr 2.5rem;
+  grid-template-columns: 2.25rem minmax(0, 3fr) minmax(
+      0,
+      8rem
+    ) 1fr 1fr 1fr 2.5rem;
   gap: 0.5rem;
   align-items: center;
   /* Same offscreen skip as .files-page-card. */
@@ -601,6 +604,16 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-top: 0.3rem;
+}
+
+/* A state belongs to its own column: inline with the name it grew past the cell and
+   ran under the actions. */
+.files-page-list-status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 /* In a row the counts share one line with the tag beside them, and the row's height
