@@ -1,18 +1,18 @@
 import { useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { completeConnect, type ConnectPhase } from "@portal/api/link";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import { completeConnect, type ConnectPhase } from "@app/portal/api/link";
+import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { clearAccountLinkSession } from "@portal/auth/accountLinkSession";
+import { clearAccountLinkSession } from "@app/portal/auth/accountLinkSession";
 import {
   isTerminalSaasAuthError,
   portalSaasSessionRestored,
-} from "@portal/auth/portalSaasSession";
-import type { PendingConnect } from "@portal/auth/pendingConnect";
-import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
-import { useUI } from "@portal/contexts/UIContext";
-import { getPortalQueryClient } from "@portal/queryClient";
-import type { ConnectCallbackState } from "@portal/components/account-link/ConnectCallbackView";
+} from "@app/portal/auth/portalSaasSession";
+import type { PendingConnect } from "@app/portal/auth/pendingConnect";
+import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { getPortalQueryClient } from "@app/portal/queryClient";
+import type { ConnectCallbackState } from "@app/portal/components/account-link/ConnectCallbackView";
 
 /** Tokens are consumed once and removed from router history before any network request. */
 export interface AccountLinkReturn {
@@ -59,7 +59,6 @@ export function ConnectCallbackHost() {
     const { type, nonce, pending } = callback;
     const metadata = {
       mode: pending?.mode ?? ("link" as const),
-      settingsSection: pending?.settingsSection,
     };
     if (
       (type !== "link" && type !== "reauth") ||

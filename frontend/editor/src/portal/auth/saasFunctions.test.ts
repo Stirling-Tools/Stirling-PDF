@@ -5,18 +5,20 @@ const { invoke, getSession, refreshSession } = vi.hoisted(() => ({
   getSession: vi.fn(),
   refreshSession: vi.fn(),
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => ({
     auth: { getSession, refreshSession },
     functions: { invoke },
   }),
 }));
-import { invokeSaasFunction } from "@portal/auth/saasFunctions";
+import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
 import {
   resetPortalSaasSessionState,
   SaasSessionRequiredError,
-} from "@portal/auth/portalSaasSession";
+} from "@app/portal/auth/portalSaasSession";
 
 describe("SaaS edge session recovery", () => {
   beforeEach(() => {

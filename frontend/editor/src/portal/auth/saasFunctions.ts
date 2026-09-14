@@ -1,7 +1,7 @@
 import { FunctionsHttpError } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
-import { withPortalSaasSession } from "@portal/auth/portalSaasSession";
+import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
 
 /** Attended edge calls share auth recovery; only explicitly read-only operations may be replayed. */
 export async function invokeSaasFunction<T>(

@@ -7,21 +7,21 @@ const mocks = vi.hoisted(() => ({
   applyLinkFacts: vi.fn(),
   markStatusKnown: vi.fn(),
 }));
-vi.mock("@portal/api/link", () => ({
+vi.mock("@app/portal/api/link", () => ({
   fetchStatus: mocks.fetchStatus,
   unlinkInstance: mocks.unlinkInstance,
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({
+vi.mock("@app/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
-vi.mock("@portal/auth/accountLinkSession", () => ({
+vi.mock("@app/portal/auth/accountLinkSession", () => ({
   clearAccountLinkSession: mocks.clearAccountLinkSession,
 }));
-vi.mock("@portal/contexts/LinkContext", () => ({
+vi.mock("@app/portal/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => mocks.applyLinkFacts,
   useLink: () => ({ markStatusKnown: mocks.markStatusKnown }),
 }));
-import { useAccountLink } from "@portal/hooks/useAccountLink";
+import { useAccountLink } from "@app/portal/hooks/useAccountLink";
 
 beforeEach(() => {
   vi.clearAllMocks();

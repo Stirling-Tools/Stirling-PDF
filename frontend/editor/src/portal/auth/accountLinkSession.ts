@@ -1,6 +1,6 @@
 import { clearSupabaseSession } from "@app/auth/supabase/supabaseClient";
-import { clearPendingConnect } from "@portal/auth/pendingConnect";
-import { getPortalQueryClient } from "@portal/queryClient";
+import { clearPendingConnect } from "@app/portal/auth/pendingConnect";
+import { getPortalQueryClient } from "@app/portal/queryClient";
 
 const OWNER_KEY = "stirling.portalSaasOwner";
 

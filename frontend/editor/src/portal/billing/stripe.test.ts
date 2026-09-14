@@ -11,7 +11,9 @@ const { getClient, invoke, rpc } = vi.hoisted(() => ({
   rpc: vi.fn(),
 }));
 
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => getClient(),
   configureSupabase: vi.fn(),
@@ -28,8 +30,8 @@ import {
   getLatestBundleQuote,
   StripeFunctionError,
   upsertBundleQuote,
-} from "@portal/billing/stripe";
-import { SaasSessionRequiredError } from "@portal/auth/portalSaasSession";
+} from "@app/portal/billing/stripe";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 
 const req = { teamId: 1, successUrl: "s", cancelUrl: "c" } as const;
 

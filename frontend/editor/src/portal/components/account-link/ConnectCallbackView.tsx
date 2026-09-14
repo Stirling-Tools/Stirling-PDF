@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { Banner, Spinner } from "@app/ui";
-import { ConnectDoneSlide } from "@portal/components/account-link/connect/ConnectDoneSlide";
-import type { ConnectMode } from "@portal/auth/pendingConnect";
-import "@portal/components/account-link/connect/connect.css";
+import { ConnectDoneSlide } from "@app/portal/components/account-link/connect/ConnectDoneSlide";
+import type { ConnectMode } from "@app/portal/auth/pendingConnect";
+import "@app/portal/components/account-link/connect/connect.css";
 
 /** Outcomes of returning from the approval page. */
 export type ConnectCallbackState =
@@ -15,7 +15,6 @@ export type ConnectCallbackState =
 
 export interface ConnectOutcome {
   mode?: ConnectMode;
-  settingsSection?: string | null;
   state: ConnectCallbackState;
   /** True only after the server accepts the callback and the SDK installs its session. */
   sessionRestored: boolean;

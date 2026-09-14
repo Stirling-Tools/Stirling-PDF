@@ -18,15 +18,17 @@ vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => ({ auth: { getSession, refreshSession } }),
   configureSupabase: vi.fn(),
 }));
-vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 
 import {
   apiClient,
   HttpError,
   SaasNotLinkedError,
   SaasUnconfiguredError,
-} from "@portal/api/http";
-import { resetPortalSaasSessionState } from "@portal/auth/portalSaasSession";
+} from "@app/portal/api/http";
+import { resetPortalSaasSessionState } from "@app/portal/auth/portalSaasSession";
 
 const fetchMock = vi.fn();
 

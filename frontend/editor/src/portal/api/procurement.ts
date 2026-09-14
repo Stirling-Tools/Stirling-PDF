@@ -1,7 +1,7 @@
-import { apiClient } from "@portal/api/http";
-import { resolveDemoResponse } from "@portal/api/demoData";
-import { saasApiBase } from "@portal/api/saasApiBase";
-import { invokeSaasFunction } from "@portal/auth/saasFunctions";
+import { apiClient } from "@app/portal/api/http";
+import { resolveDemoResponse } from "@app/portal/api/demoData";
+import { saasApiBase } from "@app/portal/api/saasApiBase";
+import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
 
 /*
  * Procurement models the enterprise commercial journey: trial → quote → agreement → payment →

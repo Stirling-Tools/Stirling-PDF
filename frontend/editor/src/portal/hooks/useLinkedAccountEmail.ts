@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
-import { usePortalSaasSession } from "@portal/hooks/usePortalSaasSession";
+import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 
 /**
  * The email of the linked SaaS account, read from the in-app SaaS Supabase

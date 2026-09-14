@@ -1,8 +1,8 @@
 import type { Stripe } from "@stripe/stripe-js";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
-import { invokeSaasFunction } from "@portal/auth/saasFunctions";
-import { withPortalSaasSession } from "@portal/auth/portalSaasSession";
+import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
+import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
 
 /**
  * Stripe checkout + portal sessions, minted via the SaaS Supabase edge

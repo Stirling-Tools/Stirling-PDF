@@ -1,9 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { errorMessage } from "@portal/api/http";
-import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
-import { fetchStatus, unlinkInstance, type LinkStatus } from "@portal/api/link";
-import { useApplyLinkFacts, useLink } from "@portal/contexts/LinkContext";
-import { clearAccountLinkSession } from "@portal/auth/accountLinkSession";
+import { errorMessage } from "@app/portal/api/http";
+import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
+import {
+  fetchStatus,
+  unlinkInstance,
+  type LinkStatus,
+} from "@app/portal/api/link";
+import { useApplyLinkFacts, useLink } from "@app/portal/contexts/LinkContext";
+import { clearAccountLinkSession } from "@app/portal/auth/accountLinkSession";
 
 /** Reads and clears THIS instance's link status. */
 

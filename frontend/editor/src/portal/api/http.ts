@@ -41,19 +41,19 @@
  * entitlement calls. It never enters the portal — the browser is the human
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
-import { withPortalSaasSession } from "@portal/auth/portalSaasSession";
-import { reportAccountLinkBlock } from "@portal/services/accountLinkBlock";
+import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
+import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
 export {
   SaasSessionRequiredError,
   SaasSessionRequiredError as SaasNotLinkedError,
-} from "@portal/auth/portalSaasSession";
-import { resolveDemoResponse } from "@portal/api/demoData";
-import { saasApiBase } from "@portal/api/saasApiBase";
+} from "@app/portal/auth/portalSaasSession";
+import { resolveDemoResponse } from "@app/portal/api/demoData";
+import { saasApiBase } from "@app/portal/api/saasApiBase";
 import {
   localAuthHeader,
   localBaseUrl,
   onLocalUnauthorized,
-} from "@portal/api/localBackend";
+} from "@app/portal/api/localBackend";
 
 /**
  * SaaS base URL via the flavor seam: self-hosted reads VITE_SAAS_API_URL (a

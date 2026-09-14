@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, screen, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { UIProvider, type LinkModalMode } from "@portal/contexts/UIContext";
-import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import { UIProvider, type LinkModalMode } from "@app/portal/contexts/UIContext";
+import { PortalTestProviders } from "@app/portal/test/TestQueryProvider";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
 const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
@@ -12,9 +12,9 @@ const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
   EMAIL: "admin@acme.example",
 }));
 
-vi.mock("@portal/api/link", () => ({ startConnect, startReauth }));
-vi.mock("@portal/api/billing", () => ({ fetchWallet }));
-vi.mock("@portal/auth/saasSupabase", () => ({
+vi.mock("@app/portal/api/link", () => ({ startConnect, startReauth }));
+vi.mock("@app/portal/api/billing", () => ({ fetchWallet }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
   // Step 3 reads the connected account's email off this session.
   ensureSaasSupabase: () => ({
@@ -25,9 +25,9 @@ vi.mock("@portal/auth/saasSupabase", () => ({
   }),
 }));
 
-import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
-import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
-import { freeWallet } from "@portal/components/billing/walletFixtures";
+import { LinkAccountModal } from "@app/portal/components/account-link/LinkAccountModal";
+import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
+import { freeWallet } from "@app/portal/components/billing/walletFixtures";
 
 const AUTHORIZE = "http://localhost:5174/link?request=req-1";
 
@@ -97,6 +97,39 @@ describe("LinkAccountModal", () => {
         assign,
       },
     });
+  });
+
+  it.each([
+    { state: "expired" as const, sessionRestored: false },
+    { state: "linked" as const, sessionRestored: false },
+  ])(
+    "shows a failed renewal retry after $state and lets the owner retry again",
+    async (outcome) => {
+      startReauth.mockRejectedValueOnce(new Error("offline"));
+      renderModal("reauth", outcome);
+      click(/Try again/);
+      expect(await screen.findByText(/outbound network access/)).toBeTruthy();
+      expect(assign).not.toHaveBeenCalled();
+      expect(screen.queryByText(GHOST)).toBeNull();
+      click(/Sign in again/);
+      await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+      expect(startReauth).toHaveBeenCalledTimes(2);
+      expect(startConnect).not.toHaveBeenCalled();
+    },
+  );
+
+  it("shows callback configuration guidance when retrying a partial session fails", async () => {
+    startReauth.mockResolvedValue({
+      phase: "CALLBACK_MISMATCH",
+      authorizeUrl: null,
+    });
+    renderModal("reauth", { state: "linked", sessionRestored: false });
+    click(/Try again/);
+    expect(
+      await screen.findByText(/configured frontend address does not match/),
+    ).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Sign in again/ })).toBeTruthy();
+    expect(assign).not.toHaveBeenCalled();
   });
 
   it("opens on the pitch, and asks nothing of the backend until told", () => {

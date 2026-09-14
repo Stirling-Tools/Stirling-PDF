@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import { withBasePath } from "@app/constants/app";
-import { startConnect, startReauth } from "@portal/api/link";
-import { rememberConnect } from "@portal/auth/pendingConnect";
+import { startConnect, startReauth } from "@app/portal/api/link";
+import { rememberConnect } from "@app/portal/auth/pendingConnect";
 
 interface ConnectHandoff {
   /** Stays true through a successful hand-off: the page is leaving, so nothing resolves. */
@@ -75,7 +75,6 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
             ownerId,
             mode: reauth ? "reauth" : "link",
             returnTo: `${location.pathname}${location.search}`,
-            settingsSection: null,
             browserState,
           });
           window.location.assign(status.authorizeUrl);

@@ -3,13 +3,12 @@ import {
   clearPendingConnect,
   readPendingConnect,
   rememberConnect,
-} from "@portal/auth/pendingConnect";
+} from "@app/portal/auth/pendingConnect";
 
 const pending = {
   ownerId: "owner",
   mode: "reauth" as const,
   returnTo: "/processor/usage?period=month",
-  settingsSection: "account-link",
   browserState: "unpredictable-state",
 };
 

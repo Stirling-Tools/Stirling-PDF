@@ -4,9 +4,9 @@ import { PortalSettingsSectionHost } from "@app/portal/components/settings/Porta
 import { act, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
-import { UIProvider, useUI } from "@portal/contexts/UIContext";
-import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
-import { rememberConnect } from "@portal/auth/pendingConnect";
+import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
+import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
+import { rememberConnect } from "@app/portal/auth/pendingConnect";
 import { AuthApiError } from "@supabase/supabase-js";
 
 /** A live session token rides in the fragment: strip it at once, refuse what cannot be verified. */
@@ -22,15 +22,15 @@ const { completeConnect, startConnect, setSession, refresh, client } =
     };
   });
 
-vi.mock("@portal/api/link", () => ({ completeConnect, startConnect }));
-vi.mock("@portal/auth/saasSupabase", () => ({
+vi.mock("@app/portal/api/link", () => ({ completeConnect, startConnect }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
   ensureSaasSupabase: () => client,
 }));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => client,
   clearSupabaseSession: vi.fn(),
 }));
-vi.mock("@portal/contexts/AccountLinkContext", () => ({
+vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
   AccountLinkProvider: ({ children }: { children: ReactNode }) => children,
   useAccountLinkContext: () => ({ refresh }),
 }));
@@ -49,8 +49,8 @@ vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
   LinkAccountModal: () => null,
 }));
 
-import ConnectCallback from "@portal/views/ConnectCallback";
-import { ConnectCallbackHost } from "@portal/components/account-link/ConnectCallbackHost";
+import ConnectCallback from "@app/portal/views/ConnectCallback";
+import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
 
 const NONCE = "the-nonce";
 
@@ -117,7 +117,6 @@ describe("account-link callback", () => {
       ownerId: "owner",
       mode: "link",
       returnTo: "/processor",
-      settingsSection: null,
       browserState: "browser-state",
     });
     completeConnect.mockResolvedValue({
@@ -136,7 +135,6 @@ describe("account-link callback", () => {
         ownerId: "owner",
         mode: "reauth",
         returnTo,
-        settingsSection: null,
         browserState: "browser-state",
       });
       landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
@@ -360,19 +358,17 @@ describe("account-link callback", () => {
     expect(completeConnect).not.toHaveBeenCalled();
   });
 
-  it("preserves renewal mode, destination and settings across the full callback", async () => {
+  it("preserves renewal mode and destination across the full callback", async () => {
     rememberConnect({
       mode: "reauth",
       ownerId: "owner",
       returnTo: "/processor/usage",
-      settingsSection: "account-link",
       browserState: "browser-state",
     });
     landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
     const screen = renderFlow();
     await waitFor(() => expect(lastOutcome()?.state).toBe("linked"));
     expect(modalMode).toBe("reauth");
-    expect(lastOutcome()?.settingsSection).toBe("account-link");
     expect(screen.getByTestId("usage")).toBeTruthy();
   });
 

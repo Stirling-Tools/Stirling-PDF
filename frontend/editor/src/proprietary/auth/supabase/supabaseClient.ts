@@ -20,6 +20,7 @@ export interface SupabaseConfig {
 }
 
 let client: SupabaseClient | null = null;
+let unsubscribeAuth: (() => void) | null = null;
 let generation = 0;
 let storageKey: string | null = null;
 let clientInvalidation: string | null = null;
@@ -35,6 +36,8 @@ function readInvalidation(): string | null {
 
 function invalidateClient(): void {
   generation++;
+  unsubscribeAuth?.();
+  unsubscribeAuth = null;
   if (client) void client.auth.stopAutoRefresh().catch(() => {});
   client = null;
   window.dispatchEvent(new Event("stirling-saas-session-cleared"));
@@ -46,6 +49,7 @@ window.addEventListener("storage", (event) => {
 
 /** Create (or replace) the shared Supabase client. Returns the instance. */
 export function configureSupabase(config: SupabaseConfig): SupabaseClient {
+  unsubscribeAuth?.();
   if (client) void client.auth.stopAutoRefresh().catch(() => {});
   const current = ++generation;
   const invalidation = readInvalidation();
@@ -146,6 +150,32 @@ export function configureSupabase(config: SupabaseConfig): SupabaseClient {
       detectSessionInUrl: config.authOptions?.detectSessionInUrl ?? true,
     },
   });
+  const configuredClient = client;
+  const {
+    data: { subscription },
+  } = client.auth.onAuthStateChange((event, session) => {
+    if (
+      active() &&
+      session &&
+      (event === "SIGNED_IN" || event === "TOKEN_REFRESHED")
+    ) {
+      // A retired client can still broadcast a refresh; only the persisted session may restore access.
+      // Do not await inside the SDK callback: getSession needs the auth lock it currently holds.
+      void configuredClient.auth
+        .getSession()
+        .then(({ data, error }) => {
+          if (
+            active() &&
+            !error &&
+            data.session?.access_token === session.access_token
+          ) {
+            window.dispatchEvent(new Event("stirling-saas-session-restored"));
+          }
+        })
+        .catch(() => {});
+    }
+  });
+  unsubscribeAuth = () => subscription.unsubscribe();
   return client;
 }
 

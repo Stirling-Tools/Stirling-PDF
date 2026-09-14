@@ -1,9 +1,9 @@
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth";
 import { Banner, Button } from "@app/ui";
-import { usePortalSaasSession } from "@portal/hooks/usePortalSaasSession";
-import { useLink } from "@portal/contexts/LinkContext";
-import { useUI } from "@portal/contexts/UIContext";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { useLink } from "@app/portal/contexts/LinkContext";
+import { useUI } from "@app/portal/contexts/UIContext";
 
 /** Recovery for attended calls, including checkout and settings, without changing instance status. */
 export function SaasSessionBanner() {

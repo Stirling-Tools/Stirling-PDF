@@ -1,15 +1,22 @@
 import { isAuthError, isAuthSessionMissingError } from "@supabase/supabase-js";
 import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
 
 let refreshPromise: Promise<string | null> | null = null;
 let generation = 0;
+let rejectedToken: string | null = null;
 let snapshot = { required: false, revision: 0 };
 const listeners = new Set<() => void>();
 window.addEventListener(
   "stirling-saas-session-cleared",
   resetPortalSaasSessionState,
 );
+
+window.addEventListener("stirling-saas-session-restored", clearRecoveryPrompt);
+
+function clearRecoveryPrompt(): void {
+  if (snapshot.required) update(false);
+}
 
 /** Browser authorization can expire while the instance remains linked. */
 export class SaasSessionRequiredError extends Error {
@@ -38,19 +45,19 @@ export function resetPortalSaasSessionState(): void {
   update(false);
 }
 
-/** Publish only after the callback has validated and installed the session. */
+/** Reload attended data after the callback validates and installs the session. */
 export function portalSaasSessionRestored(): void {
-  generation++;
-  refreshPromise = null;
   update(false);
 }
 
 function update(required: boolean): void {
+  if (!required) rejectedToken = null;
   snapshot = { required, revision: snapshot.revision + 1 };
   listeners.forEach((listener) => listener());
 }
 
-function sessionRequired(): never {
+function sessionRequired(token: string | null = null): never {
+  rejectedToken = token;
   if (!snapshot.required) update(true);
   throw new SaasSessionRequiredError();
 }
@@ -121,13 +128,17 @@ export async function withPortalSaasSession<T>(
   if (!token) return sessionRequired();
   const response = await send(token);
   if (started !== generation) throw new SaasSessionRequiredError();
-  if (!unauthorized(response)) return response;
-  if (!retry) return sessionRequired();
+  if (!unauthorized(response)) {
+    if (token !== rejectedToken) clearRecoveryPrompt();
+    return response;
+  }
+  if (!retry) return sessionRequired(token);
   const renewed = await refreshPortalSaasToken(token);
   if (started !== generation) throw new SaasSessionRequiredError();
-  if (!renewed) return sessionRequired();
+  if (!renewed) return sessionRequired(token);
   const retried = await send(renewed);
   if (started !== generation) throw new SaasSessionRequiredError();
-  if (unauthorized(retried)) return sessionRequired();
+  if (unauthorized(retried)) return sessionRequired(renewed);
+  clearRecoveryPrompt();
   return retried;
 }

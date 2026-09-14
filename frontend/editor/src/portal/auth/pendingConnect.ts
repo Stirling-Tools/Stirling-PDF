@@ -5,7 +5,6 @@ export interface PendingConnect {
   ownerId: string;
   mode: ConnectMode;
   returnTo: string;
-  settingsSection: string | null;
   browserState: string;
 }
 
@@ -13,10 +12,10 @@ const KEY = "stirling.portalConnect";
 
 /** Retains tab-local intent across the SaaS redirect; never stores access or refresh tokens. */
 export function rememberConnect(pending: PendingConnect): void {
-  const { ownerId, mode, returnTo, settingsSection, browserState } = pending;
+  const { ownerId, mode, returnTo, browserState } = pending;
   sessionStorage.setItem(
     KEY,
-    JSON.stringify({ ownerId, mode, returnTo, settingsSection, browserState }),
+    JSON.stringify({ ownerId, mode, returnTo, browserState }),
   );
 }
 
@@ -48,10 +47,6 @@ export function readPendingConnect(): PendingConnect | null {
       mode: value.mode,
       browserState: value.browserState,
       returnTo: `${url.pathname}${url.search}`,
-      settingsSection:
-        typeof value.settingsSection === "string"
-          ? value.settingsSection
-          : null,
     };
   } catch {
     return null;

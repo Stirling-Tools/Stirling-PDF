@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@app/portal/api/http";
 
 /** Link status for this instance (GET /api/v1/account-link/status). */
 export interface LinkStatus {

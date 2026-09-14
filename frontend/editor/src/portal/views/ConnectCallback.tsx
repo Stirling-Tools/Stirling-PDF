@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import type { AccountLinkReturn } from "@portal/components/account-link/ConnectCallbackHost";
+import type { AccountLinkReturn } from "@app/portal/components/account-link/ConnectCallbackHost";
 import {
   readPendingConnect,
   clearPendingConnect,
-} from "@portal/auth/pendingConnect";
+} from "@app/portal/auth/pendingConnect";
 
 /**
  * Return leg of the account-link handshake. Stirling redirects here with the

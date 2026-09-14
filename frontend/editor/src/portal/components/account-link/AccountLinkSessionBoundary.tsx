@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { useAuth } from "@app/auth";
-import { bindAccountLinkSession } from "@portal/auth/accountLinkSession";
+import { bindAccountLinkSession } from "@app/portal/auth/accountLinkSession";
 
 /** Prevents attended queries and callbacks from running under a previous local user's session. */
 export function AccountLinkSessionBoundary({

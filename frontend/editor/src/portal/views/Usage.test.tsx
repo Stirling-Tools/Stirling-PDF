@@ -45,9 +45,17 @@ vi.mock("@app/portal/components/billing/SubscribedPlanView", () => ({
 import { Usage } from "@app/portal/views/Usage";
 import {
   portalSaasSessionRestored,
+  withPortalSaasSession,
   SaasSessionRequiredError,
   resetPortalSaasSessionState,
 } from "@app/portal/auth/portalSaasSession";
+
+vi.mock("@app/auth/supabase/supabaseClient", () => ({
+  getSupabaseClient: () => null,
+}));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
+  ensureSaasSupabase: vi.fn(),
+}));
 
 describe("Usage — link-free wallet renderer", () => {
   // Enough of a wallet for BillingScreen to render; the bare {status} fixture predates it.
@@ -102,6 +110,29 @@ describe("Usage — link-free wallet renderer", () => {
     });
     expect(fetchWallet).toHaveBeenCalledTimes(1);
     expect(screen.queryByText("Session expired")).not.toBeInTheDocument();
+  });
+
+  it("reloads billing after SDK recovery from another tab", async () => {
+    await expect(
+      withPortalSaasSession(
+        async () => 401,
+        (status) => status === 401,
+      ),
+    ).rejects.toBeInstanceOf(SaasSessionRequiredError);
+    fetchWallet
+      .mockRejectedValueOnce(new SaasSessionRequiredError())
+      .mockResolvedValue(walletOf("free"));
+    const onWalletLoaded = vi.fn();
+    renderUsage(<Usage onWalletLoaded={onWalletLoaded} />);
+    await screen.findByText("Session expired");
+    act(() =>
+      window.dispatchEvent(new Event("stirling-saas-session-restored")),
+    );
+    await waitFor(() =>
+      expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),
+    );
+    expect(screen.queryByText("Session expired")).not.toBeInTheDocument();
+    expect(fetchWallet).toHaveBeenCalledTimes(2);
   });
 
   it("reloads billing and clears the expired-session view after renewal", async () => {

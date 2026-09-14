@@ -1,19 +1,19 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Skeleton, StatusBadge } from "@app/ui";
-import { useAsync } from "@portal/hooks/useAsync";
-import { usePortalSaasSession } from "@portal/hooks/usePortalSaasSession";
-import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
-import { useLink, LINK_INFO } from "@portal/contexts/LinkContext";
-import { HttpError } from "@portal/api/http";
+import { useAsync } from "@app/portal/hooks/useAsync";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
+import { useLink, LINK_INFO } from "@app/portal/contexts/LinkContext";
+import { HttpError } from "@app/portal/api/http";
 import {
   fetchInstances,
   revokeInstance as apiRevokeInstance,
   type LinkedInstanceRow,
-} from "@portal/api/link";
-import { LinkAccountCard } from "@portal/components/account-link/LinkAccountCard";
-import { LinkedInstancesTable } from "@portal/components/account-link/LinkedInstancesTable";
-import "@portal/views/AccountLink.css";
+} from "@app/portal/api/link";
+import { LinkAccountCard } from "@app/portal/components/account-link/LinkAccountCard";
+import { LinkedInstancesTable } from "@app/portal/components/account-link/LinkedInstancesTable";
+import "@app/portal/views/AccountLink.css";
 
 /**
  * Account-link surface rendered inside the Settings modal (Admin group). Same

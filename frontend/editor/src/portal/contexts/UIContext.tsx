@@ -7,8 +7,8 @@ import {
 } from "react";
 import { navigateToSettings } from "@app/utils/settingsNavigation";
 import type { NavKey } from "@app/components/shared/config/types";
-import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
-import { clearPendingConnect } from "@portal/auth/pendingConnect";
+import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
+import { clearPendingConnect } from "@app/portal/auth/pendingConnect";
 
 /**
  * Why the dialog is open. All three run the same handshake; the mode only chooses the pitch.
