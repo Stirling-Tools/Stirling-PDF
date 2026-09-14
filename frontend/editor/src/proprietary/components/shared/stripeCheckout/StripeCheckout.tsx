@@ -52,7 +52,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   planGroup,
   minimumSeats = 1,
   initialEmail,
-  combinedChoose = false,
+  combinedChoose: requestedCombinedChoose = false,
   currentLimit = null,
   onSuccess,
   onError,
@@ -61,6 +61,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 }) => {
   const { t } = useTranslation();
   const isMobile = useIsMobile();
+  const sellsCapacity = planGroup.tier === "server";
+  const combinedChoose = requestedCombinedChoose && sellsCapacity;
 
   // Initialize all state via custom hook
   const checkoutState = useCheckoutState(planGroup);
@@ -124,10 +126,6 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       checkoutState.setEmailError(validation.error);
     }
   };
-
-  // Only the Team tier is sold by capacity. Enterprise is priced per seat and free has nothing to
-  // size, so both go straight to payment.
-  const sellsCapacity = planGroup.tier === "server";
 
   // Plan selection handler
   const handlePlanSelect = (period: "monthly" | "yearly") => {

@@ -1,8 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
 import type { PlanTierGroup } from "@app/services/licenseService";
-const service = vi.hoisted(() => ({ getLicenseInfo: vi.fn() }));
+const service = vi.hoisted(() => ({
+  getLicenseInfo: vi.fn(),
+  createCheckoutSession: vi.fn(),
+}));
 vi.mock("@app/services/licenseService", () => ({ default: service }));
 vi.mock("@app/hooks/useIsMobile", () => ({ useIsMobile: () => false }));
 vi.mock("@mantine/core", () => ({
@@ -16,10 +19,14 @@ vi.mock(
 );
 vi.mock(
   "@app/components/shared/stripeCheckout/hooks/useCheckoutSession",
-  () => ({ useCheckoutSession: () => ({}) }),
+  () => ({
+    useCheckoutSession: () => ({
+      createCheckoutSession: service.createCheckoutSession,
+    }),
+  }),
 );
 vi.mock("@app/components/shared/stripeCheckout/stages/PaymentStage", () => ({
-  PaymentStage: () => null,
+  PaymentStage: () => <div>Payment details</div>,
 }));
 vi.mock("@app/components/shared/stripeCheckout/stages/SuccessStage", () => ({
   SuccessStage: () => null,
@@ -28,11 +35,40 @@ vi.mock("@app/components/shared/stripeCheckout/stages/ErrorStage", () => ({
   ErrorStage: () => null,
 }));
 vi.mock("@app/components/shared/stripeCheckout/stages/EmailStage", () => ({
-  EmailStage: () => <div>Buyer email</div>,
+  EmailStage: ({
+    emailInput,
+    setEmailInput,
+    onSubmit,
+  }: {
+    emailInput: string;
+    setEmailInput: (email: string) => void;
+    onSubmit: () => void;
+  }) => (
+    <div>
+      Buyer email
+      <input
+        aria-label="Email"
+        value={emailInput}
+        onChange={(event) => setEmailInput(event.target.value)}
+      />
+      <button onClick={onSubmit}>Continue</button>
+    </div>
+  ),
 }));
 vi.mock(
   "@app/components/shared/stripeCheckout/stages/PlanSelectionStage",
-  () => ({ PlanSelectionStage: () => <div>Billing period</div> }),
+  () => ({
+    PlanSelectionStage: ({
+      onSelectPlan,
+    }: {
+      onSelectPlan: (period: "monthly" | "yearly") => void;
+    }) => (
+      <div>
+        Billing period
+        <button onClick={() => onSelectPlan("monthly")}>Monthly</button>
+      </div>
+    ),
+  }),
 );
 vi.mock("@app/components/shared/stripeCheckout/stages/CapacityStage", () => ({
   CapacityStage: ({
@@ -125,4 +161,38 @@ describe("capacity checkout entry", () => {
     ).toBeInTheDocument();
     expect(service.getLicenseInfo).not.toHaveBeenCalled();
   });
+});
+
+describe("combined checkout for plans without capacity", () => {
+  it.each(["supplied email", "existing license", "email entry"])(
+    "reaches payment from %s",
+    async (entry) => {
+      service.getLicenseInfo.mockResolvedValue(
+        entry === "existing license"
+          ? { licenseType: "ENTERPRISE", licenseKey: "test-license" }
+          : { licenseType: "NORMAL" },
+      );
+      render(
+        <StripeCheckout
+          opened
+          onClose={() => {}}
+          planGroup={{ ...planGroup, tier: "enterprise" }}
+          combinedChoose
+          initialEmail={
+            entry === "supplied email" ? "buyer@example.test" : undefined
+          }
+        />,
+      );
+      if (entry === "email entry") {
+        await screen.findByText("Buyer email");
+        fireEvent.change(screen.getByLabelText("Email"), {
+          target: { value: "buyer@example.test" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: "Continue" }));
+      }
+      fireEvent.click(await screen.findByRole("button", { name: "Monthly" }));
+      expect(await screen.findByText("Payment details")).toBeInTheDocument();
+      expect(screen.queryByText(/Capacity:/)).not.toBeInTheDocument();
+    },
+  );
 });
