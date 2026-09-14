@@ -4,6 +4,46 @@
  */
 
 import licenseService, { LicenseInfo } from "@app/services/licenseService";
+import { verifyTeamCheckout } from "@app/services/serverPlanCheckout";
+import { requiresLocalTeamActivation } from "@app/services/teamPlanActivation";
+
+/** Waits for account capacity, then refreshes the linked server without requesting a licence key. */
+export async function pollTeamCheckout(
+  sessionId: string,
+  quantity: number,
+  config: PollConfig & { onActivated?: (info: LicenseInfo) => void } = {},
+): Promise<LicenseActivationResult> {
+  const delays = config.backoffMs ?? [0, 1000, 2000, 4000, 8000, 16000];
+  config.onStatusChange?.("polling");
+  for (const delay of delays) {
+    if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
+    if (config.isMounted && !config.isMounted()) return { success: false };
+    try {
+      if (await verifyTeamCheckout(sessionId, quantity)) {
+        if (!(await requiresLocalTeamActivation())) {
+          config.onStatusChange?.("ready");
+          return { success: true };
+        }
+        const result = await resyncExistingLicense({
+          isMounted: config.isMounted,
+          onActivated: config.onActivated,
+        });
+        if (
+          result.success &&
+          (result.licenseType === "SERVER" ||
+            result.licenseType === "ENTERPRISE")
+        ) {
+          config.onStatusChange?.("ready");
+          return result;
+        }
+      }
+    } catch {
+      // A delayed webhook or transient transport error can recover on the next attempt.
+    }
+  }
+  config.onStatusChange?.("timeout");
+  return { success: false, error: "Team activation is still pending" };
+}
 
 /**
  * Result of license key polling

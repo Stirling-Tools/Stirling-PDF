@@ -30,6 +30,23 @@ beforeEach(() => {
 });
 
 describe("createServerPlanCheckoutSession", () => {
+  it("keeps Enterprise on the licence-issuing path", async () => {
+    getSession.mockResolvedValue({ data: { session: null } });
+    invoke.mockResolvedValue({
+      data: { clientSecret: "cs", sessionId: "cs_enterprise" },
+      error: null,
+    });
+    await createServerPlanCheckoutSession({
+      ...plan,
+      requiresSeats: true,
+      currentLicenseKey: "key-1",
+    });
+    expect(invoke.mock.calls[0][1].body).toMatchObject({
+      self_hosted: true,
+      requires_seats: true,
+      current_license_key: "key-1",
+    });
+  });
   it("buys as the signed-in account: no self_hosted lane, no client-supplied email", async () => {
     invoke.mockResolvedValue({
       data: { clientSecret: "cs_1", sessionId: "cs_sess" },

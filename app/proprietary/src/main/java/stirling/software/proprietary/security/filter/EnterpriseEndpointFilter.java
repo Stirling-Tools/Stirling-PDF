@@ -2,7 +2,6 @@ package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -12,12 +11,14 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import stirling.software.common.service.LicenseServiceInterface;
+
 @Component
 public class EnterpriseEndpointFilter extends OncePerRequestFilter {
-    private final boolean runningProOrHigher;
+    private final LicenseServiceInterface licenseService;
 
-    public EnterpriseEndpointFilter(@Qualifier("runningProOrHigher") boolean runningProOrHigher) {
-        this.runningProOrHigher = runningProOrHigher;
+    public EnterpriseEndpointFilter(LicenseServiceInterface licenseService) {
+        this.licenseService = licenseService;
     }
 
     @Override
@@ -25,7 +26,13 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (!runningProOrHigher && isPrometheusEndpointRequest(request)) {
+        String path = request.getRequestURI().substring(request.getContextPath().length());
+        boolean saml = path.startsWith("/saml2/") || path.startsWith("/login/saml2/");
+        if (saml && !licenseService.isRunningProOrHigher()) {
+            response.sendError(HttpStatus.FORBIDDEN.value(), "A paid plan is required for SAML");
+            return;
+        }
+        if (isPrometheusEndpointRequest(request) && !licenseService.isRunningProOrHigher()) {
             // Allow only health checks to pass through for non-pro users
             String uri = request.getRequestURI();
 

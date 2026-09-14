@@ -97,6 +97,7 @@ class UserLicenseSettingsServiceMoreTest {
         private void cacheReturns(InstanceEntitlement entitlement) {
             EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
             when(cache.current()).thenReturn(Optional.ofNullable(entitlement));
+            when(cache.linkedDeviceId()).thenReturn("device-1");
             when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
         }
 
@@ -218,6 +219,7 @@ class UserLicenseSettingsServiceMoreTest {
         void storedAllowanceSurvivesABootWithNoAnswer() {
             UserLicenseSettings s = lockedSettings(7);
             s.setLinkedTeamUsers(300);
+            s.setLinkedTeamDeviceId("device-1");
             cacheReturns(null);
 
             assertThat(service.calculateMaxAllowedUsers()).isEqualTo(300);
@@ -245,19 +247,37 @@ class UserLicenseSettingsServiceMoreTest {
             assertThat(s.getLinkedTeamUsers()).isNull();
         }
 
-        /**
-         * Unlinked and unreachable are indistinguishable from here, so neither may clear the row:
-         * doing so would revoke a paying customer's capacity for the length of an outage.
-         */
         @Test
         @DisplayName("refresh keeps the stored allowance when SaaS says nothing")
         void refreshKeepsTheAllowanceWhenUnanswered() {
             UserLicenseSettings s = lockedSettings(7);
             s.setLinkedTeamUsers(200);
+            s.setLinkedTeamDeviceId("device-1");
             cacheReturns(null);
 
             assertThat(service.refreshLinkedTeamUsers()).isEqualTo(200);
             assertThat(s.getLinkedTeamUsers()).isEqualTo(200);
+        }
+
+        @Test
+        void unlinkClearsPersistedAllowance() {
+            UserLicenseSettings settings = lockedSettings(7);
+            settings.setLinkedTeamUsers(200);
+            settings.setLinkedTeamDeviceId("device-1");
+            assertThat(service.refreshLinkedTeamUsers()).isNull();
+            assertThat(settings.getLinkedTeamUsers()).isNull();
+            assertThat(settings.getLinkedTeamDeviceId()).isNull();
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        @Test
+        void anotherLinkCannotInheritOfflineAllowance() {
+            UserLicenseSettings settings = lockedSettings(7);
+            settings.setLinkedTeamUsers(200);
+            settings.setLinkedTeamDeviceId("old-device");
+            cacheReturns(null);
+            assertThat(service.refreshLinkedTeamUsers()).isNull();
+            assertThat(settings.getLinkedTeamUsers()).isNull();
         }
 
         @Test

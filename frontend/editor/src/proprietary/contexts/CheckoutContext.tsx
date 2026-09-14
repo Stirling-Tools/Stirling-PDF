@@ -27,6 +27,7 @@ import {
   pollLicenseKeyWithBackoff,
   activateLicenseKey,
   resyncExistingLicense,
+  pollTeamCheckout,
 } from "@app/utils/licenseCheckoutUtils";
 import { useLicense } from "@app/contexts/LicenseContext";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
@@ -137,6 +138,26 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
         // Clear URL parameters
         window.history.replaceState({}, "", window.location.pathname);
+
+        if (urlParams.get("checkout_kind") === "team") {
+          const result = await pollTeamCheckout(
+            sessionId,
+            Number(urlParams.get("team_quantity")) || 1,
+          );
+          await refetchLicense();
+          refetchPlans();
+          window.dispatchEvent(new Event("stirling:billing-updated"));
+          alert({
+            alertType: result.success ? "success" : "warning",
+            title: result.success
+              ? t("payment.teamActivated", "Your Team capacity is active")
+              : t(
+                  "payment.teamPending",
+                  "Your Team purchase is still processing. Refresh this page shortly.",
+                ),
+          });
+          return;
+        }
 
         // Fetch current license info to determine upgrade vs new
         let licenseInfo: LicenseInfo | null = null;

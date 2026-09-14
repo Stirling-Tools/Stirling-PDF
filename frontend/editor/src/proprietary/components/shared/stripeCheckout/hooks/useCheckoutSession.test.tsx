@@ -18,6 +18,7 @@ vi.mock("@app/services/licenseService", () => ({
 }));
 vi.mock("@app/utils/licenseCheckoutUtils", () => ({
   resyncExistingLicense: vi.fn(),
+  pollTeamCheckout: vi.fn(),
 }));
 vi.mock("@app/utils/protocolDetection", () => ({
   getCheckoutMode: () => "embedded",
@@ -27,6 +28,7 @@ vi.mock("@app/services/serverPlanCheckout", () => ({
 }));
 
 import { useCheckoutSession } from "@app/components/shared/stripeCheckout/hooks/useCheckoutSession";
+import { pollTeamCheckout } from "@app/utils/licenseCheckoutUtils";
 import type { CheckoutState } from "@app/components/shared/stripeCheckout/types/checkout";
 
 const plan = {
@@ -73,6 +75,19 @@ beforeEach(() => {
 });
 
 describe("useCheckoutSession", () => {
+  it("confirms Team entitlement instead of polling for a licence key", async () => {
+    vi.mocked(pollTeamCheckout).mockResolvedValue({ success: true });
+    const { hook } = mount(vi.fn(), {
+      currentStage: "payment",
+      sessionId: "cs_team",
+    });
+    await hook.result.current.handlePaymentComplete();
+    expect(pollTeamCheckout).toHaveBeenCalledWith(
+      "cs_team",
+      3,
+      expect.any(Object),
+    );
+  });
   it("sends the sized capacity and never an email", async () => {
     const createSession = vi.fn().mockResolvedValue({
       clientSecret: "cs_1",
@@ -96,7 +111,7 @@ describe("useCheckoutSession", () => {
       installationId: "install-abc",
       uiMode: "embedded",
     });
-    expect(request.successUrl).toBeUndefined();
+    expect(request.successUrl).toContain("payment_status=success");
   });
 
   it("carries a premium licence key through as upgrade metadata", async () => {

@@ -2,6 +2,7 @@ package stirling.software.proprietary.accountlink;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -43,6 +44,7 @@ public class EntitlementCache {
             new InstanceEntitlement(false, 0, 0, null, EntitlementState.REVOKED);
 
     private volatile Snapshot snapshot = EMPTY;
+    private volatile String snapshotDeviceId;
 
     /** Single-flight guard: one thread refreshes while others serve the current snapshot. */
     private final AtomicBoolean refreshing = new AtomicBoolean(false);
@@ -61,6 +63,11 @@ public class EntitlementCache {
      * not linked or the SaaS side is unreachable and we have no prior snapshot.
      */
     public Optional<InstanceEntitlement> current() {
+        String linked = linkedDeviceId();
+        if (!Objects.equals(linked, snapshotDeviceId)) {
+            snapshot = EMPTY;
+            snapshotDeviceId = linked;
+        }
         // Single-flight: when stale, exactly one thread refreshes while concurrent callers serve
         // the last snapshot — no thundering herd of round-trips on the billable hot path.
         if (isStale(snapshot) && refreshing.compareAndSet(false, true)) {
@@ -71,6 +78,11 @@ public class EntitlementCache {
             }
         }
         return Optional.ofNullable(snapshot.entitlement());
+    }
+
+    /** Identity owning the cached allowance; absent after an explicit unlink. */
+    public String linkedDeviceId() {
+        return credentialStore.get().map(DeviceCredential::getDeviceId).orElse(null);
     }
 
     private boolean isStale(Snapshot snap) {
@@ -94,6 +106,7 @@ public class EntitlementCache {
         try {
             InstanceEntitlement fresh =
                     client.fetchEntitlement(cred.get().getDeviceId(), cred.get().getDeviceSecret());
+            if (!Objects.equals(cred.get().getDeviceId(), linkedDeviceId())) return;
             if (fresh != null) {
                 snapshot = new Snapshot(fresh, Instant.now());
             } else {
@@ -104,6 +117,7 @@ public class EntitlementCache {
                 snapshot = new Snapshot(snapshot.entitlement(), Instant.now());
             }
         } catch (AccountLinkClient.RevokedException e) {
+            if (!Objects.equals(cred.get().getDeviceId(), linkedDeviceId())) return;
             // Authoritative deny — block immediately rather than serving the stale entitled
             // snapshot.
             log.info(
@@ -120,10 +134,11 @@ public class EntitlementCache {
 
     /**
      * Seeds the cache with an entitlement obtained out-of-band (the sync reply carries a fresh
-     * one), saving a redundant fetch. No-op on null.
+     * one), saving a redundant fetch. Ignores null and replies for a different linked device.
      */
-    public void accept(InstanceEntitlement fresh) {
-        if (fresh != null) {
+    public void accept(String deviceId, InstanceEntitlement fresh) {
+        if (fresh != null && deviceId != null && Objects.equals(deviceId, linkedDeviceId())) {
+            snapshotDeviceId = deviceId;
             snapshot = new Snapshot(fresh, Instant.now());
         }
     }

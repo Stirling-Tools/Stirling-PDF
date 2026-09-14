@@ -150,6 +150,16 @@ export function Usage({
   }, [refreshKey, onWalletLoaded, t]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  useEffect(() => {
+    const onBillingUpdated = () => {
+      void refreshWalletCache()
+        .catch(() => {})
+        .finally(refresh);
+    };
+    window.addEventListener("stirling:billing-updated", onBillingUpdated);
+    return () =>
+      window.removeEventListener("stirling:billing-updated", onBillingUpdated);
+  }, [refresh]);
   const onInvoicesEmpty = useCallback(() => setHasInvoices(false), []);
 
   // The same flow the settings plan section uses, so there is one purchase implementation.

@@ -61,6 +61,9 @@ public class UserLicenseSettings implements Serializable {
     @Column(name = "linked_team_users")
     private Integer linkedTeamUsers;
 
+    @Column(name = "linked_team_device_id")
+    private String linkedTeamDeviceId;
+
     /**
      * Random salt used when generating signatures. Makes it harder to recompute the signature when
      * manually editing the table.

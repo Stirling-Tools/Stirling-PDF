@@ -12,11 +12,8 @@ import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVeri
  * admins update the license key, the changes are immediately reflected in the UI and config
  * endpoints without requiring a restart.
  *
- * <p>Note: EnterpriseEndpointAspect and the filters still inject cached beans at startup, so those
- * gates reflect a licence change only after a restart. That was acceptable while a licence was the
- * only way to hold a tier — it is entered once, at setup. A Team plan is bought later and cancelled
- * by a button, which is why {@code PremiumEndpointAspect} was moved onto this service: granting a
- * cancelled plan until someone restarts is not a trade anyone would make.
+ * <p>Linked Team entitlement is evaluated on access, including unlink and revocation; installed
+ * licences retain their own validation lifecycle.
  */
 @Service
 @RequiredArgsConstructor
@@ -30,7 +27,7 @@ public class DynamicLicenseService implements LicenseServiceInterface {
      * @return Current license: NORMAL, SERVER, or ENTERPRISE
      */
     public License getCurrentLicense() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult();
+        return licenseKeyChecker.premiumTier();
     }
 
     @Override

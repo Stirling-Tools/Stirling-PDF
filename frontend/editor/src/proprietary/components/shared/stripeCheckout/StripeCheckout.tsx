@@ -95,6 +95,8 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     onSuccess,
     onError,
     onLicenseActivated,
+    undefined,
+    () => checkoutState.isMountedRef.current,
   );
 
   // Calculate savings
@@ -114,6 +116,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
 
   // Close handler
   const handleClose = () => {
+    checkoutState.isMountedRef.current = false;
     // Clear any active polling
     if (checkoutState.pollingTimeoutRef.current) {
       clearTimeout(checkoutState.pollingTimeoutRef.current);
@@ -140,6 +143,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   // Initialize stage based on existing license
   useEffect(() => {
     if (!opened) return;
+    checkoutState.isMountedRef.current = true;
 
     // Handle hosted checkout success - open directly to success state
     if (hostedCheckoutSuccess) {
@@ -283,6 +287,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       case "success":
         return (
           <SuccessStage
+            isTeam={sellsCapacity}
             pollingStatus={checkoutState.pollingStatus}
             currentLicenseKey={checkoutState.currentLicenseKey}
             licenseKey={checkoutState.licenseKey}

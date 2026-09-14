@@ -1,6 +1,9 @@
 import { useCallback } from "react";
 import licenseService, { PlanTier } from "@app/services/licenseService";
-import { resyncExistingLicense } from "@app/utils/licenseCheckoutUtils";
+import {
+  resyncExistingLicense,
+  pollTeamCheckout,
+} from "@app/utils/licenseCheckoutUtils";
 import {
   createServerPlanCheckoutSession,
   type ServerPlanCheckoutRequest,
@@ -45,6 +48,7 @@ export const useCheckoutSession = (
     hasKey: boolean;
   }) => void,
   createSession: CheckoutSessionCreator = createServerPlanCheckoutSession,
+  isMounted?: () => boolean,
 ) => {
   const createCheckoutSession = useCallback(async () => {
     if (!selectedPlan) {
@@ -103,14 +107,8 @@ export const useCheckoutSession = (
         installationId: fetchedInstallationId ?? undefined,
         currentLicenseKey: existingLicenseKey,
         uiMode,
-        successUrl:
-          uiMode === "hosted"
-            ? `${returnTo}?session_id={CHECKOUT_SESSION_ID}&payment_status=success`
-            : undefined,
-        cancelUrl:
-          uiMode === "hosted"
-            ? `${returnTo}?payment_status=canceled`
-            : undefined,
+        successUrl: `${returnTo}?session_id={CHECKOUT_SESSION_ID}&payment_status=success`,
+        cancelUrl: `${returnTo}?payment_status=canceled`,
       });
 
       if (response.url) {
@@ -152,6 +150,20 @@ export const useCheckoutSession = (
     // Preserve state when changing stage
     setState((prev) => ({ ...prev, currentStage: "success" }));
 
+    if (!selectedPlan?.requiresSeats) {
+      const result = await pollTeamCheckout(
+        state.sessionId || "",
+        serverQuantity,
+        {
+          isMounted,
+          onStatusChange: setPollingStatus,
+          onActivated: onLicenseActivated,
+        },
+      );
+      if (result.success) onSuccess?.(state.sessionId || "");
+      return;
+    }
+
     // Check if this is an upgrade (existing license key) or new plan
     if (currentLicenseKey) {
       // UPGRADE FLOW: Resync existing license with Keygen
@@ -188,6 +200,9 @@ export const useCheckoutSession = (
       }
     }
   }, [
+    selectedPlan,
+    serverQuantity,
+    isMounted,
     currentLicenseKey,
     installationId,
     state.sessionId,

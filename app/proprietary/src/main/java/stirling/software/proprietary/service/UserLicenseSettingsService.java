@@ -379,25 +379,11 @@ public class UserLicenseSettingsService {
         return licenseMaxUsers;
     }
 
-    /**
-     * Users this instance's linked team is entitled to, or null when SaaS is not the authority
-     * here.
-     *
-     * <p>Only consulted when no licence is installed. Null covers three indistinguishable cases
-     * that all fall through to the grandfathered limit: the instance is not linked, SaaS has never
-     * answered, or it answered with no user limit — which is also what an older SaaS sends.
-     *
-     * <p>Falls back to the value {@link #refreshLinkedTeamUsers()} stored, so an instance that
-     * boots offline keeps the allowance it was last told about instead of dropping its users to the
-     * grandfathered limit. When SaaS is merely unreachable {@link EntitlementCache} answers from
-     * the freshest snapshot it has, and this fallback covers the boot before it has one.
-     */
+    /** Paid capacity for the current linked device, retaining its last allowance while offline. */
     private Integer linkedTeamAllowance() {
-        Integer live = currentEntitlement().map(InstanceEntitlement::licensedUsers).orElse(null);
-        return live != null ? live : getOrCreateSettings().getLinkedTeamUsers();
+        return refreshLinkedTeamUsers();
     }
 
-    /** The linked team's entitlement, or empty when unlinked or never yet fetched. */
     /**
      * Drops the cached entitlement so the next read goes to SaaS. For a caller with reason to
      * believe the plan just changed; the ordinary path waits out the cache's own TTL.
@@ -419,10 +405,9 @@ public class UserLicenseSettingsService {
      * returns the stored value when SaaS has said nothing.
      *
      * <p>Called from the licence sync, which is what makes the stored value SaaS-derived rather
-     * than a local claim: a plan that lapses comes back as no allowance and clears the column.
-     * Nothing is written when there is no entitlement to write — an unlinked instance and an
-     * unreachable SaaS look identical from here, and clearing on the second would revoke a paid
-     * customer's capacity for the length of an outage.
+     * than a local claim: a plan that lapses comes back as no allowance and clears the column. An
+     * unreachable SaaS preserves the allowance only for the same linked device. Unlinking or
+     * replacing that identity clears it; a new link must obtain its own entitlement.
      *
      * <p>Not transactional: asking the cache can mean an HTTP round trip to SaaS, and there is no
      * invariant here worth holding a database connection across one. The single conditional write
@@ -431,8 +416,17 @@ public class UserLicenseSettingsService {
      * @return users the linked team has bought, or null when it has bought none
      */
     public Integer refreshLinkedTeamUsers() {
-        Optional<InstanceEntitlement> answer = currentEntitlement();
         UserLicenseSettings settings = getOrCreateSettings();
+        EntitlementCache cache = entitlementCache.getIfAvailable();
+        String deviceId = cache == null ? null : cache.linkedDeviceId();
+        if (!Objects.equals(deviceId, settings.getLinkedTeamDeviceId())
+                || (deviceId == null && settings.getLinkedTeamUsers() != null)) {
+            settings.setLinkedTeamUsers(null);
+            settings.setLinkedTeamDeviceId(deviceId);
+            settingsRepository.save(settings);
+        }
+        if (deviceId == null) return null;
+        Optional<InstanceEntitlement> answer = currentEntitlement();
         if (answer.isEmpty()) {
             return settings.getLinkedTeamUsers();
         }

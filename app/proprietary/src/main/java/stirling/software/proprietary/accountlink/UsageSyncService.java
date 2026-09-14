@@ -123,7 +123,7 @@ public class UsageSyncService implements SchedulingConfigurer {
             return;
         }
         // Adopt the freshest entitlement the sync returned, saving the cache a redundant fetch.
-        entitlementCache.accept(latest);
+        entitlementCache.accept(cred.get().getDeviceId(), latest);
         if (latest != null) {
             // Only when a reply actually arrived. accept() no-ops on null, so announcing a refresh
             // here would tell listeners the plan had been re-read when every period had failed.
