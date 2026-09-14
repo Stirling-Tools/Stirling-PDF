@@ -306,7 +306,15 @@ export function OwnershipTransferModal({
                     ? t("ownership.finishTitle", "Finish the server transfer")
                     : t("ownership.review", "Review & transfer")}
                 </Text>
-                {status.cloud && (
+                {partial && !error && (
+                  <Alert color="blue" role="status">
+                    {t(
+                      "ownership.partialError",
+                      "Cloud ownership has transferred. Finish the server transfer to keep both owners aligned.",
+                    )}
+                  </Alert>
+                )}
+                {status.cloud && !partial && (
                   <>
                     <Text>
                       {t(
@@ -345,7 +353,7 @@ export function OwnershipTransferModal({
                   <Text>
                     {t(
                       "ownership.localScope",
-                      "They will also own this server and become an administrator. You keep administrator access.",
+                      "They will own this server and become an administrator. You keep administrator access.",
                     )}
                   </Text>
                 )}
