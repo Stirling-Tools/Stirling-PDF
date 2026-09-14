@@ -10,6 +10,7 @@ import { Loader, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { NavSurface } from "@app/ui/NavSurface";
 import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
@@ -48,7 +49,6 @@ import {
   FileSidebarGroupControls,
   useFileSidebarGroups,
 } from "@app/components/shared/fileSidebarGrouping";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
@@ -1257,16 +1257,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                                   }
                                   aria-expanded={isOpen}
                                   leftSection={
-                                    <>
-                                      {isOpen ? (
-                                        <KeyboardArrowDownIcon
-                                          sx={{ fontSize: "1.1rem" }}
-                                        />
-                                      ) : (
-                                        <KeyboardArrowRightIcon
-                                          sx={{ fontSize: "1.1rem" }}
-                                        />
-                                      )}
+                                    <span
+                                      className="file-sidebar-group-symbol"
+                                      data-has-icon={!!group.icon}
+                                      aria-hidden="true"
+                                    >
                                       {group.icon && (
                                         <LocalIcon
                                           icon={group.icon}
@@ -1279,7 +1274,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                                           }
                                         />
                                       )}
-                                    </>
+                                      <Icon
+                                        name={
+                                          isOpen
+                                            ? "chevron-down"
+                                            : "chevron-right"
+                                        }
+                                        size="1.1rem"
+                                        className="file-sidebar-group-disclosure"
+                                      />
+                                    </span>
                                   }
                                   rightSection={
                                     <span className="file-sidebar-group-count">
