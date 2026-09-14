@@ -17,7 +17,7 @@ import {
   markDispatched,
   recordRunStart,
 } from "@app/components/policies/policyRunStore";
-import type { FileId } from "@app/types/file";
+import type { DispatchableFileId } from "@app/components/policies/policyLocalPass";
 import type { StirlingFile } from "@app/types/fileContext";
 
 /** Wait for an upload's bytes to land in IndexedDB (~5s): the stub surfaces in the
@@ -31,7 +31,9 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 export async function runPolicyOnFile(
   policyKey: string,
   backendId: string,
-  fileId: FileId,
+  // Branded, so a file whose classification is locked cannot be dispatched: the only
+  // way to obtain one is dispatchableFileId(), which refuses locked stubs.
+  fileId: DispatchableFileId,
   fileName: string,
   // Chained (downstream) dispatch — jumps the dispatch queue so a file mid-chain
   // finishes its flow before new files start (see acquireDispatchSlot).
@@ -56,6 +58,13 @@ export async function runPolicyOnFile(
     await delay(FILE_WAIT_MS);
     file = await tryGetFile();
   }
+  // Reinforces the branded parameter at the boundary: read from the persisted stub rather
+  // than the caller's word, so an authoritative classification stays settled whichever
+  // route reached here.
+  const persisted = await fileStorage
+    .getStirlingFileStub(fileId)
+    .catch(() => null);
+  if (persisted?.classificationLocked === true) return;
   if (!file) {
     // File genuinely gone (removed before it could run) — mark so we don't loop.
     markDispatched(policyKey, fileId);

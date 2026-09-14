@@ -195,6 +195,7 @@ export function portalSupersededSectionKeys(
     superseded.push("people", "teams", "users");
   }
   if (provided.has("api-keys")) superseded.push("api-keys");
+  if (provided.has("billing")) superseded.push("plan", "adminPlan");
   return superseded;
 }
 
@@ -203,6 +204,8 @@ export const PORTAL_SECTION_ALIASES: Partial<Record<string, NavKey>> = {
   people: "users",
   teams: "users",
   infrastructure: "api-keys",
+  plan: "billing",
+  adminPlan: "billing",
   // The processor links to a build-neutral "audit"; self-hosted's is the admin one.
   audit: "adminAudit",
 };

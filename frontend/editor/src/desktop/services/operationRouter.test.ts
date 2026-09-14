@@ -49,6 +49,17 @@ describe("operationRouter.getBaseUrl — SaaS mode cloud-only routing", () => {
     "/api/v1/team/my",
     "/api/v1/policies",
     "/api/v1/policies/run",
+    "/api/v1/automation/meter",
+    // Both live in app/proprietary, which the bundled desktop backend is built without,
+    // so routing them local-first left them 404ing on desktop even when signed in.
+    "/api/v1/processing-folders",
+    "/api/v1/processing-folders/downloads-suggestion",
+    "/api/v1/notifications",
+    "/api/v1/notifications?limit=20",
+    "/api/v1/proprietary/ui-data/admin-settings",
+    "/api/v1/proprietary/ui-data/teams",
+    "/api/v1/user/admin/saveUser",
+    "/api/v1/admin/access/grants",
   ])("%s routes to the SaaS backend (not local)", async (endpoint) => {
     await expect(operationRouter.getBaseUrl(endpoint)).resolves.toBe(SAAS_URL);
   });

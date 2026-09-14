@@ -1,12 +1,12 @@
 package stirling.software.common.util;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,7 +33,7 @@ import stirling.software.common.model.ApplicationProperties.AutoPipeline.FileRea
  *   <li>The file size is stable: two reads separated by {@code sizeCheckDelayMillis} return the
  *       same value. This catches active copies on Linux/macOS where advisory file locking alone
  *       cannot detect a mid-copy file.
- *   <li>An exclusive file-system lock can be acquired, confirming no other process holds it.
+ *   <li>A shared file-system lock can be acquired, confirming no writer holds an exclusive lock.
  * </ol>
  *
  * <p>All behaviour is controlled through {@link FileReadiness} inside {@link
@@ -179,16 +179,15 @@ public class FileReadinessChecker {
     }
 
     /**
-     * Returns {@code true} when an exclusive file-system lock cannot be acquired, which indicates
+     * Returns {@code true} when a shared file-system lock cannot be acquired, which indicates
      * another process still holds the file open for writing.
      *
      * <p>{@link OverlappingFileLockException} is also treated as locked: the JVM already holds a
      * lock on this file (e.g. from another thread), so it is unsafe to process.
      */
     private boolean isLocked(Path path) {
-        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw");
-                FileChannel channel = raf.getChannel()) {
-            FileLock lock = channel.tryLock();
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+            FileLock lock = channel.tryLock(0, Long.MAX_VALUE, true);
             if (lock == null) {
                 log.debug("File '{}' is locked by another process", path.getFileName());
                 return true;

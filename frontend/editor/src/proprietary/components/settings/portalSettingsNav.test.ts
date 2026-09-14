@@ -39,6 +39,17 @@ describe("portalSupersededSectionKeys", () => {
     expect(keys).toContain("api-keys");
   });
 
+  it("retires legacy plan sections only when billing is present", () => {
+    expect(
+      portalSupersededSectionKeys([group("workspace", ["users"])]),
+    ).not.toEqual(expect.arrayContaining(["plan", "adminPlan"]));
+
+    const keys = portalSupersededSectionKeys([
+      group("workspace", ["users", "billing"]),
+    ]);
+    expect(keys).toEqual(expect.arrayContaining(["plan", "adminPlan"]));
+  });
+
   it("supersedes nothing when no roster was built", () => {
     expect(portalSupersededSectionKeys([])).toEqual([]);
   });

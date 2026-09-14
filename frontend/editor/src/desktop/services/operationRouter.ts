@@ -60,6 +60,7 @@ export class OperationRouter {
       /^\/api\/v1\/auth\//, // Supabase auth (SaaS mode)
       /^\/api\/v1\/payg\//, // PAYG wallet / spend-cap / billing
       /^\/api\/v1\/policies(?:\/|$)/, // Policy runs — must bill via the cloud
+      /^\/api\/v1\/automation(?:[/?]|$)/, // Automate / classification meter - must bill via the cloud
       /^\/api\/v1\/ai\//, // AI engine (orchestrate, etc.) — runs in the cloud
       // The roster follows the signed-in org. Listed path by path: their
       // prefixes also carry this instance's settings and licence, which stay local.
@@ -67,6 +68,8 @@ export class OperationRouter {
       /^\/api\/v1\/proprietary\/ui-data\/teams(?:\/|$)/,
       /^\/api\/v1\/user\/admin\//,
       /^\/api\/v1\/admin\/access\/grants(?:\/|$)/,
+      /^\/api\/v1\/processing-folders(?:[/?]|$)/, // Processing folders — proprietary controller
+      /^\/api\/v1\/notifications(?:[/?]|$)/, // Failure notifications — proprietary controller
       // Add more cloud-only feature prefixes here as they land.
     ];
 

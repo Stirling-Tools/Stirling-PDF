@@ -125,8 +125,8 @@ vi.mock("@app/services/fileClassification", () => ({
 vi.mock("@app/services/heuristic/heuristicClassification", () => ({
   classifyFileHeuristically: (file: File) => mocks.classify(file),
 }));
-vi.mock("@app/services/classificationMeter", () => ({
-  meterClassificationRun: (payload: unknown) => mocks.meter(payload),
+vi.mock("@app/services/automationMeter", () => ({
+  meterAutomationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
