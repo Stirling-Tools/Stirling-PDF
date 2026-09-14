@@ -1,5 +1,9 @@
 import { describe, it, expect } from "vitest";
-import { createStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import {
+  createStirlingFile,
+  getFormFillFileId,
+  documentBytesReplaced,
+} from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
 
 const ID = "file-1" as FileId;
@@ -35,5 +39,35 @@ describe("getFormFillFileId", () => {
       "file-2" as FileId,
     );
     expect(getFormFillFileId(theirs)).not.toBe(getFormFillFileId(mine));
+  });
+});
+
+describe("documentBytesReplaced", () => {
+  const identity = (id: string, key: string) => ({ id: id as FileId, key });
+
+  it("reports a disk reload that swapped the bytes under one id", () => {
+    expect(
+      documentBytesReplaced(identity(ID, "before"), identity(ID, "after")),
+    ).toBe(true);
+  });
+
+  it("ignores a switch to a different file", () => {
+    expect(
+      documentBytesReplaced(
+        identity(ID, "before"),
+        identity("file-2", "after"),
+      ),
+    ).toBe(false);
+  });
+
+  it("ignores a re-render that changed nothing", () => {
+    expect(
+      documentBytesReplaced(identity(ID, "same"), identity(ID, "same")),
+    ).toBe(false);
+  });
+
+  it("ignores a first sighting and an emptied viewer", () => {
+    expect(documentBytesReplaced(null, identity(ID, "after"))).toBe(false);
+    expect(documentBytesReplaced(identity(ID, "before"), null)).toBe(false);
   });
 });

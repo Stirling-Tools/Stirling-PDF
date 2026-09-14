@@ -153,6 +153,25 @@ export function getFormFillFileId(
   return `blob-${file.size || 0}`;
 }
 
+/** A document as the viewer tracks it: which workbench record, and which bytes.
+ *  The key is a {@link getFormFillFileId} value. */
+export interface DocumentIdentity {
+  id: FileId;
+  key: string;
+}
+
+/** Whether the same record is now showing different bytes, which is what
+ *  accepting a disk reload does. A different record is a file switch and a
+ *  missing side is a first sighting; neither invalidates work held against the
+ *  document that was on screen. */
+export function documentBytesReplaced(
+  previous: DocumentIdentity | null,
+  current: DocumentIdentity | null,
+): boolean {
+  if (!previous || !current) return false;
+  return previous.id === current.id && previous.key !== current.key;
+}
+
 // Create a StirlingFile from a regular File object
 export function createStirlingFile(file: File, id?: FileId): StirlingFile {
   // If the file already has Stirling metadata and we aren't trying to override it,

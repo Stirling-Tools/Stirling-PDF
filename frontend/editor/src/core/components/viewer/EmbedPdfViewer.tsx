@@ -37,6 +37,8 @@ import {
   isStirlingFile,
   getFormFillFileId,
   type StirlingFile,
+  documentBytesReplaced,
+  type DocumentIdentity,
 } from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
@@ -532,6 +534,31 @@ const EmbedPdfViewerContent = ({
     viewerKeyCommand,
     selectionActions,
     getScrollState,
+  ]);
+
+  // Accepting a disk reload swaps the bytes under an unchanged fileId, which
+  // remounts the inner viewer with a clean history but leaves these flags
+  // describing edits that no longer exist: every later disk change then reads as
+  // a conflict, and navigation keeps warning about work already discarded.
+  const documentIdentityRef = useRef<DocumentIdentity | null>(null);
+  useEffect(() => {
+    const previous = documentIdentityRef.current;
+    const current =
+      currentFileStableId && currentFileId
+        ? { id: currentFileStableId, key: currentFileId }
+        : null;
+    documentIdentityRef.current = current;
+
+    if (!documentBytesReplaced(previous, current)) return;
+
+    hasAnnotationChangesRef.current = false;
+    setHasUnsavedChanges(false);
+    setRedactionsApplied(false);
+  }, [
+    currentFileStableId,
+    currentFileId,
+    setHasUnsavedChanges,
+    setRedactionsApplied,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
