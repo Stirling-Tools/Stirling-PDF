@@ -232,7 +232,7 @@ it("starts at held capacity and lets payment return to those choices", async () 
   ).toBeInTheDocument();
   fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
   expect(await screen.findByText("Payment details")).toBeInTheDocument();
-  fireEvent.click(screen.getByRole("button", { name: "Back" }));
+  fireEvent.click(screen.getByRole("button", { name: "common.back" }));
   expect(
     await screen.findByText("Capacity: 3 blocks; current: 300"),
   ).toBeInTheDocument();
