@@ -61,7 +61,7 @@ class CleanUrlInterceptorTest {
 
     @Test
     void preHandleRedirectsStrippingAllDisallowedParams() throws Exception {
-        when(request.getRequestURI()).thenReturn("/page");
+        when(request.getRequestURI()).thenReturn("/ctx/page");
         when(request.getContextPath()).thenReturn("/ctx");
         when(request.getQueryString()).thenReturn("unknown=bad");
         assertFalse(interceptor.preHandle(request, response, new Object()));

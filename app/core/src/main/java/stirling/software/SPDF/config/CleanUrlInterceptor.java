@@ -49,6 +49,9 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
         String queryString = request.getQueryString();
         if (queryString != null && !queryString.isEmpty()) {
             Map<String, String> allowedParameters = new HashMap<>();
+            // The frontend needs state to bind the SaaS response to the initiating browser.
+            boolean accountLinkCallback =
+                    requestURI.equals(request.getContextPath() + "/account-link/callback");
 
             // Keep only the allowed parameters
             String[] queryParameters = queryString.split("&");
@@ -57,7 +60,8 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                 if (keyValuePair.length != 2) {
                     continue;
                 }
-                if (ALLOWED_PARAMS.contains(keyValuePair[0])) {
+                if (ALLOWED_PARAMS.contains(keyValuePair[0])
+                        || (accountLinkCallback && "state".equals(keyValuePair[0]))) {
                     allowedParameters.put(keyValuePair[0], keyValuePair[1]);
                 }
             }
@@ -76,7 +80,7 @@ public class CleanUrlInterceptor implements HandlerInterceptor {
                 // Redirect to the URL with only allowed query parameters
                 String redirectUrl = requestURI + "?" + newQueryString;
 
-                response.sendRedirect(request.getContextPath() + redirectUrl);
+                response.sendRedirect(redirectUrl);
                 return false;
             }
         }
