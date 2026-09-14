@@ -418,7 +418,7 @@ public class UserService implements UserServiceInterface {
         orgOwnerService.renamed(user.getId(), newUsername);
         user.setUsername(newUsername);
         userRepository.save(user);
-        databaseService.exportDatabase();
+        exportAfterCommit();
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -427,7 +427,7 @@ public class UserService implements UserServiceInterface {
         orgOwnerService.protect(user.getId(), true);
         user.setPassword(passwordEncoder.encode(newPassword));
         userRepository.save(user);
-        databaseService.exportDatabase();
+        exportAfterCommit();
     }
 
     public void changeFirstUse(User user, boolean firstUse)
@@ -444,7 +444,7 @@ public class UserService implements UserServiceInterface {
         Authority userAuthority = this.findRole(user);
         userAuthority.setAuthority(newRole);
         authorityRepository.save(userAuthority);
-        databaseService.exportDatabase();
+        exportAfterCommit();
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -453,7 +453,7 @@ public class UserService implements UserServiceInterface {
         if (Boolean.FALSE.equals(enbeled)) orgOwnerService.protect(user.getId(), false);
         user.setEnabled(enbeled);
         userRepository.save(user);
-        databaseService.exportDatabase();
+        exportAfterCommit();
     }
 
     public void changeUserTeam(User user, Team team)
@@ -620,7 +620,7 @@ public class UserService implements UserServiceInterface {
                             // exportDatabase declares, and an exception thrown here would escape
                             // the synchronization boundary into the caller regardless.
                             log.error(
-                                    "Database export after user creation failed: {}",
+                                    "Database export after user change failed: {}",
                                     e.getMessage(),
                                     e);
                         }
