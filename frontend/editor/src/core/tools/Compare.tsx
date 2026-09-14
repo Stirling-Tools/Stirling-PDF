@@ -1,11 +1,9 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import CompareRoundedIcon from "@mui/icons-material/CompareRounded";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { Box, Group, Stack, Text, Modal } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import SwapVertRoundedIcon from "@mui/icons-material/SwapVertRounded";
 import { createToolFlow } from "@app/components/tools/shared/createToolFlow";
 import { useBaseTool } from "@app/hooks/tools/shared/useBaseTool";
 import { BaseToolProps, ToolComponent } from "@app/types/tool";
@@ -59,10 +57,7 @@ const Compare = (props: BaseToolProps) => {
   const operation = base.operation as CompareOperationHook;
   const params = base.params.parameters;
 
-  const compareIcon = useMemo(
-    () => <CompareRoundedIcon fontSize="small" />,
-    [],
-  );
+  const compareIcon = useMemo(() => <Icon name="columns-2" size={20} />, []);
   const [swapConfirmOpen, setSwapConfirmOpen] = useState(false);
   const [clearConfirmOpen, setClearConfirmOpen] = useState(false);
 
@@ -378,7 +373,7 @@ const Compare = (props: BaseToolProps) => {
               onClick={() => clearSlot(role)}
               aria-label={t("compare.clearSlot", "Remove file")}
             >
-              <CloseIcon fontSize="small" />
+              <Icon name="x" size={20} />
             </ActionIcon>
             <Group align="flex-start" wrap="nowrap" gap="md">
               <Box style={{ alignSelf: "center" }}>
@@ -505,7 +500,7 @@ const Compare = (props: BaseToolProps) => {
                   size="sm"
                   onClick={handleSwap}
                   disabled={base.operation.isLoading}
-                  leftSection={<SwapVertRoundedIcon fontSize="small" />}
+                  leftSection={<Icon name="arrow-up-down" size={20} />}
                   style={{ alignSelf: "center" }}
                 >
                   {t("compare.swap.label", "Swap")}
