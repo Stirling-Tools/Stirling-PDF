@@ -101,10 +101,23 @@ class InstanceEntitlementInterceptorTest {
         assertTrue(response.getContentAsString().contains("FREE_TIER_EXHAUSTED"));
     }
 
+    @Test
+    void enterpriseProcessingWithoutFilesDoesNotAccrueUsage() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+        interceptor.afterCompletion(request, response, new Object(), null);
+        verifyNoInteractions(
+                freeTierUsageService, entitlementCache, meterProvider, tempFileManager);
+    }
+
     @ParameterizedTest
     @EnumSource(
             value = GateDecision.Reason.class,
-            names = {"FREE_TIER", "ENTERPRISE"})
+            names = {"FREE_TIER", "ENTERPRISE_LICENSE"})
     void metersLocallyWithoutConsultingCloudBilling(GateDecision.Reason reason) throws Exception {
         when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(reason));
 

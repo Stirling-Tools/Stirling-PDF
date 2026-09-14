@@ -25,12 +25,12 @@ import stirling.software.proprietary.accountlink.GateDecision.Reason;
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementGateTest {
 
+    @Mock private LicenseServiceInterface licenseService;
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private EntitlementCache entitlementCache;
     @Mock private AccountLinkSyncStateRepository syncStateRepository;
     @Mock private LocalUsageService localUsageService;
     @Mock private FreeTierUsageService freeTierUsageService;
-    @Mock private LicenseServiceInterface licenseService;
 
     private static FreeTierUsageService.FreeTierBalance grant(long remaining) {
         LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);

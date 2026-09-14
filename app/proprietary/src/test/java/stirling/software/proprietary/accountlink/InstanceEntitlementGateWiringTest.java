@@ -71,7 +71,8 @@ class InstanceEntitlementGateWiringTest {
         when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
         when(freeTier.balance()).thenReturn(grant(0));
 
-        assertEquals(GateDecision.allow(GateDecision.Reason.ENTERPRISE), gate.evaluate(true));
+        assertEquals(
+                GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE), gate.evaluate(true));
 
         verifyNoInteractions(store, cache, syncState, localUsage, freeTier);
     }
@@ -86,7 +87,8 @@ class InstanceEntitlementGateWiringTest {
         when(localUsage.currentPeriodUnsynced())
                 .thenReturn(new LocalUsageService.LocalUsage(null, 0, 0, 0, 0));
 
-        assertEquals(GateDecision.allow(GateDecision.Reason.ENTERPRISE), gate.evaluate(true));
+        assertEquals(
+                GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE), gate.evaluate(true));
 
         verifyNoInteractions(store, cache, syncState, localUsage, freeTier);
     }
@@ -101,7 +103,8 @@ class InstanceEntitlementGateWiringTest {
         stale.setLastSuccessAt(LocalDateTime.now().minusDays(10));
         when(syncState.findById(AccountLinkSyncState.SINGLETON_ID)).thenReturn(Optional.of(stale));
 
-        assertEquals(GateDecision.allow(GateDecision.Reason.ENTERPRISE), gate.evaluate(true));
+        assertEquals(
+                GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE), gate.evaluate(true));
 
         verifyNoInteractions(store, cache, syncState, localUsage, freeTier);
     }
@@ -124,7 +127,8 @@ class InstanceEntitlementGateWiringTest {
         when(freeTier.balance()).thenReturn(grant(0));
 
         assertFalse(gate.evaluate(true).allowed());
-        assertEquals(GateDecision.allow(GateDecision.Reason.ENTERPRISE), gate.evaluate(true));
+        assertEquals(
+                GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE), gate.evaluate(true));
         assertFalse(gate.evaluate(true).allowed());
     }
 
@@ -167,6 +171,27 @@ class InstanceEntitlementGateWiringTest {
         GateDecision d = gate.evaluate(true);
         assertTrue(d.allowed());
         assertEquals(GateDecision.Reason.ENTITLED, d.reason());
+    }
+
+    @Test
+    void enterpriseProcessingDoesNotConsultLinkStatusOrCreditBalances() {
+        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        GateDecision decision = gate.evaluate(true);
+        assertTrue(decision.allowed());
+        assertEquals(GateDecision.Reason.ENTERPRISE_LICENSE, decision.reason());
+        verifyNoInteractions(store, cache, freeTier, localUsage);
+    }
+
+    @Test
+    void removingEnterpriseLicenseRestoresCreditEnforcementWithoutRestart() {
+        when(licenseChecker.getPremiumLicenseEnabledResult())
+                .thenReturn(License.ENTERPRISE, License.NORMAL);
+        assertTrue(gate.evaluate(true).allowed());
+        when(store.isLinked()).thenReturn(false);
+        when(freeTier.balance()).thenReturn(grant(0));
+        GateDecision decision = gate.evaluate(true);
+        assertFalse(decision.allowed());
+        assertEquals(GateDecision.Reason.FREE_TIER_EXHAUSTED, decision.reason());
     }
 
     @Test

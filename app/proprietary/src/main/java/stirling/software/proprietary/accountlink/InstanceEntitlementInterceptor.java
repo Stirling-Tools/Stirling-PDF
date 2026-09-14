@@ -184,7 +184,7 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
         try {
             Object reason = request.getAttribute(ATTR_REASON);
             if (reason == GateDecision.Reason.FREE_TIER
-                    || reason == GateDecision.Reason.ENTERPRISE) {
+                    || reason == GateDecision.Reason.ENTERPRISE_LICENSE) {
                 MeteredOp op = measure(request, UnitCalcPolicy.DEFAULT);
                 if (op != null) {
                     freeTierUsageService.accrue(category, op.units(), op.dedupKey());

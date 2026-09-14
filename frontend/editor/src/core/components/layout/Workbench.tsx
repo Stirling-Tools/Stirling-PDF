@@ -88,12 +88,13 @@ export default function Workbench() {
   const activeCustomView = customWorkbenchViews.find(
     (v) => v.workbenchId === currentView,
   );
-  const topControlsAvailable =
-    currentView !== "myFiles" && !activeCustomView?.hideTopControls;
+  const topControlsAvailable = !activeCustomView?.hideTopControls;
   const hasWorkbenchContent =
     hasFiles ||
     fileIds.length > 0 ||
     !isBaseWorkbench(currentView) ||
+    // The library browses stored files, so it has content of its own with none open.
+    currentView === "myFiles" ||
     // Shared signing drives the viewer from the sidebar with no file in context.
     (currentView === "viewer" && !!signingOverlay?.file);
   // Reading hides the bar; the rail's Reader entry is the way back.

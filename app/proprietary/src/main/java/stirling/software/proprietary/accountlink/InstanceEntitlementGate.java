@@ -42,13 +42,13 @@ import stirling.software.common.service.LicenseServiceInterface;
         matchIfMissing = true)
 public class InstanceEntitlementGate {
 
+    private final LicenseServiceInterface licenseService;
     private final AccountLinkProperties properties;
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
     private final AccountLinkSyncStateRepository syncStateRepository;
     private final LocalUsageService localUsageService;
     private final FreeTierUsageService freeTierUsageService;
-    private final LicenseServiceInterface licenseService;
 
     public InstanceEntitlementGate(
             AccountLinkProperties properties,
@@ -58,13 +58,13 @@ public class InstanceEntitlementGate {
             LocalUsageService localUsageService,
             FreeTierUsageService freeTierUsageService,
             LicenseServiceInterface licenseService) {
+        this.licenseService = licenseService;
         this.properties = properties;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
         this.syncStateRepository = syncStateRepository;
         this.localUsageService = localUsageService;
         this.freeTierUsageService = freeTierUsageService;
-        this.licenseService = licenseService;
     }
 
     /** Evaluates the gate for a request, resolving live state from the store + cache. */
@@ -76,7 +76,7 @@ public class InstanceEntitlementGate {
             return GateDecision.allow(GateDecision.Reason.MANUAL_FREE);
         }
         if (licenseService.isRunningEE()) {
-            return GateDecision.allow(GateDecision.Reason.ENTERPRISE);
+            return GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE);
         }
         boolean linked = credentialStore.isLinked();
         long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();
