@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.ObjectProvider;
 
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.proprietary.accountlink.EntitlementCache;
 import stirling.software.proprietary.accountlink.EntitlementState;
 import stirling.software.proprietary.accountlink.InstanceEntitlement;
@@ -25,6 +26,23 @@ class AccountLinkAutomationRunBillerTest {
 
     private static final UnitCalcPolicy POLICY = new UnitCalcPolicy(10, 1_000_000L, 1, 1000);
     private static final LocalDateTime PERIOD = LocalDateTime.of(2026, 9, 1, 0, 0);
+
+    @Test
+    void enterpriseLicenseSkipsAccrualUntilRemoved() {
+        EntitlementCache cache = mock(EntitlementCache.class);
+        when(cache.current()).thenReturn(Optional.of(entitlement(POLICY, PERIOD)));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        LicenseServiceInterface license = mock(LicenseServiceInterface.class);
+        when(license.isRunningEE()).thenReturn(true);
+        AccountLinkAutomationRunBiller biller =
+                new AccountLinkAutomationRunBiller(cache, providerOf(meter), license);
+        List<FileSize> inputs = List.of(new FileSize(25, 5000L));
+        biller.recordAutomationRun(inputs);
+        org.mockito.Mockito.verifyNoInteractions(cache, meter);
+        when(license.isRunningEE()).thenReturn(false);
+        biller.recordAutomationRun(inputs);
+        verify(meter).accrue(PERIOD, BillingCategory.AUTOMATION, 3L, null);
+    }
 
     @SuppressWarnings("unchecked")
     private static ObjectProvider<UsageMeterService> providerOf(UsageMeterService meter) {
@@ -44,7 +62,8 @@ class AccountLinkAutomationRunBillerTest {
         when(cache.current()).thenReturn(Optional.of(entitlement(POLICY, PERIOD)));
         UsageMeterService meter = mock(UsageMeterService.class);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(meter));
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
 
         // 25 pages -> ceil(25/10)=3 page units; 5000 bytes -> 1 byte unit; max = 3.
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)));
@@ -56,7 +75,8 @@ class AccountLinkAutomationRunBillerTest {
     void noAccrueWhenMeterAbsent() {
         EntitlementCache cache = mock(EntitlementCache.class);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(null));
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(null), mock(LicenseServiceInterface.class));
 
         biller.recordAutomationRun(List.of(new FileSize(1, 10L)));
 
@@ -69,7 +89,8 @@ class AccountLinkAutomationRunBillerTest {
         when(cache.current()).thenReturn(Optional.empty());
         UsageMeterService meter = mock(UsageMeterService.class);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(meter));
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
 
         biller.recordAutomationRun(List.of(new FileSize(1, 10L)));
 
@@ -89,7 +110,8 @@ class AccountLinkAutomationRunBillerTest {
                 .thenReturn(Optional.of(entitlement(null, PERIOD)));
         UsageMeterService meter = mock(UsageMeterService.class);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(meter));
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
 
         biller.recordAutomationRun(List.of(new FileSize(1, 10L)));
         biller.recordAutomationRun(List.of(new FileSize(1, 10L)));
@@ -107,7 +129,8 @@ class AccountLinkAutomationRunBillerTest {
         EntitlementCache cache = mock(EntitlementCache.class);
         UsageMeterService meter = mock(UsageMeterService.class);
         AccountLinkAutomationRunBiller biller =
-                new AccountLinkAutomationRunBiller(cache, providerOf(meter));
+                new AccountLinkAutomationRunBiller(
+                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
 
         biller.recordAutomationRun(List.of());
 

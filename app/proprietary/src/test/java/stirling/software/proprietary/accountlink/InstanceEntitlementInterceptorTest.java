@@ -101,6 +101,19 @@ class InstanceEntitlementInterceptorTest {
     }
 
     @Test
+    void enterpriseProcessingNeverReachesEitherCreditLedger() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/ai/x");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+        interceptor.afterCompletion(request, response, new Object(), null);
+        verifyNoInteractions(
+                freeTierUsageService, entitlementCache, meterProvider, tempFileManager);
+    }
+
+    @Test
     void metersTheFreeTierLedgerWhenUnlinked() throws Exception {
         // FREE_TIER is the gate saying "unlinked, inside the grant", so the op must land on the
         // local ledger with the compiled-in policy and never touch the cloud one.
