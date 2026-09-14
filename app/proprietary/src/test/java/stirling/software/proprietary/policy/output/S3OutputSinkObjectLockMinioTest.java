@@ -58,8 +58,7 @@ class S3OutputSinkObjectLockMinioTest {
     @Container
     static MinIOContainer minio =
             new MinIOContainer(
-                            DockerImageName.parse(
-                                            "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z")
+                            DockerImageName.parse("pgsty/silo:RELEASE.2026-09-03T13-18-01Z")
                                     .asCompatibleSubstituteFor("minio/minio"))
                     .withUserName(ACCESS_KEY)
                     .withPassword(SECRET_KEY);

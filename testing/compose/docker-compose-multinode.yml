@@ -1,4 +1,4 @@
-# Multi-node Stirling-PDF processor test stack: shared Postgres/MinIO/Valkey behind an nginx LB fronting N app nodes, with enterprise features unlocked via a local test licence key.
+# Multi-node Stirling-PDF processor test stack: shared Postgres/Silo/Valkey behind an nginx LB fronting N app nodes, with enterprise features unlocked via a local test licence key.
 # Bring up: ./start-multinode-test.sh   Validate: ./validate-multinode-test.sh   Access: http://localhost:8080 (admin / stirling)
 
 x-stirling-node: &stirling-node
@@ -75,7 +75,7 @@ x-stirling-node: &stirling-node
 
     # --- Policy / processor subsystem (the thing under test) ---
     POLICIES_ENABLED: "true"
-    # Let policy S3 sources/webhook-staging connections point at the in-cluster MinIO.
+    # Let policy S3 sources/webhook-staging connections point at the in-cluster Silo service.
     POLICIES_ALLOWPRIVATES3ENDPOINTS: "true"
 
     # --- Misc features on ---
@@ -121,9 +121,9 @@ services:
     networks:
       - stirling-multinode
 
-  # ---- MinIO: shared S3 (platform storage + policy connections + webhook staging) ----
+  # ---- Silo: shared S3 (platform storage + policy connections + webhook staging) ----
   minio:
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: pgsty/silo:RELEASE.2026-09-03T13-18-01Z
     container_name: multinode-minio
     command: ["server", "/data", "--console-address", ":9001"]
     environment:
@@ -144,7 +144,7 @@ services:
 
   # ---- One-shot: create the buckets the stack needs -------------------------
   minio-init:
-    image: minio/mc:latest
+    image: pgsty/mc:RELEASE.2026-09-13T00-00-00Z
     container_name: multinode-minio-init
     depends_on:
       minio:
