@@ -25,7 +25,7 @@ const TEMPLATE = `<!doctype html>
     <title>Stirling PDF</title>
     <meta
       name="description"
-      content="The Free Adobe Acrobat alternative (10M+ Downloads)"
+      content="A free, private PDF editor you can run on any infrastructure."
     />
     <script type="module" src="/assets/index-abc.js"></script>
   </head>
@@ -855,4 +855,71 @@ describe("shipped OG manifests", () => {
     expect(manifest.byTool["/processor"].noOffer).toBe(true);
     expect(manifest.byTool["/editor"].noOffer).toBeUndefined();
   });
+
+  it("gives the self-hosted home the brand card, verbatim", async () => {
+    const manifest = await load("og-metadata.json");
+    expect(manifest.default.title).toBe("Stirling PDF - 30M+ Downloads");
+    expect(manifest.default.description).toBe(
+      "A free, private PDF editor you can run on any infrastructure.",
+    );
+    const html = injectOg(TEMPLATE, manifest.default, { isHome: true });
+    expect(html).toContain(
+      '<meta name="twitter:title" content="Stirling PDF - 30M+ Downloads" />',
+    );
+    expect(html).toContain(
+      '<meta name="twitter:description" content="A free, private ' +
+        'PDF editor you can run on any infrastructure." />',
+    );
+  });
+
+  it.each(["og-metadata.json", "og-metadata.saas.json"])(
+    "%s labels every app surface the router actually renders",
+    async (name) => {
+      const manifest = await load(name);
+      // Routes that render a page of their own. Redirect-only paths
+      // (/processor/users and friends) are deliberately absent.
+      const surfaces = [
+        "/editor",
+        "/files",
+        "/login",
+        "/docs",
+        "/settings",
+        "/settings/api-keys",
+        "/processor",
+        "/processor/pipelines",
+        "/processor/sources",
+        "/processor/integrations",
+        "/processor/documents",
+        "/processor/review",
+      ];
+      for (const routePath of surfaces) {
+        const entry = manifest.byTool[manifest.byPath[routePath]];
+        expect(entry, routePath).toBeDefined();
+        expect(entry.title, routePath).not.toBe(manifest.default.title);
+      }
+      // Redirects have nothing to label, so they get no prerendered page.
+      for (const gone of ["/processor/users", "/processor/usage"])
+        expect(manifest.byPath[gone], gone).toBeUndefined();
+    },
+  );
+
+  it("keeps prerendered pages off the backend's own static HTML", async () => {
+    // ReactRoutingController serves mobile-sign.html itself in desktop mode; a
+    // prerendered route of the same name would shadow it.
+    const manifest = await load("og-metadata.json");
+    for (const reserved of ["/mobile-sign", "/mobile-upload", "/api-landing"])
+      expect(manifest.byPath[reserved], reserved).toBeUndefined();
+  });
+
+  it.each(["og-metadata.json", "og-metadata.saas.json"])(
+    "%s keeps every route within the two segments the backend can serve",
+    async (manifestName) => {
+      const manifest = await load(manifestName);
+      for (const routePath of Object.keys(manifest.byPath))
+        expect(
+          routePath.replace(/^\//, "").split("/").length,
+          routePath,
+        ).toBeLessThanOrEqual(2);
+    },
+  );
 });

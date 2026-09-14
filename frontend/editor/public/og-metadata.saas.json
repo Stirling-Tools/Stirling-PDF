@@ -239,7 +239,7 @@
     "overlayPdfs": {
       "image": "/og_images/overlay-pdfs.png",
       "title": "Overlay PDFs - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+      "description": "A free, private PDF editor you can run on any infrastructure."
     },
     "getPdfInfo": {
       "image": "/og_images/get-all-info-on-pdf.png",
@@ -334,307 +334,350 @@
     "/login": {
       "image": "/og_images/home.png",
       "title": "Sign In - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/mobile-scanner": {
       "image": "/og_images/home.png",
       "title": "Mobile Scanner - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/files": {
       "image": "/og_images/home.png",
       "title": "Files - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings": {
       "image": "/og_images/home.png",
       "title": "Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
+    "/docs": {
+      "image": "/og_images/home.png",
+      "title": "Documentation - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
+    "/processor": {
+      "image": "/og_images/saas/app-processor.png",
+      "title": "Stirling Processor - Govern every PDF your organization touches",
+      "ogTitle": "Govern every PDF your organization touches",
+      "description": "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF.",
+      "noOffer": true
+    },
+    "/processor/pipelines": {
+      "image": "/og_images/home.png",
+      "title": "Pipelines - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
+    "/processor/sources": {
+      "image": "/og_images/home.png",
+      "title": "Sources - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
+    "/processor/integrations": {
+      "image": "/og_images/home.png",
+      "title": "Integrations - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
+    "/processor/documents": {
+      "image": "/og_images/home.png",
+      "title": "Documents - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
+      "noindex": true
+    },
+    "/processor/review": {
+      "image": "/og_images/home.png",
+      "title": "Review - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/preferences": {
       "image": "/og_images/home.png",
       "title": "Preferences Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/notifications": {
       "image": "/og_images/home.png",
       "title": "Notifications Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/connections": {
       "image": "/og_images/home.png",
       "title": "Connections Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/account": {
       "image": "/og_images/home.png",
       "title": "Account Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/general": {
       "image": "/og_images/home.png",
       "title": "General Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/people": {
       "image": "/og_images/home.png",
       "title": "People Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/teams": {
       "image": "/og_images/home.png",
       "title": "Teams Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/security": {
       "image": "/og_images/home.png",
       "title": "Security Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/identity": {
       "image": "/og_images/home.png",
       "title": "Identity Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/plan": {
       "image": "/og_images/home.png",
       "title": "Plan Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/payments": {
       "image": "/og_images/home.png",
       "title": "Payments Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/requests": {
       "image": "/og_images/home.png",
       "title": "Requests Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/developer": {
       "image": "/og_images/home.png",
       "title": "Developer Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/api-keys": {
       "image": "/og_images/home.png",
-      "title": "Api Keys Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "title": "API Keys Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/hotkeys": {
       "image": "/og_images/home.png",
       "title": "Hotkeys Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminGeneral": {
       "image": "/og_images/home.png",
       "title": "Admin General Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminSecurity": {
       "image": "/og_images/home.png",
       "title": "Admin Security Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminConnections": {
       "image": "/og_images/home.png",
       "title": "Admin Connections Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminPrivacy": {
       "image": "/og_images/home.png",
       "title": "Admin Privacy Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminDatabase": {
       "image": "/og_images/home.png",
       "title": "Admin Database Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminAdvanced": {
       "image": "/og_images/home.png",
       "title": "Admin Advanced Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminLegal": {
       "image": "/og_images/home.png",
       "title": "Admin Legal Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminPremium": {
       "image": "/og_images/home.png",
       "title": "Admin Premium Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminFeatures": {
       "image": "/og_images/home.png",
       "title": "Admin Features Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminPlan": {
       "image": "/og_images/home.png",
       "title": "Admin Plan Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminAudit": {
       "image": "/og_images/home.png",
       "title": "Admin Audit Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminUsage": {
       "image": "/og_images/home.png",
       "title": "Admin Usage Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminEndpoints": {
       "image": "/og_images/home.png",
       "title": "Admin Endpoints Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminStorageSharing": {
       "image": "/og_images/home.png",
       "title": "Admin Storage Sharing Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminFolderAccess": {
       "image": "/og_images/home.png",
       "title": "Admin Folder Access Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminMcp": {
       "image": "/og_images/home.png",
-      "title": "Admin Mcp Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "title": "Admin MCP Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminAiGeneral": {
       "image": "/og_images/home.png",
-      "title": "Admin Ai General Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "title": "Admin AI General Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminAiModels": {
       "image": "/og_images/home.png",
-      "title": "Admin Ai Models Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "title": "Admin AI Models Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminAiDocuments": {
       "image": "/og_images/home.png",
-      "title": "Admin Ai Documents Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "title": "Admin AI Documents Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminAiLimits": {
       "image": "/og_images/home.png",
-      "title": "Admin Ai Limits Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "title": "Admin AI Limits Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/adminAi": {
       "image": "/og_images/home.png",
-      "title": "Admin Ai Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "title": "Admin AI Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/help": {
       "image": "/og_images/home.png",
       "title": "Help Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/legal": {
       "image": "/og_images/home.png",
       "title": "Legal Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/backendThirdPartyLicenses": {
       "image": "/og_images/home.png",
       "title": "Backend Third Party Licenses Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/frontendThirdPartyLicenses": {
       "image": "/og_images/home.png",
       "title": "Frontend Third Party Licenses Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/about": {
       "image": "/og_images/home.png",
       "title": "About Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/payg": {
       "image": "/og_images/home.png",
-      "title": "Payg Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "title": "Pay As You Go Settings - Stirling PDF",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/account-link": {
       "image": "/og_images/home.png",
       "title": "Account Link Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/users": {
       "image": "/og_images/home.png",
       "title": "Users Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/billing": {
       "image": "/og_images/home.png",
       "title": "Billing Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/audit": {
       "image": "/og_images/home.png",
       "title": "Audit Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/settings/storage": {
       "image": "/og_images/home.png",
       "title": "Storage Settings - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
     },
     "/pdf-to-word": {
@@ -735,15 +778,8 @@
     "/signup": {
       "image": "/og_images/home.png",
       "title": "Sign Up - Stirling PDF",
-      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "description": "A free, private PDF editor you can run on any infrastructure.",
       "noindex": true
-    },
-    "/processor": {
-      "image": "/og_images/saas/app-processor.png",
-      "title": "Stirling Processor - Govern every PDF your organization touches",
-      "ogTitle": "Govern every PDF your organization touches",
-      "description": "Redaction, retention, and encryption policies enforced everywhere PDFs enter your org. Distribute the free Editor anywhere. 1¢ per PDF.",
-      "noOffer": true
     }
   },
   "byPath": {
@@ -868,6 +904,13 @@
     "/mobile-scanner": "/mobile-scanner",
     "/files": "/files",
     "/settings": "/settings",
+    "/docs": "/docs",
+    "/processor": "/processor",
+    "/processor/pipelines": "/processor/pipelines",
+    "/processor/sources": "/processor/sources",
+    "/processor/integrations": "/processor/integrations",
+    "/processor/documents": "/processor/documents",
+    "/processor/review": "/processor/review",
     "/settings/preferences": "/settings/preferences",
     "/settings/notifications": "/settings/notifications",
     "/settings/connections": "/settings/connections",
@@ -915,8 +958,7 @@
     "/settings/billing": "/settings/billing",
     "/settings/audit": "/settings/audit",
     "/settings/storage": "/settings/storage",
-    "/signup": "/signup",
-    "/processor": "/processor"
+    "/signup": "/signup"
   },
   "canonicalByPath": {
     "/annotate": "/annotations",
@@ -1030,6 +1072,10 @@
     {
       "path": "/booklet-imposition",
       "label": "Create a PDF Booklet"
+    },
+    {
+      "path": "/create-portfolio",
+      "label": "Create Portfolio"
     },
     {
       "path": "/crop",

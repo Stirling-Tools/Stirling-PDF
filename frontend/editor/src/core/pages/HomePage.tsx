@@ -466,7 +466,7 @@ export default function HomePage() {
     : undefined;
   const defaultDescription = t(
     "app.description",
-    "The Free Adobe Acrobat alternative (10M+ Downloads)",
+    "A free, private PDF editor you can run on any infrastructure.",
   );
   const metaTitle = seoOverride
     ? `${seoOverride.title} - ${appName}`

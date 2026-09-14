@@ -24,8 +24,11 @@ const ROOT = path.resolve(HERE, "..");
 const read = (p) => fs.readFileSync(path.join(ROOT, p), "utf8");
 
 const SITE_NAME = "Stirling PDF";
-const SITE_TITLE = "Stirling PDF";
-const SITE_DESC = "The Free Adobe Acrobat alternative (10M+ Downloads)";
+// SITE_TITLE is the home page's own title/social headline; SITE_NAME is the
+// suffix every other page carries, so the download count appears once.
+const SITE_TITLE = "Stirling PDF - 30M+ Downloads";
+const SITE_DESC =
+  "A free, private PDF editor you can run on any infrastructure.";
 const DEFAULT_IMAGE_BASENAME = "home";
 
 // Keyword-targeted landing copy for the convert tool's URL aliases. Every
@@ -369,15 +372,38 @@ const pageTitles = {
   "/mobile-scanner": "Mobile Scanner",
   "/files": "Files",
   "/settings": "Settings",
+  "/docs": "Documentation",
+  // Processor views per portal/ViewRouter. Its redirect-only paths
+  // (/processor/users and friends, now settings) render nothing to label.
+  "/processor": "Processor",
+  "/processor/pipelines": "Pipelines",
+  "/processor/sources": "Sources",
+  "/processor/integrations": "Integrations",
+  "/processor/documents": "Documents",
+  "/processor/review": "Review",
 };
 
-// Routes only the SaaS build serves - self-hosted has no signup page.
+// Routes only the SaaS build serves - self-hosted redirects /signup to /login.
 const SAAS_ONLY_PAGE_TITLES = { "/signup": "Sign Up" };
-for (const key of navKeys)
-  pageTitles[`/settings/${key}`] = `${humanizeLabel(key)} Settings`;
 
-// Auth, file manager, scanner and settings are app surfaces, not landing pages:
-// mark them noindex so crawlers keep them out of the index (and the sitemap).
+// Nav keys humanizeLabel gets wrong: it title-cases acronyms, and one key is an
+// initialism rather than words.
+const NAV_KEY_LABELS = {
+  "api-keys": "API Keys",
+  adminMcp: "Admin MCP",
+  adminAi: "Admin AI",
+  adminAiGeneral: "Admin AI General",
+  adminAiModels: "Admin AI Models",
+  adminAiDocuments: "Admin AI Documents",
+  adminAiLimits: "Admin AI Limits",
+  payg: "Pay As You Go",
+};
+for (const key of navKeys)
+  pageTitles[`/settings/${key}`] =
+    `${NAV_KEY_LABELS[key] ?? humanizeLabel(key)} Settings`;
+
+// App surfaces, not landing pages: noindex keeps them out of the index and the
+// sitemap. Docs and processor render client-side, so a shell would be thin.
 for (const [routePath, label] of Object.entries(pageTitles)) {
   byTool[routePath] = {
     image: `/og_images/${DEFAULT_IMAGE_BASENAME}.png`,

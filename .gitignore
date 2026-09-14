@@ -55,8 +55,9 @@ app/core/src/main/resources/static/index.html
 app/core/src/main/resources/static/*.html
 !app/core/src/main/resources/static/api-landing.html
 !app/core/src/main/resources/static/mobile-upload.html
-# Prerendered nested-route pages (e.g. settings/people.html)
+# Prerendered nested-route pages (e.g. settings/people.html, processor/sources.html)
 app/core/src/main/resources/static/settings/
+app/core/src/main/resources/static/processor/
 app/core/src/main/resources/static/locales/
 app/core/src/main/resources/static/Login/
 app/core/src/main/resources/static/classic-logo/
