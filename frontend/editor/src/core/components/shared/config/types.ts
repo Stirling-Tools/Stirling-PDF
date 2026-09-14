@@ -26,6 +26,7 @@ export const VALID_NAV_KEYS = [
   "adminLegal",
   "adminPremium",
   "adminFeatures",
+  "adminMailbox",
   "adminPlan",
   "adminAudit",
   "adminUsage",

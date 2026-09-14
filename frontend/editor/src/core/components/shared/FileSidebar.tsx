@@ -36,6 +36,7 @@ import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import FolderOpenIcon from "@mui/icons-material/FolderOpen";
 import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import AddIcon from "@mui/icons-material/Add";
 import OpenInFullIcon from "@mui/icons-material/OpenInFull";
@@ -75,6 +76,7 @@ import {
   clearWatchedFolderDraggedFileIds,
 } from "@app/components/watchedFolders/watchedFolderDragState";
 import { WATCHED_FOLDERS_ENABLED } from "@app/constants/featureFlags";
+import { EMAIL_MAILBOX_ENABLED } from "@app/constants/emailMailboxAvailability";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useToolEligibleFileIds } from "@app/contexts/ToolFileEligibilityContext";
 import "@app/components/shared/FileSidebar.css";
@@ -1158,6 +1160,40 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   {!collapsed && (
                     <span className="file-sidebar-action-label sidebar-content-fade">
                       {t("fileSidebar.googleDrive", "Google Drive")}
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
+            )}
+
+            {EMAIL_MAILBOX_ENABLED && (
+              <Tooltip
+                label={t("fileSidebar.email", "Email inbox")}
+                position="right"
+                withinPortal
+                disabled={!collapsed}
+              >
+                <div
+                  className="file-sidebar-action-row"
+                  data-testid="email-button"
+                  onClick={() => {
+                    if (collapsed && onToggleCollapse) onToggleCollapse();
+                    navigate("/mail");
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t("fileSidebar.email", "Email inbox")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      navigate("/mail");
+                    }
+                  }}
+                >
+                  <EmailOutlinedIcon className="file-sidebar-action-icon" />
+                  {!collapsed && (
+                    <span className="file-sidebar-action-label sidebar-content-fade">
+                      {t("fileSidebar.email", "Email inbox")}
                     </span>
                   )}
                 </div>

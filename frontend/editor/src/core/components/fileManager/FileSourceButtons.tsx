@@ -3,7 +3,9 @@ import { Stack, Text, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import HistoryIcon from "@mui/icons-material/History";
 import PhonelinkIcon from "@mui/icons-material/Phonelink";
+import EmailOutlinedIcon from "@mui/icons-material/EmailOutlined";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 import { useGoogleDrivePicker } from "@app/hooks/useGoogleDrivePicker";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -12,6 +14,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
+import { EMAIL_MAILBOX_ENABLED } from "@app/constants/emailMailboxAvailability";
 
 interface FileSourceButtonsProps {
   horizontal?: boolean;
@@ -36,6 +39,7 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
   const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { config } = useAppConfig();
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
   const isMobileUploadEnabled = config?.enableMobileScanner && !isMobile;
 
   const handleGoogleDriveClick = async () => {
@@ -117,6 +121,22 @@ const FileSourceButtons: React.FC<FileSourceButtonsProps> = ({
           {horizontal
             ? t("fileManager.googleDriveShort", "Drive")
             : t("fileManager.googleDrive", "Google Drive")}
+        </Button>
+      )}
+
+      {EMAIL_MAILBOX_ENABLED && (
+        <Button
+          variant="tertiary"
+          accent="neutral"
+          leftSection={<EmailOutlinedIcon />}
+          justify={buttonJustify}
+          onClick={() => navigate("/mail")}
+          fullWidth={!horizontal}
+          size={buttonSize}
+        >
+          {horizontal
+            ? t("fileManager.emailShort", "Email")
+            : t("fileManager.email", "Email inbox")}
         </Button>
       )}
 

@@ -1,13 +1,14 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import { AppProviders } from "@app/components/AppProviders";
-import { AppFrame } from "@app/components/layout/AppFrame";
 import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
-import { AppRoot } from "@app/components/layout/AppRoot";
+import HomePage from "@app/pages/HomePage";
+import EmailInboxPage from "@app/pages/EmailInboxPage";
 import Onboarding from "@app/components/onboarding/Onboarding";
+import { EMAIL_MAILBOX_ENABLED } from "@app/constants/emailMailboxAvailability";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
@@ -54,21 +55,31 @@ export default function App() {
           }
         />
 
-        {/* The app, under a shared frame so the rail renders once outside it. */}
-        <Route element={<AppFrame />}>
-          {/* All other routes need AppProviders for backend integration */}
+        {EMAIL_MAILBOX_ENABLED && (
           <Route
-            path="*"
+            path="/mail"
             element={
               <AppProviders>
                 <AppLayout>
-                  <AppRoot />
-                  <Onboarding />
+                  <EmailInboxPage />
                 </AppLayout>
               </AppProviders>
             }
           />
-        </Route>
+        )}
+
+        {/* All other routes need AppProviders for backend integration */}
+        <Route
+          path="*"
+          element={
+            <AppProviders>
+              <AppLayout>
+                <HomePage />
+                <Onboarding />
+              </AppLayout>
+            </AppProviders>
+          }
+        />
       </Routes>
     </Suspense>
   );
