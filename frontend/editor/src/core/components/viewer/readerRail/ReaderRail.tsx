@@ -1,6 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { Menu } from "@mantine/core";
+import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
 import MenuBookIcon from "@mui/icons-material/MenuBook";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import SearchIcon from "@mui/icons-material/Search";
@@ -14,10 +17,8 @@ import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
-import {
-  useFileManagement,
-  useFileSelector,
-} from "@app/contexts/file/fileHooks";
+import { useAllFiles, useFileManagement } from "@app/contexts/file/fileHooks";
+import { isStirlingFile } from "@app/types/fileContext";
 import "@app/components/viewer/readerRail/ReaderRail.css";
 
 interface RailItem {
@@ -63,10 +64,10 @@ const RAIL_GROUPS: readonly (readonly RailItem[])[] = [
 export function ReaderRail() {
   const { t } = useTranslation();
   const { buttons, actions } = useWorkbenchBar();
-  const { activeFileId } = useViewer();
+  const { activeFileId, setActiveFileId } = useViewer();
   const { removeFiles } = useFileManagement();
   const { requestNavigation } = useNavigationGuard();
-  const fileIds = useFileSelector((state) => state.files.ids);
+  const { files, fileIds } = useAllFiles();
 
   // The id as the workbench holds it, so the close acts on a document that is
   // really open rather than one the viewer has not caught up with.
@@ -100,6 +101,21 @@ export function ReaderRail() {
 
   const closeLabel = t("reader.rail.close", "Close document");
 
+  // One document is just the one you are reading, so the picker only earns its
+  // place once there is a choice to make.
+  const documents = useMemo(
+    () =>
+      files
+        .filter((file) => isStirlingFile(file))
+        .map((file) => ({ id: file.fileId as string, name: file.name })),
+    [files],
+  );
+  const hasChoice = documents.length > 1;
+  const currentName =
+    documents.find((doc) => doc.id === activeFileId)?.name ??
+    documents[0]?.name ??
+    "";
+
   const registered = useMemo(
     () => new Map(buttons.map((button) => [button.id, button])),
     [buttons],
@@ -110,6 +126,57 @@ export function ReaderRail() {
       className="reader-rail"
       aria-label={t("reader.rail.label", "Reading tools")}
     >
+      {/* Which document, and whether it stays open: both are about the document
+          itself rather than how it is read, so they lead the rail. */}
+      <div className="reader-rail__group">
+        <AppTooltip content={closeLabel} position="left" arrow delay={0}>
+          <ActionIcon
+            variant="tertiary"
+            size="md"
+            shape="circle"
+            aria-label={closeLabel}
+            disabled={!openFileId}
+            onClick={closeDocument}
+          >
+            <CloseIcon fontSize="small" />
+          </ActionIcon>
+        </AppTooltip>
+        {hasChoice && (
+          <Menu shadow="md" width={260} position="left-start">
+            <Menu.Target>
+              <ActionIcon
+                variant="tertiary"
+                size="md"
+                shape="circle"
+                // The name is in the dropdown; the trigger says what it opens.
+                aria-label={t("reader.rail.switchDocument", "Switch document")}
+              >
+                <DescriptionOutlinedIcon fontSize="small" />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown>
+              <Menu.Label>{currentName}</Menu.Label>
+              {documents.map((doc) => (
+                <Menu.Item
+                  key={doc.id}
+                  onClick={() => setActiveFileId(doc.id)}
+                  leftSection={
+                    doc.id === activeFileId ? (
+                      <CheckIcon fontSize="small" />
+                    ) : (
+                      // Holds the column so the names line up either way.
+                      <span className="reader-rail__tick-space" />
+                    )
+                  }
+                >
+                  <span className="reader-rail__doc-name">{doc.name}</span>
+                </Menu.Item>
+              ))}
+            </Menu.Dropdown>
+          </Menu>
+        )}
+        <div className="reader-rail__divider" />
+      </div>
       {RAIL_GROUPS.map((group, index) => (
         <div className="reader-rail__group" key={group[0].id}>
           {index > 0 && <div className="reader-rail__divider" />}
@@ -161,23 +228,6 @@ export function ReaderRail() {
           })}
         </div>
       ))}
-      {/* At the foot, away from the reading controls: it acts on whether the
-          document is open at all, not on how it is read. */}
-      <div className="reader-rail__group reader-rail__group--foot">
-        <div className="reader-rail__divider" />
-        <AppTooltip content={closeLabel} position="left" arrow delay={0}>
-          <ActionIcon
-            variant="tertiary"
-            size="md"
-            shape="circle"
-            aria-label={closeLabel}
-            disabled={!openFileId}
-            onClick={closeDocument}
-          >
-            <CloseIcon fontSize="small" />
-          </ActionIcon>
-        </AppTooltip>
-      </div>
     </nav>
   );
 }
