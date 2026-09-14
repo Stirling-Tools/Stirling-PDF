@@ -335,6 +335,16 @@ export default function HomePage() {
     });
   }, [navigationState.workbench, navigate]);
 
+  // The sidebar owns the native picker; the quick navigation action fires the
+  // same one so both entry points share a single ingest path.
+  const openFromComputerRef = useRef<(() => void) | null>(null);
+  const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
+    openFromComputerRef.current = open;
+  }, []);
+  const openFromComputer = useCallback(() => {
+    openFromComputerRef.current?.();
+  }, []);
+
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
   );
@@ -497,6 +507,10 @@ export default function HomePage() {
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         toolReasons={quickNavToolReasons}
+        // /files provides its own upload action.
+        onOpenFromComputer={
+          navigationState.workbench === "myFiles" ? undefined : openFromComputer
+        }
       />
       <FilesPageProvider>
         {isMobile ? (
@@ -505,9 +519,9 @@ export default function HomePage() {
             data-files-mode={navigationState.workbench === "myFiles"}
           >
             {/* On /files the FileManagerView already has its own Back +
-              breadcrumb + tabs chrome - the tools/workspace toggle would
-              just duplicate vertical space. Keep the toggle on every
-              other route. */}
+            breadcrumb + tabs chrome - the tools/workspace toggle would
+            just duplicate vertical space. Keep the toggle on every
+            other route. */}
             {navigationState.workbench !== "myFiles" && (
               <div className="mobile-toggle">
                 <div className="mobile-brand">
@@ -545,9 +559,9 @@ export default function HomePage() {
             )}
             {navigationState.workbench === "myFiles" ? (
               /* /files takes the whole viewport. Skipping the slider keeps
-                the FileManagerView from being trapped inside a 100vw
-                horizontal-scroll container (which truncated buttons and
-                created a stray side-scroll surface on touch). */
+              the FileManagerView from being trapped inside a 100vw
+              horizontal-scroll container (which truncated buttons and
+              created a stray side-scroll surface on touch). */
               <div className="mobile-files-full">
                 <div className="flex-1 min-h-0 flex" style={{ minWidth: 0 }}>
                   <Workbench />
@@ -698,6 +712,7 @@ export default function HomePage() {
                 }
                 onToggleCollapse={handleSidebarToggle}
                 onOpenSettings={openSettings}
+                onRegisterOpenFromComputer={registerOpenFromComputer}
               />
             </div>
             <FolderTreePanel active={navigationState.workbench === "myFiles"} />

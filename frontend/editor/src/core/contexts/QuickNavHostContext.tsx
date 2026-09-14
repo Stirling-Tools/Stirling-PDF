@@ -29,6 +29,8 @@ export interface QuickNavHostData {
   notificationsOpen: boolean;
   /** Translated; absent means usable. */
   toolReasons: QuickNavToolReasons;
+  /** Mirrors `openFromComputer`, which lives in a ref and so cannot trigger a render. */
+  hasOpenFromComputer: boolean;
 }
 
 export interface QuickNavHostActions {
@@ -38,6 +40,7 @@ export interface QuickNavHostActions {
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
   requestNavigation?: (go: () => void) => void;
+  openFromComputer?: () => void;
   /**
    * Absent unless the app says the hidden novelty features are enabled, which
    * is the only gate the rail gets - see useBrandFlourish. `originRect` is the
@@ -67,6 +70,7 @@ const EMPTY_DATA: QuickNavHostData = {
   readerMode: false,
   activeTool: null,
   notificationsOpen: false,
+  hasOpenFromComputer: false,
 };
 
 function sameReasons(
@@ -96,6 +100,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.readerMode === prev.readerMode &&
         merged.activeTool === prev.activeTool &&
         merged.notificationsOpen === prev.notificationsOpen &&
+        merged.hasOpenFromComputer === prev.hasOpenFromComputer &&
         merged.identity?.displayName === prev.identity?.displayName &&
         merged.identity?.profilePictureUrl ===
           prev.identity?.profilePictureUrl &&
@@ -151,6 +156,7 @@ export function useRegisterQuickNavHost(
     notificationsOpen,
     toolReasons,
   } = data;
+  const hasOpenFromComputer = Boolean(actions.openFromComputer);
   useEffect(() => {
     host?.setData({
       appMounted: true,
@@ -163,6 +169,7 @@ export function useRegisterQuickNavHost(
       notificationsOpen: notificationsOpen ?? false,
       // Omitted when unknown, so the last answer survives a re-fetch.
       ...(toolReasons ? { toolReasons } : {}),
+      hasOpenFromComputer,
     });
     // By field: identity is rebuilt every render.
   }, [
@@ -175,6 +182,7 @@ export function useRegisterQuickNavHost(
     activeTool,
     notificationsOpen,
     toolReasons,
+    hasOpenFromComputer,
   ]);
 
   const setActions = host?.setActions;
