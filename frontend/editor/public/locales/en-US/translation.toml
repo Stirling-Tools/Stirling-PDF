@@ -9065,10 +9065,6 @@ summary = "Strips hidden data, converts to the PDF/A archival format, and valida
 [portal.policies.config.ingestion]
 summary = "Classifies documents, extracts structured data, enforces naming, and normalizes pages."
 
-[portal.policies.config.ingestion.fields]
-belowThreshold = "Below threshold"
-minConfidence = "Min confidence"
-
 [portal.policies.config.ingestion.rules]
 0 = "Classify"
 1 = "Extract"
@@ -9790,6 +9786,7 @@ openNav = "Open navigation"
 search = "Search"
 
 [portal.sources]
+processingModeHelp = "Track keeps originals and processes each version once. Snapshot keeps originals and processes them on every run. Consume deletes originals after successful delivery."
 subtitle = "Reusable input connections that feed documents into Stirling. Configure a source once, then reference it from any number of pipelines."
 title = "Sources"
 
@@ -9832,12 +9829,12 @@ label = "Folder"
 placeholder = "Login home or share root"
 
 [portal.sources.networkFields.mode]
-helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
 label = "After processing"
 
 [portal.sources.networkFields.mode.options]
 consume = "Delete the file"
 snapshot = "Leave it in place"
+track = "Keep originals; process changes once"
 
 [portal.sources.networkFields.recursive]
 helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
@@ -9894,12 +9891,13 @@ hash = "File Metadata & Content"
 stat = "File Metadata"
 
 [portal.sources.types.folder.fields.mode]
-helperText = "Whether to leave the original file in place after it has been processed. If the original file is left in place, it will be re-processed next time the pipeline scans the source."
+helperText = "What happens to the original file once it has been processed. \"Keep it\" remembers what it has already handled, so a file is only processed again when it actually changes."
 label = "After processing"
 
 [portal.sources.types.folder.fields.mode.options]
 consume = "Delete the file"
-snapshot = "Leave it in place"
+snapshot = "Keep it, and process it again every scan"
+track = "Keep it, and only process it again if it changes"
 
 [portal.sources.types.folder.fields.recursive]
 helperText = "Include subfolders if your files are organised into nested folders, or watch only the top level."
@@ -9934,12 +9932,12 @@ helperText = "The saved connection with the bucket and credentials. Shared by ev
 label = "Connection"
 
 [portal.sources.types.s3.fields.mode]
-helperText = "Whether to leave the original object in place after it has been processed. If the original object is left in place, it will be re-processed next time the pipeline scans the source."
 label = "After processing"
 
 [portal.sources.types.s3.fields.mode.options]
 consume = "Delete the object"
 snapshot = "Leave it in place"
+track = "Keep originals; process changes once"
 
 [portal.sources.types.s3.fields.prefix]
 helperText = "The folder (key prefix) within the bucket to watch."
