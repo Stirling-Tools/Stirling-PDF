@@ -1,6 +1,5 @@
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import AddRoundedIcon from "@mui/icons-material/AddRounded";
-import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import {
   ActionIcon,
   Banner,
@@ -62,7 +61,7 @@ export function RoutingRules({
       <Button
         variant="tertiary"
         size="sm"
-        leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+        leftSection={<Icon name="plus" size={"1.125rem"} />}
         onClick={onCreateDestination}
       >
         {t("portal.policies.wizard.sources.connect", "Connect a source")}
@@ -118,7 +117,7 @@ export function RoutingRules({
                   )}
                   onClick={() => onChange(rules.filter((_, i) => i !== index))}
                 >
-                  <CloseRoundedIcon style={{ fontSize: "0.875rem" }} />
+                  <Icon name="x" size={"0.875rem"} />
                 </ActionIcon>
               </div>
             </div>
@@ -128,7 +127,7 @@ export function RoutingRules({
       <Button
         variant="tertiary"
         size="sm"
-        leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
+        leftSection={<Icon name="plus" size={"1.125rem"} />}
         onClick={() =>
           onChange([...rules, blankRoutingRule(destinations[0]?.id ?? "")])
         }
