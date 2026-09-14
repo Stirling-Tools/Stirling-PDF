@@ -62,14 +62,12 @@ export function SelectionAPIBridge() {
 
       // Pre-load geometry for every page so updateRectsAndSlices has data to
       // emit rects for, and getSelectedText has slices for, every page.
-      try {
-        await Promise.all(
-          Array.from({ length: totalPages }, (_, p) =>
-            plugin.getOrLoadGeometry(documentId, p).toPromise(),
-          ),
-        );
-      } catch {
-        // Continue with whatever geometry did load
+      for (let p = 0; p < totalPages; p++) {
+        try {
+          await plugin.getOrLoadGeometry(documentId, p).toPromise();
+        } catch {
+          // Continue with whatever geometry did load
+        }
       }
 
       const state = selection.getState(documentId);
@@ -86,10 +84,24 @@ export function SelectionAPIBridge() {
 
       if (firstPage === -1 || lastPage === -1) return false;
 
-      plugin.clearSelection(documentId);
-      plugin.beginSelection(documentId, firstPage, 0);
-      plugin.updateSelection(documentId, lastPage, lastGlyph);
-      plugin.endSelection(documentId);
+      try {
+        await selection
+          .setSelection(
+            {
+              start: { page: firstPage, index: 0 },
+              end: { page: lastPage, index: lastGlyph },
+            },
+            documentId,
+          )
+          .toPromise();
+      } catch {
+        // Fallback: use internal begin/update/end flow
+        plugin.clearSelection(documentId);
+        plugin.beginSelection(documentId, firstPage, 0);
+        plugin.updateSelection(documentId, lastPage, lastGlyph);
+        plugin.endSelection(documentId);
+      }
+
       return true;
     };
 
@@ -117,8 +129,10 @@ export function SelectionAPIBridge() {
     };
 
     const buildApi = () => ({
-      copyToClipboard: () => selection.copyToClipboard(),
-      getFormattedSelection: () => selection.getFormattedSelection(),
+      copyToClipboard: () =>
+        selection.copyToClipboard(activeDocumentId ?? undefined),
+      getFormattedSelection: () =>
+        selection.getFormattedSelection(activeDocumentId ?? undefined),
       selectAll: async (totalPages: number) => {
         const docId = activeDocumentId;
         if (!docId || !selectionPlugin) return false;
@@ -147,7 +161,9 @@ export function SelectionAPIBridge() {
 
       if (hasText) {
         try {
-          const result = selection.getSelectedText();
+          const result = selection.getSelectedText(
+            activeDocumentId ?? undefined,
+          );
           result?.wait?.(
             (texts: string[]) => {
               selectedTextRef.current = texts.join("\n");
@@ -187,7 +203,7 @@ export function SelectionAPIBridge() {
         event.key === "c" &&
         hasSelectionRef.current
       ) {
-        selection.copyToClipboard();
+        selection.copyToClipboard(activeDocumentId ?? undefined);
       }
     };
 

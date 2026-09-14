@@ -24,6 +24,8 @@ export interface QuickNavHostData {
   signingBadge: number;
   portalAccess: boolean;
   readerMode: boolean;
+  /** The library is a view of the editor app, and the rail marks it as its own place. */
+  fileLibrary: boolean;
   activeTool: ToolId | null;
   /** The app owns the panel; the rail's bell only reports its state. */
   notificationsOpen: boolean;
@@ -35,6 +37,7 @@ export interface QuickNavHostActions {
   /** The editor reads its tool from the URL only on mount. */
   selectTool?: (toolId: ToolId) => void;
   setReaderMode?: (on: boolean) => void;
+  showFileLibrary?: () => void;
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
   requestNavigation?: (go: () => void) => void;
@@ -65,6 +68,7 @@ const EMPTY_DATA: QuickNavHostData = {
   signingBadge: 0,
   portalAccess: false,
   readerMode: false,
+  fileLibrary: false,
   activeTool: null,
   notificationsOpen: false,
 };
@@ -94,6 +98,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.signingBadge === prev.signingBadge &&
         merged.portalAccess === prev.portalAccess &&
         merged.readerMode === prev.readerMode &&
+        merged.fileLibrary === prev.fileLibrary &&
         merged.activeTool === prev.activeTool &&
         merged.notificationsOpen === prev.notificationsOpen &&
         merged.identity?.displayName === prev.identity?.displayName &&
@@ -147,6 +152,7 @@ export function useRegisterQuickNavHost(
     signingBadge,
     portalAccess,
     readerMode,
+    fileLibrary,
     activeTool,
     notificationsOpen,
     toolReasons,
@@ -158,6 +164,7 @@ export function useRegisterQuickNavHost(
       signingBadge: signingBadge ?? 0,
       portalAccess: portalAccess ?? false,
       readerMode: readerMode ?? false,
+      fileLibrary: fileLibrary ?? false,
       // Cleared, not omitted as toolReasons is: a stale tool marks an entry.
       activeTool: activeTool ?? null,
       notificationsOpen: notificationsOpen ?? false,
@@ -172,6 +179,7 @@ export function useRegisterQuickNavHost(
     signingBadge,
     portalAccess,
     readerMode,
+    fileLibrary,
     activeTool,
     notificationsOpen,
     toolReasons,
