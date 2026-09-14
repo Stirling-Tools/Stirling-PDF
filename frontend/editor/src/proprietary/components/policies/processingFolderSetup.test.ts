@@ -3,9 +3,16 @@ import {
   canEditFolderSteps,
   folderSetupEntry,
   mergeFolderSteps,
+  sortFolderPresets,
 } from "@app/components/policies/processingFolderSetup";
 import { policyStepFromWire, policyStepToWire } from "@app/policies/operations";
 import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
+
+import { assemblePolicies } from "@app/policies/overview";
+
+const catalogue = assemblePolicies([], []).catalogue;
+const preset = (id: string) =>
+  catalogue.find((entry) => entry.category.id === id)!;
 
 const saved: ProcessingRecordSummary = {
   id: "processing-1",
@@ -25,7 +32,7 @@ const saved: ProcessingRecordSummary = {
 
 describe("folder processing edits", () => {
   it("retains saved tool order across preset boundaries and the paused state", () => {
-    const entry = folderSetupEntry("security", saved);
+    const entry = folderSetupEntry(preset("security"), saved);
     expect(entry.config.defaultOperations.map((step) => step.toolId)).toEqual([
       "compress",
       "sanitize",
@@ -44,7 +51,7 @@ describe("folder processing edits", () => {
   });
 
   it("keeps the matching preset's omitted tools available when reopening a folder", () => {
-    const entry = folderSetupEntry("classification", {
+    const entry = folderSetupEntry(preset("classification"), {
       ...saved,
       steps: [saved.steps[1]],
     });
@@ -55,6 +62,32 @@ describe("folder processing edits", () => {
       "watermark",
     ]);
     expect(entry.policy?.steps).toEqual([saved.steps[1]]);
+  });
+
+  it("keeps every preset and sorts configured policies ahead of available defaults", () => {
+    const configured = assemblePolicies(
+      [
+        {
+          id: "saved-compliance",
+          name: "Compliance",
+          enabled: true,
+          inputs: [],
+          steps: [],
+          output: { type: "inline", options: { categoryId: "compliance" } },
+        },
+      ],
+      [],
+    ).catalogue;
+    expect(
+      sortFolderPresets(configured).map((entry) => entry.category.id),
+    ).toEqual([
+      "compliance",
+      "security",
+      "classification",
+      "routing",
+      "ingestion",
+      "retention",
+    ]);
   });
 
   it("refuses unknown or repeated tools so the simple editor cannot silently discard them", () => {

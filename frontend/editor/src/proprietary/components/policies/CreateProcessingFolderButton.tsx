@@ -36,7 +36,6 @@ export function CreateProcessingFolderButton({
             {!collapsed && label}
           </Button>
         </Tooltip>
-        {placement === "home" && <p>{t("processingFolders.setup.ctaHint")}</p>}
       </div>
       {open && (
         <Suspense

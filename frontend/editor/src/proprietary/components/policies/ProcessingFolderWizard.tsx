@@ -1,12 +1,13 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Modal } from "@app/ui";
-import { Icon, type IconName } from "@app/ui/Icon";
+import { Banner, Button, InfoTooltip, Modal } from "@app/ui";
+import { Icon } from "@app/ui/Icon";
 import { folderKind, type FolderRecord } from "@app/types/folder";
 import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
 import {
   humanizeEndpoint,
   type PolicySetupResult,
+  type CatalogueEntry,
 } from "@app/policies/catalog";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import {
@@ -14,12 +15,15 @@ import {
   type ProcessingFolderPickerProps,
 } from "@app/components/policies/ProcessingFolderPicker";
 import {
-  FOLDER_PRESETS,
+  sortFolderPresets,
+  presetProcessingRecord,
+  mergeFolderSteps,
   canEditFolderSteps,
   folderSetupEntry,
   processingFolderPath,
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import "@app/components/policies/FolderProcessingSetup.css";
 
 export interface ProcessingFolderWizardProps extends Omit<
@@ -29,6 +33,7 @@ export interface ProcessingFolderWizardProps extends Omit<
   /** An existing-folder entry skips destination selection. */
   initialFolder?: FolderRecord;
   aiEngineEnabled: boolean;
+  catalogue: CatalogueEntry[];
   recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
   /** Resolves a selection or creates its folder; must not enable processing. */
   resolveTarget: (target: ProcessingFolderTarget) => Promise<FolderRecord>;
@@ -40,16 +45,11 @@ export interface ProcessingFolderWizardProps extends Omit<
 }
 
 type Stage = "folder" | "processing" | "review";
-const PRESET_ICONS: Record<string, IconName> = {
-  security: "shield-check",
-  classification: "tags",
-  compliance: "badge-check",
-};
-
 /** Both entry flows share the same mounted configuration, including when revisiting earlier steps. */
 export function ProcessingFolderWizard({
   initialFolder,
   aiEngineEnabled,
+  catalogue,
   folders,
   canPickDirectory,
   serverDisabledReason,
@@ -70,14 +70,31 @@ export function ProcessingFolderWizard({
   const [target, setTarget] = useState<ProcessingFolderTarget | null>(
     initialFolder ? { kind: "existing", folder: initialFolder } : null,
   );
-  const [categoryId, setCategoryId] = useState(FOLDER_PRESETS[0].id);
+  const [categoryId, setCategoryId] = useState<string | null>(null);
+  const presets = useMemo(() => sortFolderPresets(catalogue), [catalogue]);
+
+  function unavailableReason(preset: CatalogueEntry): string | null {
+    if (preset.category.comingSoon && !preset.policy)
+      return t("portal.policies.card.comingSoon");
+    if (preset.category.requiresAiEngine && !aiEngineEnabled)
+      return t("portal.policies.card.requiresAiEngine");
+    if (preset.category.bindsOwnSource)
+      return t("processingFolders.setup.portalOnlyPreset");
+    return null;
+  }
+
+  const preset =
+    presets.find((item) => item.category.id === categoryId) ??
+    presets.find((item) => !unavailableReason(item)) ??
+    presets[0];
   const [pickerVersion, setPickerVersion] = useState(0);
   const folder = target?.kind === "existing" ? target.folder : undefined;
   const existing = folder ? recordFor(folder) : undefined;
-  const unsupportedSteps = existing && !canEditFolderSteps(existing);
+  const savedSteps = existing ?? presetProcessingRecord(preset);
+  const unsupportedSteps = savedSteps && !canEditFolderSteps(savedSteps);
   const entry = useMemo(
-    () => folderSetupEntry(categoryId, existing),
-    [categoryId, existing],
+    () => folderSetupEntry(preset, existing),
+    [preset, existing],
   );
   const local =
     target?.kind === "local" || (folder && folderKind(folder) === "local");
@@ -109,8 +126,7 @@ export function ProcessingFolderWizard({
       /[\\/]/.test(target.name) ||
       [".", ".."].includes(target.name.trim()));
   const destinationBlocked = !local && Boolean(serverDisabledReason);
-  const presetBlocked =
-    !existing && entry.category.providesClassification && !aiEngineEnabled;
+  const presetBlocked = !existing && unavailableReason(preset);
   const canContinue = Boolean(
     target &&
     !invalidName &&
@@ -131,7 +147,10 @@ export function ProcessingFolderWizard({
     // A failed processing save can be retried without creating a second folder.
     setTarget({ kind: "existing", folder: resolved });
     if (target.kind !== "existing") setPickerVersion((version) => version + 1);
-    await save(resolved, result);
+    await save(resolved, {
+      ...result,
+      steps: mergeFolderSteps(savedSteps, result.steps),
+    });
   }
 
   function back() {
@@ -142,7 +161,7 @@ export function ProcessingFolderWizard({
 
   return (
     <PolicySetupWizard
-      key={existing?.id ?? "new"}
+      key={existing?.id ?? preset.policy?.state.backendId ?? "new"}
       entry={entry}
       onClose={onClose}
       onSubmit={submit}
@@ -152,7 +171,7 @@ export function ProcessingFolderWizard({
       {({ content, steps, submit: confirm, submitting, canSubmit, error }) => (
         <Modal
           open
-          width="lg"
+          width="xl"
           className="folder-setup"
           title={t(
             existing
@@ -160,11 +179,6 @@ export function ProcessingFolderWizard({
               : initialFolder
                 ? "processingFolders.setup.existingTitle"
                 : "processingFolders.setup.title",
-          )}
-          subtitle={t(
-            initialFolder
-              ? "processingFolders.setup.existingSubtitle"
-              : "processingFolders.setup.subtitle",
           )}
           onClose={submitting ? () => {} : onClose}
           disableBackdropClose={submitting}
@@ -261,10 +275,7 @@ export function ProcessingFolderWizard({
             <Banner tone="warning" description={serverDisabledReason} />
           )}
           {stage !== "folder" && presetBlocked && (
-            <Banner
-              tone="warning"
-              description={t("portal.policies.card.requiresAiEngine")}
-            />
+            <Banner tone="warning" description={presetBlocked} />
           )}
           {error && <Banner tone="danger" description={error} />}
           <div hidden={stage !== "folder"}>
@@ -280,57 +291,58 @@ export function ProcessingFolderWizard({
             />
           </div>
           <div hidden={stage !== "processing"}>
-            {!existing && (
-              <>
-                <h2 className="folder-setup__heading">
-                  {t("processingFolders.setup.chooseProcessing")}
-                </h2>
+            <div className="folder-setup__processing">
+              {!existing && (
                 <div
                   className="folder-setup__presets"
                   role="group"
                   aria-label={t("processingFolders.setup.presetsLabel")}
                 >
-                  {FOLDER_PRESETS.map((preset) => (
-                    <button
-                      key={preset.id}
-                      type="button"
-                      className="folder-setup__preset"
-                      aria-pressed={categoryId === preset.id}
-                      disabled={
-                        preset.providesClassification && !aiEngineEnabled
-                      }
-                      onClick={() => setCategoryId(preset.id)}
-                    >
-                      <Icon
-                        name={PRESET_ICONS[preset.id] ?? "workflow"}
-                        size={22}
-                      />
-                      <strong>
-                        {t(
-                          `processingFolders.setup.presets.${preset.id}.title`,
-                        )}
-                      </strong>
-                      <span>
-                        {t(
-                          `processingFolders.setup.presets.${preset.id}.description`,
-                        )}
-                      </span>
-                      {preset.providesClassification && !aiEngineEnabled && (
-                        <span>
-                          {t("portal.policies.card.requiresAiEngine")}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                  {presets.map((item) => {
+                    const reason = unavailableReason(item);
+                    return (
+                      <div
+                        key={item.category.id}
+                        className="folder-setup__preset"
+                        data-selected={
+                          preset.category.id === item.category.id || undefined
+                        }
+                      >
+                        <button
+                          type="button"
+                          className="folder-setup__preset-select"
+                          aria-pressed={preset.category.id === item.category.id}
+                          disabled={Boolean(reason)}
+                          onClick={() => setCategoryId(item.category.id)}
+                        >
+                          <span className="folder-setup__preset-icon">
+                            {policyCategoryIcon(item.category.id)}
+                          </span>
+                          <span>{t(item.category.label)}</span>
+                        </button>
+                        <InfoTooltip
+                          ariaLabel={t("processingFolders.setup.presetInfo", {
+                            name: t(item.category.label),
+                          })}
+                          label={
+                            <>
+                              {t(item.category.desc)}
+                              {reason && <p>{reason}</p>}
+                            </>
+                          }
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
-              </>
-            )}
-            {content}
+              )}
+              <div className="folder-setup__settings">{content}</div>
+            </div>
           </div>
           {stage === "review" && (
             <div className="folder-setup__review">
               <h2 className="folder-setup__heading">
-                {t("processingFolders.setup.reviewTitle")}
+                {t(entry.category.label)}
               </h2>
               <ol className="folder-setup__review-steps">
                 {steps.map((step, index) => (
@@ -340,30 +352,6 @@ export function ProcessingFolderWizard({
                   </li>
                 ))}
               </ol>
-              <dl className="folder-setup__outcome">
-                <div>
-                  <dt>{t("processingFolders.setup.when")}</dt>
-                  <dd>
-                    {t(
-                      existing
-                        ? existing.enabled
-                          ? "processingFolders.setup.staysActive"
-                          : "processingFolders.setup.staysPaused"
-                        : "processingFolders.setup.currentFiles",
-                    )}
-                  </dd>
-                </div>
-                <div>
-                  <dt>{t("processingFolders.setup.result")}</dt>
-                  <dd>
-                    {t(
-                      local
-                        ? "processingFolders.setup.localResult"
-                        : "processingFolders.setup.serverResult",
-                    )}
-                  </dd>
-                </div>
-              </dl>
             </div>
           )}
         </Modal>

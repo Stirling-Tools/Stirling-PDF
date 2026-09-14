@@ -1,4 +1,10 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { describe, expect, it, vi } from "vitest";
 import {
@@ -6,6 +12,9 @@ import {
   type ProcessingFolderWizardProps,
 } from "@app/components/policies/ProcessingFolderWizard";
 import { createFolderId, type FolderRecord } from "@app/types/folder";
+
+import { assemblePolicies } from "@app/policies/overview";
+import { POLICY_CATEGORIES } from "@app/policies/catalog";
 
 const folder: FolderRecord = {
   id: createFolderId(),
@@ -20,6 +29,7 @@ const key = (name: string) => `processingFolders.setup.${name}`;
 function renderWizard(overrides: Partial<ProcessingFolderWizardProps> = {}) {
   const props: ProcessingFolderWizardProps = {
     folders: [folder],
+    catalogue: assemblePolicies([], []).catalogue,
     aiEngineEnabled: true,
     canPickDirectory: false,
     serverDisabledReason: null,
@@ -56,11 +66,15 @@ describe("ProcessingFolderWizard", () => {
     const props = renderWizard();
     createServerFolder();
     fireEvent.click(
-      screen.getByRole("button", { name: /presets.classification.title/ }),
+      screen.getByRole("button", {
+        name: "portal.policies.categories.classification.label",
+      }),
     );
     expect(props.resolveTarget).not.toHaveBeenCalled();
     fireEvent.click(button("review"));
-    expect(screen.getByText(key("serverResult"))).toBeVisible();
+    expect(
+      screen.getByText("portal.policies.endpoints.classifyAndLabel"),
+    ).toBeVisible();
     fireEvent.click(
       screen.getByRole("button", { name: "filesPage.processingSetup.back" }),
     );
@@ -70,7 +84,9 @@ describe("ProcessingFolderWizard", () => {
     );
     fireEvent.click(button("chooseProcessing"));
     expect(
-      screen.getByRole("button", { name: /presets.classification.title/ }),
+      screen.getByRole("button", {
+        name: "portal.policies.categories.classification.label",
+      }),
     ).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(button("review"));
     fireEvent.click(button("enable"));
@@ -118,7 +134,7 @@ describe("ProcessingFolderWizard", () => {
     });
   });
 
-  it("skips folder selection when editing and reviews the paused state", async () => {
+  it("skips folder selection when editing paused processing", async () => {
     const props = renderWizard({
       initialFolder: folder,
       recordFor: () => ({
@@ -137,7 +153,6 @@ describe("ProcessingFolderWizard", () => {
     ).toBeNull();
     expect(screen.queryByRole("button", { name: key("change") })).toBeNull();
     fireEvent.click(button("review"));
-    expect(screen.getByText(key("staysPaused"))).toBeVisible();
     fireEvent.click(button("saveChanges"));
     await waitFor(() => expect(props.save).toHaveBeenCalledTimes(1));
   });
@@ -177,10 +192,95 @@ describe("ProcessingFolderWizard", () => {
     expect(button("review")).toBeDisabled();
   });
 
-  it("disables classification when the AI engine is unavailable", () => {
-    renderWizard({ initialFolder: folder, aiEngineEnabled: false });
+  it("shows every portal preset with its canonical name and a separate info button", () => {
+    renderWizard({ initialFolder: folder });
+    const chooser = screen.getByRole("group", { name: key("presetsLabel") });
+    for (const category of POLICY_CATEGORIES) {
+      expect(
+        within(chooser).getByRole("button", { name: category.label }),
+      ).toBeVisible();
+    }
     expect(
-      screen.getByRole("button", { name: /presets.classification.title/ }),
+      within(chooser).getAllByRole("button", { name: key("presetInfo") }),
+    ).toHaveLength(POLICY_CATEGORIES.length);
+    expect(
+      within(chooser).getByRole("button", {
+        name: "portal.policies.categories.ingestion.label",
+      }),
+    ).toBeDisabled();
+    expect(
+      within(chooser).getByRole("button", {
+        name: "portal.policies.categories.retention.label",
+      }),
+    ).toBeDisabled();
+  });
+
+  it("prioritises configured policies and saves their actual processing settings", async () => {
+    const catalogue = assemblePolicies(
+      [
+        {
+          id: "saved-compliance",
+          name: "Compliance",
+          enabled: true,
+          inputs: [],
+          output: { type: "inline", options: { categoryId: "compliance" } },
+          steps: [
+            {
+              operation: "/api/v1/security/sanitize-pdf",
+              parameters: {
+                removeJavaScript: false,
+                removeMetadata: true,
+                customServerOption: "keep",
+              },
+            },
+          ],
+        },
+      ],
+      [],
+    ).catalogue;
+    const props = renderWizard({ initialFolder: folder, catalogue });
+    const chooser = screen.getByRole("group", { name: key("presetsLabel") });
+    const first = within(chooser).getAllByRole("button")[0];
+    expect(first).toHaveAccessibleName(
+      "portal.policies.categories.compliance.label",
+    );
+    expect(first).toHaveAttribute("aria-pressed", "true");
+    fireEvent.click(button("review"));
+    expect(screen.queryByText("When it runs")).toBeNull();
+    expect(screen.queryByText("Files and originals")).toBeNull();
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.save).toHaveBeenCalledWith(
+        folder,
+        expect.objectContaining({
+          steps: [
+            expect.objectContaining({
+              operation: "/api/v1/security/sanitize-pdf",
+              parameters: expect.objectContaining({
+                removeJavaScript: false,
+                removeMetadata: true,
+                customServerOption: "keep",
+              }),
+            }),
+          ],
+        }),
+      ),
+    );
+  });
+
+  it("uses the portal availability flags for presets", () => {
+    const catalogue = assemblePolicies([], []).catalogue.map((entry) => ({
+      ...entry,
+      category: {
+        ...entry.category,
+        requiresAiEngine: entry.category.id === "classification",
+      },
+    }));
+    renderWizard({ initialFolder: folder, aiEngineEnabled: false, catalogue });
+    expect(
+      screen.getByRole("button", {
+        name: "portal.policies.categories.classification.label",
+      }),
     ).toBeDisabled();
     expect(button("review")).toBeEnabled();
   });

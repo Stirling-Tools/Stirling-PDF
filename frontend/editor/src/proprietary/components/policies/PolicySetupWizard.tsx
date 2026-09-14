@@ -509,16 +509,11 @@ function PolicySetupWizardBody({
 
       {!isClassification && (
         <div className="portal-policies__wizard-section">
-          <p className="portal-policies__wizard-desc">
-            {t(
-              folderSetup
-                ? "processingFolders.setup.stepsHint"
-                : "portal.policies.wizard.workflow.description",
-              folderSetup
-                ? "Steps run from top to bottom. Expand a step to adjust its settings."
-                : "Choose what this policy does to every document it processes.",
-            )}
-          </p>
+          {!folderSetup && (
+            <p className="portal-policies__wizard-desc">
+              {t("portal.policies.wizard.workflow.description")}
+            </p>
+          )}
           <Card padding="none">
             <div
               className={
@@ -543,7 +538,7 @@ function PolicySetupWizardBody({
                   >
                     <SettingsRow
                       label={label}
-                      description={description}
+                      description={folderSetup ? undefined : description}
                       control={
                         <ToggleSwitch
                           size="sm"

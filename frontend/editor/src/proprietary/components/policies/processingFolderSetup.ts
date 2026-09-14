@@ -15,13 +15,30 @@ export type ProcessingFolderTarget =
   | { kind: "server"; name: string; parentId: FolderId | null }
   | { kind: "local"; directory: PickedDirectory; name: string | null };
 
-/** Folder setup omits templates that cannot run or bind a different source. */
-export const FOLDER_PRESETS = POLICY_CATEGORIES.filter(
-  (category) =>
-    !category.comingSoon &&
-    !category.bindsOwnSource &&
-    POLICY_CONFIG[category.id],
-);
+/** Configured portal policies come first; availability keeps the remaining portal order stable. */
+export function sortFolderPresets(
+  catalogue: CatalogueEntry[],
+): CatalogueEntry[] {
+  return [...catalogue].sort(
+    (a, b) =>
+      Number(Boolean(b.policy)) - Number(Boolean(a.policy)) ||
+      Number(Boolean(a.category.comingSoon)) -
+        Number(Boolean(b.category.comingSoon)),
+  );
+}
+
+/** The saved processing chain behind a configured portal preset. */
+export function presetProcessingRecord(
+  entry: CatalogueEntry,
+): ProcessingRecordSummary | undefined {
+  return entry.policy
+    ? {
+        id: entry.policy.state.backendId ?? entry.category.id,
+        enabled: entry.policy.state.status === "active",
+        steps: entry.policy.steps,
+      }
+    : undefined;
+}
 
 /** The simple form cannot safely edit unknown operations or repeated instances of a tool. */
 export function canEditFolderSteps(record: ProcessingRecordSummary): boolean {
@@ -56,18 +73,19 @@ export function mergeFolderSteps(
 
 /** Saved steps retain their order and parameters, including chains spanning presets. */
 export function folderSetupEntry(
-  categoryId: string,
+  preset: CatalogueEntry,
   existing?: ProcessingRecordSummary,
 ): CatalogueEntry {
+  const record = existing ?? presetProcessingRecord(preset);
   const savedTools =
-    existing?.steps.flatMap((step) => {
+    record?.steps.flatMap((step) => {
       const tool = policyStepFromWire(step);
       return tool ? [tool] : [];
     }) ?? [];
   const savedIds = new Set(savedTools.map((tool) => tool.toolId));
   const matchingPreset =
     savedTools.length > 0
-      ? FOLDER_PRESETS.find((preset) =>
+      ? POLICY_CATEGORIES.find((preset) =>
           savedTools.every((tool) =>
             POLICY_CONFIG[preset.id].defaultOperations.some(
               (candidate) => candidate.toolId === tool.toolId,
@@ -75,12 +93,9 @@ export function folderSetupEntry(
           ),
         )
       : undefined;
-  const category =
-    matchingPreset ??
-    FOLDER_PRESETS.find((item) => item.id === categoryId) ??
-    FOLDER_PRESETS[0];
+  const category = (existing ? matchingPreset : undefined) ?? preset.category;
   const config = POLICY_CONFIG[category.id];
-  if (!existing) return { category, config, policy: null };
+  if (!record) return preset;
   const savedConfig = {
     ...config,
     defaultOperations: [
@@ -98,14 +113,14 @@ export function folderSetupEntry(
       config: savedConfig,
       state: {
         configured: true,
-        status: existing.enabled ? "active" : "paused",
+        status: record.enabled ? "active" : "paused",
         required: false,
         sources: [],
         scopeTypes: [],
         reviewerEmail: "",
         fieldValues: {},
       },
-      steps: existing.steps,
+      steps: record.steps,
       stats: { enforced: 0, dataProcessed: "", activeFor: "" },
       activity: [],
     },

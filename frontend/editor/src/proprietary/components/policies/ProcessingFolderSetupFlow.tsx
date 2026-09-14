@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { useFolders } from "@app/contexts/FolderContext";
@@ -21,6 +22,10 @@ import {
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
 import { ProcessingFolderWizard } from "@app/components/policies/ProcessingFolderWizard";
+import apiClient from "@app/services/apiClient";
+import { assemblePolicies } from "@app/policies/overview";
+import type { WirePolicy } from "@app/policies/types";
+import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 
 interface ProcessingFolderSetupFlowProps {
   folder?: FolderRecord;
@@ -39,6 +44,38 @@ export function ProcessingFolderSetupFlow({
   const serverDisabledReason = useServerFolderBlock();
   const aiEngineEnabled = useAiEngineEnabled();
   const navigate = useNavigate();
+  const [reload, setReload] = useState(0);
+  const [presets, setPresets] = useState(() => ({
+    catalogue: assemblePolicies([], []).catalogue,
+    loading: true,
+    error: null as string | null,
+  }));
+
+  useEffect(() => {
+    let cancelled = false;
+    setPresets((current) => ({ ...current, loading: true, error: null }));
+    void apiClient
+      .get<WirePolicy[]>("/api/v1/policies", { suppressErrorToast: true })
+      .then(({ data }) => {
+        if (!cancelled)
+          setPresets({
+            catalogue: assemblePolicies(data, []).catalogue,
+            loading: false,
+            error: null,
+          });
+      })
+      .catch((error: unknown) => {
+        if (!cancelled)
+          setPresets((current) => ({
+            ...current,
+            loading: false,
+            error: extractErrorMessage(error),
+          }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
 
   async function resolveTarget(
     target: ProcessingFolderTarget,
@@ -88,10 +125,14 @@ export function ProcessingFolderSetupFlow({
     <ProcessingFolderWizard
       initialFolder={folder}
       aiEngineEnabled={aiEngineEnabled}
+      catalogue={presets.catalogue}
       folders={folders.folders}
-      loading={folders.loading || processing.loading}
-      loadError={processing.loadError}
-      onRetry={() => void refreshProcessingFolders()}
+      loading={folders.loading || processing.loading || presets.loading}
+      loadError={processing.loadError ?? presets.error}
+      onRetry={() => {
+        void refreshProcessingFolders();
+        setReload((current) => current + 1);
+      }}
       canPickDirectory={canPickDirectory}
       pickDirectory={pickDirectory}
       serverDisabledReason={serverDisabledReason}

@@ -3,6 +3,8 @@ import { ProcessingFolderWizard } from "@app/components/policies/ProcessingFolde
 import { createFolderId, type FolderRecord } from "@app/types/folder";
 import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
 
+import { assemblePolicies } from "@app/policies/overview";
+
 const invoices: FolderRecord = {
   id: createFolderId(),
   name: "Invoices",
@@ -23,6 +25,7 @@ const meta = {
   parameters: { layout: "fullscreen" },
   args: {
     folders: [invoices, archive],
+    catalogue: assemblePolicies([], []).catalogue,
     aiEngineEnabled: true,
     canPickDirectory: false,
     serverDisabledReason: null,
@@ -54,5 +57,29 @@ export const Paused: Story = {
       enabled: false,
       steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
     }),
+  },
+};
+
+export const ConfiguredPoliciesFirst: Story = {
+  args: {
+    initialFolder: invoices,
+    catalogue: assemblePolicies(
+      [
+        {
+          id: "saved-compliance",
+          name: "Compliance",
+          enabled: true,
+          inputs: [],
+          output: { type: "inline", options: { categoryId: "compliance" } },
+          steps: [
+            {
+              operation: "/api/v1/security/sanitize-pdf",
+              parameters: { removeJavaScript: false, removeMetadata: true },
+            },
+          ],
+        },
+      ],
+      [],
+    ).catalogue,
   },
 };

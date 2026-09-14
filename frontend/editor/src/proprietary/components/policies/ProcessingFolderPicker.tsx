@@ -104,14 +104,6 @@ export function ProcessingFolderPicker({
 
   return (
     <div className="folder-setup__picker">
-      <div>
-        <h2 className="folder-setup__heading">
-          {t("processingFolders.setup.chooseFolder")}
-        </h2>
-        <p className="folder-setup__lead">
-          {t("processingFolders.setup.chooseFolderHint")}
-        </p>
-      </div>
       {canPickDirectory && (
         <SegmentedControl
           ariaLabel={t("processingFolders.setup.location")}
