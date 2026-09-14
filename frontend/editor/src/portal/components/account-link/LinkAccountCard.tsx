@@ -1,5 +1,7 @@
+import { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Skeleton, StatusBadge } from "@app/ui";
+import { Banner, Button, InfoTooltip, Modal, Skeleton } from "@app/ui";
 import "@app/components/settings/AccountConnectionLayout.css";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
 import { useUI } from "@portal/contexts/UIContext";
@@ -16,6 +18,7 @@ export function LinkAccountCard({ link }: Props) {
   const email = useLinkedAccountEmail();
   const linking = link.phase === "linking";
   const linked = link.status?.linked ?? false;
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
 
   if (link.statusError) {
     return (
@@ -63,16 +66,31 @@ export function LinkAccountCard({ link }: Props) {
           <span className="account-connection__eyebrow">
             {t("portal.accountLink.card.eyebrow", "This instance")}
           </span>
-          <h2>
-            {link.status?.name ??
-              t("portal.accountLink.card.title", "Stirling Cloud")}
-          </h2>
+          <div className="portal-link__section-head">
+            <h2>
+              {link.status?.name ??
+                t("portal.accountLink.card.title", "Stirling Cloud")}
+            </h2>
+            {linked && (
+              <InfoTooltip
+                label={t(
+                  "portal.accountLink.card.billingNote",
+                  "This server shares your team’s processing allowance in Stirling Cloud.",
+                )}
+              />
+            )}
+          </div>
         </div>
-        <StatusBadge tone={linked ? "success" : "neutral"} size="sm">
+        <span className="portal-link__status">
+          {linked ? (
+            <Icon name="circle-check" size={20} />
+          ) : (
+            <Icon name="unlink" size={20} />
+          )}
           {linked
             ? t("portal.accountLink.card.linked", "Connected")
             : t("portal.accountLink.card.notLinked", "Not connected")}
-        </StatusBadge>
+        </span>
       </div>
 
       {email && (
@@ -114,17 +132,12 @@ export function LinkAccountCard({ link }: Props) {
 
       {linked ? (
         <div className="portal-link__actions">
-          <span className="portal-link__muted">
-            {t(
-              "portal.accountLink.card.billingNote",
-              "This server shares your team’s processing allowance in Stirling Cloud.",
-            )}
-          </span>
           <Button
             variant="quiet"
-            accent="danger"
+            accent="neutral"
+            leftSection={<Icon name="unlink" size={20} />}
             loading={linking}
-            onClick={link.unlink}
+            onClick={() => setConfirmDisconnect(true)}
           >
             {t("portal.accountLink.card.unlink", "Disconnect this instance")}
           </Button>
@@ -145,6 +158,42 @@ export function LinkAccountCard({ link }: Props) {
           </Button>
         </div>
       )}
+      <Modal
+        open={confirmDisconnect}
+        onClose={() => setConfirmDisconnect(false)}
+        width="sm"
+        title={t(
+          "portal.accountLink.card.disconnectTitle",
+          "Disconnect this instance?",
+        )}
+        footer={
+          <div className="account-connection__actions">
+            <Button
+              variant="secondary"
+              onClick={() => setConfirmDisconnect(false)}
+              data-autofocus
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              accent="danger"
+              onClick={() => {
+                setConfirmDisconnect(false);
+                void link.unlink();
+              }}
+            >
+              {t("portal.accountLink.card.unlink", "Disconnect this instance")}
+            </Button>
+          </div>
+        }
+      >
+        <p>
+          {t(
+            "portal.accountLink.card.disconnectBody",
+            "This server will stop using your team’s processing allowance in Stirling Cloud. Your local files stay on this server. To connect again, follow the original connection steps.",
+          )}
+        </p>
+      </Modal>
     </section>
   );
 }

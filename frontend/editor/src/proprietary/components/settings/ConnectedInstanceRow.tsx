@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import type { LinkedInstanceRow } from "@app/types/linkedInstance";
@@ -22,6 +23,20 @@ export function ConnectedInstanceRow({
   const [copyState, setCopyState] = useState<"idle" | "copied" | "error">(
     "idle",
   );
+  const [now, setNow] = useState(Date.now);
+  const connectedAt = instance.createdAt
+    ? new Date(instance.createdAt).getTime()
+    : Number.NaN;
+  const justConnected = now >= connectedAt && now - connectedAt < 60_000;
+
+  useEffect(() => {
+    if (instance.lastSeenAt || !justConnected) return;
+    const timeout = window.setTimeout(
+      () => setNow(Date.now()),
+      Math.max(0, connectedAt + 60_000 - Date.now()),
+    );
+    return () => window.clearTimeout(timeout);
+  }, [connectedAt, instance.lastSeenAt, justConnected]);
   const formatDate = (value: string | null) => {
     const date = value ? new Date(value) : null;
     return !date || Number.isNaN(date.getTime())
@@ -62,9 +77,26 @@ export function ConnectedInstanceRow({
         </div>
         {!instance.revoked && (
           <p>
-            {t("settings.connectedInstances.lastSeen", "Last seen: {{date}}", {
-              date: formatDate(instance.lastSeenAt),
-            })}
+            {instance.lastSeenAt
+              ? t(
+                  "settings.connectedInstances.lastSeen",
+                  "Last seen: {{date}}",
+                  {
+                    date: formatDate(instance.lastSeenAt),
+                  },
+                )
+              : justConnected
+                ? t(
+                    "settings.connectedInstances.justConnected",
+                    "Connected just now",
+                  )
+                : t(
+                    "settings.connectedInstances.connectedAt",
+                    "Connected: {{date}}",
+                    {
+                      date: formatDate(instance.createdAt),
+                    },
+                  )}
           </p>
         )}
         <details className="account-connection__details">
@@ -102,7 +134,8 @@ export function ConnectedInstanceRow({
       </div>
       <Button
         variant="quiet"
-        accent="danger"
+        accent="neutral"
+        leftSection={<Icon name="unlink" size={20} />}
         size="sm"
         disabled={busy}
         onClick={onRemove}

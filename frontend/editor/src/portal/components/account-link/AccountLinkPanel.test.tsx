@@ -125,6 +125,69 @@ describe("Self-hosted account connection", () => {
     expect(state.fetchInstances).not.toHaveBeenCalled();
   });
 
+  it("only disconnects this instance after confirmation", async () => {
+    mount();
+    await screen.findByRole("heading", { name: "Production", level: 3 });
+    fireEvent.click(
+      screen.getByRole("button", { name: "Disconnect this instance" }),
+    );
+    expect(state.unlink).not.toHaveBeenCalled();
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Cancel",
+      }),
+    );
+    expect(state.unlink).not.toHaveBeenCalled();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Disconnect this instance" }),
+    );
+    fireEvent.click(
+      within(screen.getByRole("dialog")).getByRole("button", {
+        name: "Disconnect this instance",
+      }),
+    );
+    expect(state.unlink).toHaveBeenCalledOnce();
+  });
+
+  it("shows the connection time until a device has been seen", async () => {
+    state.fetchInstances.mockResolvedValue([
+      { ...instance, createdAt: "2026-09-14T10:00:00Z" },
+    ]);
+    mount();
+    expect(await screen.findByText(/^Connected: /)).toBeVisible();
+    expect(screen.queryByText(/^Last seen:/)).not.toBeInTheDocument();
+  });
+
+  it("shows actual device activity when available", async () => {
+    state.fetchInstances.mockResolvedValue([
+      { ...instance, lastSeenAt: "2026-09-14T10:30:00Z" },
+    ]);
+    mount();
+    expect(await screen.findByText(/^Last seen: /)).toBeVisible();
+    expect(screen.queryByText(/^Connected: /)).not.toBeInTheDocument();
+  });
+
+  it("ages the just-connected label without another request", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-09-14T10:00:00Z"));
+    state.fetchInstances.mockResolvedValue([
+      { ...instance, createdAt: "2026-09-14T10:00:00Z" },
+    ]);
+    try {
+      await act(async () => {
+        mount();
+      });
+      expect(screen.getByText("Connected just now")).toBeVisible();
+      await act(async () => {
+        vi.advanceTimersByTime(60_000);
+      });
+      expect(screen.queryByText("Connected just now")).not.toBeInTheDocument();
+      expect(screen.getByText(/^Connected: /)).toBeVisible();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("does not offer connection actions before status is known", async () => {
     state.status = null;
     await act(async () => {

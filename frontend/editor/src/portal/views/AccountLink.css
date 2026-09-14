@@ -20,8 +20,27 @@
   gap: 1rem;
 }
 
+.portal-link__actions {
+  justify-content: flex-end;
+}
+
+.portal-link__section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
 .portal-link__account {
   overflow-wrap: anywhere;
+}
+
+.portal-link__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--c-text-subtle);
+  font-size: 0.75rem;
+  white-space: nowrap;
 }
 
 .portal-link__account strong {
@@ -36,19 +55,8 @@
   color: var(--c-text);
 }
 
-.portal-link__section-sub {
-  margin: 0.25rem 0 0;
-  font-size: 0.875rem;
-  color: var(--c-text-subtle);
-}
-
 .portal-link__skeleton {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-}
-
-.portal-link__muted {
-  color: var(--c-text-subtle);
-  font-size: 0.875rem;
 }

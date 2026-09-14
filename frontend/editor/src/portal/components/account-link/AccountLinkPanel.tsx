@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Skeleton } from "@app/ui";
+import { Banner, Button, InfoTooltip, Skeleton } from "@app/ui";
 import { AccountConnectionLayout } from "@app/components/settings/AccountConnectionLayout";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
@@ -65,12 +65,12 @@ export function AccountLinkPanel() {
                 "Connected instances",
               )}
             </h2>
-            <p className="portal-link__section-sub">
-              {t(
+            <InfoTooltip
+              label={t(
                 "portal.accountLink.panel.instancesSub",
                 "Self-hosted servers connected to the same team.",
               )}
-            </p>
+            />
           </div>
           {instancesState.loading ? (
             <div className="portal-link__skeleton" aria-hidden>
