@@ -37,3 +37,9 @@
   background: var(--c-border-subtle);
   flex-shrink: 0;
 }
+
+/* The rail runs the full height, so the foot group sits at the bottom of it
+   rather than under the last reading control. */
+.reader-rail__group--foot {
+  margin-top: auto;
+}

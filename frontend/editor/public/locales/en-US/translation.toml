@@ -10186,6 +10186,7 @@ tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,di
 
 [reader.rail]
 bookmarks = "Bookmarks"
+close = "Close document"
 comment = "Comments"
 label = "Reading tools"
 readAloud = "Read aloud"
