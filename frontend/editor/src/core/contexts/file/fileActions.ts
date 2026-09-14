@@ -753,14 +753,22 @@ export async function undoConsumeFiles(
     }
 
     // Restore isLeaf in IDB — modal reads IDB directly and misses files if isLeaf=false.
+    // isDirty rides along: the dispatch above only reaches memory, and a restored
+    // version that reads clean on the next open is reloaded from the disk copy the
+    // undone operation wrote, putting the undone bytes back for good.
     await Promise.all(
-      inputStirlingFileStubs.map((stub) =>
-        fileStorage.markFileAsLeaf(stub.id).catch((error) => {
-          console.warn(
-            `📄 undoConsumeFiles: Failed to restore isLeaf for ${stub.id}:`,
-            error,
-          );
-        }),
+      stubsWithDirtyMarked.map((stub) =>
+        fileStorage
+          .updateFileMetadata(stub.id, {
+            isLeaf: true,
+            ...(stub.isDirty ? { isDirty: true } : {}),
+          })
+          .catch((error) => {
+            console.warn(
+              `📄 undoConsumeFiles: Failed to restore isLeaf for ${stub.id}:`,
+              error,
+            );
+          }),
       ),
     );
 
