@@ -10,6 +10,7 @@ import { errorMessage } from "@portal/api/http";
 import { useAsync } from "@portal/hooks/useAsync";
 import { useMemo } from "react";
 import { PolicyPurviewConfig } from "@portal/components/policies/PolicyPurviewConfig";
+import { PolicyRoutingConfig } from "@portal/components/policies/PolicyRoutingConfig";
 
 interface PolicySetupWizardProps {
   entry: CatalogueEntry | null;
@@ -41,6 +42,13 @@ export function PolicySetupWizard(props: PolicySetupWizardProps) {
       formatError={errorMessage}
       purviewConfig={({ parameters, onChange }) => (
         <PolicyPurviewConfig parameters={parameters} onChange={onChange} />
+      )}
+      routingConfig={({ value, onChange }) => (
+        <PolicyRoutingConfig
+          value={value}
+          onChange={onChange}
+          onClose={props.onClose}
+        />
       )}
     />
   );

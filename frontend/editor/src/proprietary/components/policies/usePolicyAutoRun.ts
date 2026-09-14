@@ -34,6 +34,10 @@ import type {
   PolicyRunView,
 } from "@app/services/policyPipeline";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import {
+  dispatchableFileId,
+  type DispatchableFileId,
+} from "@app/components/policies/policyLocalPass";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
@@ -198,10 +202,12 @@ export function usePolicyAutoRun(): void {
     setTimeout(
       () => {
         removeRun(runId);
+        // Retrying an existing run: a locked file never produced one, and
+        // runPolicyOnFile re-checks the persisted stub regardless.
         void runPolicyOnFile(
           rec.policyKey,
           backendId,
-          rec.fileId as FileId,
+          rec.fileId as DispatchableFileId,
           rec.fileName,
         );
       },
@@ -245,6 +251,9 @@ export function usePolicyAutoRun(): void {
       // Input-mode policies cover uploads only; tool-produced files are left to
       // export-mode policies at export time.
       if (stub.derivedFromTool) continue;
+      // Null when the classification is locked, i.e. produced outside the policy system.
+      const target = dispatchableFileId(stub);
+      if (!target) continue;
       // Held while the unlock prompt is open: the run would fail on a document the user is
       // about to decrypt, bill for it, and leave a row about a version soon replaced. Skipping
       // the prompt releases it, so a document nobody unlocks still records its failure.
@@ -258,7 +267,7 @@ export function usePolicyAutoRun(): void {
         continue;
       }
       dispatching.current.add(key);
-      void runPolicyOnFile(firstPolicyKey, backendId, stub.id, stub.name)
+      void runPolicyOnFile(firstPolicyKey, backendId, target, stub.name)
         .catch(() => {
           // Backstop: runPolicyOnFile handles its own failures.
         })
@@ -290,10 +299,11 @@ export function usePolicyAutoRun(): void {
       // would otherwise silently skip the next policy on outputs 2..N.
       for (const outputId of outputIds) {
         if (isDispatched(nextPolicyKey, outputId as FileId)) continue;
+        // Chaining onto a run's own outputs; same reasoning as the retry above.
         void runPolicyOnFile(
           nextPolicyKey,
           backendId,
-          outputId as FileId,
+          outputId as DispatchableFileId,
           run.fileName,
           true, // chained → jump the dispatch queue ahead of new files
         ).catch(() => {});
