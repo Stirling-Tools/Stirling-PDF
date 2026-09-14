@@ -1,0 +1,27 @@
+.marketing-processor-preview {
+  width: 1120px;
+  padding: 0;
+}
+.portal-scope .marketing-processor-preview .portal-pf {
+  padding: 16px;
+}
+.portal-scope .marketing-processor-preview .portal-pf__node {
+  height: 43px;
+  min-height: 43px;
+  padding: 4px 10px;
+}
+.marketing-processor-preview .portal-pf__policies {
+  width: 340px;
+}
+.marketing-processor-preview .portal-pf__policy {
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
+.marketing-processor-preview .portal-pf__wire-path {
+  stroke: var(--c-primary);
+  opacity: 0.3;
+  stroke-width: 2;
+}
+.marketing-processor-preview .portal-pf__foot {
+  margin-top: 10px;
+}
