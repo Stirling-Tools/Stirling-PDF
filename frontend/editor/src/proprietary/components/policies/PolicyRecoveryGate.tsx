@@ -8,6 +8,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth/UseSession";
 import { Button } from "@app/ui/Button";
 import {
   useAllFiles,
@@ -62,6 +63,7 @@ interface RecoveryDialogProps {
 
 function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const titleId = useId();
   const bodyId = useId();
   const dialogRef = useRef<HTMLDialogElement>(null);
@@ -170,6 +172,14 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
       <div className="policy-recovery__files">
         {blocks.map((block) => {
           const { outcome } = block;
+          const policy = policies[outcome.policyKey];
+          const owner = policy?.owner?.trim();
+          const isOwner = Boolean(
+            owner &&
+            !user?.is_anonymous &&
+            (owner === user?.username ||
+              owner.toLowerCase() === user?.email?.toLowerCase()),
+          );
           const key = `${outcome.policyKey}:${outcome.fileId}`;
           const running =
             dispatching.has(key) ||
@@ -184,17 +194,30 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
             <section className="policy-recovery__file" key={key}>
               <strong>{outcome.fileName ?? block.affectedFiles[0].name}</strong>
               <p>
-                {policies[outcome.policyKey]?.name ??
+                {policy?.name ??
                   labels.get(outcome.policyKey) ??
                   outcome.policyKey}
               </p>
+              <p className="policy-recovery__hint">
+                {t(
+                  isOwner
+                    ? "policy.recoveryOwnedPolicy"
+                    : owner
+                      ? "policy.recoveryContactOwner"
+                      : "policy.recoveryContactAdmin",
+                  { owner },
+                )}
+              </p>
               {outcome.error && (
-                <p className="policy-recovery__error">{outcome.error}</p>
+                <details className="policy-recovery__details">
+                  <summary>{t("policy.recoveryTechnicalDetails")}</summary>
+                  <pre>{outcome.error}</pre>
+                </details>
               )}
               <div className="policy-recovery__actions">
                 <Button
                   variant="primary"
-                  disabled={running || !policies[outcome.policyKey]?.backendId}
+                  disabled={running || !policy?.backendId}
                   onClick={() => void retry(block)}
                 >
                   {t(

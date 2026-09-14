@@ -50,6 +50,7 @@ export function decodedToState(
     configured: true,
     enabled: decoded.enabled,
     name: decoded.name,
+    owner: decoded.owner,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,
     required: decoded.required,

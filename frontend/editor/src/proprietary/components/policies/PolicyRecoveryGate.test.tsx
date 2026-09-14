@@ -13,12 +13,16 @@ import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
 
 const harness = vi.hoisted(() => ({
   files: [] as StirlingFileStub[],
+  user: { username: "alice", email: "alice@example.com" },
   removeFiles: vi.fn(),
   pauseHotkeys: vi.fn(),
   resumeHotkeys: vi.fn(),
   navigation: { setSelectedTool: vi.fn(), setWorkbench: vi.fn() },
   setPreviewFile: vi.fn(),
   selectors: { getStirlingFileStubs: (): StirlingFileStub[] => harness.files },
+}));
+vi.mock("@app/auth/UseSession", () => ({
+  useAuth: () => ({ user: harness.user }),
 }));
 vi.mock("@app/contexts/FileContext", () => ({
   useAllFiles: () => ({ fileStubs: harness.files }),
@@ -133,11 +137,45 @@ describe("editor policy recovery", () => {
     act(() => recordRunStart(failed(harness.files[0])));
     expect(screen.getByRole("dialog")).toHaveAttribute("open");
     expect(screen.getByText("failed.pdf")).toBeInTheDocument();
+    expect(
+      screen.getByText("policy.recoveryTechnicalDetails").closest("details"),
+    ).not.toHaveAttribute("open");
     expect(editor).toHaveValue("Unsaved changes");
     expect(harness.pauseHotkeys).toHaveBeenCalled();
     view.unmount();
     render(app());
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("directs users to the policy owner when it belongs to someone else", () => {
+    updatePolicy("security", { owner: "bob@example.com" });
+    recordRunStart(failed(harness.files[0]));
+    render(app());
+    expect(screen.getByText("policy.recoveryContactOwner")).toBeInTheDocument();
+    expect(
+      screen.queryByText("policy.recoveryOwnedPolicy"),
+    ).not.toBeInTheDocument();
+  });
+
+  it.each(["alice", "ALICE@example.com"])(
+    "directs the owner to their policy settings when identified by %s",
+    (owner) => {
+      updatePolicy("security", { owner });
+      recordRunStart(failed(harness.files[0]));
+      render(app());
+      expect(
+        screen.getByText("policy.recoveryOwnedPolicy"),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByText("policy.recoveryContactOwner"),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it("directs users to their administrator when the owner is unavailable", () => {
+    recordRunStart(failed(harness.files[0]));
+    render(app());
+    expect(screen.getByText("policy.recoveryContactAdmin")).toBeInTheDocument();
   });
 
   it("blocks global shortcuts, clipboard handlers and Escape while allowing recovery buttons", () => {

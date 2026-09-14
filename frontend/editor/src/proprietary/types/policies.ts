@@ -46,6 +46,8 @@ export interface PolicyState {
   sources: string[];
   /** The policy's own name. Set for builder pipelines, which have no built-in category label. */
   name?: string;
+  /** The owner's username (email on SaaS), used to direct recovery requests. */
+  owner?: string;
   /** Whether the policy runs in the editor as each file passes through (resolved at decode). */
   runsOnEditor?: boolean;
   /**

@@ -37,9 +37,21 @@
   overflow-wrap: anywhere;
 }
 
-.policy-recovery__error {
-  color: var(--c-danger);
+.policy-recovery__details {
+  margin-top: 1rem;
+  color: var(--c-text-muted);
   font-size: 0.875rem;
+}
+
+.policy-recovery__details summary {
+  cursor: pointer;
+}
+
+.policy-recovery__details pre {
+  max-height: 12rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  font-size: inherit;
 }
 
 .policy-recovery__actions {
