@@ -9,6 +9,17 @@ the core (OSS) build has no implementation (`usePoliciesEnabled` stub = false),
 and desktop additionally requires an active SaaS connection (runs bill through
 the cloud). The single gate is `components/policies/usePoliciesEnabled.ts`.
 
+A required upload-policy failure pauses the entire editor with `PolicyRecoveryGate`.
+The modal keeps editor state mounted, makes the background inert, and suspends global
+shortcuts. Retry stays blocked until the policy output is imported; closing the affected
+files ends the current tool session and retains the originals in the library. Failures
+persist separately from the capped activity log, including through cancellation and reload.
+Ordinary pipeline failures do not pause the editor.
+Required export-policy failures cancel that export without freezing further editing.
+
+The gate includes open derivatives and files retained by Compare outside the workspace.
+Operation, download and upload boundaries recheck failures after asynchronous preparation.
+
 ## Layout
 
 | Path | Role |
@@ -19,7 +30,7 @@ the cloud). The single gate is `components/policies/usePoliciesEnabled.ts`.
 | `hooks/usePolicies.ts` | Policy state + permission flag, consumed by the auto-run controller. |
 | `hooks/usePolicyFileBadges.ts` | Per-file badge map (which policies produced/are enforcing a file) — drives the shared `PolicyBadges` row and the exit-point blocking. |
 | `components/policies/usePoliciesEnabled.ts` | The single build/connection gate for mounting the auto-run controller. Core stub = false; desktop shadow adds the SaaS-connection check. |
-| `components/policies/PolicyAutoRunController.tsx` | Headless: enforces enabled policies on every uploaded file. Mounted by `RightSidebar`. |
+| `components/policies/PolicyAutoRunController.tsx` | Runs policies and recovery once per editor. Mounted by `HomePage`, outside the tool sidebar. |
 | `components/policies/usePolicyAutoRun.ts` | The auto-run engine: dispatch, polling, retry, output import, server reconcile. |
 | `components/policies/policyRunStore.ts` | `useSyncExternalStore` store of run records (status, progress, outputs), persisted to localStorage. |
 | `components/policies/enforcementQueue.ts` | Export-time enforcement queue used by `services/policyExport.ts`. |

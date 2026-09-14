@@ -1,3 +1,7 @@
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
@@ -128,6 +132,10 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       const parentStub = sourceId
         ? selectors.getStirlingFileStub(sourceId)
         : null;
+      const policyIds = parentStub
+        ? policySourceIds(parentStub)
+        : [sourceId ?? undefined];
+      assertFilesNotBlocked(policyIds);
       setApplying(true);
       try {
         if (sourceId && parentStub) {
@@ -136,6 +144,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
             parentStub,
             "pdfTextEditor",
           );
+          assertFilesNotBlocked(policyIds);
           await consumeFiles([sourceId], stirlingFiles, stubs);
           // Claim the replacement before releasing the hold, otherwise the
           // editor sees an unfamiliar selection and re-opens the file it just
@@ -162,7 +171,9 @@ export default function PdfTextEditor(_props: BaseToolProps) {
       if (!store.document || savingRef.current) return;
       savingRef.current = true;
       store.setError(null);
+      const sourceId = sourceFileIdRef.current;
       try {
+        assertFilesNotBlocked([sourceId ?? undefined]);
         // Yield once so React can paint the disabled/saving state before the
         // synchronous PDFium serialize blocks the main thread.
         await new Promise((resolve) => setTimeout(resolve, 0));
@@ -175,9 +186,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         );
         // Apply first and unconditionally. Gating the write-back on the browser
         // download dialog meant cancelling it silently discarded the save.
+        assertFilesNotBlocked([sourceId ?? undefined]);
         await applyToWorkbench(blob, filename);
         store.markSaved(exported);
-        if (download) await downloadFile({ data: blob, filename });
+        if (download) {
+          assertFilesNotBlocked([sourceId ?? undefined]);
+          await downloadFile({ data: blob, filename });
+        }
       } catch (err) {
         // Surface the failure instead of silently dropping it - the user
         // must not believe a broken save succeeded.
