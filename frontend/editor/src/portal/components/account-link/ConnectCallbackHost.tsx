@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { completeConnect, type ConnectPhase } from "@portal/api/link";
+import { HttpError } from "@portal/api/http";
 import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
 import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
 import { useUI } from "@portal/contexts/UIContext";
@@ -93,7 +94,14 @@ export function ConnectCallbackHost() {
         });
         // Without this the page behind the dialog says unlinked until a reload.
         if (state === "linked") await refreshRef.current();
-      } catch {
+      } catch (error) {
+        if (
+          error instanceof HttpError &&
+          (error.status === 403 || error.status === 409)
+        ) {
+          publishRef.current({ state: "rejected", sessionRestored });
+          return;
+        }
         // Our own backend is unreachable; the handshake is untouched, so retrying beats restarting.
         publishRef.current({ state: "retry", sessionRestored, reclaim: again });
       }

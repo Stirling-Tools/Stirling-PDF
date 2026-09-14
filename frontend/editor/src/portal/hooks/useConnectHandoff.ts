@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth/UseSession";
 import { withBasePath } from "@app/constants/app";
 import { startConnect, startReauth } from "@portal/api/link";
+import { HttpError } from "@portal/api/http";
 
 interface ConnectHandoff {
   /** Stays true through a successful hand-off: the page is leaving, so nothing resolves. */
@@ -12,6 +14,7 @@ interface ConnectHandoff {
 
 export function useConnectHandoff(reauth: boolean): ConnectHandoff {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,6 +27,15 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
   }, []);
 
   const begin = useCallback(() => {
+    if (!reauth && user?.orgOwner !== true) {
+      setError(
+        t(
+          "portal.accountLink.ownerRequired",
+          "Only the org owner can link or unlink this server.",
+        ),
+      );
+      return;
+    }
     setBusy(true);
     setError(null);
     void (async () => {
@@ -48,17 +60,22 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
           ),
         );
         setBusy(false);
-      } catch {
+      } catch (error) {
         setError(
-          t(
-            "portal.accountLink.modal.startFailed",
-            "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again.",
-          ),
+          error instanceof HttpError && error.status === 403
+            ? t(
+                "portal.accountLink.ownerRequired",
+                "Only the org owner can link or unlink this server.",
+              )
+            : t(
+                "portal.accountLink.modal.startFailed",
+                "Could not reach Stirling to start the connection. Check this server's outbound network access, then try again.",
+              ),
         );
         setBusy(false);
       }
     })();
-  }, [reauth, t]);
+  }, [reauth, t, user?.orgOwner]);
 
   return { busy, error, begin };
 }

@@ -4,9 +4,12 @@ import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.proprietary.service.OrgOwnerService;
 
 /** Linking orchestrator (self-hosted side of combined billing). */
 @Slf4j
@@ -21,14 +24,17 @@ public class AccountLinkService {
     private final AccountLinkClient client;
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
+    private final OrgOwnerService owners;
 
     public AccountLinkService(
             AccountLinkClient client,
             DeviceCredentialStore credentialStore,
-            EntitlementCache entitlementCache) {
+            EntitlementCache entitlementCache,
+            OrgOwnerService owners) {
         this.client = client;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
+        this.owners = owners;
     }
 
     /** Status of this instance's link, for the portal's "Account link" card. */
@@ -40,6 +46,7 @@ public class AccountLinkService {
      */
     @org.springframework.transaction.annotation.Transactional
     public void unlink() {
+        owners.requireCurrentOwner(SecurityContextHolder.getContext().getAuthentication());
         credentialStore.assertNoHandover();
         credentialStore
                 .get()

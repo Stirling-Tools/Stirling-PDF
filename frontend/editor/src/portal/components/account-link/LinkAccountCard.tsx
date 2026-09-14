@@ -1,4 +1,5 @@
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth/UseSession";
 import { Banner, Button, Card, StatusBadge } from "@app/ui";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
 import { useUI } from "@portal/contexts/UIContext";
@@ -8,14 +9,14 @@ interface Props {
 }
 
 /**
- * Status + actions for THIS instance's account link. The "Link" button opens
- * the single top-level login modal (UIContext.openLinkModal) — never a nested
- * modal. The portal posts the returned JWT to the local backend, which stores
- * the device secret server-side; the secret is never received or rendered here.
+ * Only the org owner can change this instance's link. The shared dialog handles the browser
+ * handshake; device credentials remain on the server.
  */
 export function LinkAccountCard({ link }: Props) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
+  const { user } = useAuth();
+  const canLink = user?.orgOwner === true;
   const linking = link.phase === "linking";
   const linked = link.status?.linked ?? false;
 
@@ -66,6 +67,14 @@ export function LinkAccountCard({ link }: Props) {
         </Banner>
       )}
 
+      {!canLink && (
+        <p>
+          {t(
+            "portal.accountLink.ownerRequired",
+            "Only the org owner can link or unlink this server.",
+          )}
+        </p>
+      )}
       {linked ? (
         <div className="portal-link__actions">
           <span className="portal-link__muted">
@@ -87,13 +96,18 @@ export function LinkAccountCard({ link }: Props) {
             accent="danger"
             loading={linking}
             onClick={link.unlink}
+            disabled={!canLink}
           >
             {t("portal.accountLink.card.unlink", "Unlink")}
           </Button>
         </div>
       ) : (
         <div className="portal-link__actions">
-          <Button loading={linking} onClick={() => openLinkModal()}>
+          <Button
+            loading={linking}
+            disabled={!canLink}
+            onClick={() => openLinkModal()}
+          >
             {t(
               "portal.accountLink.card.linkButton",
               "Link your Stirling account",

@@ -6164,7 +6164,7 @@ invited = "Invitation sent. Ask them to accept it, then check again."
 joinBody = "Send an invitation to {{email}}. They can create an account or sign in, then accept it to join {{team}}. Ownership stays with you until they are ready."
 joinTitle = "Join the cloud team first"
 linkChanged = "The server's cloud link changed. Ask the server operator to restore the original link before resuming."
-localScope = "They will own this server and become an administrator. You keep administrator access."
+localScope = "They will own this server and control its cloud account link. You keep administrator access, but cannot link or unlink the server."
 newOwner = "{{name}} is now the owner."
 newOwnerLabel = "New owner"
 otherTeam = "If they belong to another team, accepting may move their account. A paid account or ownership of another team may need resolving first. We won't move their subscription or merge teams."
@@ -7290,6 +7290,9 @@ viewAnyway = "View file (policy still enforcing)"
 pdfa-1 = "PDF/A-1b"
 pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
+
+[portal.accountLink]
+ownerRequired = "Only the org owner can link or unlink this server."
 
 [portal.accountLink.card]
 billingNote = "Unattended processing bills against your org wallet."

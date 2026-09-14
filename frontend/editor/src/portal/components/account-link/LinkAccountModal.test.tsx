@@ -4,12 +4,17 @@ import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
-const { startConnect, startReauth, fetchWallet, EMAIL } = vi.hoisted(() => ({
-  startConnect: vi.fn(),
-  startReauth: vi.fn(),
-  fetchWallet: vi.fn(),
-  EMAIL: "admin@acme.example",
-}));
+const { startConnect, startReauth, fetchWallet, EMAIL, auth } = vi.hoisted(
+  () => ({
+    startConnect: vi.fn(),
+    startReauth: vi.fn(),
+    fetchWallet: vi.fn(),
+    EMAIL: "admin@acme.example",
+    auth: { user: { orgOwner: true } },
+  }),
+);
+
+vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
 
 vi.mock("@portal/api/link", () => ({ startConnect, startReauth }));
 vi.mock("@portal/api/billing", () => ({ fetchWallet }));
@@ -68,6 +73,7 @@ describe("LinkAccountModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    auth.user.orgOwner = true;
     fetchWallet.mockResolvedValue(freeWallet);
     startConnect.mockResolvedValue({
       phase: "PENDING",
@@ -100,6 +106,39 @@ describe("LinkAccountModal", () => {
     expect(screen.getByText(BENEFITS)).toBeTruthy();
     expect(screen.getByRole("button", { name: CONNECT })).toBeTruthy();
     expect(filledSteps()).toBe(1);
+    expect(startConnect).not.toHaveBeenCalled();
+  });
+
+  it("explains the owner requirement without offering a linking action to other admins", () => {
+    auth.user.orgOwner = false;
+    renderModal();
+    expect(
+      screen.getByText("Only the org owner can link or unlink this server."),
+    ).toBeTruthy();
+    expect(screen.queryByRole("button", { name: CONNECT })).toBeNull();
+    expect(startConnect).not.toHaveBeenCalled();
+  });
+
+  it("allows an administrator to sign into an existing link without linking again", async () => {
+    auth.user.orgOwner = false;
+    renderModal("reauth");
+    click("Sign in again");
+    await waitFor(() => expect(startReauth).toHaveBeenCalled());
+    expect(startConnect).not.toHaveBeenCalled();
+  });
+
+  it("removes linking permission when the session reflects the completed ownership transfer", () => {
+    const view = renderModal();
+    expect(screen.getByRole("button", { name: CONNECT })).toBeTruthy();
+    auth.user.orgOwner = false;
+    view.rerender(
+      <PortalTestProviders>
+        <MemoryRouter>
+          <LinkAccountModal open onClose={() => {}} />
+        </MemoryRouter>
+      </PortalTestProviders>,
+    );
+    expect(screen.queryByRole("button", { name: CONNECT })).toBeNull();
     expect(startConnect).not.toHaveBeenCalled();
   });
 

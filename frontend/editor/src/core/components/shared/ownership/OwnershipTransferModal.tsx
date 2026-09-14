@@ -353,7 +353,7 @@ export function OwnershipTransferModal({
                   <Text>
                     {t(
                       "ownership.localScope",
-                      "They will own this server and become an administrator. You keep administrator access.",
+                      "They will own this server and control its cloud account link. You keep administrator access, but cannot link or unlink the server.",
                     )}
                   </Text>
                 )}

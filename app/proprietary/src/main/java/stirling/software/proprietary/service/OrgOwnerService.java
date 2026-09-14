@@ -72,6 +72,33 @@ public class OrgOwnerService {
                 .isPresent();
     }
 
+    /**
+     * Holds the ownership lock through the caller's mutation; stale admin sessions grant no
+     * ownership.
+     */
+    @Transactional(propagation = org.springframework.transaction.annotation.Propagation.MANDATORY)
+    public OrgOwner requireCurrentOwner(Authentication authentication) {
+        OrgOwner row =
+                lockedOwner()
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN, "orgOwnerRequired"));
+        User owner =
+                validOwner(row)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.FORBIDDEN, "orgOwnerRequired"));
+        if (saas()
+                || authentication == null
+                || !authentication.isAuthenticated()
+                || !owner.getUsername().equalsIgnoreCase(authentication.getName())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "orgOwnerRequired");
+        }
+        return row;
+    }
+
     private Optional<OrgOwner> lockedOwner() {
         Optional<OrgOwner> row = repository.lockOwner();
         row.ifPresent(entityManager::refresh);

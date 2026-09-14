@@ -24,7 +24,8 @@ import lombok.extern.slf4j.Slf4j;
  * Same-origin account-link surface on the self-hosted instance (combined billing).
  *
  * <p>Admin-only class-wide: everything here is server-scoped, the free-tier meter included. A
- * non-admin learns of the wall from the {@code reason} on the 402, not from here.
+ * non-admin learns of the wall from the {@code reason} on the 402, not from here. Linking and
+ * unlinking additionally require the current org owner under the service's ownership lock.
  */
 @Slf4j
 @Hidden
