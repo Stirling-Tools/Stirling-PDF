@@ -6,12 +6,19 @@ import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import { useTranslation } from "react-i18next";
 
+import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import type { FolderId, FolderKind } from "@app/types/folder";
 
 export interface NewFolderButtonProps {
   label: string;
   size?: "sm" | "md";
+  /** "icon" matches the workbench bar's controls; "row" the file sidebar's. */
+  trigger?: "labelled" | "icon" | "row";
+  /** Row trigger only: the sidebar is a rail, so the label goes. */
+  collapsed?: boolean;
+  /** Row trigger only, for the tests and callers that look the row up. */
+  testId?: string;
   /** Set when a folder cannot be created here at all; also the tooltip. */
   disabledReason?: string | null;
   /** Set when only the server destination is unavailable; also its tooltip. */
@@ -32,6 +39,9 @@ export interface NewFolderButtonProps {
 export function NewFolderButton({
   label,
   size = "sm",
+  trigger = "labelled",
+  collapsed = false,
+  testId,
   disabledReason,
   serverDisabledReason,
   currentFolderId,
@@ -40,21 +50,77 @@ export function NewFolderButton({
   onOpenDialog,
 }: NewFolderButtonProps): ReactNode {
   const { t } = useTranslation();
+  const iconOnly = trigger === "icon";
+  const asRow = trigger === "row";
+
+  /** The sidebar's own action-row markup, so the row reads as one of its own.
+   *  `nativeTitle` for the menu shape, which Menu.Target's clone leaves no room to
+   *  wrap in a Tooltip. */
+  const row = (onClick?: () => void, nativeTitle = false) => (
+    <div
+      className={`file-sidebar-action-row${disabledReason ? " disabled" : ""}`}
+      data-testid={testId}
+      role="button"
+      tabIndex={disabledReason ? -1 : 0}
+      aria-disabled={Boolean(disabledReason)}
+      aria-label={label}
+      title={nativeTitle && collapsed ? label : undefined}
+      onClick={disabledReason ? undefined : onClick}
+      // Not onClick: in the menu shape the click handler belongs to Menu.Target,
+      // which binds the pointer only. A div has no native Enter/Space either way.
+      onKeyDown={(e) => {
+        if (disabledReason) return;
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          e.currentTarget.click();
+        }
+      }}
+    >
+      <span className="file-sidebar-action-icon">
+        <CreateNewFolderIcon />
+      </span>
+      {!collapsed && (
+        <span className="file-sidebar-action-label sidebar-content-fade">
+          {label}
+        </span>
+      )}
+    </div>
+  );
 
   if (disabledReason) {
     return (
-      <Tooltip label={disabledReason} withinPortal multiline w={260}>
+      <Tooltip
+        label={disabledReason}
+        withinPortal
+        multiline
+        w={260}
+        position={asRow ? "right" : undefined}
+      >
         {/* Wrapped so the tooltip still opens while the button is disabled. */}
-        <span style={{ display: "inline-flex" }}>
-          <Button
-            variant="secondary"
-            size={size}
-            leftSection={<CreateNewFolderIcon fontSize="small" />}
-            disabled
-            style={{ pointerEvents: "auto" }}
-          >
-            {label}
-          </Button>
+        <span style={{ display: asRow ? "block" : "inline-flex" }}>
+          {asRow ? (
+            row()
+          ) : iconOnly ? (
+            <ActionIcon
+              variant="tertiary"
+              size="sm"
+              disabled
+              aria-label={label}
+              style={{ pointerEvents: "auto" }}
+            >
+              <CreateNewFolderIcon fontSize="small" />
+            </ActionIcon>
+          ) : (
+            <Button
+              variant="secondary"
+              size={size}
+              leftSection={<CreateNewFolderIcon fontSize="small" />}
+              disabled
+              style={{ pointerEvents: "auto" }}
+            >
+              {label}
+            </Button>
+          )}
         </span>
       </Tooltip>
     );
@@ -63,6 +129,34 @@ export function NewFolderButton({
   // Inside a folder the kind is inherited, and on the web the server is the only
   // place a folder can go.
   if (currentFolderId !== null || !canAddLocalFolder) {
+    const open = () =>
+      currentFolderId !== null ? onOpenDialog() : onOpenDialog(null, "server");
+    if (asRow) {
+      return (
+        <Tooltip
+          label={label}
+          position="right"
+          withinPortal
+          disabled={!collapsed}
+        >
+          {row(open)}
+        </Tooltip>
+      );
+    }
+    if (iconOnly) {
+      return (
+        <Tooltip label={label} withinPortal>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            aria-label={label}
+            onClick={open}
+          >
+            <CreateNewFolderIcon fontSize="small" />
+          </ActionIcon>
+        </Tooltip>
+      );
+    }
     return (
       <Button
         variant="secondary"
@@ -82,14 +176,24 @@ export function NewFolderButton({
   return (
     <Menu shadow="md" position="bottom-end" withinPortal>
       <Menu.Target>
-        <Button
-          variant="secondary"
-          size={size}
-          leftSection={<CreateNewFolderIcon fontSize="small" />}
-          rightSection={<ArrowDropDownIcon fontSize="small" />}
-        >
-          {label}
-        </Button>
+        {asRow ? (
+          row(undefined, true)
+        ) : iconOnly ? (
+          <Tooltip label={label} withinPortal>
+            <ActionIcon variant="tertiary" size="sm" aria-label={label}>
+              <CreateNewFolderIcon fontSize="small" />
+            </ActionIcon>
+          </Tooltip>
+        ) : (
+          <Button
+            variant="secondary"
+            size={size}
+            leftSection={<CreateNewFolderIcon fontSize="small" />}
+            rightSection={<ArrowDropDownIcon fontSize="small" />}
+          >
+            {label}
+          </Button>
+        )}
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
