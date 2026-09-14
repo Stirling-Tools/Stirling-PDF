@@ -53,6 +53,7 @@ export function RailButton({
       content={disabled && reason ? `${label} — ${reason}` : label}
       position="right"
       arrow
+      containerStyle={{ pointerEvents: "none" }}
     >
       <button
         type="button"
