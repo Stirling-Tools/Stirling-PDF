@@ -603,6 +603,17 @@
   margin-top: 0.3rem;
 }
 
+/* In a row the counts share one line with the tag beside them, and the row's height
+   is fixed: they never wrap, and the full labels live in the title. */
+.files-page-folder-stats.is-compact {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+  margin-top: 0;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+}
+
 .files-page-folder-stat {
   display: inline-flex;
   align-items: center;

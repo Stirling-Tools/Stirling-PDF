@@ -145,6 +145,7 @@ test.describe("Files page screenshots", () => {
   // create-folder, the seeded "Reports" folder) only render once a confirmed,
   // non-anonymous user triggers the folder pull (see FolderContext gating).
   test.use({
+    filesViewMode: "grid",
     autoGoto: false,
     viewport: { width: 1600, height: 900 },
     seedJwt: true,

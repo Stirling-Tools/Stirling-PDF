@@ -45,6 +45,8 @@ type StubFixtures = {
   stubOptions: MockAppApiOptions;
   autoGoto: false | string;
   seedJwt: boolean;
+  /** The library's view. Set it where a test reads cards or rows by shape. */
+  filesViewMode: "grid" | "list" | null;
 };
 
 // Minimal JWT-shaped value — the proprietary auth client only checks for
@@ -59,8 +61,12 @@ export const test = base.extend<StubFixtures>({
   // the app instead of racing a redirect on every single test.
   autoGoto: ["/editor", { option: true }],
   seedJwt: [false, { option: true }],
+  filesViewMode: [null, { option: true }],
 
-  page: async ({ page, stubOptions, autoGoto, seedJwt }, use) => {
+  page: async (
+    { page, stubOptions, autoGoto, seedJwt, filesViewMode },
+    use,
+  ) => {
     suppressNativeFilePicker(page);
     await seedCookieConsent(page);
     if (seedJwt) {
@@ -73,6 +79,11 @@ export const test = base.extend<StubFixtures>({
       }, STUB_JWT);
     } else {
       await skipOnboarding(page);
+    }
+    if (filesViewMode) {
+      await page.addInitScript((mode) => {
+        localStorage.setItem("stirling.filesPageViewMode", mode);
+      }, filesViewMode);
     }
     await mockAppApis(page, stubOptions);
     if (autoGoto !== false) {
