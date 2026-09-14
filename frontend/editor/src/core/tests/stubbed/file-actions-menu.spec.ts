@@ -114,7 +114,10 @@ const cards = (page: Page) => page.locator(".files-page-card:not(.is-folder)");
 /** Upload a file, cross to My Files, and open the card's kebab. */
 async function openCardKebab(page: Page): Promise<void> {
   await uploadFiles(page, SAMPLE);
-  await page.getByTestId("my-files-button").click();
+  await page
+    .getByRole("navigation", { name: /Quick navigation/i })
+    .getByRole("button", { name: /^File library$/i })
+    .click();
   const card = cards(page).filter({ hasText: "sample.pdf" }).first();
   await expect(card).toBeVisible();
   await card.getByRole("button", { name: /File actions/i }).click();
