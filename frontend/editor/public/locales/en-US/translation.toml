@@ -3771,7 +3771,9 @@ step = "Step {{current}} of {{total}}"
 [connect.confirm]
 acknowledge = "I recognise this address and want to connect it to my team"
 approve = "Connect server"
+cannotDecide = "Only a team owner can approve or decline this connection. Use a different account or dismiss this prompt to continue using Stirling."
 deny = "Decline"
+dismiss = "Dismiss"
 lead = "A Stirling server is asking to connect to your team. Check the address below is yours before you approve."
 originLabel = "Address"
 signedInAs = "Signed in as"
@@ -3939,6 +3941,26 @@ description = "These cookies are essential for the website to function properly.
 [cookieBanner.services]
 posthog = "PostHog Analytics"
 scarf = "Scarf Pixel"
+
+[createPortfolio]
+coverTitle = "Cover page title"
+coverTitlePlaceholder = "PDF Portfolio"
+description = "Every selected file is kept whole inside the new PDF, whatever its type. Readers that don't support portfolios show a cover page with the files attached."
+goToFileEditor = "Go to file editor"
+info = "Combines your files into one PDF that keeps each file whole inside it. Open the result to browse the files and view or save any of them on their own."
+settings = "Portfolio Settings"
+submit = "Create Portfolio"
+title = "Portfolio Results"
+viewerModeHint = "A portfolio needs 2 or more files. Head to the file editor to select them."
+
+[createPortfolio.error]
+failed = "An error occurred while creating the PDF portfolio."
+
+[createPortfolio.tooltip.description]
+title = "What it does"
+
+[createPortfolio.tooltip.header]
+title = "About PDF Portfolios"
 
 [crop]
 autoCrop = "Auto-crop whitespace"
@@ -5208,6 +5230,11 @@ desc = "Convert files between different formats"
 tags = "transform,change,convert,PDF to Word,PDF to Excel,PDF to image,Word to PDF,Excel to PDF,PowerPoint to PDF,HTML to PDF,export,import,file conversion,format change,save as"
 title = "Convert"
 
+[home.createPortfolio]
+desc = "Bundle multiple files into an Adobe PDF Portfolio"
+tags = "portfolio,collection,package,bundle,combine files,pdf portfolio,adobe portfolio,pdf collection,container"
+title = "Create Portfolio"
+
 [home.crop]
 desc = "Crop a PDF to reduce its size (maintains text!)"
 tags = "trim,cut,resize,crop,crop PDF,trim PDF,trim margins,remove margins,cut edges,trim borders,remove white space,crop pages,trim pages,reduce margins,set margins"
@@ -5720,6 +5747,10 @@ noDocumentLinked = "This failure is not linked to a specific document, so it can
 notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
 occurrences = "{{count}} times"
 open = "Notifications"
+repairAdoptFailed = "The document was repaired but could not be opened here. Try the Repair tool directly."
+repairedNotRerun = "The document was repaired and opened here, but the policy could not be run on it again."
+repairedRerunNotAdopted = "The repaired document went through, but its result could not be opened here."
+repairedRerunUndelivered = "The document was repaired and the policy re-run started, but its result cannot be delivered here, so this failure stays open."
 rerunRejected = "The policy could not be run again just now. Try again in a moment."
 rerunUndelivered = "The policy re-run started, but its result cannot be delivered here, so this failure stays open."
 retryUnavailable = "This document can no longer be retried from this browser."
@@ -7343,11 +7374,11 @@ eyebrow = "Volume discount · 1M+ PDFs"
 title = "Stirling Enterprise"
 
 [portal.billing.freeEditors]
-activeThisMonth = "Active this month"
+activeThisMonth = "Active editors (30 days)"
 cost = "Cost"
 editorsDeployed = "Editors deployed"
 inviteTeammates = "Invite teammates"
-pdfsEdited = "PDFs edited"
+pdfsEdited = "Edit operations (30 days)"
 subtitle = "Deploy anywhere, for your whole team."
 title = "Free PDF Editors"
 
@@ -8162,9 +8193,10 @@ searchPlaceholder = "Search issues, users and errors"
 
 [portal.failures.action]
 acknowledge = "Acknowledge"
-decrypt = "Decrypt and retry"
+decrypt = "Unlock"
 dismiss = "Dismiss"
 openInTool = "Retry"
+repair = "Repair"
 viewFile = "View file"
 viewInProcessor = "View in processor"
 
@@ -8200,6 +8232,10 @@ user = "User"
 [portal.failures.kind.complianceNotMet]
 description = "The compliance check refused this document because it does not meet the standard the policy validates against. The violation is shown below."
 title = "Compliance standard not met"
+
+[portal.failures.kind.inputCorrupted]
+description = "Your file is damaged, so the run could not read it."
+title = "Damaged document"
 
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."
@@ -8291,7 +8327,7 @@ tagline = "Native app for Microsoft Windows"
 title = "Windows"
 
 [portal.home.editor]
-activeOfDeployed = "{{active}} of {{total}} active this month"
+activeOfDeployed = "{{active}} of {{total}} active in the last 30 days"
 name = "PDF Editor"
 open = "Open in browser"
 updated = "updated {{time}}"
@@ -12232,6 +12268,7 @@ close = "Close attachments"
 closeSidebar = "Close attachments sidebar"
 download = "Download attachment"
 empty = "No attachments in this document"
+loadFailed = "Failed to load attachments"
 loading = "Loading attachments..."
 noDocument = "Open a PDF to view its attachments."
 noMatch = "No attachments match your search"
@@ -12239,6 +12276,7 @@ noSupport = "Attachment support is unavailable for this viewer."
 retry = "Retry"
 searchPlaceholder = "Search attachments"
 title = "Attachments"
+untitled = "Untitled"
 
 [viewer.bookmarks]
 addBookmark = "Add bookmark"
@@ -12320,6 +12358,17 @@ loading = "Loading..."
 renderMarkdown = "Render markdown"
 sortedBy = "Sorted by: {{column}}"
 textStats = "{{lines}} lines · {{size}}"
+
+[viewer.portfolio]
+addFile = "Add file"
+count_one = "{{count}} file in this portfolio"
+count_other = "{{count}} files in this portfolio"
+import = "Import into Stirling"
+importFailed = "This file could not be added to your workspace."
+memberUnavailable = "This file could not be read from the portfolio."
+preview = "Preview"
+searchPlaceholder = "Search files"
+title = "Portfolio"
 
 [viewer.redaction]
 removeMark = "Remove this mark"
