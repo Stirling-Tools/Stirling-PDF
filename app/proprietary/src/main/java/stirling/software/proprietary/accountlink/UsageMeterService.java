@@ -10,14 +10,16 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.billing.BillingCategory;
+import stirling.software.proprietary.billing.BillingStepLimit;
 
 /**
  * Accrues a linked team's metered usage into the durable per-(period, category) {@link
  * UsageCounter}; the daily sync later reports the cumulative totals to SaaS. The cloud ledger only
  * — an unlinked instance meters its own grant through {@link FreeTierUsageService}.
  *
- * <p>Dedup follows the shared {@link MeteredInputWindow} rule. Fileless ops pass a null signature
- * and always accrue. {@link #accrue} is best-effort: callers need not handle persistence errors.
+ * <p>A run/document key groups successful sub-steps until the configured step limit or workflow
+ * window is reached. Standalone calls have no key and always accrue. Persistence failures are
+ * logged and never affect the completed operation's response.
  */
 @Slf4j
 @Service
@@ -40,20 +42,36 @@ public class UsageMeterService {
     }
 
     /**
-     * Adds {@code units} to the {@code (periodStart, category)} counter (creating the row on first
-     * use), unless {@code opSignature} was already metered this period. No-ops for non-billable
-     * categories, non-positive units, or a missing period.
+     * Records successful work using the default step limit. A null key always charges; a
+     * run/document key groups steps within that limit and the workflow window.
      */
     public void accrue(
-            LocalDateTime periodStart, BillingCategory category, long units, String opSignature) {
+            LocalDateTime periodStart, BillingCategory category, long units, String dedupKey) {
+        accrue(periodStart, category, units, dedupKey, BillingStepLimit.resolve(null));
+    }
+
+    /**
+     * Records one successful step. Charges its current input units on the first step, after {@code
+     * stepLimit} successful steps, or after the workflow window expires. Each key counts
+     * independently; a null key always charges. Missing periods, non-billable categories and
+     * non-positive units are ignored. Callers must not report failed steps.
+     */
+    public void accrue(
+            LocalDateTime periodStart,
+            BillingCategory category,
+            long units,
+            String dedupKey,
+            int stepLimit) {
         if (periodStart == null
                 || category == null
                 || category == BillingCategory.BYPASSED
                 || units <= 0) {
             return;
         }
-        if (opSignature != null && !inputWindow.shouldCharge(periodStart, opSignature)) {
-            return; // identical inputs seen within the workflow window — chaining, already billed
+        if (dedupKey != null
+                && !inputWindow.shouldCharge(
+                        periodStart, dedupKey, BillingStepLimit.resolve(stepLimit))) {
+            return;
         }
         incrementOrInsert(periodStart, category.name(), units);
     }
