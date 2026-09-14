@@ -21,7 +21,7 @@ interface WorkbenchBarDesktopActionsProps extends WorkbenchBarActionsProps {
  */
 export default function WorkbenchBarDesktopActions({
   currentView,
-  isCustomView,
+  showsFileActions,
   actionsDisabled,
   policyEnforcing,
   downloadLabel,
@@ -64,8 +64,8 @@ export default function WorkbenchBarDesktopActions({
           tooltipFor(t("workbenchBar.print", "Print PDF")),
         )}
 
-      {/* Download (file-level action — not relevant in custom views) */}
-      {!isCustomView &&
+      {/* Saving, and closing what was saved: only where a document is open. */}
+      {showsFileActions &&
         renderWithTooltip(
           <ActionIcon
             variant="tertiary"
@@ -80,7 +80,7 @@ export default function WorkbenchBarDesktopActions({
           tooltipFor(downloadLabel),
         )}
 
-      {!isCustomView &&
+      {showsFileActions &&
         saveAsIconName &&
         renderWithTooltip(
           <ActionIcon
@@ -97,12 +97,12 @@ export default function WorkbenchBarDesktopActions({
         )}
 
       {/* Separator: export group | close */}
-      {!isCustomView && (
+      {showsFileActions && (
         <div className="workbench-bar-divider workbench-bar-globals-sep" />
       )}
 
       {/* Close (context-aware: close all / close viewer file / close page editor) */}
-      {!isCustomView &&
+      {showsFileActions &&
         renderWithTooltip(
           <ActionIcon
             variant="tertiary"
