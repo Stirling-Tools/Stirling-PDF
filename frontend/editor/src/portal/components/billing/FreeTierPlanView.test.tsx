@@ -2,31 +2,31 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
+import type { ServerPlan } from "@app/billing/serverPlan";
 
 /**
- * The unlinked usage page reads the instance's own ledger and nothing else — no wallet, so no
- * claim about linkage — and it has to survive the endpoint being admin-only, since a non-admin can
- * hold a portal grant and reach this page.
+ * The unlinked usage page renders the shared billing screen from the instance's own ledger and
+ * nothing else — no wallet, so no claim about linkage — and it has to survive its endpoints being
+ * admin-only, since a non-admin can hold a portal grant and reach this page.
  */
-const { fetchFreeTier, openLinkModal } = vi.hoisted(() => ({
-  fetchFreeTier: vi.fn(),
-  openLinkModal: vi.fn(),
-}));
+const { fetchFreeTier, fetchFleetStats, fetchUsers, openLinkModal, auth } =
+  vi.hoisted(() => ({
+    fetchFreeTier: vi.fn(),
+    fetchFleetStats: vi.fn(),
+    fetchUsers: vi.fn(),
+    openLinkModal: vi.fn(),
+    auth: { isAdmin: true },
+  }));
 
-vi.mock("@app/auth", () => ({ useAuth: () => ({ isAdmin: true }) }));
-vi.mock("@app/ui", async () => ({
-  ...(await import("@app/ui/Button")),
-  ...(await import("@app/ui/Banner")),
-  ...(await import("@app/ui/Card")),
-  ...(await import("@app/ui/Skeleton")),
-}));
+vi.mock("@app/auth", () => ({ useAuth: () => auth }));
 
 vi.mock("@portal/api/link", () => ({ fetchFreeTier }));
+vi.mock("@portal/queries/infrastructure", () => ({
+  useFleetStats: () => ({ data: null, loading: false, error: null }),
+}));
+vi.mock("@app/portal/usersBackend", () => ({ usersBackend: { fetchUsers } }));
 vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),
-}));
-vi.mock("@portal/components/billing/FreePdfEditorsCard", () => ({
-  FreePdfEditorsCard: () => null,
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
@@ -50,43 +50,63 @@ const BALANCE = {
   periodEnd: "2026-10-01T00:00:00",
 };
 
-const renderView = () =>
+const renderView = (serverPlan?: ServerPlan) =>
   render(
     <PortalTestProviders>
       <MemoryRouter>
-        <FreeTierPlanView />
+        <FreeTierPlanView serverPlan={serverPlan} />
       </MemoryRouter>
     </PortalTestProviders>,
   );
 
 describe("FreeTierPlanView", () => {
   beforeEach(() => {
+    auth.isAdmin = true;
     fetchFreeTier.mockReset();
+    fetchFleetStats.mockReset().mockRejectedValue(new Error("no stats"));
+    fetchUsers.mockReset().mockRejectedValue(new Error("not admin"));
     openLinkModal.mockReset();
   });
 
-  it("renders the local meter: used, grant, remaining and when it resets", async () => {
+  it("meters the local ledger on the shared screen", async () => {
     fetchFreeTier.mockResolvedValue(BALANCE);
     renderView();
-    expect(await screen.findByText("380")).toBeInTheDocument();
-    expect(
-      screen.getByText("of 500 free credits left this month"),
-    ).toBeInTheDocument();
-    expect(screen.getByText("120 used")).toBeInTheDocument();
-    expect(screen.getByText(/^Resets /)).toBeInTheDocument();
+
+    expect(await screen.findByText("120 of 500 used")).toBeInTheDocument();
+    // No rate is known locally, so the row quotes the allowance rather than a price.
+    expect(screen.getByText("500 free every month")).toBeInTheDocument();
   });
 
-  it("reads only the instance's own ledger", async () => {
+  it("reads only the instance's own ledger for the meter", async () => {
     fetchFreeTier.mockResolvedValue(BALANCE);
     renderView();
-    await screen.findByText("380");
+
+    await screen.findByText("120 of 500 used");
     expect(fetchFreeTier).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows the users this server may have when the admin endpoint answers", async () => {
+    fetchFreeTier.mockResolvedValue(BALANCE);
+    fetchUsers.mockResolvedValue({ summary: { seatsUsed: 3, seatLimit: 5 } });
+    renderView();
+
+    expect(await screen.findByText("3 of 5 users")).toBeInTheDocument();
+  });
+
+  it("drops the users row rather than claiming zero when it does not", async () => {
+    fetchFreeTier.mockResolvedValue(BALANCE);
+    renderView();
+
+    await screen.findByText("120 of 500 used");
+    expect(screen.queryByText(/of 0 users/)).toBeNull();
+    expect(screen.queryByText("Users")).toBeNull();
   });
 
   it("offers the account as more allowance, and asks for it only on request", async () => {
     fetchFreeTier.mockResolvedValue(BALANCE);
     renderView();
-    await screen.findByText("380");
+
+    await screen.findByText("120 of 500 used");
     expect(openLinkModal).not.toHaveBeenCalled();
     expect(screen.getByText("Connect a Stirling account")).toBeInTheDocument();
   });
@@ -94,6 +114,7 @@ describe("FreeTierPlanView", () => {
   it("tells a non-admin the figures are not theirs to see, rather than failing", async () => {
     fetchFreeTier.mockRejectedValue(new HttpError(403, "Forbidden", null));
     renderView();
+
     expect(
       await screen.findByText(/only an administrator/),
     ).toBeInTheDocument();
@@ -103,9 +124,26 @@ describe("FreeTierPlanView", () => {
   it("reports a real failure as one", async () => {
     fetchFreeTier.mockRejectedValue(new HttpError(500, "Server Error", null));
     renderView();
+
     expect(
       await screen.findByText("Couldn't load credit usage"),
     ).toBeInTheDocument();
+  });
+
+  it("does not offer linking or fetch admin figures for a member", async () => {
+    auth.isAdmin = false;
+    renderView();
+
+    expect(
+      await screen.findByText(/only an administrator/),
+    ).toBeInTheDocument();
+    expect(fetchFreeTier).not.toHaveBeenCalled();
+    expect(fetchUsers).not.toHaveBeenCalled();
+    expect(
+      screen.queryByRole("button", {
+        name: /Connect a Stirling account|Link account for more credits/,
+      }),
+    ).toBeNull();
   });
 
   it("puts a recovery CTA beside an exhausted meter", async () => {
@@ -121,5 +159,25 @@ describe("FreeTierPlanView", () => {
       }),
     );
     expect(openLinkModal).toHaveBeenCalledWith("exhausted");
+  });
+
+  it("keeps Enterprise linking optional when the local ledger is empty", async () => {
+    fetchFreeTier.mockResolvedValue({
+      ...BALANCE,
+      remainingUnits: 0,
+      usedUnits: 500,
+    });
+    renderView({ licenseType: "ENTERPRISE", maxUsers: 10, usersInUse: 3 });
+
+    expect(
+      await screen.findByText(/Your Enterprise license includes processing/),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Connect a Stirling account" }),
+    );
+    expect(openLinkModal).toHaveBeenCalledWith("link");
+    expect(
+      screen.queryByRole("button", { name: "Link account for more credits" }),
+    ).toBeNull();
   });
 });

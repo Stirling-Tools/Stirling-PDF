@@ -28,6 +28,7 @@ class WalletSnapshotResponseTest {
                 /* billableLimit= */ 100,
                 /* freeAllowance= */ 500,
                 /* freeRemaining= */ 488,
+                /* freeUserAllowance= */ 5,
                 new BigDecimal("1.5"),
                 "usd",
                 /* estimatedBillMinor= */ 1800L,
@@ -62,6 +63,7 @@ class WalletSnapshotResponseTest {
         assertThat(r.billableLimit()).isEqualTo(100);
         assertThat(r.freeAllowance()).isEqualTo(500);
         assertThat(r.freeRemaining()).isEqualTo(488);
+        assertThat(r.freeUserAllowance()).isEqualTo(5);
         assertThat(r.pricePerDocMinor()).isEqualByComparingTo("1.5");
         assertThat(r.currency()).isEqualTo("usd");
         assertThat(r.estimatedBillMinor()).isEqualTo(1800L);
@@ -111,6 +113,7 @@ class WalletSnapshotResponseTest {
                         null,
                         500,
                         500,
+                        5,
                         null,
                         null,
                         null,

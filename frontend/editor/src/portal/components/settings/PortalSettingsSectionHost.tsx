@@ -1,36 +1,10 @@
 import { type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { getPortalQueryClient } from "@portal/queryClient";
-import { LinkProvider } from "@portal/contexts/LinkContext";
-import { TierProvider } from "@portal/contexts/TierContext";
-import { UIProvider } from "@portal/contexts/UIContext";
-import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
-import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
+import { PortalSettingsProviders } from "@portal/components/settings/PortalSettingsProviders";
 import { ErrorBoundary } from "@portal/components/ErrorBoundary";
-import { useUI } from "@portal/contexts/UIContext";
-import { useFreeTierExhaustedPrompt } from "@portal/hooks/useFreeTierExhaustedPrompt";
 import "@portal/theme/base.css";
 import "@portal/components/settings/PortalSettingsSectionHost.css";
-
-/** The one account-link dialog for this subtree, mounted only while open. */
-function LinkModalHost() {
-  const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
-    useUI();
-  const { pathname } = useLocation();
-  useFreeTierExhaustedPrompt(
-    pathname === "/settings/billing" || pathname === "/settings/account-link",
-  );
-  if (!linkModalOpen) return null;
-  return (
-    <LinkAccountModal
-      open
-      mode={linkModalMode}
-      onClose={closeLinkModal}
-      outcome={connectOutcome}
-    />
-  );
-}
 
 /**
  * Runs a portal-authored view inside the settings page. Those views are written
@@ -48,16 +22,9 @@ export function PortalSettingsSectionHost({
   return (
     <QueryClientProvider client={getPortalQueryClient()}>
       <div className="portal-settings-section portal-scope">
-        <LinkProvider initialState="unlinked" statusKnown={false}>
-          <TierProvider>
-            <UIProvider>
-              <AccountLinkProvider>
-                <ErrorBoundary>{children}</ErrorBoundary>
-                <LinkModalHost />
-              </AccountLinkProvider>
-            </UIProvider>
-          </TierProvider>
-        </LinkProvider>
+        <PortalSettingsProviders>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </PortalSettingsProviders>
       </div>
     </QueryClientProvider>
   );

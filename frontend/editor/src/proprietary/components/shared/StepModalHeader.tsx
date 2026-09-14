@@ -1,19 +1,16 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
-// The trademarked Stirling wordmark — the font is baked into the SVG (no brand webfont is loaded),
-// so we render the same asset the portal nav uses rather than styled text. Theme-switched in CSS.
+// No brand webfont is loaded, so the wordmark must be this SVG rather than styled text.
 import wordmarkLight from "@app/assets/brand/modern-logo/StirlingProcessorLogoBlackText.svg";
 import wordmarkDark from "@app/assets/brand/modern-logo/StirlingProcessorLogoWhiteText.svg";
 import "@app/components/shared/StepModalHeader.css";
 
 /**
- * Header for any stepped flow modal: an identity row (brand wordmark or the flow's own title) with a
- * "Step N of M" badge and close, an M-segment progress bar, and the current step's title.
+ * Header for any stepped flow modal: identity row, step badge, progress bar, step title. Worn by
+ * the prepay wizard, the metered checkout and the procurement quote builder.
  *
- * Shared so a flow's chrome is not re-implemented per flow — the prepay wizard, the metered
- * checkout, and the procurement quote builder all wear this. The step label is passed already
- * translated: each flow keeps its own copy key rather than this component inventing a shared one.
+ * <p>The step label arrives already translated, so each flow keeps its own copy key.
  */
 export function StepModalHeader({
   title,
@@ -29,19 +26,19 @@ export function StepModalHeader({
 }: {
   /** The current step's heading. Omit when the host modal already renders one. */
   title?: string;
-  /** A line under the title, for a step whose heading needs qualifying (what the document covers). */
+  /** A line under the title, for a heading that needs qualifying. */
   subtitle?: ReactNode;
-  /** Actions belonging to what is on screen (e.g. download this document), seated before the close. */
+  /** Actions belonging to what is on screen, seated before the close. */
   aside?: ReactNode;
   /** 1-based current step. Omit to hide the badge and the progress bar (e.g. a terminal receipt). */
   step?: number;
-  /** Segments to draw. Any length — a flow is not limited to three steps. */
+  /** Segments to draw; any length. */
   total?: number;
   /** Pre-translated "Step 2 of 3"; omitted renders no badge. */
   stepLabel?: string;
   /** Show the Stirling wordmark instead of a plain heading, for flows that stand alone. */
   brand?: boolean;
-  /** Extra class on the root, so a host modal can still own its padding/layout. */
+  /** Extra class on the root, so a host modal can own its own padding. */
   className?: string;
   closeLabel?: string;
   /** Omit when the host modal already owns a close control, so there is only ever one. */
