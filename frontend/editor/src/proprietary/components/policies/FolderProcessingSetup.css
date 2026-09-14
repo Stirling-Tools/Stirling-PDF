@@ -4,22 +4,45 @@
 }
 .folder-setup .sui-modal__header,
 .folder-setup .sui-modal__footer {
+  flex-shrink: 0;
   padding-inline: 1.75rem;
 }
 .folder-setup .sui-modal__body {
   padding: 1.5rem 1.75rem;
 }
+.folder-setup--processing .sui-modal__body {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.folder-setup--processing
+  .sui-modal__body
+  > :not(.folder-setup__processing-stage) {
+  flex-shrink: 0;
+}
+.folder-setup__processing-stage {
+  flex: 1;
+  min-height: 0;
+}
 .folder-setup__processing {
   display: grid;
   grid-template-columns: 17rem minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
   gap: 2rem;
-  align-items: start;
+  height: 100%;
+  min-height: 0;
 }
 .folder-setup__processing:not(:has(.folder-setup__presets)) {
   grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
 }
 .folder-setup__settings {
   min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 .folder-setup__settings .portal-policies__wizard-section {
   margin-top: 0;
@@ -96,7 +119,11 @@
 }
 .folder-setup__presets {
   display: grid;
+  align-content: start;
   gap: 0.5rem;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 .folder-setup__preset {
   display: flex;
@@ -205,6 +232,7 @@
 @media (max-width: 48rem) {
   .folder-setup__processing {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 2fr);
     gap: 1.5rem;
   }
   .folder-setup__presets {

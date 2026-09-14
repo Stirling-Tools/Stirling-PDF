@@ -172,7 +172,7 @@ export function ProcessingFolderWizard({
         <Modal
           open
           width="xl"
-          className="folder-setup"
+          className={`folder-setup${stage === "processing" ? " folder-setup--processing" : ""}`}
           title={t(
             existing
               ? "processingFolders.setup.editTitle"
@@ -290,7 +290,10 @@ export function ProcessingFolderWizard({
               pickDirectory={pickDirectory}
             />
           </div>
-          <div hidden={stage !== "processing"}>
+          <div
+            className="folder-setup__processing-stage"
+            hidden={stage !== "processing"}
+          >
             <div className="folder-setup__processing">
               {!existing && (
                 <div
