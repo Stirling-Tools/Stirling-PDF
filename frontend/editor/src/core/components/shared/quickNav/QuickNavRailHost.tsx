@@ -152,7 +152,7 @@ export function QuickNavRailHost() {
                 height={SIZE}
               />
             ),
-            testId: "quicknav-open-from-computer",
+            testId: "files-button",
             onClick: () => host?.actions.current?.openFromComputer?.(),
           },
         ]),

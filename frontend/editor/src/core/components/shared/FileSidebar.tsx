@@ -1206,10 +1206,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-add"
-                      // `files-button` is the long-standing upload entry-point
-                      // testid: click, then setInputFiles on `file-input`. The
-                      // tour anchors here too, on the native picker shortcut.
-                      data-testid="files-button"
+                      data-testid="pdf-library-add-files"
                       data-tour="files-button"
                       onClick={() => nativeFileInputRef.current?.click()}
                       title={t("fileSidebar.addFiles", "Add files")}

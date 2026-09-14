@@ -43,7 +43,7 @@ test.describe("PDF Library cleanup", () => {
     await page.goto("/editor");
 
     const chooser = page.waitForEvent("filechooser");
-    await page.getByTestId("quicknav-open-from-computer").click();
+    await page.getByTestId("files-button").click();
     await (await chooser).setFiles(SAMPLE_PDF);
 
     await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
@@ -55,7 +55,7 @@ test.describe("PDF Library cleanup", () => {
     page,
   }) => {
     await page.goto("/editor");
-    await expect(page.getByTestId("files-button")).toBeVisible();
+    await expect(page.getByTestId("pdf-library-add-files")).toBeVisible();
     await expect(page.getByTestId("google-drive-button")).toHaveCount(0);
   });
 
@@ -68,7 +68,9 @@ test.describe("PDF Library cleanup", () => {
     await expect(drive).toBeVisible();
 
     const driveBox = await drive.boundingBox();
-    const addBox = await page.getByTestId("files-button").boundingBox();
+    const addBox = await page
+      .getByTestId("pdf-library-add-files")
+      .boundingBox();
     expect(driveBox).not.toBeNull();
     expect(addBox).not.toBeNull();
     expect(driveBox!.y).toBeCloseTo(addBox!.y, 0);
