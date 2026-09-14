@@ -6,7 +6,7 @@ import { Banner, Button, Card } from "@app/ui";
 import { BillingScreen } from "@app/billing";
 import type { Wallet } from "@app/billing/types";
 import { fetchFreeTier, type FreeTierBalance } from "@portal/api/link";
-import { fetchFleetStats } from "@portal/api/fleetStats";
+import { useFleetStats } from "@portal/queries/infrastructure";
 import { usersBackend } from "@app/portal/usersBackend";
 import { HttpError } from "@portal/api/http";
 import { useUI } from "@portal/contexts/UIContext";
@@ -92,7 +92,8 @@ export function FreeTierPlanView({
   // not stable across renders.
   const [load, setLoad] = useState<Load>({ state: "loading" });
   const [seats, setSeats] = useState<Seats | null>(null);
-  const [editorsDeployed, setEditorsDeployed] = useState<number | null>(null);
+  const { data: fleetStats } = useFleetStats();
+  const editorsDeployed = fleetStats?.editorsDeployed ?? null;
 
   useEffect(() => {
     let cancelled = false;
@@ -106,7 +107,7 @@ export function FreeTierPlanView({
           e instanceof HttpError && (e.status === 401 || e.status === 403);
         setLoad({ state: denied ? "forbidden" : "failed" });
       });
-    // Both are best-effort: this page is the credit meter, and a row is dropped rather than
+    // User counts are best-effort: this page is the credit meter, and a row is dropped rather than
     // guessed at when its source cannot answer.
     usersBackend
       .fetchUsers("free")
@@ -116,13 +117,6 @@ export function FreeTierPlanView({
         }
       })
       .catch(() => {});
-    fetchFleetStats()
-      .then((f) => {
-        if (!cancelled) setEditorsDeployed(f.editorsDeployed);
-      })
-      .catch(() => {
-        if (!cancelled) setEditorsDeployed(null);
-      });
     return () => {
       cancelled = true;
     };

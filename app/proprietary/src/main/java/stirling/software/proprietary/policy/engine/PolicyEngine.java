@@ -191,15 +191,33 @@ public class PolicyEngine {
         // the triggering user, or the run goes out principal-less and its tool sub-steps bill the
         // team-less INTERNAL_API_USER, which PAYG refuses with a usage-limit 402.
         String billingPrincipal = policy.owner() != null ? policy.owner() : triggeringUser;
-        // Stored supporting files (certificates, watermark images, ...) load here, before the
-        // async hop: worker threads have no principal, so assets bind by the policy's own team.
-        PolicyInputs resolved = assetResolver.resolve(policy, inputs);
-        // Resolve the referenced output destinations live (like sourceIds), so a stored policy
-        // delivers to each of its saved Source destinations. Unreferenced policies fall back to
-        // their inline output.
-        PipelineDefinition definition =
-                new PipelineDefinition(
-                        policy.name(), policy.steps(), outputResolver.resolve(policy));
+        PolicyInputs resolved;
+        PipelineDefinition definition;
+        try {
+            // Supporting files and destinations resolve before the worker loses the request
+            // principal.
+            resolved = assetResolver.resolve(policy, inputs);
+            definition =
+                    new PipelineDefinition(
+                            policy.name(), policy.steps(), outputResolver.resolve(policy));
+        } catch (RuntimeException e) {
+            if (sourceId == null) {
+                throw e;
+            }
+            // Sources already claimed their inputs; a terminal handle settles every claim normally.
+            PolicyRun run =
+                    registerRun(
+                            policy.id(),
+                            new PipelineDefinition(policy.name(), policy.steps(), List.of()),
+                            sourceId,
+                            fileIdentity,
+                            triggeringUser);
+            String message = "Policy run could not start: " + e.getMessage();
+            run.fail(message);
+            taskManager.setError(run.getRunId(), message);
+            recordFailure(run, message, e);
+            return new PolicyRunHandle(run.getRunId(), CompletableFuture.completedFuture(run));
+        }
         return submitForPrincipal(
                 billingPrincipal,
                 fileOwner,
@@ -226,17 +244,8 @@ public class PolicyEngine {
             String sourceId,
             String fileIdentity,
             Semaphore admission) {
-        // Scope the run id to the current user (this request thread) so the file-download
-        // ownership check passes. No-op when security is off.
-        String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
-        taskManager.createTask(runId);
-        // Tag the shared job entry with the policy id so peers can list it as a policy run.
-        if (policyId != null) {
-            taskManager.putMetadata(runId, "policyId", policyId);
-        }
-        PolicyRun run =
-                new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
-        registry.register(run);
+        PolicyRun run = registerRun(policyId, definition, sourceId, fileIdentity, triggeringUser);
+        String runId = run.getRunId();
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
         // Re-establish the acting principal as the audit principal on the worker thread. Each tool
@@ -289,6 +298,26 @@ public class PolicyEngine {
             asyncExecutor.execute(task);
         }
         return new PolicyRunHandle(runId, completion);
+    }
+
+    private PolicyRun registerRun(
+            String policyId,
+            PipelineDefinition definition,
+            String sourceId,
+            String fileIdentity,
+            String triggeringUser) {
+        // Scope the run id to the current user (this request thread) so the file-download
+        // ownership check passes. No-op when security is off.
+        String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
+        taskManager.createTask(runId);
+        // Tag the shared job entry with the policy id so peers can list it as a policy run.
+        if (policyId != null) {
+            taskManager.putMetadata(runId, "policyId", policyId);
+        }
+        PolicyRun run =
+                new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
+        registry.register(run);
+        return run;
     }
 
     public PolicyRun getRun(String runId) {
