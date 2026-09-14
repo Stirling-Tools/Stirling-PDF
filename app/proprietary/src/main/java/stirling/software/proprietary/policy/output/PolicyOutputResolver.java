@@ -1,30 +1,21 @@
 package stirling.software.proprietary.policy.output;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.RoutedDestination;
-import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 
 /**
- * Resolves a policy's effective output destinations at run time: each {@code outputId} references a
- * {@link Source} used as a destination, looked up live (so editing a location updates every policy
- * that writes to it), exactly as input {@code sourceIds} are resolved. A run is delivered to every
- * resolved destination. A policy with no references keeps its inline output (results returned to
- * the caller) - the case for editor and one-off policies. A reference that no longer resolves
- * (location deleted out from under a live policy - normally blocked by the source delete guard) is
- * skipped; if none resolve, delivery falls back to inline so the run still completes.
+ * Resolves saved destinations at dispatch; unavailable references fail instead of returning files
+ * inline.
  */
-@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PolicyOutputResolver {
@@ -36,43 +27,25 @@ public class PolicyOutputResolver {
         if (outputIds.isEmpty()) {
             return List.of(policy.output());
         }
-        List<OutputSpec> resolved = new ArrayList<>();
-        for (String outputId : outputIds) {
-            sourceStore
-                    .get(outputId)
-                    .map(Source::toOutputSpec)
-                    .ifPresentOrElse(
-                            resolved::add,
-                            () ->
-                                    log.warn(
-                                            "Policy {} references missing output source {}; skipping"
-                                                    + " that destination",
-                                            policy.id(),
-                                            outputId));
-        }
-        return resolved.isEmpty() ? List.of(policy.output()) : resolved;
+        return outputIds.stream().map(this::resolveDestination).toList();
     }
 
-    /**
-     * Resolve each routing rule's destination live, dropping a rule whose destination no longer
-     * resolves (rather than silently sending its documents to the fallback under a stale rule). The
-     * result is what the engine matches documents against; rule order is preserved.
-     */
+    /** Resolve each routing rule's destination live; rule order is preserved. */
     public List<RoutedDestination> resolveRouting(Policy policy) {
-        List<RoutedDestination> resolved = new ArrayList<>();
-        for (RoutingRule rule : policy.routingRules()) {
-            sourceStore
-                    .get(rule.outputId())
-                    .map(Source::toOutputSpec)
-                    .ifPresentOrElse(
-                            spec -> resolved.add(new RoutedDestination(rule, spec)),
-                            () ->
-                                    log.warn(
-                                            "Policy {} routing rule references missing source {};"
-                                                    + " skipping that rule",
-                                            policy.id(),
-                                            rule.outputId()));
-        }
-        return resolved;
+        return policy.routingRules().stream()
+                .map(rule -> new RoutedDestination(rule, resolveDestination(rule.outputId())))
+                .toList();
+    }
+
+    private OutputSpec resolveDestination(String id) {
+        return sourceStore
+                .get(id)
+                .filter(Source::enabled)
+                .filter(source -> !"editor".equals(source.type()))
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        "The output destination is missing, disabled, or unavailable"))
+                .toOutputSpec();
     }
 }
