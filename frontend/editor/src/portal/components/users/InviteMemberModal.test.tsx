@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
-import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { MantineProvider } from "@mantine/core";
 
 // Deterministic i18n: render the English fallback so assertions read naturally.
@@ -28,9 +29,15 @@ vi.mock("@app/portal/usersBackend", () => ({
 vi.mock("@portal/api/access", () => ({ createGrant: vi.fn() }));
 
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
+import { createMember } from "@portal/api/users";
 import type { Team } from "@portal/api/teams";
 
 const TEAMS: Team[] = [{ id: 1, name: "Default", userCount: 1, owners: [] }];
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  Element.prototype.scrollIntoView = vi.fn();
+});
 
 function renderModal(props: Partial<ComponentProps<typeof InviteMemberModal>>) {
   return render(
@@ -71,5 +78,35 @@ describe("InviteMemberModal — add-user method gating", () => {
     });
     expect(screen.getByText("Username")).toBeInTheDocument();
     expect(screen.queryByText("Email address")).not.toBeInTheDocument();
+  });
+
+  it("does not offer local MFA enrollment for an SSO account", async () => {
+    const user = userEvent.setup();
+    renderModal({
+      canDirectCreate: true,
+      canEmailInvite: false,
+      hasOauth: true,
+    });
+
+    expect(
+      screen.getByLabelText("Require MFA setup on first login"),
+    ).toBeInTheDocument();
+    await user.click(screen.getByLabelText("Require MFA setup on first login"));
+
+    await user.click(screen.getByLabelText("Sign-in method"));
+    await user.click(screen.getByText("OAuth2 / SSO"));
+
+    expect(
+      screen.queryByLabelText("Require MFA setup on first login"),
+    ).not.toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/Username/), "ConnorYoh");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() =>
+      expect(createMember).toHaveBeenCalledWith(
+        expect.objectContaining({ authType: "OAUTH2", forceMFA: false }),
+      ),
+    );
   });
 });

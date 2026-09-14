@@ -234,7 +234,7 @@ export function InviteMemberModal({
           teamId: teamNum,
           authType,
           forceChange,
-          forceMFA,
+          forceMFA: authType === "WEB" && forceMFA,
         });
         if (processor)
           processorApplied = await grantProcessor(
@@ -404,14 +404,16 @@ export function InviteMemberModal({
               )}
               disabled={authType !== "WEB"}
             />
-            <Checkbox
-              checked={forceMFA}
-              onChange={(e) => setForceMFA(e.target.checked)}
-              label={t(
-                "users.invite.forceMfa",
-                "Require MFA setup on first login",
-              )}
-            />
+            {authType === "WEB" && (
+              <Checkbox
+                checked={forceMFA}
+                onChange={(e) => setForceMFA(e.target.checked)}
+                label={t(
+                  "users.invite.forceMfa",
+                  "Require MFA setup on first login",
+                )}
+              />
+            )}
           </div>
         )}
 
