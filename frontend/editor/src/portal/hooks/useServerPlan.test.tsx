@@ -1,6 +1,22 @@
-import { renderHook, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { LicenseInfo } from "@app/types/license";
+import { BillingScreen } from "@app/billing/BillingScreen";
+import { freeWallet } from "@app/billing/walletFixtures";
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (_key: string, fallback?: string, vars?: Record<string, unknown>) =>
+      (fallback ?? _key).replace(/\{\{(\w+)\}\}/g, (_match, key) =>
+        String(vars?.[key] ?? ""),
+      ),
+  }),
+}));
 const state = vi.hoisted(() => ({
   licenseInfo: null as LicenseInfo | null,
   fetchUsers: vi.fn(),
@@ -20,6 +36,7 @@ describe("local licence entitlements", () => {
       enabled: true,
       maxUsers: 250,
       hasKey: true,
+      licenseKey: "installed-enterprise-key",
     };
     state.fetchUsers
       .mockReset()
@@ -41,6 +58,61 @@ describe("local licence entitlements", () => {
     expect(result.current.serverPlan).toBeUndefined();
     expect(state.fetchUsers).not.toHaveBeenCalled();
   });
+  it.each([undefined, "", "00000000-0000-0000-0000-000000000000"])(
+    "keeps keyless SERVER features on Team billing with key %s",
+    (licenseKey) => {
+      state.licenseInfo = {
+        licenseType: "SERVER",
+        enabled: true,
+        maxUsers: 200,
+        hasKey: Boolean(licenseKey),
+        licenseKey,
+      };
+      const addCapacity = vi.fn();
+      function LinkedTeamBilling() {
+        const { serverPlan } = useServerPlan(true);
+        return (
+          <BillingScreen
+            selfHosted
+            serverPlan={serverPlan}
+            wallet={{
+              ...freeWallet,
+              team: { held: true, licensedUsers: 200, usersInUse: 40 },
+            }}
+            onAddCapacity={addCapacity}
+          />
+        );
+      }
+      render(<LinkedTeamBilling />);
+      expect(screen.getByText("Team")).toBeInTheDocument();
+      expect(screen.getByText("40 of 200 users")).toBeInTheDocument();
+      expect(screen.queryByText("Server")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
+      expect(addCapacity).toHaveBeenCalledOnce();
+      expect(state.licenseInfo.licenseType).toBe("SERVER");
+      expect(state.fetchUsers).not.toHaveBeenCalled();
+    },
+  );
+  it.each(["installed-server-key", "file:/licenses/server.cert"])(
+    "keeps installed Server billing for %s",
+    async (licenseKey) => {
+      state.licenseInfo = {
+        licenseType: "SERVER",
+        enabled: true,
+        maxUsers: 9999,
+        hasKey: true,
+        licenseKey,
+      };
+      const { result } = renderHook(() => useServerPlan(true));
+      await waitFor(() =>
+        expect(result.current.serverPlan).toEqual({
+          licenseType: "SERVER",
+          maxUsers: 9999,
+          usersInUse: 37,
+        }),
+      );
+    },
+  );
   it("does not read licence seats for a non-admin", () => {
     const { result } = renderHook(() => useServerPlan(false));
     expect(result.current.serverPlan).toBeUndefined();
