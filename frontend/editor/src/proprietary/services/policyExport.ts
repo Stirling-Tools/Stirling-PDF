@@ -7,11 +7,13 @@
  * Export is never hard-blocked: on failure the original file is exported and a
  * warning toast is shown. For "new version" policies, the run is also recorded
  * so the mounted import effect versions the in-editor file, not just the
- * download. Only PDFs are enforced.
+ * download. Each policy selects files using its first step's accepted inputs.
  */
 
 import { loadPolicies } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { policyAcceptsFile } from "@app/services/policyInput";
+import { splitFileName } from "@app/utils/fileUtils";
 import {
   runStoredPolicy,
   getPolicyRun,
@@ -38,12 +40,10 @@ const MAX_POLLS = 75;
 const TOAST_LINGER_MS = 10_000;
 const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
-const isPdf = (f: File) =>
-  f.type === "application/pdf" || /\.pdf$/i.test(f.name);
-
 interface ExportPolicy {
   policyKey: string;
   backendId: string;
+  firstOperation?: string | null;
   label: string;
   outputMode: "new_file" | "new_version";
   /** The policy's accent as a CSS colour, for the toast glow. */
@@ -78,6 +78,7 @@ function activeExportPolicies(): ExportPolicy[] {
       .map(([id, s]) => ({
         policyKey: id,
         backendId: s.backendId as string,
+        firstOperation: s.firstOperation,
         // A builder pipeline has no built-in category, so it labels by its own name.
         label: labels.get(id) ?? s.name ?? "Policy",
         outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
@@ -106,9 +107,9 @@ async function runToCompletion(
       const out = view.outputs?.[0];
       if (!out) throw new Error("policy produced no output");
       const blob = await downloadPolicyOutput(out.fileId, target);
-      // Keep the export's filename; only the bytes are the enforced result.
-      const enforced = new File([blob], file.name, {
-        type: blob.type || file.type || "application/pdf",
+      // Downstream policies must see the output's type, including its extension when MIME is absent.
+      const enforced = new File([blob], out.fileName, {
+        type: blob.type,
       });
       return { file: enforced, runId, target, outputs: view.outputs ?? [] };
     }
@@ -139,10 +140,10 @@ function enforcedFilesSummary(names: string[]): string {
 }
 
 /**
- * Enforce every active export-policy on each PDF just before export, returning
+ * Enforce compatible active export policies just before export, returning
  * the files in order (enforced, or the original on failure). `fileIds[i]` is the
  * workspace id of `files[i]` when known — used to version the in-editor file for
- * "new version" policies. Non-PDFs pass through untouched, and a single toast
+ * "new version" policies. Incompatible files pass through untouched, and a single toast
  * (glowing in the policy's accent while it runs) fades a few seconds after the
  * result.
  */
@@ -152,8 +153,7 @@ export async function enforceExportPolicies(
   trigger: EnforcementTrigger = "export",
 ): Promise<File[]> {
   const active = activeExportPolicies();
-  const targets = files.flatMap((f, i) => (isPdf(f) ? [i] : []));
-  if (!active.length || targets.length === 0) return files;
+  if (!active.length || files.length === 0) return files;
 
   // Policies that haven't already enforced this exact file version. Enforcing
   // versions the in-editor file to the policy's output and marks that output
@@ -162,7 +162,12 @@ export async function enforceExportPolicies(
   // new file id that isn't dispatched, so an edited file enforces afresh.
   const pendingFor = (fileId: string | undefined) =>
     active.filter((p) => !(fileId && isDispatched(p.policyKey, fileId)));
-  if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0)) return files;
+  const hasCompatiblePolicy = (i: number) =>
+    pendingFor(fileIds?.[i]).some((policy) =>
+      policyAcceptsFile(policy, files[i]),
+    );
+  const targets = files.flatMap((_, i) => (hasCompatiblePolicy(i) ? [i] : []));
+  if (targets.length === 0) return files;
 
   const names = active.map((p) => p.label).join(", ");
 
@@ -172,9 +177,9 @@ export async function enforceExportPolicies(
   return runQueued({ label: names, trigger }, async () => {
     // An earlier queued job may have just enforced these same files and marked
     // them dispatched, so re-check at run time before doing (or announcing) work.
-    if (!targets.some((i) => pendingFor(fileIds?.[i]).length > 0)) return files;
+    if (!targets.some(hasCompatiblePolicy)) return files;
 
-    const pending = targets.filter((i) => pendingFor(fileIds?.[i]).length > 0);
+    const pending = targets.filter(hasCompatiblePolicy);
     const total = pending.length;
     const progressTitle = (done: number) =>
       total === 1
@@ -208,13 +213,20 @@ export async function enforceExportPolicies(
         // file (recording every policy would double-consume the same input).
         let versionRun: (PolicyRunResult & { policyKey: string }) | undefined;
         for (const policy of toRun) {
+          if (!policyAcceptsFile(policy, current)) continue;
           const result = await runToCompletion(policy.backendId, current);
           current = result.file;
           if (policy.outputMode === "new_version" && fileId) {
             versionRun = { ...result, policyKey: policy.policyKey };
           }
         }
-        out[i] = current;
+        const [base, inputExtension] = splitFileName(file.name);
+        const [, outputExtension] = splitFileName(current.name);
+        out[i] = new File(
+          [current],
+          base + (outputExtension || inputExtension),
+          { type: current.type },
+        );
         done += 1;
         if (done < total)
           updateToast(toastId, {

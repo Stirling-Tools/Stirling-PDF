@@ -105,6 +105,8 @@ export interface PolicyRunView {
 /** The decoded policy read back from the backend. */
 export interface DecodedPolicy {
   id: string;
+  /** First stored step's endpoint, used to select compatible editor files. */
+  firstOperation?: string | null;
   /** The policy this record belongs to, read from `output.options.categoryId`. */
   policyKey: string;
   name: string;
@@ -146,6 +148,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
   const policyKey = str(meta.categoryId);
   return {
     id: policy.id,
+    firstOperation: policy.steps[0]?.operation ?? null,
     policyKey,
     name: policy.name,
     enabled: policy.enabled,

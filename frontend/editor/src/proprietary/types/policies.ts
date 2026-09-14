@@ -85,6 +85,8 @@ export interface PolicyState {
    * it has been persisted server-side; used to update/delete/run it.
    */
   backendId?: string;
+  /** First stored step's endpoint; absent before fetch, null for an empty pipeline. */
+  firstOperation?: string | null;
   /**
    * A built-in policy (one of the shipped catalog categories) rather than a
    * user-created one. Default policies are configurable but NOT deletable — the
