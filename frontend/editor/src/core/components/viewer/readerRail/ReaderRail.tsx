@@ -1,10 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
+import BookmarksOutlinedIcon from "@mui/icons-material/BookmarksOutlined";
 import CheckIcon from "@mui/icons-material/Check";
 import CloseIcon from "@mui/icons-material/Close";
 import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined";
-import MenuBookIcon from "@mui/icons-material/MenuBook";
 import ViewListIcon from "@mui/icons-material/ViewList";
 import SearchIcon from "@mui/icons-material/Search";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
@@ -44,7 +44,10 @@ interface RailItem {
  */
 const RAIL_GROUPS: readonly (readonly RailItem[])[] = [
   [
-    { id: "viewer-toggle-bookmarks", icon: <MenuBookIcon fontSize="small" /> },
+    {
+      id: "viewer-toggle-bookmarks",
+      icon: <BookmarksOutlinedIcon fontSize="small" />,
+    },
     { id: "viewer-toggle-sidebar", icon: <ViewListIcon fontSize="small" /> },
     { id: "viewer-search", icon: <SearchIcon fontSize="small" /> },
   ],
