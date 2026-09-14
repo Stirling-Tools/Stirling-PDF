@@ -60,8 +60,14 @@ const { writeWorkbenchSession, readWorkbenchSession, resumeWorkbenchSession } =
 
 /** Surfaces `loading` so a test can assert on it rather than on the container. */
 function LoadingProbe() {
-  const { loading } = useAuth();
-  return <span data-testid="loading">{String(loading)}</span>;
+  const { loading, profilePictureLoading, profilePictureUrl } = useAuth();
+  return (
+    <>
+      <span data-testid="loading">{String(loading)}</span>
+      <span data-testid="picture-loading">{String(profilePictureLoading)}</span>
+      <span data-testid="picture">{profilePictureUrl}</span>
+    </>
+  );
 }
 
 const USER_ID = "11111111-2222-3333-4444-555555555555";
@@ -217,11 +223,29 @@ describe("AuthProvider user-data loading", () => {
     );
     // The picture read chains behind the sync, so it has not run yet either.
     expect(createSignedUrl).not.toHaveBeenCalled();
+    expect(getByTestId("picture-loading").textContent).toBe("true");
 
     await act(async () => {
       releaseSync();
       await new Promise((resolve) => setTimeout(resolve, 0));
     });
+    expect(getByTestId("picture-loading").textContent).toBe("false");
+    expect(getByTestId("picture").textContent).toBe(
+      "https://example.test/avatar",
+    );
+  });
+
+  it("settles the picture lookup when the user has no avatar", async () => {
+    createSignedUrl.mockResolvedValue({
+      data: null,
+      error: { message: "Not found" },
+    });
+    const { getByTestId } = renderProvider();
+
+    await waitFor(() =>
+      expect(getByTestId("picture-loading").textContent).toBe("false"),
+    );
+    expect(getByTestId("picture").textContent).toBe("");
   });
 
   it("refetches after a guest upgrade, which keeps the same user id", async () => {

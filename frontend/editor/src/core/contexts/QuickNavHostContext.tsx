@@ -20,6 +20,7 @@ export interface QuickNavIdentity {
 export interface QuickNavHostData {
   /** Sticky: one app unmounts before the next one registers. */
   appMounted: boolean;
+  /** Registrations omit this while loading; null explicitly clears the cached identity. */
   identity: QuickNavIdentity | null;
   signingBadge: number;
   portalAccess: boolean;
@@ -157,10 +158,11 @@ export function useRegisterQuickNavHost(
     notificationsOpen,
     toolReasons,
   } = data;
+  const identityProvided = identity !== undefined;
   useEffect(() => {
     host?.setData({
       appMounted: true,
-      identity: identity ?? null,
+      ...(identityProvided ? { identity } : {}),
       signingBadge: signingBadge ?? 0,
       portalAccess: portalAccess ?? false,
       readerMode: readerMode ?? false,
@@ -174,6 +176,7 @@ export function useRegisterQuickNavHost(
     // By field: identity is rebuilt every render.
   }, [
     host,
+    identityProvided,
     identity?.displayName,
     identity?.profilePictureUrl,
     signingBadge,

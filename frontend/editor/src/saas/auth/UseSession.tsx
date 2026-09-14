@@ -71,6 +71,8 @@ interface AuthContextType {
   error: AuthError | null;
   isPro: boolean | null;
   profilePictureUrl: string | null;
+  /** Pending until this user's picture lookup resolves, including a missing picture. */
+  profilePictureLoading: boolean;
   profilePictureMetadata: ProfilePictureMetadata | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
@@ -95,6 +97,7 @@ const AuthContext = createContext<AuthContextType>({
   error: null,
   isPro: null,
   profilePictureUrl: null,
+  profilePictureLoading: true,
   profilePictureMetadata: null,
   signOut: async () => {},
   refreshSession: async () => {},
@@ -111,6 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profilePictureUrl, setProfilePictureUrl] = useState<string | null>(
     null,
   );
+  const [profilePictureResolvedFor, setProfilePictureResolvedFor] = useState<
+    string | null
+  >(null);
   const [profilePictureMetadata, setProfilePictureMetadata] =
     useState<ProfilePictureMetadata | null>(null);
 
@@ -177,6 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           "[Auth Debug] No user session, skipping profile picture fetch",
         );
         setProfilePictureUrl(null);
+        setProfilePictureResolvedFor(null);
         return;
       }
 
@@ -210,6 +217,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } catch (error: unknown) {
         console.debug("[Auth Debug] Failed to fetch profile picture:", error);
         setProfilePictureUrl(await providerAvatarFallback(currentSession.user));
+      } finally {
+        setProfilePictureResolvedFor(currentSession.user.id);
       }
     },
     [session, providerAvatarFallback],
@@ -451,6 +460,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Clear pro status, profile picture, and metadata on sign out
             setIsPro(null);
             setProfilePictureUrl(null);
+            setProfilePictureResolvedFor(null);
             setProfilePictureMetadata(null);
             loadedForRef.current = null;
           } else if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
@@ -528,6 +538,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     error,
     isPro,
     profilePictureUrl,
+    profilePictureLoading: Boolean(
+      user && profilePictureResolvedFor !== user.id,
+    ),
     profilePictureMetadata,
     signOut,
     refreshSession,

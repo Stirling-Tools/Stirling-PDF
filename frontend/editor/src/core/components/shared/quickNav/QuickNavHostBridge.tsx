@@ -43,7 +43,7 @@ export function QuickNavHostBridge({
   onGoToDefaultState,
   toolReasons,
 }: QuickNavHostBridgeProps) {
-  const { displayName, profilePictureUrl } = useAccountIdentity();
+  const { displayName, profilePictureUrl, loading } = useAccountIdentity();
   const signingBadge = useSigningBadgeCount();
   const notificationsAvailable = useNotificationsAvailable();
   // Built even when closed: it carries a one-shot document pickup that would sit unclaimed.
@@ -64,7 +64,7 @@ export function QuickNavHostBridge({
 
   useRegisterQuickNavHost(
     {
-      identity: { displayName, profilePictureUrl },
+      ...(!loading ? { identity: { displayName, profilePictureUrl } } : {}),
       signingBadge,
       portalAccess,
       readerMode,

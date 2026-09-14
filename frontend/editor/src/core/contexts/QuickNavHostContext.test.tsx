@@ -5,6 +5,7 @@ import {
   useQuickNavHost,
   useRegisterQuickNavHost,
   useSuppressQuickNavRail,
+  type QuickNavIdentity,
 } from "@app/contexts/QuickNavHostContext";
 
 function Probe({ onRead }: { onRead: (value: unknown) => void }) {
@@ -29,6 +30,11 @@ function App() {
 
 function AppWithTool({ tool }: { tool: "automate" | null }) {
   useRegisterQuickNavHost({ activeTool: tool }, {});
+  return null;
+}
+
+function AppWithIdentity({ identity }: { identity?: QuickNavIdentity | null }) {
+  useRegisterQuickNavHost({ identity }, {});
   return null;
 }
 
@@ -74,7 +80,40 @@ describe("QuickNavHostContext", () => {
       </QuickNavHostProvider>,
     );
     expect(after.appMounted).toBe(true);
+    expect(after.identity).toEqual({
+      displayName: "Ada",
+      profilePictureUrl: null,
+    });
     expect(after.goToDefaultState).toBe(false);
+  });
+
+  it("keeps the previous identity until the incoming app publishes an answer", () => {
+    const { view } = setup();
+    let latest: Record<string, unknown> = {};
+    const renderIdentity = (identity?: QuickNavIdentity | null) => (
+      <QuickNavHostProvider>
+        <Probe
+          onRead={(value) => (latest = value as Record<string, unknown>)}
+        />
+        <AppWithIdentity identity={identity} />
+      </QuickNavHostProvider>
+    );
+
+    view.rerender(renderIdentity());
+    expect(latest.identity).toEqual({
+      displayName: "Ada",
+      profilePictureUrl: null,
+    });
+
+    const resolved = { displayName: "Grace", profilePictureUrl: "/grace.png" };
+    view.rerender(renderIdentity(resolved));
+    expect(latest.identity).toEqual(resolved);
+
+    view.rerender(renderIdentity());
+    expect(latest.identity).toEqual(resolved);
+
+    view.rerender(renderIdentity(null));
+    expect(latest.identity).toBeNull();
   });
 
   it("clears the open tool when the next app registers without one", () => {
