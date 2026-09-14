@@ -1,3 +1,4 @@
+import { UIProvider } from "@portal/contexts/UIContext";
 import {
   afterAll,
   afterEach,
@@ -86,7 +87,9 @@ function renderUsers() {
   return render(
     <PortalTestProviders>
       <MemoryRouter>
-        <Users />
+        <UIProvider>
+          <Users />
+        </UIProvider>
       </MemoryRouter>
     </PortalTestProviders>,
   );
@@ -195,14 +198,37 @@ function ownershipScenario(ownerless = false, fail = false) {
         },
       ]),
     ),
-    http.post("/api/v1/team/1/members/2/transfer-leadership", () => {
+    http.post("/api/v1/team/1/ownership/status", () =>
+      HttpResponse.json({
+        teamId: 1,
+        teamName: "Acme",
+        leaderUserId: ownerId,
+        targetUserId: 2,
+        linkedInstances: 2,
+        subscribed: true,
+        state: ownerId === 2 ? "TRANSFERRED" : "READY",
+      }),
+    ),
+    http.post("/api/v1/team/1/ownership/transfer", async ({ request }) => {
+      expect(await request.json()).toEqual({
+        email: "blair@example.test",
+        expectedLeaderId: 1,
+      });
       if (fail)
         return HttpResponse.json(
           { message: "Ownership changed; refresh and retry." },
           { status: 409 },
         );
       ownerId = 2;
-      return HttpResponse.json({});
+      return HttpResponse.json({
+        teamId: 1,
+        teamName: "Acme",
+        leaderUserId: 2,
+        targetUserId: 2,
+        linkedInstances: 2,
+        subscribed: true,
+        state: "TRANSFERRED",
+      });
     }),
     http.post("/api/v1/team/1/claim-leadership", () => {
       ownerId = 1;
@@ -228,9 +254,9 @@ describe("SaaS ownership through the current Users page", () => {
         }),
       ).getByRole("option", { name: "Org Owner", hidden: true }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Transfer ownership" }),
-    );
+    fireEvent.click(await screen.findByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Transfer ownership" }));
+    fireEvent.click(await screen.findByRole("button", { name: "Done" }));
     await waitFor(() =>
       expect(
         screen.getByRole("textbox", { name: "Role for Blair" }),
@@ -275,13 +301,12 @@ describe("SaaS ownership through the current Users page", () => {
         }),
       ).getByRole("option", { name: "Org Owner", hidden: true }),
     );
-    fireEvent.click(
-      await screen.findByRole("button", { name: "Transfer ownership" }),
-    );
+    fireEvent.click(await screen.findByRole("checkbox"));
+    fireEvent.click(screen.getByRole("button", { name: "Transfer ownership" }));
     expect(await screen.findByRole("alert")).toBeInTheDocument();
     expect(owner()).toBe(1);
-    expect(screen.getByRole("textbox", { name: "Role for Alex" })).toHaveValue(
-      "Org Owner",
-    );
+    expect(
+      screen.getByRole("textbox", { name: "Role for Alex", hidden: true }),
+    ).toHaveValue("Org Owner");
   });
 });

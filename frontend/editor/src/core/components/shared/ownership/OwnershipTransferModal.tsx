@@ -133,6 +133,7 @@ export function OwnershipTransferModal({
   return (
     <Modal
       opened
+      centered
       onClose={() => !busy && onClose()}
       closeOnClickOutside={false}
       closeOnEscape={!busy}
@@ -141,7 +142,7 @@ export function OwnershipTransferModal({
       zIndex={Z_INDEX_OVER_CONFIG_MODAL + 1}
       title={t("ownership.title", "Transfer ownership")}
     >
-      <Stack gap="lg" aria-busy={busy}>
+      <Stack gap="md" aria-busy={busy}>
         {done ? (
           <>
             <Text fw={600}>{t("ownership.done", "Ownership transferred")}</Text>
@@ -377,17 +378,19 @@ export function OwnershipTransferModal({
                   {t("ownership.cancel", "Cancel transfer")}
                 </Button>
               )}
-              <Button
-                variant="secondary"
-                disabled={busy}
-                onClick={() =>
-                  void run(async () => {
-                    setStatus(await adapter.prepare());
-                  })
-                }
-              >
-                {t("ownership.check", "Check again")}
-              </Button>
+              {(!status || needsMember || error) && (
+                <Button
+                  variant="secondary"
+                  disabled={busy}
+                  onClick={() =>
+                    void run(async () => {
+                      setStatus(await adapter.prepare());
+                    })
+                  }
+                >
+                  {t("ownership.check", "Check again")}
+                </Button>
+              )}
               {status && !needsMember && (
                 <Button
                   disabled={busy || (!accepted && !partial)}
