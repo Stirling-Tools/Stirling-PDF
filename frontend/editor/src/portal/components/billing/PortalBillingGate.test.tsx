@@ -1,6 +1,13 @@
+vi.mock("@app/portal/hooks/useServerPlan", () => ({
+  useServerPlan: () => ({ serverPlan: undefined, loading: false }),
+}));
+vi.mock("@app/portal/components/billing/ServerLicenseSection", () => ({
+  ServerLicenseSection: () => null,
+}));
+
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { MemoryRouter, useLocation } from "react-router-dom";
 
 /**
  * Which usage page this instance has one of. The unlinked half must not go anywhere near the
@@ -14,46 +21,55 @@ const link = { is: false };
 const connect = vi.fn();
 const applyLinkFacts = vi.fn();
 
-vi.mock("@portal/hooks/useConnectGate", () => ({
+vi.mock("@app/portal/hooks/useConnectGate", () => ({
   useConnectGate: () => ({ ...gate, connect, guard: (f: unknown) => f }),
 }));
-vi.mock("@portal/contexts/LinkContext", () => ({
+vi.mock("@app/portal/contexts/LinkContext", () => ({
   useApplyLinkFacts: () => applyLinkFacts,
   useLinkOptional: () => ({ isLinked: link.is }),
 }));
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
 }));
-vi.mock("@portal/hooks/usePortalAdmin", () => ({
+vi.mock("@app/portal/hooks/usePortalAdmin", () => ({
   usePortalAdmin: () => admin.is,
 }));
-vi.mock("@portal/views/Usage", () => ({
+vi.mock("@app/portal/views/Usage", () => ({
   Usage: ({
     onWalletLoaded,
     sessionRecoveryInShell,
+    onEnterpriseQuote,
   }: {
     onWalletLoaded?: (w: unknown) => void;
     sessionRecoveryInShell?: boolean;
+    onEnterpriseQuote?: () => void;
   }) => {
     onWalletLoaded?.({ status: "free" });
     return (
       <div
         data-testid="usage"
         data-session-recovery-in-shell={sessionRecoveryInShell}
-      />
+      >
+        <button onClick={onEnterpriseQuote}>Get enterprise quote</button>
+      </div>
     );
   },
 }));
-vi.mock("@portal/components/billing/FreeTierPlanView", () => ({
+vi.mock("@app/portal/components/billing/FreeTierPlanView", () => ({
   FreeTierPlanView: () => <div data-testid="free-tier" />,
 }));
 
-import { PortalBillingGate } from "@portal/components/billing/PortalBillingGate";
+import { BillingSettingsSection } from "@app/portal/components/settings/BillingSettingsSection";
+
+function Location() {
+  return <output>{useLocation().pathname}</output>;
+}
 
 const renderGate = () =>
   render(
-    <MemoryRouter initialEntries={["/processor/usage"]}>
-      <PortalBillingGate />
+    <MemoryRouter initialEntries={["/settings/billing"]}>
+      <BillingSettingsSection />
+      <Location />
     </MemoryRouter>,
   );
 
@@ -72,6 +88,15 @@ describe("PortalBillingGate — self-hosted", () => {
     renderGate();
     expect(screen.getByTestId("free-tier")).toBeInTheDocument();
     expect(screen.queryByTestId("usage")).toBeNull();
+  });
+
+  it("starts enterprise through the processor entry route across the settings provider boundary", () => {
+    link.is = true;
+    renderGate();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Get enterprise quote" }),
+    );
+    expect(screen.getByText("/processor/procurement")).toBeInTheDocument();
   });
 
   it("asks for nothing on the way in", () => {

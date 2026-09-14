@@ -1,29 +1,39 @@
+import type { ReactNode } from "react";
+import type { ServerPlan } from "@app/billing/serverPlan";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Skeleton } from "@app/ui";
+import { Banner, Button } from "@app/ui";
+import { BillingScreen } from "@app/billing";
 import {
   fetchWallet,
   refreshWalletCache,
   type Wallet,
-} from "@portal/api/billing";
+} from "@app/portal/api/billing";
 import {
   fetchLocalUsage,
   triggerLocalSync,
   type LocalUsage,
-} from "@portal/api/link";
-import { useStripePortal } from "@portal/hooks/useStripePortal";
-import { usePortalSaasSession } from "@portal/hooks/usePortalSaasSession";
-import { FreePlanView } from "@portal/components/billing/FreePlanView";
-import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
+} from "@app/portal/api/link";
+import { useStripePortal } from "@app/portal/hooks/useStripePortal";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { FreePlanView } from "@app/portal/components/billing/FreePlanView";
+import { PaymentSection } from "@app/portal/components/billing/PaymentSection";
+import { InvoicesSection } from "@app/portal/components/billing/InvoicesSection";
+import { useFleetStats } from "@app/portal/queries/infrastructure";
+import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
+import { SubscribedPlanView } from "@app/portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
   SaasNotLinkedError,
   SaasUnconfiguredError,
-} from "@portal/api/http";
-import "@portal/views/Usage.css";
-import "@portal/components/billing/billing.css";
+} from "@app/portal/api/http";
+import "@app/portal/views/Usage.css";
+import "@app/portal/components/billing/billing.css";
 
 export interface UsageProps {
+  serverPlan?: ServerPlan;
+  serverPlanAction?: ReactNode;
+  renderLicenseSection?: (onSaved: () => void) => ReactNode;
   /**
    * Called with the wallet whenever it loads (initial fetch + post-checkout
    * flip). A flavor-agnostic hook the composition uses for cross-cutting state —
@@ -39,23 +49,27 @@ export interface UsageProps {
   onReauth?: () => void;
   /** Self-hosted supplies a shared recovery banner for usage, checkout and settings. */
   sessionRecoveryInShell?: boolean;
+  /** A prop rather than a hook, as {@link onReauth} is: reaching for a router here would make
+   * this view unrenderable wherever one is absent. */
+  onEnterpriseQuote?: () => void;
 }
 
 /**
- * Billing & usage page — a flavor-agnostic wallet renderer. Whether it should be
- * shown at all (self-hosted only renders it once the instance is linked) is
- * decided upstream by the billing gate; this component always loads the wallet
- * and dispatches on {@code wallet.status}:
+ * The portal's host for {@link BillingScreen}: it owns the data loading, session handling and
+ * Stripe portal action, and passes its own detail sections through {@code extras}. Whether the
+ * page is shown at all is the billing gate's decision, upstream.
  *
- *   free       → FreePlanView (free meter + PAYG explainer)
- *   subscribed → SubscribedPlanView (period meter, cap, members, invoices)
- *
- * Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas). After a
- * checkout / cancel, the refresh re-reads and the view re-dispatches on status.
+ * <p>Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas); a checkout or cancel
+ * re-reads it. Only the {@code extras} sections still branch on {@code wallet.status} — the two
+ * products render from their own holdings, which that axis cannot express.
  */
 export function Usage({
+  serverPlan,
+  serverPlanAction,
+  renderLicenseSection,
   onWalletLoaded,
   onReauth,
+  onEnterpriseQuote,
   sessionRecoveryInShell = false,
 }: UsageProps = {}) {
   const { t } = useTranslation();
@@ -69,6 +83,16 @@ export function Usage({
   // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
   const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
+  // From fleet-stats, not the wallet. Null when the backend cannot compute it, which omits the row.
+  const { data: fleetStats } = useFleetStats();
+  const editorsDeployed = fleetStats?.editorsDeployed ?? null;
+  // A team never billed has none, and the section and its chip then drop out.
+  const [hasInvoices, setHasInvoices] = useState(true);
+  // Held here, not in the detail views that own the flows, so the product rows can start them.
+  const [activationStep, setActivationStep] = useState<
+    "choose" | "payg" | "prepay" | null
+  >(null);
+  const [adjustingLimit, setAdjustingLimit] = useState(false);
   // Stripe customer portal — the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
   // Guards the post-checkout poll loop from setState after unmount.
@@ -131,6 +155,23 @@ export function Usage({
   }, [refreshKey, onWalletLoaded, t, sessionRevision]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  const onInvoicesEmpty = useCallback(() => setHasInvoices(false), []);
+
+  // The same flow the settings plan section uses, so there is one purchase implementation.
+  // Optional on purpose: a build that mounts no provider must lose the door, not the page.
+  const checkout = useCheckoutOptional();
+  const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
+  const usersInUse = wallet?.team?.usersInUse;
+  const addCapacity = useCallback(() => {
+    // No email: the only one this instance holds is its local admin record, which is a Spring
+    // username and not an address the buyer owns. The checkout asks for one instead.
+    void checkout?.openCheckout("server", {
+      combinedChoose: true,
+      currentLimit: heldLimit,
+      minimumSeats: usersInUse,
+      onSuccess: () => setRefreshKey((k) => k + 1),
+    });
+  }, [checkout, heldLimit, usersInUse]);
 
   const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
@@ -166,98 +207,116 @@ export function Usage({
     return false;
   }, [onWalletLoaded]);
 
+  const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
+  const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
+
   return (
-    <div className="portal-usage portal-billing">
-      <header className="portal-usage__header">
-        <div className="portal-usage__header-inner">
-          <div>
-            <h1 className="portal-usage__title">
-              {t("portal.usage.title", "Usage & billing")}
-            </h1>
-            <p className="portal-usage__subtitle">
-              {t(
-                "portal.usage.subtitle",
-                "Consumption, invoices, and plan management for every PDF Stirling has billed, in one console.",
-              )}
-            </p>
-          </div>
-          {wallet?.status === "subscribed" && (
-            <Button
-              variant="secondary"
-              fat
-              loading={portal.opening}
-              onClick={portal.open}
+    <BillingScreen
+      wallet={wallet}
+      serverPlan={serverPlan}
+      serverPlanAction={serverPlanAction}
+      licenseSection={renderLicenseSection?.(refresh)}
+      loading={loading}
+      pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
+      notices={
+        <>
+          {sessionExpired && !sessionRecoveryInShell && (
+            <Banner
+              tone="warning"
+              title={t("portal.usage.sessionExpired.title", "Session expired")}
+              action={
+                onReauth ? (
+                  <Button size="sm" onClick={onReauth}>
+                    {t("portal.usage.sessionExpired.action", "Sign in again")}
+                  </Button>
+                ) : undefined
+              }
             >
-              {t("portal.usage.managePayment", "Manage Payment")}
-            </Button>
+              {t(
+                "portal.usage.sessionExpired.body",
+                "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
+              )}
+            </Banner>
           )}
-        </div>
-      </header>
 
-      <div className="portal-usage__body">
-        {loading && (
-          <div className="portal-billing__skeleton" aria-hidden>
-            <Skeleton height="10rem" />
-            <Skeleton height="14rem" />
-          </div>
-        )}
+          {error && (
+            <Banner
+              tone="danger"
+              title={t("portal.usage.error.loadWallet", "Couldn't load wallet")}
+            >
+              {error}
+            </Banner>
+          )}
 
-        {sessionExpired && !sessionRecoveryInShell && (
-          <Banner
-            tone="warning"
-            title={t("portal.usage.sessionExpired.title", "Session expired")}
-            action={
-              onReauth ? (
-                <Button size="sm" onClick={onReauth}>
-                  {t("portal.usage.sessionExpired.action", "Sign in again")}
-                </Button>
-              ) : undefined
-            }
-          >
-            {t(
-              "portal.usage.sessionExpired.body",
-              "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
-            )}
-          </Banner>
-        )}
-
-        {error && (
-          <Banner
-            tone="danger"
-            title={t("portal.usage.error.loadWallet", "Couldn't load wallet")}
-          >
-            {error}
-          </Banner>
-        )}
-
-        {portal.error && (
-          <Banner
-            tone="danger"
-            title={t(
-              "portal.usage.error.openStripePortal",
-              "Couldn't open Stripe portal",
-            )}
-          >
-            {portal.error}
-          </Banner>
-        )}
-
-        {wallet && wallet.status === "free" && (
-          <FreePlanView
+          {portal.error && (
+            <Banner
+              tone="danger"
+              title={t(
+                "portal.usage.error.openStripePortal",
+                "Couldn't open Stripe portal",
+              )}
+            >
+              {portal.error}
+            </Banner>
+          )}
+        </>
+      }
+      editorsDeployed={editorsDeployed}
+      onAddCapacity={
+        checkout && wallet?.role === "leader" ? addCapacity : undefined
+      }
+      onActivateProcessor={
+        !enterpriseProcessor &&
+        wallet?.role === "leader" &&
+        !wallet?.processor?.active
+          ? () => setActivationStep("choose")
+          : undefined
+      }
+      onGovernSpend={
+        !enterpriseProcessor &&
+        wallet?.role === "leader" &&
+        wallet?.processor?.active
+          ? () => setAdjustingLimit(true)
+          : undefined
+      }
+      onEnterpriseQuote={onEnterpriseQuote}
+      paymentSection={
+        paying && wallet ? (
+          <PaymentSection
+            pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
             wallet={wallet}
-            unsynced={localUsage}
-            onSubscribed={confirmSubscription}
+            onManage={portal.open}
+            managing={portal.opening}
           />
-        )}
+        ) : undefined
+      }
+      invoicesSection={
+        paying && hasInvoices ? (
+          <InvoicesSection onEmpty={onInvoicesEmpty} />
+        ) : undefined
+      }
+      extras={
+        <>
+          {!enterpriseProcessor && wallet && wallet.status === "free" && (
+            <FreePlanView
+              wallet={wallet}
+              step={activationStep}
+              onStepChange={setActivationStep}
+              onSubscribed={confirmSubscription}
+            />
+          )}
 
-        {wallet && wallet.status === "subscribed" && (
-          <SubscribedPlanView
-            wallet={wallet}
-            unsynced={localUsage}
-            onWalletChange={refresh}
-          />
-        )}
-      </div>
-    </div>
+          {!enterpriseProcessor && wallet && wallet.status === "subscribed" && (
+            <SubscribedPlanView
+              pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
+              wallet={wallet}
+              onWalletChange={refresh}
+              adjusting={adjustingLimit}
+              onAdjustingChange={setAdjustingLimit}
+            />
+          )}
+        </>
+      }
+    />
   );
 }
