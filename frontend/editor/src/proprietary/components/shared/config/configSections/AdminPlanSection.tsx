@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { Divider, Loader, Alert } from "@mantine/core";
+import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
+import { Divider, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePlans } from "@app/hooks/usePlans";
 import licenseService, {
@@ -19,7 +20,6 @@ import {
   setCachedCurrency,
 } from "@app/utils/currencyDetection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@core/components/shared/config/LoginRequiredBanner";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
 
 const AdminPlanSection: React.FC = () => {
@@ -183,22 +183,20 @@ const AdminPlanSection: React.FC = () => {
 
   if (!plans || plans.length === 0) {
     return (
-      <Alert
-        color="yellow"
-        title={t("admin.settings.plan.noData.title", "No data available")}
+      <SettingsEmptyState
+        icon="star-rounded"
+        title={t("admin.settings.plan.noData.title", "No plan data")}
       >
         {t(
           "admin.settings.plan.noData.message",
-          "Plans data is not available at the moment.",
+          "This server could not reach the licence service. Retry, or check the licence key.",
         )}
-      </Alert>
+      </SettingsEmptyState>
     );
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-      <LoginRequiredBanner show={!loginEnabled} />
-
       {shouldShowLicenseWarning && (
         <AppBanner
           icon="warning-rounded"
