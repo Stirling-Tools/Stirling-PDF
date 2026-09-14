@@ -7,9 +7,29 @@ import {
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createInstance } from "i18next";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
+import { parse } from "smol-toml";
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { createNewStirlingFileStub } from "@app/types/fileContext";
 import type { PolicyRunRecord } from "@app/components/policies/policyRunStore";
+
+const translations = parse(
+  readFileSync(
+    join(__dirname, "../../../../public/locales/en-US/translation.toml"),
+    "utf8",
+  ),
+);
+const testI18n = createInstance();
+await testI18n.init({
+  lng: "en-US",
+  resources: { "en-US": { translation: translations } },
+});
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({ t: testI18n.t.bind(testI18n), i18n: testI18n }),
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
+}));
 
 const harness = vi.hoisted(() => ({
   files: [] as StirlingFileStub[],
@@ -135,10 +155,13 @@ describe("editor policy recovery", () => {
     const editor = screen.getByRole("textbox");
     fireEvent.change(editor, { target: { value: "Unsaved changes" } });
     act(() => recordRunStart(failed(harness.files[0])));
-    expect(screen.getByRole("dialog")).toHaveAttribute("open");
-    expect(screen.getByText("failed.pdf")).toBeInTheDocument();
     expect(
-      screen.getByText("policy.recoveryTechnicalDetails").closest("details"),
+      screen.getByRole("dialog", { name: "Policy enforcement failed" }),
+    ).toHaveAttribute("open");
+    expect(screen.getByText("1 file is affected.")).toBeVisible();
+    expect(screen.getByText("failed.pdf")).not.toBeVisible();
+    expect(
+      screen.getByText("Technical details").closest("details"),
     ).not.toHaveAttribute("open");
     expect(editor).toHaveValue("Unsaved changes");
     expect(harness.pauseHotkeys).toHaveBeenCalled();
@@ -151,9 +174,11 @@ describe("editor policy recovery", () => {
     updatePolicy("security", { owner: "bob@example.com" });
     recordRunStart(failed(harness.files[0]));
     render(app());
-    expect(screen.getByText("policy.recoveryContactOwner")).toBeInTheDocument();
     expect(
-      screen.queryByText("policy.recoveryOwnedPolicy"),
+      screen.getByText("Contact bob@example.com for help."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Check the policy settings, then retry."),
     ).not.toBeInTheDocument();
   });
 
@@ -164,10 +189,10 @@ describe("editor policy recovery", () => {
       recordRunStart(failed(harness.files[0]));
       render(app());
       expect(
-        screen.getByText("policy.recoveryOwnedPolicy"),
+        screen.getByText("Check the policy settings, then retry."),
       ).toBeInTheDocument();
       expect(
-        screen.queryByText("policy.recoveryContactOwner"),
+        screen.queryByText("Contact bob@example.com for help."),
       ).not.toBeInTheDocument();
     },
   );
@@ -175,7 +200,9 @@ describe("editor policy recovery", () => {
   it("directs users to their administrator when the owner is unavailable", () => {
     recordRunStart(failed(harness.files[0]));
     render(app());
-    expect(screen.getByText("policy.recoveryContactAdmin")).toBeInTheDocument();
+    expect(
+      screen.getByText("Contact your administrator for help."),
+    ).toBeInTheDocument();
   });
 
   it("isolates editor handlers without cancelling browser shortcuts or clipboard defaults", () => {
@@ -240,9 +267,7 @@ describe("editor policy recovery", () => {
     });
     render(app());
     await act(async () =>
-      fireEvent.click(
-        screen.getByRole("button", { name: "policy.recoveryRetry" }),
-      ),
+      fireEvent.click(screen.getByRole("button", { name: "Retry file" })),
     );
     expect(runPolicyOnFile).toHaveBeenCalledWith(
       "security",
@@ -251,7 +276,7 @@ describe("editor policy recovery", () => {
       file.name,
     );
     expect(
-      screen.getByRole("button", { name: "policy.recoveryRetrying" }),
+      screen.getByRole("button", { name: "Retrying file..." }),
     ).toBeDisabled();
     act(() => updateRun("retry", { status: "CANCELLED" }));
     expect(screen.getByRole("dialog")).toBeInTheDocument();
@@ -275,9 +300,7 @@ describe("editor policy recovery", () => {
     const view = render(app());
     expect(isEditorPolicyBlocked()).toBe(true);
     await act(async () =>
-      fireEvent.click(
-        screen.getByRole("button", { name: "policy.recoveryClose" }),
-      ),
+      fireEvent.click(screen.getByRole("button", { name: "Close file" })),
     );
     expect(harness.removeFiles).toHaveBeenCalledWith([child.id], false);
     expect(harness.navigation.setSelectedTool).toHaveBeenCalledWith(null);
@@ -296,9 +319,9 @@ describe("editor policy recovery", () => {
     harness.files.push(second);
     harness.files.forEach((file) => recordRunStart(failed(file)));
     render(app());
-    expect(
-      screen.getAllByRole("button", { name: "policy.recoveryRetry" }),
-    ).toHaveLength(2);
+    expect(screen.getByText("2 files are affected.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Retry 2 files" })).toBeVisible();
+    expect(screen.getAllByRole("button")).toHaveLength(2);
     act(() =>
       recordRunStart(
         failed(second, {
@@ -309,9 +332,121 @@ describe("editor policy recovery", () => {
         }),
       ),
     );
+    expect(screen.getByText("1 file is affected.")).toBeVisible();
+    expect(screen.getByRole("button", { name: "Retry file" })).toBeVisible();
+    expect(screen.getByRole("button", { name: "Close file" })).toBeVisible();
+  });
+
+  it("retries the batch once and pluralises the remaining work after partial recovery", async () => {
+    const first = harness.files[0];
+    const second = createNewStirlingFileStub(new File(["pdf"], "second.pdf"));
+    harness.files.push(second);
+    harness.files.forEach((file) => recordRunStart(failed(file)));
+    vi.mocked(runPolicyOnFile).mockImplementation(
+      async (_key, _backend, fileId) => {
+        const file = harness.files.find((file) => file.id === fileId)!;
+        recordRunStart(
+          failed(file, {
+            runId: `retry-${fileId}`,
+            status: "PENDING",
+            startedAt: 2,
+          }),
+        );
+      },
+    );
+    render(app());
     expect(
-      screen.getAllByRole("button", { name: "policy.recoveryRetry" }),
-    ).toHaveLength(1);
+      screen.getByText("Contact your administrator for help."),
+    ).toBeVisible();
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Retry 2 files" })),
+    );
+    expect(runPolicyOnFile).toHaveBeenCalledTimes(2);
+    expect(runPolicyOnFile).toHaveBeenCalledWith(
+      "security",
+      "backend-security",
+      first.id,
+      first.name,
+    );
+    expect(runPolicyOnFile).toHaveBeenCalledWith(
+      "security",
+      "backend-security",
+      second.id,
+      second.name,
+    );
+    expect(
+      screen.getByRole("button", { name: "Retrying 2 files..." }),
+    ).toBeDisabled();
+    act(() =>
+      updateRun(`retry-${first.id}`, { status: "COMPLETED", imported: true }),
+    );
+    expect(screen.getByText("1 file is affected.")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Retrying file..." }),
+    ).toBeDisabled();
+    act(() => updateRun(`retry-${second.id}`, { status: "FAILED" }));
+    expect(screen.getByRole("button", { name: "Retry file" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Close file" })).toBeEnabled();
+  });
+
+  it("counts and closes each affected file once across multiple failed policies", async () => {
+    const first = harness.files[0];
+    const second = createNewStirlingFileStub(new File(["pdf"], "second.pdf"));
+    const healthy = createNewStirlingFileStub(new File(["pdf"], "healthy.pdf"));
+    harness.files.push(second, healthy);
+    updatePolicy("compliance", {
+      required: true,
+      backendId: "backend-compliance",
+    });
+    recordRunStart(failed(first));
+    recordRunStart(failed(second));
+    recordRunStart(
+      failed(first, { runId: "compliance-failure", policyKey: "compliance" }),
+    );
+    let finishClosing = () => {};
+    harness.removeFiles.mockImplementationOnce(
+      () =>
+        new Promise<void>((resolve) => {
+          finishClosing = resolve;
+        }),
+    );
+    render(app());
+    expect(screen.getByText("2 files are affected.")).toBeVisible();
+    expect(screen.getAllByRole("button")).toHaveLength(2);
+    fireEvent.click(screen.getByRole("button", { name: "Close 2 files" }));
+    expect(
+      screen.getByRole("button", { name: "Closing 2 files..." }),
+    ).toBeDisabled();
+    expect(harness.removeFiles).toHaveBeenCalledOnce();
+    expect(harness.removeFiles).toHaveBeenCalledWith(
+      [first.id, second.id],
+      false,
+    );
+    await act(async () => finishClosing());
+  });
+
+  it("still retries the other files when one dispatch rejects", async () => {
+    const second = createNewStirlingFileStub(new File(["pdf"], "second.pdf"));
+    harness.files.push(second);
+    harness.files.forEach((file) => recordRunStart(failed(file)));
+    vi.mocked(runPolicyOnFile).mockRejectedValueOnce(new Error("unavailable"));
+    render(app());
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Retry 2 files" })),
+    );
+    expect(runPolicyOnFile).toHaveBeenCalledTimes(2);
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "The action couldn't be completed. Try again.",
+    );
+    expect(screen.getByRole("button", { name: "Retry 2 files" })).toBeEnabled();
+  });
+
+  it("does not offer a retry for a missing policy", () => {
+    updatePolicy("security", { backendId: undefined });
+    recordRunStart(failed(harness.files[0]));
+    render(app());
+    expect(screen.getByRole("button", { name: "Retry file" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Close file" })).toBeEnabled();
   });
 
   it("does not pause for ordinary pipeline failures or unrelated closed files", () => {

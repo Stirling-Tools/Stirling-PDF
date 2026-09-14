@@ -61,6 +61,18 @@ interface RecoveryDialogProps {
   runs: PolicyRunRecord[];
 }
 
+function affectedFileIds(blocks: PolicyRecoveryBlock[]): FileId[] {
+  return [
+    ...new Set(
+      blocks.flatMap((block) => block.affectedFiles.map((file) => file.id)),
+    ),
+  ];
+}
+
+function recoveryKey(block: PolicyRecoveryBlock): string {
+  return `${block.outcome.policyKey}:${block.outcome.fileId}`;
+}
+
 function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -73,6 +85,7 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
   const { actions: navigation } = useNavigationActions();
   const { setPreviewFile } = useToolWorkflow();
   const [dispatching, setDispatching] = useState<Set<string>>(new Set());
+  const [closing, setClosing] = useState(false);
   const [error, setError] = useState(false);
   const labels = new Map(
     loadPolicyCatalog().categories.map((category) => [
@@ -80,6 +93,31 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
       category.label,
     ]),
   );
+  const fileIds = affectedFileIds(blocks);
+  const policyKeys = [
+    ...new Set(blocks.map((block) => block.outcome.policyKey)),
+  ];
+  const runningBlocks = blocks.filter(
+    (block) =>
+      dispatching.has(recoveryKey(block)) ||
+      runs.some(
+        (run) =>
+          run.fileId === block.outcome.fileId &&
+          run.policyKey === block.outcome.policyKey &&
+          run.startedAt >= block.outcome.startedAt &&
+          isRunInFlight(run),
+      ),
+  );
+  const runningFileCount = affectedFileIds(runningBlocks).length;
+  const retryable = blocks.flatMap((block) => {
+    const backendId = policies[block.outcome.policyKey]?.backendId;
+    return backendId ? [{ block, backendId }] : [];
+  });
+  const retryFileCount = affectedFileIds(
+    retryable.map(({ block }) => block),
+  ).length;
+  const policyName = (key: string) =>
+    policies[key]?.name ?? labels.get(key) ?? key;
 
   useLayoutEffect(() => {
     const dialog = dialogRef.current;
@@ -102,44 +140,46 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
     };
   }, [pauseHotkeys, resumeHotkeys]);
 
-  const retry = async (block: PolicyRecoveryBlock) => {
-    const { fileId, policyKey, fileName } = block.outcome;
-    const backendId = policies[policyKey]?.backendId;
-    if (!backendId) return;
-    const key = `${policyKey}:${fileId}`;
-    setDispatching((previous) => new Set(previous).add(key));
+  const retry = async () => {
+    if (runningFileCount || closing) return;
+    setDispatching(new Set(retryable.map(({ block }) => recoveryKey(block))));
     setError(false);
-    try {
-      await runPolicyOnFile(
-        policyKey,
-        backendId,
-        fileId as FileId,
-        fileName ?? block.affectedFiles[0].name,
-      );
-    } catch {
-      setError(true);
-    } finally {
-      setDispatching((previous) => {
-        const next = new Set(previous);
-        next.delete(key);
-        return next;
-      });
-    }
+    const results = await Promise.allSettled(
+      retryable.map(async ({ block, backendId }) => {
+        const { fileId, policyKey, fileName } = block.outcome;
+        try {
+          await runPolicyOnFile(
+            policyKey,
+            backendId,
+            fileId as FileId,
+            fileName ?? block.affectedFiles[0].name,
+          );
+        } finally {
+          setDispatching((previous) => {
+            const next = new Set(previous);
+            next.delete(recoveryKey(block));
+            return next;
+          });
+        }
+      }),
+    );
+    setError(results.some((result) => result.status === "rejected"));
   };
 
-  const closeFiles = async (block: PolicyRecoveryBlock) => {
+  const closeFiles = async () => {
+    if (closing) return;
+    setClosing(true);
     setError(false);
     try {
       // End the tool session so retained comparison slots and previews cannot keep using the input.
       navigation.setSelectedTool(null);
       navigation.setWorkbench("fileEditor");
       setPreviewFile(null);
-      await removeFiles(
-        block.affectedFiles.map((file) => file.id),
-        false,
-      );
+      await removeFiles(fileIds, false);
     } catch {
       setError(true);
+    } finally {
+      setClosing(false);
     }
   };
 
@@ -152,13 +192,13 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
       onCancel={(event) => event.preventDefault()}
     >
       <h2 id={titleId}>{t("policy.recoveryTitle")}</h2>
-      <p id={bodyId}>{t("policy.recoveryBody")}</p>
-      <p className="policy-recovery__hint">{t("policy.recoveryCloseHint")}</p>
+      <p id={bodyId}>
+        {t("policy.recoverySummary", { count: fileIds.length })}
+      </p>
       {error && <p role="alert">{t("policy.recoveryError")}</p>}
-      <div className="policy-recovery__files">
-        {blocks.map((block) => {
-          const { outcome } = block;
-          const policy = policies[outcome.policyKey];
+      <div className="policy-recovery__policies">
+        {policyKeys.map((policyKey) => {
+          const policy = policies[policyKey];
           const owner = policy?.owner?.trim();
           const isOwner = Boolean(
             owner &&
@@ -166,24 +206,9 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
             (owner === user?.username ||
               owner.toLowerCase() === user?.email?.toLowerCase()),
           );
-          const key = `${outcome.policyKey}:${outcome.fileId}`;
-          const running =
-            dispatching.has(key) ||
-            runs.some(
-              (run) =>
-                run.fileId === outcome.fileId &&
-                run.policyKey === outcome.policyKey &&
-                run.startedAt >= outcome.startedAt &&
-                isRunInFlight(run),
-            );
           return (
-            <section className="policy-recovery__file" key={key}>
-              <strong>{outcome.fileName ?? block.affectedFiles[0].name}</strong>
-              <p>
-                {policy?.name ??
-                  labels.get(outcome.policyKey) ??
-                  outcome.policyKey}
-              </p>
+            <section className="policy-recovery__policy" key={policyKey}>
+              <strong>{policyName(policyKey)}</strong>
               <p className="policy-recovery__hint">
                 {t(
                   isOwner
@@ -194,34 +219,50 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
                   { owner },
                 )}
               </p>
-              {outcome.error && (
-                <details className="policy-recovery__details">
-                  <summary>{t("policy.recoveryTechnicalDetails")}</summary>
-                  <pre>{outcome.error}</pre>
-                </details>
-              )}
-              <div className="policy-recovery__actions">
-                <Button
-                  variant="primary"
-                  disabled={running || !policy?.backendId}
-                  onClick={() => void retry(block)}
-                >
-                  {t(
-                    running
-                      ? "policy.recoveryRetrying"
-                      : "policy.recoveryRetry",
-                  )}
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => void closeFiles(block)}
-                >
-                  {t("policy.recoveryClose")}
-                </Button>
-              </div>
             </section>
           );
         })}
+      </div>
+      <details className="policy-recovery__details">
+        <summary>{t("policy.recoveryTechnicalDetails")}</summary>
+        <div className="policy-recovery__errors">
+          {blocks.map((block) => (
+            <div className="policy-recovery__error" key={recoveryKey(block)}>
+              <strong>
+                {block.outcome.fileName ?? block.affectedFiles[0].name}
+              </strong>
+              {policyKeys.length > 1 && (
+                <p>{policyName(block.outcome.policyKey)}</p>
+              )}
+              {block.outcome.error && <pre>{block.outcome.error}</pre>}
+            </div>
+          ))}
+        </div>
+      </details>
+      <div className="policy-recovery__actions">
+        <Button
+          variant="primary"
+          disabled={runningFileCount > 0 || closing || retryable.length === 0}
+          onClick={() => void retry()}
+        >
+          {t(
+            runningFileCount
+              ? "policy.recoveryRetrying"
+              : "policy.recoveryRetry",
+            {
+              count: runningFileCount || retryFileCount || fileIds.length,
+            },
+          )}
+        </Button>
+        <Button
+          variant="secondary"
+          disabled={closing}
+          onClick={() => void closeFiles()}
+        >
+          {t(closing ? "policy.recoveryClosing" : "policy.recoveryClose", {
+            count: fileIds.length,
+          })}
+        </Button>
       </div>
     </dialog>,
     document.body,
