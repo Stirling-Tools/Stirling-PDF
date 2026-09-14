@@ -309,15 +309,18 @@ public class SourceController {
 
     /**
      * Names of the caller's visible policies that reference the given source - as an input ({@code
-     * sourceIds}) or as their output destination ({@code outputId}), so a location in use either
-     * way is protected from deletion.
+     * sourceIds}) or as any destination it can deliver to ({@link Policy#allOutputIds()}: the
+     * fallback output and every routing rule's destination), so a location in use any of those ways
+     * is protected from deletion. A routing destination has to be covered here: dropping it would
+     * leave the rule unresolvable at run time, and the documents it claimed would go to the
+     * fallback destination instead.
      */
     private List<String> referencingPolicyNames(String sourceId) {
         return policyAccessGuard.visibleFrom(policyStore).stream()
                 .filter(
                         policy ->
                                 policy.sourceIds().contains(sourceId)
-                                        || policy.outputIds().contains(sourceId))
+                                        || policy.allOutputIds().contains(sourceId))
                 .map(Policy::name)
                 .toList();
     }
