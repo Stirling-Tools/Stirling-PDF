@@ -1,10 +1,17 @@
 import type { ToolId } from "@app/types/toolId";
 import {
+  EMPTY_QUICK_NAV_ACCOUNT,
+  updateQuickNavAccount,
+  type QuickNavAccount,
+  type QuickNavAccountUpdate,
+} from "@app/contexts/quickNavAccount";
+import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useMemo,
+  useReducer,
   useRef,
   useState,
   type ReactNode,
@@ -12,20 +19,9 @@ import {
 
 export type QuickNavToolReasons = Partial<Record<ToolId, string>>;
 
-export interface QuickNavIdentity {
-  displayName: string;
-  profilePictureUrl: string | null;
-}
+export type { QuickNavIdentity } from "@app/contexts/quickNavAccount";
 
-export interface QuickNavHostData {
-  /** Sticky: one app unmounts before the next one registers. */
-  appMounted: boolean;
-  /** Omitted while auth loads; a changed account clears its cached display data. */
-  accountId: string | null;
-  /** Registrations omit this while loading; null explicitly clears the cached identity. */
-  identity: QuickNavIdentity | null;
-  signingBadge: number;
-  portalAccess: boolean;
+export interface QuickNavViewData {
   readerMode: boolean;
   /** The library is a view of the editor app, and the rail marks it as its own place. */
   fileLibrary: boolean;
@@ -52,25 +48,23 @@ export interface QuickNavHostActions {
   onBrandFlourish?: (originRect: DOMRect | null) => void;
 }
 
-interface QuickNavHostValue extends QuickNavHostData {
-  /** Reset on unmount, unlike the data above. */
+interface QuickNavHostValue extends QuickNavAccount, QuickNavViewData {
+  /** Sticky: one view unmounts before the next one registers. */
+  appMounted: boolean;
+  /** Screens without app chrome suppress the rail only while mounted. */
   chromeless: boolean;
   setChromeless: (chromeless: boolean) => void;
   /** A ref, so a click reaches the app currently mounted. */
   actions: React.RefObject<QuickNavHostActions>;
-  setData: (data: Partial<QuickNavHostData>) => void;
+  updateAccount: (update: QuickNavAccountUpdate) => void;
+  setViewData: (data: Partial<QuickNavViewData>) => void;
   setActions: (actions: QuickNavHostActions) => void;
 }
 
 const EMPTY_REASONS: QuickNavToolReasons = {};
 
-const EMPTY_DATA: QuickNavHostData = {
-  appMounted: false,
-  accountId: null,
+const EMPTY_VIEW: QuickNavViewData = {
   toolReasons: EMPTY_REASONS,
-  identity: null,
-  signingBadge: 0,
-  portalAccess: false,
   readerMode: false,
   fileLibrary: false,
   activeTool: null,
@@ -90,33 +84,30 @@ const QuickNavHostContext = createContext<QuickNavHostValue | null>(null);
 
 /** Outside both apps' providers, so each app registers what only it knows. */
 export function QuickNavHostProvider({ children }: { children: ReactNode }) {
-  const [data, setDataState] = useState<QuickNavHostData>(EMPTY_DATA);
+  const [account, updateAccount] = useReducer(
+    updateQuickNavAccount,
+    EMPTY_QUICK_NAV_ACCOUNT,
+  );
+  const [view, setViewState] = useState({ ...EMPTY_VIEW, appMounted: false });
   const [chromeless, setChromelessState] = useState(false);
   const actions = useRef<QuickNavHostActions>({});
 
-  const setData = useCallback((next: Partial<QuickNavHostData>) => {
-    setDataState((prev) => {
-      const accountChanged =
-        next.accountId !== undefined && next.accountId !== prev.accountId;
+  const setViewData = useCallback((next: Partial<QuickNavViewData>) => {
+    setViewState((prev) => {
       const merged = {
-        ...prev,
-        ...(accountChanged
-          ? { identity: null, signingBadge: 0, portalAccess: false }
-          : {}),
-        ...next,
+        appMounted: true,
+        readerMode: next.readerMode ?? false,
+        fileLibrary: next.fileLibrary ?? false,
+        activeTool: next.activeTool ?? null,
+        notificationsOpen: next.notificationsOpen ?? false,
+        toolReasons: next.toolReasons ?? prev.toolReasons,
       };
       const unchanged =
         merged.appMounted === prev.appMounted &&
-        merged.accountId === prev.accountId &&
-        merged.signingBadge === prev.signingBadge &&
-        merged.portalAccess === prev.portalAccess &&
         merged.readerMode === prev.readerMode &&
         merged.fileLibrary === prev.fileLibrary &&
         merged.activeTool === prev.activeTool &&
         merged.notificationsOpen === prev.notificationsOpen &&
-        merged.identity?.displayName === prev.identity?.displayName &&
-        merged.identity?.profilePictureUrl ===
-          prev.identity?.profilePictureUrl &&
         // Compared by value: the object is rebuilt every render.
         sameReasons(merged.toolReasons, prev.toolReasons);
       return unchanged ? prev : merged;
@@ -133,14 +124,24 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<QuickNavHostValue>(
     () => ({
-      ...data,
+      ...account,
+      ...view,
       chromeless,
       actions,
-      setData,
+      updateAccount,
+      setViewData,
       setActions,
       setChromeless,
     }),
-    [data, chromeless, setData, setActions, setChromeless],
+    [
+      account,
+      view,
+      chromeless,
+      updateAccount,
+      setViewData,
+      setActions,
+      setChromeless,
+    ],
   );
 
   return (
@@ -154,48 +155,30 @@ export function useQuickNavHost(): QuickNavHostValue | null {
   return useContext(QuickNavHostContext);
 }
 
-/** Omit unresolved account data to retain the last answer. No-ops outside the provider. */
-export function useRegisterQuickNavHost(
-  data: Partial<QuickNavHostData>,
+/** Registers the mounted view's controls; handlers are released on unmount. No-ops without a host. */
+export function useRegisterQuickNavView(
+  data: Partial<QuickNavViewData>,
   actions: QuickNavHostActions,
 ): void {
   const host = useQuickNavHost();
+  const setViewData = host?.setViewData;
   const {
-    accountId,
-    identity,
-    signingBadge,
-    portalAccess,
     readerMode,
     fileLibrary,
     activeTool,
     notificationsOpen,
     toolReasons,
   } = data;
-  const identityProvided = identity !== undefined;
   useEffect(() => {
-    host?.setData({
-      appMounted: true,
-      ...(accountId !== undefined ? { accountId } : {}),
-      ...(identityProvided ? { identity } : {}),
-      ...(signingBadge !== undefined ? { signingBadge } : {}),
-      ...(portalAccess !== undefined ? { portalAccess } : {}),
-      readerMode: readerMode ?? false,
-      fileLibrary: fileLibrary ?? false,
-      // Cleared, not omitted as toolReasons is: a stale tool marks an entry.
-      activeTool: activeTool ?? null,
-      notificationsOpen: notificationsOpen ?? false,
-      // Omitted when unknown, so the last answer survives a re-fetch.
-      ...(toolReasons ? { toolReasons } : {}),
+    setViewData?.({
+      readerMode,
+      fileLibrary,
+      activeTool,
+      notificationsOpen,
+      toolReasons,
     });
-    // By field: identity is rebuilt every render.
   }, [
-    host,
-    accountId,
-    identityProvided,
-    identity?.displayName,
-    identity?.profilePictureUrl,
-    signingBadge,
-    portalAccess,
+    setViewData,
     readerMode,
     fileLibrary,
     activeTool,

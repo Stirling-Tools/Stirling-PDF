@@ -1,9 +1,10 @@
 import { describe, it, expect } from "vitest";
 import { render, act } from "@testing-library/react";
+import { useEffect } from "react";
 import {
   QuickNavHostProvider,
   useQuickNavHost,
-  useRegisterQuickNavHost,
+  useRegisterQuickNavView,
   useSuppressQuickNavRail,
   type QuickNavIdentity,
 } from "@app/contexts/QuickNavHostContext";
@@ -21,20 +22,27 @@ function Probe({ onRead }: { onRead: (value: unknown) => void }) {
 }
 
 function App() {
-  useRegisterQuickNavHost(
-    { identity: { displayName: "Ada", profilePictureUrl: null } },
-    { goToDefaultState: () => {} },
-  );
+  const updateAccount = useQuickNavHost()?.updateAccount;
+  useEffect(() => {
+    updateAccount?.({
+      identity: { displayName: "Ada", profilePictureUrl: null },
+    });
+  }, [updateAccount]);
+  useRegisterQuickNavView({}, { goToDefaultState: () => {} });
   return null;
 }
 
 function AppWithTool({ tool }: { tool: "automate" | null }) {
-  useRegisterQuickNavHost({ activeTool: tool }, {});
+  useRegisterQuickNavView({ activeTool: tool }, {});
   return null;
 }
 
 function AppWithIdentity({ identity }: { identity?: QuickNavIdentity | null }) {
-  useRegisterQuickNavHost({ identity }, {});
+  const updateAccount = useQuickNavHost()?.updateAccount;
+  useEffect(() => {
+    updateAccount?.({ identity });
+  }, [updateAccount, identity]);
+  useRegisterQuickNavView({}, {});
   return null;
 }
 

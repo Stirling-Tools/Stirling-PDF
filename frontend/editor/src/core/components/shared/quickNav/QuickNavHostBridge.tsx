@@ -1,7 +1,4 @@
 import { useCallback, useMemo, useState } from "react";
-import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
-import { useAuth } from "@app/auth/UseSession";
-import { usePortalAccessState } from "@app/hooks/usePortalAccess";
 import {
   NotificationPanel,
   NOTIFICATIONS_PANEL_ID,
@@ -9,11 +6,11 @@ import {
 import { useNotificationActions } from "@app/components/notifications/notificationActions";
 import { useNotificationPasswordPrompt } from "@app/components/notifications/useNotificationPasswordPrompt";
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
+import { useSyncQuickNavAccount } from "@app/components/shared/quickNav/useSyncQuickNavAccount";
 import { useBrandFlourish } from "@app/components/easterEgg/useBrandFlourish";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
-import { useSigningBadgeState } from "@app/hooks/signing/useSigningBadgeCount";
 import {
-  useRegisterQuickNavHost,
+  useRegisterQuickNavView,
   type QuickNavToolReasons,
 } from "@app/contexts/QuickNavHostContext";
 import type { ToolId } from "@app/types/toolId";
@@ -43,10 +40,7 @@ export function QuickNavHostBridge({
   onGoToDefaultState,
   toolReasons,
 }: QuickNavHostBridgeProps) {
-  const { displayName, profilePictureUrl, loading } = useAccountIdentity();
-  const { user, loading: authLoading } = useAuth();
-  const portalAccess = usePortalAccessState();
-  const signingBadge = useSigningBadgeState();
+  useSyncQuickNavAccount();
   const notificationsAvailable = useNotificationsAvailable();
   // Built even when closed: it carries a one-shot document pickup that would sit unclaimed.
   const notificationActions = useNotificationActions();
@@ -64,16 +58,8 @@ export function QuickNavHostBridge({
   const { requestPassword, promptModal } =
     useNotificationPasswordPrompt(closeNotifications);
 
-  useRegisterQuickNavHost(
+  useRegisterQuickNavView(
     {
-      ...(!authLoading ? { accountId: user?.id ?? null } : {}),
-      ...(!loading ? { identity: { displayName, profilePictureUrl } } : {}),
-      ...(!authLoading && signingBadge.settled
-        ? { signingBadge: signingBadge.count }
-        : {}),
-      ...(!authLoading && portalAccess.settled
-        ? { portalAccess: portalAccess.granted }
-        : {}),
       readerMode,
       fileLibrary,
       activeTool,
