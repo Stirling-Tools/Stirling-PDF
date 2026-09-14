@@ -10,8 +10,8 @@ and desktop additionally requires an active SaaS connection (runs bill through
 the cloud). The single gate is `components/policies/usePoliciesEnabled.ts`.
 
 A required upload-policy failure pauses the entire editor with `PolicyRecoveryGate`.
-The modal keeps editor state mounted, makes the background inert, and suspends global
-shortcuts. Retry stays blocked until the policy output is imported; closing the affected
+The modal keeps editor state mounted, makes the background inert, and pauses editor
+shortcuts while preserving browser commands. Retry stays blocked until the policy output is imported; closing the affected
 files ends the current tool session and retains the originals in the library. Failures
 persist separately from the capped activity log, including through cancellation and reload.
 Ordinary pipeline failures do not pause the editor.

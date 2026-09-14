@@ -178,7 +178,7 @@ describe("editor policy recovery", () => {
     expect(screen.getByText("policy.recoveryContactAdmin")).toBeInTheDocument();
   });
 
-  it("blocks global shortcuts, clipboard handlers and Escape while allowing recovery buttons", () => {
+  it("isolates editor handlers without cancelling browser shortcuts or clipboard defaults", () => {
     recordRunStart(failed(harness.files[0]));
     const shortcut = vi.fn();
     const clipboard = vi.fn();
@@ -191,7 +191,25 @@ describe("editor policy recovery", () => {
       fireEvent.keyDown(dialog, { key: "z", metaKey: true });
       fireEvent.keyDown(dialog, { key: "Delete" });
       fireEvent.keyDown(dialog, { key: "Tab" });
-      fireEvent.paste(dialog);
+      for (const binding of [
+        { key: "r", ctrlKey: true },
+        { key: "r", metaKey: true },
+        { key: "r", metaKey: true, shiftKey: true },
+        { key: "F5" },
+        { key: "F12" },
+        { key: "i", ctrlKey: true, shiftKey: true },
+        { key: "i", metaKey: true, altKey: true },
+        { key: "l", metaKey: true },
+        { key: "l", ctrlKey: true },
+        { key: "c", metaKey: true },
+        { key: "c", ctrlKey: true },
+      ]) {
+        expect(fireEvent.keyDown(dialog, binding)).toBe(true);
+        expect(fireEvent.keyUp(dialog, binding)).toBe(true);
+      }
+      expect(fireEvent.copy(dialog)).toBe(true);
+      expect(fireEvent.cut(dialog)).toBe(true);
+      expect(fireEvent.paste(dialog)).toBe(true);
       const cancel = new Event("cancel", { cancelable: true });
       dialog.dispatchEvent(cancel);
       expect(cancel.defaultPrevented).toBe(true);

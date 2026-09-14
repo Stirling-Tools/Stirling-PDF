@@ -88,25 +88,11 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
     // The top layer also makes existing portals inert; a z-index overlay cannot do that.
     dialog.showModal();
     pauseHotkeys();
-    const blockShortcut = (event: KeyboardEvent) => {
-      if (
-        !event.ctrlKey &&
-        !event.metaKey &&
-        ["Tab", "Enter", " "].includes(event.key)
-      )
-        return;
-      event.preventDefault();
-      event.stopImmediatePropagation();
-    };
     const stopEvent = (event: Event) => event.stopPropagation();
-    window.addEventListener("keydown", blockShortcut, true);
-    window.addEventListener("keyup", blockShortcut, true);
-    // Let Tab and button activation reach the dialog, then stop the editor's global listeners.
+    // Keep dialog events out of editor handlers without cancelling browser or clipboard defaults.
     for (const name of ["keydown", "keyup", "copy", "cut", "paste"])
       dialog.addEventListener(name, stopEvent);
     return () => {
-      window.removeEventListener("keydown", blockShortcut, true);
-      window.removeEventListener("keyup", blockShortcut, true);
       for (const name of ["keydown", "keyup", "copy", "cut", "paste"])
         dialog.removeEventListener(name, stopEvent);
       dialog.close();
