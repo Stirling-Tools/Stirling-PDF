@@ -37,10 +37,3 @@
   background: var(--c-border-subtle);
   flex-shrink: 0;
 }
-
-.reader-rail__prompt {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  max-width: 15rem;
-}

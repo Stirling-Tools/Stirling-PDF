@@ -11,7 +11,6 @@ import VolumeUpIcon from "@mui/icons-material/VolumeUp";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
-import { ReaderSignButton } from "@app/components/viewer/readerRail/ReaderSignButton";
 import "@app/components/viewer/readerRail/ReaderRail.css";
 
 interface RailItem {
@@ -132,8 +131,6 @@ export function ReaderRail() {
           })}
         </div>
       ))}
-      <div className="reader-rail__divider" />
-      <ReaderSignButton />
     </nav>
   );
 }

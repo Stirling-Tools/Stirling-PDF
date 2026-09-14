@@ -10192,13 +10192,7 @@ readAloud = "Read aloud"
 rotateLeft = "Rotate left"
 rotateRight = "Rotate right"
 search = "Find in document"
-sign = "Sign"
 thumbnails = "Pages"
-
-[reader.sign]
-noneBody = "Create one and it will be one press away here."
-noneTitle = "No saved signature"
-openTool = "Create a signature"
 
 [redact]
 submit = "Redact"
