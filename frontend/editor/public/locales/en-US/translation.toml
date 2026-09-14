@@ -12371,8 +12371,11 @@ disableColorFilter = "Disable Color Filter"
 dualPageView = "Dual Page View"
 enableDarkFilter = "Enable Dark Filter"
 enableSepiaFilter = "Enable Sepia Filter"
+engineLoadError = "Failed to initialize PDF viewer engine"
+engineSlowWarning = "PDF engine initialization is taking longer than expected. Please check your browser WebAssembly and Worker settings, or reload the page."
 firstPage = "First Page"
 lastPage = "Last Page"
+loadingEngine = "Loading PDF Engine..."
 moreOptions = "More"
 nextPage = "Next Page"
 onlyPdfSupported = "This file format is not supported for preview."
@@ -12496,6 +12499,7 @@ searchPlaceholder = "Search files"
 title = "Portfolio"
 
 [viewer.redaction]
+applyAll = "Apply Redactions"
 removeMark = "Remove this mark"
 
 [viewer.search]
