@@ -1,5 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
+import { useAuth } from "@app/auth/UseSession";
+import { usePortalAccessState } from "@app/hooks/usePortalAccess";
 import {
   NotificationPanel,
   NOTIFICATIONS_PANEL_ID,
@@ -9,7 +11,7 @@ import { useNotificationPasswordPrompt } from "@app/components/notifications/use
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
 import { useBrandFlourish } from "@app/components/easterEgg/useBrandFlourish";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
-import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
+import { useSigningBadgeState } from "@app/hooks/signing/useSigningBadgeCount";
 import {
   useRegisterQuickNavHost,
   type QuickNavToolReasons,
@@ -17,7 +19,6 @@ import {
 import type { ToolId } from "@app/types/toolId";
 
 export interface QuickNavHostBridgeProps {
-  portalAccess?: boolean;
   readerMode?: boolean;
   fileLibrary?: boolean;
   onSetReaderMode?: (on: boolean) => void;
@@ -32,7 +33,6 @@ export interface QuickNavHostBridgeProps {
 
 /** Registers with the rail what only the app can see, and owns the notifications panel. */
 export function QuickNavHostBridge({
-  portalAccess = false,
   readerMode = false,
   fileLibrary = false,
   onSetReaderMode,
@@ -44,7 +44,9 @@ export function QuickNavHostBridge({
   toolReasons,
 }: QuickNavHostBridgeProps) {
   const { displayName, profilePictureUrl, loading } = useAccountIdentity();
-  const signingBadge = useSigningBadgeCount();
+  const { user, loading: authLoading } = useAuth();
+  const portalAccess = usePortalAccessState();
+  const signingBadge = useSigningBadgeState();
   const notificationsAvailable = useNotificationsAvailable();
   // Built even when closed: it carries a one-shot document pickup that would sit unclaimed.
   const notificationActions = useNotificationActions();
@@ -64,9 +66,14 @@ export function QuickNavHostBridge({
 
   useRegisterQuickNavHost(
     {
+      ...(!authLoading ? { accountId: user?.id ?? null } : {}),
       ...(!loading ? { identity: { displayName, profilePictureUrl } } : {}),
-      signingBadge,
-      portalAccess,
+      ...(!authLoading && signingBadge.settled
+        ? { signingBadge: signingBadge.count }
+        : {}),
+      ...(!authLoading && portalAccess.settled
+        ? { portalAccess: portalAccess.granted }
+        : {}),
       readerMode,
       fileLibrary,
       activeTool,

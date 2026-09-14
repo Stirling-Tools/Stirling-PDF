@@ -55,7 +55,7 @@ function setup(enableLogin = false) {
               bootstrapMode="non-blocking"
               initialConfig={{ enableLogin }}
             >
-              <QuickNavHostBridge portalAccess />
+              <QuickNavHostBridge />
             </AppConfigProvider>
           )}
         </QuickNavHostProvider>

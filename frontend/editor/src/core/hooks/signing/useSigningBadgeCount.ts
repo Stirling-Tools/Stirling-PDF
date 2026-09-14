@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from "react";
+import { useAuth } from "@app/auth/UseSession";
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useGroupSigningEnabled } from "@app/hooks/useGroupSigningEnabled";
 import { useSigningSessions } from "@app/hooks/signing/useSigningSessions";
 import {
@@ -11,11 +13,14 @@ import {
  * Count that drives the Shared Signing badge: sign requests awaiting the user's
  * signature, plus the user's own sessions that gained new signatures since they
  * last opened them. 0 when group signing is disabled. Polls in the background
- * while enabled.
+ * while enabled. Unsettled while auth, config or sessions load, or the session
+ * lookup fails; consumers may retain their previous count until it settles.
  */
-export function useSigningBadgeCount(): number {
+export function useSigningBadgeState(): { count: number; settled: boolean } {
+  const { loading: authLoading } = useAuth();
+  const { loading: configLoading } = useAppConfig();
   const enabled = useGroupSigningEnabled();
-  const { signRequests, mySessions } = useSigningSessions({
+  const { signRequests, mySessions, settled } = useSigningSessions({
     enabled,
     autoRefreshInterval: enabled ? 60000 : 0,
   });
@@ -38,5 +43,13 @@ export function useSigningBadgeCount(): number {
       session.signedCount > getLastSeenSignedCount(session.sessionId),
   ).length;
 
-  return incoming + ownerUpdates;
+  return {
+    count: enabled ? incoming + ownerUpdates : 0,
+    settled: !authLoading && !configLoading && (!enabled || settled),
+  };
+}
+
+/** Count without loading status; requests with no cached sessions report zero. */
+export function useSigningBadgeCount(): number {
+  return useSigningBadgeState().count;
 }

@@ -20,6 +20,8 @@ export interface QuickNavIdentity {
 export interface QuickNavHostData {
   /** Sticky: one app unmounts before the next one registers. */
   appMounted: boolean;
+  /** Omitted while auth loads; a changed account clears its cached display data. */
+  accountId: string | null;
   /** Registrations omit this while loading; null explicitly clears the cached identity. */
   identity: QuickNavIdentity | null;
   signingBadge: number;
@@ -64,6 +66,7 @@ const EMPTY_REASONS: QuickNavToolReasons = {};
 
 const EMPTY_DATA: QuickNavHostData = {
   appMounted: false,
+  accountId: null,
   toolReasons: EMPTY_REASONS,
   identity: null,
   signingBadge: 0,
@@ -93,9 +96,18 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
 
   const setData = useCallback((next: Partial<QuickNavHostData>) => {
     setDataState((prev) => {
-      const merged = { ...prev, ...next };
+      const accountChanged =
+        next.accountId !== undefined && next.accountId !== prev.accountId;
+      const merged = {
+        ...prev,
+        ...(accountChanged
+          ? { identity: null, signingBadge: 0, portalAccess: false }
+          : {}),
+        ...next,
+      };
       const unchanged =
         merged.appMounted === prev.appMounted &&
+        merged.accountId === prev.accountId &&
         merged.signingBadge === prev.signingBadge &&
         merged.portalAccess === prev.portalAccess &&
         merged.readerMode === prev.readerMode &&
@@ -142,13 +154,14 @@ export function useQuickNavHost(): QuickNavHostValue | null {
   return useContext(QuickNavHostContext);
 }
 
-/** No-ops outside the provider. */
+/** Omit unresolved account data to retain the last answer. No-ops outside the provider. */
 export function useRegisterQuickNavHost(
   data: Partial<QuickNavHostData>,
   actions: QuickNavHostActions,
 ): void {
   const host = useQuickNavHost();
   const {
+    accountId,
     identity,
     signingBadge,
     portalAccess,
@@ -162,9 +175,10 @@ export function useRegisterQuickNavHost(
   useEffect(() => {
     host?.setData({
       appMounted: true,
+      ...(accountId !== undefined ? { accountId } : {}),
       ...(identityProvided ? { identity } : {}),
-      signingBadge: signingBadge ?? 0,
-      portalAccess: portalAccess ?? false,
+      ...(signingBadge !== undefined ? { signingBadge } : {}),
+      ...(portalAccess !== undefined ? { portalAccess } : {}),
       readerMode: readerMode ?? false,
       fileLibrary: fileLibrary ?? false,
       // Cleared, not omitted as toolReasons is: a stale tool marks an entry.
@@ -176,6 +190,7 @@ export function useRegisterQuickNavHost(
     // By field: identity is rebuilt every render.
   }, [
     host,
+    accountId,
     identityProvided,
     identity?.displayName,
     identity?.profilePictureUrl,
