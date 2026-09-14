@@ -37,7 +37,10 @@ vi.mock("@app/services/policyApi", () => ({
   resolvePolicyRunTarget: () => "saas",
 }));
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
+  fileStorage: {
+    getStirlingFile: vi.fn(),
+    getStirlingFileStub: vi.fn().mockResolvedValue(null),
+  },
 }));
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
@@ -88,7 +91,7 @@ describe("an upload waiting on its unlock prompt", () => {
 
   it("runs once the prompt is answered, so skipping still records the failure", async () => {
     // Skipping releases the file encrypted: the run fails, and that failure is the row the
-    // bell offers Decrypt and retry on. Holding it back forever would lose that entirely.
+    // bell offers Unlock on. Holding it back forever would lose that entirely.
     setPendingUnlocks(["file-locked"]);
     setFileStubs([{ id: "file-locked", name: "locked.pdf" }]);
 
