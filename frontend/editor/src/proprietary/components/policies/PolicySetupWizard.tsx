@@ -1,5 +1,5 @@
 import { classificationCondition } from "@app/data/classificationConditions";
-import { useMemo, useState, type ReactNode } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
@@ -257,6 +257,45 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
   });
 }
 
+interface PolicySetupState {
+  categoryId: string;
+  policyId: string | undefined;
+  routing: RoutingSetup;
+  tools: ToolState[];
+  required: boolean;
+  submitting: boolean;
+  error: string | null;
+}
+
+function initialWizardState(
+  entry: CatalogueEntry,
+  folderSetup: boolean,
+): PolicySetupState {
+  const { category, policy } = entry;
+  const seeded = seedTools(entry);
+  return {
+    categoryId: category.id,
+    policyId: policy?.state.backendId,
+    routing: {
+      sourceId: policy?.state.sources?.[0] ?? "",
+      trigger: null,
+      outputIds: (policy?.state.outputIds ?? []).slice(0, 1),
+      // A blank route lets the form and the submitted rules share the same initial state.
+      routingRules: policy?.state.routingRules ?? [
+        { condition: classificationCondition(), outputId: "" },
+      ],
+    },
+    // Classification has no toggle in the portal, so its only tool must remain enabled.
+    tools:
+      !folderSetup && category.id === "classification"
+        ? seeded.map((tool) => ({ ...tool, enabled: true }))
+        : seeded,
+    required: policy?.state.required ?? true,
+    submitting: false,
+    error: null,
+  };
+}
+
 /**
  * The "set up a policy" flow: a Workflow step (toggle which tools run) and a Settings step.
  * Submitting builds the pipeline steps and persists via the real POST.
@@ -276,10 +315,8 @@ export function PolicySetupWizard({
   permissionsLoading,
   children,
 }: PolicySetupWizardProps) {
-  // Re-key on the opened category so state resets cleanly between categories.
   return entry ? (
     <PolicySetupWizardBody
-      key={entry.category.id}
       entry={entry}
       onClose={onClose}
       onSubmit={onSubmit}
@@ -339,52 +376,27 @@ function PolicySetupWizardBody({
   const isEdit = policy != null;
   const isClassification = !folderSetup && category.id === "classification";
   const isRouting = category.id === "routing";
-  const [routing, setRouting] = useState<RoutingSetup>(() => ({
-    sourceId: policy?.state.sources?.[0] ?? "",
-    trigger: null,
-    outputIds: (policy?.state.outputIds ?? []).slice(0, 1),
-    // One blank route so the form and the saved result agree: an empty list would render a route
-    // the user could fill in and then submit as none.
-    routingRules: policy?.state.routingRules ?? [
-      {
-        condition: classificationCondition(),
-        outputId: "",
-      },
-    ],
-  }));
-
-  const [tools, setTools] = useState<ToolState[]>(() => {
-    const seeded = seedTools(entry);
-    // Classification's single tool has no toggle, so keep it enabled — editing a policy
-    // whose saved steps lack it would otherwise strand submit.
-    return isClassification
-      ? seeded.map((t) => ({ ...t, enabled: true }))
-      : seeded;
-  });
-  // No UI for these: stored values carry through on edit; new policies get runOn per
-  // category and run-once/new-version for the rest.
-  const [fieldValues] = useState(() => resolveFieldValues(entry));
-  const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
-  const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
-  const [outputMode] = useState<"new_file" | "new_version">(
-    policy?.state.outputMode ?? "new_version",
+  const [form, setForm] = useState(() =>
+    initialWizardState(entry, folderSetup),
   );
-  const [outputName] = useState(policy?.state.outputName ?? "");
-  const [outputNamePosition] = useState<"prefix" | "suffix" | "auto-number">(
-    policy?.state.outputNamePosition ?? "suffix",
-  );
-  const [runOn] = useState<"upload" | "export">(() =>
-    resolveRunOn(policy?.state.runOn, category.id),
-  );
-  const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
-  const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
-  // A template is a policy by nature, where a failure blocks the file rather than waving it
-  // through, so a new one defaults to required. Editing preserves what was saved.
-  const [required, setRequired] = useState(policy?.state.required ?? true);
+  const { routing, tools, required, submitting, error } = form;
+  // Reset before rendering the new preset, preserving the modal and its focus trap.
+  if (
+    form.categoryId !== category.id ||
+    form.policyId !== policy?.state.backendId
+  ) {
+    setForm(initialWizardState(entry, folderSetup));
+  }
+  const fieldValues = resolveFieldValues(entry);
+  const scopeTypes = policy?.state.scopeTypes ?? [];
+  const reviewerEmail = policy?.state.reviewerEmail ?? "";
+  const outputMode = policy?.state.outputMode ?? "new_version";
+  const outputName = policy?.state.outputName ?? "";
+  const outputNamePosition = policy?.state.outputNamePosition ?? "suffix";
+  const runOn = resolveRunOn(policy?.state.runOn, category.id);
+  const maxRetries = policy?.state.maxRetries ?? 0;
+  const retryDelayMinutes = policy?.state.retryDelayMinutes ?? 0;
   const readOnly = !canManagePolicies;
-
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Purview steps appear once a tenant is connected; an already-enabled one stays visible
   // so editing never silently drops it.
@@ -404,20 +416,24 @@ function PolicySetupWizardBody({
   );
 
   function setToolEnabled(toolId: PolicyToolId, enabled: boolean) {
-    setTools((prev) =>
-      prev.map((tl) => (tl.toolId === toolId ? { ...tl, enabled } : tl)),
-    );
+    setForm((current) => ({
+      ...current,
+      tools: current.tools.map((tool) =>
+        tool.toolId === toolId ? { ...tool, enabled } : tool,
+      ),
+    }));
   }
 
   function setToolParams<Id extends PolicyToolId>(
     toolId: Id,
     params: PolicyParams<Id>,
   ) {
-    setTools((prev) =>
-      prev.map((tl) =>
-        tl.toolId === toolId ? ({ ...tl, params } as ToolState) : tl,
+    setForm((current) => ({
+      ...current,
+      tools: current.tools.map((tool) =>
+        tool.toolId === toolId ? ({ ...tool, params } as ToolState) : tool,
       ),
-    );
+    }));
   }
 
   /** The wizard's current state as a submit result: shared by Save and Customise. */
@@ -461,24 +477,29 @@ function PolicySetupWizardBody({
   async function submit() {
     if (submitting) return;
     if (enabledTools.length === 0) {
-      setError(t("portal.policies.wizard.errors.noTools"));
+      setForm((current) => ({
+        ...current,
+        error: t("portal.policies.wizard.errors.noTools"),
+      }));
       return;
     }
-    setError(null);
-    setSubmitting(true);
+    setForm((current) => ({ ...current, error: null, submitting: true }));
     try {
       await onSubmit(entry, collectResult());
     } catch (e) {
-      setSubmitting(false);
       // Surface the backend's actual reason rather than a generic failure.
       const message = formatError?.(e) ?? (e instanceof Error ? e.message : "");
-      setError(message || t("portal.policies.wizard.errors.saveFailed"));
+      setForm((current) => ({
+        ...current,
+        submitting: false,
+        error: message || t("portal.policies.wizard.errors.saveFailed"),
+      }));
     }
   }
 
   const canSubmit = enabledTools.length > 0;
   const content = (
-    <>
+    <Fragment key={`${category.id}:${policy?.state.backendId ?? "new"}`}>
       {error && !folderSetup && (
         <Banner
           tone="danger"
@@ -505,7 +526,12 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {isRouting && routingConfig?.({ value: routing, onChange: setRouting })}
+      {isRouting &&
+        routingConfig?.({
+          value: routing,
+          onChange: (next) =>
+            setForm((current) => ({ ...current, routing: next })),
+        })}
 
       {!isClassification && (
         <div className="portal-policies__wizard-section">
@@ -611,13 +637,15 @@ function PolicySetupWizardBody({
         <div className="portal-policies__wizard-enforce">
           <EnforceAsPolicyControl
             required={required}
-            onRequiredChange={setRequired}
+            onRequiredChange={(next) =>
+              setForm((current) => ({ ...current, required: next }))
+            }
             disabled={readOnly}
             permissionsLoading={permissionsLoading}
           />
         </div>
       )}
-    </>
+    </Fragment>
   );
   if (children) {
     return children({

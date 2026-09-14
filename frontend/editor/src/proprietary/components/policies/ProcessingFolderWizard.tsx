@@ -161,7 +161,6 @@ export function ProcessingFolderWizard({
 
   return (
     <PolicySetupWizard
-      key={existing?.id ?? preset.policy?.state.backendId ?? "new"}
       entry={entry}
       onClose={onClose}
       onSubmit={submit}
@@ -315,7 +314,7 @@ export function ProcessingFolderWizard({
                           type="button"
                           className="folder-setup__preset-select"
                           aria-pressed={preset.category.id === item.category.id}
-                          disabled={Boolean(reason)}
+                          disabled={Boolean(reason) || submitting}
                           onClick={() => setCategoryId(item.category.id)}
                         >
                           <span className="folder-setup__preset-icon">
@@ -339,7 +338,12 @@ export function ProcessingFolderWizard({
                   })}
                 </div>
               )}
-              <div className="folder-setup__settings">{content}</div>
+              <div
+                key={`${entry.category.id}:${entry.policy?.state.backendId ?? "new"}`}
+                className="folder-setup__settings"
+              >
+                {content}
+              </div>
             </div>
           </div>
           {stage === "review" && (

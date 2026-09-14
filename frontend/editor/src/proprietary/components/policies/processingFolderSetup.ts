@@ -112,6 +112,7 @@ export function folderSetupEntry(
       category,
       config: savedConfig,
       state: {
+        backendId: record.id,
         configured: true,
         status: record.enabled ? "active" : "paused",
         required: false,

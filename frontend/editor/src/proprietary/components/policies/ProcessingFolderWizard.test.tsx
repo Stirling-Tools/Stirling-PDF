@@ -284,4 +284,52 @@ describe("ProcessingFolderWizard", () => {
     ).toBeDisabled();
     expect(button("review")).toBeEnabled();
   });
+
+  it("keeps the dialog and preset focus when switching between saved and default presets", async () => {
+    const catalogue = assemblePolicies(
+      [
+        {
+          id: "saved-compliance",
+          name: "Compliance",
+          enabled: true,
+          inputs: [],
+          output: { type: "inline", options: { categoryId: "compliance" } },
+          steps: [
+            {
+              operation: "/api/v1/security/sanitize-pdf",
+              parameters: { removeMetadata: true },
+            },
+          ],
+        },
+      ],
+      [],
+    ).catalogue;
+    const props = renderWizard({ initialFolder: folder, catalogue });
+    const dialog = screen.getByRole("dialog");
+    for (const category of ["security", "classification", "compliance"]) {
+      const preset = screen.getByRole("button", {
+        name: `portal.policies.categories.${category}.label`,
+      });
+      preset.focus();
+      fireEvent.click(preset);
+      expect(screen.getByRole("dialog")).toBe(dialog);
+      expect(preset).toHaveFocus();
+      expect(preset).toHaveAttribute("aria-pressed", "true");
+    }
+    fireEvent.click(button("review"));
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.save).toHaveBeenCalledWith(
+        folder,
+        expect.objectContaining({
+          steps: [
+            expect.objectContaining({
+              operation: "/api/v1/security/sanitize-pdf",
+              parameters: expect.objectContaining({ removeMetadata: true }),
+            }),
+          ],
+        }),
+      ),
+    );
+  });
 });
