@@ -8853,7 +8853,6 @@ usesDefaults = "Runs with default settings"
 viewDefinition = "View definition"
 
 [portal.pipelines.builder.blocker]
-aiChecking = "Wait while AI classification availability is checked"
 aiClassification = "Enable AI classification in Settings, or remove the Classify step"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
@@ -8880,7 +8879,6 @@ label = "Change icon"
 
 [portal.pipelines.builder.routing]
 addRule = "Add a route"
-aiChecking = "Checking whether AI classification is available…"
 aiDisabled = "AI classification is not enabled. Enable it in Settings, or route using a no-AI document property."
 aiToolDisabled = "Unavailable until AI classification is enabled in Settings"
 aiUnavailable = "Document-type routing is disabled because AI classification is unavailable. Choose a no-AI match instead."

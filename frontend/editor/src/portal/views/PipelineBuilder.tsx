@@ -819,17 +819,12 @@ export function PipelineBuilder() {
         "Add a Classify step, or turn off routing by document type",
       ),
     );
-  if (classifies && !aiClassificationEnabled)
+  if (classifies && !aiAvailabilityLoading && !aiClassificationEnabled)
     blockers.push(
-      aiAvailabilityLoading
-        ? t(
-            "portal.pipelines.builder.blocker.aiChecking",
-            "Wait while AI classification availability is checked",
-          )
-        : t(
-            "portal.pipelines.builder.blocker.aiClassification",
-            "Enable AI classification in Settings, or remove the Classify step",
-          ),
+      t(
+        "portal.pipelines.builder.blocker.aiClassification",
+        "Enable AI classification in Settings, or remove the Classify step",
+      ),
     );
   if (hasUnconfiguredSteps)
     blockers.push(
@@ -1188,7 +1183,7 @@ export function PipelineBuilder() {
     }
   }
 
-  if (isEdit && !seeded) {
+  if (aiAvailabilityLoading || (isEdit && !seeded)) {
     return (
       <div className="portal-builder__loading">
         <Spinner />
@@ -1609,15 +1604,10 @@ export function PipelineBuilder() {
           precedingOutput={precedingOutput}
           unavailableReason={(tool) =>
             isClassifyTool(tool) && !aiClassificationEnabled
-              ? aiAvailabilityLoading
-                ? t(
-                    "portal.pipelines.builder.routing.aiChecking",
-                    "Checking AI availability…",
-                  )
-                : t(
-                    "portal.pipelines.builder.routing.aiToolDisabled",
-                    "Unavailable until AI classification is enabled in Settings",
-                  )
+              ? t(
+                  "portal.pipelines.builder.routing.aiToolDisabled",
+                  "Unavailable until AI classification is enabled in Settings",
+                )
               : undefined
           }
           onClose={() => setPickerAt(null)}

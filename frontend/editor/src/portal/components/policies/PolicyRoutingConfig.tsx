@@ -119,13 +119,10 @@ export function PolicyRoutingConfig({
         onChange={(routingRules) => onChange({ ...value, routingRules })}
         destinations={destinations}
         onCreateDestination={connectSource}
-        classificationAvailable={classificationEnabled}
+        classificationAvailable={aiLoading || classificationEnabled}
         classificationUnavailableReason={
           aiLoading
-            ? t(
-                "portal.pipelines.builder.routing.aiChecking",
-                "Checking whether AI classification is available…",
-              )
+            ? undefined
             : t(
                 "portal.pipelines.builder.routing.aiDisabled",
                 "AI classification is not enabled. Enable it in Settings, or route using a no-AI document property.",
