@@ -111,6 +111,7 @@ public class S3InputSource implements InputSource {
                         .map(object -> S3Identities.identity(config.bucket(), object.key()))
                         .toList());
 
+        boolean track = "track".equals(String.valueOf(spec.options().get("mode")).trim());
         List<ResolvedInput> work = new ArrayList<>();
         for (S3Object object : objects) {
             String identity = S3Identities.identity(config.bucket(), object.key());
@@ -123,14 +124,15 @@ public class S3InputSource implements InputSource {
                             PolicyInputs.of(List.of(objectResource(client, config, object))),
                             identity,
                             success ->
-                                    completeConsumed(
+                                    complete(
                                             ctx,
                                             client,
                                             config,
                                             object.key(),
                                             identity,
                                             gate,
-                                            success)));
+                                            success,
+                                            track)));
         }
         return work;
     }
@@ -141,16 +143,17 @@ public class S3InputSource implements InputSource {
      * consensus delete. A failed run settles ERROR and never deletes; the DONE row of an object
      * that could not be deleted still stops reprocessing.
      */
-    private void completeConsumed(
+    private void complete(
             ResolveContext ctx,
             S3Client client,
             S3Config config,
             String key,
             String identity,
             String claimGate,
-            boolean success) {
+            boolean success,
+            boolean track) {
         ctx.settle(identity, claimGate, null, success);
-        if (!success) {
+        if (!success || track) {
             return;
         }
         try {

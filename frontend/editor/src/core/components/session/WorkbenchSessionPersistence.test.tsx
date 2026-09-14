@@ -238,7 +238,7 @@ describe("restore", () => {
     expect(mocks.restoreWorkbench).toHaveBeenCalledWith("fileEditor");
   });
 
-  it("leaves a URL-owned view to the return path", async () => {
+  it("leaves a path-seeded view to the return path", async () => {
     sessionStorage.setItem(
       SESSION_KEY,
       JSON.stringify({

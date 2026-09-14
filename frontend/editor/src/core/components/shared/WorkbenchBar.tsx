@@ -168,6 +168,24 @@ export default function WorkbenchBar({
     return selectedFileIds.length;
   }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
 
+  // Registered into the bar's own row rather than the tool row below it. Already
+  // sorted by order when registered.
+  const barRowButtons = useMemo(
+    () =>
+      buttons.filter((btn) => btn.section === "bar" && (btn.visible ?? true)),
+    [buttons],
+  );
+
+  // Beside the view switcher rather than among the actions: what the view is showing
+  // reads as part of the view, not as something to do to it.
+  const barLeadButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "bar-lead" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
+
   const sectionsWithButtons = useMemo(() => {
     return SECTION_ORDER.map((section) => {
       const sectionButtons = buttons.filter(
@@ -334,7 +352,9 @@ export default function WorkbenchBar({
   // stay in step; each renders the same actions in its own shape.
   const globalActionProps: WorkbenchBarActionsProps = {
     currentView,
-    isCustomView,
+    // Save, Save As and Close act on an open document. The library has none: it
+    // lists files, and opening one is what the other views are for.
+    showsFileActions: !isCustomView && currentView !== "myFiles",
     actionsDisabled,
     policyEnforcing,
     downloadLabel: downloadTooltip,
@@ -525,7 +545,9 @@ export default function WorkbenchBar({
             <div className="workbench-bar-divider" />
           </>
         )}
-        {(hasFiles || isCustomView) && (
+        {/* Not in the library: it browses files rather than showing one, and the
+            rail is what moves between surfaces. */}
+        {currentView !== "myFiles" && (hasFiles || isCustomView) && (
           <SegmentedControl<WorkbenchType>
             className="workbench-bar-views"
             size="sm"
@@ -543,6 +565,16 @@ export default function WorkbenchBar({
             }))}
           />
         )}
+        {barLeadButtons.map((btn) => {
+          const content = renderButton(btn);
+          if (!content) return null;
+          return (
+            <div className="workbench-bar-lead" key={btn.id}>
+              <div className="workbench-bar-divider" />
+              {content}
+            </div>
+          );
+        })}
       </div>
 
       {/* Global super search - always present, even on the homepage */}
@@ -598,6 +630,19 @@ export default function WorkbenchBar({
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
+        {/* A view's own controls, ahead of the globals every view shares. */}
+        {barRowButtons.map((btn) => {
+          const content = renderButton(btn);
+          if (!content) return null;
+          return (
+            <div key={btn.id} className="workbench-bar-action-wrapper">
+              {content}
+            </div>
+          );
+        })}
+        {barRowButtons.length > 0 && (
+          <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        )}
         {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
         {currentView === "viewer" && sharingEnabled && (
           <ViewerShareButton disabled={actionsDisabled} />
