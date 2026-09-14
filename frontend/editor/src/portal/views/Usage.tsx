@@ -18,7 +18,7 @@ import { useStripePortal } from "@portal/hooks/useStripePortal";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { PaymentSection } from "@portal/components/billing/PaymentSection";
 import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
-import { fetchFleetStats } from "@portal/api/fleetStats";
+import { useFleetStats } from "@portal/queries/infrastructure";
 import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
 import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
 import {
@@ -79,7 +79,8 @@ export function Usage({
   const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   // From fleet-stats, not the wallet. Null when the backend cannot compute it, which omits the row.
-  const [editorsDeployed, setEditorsDeployed] = useState<number | null>(null);
+  const { data: fleetStats } = useFleetStats();
+  const editorsDeployed = fleetStats?.editorsDeployed ?? null;
   // A team never billed has none, and the section and its chip then drop out.
   const [hasInvoices, setHasInvoices] = useState(true);
   // Held here, not in the detail views that own the flows, so the product rows can start them.
@@ -105,13 +106,6 @@ export function Usage({
     setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
-    fetchFleetStats()
-      .then((f) => {
-        if (!cancelled) setEditorsDeployed(f.editorsDeployed);
-      })
-      .catch(() => {
-        if (!cancelled) setEditorsDeployed(null);
-      });
     fetchLocalUsage()
       .then((u) => {
         if (!cancelled) setLocalUsage(u);

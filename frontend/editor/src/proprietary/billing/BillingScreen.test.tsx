@@ -33,7 +33,9 @@ describe("BillingScreen and units pending sync", () => {
     // 1000 synced + 250 pending, at 1 minor unit each. Twice on purpose: the cycle estimate and
     // the credit line are the two figures that used to disagree.
     expect(screen.getAllByText("$12.50")).toHaveLength(2);
-    expect(screen.getByText("1,250 · $0.01 each")).toBeInTheDocument();
+    expect(
+      screen.getByText("1,250 used · includes free and prepaid credits"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText(
         "estimated · includes 250 not yet synced from your instances",
@@ -45,7 +47,9 @@ describe("BillingScreen and units pending sync", () => {
     render(<BillingScreen wallet={wallet} pendingUnits={0} />);
 
     expect(screen.getAllByText("$10.00")).toHaveLength(2);
-    expect(screen.getByText("1,000 · $0.01 each")).toBeInTheDocument();
+    expect(
+      screen.getByText("1,000 used · includes free and prepaid credits"),
+    ).toBeInTheDocument();
     expect(
       screen.getByText("estimated · the meter settles at close"),
     ).toBeInTheDocument();
@@ -138,4 +142,40 @@ describe("installed server licences", () => {
       screen.getByRole("button", { name: "Manage Billing" }),
     ).toBeInTheDocument();
   });
+});
+
+it("shows the net charge consistently when gross usage includes allowances", () => {
+  render(
+    <BillingScreen
+      wallet={{
+        ...subscribedWallet,
+        spendUnitsThisPeriod: 2000,
+        estimatedBillMinor: 4000,
+        pricePerDocMinor: 2,
+        freeRemaining: 100,
+        prepaidUnitsRemaining: 150,
+      }}
+      pendingUnits={500}
+    />,
+  );
+  expect(screen.getAllByText("$45.00")).toHaveLength(2);
+  expect(
+    screen.getByText("2,500 used · includes free and prepaid credits"),
+  ).toBeInTheDocument();
+  expect(screen.queryByText(/each/)).not.toBeInTheDocument();
+});
+
+it("does not price gross usage as paid usage", () => {
+  render(
+    <BillingScreen
+      wallet={{
+        ...subscribedWallet,
+        spendUnitsThisPeriod: 2000,
+        estimatedBillMinor: 3000,
+        pricePerDocMinor: 2,
+      }}
+    />,
+  );
+  expect(screen.getAllByText("$30.00")).toHaveLength(2);
+  expect(screen.queryByText("$40.00")).not.toBeInTheDocument();
 });

@@ -58,12 +58,11 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   const covered = usersForBlocks(serverQuantity);
   const total = blockPrice * serverQuantity;
 
-  // Never sell less capacity than is already in use; reducing capacity happens at renewal rather
-  // than by stranding accounts that already exist. The stage is entered pre-seeded to this minimum.
-  const minBlocks = blocksForUsers(currentUsers);
+  // Adding capacity cannot reduce the purchased allowance or strand existing users.
+  const minBlocks = blocksForUsers(Math.max(currentUsers, currentLimit ?? 0));
   const minUsers = usersForBlocks(minBlocks);
   const maxUsers = usersForBlocks(SELF_SERVE_MAX_BLOCKS);
-  const belowCurrentUsage = serverQuantity < minBlocks;
+  const belowMinimumCapacity = serverQuantity < minBlocks;
   const offerEnterprise = shouldOfferEnterprise(serverQuantity);
 
   const presets = USER_PRESETS.filter((users) => users <= maxUsers);
@@ -139,7 +138,7 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
         />
       )}
 
-      {belowCurrentUsage && (
+      {belowMinimumCapacity && (
         <Alert color="yellow" variant="light">
           {t(
             "payment.capacityStage.minimumForCurrentUsers",
@@ -192,7 +191,7 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
       </Stack>
 
       <Stack gap="sm">
-        <Button onClick={onContinue} disabled={belowCurrentUsage} fullWidth>
+        <Button onClick={onContinue} disabled={belowMinimumCapacity} fullWidth>
           {t("payment.capacityStage.continue", "Continue to payment")}
         </Button>
 

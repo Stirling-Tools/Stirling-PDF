@@ -17,7 +17,9 @@ const { fetchFreeTier, fetchFleetStats, fetchUsers, openLinkModal } =
   }));
 
 vi.mock("@portal/api/link", () => ({ fetchFreeTier }));
-vi.mock("@portal/api/fleetStats", () => ({ fetchFleetStats }));
+vi.mock("@portal/queries/infrastructure", () => ({
+  useFleetStats: () => ({ data: null, loading: false, error: null }),
+}));
 vi.mock("@app/portal/usersBackend", () => ({ usersBackend: { fetchUsers } }));
 vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),

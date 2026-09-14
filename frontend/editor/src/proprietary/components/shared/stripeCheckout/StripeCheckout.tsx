@@ -63,6 +63,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
   const isMobile = useIsMobile();
   const sellsCapacity = planGroup.tier === "server";
   const combinedChoose = requestedCombinedChoose && sellsCapacity;
+  const minimumCapacity = Math.max(minimumSeats, currentLimit ?? 0);
 
   // Initialize all state via custom hook
   const checkoutState = useCheckoutState(planGroup);
@@ -116,7 +117,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         // Arrive on the capacity an installation already needs rather than on a blocked minimum,
         // the same seeding the separate walk does when a period is picked.
         if (sellsCapacity) {
-          checkoutState.setServerQuantity(blocksForUsers(minimumSeats));
+          checkoutState.setServerQuantity(blocksForUsers(minimumCapacity));
         }
         navigation.goToStage("choose");
       } else {
@@ -132,7 +133,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     checkoutState.setSelectedPeriod(period);
     if (sellsCapacity) {
       // Arrive on the capacity an installation already needs rather than on a blocked minimum.
-      checkoutState.setServerQuantity(blocksForUsers(minimumSeats));
+      checkoutState.setServerQuantity(blocksForUsers(minimumCapacity));
       navigation.goToStage("capacity");
       return;
     }
@@ -192,7 +193,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
         // A caller that already holds the email (a linked instance does, from the account link)
         // never needs to be asked for it, whatever the licence says.
         if (combinedChoose && sellsCapacity)
-          checkoutState.setServerQuantity(blocksForUsers(minimumSeats));
+          checkoutState.setServerQuantity(blocksForUsers(minimumCapacity));
         if (initialEmail) {
           checkoutState.setEmailInput(initialEmail);
           checkoutState.setState((prev) => ({
@@ -232,7 +233,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
     initialEmail,
     combinedChoose,
     sellsCapacity,
-    minimumSeats,
+    minimumCapacity,
     checkoutState.setServerQuantity,
     checkoutState.setEmailInput,
     checkoutState.setCurrentLicenseKey,
@@ -287,7 +288,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
                 if (sellsCapacity) {
                   checkoutState.setServerQuantity(
                     Math.max(
-                      blocksForUsers(minimumSeats),
+                      blocksForUsers(minimumCapacity),
                       checkoutState.serverQuantity || 1,
                     ),
                   );
@@ -324,6 +325,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             serverQuantity={checkoutState.serverQuantity}
             setServerQuantity={checkoutState.setServerQuantity}
             currentUsers={minimumSeats}
+            currentLimit={currentLimit}
             onContinue={() => navigation.goToStage("payment")}
           />
         );
@@ -389,6 +391,7 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
               <ActionIcon
                 variant="tertiary"
                 size="lg"
+                disabled={checkoutState.state.loading}
                 onClick={navigation.goBack}
                 aria-label={t("common.back", "Back")}
               >
@@ -442,6 +445,19 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
             n: steppedStep,
             total: steppedPath?.length ?? 0,
           })}
+          aside={
+            canGoBack ? (
+              <ActionIcon
+                variant="tertiary"
+                size="lg"
+                disabled={checkoutState.state.loading}
+                onClick={navigation.goBack}
+                aria-label={t("common.back", "Back")}
+              >
+                <LocalIcon icon="arrow-back" width={20} height={20} />
+              </ActionIcon>
+            ) : undefined
+          }
           onClose={handleClose}
         />
       )}

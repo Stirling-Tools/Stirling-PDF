@@ -61,7 +61,7 @@ export function PaymentSection({
       ? pm.expMonth && pm.expYear
         ? t(
             "portal.billing.payment.cardWithExpiry",
-            "{{brand}} ending {{last4}} Â· expires {{month}} / {{year}}",
+            "{{brand}} ending {{last4}} · expires {{month}} / {{year}}",
             {
               brand: pm.brand,
               last4: pm.last4,
@@ -103,7 +103,7 @@ export function PaymentSection({
           estimatedMinor != null
             ? t(
                 "portal.billing.payment.nextInvoiceValue",
-                "{{date}} Â· {{amount}}",
+                "{{date}} · {{amount}}",
                 {
                   date: formatPeriodDate(wallet.billingPeriodEnd, {
                     year: true,

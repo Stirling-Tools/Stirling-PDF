@@ -6,10 +6,7 @@ import { formatMinor } from "@app/billing/format";
 import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
 import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
-import {
-  estimatedBillWithPending,
-  pendingMeteredUnits,
-} from "@app/billing/pendingUsage";
+import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import type { Wallet } from "@app/billing/types";
 import "@app/billing/billing-screen.css";
@@ -407,25 +404,16 @@ export function BillingScreen({
                             wallet.pricePerDocMinor != null
                               ? t(
                                   "portal.billing.cycle.creditsNote",
-                                  "{{units}} · {{rate}} each",
+                                  "{{units}} used · includes free and prepaid credits",
                                   {
                                     units: creditUnits.toLocaleString(),
-                                    rate: formatMinor(
-                                      wallet.pricePerDocMinor,
-                                      wallet.currency,
-                                    ),
                                   },
                                 )
                               : undefined
                           }
                           value={
-                            wallet.pricePerDocMinor != null
-                              ? formatMinor(
-                                  (wallet.spendUnitsThisPeriod +
-                                    pendingMeteredUnits(wallet, pendingUnits)) *
-                                    wallet.pricePerDocMinor,
-                                  wallet.currency,
-                                )
+                            estimatedMinor != null
+                              ? formatMinor(estimatedMinor, wallet.currency)
                               : creditUnits.toLocaleString()
                           }
                         />

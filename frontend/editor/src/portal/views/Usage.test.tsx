@@ -1,3 +1,6 @@
+vi.mock("@portal/queries/infrastructure", () => ({
+  useFleetStats: () => ({ data: null, loading: false, error: null }),
+}));
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";

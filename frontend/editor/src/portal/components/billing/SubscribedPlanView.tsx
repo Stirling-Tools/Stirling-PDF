@@ -45,7 +45,7 @@ export function SubscribedPlanView({
   const portal = useStripePortal(wallet);
 
   const isLeader = wallet.role === "leader";
-  // Buying/topping up prepaid capacity is a commercial action â€” leader-only, and
+  // Buying/topping up prepaid capacity is a commercial action — leader-only, and
   // needs a resolved team to scope checkout.
   const canBuyBundle = isLeader && wallet.teamId != null;
   const spent = estimatedMinor != null ? estimatedMinor / 100 : 0;

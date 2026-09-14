@@ -1,3 +1,18 @@
+vi.mock("@app/ui/ActionIcon", () => ({
+  ActionIcon: ({
+    children,
+    onClick,
+    "aria-label": label,
+  }: {
+    children: ReactNode;
+    onClick: () => void;
+    "aria-label": string;
+  }) => (
+    <button onClick={onClick} aria-label={label}>
+      {children}
+    </button>
+  ),
+}));
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
@@ -74,17 +89,20 @@ vi.mock("@app/components/shared/stripeCheckout/stages/CapacityStage", () => ({
   CapacityStage: ({
     serverQuantity,
     currentLimit,
+    onContinue,
   }: {
     serverQuantity: number;
     currentLimit: number;
+    onContinue: () => void;
   }) => (
     <div>
       Capacity: {serverQuantity} blocks; current: {currentLimit}
+      <button onClick={onContinue}>Continue to payment</button>
     </div>
   ),
 }));
 vi.mock("@app/components/shared/StepModalHeader", () => ({
-  StepModalHeader: () => null,
+  StepModalHeader: ({ aside }: { aside?: ReactNode }) => <div>{aside}</div>,
 }));
 import StripeCheckout from "@app/components/shared/stripeCheckout/StripeCheckout";
 const planGroup: PlanTierGroup = {
@@ -195,4 +213,27 @@ describe("combined checkout for plans without capacity", () => {
       expect(screen.queryByText(/Capacity:/)).not.toBeInTheDocument();
     },
   );
+});
+
+it("starts at held capacity and lets payment return to those choices", async () => {
+  render(
+    <StripeCheckout
+      opened
+      onClose={() => {}}
+      planGroup={planGroup}
+      combinedChoose
+      initialEmail="buyer@example.test"
+      minimumSeats={40}
+      currentLimit={300}
+    />,
+  );
+  expect(
+    await screen.findByText("Capacity: 3 blocks; current: 300"),
+  ).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Continue to payment" }));
+  expect(await screen.findByText("Payment details")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Back" }));
+  expect(
+    await screen.findByText("Capacity: 3 blocks; current: 300"),
+  ).toBeInTheDocument();
 });
