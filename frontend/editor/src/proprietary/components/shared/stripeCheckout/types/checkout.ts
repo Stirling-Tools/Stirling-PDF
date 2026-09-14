@@ -6,7 +6,7 @@ export interface StripeCheckoutProps {
   /**
    * Put the period and capacity choices on one page instead of walking them separately. Independent
    * of {@link initialEmail}: a buyer who still has to type an address gets the email page in front
-   * of the combined one rather than the long walk behind it.
+   * of the combined one rather than the long walk behind it. Ignored for tiers that do not sell capacity.
    */
   combinedChoose?: boolean;
   /** Users the current plan covers, or null when there is none. Drives the add-capacity face. */
