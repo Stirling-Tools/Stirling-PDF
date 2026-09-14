@@ -204,7 +204,8 @@ export async function addAttachments(
 }
 
 /**
- * Apply queued batch operations (renames, deletions, additions) in a single atomic pass via backend endpoint.
+ * Apply queued batch operations (renames, deletions, additions) in a single pass via backend endpoint.
+ * Unknown rename or delete targets are skipped server-side; re-list afterwards to reconcile.
  */
 export async function applyBatchAttachmentOps(
   fileInput: File,

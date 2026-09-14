@@ -320,7 +320,7 @@ public class AttachmentController {
     @Operation(
             summary = "Batch process attachments in PDF",
             description =
-                    "This endpoint applies atomic batch renames, deletions, and additions to PDF attachments in a single pass.")
+                    "This endpoint applies batch renames, deletions, and additions to PDF attachments in a single pass. Unknown rename or delete targets are skipped, so re-list attachments afterwards to reconcile.")
     public ResponseEntity<Resource> batchProcessAttachments(
             @ModelAttribute BatchAttachmentRequest request) throws Exception {
         MultipartFile fileInput = request.getFileInput();
