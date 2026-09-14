@@ -289,16 +289,25 @@ export default function SuperSearch({
       inputRef.current?.select();
     };
     // Focus handover from a closing dialog. Only the on-screen instance
-    // responds (offsetParent is null while display:none / unmounted hosts),
-    // and focus waits two frames so the dialog's own return-focus runs first.
+    // responds (offsetParent is null while a host is display:none / unmounted).
     const onFocusRequest = () => {
       const input = inputRef.current;
       if (!input || input.offsetParent === null) return;
       setOpen(true);
+      const grab = () => {
+        input.focus();
+        input.select();
+      };
       requestAnimationFrame(() =>
         requestAnimationFrame(() => {
-          input.focus();
-          input.select();
+          grab();
+          // The dialog's return-focus fires shortly after it closes and steals
+          // focus back once; re-grab it if that happens.
+          input.addEventListener("focusout", grab, { once: true });
+          window.setTimeout(
+            () => input.removeEventListener("focusout", grab),
+            250,
+          );
         }),
       );
     };

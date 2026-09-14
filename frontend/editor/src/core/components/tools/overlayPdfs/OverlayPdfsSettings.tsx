@@ -137,7 +137,7 @@ export default function OverlayPdfsSettings({
         <SegmentedControl
           value={String(parameters.overlayPosition)}
           onChange={(v) =>
-            onParameterChange("overlayPosition", (v === "1" ? 1 : 0) as 0 | 1)
+            onParameterChange("overlayPosition", v === "1" ? 1 : 0)
           }
           options={[
             {

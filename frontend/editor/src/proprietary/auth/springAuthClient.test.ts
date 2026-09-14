@@ -12,11 +12,7 @@ import apiClient from "@app/services/apiClient";
 // + oauthNavigation seam, so springAuth routes through the mocks below.
 import "@app/auth/configureSpringAuth";
 import { allowConsole, expectConsole } from "@app/tests/failOnConsole";
-import {
-  AxiosError,
-  type AxiosResponse,
-  type InternalAxiosRequestConfig,
-} from "axios";
+import { AxiosError, type InternalAxiosRequestConfig } from "axios";
 
 // Mock apiClient
 vi.mock("@app/services/apiClient");
@@ -59,7 +55,7 @@ describe("SpringAuthClient", () => {
       vi.mocked(apiClient.get).mockResolvedValueOnce({
         status: 200,
         data: { user: mockUser },
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.getSession();
 
@@ -176,7 +172,7 @@ describe("SpringAuthClient", () => {
             expires_in: 3600,
           },
         },
-      } as unknown as AxiosResponse);
+      });
 
       // Spy on window.dispatchEvent
       const dispatchEventSpy = vi.spyOn(window, "dispatchEvent");
@@ -235,7 +231,7 @@ describe("SpringAuthClient", () => {
       vi.mocked(apiClient.post).mockResolvedValueOnce({
         status: 200,
         data: {},
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.signOut();
 
@@ -288,7 +284,7 @@ describe("SpringAuthClient", () => {
             expires_in: 3600,
           },
         },
-      } as unknown as AxiosResponse);
+      });
 
       const result = await springAuth.refreshSession();
 
@@ -375,7 +371,7 @@ describe("SpringAuthClient", () => {
         expect(isSafePostLoginRedirect("")).toBe(false);
         expect(isSafePostLoginRedirect(null)).toBe(false);
         expect(isSafePostLoginRedirect(undefined)).toBe(false);
-        expect(isSafePostLoginRedirect(42 as unknown)).toBe(false);
+        expect(isSafePostLoginRedirect(42)).toBe(false);
       });
 
       it("rejects protocol-relative and absolute URLs (open-redirect guard)", () => {

@@ -9,10 +9,8 @@ const meta: Meta<typeof PolicyDetailPanel> = {
   args: {
     onClose: () => {},
     onEdit: () => {},
-    onRun: () => {},
     onTogglePause: () => {},
     onDelete: () => {},
-    onRetry: () => {},
   },
 };
 export default meta;

@@ -53,6 +53,9 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class ExtractImageScansController {
 
+    // Print-quality raster for the extracted scan; capped by system maxDPI
+    private static final int SCAN_RENDER_DPI = 300;
+
     private static final String REPLACEFIRST = "[.][^.]+$";
 
     private final CustomPDFDocumentFactory pdfDocumentFactory;
@@ -63,7 +66,15 @@ public class ExtractImageScansController {
             value = "/extract-image-scans",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @MultiFileResponse
-    @ToolIO(produces = ToolFormat.IMAGE, arity = ToolArity.SIMO)
+    // split_photos.py uses OpenCV imread, which cannot read the vector/PSD formats in IMAGE.
+    @ToolIO(
+            accepts = {ToolFormat.PDF, ToolFormat.IMAGE},
+            inputExtensions = {
+                "pdf", "bmp", "dib", "gif", "jpeg", "jpg", "jpe", "jp2", "png", "webp", "avif",
+                "pbm", "pgm", "ppm", "pxm", "pnm", "pfm", "sr", "ras", "tiff", "tif", "hdr", "pic"
+            },
+            produces = ToolFormat.IMAGE,
+            arity = ToolArity.SIMO)
     @Operation(
             summary = "Extract image scans from an input file",
             description =
@@ -112,12 +123,12 @@ public class ExtractImageScansController {
                         // Render image and save as temp file
                         BufferedImage image;
 
-                        // Use global maximum DPI setting, fallback to 300 if not set
-                        int renderDpi = 300; // Default fallback
+                        // maxDPI is a safety ceiling for user-supplied values, not a target
+                        int renderDpi = SCAN_RENDER_DPI;
                         ApplicationProperties properties =
                                 ApplicationContextProvider.getBean(ApplicationProperties.class);
                         if (properties != null && properties.getSystem() != null) {
-                            renderDpi = properties.getSystem().getMaxDPI();
+                            renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
                         }
                         final int dpi = renderDpi;
                         final int pageIndex = i;

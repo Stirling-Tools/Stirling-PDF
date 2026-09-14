@@ -1,12 +1,29 @@
 import { useTranslation } from "react-i18next";
 import ArrowBackRoundedIcon from "@mui/icons-material/ArrowBackRounded";
-import { ActionIcon, Button, Input } from "@app/ui";
+import { ActionIcon, Button, IconPicker, Input } from "@app/ui";
 import { PipelineBlockerTooltip } from "@portal/components/pipelines/PipelineBlockerTooltip";
+import { PIPELINE_ICON_OPTIONS } from "@portal/components/pipelines/pipelineIcon";
+import { EnforceAsPolicyControl } from "@portal/components/pipelines/EnforceAsPolicyControl";
 import "@portal/components/pipelines/PipelineCreateHeader.css";
 
 export interface PipelineCreateHeaderProps {
   name: string;
   onNameChange: (name: string) => void;
+  /** Row icon key (see pipelineIcon); chosen from the picker beside the name. */
+  icon: string;
+  onIconChange: (key: string) => void;
+  /** "Enforce as policy" toggle, shown in the actions row. */
+  required: boolean;
+  onRequiredChange: (required: boolean) => void;
+  /** Whether this pipeline's source is the editor. */
+  runsOnEditor?: boolean;
+  /** Whether the user may create pipelines and policies. */
+  canManagePolicies?: boolean;
+  /**
+   * The permission check is still loading. The enforce toggle stays locked, but the manager-only
+   * tooltip is withheld so a still-loading manager isn't told they lack permission.
+   */
+  permissionsLoading?: boolean;
 
   canSave: boolean;
   /** Everything still owed before the pipeline can be created, shown on the disabled create button. */
@@ -28,6 +45,13 @@ export interface PipelineCreateHeaderProps {
 export function PipelineCreateHeader({
   name,
   onNameChange,
+  icon,
+  onIconChange,
+  required,
+  onRequiredChange,
+  runsOnEditor = false,
+  canManagePolicies = true,
+  permissionsLoading = false,
   canSave,
   blockers,
   saving,
@@ -37,6 +61,8 @@ export function PipelineCreateHeader({
   onBack,
 }: PipelineCreateHeaderProps) {
   const { t } = useTranslation();
+  // Only a manager may create a pipeline or policy; block create for others.
+  const readOnly = !canManagePolicies;
 
   return (
     <section className="portal-pipeline-create-header">
@@ -49,6 +75,13 @@ export function PipelineCreateHeader({
         <ArrowBackRoundedIcon style={{ fontSize: "1.25rem" }} />
       </ActionIcon>
 
+      <IconPicker
+        value={icon}
+        onChange={onIconChange}
+        options={PIPELINE_ICON_OPTIONS}
+        ariaLabel={t("portal.pipelines.builder.icon.label")}
+      />
+
       <Input
         className="portal-pipeline-create-header__name"
         value={name}
@@ -58,18 +91,31 @@ export function PipelineCreateHeader({
       />
 
       <div className="portal-pipeline-create-header__actions">
+        {runsOnEditor && (
+          <EnforceAsPolicyControl
+            required={required}
+            onRequiredChange={onRequiredChange}
+            disabled={!canManagePolicies}
+            permissionsLoading={permissionsLoading}
+          />
+        )}
+
         {/* The pair share one tooltip target because a disabled button swallows its own hover - the
             wrapper is what the pointer lands on. */}
         <PipelineBlockerTooltip
           heading={t("portal.pipelines.builder.blocker.heading")}
-          blockers={blockers}
+          blockers={
+            readOnly && !permissionsLoading
+              ? [t("portal.pipelines.builder.blocker.managerOnly")]
+              : blockers
+          }
         >
           <div className="portal-pipeline-create-header__create">
             <Button
               variant="secondary"
               size="sm"
               loading={saving && pendingCreateEnabled === false}
-              disabled={!canSave}
+              disabled={!canSave || readOnly}
               onClick={onCreatePaused}
             >
               {t("portal.pipelines.composer.createPaused")}
@@ -77,7 +123,7 @@ export function PipelineCreateHeader({
             <Button
               size="sm"
               loading={saving && pendingCreateEnabled === true}
-              disabled={!canSave}
+              disabled={!canSave || readOnly}
               onClick={onCreate}
             >
               {t("portal.pipelines.composer.create")}

@@ -26,7 +26,7 @@
   color: var(--c-text);
 }
 
-/* Trademarked wordmark SVG (theme-switched via .wordmark-light-only/.wordmark-dark-only). Height
+/* Trademarked wordmark SVG (theme-switched via .wordmark/.wordmark-dark-only). Height
    matches the portal nav's 22px wordmark so the modal and app read as one brand. No `display` here —
    the theme-switch utilities own visibility. */
 .portal-stepmodal__wordmark {

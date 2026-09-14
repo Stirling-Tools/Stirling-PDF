@@ -9,26 +9,6 @@
  */
 
 import type { ReactNode } from "react";
-import type {
-  AutomationConfig,
-  AutomationOperation,
-} from "@app/types/automation";
-
-/** Lifecycle status of a policy category for the current user/org. */
-export type PolicyStatus = "default" | "active" | "paused";
-
-/** A configurable field within a policy's settings. */
-export type PolicyFieldType = "toggle" | "select" | "chips" | "text";
-
-export interface PolicyField {
-  label: string;
-  key: string;
-  type: PolicyFieldType;
-  /** Current value: boolean (toggle), string (select/text), string[] (chips). */
-  value: boolean | string | string[];
-  /** Options for select/chips. */
-  options?: string[];
-}
 
 /** Static definition of a policy category (the "what it does"). */
 export interface PolicyCategory {
@@ -55,71 +35,18 @@ export interface PolicyCategory {
   requiresAiEngine?: boolean;
 }
 
-/**
- * The three-up summary stats shown at the foot of a configured policy's detail,
- * derived live from the user's uploaded files.
- */
-export interface PolicyStats {
-  /** Documents enforced (rendered with toLocaleString). */
-  enforced: number;
-  /** Human-formatted data-processed figure, e.g. "2.3 GB". */
-  dataProcessed: string;
-  /** Human-formatted active-for figure, e.g. "12d", or "—" when idle. */
-  activeFor: string;
-}
-
-/** The narrative + field configuration backing a category. */
-export interface PolicyConfigDef {
-  /** One-line summary of what the policy enforces. */
-  summary: string;
-  /** Pipeline-like rule chips shown in the "Enforces" section. */
-  rules: string[];
-  /** Human label for the scope this policy applies to. */
-  scopeLabel: string;
-  /** Editable settings fields. */
-  fields: PolicyField[];
-  /**
-   * The preset pipeline this category seeds a new policy with — the real,
-   * editable tool steps (same shape as the backend's `PipelineStep` and the
-   * Watch Folders automation `operations`). Configuring a policy starts from
-   * these and the user can edit them.
-   */
-  defaultOperations: AutomationOperation[];
-}
-
-/** A document a source can ingest, used in the wizard's "Sources" step. */
-export interface PolicySource {
-  id: string;
-  label: string;
-  desc: string;
-  icon: ReactNode;
-}
-
-/** An entry in a policy's recent-activity feed (derived from real uploads). */
-export interface PolicyActivityItem {
-  /** Document the policy acted on. */
-  doc: string;
-  /** What the policy did, e.g. "Classified as Contract • 3 tables extracted". */
-  action: string;
-  /** Relative timestamp, e.g. "2h ago". */
-  time: string;
-  /**
-   * "enforced" (clean green), "flagged" (needs review, amber), or "processing"
-   * (in progress — enforcement currently running, blue).
-   */
-  status: "enforced" | "flagged" | "processing";
-  /** The backend run this row reflects — used to offer Retry on a failed run. */
-  runId?: string;
-  /** The file the run acted on — needed to re-run it on Retry. */
-  fileId?: string;
-}
-
 /** Per-category runtime state held in the local cache. */
 export interface PolicyState {
   configured: boolean;
-  status: PolicyStatus;
-  /** Selected sources (ids from POLICY_SOURCES). */
+  /** Whether the backend policy is enabled (fires on the editor). Meaningful only
+   *  when `configured`; false otherwise. Mirrors the backend `Policy.enabled`. */
+  enabled: boolean;
+  /** Selected source ids. */
   sources: string[];
+  /** The policy's own name. Set for builder pipelines, which have no built-in category label. */
+  name?: string;
+  /** Whether the policy runs in the editor as each file passes through (resolved at decode). */
+  runsOnEditor?: boolean;
   /** When non-empty, narrows the policy to these document types. */
   scopeTypes: string[];
   /** Email that low-confidence enforcements are routed to. */
@@ -166,7 +93,7 @@ export interface PolicyState {
   isDefault?: boolean;
 }
 
-export type PoliciesByCategory = Record<string, PolicyState>;
+export type PoliciesByKey = Record<string, PolicyState>;
 
 /**
  * Output + retry settings applied by the Watch Folders engine to a policy's
@@ -180,51 +107,4 @@ export interface PolicyFolderSettings {
   outputNamePosition: "prefix" | "suffix" | "auto-number";
   maxRetries: number;
   retryDelayMinutes: number;
-}
-
-/** Everything the shared policy wizard collects, handed back on submit. */
-export interface PolicyWizardResult {
-  /** The saved workflow automation (created on setup, updated in place on edit). */
-  automation: AutomationConfig;
-  fieldValues: Record<string, boolean | string | string[]>;
-  sources: string[];
-  scopeTypes: string[];
-  reviewerEmail: string;
-  /** Output + retry settings for the backing folder. */
-  folder: PolicyFolderSettings;
-  /**
-   * Backend pipeline steps (each `operation` is a tool ENDPOINT path), built
-   * from the workflow via the tool registry in the wizard's Workflow step — the
-   * hook persists these to the backend without needing the registry itself.
-   * Structurally matches policyPipeline's `BackendPipelineStep` (inlined here to
-   * avoid a types↔services import cycle).
-   */
-  pipelineSteps: {
-    operation: string;
-    parameters: Record<string, unknown>;
-    fileParameters?: Record<string, string>;
-  }[];
-  /** Operation ids whose endpoint couldn't be resolved (dropped from steps). */
-  unresolvedOps: string[];
-}
-
-/**
- * What the locked tool-config page hands back on save. Unlike the wizard's
- * result it carries the tool `operations` directly (the page owns a fixed,
- * configure-only chain — there's no separate saved automation), plus the
- * endpoint-mapped pipeline steps. Used for both first-time configure and edits
- * of a preset policy.
- */
-export interface PolicyConfigResult {
-  /** The enabled tools (in order) as automation operations. */
-  operations: AutomationOperation[];
-  /** Endpoint-mapped backend steps built from `operations` via the registry. */
-  pipelineSteps: PolicyWizardResult["pipelineSteps"];
-  /** Operation ids whose endpoint couldn't be resolved (dropped from steps). */
-  unresolvedOps: string[];
-  fieldValues: Record<string, boolean | string | string[]>;
-  sources: string[];
-  scopeTypes: string[];
-  reviewerEmail: string;
-  folder: PolicyFolderSettings;
 }

@@ -19,7 +19,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Authenticates a linked self-hosted instance by its device credential (combined-billing "Mode A").
+ * Authenticates a linked self-hosted instance by its device credential (combined billing).
  *
  * <p>Reads {@code X-Device-Id} + {@code X-Device-Secret}, looks up the active {@link
  * LinkedInstance}, and constant-time compares the SHA-256 of the presented secret against the

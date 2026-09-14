@@ -1,10 +1,12 @@
 package stirling.software.saas.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,8 +25,8 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
-import stirling.software.saas.accountlink.AccountLinkController.RegisterRequest;
-import stirling.software.saas.accountlink.AccountLinkController.RegisterResponse;
+import stirling.software.saas.accountlink.AccountLinkController.InstanceRow;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -44,20 +46,28 @@ class AccountLinkControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new AccountLinkController(service, memberRepo, userRepository);
+        // Real resolver over the mocked repositories: the leader ladder moved into
+        // LeaderTeamResolver, and these tests are still asserting that ladder's behaviour
+        // through the controller.
+        controller =
+                new AccountLinkController(
+                        service,
+                        new LeaderTeamResolver(new UserTeamResolver(memberRepo), userRepository));
         auth =
                 new AnonymousAuthenticationToken(
                         "k", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_USER")));
     }
 
+    // The leader ladder used to be asserted through POST /register, which has been removed along
+    // with the JWT relay. It is exercised through /instances instead: same resolver, same rungs.
+
     @Test
-    void register_unauthenticated_returns401() {
+    void list_unauthenticated_returns401() {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenThrow(new SecurityException("not authenticated"));
 
-            ResponseEntity<RegisterResponse> resp =
-                    controller.register(new RegisterRequest("host"), auth);
+            ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
             verifyNoInteractions(service);
@@ -65,14 +75,12 @@ class AccountLinkControllerTest {
     }
 
     @Test
-    void register_noMembership_returns403() {
+    void list_noMembership_returns403() {
         User user = mockUser(42L);
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of());
-
-            ResponseEntity<RegisterResponse> resp = controller.register(null, auth);
+            ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
             verifyNoInteractions(service);
@@ -80,15 +88,16 @@ class AccountLinkControllerTest {
     }
 
     @Test
-    void register_nonLeader_returns403() {
+    void list_nonLeader_returns403() {
         User user = mockUser(42L);
         TeamMembership member = membership(7L, TeamRole.MEMBER);
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(member));
+            user.setTeam(member.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(member));
 
-            ResponseEntity<RegisterResponse> resp = controller.register(null, auth);
+            ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
             assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.FORBIDDEN);
             verifyNoInteractions(service);
@@ -96,27 +105,21 @@ class AccountLinkControllerTest {
     }
 
     @Test
-    void register_leader_mintsCredentialForCallerTeam() {
+    void list_leader_readsOnlyTheCallersTeam() {
         User user = mockUser(42L);
         TeamMembership leader = membership(7L, TeamRole.LEADER);
-        when(service.register(7L, 42L, "host"))
-                .thenReturn(
-                        new AccountLinkService.RegisteredInstance(99L, "dev-x", "sec-x", "host"));
+        when(service.list(7L)).thenReturn(List.of());
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
-            ResponseEntity<RegisterResponse> resp =
-                    controller.register(new RegisterRequest("host"), auth);
+            ResponseEntity<List<InstanceRow>> resp = controller.list(auth);
 
-            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.CREATED);
-            RegisterResponse body = resp.getBody();
-            assertThat(body).isNotNull();
-            // Team comes from the caller's membership and is surfaced in the response.
-            assertThat(body.teamId()).isEqualTo(7L);
-            assertThat(body.instanceId()).isEqualTo(99L);
-            assertThat(body.deviceSecret()).isEqualTo("sec-x");
+            assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+            // The team comes from the caller's membership, never from the request.
+            verify(service).list(7L);
         }
     }
 
@@ -128,7 +131,8 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
             ResponseEntity<Void> resp = controller.revoke(11L, auth);
 
@@ -144,7 +148,8 @@ class AccountLinkControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(leader));
+            user.setTeam(leader.getTeam());
+            when(memberRepo.findByTeamIdAndUserId(7L, 42L)).thenReturn(Optional.of(leader));
 
             ResponseEntity<Void> resp = controller.revoke(11L, auth);
 

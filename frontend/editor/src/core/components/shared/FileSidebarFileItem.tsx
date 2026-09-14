@@ -142,6 +142,7 @@ export interface FileItemProps {
   isSelected: boolean;
   isActive: boolean;
   isViewedInViewer: boolean;
+  isToolSkipped?: boolean;
   thumbnailUrl?: string;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
@@ -234,6 +235,7 @@ export const FileItem = React.memo(function FileItem({
   isSelected,
   isActive,
   isViewedInViewer,
+  isToolSkipped = false,
   dataUnavailable,
   thumbnailUrl,
   onClick,
@@ -256,6 +258,9 @@ export const FileItem = React.memo(function FileItem({
   hasVersionHistory = false,
 }: FileItemProps) {
   const { t } = useTranslation();
+  const toolSkipReason = isToolSkipped
+    ? t("files.notIncludedInToolRun", "Not included in this tool run")
+    : undefined;
   const terminology = useFileActionTerminology();
   const DownloadIcon = useFileActionIcons().download;
   const ext = getFileExtension(name);
@@ -336,6 +341,9 @@ export const FileItem = React.memo(function FileItem({
     <>
       <div
         ref={itemRef}
+        data-tool-skipped={isToolSkipped}
+        title={toolSkipReason}
+        aria-description={toolSkipReason}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
         draggable={draggable}

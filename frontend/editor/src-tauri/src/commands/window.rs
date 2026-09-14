@@ -48,8 +48,11 @@ fn build_window(app: &AppHandle, label: &str, url: &str) -> Result<WebviewWindow
     // dir (and thus IndexedDB / localStorage / cookies). macOS (WKWebView) and
     // Linux (WebKitGTK) don't have this constraint, so the arg is Windows-only.
     #[cfg(target_os = "windows")]
-    let builder =
-        builder.additional_browser_args("--enable-features=CertVerifierBuiltinFeature");
+    let builder = builder
+        .additional_browser_args("--enable-features=CertVerifierBuiltinFeature")
+        // Windows: no native title bar; the frontend draws its own (WindowTitleBar).
+        // macOS/Linux keep native decorations.
+        .decorations(false);
 
     builder.build().map_err(|e| e.to_string())
 }

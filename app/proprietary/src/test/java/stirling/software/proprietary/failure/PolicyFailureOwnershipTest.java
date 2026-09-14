@@ -181,7 +181,7 @@ class PolicyFailureOwnershipTest {
     private FileRunEvent asMember(String reader) {
         lenient().when(userService.getCurrentUsername()).thenReturn(reader);
         lenient().when(authority.canEditPolicies()).thenReturn(false);
-        List<FileRunEvent> visible = service.list(null, null, 10);
+        List<FileRunEvent> visible = service.list(null, false, null, 10);
         return visible.isEmpty() ? null : visible.getFirst();
     }
 
@@ -189,7 +189,7 @@ class PolicyFailureOwnershipTest {
     private FileRunEvent asReviewer(String reader) {
         lenient().when(userService.getCurrentUsername()).thenReturn(reader);
         lenient().when(authority.canEditPolicies()).thenReturn(true);
-        return service.list(null, null, 10).getFirst();
+        return service.list(null, false, null, 10).getFirst();
     }
 
     private List<FailureActionId> offeredTo(FileRunEvent event) {

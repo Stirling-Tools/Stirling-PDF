@@ -102,7 +102,7 @@ function getCurrentSourcePriority(): LanguageSource {
   const sourceStr = localStorage.getItem(I18N_STORAGE_KEYS.LANGUAGE_SOURCE);
   const sourceNum = sourceStr ? parseInt(sourceStr, 10) : null;
   return sourceNum !== null && !isNaN(sourceNum)
-    ? (sourceNum as LanguageSource)
+    ? sourceNum
     : LanguageSource.Fallback;
 }
 

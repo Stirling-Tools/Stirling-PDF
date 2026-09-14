@@ -32,21 +32,51 @@ export interface WalletActivityRow {
   docUnits: number;
 }
 
+/**
+ * The Team holding: paid user capacity. Independent of {@link ProcessorHolding} — a team may hold
+ * either product, both, or neither, which `status` alone cannot express.
+ */
+export interface TeamHolding {
+  /**
+   * The team pays for user capacity. False means no Team plan, so a caller offers it, rather than
+   * meaning capacity is unknown.
+   */
+  held: boolean;
+  /** Users the holding covers; null when the team has no user limit. */
+  licensedUsers: number | null;
+  /** Members occupying capacity right now — the capacity meter's numerator. */
+  usersInUse: number;
+}
+
+/** The Processor holding: metered automation beyond the free grant. */
+export interface ProcessorHolding {
+  /** The team has a live metered subscription. The fact `status: "subscribed"` actually carried. */
+  active: boolean;
+}
+
 export interface Wallet {
   /** Caller's primary team_id; null on the synthetic empty snapshot for team-less callers. */
   teamId: number | null;
+  /**
+   * The old single billing axis. Superseded by `team` and `processor`, which say which products the
+   * team holds independently; kept until every consumer stops branching on it.
+   */
   status: WalletStatus;
+  /** Paid user capacity, reported independently of Credits. */
+  team: TeamHolding;
+  /** Metered automation, reported independently of Team. */
+  processor: ProcessorHolding;
   role: WalletRole;
   /** ISO yyyy-mm-dd. Stripe period when subscribed; calendar month when free. */
   billingPeriodStart: string;
   billingPeriodEnd: string;
-  /** Free grant used (free teams) or documents processed this period (subscribed). */
+  /** Free grant used this period (free teams) or documents processed this period (subscribed). */
   billableUsed: number;
   /** Document ceiling for the window; null when subscribed-uncapped. */
   billableLimit: number | null;
-  /** One-time free grant size — a lifetime pool that survives subscribing. */
+  /** Free grant size per billing period; unused units don't carry over. */
   freeAllowance: number;
-  /** Free grant still available; 0 = exhausted. */
+  /** Free grant left in this period; 0 = exhausted. */
   freeRemaining: number;
   /** Paid per-document rate in minor units (may be fractional); null = unknown (render "unknown", never substitute). */
   pricePerDocMinor: number | null;

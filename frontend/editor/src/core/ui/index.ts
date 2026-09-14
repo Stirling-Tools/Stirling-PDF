@@ -10,6 +10,10 @@ export * from "@app/ui/ToggleSwitch";
 export * from "@app/ui/ProgressBar";
 export * from "@app/ui/MetricCard";
 export * from "@app/ui/NodeCard";
+export * from "@app/ui/OptionCard";
+export * from "@app/ui/CardRail";
+export * from "@app/ui/IconPicker";
+export * from "@app/ui/InfoTooltip";
 export * from "@app/ui/NavItem";
 export * from "@app/ui/NavSurface";
 export * from "@app/ui/Surface";
@@ -29,6 +33,7 @@ export * from "@app/ui/StatTile";
 
 // Feedback
 export * from "@app/ui/Spinner";
+export * from "@app/ui/Tooltip";
 export * from "@app/ui/Skeleton";
 export * from "@app/ui/Avatar";
 export * from "@app/ui/Chip";
@@ -42,6 +47,7 @@ export * from "@app/ui/Tabs";
 export * from "@app/ui/Dropdown";
 export * from "@app/ui/Drawer";
 export * from "@app/ui/DataTable";
+export * from "@app/ui/DataTableFilterBar";
 
 // Forms
 export * from "@app/ui/FormField";

@@ -1,5 +1,7 @@
 """Shared services used by the Stirling AI runtime."""
 
+from .language import language_directive, set_reply_locale
+from .operation_shortlist import OperationRanker, OperationShortlist, retrieval_query
 from .progress import (
     ProgressEmitter,
     emit_progress,
@@ -12,6 +14,8 @@ from .tracking import current_user_id, require_current_user_id, setup_posthog_tr
 
 __all__ = [
     "AppRuntime",
+    "OperationRanker",
+    "OperationShortlist",
     "ProgressEmitter",
     "ToolChainStep",
     "ToolDiagnostic",
@@ -20,9 +24,12 @@ __all__ = [
     "build_runtime",
     "current_user_id",
     "emit_progress",
+    "language_directive",
     "require_current_user_id",
     "reset_progress_emitter",
+    "retrieval_query",
     "set_progress_emitter",
+    "set_reply_locale",
     "setup_posthog_tracking",
     "validate_tool_chain",
 ]

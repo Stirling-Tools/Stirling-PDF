@@ -24,17 +24,10 @@
   --app-banner-icon: var(--c-accent-fg, var(--c-primary));
 }
 
-/* The one bar meant to pop, so it takes the feature gradient rather than a tint.
-   Fixed hues by design — it doesn't follow the chosen accent. */
 .app-banner--promo {
-  --app-banner-bg: linear-gradient(
-    135deg,
-    var(--c-hue-indigo) 0%,
-    var(--c-hue-purple) 100%
-  );
-  --app-banner-border: transparent;
-  --app-banner-icon: var(--color-text-on-accent);
-  color: var(--color-text-on-accent);
+  --app-banner-bg: var(--c-bg-raised);
+  --app-banner-border: var(--c-border-subtle);
+  --app-banner-icon: var(--c-text-muted);
 }
 
 .app-banner--warning {
@@ -86,16 +79,18 @@
   font-size: 0.75rem;
 }
 
-/* On the gradient everything is white; muted grey would disappear. */
-.app-banner--promo .app-banner__message,
-.app-banner--promo .app-banner__actions .sui-btn--tertiary,
-.app-banner--promo .app-banner__actions .sui-ai {
-  color: var(--color-text-on-accent);
+.app-banner--promo .app-banner__icon {
+  width: 1.75rem;
+  height: 1.75rem;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--c-surface-sunken);
+  box-shadow: inset 0 0 0 1px var(--c-border-subtle);
 }
 
-/* Lifts the premium CTA off the gradient it sits on. */
-.app-banner--promo .app-banner__actions .sui-btn--primary {
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+.app-banner--promo.app-banner--compact .app-banner__icon {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .app-banner__actions {

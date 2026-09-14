@@ -9,7 +9,7 @@ import {
 } from "@app/services/pdfiumService";
 import { renderPdfiumPageDataUrl } from "@app/utils/pdfiumPageRender";
 
-interface ThumbnailResult {
+export interface ThumbnailResult {
   pageNumber: number;
   thumbnail: string;
   success: boolean;

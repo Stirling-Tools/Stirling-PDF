@@ -8,6 +8,8 @@ import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
 import { viteStaticCopy } from "vite-plugin-static-copy";
 
 const gzipPromise = promisify(gzip);
@@ -259,10 +261,21 @@ export default defineConfig(async ({ mode, command }) => {
         };
 
   return {
+    // Per-mode: the default is one shared node_modules/.vite, so two dev servers in
+    // different modes re-optimize over each other and the browser 504s on a stale dep
+    // hash. Anchored to frontend/ because a relative path resolves against the vite
+    // root (editor/) and would create a second node_modules there.
+    cacheDir: resolve(
+      import.meta.dirname,
+      "..",
+      "node_modules",
+      `.vite-${effectiveMode}`,
+    ),
     define: {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
     plugins: [
+      iconSvgr(),
       react(),
       ...(runSubpath ? [subpathBareRedirectPlugin(runSubpath)] : []),
       tsconfigPaths({

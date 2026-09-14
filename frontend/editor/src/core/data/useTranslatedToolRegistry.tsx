@@ -30,7 +30,9 @@ import { repairOperationConfig } from "@app/hooks/tools/repair/useRepairOperatio
 import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAddWatermarkOperation";
 import { addStampOperationConfig } from "@app/components/tools/addStamp/useAddStampOperation";
 import { addAttachmentsOperationConfig } from "@app/hooks/tools/addAttachments/useAddAttachmentsOperation";
+import { createPortfolioOperationConfig } from "@app/hooks/tools/createPortfolio/useCreatePortfolioOperation";
 import { unlockPdfFormsOperationConfig } from "@app/hooks/tools/unlockPdfForms/useUnlockPdfFormsOperation";
+import { autoFormDetectionOperationConfig } from "@app/hooks/tools/autoFormDetection/useAutoFormDetectionOperation";
 import { singleLargePageOperationConfig } from "@app/hooks/tools/singleLargePage/useSingleLargePageOperation";
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { convertOperationConfig } from "@app/hooks/tools/convert/useConvertOperation";
@@ -109,7 +111,6 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         synonyms: getSynonyms(t, "pdfTextEditor"),
         supportsAutomate: false,
         automationSettings: null,
-        versionStatus: "alpha",
       },
       multiTool: {
         icon: (
@@ -481,6 +482,46 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
           "builder",
         ],
       },
+      autoFormDetection: {
+        icon: (
+          <LocalIcon
+            icon="document-scanner-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.autoFormDetection.title", "Auto Form Detection"),
+        component: lazy(
+          () => import("@app/tools/autoFormDetection/AutoFormDetection"),
+        ),
+        description: t(
+          "home.autoFormDetection.desc",
+          "Automatically detect form fields with AI and make your PDF fillable.",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.AUTOMATION,
+        maxFiles: 1,
+        endpoints: ["form-detection"],
+        unavailableMessage: t(
+          "home.autoFormDetection.unavailable",
+          "Needs the AI detection model, which isn't installed on this server. An administrator can add it under Settings > Features > AI Form Detection.",
+        ),
+        operationConfig: asRegistryConfig(autoFormDetectionOperationConfig),
+        synonyms: [
+          "form",
+          "detect",
+          "fillable",
+          "acroform",
+          "ai",
+          "fields",
+          "auto",
+        ],
+        automationSettings: lazySettings(
+          () =>
+            import("@app/components/tools/autoFormDetection/AutoFormDetectionSettings"),
+        ),
+        supportsAutomate: true,
+      },
       changePermissions: {
         icon: <LocalIcon icon="lock-outline" width="1.5rem" height="1.5rem" />,
         name: t("home.changePermissions.title", "Change Permissions"),
@@ -847,6 +888,31 @@ export function useTranslatedToolCatalog(): TranslatedToolCatalog {
         automationSettings: lazySettings(
           () =>
             import("@app/components/tools/addAttachments/AddAttachmentsSettings"),
+        ),
+      },
+      createPortfolio: {
+        icon: (
+          <LocalIcon
+            icon="library-add-outline-rounded"
+            width="1.5rem"
+            height="1.5rem"
+          />
+        ),
+        name: t("home.createPortfolio.title", "Create Portfolio"),
+        component: lazy(() => import("@app/tools/CreatePortfolio")),
+        description: t(
+          "home.createPortfolio.desc",
+          "Bundle multiple files into an Adobe PDF Portfolio",
+        ),
+        categoryId: ToolCategoryId.STANDARD_TOOLS,
+        subcategoryId: SubcategoryId.PAGE_FORMATTING,
+        synonyms: getSynonyms(t, "createPortfolio"),
+        maxFiles: -1,
+        endpoints: ["create-portfolio"],
+        operationConfig: asRegistryConfig(createPortfolioOperationConfig),
+        automationSettings: lazySettings(
+          () =>
+            import("@app/components/tools/createPortfolio/CreatePortfolioSettings"),
         ),
       },
 
