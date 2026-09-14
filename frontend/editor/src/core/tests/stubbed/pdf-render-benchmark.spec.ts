@@ -31,10 +31,9 @@ test.describe("PDF Viewer Hot Paths Performance Benchmark", () => {
       .first()
       .setInputFiles(SAMPLE_PDF);
 
-    // Wait until file is loaded
-    await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
-      timeout: 15_000,
-    });
+    // Wait until the reader shows the loaded document. No sidebar assertion:
+    // on /read the file rail stays collapsed by design, the document opens
+    // directly in the viewer instead.
     await expect(page.getByText(/\/\s*1/)).toBeVisible({ timeout: 30_000 });
 
     // Wait until EmbedPDF registry is fully initialized
