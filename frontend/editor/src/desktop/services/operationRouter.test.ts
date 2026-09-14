@@ -49,6 +49,7 @@ describe("operationRouter.getBaseUrl — SaaS mode cloud-only routing", () => {
     "/api/v1/team/my",
     "/api/v1/policies",
     "/api/v1/policies/run",
+    "/api/v1/automation/meter",
     // Both live in app/proprietary, which the bundled desktop backend is built without,
     // so routing them local-first left them 404ing on desktop even when signed in.
     "/api/v1/processing-folders",

@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, test, vi } from "vitest";
 // classification demo's files never reach the AI, and the batch accounting follow-ups depend on.
 
 const classifyFileHeuristically = vi.fn();
-const meterClassificationRun = vi.fn();
+const meterAutomationRun = vi.fn();
 const listDirectory = vi.fn();
 const readDiskFile = vi.fn();
 
@@ -17,9 +17,8 @@ vi.mock("@app/services/heuristic/heuristicClassification", () => ({
   classifyFileHeuristically: (...args: unknown[]) =>
     classifyFileHeuristically(...args),
 }));
-vi.mock("@app/services/classificationMeter", () => ({
-  meterClassificationRun: (...args: unknown[]) =>
-    meterClassificationRun(...args),
+vi.mock("@app/services/automationMeter", () => ({
+  meterAutomationRun: (...args: unknown[]) => meterAutomationRun(...args),
 }));
 import {
   mergeOutcomes,
@@ -113,9 +112,14 @@ describe("runClassificationDemoSweep", () => {
   test("meters the batch once, for the documents it actually classified", async () => {
     await runClassificationDemoSweep("/downloads", deps());
 
-    expect(meterClassificationRun).toHaveBeenCalledTimes(1);
-    expect(meterClassificationRun).toHaveBeenCalledWith(
-      expect.objectContaining({ documentCount: 2 }),
+    expect(meterAutomationRun).toHaveBeenCalledTimes(1);
+    expect(meterAutomationRun).toHaveBeenCalledWith(
+      expect.objectContaining({
+        inputs: [
+          { pages: 0, bytes: 1 },
+          { pages: 0, bytes: 1 },
+        ],
+      }),
     );
   });
 
@@ -125,7 +129,7 @@ describe("runClassificationDemoSweep", () => {
     const outcome = await runClassificationDemoSweep("/downloads", deps());
 
     expect(outcome.processed).toBe(0);
-    expect(meterClassificationRun).not.toHaveBeenCalled();
+    expect(meterAutomationRun).not.toHaveBeenCalled();
   });
 
   test("skips an unreadable document but still retires it", async () => {
@@ -392,39 +396,8 @@ describe("settling swept documents locally", () => {
     // Same billing today, separate identity, so onboarding can be repriced alone.
     await runClassificationDemoSweep("/downloads", deps());
 
-    // `source` is what the server prices on; policyName is only the audit label.
-    expect(meterClassificationRun).toHaveBeenCalledWith(
-      expect.objectContaining({
-        policyName: "Onboarding classification",
-        source: "onboarding",
-      }),
+    expect(meterAutomationRun).toHaveBeenCalledWith(
+      expect.objectContaining({ automationName: "Onboarding classification" }),
     );
-  });
-
-  test("meters the label ids it actually saw, not the display roll-ups", async () => {
-    // Regression: the set was built but never added to, so every batch reported an empty
-    // label list. Families (and the synthetic "other") are a display concern.
-    classifyFileHeuristically
-      .mockResolvedValueOnce({
-        labels: ["invoice"],
-        confidence: "high",
-        score: 9,
-        isEnglish: true,
-      })
-      .mockResolvedValueOnce({
-        labels: ["contract"],
-        confidence: "high",
-        score: 9,
-        isEnglish: true,
-      });
-
-    await runClassificationDemoSweep("/downloads", deps());
-
-    const payload = vi.mocked(meterClassificationRun).mock.calls.at(-1)?.[0];
-    expect(payload?.labels).toEqual(
-      expect.arrayContaining(["invoice", "contract"]),
-    );
-    expect(payload?.labels).not.toContain("finance");
-    expect(payload?.labels).not.toContain("other");
   });
 });

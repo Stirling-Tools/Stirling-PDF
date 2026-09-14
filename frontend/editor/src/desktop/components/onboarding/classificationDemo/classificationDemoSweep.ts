@@ -8,7 +8,7 @@ import {
   type DiskFileEntry,
 } from "@app/services/localFolderContents";
 import { classifyFileHeuristically } from "@app/services/heuristic/heuristicClassification";
-import { meterClassificationRun } from "@app/services/classificationMeter";
+import { meterAutomationRun } from "@app/services/automationMeter";
 import type { StirlingFile } from "@app/types/fileContext";
 import type {
   HeuristicConfidence,
@@ -17,9 +17,13 @@ import type {
 import { LABEL_FAMILIES } from "@app/data/classificationLabels";
 import { accentColor, accentCycleColor } from "@app/utils/accentColors";
 
-/** Billed as its own source, so `premium.classification.billOnboarding=false` makes the
- *  sweep free server-side without touching how uploads are charged. */
+/** Names this run in the billing audit trail, so onboarding's sweep is distinguishable
+ *  from classification on upload. */
 const ONBOARDING_METER_NAME = "Onboarding classification";
+
+/** The step this work corresponds to, matching what the upload path meters, so both read
+ *  the same in the trail even though this sweep never calls the AI. */
+const CLASSIFY_STEP = "/api/v1/ai/tools/classify-and-label";
 
 /** How many PDFs one sweep covers. The rest of the folder waits for a follow-up batch. */
 export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
@@ -264,9 +268,10 @@ export async function runClassificationDemoSweep(
   const exclude = options.exclude ?? new Set<string>();
   const unclassifiedName = options.unclassifiedName ?? "Other";
   const counts = new Map<string, ClassificationDemoGroupCount>();
-  // Real label ids for the audit record; families (and the synthetic "other") are a
-  // display roll-up, and every other meter caller sends labels.
-  const metered = new Set<string>();
+  // One entry per document the sweep classified, which is what the meter charges on.
+  // Pages are unknown here: the heuristic reads text without paginating, and the meter
+  // treats 0 as "not known" rather than "no pages".
+  const metered: { pages: number; bytes: number }[] = [];
   let processed = 0;
 
   const report = (phase: ClassificationDemoPhase, total: number) =>
@@ -297,20 +302,19 @@ export async function runClassificationDemoSweep(
       if (labels) {
         processed += 1;
         countVerdict(counts, labels, unclassifiedName);
-        for (const label of labels) metered.add(label);
+        metered.push({ pages: 0, bytes: entry.sizeBytes });
       }
     }
     report("processing", total);
   }
 
-  // One call for the batch, not per document: same billable work as the upload path,
-  // but with no per-file records to attribute it to.
-  if (processed > 0) {
-    meterClassificationRun({
-      policyName: ONBOARDING_METER_NAME,
-      source: "onboarding",
-      documentCount: processed,
-      labels: [...metered],
+  // One call for the batch rather than per document, matching how the upload path meters
+  // a run: the sweep is one automation over many inputs.
+  if (metered.length > 0) {
+    meterAutomationRun({
+      automationName: ONBOARDING_METER_NAME,
+      operations: [CLASSIFY_STEP],
+      inputs: metered,
     });
   }
 
