@@ -8,6 +8,7 @@ import lombok.RequiredArgsConstructor;
 
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutedDestination;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 
@@ -26,18 +27,25 @@ public class PolicyOutputResolver {
         if (outputIds.isEmpty()) {
             return List.of(policy.output());
         }
-        return outputIds.stream()
-                .map(
-                        id ->
-                                sourceStore
-                                        .get(id)
-                                        .filter(Source::enabled)
-                                        .filter(source -> !"editor".equals(source.type()))
-                                        .orElseThrow(
-                                                () ->
-                                                        new IllegalArgumentException(
-                                                                "The output destination is missing, disabled, or unavailable"))
-                                        .toOutputSpec())
+        return outputIds.stream().map(this::resolveDestination).toList();
+    }
+
+    /** Resolve each routing rule's destination live; rule order is preserved. */
+    public List<RoutedDestination> resolveRouting(Policy policy) {
+        return policy.routingRules().stream()
+                .map(rule -> new RoutedDestination(rule, resolveDestination(rule.outputId())))
                 .toList();
+    }
+
+    private OutputSpec resolveDestination(String id) {
+        return sourceStore
+                .get(id)
+                .filter(Source::enabled)
+                .filter(source -> !"editor".equals(source.type()))
+                .orElseThrow(
+                        () ->
+                                new IllegalArgumentException(
+                                        "The output destination is missing, disabled, or unavailable"))
+                .toOutputSpec();
     }
 }
