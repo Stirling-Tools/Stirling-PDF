@@ -4,7 +4,10 @@ import { useTranslation } from "react-i18next";
 import { Menu, Tooltip } from "@mantine/core";
 import { ActionIcon, Button } from "@app/ui";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { isResolvableHere } from "@app/hooks/useNotifications";
+import {
+  isResolvableHere,
+  refreshNotificationsNow,
+} from "@app/hooks/useNotifications";
 import type { NotificationDocumentState } from "@app/hooks/useNotifications";
 import type {
   ClientActionRegistry,
@@ -135,6 +138,10 @@ export function NotificationItem({
       return;
     }
 
+    // A resolution closes its row server-side, and the panel reads that list on a 30s poll, so
+    // without this the row a reader just fixed sits there until a poll happens to land. Re-read
+    // rather than patched here, as the password path does: the server decides what closed.
+    refreshNotificationsNow();
     if (spec.closesPanel) onDismissPanel();
   };
 

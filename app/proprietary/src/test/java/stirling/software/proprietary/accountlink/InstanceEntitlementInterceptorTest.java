@@ -5,24 +5,31 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.notNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.ByteArrayOutputStream;
+import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.ObjectProvider;
@@ -31,11 +38,17 @@ import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.mock.web.MockMultipartHttpServletRequest;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.method.HandlerMethod;
 
+import stirling.software.common.annotations.AutoJobPostMapping;
 import stirling.software.common.util.TempFile;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
+import stirling.software.proprietary.security.model.ApiKeyAuthenticationToken;
+import stirling.software.proprietary.security.model.User;
 
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementInterceptorTest {
@@ -51,10 +64,17 @@ class InstanceEntitlementInterceptorTest {
                 gate, entitlementCache, meterProvider, freeTierUsageService, tempFileManager);
     }
 
+    @AfterEach
+    void clearAuth() {
+        SecurityContextHolder.clearContext();
+    }
+
     private boolean preHandle(MockHttpServletResponse response) throws Exception {
         return interceptor()
                 .preHandle(
-                        new MockHttpServletRequest("GET", "/api/v1/ai/x"), response, new Object());
+                        new MockHttpServletRequest("GET", "/api/v1/ai/tools/x"),
+                        response,
+                        new Object());
     }
 
     @Test
@@ -88,13 +108,45 @@ class InstanceEntitlementInterceptorTest {
                 .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/x");
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         verify(freeTierUsageService).accrue(eq(BillingCategory.AI), eq(1L), isNull());
         verifyNoInteractions(entitlementCache, meterProvider);
+    }
+
+    @Test
+    void freeTierAutomationUsesTheSourceDocumentKey() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/rotate-pdf");
+        req.addHeader("X-Stirling-Automation", "true");
+        req.addHeader("X-Stirling-Run-Id", "run-1");
+        req.addHeader("X-Stirling-Document-Id", "run-1:0");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verify(freeTierUsageService).accrue(BillingCategory.AUTOMATION, 1L, "run-1:0");
+        verifyNoInteractions(entitlementCache, meterProvider);
+    }
+
+    @Test
+    void freeTierDoesNotMeterFilelessWork() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verifyNoInteractions(freeTierUsageService, entitlementCache, meterProvider);
     }
 
     @Test
@@ -117,7 +169,7 @@ class InstanceEntitlementInterceptorTest {
                 .thenReturn(GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/x");
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
@@ -147,13 +199,34 @@ class InstanceEntitlementInterceptorTest {
         when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/x");
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object()); // stashes AI category
         interceptor.afterCompletion(req, resp, new Object(), null);
 
-        // No uploaded files → bytes axis → the 1-unit floor; no input identity → null signature.
-        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(1L), isNull());
+        // A tiny non-PDF input bills the 1-unit byte floor; a standalone op has a null key.
+        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(1L), isNull(), eq(10));
+    }
+
+    @Test
+    void doesNotMeterFilelessBillableOp() throws Exception {
+        // A billable op with no document (no multipart file) is not metered - matching SaaS, which
+        // short-circuits a request that carries no file.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, new Object());
+        interceptor.afterCompletion(req, resp, new Object(), null);
+
+        verify(meter, never()).accrue(any(), any(), anyLong(), any(), eq(10));
     }
 
     @Test
@@ -167,22 +240,48 @@ class InstanceEntitlementInterceptorTest {
         UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
         LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
         when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
-        // Materialise to a real path under @TempDir; the interceptor writes the upload there and
-        // jpdfium + the hasher read it back.
+        // Materialise to a real path under @TempDir; the interceptor writes the PDF there so
+        // jpdfium can read its page count back.
         TempFile temp = mock(TempFile.class);
         when(temp.getPath()).thenReturn(tmp.resolve("input.bin"));
         when(tempFileManager.createManagedTempFile(any())).thenReturn(temp);
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockMultipartHttpServletRequest req = new MockMultipartHttpServletRequest();
-        req.setRequestURI("/api/v1/ai/x");
+        req.setRequestURI("/api/v1/ai/tools/x");
         req.addFile(new MockMultipartFile("file", "doc.pdf", "application/pdf", fivePagePdf()));
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
 
-        // 5 pages + a non-null input-set signature (file ops carry a dedup key).
-        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(5L), notNull());
+        // 5 pages, and a null key: a standalone op (no run) is its own charge - never deduped.
+        verify(meter).accrue(eq(period), eq(BillingCategory.AI), eq(5L), isNull(), eq(10));
+    }
+
+    @Test
+    void repeatedStandaloneOpsEachCharge() throws Exception {
+        // A standalone op (no run id) has a null key, so identical calls each accrue - matching
+        // SaaS, which never groups a call outside a run ("charge per API call"). The old
+        // input-signature window wrongly collapsed these on the instance.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+        authenticateWithApiKey();
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        for (int call = 0; call < 2; call++) {
+            MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
+            MockHttpServletResponse resp = new MockHttpServletResponse();
+            interceptor.preHandle(req, resp, toolHandler());
+            interceptor.afterCompletion(req, resp, toolHandler(), null);
+        }
+
+        verify(meter, times(2))
+                .accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull(), eq(10));
     }
 
     @Test
@@ -192,7 +291,7 @@ class InstanceEntitlementInterceptorTest {
         when(meterProvider.getIfAvailable()).thenReturn(null); // metering.enabled = false
 
         InstanceEntitlementInterceptor interceptor = interceptor();
-        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/x");
+        MockHttpServletRequest req = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
         MockHttpServletResponse resp = new MockHttpServletResponse();
         interceptor.preHandle(req, resp, new Object());
         interceptor.afterCompletion(req, resp, new Object(), null);
@@ -234,6 +333,217 @@ class InstanceEntitlementInterceptorTest {
         interceptor.afterCompletion(req, resp, new Object(), null);
 
         verifyNoInteractions(meterProvider, freeTierUsageService);
+    }
+
+    @Test
+    void billsApiKeyToolCallAsApi() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+        authenticateWithApiKey();
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, toolHandler());
+        interceptor.afterCompletion(req, resp, toolHandler(), null);
+
+        verify(meter).accrue(eq(period), eq(BillingCategory.API), eq(1L), isNull(), eq(10));
+    }
+
+    @Test
+    void doesNotBillApiKeyCallToNonToolEndpoint() throws Exception {
+        // Matches SaaS: an API-key call to a non-tool endpoint (no @AutoJobPostMapping) is not
+        // billed. Only tool operations count as API usage.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        authenticateWithApiKey();
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest req =
+                new MockHttpServletRequest("GET", "/api/v1/general/files/some-id");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, plainHandler());
+        interceptor.afterCompletion(req, resp, plainHandler(), null);
+
+        verifyNoInteractions(meterProvider, freeTierUsageService);
+    }
+
+    @Test
+    void policyRunSubStepsAccrueUnderTheSharedRunId() throws Exception {
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current())
+                .thenReturn(
+                        Optional.of(
+                                new InstanceEntitlement(
+                                        true,
+                                        0,
+                                        0,
+                                        100L,
+                                        EntitlementState.OK,
+                                        policy,
+                                        period,
+                                        period.plusMonths(1),
+                                        null,
+                                        20)));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        for (int step = 0; step < 3; step++) {
+            MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
+            req.addHeader("X-Stirling-Automation", "true");
+            req.addHeader("X-Stirling-Run-Id", "run-1");
+            MockHttpServletResponse resp = new MockHttpServletResponse();
+            interceptor.preHandle(req, resp, new Object());
+            interceptor.afterCompletion(req, resp, new Object(), null);
+        }
+
+        verify(meter, times(3))
+                .accrue(eq(period), eq(BillingCategory.AUTOMATION), anyLong(), eq("run-1"), eq(20));
+    }
+
+    @ParameterizedTest
+    @ValueSource(ints = {400, 422, 500})
+    void failedResponsesDoNotConsumeStepAllowance(int status) {
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        response.setStatus(status);
+
+        interceptor()
+                .afterCompletion(
+                        fileRequest("/api/v1/general/merge"), response, new Object(), null);
+
+        verifyNoInteractions(meterProvider);
+    }
+
+    @Test
+    void failedRequestsDoNotConsumeStepAllowance() {
+        interceptor()
+                .afterCompletion(
+                        fileRequest("/api/v1/general/merge"),
+                        new MockHttpServletResponse(),
+                        new Object(),
+                        new IllegalStateException("failed"));
+
+        verifyNoInteractions(meterProvider);
+    }
+
+    @Test
+    void forgedRunIdWithoutAutomationHeaderIsIgnored() throws Exception {
+        // A raw API-key caller that sets X-Stirling-Run-Id but not the automation header must not
+        // be
+        // able to group its separate calls into one charge: the run id keys the meter only on a
+        // genuine internal dispatch, so here the op falls back to its standalone null key.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+        authenticateWithApiKey();
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
+        req.addHeader("X-Stirling-Run-Id", "forged");
+        MockHttpServletResponse resp = new MockHttpServletResponse();
+        interceptor.preHandle(req, resp, toolHandler());
+        interceptor.afterCompletion(req, resp, toolHandler(), null);
+
+        verify(meter).accrue(eq(period), eq(BillingCategory.API), anyLong(), isNull(), eq(10));
+    }
+
+    @Test
+    void multiDocumentRunChargesPerDocumentNotPerRun() throws Exception {
+        // Two source documents in one run carry distinct document ids, so each accrues under its
+        // own
+        // key: the meter collapses a document's steps but bills the documents separately (matching
+        // SaaS per-document lineage), rather than collapsing the whole run to a single charge.
+        when(gate.evaluate(anyBoolean()))
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
+        UsageMeterService meter = mock(UsageMeterService.class);
+        when(meterProvider.getIfAvailable()).thenReturn(meter);
+        UnitCalcPolicy policy = new UnitCalcPolicy(1, 1_048_576L, 1, 1000);
+        LocalDateTime period = LocalDateTime.of(2026, 6, 1, 0, 0);
+        when(entitlementCache.current()).thenReturn(Optional.of(entitled(policy, period)));
+
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        for (String docId : List.of("run-1:0", "run-1:0", "run-1:1")) {
+            MockMultipartHttpServletRequest req = fileRequest("/api/v1/general/merge");
+            req.addHeader("X-Stirling-Automation", "true");
+            req.addHeader("X-Stirling-Run-Id", "run-1");
+            req.addHeader("X-Stirling-Document-Id", docId);
+            MockHttpServletResponse resp = new MockHttpServletResponse();
+            interceptor.preHandle(req, resp, new Object());
+            interceptor.afterCompletion(req, resp, new Object(), null);
+        }
+
+        // Keyed on the document id, not the run id: document run-1:0's two steps both accrue under
+        // it (the meter dedups them), and run-1:1 accrues under its own key.
+        verify(meter, times(2))
+                .accrue(
+                        eq(period),
+                        eq(BillingCategory.AUTOMATION),
+                        anyLong(),
+                        eq("run-1:0"),
+                        eq(10));
+        verify(meter)
+                .accrue(
+                        eq(period),
+                        eq(BillingCategory.AUTOMATION),
+                        anyLong(),
+                        eq("run-1:1"),
+                        eq(10));
+    }
+
+    private static MockMultipartHttpServletRequest fileRequest(String uri) {
+        MockMultipartHttpServletRequest req = new MockMultipartHttpServletRequest();
+        req.setRequestURI(uri);
+        // A tiny non-PDF part: no page-count temp needed, and it bills the 1-unit byte floor.
+        req.addFile(
+                new MockMultipartFile(
+                        "fileInput", "doc.bin", "application/octet-stream", "x".getBytes()));
+        return req;
+    }
+
+    private static void authenticateWithApiKey() {
+        ApiKeyAuthenticationToken token =
+                new ApiKeyAuthenticationToken(
+                        new User(),
+                        "test-api-key",
+                        List.of(new SimpleGrantedAuthority("ROLE_API")));
+        SecurityContextHolder.getContext().setAuthentication(token);
+    }
+
+    private static HandlerMethod toolHandler() {
+        return handlerMethod("tool");
+    }
+
+    private static HandlerMethod plainHandler() {
+        return handlerMethod("plain");
+    }
+
+    private static HandlerMethod handlerMethod(String name) {
+        try {
+            Method m = Fixture.class.getDeclaredMethod(name);
+            return new HandlerMethod(new Fixture(), m);
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    static class Fixture {
+        @AutoJobPostMapping(value = "/tool", resourceWeight = 1)
+        public void tool() {}
+
+        public void plain() {}
     }
 
     private static InstanceEntitlement entitled(UnitCalcPolicy policy, LocalDateTime period) {
