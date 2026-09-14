@@ -39,8 +39,8 @@ import software.amazon.awssdk.services.s3.model.NoSuchKeyException;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 /**
- * End-to-end {@link S3InputSource} test against a real S3 API (MinIO), through the production
- * client factory: listing, claiming, streaming, consensus delete, and save-time validation.
+ * End-to-end {@link S3InputSource} test against a real S3 API (Silo), through the production client
+ * factory: listing, claiming, streaming, consensus delete, and save-time validation.
  */
 @Testcontainers(disabledWithoutDocker = true)
 class S3InputSourceMinioTest {
@@ -52,8 +52,7 @@ class S3InputSourceMinioTest {
     @Container
     static MinIOContainer minio =
             new MinIOContainer(
-                            DockerImageName.parse(
-                                            "quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z")
+                            DockerImageName.parse("pgsty/silo:RELEASE.2026-09-03T13-18-01Z")
                                     .asCompatibleSubstituteFor("minio/minio"))
                     .withUserName(ACCESS_KEY)
                     .withPassword(SECRET_KEY);
@@ -84,7 +83,7 @@ class S3InputSourceMinioTest {
         bucket = "policy-inbox-" + ++bucketCounter;
         adminClient.createBucket(CreateBucketRequest.builder().bucket(bucket).build());
 
-        // The MinIO endpoint resolves to loopback, so the operator opt-in must be on.
+        // The Silo endpoint resolves to loopback, so the operator opt-in must be on.
         ApplicationProperties properties = new ApplicationProperties();
         properties.getPolicies().setAllowPrivateS3Endpoints(true);
         source =
