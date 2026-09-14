@@ -8,10 +8,12 @@ import { qk } from "@portal/queries/keys";
 
 interface AppConfigShape {
   aiEngineEnabled?: boolean;
+  aiFeatures?: { classify?: boolean };
 }
 
 export interface AiEngineState {
   enabled: boolean;
+  classificationEnabled: boolean;
   loading: boolean;
 }
 
@@ -23,6 +25,9 @@ export function useAiEngineEnabled(): AiEngineState {
   });
   return {
     enabled: Boolean(query.data?.aiEngineEnabled),
+    classificationEnabled: Boolean(
+      query.data?.aiEngineEnabled && query.data.aiFeatures?.classify,
+    ),
     loading: query.isPending,
   };
 }

@@ -47,6 +47,11 @@ vi.mock("@portal/api/sources", () => ({
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
 
+const aiClassificationEnabled = { value: true };
+vi.mock("@app/hooks/useAiClassificationEnabled", () => ({
+  useAiClassificationEnabled: () => aiClassificationEnabled.value,
+}));
+
 const SAVE_CHANGES = "portal.policies.wizard.actions.saveChanges";
 const ENABLE = "portal.policies.wizard.actions.enablePolicy";
 
@@ -98,6 +103,7 @@ const routingEntry: CatalogueEntry = {
 
 describe("PolicySetupWizard", () => {
   beforeEach(() => {
+    aiClassificationEnabled.value = true;
     fetchIntegrations.mockResolvedValue([]);
     fetchSources.mockResolvedValue({ kpis: [], sources: [] });
   });
@@ -247,6 +253,53 @@ describe("PolicySetupWizard", () => {
         outputId: "finance",
       },
     ]);
+  });
+
+  it("allows deterministic routing without AI or a classify step", async () => {
+    aiClassificationEnabled.value = false;
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <SharedPolicySetupWizard
+        entry={routingEntry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        routingConfig={({ onChange }) => (
+          <button
+            onClick={() =>
+              onChange({
+                sourceId: "inbox",
+                trigger: { type: "folder-watch", options: {} },
+                outputIds: ["archive"],
+                routingRules: [
+                  {
+                    condition: {
+                      input: {
+                        source: "document",
+                        field: "document.extension",
+                      },
+                      operator: "matches-any",
+                      values: ["pdf"],
+                    },
+                    outputId: "finance",
+                  },
+                ],
+              })
+            }
+          >
+            Configure deterministic routing
+          </button>
+        )}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Configure deterministic routing" }),
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.steps).toEqual([]);
   });
 
   it("defaults a new security policy to enforcing on export", async () => {

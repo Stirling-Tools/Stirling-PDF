@@ -29,6 +29,14 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("@portal/hooks/useAiEngineEnabled", () => ({
+  useAiEngineEnabled: () => ({
+    enabled: true,
+    classificationEnabled: true,
+    loading: false,
+  }),
+}));
+
 const fetchPipeline = vi.fn();
 const fetchTriggers = vi.fn();
 const savePipeline = vi.fn();
