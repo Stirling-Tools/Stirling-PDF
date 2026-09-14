@@ -1,10 +1,12 @@
 package stirling.software.proprietary.accountlink;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.time.LocalDateTime;
@@ -12,6 +14,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import stirling.software.common.service.LicenseServiceInterface;
 
 /** Verifies {@link InstanceEntitlementGate#evaluate} resolves live state from store + cache. */
 class InstanceEntitlementGateWiringTest {
@@ -22,9 +26,11 @@ class InstanceEntitlementGateWiringTest {
     private LocalUsageService localUsage;
     private FreeTierUsageService freeTier;
     private InstanceEntitlementGate gate;
+    private LicenseServiceInterface licenseService;
 
     @BeforeEach
     void setUp() {
+        licenseService = mock(LicenseServiceInterface.class);
         properties = new AccountLinkProperties();
         properties.setEnabled(true);
         store = mock(DeviceCredentialStore.class);
@@ -38,7 +44,8 @@ class InstanceEntitlementGateWiringTest {
                         cache,
                         mock(AccountLinkSyncStateRepository.class),
                         localUsage,
-                        freeTier);
+                        freeTier,
+                        licenseService);
     }
 
     private static FreeTierUsageService.FreeTierBalance grant(long remaining) {
@@ -80,6 +87,26 @@ class InstanceEntitlementGateWiringTest {
         GateDecision d = gate.evaluate(true);
         assertTrue(d.allowed());
         assertEquals(GateDecision.Reason.ENTITLED, d.reason());
+    }
+
+    @Test
+    void enterpriseProcessingDoesNotConsultLinkStatusOrCreditBalances() {
+        when(licenseService.isRunningEE()).thenReturn(true);
+        GateDecision decision = gate.evaluate(true);
+        assertTrue(decision.allowed());
+        assertEquals(GateDecision.Reason.ENTERPRISE_LICENSE, decision.reason());
+        verifyNoInteractions(store, cache, freeTier, localUsage);
+    }
+
+    @Test
+    void removingEnterpriseLicenseRestoresCreditEnforcementWithoutRestart() {
+        when(licenseService.isRunningEE()).thenReturn(true, false);
+        assertTrue(gate.evaluate(true).allowed());
+        when(store.isLinked()).thenReturn(false);
+        when(freeTier.balance()).thenReturn(grant(0));
+        GateDecision decision = gate.evaluate(true);
+        assertFalse(decision.allowed());
+        assertEquals(GateDecision.Reason.FREE_TIER_EXHAUSTED, decision.reason());
     }
 
     @Test
