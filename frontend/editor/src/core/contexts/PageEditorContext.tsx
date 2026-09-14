@@ -241,18 +241,20 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
 
   // Bytes can be replaced under an unchanged id and version - reconciling a
   // record with its source does exactly that - and the laid-out document would
-  // then describe pages that no longer exist.
-  const fileContentSignature = useMemo(() => {
-    return state.files.ids
-      .map((id) => {
-        const stub = state.files.byId[id];
-        return `${id}:${stub?.size ?? 0}:${stub?.lastModified ?? 0}`;
-      })
-      .join(",");
+  // then describe pages that no longer exist. Keyed per id rather than joined:
+  // a join also changes when the file set does, and adding a file would then
+  // read as every open document being replaced.
+  const fileContentKeys = useMemo(() => {
+    const keys = new Map<FileId, string>();
+    for (const id of state.files.ids) {
+      const stub = state.files.byId[id];
+      keys.set(id, `${stub?.size ?? 0}:${stub?.lastModified ?? 0}`);
+    }
+    return keys;
   }, [state.files.ids, state.files.byId]);
 
   const prevFileContextSignature = useRef<string | null>(null);
-  const prevFileContentSignature = useRef<string | null>(null);
+  const prevFileContentKeys = useRef<Map<FileId, string> | null>(null);
   const [contentRevision, setContentRevision] = useState(0);
   const haveFileIdSetsChanged = (prevIds: FileId[], currentIds: FileId[]) => {
     if (prevIds.length !== currentIds.length) {
@@ -270,10 +272,19 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const currentFileIds = state.files.ids;
     const prevFileIds = prevFileContextIdsRef.current;
     const idsChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
+    const previousContentKeys = prevFileContentKeys.current;
+    // Only an id carried over from the previous set can have had its bytes
+    // replaced. One that arrived or left is a file-set change, which the merge
+    // below folds in without discarding the edits on everything else.
     const contentChanged =
-      prevFileContentSignature.current !== null &&
-      prevFileContentSignature.current !== fileContentSignature;
-    prevFileContentSignature.current = fileContentSignature;
+      previousContentKeys !== null &&
+      currentFileIds.some((id) => {
+        const previousKey = previousContentKeys.get(id);
+        return (
+          previousKey !== undefined && previousKey !== fileContentKeys.get(id)
+        );
+      });
+    prevFileContentKeys.current = fileContentKeys;
     // Clearing the persisted document only invalidates the cache. The live
     // document is held by the editor and has to be told to start over too.
     if (contentChanged) setContentRevision((revision) => revision + 1);
@@ -305,7 +316,7 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     clearPersistedDocument();
   }, [
     fileContextSignature,
-    fileContentSignature,
+    fileContentKeys,
     clearPersistedDocument,
     state.files.ids,
   ]);
