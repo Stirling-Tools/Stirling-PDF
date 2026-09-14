@@ -191,9 +191,9 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const prevWorkbench = prevWorkbenchRef.current;
     const nextWorkbench = navigationState.workbench;
     const isLeavingPageEditor =
-      prevWorkbench === "pageEditor" && nextWorkbench !== "pageEditor";
+      prevWorkbench === "multiTool" && nextWorkbench !== "multiTool";
     const isEnteringPageEditor =
-      prevWorkbench !== "pageEditor" && nextWorkbench === "pageEditor";
+      prevWorkbench !== "multiTool" && nextWorkbench === "multiTool";
 
     if (isLeavingPageEditor) {
       clearPersistedDocument();
