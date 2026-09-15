@@ -465,6 +465,27 @@ class AdminSettingsControllerTest {
         }
 
         @Test
+        @DisplayName("rejects section payloads deeper than the setting key limit")
+        void rejectsExcessivelyNestedBlocks() {
+            java.util.Map<String, Object> section = new java.util.HashMap<>();
+            java.util.Map<String, Object> current = section;
+            for (int i = 0; i < 10; i++) {
+                java.util.Map<String, Object> nested = new java.util.HashMap<>();
+                current.put("level" + i, nested);
+                current = nested;
+            }
+            current.put("value", true);
+
+            try (MockedStatic<GeneralUtils> mocked = mockStatic(GeneralUtils.class)) {
+                ResponseEntity<Map<String, Object>> response =
+                        controller.updateSettingsSection("storage", section);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
+                mocked.verify(() -> GeneralUtils.updateSettingsTransactional(any()), never());
+            }
+        }
+
+        @Test
         @DisplayName("auto-enables premium when license key provided")
         void autoEnablesPremium() {
             java.util.Map<String, Object> section = new java.util.HashMap<>();

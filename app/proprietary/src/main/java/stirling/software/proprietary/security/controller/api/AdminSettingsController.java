@@ -365,7 +365,7 @@ public class AdminSettingsController {
             }
 
             Map<String, Object> flattened = new LinkedHashMap<>();
-            flattenSectionData(sectionName, sectionData, flattened);
+            flattenSectionData(sectionName, sectionData, flattened, 1);
 
             // Validate every key before writing, so an invalid one cannot half-update the file.
             for (String fullKey : flattened.keySet()) {
@@ -1035,14 +1035,20 @@ public class AdminSettingsController {
      * forget the siblings a previous save of the same block set.
      */
     private void flattenSectionData(
-            String prefix, Map<String, Object> sectionData, Map<String, Object> flattened) {
+            String prefix,
+            Map<String, Object> sectionData,
+            Map<String, Object> flattened,
+            int depth) {
+        if (depth >= MAX_NESTING_DEPTH) {
+            throw new IllegalArgumentException("Maximum nesting depth exceeded");
+        }
         for (Map.Entry<String, Object> entry : sectionData.entrySet()) {
             String key = prefix + "." + entry.getKey();
             Object value = entry.getValue();
             if (value instanceof Map<?, ?> nested && !nested.isEmpty()) {
                 @SuppressWarnings("unchecked")
                 Map<String, Object> nestedMap = (Map<String, Object>) nested;
-                flattenSectionData(key, nestedMap, flattened);
+                flattenSectionData(key, nestedMap, flattened, depth + 1);
             } else {
                 flattened.put(key, value);
             }
