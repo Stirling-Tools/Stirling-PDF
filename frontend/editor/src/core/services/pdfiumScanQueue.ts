@@ -1,10 +1,9 @@
 /**
  * Serializes main-thread PDFium scans.
  *
- * PDFium is single-threaded and wasm memory never shrinks. Every scan copies
- * the whole document into the heap, so running them concurrently multiplies
- * that copy and pushes the heap high-water mark up without finishing any
- * sooner. Queued scans run in submission order.
+ * PDFium is single-threaded and wasm memory never shrinks. Two scans of
+ * different documents would each open a full copy in the heap and leave the
+ * sum as the high-water mark, so scans run in submission order.
  */
 let tail: Promise<unknown> = Promise.resolve();
 
