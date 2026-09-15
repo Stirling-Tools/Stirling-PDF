@@ -50,6 +50,10 @@ class AppSettings(BaseSettings):
     rag_chunk_overlap: int = Field(validation_alias="STIRLING_RAG_CHUNK_OVERLAP")
     rag_default_top_k: int = Field(validation_alias="STIRLING_RAG_TOP_K")
     rag_max_searches: int = Field(validation_alias="STIRLING_RAG_MAX_SEARCHES")
+
+    # How many of the catalogue's operations the edit planner is shown. The full list
+    # overruns a local model's context; 0 disables ranking and shows every operation.
+    planner_shortlist_size: int = Field(default=20, validation_alias="STIRLING_PLANNER_SHORTLIST_SIZE")
     documents_reaper_interval_seconds: int = Field(
         default=900,
         validation_alias="STIRLING_DOCUMENTS_REAPER_INTERVAL_SECONDS",

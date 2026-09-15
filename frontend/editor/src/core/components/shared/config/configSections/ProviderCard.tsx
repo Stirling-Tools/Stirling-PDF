@@ -1,4 +1,6 @@
 import { useEffect, useState } from "react";
+import { SettingsToggleRow } from "@app/components/shared/config/SettingsToggleRow";
+import { SettingsFieldLabel } from "@app/components/shared/config/SettingsFieldLabel";
 import {
   Paper,
   Group,
@@ -7,7 +9,6 @@ import {
   Stack,
   TextInput,
   Textarea,
-  Switch,
   NumberInput,
   TagsInput,
   Anchor,
@@ -24,10 +25,10 @@ import {
 interface ProviderCardProps {
   provider: Provider;
   isConfigured: boolean;
-  settings?: Record<string, any>;
-  onSave?: (settings: Record<string, any>) => void;
+  settings?: Record<string, unknown>;
+  onSave?: (settings: Record<string, unknown>) => void;
   onDisconnect?: () => void;
-  onChange?: (settings: Record<string, any>) => void;
+  onChange?: (settings: Record<string, unknown>) => void;
   disabled?: boolean;
   readOnly?: boolean;
 }
@@ -36,7 +37,10 @@ interface ProviderCardProps {
 // renders. An inline `settings = {}` would allocate a new object every render,
 // and the sync effect below lists `settings` as a dependency — so it would
 // re-run and setState on every render, looping until React bails out.
-const NO_SETTINGS: Record<string, any> = {};
+const NO_SETTINGS: Record<string, unknown> = {};
+
+const asString = (value: unknown): string =>
+  typeof value === "string" ? value : "";
 
 export default function ProviderCard({
   provider,
@@ -51,7 +55,7 @@ export default function ProviderCard({
   const { t } = useTranslation();
   const [expanded, setExpanded] = useState(false);
   const [localSettings, setLocalSettings] =
-    useState<Record<string, any>>(settings);
+    useState<Record<string, unknown>>(settings);
 
   // Keep local settings in sync with incoming settings (values loaded from settings.yml)
   // Update whenever parent settings change, whether expanded or not (important for Discard to work)
@@ -64,7 +68,7 @@ export default function ProviderCard({
     if (!isConfigured && !expanded) {
       // First time opening an unconfigured provider - initialize with defaults
       // while preserving any values already present (from settings.yml)
-      const defaultSettings: Record<string, any> = { ...settings };
+      const defaultSettings: Record<string, unknown> = { ...settings };
       provider.fields.forEach((field) => {
         if (field.defaultValue !== undefined) {
           defaultSettings[field.key] =
@@ -76,7 +80,7 @@ export default function ProviderCard({
     setExpanded(!expanded);
   };
 
-  const handleFieldChange = (key: string, value: any) => {
+  const handleFieldChange = (key: string, value: unknown) => {
     if (disabled) return; // Block changes when disabled
     const updated = { ...localSettings, [key]: value };
     setLocalSettings(updated);
@@ -94,33 +98,19 @@ export default function ProviderCard({
   };
 
   const renderField = (field: ProviderField) => {
-    const value = localSettings[field.key] ?? field.defaultValue ?? "";
+    const raw = localSettings[field.key] ?? field.defaultValue;
 
     switch (field.type) {
       case "switch":
         return (
-          <div
+          <SettingsToggleRow
             key={field.key}
-            style={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-            }}
-          >
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <Text fw={500} size="sm">
-                {field.label}
-              </Text>
-              <Text size="xs" c="dimmed" mt={4}>
-                {field.description}
-              </Text>
-            </div>
-            <Switch
-              checked={value || false}
-              onChange={(e) => handleFieldChange(field.key, e.target.checked)}
-              disabled={disabled}
-            />
-          </div>
+            label={field.label}
+            info={field.description}
+            checked={Boolean(raw)}
+            onChange={(checked) => handleFieldChange(field.key, checked)}
+            disabled={disabled}
+          />
         );
 
       case "password":
@@ -130,7 +120,7 @@ export default function ProviderCard({
             label={field.label}
             description={field.description}
             placeholder={field.placeholder}
-            value={value}
+            value={asString(raw)}
             onChange={(newValue) => handleFieldChange(field.key, newValue)}
             disabled={disabled}
           />
@@ -140,10 +130,13 @@ export default function ProviderCard({
         return (
           <Textarea
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
-            value={value}
+            value={asString(raw)}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
             disabled={disabled}
           />
@@ -153,10 +146,15 @@ export default function ProviderCard({
         return (
           <NumberInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
-            value={value}
+            value={
+              typeof raw === "number" || typeof raw === "string" ? raw : ""
+            }
             onChange={(num) => handleFieldChange(field.key, num)}
             disabled={disabled}
             allowDecimal={false}
@@ -164,15 +162,16 @@ export default function ProviderCard({
         );
 
       case "tags": {
-        const tagValue = Array.isArray(value)
-          ? value.map((val) => `${val}`)
-          : [];
+        const tagValue = Array.isArray(raw) ? raw.map((val) => `${val}`) : [];
 
         return (
           <TagsInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
             value={tagValue}
             onChange={(vals) => handleFieldChange(field.key, vals)}
@@ -185,10 +184,13 @@ export default function ProviderCard({
         return (
           <TextInput
             key={field.key}
-            label={field.label}
-            description={field.description}
+            label={
+              <SettingsFieldLabel info={field.description}>
+                {field.label}
+              </SettingsFieldLabel>
+            }
             placeholder={field.placeholder}
-            value={value}
+            value={asString(raw)}
             onChange={(e) => handleFieldChange(field.key, e.target.value)}
             disabled={disabled}
           />

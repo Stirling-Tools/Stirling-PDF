@@ -57,6 +57,7 @@ public class ConvertSvgToPDF {
     @MultiFileResponse
     @ToolIO(
             accepts = ToolFormat.IMAGE,
+            inputExtensions = "svg",
             produces = ToolFormat.PDF,
             arity = ToolArity.MIMO,
             cases =

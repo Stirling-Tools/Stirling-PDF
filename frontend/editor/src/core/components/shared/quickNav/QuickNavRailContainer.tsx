@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { NavSurface } from "@app/ui/NavSurface";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { QuickNavBrand } from "@app/components/shared/quickNav/QuickNavBrand";
 import type { QuickNavIdentity } from "@app/contexts/QuickNavHostContext";
 import {
@@ -10,6 +10,7 @@ import {
 } from "@app/components/shared/quickNav/QuickNavRailBase";
 import { QuickNavRailAccount } from "@app/components/shared/quickNav/QuickNavRailAccount";
 import { QuickNavRailNotifications } from "@app/components/shared/quickNav/QuickNavRailNotifications";
+import { QuickNavRailFooterExtensions } from "@app/components/shared/quickNav/QuickNavRailFooterExtensions";
 import "@app/components/shared/quickNav/QuickNavRailContainer.css";
 
 export type {
@@ -22,7 +23,12 @@ export interface QuickNavRailContainerProps extends Omit<
   "footer"
 > {
   /** The rail owns the account control, so the sidebars drop their own row. */
-  onOpenSettings?: () => void;
+  onOpenAccount?: () => void;
+  /** Marks the avatar current for the whole settings page, which it now owns. */
+  accountActive?: boolean;
+  /** Omitted in builds with no docs to browse. */
+  onOpenDocs?: () => void;
+  docsActive?: boolean;
   /** Omitted in builds with no processor to invite anyone into. */
   onInvite?: () => void;
   onToggleNotifications?: () => void;
@@ -33,7 +39,10 @@ export interface QuickNavRailContainerProps extends Omit<
 
 /** The fixed-width column the rail sits in. */
 export function QuickNavRailContainer({
-  onOpenSettings,
+  onOpenAccount,
+  accountActive = false,
+  onOpenDocs,
+  docsActive = false,
   onInvite,
   onToggleNotifications,
   notificationsOpen,
@@ -51,6 +60,7 @@ export function QuickNavRailContainer({
           footer={
             // Always rendered: the bell lives here too, so gating the footer hides it.
             <div className="quick-nav-rail-footer">
+              <QuickNavRailFooterExtensions />
               <QuickNavRailNotifications
                 onToggle={onToggleNotifications}
                 open={notificationsOpen}
@@ -58,20 +68,26 @@ export function QuickNavRailContainer({
               {onInvite && (
                 <RailButton
                   label={t("quickNav.invite", "Invite")}
-                  icon={
-                    <LocalIcon
-                      icon="person-add-outline-rounded"
-                      width="1.125rem"
-                      height="1.125rem"
-                    />
-                  }
+                  icon={<Icon name="user-plus" size="1.125rem" />}
                   onClick={onInvite}
                 />
               )}
-              {onOpenSettings && (
+              {onOpenDocs && (
+                <RailButton
+                  label={t("quickNav.docs", "Documentation")}
+                  // No `filled`: the mark is a ring around a stroked glyph, so a
+                  // fill swallows the question mark and leaves a blank disc.
+                  icon={<Icon name="circle-question-mark" size="1.125rem" />}
+                  current={docsActive}
+                  testId="docs-button"
+                  onClick={onOpenDocs}
+                />
+              )}
+              {onOpenAccount && (
                 <QuickNavRailAccount
-                  onOpenSettings={onOpenSettings}
+                  onOpen={onOpenAccount}
                   identity={identity}
+                  active={accountActive}
                 />
               )}
             </div>
