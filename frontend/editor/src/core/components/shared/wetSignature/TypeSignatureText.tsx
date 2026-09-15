@@ -5,9 +5,13 @@ import {
   ColorPicker,
   Slider,
   Text,
+  Button,
+  Group,
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useEffect, useRef } from "react";
+import { useSystemFonts } from "@app/hooks/useSystemFonts";
+import RefreshIcon from "@mui/icons-material/Refresh";
 
 interface TypeSignatureTextProps {
   text: string;
@@ -36,6 +40,8 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
 }) => {
   const { t } = useTranslation();
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const { fontOptions, isLoading, error, refetch, fontCount } =
+    useSystemFonts();
 
   // Generate signature image when text/style changes
   useEffect(() => {
@@ -43,21 +49,13 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
       onSignatureChange(null);
       return;
     }
-
     const canvas = canvasRef.current;
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
-
-    // Clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Set font and measure text
     ctx.font = `${fontSize}px ${fontFamily}`;
     const metrics = ctx.measureText(text);
     const textWidth = metrics.width;
-    const _textHeight = fontSize * 1.2; // Approximate height
-
-    // Center text on canvas
     ctx.fillStyle = color;
     ctx.textBaseline = "middle";
     ctx.fillText(text, (canvas.width - textWidth) / 2, canvas.height / 2);
@@ -67,16 +65,6 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
     onSignatureChange(dataUrl);
   }, [text, fontFamily, fontSize, color, onSignatureChange]);
 
-  const fontOptions = [
-    { value: "Arial", label: "Arial" },
-    { value: "Times New Roman", label: "Times New Roman" },
-    { value: "Courier New", label: "Courier New" },
-    { value: "Georgia", label: "Georgia" },
-    { value: "Verdana", label: "Verdana" },
-    { value: "Comic Sans MS", label: "Comic Sans MS" },
-    { value: "Brush Script MT", label: "Brush Script MT (cursive)" },
-  ];
-
   return (
     <Stack gap="sm">
       <Text size="sm" c="dimmed">
@@ -85,7 +73,6 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
           "Type your name to create a signature",
         )}
       </Text>
-
       <TextInput
         label={t("certSign.collab.signRequest.signatureText", "Signature Text")}
         placeholder={t(
@@ -96,15 +83,47 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
         onChange={(e) => onTextChange(e.target.value)}
         disabled={disabled}
       />
-
       <Select
         label={t("certSign.collab.signRequest.fontFamily", "Font Family")}
         value={fontFamily}
         onChange={(val) => val && onFontFamilyChange(val)}
         data={fontOptions}
-        disabled={disabled}
+        searchable
+        disabled={disabled || isLoading}
+        placeholder={
+          isLoading ? t("common.loading", "Loading fonts...") : "Select font"
+        }
       />
-
+      <Group justify="space-between" align="flex-start">
+        <div style={{ flex: 1 }}>
+          {fontCount > 5 && (
+            <Text size="xs" c="green">
+              ✅ {fontCount} system fonts loaded
+            </Text>
+          )}
+          {fontCount <= 5 && !isLoading && (
+            <Text size="xs" c="orange">
+              ⚠️ Only {fontCount} fonts found (using defaults)
+            </Text>
+          )}
+          {error && (
+            <Text size="xs" c="orange">
+              {t("common.warning", "Warning")}: {error}
+            </Text>
+          )}
+        </div>
+        {fontCount <= 5 && (
+          <Button
+            size="xs"
+            variant="subtle"
+            onClick={() => refetch()}
+            disabled={isLoading}
+            leftSection={<RefreshIcon sx={{ fontSize: "1rem" }} />}
+          >
+            Refresh
+          </Button>
+        )}
+      </Group>
       <div>
         <Text size="sm" mb={4}>
           {t("certSign.collab.signRequest.fontSize", "Font Size: {{size}}px", {
@@ -131,7 +150,6 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
           ]}
         />
       </div>
-
       <div>
         <Text size="sm" mb={4}>
           {t("certSign.collab.signRequest.textColor", "Text Color")}
@@ -149,8 +167,6 @@ export const TypeSignatureText: React.FC<TypeSignatureTextProps> = ({
           hueLabel={t("colorPicker.hue", "Hue")}
         />
       </div>
-
-      {/* Preview */}
       {text && (
         <div
           style={{
