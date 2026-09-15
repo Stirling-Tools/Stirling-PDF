@@ -193,7 +193,8 @@ function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
  */
 const WALLET_POLL_MS = 30_000;
 
-export function useWallet(): UseWalletResult {
+/** Disabled readers neither fetch nor poll; foreground load failures populate `error`. */
+export function useWallet({ enabled = true } = {}): UseWalletResult {
   // Resolved once: the dev-preview side-channel when rendered outside the real
   // app (saas /dev/payg-preview route), else null (every real build + desktop).
   // The detection + synthesis live behind the @app/hooks/walletDevPreview seam
@@ -234,6 +235,13 @@ export function useWallet(): UseWalletResult {
     const silent = silentRefresh.current;
     silentRefresh.current = false;
 
+    if (!enabled) {
+      setWallet(null);
+      setLoading(false);
+      setError(null);
+      return;
+    }
+
     const promise = (async () => {
       if (!silent) {
         setLoading(true);
@@ -249,7 +257,9 @@ export function useWallet(): UseWalletResult {
       }
 
       try {
-        const res = await apiClient.get<Wallet>("/api/v1/payg/wallet");
+        const res = await apiClient.get<Wallet>("/api/v1/payg/wallet", {
+          suppressErrorToast: true,
+        });
         if (cancelled || reqId !== latestReqId.current) return;
         setWallet((prev) => reuseIfEqual(prev, res.data));
         // Fresh data retires any earlier failure, including one a silent poll
@@ -282,7 +292,7 @@ export function useWallet(): UseWalletResult {
       // still see a definitive "load completed" point. The reqId guard
       // upstream ensures stale results don't commit.
     };
-  }, [devPreview, refetchTick]);
+  }, [devPreview, refetchTick, enabled]);
 
   // The wallet drains as automation, AI and API work runs, so a figure fetched
   // on mount goes stale while the user watches it. Refresh on a timer, and
@@ -290,7 +300,7 @@ export function useWallet(): UseWalletResult {
   // case people actually notice. Hidden tabs don't poll, and the dev-preview
   // wallet is synthesised locally so there is nothing to re-read.
   useEffect(() => {
-    if (devPreview) return;
+    if (devPreview || !enabled) return;
 
     let timer: ReturnType<typeof setInterval> | undefined;
     const refresh = () => {
@@ -322,7 +332,7 @@ export function useWallet(): UseWalletResult {
       stop();
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, [devPreview]);
+  }, [devPreview, enabled]);
 
   const refetch = useCallback(async () => {
     setRefetchTick((t) => t + 1);
