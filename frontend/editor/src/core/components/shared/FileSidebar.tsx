@@ -61,6 +61,7 @@ import { useBulkAddProgress } from "@app/services/bulkAddProgress";
 import { useFolderMembership } from "@app/hooks/useFolderMembership";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
 import {
   setWatchedFolderDraggedFileIds,
   clearWatchedFolderDraggedFileIds,
@@ -365,27 +366,8 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       }
     }, [indexedDB, state.files.ids, state.files.byId]);
 
-    // Refresh on mount, workbench changes, or external IndexedDB writes —
-    // COALESCED. refreshStubs is a full IDB metadata scan, and it's re-created on
-    // every workspace change: during a big folder drop (or a policy wave) that's
-    // hundreds of triggers (per-file thumbnail hydrations, versioned deliveries),
-    // which uncoalesced means O(files²) IDB reads and a re-render storm. A short
-    // trailing throttle turns a burst into one scan per window; the first run
-    // fires immediately so mount/load isn't delayed.
     const indexedDBRevision = useIndexedDBRevision();
-    const lastRefreshAt = useRef(0);
-    useEffect(() => {
-      const REFRESH_COALESCE_MS = 300;
-      const wait = Math.max(
-        0,
-        lastRefreshAt.current + REFRESH_COALESCE_MS - Date.now(),
-      );
-      const timer = window.setTimeout(() => {
-        lastRefreshAt.current = Date.now();
-        void refreshStubs();
-      }, wait);
-      return () => window.clearTimeout(timer);
-    }, [refreshStubs, indexedDBRevision]);
+    useCoalescedCallback(refreshStubs, indexedDBRevision);
 
     // Kebab delete: local-only files go immediately (cheap, re-addable). When
     // the file is also on the cloud, open the choice dialog so the user picks
