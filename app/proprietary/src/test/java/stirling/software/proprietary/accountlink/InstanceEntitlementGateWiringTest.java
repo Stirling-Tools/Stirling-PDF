@@ -184,8 +184,7 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void removingEnterpriseLicenseRestoresCreditEnforcementWithoutRestart() {
-        when(licenseChecker.premiumTier())
-                .thenReturn(License.ENTERPRISE, License.NORMAL);
+        when(licenseChecker.premiumTier()).thenReturn(License.ENTERPRISE, License.NORMAL);
         assertTrue(gate.evaluate(true).allowed());
         when(store.isLinked()).thenReturn(false);
         when(freeTier.balance()).thenReturn(grant(0));
