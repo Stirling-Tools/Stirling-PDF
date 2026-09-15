@@ -16,6 +16,7 @@ interface StoredFileResponse {
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
+  canEdit?: boolean;
   shareLinks?: Array<{ token?: string | null }>;
   sharedWithUsers?: string[];
   filePurpose?: string | null;
@@ -185,6 +186,10 @@ export const useFileManager = () => {
                   ? serverFile.ownedByCurrentUser
                   : stub.remoteOwnedByCurrentUser,
               remoteAccessRole: serverFile.accessRole ?? stub.remoteAccessRole,
+              remoteCanEdit:
+                typeof serverFile.canEdit === "boolean"
+                  ? serverFile.canEdit
+                  : stub.remoteCanEdit,
               remoteSharedViaLink: stub.remoteSharedViaLink,
               remoteHasShareLinks: Boolean(serverFile.shareLinks?.length),
               remoteStorageUpdatedAt:
@@ -235,6 +240,8 @@ export const useFileManager = () => {
                   ? file.ownedByCurrentUser
                   : undefined,
               remoteAccessRole: file.accessRole ?? undefined,
+              remoteCanEdit:
+                typeof file.canEdit === "boolean" ? file.canEdit : undefined,
               remoteSharedViaLink: false,
               remoteHasShareLinks: Boolean(file.shareLinks?.length),
             });

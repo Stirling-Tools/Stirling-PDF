@@ -18,6 +18,8 @@ export interface ShareLinkMetadata {
   owner?: string | null;
   ownedByCurrentUser?: boolean;
   accessRole?: string | null;
+  canEdit?: boolean;
+  version?: number | null;
   createdAt?: string;
   expiresAt?: string;
 }
@@ -94,9 +96,21 @@ export async function importShareLinkToWorkbench(
         remoteOwnerUsername: shareMetadata?.owner ?? undefined,
         remoteOwnedByCurrentUser: false,
         remoteAccessRole: shareMetadata?.accessRole ?? undefined,
+        remoteCanEdit:
+          typeof shareMetadata?.canEdit === "boolean"
+            ? shareMetadata.canEdit
+            : undefined,
         remoteSharedViaLink: true,
         remoteHasShareLinks: false,
         remoteShareToken: shareMetadata?.shareToken || token,
+        remoteVersionBase:
+          typeof shareMetadata?.version === "number"
+            ? shareMetadata.version
+            : undefined,
+        remoteVersionLatest:
+          typeof shareMetadata?.version === "number"
+            ? shareMetadata.version
+            : undefined,
       };
 
       for (const entry of sortedEntries) {
@@ -157,9 +171,21 @@ export async function importShareLinkToWorkbench(
       remoteOwnerUsername: shareMetadata?.owner ?? undefined,
       remoteOwnedByCurrentUser: false,
       remoteAccessRole: shareMetadata?.accessRole ?? undefined,
+      remoteCanEdit:
+        typeof shareMetadata?.canEdit === "boolean"
+          ? shareMetadata.canEdit
+          : undefined,
       remoteSharedViaLink: true,
       remoteHasShareLinks: false,
       remoteShareToken: shareMetadata?.shareToken || token,
+      remoteVersionBase:
+        typeof shareMetadata?.version === "number"
+          ? shareMetadata.version
+          : undefined,
+      remoteVersionLatest:
+        typeof shareMetadata?.version === "number"
+          ? shareMetadata.version
+          : undefined,
     };
     for (const fileId of ids) {
       actions.updateStirlingFileStub(fileId, sharedUpdates);
