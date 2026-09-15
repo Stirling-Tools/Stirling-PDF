@@ -28,7 +28,7 @@ import type {
 } from "@portal/api/users";
 
 export interface UsersBackend {
-  /** Roster + summary + (SaaS) pending invitations, adapted onto UsersResponse. */
+  /** Roster + summary + pending invitations, adapted onto UsersResponse. */
   fetchUsers(tier: Tier): Promise<UsersResponse>;
   /** Teams shown in the roster / invite team picker. */
   fetchTeams(): Promise<Team[]>;
@@ -45,8 +45,8 @@ export interface UsersBackend {
   /** Remove a member (self-hosted: delete account; SaaS: remove from team). */
   removeMember(member: Member): Promise<void>;
   /**
-   * Cancel a pending invitation by id (SaaS). Never called on self-hosted
-   * (gated off by `manageInvitations`); the proprietary impl rejects it.
+   * Cancel a pending invitation by id: a SaaS TeamInvitation, or a self-hosted
+   * invite link issued but not yet redeemed.
    */
   cancelInvitation(invitationId: number): Promise<void>;
 }

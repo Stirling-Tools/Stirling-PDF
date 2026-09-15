@@ -1,10 +1,12 @@
+import { withBasePath } from "@app/constants/app";
 import { apiClient } from "@portal/api/http";
 
 /**
  * Invite links (self-hosted). A link is a token an admin hands out; the account
  * is created when someone redeems it, unlike an email invite which creates the
- * account up front. Backed by InviteLinkController's admin endpoints, all of
- * which need `mail.enableInvites` - but not SMTP, unless the link is emailed.
+ * account up front. Backed by InviteLinkController's admin endpoints; issuing a
+ * link needs `mail.enableInvites`, listing and revoking need only ROLE_ADMIN,
+ * and SMTP is needed only when the link is emailed.
  */
 export interface GenerateInviteLinkParams {
   /** Binds the link to one address; omitted for a link anyone can redeem. */
@@ -48,7 +50,12 @@ export async function generateInviteLink(
   if (p.teamId != null) params.teamId = String(p.teamId);
   if (p.expiryHours != null) params.expiryHours = String(p.expiryHours);
   if (p.sendEmail) params.sendEmail = "true";
-  params.frontendBaseUrl = p.frontendBaseUrl ?? window.location.origin;
+  // Stated, not inferred: only the frontend knows its own base path.
+  params.frontendBaseUrl =
+    p.frontendBaseUrl ??
+    new URL(withBasePath("/"), window.location.origin)
+      .toString()
+      .replace(/\/$/, "");
   return apiClient.local.form<GeneratedInviteLink>(
     "/api/v1/invite/generate",
     params,

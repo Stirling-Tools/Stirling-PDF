@@ -446,7 +446,11 @@ export function InviteMemberModal({
               )}
             >
               <div className="portal-users__invite-link-row">
-                <Input readOnly value={link.inviteUrl} />
+                <Input
+                  readOnly
+                  value={link.inviteUrl}
+                  aria-label={t("users.invite.linkReady", "Invite link")}
+                />
                 <Button
                   variant="secondary"
                   size="sm"
