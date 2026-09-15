@@ -3,6 +3,7 @@
  */
 
 import { FileId } from "@app/types/file";
+import { releaseSharedDocument } from "@app/services/pdfiumService";
 import {
   FileContextAction,
   FileContextState,
@@ -84,6 +85,9 @@ export class FileLifecycleManager {
     this.cleanupTimers.clear();
     this.fileGenerations.clear();
 
+    // No file survives teardown, so neither should its shared document.
+    releaseSharedDocument();
+
     // Clear files ref
     this.filesRef.current.clear();
   };
@@ -162,6 +166,10 @@ export class FileLifecycleManager {
       this.cleanupTimers.delete(fileId);
     }
     this.fileGenerations.delete(fileId);
+
+    // Scans are keyed by buffer identity, so a removed file's document can
+    // never be reused; release waits for any in-flight reader.
+    releaseSharedDocument();
 
     // Clean up blob URLs from file record if we have access to state
     if (stateRef) {
