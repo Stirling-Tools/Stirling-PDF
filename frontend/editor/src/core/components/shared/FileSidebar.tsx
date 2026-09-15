@@ -1010,45 +1010,50 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             data-testid="file-input"
           />
 
-          {/* The expanded library header owns these actions; retain their compact
-              versions for the existing narrow sidebar. */}
-          <NavSurface className="file-sidebar-controls" hidden={!collapsed}>
-            <Tooltip
-              label={t("fileSidebar.openFromComputer", "Open from computer")}
-              position="right"
-              withinPortal
-              disabled={!collapsed}
-            >
-              <div
-                className="file-sidebar-action-row"
-                data-testid="files-rail-button"
-                onClick={() => {
-                  // "Open from computer" goes straight to the native OS file
-                  // picker. The full file manager (recent + drives + folders)
-                  // is reachable via "File library" below.
-                  nativeFileInputRef.current?.click();
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={t(
-                  "fileSidebar.openFromComputer",
-                  "Open from computer",
-                )}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    nativeFileInputRef.current?.click();
-                  }
-                }}
+          {/* Global actions live in quick navigation while expanded. Library-only
+              actions still belong here; the collapsed rail retains all controls. */}
+          <NavSurface
+            className="file-sidebar-controls"
+            hidden={!collapsed && !extraActions?.length}
+          >
+            {collapsed && (
+              <Tooltip
+                label={t("fileSidebar.openFromComputer", "Open from computer")}
+                position="right"
+                withinPortal
+                disabled={!collapsed}
               >
-                <Icon name="file-up" className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.openFromComputer", "Open from computer")}
-                  </span>
-                )}
-              </div>
-            </Tooltip>
+                <div
+                  className="file-sidebar-action-row"
+                  data-testid="files-rail-button"
+                  onClick={() => {
+                    // "Open from computer" goes straight to the native OS file
+                    // picker. The full file manager (recent + drives + folders)
+                    // is reachable via "File library" below.
+                    nativeFileInputRef.current?.click();
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t(
+                    "fileSidebar.openFromComputer",
+                    "Open from computer",
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      nativeFileInputRef.current?.click();
+                    }
+                  }}
+                >
+                  <Icon name="file-up" className="file-sidebar-action-icon" />
+                  {!collapsed && (
+                    <span className="file-sidebar-action-label sidebar-content-fade">
+                      {t("fileSidebar.openFromComputer", "Open from computer")}
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
+            )}
 
             {extraActions?.map((action) => (
               <React.Fragment key={action.label}>
@@ -1106,7 +1111,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               </React.Fragment>
             ))}
 
-            {!shouldHideGoogleDrive && (
+            {collapsed && !shouldHideGoogleDrive && (
               <Tooltip
                 label={
                   !isGoogleDriveEnabled
@@ -1160,7 +1165,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
 
             {/* Watched Folders entry */}
-            {WATCHED_FOLDERS_ENABLED && (
+            {collapsed && WATCHED_FOLDERS_ENABLED && (
               <div
                 className="file-sidebar-action-row"
                 data-testid="watchedFolders-button"

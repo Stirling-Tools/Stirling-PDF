@@ -139,6 +139,7 @@ export function QuickNavRailHost() {
             label: t("fileSidebar.openFromComputer", "Open from computer"),
             icon: <Icon name="file-up" size={SIZE} />,
             testId: "files-button",
+            tourId: "files-button",
             onClick: () => host?.actions.current?.openFromComputer?.(),
           },
         ]),

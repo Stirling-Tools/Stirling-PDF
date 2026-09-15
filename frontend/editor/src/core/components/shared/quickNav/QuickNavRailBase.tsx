@@ -24,6 +24,8 @@ export interface QuickNavEntry {
   badgeTone?: "danger" | "warning";
   /** Stable hook for tests and tours. */
   testId?: string;
+  /** Stable guided-tour anchor when it differs from the test hook. */
+  tourId?: string;
   onClick: () => void;
 }
 
@@ -46,6 +48,7 @@ export function RailButton({
   expanded,
   controls,
   testId,
+  tourId,
   onClick,
 }: Omit<QuickNavEntry, "id">) {
   return (
@@ -67,6 +70,7 @@ export function RailButton({
         // aria-disabled, not `disabled`: stays focusable, so its tooltip is reachable.
         aria-disabled={disabled || undefined}
         data-testid={testId}
+        data-tour={tourId}
         onClick={disabled ? undefined : onClick}
       >
         {icon}
