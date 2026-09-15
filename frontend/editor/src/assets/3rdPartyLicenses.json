@@ -521,7 +521,7 @@
     {
       "moduleName": "smol-toml",
       "moduleUrl": "https://github.com/squirrelchat/smol-toml",
-      "moduleVersion": "1.6.1",
+      "moduleVersion": "1.7.1",
       "moduleLicense": "BSD-3-Clause",
       "moduleLicenseUrl": "https://opensource.org/licenses/BSD-3-Clause"
     },
@@ -534,7 +534,7 @@
     },
     {
       "moduleName": "use-sync-external-store",
-      "moduleUrl": "https://github.com/facebook/react",
+      "moduleUrl": "https://github.com/react/react",
       "moduleVersion": "1.6.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
