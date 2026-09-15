@@ -37,6 +37,7 @@ import {
 } from "@app/contexts/IndexedDBContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useDiskLinkReconcile } from "@app/hooks/useDiskLinkReconcile";
+import { useCoalescedCallback } from "@app/hooks/useCoalescedCallback";
 import { useFolders } from "@app/contexts/FolderContext";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
@@ -233,9 +234,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     onOpenFilesDetached,
   ]);
 
-  useEffect(() => {
-    void refresh();
-  }, [refresh, indexedDBRevision]);
+  useCoalescedCallback(refresh, indexedDBRevision);
 
   const fileMap = useMemo(() => {
     const map = new Map<FileId, StirlingFileStub>();
