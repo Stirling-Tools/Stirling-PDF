@@ -5,7 +5,6 @@ import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { EditorPipelinesPanel } from "@app/components/policies/EditorPipelinesPanel";
 import { useFavoriteToolItems } from "@app/hooks/tools/useFavoriteToolItems";
 import { useToolSections } from "@app/hooks/useToolSections";
@@ -38,6 +37,7 @@ export default function RightSidebar() {
   const { sidebarRefs } = useSidebarContext();
   const { toolPanelRef, quickAccessRef } = sidebarRefs;
   const isMobile = useIsMobile();
+  const policiesEnabled = usePoliciesEnabled();
 
   const {
     leftPanelView,
@@ -56,7 +56,6 @@ export default function RightSidebar() {
     favoriteTools,
   } = useToolWorkflow();
 
-  const policiesEnabled = usePoliciesEnabled();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
@@ -157,8 +156,6 @@ export default function RightSidebar() {
         padding: "0",
       }}
     >
-      {/* Headless: enforces enabled policies on every uploaded file. */}
-      {policiesEnabled && <PolicyAutoRunController />}
       {!fullscreenExpanded && !isPanelVisible && !isMobile && (
         <div className="tool-panel__collapsed-strip">
           <div className="tool-panel__collapsed-top">
