@@ -222,6 +222,13 @@ class InternalApiClientTest {
     }
 
     @Test
+    void postRejectsUserEndpointsIncludingApiKeyEndpoint() {
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+
+        assertThrows(SecurityException.class, () -> client.post("/api/v1/user/get-api-key", body));
+    }
+
+    @Test
     void postRejectsAiEndpointsOutsideToolsSubnamespace() {
         // /api/v1/ai/orchestrate and other non-tool AI endpoints are not internally
         // dispatchable. Only /api/v1/ai/tools/* and the general/misc/security/convert/filter
