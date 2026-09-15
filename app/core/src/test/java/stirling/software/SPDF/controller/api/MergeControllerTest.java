@@ -331,10 +331,7 @@ class MergeControllerTest {
     void isImageFile_returnsFalseWhenNoExtensionAndNotImageContentType() throws Exception {
         MockMultipartFile noExt =
                 new MockMultipartFile(
-                        "file",
-                        "document_no_ext",
-                        MediaType.APPLICATION_PDF_VALUE,
-                        new byte[] {1});
+                        "file", "document_no_ext", MediaType.APPLICATION_PDF_VALUE, new byte[] {1});
         assertFalse(invokeIsImageFile(noExt));
     }
 
