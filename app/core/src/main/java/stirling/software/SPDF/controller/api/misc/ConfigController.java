@@ -19,7 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import stirling.software.SPDF.config.EndpointConfiguration;
 import stirling.software.SPDF.config.EndpointConfiguration.EndpointAvailability;
 import stirling.software.SPDF.config.InitialSetup;
-import stirling.software.SPDF.controller.api.security.TimestampController;
+import stirling.software.SPDF.pdf.signature.TsaUrlResolver;
 import stirling.software.common.annotations.api.ConfigApi;
 import stirling.software.common.configuration.AppConfig;
 import stirling.software.common.configuration.interfaces.ShowAdminInterface;
@@ -373,7 +373,7 @@ public class ConfigController {
                     applicationProperties.getSecurity().getTimestamp();
             configData.put("timestampDefaultTsaUrl", tsConfig.getDefaultTsaUrl());
             configData.put("timestampCustomTsaUrls", tsConfig.getCustomTsaUrls());
-            configData.put("timestampTsaPresets", TimestampController.TSA_PRESETS);
+            configData.put("timestampTsaPresets", TsaUrlResolver.TSA_PRESETS);
 
             // Server certificate settings
             configData.put(

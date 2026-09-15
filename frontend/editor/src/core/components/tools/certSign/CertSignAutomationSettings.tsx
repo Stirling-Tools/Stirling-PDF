@@ -13,6 +13,7 @@ import CertificateFormatSettings from "@app/components/tools/certSign/Certificat
 import CertificateFilesSettings from "@app/components/tools/certSign/CertificateFilesSettings";
 import HardwareCertificateSettings from "@app/components/tools/certSign/HardwareCertificateSettings";
 import SignatureAppearanceSettings from "@app/components/tools/certSign/SignatureAppearanceSettings";
+import TimestampToggleSettings from "@app/components/tools/certSign/TimestampToggleSettings";
 
 interface CertSignAutomationSettingsProps {
   parameters: CertSignParameters;
@@ -66,6 +67,13 @@ const CertSignAutomationSettings = ({
 
       {/* Signature Appearance Settings */}
       <SignatureAppearanceSettings
+        parameters={parameters}
+        onParameterChange={onParameterChange}
+        disabled={disabled}
+      />
+
+      {/* Trusted Timestamp */}
+      <TimestampToggleSettings
         parameters={parameters}
         onParameterChange={onParameterChange}
         disabled={disabled}
