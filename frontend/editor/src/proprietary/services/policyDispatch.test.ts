@@ -4,18 +4,23 @@ import { runStoredPolicy } from "@app/services/policyApi";
 import { fileStorage } from "@app/services/fileStorage";
 import { isFileBlocked } from "@app/services/policyBlockRegistry";
 import * as runStore from "@app/components/policies/policyRunStore";
-import { createStirlingFile } from "@app/types/fileContext";
-import type { FileId } from "@app/types/file";
+import {
+  createNewStirlingFileStub,
+  createStirlingFile,
+} from "@app/types/fileContext";
+import { dispatchableFileId } from "@app/components/policies/policyLocalPass";
 
 vi.mock("@app/services/policyApi", () => ({
   runStoredPolicy: vi.fn(),
   resolvePolicyRunTarget: () => "local",
 }));
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getStirlingFile: vi.fn() },
+  fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
 }));
 
-const fileId = "input" as FileId;
+const file = new File(["%PDF"], "doc.pdf", { type: "application/pdf" });
+const stub = createNewStirlingFileStub(file);
+const fileId = dispatchableFileId(stub)!;
 
 beforeEach(() => {
   vi.useFakeTimers();
@@ -27,11 +32,9 @@ beforeEach(() => {
     JSON.stringify({ security: { required: true } }),
   );
   vi.mocked(fileStorage.getStirlingFile).mockResolvedValue(
-    createStirlingFile(
-      new File(["%PDF"], "doc.pdf", { type: "application/pdf" }),
-      fileId,
-    ),
+    createStirlingFile(file, fileId),
   );
+  vi.mocked(fileStorage.getStirlingFileStub).mockResolvedValue(stub);
   vi.mocked(runStoredPolicy).mockReset();
 });
 afterEach(() => {

@@ -33,6 +33,8 @@ import {
 import { loadPolicies, onPoliciesChange } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { runPolicyOnFile } from "@app/services/policyDispatch";
+import { dispatchableFileId } from "@app/components/policies/policyLocalPass";
+import { fileStorage } from "@app/services/fileStorage";
 import type { PoliciesByKey } from "@app/types/policies";
 import type { FileId } from "@app/types/file";
 import "@app/components/policies/PolicyRecoveryGate.css";
@@ -148,10 +150,16 @@ function RecoveryDialog({ blocks, policies, runs }: RecoveryDialogProps) {
       retryable.map(async ({ block, backendId }) => {
         const { fileId, policyKey, fileName } = block.outcome;
         try {
+          // The failed source can be closed while its descendants remain open.
+          const source = await fileStorage.getStirlingFileStub(
+            fileId as FileId,
+          );
+          const target = source ? dispatchableFileId(source) : null;
+          if (!target) throw new Error("Policy source cannot be retried");
           await runPolicyOnFile(
             policyKey,
             backendId,
-            fileId as FileId,
+            target,
             fileName ?? block.affectedFiles[0].name,
           );
         } finally {

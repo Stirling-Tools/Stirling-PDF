@@ -63,6 +63,9 @@ vi.mock("@app/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({ setPreviewFile: harness.setPreviewFile }),
 }));
 vi.mock("@app/services/policyDispatch", () => ({ runPolicyOnFile: vi.fn() }));
+vi.mock("@app/services/fileStorage", () => ({
+  fileStorage: { getStirlingFileStub: vi.fn() },
+}));
 vi.mock("@app/services/policyCatalog", () => ({
   loadPolicyCatalog: () => ({
     categories: [{ id: "security", label: "Security" }],
@@ -81,6 +84,7 @@ import {
   registerPolicyFileUsage,
 } from "@app/services/policyBlockRegistry";
 import { runPolicyOnFile } from "@app/services/policyDispatch";
+import { fileStorage } from "@app/services/fileStorage";
 
 function failed(
   file: StirlingFileStub,
@@ -116,6 +120,9 @@ beforeEach(() => {
   resetPolicyRuns();
   updatePolicy("security", { required: true, backendId: "backend-security" });
   harness.files = [createNewStirlingFileStub(new File(["pdf"], "failed.pdf"))];
+  vi.mocked(fileStorage.getStirlingFileStub).mockImplementation(
+    async (id) => harness.files.find((file) => file.id === id) ?? null,
+  );
   harness.removeFiles.mockResolvedValue(undefined);
   vi.mocked(runPolicyOnFile).mockResolvedValue(undefined);
   // Modal/inert behaviour is checked in Chromium; jsdom only models the open state.
@@ -290,6 +297,48 @@ describe("editor policy recovery", () => {
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     expect(isFileBlocked(file.id)).toBe(false);
   });
+
+  it("retries the stored source when only a descendant remains open", async () => {
+    const original = harness.files[0];
+    recordRunStart(failed(original));
+    const child = createNewStirlingFileStub(new File(["edited"], "edited.pdf"));
+    child.sourceFileIds = [original.id];
+    child.classificationLocked = true;
+    harness.files = [child];
+    vi.mocked(fileStorage.getStirlingFileStub).mockResolvedValueOnce(original);
+    render(app());
+    await act(async () =>
+      fireEvent.click(screen.getByRole("button", { name: "Retry file" })),
+    );
+    expect(fileStorage.getStirlingFileStub).toHaveBeenCalledWith(original.id);
+    expect(runPolicyOnFile).toHaveBeenCalledWith(
+      "security",
+      "backend-security",
+      original.id,
+      original.name,
+    );
+  });
+
+  it.each(["missing", "locked"] as const)(
+    "keeps recovery available when the stored source is %s",
+    async (state) => {
+      const file = harness.files[0];
+      recordRunStart(failed(file));
+      vi.mocked(fileStorage.getStirlingFileStub).mockResolvedValueOnce(
+        state === "missing" ? null : { ...file, classificationLocked: true },
+      );
+      render(app());
+      await act(async () =>
+        fireEvent.click(screen.getByRole("button", { name: "Retry file" })),
+      );
+      expect(runPolicyOnFile).not.toHaveBeenCalled();
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "The action couldn't be completed. Try again.",
+      );
+      expect(screen.getByRole("button", { name: "Close file" })).toBeEnabled();
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    },
+  );
 
   it("closes affected descendants without deleting the stored source or allowing it to reopen unblocked", async () => {
     const original = harness.files[0];
