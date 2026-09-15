@@ -215,16 +215,15 @@ test.describe("an external edit never silently costs the user work", () => {
       .first()
       .click();
 
-    // "Open in workspace" lands in the file editor, so the card's own size is
-    // what the version opened as: 2.07 KB is v1, 4.04 KB is today's disk file.
-    const opened = page.getByRole("listitem").filter({
-      hasText: "quarterly-report.pdf",
-    });
-    await expect(opened).toBeVisible({ timeout: 30_000 });
+    // "Open in workspace" lands in the viewer. The historical version has one
+    // page while today's disk file has eight, so the rendered page count tells
+    // us which bytes were actually opened.
+    await expect(viewerPageCount(page, 1)).toBeVisible({ timeout: 30_000 });
     // Reconciliation is the first thing hydration does, so anything it was
-    // going to replace has been replaced by the time the card settles.
+    // going to replace has been replaced by the time the viewer settles.
     await page.waitForTimeout(4000);
-    await expect(opened).toContainText("2.07 KB");
+    await expect(viewerPageCount(page, 1)).toBeVisible();
+    await expect(viewerPageCount(page, 8)).toHaveCount(0);
     await expect(page.getByText(/Updated from disk/i)).toHaveCount(0);
 
     const storedSize = await page.evaluate(async () => {
