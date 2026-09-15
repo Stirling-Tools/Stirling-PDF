@@ -28,6 +28,8 @@ export interface NewFolderButtonProps {
   /** Whether this build can put a directory on screen to be mounted. */
   canAddLocalFolder: boolean;
   onAddLocalFolder: () => void;
+  /** False when the selected action transfers focus into an inline form. */
+  returnFocus?: boolean;
   onOpenDialog: (parentId?: FolderId | null, kind?: FolderKind) => void;
 }
 
@@ -47,6 +49,7 @@ export function NewFolderButton({
   currentFolderId,
   canAddLocalFolder,
   onAddLocalFolder,
+  returnFocus = true,
   onOpenDialog,
 }: NewFolderButtonProps): ReactNode {
   const { t } = useTranslation();
@@ -174,7 +177,12 @@ export function NewFolderButton({
   }
 
   return (
-    <Menu shadow="md" position="bottom-end" withinPortal>
+    <Menu
+      shadow="md"
+      position="bottom-end"
+      withinPortal
+      returnFocus={returnFocus}
+    >
       <Menu.Target>
         {asRow ? (
           row(undefined, true)

@@ -104,16 +104,60 @@
   flex-shrink: 0;
 }
 .folder-setup__folder-navigation,
-.folder-setup__folder-toolbar,
-.folder-setup__new-folder {
+.folder-setup__folder-toolbar {
   display: flex;
   align-items: center;
   gap: 0.75rem;
 }
-.folder-setup__folder-toolbar > .sui-input,
-.folder-setup__new-folder > .sui-field {
+.folder-setup__folder-toolbar > .sui-input {
   flex: 1;
   min-width: 0;
+}
+.folder-setup__new-folder {
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr) minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 1.25rem;
+  padding: 1.25rem;
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  background: var(--c-surface-raised);
+}
+.folder-setup__new-folder-icon {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  background: var(--c-primary-subtle);
+  color: var(--c-accent-fg);
+}
+.folder-setup__new-folder > .sui-field {
+  min-width: 0;
+}
+.folder-setup__new-folder-location {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  min-width: 0;
+  font-size: 0.8125rem;
+}
+.folder-setup__new-folder-location > span {
+  color: var(--c-text-muted);
+}
+.folder-setup__new-folder-location > div {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  color: var(--c-text);
+}
+.folder-setup__new-folder-location svg {
+  flex-shrink: 0;
+  color: var(--c-text-muted);
+}
+.folder-setup__new-folder-location > div > span {
+  overflow-wrap: anywhere;
 }
 .folder-setup__breadcrumbs {
   flex: 1;
@@ -299,6 +343,28 @@
   padding: 0.5rem 0;
 }
 @media (max-width: 48rem) {
+  .folder-setup__new-folder {
+    grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+    align-items: start;
+    gap: 0.75rem;
+    padding: 0.875rem;
+  }
+  .folder-setup__new-folder-icon {
+    width: 2.25rem;
+    height: 2.25rem;
+  }
+  .folder-setup__new-folder-location {
+    grid-column: 2;
+    grid-row: 2;
+    gap: 0.25rem;
+  }
+  .folder-setup__new-folder-location > div {
+    min-height: 0;
+  }
+  .folder-setup__new-folder > .sui-ai {
+    grid-column: 3;
+    grid-row: 1;
+  }
   .folder-setup__folder-toolbar {
     flex-wrap: wrap;
   }

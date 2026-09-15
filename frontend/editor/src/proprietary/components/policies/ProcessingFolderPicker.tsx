@@ -9,10 +9,12 @@ import {
   SegmentedControl,
 } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
+import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import { FolderListRow } from "@app/components/filesPage/FolderListRow";
 import {
   folderKind,
   type FolderId,
+  type FolderKind,
   type FolderRecord,
 } from "@app/types/folder";
 import type { PickedDirectory } from "@app/services/directoryPicker";
@@ -129,6 +131,17 @@ export function ProcessingFolderPicker({
       ? target.folder.id
       : null;
   const parent = parentId ? byId.get(parentId) : undefined;
+  const creationParentId = selectedId ?? currentId;
+  const newFolderBlockedReason =
+    blocked && (creationParentId !== null || !canPickDirectory)
+      ? serverDisabledReason
+      : null;
+  const parentPath =
+    location === "local"
+      ? directory?.path
+      : parent
+        ? `${serverLabel} / ${processingFolderPath(parent, folders)}`
+        : serverLabel;
 
   function updateDraft(
     nextName = name,
@@ -192,45 +205,69 @@ export function ProcessingFolderPicker({
     showFolder(folder?.id ?? null);
   }
 
-  function toggleCreation() {
-    if (creating) {
-      setCreating(false);
-      onChange(
-        location === "local" && directory
-          ? { kind: "local", directory, name: null }
-          : parent
-            ? { kind: "existing", folder: parent }
-            : null,
-      );
-      return;
-    }
+  function cancelCreation() {
+    setCreating(false);
+    onChange(
+      location === "local" && directory
+        ? { kind: "local", directory, name: null }
+        : parent
+          ? { kind: "existing", folder: parent }
+          : null,
+    );
+  }
+
+  function startCreation(requestedParent?: FolderId | null, kind?: FolderKind) {
     const selected =
       target?.kind === "existing"
         ? target.folder
         : currentId
           ? byId.get(currentId)
           : undefined;
-    const nextParent = selected?.id ?? null;
-    const nextDirectory = selected?.directory
-      ? { path: selected.directory, name: selected.name }
-      : directory;
+    const nextLocation = kind === "server" ? "server" : location;
+    const nextParent =
+      requestedParent === undefined ? (selected?.id ?? null) : requestedParent;
+    const nextDirectory =
+      nextLocation === "local"
+        ? selected?.directory
+          ? { path: selected.directory, name: selected.name }
+          : directory
+        : null;
+    if (nextLocation !== location) {
+      remember();
+      setLocation(nextLocation);
+      setCurrentId(null);
+      setSearch("");
+    }
     setCreating(true);
     setParentId(nextParent);
     setDirectory(nextDirectory);
-    updateDraft(name, nextParent, nextDirectory);
+    setError(null);
+    onChange(
+      nextLocation === "server"
+        ? { kind: "server", name, parentId: nextParent }
+        : nextDirectory
+          ? { kind: "local", directory: nextDirectory, name }
+          : null,
+    );
   }
 
-  async function browse() {
+  async function browse(asParent = false) {
     setPicking(true);
     setError(null);
     try {
       const picked = await pickDirectory();
       if (picked) {
+        if (location !== "local") remember();
+        setLocation("local");
+        setCurrentId(null);
+        setParentId(null);
+        setSearch("");
+        setCreating(asParent);
         setDirectory(picked);
         onChange({
           kind: "local",
           directory: picked,
-          name: creating ? name : null,
+          name: asParent ? name : null,
         });
       }
     } catch (cause) {
@@ -289,7 +326,7 @@ export function ProcessingFolderPicker({
           disabled={blocked}
           onChange={(event) => setSearch(event.target.value)}
         />
-        {location === "local" && (
+        {location === "local" && directory && !creating && (
           <Button
             title={directory?.path}
             variant="secondary"
@@ -297,24 +334,80 @@ export function ProcessingFolderPicker({
             loading={picking}
             leftSection={<Icon name="folder-open" size={18} />}
           >
-            {directory?.name ??
-              t(
-                creating
-                  ? "processingFolders.setup.chooseParent"
-                  : "processingFolders.setup.browseComputer",
-              )}
+            {directory.name}
           </Button>
         )}
-        <Button
-          variant="secondary"
-          disabled={blocked}
-          aria-pressed={creating}
-          onClick={toggleCreation}
-          leftSection={<Icon name="plus" size={18} />}
-        >
-          {t("processingFolders.setup.newFolder")}
-        </Button>
+        <NewFolderButton
+          label={t("processingFolders.setup.newFolder")}
+          currentFolderId={creationParentId}
+          canAddLocalFolder={canPickDirectory}
+          disabledReason={
+            picking ? t("loading", "Loading...") : newFolderBlockedReason
+          }
+          serverDisabledReason={serverDisabledReason}
+          onAddLocalFolder={() => void browse()}
+          onOpenDialog={startCreation}
+          returnFocus={!creating}
+        />
       </div>
+      {creating && (
+        <section
+          className="folder-setup__new-folder"
+          aria-label={t("processingFolders.setup.newFolder")}
+        >
+          <div className="folder-setup__new-folder-icon">
+            <Icon name="folder" size={28} />
+          </div>
+          <FormField
+            label={t("processingFolders.setup.folderName")}
+            required
+            error={
+              name && (/[\\/]/.test(name) || [".", ".."].includes(name.trim()))
+                ? t("processingFolders.setup.invalidName")
+                : undefined
+            }
+          >
+            <Input
+              autoFocus
+              value={name}
+              maxLength={120}
+              disabled={blocked}
+              placeholder={t("processingFolders.setup.namePlaceholder")}
+              onChange={(event) => {
+                setName(event.target.value);
+                updateDraft(event.target.value);
+              }}
+            />
+          </FormField>
+          <div className="folder-setup__new-folder-location">
+            <span>{t("processingFolders.setup.createIn")}</span>
+            {parentPath ? (
+              <div title={parentPath}>
+                <Icon
+                  name={location === "local" ? "monitor" : "cloud"}
+                  size={18}
+                />
+                <span>{parentPath}</span>
+              </div>
+            ) : (
+              <Button
+                variant="tertiary"
+                onClick={() => void browse(true)}
+                loading={picking}
+              >
+                {t("processingFolders.setup.chooseParent")}
+              </Button>
+            )}
+          </div>
+          <ActionIcon
+            variant="tertiary"
+            aria-label={t("cancel", "Cancel")}
+            onClick={cancelCreation}
+          >
+            <Icon name="x" size={18} />
+          </ActionIcon>
+        </section>
+      )}
       <div className="folder-setup__folder-navigation">
         <ActionIcon
           aria-label={t("filesPage.back", "Back")}
@@ -442,33 +535,6 @@ export function ProcessingFolderPicker({
           </p>
         )}
       </div>
-      {creating && (
-        <div className="folder-setup__new-folder">
-          <FormField
-            label={t("processingFolders.setup.folderName")}
-            required
-            error={
-              name && (/[\\/]/.test(name) || [".", ".."].includes(name.trim()))
-                ? t("processingFolders.setup.invalidName")
-                : undefined
-            }
-          >
-            <Input
-              autoFocus
-              value={name}
-              disabled={blocked}
-              placeholder={t("processingFolders.setup.namePlaceholder")}
-              onChange={(event) => {
-                setName(event.target.value);
-                updateDraft(event.target.value);
-              }}
-            />
-          </FormField>
-          <Button variant="tertiary" onClick={toggleCreation}>
-            {t("cancel", "Cancel")}
-          </Button>
-        </div>
-      )}
       {error && <Banner tone="danger" description={error} />}
     </div>
   );

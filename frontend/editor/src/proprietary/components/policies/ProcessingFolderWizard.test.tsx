@@ -288,7 +288,7 @@ describe("ProcessingFolderWizard", () => {
     );
   });
 
-  it("limits rows to the chosen storage and blocks unavailable server selection", () => {
+  it("limits rows to the chosen storage and blocks unavailable server selection", async () => {
     const local: FolderRecord = {
       ...folder,
       id: createFolderId(),
@@ -307,7 +307,23 @@ describe("ProcessingFolderWizard", () => {
     fireEvent.click(screen.getByRole("radio", { name: "Server storage" }));
     expect(screen.queryByRole("radio", { name: local.name })).toBeNull();
     expect(screen.getByRole("radio", { name: folder.name })).toBeDisabled();
-    expect(button("newFolder")).toBeDisabled();
+    expect(button("newFolder")).toBeEnabled();
+    fireEvent.click(button("newFolder"));
+    // JSDOM has no layout, so Floating UI hides the menu after positioning.
+    const menu = await screen.findByRole("menu", { hidden: true });
+    expect(
+      within(menu).getByRole("menuitem", {
+        name: /filesPage.newFolderMenu.server/,
+        hidden: true,
+      }),
+    ).toHaveAttribute("data-disabled", "true");
+    expect(
+      within(menu).getByRole("menuitem", {
+        name: "filesPage.newFolderMenu.addExisting",
+        hidden: true,
+      }),
+    ).not.toHaveAttribute("data-disabled");
+    fireEvent.click(button("newFolder"));
     fireEvent.click(
       screen.getByRole("radio", { name: folder.name }).closest('[role="row"]')!,
     );
@@ -417,15 +433,83 @@ describe("ProcessingFolderWizard", () => {
       serverDisabledReason: "Sign in first",
       pickDirectory,
     });
-    fireEvent.click(button("browseComputer"));
+    fireEvent.click(button("newFolder"));
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: "filesPage.newFolderMenu.addExisting",
+      }),
+    );
     await waitFor(() => expect(pickDirectory).toHaveBeenCalledTimes(1));
     expect(button("chooseProcessing")).toBeDisabled();
-    fireEvent.click(button("browseComputer"));
+    fireEvent.click(button("newFolder"));
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: "filesPage.newFolderMenu.addExisting",
+      }),
+    );
     expect(
       await screen.findByRole("button", { name: "Invoices" }),
     ).toHaveAttribute("title", "C:/Invoices");
     expect(screen.queryByText("C:/Invoices")).toBeNull();
     expect(button("chooseProcessing")).toBeEnabled();
+  });
+
+  it("switches to local storage when the library menu picks a directory from the server tab", async () => {
+    const props = renderWizard({
+      canPickDirectory: true,
+      pickDirectory: vi
+        .fn()
+        .mockResolvedValue({ path: "C:/Documents", name: "Documents" }),
+    });
+    expect(screen.getByRole("radio", { name: "Server storage" })).toBeChecked();
+    fireEvent.click(button("newFolder"));
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: "filesPage.newFolderMenu.addExisting",
+      }),
+    );
+    await waitFor(() =>
+      expect(
+        screen.getByRole("radio", { name: key("computer") }),
+      ).toBeChecked(),
+    );
+    expect(screen.getByRole("button", { name: "Documents" })).toHaveAttribute(
+      "title",
+      "C:/Documents",
+    );
+    expect(props.resolveTarget).not.toHaveBeenCalled();
+    expect(button("chooseProcessing")).toBeEnabled();
+  });
+
+  it("opens the server name panel from the local menu and updates its destination when a parent is selected", async () => {
+    const props = renderWizard({ canPickDirectory: true });
+    fireEvent.click(screen.getByRole("radio", { name: key("computer") }));
+    fireEvent.click(button("newFolder"));
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: /filesPage.newFolderMenu.server/,
+      }),
+    );
+    const panel = screen.getByRole("region", { name: key("newFolder") });
+    const name = within(panel).getByRole("textbox", {
+      name: new RegExp(key("folderName")),
+    });
+    expect(name).toHaveFocus();
+    expect(screen.getByRole("radio", { name: "Server storage" })).toBeChecked();
+    expect(within(panel).getByText("Server storage")).toBeVisible();
+    fireEvent.change(name, { target: { value: "Bad/name" } });
+    expect(name).toHaveAttribute("aria-invalid", "true");
+    expect(button("chooseProcessing")).toBeDisabled();
+    fireEvent.change(name, { target: { value: "Receipts" } });
+    fireEvent.click(screen.getByRole("radio", { name: folder.name }));
+    expect(
+      within(panel).getByText(`Server storage / ${folder.name}`),
+    ).toBeVisible();
+    expect(button("chooseProcessing")).toBeEnabled();
+    expect(props.resolveTarget).not.toHaveBeenCalled();
+    fireEvent.click(within(panel).getByRole("button", { name: "cancel" }));
+    expect(screen.queryByRole("region", { name: key("newFolder") })).toBeNull();
+    expect(screen.getByRole("radio", { name: folder.name })).toBeChecked();
   });
 
   it("does not offer native folders in browser builds and explains unavailable storage", () => {
