@@ -9,30 +9,9 @@ import { useTranslation } from "react-i18next";
 import { Badge, Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { Icon } from "@app/ui/Icon";
 import { PolicyBadges as PolicyBadgeRow } from "@app/components/shared/PolicyBadges";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
-import FolderIcon from "@mui/icons-material/Folder";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import DeleteIcon from "@mui/icons-material/Delete";
-import HistoryIcon from "@mui/icons-material/History";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import AutoModeIcon from "@mui/icons-material/AutoMode";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
-import ReplayIcon from "@mui/icons-material/Replay";
-import TuneIcon from "@mui/icons-material/Tune";
-import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CloudSyncIcon from "@mui/icons-material/CloudSync";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import SearchIcon from "@mui/icons-material/Search";
-
 import { FileId } from "@app/types/file";
 import {
   FolderId,
@@ -460,7 +439,7 @@ function EmptyState({
     return (
       <div className="files-page-empty">
         <span className="files-page-empty-icon">
-          <SearchIcon style={{ fontSize: "2.5rem" }} />
+          <Icon name="search" size={"2.5rem"} />
         </span>
         <div className="files-page-empty-title">
           {t("filesPage.empty.noResults.title", "No matching files")}
@@ -534,7 +513,7 @@ function EmptyState({
   return (
     <div className="files-page-empty">
       <span className="files-page-empty-icon">
-        <FolderIcon style={{ fontSize: "2.5rem" }} />
+        <Icon name="folder" size={"2.5rem"} />
       </span>
       <div className="files-page-empty-title">{t(titleKey, titleFallback)}</div>
       <div className="files-page-empty-hint">{t(hintKey, hintFallback)}</div>
@@ -543,7 +522,7 @@ function EmptyState({
           {showUpload && (
             <Button
               size="md"
-              leftSection={<UploadFileIcon fontSize="small" />}
+              leftSection={<Icon name="file-up" size={20} />}
               onClick={onUpload}
             >
               {t("filesPage.empty.uploadCta", "Upload files")}
@@ -811,12 +790,12 @@ const FolderCard = React.memo(function FolderCard({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.folderMenu", "Folder actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={onOpen}
             >
               {t("filesPage.open", "Open")}
@@ -845,7 +824,7 @@ const FolderCard = React.memo(function FolderCard({
             {editsHidden && folder.parentFolderId === null && (
               <Menu.Item
                 color="red"
-                leftSection={<DeleteIcon fontSize="small" />}
+                leftSection={<Icon name="trash" size={20} />}
                 onClick={() => actions.deleteFolder(folder)}
               >
                 {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
@@ -854,7 +833,7 @@ const FolderCard = React.memo(function FolderCard({
             {!editsHidden && (
               <>
                 <Menu.Item
-                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+                  leftSection={<Icon name="file-pen" size={20} />}
                   onClick={() => actions.renameFolder(folder)}
                   disabled={editsDisabled}
                   title={editsDisabled ? offlineHint : undefined}
@@ -890,7 +869,7 @@ const FolderCard = React.memo(function FolderCard({
                 <Menu.Divider />
                 <Menu.Item
                   color="red"
-                  leftSection={<DeleteIcon fontSize="small" />}
+                  leftSection={<Icon name="trash" size={20} />}
                   onClick={() => actions.deleteFolder(folder)}
                   disabled={editsDisabled}
                   title={editsDisabled ? offlineHint : undefined}
@@ -999,7 +978,7 @@ export function ProcessingMenuItems({
       <>
         {heading}
         <Menu.Item
-          leftSection={<AutoModeIcon fontSize="small" />}
+          leftSection={<Icon name="workflow" size={20} />}
           onClick={onStart}
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
@@ -1016,7 +995,7 @@ export function ProcessingMenuItems({
       <>
         {heading}
         <Menu.Item
-          leftSection={<PlayArrowIcon fontSize="small" />}
+          leftSection={<Icon name="play" size={20} />}
           onClick={onResume}
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
@@ -1025,7 +1004,7 @@ export function ProcessingMenuItems({
         </Menu.Item>
         {onEdit && (
           <Menu.Item
-            leftSection={<TuneIcon fontSize="small" />}
+            leftSection={<Icon name="sliders-horizontal" size={20} />}
             onClick={onEdit}
             disabled={disabled}
             title={disabled ? disabledHint : undefined}
@@ -1035,7 +1014,7 @@ export function ProcessingMenuItems({
         )}
         {onRevertAll && (
           <Menu.Item
-            leftSection={<HistoryIcon fontSize="small" />}
+            leftSection={<Icon name="rotate-ccw-clock" size={20} />}
             onClick={onRevertAll}
             disabled={disabled}
             title={disabled ? disabledHint : undefined}
@@ -1045,7 +1024,7 @@ export function ProcessingMenuItems({
         )}
         <Menu.Item
           color="red"
-          leftSection={<AutoModeIcon fontSize="small" />}
+          leftSection={<Icon name="workflow" size={20} />}
           onClick={onRemove}
           disabled={disabled}
           title={disabled ? disabledHint : undefined}
@@ -1060,23 +1039,26 @@ export function ProcessingMenuItems({
       {heading}
       {!continuous && (
         <Menu.Item
-          leftSection={<ReplayIcon fontSize="small" />}
+          leftSection={<Icon name="rotate-ccw" size={20} />}
           onClick={onRun}
         >
           {t("filesPage.processing.sweep", "Retry failed files")}
         </Menu.Item>
       )}
-      <Menu.Item leftSection={<PauseIcon fontSize="small" />} onClick={onStop}>
+      <Menu.Item leftSection={<Icon name="pause" size={20} />} onClick={onStop}>
         {t("filesPage.processing.stop", "Pause processing")}
       </Menu.Item>
       {onEdit && (
-        <Menu.Item leftSection={<TuneIcon fontSize="small" />} onClick={onEdit}>
+        <Menu.Item
+          leftSection={<Icon name="sliders-horizontal" size={20} />}
+          onClick={onEdit}
+        >
           {t("filesPage.processing.edit", "Edit processing...")}
         </Menu.Item>
       )}
       {onRevertAll && (
         <Menu.Item
-          leftSection={<HistoryIcon fontSize="small" />}
+          leftSection={<Icon name="rotate-ccw-clock" size={20} />}
           onClick={onRevertAll}
         >
           {t("filesPage.processing.restoreAll", "Restore all originals")}
@@ -1099,7 +1081,7 @@ function FileStateBadge({
   if (state === "done") {
     return (
       <span className="files-page-state-badge is-done">
-        <TaskAltIcon style={{ fontSize: "0.85rem" }} />
+        <Icon name="circle-check-big" size="0.85rem" />
         {t("filesPage.diskState.done", "Ready")}
       </span>
     );
@@ -1126,7 +1108,7 @@ function FileStateBadge({
             }}
             title={t("filesPage.diskState.retryHint", "Run this file again")}
           >
-            <ReplayIcon style={{ fontSize: "0.8rem" }} />
+            <Icon name="rotate-ccw" size="0.8rem" />
             {t("filesPage.diskState.retry", "Retry")}
           </button>
         )}
@@ -1191,7 +1173,7 @@ function FileActionsMenu({
 }: FileActionsMenuProps) {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
-  const DownloadIcon = useFileActionIcons().download;
+  const downloadIcon = useFileActionIcons().download;
   const [showSaveToSharedModal, setShowSaveToSharedModal] = useState(false);
   const { fetchLatestCopy } = useSharedFileActions();
   const { isSharedEditor, isSharedWithYou, hasRemoteUpdate } =
@@ -1212,12 +1194,12 @@ function FileActionsMenu({
             aria-label={t("filesPage.fileMenu", "File actions")}
             data-testid="file-card-actions"
           >
-            <MoreVertIcon fontSize="small" />
+            <Icon name="ellipsis-vertical" size={20} />
           </ActionIcon>
         </Menu.Target>
         <Menu.Dropdown>
           <Menu.Item
-            leftSection={<OpenInNewIcon fontSize="small" />}
+            leftSection={<Icon name="external-link" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.openFile(file);
@@ -1227,7 +1209,7 @@ function FileActionsMenu({
           </Menu.Item>
           <OpenInNewWindowMenuItem file={file} />
           <Menu.Item
-            leftSection={<DriveFileMoveIcon fontSize="small" />}
+            leftSection={<Icon name="folder-input" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.requestMoveFile(file.id);
@@ -1242,7 +1224,7 @@ function FileActionsMenu({
           )}
           {downloadAvailable && (
             <Menu.Item
-              leftSection={<DownloadIcon fontSize="small" />}
+              leftSection={<Icon name={downloadIcon} size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 actions.downloadFile(file);
@@ -1254,7 +1236,7 @@ function FileActionsMenu({
           )}
           {renameAvailable && (
             <Menu.Item
-              leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+              leftSection={<Icon name="file-pen" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 actions.renameFile(file);
@@ -1266,7 +1248,7 @@ function FileActionsMenu({
           )}
           {duplicateAvailable && (
             <Menu.Item
-              leftSection={<ContentCopyOutlinedIcon fontSize="small" />}
+              leftSection={<Icon name="copy" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 actions.duplicateFile(file);
@@ -1293,7 +1275,7 @@ function FileActionsMenu({
               w={240}
             >
               <Menu.Item
-                leftSection={<CloudUploadIcon fontSize="small" />}
+                leftSection={<Icon name="cloud-upload" size={20} />}
                 disabled={Boolean(saveToServerDisabledReason)}
                 onClick={(e) => {
                   e.stopPropagation();
@@ -1311,7 +1293,7 @@ function FileActionsMenu({
           )}
           {isSharedEditor && (
             <Menu.Item
-              leftSection={<CloudSyncIcon fontSize="small" />}
+              leftSection={<Icon name="refresh-cw" size={20} />}
               data-testid="file-menu-save-to-shared"
               onClick={(e) => {
                 e.stopPropagation();
@@ -1323,7 +1305,7 @@ function FileActionsMenu({
           )}
           {isSharedWithYou && (
             <Menu.Item
-              leftSection={<FileDownloadIcon fontSize="small" />}
+              leftSection={<Icon name="download" size={20} />}
               rightSection={
                 hasRemoteUpdate ? (
                   <Badge size="xs" color="orange" variant="filled">
@@ -1342,7 +1324,7 @@ function FileActionsMenu({
           )}
           {showVersionHistory && (
             <Menu.Item
-              leftSection={<HistoryIcon fontSize="small" />}
+              leftSection={<Icon name="rotate-ccw-clock" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 actions.versionHistory(file);
@@ -1355,7 +1337,7 @@ function FileActionsMenu({
           <Menu.Divider />
           <Menu.Item
             color="red"
-            leftSection={<DeleteIcon fontSize="small" />}
+            leftSection={<Icon name="trash" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.removeFile(file.id);
@@ -1529,9 +1511,9 @@ const FileCard = React.memo(function FileCard({
         ) : (
           <div className="files-page-card-thumb-fallback">
             {isPdf ? (
-              <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file-pdf" size={"2rem"} />
             ) : (
-              <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file" size={"2rem"} />
             )}
             <span>{extension || "FILE"}</span>
           </div>
@@ -1925,12 +1907,12 @@ const FolderRow = React.memo(function FolderRow({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.folderMenu", "Folder actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={onOpen}
             >
               {t("filesPage.open", "Open")}
@@ -1959,7 +1941,7 @@ const FolderRow = React.memo(function FolderRow({
             {editsHidden && folder.parentFolderId === null && (
               <Menu.Item
                 color="red"
-                leftSection={<DeleteIcon fontSize="small" />}
+                leftSection={<Icon name="trash" size={20} />}
                 onClick={() => actions.deleteFolder(folder)}
               >
                 {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
@@ -1968,7 +1950,7 @@ const FolderRow = React.memo(function FolderRow({
             {!editsHidden && (
               <>
                 <Menu.Item
-                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+                  leftSection={<Icon name="file-pen" size={20} />}
                   onClick={() => actions.renameFolder(folder)}
                   disabled={editsDisabled}
                   title={editsDisabled ? offlineHint : undefined}
@@ -2004,7 +1986,7 @@ const FolderRow = React.memo(function FolderRow({
                 <Menu.Divider />
                 <Menu.Item
                   color="red"
-                  leftSection={<DeleteIcon fontSize="small" />}
+                  leftSection={<Icon name="trash" size={20} />}
                   onClick={() => actions.deleteFolder(folder)}
                   disabled={editsDisabled}
                   title={editsDisabled ? offlineHint : undefined}
@@ -2149,7 +2131,7 @@ const FileRow = React.memo(function FileRow({
             }}
           />
         ) : (
-          <PictureAsPdfIcon fontSize="small" />
+          <Icon name="file-pdf" size={20} />
         )}
         <span
           style={{
@@ -2265,9 +2247,9 @@ const DiskFileCard = React.memo(function DiskFileCard({
         ) : (
           <div className="files-page-card-thumb-fallback">
             {isPdf ? (
-              <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file-pdf" size={"2rem"} />
             ) : (
-              <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file" size={"2rem"} />
             )}
             <span>{extension || "FILE"}</span>
           </div>
@@ -2305,12 +2287,12 @@ const DiskFileCard = React.memo(function DiskFileCard({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onOpen();
@@ -2320,7 +2302,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
             </Menu.Item>
             {hasOriginal && (
               <Menu.Item
-                leftSection={<HistoryIcon fontSize="small" />}
+                leftSection={<Icon name="rotate-ccw-clock" size={20} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   actions.revertFile(entry.name);
@@ -2393,9 +2375,9 @@ const DiskFileRow = React.memo(function DiskFileRow({
             }}
           />
         ) : ext === "PDF" ? (
-          <PictureAsPdfIcon fontSize="small" />
+          <Icon name="file-pdf" size={20} />
         ) : (
-          <InsertDriveFileIcon fontSize="small" />
+          <Icon name="file" size={20} />
         )}
         <span
           style={{
@@ -2434,19 +2416,19 @@ const DiskFileRow = React.memo(function DiskFileRow({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={onOpen}
             >
               {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
             {hasOriginal && (
               <Menu.Item
-                leftSection={<HistoryIcon fontSize="small" />}
+                leftSection={<Icon name="rotate-ccw-clock" size={20} />}
                 onClick={() => actions.revertFile(entry.name)}
               >
                 {t("filesPage.processing.restore", "Restore original")}

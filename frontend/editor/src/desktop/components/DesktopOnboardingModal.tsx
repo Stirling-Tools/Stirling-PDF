@@ -1,190 +1,151 @@
-import { useState, useMemo } from "react";
-import { Modal, Stack, Group } from "@mantine/core";
-import { Button } from "@app/ui/Button";
-import { ActionIcon } from "@app/ui/ActionIcon";
+import { useEffect, useState, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import AnimatedSlideBackground from "@app/components/onboarding/slides/AnimatedSlideBackground";
-import OnboardingStepper from "@app/components/onboarding/OnboardingStepper";
+import { authService } from "@app/services/authService";
+import OnboardingSlideShell, {
+  ShellHero,
+  type ShellButton,
+} from "@app/components/onboarding/OnboardingSlideShell";
 import { SetupWizard } from "@app/components/SetupWizard";
 import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
-import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
-import styles from "@app/components/onboarding/InitialOnboardingModal/InitialOnboardingModal.module.css";
 import { connectionModeService } from "@app/services/connectionModeService";
+import { ClassificationDemoModal } from "@app/components/onboarding/classificationDemo/ClassificationDemoModal";
 
-const ONBOARDING_KEY = "stirling-desktop-onboarding-seen";
+/** Bumped whenever the welcome copy changes materially: it means "has seen the current
+ *  welcome", not "has launched before". The old key is left behind, not migrated. */
+const ONBOARDING_KEY = "stirling-desktop-onboarding-seen.v2";
+/** Separate from ONBOARDING_KEY so installs that predate the trick still get it once. */
+const CLASSIFICATION_DEMO_KEY = "stirling-desktop-classification-demo-seen";
 
-const SIGN_IN_GRADIENT: [string, string] = [
-  "var(--c-hue-blue)",
-  "var(--c-hue-violet)",
-];
-
-/**
- * Desktop-specific onboarding modal.
- * Shown on first launch: welcome slide → sign-in slide.
- * Replaces the core onboarding (which targets server/admin users).
- */
+/** Desktop onboarding: welcome → sign-in → the classification demo, replacing the core flow
+ *  aimed at server admins. Uses the shared shell, as every other onboarding does. */
 export function DesktopOnboardingModal() {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(
     () => !localStorage.getItem(ONBOARDING_KEY),
   );
   const [step, setStep] = useState(0);
+  // The classification demo follows the welcome flow. Someone who onboarded before it existed has
+  // no welcome flow left to follow, so they start here.
+  const [classificationDemo, setClassificationDemo] = useState(
+    () =>
+      !localStorage.getItem(CLASSIFICATION_DEMO_KEY) &&
+      !!localStorage.getItem(ONBOARDING_KEY),
+  );
 
-  const dismissFinal = () => {
+  // Null until known. A key bump re-runs this for people already signed in, and
+  // dismissing the sign-in slide drops them to local mode — a copy change must not.
+  const [needsSignIn, setNeedsSignIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    void authService
+      .isAuthenticated()
+      .then((authed) => {
+        if (!cancelled) setNeedsSignIn(!authed);
+      })
+      .catch(() => {
+        // Unknown session: offer sign-in rather than assume one exists.
+        if (!cancelled) setNeedsSignIn(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const finish = () => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     setVisible(false);
-    // If the user dismissed the sign-in slide without authenticating, fall back to local mode
-    // so the app is usable without a server connection.
-    connectionModeService.switchToLocal().catch(console.error);
+    setClassificationDemo(!localStorage.getItem(CLASSIFICATION_DEMO_KEY));
   };
 
-  // X on slide 0 advances to sign-in slide rather than dismissing entirely
+  const dismissFinal = () => {
+    finish();
+    // Only for someone offered sign-in who declined: they have no server connection.
+    // Doing this to an authenticated user would sign them out of SaaS.
+    if (needsSignIn) {
+      connectionModeService.switchToLocal().catch(console.error);
+    }
+  };
+
+  // The welcome slide advances rather than closes: skipping the account step strands
+  // the user. With no account step to reach, it simply ends.
   const handleClose = () => {
-    if (step === 0) {
+    if (step === 0 && needsSignIn) {
       setStep(1);
     } else {
       dismissFinal();
     }
   };
 
-  const handleComplete = () => {
-    localStorage.setItem(ONBOARDING_KEY, "true");
-    setVisible(false);
-    // No reload needed — AppProviders subscribes to connectionModeService and remounts
-    // the SaaS provider tree when mode changes, avoiding the Windows WebView2 freeze
-    // that window.location.reload() causes during a backgrounded OAuth flow.
-  };
+  // No reload: AppProviders remounts on mode change, avoiding the WebView2 freeze
+  // window.location.reload() causes during a backgrounded OAuth flow.
+  const handleComplete = finish;
 
-  // Call WelcomeSlide as a data factory (not a component render) — memoised so it
-  // isn't reconstructed on every render while the modal is open.
+  // Called as a data factory (not rendered as a component) — memoised so it isn't
+  // reconstructed on every render while the modal is open.
   const welcomeSlide = useMemo(() => WelcomeSlide(), []);
-  const totalSteps = 2;
 
-  if (!visible) return null;
+  if (!visible) {
+    // Accepting the offer hands the workbench canvas to the sweep, which outlives this
+    // modal — the session store owns it from there, so nothing else needs to stay mounted.
+    return classificationDemo ? (
+      <ClassificationDemoModal
+        opened
+        onClose={() => {
+          localStorage.setItem(CLASSIFICATION_DEMO_KEY, "true");
+          setClassificationDemo(false);
+        }}
+      />
+    ) : null;
+  }
+
+  // Held back until the session is known: rendering first would flash "Step 1 of 2" and
+  // then drop to one step for an already-signed-in user.
+  if (needsSignIn === null) return null;
+
+  const isWelcome = step === 0;
+
+  // Sign-in draws its own actions inside SetupWizard, so the shell footer stays empty
+  // rather than offering a second, competing way forward.
+  const buttons: ShellButton[] = isWelcome
+    ? [
+        {
+          key: "welcome-next",
+          label: needsSignIn
+            ? t("onboarding.buttons.next", "Next →")
+            : t("onboarding.buttons.getStarted", "Get started"),
+          primary: true,
+          action: "next",
+        },
+      ]
+    : [];
 
   return (
-    <Modal
-      opened={visible}
+    <OnboardingSlideShell
+      opened
+      // Sign-in draws its own logo and heading, so the shell adds only chrome: a hero
+      // and a second title would just push the form down the card.
+      hero={isWelcome ? <ShellHero appIcon /> : undefined}
+      slideKey={isWelcome ? "desktop-welcome" : "desktop-sign-in"}
+      title={isWelcome ? welcomeSlide.title : undefined}
+      body={
+        isWelcome ? (
+          welcomeSlide.body
+        ) : (
+          // No onClose: that prop draws the wizard's own close button, and the card
+          // already has one. SignInModal still passes it, being the only way out there.
+          <SetupWizard noLayout onComplete={handleComplete} />
+        )
+      }
+      stepIndex={step}
+      stepCount={needsSignIn ? 2 : 1}
+      buttons={buttons}
+      onAction={() => (needsSignIn ? setStep(1) : finish())}
+      // Neither slide can be dismissed: the header control moves the user through the
+      // flow rather than out of it, and Escape does nothing.
+      allowDismiss={false}
+      headerControl="forward"
       onClose={handleClose}
-      closeOnClickOutside={step === 1}
-      centered
-      size="lg"
-      radius="lg"
-      withCloseButton={false}
-      zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
-      styles={{
-        body: { padding: 0 },
-        content: {
-          overflow: "hidden",
-          border: "none",
-          background: "var(--c-surface)",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-        },
-      }}
-    >
-      <Stack
-        gap={0}
-        className={styles.modalContent}
-        style={{
-          height: "100%",
-          maxHeight: "90vh",
-          display: "flex",
-          flexDirection: "column",
-        }}
-      >
-        {/* Hero section — gradient changes per slide */}
-        <div className={styles.heroWrapper} style={{ flexShrink: 0 }}>
-          <AnimatedSlideBackground
-            gradientStops={
-              step === 0
-                ? welcomeSlide.background.gradientStops
-                : SIGN_IN_GRADIENT
-            }
-            circles={welcomeSlide.background.circles}
-            isActive
-            slideKey={step === 0 ? "desktop-welcome" : "desktop-sign-in"}
-          />
-          <ActionIcon
-            onClick={handleClose}
-            variant="tertiary"
-            size="md"
-            aria-label={t("close", "Close")}
-            style={{
-              position: "absolute",
-              top: 16,
-              right: 16,
-              backgroundColor: "rgba(255, 255, 255, 0.2)",
-              color: "white",
-              backdropFilter: "blur(4px)",
-              zIndex: 10,
-            }}
-          >
-            <CloseIcon fontSize="small" />
-          </ActionIcon>
-          <div className={styles.heroLogo} key={`logo-${step}`}>
-            <div className={styles.heroLogoCircle}>
-              {step === 0 ? (
-                <LocalIcon
-                  icon="rocket-launch"
-                  width={64}
-                  height={64}
-                  className={styles.heroIcon}
-                />
-              ) : (
-                <LocalIcon
-                  icon="login"
-                  width={64}
-                  height={64}
-                  className={styles.heroIcon}
-                />
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Body section */}
-        <div
-          className={styles.modalBody}
-          style={{ flex: 1, overflowY: "auto", overflowX: "hidden" }}
-        >
-          {step === 0 ? (
-            // Welcome slide
-            <Stack gap={16}>
-              <div className={`${styles.title} ${styles.titleText}`}>
-                {welcomeSlide.title}
-              </div>
-              <div className={styles.bodyText}>
-                <div className={`${styles.bodyCopy} ${styles.bodyCopyInner}`}>
-                  {welcomeSlide.body}
-                </div>
-                <style>{`.${styles.bodyCopyInner} strong { color: var(--c-text); font-weight: 600; }`}</style>
-              </div>
-              <OnboardingStepper totalSteps={totalSteps} activeStep={step} />
-              <div className={styles.buttonContainer}>
-                <Group justify="flex-end">
-                  <Button onClick={() => setStep(1)} accent="neutral">
-                    {t("onboarding.buttons.next", "Next →")}
-                  </Button>
-                </Group>
-              </div>
-            </Stack>
-          ) : (
-            // Sign-in slide
-            <Stack gap={12}>
-              <OnboardingStepper totalSteps={totalSteps} activeStep={step} />
-              <SetupWizard
-                noLayout
-                onComplete={handleComplete}
-                onClose={dismissFinal}
-              />
-            </Stack>
-          )}
-        </div>
-      </Stack>
-    </Modal>
+    />
   );
 }

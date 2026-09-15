@@ -250,9 +250,12 @@
   flex-shrink: 0;
 }
 
+/* The colorless brand mark follows currentColor, so the muted tone lives here
+   and tracks the theme: dark grey on light, light grey on dark. */
 .file-sidebar-cloud-icon-gray {
   position: absolute;
   inset: 0;
+  color: var(--c-text-muted);
   transition: opacity 0.2s ease;
   opacity: 1;
 }
@@ -278,6 +281,34 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  margin-top: 4px;
+}
+
+/* A refresh in progress, on a row that has no room for a spinner beside its label. */
+.file-sidebar-spin {
+  animation: file-sidebar-refresh-spin 0.9s linear infinite;
+}
+
+@keyframes file-sidebar-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar-spin {
+    animation-duration: 2s;
+  }
+}
+
+/* Folder navigation fills the box the file list would: in the library it is what the
+   sidebar is for, and a deep tree scrolls within it. */
+.file-sidebar-folders-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
   margin-top: 4px;
 }
 
@@ -312,6 +343,47 @@
   background: var(--c-hover, var(--c-hover));
 }
 
+.file-sidebar-group-header .mantine-Button-inner {
+  width: 100%;
+  gap: 6px;
+}
+
+.file-sidebar-group-header .mantine-Button-section {
+  margin-inline: 0;
+}
+
+.file-sidebar-group-header .mantine-Button-label {
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+}
+
+.file-sidebar-group-symbol {
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+
+.file-sidebar-group-symbol > * {
+  grid-area: 1 / 1;
+}
+
+.file-sidebar-group-symbol[data-has-icon="true"]
+  .file-sidebar-group-disclosure {
+  visibility: hidden;
+}
+
+.file-sidebar-group-header:is(:hover, :focus-visible) .file-sidebar-group-icon {
+  visibility: hidden;
+}
+
+.file-sidebar-group-header:is(:hover, :focus-visible)
+  .file-sidebar-group-disclosure {
+  visibility: visible;
+}
+
 .file-sidebar-group-icon {
   flex: none;
   color: var(--c-text-subtle, var(--c-text-subtle));
@@ -339,7 +411,7 @@
   padding-left: 0;
 }
 .file-sidebar-group-items .file-sidebar-file-item {
-  padding: 5px 10px 5px 1.4rem;
+  padding: 5px 10px 5px 1rem;
   gap: 8px;
   border-radius: 0;
 }

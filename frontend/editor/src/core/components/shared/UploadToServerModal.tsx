@@ -1,8 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Modal, Stack, Text, Group, Alert } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 
 import { alert } from "@app/components/toast";
@@ -174,7 +173,7 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
             <>
               <Button
                 variant="secondary"
-                leftSection={<FileDownloadIcon style={{ fontSize: 18 }} />}
+                leftSection={<Icon name="download" size={18} />}
                 onClick={() => void handleGetLatestCopy()}
                 loading={isUploading}
               >
@@ -182,7 +181,7 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
               </Button>
               <Button
                 accent="danger"
-                leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />}
+                leftSection={<Icon name="cloud-upload" size={18} />}
                 onClick={() => void handleUpload(true)}
                 loading={isUploading}
               >
@@ -191,7 +190,7 @@ const UploadToServerModal: React.FC<UploadToServerModalProps> = ({
             </>
           ) : (
             <Button
-              leftSection={<CloudUploadIcon style={{ fontSize: 18 }} />}
+              leftSection={<Icon name="cloud-upload" size={18} />}
               onClick={() => void handleUpload(false)}
               loading={isUploading}
             >

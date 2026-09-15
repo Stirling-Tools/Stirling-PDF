@@ -9,18 +9,7 @@ import {
   Badge,
 } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
-import HistoryIcon from "@mui/icons-material/History";
-import RestoreIcon from "@mui/icons-material/Restore";
-import UnarchiveIcon from "@mui/icons-material/Unarchive";
-import CloseIcon from "@mui/icons-material/Close";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CloudDoneIcon from "@mui/icons-material/CloudDone";
-import CloudSyncIcon from "@mui/icons-material/CloudSync";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import LinkIcon from "@mui/icons-material/Link";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { getFileSize, getFileDate } from "@app/utils/fileUtils";
 import { FileId, StirlingFileStub } from "@app/types/fileContext";
@@ -270,7 +259,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   size="xs"
                   variant="light"
                   color="orange"
-                  leftSection={<CloudSyncIcon style={{ fontSize: 12 }} />}
+                  leftSection={<Icon name="refresh-cw" size={12} />}
                 >
                   {t("storageCollab.updateAvailable", "Update available")}
                 </Badge>
@@ -298,7 +287,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   size="xs"
                   variant="light"
                   color="yellow"
-                  leftSection={<CloudUploadIcon style={{ fontSize: 12 }} />}
+                  leftSection={<Icon name="cloud-upload" size={12} />}
                 >
                   {t("fileManager.changesNotUploaded", "Changes not uploaded")}
                 </Badge>
@@ -307,7 +296,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   size="xs"
                   variant="light"
                   color="teal"
-                  leftSection={<CloudDoneIcon style={{ fontSize: 12 }} />}
+                  leftSection={<Icon name="cloud-check" size={12} />}
                 >
                   {t("fileManager.synced", "Synced")}
                 </Badge>
@@ -359,7 +348,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
                   pointerEvents: shouldShowHovered ? "auto" : "none",
                 }}
               >
-                <MoreVertIcon style={{ fontSize: 20 }} />
+                <Icon name="ellipsis-vertical" size={20} />
               </ActionIcon>
             </Menu.Target>
 
@@ -368,7 +357,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {isActive && (
                 <>
                   <Menu.Item
-                    leftSection={<CloseIcon style={{ fontSize: 16 }} />}
+                    leftSection={<Icon name="x" size={16} />}
                     onClick={(e) => {
                       e.stopPropagation();
                       removeFiles([file.id]);
@@ -382,7 +371,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               {canDownloadFile && (
                 <Menu.Item
-                  leftSection={<DownloadIcon style={{ fontSize: 16 }} />}
+                  leftSection={<Icon name="download" size={16} />}
                   onClick={(e) => {
                     e.stopPropagation();
                     onDownload?.();
@@ -394,7 +383,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               {canUpload && (
                 <Menu.Item
-                  leftSection={<CloudUploadIcon style={{ fontSize: 16 }} />}
+                  leftSection={<Icon name="cloud-upload" size={16} />}
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowUploadModal(true);
@@ -408,7 +397,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               {canSaveToShared && (
                 <Menu.Item
-                  leftSection={<CloudSyncIcon style={{ fontSize: 16 }} />}
+                  leftSection={<Icon name="refresh-cw" size={16} />}
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowSaveToSharedModal(true);
@@ -420,7 +409,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               {sharingEnabled && isSharedWithYou && isLatestVersion && (
                 <Menu.Item
-                  leftSection={<FileDownloadIcon style={{ fontSize: 16 }} />}
+                  leftSection={<Icon name="download" size={16} />}
                   rightSection={
                     hasRemoteUpdate ? (
                       <Badge size="xs" color="orange" variant="filled">
@@ -439,7 +428,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               {canShare && (
                 <Menu.Item
-                  leftSection={<LinkIcon style={{ fontSize: 16 }} />}
+                  leftSection={<Icon name="link" size={16} />}
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowShareModal(true);
@@ -451,7 +440,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               {canCopyShareLink && (
                 <Menu.Item
-                  leftSection={<LinkIcon style={{ fontSize: 16 }} />}
+                  leftSection={<Icon name="link" size={16} />}
                   onClick={(e) => {
                     e.stopPropagation();
                     void handleCopyShareLink();
@@ -463,7 +452,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
 
               {canManageShare && (
                 <Menu.Item
-                  leftSection={<LinkIcon style={{ fontSize: 16 }} />}
+                  leftSection={<Icon name="link" size={16} />}
                   onClick={(e) => {
                     e.stopPropagation();
                     setShowShareManageModal(true);
@@ -477,7 +466,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {isLatestVersion && hasVersionHistory && (
                 <>
                   <Menu.Item
-                    leftSection={<HistoryIcon style={{ fontSize: 16 }} />}
+                    leftSection={<Icon name="rotate-ccw-clock" size={16} />}
                     onClick={(e) => {
                       e.stopPropagation();
                       onToggleExpansion(leafFileId);
@@ -495,7 +484,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {isHistoryFile && (
                 <>
                   <Menu.Item
-                    leftSection={<RestoreIcon style={{ fontSize: 16 }} />}
+                    leftSection={<Icon name="rotate-ccw-clock" size={16} />}
                     onClick={(e) => {
                       e.stopPropagation();
                     }}
@@ -510,7 +499,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               {isZipFile && !isHistoryFile && !isCBZ && !isCBR && (
                 <>
                   <Menu.Item
-                    leftSection={<UnarchiveIcon style={{ fontSize: 16 }} />}
+                    leftSection={<Icon name="archive-restore" size={16} />}
                     onClick={(e) => {
                       e.stopPropagation();
                       onUnzipFile(file);
@@ -523,7 +512,7 @@ const FileListItem: React.FC<FileListItemProps> = ({
               )}
 
               <Menu.Item
-                leftSection={<DeleteIcon style={{ fontSize: 16 }} />}
+                leftSection={<Icon name="trash" size={16} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onRemove();

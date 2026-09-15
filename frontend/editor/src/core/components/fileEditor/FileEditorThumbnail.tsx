@@ -7,17 +7,7 @@ import { alert } from "@app/components/toast";
 import { useTranslation } from "react-i18next";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
-import CloseIcon from "@mui/icons-material/Close";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import UnarchiveIcon from "@mui/icons-material/Unarchive";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import CloudSyncIcon from "@mui/icons-material/CloudSync";
-import LinkIcon from "@mui/icons-material/Link";
-import HistoryIcon from "@mui/icons-material/History";
-import PushPinIcon from "@mui/icons-material/PushPin";
-import LockOpenIcon from "@mui/icons-material/LockOpen";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
+import { Icon } from "@app/ui/Icon";
 import {
   draggable,
   dropTargetForElements,
@@ -95,7 +85,6 @@ const FileEditorThumbnail = ({
   const { config } = useAppConfig();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
-  const DownloadOutlinedIcon = icons.download;
   const {
     pinFile,
     unpinFile,
@@ -330,7 +319,7 @@ const FileEditorThumbnail = ({
     const enforcingTooltip = (action: string): React.ReactNode => (
       <Stack gap={4} py={2} w={180}>
         <Group gap={6} wrap="nowrap">
-          <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+          <Icon name="shield" size={13} />
           <Text size="xs" fw={600}>
             {t(
               "policy.blockingAction",
@@ -345,7 +334,7 @@ const FileEditorThumbnail = ({
     return [
       {
         id: "view",
-        icon: <VisibilityIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="eye" size={20} />,
         label: t("openInViewer", "Open in Viewer"),
         onClick: (e) => {
           e.stopPropagation();
@@ -354,7 +343,7 @@ const FileEditorThumbnail = ({
       },
       {
         id: "pin",
-        icon: <PushPinIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="pin" size={20} filled={isPinned} />,
         label: isPinned
           ? t("unpin", "Unpin File (replace after tool run)")
           : t("pin", "Pin File (keep active after tool run)"),
@@ -384,7 +373,7 @@ const FileEditorThumbnail = ({
       },
       {
         id: "download",
-        icon: <DownloadOutlinedIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name={icons.download} size={20} />,
         label: terminology.download,
         disabled: policyEnforcing,
         tooltip: policyEnforcing
@@ -399,7 +388,7 @@ const FileEditorThumbnail = ({
         ? [
             {
               id: "upload",
-              icon: <CloudUploadIcon style={{ fontSize: 20 }} />,
+              icon: <Icon name="cloud-upload" size={20} />,
               label: uploadLabel,
               disabled: policyEnforcing,
               tooltip: policyEnforcing
@@ -416,7 +405,7 @@ const FileEditorThumbnail = ({
         ? [
             {
               id: "saveToShared",
-              icon: <CloudSyncIcon style={{ fontSize: 20 }} />,
+              icon: <Icon name="refresh-cw" size={20} />,
               label: t("storageCollab.saveToShared", "Save to shared file"),
               disabled: policyEnforcing,
               tooltip: policyEnforcing
@@ -435,7 +424,7 @@ const FileEditorThumbnail = ({
         ? [
             {
               id: "share",
-              icon: <LinkIcon style={{ fontSize: 20 }} />,
+              icon: <Icon name="link" size={20} />,
               label: t("fileManager.share", "Share"),
               disabled: policyEnforcing,
               tooltip: policyEnforcing
@@ -450,7 +439,7 @@ const FileEditorThumbnail = ({
         : []),
       {
         id: "unzip",
-        icon: <UnarchiveIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="archive-restore" size={20} />,
         label: t("fileManager.unzip", "Unzip"),
         onClick: (e) => {
           e.stopPropagation();
@@ -468,7 +457,7 @@ const FileEditorThumbnail = ({
       },
       {
         id: "versionHistory",
-        icon: <HistoryIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="rotate-ccw-clock" size={20} />,
         label: t("fileManager.versionHistory", "Version history"),
         onClick: (e) => {
           e.stopPropagation();
@@ -478,7 +467,7 @@ const FileEditorThumbnail = ({
       },
       {
         id: "close",
-        icon: <CloseIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="x" size={20} />,
         label: t("close", "Close"),
         onClick: (e) => {
           e.stopPropagation();
@@ -498,7 +487,6 @@ const FileEditorThumbnail = ({
     isPinned,
     actualFile,
     terminology,
-    DownloadOutlinedIcon,
     onViewFile,
     onDownloadFile,
     onUnzipFile,
@@ -629,9 +617,7 @@ const FileEditorThumbnail = ({
                       className={styles.backgroundPolicyPill}
                       style={{ color: backgroundPolicy.accentColor }}
                     >
-                      {policyCategoryIcon(backgroundPolicy.id, {
-                        fontSize: 14,
-                      })}
+                      {policyCategoryIcon(backgroundPolicy.id, 14)}
                       <Loader size={10} color={backgroundPolicy.accentColor} />
                     </span>
                   </span>
@@ -648,7 +634,7 @@ const FileEditorThumbnail = ({
                 </span>
                 {isPinned && (
                   <span className={styles.pinnedBadge}>
-                    <PushPinIcon style={{ fontSize: 12 }} />
+                    <Icon name="pin" size={12} filled />
                   </span>
                 )}
                 {isSharedFile && !isOwnedOrLocal && (
@@ -676,7 +662,7 @@ const FileEditorThumbnail = ({
                       }}
                       style={{ pointerEvents: "auto" }}
                     >
-                      <LockOpenIcon style={{ fontSize: 12 }} />
+                      <Icon name="lock-open" size={12} />
                     </ActionIcon>
                   </Tooltip>
                 )}
@@ -689,7 +675,7 @@ const FileEditorThumbnail = ({
 
           {/* Drag handle */}
           <span ref={handleRef} className={styles.dragHandle} aria-hidden>
-            <DragIndicatorIcon fontSize="small" />
+            <Icon name="grip-vertical" size={20} />
           </span>
         </div>
 
