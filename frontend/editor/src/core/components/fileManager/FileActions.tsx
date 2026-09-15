@@ -2,10 +2,7 @@ import React, { useEffect } from "react";
 import { Group, Text, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
-import SelectAllIcon from "@mui/icons-material/SelectAll";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import LinkIcon from "@mui/icons-material/Link";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useFileManagerContext } from "@app/contexts/FileManagerContext";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
@@ -18,7 +15,6 @@ const FileActions: React.FC = () => {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
   const icons = useFileActionIcons();
-  const DownloadIcon = icons.download;
   const { config } = useAppConfig();
   const [showBulkUploadModal, setShowBulkUploadModal] = React.useState(false);
   const [showBulkShareModal, setShowBulkShareModal] = React.useState(false);
@@ -137,7 +133,7 @@ const FileActions: React.FC = () => {
                 : t("fileManager.selectAll", "Select All")
             }
           >
-            <SelectAllIcon style={{ fontSize: "1rem" }} />
+            <Icon name="select-all" size={"1rem"} />
           </ActionIcon>
         </Tooltip>
         {showStorageFilter && (
@@ -182,7 +178,7 @@ const FileActions: React.FC = () => {
               disabled={!canBulkUpload}
               aria-label={t("fileManager.uploadSelected", "Upload Selected")}
             >
-              <CloudUploadIcon style={{ fontSize: "1rem" }} />
+              <Icon name="cloud-upload" size={"1rem"} />
             </ActionIcon>
           </Tooltip>
         )}
@@ -195,7 +191,7 @@ const FileActions: React.FC = () => {
               disabled={!canBulkShare}
               aria-label={t("fileManager.shareSelected", "Share Selected")}
             >
-              <LinkIcon style={{ fontSize: "1rem" }} />
+              <Icon name="link" size={"1rem"} />
             </ActionIcon>
           </Tooltip>
         )}
@@ -208,7 +204,7 @@ const FileActions: React.FC = () => {
             disabled={!hasSelection}
             aria-label={t("fileManager.deleteSelected", "Delete Selected")}
           >
-            <DeleteIcon style={{ fontSize: "1rem" }} />
+            <Icon name="trash" size={"1rem"} />
           </ActionIcon>
         </Tooltip>
 
@@ -220,7 +216,7 @@ const FileActions: React.FC = () => {
             disabled={!hasSelection || !hasDownloadAccess}
             aria-label={terminology.downloadSelected}
           >
-            <DownloadIcon style={{ fontSize: "1rem" }} />
+            <Icon name={icons.download} size="1rem" />
           </ActionIcon>
         </Tooltip>
       </Group>

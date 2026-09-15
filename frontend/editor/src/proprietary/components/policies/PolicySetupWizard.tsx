@@ -1,3 +1,4 @@
+import { classificationCondition } from "@app/data/classificationConditions";
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -19,9 +20,11 @@ import {
   type PolicyToolStep,
 } from "@app/policies/operations";
 import { resolveRunOn } from "@app/policies/runOn";
+import type { WireRoutingRule, WireTriggerConfig } from "@app/policies/types";
 import { PolicyCategoryBadge } from "@app/components/policies/PolicyCategoryBadge";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
+import { PolicyPdfaConfig } from "@app/components/policies/PolicyPdfaConfig";
 import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
 import "@app/components/policies/PolicySetupWizard.css";
 
@@ -33,6 +36,14 @@ export interface PolicySetupFrame {
   error: string | null;
   /** False while no step is enabled, when submitting would be a no-op. */
   canSubmit: boolean;
+}
+
+/** What the routing category binds: where documents come from, where each type goes. */
+export interface RoutingSetup {
+  sourceId: string;
+  trigger: WireTriggerConfig | null;
+  outputIds: string[];
+  routingRules: WireRoutingRule[];
 }
 
 interface PolicySetupWizardProps {
@@ -47,6 +58,14 @@ interface PolicySetupWizardProps {
   onCustomise?: (entry: CatalogueEntry, result: PolicySetupResult) => void;
   /** Whether a Purview tenant is connected; gates the Purview-backed steps. */
   hasPurviewConnection?: boolean;
+  /**
+   * Renders the routing category's source, routes and fallback destination. Portal-only: it reads
+   * the saved Sources. Without it a routing policy shows its steps and nothing to route with.
+   */
+  routingConfig?: (props: {
+    value: RoutingSetup;
+    onChange: (next: RoutingSetup) => void;
+  }) => ReactNode;
   /** Renders the Purview step's inline config. Portal-only; without it the step shows bare. */
   purviewConfig?: (props: {
     parameters: PolicyParams<"purviewApplyLabel">;
@@ -149,6 +168,20 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.compress.desc",
     descEn: "Compresses the document to a smaller file size.",
   },
+  pdfa: {
+    labelKey: "portal.policies.wizard.capability.pdfa.label",
+    labelEn: "Convert to PDF/A for archiving",
+    descKey: "portal.policies.wizard.capability.pdfa.desc",
+    descEn:
+      "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures.",
+  },
+  complianceCheck: {
+    labelKey: "portal.policies.wizard.capability.complianceCheck.label",
+    labelEn: "Check the document meets the standard",
+    descKey: "portal.policies.wizard.capability.complianceCheck.desc",
+    descEn:
+      "Validates the finished document against PDF/A and stops the run if it does not hold up.",
+  },
   classify: {
     labelKey: "portal.policies.wizard.capability.classify.label",
     labelEn: "Classify the document",
@@ -212,6 +245,7 @@ export function PolicySetupWizard({
   onCustomise,
   hasPurviewConnection,
   purviewConfig,
+  routingConfig,
   formatError,
   enforceControl,
   canManagePolicies,
@@ -228,6 +262,7 @@ export function PolicySetupWizard({
       onCustomise={onCustomise}
       hasPurviewConnection={hasPurviewConnection}
       purviewConfig={purviewConfig}
+      routingConfig={routingConfig}
       formatError={formatError}
       enforceControl={enforceControl}
       canManagePolicies={canManagePolicies}
@@ -245,6 +280,7 @@ function PolicySetupWizardBody({
   onCustomise,
   hasPurviewConnection = false,
   purviewConfig,
+  routingConfig,
   formatError,
   enforceControl = true,
   canManagePolicies = true,
@@ -260,6 +296,10 @@ function PolicySetupWizardBody({
     parameters: PolicyParams<"purviewApplyLabel">;
     onChange: (params: PolicyParams<"purviewApplyLabel">) => void;
   }) => ReactNode;
+  routingConfig?: (props: {
+    value: RoutingSetup;
+    onChange: (next: RoutingSetup) => void;
+  }) => ReactNode;
   formatError?: (e: unknown) => string;
   enforceControl?: boolean;
   canManagePolicies?: boolean;
@@ -271,6 +311,20 @@ function PolicySetupWizardBody({
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
+  const isRouting = category.id === "routing";
+  const [routing, setRouting] = useState<RoutingSetup>(() => ({
+    sourceId: policy?.state.sources?.[0] ?? "",
+    trigger: null,
+    outputIds: (policy?.state.outputIds ?? []).slice(0, 1),
+    // One blank route so the form and the saved result agree: an empty list would render a route
+    // the user could fill in and then submit as none.
+    routingRules: policy?.state.routingRules ?? [
+      {
+        condition: classificationCondition(),
+        outputId: "",
+      },
+    ],
+  }));
 
   const [tools, setTools] = useState<ToolState[]>(() => {
     const seeded = seedTools(entry);
@@ -349,7 +403,7 @@ function PolicySetupWizardBody({
       // Preserve stored options this wizard has no UI for rather than wiping them on save;
       // the builder is where those are edited.
       extraOptions: policy?.state.extraOptions,
-      runsOnEditor: true,
+      runsOnEditor: !isRouting,
       fieldValues,
       sources: policy?.state.sources ?? [],
       scopeTypes,
@@ -361,6 +415,14 @@ function PolicySetupWizardBody({
       maxRetries,
       retryDelayMinutes,
       steps,
+      ...(isRouting
+        ? {
+            sources: routing.sourceId ? [routing.sourceId] : [],
+            trigger: routing.trigger,
+            outputIds: routing.outputIds,
+            routingRules: routing.routingRules,
+          }
+        : {}),
     };
   }
 
@@ -416,6 +478,8 @@ function PolicySetupWizardBody({
         </div>
       )}
 
+      {isRouting && routingConfig?.({ value: routing, onChange: setRouting })}
+
       {!isClassification && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
@@ -450,7 +514,7 @@ function PolicySetupWizardBody({
                           onChange={(checked) =>
                             setToolEnabled(tl.toolId, checked)
                           }
-                          label=""
+                          aria-label={label}
                         />
                       }
                     />
@@ -470,6 +534,12 @@ function PolicySetupWizardBody({
                             onChange={(params) =>
                               setToolParams("watermark", params)
                             }
+                          />
+                        )}
+                        {tl.toolId === "pdfa" && (
+                          <PolicyPdfaConfig
+                            parameters={tl.params}
+                            onChange={(params) => setToolParams("pdfa", params)}
                           />
                         )}
                         {tl.toolId === "purviewApplyLabel" &&

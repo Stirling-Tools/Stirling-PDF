@@ -35,6 +35,7 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
@@ -201,6 +202,34 @@ class PaygWalletControllerTest {
         assertThat(body.team().usersInUse()).isEqualTo(40);
         // Team and Processor stay independent: a Team plan says nothing about the meter.
         assertThat(body.processor().active()).isFalse();
+    }
+
+    /**
+     * An unpurchased row carries the free allowance, which is not a Team holding: reporting it as
+     * the meter's denominator would show a ceiling nobody bought.
+     */
+    @Test
+    void getWallet_freeAllowanceRow_holdsNoTeam() {
+        User user = userWithId(63L, UUID.randomUUID());
+        Team team = teamWithId(63L);
+        when(userRepository.findBySupabaseId(any())).thenReturn(Optional.of(user));
+        user.setTeam(team);
+        when(memberRepo.findByTeamIdAndUserId(team.getId(), 63L))
+                .thenReturn(Optional.of(membership(team, user, TeamRole.MEMBER)));
+        when(memberRepo.countByTeamId(63L)).thenReturn(2L);
+        SaasTeamExtensions ext = new SaasTeamExtensions();
+        ext.setMaxSeats(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+        when(teamExtensionsRepository.findByTeamId(63L)).thenReturn(Optional.of(ext));
+        when(billingService.forTeam(63L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(63L)).thenReturn(snapshot(0L, 500L));
+        stubEmptyLedgerReads(63L);
+
+        WalletSnapshotResponse body = controller.getWallet(jwtAuth(user.getSupabaseId())).getBody();
+
+        assertThat(body).isNotNull();
+        assertThat(body.team().held()).isFalse();
+        assertThat(body.team().licensedUsers()).isNull();
+        assertThat(body.team().usersInUse()).isEqualTo(2);
     }
 
     /**

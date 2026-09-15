@@ -8,92 +8,64 @@
   overflow: hidden;
 }
 
-.files-page-header {
-  /* 3-column grid keeps the search bar position-stable regardless of
-   * breadcrumb length. Left column flexes for the breadcrumb (truncating
-   * via overflow:hidden), middle column holds the search, right column
-   * holds the action buttons right-aligned. */
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(min(14rem, 100%), 40rem) minmax(
-      0,
-      1fr
-    );
-  align-items: center;
-  gap: 1rem;
-  min-height: 48px;
-  padding: 0 0.75rem;
-  border-bottom: 1px solid var(--c-border-subtle);
-  background: var(--c-bg-raised);
-  flex-shrink: 0;
-}
-
-.files-page-header-actions {
-  justify-self: end;
+/* The library's own row: the tabs, then the folder path. What the library brings
+   sits here rather than in the shared bar above, which carries only what every view
+   has. */
+.files-page-tabs-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
-}
-
-.files-page-header-search {
-  display: flex;
-  align-items: center;
-  justify-content: center;
   min-width: 0;
 }
 
-.files-page-header-search .super-search {
-  flex: 0 1 24rem;
-  width: min(100%, 24rem);
-  max-width: 24rem;
+.files-page-tabs-path {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
 }
 
-.files-page-header-search .super-search input {
-  background-color: transparent;
-  padding-top: 4px;
-  padding-bottom: 4px;
-  font-size: 12.5px;
-}
-
-[data-mantine-color-scheme="dark"]
-  .files-page-header-search
-  .super-search
-  input {
-  background-color: transparent;
-}
-
+/* The folder path. Sized and coloured like the bar's own controls, since on mobile
+   that is where it renders. Fixed height and no wrapping: a deep trail would
+   otherwise push its row taller, so depth is handled by showing fewer crumbs - see
+   the overflow menu. */
 .files-page-breadcrumbs {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.8125rem;
+  gap: 2px;
   min-width: 0;
-  /* Fixed, and never wrapping: the trail shares a row with the search and the
-     action buttons, and any growth here moves the grid below it. Length is handled
-     by showing fewer crumbs, not by taking more space. */
-  height: 2rem;
+  height: 24px;
   flex-wrap: nowrap;
   overflow: hidden;
 }
+
 .files-page-breadcrumb {
-  background: none;
+  display: inline-flex;
+  align-items: center;
+  height: 24px;
+  max-width: 12rem;
+  min-width: 0;
+  padding: 0 6px;
   border: none;
-  padding: 0.25rem 0.5rem;
-  border-radius: 0.375rem;
+  border-radius: 8px;
+  background: transparent;
   color: var(--c-text-muted);
-  cursor: pointer;
-  font-size: inherit;
+  font-size: 13px;
   font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
   transition:
     background-color 0.12s ease,
     color 0.12s ease;
-  white-space: nowrap;
-  max-width: 14rem;
-  min-width: 0;
-  height: 1.5rem;
-  line-height: 1.5rem;
-  padding: 0 0.375rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
+}
+
+.files-page-breadcrumb:hover,
+.files-page-breadcrumb.is-current {
+  background-color: var(--c-hover);
+  color: var(--c-text);
 }
 
 /* The parents that don't fit, root included. */
@@ -101,15 +73,8 @@
   flex-shrink: 0;
 }
 
-.files-page-breadcrumb:hover,
-.files-page-breadcrumb.is-current {
-  background: var(--c-hover);
-  color: var(--c-text);
-}
-
 .files-page-breadcrumb-sep {
   color: var(--c-text-subtle);
-  font-size: 1rem !important;
   width: 1rem;
   height: 1rem;
   opacity: 0.55;
@@ -122,36 +87,6 @@
   min-height: 0;
   overflow: hidden;
 }
-
-.files-page-tree {
-  width: 17rem;
-  flex-shrink: 0;
-  border-right: 1px solid var(--c-border-subtle);
-  background: var(--c-bg-raised);
-  overflow-y: auto;
-  display: flex;
-  flex-direction: column;
-}
-
-.files-page-tree[data-collapsed="true"] {
-  width: 3.25rem;
-}
-
-.files-page-tree-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0.75rem 0.75rem 0.5rem;
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--c-text-subtle);
-}
-
-/* Tree node styles moved to FolderTreePanel.css - that's where the
-   .files-page-tree-* elements actually render (the slide-out panel from
-   HomePage), so the styles need to load whether or not the standalone
-   /files route is mounted. */
 
 .files-page-main {
   flex: 1;
@@ -304,20 +239,17 @@
 }
 
 .files-page-tree-list,
-.folder-tree-panel-inner,
 .files-page-details-body {
   scrollbar-width: thin;
   scrollbar-color: var(--c-border-subtle) transparent;
 }
 
 .files-page-tree-list::-webkit-scrollbar,
-.folder-tree-panel-inner::-webkit-scrollbar,
 .files-page-details-body::-webkit-scrollbar {
   width: 0.4rem;
 }
 
 .files-page-tree-list::-webkit-scrollbar-thumb,
-.folder-tree-panel-inner::-webkit-scrollbar-thumb,
 .files-page-details-body::-webkit-scrollbar-thumb {
   background: var(--c-border-subtle);
   border-radius: 999px;
@@ -1486,24 +1418,15 @@
 }
 
 @media (max-width: 1024px) {
-  .files-page-tree {
-    width: 14rem;
-  }
   .files-page-details {
     width: 18rem;
   }
 }
 
 @media (max-width: 800px) {
-  /* Tree slot inside the inline layout can't fit at this width - the
-     tree itself is still reachable via the FolderTreePanel slide-out.
-     Details panel visibility is controlled by JSX (conditional Drawer)
-     at this width, not CSS, so we don't blanket-hide .files-page-details
-     here - that would also hide it when it lives inside the Drawer's
-     portaled overlay tree. */
-  .files-page-tree {
-    display: none;
-  }
+  /* Details panel visibility is controlled by JSX (conditional Drawer) at this
+     width, not CSS: blanket-hiding .files-page-details would also hide it when it
+     lives inside the Drawer's portaled overlay tree. */
   .files-page-content {
     padding: 0.75rem;
   }
@@ -1516,14 +1439,7 @@
    filter selects + grid/list toggle is too wide to fit. This block
    collapses bulk-action button labels to icon-only, shrinks the
    filter selects, and pins the view toggle so it never clips off the
-   right edge. The header stays in desktop layout here (it has fewer
-   items and the side panels disappearing actually GIVES it room). */
-.files-page-header [data-desktop-hide="true"] {
-  /* The mobile-only overflow menu trigger. Hidden by default; shown
-     inside the mobile breakpoint below. Live as inline-flex so it
-     sits next to the Upload button without breaking the action row. */
-  display: none;
-}
+   right edge. */
 @media (max-width: 1024px) {
   .files-page-toolbar {
     /* nowrap so "7 items" + "Select all" sit on the same row as the
@@ -1582,65 +1498,9 @@
 }
 
 /* ── Mobile (≤640px) ────────────────────────────────────────────────
-   Tighten the chrome so the file manager fits inside the mobile
-   workspace slide. The slide-rail's bottom tab bar already provides
-   navigation, so the in-header Home/Apps/Close trio is duplicated
-   and the first to go. Same for "Upload" - the user can use the
-   centre drop overlay. */
-/* ── Mobile + tablet chrome (≤1024px = useIsMobile) ──────────────────
-   The desktop header is a 3-column grid whose middle track can grow to
-   40rem. Below ~1024px that track eats the row: the breadcrumb column
-   collapsed to ~36px (wrapping "All files" to two lines) and the action
-   column overflowed, pushing Upload off the right edge. One flex row
-   instead - breadcrumb and actions keep their intrinsic width and the
-   search takes whatever is left. Ends at the app's mobile breakpoint so
-   it matches the layout HomePage is already rendering. */
-@media (max-width: 1024px) {
-  .files-page-header {
-    display: flex;
-    flex-wrap: nowrap;
-    align-items: center;
-    gap: 0.4rem;
-    padding: 0.25rem 0.4rem;
-    overflow-x: hidden;
-  }
-  .files-page-header-search {
-    flex: 1 1 auto;
-    min-width: 0;
-    justify-content: flex-start;
-  }
-  /* Undo the fixed 24rem basis so the pill tracks the row's spare width. */
-  .files-page-header-search .super-search {
-    flex: 1 1 auto;
-    width: 100%;
-    max-width: none;
-  }
-  .files-page-header-actions {
-    flex: 0 0 auto;
-    margin-left: auto;
-    gap: 0.25rem;
-    flex-wrap: nowrap;
-  }
-  .files-page-breadcrumbs {
-    flex: 0 1 auto;
-    font-size: 0.85rem;
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    min-width: 5rem;
-    max-width: 45%;
-  }
-  /* Icon-only actions: the labels are what pushed Upload past the edge. */
-  .files-page-header-actions .mantine-Button-root {
-    padding-left: 0.55rem;
-    padding-right: 0.55rem;
-  }
-  .files-page-header-actions .mantine-Button-section[data-position="left"] {
-    margin-right: 0;
-  }
-  .files-page-header-actions .mantine-Button-label {
-    display: none;
-  }
-}
+   Tighten the chrome so the file manager fits inside the mobile workspace
+   slide: the slide-rail's bottom tab bar already carries the navigation, and
+   uploads have the centre drop overlay. */
 
 @media (max-width: 640px) {
   /* Grid: single column on very narrow phones; two columns from ~440px */

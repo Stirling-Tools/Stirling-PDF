@@ -482,6 +482,14 @@ export class EditTextCommand implements Command {
         // emits land at the same baselines we just established.
         run.paragraphLineHeight = lineHeight;
       }
+    } else {
+      run.pdfiumObjPtr = 0;
+      run.paragraphMemberPtrs = [];
+      run.paragraphMemberContainers = [];
+      run.paragraphMemberFs = [];
+      run.paragraphLeafPtrs = [];
+      run.paragraphLeafContainers = [];
+      run.bounds = { ...run.bounds, width: 0 };
     }
 
     run.mergedFromPtrs = [];
