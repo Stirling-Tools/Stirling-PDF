@@ -60,7 +60,8 @@ public class AccountLinkProperties {
         private int syncIntervalHours = 24;
 
         /**
-         * Block billable work after this many days with no successful sync (fail-open → closed).
+         * Suspend cloud-backed Team features and processing after this many days without confirmed
+         * entitlement.
          */
         private int graceDays = 3;
 
