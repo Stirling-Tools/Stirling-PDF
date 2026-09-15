@@ -90,6 +90,25 @@ describe("fetchPoliciesByCategory", () => {
 describe("decodedToState — runsOnEditor", () => {
   beforeEach(() => listPolicies.mockReset());
 
+  it("carries the first stored endpoint through to editor file selection", async () => {
+    const wire = policy("convert", undefined, { allowed: true });
+    wire.steps = [
+      { operation: "/api/v1/convert/img/pdf", parameters: {} },
+      { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+    ];
+
+    expect((await stateOf(wire, "convert")).firstOperation).toBe(
+      "/api/v1/convert/img/pdf",
+    );
+  });
+
+  it("leaves an empty pipeline without an input operation", async () => {
+    const wire = policy("empty", undefined, { allowed: true });
+    wire.steps = [];
+
+    expect((await stateOf(wire, "empty")).firstOperation).toBeNull();
+  });
+
   it("runs a catalogue tile that opted into the editor", async () => {
     const state = await stateOf(
       policy("pol-1", "security", { allowed: true }),
