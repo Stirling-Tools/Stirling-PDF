@@ -3,6 +3,7 @@ use tauri::{AppHandle, Emitter, Manager, RunEvent, WindowEvent};
 mod utils;
 pub mod commands;
 mod state;
+mod directory_drop;
 
 use commands::{
     add_opened_file,
@@ -11,6 +12,7 @@ use commands::{
     clear_opened_files,
     clear_refresh_token,
     clear_user_info,
+    file_disk_state,
     forward_files_to_window,
     is_default_pdf_handler,
     get_auth_token,
@@ -21,6 +23,9 @@ use commands::{
     open_in_new_window,
     pop_opened_files,
     pop_window_file_ids,
+    release_window_watches,
+    unwatch_disk_paths,
+    watch_disk_paths,
     get_refresh_token,
     get_user_info,
     is_first_launch,
@@ -114,6 +119,7 @@ pub fn run() {
         .build()
     )
     .plugin(tauri_plugin_opener::init())
+    .plugin(directory_drop::init())
     .plugin(tauri_plugin_shell::init())
     .plugin(tauri_plugin_fs::init())
     .plugin(tauri_plugin_dialog::init())
@@ -212,6 +218,9 @@ pub fn run() {
       get_opened_files,
       pop_opened_files,
       clear_opened_files,
+      file_disk_state,
+      watch_disk_paths,
+      unwatch_disk_paths,
       open_in_new_window,
       open_files_in_new_window,
       pop_window_file_ids,
@@ -268,6 +277,9 @@ pub fn run() {
               let _ = window.destroy();
             }
           }
+        }
+        RunEvent::WindowEvent { event: WindowEvent::Destroyed, label, .. } => {
+          release_window_watches(app_handle, &label);
         }
         RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), label, .. } => {
           use tauri::DragDropEvent;

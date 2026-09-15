@@ -1,8 +1,6 @@
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CheckIcon from "@mui/icons-material/Check";
-import SwapVertIcon from "@mui/icons-material/SwapVert";
-
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
@@ -56,7 +54,7 @@ export function FilesToolbarSortMenu({
               aria-label={`${label}: ${current}`}
               className="files-page-toolbar-icon-btn"
             >
-              <SwapVertIcon sx={{ fontSize: "1.1rem" }} />
+              <Icon name="arrow-up-down" size={"1.1rem"} />
             </ActionIcon>
           </Tooltip>
         </div>
@@ -69,7 +67,7 @@ export function FilesToolbarSortMenu({
             onClick={() => onChange(option.value)}
             leftSection={
               option.value === value ? (
-                <CheckIcon sx={{ fontSize: "1rem" }} />
+                <Icon name="check" size={"1rem"} />
               ) : (
                 <span style={{ display: "inline-block", width: "1rem" }} />
               )

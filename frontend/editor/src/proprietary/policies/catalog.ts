@@ -9,7 +9,11 @@ import {
   type UntypedPolicyEndpoint,
 } from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
-import type { WirePipelineStep } from "@app/policies/types";
+import type {
+  WirePipelineStep,
+  WireRoutingRule,
+  WireTriggerConfig,
+} from "@app/policies/types";
 
 export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
 
@@ -44,6 +48,10 @@ export interface PolicyConfigDef {
 }
 
 export interface PolicyState {
+  /** The saved destinations and per-document routes; the routing category edits these. */
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
+  trigger?: WireTriggerConfig | null;
   configured: boolean;
   status: PolicyStatus;
   /** A policy rather than an ordinary pipeline (see `Policy.required`). */
@@ -69,6 +77,10 @@ export interface PolicyState {
 }
 
 export interface PolicySetupResult {
+  /** Bound by the routing category only; every other category leaves these alone. */
+  trigger?: WireTriggerConfig | null;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
   required: boolean;
   /** Stored options the wizard doesn't model, carried through so a save preserves them (see codec). */
   extraOptions?: Record<string, unknown>;
@@ -172,7 +184,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.routing.label",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
-    comingSoon: true,
   },
   {
     id: "retention",
@@ -276,28 +287,8 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.routing.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("compress")],
-    fields: [
-      {
-        label: "portal.policies.config.routing.fields.destination",
-        key: "destination",
-        type: "select",
-        value: "documents",
-        options: ["documents", "s3Bucket", "sharePoint", "webhook"],
-      },
-      {
-        label: "portal.policies.config.routing.fields.webhookUrl",
-        key: "webhookUrl",
-        type: "text",
-        value: "",
-      },
-      {
-        label: "portal.policies.config.routing.fields.notify",
-        key: "notify",
-        type: "toggle",
-        value: false,
-      },
-    ],
+    defaultOperations: [policyStep("classify")],
+    fields: [],
   },
   retention: {
     summary: "portal.policies.config.retention.summary",

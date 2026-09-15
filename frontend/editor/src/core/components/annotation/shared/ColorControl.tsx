@@ -8,7 +8,7 @@ import {
 } from "@mantine/core";
 import { useState, useCallback, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import ColorizeIcon from "@mui/icons-material/Colorize";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 
 // safari and firefox do not support the eye dropper API, only edge, chrome and opera do.
@@ -114,7 +114,7 @@ export function ColorControl({
                   size="sm"
                   onClick={handleEyeDropper}
                 >
-                  <ColorizeIcon style={{ fontSize: 16 }} />
+                  <Icon name="pipette" size={16} />
                 </ActionIcon>
               </Tooltip>
             </Group>

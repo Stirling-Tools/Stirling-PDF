@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@app/auth/UseSession";
 import { fetchSigningSessions } from "@app/api/signing";
 import { qk } from "@app/query/keys";
 import { alert } from "@app/components/toast";
@@ -18,6 +19,8 @@ export interface UseSigningSessionsResult {
   signRequests: SignRequestSummary[];
   mySessions: SessionSummary[];
   loading: boolean;
+  /** A successful snapshot with no replacement request still in flight. */
+  settled: boolean;
   error: Error | null;
   refetch: () => Promise<void>;
 }
@@ -31,18 +34,20 @@ export const useSigningSessions = (
 ): UseSigningSessionsResult => {
   const { enabled = true, autoRefreshInterval = 0 } = options;
   const { t } = useTranslation();
+  const { user, loading: authLoading } = useAuth();
 
-  const { data, isLoading, isLoadingError, error, refetch } = useQuery({
-    queryKey: qk.signingSessions(),
-    queryFn: fetchSigningSessions,
-    enabled,
-    staleTime: 0,
-    refetchInterval: autoRefreshInterval > 0 ? autoRefreshInterval : false,
-    refetchIntervalInBackground: false,
-    // The interval pauses while unfocused, so returning has to catch up: the
-    // client-wide default of false would hold stale data until the next tick.
-    refetchOnWindowFocus: autoRefreshInterval > 0,
-  });
+  const { data, isLoading, isFetching, isLoadingError, error, refetch } =
+    useQuery({
+      queryKey: qk.signingSessions(user?.id ?? null),
+      queryFn: fetchSigningSessions,
+      enabled: enabled && !authLoading,
+      staleTime: 0,
+      refetchInterval: autoRefreshInterval > 0 ? autoRefreshInterval : false,
+      refetchIntervalInBackground: false,
+      // The interval pauses while unfocused, so returning has to catch up: the
+      // client-wide default of false would hold stale data until the next tick.
+      refetchOnWindowFocus: autoRefreshInterval > 0,
+    });
 
   const notifyFailure = useCallback(() => {
     console.error("Failed to fetch signing data");
@@ -89,6 +94,7 @@ export const useSigningSessions = (
     signRequests: data?.signRequests ?? EMPTY_REQUESTS,
     mySessions: data?.mySessions ?? EMPTY_SESSIONS,
     loading: isLoading || refreshing,
+    settled: data !== undefined && !isFetching && error === null,
     error: (error as Error | null) ?? null,
     refetch: explicitRefetch,
   };
