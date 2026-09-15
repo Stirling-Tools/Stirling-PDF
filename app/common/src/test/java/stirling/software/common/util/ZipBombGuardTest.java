@@ -12,8 +12,6 @@ import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
-import stirling.software.common.model.ApplicationProperties;
-
 class ZipBombGuardTest {
 
     @Test
@@ -79,10 +77,8 @@ class ZipBombGuardTest {
     }
 
     @Test
-    void defaults_comeFromArchiveLimits() {
-        ApplicationProperties.System.ArchiveLimits limits = ZipBombGuard.configuredLimits();
-        assertEquals(100L * 1024 * 1024, limits.getMaxEntryBytes());
-        assertEquals(500L * 1024 * 1024, limits.getMaxTotalBytes());
-        assertEquals(10_000, limits.getMaxEntries());
+    void defaults_matchAttachmentServiceLimits() {
+        assertEquals(100L * 1024 * 1024, ZipBombGuard.MAX_ENTRY_BYTES);
+        assertEquals(500L * 1024 * 1024, ZipBombGuard.MAX_TOTAL_BYTES);
     }
 }
