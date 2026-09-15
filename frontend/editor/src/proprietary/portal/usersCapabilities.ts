@@ -5,6 +5,8 @@ import type { UsersCapabilities } from "@portal/api/usersCapabilities";
  * behaviour the Users page had before the flavor seam existed.
  */
 export const usersCapabilities: UsersCapabilities = {
+  orgGroup: true,
+  transferOwnership: true,
   changeRole: true,
   adminRole: true,
   createTeam: true,

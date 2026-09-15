@@ -6,6 +6,8 @@ import type { UsersCapabilities } from "@portal/api/usersCapabilities";
  * remove members, and manage seats. Mirrors what SaasTeamController exposes.
  */
 export const usersCapabilities: UsersCapabilities = {
+  orgGroup: false,
+  transferOwnership: true,
   changeRole: false,
   adminRole: false,
   createTeam: false,

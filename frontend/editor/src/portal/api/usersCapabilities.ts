@@ -11,6 +11,9 @@
  * (SaaS, team-leader scoped: invite / rename / remove / seats only).
  */
 export interface UsersCapabilities {
+  /** Show the "Organization" owners group (a single-org deployment). */
+  orgGroup: boolean;
+  transferOwnership: boolean;
   /** Let an admin reassign roles at all (the role Select). */
   changeRole: boolean;
   /**

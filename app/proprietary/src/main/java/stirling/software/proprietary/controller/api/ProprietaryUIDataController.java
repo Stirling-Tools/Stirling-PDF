@@ -81,6 +81,7 @@ public class ProprietaryUIDataController {
     private final LoginAttemptService loginAttemptService;
     private final ResourceAccessService resourceAccessService;
     private final InviteTokenRepository inviteTokenRepository;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -98,7 +99,9 @@ public class ProprietaryUIDataController {
             MfaService mfaService,
             LoginAttemptService loginAttemptService,
             ResourceAccessService resourceAccessService,
-            InviteTokenRepository inviteTokenRepository) {
+            InviteTokenRepository inviteTokenRepository,
+            stirling.software.proprietary.service.OrgOwnerService orgOwnerService) {
+        this.orgOwnerService = orgOwnerService;
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -372,9 +375,18 @@ public class ProprietaryUIDataController {
                         .collect(Collectors.toSet());
         Set<Long> portalAccessUserIds =
                 resourceAccessService.usersWithPortalAccess(sortedUsers, activeTeamLeaderUserIds);
+        Long ownerId = orgOwnerService.ownerId().orElse(null);
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
-                        .map(user -> convertUserToSummary(user, leaderUserIds, portalAccessUserIds))
+                        .map(
+                                user -> {
+                                    AdminUserSummary summary =
+                                            convertUserToSummary(
+                                                    user, leaderUserIds, portalAccessUserIds);
+                                    summary.setOrgOwner(
+                                            java.util.Objects.equals(ownerId, user.getId()));
+                                    return summary;
+                                })
                         .toList();
 
         AdminSettingsData data = new AdminSettingsData();
