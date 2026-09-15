@@ -2,14 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import HomeIcon from "@mui/icons-material/Home";
-import DevicesOtherIcon from "@mui/icons-material/DevicesOther";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { Icon } from "@app/ui/Icon";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 
 import { useFolders } from "@app/contexts/FolderContext";
@@ -28,6 +21,7 @@ import {
   serialiseFilesPageDragPayload,
 } from "@app/components/filesPage/dragDrop";
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
+import "@app/components/filesPage/FolderTreeSidebar.css";
 import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 
 /**
@@ -56,14 +50,9 @@ interface FolderTreeSidebarProps {
   ) => Promise<void> | void;
 }
 
-// This component is always rendered inside FolderTreePanel, which supplies
-// its own <aside> chrome and "New folder at root" toolbar control. An
-// earlier `embed` prop selected between an embedded list and a standalone
-// aside+header layout; the standalone layout was unused and its "New
-// folder at root" ActionIcon was not gated by `serverReachable`, so if
-// anyone re-wired the component into a non-embed surface they'd ship an
-// always-enabled mutation button against a possibly-offline server.
-// Deleted to remove the trap.
+// A list, not a surface: the section around it owns the heading, and root-level
+// folder mutations belong there too - they need a serverReachable gate that a bare
+// list has no way to apply.
 /**
  * A name that gives way in the middle when the row is too narrow for it, keeping both
  * ends readable - folder names tend to differ at the end, where a plain end-ellipsis
@@ -216,7 +205,7 @@ function RootRow({ fileCount, isActive, onSelect, onDropFiles }: RootRowProps) {
     >
       <span className="files-page-tree-spacer" />
       <span className="files-page-tree-icon">
-        <HomeIcon fontSize="small" />
+        <Icon name="house" size={20} />
       </span>
       <span className="files-page-tree-name">
         {t("filesPage.allFiles", "All files")}
@@ -254,7 +243,7 @@ function LocalRow({ isActive, onSelect }: LocalRowProps) {
     >
       <span className="files-page-tree-spacer" />
       <span className="files-page-tree-icon">
-        <DevicesOtherIcon fontSize="small" />
+        <Icon name="tablet-smartphone" size={20} />
       </span>
       <span className="files-page-tree-name">
         {t("filesPage.tabName.local", "Local")}
@@ -425,9 +414,9 @@ function TreeNodeRow({
             }}
           >
             {open ? (
-              <KeyboardArrowDownIcon fontSize="small" />
+              <Icon name="chevron-down" size={20} />
             ) : (
-              <KeyboardArrowRightIcon fontSize="small" />
+              <Icon name="chevron-right" size={20} />
             )}
           </span>
         ) : (
@@ -466,12 +455,12 @@ function TreeNodeRow({
                 setMenuOpen((o) => !o);
               }}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<EditIcon fontSize="small" />}
+              leftSection={<Icon name="pencil" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onRenameFolder(node.folder);
@@ -491,7 +480,7 @@ function TreeNodeRow({
               {t("filesPage.treeMenu.rename", "Rename")}
             </Menu.Item>
             <Menu.Item
-              leftSection={<CreateNewFolderIcon fontSize="small" />}
+              leftSection={<Icon name="folder-plus" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onRequestNewFolder(node.folder.id);
@@ -518,7 +507,7 @@ function TreeNodeRow({
             {(kind !== "local" || node.folder.parentFolderId === null) && (
               <Menu.Item
                 color="red"
-                leftSection={<DeleteOutlineIcon fontSize="small" />}
+                leftSection={<Icon name="trash" size={20} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   onDeleteFolder(node.folder);

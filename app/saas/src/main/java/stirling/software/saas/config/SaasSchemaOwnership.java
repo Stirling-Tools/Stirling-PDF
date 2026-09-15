@@ -108,6 +108,7 @@ public final class SaasSchemaOwnership {
                     "stored_file_blobs",
                     "stored_files",
                     "user_license_settings",
+                    "org_owner",
                     "user_profile_pictures",
                     "user_server_certificates",
                     "workflow_participants",

@@ -108,7 +108,9 @@ class ProprietaryUIDataControllerMoreTest {
                         loginAttemptService,
                         resourceAccessService,
                         profilePictureService,
-                        inviteTokenRepository);
+                        inviteTokenRepository,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class));
     }
 
     private static User normalUser(Long id, String username) {

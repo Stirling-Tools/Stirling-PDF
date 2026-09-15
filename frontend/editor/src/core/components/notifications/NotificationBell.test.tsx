@@ -12,9 +12,20 @@ import type {
   NotificationActionSlot,
 } from "@app/services/notifications";
 
-// @app/ui Button is a Mantine wrapper, so it needs the provider in the tree.
+vi.mock("@mantine/hooks", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@mantine/hooks")>()),
+  useReducedMotion: () => true,
+}));
+
+// Reduced motion also stops transition timers, which env="test" alone still schedules.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, {
+    wrapper: ({ children }) => (
+      <MantineProvider env="test" theme={{ respectReducedMotion: true }}>
+        {children}
+      </MantineProvider>
+    ),
+  });
 
 // The bell's own two jobs: what counts as read, and how a row behaves around an action.
 
@@ -376,6 +387,28 @@ describe("NotificationBell", () => {
 
     await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
     expect(screen.getByText("Unrecognised failure")).toBeTruthy();
+  });
+
+  it("re-reads the list once an action has run, rather than waiting for the next poll", async () => {
+    // A resolution closes its row server-side. The panel polls every 30s, so without a re-read
+    // the row a reader just fixed stays on screen, and reopening the panel does not shift it.
+    const run = vi.fn();
+    h.specs = { REPAIR: { available: () => true, run } };
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Damaged document", { actions: [offer("REPAIR")] }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // Repaired: the server no longer reports it.
+    fetchNotifications.mockResolvedValue([]);
+    fireEvent.click(
+      screen.getByRole("button", { name: "REPAIR: Damaged document" }),
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByText("Damaged document")).toBeNull(),
+    );
   });
 
   it("closes the panel on its way to a destination behind it", async () => {

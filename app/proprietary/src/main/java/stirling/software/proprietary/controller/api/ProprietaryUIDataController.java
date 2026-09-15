@@ -83,6 +83,7 @@ public class ProprietaryUIDataController {
     private final ResourceAccessService resourceAccessService;
     private final ProfilePictureService profilePictureService;
     private final InviteTokenRepository inviteTokenRepository;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
 
     public ProprietaryUIDataController(
             ApplicationProperties applicationProperties,
@@ -101,7 +102,9 @@ public class ProprietaryUIDataController {
             LoginAttemptService loginAttemptService,
             ResourceAccessService resourceAccessService,
             ProfilePictureService profilePictureService,
-            InviteTokenRepository inviteTokenRepository) {
+            InviteTokenRepository inviteTokenRepository,
+            stirling.software.proprietary.service.OrgOwnerService orgOwnerService) {
+        this.orgOwnerService = orgOwnerService;
         this.applicationProperties = applicationProperties;
         this.auditConfig = auditConfig;
         this.sessionPersistentRegistry = sessionPersistentRegistry;
@@ -379,15 +382,21 @@ public class ProprietaryUIDataController {
         // Which roster rows carry an avatar; no image bytes are loaded.
         Set<Long> usersWithProfilePicture =
                 profilePictureService.withPicture(sortedUsers.stream().map(User::getId).toList());
+        Long ownerId = orgOwnerService.ownerId().orElse(null);
         List<AdminUserSummary> userSummaries =
                 sortedUsers.stream()
                         .map(
-                                user ->
-                                        convertUserToSummary(
-                                                user,
-                                                leaderUserIds,
-                                                portalAccessUserIds,
-                                                usersWithProfilePicture))
+                                user -> {
+                                    AdminUserSummary summary =
+                                            convertUserToSummary(
+                                                    user,
+                                                    leaderUserIds,
+                                                    portalAccessUserIds,
+                                                    usersWithProfilePicture);
+                                    summary.setOrgOwner(
+                                            java.util.Objects.equals(ownerId, user.getId()));
+                                    return summary;
+                                })
                         .toList();
 
         AdminSettingsData data = new AdminSettingsData();
