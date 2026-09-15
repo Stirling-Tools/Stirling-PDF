@@ -12,7 +12,10 @@ import { render, waitFor } from "@testing-library/react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { setupServer } from "msw/node";
 import { http, HttpResponse } from "msw";
-import { createPortalQueryClient } from "@portal/queryClient";
+import {
+  getPortalQueryClient,
+  resetPortalQueryClient,
+} from "@portal/queryClient";
 import { usePoliciesOverview } from "@portal/queries/policies";
 import { useProcessorFlow } from "@portal/queries/processorFlow";
 
@@ -70,9 +73,12 @@ function PoliciesConsumer() {
   return null;
 }
 
+// The client outlives a mount now, so each case starts from a cold one.
+beforeEach(resetPortalQueryClient);
+
 describe("portal query sharing", () => {
   it("in-view: multiple consumers of the same endpoints fetch each once", async () => {
-    const client = createPortalQueryClient();
+    const client = getPortalQueryClient();
     render(
       <QueryClientProvider client={client}>
         <HomeConsumers />
@@ -86,7 +92,7 @@ describe("portal query sharing", () => {
   });
 
   it("cross-view: a later screen reusing the data refetches nothing", async () => {
-    const client = createPortalQueryClient();
+    const client = getPortalQueryClient();
     const home = render(
       <QueryClientProvider client={client}>
         <HomeConsumers />

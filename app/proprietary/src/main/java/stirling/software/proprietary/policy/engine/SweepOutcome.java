@@ -11,7 +11,13 @@ import java.util.List;
  * listing.
  */
 public record SweepOutcome(
-        List<String> runIds, int filesListed, int alreadyProcessed, int parked, int inFlight) {
+        List<String> runIds,
+        int filesListed,
+        int alreadyProcessed,
+        int parked,
+        int inFlight,
+        /** Files this sweep took on again after an earlier failure (user sweeps only). */
+        int retried) {
 
     public SweepOutcome {
         runIds = runIds == null ? List.of() : List.copyOf(runIds);

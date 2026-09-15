@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Box, Popover, ScrollArea, Text, Loader } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import {
   createStirlingFile,
@@ -419,12 +419,10 @@ export function FileSelectorPicker({
               {placeholder ||
                 t("fileSelectorPicker.placeholder", "Select file")}
             </Text>
-            <AddIcon
-              style={{
-                fontSize: 18,
-                color: "var(--mantine-color-dimmed)",
-                flexShrink: 0,
-              }}
+            <Icon
+              name="plus"
+              size={18}
+              style={{ color: "var(--mantine-color-dimmed)", flexShrink: 0 }}
             />
           </Box>
         </Popover.Target>

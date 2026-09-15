@@ -1,5 +1,7 @@
 /** Editor query keys: ["editor", <resource>, ...params]. */
 export const qk = {
+  adminSection: (sectionName: string) =>
+    ["editor", "adminSection", sectionName] as const,
   /** The admin directory payload: a different endpoint and shape to qk.users(). */
   adminUsers: () => ["editor", "adminUsers"] as const,
   appConfig: () => ["editor", "appConfig"] as const,

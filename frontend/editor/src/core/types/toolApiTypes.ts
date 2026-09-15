@@ -396,7 +396,21 @@ export interface ConvertToPdfRequest {
   /**
    * Option to determine how the image will fit onto the page
    */
-  fitOption?: "fillPage" | "fitDocumentToImage" | "maintainAspectRatio";
+  fitOption?:
+    | "fillPage"
+    | "fitDocumentToImage"
+    | "fitDocumentToPage"
+    | "maintainAspectRatio";
+}
+export interface CreatePortfolioRequest {
+  /**
+   * Title shown on the portfolio cover page.
+   */
+  coverTitle?: string;
+  /**
+   * The files to bundle into the PDF Portfolio.
+   */
+  files: File[];
 }
 export interface CropPdfForm {
   /**
@@ -485,6 +499,14 @@ export interface EmlToPdfRequest {
    */
   maxAttachmentSizeMB?: number;
 }
+export interface EncodeCharcodesRequest {
+  fontName?: string;
+  fontSha256?: string;
+  locatorChar?: string;
+  pageIndex?: number;
+  pdfBase64?: string;
+  text?: string;
+}
 export type ExtractAttachmentsRequest = Record<string, never>;
 export interface ExtractHeaderRequest {
   /**
@@ -524,6 +546,7 @@ export interface FileSizeRequest {
    */
   fileSize?: number;
 }
+export type FlattenPortfolioRequest = Record<string, never>;
 export interface FlattenRequest {
   /**
    * True to flatten only the forms, false to flatten full PDF (Convert page to image)
@@ -533,6 +556,10 @@ export interface FlattenRequest {
    * Optional DPI for page rendering when flattening the full document.
    */
   renderDpi?: number;
+}
+export interface FormFormDetectionDetectRequest {
+  applyToPdf?: boolean;
+  confThreshold?: number;
 }
 export type GeneralExtractBookmarksRequest = Record<string, never>;
 export type GeneralFile = Record<string, never>;
@@ -1348,6 +1375,7 @@ export interface SecurityCertSignValidateCertificateRequest {
 }
 export type SecurityGetInfoOnPdfRequest = Record<string, never>;
 export type SecurityRemoveCertSignRequest = Record<string, never>;
+export type SecurityValidateComplianceRequest = Record<string, never>;
 export interface SignPDFWithCertRequest {
   /**
    * The alias of the certificate to sign with. Required for WINDOWS_STORE and recommended for PKCS11 tokens holding multiple certificates.
@@ -1528,6 +1556,7 @@ export type ToolEndpoint =
   | "/api/v1/filter/filter-page-count"
   | "/api/v1/filter/filter-page-rotation"
   | "/api/v1/filter/filter-page-size"
+  | "/api/v1/form/form-detection/detect"
   | "/api/v1/general/booklet-imposition"
   | "/api/v1/general/crop"
   | "/api/v1/general/edit-table-of-contents"
@@ -1536,6 +1565,7 @@ export type ToolEndpoint =
   | "/api/v1/general/merge-pdfs"
   | "/api/v1/general/multi-page-layout"
   | "/api/v1/general/overlay-pdfs"
+  | "/api/v1/general/pdf-text-editor/encode-charcodes"
   | "/api/v1/general/pdf-to-single-page"
   | "/api/v1/general/rearrange-pages"
   | "/api/v1/general/remove-image-pdf"
@@ -1559,12 +1589,14 @@ export type ToolEndpoint =
   | "/api/v1/misc/auto-rotate-pdf"
   | "/api/v1/misc/auto-split-pdf"
   | "/api/v1/misc/compress-pdf"
+  | "/api/v1/misc/create-portfolio"
   | "/api/v1/misc/decompress-pdf"
   | "/api/v1/misc/delete-attachment"
   | "/api/v1/misc/extract-attachments"
   | "/api/v1/misc/extract-image-scans"
   | "/api/v1/misc/extract-images"
   | "/api/v1/misc/flatten"
+  | "/api/v1/misc/flatten-portfolio"
   | "/api/v1/misc/list-attachments"
   | "/api/v1/misc/ocr-pdf"
   | "/api/v1/misc/remove-blanks"
@@ -1590,6 +1622,7 @@ export type ToolEndpoint =
   | "/api/v1/security/remove-password"
   | "/api/v1/security/sanitize-pdf"
   | "/api/v1/security/timestamp-pdf"
+  | "/api/v1/security/validate-compliance"
   | "/api/v1/security/validate-signature"
   | "/api/v1/security/verify-pdf";
 
@@ -1631,6 +1664,7 @@ export interface ToolApiParams {
   "/api/v1/filter/filter-page-count": PDFComparisonAndCount;
   "/api/v1/filter/filter-page-rotation": PageRotationRequest;
   "/api/v1/filter/filter-page-size": PageSizeRequest;
+  "/api/v1/form/form-detection/detect": FormFormDetectionDetectRequest;
   "/api/v1/general/booklet-imposition": BookletImpositionRequest;
   "/api/v1/general/crop": CropPdfForm;
   "/api/v1/general/edit-table-of-contents": EditTableOfContentsRequest;
@@ -1639,6 +1673,7 @@ export interface ToolApiParams {
   "/api/v1/general/merge-pdfs": MergePdfsRequest;
   "/api/v1/general/multi-page-layout": MergeMultiplePagesRequest;
   "/api/v1/general/overlay-pdfs": OverlayPdfsRequest;
+  "/api/v1/general/pdf-text-editor/encode-charcodes": EncodeCharcodesRequest;
   "/api/v1/general/pdf-to-single-page": GeneralPdfToSinglePageRequest;
   "/api/v1/general/rearrange-pages": RearrangePagesRequest;
   "/api/v1/general/remove-image-pdf": GeneralRemoveImagePdfRequest;
@@ -1662,12 +1697,14 @@ export interface ToolApiParams {
   "/api/v1/misc/auto-rotate-pdf": AutoRotatePdfRequest;
   "/api/v1/misc/auto-split-pdf": AutoSplitPdfRequest;
   "/api/v1/misc/compress-pdf": OptimizePdfRequest;
+  "/api/v1/misc/create-portfolio": CreatePortfolioRequest;
   "/api/v1/misc/decompress-pdf": MiscDecompressPdfRequest;
   "/api/v1/misc/delete-attachment": DeleteAttachmentRequest;
   "/api/v1/misc/extract-attachments": ExtractAttachmentsRequest;
   "/api/v1/misc/extract-image-scans": ExtractImageScansRequest;
   "/api/v1/misc/extract-images": PDFExtractImagesRequest;
   "/api/v1/misc/flatten": FlattenRequest;
+  "/api/v1/misc/flatten-portfolio": FlattenPortfolioRequest;
   "/api/v1/misc/list-attachments": ListAttachmentsRequest;
   "/api/v1/misc/ocr-pdf": ProcessPdfWithOcrRequest;
   "/api/v1/misc/remove-blanks": RemoveBlankPagesRequest;
@@ -1693,6 +1730,7 @@ export interface ToolApiParams {
   "/api/v1/security/remove-password": PDFPasswordRequest;
   "/api/v1/security/sanitize-pdf": SanitizePdfRequest;
   "/api/v1/security/timestamp-pdf": TimestampPdfRequest;
+  "/api/v1/security/validate-compliance": SecurityValidateComplianceRequest;
   "/api/v1/security/validate-signature": SignatureValidationRequest;
   "/api/v1/security/verify-pdf": PDFVerificationRequest;
 }
@@ -1735,6 +1773,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/filter/filter-page-count",
   "/api/v1/filter/filter-page-rotation",
   "/api/v1/filter/filter-page-size",
+  "/api/v1/form/form-detection/detect",
   "/api/v1/general/booklet-imposition",
   "/api/v1/general/crop",
   "/api/v1/general/edit-table-of-contents",
@@ -1743,6 +1782,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/general/merge-pdfs",
   "/api/v1/general/multi-page-layout",
   "/api/v1/general/overlay-pdfs",
+  "/api/v1/general/pdf-text-editor/encode-charcodes",
   "/api/v1/general/pdf-to-single-page",
   "/api/v1/general/rearrange-pages",
   "/api/v1/general/remove-image-pdf",
@@ -1766,12 +1806,14 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/misc/auto-rotate-pdf",
   "/api/v1/misc/auto-split-pdf",
   "/api/v1/misc/compress-pdf",
+  "/api/v1/misc/create-portfolio",
   "/api/v1/misc/decompress-pdf",
   "/api/v1/misc/delete-attachment",
   "/api/v1/misc/extract-attachments",
   "/api/v1/misc/extract-image-scans",
   "/api/v1/misc/extract-images",
   "/api/v1/misc/flatten",
+  "/api/v1/misc/flatten-portfolio",
   "/api/v1/misc/list-attachments",
   "/api/v1/misc/ocr-pdf",
   "/api/v1/misc/remove-blanks",
@@ -1797,6 +1839,7 @@ export const TOOL_ENDPOINTS = [
   "/api/v1/security/remove-password",
   "/api/v1/security/sanitize-pdf",
   "/api/v1/security/timestamp-pdf",
+  "/api/v1/security/validate-compliance",
   "/api/v1/security/validate-signature",
   "/api/v1/security/verify-pdf",
 ] as const satisfies readonly ToolEndpoint[];
@@ -1807,6 +1850,7 @@ export const TOOL_FILE_FIELDS = {
   "/api/v1/misc/add-attachments": ["attachments"],
   "/api/v1/misc/add-image": ["imageFile"],
   "/api/v1/misc/add-stamp": ["stampImage"],
+  "/api/v1/misc/create-portfolio": ["files"],
   "/api/v1/security/add-watermark": ["watermarkImage"],
   "/api/v1/security/cert-sign": [
     "privateKeyFile",

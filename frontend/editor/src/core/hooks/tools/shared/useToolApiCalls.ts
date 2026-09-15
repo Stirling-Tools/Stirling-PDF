@@ -9,6 +9,13 @@ import { isEmptyOutput } from "@app/services/errorUtils";
 import type { ProcessingProgress } from "@app/hooks/tools/shared/useToolState";
 import type { StirlingFile, FileId } from "@app/types/fileContext";
 
+/** An input that did not survive the batch, with the error it failed on. */
+export interface FailedInput {
+  fileId: FileId;
+  name: string;
+  error: unknown;
+}
+
 export interface ApiCallsConfig<TParams = void> {
   endpoint: string | null | ((params: TParams) => string | null);
   buildFormData: (params: TParams, file: File) => FormData;
@@ -28,9 +35,16 @@ export const useToolApiCalls = <TParams = void>() => {
       onProgress: (progress: ProcessingProgress) => void,
       onStatus: (status: string) => void,
       markFileError?: (fileId: FileId) => void,
-    ): Promise<{ outputFiles: File[]; successSourceIds: FileId[] }> => {
+    ): Promise<{
+      outputFiles: File[];
+      successSourceIds: FileId[];
+      failedInputs: FailedInput[];
+    }> => {
       const processedFiles: File[] = [];
       const successSourceIds: FileId[] = [];
+      // Kept with their errors: a batch where only some inputs fail still owes the caller a
+      // report for each one, and it cannot derive the kind without the error.
+      const failedInputs: FailedInput[] = [];
       const failedFiles: string[] = [];
       const total = validFiles.length;
 
@@ -89,6 +103,11 @@ export const useToolApiCalls = <TParams = void>() => {
               name: file.name,
             });
             failedFiles.push(file.name);
+            failedInputs.push({
+              fileId: file.fileId,
+              name: file.name,
+              error: new Error(`${endpoint} returned an empty output`),
+            });
             try {
               markFileError?.(file.fileId);
             } catch (e) {
@@ -109,6 +128,7 @@ export const useToolApiCalls = <TParams = void>() => {
           }
           console.error("[processFiles] Failed", { name: file.name, error });
           failedFiles.push(file.name);
+          failedInputs.push({ fileId: file.fileId, name: file.name, error });
           // mark errored file so UI can highlight
           try {
             markFileError?.(file.fileId);
@@ -140,7 +160,11 @@ export const useToolApiCalls = <TParams = void>() => {
         outputs: processedFiles.length,
         failed: failedFiles.length,
       });
-      return { outputFiles: processedFiles, successSourceIds };
+      return {
+        outputFiles: processedFiles,
+        successSourceIds,
+        failedInputs,
+      };
     },
     [],
   );

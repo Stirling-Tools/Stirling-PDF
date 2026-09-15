@@ -112,9 +112,9 @@ fi
 log "users created: $created (failed: $failed, requested: $USER_COUNT)"
 [ "$failed" -eq 0 ] || fail_note "$failed of $USER_COUNT user creates failed"
 
-# --- S3 connection -> the in-cluster MinIO 'policy-data' bucket ---------------
+# --- S3 connection -> the in-cluster Silo 'policy-data' bucket ----------------
 conn_body=$(cat <<JSON
-{"integrationType":"S3","name":"MinIO policy bucket","scope":"SERVER","enabled":true,"locked":false,"defaultAccess":"ORG_ALL",
+{"integrationType":"S3","name":"Silo policy bucket","scope":"SERVER","enabled":true,"locked":false,"defaultAccess":"ORG_ALL",
  "config":{"bucket":"policy-data","region":"us-east-1","endpoint":"http://minio:9000","accessKeyId":"minioadmin","secretAccessKey":"minioadmin","pathStyleAccess":true}}
 JSON
 )

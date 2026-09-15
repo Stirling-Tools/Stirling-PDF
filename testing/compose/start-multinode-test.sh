@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Brings up the multi-node stack (Postgres/Valkey/MinIO/2 app nodes/nginx LB), seeds teams/users/an S3 connection/policies, then leaves it running for manual testing.
+# Brings up the multi-node stack (Postgres/Valkey/Silo/2 app nodes/nginx LB), seeds teams/users/an S3 connection/policies, then leaves it running for manual testing.
 # Usage: ./start-multinode-test.sh [--valkey standalone|sentinel|cluster] [--no-seed | --down]
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -56,7 +56,7 @@ fi
 echo "==> Building the Stirling image (first run compiles the app; be patient)..."
 $COMPOSE build
 
-echo "==> Starting Postgres + Valkey ($VALKEY_TOPOLOGY) + MinIO + 2 app nodes + nginx..."
+echo "==> Starting Postgres + Valkey ($VALKEY_TOPOLOGY) + Silo + 2 app nodes + nginx..."
 $COMPOSE up -d --remove-orphans
 printf '%s\n' "$VALKEY_TOPOLOGY" > "$TOPOLOGY_MARKER"
 
@@ -81,7 +81,7 @@ cat <<EOF
  Multi-node Stirling is UP.   Valkey topology: $VALKEY_TOPOLOGY
 
    App (via load balancer): http://localhost:8080     (admin / stirling)
-   MinIO console:           http://localhost:9001     (minioadmin / minioadmin)
+   Silo console:            http://localhost:9001     (minioadmin / minioadmin)
    Postgres:                localhost:5434            (stirling / stirling, db 'stirling')
 
    Seeded users:            user01..user40@stirling.test / Password123!

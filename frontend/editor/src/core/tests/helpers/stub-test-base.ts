@@ -54,7 +54,7 @@ const STUB_JWT = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdHViLXVzZXIifQ.signature";
 
 export const test = base.extend<StubFixtures>({
   stubOptions: [{}, { option: true }],
-  // The editor's own URL, not "/". "/" is a role-based router that redirects,
+  // The editor's own URL, not "/". "/" is a landing router that redirects,
   // and /editor renders the editor in every flavour, so tests land straight on
   // the app instead of racing a redirect on every single test.
   autoGoto: ["/editor", { option: true }],
