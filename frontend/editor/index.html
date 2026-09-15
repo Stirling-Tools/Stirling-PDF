@@ -15,6 +15,34 @@
     />
     <link rel="apple-touch-icon" href="modern-logo/logo192.png" />
     <link rel="manifest" href="manifest.json" />
+    <!-- en-US ships on every boot as primary language or fallback; preload it
+      so the download runs with the JS instead of after. Relative so <base>
+      keeps it right on subpath deploys, matching the i18next loadPath. -->
+    <link
+      rel="preload"
+      href="locales/en-US/translation.toml"
+      as="fetch"
+      crossorigin
+    />
+    <!-- Returning visitors may run another language (stored pick at boot).
+      Preload that file too; identical URLs dedupe to one fetch. -->
+    <script>
+      (function () {
+        try {
+          var lng = localStorage.getItem("i18nextLng");
+          if (!lng || lng === "en-US" || !/^[A-Za-z-]{2,12}$/.test(lng)) return;
+          var link = document.createElement("link");
+          link.rel = "preload";
+          link.as = "fetch";
+          link.crossOrigin = "anonymous";
+          link.href =
+            "locales/" + encodeURIComponent(lng) + "/translation.toml";
+          document.head.appendChild(link);
+        } catch (e) {
+          /* storage blocked: static en-US preload above still applies */
+        }
+      })();
+    </script>
 
     <title>Stirling PDF</title>
 
