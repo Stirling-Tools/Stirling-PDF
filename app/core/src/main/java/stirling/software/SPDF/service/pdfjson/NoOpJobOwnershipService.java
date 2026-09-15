@@ -30,6 +30,11 @@ public class NoOpJobOwnershipService
     }
 
     @Override
+    public String createScopedJobKey(String jobId, String owner) {
+        return jobId;
+    }
+
+    @Override
     public boolean validateJobAccess(String scopedJobKey) {
         // All jobs are accessible when security is disabled
         log.trace("Security disabled, allowing access to job: {}", scopedJobKey);

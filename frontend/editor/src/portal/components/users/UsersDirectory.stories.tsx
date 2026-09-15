@@ -7,6 +7,7 @@ import type { UsersCapabilities } from "@portal/api/usersCapabilities";
 /** Self-hosted org-admin: the full action set. */
 const FULL_CAPS: UsersCapabilities = {
   orgGroup: true,
+  transferOwnership: true,
   changeRole: true,
   adminRole: true,
   createTeam: true,
@@ -30,6 +31,7 @@ const FULL_CAPS: UsersCapabilities = {
 /** SaaS team-leader: invite / rename / remove-member only, no org group. */
 const SAAS_CAPS: UsersCapabilities = {
   orgGroup: false,
+  transferOwnership: false,
   changeRole: false,
   adminRole: false,
   createTeam: false,
