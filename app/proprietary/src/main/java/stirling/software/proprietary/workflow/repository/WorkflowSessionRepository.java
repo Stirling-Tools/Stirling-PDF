@@ -6,14 +6,12 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.workflow.model.WorkflowSession;
 import stirling.software.proprietary.workflow.model.WorkflowStatus;
 import stirling.software.proprietary.workflow.model.WorkflowType;
 
-@Repository
 public interface WorkflowSessionRepository extends JpaRepository<WorkflowSession, Long> {
 
     /** Find workflow session by unique session ID */

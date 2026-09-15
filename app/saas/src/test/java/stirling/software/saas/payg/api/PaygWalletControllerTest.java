@@ -442,6 +442,8 @@ class PaygWalletControllerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(resp.getBody().status()).isEqualTo("free");
+        assertThat(resp.getBody().freeAllowance()).isEqualTo(1000);
+        assertThat(resp.getBody().freeRemaining()).isEqualTo(1000);
         assertThat(resp.getBody().members()).isEmpty();
         // Entitlement service must not be queried for a teamless user (avoids null-key NPE).
         verifyNoInteractions(entitlementService);

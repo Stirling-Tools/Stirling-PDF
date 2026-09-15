@@ -1,4 +1,10 @@
-import { useMemo, useState, type ReactNode } from "react";
+import { isConditionComplete } from "@app/conditions/validation";
+import {
+  classificationCondition,
+  documentFieldCondition,
+  requiresClassification,
+} from "@app/data/classificationConditions";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
 import { Banner, Button, Card, Modal, ToggleSwitch } from "@app/ui";
@@ -19,21 +25,33 @@ import {
   type PolicyToolStep,
 } from "@app/policies/operations";
 import { resolveRunOn } from "@app/policies/runOn";
+import type { WireRoutingRule, WireTriggerConfig } from "@app/policies/types";
 import { PolicyCategoryBadge } from "@app/components/policies/PolicyCategoryBadge";
 import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig";
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPdfaConfig } from "@app/components/policies/PolicyPdfaConfig";
 import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
+import { useAiClassificationEnabled } from "@app/hooks/useAiClassificationEnabled";
 import "@app/components/policies/PolicySetupWizard.css";
 
 /** What a host frame needs to wrap the form: the middle content plus submit state. */
 export interface PolicySetupFrame {
   content: ReactNode;
+  /** Current enabled steps, in execution order, for a host's review screen. */
+  steps: PipelineStep[];
   submit: () => void;
   submitting: boolean;
   error: string | null;
-  /** False while no step is enabled, when submitting would be a no-op. */
+  /** Routing requires complete rules and a fallback; other presets need an enabled step. */
   canSubmit: boolean;
+}
+
+/** What the routing category binds: where documents come from, where each type goes. */
+export interface RoutingSetup {
+  sourceId: string;
+  trigger: WireTriggerConfig | null;
+  outputIds: string[];
+  routingRules: WireRoutingRule[];
 }
 
 interface PolicySetupWizardProps {
@@ -48,6 +66,14 @@ interface PolicySetupWizardProps {
   onCustomise?: (entry: CatalogueEntry, result: PolicySetupResult) => void;
   /** Whether a Purview tenant is connected; gates the Purview-backed steps. */
   hasPurviewConnection?: boolean;
+  /**
+   * Renders the routing category's source, routes and fallback destination. Folder hosts supply
+   * their own input selection and render only the destinations here.
+   */
+  routingConfig?: (props: {
+    value: RoutingSetup;
+    onChange: (next: RoutingSetup) => void;
+  }) => ReactNode;
   /** Renders the Purview step's inline config. Portal-only; without it the step shows bare. */
   purviewConfig?: (props: {
     parameters: PolicyParams<"purviewApplyLabel">;
@@ -57,6 +83,8 @@ interface PolicySetupWizardProps {
   formatError?: (e: unknown) => string;
   /** Whether the org-enforcement choice applies on this surface (it doesn't for folders). */
   enforceControl?: boolean;
+  /** Folder setup shows an ordered chain with expandable per-step settings. */
+  folderSetup?: boolean;
   /** False locks saving and the enforce toggle. Defaults true: only the portal gates on the role. */
   canManagePolicies?: boolean;
   /** The role check is still in flight, so the manager-only tooltip is withheld. */
@@ -67,6 +95,25 @@ interface PolicySetupWizardProps {
 }
 
 type ToolState = PolicyToolStep & { enabled: boolean };
+
+function StepSettings({
+  collapsible,
+  label,
+  children,
+}: {
+  collapsible: boolean;
+  label: string;
+  children: ReactNode;
+}) {
+  return collapsible ? (
+    <details className="portal-policies__capability-config">
+      <summary>{label}</summary>
+      {children}
+    </details>
+  ) : (
+    <div className="portal-policies__capability-config">{children}</div>
+  );
+}
 
 /** Resolve each field's effective value: saved override, else definition default. */
 function resolveFieldValues(
@@ -216,6 +263,50 @@ function seedTools(entry: CatalogueEntry): ToolState[] {
   });
 }
 
+interface PolicySetupState {
+  categoryId: string;
+  policyId: string | undefined;
+  routing: RoutingSetup;
+  tools: ToolState[];
+  required: boolean;
+  submitting: boolean;
+  error: string | null;
+}
+
+function initialWizardState(
+  entry: CatalogueEntry,
+  aiClassificationEnabled: boolean,
+): PolicySetupState {
+  const { category, policy } = entry;
+  const seeded = seedTools(entry);
+  return {
+    categoryId: category.id,
+    policyId: policy?.state.backendId,
+    routing: {
+      sourceId: policy?.state.sources?.[0] ?? "",
+      trigger: policy?.state.trigger ?? null,
+      outputIds: (policy?.state.outputIds ?? []).slice(0, 1),
+      // A blank route lets the form and the submitted rules share the same initial state.
+      routingRules: policy?.state.routingRules ?? [
+        {
+          condition: aiClassificationEnabled
+            ? classificationCondition()
+            : documentFieldCondition("document.extension"),
+          outputId: "",
+        },
+      ],
+    },
+    // Classification has no toggle, so its only tool must remain enabled.
+    tools:
+      category.id === "classification"
+        ? seeded.map((tool) => ({ ...tool, enabled: true }))
+        : seeded,
+    required: policy?.state.required ?? category.id !== "classification",
+    submitting: false,
+    error: null,
+  };
+}
+
 /**
  * The "set up a policy" flow: a Workflow step (toggle which tools run) and a Settings step.
  * Submitting builds the pipeline steps and persists via the real POST.
@@ -227,24 +318,26 @@ export function PolicySetupWizard({
   onCustomise,
   hasPurviewConnection,
   purviewConfig,
+  routingConfig,
   formatError,
   enforceControl,
+  folderSetup,
   canManagePolicies,
   permissionsLoading,
   children,
 }: PolicySetupWizardProps) {
-  // Re-key on the opened category so state resets cleanly between categories.
   return entry ? (
     <PolicySetupWizardBody
-      key={entry.category.id}
       entry={entry}
       onClose={onClose}
       onSubmit={onSubmit}
       onCustomise={onCustomise}
       hasPurviewConnection={hasPurviewConnection}
       purviewConfig={purviewConfig}
+      routingConfig={routingConfig}
       formatError={formatError}
       enforceControl={enforceControl}
+      folderSetup={folderSetup}
       canManagePolicies={canManagePolicies}
       permissionsLoading={permissionsLoading}
     >
@@ -260,8 +353,10 @@ function PolicySetupWizardBody({
   onCustomise,
   hasPurviewConnection = false,
   purviewConfig,
+  routingConfig,
   formatError,
   enforceControl = true,
+  folderSetup = false,
   canManagePolicies = true,
   permissionsLoading = false,
   children,
@@ -275,50 +370,45 @@ function PolicySetupWizardBody({
     parameters: PolicyParams<"purviewApplyLabel">;
     onChange: (params: PolicyParams<"purviewApplyLabel">) => void;
   }) => ReactNode;
+  routingConfig?: (props: {
+    value: RoutingSetup;
+    onChange: (next: RoutingSetup) => void;
+  }) => ReactNode;
   formatError?: (e: unknown) => string;
   enforceControl?: boolean;
+  folderSetup?: boolean;
   canManagePolicies?: boolean;
   permissionsLoading?: boolean;
   children?: (frame: PolicySetupFrame) => ReactNode;
 }) {
   const { t } = useTranslation();
+  const aiClassificationEnabled = useAiClassificationEnabled();
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
-
-  const [tools, setTools] = useState<ToolState[]>(() => {
-    const seeded = seedTools(entry);
-    // Classification's single tool has no toggle, so keep it enabled — editing a policy
-    // whose saved steps lack it would otherwise strand submit.
-    return isClassification
-      ? seeded.map((t) => ({ ...t, enabled: true }))
-      : seeded;
-  });
-  // No UI for these: stored values carry through on edit; new policies get runOn per
-  // category and run-once/new-version for the rest.
-  const [fieldValues] = useState(() => resolveFieldValues(entry));
-  const [scopeTypes] = useState<string[]>(policy?.state.scopeTypes ?? []);
-  const [reviewerEmail] = useState(policy?.state.reviewerEmail ?? "");
-  const [outputMode] = useState<"new_file" | "new_version">(
-    policy?.state.outputMode ?? "new_version",
+  const isRouting = category.id === "routing";
+  const [form, setForm] = useState(() =>
+    initialWizardState(entry, aiClassificationEnabled),
   );
-  const [outputName] = useState(policy?.state.outputName ?? "");
-  const [outputNamePosition] = useState<"prefix" | "suffix" | "auto-number">(
-    policy?.state.outputNamePosition ?? "suffix",
-  );
-  const [runOn] = useState<"upload" | "export">(() =>
-    resolveRunOn(policy?.state.runOn, category.id),
-  );
-  const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
-  const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
-  // A template is a policy by nature, where a failure blocks the file rather than waving it
-  // through, so a new one defaults to required. Editing preserves what was saved.
-  const [required, setRequired] = useState(policy?.state.required ?? true);
+  const { routing, tools, required, submitting, error } = form;
+  // Reset before rendering the new preset, preserving the modal and its focus trap.
+  if (
+    form.categoryId !== category.id ||
+    form.policyId !== policy?.state.backendId
+  ) {
+    setForm(initialWizardState(entry, aiClassificationEnabled));
+  }
+  const fieldValues = resolveFieldValues(entry);
+  const scopeTypes = policy?.state.scopeTypes ?? [];
+  const reviewerEmail = policy?.state.reviewerEmail ?? "";
+  const outputMode = policy?.state.outputMode ?? "new_version";
+  const outputName = policy?.state.outputName ?? "";
+  const outputNamePosition = policy?.state.outputNamePosition ?? "suffix";
+  const runOn = resolveRunOn(policy?.state.runOn, category.id);
+  const maxRetries = policy?.state.maxRetries ?? 0;
+  const retryDelayMinutes = policy?.state.retryDelayMinutes ?? 0;
   const readOnly = !canManagePolicies;
-
-  const [submitting, setSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Purview steps appear once a tenant is connected; an already-enabled one stays visible
   // so editing never silently drops it.
@@ -338,33 +428,46 @@ function PolicySetupWizardBody({
   );
 
   function setToolEnabled(toolId: PolicyToolId, enabled: boolean) {
-    setTools((prev) =>
-      prev.map((tl) => (tl.toolId === toolId ? { ...tl, enabled } : tl)),
-    );
+    setForm((current) => ({
+      ...current,
+      tools: current.tools.map((tool) =>
+        tool.toolId === toolId ? { ...tool, enabled } : tool,
+      ),
+    }));
   }
 
   function setToolParams<Id extends PolicyToolId>(
     toolId: Id,
     params: PolicyParams<Id>,
   ) {
-    setTools((prev) =>
-      prev.map((tl) =>
-        tl.toolId === toolId ? ({ ...tl, params } as ToolState) : tl,
+    setForm((current) => ({
+      ...current,
+      tools: current.tools.map((tool) =>
+        tool.toolId === toolId ? ({ ...tool, params } as ToolState) : tool,
       ),
-    );
+    }));
   }
 
   /** The wizard's current state as a submit result: shared by Save and Customise. */
   function collectResult(): PolicySetupResult {
-    const steps: PipelineStep[] = enabledTools.map((tl) =>
-      policyStepToWire(tl),
+    const routingNeedsClassification = routing.routingRules.some((rule) =>
+      requiresClassification(rule.condition),
     );
+    const steps: PipelineStep[] = isRouting
+      ? routingNeedsClassification
+        ? tools
+            .filter((tool) => tool.toolId === "classify")
+            .map((tool) => policyStepToWire(tool))
+        : []
+      : enabledTools.map((tool) => policyStepToWire(tool));
     return {
       required,
+      outputIds: policy?.state.outputIds,
+      routingRules: policy?.state.routingRules,
       // Preserve stored options this wizard has no UI for rather than wiping them on save;
       // the builder is where those are edited.
       extraOptions: policy?.state.extraOptions,
-      runsOnEditor: true,
+      runsOnEditor: !isRouting,
       fieldValues,
       sources: policy?.state.sources ?? [],
       scopeTypes,
@@ -376,6 +479,14 @@ function PolicySetupWizardBody({
       maxRetries,
       retryDelayMinutes,
       steps,
+      ...(isRouting
+        ? {
+            sources: routing.sourceId ? [routing.sourceId] : [],
+            trigger: routing.trigger,
+            outputIds: routing.outputIds,
+            routingRules: routing.routingRules,
+          }
+        : {}),
     };
   }
 
@@ -385,27 +496,47 @@ function PolicySetupWizardBody({
   }
 
   async function submit() {
-    if (submitting) return;
-    if (enabledTools.length === 0) {
-      setError(t("portal.policies.wizard.errors.noTools"));
+    if (submitting || !routingComplete) return;
+    if (!isRouting && enabledTools.length === 0) {
+      setForm((current) => ({
+        ...current,
+        error: t("portal.policies.wizard.errors.noTools"),
+      }));
       return;
     }
-    setError(null);
-    setSubmitting(true);
+    setForm((current) => ({ ...current, error: null, submitting: true }));
     try {
       await onSubmit(entry, collectResult());
     } catch (e) {
-      setSubmitting(false);
       // Surface the backend's actual reason rather than a generic failure.
       const message = formatError?.(e) ?? (e instanceof Error ? e.message : "");
-      setError(message || t("portal.policies.wizard.errors.saveFailed"));
+      setForm((current) => ({
+        ...current,
+        submitting: false,
+        error: message || t("portal.policies.wizard.errors.saveFailed"),
+      }));
     }
   }
 
-  const canSubmit = enabledTools.length > 0;
+  const routingNeedsClassification = routing.routingRules.some((rule) =>
+    requiresClassification(rule.condition),
+  );
+  const routingComplete =
+    !isRouting ||
+    Boolean(
+      (folderSetup || routing.sourceId) &&
+      routing.outputIds.length === 1 &&
+      routing.outputIds[0] &&
+      routing.routingRules.length > 0 &&
+      routing.routingRules.every(
+        (rule) => rule.outputId && isConditionComplete(rule.condition),
+      ) &&
+      (!routingNeedsClassification || aiClassificationEnabled),
+    );
+  const canSubmit = isRouting ? routingComplete : enabledTools.length > 0;
   const content = (
-    <>
-      {error && (
+    <Fragment key={`${category.id}:${policy?.state.backendId ?? "new"}`}>
+      {error && !folderSetup && (
         <Banner
           tone="danger"
           description={error}
@@ -415,12 +546,14 @@ function PolicySetupWizardBody({
 
       {isClassification && (
         <div className="portal-policies__wizard-section">
-          <p className="portal-policies__wizard-desc">
-            {t(
-              "portal.policies.wizard.classification.description",
-              "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team.",
-            )}
-          </p>
+          {!folderSetup && (
+            <p className="portal-policies__wizard-desc">
+              {t(
+                "portal.policies.wizard.classification.description",
+                "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team.",
+              )}
+            </p>
+          )}
           <h3 className="portal-policies__wizard-heading">
             {t(
               "portal.policies.wizard.classification.labelsHeading",
@@ -431,16 +564,28 @@ function PolicySetupWizardBody({
         </div>
       )}
 
-      {!isClassification && (
+      {isRouting &&
+        routingConfig?.({
+          value: routing,
+          onChange: (next) =>
+            setForm((current) => ({ ...current, routing: next })),
+        })}
+
+      {!isClassification && !isRouting && (
         <div className="portal-policies__wizard-section">
-          <p className="portal-policies__wizard-desc">
-            {t(
-              "portal.policies.wizard.workflow.description",
-              "Choose what this policy does to every document it processes.",
-            )}
-          </p>
+          {!folderSetup && (
+            <p className="portal-policies__wizard-desc">
+              {t("portal.policies.wizard.workflow.description")}
+            </p>
+          )}
           <Card padding="none">
-            <div className="portal-policies__capabilities">
+            <div
+              className={
+                folderSetup
+                  ? "portal-policies__capabilities folder-setup__chain"
+                  : "portal-policies__capabilities"
+              }
+            >
               {visibleTools.map((tl) => {
                 const meta = CAPABILITY_META[tl.toolId];
                 const label = meta
@@ -457,7 +602,7 @@ function PolicySetupWizardBody({
                   >
                     <SettingsRow
                       label={label}
-                      description={description}
+                      description={folderSetup ? undefined : description}
                       control={
                         <ToggleSwitch
                           size="sm"
@@ -469,38 +614,55 @@ function PolicySetupWizardBody({
                         />
                       }
                     />
-                    {tl.enabled && (
-                      <div className="portal-policies__capability-config">
-                        {tl.toolId === "redact" && (
-                          <PolicyRedactConfig
-                            parameters={tl.params}
-                            onChange={(params) =>
-                              setToolParams("redact", params)
-                            }
-                          />
-                        )}
-                        {tl.toolId === "watermark" && (
-                          <PolicyWatermarkConfig
-                            parameters={tl.params}
-                            onChange={(params) =>
-                              setToolParams("watermark", params)
-                            }
-                          />
-                        )}
-                        {tl.toolId === "pdfa" && (
-                          <PolicyPdfaConfig
-                            parameters={tl.params}
-                            onChange={(params) => setToolParams("pdfa", params)}
-                          />
-                        )}
-                        {tl.toolId === "purviewApplyLabel" &&
-                          purviewConfig?.({
-                            parameters: tl.params,
-                            onChange: (params) =>
-                              setToolParams("purviewApplyLabel", params),
-                          })}
-                      </div>
-                    )}
+                    {tl.enabled &&
+                      (tl.toolId === "redact" ||
+                        tl.toolId === "watermark" ||
+                        tl.toolId === "pdfa" ||
+                        tl.toolId === "purviewApplyLabel" ||
+                        (folderSetup && tl.toolId === "classify")) && (
+                        <StepSettings
+                          collapsible={folderSetup}
+                          label={t(
+                            tl.toolId === "classify"
+                              ? "processingFolders.setup.viewLabels"
+                              : "processingFolders.setup.settings",
+                          )}
+                        >
+                          {folderSetup && tl.toolId === "classify" && (
+                            <ClassificationLabelsSection />
+                          )}
+                          {tl.toolId === "redact" && (
+                            <PolicyRedactConfig
+                              parameters={tl.params}
+                              onChange={(params) =>
+                                setToolParams("redact", params)
+                              }
+                            />
+                          )}
+                          {tl.toolId === "watermark" && (
+                            <PolicyWatermarkConfig
+                              parameters={tl.params}
+                              onChange={(params) =>
+                                setToolParams("watermark", params)
+                              }
+                            />
+                          )}
+                          {tl.toolId === "pdfa" && (
+                            <PolicyPdfaConfig
+                              parameters={tl.params}
+                              onChange={(params) =>
+                                setToolParams("pdfa", params)
+                              }
+                            />
+                          )}
+                          {tl.toolId === "purviewApplyLabel" &&
+                            purviewConfig?.({
+                              parameters: tl.params,
+                              onChange: (params) =>
+                                setToolParams("purviewApplyLabel", params),
+                            })}
+                        </StepSettings>
+                      )}
                   </div>
                 );
               })}
@@ -513,16 +675,25 @@ function PolicySetupWizardBody({
         <div className="portal-policies__wizard-enforce">
           <EnforceAsPolicyControl
             required={required}
-            onRequiredChange={setRequired}
+            onRequiredChange={(next) =>
+              setForm((current) => ({ ...current, required: next }))
+            }
             disabled={readOnly}
             permissionsLoading={permissionsLoading}
           />
         </div>
       )}
-    </>
+    </Fragment>
   );
   if (children) {
-    return children({ content, submit, submitting, error, canSubmit });
+    return children({
+      content,
+      steps: collectResult().steps,
+      submit,
+      submitting,
+      error,
+      canSubmit,
+    });
   }
   return (
     <Modal
@@ -569,7 +740,7 @@ function PolicySetupWizardBody({
             style={{ marginLeft: "auto" }}
             onClick={submit}
             loading={submitting}
-            disabled={readOnly}
+            disabled={readOnly || !routingComplete}
           >
             {isEdit
               ? t("portal.policies.wizard.actions.saveChanges")

@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+import stirling.software.common.service.LicenseServiceInterface;
+
 /**
  * Decides whether a request may proceed under combined billing on a self-hosted instance.
  *
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
  * <ol>
  *   <li>Flag off → always allow (feature inert).
  *   <li>Manual tool → always allow (manual tools are free, never metered).
+ *   <li>Enterprise license → always allow, with local-only metering.
  *   <li>Billable + not linked → {@code FREE_TIER} while units remain, else {@code
  *       FREE_TIER_EXHAUSTED}. Linking buys a further grant, it does not activate the feature.
  *   <li>Billable + linked + entitlement unknown (unreachable) → <b>fail open</b>, allow — unless
@@ -39,6 +42,7 @@ import org.springframework.stereotype.Service;
         matchIfMissing = true)
 public class InstanceEntitlementGate {
 
+    private final LicenseServiceInterface licenseService;
     private final AccountLinkProperties properties;
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
@@ -52,7 +56,9 @@ public class InstanceEntitlementGate {
             EntitlementCache entitlementCache,
             AccountLinkSyncStateRepository syncStateRepository,
             LocalUsageService localUsageService,
-            FreeTierUsageService freeTierUsageService) {
+            FreeTierUsageService freeTierUsageService,
+            LicenseServiceInterface licenseService) {
+        this.licenseService = licenseService;
         this.properties = properties;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
@@ -68,6 +74,9 @@ public class InstanceEntitlementGate {
         }
         if (!billable) {
             return GateDecision.allow(GateDecision.Reason.MANUAL_FREE);
+        }
+        if (licenseService.isRunningEE()) {
+            return GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE);
         }
         boolean linked = credentialStore.isLinked();
         long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();

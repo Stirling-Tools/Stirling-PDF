@@ -562,6 +562,11 @@ export const TOOL_IO: ToolIOTable = {
     produces: "PDF",
     arity: "SISO",
   },
+  "/api/v1/misc/create-portfolio": {
+    accepts: ["ANY"],
+    produces: "PDF",
+    arity: "MISO",
+  },
   "/api/v1/misc/decompress-pdf": {
     accepts: ["PDF"],
     produces: "PDF",
@@ -613,6 +618,11 @@ export const TOOL_IO: ToolIOTable = {
     arity: "SIMO",
   },
   "/api/v1/misc/flatten": { accepts: ["PDF"], produces: "PDF", arity: "SISO" },
+  "/api/v1/misc/flatten-portfolio": {
+    accepts: ["PDF"],
+    produces: "PDF",
+    arity: "SISO",
+  },
   "/api/v1/misc/list-attachments": {
     accepts: ["PDF"],
     produces: "JSON",

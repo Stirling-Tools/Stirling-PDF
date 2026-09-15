@@ -2,8 +2,7 @@ import { useEffect } from "react";
 import { Stack, Text, Box, Group, Center } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
+import { Icon } from "@app/ui/Icon";
 import { RotateParametersHook } from "@app/hooks/tools/rotate/useRotateParameters";
 import { useViewScopedFileStubs } from "@app/hooks/tools/shared/useViewScopedFiles";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
@@ -95,7 +94,7 @@ const RotateSettings = ({
           aria-label={t("rotate.rotateLeft", "Rotate Anticlockwise")}
           title={t("rotate.rotateLeft", "Rotate Anticlockwise")}
         >
-          <RotateLeftIcon style={{ fontSize: "1.5rem" }} />
+          <Icon name="rotate-ccw" size={"1.5rem"} />
         </ActionIcon>
 
         <ActionIcon
@@ -106,7 +105,7 @@ const RotateSettings = ({
           aria-label={t("rotate.rotateRight", "Rotate Clockwise")}
           title={t("rotate.rotateRight", "Rotate Clockwise")}
         >
-          <RotateRightIcon style={{ fontSize: "1.5rem" }} />
+          <Icon name="rotate-cw" size={"1.5rem"} />
         </ActionIcon>
       </Group>
     </Stack>

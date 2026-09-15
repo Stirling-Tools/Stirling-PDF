@@ -36,6 +36,7 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.ActivityRow;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.CategoryBreakdown;
@@ -98,7 +99,7 @@ public class PaygWalletController {
      * membership — shouldn't happen post-migration). Teams always get the live {@code
      * pricing_policy.free_tier_units} grant via {@link TeamBillingService}.
      */
-    private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 500;
+    private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 1000;
 
     private static final DateTimeFormatter ISO_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
 
@@ -232,6 +233,7 @@ public class PaygWalletController {
                         limit,
                         clampToInt(billing.freeGrantUnits()),
                         clampToInt(billing.freeRemainingUnits()),
+                        UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                         billing.perDocMinor(),
                         billing.currency(),
                         estimatedBill,
@@ -509,6 +511,7 @@ public class PaygWalletController {
                 FREE_TIER_LIMIT_UNITS_FALLBACK,
                 FREE_TIER_LIMIT_UNITS_FALLBACK,
                 FREE_TIER_LIMIT_UNITS_FALLBACK,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                 null,
                 null,
                 null,

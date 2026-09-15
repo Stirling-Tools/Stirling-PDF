@@ -22,6 +22,7 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
@@ -34,9 +35,8 @@ import stirling.software.proprietary.storage.service.FileStorageService;
  * mode} picks: {@code new_version} (default) replaces the input file's content in place under its
  * own name, settling the ledger at the bumped version; {@code new_file} stores each output as a new
  * file in {@code folderId} (default: the input's folder), recorded in the ledger before it becomes
- * visible so a sweep never claims the policy's own output. Ownership follows the input; a run fed
- * from disk has no anchor, so it is stored as the owner of the {@code folderId} it writes into, and
- * must name one.
+ * visible so a sweep never claims the policy's own output. The engine supplies the document owner;
+ * existing files and destination folders must belong to that user before anything is written.
  */
 @Slf4j
 @Service
@@ -55,6 +55,7 @@ public class StorageOutputSink implements PolicyOutputSink {
     private final ProcessedLedger processedLedger;
     private final StorageProvider storageProvider;
     private final ApplicationProperties applicationProperties;
+    private final UserService userService;
 
     @Override
     public String type() {
@@ -87,7 +88,7 @@ public class StorageOutputSink implements PolicyOutputSink {
             OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
         StoredFile origin = originOf(delivery);
         UUID folderId = folderIdOf(spec);
-        User owner = ownerFor(origin, folderId);
+        User owner = ownerFor(delivery, origin, folderId);
         List<ResultFile> results = new ArrayList<>();
 
         // Replacing in place needs a stored row to replace, which a run fed from disk has not got.
@@ -169,23 +170,44 @@ public class StorageOutputSink implements PolicyOutputSink {
                 .orElse(null);
     }
 
-    /**
-     * Who the outputs are stored as, and whose quota they count against: the input's owner, or for
-     * a disk-fed run the owner of the folder being written into.
-     */
-    private User ownerFor(StoredFile origin, UUID folderId) {
-        if (origin != null) {
-            return origin.getOwner();
+    private User ownerFor(OutputDelivery delivery, StoredFile origin, UUID folderId) {
+        String username = delivery.fileOwner();
+        if (username == null || username.isBlank()) {
+            throw new IllegalStateException("Storage output requires a document owner");
         }
-        if (folderId == null) {
+        User owner =
+                userService
+                        .findByUsername(username)
+                        .orElseThrow(
+                                () ->
+                                        new IllegalStateException(
+                                                "The document owner is unavailable"));
+        if (origin != null && !ownedBy(origin.getOwner(), owner)) {
+            throw new IllegalStateException("The input file does not belong to the document owner");
+        }
+        if (folderId != null) {
+            Folder folder =
+                    folderRepository
+                            .findById(folderId)
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalStateException(
+                                                    "Unknown storage folder: " + folderId));
+            if (!ownedBy(folder.getOwner(), owner)) {
+                throw new IllegalStateException(
+                        "The output folder does not belong to the document owner");
+            }
+        } else if (origin == null) {
             throw new IllegalStateException(
-                    "storage output from a non-storage input needs a folderId to anchor ownership");
+                    "Storage output without a stored input requires a folder");
         }
-        return folderRepository
-                .findById(folderId)
-                .map(Folder::getOwner)
-                .orElseThrow(
-                        () -> new IllegalStateException("unknown storage folder: " + folderId));
+        return owner;
+    }
+
+    private static boolean ownedBy(User actual, User expected) {
+        return actual != null
+                && expected.getId() != null
+                && expected.getId().equals(actual.getId());
     }
 
     private static String modeOf(OutputSpec spec) {

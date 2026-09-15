@@ -239,6 +239,14 @@ tasks:
     cmds:
       - npx vite build editor --mode desktop
 
+  build:desktop:e2e:
+    desc: "Desktop build in its own outDir, for the disk-link E2E project"
+    deps:
+      - task: prepare
+        vars: { MODE: desktop }
+    cmds:
+      - npx vite build editor --mode desktop --outDir dist-desktop
+
   build:prototypes:
     desc: "Build for prototypes mode"
     deps: [prepare]
@@ -342,7 +350,20 @@ tasks:
     cmds:
       - task: lint:oxlint
       - task: lint:colors
+      - task: lint:icons
       - task: lint:css
+
+  lint:icons:
+    desc: "Enforce one icon system - no inline svg, no retired icon libraries"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/lint/icon-lint.mts
+
+  lint:unused-icons:
+    desc: "Report icons we draw ourselves that nothing renders"
+    deps: [install]
+    cmds:
+      - npx tsx editor/scripts/lint/icon-lint.mts unused
 
   lint:css:
     desc: "Lint stylesheets for duplicate selectors"
