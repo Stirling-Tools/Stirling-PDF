@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 /**
- * One self-hosted instance that has linked a SaaS account (combined-billing "Mode A", {@code
+ * One self-hosted instance that has linked a SaaS account (combined billing, {@code
  * linked_instance}, V22).
  *
  * <p>Created by {@code POST /api/v1/account-link/register}, authenticated with the admin's

@@ -69,31 +69,73 @@ export async function waitForModalClose(
 
 /**
  * Upload one or more files through the FileSidebar's "Open from computer"
- * action. The button is always rendered (collapsed or expanded sidebar) and
- * fires the hidden `data-testid="file-input"`. Its native OS picker is mocked
- * globally by `suppressNativeFilePicker` (installed by the test fixtures), so
- * the click is safe on every browser; we then set the files directly on the
- * input via `setInputFiles`.
- *
- * `setInputFiles` doesn't await the input's async onChange (which writes to
- * IndexedDB via `addFiles`), so without a sync point a caller that follows
- * with `page.goto()` can race the IDB flush. Wait for the workbench to
- * pick up the upload (the FileSidebar renders the added file in its scroll
- * list once `addFiles` resolves and IDB has been written).
+ * action. The native picker is mocked globally by `suppressNativeFilePicker`,
+ * so the click is safe on every browser; files are set on the hidden input via
+ * `setInputFiles`. Returns only once the files are durably in IndexedDB, so
+ * callers may navigate or reload without racing the write.
  */
 export async function uploadFiles(
   page: Page,
   filePaths: string | string[],
 ): Promise<void> {
   const paths = Array.isArray(filePaths) ? filePaths : [filePaths];
+  const names = paths.map((p) => p.split(/[\\/]/).pop() ?? p);
   await page.getByTestId("files-button").click();
   await page.locator('[data-testid="file-input"]').setInputFiles(paths);
-  // Sync point: wait until at least one file lands in the sidebar's file
-  // list. The list only renders once `addFiles` has resolved (which awaits
-  // the IDB write). Use first() so multi-file uploads pass too.
+  // The sidebar renders from in-memory state, before the IDB write commits.
+  // first() so multi-file uploads pass too.
   await expect(page.locator(".file-sidebar-file-item").first()).toBeVisible({
     timeout: 10_000,
   });
+  // A navigation before the write commits aborts the transaction and drops the
+  // file, so wait for it to land rather than assume the sidebar means it did.
+  await waitForStoredFiles(page, names);
+}
+
+/**
+ * Resolve once every uploaded name is in the files store. Read-only: aborts
+ * rather than create or upgrade the DB, so it can't race the app's own
+ * versioned open and leave it without object stores. Reads only a DB the app
+ * already made; until then each poll returns false and retries.
+ */
+async function waitForStoredFiles(page: Page, names: string[]): Promise<void> {
+  await page.waitForFunction(
+    (expected) =>
+      new Promise<boolean>((resolve) => {
+        const open = indexedDB.open("stirling-pdf-files");
+        open.onupgradeneeded = () => {
+          open.transaction?.abort();
+          resolve(false);
+        };
+        open.onsuccess = () => {
+          const db = open.result;
+          if (!db.objectStoreNames.contains("files")) {
+            db.close();
+            resolve(false);
+            return;
+          }
+          const request = db
+            .transaction("files", "readonly")
+            .objectStore("files")
+            .getAll();
+          request.onsuccess = () => {
+            const stored = new Set(
+              (request.result as Array<{ name?: string }>).map((r) => r.name),
+            );
+            db.close();
+            resolve(expected.every((name) => stored.has(name)));
+          };
+          request.onerror = () => {
+            db.close();
+            resolve(false);
+          };
+        };
+        open.onerror = () => resolve(false);
+        open.onblocked = () => resolve(false);
+      }),
+    names,
+    { timeout: 10_000, polling: 100 },
+  );
 }
 
 /**
@@ -136,27 +178,64 @@ export async function runToolAndWaitForReview(
   ).toBeVisible({ timeout: reviewTimeout });
 }
 
+/** The settings page's root. Settings is a route, not a dialog. */
+export const SETTINGS_SURFACE = ".settings-page";
+
 /**
- * Open the global Settings dialog. Returns the dialog locator so callers can
- * scope further queries to it.
+ * Go to the global Settings page by the rail's avatar, the only entry there is,
+ * which opens on the Account section. Pass `section` to land on a named one
+ * instead. Returns the page's root locator so callers can scope further
+ * queries to it.
  */
-export async function openSettings(page: Page): Promise<Locator> {
+export async function openSettings(
+  page: Page,
+  section?: string | RegExp,
+): Promise<Locator> {
   await page.locator('[data-testid="config-button"]').first().click();
-  const dialog = page.locator(".mantine-Modal-content").first();
-  await expect(dialog).toBeVisible({ timeout: 5_000 });
-  return dialog;
+  const surface = page.locator(SETTINGS_SURFACE);
+  await expect(surface).toBeVisible({ timeout: 5_000 });
+  if (section) {
+    await surface
+      .locator(".modal-nav-item")
+      .filter({ hasText: section })
+      .first()
+      .click();
+    // The URL flips before React commits the section, so wait on the page
+    // title rather than on the address bar.
+    await expect(surface.locator(".settings-page__title")).toHaveText(section, {
+      timeout: 5_000,
+    });
+  }
+  return surface;
 }
 
 /**
- * Close the Settings dialog via its built-in Close button and assert the
- * dialog is fully dismissed before returning.
+ * Leave Settings the way a reader does now that the nav has no Back control:
+ * browser back, which lands on the origin because tab switches replace.
  */
 export async function closeSettings(page: Page): Promise<void> {
-  const closeBtn = page.locator('[aria-label="Close"]').first();
-  await closeBtn.click();
-  await expect(page.locator(".mantine-Modal-content").first()).not.toBeVisible({
-    timeout: 5_000,
-  });
+  const surface = page.locator(SETTINGS_SURFACE);
+  // Retry: one back can land on another /settings entry if a spec pushed one.
+  await expect(async () => {
+    if (await surface.isVisible().catch(() => false)) {
+      await page.goBack({ timeout: 2_000 }).catch(() => {});
+    }
+    await expect(surface).not.toBeVisible({ timeout: 2_000 });
+  }).toPass({ timeout: 12_000 });
+}
+
+/** Unfold every sidebar group, for checks that scan the whole section list. */
+export async function expandSettingsGroups(page: Page): Promise<void> {
+  // Wait for the aside to render its groups first; evaluateAll on an empty set
+  // is a silent no-op that surfaces later as an unrelated missing-item failure.
+  await expect(
+    page.locator(`${SETTINGS_SURFACE} .settings-page__group`).first(),
+  ).toBeAttached({ timeout: 5_000 });
+  await page
+    .locator(`${SETTINGS_SURFACE} .settings-page__group[aria-expanded="false"]`)
+    .evaluateAll((buttons) =>
+      buttons.forEach((b) => (b as HTMLButtonElement).click()),
+    );
 }
 
 /**

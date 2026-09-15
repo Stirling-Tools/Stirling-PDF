@@ -5,3 +5,6 @@
  * portal (core, desktop, prototypes) must never resolve @portal.
  */
 export const PORTAL_BASENAME = "/processor";
+
+/** Here because whoever links to the review screen and whoever renders it are in different layers. */
+export const PORTAL_REVIEW_PATH = "/review";

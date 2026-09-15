@@ -33,7 +33,7 @@ export function formatMinor(
   minor: number,
   currency: string | null | undefined,
 ): string {
-  const num = new Intl.NumberFormat(undefined, {
+  const num = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 3,
   }).format(minor / 100);
@@ -45,14 +45,14 @@ export function formatMoneyMajor(
   major: number,
   currency: string | null | undefined,
 ): string {
-  return `${currencySymbol(currency)}${major.toLocaleString()}`;
+  return `${currencySymbol(currency)}${major.toLocaleString("en-US")}`;
 }
 
 /**
  * Paid PDFs a monthly cap buys — mirror of the backend's {@code docCapForMoney}:
- * floor(capMinor / rate). The one-time free grant is a separate lifetime pool and
- * is NOT added here. Returns null when there's no cap or no resolvable rate (the
- * caller hides the estimate).
+ * floor(capMinor / rate). The free grant is a separate per-period pool and is NOT
+ * added here. Returns null when there's no cap or no resolvable rate (the caller
+ * hides the estimate).
  */
 export function docCapForMoney(
   capUsdMajor: number | null,
@@ -87,8 +87,6 @@ export function formatPeriodDate(
     return datePart;
   }
 }
-
-// ─── Prepaid bundle pricing (run-based brain) ───────────────────────────────
 
 /**
  * "12 months for the price of 10" — months granted vs paid. Mirrors the Stripe

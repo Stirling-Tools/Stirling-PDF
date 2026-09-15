@@ -1,5 +1,7 @@
 import { SpreadMode } from "@embedpdf/plugin-spread/react";
 import { PdfBookmarkObject, PdfAttachmentObject } from "@embedpdf/models";
+import { ZoomLevel, Point } from "@embedpdf/plugin-zoom";
+import { FormattedSelection } from "@embedpdf/plugin-selection";
 
 export enum PdfPermissionFlag {
   Print = 0x0004,
@@ -46,20 +48,18 @@ export interface ZoomAPIWrapper {
   zoomIn: () => void;
   zoomOut: () => void;
   toggleMarqueeZoom: () => void;
-  requestZoom: (level: any, center?: any) => void;
+  requestZoom: (level: ZoomLevel, center?: Point) => void;
 }
 
 export interface PanAPIWrapper {
   enable: () => void;
   disable: () => void;
   toggle: () => void;
-  makePanDefault: () => void;
 }
 
 export interface SelectionAPIWrapper {
   copyToClipboard: () => void;
-  getSelectedText: () => string | any;
-  getFormattedSelection: () => any;
+  getFormattedSelection: () => FormattedSelection[];
   selectAll: (totalPages: number) => Promise<boolean>;
   selectWordAt: (pageIndex: number, x: number, y: number) => boolean;
 }
@@ -79,7 +79,7 @@ export interface RotationAPIWrapper {
 }
 
 export interface SearchAPIWrapper {
-  search: (query: string) => Promise<any>;
+  search: (query: string) => Promise<unknown>;
   clear: () => void;
   next: () => void;
   previous: () => void;

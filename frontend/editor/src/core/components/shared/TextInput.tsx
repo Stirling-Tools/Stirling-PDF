@@ -1,7 +1,7 @@
 import React, { forwardRef } from "react";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import styles from "@app/components/shared/textInput/TextInput.module.css";
 
 /**
@@ -119,12 +119,21 @@ export const TextInput = forwardRef<HTMLInputElement, TextInputProps>(
         />
         {shouldShowClearButton && (
           <ActionIcon
-            variant="tertiary"
+            variant="quiet"
+            accent="neutral"
+            shape="circle"
             className={styles.clearButton}
+            style={
+              {
+                "--ai-size": "1.25rem",
+                width: "1.25rem",
+                height: "1.25rem",
+              } as React.CSSProperties
+            }
             onClick={handleClear}
             aria-label={t("textInput.clear", "Clear input")}
           >
-            <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
+            <Icon name="x" size="0.875rem" />
           </ActionIcon>
         )}
       </div>

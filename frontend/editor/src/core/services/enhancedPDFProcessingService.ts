@@ -5,6 +5,7 @@ import {
   ProcessingConfig,
   ProcessingMetrics,
 } from "@app/types/processing";
+import type { PDFPageProxy } from "pdfjs-dist";
 import { ProcessingCache } from "@app/services/processingCache";
 import { FileHasher } from "@app/utils/fileHash";
 import { FileAnalyzer } from "@app/services/fileAnalyzer";
@@ -415,7 +416,7 @@ export class EnhancedPDFProcessingService {
    * Render a page thumbnail with specified quality
    */
   private async renderPageThumbnail(
-    page: any,
+    page: PDFPageProxy,
     quality: "low" | "medium" | "high",
   ): Promise<string> {
     const scales = { low: 0.2, medium: 0.5, high: 0.8 }; // Reduced low quality for page editor
@@ -431,7 +432,7 @@ export class EnhancedPDFProcessingService {
       throw new Error("Could not get canvas context");
     }
 
-    await page.render({ canvasContext: context, viewport }).promise;
+    await page.render({ canvasContext: context, viewport, canvas }).promise;
     return canvas.toDataURL("image/jpeg", 0.8); // Use JPEG for better compression
   }
 

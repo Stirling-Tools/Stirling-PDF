@@ -38,7 +38,7 @@ class PDFWorkerManager {
         "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
         import.meta.url,
       ).toString();
-      (GlobalWorkerOptions as any).docBaseUrl = undefined;
+      (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
       this.isInitialized = true;
     }
   }
@@ -62,7 +62,7 @@ class PDFWorkerManager {
     }
 
     // Normalize input data to PDF.js format
-    let pdfData: any;
+    let pdfData: string | { data: ArrayBuffer | Uint8Array };
     if (data instanceof ArrayBuffer || data instanceof Uint8Array) {
       pdfData = { data };
     } else if (typeof data === "string") {

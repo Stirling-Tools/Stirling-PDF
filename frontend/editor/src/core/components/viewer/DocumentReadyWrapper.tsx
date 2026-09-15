@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { useDocumentManagerPlugin } from "@embedpdf/plugin-document-manager/react";
+import React from "react";
+import { useActiveDocument } from "@embedpdf/plugin-document-manager/react";
 
 interface DocumentReadyWrapperProps {
   children: (documentId: string) => React.ReactNode;
@@ -10,47 +10,13 @@ export function DocumentReadyWrapper({
   children,
   fallback = null,
 }: DocumentReadyWrapperProps) {
-  const { plugin, isLoading, ready } = useDocumentManagerPlugin();
-  const [activeDocumentId, setActiveDocumentId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (isLoading || !plugin) return;
-
-    const checkActiveDocument = async () => {
-      await ready;
-      const docManagerApi = plugin.provides?.();
-      if (docManagerApi) {
-        const activeDoc = docManagerApi.getActiveDocument?.();
-        if (activeDoc?.id) {
-          setActiveDocumentId(activeDoc.id);
-          return;
-        }
-      }
-    };
-
-    checkActiveDocument();
-
-    // Subscribe to document changes
-    const docManagerApi = plugin.provides?.();
-    if (docManagerApi?.onDocumentOpened) {
-      const unsubscribe = docManagerApi.onDocumentOpened((event: any) => {
-        const docId = event?.documentId || event?.id || event?.document?.id;
-        if (docId) {
-          setActiveDocumentId(docId);
-        }
-      });
-
-      return () => {
-        if (typeof unsubscribe === "function") {
-          unsubscribe();
-        }
-      };
-    }
-  }, [plugin, isLoading, ready]);
-
-  if (!activeDocumentId) {
+  const { activeDocumentId, activeDocument } = useActiveDocument();
+  if (
+    !activeDocumentId ||
+    activeDocument?.status !== "loaded" ||
+    !activeDocument?.document
+  ) {
     return <>{fallback}</>;
   }
-
   return <>{children(activeDocumentId)}</>;
 }

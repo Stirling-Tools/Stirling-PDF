@@ -196,6 +196,11 @@
       "title": "Compress - Stirling PDF",
       "description": "Compress PDFs to reduce their file size."
     },
+    "classify": {
+      "image": "/og_images/home.png",
+      "title": "Classify - Stirling PDF",
+      "description": "Identify what kind of document this is and tag it."
+    },
     "extractPages": {
       "image": "/og_images/extract-pages.png",
       "title": "Extract Pages - Stirling PDF",
@@ -220,6 +225,11 @@
       "image": "/og_images/add-attachments.png",
       "title": "Add Attachments - Stirling PDF",
       "description": "Add or remove embedded files (attachments) to/from a PDF"
+    },
+    "createPortfolio": {
+      "image": "/og_images/home.png",
+      "title": "Create Portfolio - Stirling PDF",
+      "description": "Bundle multiple files into an Adobe PDF Portfolio"
     },
     "changeMetadata": {
       "image": "/og_images/change-metadata.png",
@@ -268,8 +278,13 @@
     },
     "formFill": {
       "image": "/og_images/form-fill.png",
-      "title": "Fill Form - Stirling PDF",
-      "description": "Fill PDF form fields interactively with a visual editor"
+      "title": "Form Editor - Stirling PDF",
+      "description": "Fill, create, edit, and delete PDF form fields with a visual editor"
+    },
+    "autoFormDetection": {
+      "image": "/og_images/home.png",
+      "title": "Auto Form Detection - Stirling PDF",
+      "description": "Automatically detect form fields with AI and make your PDF fillable."
     },
     "multiTool": {
       "image": "/og_images/multi-tool.png",
@@ -507,6 +522,11 @@
       "title": "Admin Ai Limits Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/adminAi": {
+      "image": "/og_images/home.png",
+      "title": "Admin Ai Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/help": {
       "image": "/og_images/home.png",
       "title": "Help Settings - Stirling PDF",
@@ -527,6 +547,11 @@
       "title": "Frontend Third Party Licenses Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
+    "/settings/about": {
+      "image": "/og_images/home.png",
+      "title": "About Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
     "/settings/payg": {
       "image": "/og_images/home.png",
       "title": "Payg Settings - Stirling PDF",
@@ -535,6 +560,26 @@
     "/settings/account-link": {
       "image": "/og_images/home.png",
       "title": "Account Link Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/users": {
+      "image": "/og_images/home.png",
+      "title": "Users Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/billing": {
+      "image": "/og_images/home.png",
+      "title": "Billing Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/audit": {
+      "image": "/og_images/home.png",
+      "title": "Audit Settings - Stirling PDF",
+      "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
+    },
+    "/settings/storage": {
+      "image": "/og_images/home.png",
+      "title": "Storage Settings - Stirling PDF",
       "description": "The Free Adobe Acrobat alternative (10M+ Downloads)"
     },
     "/signup": {
@@ -588,11 +633,13 @@
     "/remove-cert-sign": "removeCertSign",
     "/unlock-p-d-f-forms": "unlockPDFForms",
     "/compress": "compress",
+    "/classify": "classify",
     "/extract-pages": "extractPages",
     "/reorganize-pages": "reorganizePages",
     "/extract-images": "extractImages",
     "/add-stamp": "addStamp",
     "/add-attachments": "addAttachments",
+    "/create-portfolio": "createPortfolio",
     "/change-metadata": "changeMetadata",
     "/overlay-pdfs": "overlayPdfs",
     "/get-pdf-info": "getPdfInfo",
@@ -603,6 +650,7 @@
     "/booklet-imposition": "bookletImposition",
     "/pdf-text-editor": "pdfTextEditor",
     "/form-fill": "formFill",
+    "/auto-form-detection": "autoFormDetection",
     "/multi-tool": "multiTool",
     "/read": "read",
     "/automate": "automate",
@@ -703,12 +751,18 @@
     "/settings/adminAiModels": "/settings/adminAiModels",
     "/settings/adminAiDocuments": "/settings/adminAiDocuments",
     "/settings/adminAiLimits": "/settings/adminAiLimits",
+    "/settings/adminAi": "/settings/adminAi",
     "/settings/help": "/settings/help",
     "/settings/legal": "/settings/legal",
     "/settings/backendThirdPartyLicenses": "/settings/backendThirdPartyLicenses",
     "/settings/frontendThirdPartyLicenses": "/settings/frontendThirdPartyLicenses",
+    "/settings/about": "/settings/about",
     "/settings/payg": "/settings/payg",
     "/settings/account-link": "/settings/account-link",
+    "/settings/users": "/settings/users",
+    "/settings/billing": "/settings/billing",
+    "/settings/audit": "/settings/audit",
+    "/settings/storage": "/settings/storage",
     "/signup": "/signup",
     "/processor": "/processor"
   }

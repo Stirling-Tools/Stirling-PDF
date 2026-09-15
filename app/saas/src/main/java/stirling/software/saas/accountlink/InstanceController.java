@@ -21,6 +21,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.billing.UnitCalcPolicy;
+import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
@@ -28,13 +29,15 @@ import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.instance.InstanceUsageIngestService;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.EntitlementState;
+import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
+import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 
 /**
- * Instance-facing surface (combined-billing "Mode A"), authenticated by the <b>device
- * credential</b> — not a user JWT. Separate path prefix ({@code /api/v1/instance/**}) so the device
- * credential is scoped here and nowhere else.
+ * Instance-facing surface (combined billing), authenticated by the <b>device credential</b> — not a
+ * user JWT. Separate path prefix ({@code /api/v1/instance/**}) so the device credential is scoped
+ * here and nowhere else.
  *
  * <p>{@code GET /whoami} is the MVP round-trip proof: a registered instance presenting a valid
  * device credential gets back its resolved {@code instanceId} + {@code teamId}. {@code GET
@@ -58,6 +61,7 @@ public class InstanceController {
     private final PricingPolicyService pricingPolicyService;
     private final InstanceUsageIngestService usageIngestService;
     private final LinkedInstanceRepository linkedInstanceRepository;
+    private final SaasTeamExtensionsRepository teamExtensionsRepository;
 
     public InstanceController(
             EntitlementService entitlementService,
@@ -65,12 +69,14 @@ public class InstanceController {
             AccountLinkService accountLinkService,
             PricingPolicyService pricingPolicyService,
             InstanceUsageIngestService usageIngestService,
-            LinkedInstanceRepository linkedInstanceRepository) {
+            LinkedInstanceRepository linkedInstanceRepository,
+            SaasTeamExtensionsRepository teamExtensionsRepository) {
         this.entitlementService = entitlementService;
         this.billingService = billingService;
         this.accountLinkService = accountLinkService;
         this.pricingPolicyService = pricingPolicyService;
         this.usageIngestService = usageIngestService;
+        this.teamExtensionsRepository = teamExtensionsRepository;
         this.linkedInstanceRepository = linkedInstanceRepository;
     }
 
@@ -87,12 +93,18 @@ public class InstanceController {
             long periodSpendUnits,
             Long periodCapUnits,
             String state,
+            // Users the team's Team plan covers, so the instance enforces the capacity the customer
+            // bought rather than reading it from a licence. Null = no user limit, which is both a
+            // team with no Team plan today and the historic unlimited licence; a limit is never
+            // expressed as a sentinel, so no caller can do arithmetic on Integer.MAX_VALUE.
+            Integer licensedUsers,
             // Metering inputs the instance needs to cost + bucket its own usage (Phase 2). The
             // instance computes units locally with this policy and resets its per-period cumulative
             // counters on the [periodStart, periodEnd) boundary.
             UnitCalcPolicy unitCalcPolicy,
             LocalDateTime periodStart,
-            LocalDateTime periodEnd) {}
+            LocalDateTime periodEnd,
+            int automationStepLimit) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -210,13 +222,26 @@ public class InstanceController {
                 snap.periodSpendUnits(),
                 snap.periodCapUnits(),
                 coarseState(snap.state()),
+                licensedUsers(teamId),
                 new UnitCalcPolicy(
                         policy.getDocPagesPerUnit(),
                         policy.getDocBytesPerUnit(),
                         policy.getMinChargeUnits(),
                         policy.getFileUnitCap()),
                 snap.periodStart(),
-                snap.periodEnd());
+                snap.periodEnd(),
+                policy.resolveStepLimit(JobSource.PIPELINE));
+    }
+
+    /**
+     * Users the team's Team plan covers, or null when it has no user limit. Read from the seat cap
+     * the subscription writes, so the instance and the cloud team enforce one number.
+     */
+    private Integer licensedUsers(Long teamId) {
+        return teamExtensionsRepository
+                .findByTeamId(teamId)
+                .map(SaasTeamExtensions::licensedUsers)
+                .orElse(null);
     }
 
     /**

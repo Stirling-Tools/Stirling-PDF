@@ -7,6 +7,7 @@ import type { UsersCapabilities } from "@portal/api/usersCapabilities";
 /** Self-hosted org-admin: the full action set. */
 const FULL_CAPS: UsersCapabilities = {
   orgGroup: true,
+  transferOwnership: true,
   changeRole: true,
   adminRole: true,
   createTeam: true,
@@ -23,12 +24,14 @@ const FULL_CAPS: UsersCapabilities = {
   seats: false,
   manageGrants: true,
   removeScope: "org",
+  removeMember: true,
   listingRequiresAdmin: true,
 };
 
 /** SaaS team-leader: invite / rename / remove-member only, no org group. */
 const SAAS_CAPS: UsersCapabilities = {
   orgGroup: false,
+  transferOwnership: false,
   changeRole: false,
   adminRole: false,
   createTeam: false,
@@ -45,6 +48,7 @@ const SAAS_CAPS: UsersCapabilities = {
   seats: true,
   manageGrants: false,
   removeScope: "team",
+  removeMember: true,
   listingRequiresAdmin: false,
 };
 
@@ -215,22 +219,19 @@ const BIG_MEMBERS: Member[] = [
     isSelf: true,
     portalAccess: "admin",
   },
-  ...Array.from(
-    { length: 11 },
-    (_, i): Member => ({
-      id: `big-${i}`,
-      name: `Teammate ${i + 1}`,
-      email: `teammate${i + 1}@acme.com`,
-      role: i === 0 ? "team_owner" : "member",
-      status: "active",
-      lastActive: `${i + 1}h ago`,
-      username: `tm${i + 1}`,
-      teamId: 9,
-      teamName: "Platform",
-      teamLead: i === 0,
-      portalAccess: i === 0 ? "role" : "none",
-    }),
-  ),
+  ...Array.from({ length: 11 }, (_, i): Member => ({
+    id: `big-${i}`,
+    name: `Teammate ${i + 1}`,
+    email: `teammate${i + 1}@acme.com`,
+    role: i === 0 ? "team_owner" : "member",
+    status: "active",
+    lastActive: `${i + 1}h ago`,
+    username: `tm${i + 1}`,
+    teamId: 9,
+    teamName: "Platform",
+    teamLead: i === 0,
+    portalAccess: i === 0 ? "role" : "none",
+  })),
 ];
 
 const TEAMS: Team[] = [

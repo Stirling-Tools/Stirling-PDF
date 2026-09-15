@@ -3,6 +3,11 @@ repositories {
     maven { url = "https://build.shibboleth.net/maven/releases" }
 }
 
+ext {
+    // CPU build with self-extracting natives for linux/win/mac x64+arm64. Must stay >=1.21: the
+    // model exports are stamped ai.onnx opset 22, which 1.19/1.20 reject outright.
+    onnxruntimeVersion = '1.26.0'
+}
 bootRun {
     enabled = false
 }
@@ -27,7 +32,7 @@ dependencies {
     api 'org.springframework.boot:spring-boot-starter-cache'
     api 'com.github.ben-manes.caffeine:caffeine'
     implementation 'org.springframework.boot:spring-boot-starter-data-redis'
-    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.46'
+    api 'io.swagger.core.v3:swagger-core-jakarta:2.2.53'
     implementation "com.bucket4j:bucket4j_jdk17-core:${bucket4jVersion}"
     // Lettuce-backed Bucket4j ProxyManager used by ValkeyRateLimitStore for cluster-wide
     // token-bucket rate limiting (parity with in-process Bucket4j semantics; no fixed-window
@@ -47,6 +52,14 @@ dependencies {
     runtimeOnly 'com.sun.xml.bind:jaxb-core:4.0.9'
 
     implementation "com.google.code.gson:gson:${gsonVersion}"
+
+    // ONNX Runtime (Java) runs Auto Form Detection. The ~42MB multi-platform native is bundled
+    // only with -PbundleOnnxRuntime=true (Docker); without it the tool reports unavailable.
+    compileOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    testImplementation "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    if ((project.findProperty('bundleOnnxRuntime') ?: 'false').toString().toBoolean()) {
+        runtimeOnly "com.microsoft.onnxruntime:onnxruntime:$onnxruntimeVersion"
+    }
 
     // jinjava/jjwt transitively request older Jackson 2 versions; declare the current
     // version directly so it is selected consistently (root build.gradle pins are the fallback).
@@ -98,6 +111,14 @@ dependencies {
     testImplementation "org.testcontainers:junit-jupiter:${testcontainersMinioVersion}"
 }
 
+// Golden extraction fixtures live in :common; the advanced converter is graded against the same
+// corpus as the built-in one rather than a forked copy of it.
+processTestResources {
+    from(project(':common').file('src/test/resources/pdf-ingestion-fixtures')) {
+        into 'pdf-ingestion-fixtures'
+    }
+}
+
 tasks.register('prepareKotlinBuildScriptModel') {}
 
 tasks.register('type3SignatureTool', JavaExec) {
@@ -106,4 +127,15 @@ tasks.register('type3SignatureTool', JavaExec) {
     classpath = sourceSets.main.runtimeClasspath
     mainClass = 'stirling.software.SPDF.service.pdfjson.type3.tool.Type3SignatureTool'
     standardInput = System.in
+}
+
+// FailureKindTest asserts the enum against two files outside this project, found by walking up to
+// the repo root: the kind-to-code fixture the frontend also reads, and the English copy every kind
+// must have a key in. Gradle cannot infer either, so without this the task is up-to-date when only
+// one of them changed and the mismatch surfaces on the next unrelated Java edit instead.
+tasks.named('test', Test).configure {
+    inputs.files(
+        rootProject.file('testing/failure-kind-codes.json'),
+        rootProject.file('frontend/editor/public/locales/en-US/translation.toml')
+    ).withPropertyName('sharedConformanceFixtures').optional()
 }

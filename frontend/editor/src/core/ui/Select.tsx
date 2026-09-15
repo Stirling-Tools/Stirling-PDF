@@ -7,7 +7,7 @@ import { useInputAria } from "@app/ui/ariaForwarding";
 import "@app/ui/MantineForms.css";
 
 const SUI_INPUT_VARS = {
-  "--input-bg": "var(--c-surface)",
+  "--input-bg": "var(--c-input-bg)",
   "--input-bd": "var(--c-border)",
   "--input-bd-focus": "var(--c-primary)",
   "--input-radius": "var(--radius-md)",
@@ -150,7 +150,10 @@ export function Select({
       // required sets the input attribute only; FormField renders the asterisk.
       withAsterisk={false}
       ref={inputRef}
-      classNames={{ wrapper: "sui-mantine-wrapper" }}
+      classNames={{
+        wrapper: "sui-mantine-wrapper",
+        dropdown: "sui-mantine-dropdown",
+      }}
       styles={{ wrapper: SUI_INPUT_VARS }}
       {...passthroughProps}
     />
