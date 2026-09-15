@@ -33,10 +33,33 @@
   border-radius: 0;
 }
 
-/* Back from reading: in over the edge it left by. Transform only, so the
-   workbench is already at its narrower width while the wing arrives. */
-[data-wings-returning] .file-sidebar {
+/* Reading takes the wing off the leading edge, and leaving reading brings it
+   back the same way. Transform only, and out of flow while it leaves, so the
+   workbench holds its reading width throughout instead of reflowing twice. */
+[data-wings] {
+  position: relative;
+}
+
+[data-wings="leaving"] .workspace-frame {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: var(--z-dropdown);
+}
+
+[data-wings="leaving"] .file-sidebar {
+  animation: file-sidebar-leave 220ms ease-in both;
+}
+
+[data-wings="returning"] .file-sidebar {
   animation: file-sidebar-return 220ms ease-out both;
+}
+
+@keyframes file-sidebar-leave {
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
 }
 
 @keyframes file-sidebar-return {
@@ -51,7 +74,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-wings-returning] .file-sidebar {
+  [data-wings] .file-sidebar {
     animation: none;
   }
 }

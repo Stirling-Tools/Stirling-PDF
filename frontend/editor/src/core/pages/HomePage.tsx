@@ -72,7 +72,8 @@ import "@app/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
 
-/** Outlasts the wings' own slide-in, which the two rails' stylesheets own. */
+/** Outlast the wings' own animations, which the two rails' stylesheets own. */
+const WINGS_LEAVE_MS = 220;
 const WINGS_RETURN_MS = 320;
 
 function readSwipeHintSeen(): boolean {
@@ -225,22 +226,34 @@ export default function HomePage() {
     if (onReadPath !== readerMode) setReaderMode(onReadPath);
   }, [location.pathname, readerMode, setReaderMode]);
 
-  // Leaving reading puts both wings back on screen at once. They arrive over the
-  // edge they left by rather than appearing in place, so the workspace reads as
-  // coming back rather than blinking into a different layout. Cleared once the
-  // animation has run, so a later render doesn't replay it.
-  const [wingsReturning, setWingsReturning] = useState(false);
+  // The wings leave and return over the edge they sit on, so moving between the
+  // editor and reading reads as one workspace rather than two layouts swapping.
+  // Leaving outlives reader mode by the length of its own animation: the rails'
+  // stylesheets take them out of flow while it runs, so what is underneath is
+  // already in its reading position and nothing reflows twice.
+  const [wingsMounted, setWingsMounted] = useState(!readerMode);
+  const [wingsPhase, setWingsPhase] = useState<"leaving" | "returning" | null>(
+    null,
+  );
   const readingRef = useRef(readerMode);
   useEffect(() => {
-    const leftReading = readingRef.current && !readerMode;
+    if (readingRef.current === readerMode) return;
     readingRef.current = readerMode;
-    if (!leftReading) return;
-    setWingsReturning(true);
-    const done = window.setTimeout(
-      () => setWingsReturning(false),
+    if (readerMode) {
+      setWingsPhase("leaving");
+      const gone = window.setTimeout(() => {
+        setWingsPhase(null);
+        setWingsMounted(false);
+      }, WINGS_LEAVE_MS);
+      return () => window.clearTimeout(gone);
+    }
+    setWingsMounted(true);
+    setWingsPhase("returning");
+    const settled = window.setTimeout(
+      () => setWingsPhase(null),
       WINGS_RETURN_MS,
     );
-    return () => window.clearTimeout(done);
+    return () => window.clearTimeout(settled);
   }, [readerMode]);
 
   // Reading moved, so the path follows. Pushed, not replaced, so Back leaves it.
@@ -650,12 +663,12 @@ export default function HomePage() {
             h="100%"
             className="flex-nowrap flex"
             bg="var(--c-bg)"
-            data-wings-returning={wingsReturning || undefined}
+            data-wings={wingsPhase ?? undefined}
           >
             {/* Reading is a surface of its own: the document and nothing beside it,
                 so the wing goes rather than shrinking to a rail. Everywhere else it
                 is fixed open - see FileSidebar. */}
-            {!readerMode && (
+            {wingsMounted && (
               <div className="workspace-frame">
                 <MyFilesAwareFileSidebar
                   ref={quickAccessRef}
@@ -667,8 +680,10 @@ export default function HomePage() {
             )}
             <Workbench />
             {/* Reading gets its own rail in the slot the tool panel holds otherwise:
-                the panel's controls are the editor's, and reading wants the viewer's. */}
-            {readerMode ? <ReaderRail /> : !hideToolPanel && <RightSidebar />}
+                the panel's controls are the editor's, and reading wants the viewer's.
+                Both are here only while the panel is on its way out. */}
+            {wingsMounted && !hideToolPanel && <RightSidebar />}
+            {readerMode && <ReaderRail />}
             <FileManager selectedTool={selectedTool} />
           </Group>
         )}

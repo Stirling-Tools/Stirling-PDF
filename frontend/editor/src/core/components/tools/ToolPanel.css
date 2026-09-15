@@ -19,9 +19,25 @@
   user-select: none;
 }
 
-/* Back from reading: in over the edge it left by, mirroring the file sidebar. */
-[data-wings-returning] .tool-panel {
+/* Off the trailing edge and back, mirroring the file sidebar. Out of flow while
+   it leaves, so the reader's rail takes the slot without waiting for it. */
+[data-wings="leaving"] .tool-panel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: var(--z-dropdown);
+  animation: tool-panel-leave 220ms ease-in both;
+}
+
+[data-wings="returning"] .tool-panel {
   animation: tool-panel-return 220ms ease-out both;
+}
+
+@keyframes tool-panel-leave {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }
 
 @keyframes tool-panel-return {
@@ -36,7 +52,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  [data-wings-returning] .tool-panel {
+  [data-wings] .tool-panel {
     animation: none;
   }
 }
