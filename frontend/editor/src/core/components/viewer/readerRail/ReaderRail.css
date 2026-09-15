@@ -38,9 +38,24 @@
   flex-shrink: 0;
 }
 
-/* A long filename wraps rather than widening the dropdown past its set width. */
+/* A name can never widen or wrap the dropdown: the item and Mantine's label wrapper
+   both give up width (min-width: 0) so the ellipsis on the name actually engages. */
+.reader-rail__doc {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.reader-rail__doc .mantine-Menu-itemLabel {
+  min-width: 0;
+  overflow: hidden;
+}
+
 .reader-rail__doc-name {
-  overflow-wrap: anywhere;
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* The document you are reading, marked down its leading edge. The stripe is
@@ -60,4 +75,29 @@
   width: 2px;
   border-radius: 1px;
   background: var(--c-primary);
+}
+
+/* A disabled control keeps its slot but loses its chrome: the filled circle reads
+   as something to press, and a faded glyph alone says "not right now" better. */
+.reader-rail .mantine-ActionIcon-root:disabled,
+.reader-rail .mantine-ActionIcon-root[data-disabled] {
+  background-color: transparent;
+  border-color: transparent;
+  opacity: 0.45;
+}
+
+/* Controls that bring the workbench bar's compact styling with them (the search
+   popover, read-aloud) revert to the rail's own button look here: the bar's muted
+   rest color and hover-to-bright read as faded beside the rail's other buttons,
+   and its 24px clamp shrinks the hit target. */
+.reader-rail .workbench-bar-action-icon,
+.reader-rail .workbench-bar-action-icon:hover {
+  color: var(--ai-color, var(--c-text)) !important;
+}
+
+.reader-rail .workbench-bar-action-icon {
+  width: var(--ai-size) !important;
+  height: var(--ai-size) !important;
+  min-width: var(--ai-size) !important;
+  min-height: var(--ai-size) !important;
 }

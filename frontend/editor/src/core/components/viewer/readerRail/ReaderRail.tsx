@@ -1,15 +1,16 @@
-import { useCallback, useMemo, useRef } from "react";
+import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { Menu } from "@mantine/core";
 
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Tooltip as AppTooltip } from "@app/components/shared/Tooltip";
 import { useWorkbenchBar } from "@app/contexts/WorkbenchBarContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useNavigationGuard } from "@app/contexts/NavigationContext";
 import { useAllFiles, useFileManagement } from "@app/contexts/file/fileHooks";
-import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useFilesModalContext } from "@app/contexts/FilesModalContext";
+import { truncateCenter } from "@app/utils/textUtils";
 import { isStirlingFile } from "@app/types/fileContext";
 import "@app/components/viewer/readerRail/ReaderRail.css";
 
@@ -23,8 +24,7 @@ interface RailItem {
 }
 
 /**
- * The controls that belong beside a document being read, grouped by what they are
- * for, with a rule between groups.
+ * The controls that belong beside a document being read.
  *
  * The icons are declared here rather than taken from the viewer, so the rail is the
  * same shape with a document open or not: the viewer only mounts once something is
@@ -41,47 +41,35 @@ const RAIL_GROUPS: readonly (readonly RailItem[])[] = [
   [
     {
       id: "viewer-toggle-bookmarks",
-      icon: (
-        <LocalIcon icon="bookmarks-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="bookmark" size={SIZE} />,
     },
     {
       id: "viewer-toggle-sidebar",
-      icon: (
-        <LocalIcon icon="view-list-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="rows-2" size={SIZE} />,
     },
     {
       id: "viewer-search",
-      icon: <LocalIcon icon="search-rounded" width={SIZE} height={SIZE} />,
+      icon: <Icon name="search" size={SIZE} />,
     },
   ],
   [
     {
       id: "viewer-rotate-left",
-      icon: <LocalIcon icon="rotate-left-rounded" width={SIZE} height={SIZE} />,
+      icon: <Icon name="rotate-ccw" size={SIZE} />,
     },
     {
       id: "viewer-rotate-right",
-      icon: <LocalIcon icon="rotate-right-rounded" width={SIZE} height={SIZE} />,
+      icon: <Icon name="rotate-cw" size={SIZE} />,
     },
   ],
   [
     {
       id: "viewer-toggle-comments",
-      icon: (
-        <LocalIcon
-          icon="chat-bubble-outline-rounded"
-          width={SIZE}
-          height={SIZE}
-        />
-      ),
+      icon: <Icon name="message-square" size={SIZE} />,
     },
     {
       id: "viewer-read-aloud",
-      icon: (
-        <LocalIcon icon="volume-up-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="volume-2" size={SIZE} />,
     },
   ],
 ];
@@ -91,7 +79,7 @@ export function ReaderRail() {
   const { buttons, actions } = useWorkbenchBar();
   const { activeFileId, setActiveFileId } = useViewer();
   const { removeFiles } = useFileManagement();
-  const { addFiles } = useFileHandler();
+  const { openFilesModal } = useFilesModalContext();
   const { requestNavigation } = useNavigationGuard();
   const { files, fileIds } = useAllFiles();
 
@@ -106,9 +94,8 @@ export function ReaderRail() {
   // unsaved changes still deserve their prompt. Storage keeps its copy: this closes
   // the document, it does not delete it. The viewer falls to the next one open.
   //
-  // Always pressable, and a no-op with nothing open: whether a document is open is
-  // not always something the rail can read correctly, and a control greyed out when
-  // it should not be is worse than one that quietly does nothing.
+  // Pressable with nothing open, where it does nothing: the rail cannot always read
+  // whether a document is open, and a wrongly greyed-out control is the worse failure.
   const closeDocument = useCallback(() => {
     if (!openFileId) return;
     requestNavigation(() => {
@@ -130,21 +117,6 @@ export function ReaderRail() {
   );
 
   const closeLabel = t("reader.rail.close", "Close document");
-
-  // The picker is also the way to open something, so it reaches the OS chooser
-  // through an input of its own rather than borrowing the sidebar's - reading
-  // is the one surface where that sidebar is not on screen.
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const addDocument = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const chosen = Array.from(event.target.files ?? []);
-      // Cleared before the await, so the same file can be picked twice running.
-      event.target.value = "";
-      if (chosen.length === 0) return;
-      await addFiles(chosen);
-    },
-    [addFiles],
-  );
 
   const documents = useMemo(
     () =>
@@ -175,19 +147,10 @@ export function ReaderRail() {
             aria-label={closeLabel}
             onClick={closeDocument}
           >
-            <LocalIcon icon="close-rounded" width={SIZE} height={SIZE} />
+            <Icon name="x" size={SIZE} />
           </ActionIcon>
         </AppTooltip>
-        {/* No `accept`: this feeds the workspace rather than one tool, so what
-            can be opened is the workspace's business, not the rail's. */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          multiple
-          style={{ display: "none" }}
-          onChange={addDocument}
-        />
-        <Menu shadow="md" width={260} position="left-start">
+        <Menu shadow="md" width={320} position="left-start">
           <Menu.Target>
             <ActionIcon
               variant="tertiary"
@@ -196,11 +159,7 @@ export function ReaderRail() {
               // The name is in the dropdown; the trigger says what it opens.
               aria-label={t("reader.rail.switchDocument", "Switch document")}
             >
-              <LocalIcon
-                icon="description-outline-rounded"
-                width={SIZE}
-                height={SIZE}
-              />
+              <Icon name="file-text" size={SIZE} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
@@ -208,20 +167,22 @@ export function ReaderRail() {
               <Menu.Item
                 key={doc.id}
                 className="reader-rail__doc"
-                // The stripe is what marks the one you are reading, so the row
-                // says it rather than a tick column beside every name.
+                // The stripe marks the one you are reading, so no tick column
+                // has to sit beside every name.
                 data-current={doc.id === activeFileId || undefined}
                 onClick={() => setActiveFileId(doc.id)}
               >
-                <span className="reader-rail__doc-name">{doc.name}</span>
+                <span className="reader-rail__doc-name" title={doc.name}>
+                  {truncateCenter(doc.name, 48)}
+                </span>
               </Menu.Item>
             ))}
             {documents.length > 0 && <Menu.Divider />}
             <Menu.Item
-              leftSection={
-                <LocalIcon icon="add-rounded" width={SIZE} height={SIZE} />
-              }
-              onClick={() => fileInputRef.current?.click()}
+              leftSection={<Icon name="plus" size={SIZE} />}
+              // The full library modal, as the home screen opens it: Stirling's
+              // own files as well as the device.
+              onClick={() => openFilesModal()}
             >
               {t("reader.rail.addDocument", "Add file")}
             </Menu.Item>
