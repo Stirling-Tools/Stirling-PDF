@@ -47,34 +47,41 @@ test.beforeEach(async ({ page, context }) => {
   });
 });
 
-for (const path of ["/", "/processor", "/processor/policies?view=all#latest"]) {
-  test(`uses the shared first-startup login when opening ${path}`, async ({
-    page,
-  }) => {
-    await page.goto(path, { waitUntil: "domcontentloaded" });
-    await expect(page).toHaveURL(
-      (url) =>
-        url.pathname === "/login" &&
-        (path === "/" || url.searchParams.get("from") === path),
-    );
-    await expect(
-      page.getByText("Default Login Credentials", { exact: true }),
-    ).toBeVisible();
-
-    await page.reload({ waitUntil: "domcontentloaded" });
-    await page.locator("#email").fill("admin");
-    await page.locator("#password").fill("stirling");
-    await page.getByRole("button", { name: "Login", exact: true }).click();
-
-    if (path.startsWith("/processor")) {
+for (const path of [
+  "/",
+  "/editor?view=all#latest",
+  "/processor",
+  "/processor/policies?view=all#latest",
+]) {
+  for (const reload of [false, true]) {
+    test(`uses the shared first-startup login when opening ${path}${reload ? " after reloading login" : ""}`, async ({
+      page,
+    }) => {
+      await page.goto(path, { waitUntil: "domcontentloaded" });
       await expect(page).toHaveURL(
-        (url) => url.pathname + url.search + url.hash === path,
+        (url) =>
+          url.pathname === "/login" &&
+          (path === "/" || url.searchParams.get("from") === path),
       );
-    }
-    await expect(
-      page
-        .getByRole("dialog", { name: "Onboarding", exact: true })
-        .getByRole("textbox", { name: "New Password", exact: true }),
-    ).toBeVisible();
-  });
+      await expect(
+        page.getByText("Default Login Credentials", { exact: true }),
+      ).toBeVisible();
+
+      if (reload) await page.reload({ waitUntil: "domcontentloaded" });
+      await page.locator("#email").fill("admin");
+      await page.locator("#password").fill("stirling");
+      await page.getByRole("button", { name: "Login", exact: true }).click();
+
+      if (path !== "/") {
+        await expect(page).toHaveURL(
+          (url) => url.pathname + url.search + url.hash === path,
+        );
+      }
+      await expect(
+        page
+          .getByRole("dialog", { name: "Onboarding", exact: true })
+          .getByRole("textbox", { name: "New Password", exact: true }),
+      ).toBeVisible();
+    });
+  }
 }

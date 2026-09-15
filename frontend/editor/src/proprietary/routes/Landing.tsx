@@ -183,7 +183,9 @@ export default function Landing() {
   // authenticated, and carries where we came from so signing in returns there
   // (going to /editor and logging in lands back on /editor, not the role
   // router). Also passed as router state; the query is what survives a reload.
-  const returnTo = encodeURIComponent(location.pathname + location.search);
+  const returnTo = encodeURIComponent(
+    location.pathname + location.search + location.hash,
+  );
   return config?.enableLogin === true && !backendProbe.loginDisabled ? (
     <Navigate
       to={`/login?from=${returnTo}`}
