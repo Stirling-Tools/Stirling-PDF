@@ -183,7 +183,7 @@ class SupabaseSecurityConfigMoreTest {
         /**
          * Through the interface: the bean's concrete type depends on whether account linking is on,
          * so a downcast here breaks the moment a test in this class turns it on. A path outside
-         * LINKED_INSTANCE_PATHS always resolves to the "/**" config either way.
+         * LINKED_INSTANCE_PATHS always resolves to the allow-list config either way.
          */
         private CorsConfiguration cors(CorsConfigurationSource source) {
             return source.getCorsConfiguration(
