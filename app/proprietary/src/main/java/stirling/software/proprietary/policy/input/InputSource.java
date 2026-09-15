@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 
 import stirling.software.proprietary.policy.model.InputSpec;
+import stirling.software.proprietary.policy.source.Source;
 
 /**
  * Resolves a policy {@link InputSpec} into the files to run on. Implementations are beans selected
@@ -35,6 +36,16 @@ public interface InputSource {
      * pickup, settle on completion, report what is present so stale ledger rows can be pruned).
      */
     List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException;
+
+    /**
+     * Resolve a persisted source on behalf of its policy owner, including on background threads
+     * without request authentication. Both identities must come from server-owned records, never
+     * input options. Sources backed by private user storage must enforce this authority.
+     */
+    default List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        return resolve(source.toInputSpec(), ctx);
+    }
 
     /**
      * Whether {@link #resolve} observes everything in the source (a complete listing) rather than

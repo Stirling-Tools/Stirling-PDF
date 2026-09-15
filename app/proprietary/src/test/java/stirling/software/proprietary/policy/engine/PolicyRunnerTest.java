@@ -70,7 +70,8 @@ class PolicyRunnerTest {
     private PolicyRunner runner;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        lenient().when(folderSource.resolve(any(Source.class), any(), any())).thenCallRealMethod();
         runner =
                 new PolicyRunner(
                         policyEngine,

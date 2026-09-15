@@ -63,6 +63,8 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
 
     List<StoredFile> findAllByFolderId(UUID folderId);
 
+    List<StoredFile> findAllByFolderIdAndOwner(UUID folderId, User owner);
+
     /**
      * A file's folder placement as a plain id. Reads the FK directly so callers outside a
      * transaction never touch the lazy {@code folder} association.
