@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { promisify } from "node:util";
 import { defineConfig, loadEnv } from "vite";
 import type { Connect, PluginOption } from "vite";
+import type { PreRenderedAsset } from "rollup";
 import tsconfigPaths from "vite-tsconfig-paths";
 // oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
 import { iconSvgr } from "./scripts/icons/svgrOptions.mts";
@@ -38,6 +39,18 @@ const COMPRESSION_EXCLUDE_REGEX = new RegExp(
   `\\.(${COMPRESSION_EXCLUDED_EXTENSIONS.map((e) => e.slice(1)).join("|")})$`,
 );
 const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
+
+// Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
+// extension (not MIME type) and its default list omits .mjs, so those assets
+// bypassed the edge cache on every request. The extension is irrelevant to a
+// `type: "module"` worker. Renaming at emission time lets Rollup substitute the
+// final filename into every `new URL(..., import.meta.url)` reference itself.
+// Shared by the main build and Vite's worker sub-builds, which do not inherit
+// the main build's output options.
+const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
+  assetInfo.names.some((name) => name.endsWith(".mjs"))
+    ? "assets/[name]-[hash].js"
+    : "assets/[name]-[hash][extname]";
 
 /**
  * Writes .gz and .br siblings for one file, both encoders in flight at once.
@@ -457,6 +470,14 @@ export default defineConfig(async ({ mode, command }) => {
     // so without this `@app/*` resolves in the app and fails in a worker.
     worker: {
       plugins: () => [tsconfigPaths({ projects: [tsconfigProject] })],
+      // Worker sub-builds do not inherit the main build's output options, so
+      // without this a worker asset referenced from inside a worker is emitted
+      // as .mjs again (see mjsToJsAssetFileNames above).
+      rollupOptions: {
+        output: {
+          assetFileNames: mjsToJsAssetFileNames,
+        },
+      },
     },
     server: {
       host: true,
@@ -488,6 +509,7 @@ export default defineConfig(async ({ mode, command }) => {
       cssMinify: "lightningcss" as const,
       rollupOptions: {
         output: {
+          assetFileNames: mjsToJsAssetFileNames,
           manualChunks(id) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
