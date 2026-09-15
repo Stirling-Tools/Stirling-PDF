@@ -1,14 +1,26 @@
 import { STIRLING_SAAS_BACKEND_API_URL } from "@app/constants/connection";
+import { connectionModeService } from "@app/services/connectionModeService";
 
 /**
- * Desktop: AI-engine calls must hit the SaaS backend (the local bundled backend
- * has no AI engine). The AI surface is only shown in SaaS mode (gated by
- * useAiEngineEnabled), so returning the SaaS base unconditionally is correct —
- * when an AI call is made, the app is in SaaS mode.
+ * Desktop: base URL for AI-engine calls, which the local bundled backend never serves.
  *
- * Used for the orchestrate stream (a raw fetch) and the AI result-file download,
- * which would otherwise resolve to the empty/local base and miss the engine.
+ * Absolute in both connected modes, because one consumer is a raw fetch (the orchestrate
+ * stream) where a relative path would resolve against the webview origin rather than the
+ * server. Empty in local mode, where there is no engine to reach.
+ *
+ * Read from the cached mode so it stays synchronous; an unresolved mode yields "" rather
+ * than guessing, so a call made that early fails locally instead of reaching the wrong server.
  */
 export function getAiBaseUrl(): string {
-  return (STIRLING_SAAS_BACKEND_API_URL ?? "").replace(/\/$/, "");
+  const mode = connectionModeService.getCachedMode();
+  if (mode === "saas") {
+    return (STIRLING_SAAS_BACKEND_API_URL ?? "").replace(/\/$/, "");
+  }
+  if (mode === "selfhosted") {
+    return (connectionModeService.getCachedServerConfig()?.url ?? "").replace(
+      /\/$/,
+      "",
+    );
+  }
+  return "";
 }
