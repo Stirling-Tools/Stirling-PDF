@@ -5,7 +5,7 @@
 
 export interface PolicyRunRecord {
   runId: string;
-  categoryId: string;
+  policyKey: string;
   fileId: string;
   fileName: string;
   status: string;

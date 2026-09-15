@@ -3,7 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { useAutoAnonymousAuth } from "@app/hooks/useAutoAnonymousAuth";
 import { isHomeRoute, isToolRoute } from "@app/utils/pathUtils";
-import HomePage from "@app/pages/HomePage";
+import { AppRoot } from "@app/components/layout/AppRoot";
 import Login from "@app/routes/Login";
 import GuestUserBanner from "@app/components/auth/GuestUserBanner";
 import { TeamInvitationBanner } from "@app/components/shared/TeamInvitationBanner";
@@ -72,7 +72,7 @@ export default function Landing() {
       <>
         <GuestUserBanner />
         <TeamInvitationBanner />
-        <HomePage />
+        <AppRoot />
       </>
     );
   }

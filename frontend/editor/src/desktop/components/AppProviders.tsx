@@ -1,9 +1,11 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
+import { WindowTitleBar } from "@app/components/WindowTitleBar";
 import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
+import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
 import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
@@ -328,6 +330,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
       >
         {/* Also here: the auth check below switches mode pre-authChecked. */}
         <DesktopQueryCacheReset />
+        <WindowTitleBar />
         <div style={{ minHeight: "100vh" }} />
         {updatePopupModal}
       </ProprietaryAppProviders>
@@ -354,10 +357,12 @@ export function AppProviders({ children }: { children: ReactNode }) {
         }}
       >
         <DesktopQueryCacheReset />
+        <WindowTitleBar />
         <SaaSTeamProvider key={appKey}>
           <DesktopConfigSync />
           <DesktopBannerInitializer />
           <SaveShortcutListener />
+          <DiskConflictHost />
           {children}
           {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
           <DesktopOnboardingModal />

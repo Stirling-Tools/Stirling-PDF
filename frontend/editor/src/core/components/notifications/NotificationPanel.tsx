@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import DividerWithText from "@app/components/shared/DividerWithText";
 import { useNotifications } from "@app/hooks/useNotifications";
 import type { ClientActionRegistry } from "@app/components/notifications/notificationActions";
-import { NotificationItem } from "@app/components/notifications/NotificationItem";
+import {
+  NotificationItem,
+  type PasswordPrompt,
+} from "@app/components/notifications/NotificationItem";
 import "@app/components/notifications/NotificationBell.css";
 
 /** Named so a trigger in another tree can point at it with aria-controls. */
@@ -16,6 +19,8 @@ export interface NotificationPanelProps {
   registry: ClientActionRegistry;
   style?: React.CSSProperties;
   className?: string;
+  /** Hand a password-collecting action up to the host, which outlives this panel. */
+  onRequestPassword: (prompt: PasswordPrompt) => void;
 }
 
 /** Mounted only while open, since mounting is what marks everything read. */
@@ -25,6 +30,7 @@ export function NotificationPanel({
   id,
   style,
   className,
+  onRequestPassword,
 }: NotificationPanelProps) {
   const { t } = useTranslation();
   const { notifications, unreadCount, documentStateFor, markAllSeen } =
@@ -65,6 +71,8 @@ export function NotificationPanel({
       if (panel.current?.contains(target)) return;
       // A trigger closes this itself; counting it as outside would reopen it.
       if (target.closest?.("[data-notifications-trigger]")) return;
+      // The overflow menu is portaled out, so a click in it would read as outside the panel.
+      if (target.closest?.(".notification-bell__menu")) return;
       onClose();
     };
     const closeOnEscape = (event: KeyboardEvent) => {
@@ -98,7 +106,7 @@ export function NotificationPanel({
 
       {notifications.length === 0 ? (
         <p className="notification-bell__empty">
-          {t("notifications.empty", "Nothing to report.")}
+          {t("notifications.empty", "You're all caught up.")}
         </p>
       ) : (
         <ul className="notification-bell__list">
@@ -107,6 +115,7 @@ export function NotificationPanel({
               {index === 0 && dividedAt > 0 && (
                 <li aria-hidden>
                   <DividerWithText
+                    className="notification-bell__divider notification-bell__divider--new"
                     text={t("notifications.section.new", "New")}
                   />
                 </li>
@@ -115,6 +124,7 @@ export function NotificationPanel({
               {index === dividedAt && dividedAt > 0 && (
                 <li aria-hidden>
                   <DividerWithText
+                    className="notification-bell__divider"
                     text={t("notifications.section.earlier", "Earlier")}
                   />
                 </li>
@@ -125,6 +135,7 @@ export function NotificationPanel({
                 documentState={documentStateFor(notification)}
                 registry={registry}
                 onDismissPanel={onClose}
+                onRequestPassword={onRequestPassword}
               />
             </Fragment>
           ))}

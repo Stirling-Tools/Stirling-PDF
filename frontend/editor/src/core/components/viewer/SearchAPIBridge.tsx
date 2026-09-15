@@ -59,7 +59,7 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
     if (!search) return;
 
     subscriptionRef.current =
-      search.onSearchResultStateChange?.((state: any) => {
+      search.onSearchResultStateChange?.((state) => {
         if (!state) return;
 
         const newState = {
@@ -137,11 +137,13 @@ function SearchAPIBridgeInner({ documentId }: { documentId: string }) {
               currentSearch.startSearch();
               const results = await currentSearch.searchAllPages(query);
               return results;
-            } catch (error: any) {
+            } catch (error) {
               // Handle abort errors gracefully - these occur when searches overlap
+              const abortLike = error as { type?: unknown; message?: unknown };
               if (
-                error?.type === "abort" ||
-                error?.message?.includes("abort")
+                abortLike.type === "abort" ||
+                (typeof abortLike.message === "string" &&
+                  abortLike.message.includes("abort"))
               ) {
                 // Silently handle abort - this is expected when user types quickly
                 return null;
