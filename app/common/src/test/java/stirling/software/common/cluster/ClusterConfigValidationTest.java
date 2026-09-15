@@ -8,11 +8,14 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Method;
 import java.util.List;
 
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
@@ -22,6 +25,11 @@ import org.springframework.context.annotation.Configuration;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
 import stirling.software.common.model.ApplicationProperties.Cluster.Valkey;
+
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 
 class ClusterConfigValidationTest {
 
@@ -365,76 +373,68 @@ class ClusterConfigValidationTest {
 
     /** AutomaticallyGenerated.key/.UUID feed metadata encryption and licence seat HMACs. */
     @Nested
-    @DisplayName("shared AutomaticallyGenerated key/UUID guard")
+    @DisplayName("shared AutomaticallyGenerated key/UUID warning")
     class SharedCryptoMaterial {
 
         private ApplicationProperties props;
+        private Logger clusterLogger;
+        private ListAppender<ILoggingEvent> appender;
 
-        @Test
-        @DisplayName("an unset key is rejected and names the env var to set")
-        void missingKeyRejected() {
-            enabled("valkey");
-            assertMessage(
-                    new ClusterConfig(props, "", SHARED_UUID),
-                    "AutomaticallyGenerated.key",
-                    "same UUID on every node",
-                    "AUTOMATICALLYGENERATED_KEY");
+        @BeforeEach
+        void attachLogCapture() {
+            clusterLogger = (Logger) LoggerFactory.getLogger(ClusterConfig.class);
+            appender = new ListAppender<>();
+            appender.start();
+            clusterLogger.addAppender(appender);
+        }
+
+        @AfterEach
+        void detachLogCapture() {
+            clusterLogger.detachAppender(appender);
+            appender.stop();
         }
 
         @Test
-        @DisplayName("an unset UUID is rejected even when the key is set")
-        void missingUuidRejected() {
-            enabled("valkey");
-            assertMessage(
-                    new ClusterConfig(props, SHARED_KEY, null),
-                    "AutomaticallyGenerated.UUID",
-                    "AUTOMATICALLYGENERATED_UUID");
-        }
-
-        @Test
-        @DisplayName("the settings.yml.template placeholder is rejected: InitialSetup replaces it")
-        void nonUuidPlaceholderRejected() {
-            enabled("valkey");
-            assertMessage(
-                    new ClusterConfig(props, "example", "example"),
-                    "AutomaticallyGenerated.key",
-                    "must be a UUID");
-        }
-
-        @Test
-        @DisplayName("the guard also applies to backplane=inprocess")
-        void inProcessBackplaneAlsoGuarded() {
+        @DisplayName("an unset key warns and names the env var to set, but still boots")
+        void missingKeyWarns() {
             enabled("inprocess");
-            assertMessage(new ClusterConfig(props, "", ""), "AutomaticallyGenerated.key");
+            assertDoesNotThrow(() -> invokeValidate(new ClusterConfig(props, "", SHARED_UUID)));
+            assertWarned("AutomaticallyGenerated.key", "AUTOMATICALLYGENERATED_KEY");
         }
 
         @Test
-        @DisplayName("two explicit UUIDs pass")
-        void explicitSharedValuesPass() {
+        @DisplayName("an unset UUID warns even when the key is set")
+        void missingUuidWarns() {
+            enabled("inprocess");
+            assertDoesNotThrow(() -> invokeValidate(new ClusterConfig(props, SHARED_KEY, null)));
+            assertWarned("AutomaticallyGenerated.UUID");
+        }
+
+        @Test
+        @DisplayName("the settings.yml.template placeholder warns: InitialSetup replaces it")
+        void nonUuidPlaceholderWarns() {
+            enabled("inprocess");
+            assertDoesNotThrow(
+                    () -> invokeValidate(new ClusterConfig(props, "example", "example")));
+            assertWarned("AutomaticallyGenerated.key");
+        }
+
+        @Test
+        @DisplayName("two explicit UUIDs warn about nothing")
+        void explicitSharedValuesStaySilent() {
             enabled("valkey");
             props.getCluster().getValkey().setUrl("redis://valkey:6379");
             assertDoesNotThrow(() -> invokeValidate(config(props)));
+            assertThat(warnings()).noneMatch(line -> line.contains("AutomaticallyGenerated"));
         }
 
         @Test
-        @DisplayName("cluster.enabled=false never requires the shared values")
-        void disabledClusterSkipsGuard() {
+        @DisplayName("cluster.enabled=false never looks at the shared values")
+        void disabledClusterSkipsCheck() {
             enabled("valkey");
             props.getCluster().setEnabled(false);
             assertDoesNotThrow(() -> invokeValidate(new ClusterConfig(props, "", "")));
-        }
-
-        @Test
-        @DisplayName("the pre-bean guard reads the same rule as the @PostConstruct one")
-        void staticGuardMatchesPostConstructGuard() {
-            assertDoesNotThrow(() -> ClusterConfig.validateSharedCryptoMaterial(false, "", ""));
-            assertDoesNotThrow(
-                    () ->
-                            ClusterConfig.validateSharedCryptoMaterial(
-                                    true, SHARED_KEY, SHARED_UUID));
-            assertThrows(
-                    IllegalStateException.class,
-                    () -> ClusterConfig.validateSharedCryptoMaterial(true, SHARED_KEY, ""));
+            assertThat(warnings()).isEmpty();
         }
 
         private void enabled(String backplane) {
@@ -443,21 +443,27 @@ class ClusterConfigValidationTest {
             props.getCluster().setBackplane(backplane);
         }
 
-        private void assertMessage(ClusterConfig config, String... expectedSubstrings) {
-            IllegalStateException ex =
-                    assertThrows(IllegalStateException.class, () -> invokeValidate(config));
+        private List<String> warnings() {
+            return appender.list.stream()
+                    .filter(event -> event.getLevel() == Level.WARN)
+                    .map(ILoggingEvent::getFormattedMessage)
+                    .toList();
+        }
+
+        private void assertWarned(String... expectedSubstrings) {
+            List<String> warnings = warnings();
             for (String expected : expectedSubstrings) {
                 assertTrue(
-                        ex.getMessage().contains(expected),
-                        "message must contain '" + expected + "'; got: " + ex.getMessage());
+                        warnings.stream().anyMatch(line -> line.contains(expected)),
+                        "a WARN must contain '" + expected + "'; got: " + warnings);
             }
         }
     }
 
-    /** The guard must abort the context before InitialSetup's @PostConstruct can generate one. */
+    /** A missing shared key must never refuse the context, however the app is wired. */
     @Nested
-    @DisplayName("pre-bean shared key/UUID guard")
-    class SharedCryptoMaterialBootGuard {
+    @DisplayName("boot with unshared key/UUID")
+    class SharedCryptoMaterialBoot {
 
         private final ApplicationContextRunner runner =
                 new ApplicationContextRunner()
@@ -467,31 +473,18 @@ class ClusterConfigValidationTest {
                         .withPropertyValues("cluster.enabled=true", "cluster.backplane=inprocess");
 
         @Test
-        @DisplayName("boot fails before any bean is created when the shared values are missing")
-        void bootFailsWhenSharedValuesMissing() {
-            runner.withUserConfiguration(StubInitialSetupConfig.class)
-                    .run(
-                            context ->
-                                    assertThat(context)
-                                            .getFailure()
-                                            .hasMessageContaining("AutomaticallyGenerated.key")
-                                            .hasMessageContaining("AUTOMATICALLYGENERATED_KEY"));
+        @DisplayName("boot succeeds when the shared values are missing")
+        void bootSucceedsWhenSharedValuesMissing() {
+            runner.run(context -> assertThat(context).hasNotFailed());
         }
 
         @Test
         @DisplayName("boot succeeds once both values are configured")
         void bootSucceedsWhenSharedValuesConfigured() {
-            runner.withUserConfiguration(StubInitialSetupConfig.class)
-                    .withPropertyValues(
+            runner.withPropertyValues(
                             "AutomaticallyGenerated.key=" + SHARED_KEY,
                             "AutomaticallyGenerated.UUID=" + SHARED_UUID)
                     .run(context -> assertThat(context).hasNotFailed());
-        }
-
-        @Test
-        @DisplayName("no InitialSetup in the context means nothing mints a per-node UUID")
-        void guardSkippedWithoutInitialSetup() {
-            runner.run(context -> assertThat(context).hasNotFailed());
         }
     }
 
@@ -501,15 +494,6 @@ class ClusterConfigValidationTest {
         @Bean
         ApplicationProperties applicationProperties() {
             return new ApplicationProperties();
-        }
-    }
-
-    /** Stands in for :core's InitialSetup, which the guard keys off by bean name. */
-    @Configuration
-    static class StubInitialSetupConfig {
-        @Bean(name = "initialSetup")
-        Object initialSetup() {
-            return new Object();
         }
     }
 
