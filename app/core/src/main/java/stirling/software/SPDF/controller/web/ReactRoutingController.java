@@ -68,7 +68,7 @@ public class ReactRoutingController {
     // (LOWEST_PRECEDENCE - 1).
     private static final int SPA_FALLBACK_ORDER = Ordered.LOWEST_PRECEDENCE - 2;
 
-    @Value("${server.servlet.context-path:/}")
+    @Value("${server.servlet.context-path}")
     private String contextPath;
 
     private String cachedIndexHtml;
