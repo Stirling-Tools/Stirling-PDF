@@ -15,6 +15,10 @@ import { addWatermarkOperationConfig } from "@app/hooks/tools/addWatermark/useAd
 import { ocrOperationConfig } from "@app/hooks/tools/ocr/useOCROperation";
 import { flattenOperationConfig } from "@app/hooks/tools/flatten/useFlattenOperation";
 import { compressOperationConfig } from "@app/hooks/tools/compress/useCompressOperation";
+import {
+  RAG_INGEST_ENDPOINT,
+  ragIngestOperationConfig,
+} from "@app/policies/ragIngestOperation";
 import { pdfaOperationConfig } from "@app/policies/pdfaOperation";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type { WirePipelineStep } from "@app/policies/types";
@@ -145,9 +149,18 @@ export const POLICY_OPERATIONS = {
     complianceCheckOperationConfig,
   ),
   classify: describeAiToolOperation("/api/v1/ai/tools/classify-and-label"),
+  ragIngest: describeToolOperation(
+    RAG_INGEST_ENDPOINT,
+    ragIngestOperationConfig,
+  ),
   purviewApplyLabel: describeIntegrationOperation(
     "/api/v1/integration/purview-apply-label",
-    { connectionId: "", labelId: "", labelName: "", method: "STANDARD" },
+    {
+      connectionId: "",
+      labelId: "",
+      labelName: "",
+      method: "STANDARD",
+    },
   ),
   purviewReadLabel: describeIntegrationOperation(
     "/api/v1/integration/purview-read-label",

@@ -8926,6 +8926,28 @@ undeclared-operation = "Can't check what this step accepts"
 [portal.pipelines.builder.icon]
 label = "Change icon"
 
+[portal.pipelines.builder.ragIngest]
+chunkSize = "Chunk size"
+chunkSizeHint = "Characters per chunk. Smaller chunks retrieve more precisely; larger ones keep more context together."
+editorPdfOnly = "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination."
+exportChunks = "Export chunks as JSONL"
+exportChunksHint = "One chunk per line with its page span, ready to load into another system."
+exportMarkdown = "Export markdown"
+exportMarkdownHint = "The document's text as one Markdown file."
+includeOriginal = "Include the input PDF"
+includeOriginalHint = "Deliver the PDF alongside exported text. This does not change whether the source keeps its original."
+index = "Index into the knowledge base"
+indexHint = "Embeds the document so it can be searched and asked about. Needs the AI engine."
+mode = "Parse quality"
+modeAuto = "Automatic"
+modeBasic = "Text layer only"
+modeHint = "Automatic uses the best tier available on this deployment."
+nothingToDo = "Turn on at least one of indexing or an export, or this step has nothing to do and the run will fail."
+overlap = "Overlap"
+overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
+overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
+unavailable = "RAG preparation needs an enabled, reachable AI engine, including when the destination database generates embeddings."
+
 [portal.pipelines.builder.routing]
 addRule = "Add a route"
 aiDisabled = "AI classification is not enabled. Enable it in Settings, or route on a document property instead."
@@ -9198,6 +9220,7 @@ compressPdf = "Compress"
 flatten = "Flatten"
 ocrPdf = "OCR"
 pdfa = "Convert to PDF/A"
+ragIngest = "Prepare documents for RAG"
 sanitizePdf = "Remove JavaScript"
 validateCompliance = "Validate compliance"
 
@@ -9426,6 +9449,10 @@ label = "Make text searchable"
 [portal.policies.wizard.capability.pdfa]
 desc = "Rewrites the document in the ISO archival format, embedding its fonts and colour profiles so it still renders the same years from now. Invalidates digital signatures."
 label = "Convert to PDF/A for archiving"
+
+[portal.policies.wizard.capability.ragIngest]
+desc = "Prepare searchable chunks for the built-in knowledge base, a connected RAG database, or a corpus export."
+label = "Prepare for knowledge search"
 
 [portal.policies.wizard.capability.redact]
 desc = "Finds and blacks out sensitive details — like Social Security and card numbers — so they can't be read."
