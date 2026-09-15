@@ -180,10 +180,56 @@ describe("ownership handover", () => {
 
   it("native SaaS uses the same review without a server mutation", async () => {
     adapter.local = false;
+    const unlinked = status("READY");
+    unlinked.cloud!.linkedInstances = 0;
+    vi.mocked(adapter.prepare).mockResolvedValue(unlinked);
     show();
     await confirm();
     await waitFor(() => expect(onTransferred).toHaveBeenCalledOnce());
     expect(adapter.transferCloud).toHaveBeenCalledOnce();
+    expect(adapter.completeLocal).not.toHaveBeenCalled();
+  });
+
+  it.each([1, 3])(
+    "directs SaaS owners with %s linked servers to self-hosted",
+    async (count) => {
+      adapter.local = false;
+      const linked = status("READY");
+      linked.cloud!.linkedInstances = count;
+      vi.mocked(adapter.prepare).mockResolvedValue(linked);
+      show();
+      expect(
+        await screen.findByText("Start from your self-hosted server"),
+      ).toBeVisible();
+      expect(screen.getByText(/open Settings → Users/)).toBeVisible();
+      expect(screen.queryByRole("checkbox")).toBeNull();
+      expect(
+        screen.queryByRole("button", { name: "Transfer ownership" }),
+      ).toBeNull();
+      await click(screen.getByRole("button", { name: "Close" }));
+      expect(onClose).toHaveBeenCalledOnce();
+      expect(adapter.transferCloud).not.toHaveBeenCalled();
+      expect(adapter.completeLocal).not.toHaveBeenCalled();
+    },
+  );
+
+  it("shows the same guidance if an instance is linked after the review loads", async () => {
+    adapter.local = false;
+    const unlinked = status("READY");
+    unlinked.cloud!.linkedInstances = 0;
+    vi.mocked(adapter.prepare).mockResolvedValue(unlinked);
+    vi.mocked(adapter.transferCloud).mockRejectedValue({
+      response: { data: { detail: "START_TRANSFER_FROM_INSTANCE" } },
+    });
+    show();
+    await confirm();
+    expect(
+      await screen.findByText("Start from your self-hosted server"),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Transfer ownership" }),
+    ).toBeNull();
+    expect(onTransferred).not.toHaveBeenCalled();
     expect(adapter.completeLocal).not.toHaveBeenCalled();
   });
 });

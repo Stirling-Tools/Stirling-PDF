@@ -49,7 +49,17 @@ export const LinkedPaid: Story = {};
 export const Unlinked: Story = {
   args: { adapter: adapter({ ...ready, cloud: null }) },
 };
-export const CloudTeam: Story = { args: { adapter: adapter(ready, false) } };
+export const CloudTeam: Story = {
+  args: {
+    adapter: adapter(
+      { ...ready, cloud: { ...ready.cloud!, linkedInstances: 0 } },
+      false,
+    ),
+  },
+};
+export const CloudTeamWithLinkedServers: Story = {
+  args: { adapter: adapter(ready, false) },
+};
 export const Invitation: Story = {
   args: {
     adapter: adapter({

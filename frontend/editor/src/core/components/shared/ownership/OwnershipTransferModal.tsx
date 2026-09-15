@@ -92,6 +92,10 @@ export function OwnershipTransferModal({
   const needsMember = status?.cloud?.state === "NEEDS_MEMBERSHIP";
   const cloudDone = status?.cloud?.state === "TRANSFERRED";
   const partial = adapter.local && cloudDone && !done;
+  const startFromInstance =
+    !adapter.local &&
+    ((status?.cloud?.linkedInstances ?? 0) > 0 ||
+      Boolean(error?.includes("START_TRANSFER_FROM_INSTANCE")));
 
   async function run(action: () => Promise<void>) {
     if (working.current) return;
@@ -109,7 +113,7 @@ export function OwnershipTransferModal({
   }
 
   async function transfer() {
-    if (!status) return;
+    if (!status || startFromInstance) return;
     let next = status;
     try {
       if (next.cloud && next.cloud.state !== "TRANSFERRED") {
@@ -171,7 +175,21 @@ export function OwnershipTransferModal({
                 {t("ownership.working", "Checking and updating ownership…")}
               </Text>
             )}
-            {error && (
+            {startFromInstance && (
+              <Alert
+                role="alert"
+                title={t(
+                  "ownership.startFromInstanceTitle",
+                  "Start from your self-hosted server",
+                )}
+              >
+                {t(
+                  "ownership.startFromInstanceBody",
+                  "This team has linked servers. On the self-hosted server, open Settings → Users and change the recipient's role to Org Owner. That flow transfers cloud ownership before completing the server transfer.",
+                )}
+              </Alert>
+            )}
+            {error && !startFromInstance && (
               <Alert role="alert" color="red">
                 {partial
                   ? t(
@@ -184,7 +202,7 @@ export function OwnershipTransferModal({
                     )}
               </Alert>
             )}
-            {error && (
+            {error && !startFromInstance && (
               <Text size="sm">
                 {error.includes("CLOUD_SIGN_IN_REQUIRED") ||
                 error.includes("CLOUD_OWNER_REQUIRED")
@@ -226,7 +244,7 @@ export function OwnershipTransferModal({
                               : null}
               </Text>
             )}
-            {!status && !busy && (
+            {!status && !busy && !startFromInstance && (
               <Text>
                 {t(
                   "ownership.prepareError",
@@ -234,7 +252,7 @@ export function OwnershipTransferModal({
                 )}
               </Text>
             )}
-            {needsMember && (
+            {needsMember && !startFromInstance && (
               <>
                 <Text fw={600}>
                   {t("ownership.joinTitle", "Join the cloud team first")}
@@ -299,7 +317,7 @@ export function OwnershipTransferModal({
                 </Button>
               </div>
             )}
-            {status && !needsMember && (
+            {status && !needsMember && !startFromInstance && (
               <>
                 <Text fw={600}>
                   {partial
@@ -372,6 +390,11 @@ export function OwnershipTransferModal({
               </>
             )}
             <Group justify="flex-end">
+              {startFromInstance && (
+                <Button variant="secondary" onClick={onClose} disabled={busy}>
+                  {t("common.close", "Close")}
+                </Button>
+              )}
               {adapter.cancel && !partial && (
                 <Button
                   variant="tertiary"
@@ -399,7 +422,7 @@ export function OwnershipTransferModal({
                   {t("ownership.check", "Check again")}
                 </Button>
               )}
-              {status && !needsMember && (
+              {status && !needsMember && !startFromInstance && (
                 <Button
                   disabled={busy || (!accepted && !partial)}
                   onClick={() => void run(transfer)}

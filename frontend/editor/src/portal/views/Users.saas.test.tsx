@@ -157,7 +157,11 @@ describe("Users page (SaaS flavor, end-to-end via SaasTeamController mocks)", ()
   });
 });
 
-function ownershipScenario(ownerless = false, fail = false) {
+function ownershipScenario(
+  ownerless = false,
+  fail = false,
+  linkedInstances = 0,
+) {
   let ownerId = ownerless ? 0 : 1;
   server.use(
     http.get("/api/v1/team/my", () =>
@@ -204,7 +208,7 @@ function ownershipScenario(ownerless = false, fail = false) {
         teamName: "Acme",
         leaderUserId: ownerId,
         targetUserId: 2,
-        linkedInstances: 2,
+        linkedInstances,
         subscribed: true,
         state: ownerId === 2 ? "TRANSFERRED" : "READY",
       }),
@@ -225,7 +229,7 @@ function ownershipScenario(ownerless = false, fail = false) {
         teamName: "Acme",
         leaderUserId: 2,
         targetUserId: 2,
-        linkedInstances: 2,
+        linkedInstances,
         subscribed: true,
         state: "TRANSFERRED",
       });
@@ -239,6 +243,30 @@ function ownershipScenario(ownerless = false, fail = false) {
 }
 
 describe("SaaS ownership through the current Users page", () => {
+  it("directs a linked team's owner to the self-hosted Users page without transferring", async () => {
+    const owner = ownershipScenario(false, false, 1);
+    renderUsers();
+    await screen.findByText("Acme team");
+    fireEvent.click(
+      await screen.findByRole("textbox", { name: "Role for Blair" }),
+    );
+    fireEvent.click(
+      within(
+        await screen.findByRole("listbox", {
+          name: "Role for Blair",
+          hidden: true,
+        }),
+      ).getByRole("option", { name: "Org Owner", hidden: true }),
+    );
+    expect(
+      await screen.findByText("Start from your self-hosted server"),
+    ).toBeVisible();
+    expect(
+      screen.queryByRole("button", { name: "Transfer ownership" }),
+    ).toBeNull();
+    expect(owner()).toBe(1);
+  });
+
   it("transfers through the role menu and keeps the former owner's shared roster visible", async () => {
     const owner = ownershipScenario();
     renderUsers();

@@ -50,8 +50,8 @@ public class OwnershipHandoverController {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.FORBIDDEN, "LINK_CHANGED"));
-        return handovers.change(
-                instance.getTeamId(),
+        return handovers.changeFromInstance(
+                instance,
                 request.email(),
                 request.expectedLeaderId(),
                 AuthenticationUtils.getCurrentUser(auth, users),

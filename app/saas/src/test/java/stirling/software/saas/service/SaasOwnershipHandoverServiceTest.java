@@ -19,6 +19,7 @@ import stirling.software.proprietary.accountlink.CloudOwnershipStatus.State;
 import stirling.software.proprietary.model.*;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.*;
+import stirling.software.saas.accountlink.LinkedInstance;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.payg.billing.*;
 import stirling.software.saas.repository.TeamInvitationRepository;
@@ -120,6 +121,8 @@ class SaasOwnershipHandoverServiceTest {
 
     @Test
     void transferUsesExistingTeamAndDoesNotMutateBillingOrLinks() {
+        LinkedInstance instance = new LinkedInstance();
+        instance.setTeamId(9L);
         doAnswer(
                         invocation -> {
                             leader.setRole(TeamRole.MEMBER);
@@ -127,15 +130,41 @@ class SaasOwnershipHandoverServiceTest {
                             return null;
                         })
                 .when(ownership)
-                .transfer(9L, 2L, leader.getUser());
+                .transferFromInstance(9L, 2L, leader.getUser(), instance);
         assertEquals(
                 State.TRANSFERRED,
-                service.change(9L, "new@example.com", 1L, leader.getUser(), "transfer").state());
-        verify(ownership).transfer(9L, 2L, leader.getUser());
+                service.changeFromInstance(
+                                instance, "new@example.com", 1L, leader.getUser(), "transfer")
+                        .state());
+        verify(ownership).transferFromInstance(9L, 2L, leader.getUser(), instance);
+        verify(ownership, never()).transfer(anyLong(), anyLong(), any());
         verify(billing, atLeastOnce()).forTeam(9L);
         verify(instances, atLeastOnce()).countByTeamIdAndRevokedAtIsNull(9L);
         verifyNoMoreInteractions(billing, instances);
         verifyNoInteractions(invitations);
+    }
+
+    @Test
+    void cloudEntryPointCannotOptIntoInstanceTransfer() {
+        doThrow(
+                        new ResponseStatusException(
+                                org.springframework.http.HttpStatus.CONFLICT,
+                                "START_TRANSFER_FROM_INSTANCE"))
+                .when(ownership)
+                .transfer(9L, 2L, leader.getUser());
+        assertEquals(
+                "START_TRANSFER_FROM_INSTANCE",
+                assertThrows(
+                                ResponseStatusException.class,
+                                () ->
+                                        service.change(
+                                                9L,
+                                                "new@example.com",
+                                                1L,
+                                                leader.getUser(),
+                                                "transfer"))
+                        .getReason());
+        verify(ownership, never()).transferFromInstance(anyLong(), anyLong(), any(), any());
     }
 
     @Test

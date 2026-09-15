@@ -19,6 +19,7 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.saas.accountlink.LinkedInstance;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.repository.TeamInvitationRepository;
@@ -74,6 +75,29 @@ public class SaasOwnershipHandoverService {
     @Transactional
     public CloudOwnershipStatus change(
             Long teamId, String email, Long expectedLeaderId, User caller, String action) {
+        return change(teamId, email, expectedLeaderId, caller, action, null);
+    }
+
+    /**
+     * Only the device-authenticated endpoint may supply an instance; the human owner is rechecked.
+     */
+    @Transactional
+    public CloudOwnershipStatus changeFromInstance(
+            LinkedInstance instance,
+            String email,
+            Long expectedLeaderId,
+            User caller,
+            String action) {
+        return change(instance.getTeamId(), email, expectedLeaderId, caller, action, instance);
+    }
+
+    private CloudOwnershipStatus change(
+            Long teamId,
+            String email,
+            Long expectedLeaderId,
+            User caller,
+            String action,
+            LinkedInstance instance) {
         var team =
                 teams.lockById(teamId)
                         .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -112,8 +136,11 @@ public class SaasOwnershipHandoverService {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "PERSONAL_TEAM");
             if (before.state() == State.NEEDS_MEMBERSHIP)
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "MEMBERSHIP_REQUIRED");
-            if (before.state() != State.TRANSFERRED)
-                ownership.transfer(teamId, before.targetUserId(), caller);
+            if (before.state() != State.TRANSFERRED) {
+                if (instance == null) ownership.transfer(teamId, before.targetUserId(), caller);
+                else
+                    ownership.transferFromInstance(teamId, before.targetUserId(), caller, instance);
+            }
         } else {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
