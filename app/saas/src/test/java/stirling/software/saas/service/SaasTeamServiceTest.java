@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.model.Authority;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
@@ -54,6 +55,19 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 @ExtendWith(MockitoExtension.class)
 class SaasTeamServiceTest {
 
+    @org.junit.jupiter.api.BeforeEach
+    void ownershipLocks() {
+        org.mockito.Mockito.lenient()
+                .when(teamRepository.lockById(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(
+                        i -> {
+                            Long id = i.getArgument(0);
+                            if (id.equals(100L)) return Optional.of(team(id, "Acme"));
+                            return teamRepository.findById(id);
+                        });
+    }
+
+    @Mock private jakarta.persistence.EntityManager entityManager;
     @Mock private TeamRepository teamRepository;
     @Mock private TeamMembershipRepository membershipRepository;
     @Mock private TeamInvitationRepository invitationRepository;
@@ -170,7 +184,12 @@ class SaasTeamServiceTest {
 
             assertThat(result).isSameAs(saved);
             verify(saasTeamExtensionService).setPersonal(saved, true);
-            verify(saasTeamExtensionService).setSeats(saved, 1, 1);
+            // The free allowance, not 1: a linked instance reads this as its own ceiling.
+            verify(saasTeamExtensionService)
+                    .setSeats(
+                            saved,
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT);
             verify(saasTeamExtensionService).setCreatedByUserId(saved, 1L);
             verify(saasTeamExtensionsRepository).incrementSeatsUsed(50L);
 
@@ -285,7 +304,7 @@ class SaasTeamServiceTest {
         }
 
         @Test
-        @DisplayName("converts a personal team to standard (unlimited seats) on first invitation")
+        @DisplayName("converts a personal team to standard on first invitation")
         void personalTeam_convertedToStandard() {
             Team t = team(teamId, "My Team");
             User inviter = user(1L, "a@x.com", "alice");
@@ -304,6 +323,9 @@ class SaasTeamServiceTest {
             service.inviteUserToTeam(teamId, "b@x.com", inviter);
 
             verify(saasTeamExtensionService).setPersonal(t, false);
+            // Still the sentinel. A standard team has no user limit until it buys one, and nothing
+            // enforces capacity for one, so stating the free allowance here would announce a
+            // ceiling nothing honours.
             verify(saasTeamExtensionService).setSeats(t, Integer.MAX_VALUE, Integer.MAX_VALUE);
         }
 

@@ -1,12 +1,12 @@
 package stirling.software.common.util;
 
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
 import java.nio.channels.OverlappingFileLockException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Locale;
 
@@ -33,7 +33,7 @@ import stirling.software.common.model.ApplicationProperties.AutoPipeline.FileRea
  *   <li>The file size is stable: two reads separated by {@code sizeCheckDelayMillis} return the
  *       same value. This catches active copies on Linux/macOS where advisory file locking alone
  *       cannot detect a mid-copy file.
- *   <li>An exclusive file-system lock can be acquired, confirming no other process holds it.
+ *   <li>A shared file-system lock can be acquired, confirming no writer holds an exclusive lock.
  * </ol>
  *
  * <p>All behaviour is controlled through {@link FileReadiness} inside {@link
@@ -67,11 +67,17 @@ public class FileReadinessChecker {
             return false;
         }
 
-        if (!hasSettled(path, config.getSettleTimeMillis())) {
+        Long ageMillis = fileAgeMillis(path);
+        if (ageMillis == null || ageMillis < config.getSettleTimeMillis()) {
             return false;
         }
 
-        if (!hasSizeStabilized(path, config.getSizeCheckDelayMillis())) {
+        // The size-stability wait exists to catch an active copy whose writer pauses
+        // between chunks. A file untouched for twice the settle window has provably
+        // stopped changing, and the wait sleeps per file - paying it for old files
+        // turns a backlog scan over a folder-sized directory into minutes of dead time.
+        if (ageMillis < config.getSettleTimeMillis() * 2
+                && !hasSizeStabilized(path, config.getSizeCheckDelayMillis())) {
             return false;
         }
 
@@ -123,30 +129,16 @@ public class FileReadinessChecker {
         return allowed;
     }
 
-    /**
-     * Returns {@code true} when the file's last-modified timestamp is at least {@code
-     * settleTimeMillis} milliseconds in the past, indicating the write has completed and the file
-     * has "settled".
-     */
-    private boolean hasSettled(Path path, long settleTimeMillis) {
+    /** Milliseconds since the file was last modified; null when the timestamp cannot be read. */
+    private Long fileAgeMillis(Path path) {
         try {
-            long lastModified = Files.getLastModifiedTime(path).toMillis();
-            long ageMillis = System.currentTimeMillis() - lastModified;
-            boolean settled = ageMillis >= settleTimeMillis;
-            if (!settled) {
-                log.debug(
-                        "File '{}' was modified {}ms ago (settle threshold: {}ms), not yet ready",
-                        path.getFileName(),
-                        ageMillis,
-                        settleTimeMillis);
-            }
-            return settled;
+            return System.currentTimeMillis() - Files.getLastModifiedTime(path).toMillis();
         } catch (IOException e) {
             log.warn(
                     "Could not read last-modified time for '{}', treating as not settled: {}",
                     path,
                     e.getMessage());
-            return false;
+            return null;
         }
     }
 
@@ -187,16 +179,15 @@ public class FileReadinessChecker {
     }
 
     /**
-     * Returns {@code true} when an exclusive file-system lock cannot be acquired, which indicates
+     * Returns {@code true} when a shared file-system lock cannot be acquired, which indicates
      * another process still holds the file open for writing.
      *
      * <p>{@link OverlappingFileLockException} is also treated as locked: the JVM already holds a
      * lock on this file (e.g. from another thread), so it is unsafe to process.
      */
     private boolean isLocked(Path path) {
-        try (RandomAccessFile raf = new RandomAccessFile(path.toFile(), "rw");
-                FileChannel channel = raf.getChannel()) {
-            FileLock lock = channel.tryLock();
+        try (FileChannel channel = FileChannel.open(path, StandardOpenOption.READ)) {
+            FileLock lock = channel.tryLock(0, Long.MAX_VALUE, true);
             if (lock == null) {
                 log.debug("File '{}' is locked by another process", path.getFileName());
                 return true;

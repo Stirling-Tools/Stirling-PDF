@@ -15,6 +15,8 @@ export type {
   WalletMember,
   WalletCategoryBreakdown,
   WalletActivityRow,
+  TeamHolding,
+  ProcessorHolding,
 } from "@app/billing";
 
 export async function fetchWallet(): Promise<Wallet> {
@@ -88,4 +90,17 @@ export interface PaymentMethod {
 
 export async function fetchPaymentMethod(): Promise<PaymentMethod> {
   return apiClient.saas.json<PaymentMethod>("/api/v1/payg/payment-method");
+}
+
+// GET /api/v1/payg/billing-details. `present: false` when the Stripe mirror carries no
+// customer. Read-only: the mirror is one-way, and Stripe's hosted portal is the writer.
+
+export interface BillingDetails {
+  present: boolean;
+  companyName: string | null;
+  invoiceEmail: string | null;
+}
+
+export async function fetchBillingDetails(): Promise<BillingDetails> {
+  return apiClient.saas.json<BillingDetails>("/api/v1/payg/billing-details");
 }

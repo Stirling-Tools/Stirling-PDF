@@ -15,6 +15,7 @@ import fs from "fs";
 
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
+const MULTI_PAGE_PDF = path.join(FIXTURES_DIR, "multi-page-sample.pdf");
 const SAMPLE_PDF_BYTES = fs.readFileSync(SAMPLE_PDF);
 
 async function mockMergeWithContentType(page: Page, contentType: string) {
@@ -32,7 +33,7 @@ async function mockMergeWithContentType(page: Page, contentType: string) {
 
 async function runMergeAndOpenReview(page: Page) {
   await page.goto("/merge");
-  await uploadFiles(page, [SAMPLE_PDF, SAMPLE_PDF]);
+  await uploadFiles(page, [SAMPLE_PDF, MULTI_PAGE_PDF]);
   await switchToEditorIfViewerMode(page);
   await runToolAndWaitForReview(page);
 }
