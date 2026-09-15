@@ -196,7 +196,7 @@
         {
             "moduleName": "com.github.mwiede:jsch",
             "moduleUrl": "https://github.com/mwiede/jsch",
-            "moduleVersion": "2.28.6",
+            "moduleVersion": "2.28.7",
             "moduleLicense": "Revised BSD",
             "moduleLicenseUrl": "https://github.com/mwiede/jsch/blob/master/LICENSE.txt"
         },
@@ -1626,13 +1626,13 @@
         },
         {
             "moduleName": "org.commonmark:commonmark",
-            "moduleVersion": "0.28.0",
+            "moduleVersion": "0.30.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
         {
             "moduleName": "org.commonmark:commonmark-ext-gfm-tables",
-            "moduleVersion": "0.28.0",
+            "moduleVersion": "0.30.0",
             "moduleLicense": "BSD-2-Clause",
             "moduleLicenseUrl": "https://opensource.org/licenses/BSD-2-Clause"
         },
