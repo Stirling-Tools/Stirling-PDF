@@ -3,7 +3,10 @@ import type {
   ConfigNavSection,
   NavKey,
 } from "@app/components/shared/config/types";
-import { portalSupersededSectionKeys } from "@app/components/settings/portalSettingsNav";
+import {
+  buildPortalSettingsSections,
+  portalSupersededSectionKeys,
+} from "@app/components/settings/portalSettingsNav";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 
 const group = (
@@ -15,6 +18,23 @@ const group = (
   title: id,
   mergeAt,
   items: keys.map((key) => ({ key, label: key, icon: "x", component: null })),
+});
+
+const translate = ((_: string, fallback: string) => fallback) as never;
+
+describe("buildPortalSettingsSections", () => {
+  it("keeps independently enabled processor sections when the roster is hidden", () => {
+    const sections = buildPortalSettingsSections(translate, {
+      includeRoster: false,
+      includeBilling: true,
+      includeAccountLink: false,
+      includeApiKeys: false,
+    });
+
+    expect(
+      sections.flatMap((section) => section.items.map((item) => item.key)),
+    ).toEqual(["billing"]);
+  });
 });
 
 describe("portalSupersededSectionKeys", () => {

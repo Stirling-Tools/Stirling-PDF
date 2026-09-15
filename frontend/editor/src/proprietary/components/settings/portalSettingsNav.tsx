@@ -68,11 +68,9 @@ export function buildPortalSettingsSections(
     includeApiKeys?: boolean;
   } = {},
 ): ConfigNavSection[] {
-  if (!UsersSection || !includeRoster) {
-    return [];
-  }
-  const workspace: ConfigNavItem[] = [
-    {
+  const workspace: ConfigNavItem[] = [];
+  if (UsersSection && includeRoster) {
+    workspace.push({
       key: "users",
       label: t("portal.nav.users", "Users"),
       description: t(
@@ -82,8 +80,8 @@ export function buildPortalSettingsSections(
       icon: "group-rounded",
       component: <UsersSection />,
       fullBleed: true,
-    },
-  ];
+    });
+  }
   if (includeBilling && BillingSection) {
     workspace.push({
       key: "billing",
@@ -106,13 +104,16 @@ export function buildPortalSettingsSections(
       fullBleed: true,
     });
   }
-  const groups: ConfigNavSection[] = [
-    {
-      id: "workspace",
-      title: t("settings.workspace.title", "Workspace"),
-      items: workspace,
-    },
-  ];
+  const groups: ConfigNavSection[] =
+    workspace.length > 0
+      ? [
+          {
+            id: "workspace",
+            title: t("settings.workspace.title", "Workspace"),
+            items: workspace,
+          },
+        ]
+      : [];
   // Keys belong to you, not the server, so they join your own settings. Only the
   // processor's tab supersedes the build's own; without it the build keeps its own.
   if (ApiKeysSection && includeApiKeys) {

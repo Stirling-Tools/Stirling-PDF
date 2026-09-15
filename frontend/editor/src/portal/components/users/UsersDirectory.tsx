@@ -218,7 +218,7 @@ export function UsersDirectory({
       if (capabilities.resetPassword) {
         items.push({
           label: t("users.action.resetPw", "Reset password"),
-          disabled: m.isSelf,
+          disabled: m.isSelf || isOwner(m),
           onClick: () => onResetPassword(m),
         });
       }
@@ -234,7 +234,7 @@ export function UsersDirectory({
             m.status === "suspended"
               ? t("users.action.reinstate", "Reinstate")
               : t("users.action.suspend", "Suspend"),
-          disabled: m.isSelf,
+          disabled: m.isSelf || isOwner(m),
           onClick: () => onToggleEnabled(m),
         });
       }
@@ -247,7 +247,7 @@ export function UsersDirectory({
       if (capabilities.resetMfa && m.mfaEnabled) {
         items.push({
           label: t("users.action.disableMfa", "Reset MFA"),
-          disabled: m.isSelf,
+          disabled: m.isSelf || isOwner(m),
           onClick: () => onDisableMfa(m),
         });
       }
@@ -255,7 +255,7 @@ export function UsersDirectory({
         items.push({
           label: removeLabel,
           tone: "danger",
-          disabled: m.isSelf,
+          disabled: m.isSelf || isOwner(m),
           onClick: () => onRemove(m),
           dividerBefore: items.length > 0,
         });
