@@ -112,12 +112,12 @@ export default function Signup() {
     title: `${t("signup.title", "Create an account")} - Stirling PDF`,
     description: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogTitle: `${t("signup.title", "Create an account")} - Stirling PDF`,
     ogDescription: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogImage: `${baseUrl}/og_images/saas/app.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,

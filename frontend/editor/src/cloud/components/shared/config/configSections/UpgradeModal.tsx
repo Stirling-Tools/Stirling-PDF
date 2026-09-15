@@ -375,8 +375,8 @@ function CapStep({
         </ul>
         <div style={{ marginTop: 8, fontStyle: "italic" }}>
           {t(
-            "payg.upgrade.help.footnote",
-            "Manual tools — viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR — are always free, even past 500. The distinction is the type of work, not where you click.",
+            "payg.upgrade.help.footnoteUnlimited",
+            "Manual tools — viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR — are always free, even after your included credits are used. The distinction is the type of work, not where you click.",
           )}
         </div>
       </div>
@@ -455,7 +455,7 @@ function ConfirmationStep({
       </h3>
       <p className="upm-confirm__body">
         {t(
-          "payg.confirm.body",
+          "payg.confirm.bodyWithAllowance",
           "Your team can now process documents with automation, AI, and the API beyond your {{limit}} free PDFs.",
           { limit: freeLimit.toLocaleString() },
         )}
