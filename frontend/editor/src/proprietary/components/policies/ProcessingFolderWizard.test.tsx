@@ -54,7 +54,7 @@ function button(name: string) {
 }
 
 function createServerFolder() {
-  fireEvent.click(screen.getByRole("radio", { name: key("newFolder") }));
+  fireEvent.click(button("newFolder"));
   fireEvent.change(screen.getByLabelText(new RegExp(key("folderName"))), {
     target: { value: "Invoices" },
   });
@@ -62,6 +62,109 @@ function createServerFolder() {
 }
 
 describe("ProcessingFolderWizard", () => {
+  it("selects nested folders from the library list and retains selection when returning", async () => {
+    const child: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      parentFolderId: folder.id,
+      name: "2026",
+    };
+    const virtual: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      kind: "virtual",
+      name: "Browser folder",
+    };
+    const props = renderWizard({
+      folders: [folder, child, virtual],
+      resolveTarget: vi.fn().mockResolvedValue(child),
+    });
+    const grid = screen.getByRole("grid", { name: key("selectFolder") });
+    expect(within(grid).queryByRole("radio", { name: "2026" })).toBeNull();
+    expect(screen.queryByRole("radio", { name: virtual.name })).toBeNull();
+    const row = within(grid)
+      .getByRole("radio", { name: folder.name })
+      .closest('[role="row"]')!;
+    fireEvent.contextMenu(row);
+    expect(screen.queryByRole("menu")).toBeNull();
+    expect(row).not.toHaveAttribute("draggable");
+    expect(screen.queryByRole("button", { name: "Folder actions" })).toBeNull();
+    fireEvent.doubleClick(row);
+    const childRow = screen
+      .getByRole("radio", { name: "2026" })
+      .closest('[role="row"]')!;
+    fireEvent.keyDown(childRow, { key: " " });
+    expect(childRow).toHaveAttribute("aria-selected", "true");
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("change"));
+    expect(screen.getByRole("radio", { name: "2026" })).toBeChecked();
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("review"));
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.resolveTarget).toHaveBeenCalledWith({
+        kind: "existing",
+        folder: child,
+      }),
+    );
+  });
+
+  it("searches nested folders and creates inside the chosen parent only on confirmation", async () => {
+    const child: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      parentFolderId: folder.id,
+      name: "2026",
+    };
+    const props = renderWizard({ folders: [folder, child] });
+    fireEvent.change(
+      screen.getByRole("textbox", { name: key("searchFolders") }),
+      { target: { value: "2026" } },
+    );
+    fireEvent.click(screen.getByRole("radio", { name: "2026" }));
+    fireEvent.click(button("newFolder"));
+    fireEvent.change(screen.getByLabelText(new RegExp(key("folderName"))), {
+      target: { value: "Receipts" },
+    });
+    expect(props.resolveTarget).not.toHaveBeenCalled();
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("review"));
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.resolveTarget).toHaveBeenCalledWith({
+        kind: "server",
+        name: "Receipts",
+        parentId: child.id,
+      }),
+    );
+  });
+
+  it("limits rows to the chosen storage and blocks unavailable server selection", () => {
+    const local: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      kind: "local",
+      name: "Documents",
+      directory: "C:/Documents",
+    };
+    renderWizard({
+      folders: [folder, local],
+      canPickDirectory: true,
+      serverDisabledReason: "Sign in first",
+    });
+    expect(screen.queryByRole("radio", { name: folder.name })).toBeNull();
+    fireEvent.click(screen.getByRole("radio", { name: local.name }));
+    expect(button("chooseProcessing")).toBeEnabled();
+    fireEvent.click(screen.getByRole("radio", { name: "Server storage" }));
+    expect(screen.queryByRole("radio", { name: local.name })).toBeNull();
+    expect(screen.getByRole("radio", { name: folder.name })).toBeDisabled();
+    expect(button("newFolder")).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("radio", { name: folder.name }).closest('[role="row"]')!,
+    );
+    expect(button("chooseProcessing")).toBeDisabled();
+  });
+
   it("defers folder creation until review and retains processing choices when going back", async () => {
     const props = renderWizard();
     createServerFolder();
@@ -120,9 +223,7 @@ describe("ProcessingFolderWizard", () => {
     fireEvent.click(button("enable"));
     await screen.findByText("Server unavailable");
     fireEvent.click(button("change"));
-    expect(
-      screen.getByRole("radio", { name: key("useExisting") }),
-    ).toBeChecked();
+    expect(screen.getByRole("radio", { name: folder.name })).toBeChecked();
     expect(screen.queryByLabelText(new RegExp(key("folderName")))).toBeNull();
     fireEvent.click(button("chooseProcessing"));
     fireEvent.click(button("review"));

@@ -171,7 +171,7 @@ export function ProcessingFolderWizard({
         <Modal
           open
           width="xl"
-          className={`folder-setup${stage === "processing" ? " folder-setup--processing" : ""}`}
+          className={`folder-setup folder-setup--${stage}`}
           title={t(
             existing
               ? "processingFolders.setup.editTitle"
@@ -277,7 +277,10 @@ export function ProcessingFolderWizard({
             <Banner tone="warning" description={presetBlocked} />
           )}
           {error && <Banner tone="danger" description={error} />}
-          <div hidden={stage !== "folder"}>
+          <div
+            className="folder-setup__folder-stage"
+            hidden={stage !== "folder"}
+          >
             <ProcessingFolderPicker
               key={pickerVersion}
               folders={folders}

@@ -24,7 +24,16 @@ const meta = {
   component: ProcessingFolderWizard,
   parameters: { layout: "fullscreen" },
   args: {
-    folders: [invoices, archive],
+    folders: [
+      invoices,
+      archive,
+      {
+        ...invoices,
+        id: createFolderId(),
+        name: "2026",
+        parentFolderId: invoices.id,
+      },
+    ],
     catalogue: assemblePolicies([], []).catalogue,
     aiEngineEnabled: true,
     canPickDirectory: false,
@@ -45,7 +54,31 @@ type Story = StoryObj<typeof meta>;
 
 export const Create: Story = {};
 export const ExistingFolder: Story = { args: { initialFolder: invoices } };
-export const Desktop: Story = { args: { canPickDirectory: true } };
+export const Desktop: Story = {
+  args: {
+    canPickDirectory: true,
+    folders: [
+      invoices,
+      archive,
+      {
+        ...invoices,
+        id: createFolderId(),
+        name: "Documents",
+        kind: "local",
+        directory: "C:/Documents",
+      },
+    ],
+  },
+};
+export const ManyFolders: Story = {
+  args: {
+    folders: Array.from({ length: 80 }, (_, i) => ({
+      ...invoices,
+      id: createFolderId(),
+      name: `Folder ${String(i + 1).padStart(2, "0")}`,
+    })),
+  },
+};
 export const StorageUnavailable: Story = {
   args: { serverDisabledReason: "Sign in to use server storage." },
 };
