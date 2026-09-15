@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
 import {
   Box,
@@ -18,6 +18,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
+import { isStartupRoute } from "@app/constants/routes";
 
 const ACCEPTED_STORAGE_KEY = "loginAgreementAccepted";
 
@@ -68,22 +69,27 @@ const markdownComponents: Components = {
  * anonymous mode). Text is fetched live for the user's current language; admins manage it via
  * customFiles/disclaimer/<locale>.md.
  */
-export default function LoginAgreementModal() {
+export default function LoginAgreementModal({
+  children,
+}: {
+  children?: ReactNode;
+}) {
   const { t, i18n } = useTranslation();
   const { config } = useAppConfig();
   const { user, signOut } = useAuth();
   const { pathname } = useLocation();
+  const eligibleRoute = isStartupRoute(pathname);
 
   const [opened, setOpened] = useState(false);
+  const [resolved, setResolved] = useState(false);
   const [content, setContent] = useState("");
   const nonceRef = useRef("anon");
 
   useEffect(() => {
     if (!config) return;
-    // Never gate the login/auth screens themselves. pathname is a dep (not window.location) so
-    // the gate re-runs when the SPA navigates from /login to / after an interactive login -
-    // AppLayout stays mounted across that route change, so nothing else would re-trigger it.
-    if (pathname.startsWith("/login")) return;
+    if (!eligibleRoute) return;
+    setResolved(false);
+    setOpened(false);
 
     const loginEnabled = config.enableLogin !== false;
     let cancelled = false;
@@ -119,13 +125,15 @@ export default function LoginAgreementModal() {
       } catch {
         // On fetch error (unreachable/unauthorized) fail OPEN: don't block app usage on a
         // disclaimer we couldn't load.
+      } finally {
+        if (!cancelled) setResolved(true);
       }
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [config, i18n.language, user?.id, pathname]);
+  }, [config, i18n.language, user?.id, eligibleRoute]);
 
   const handleAccept = () => {
     try {
@@ -139,6 +147,7 @@ export default function LoginAgreementModal() {
   const handleDecline = async () => {
     const loginEnabled = config?.enableLogin !== false;
     if (loginEnabled) {
+      setResolved(false);
       setOpened(false);
       try {
         await signOut();
@@ -154,7 +163,8 @@ export default function LoginAgreementModal() {
     }
   };
 
-  if (!opened) return null;
+  if (!eligibleRoute) return null;
+  if (!opened) return resolved ? <>{children}</> : null;
 
   return (
     <Modal

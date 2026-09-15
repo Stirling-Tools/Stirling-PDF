@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { useBanner } from "@app/contexts/BannerContext";
 import NavigationWarningModal from "@app/components/shared/NavigationWarningModal";
-import LoginAgreementModal from "@app/components/shared/LoginAgreementModal";
+import { StartupPrompts } from "@app/components/startup/StartupPrompts";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -28,7 +28,7 @@ export function AppLayout({ children }: AppLayoutProps) {
         <div style={{ flex: 1, minHeight: 0, height: 0 }}>{children}</div>
       </div>
       <NavigationWarningModal />
-      <LoginAgreementModal />
+      <StartupPrompts />
     </>
   );
 }

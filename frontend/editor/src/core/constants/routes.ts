@@ -23,3 +23,16 @@ export const AUTH_ROUTES = [
 export function isAuthRoute(pathname: string): boolean {
   return AUTH_ROUTES.some((route) => pathname.startsWith(route));
 }
+
+/** Router-relative app entries that may show account setup and consent prompts. */
+export function isStartupRoute(pathname: string): boolean {
+  return ![
+    ...AUTH_ROUTES,
+    "/share",
+    "/workflow/sign",
+    "/mobile-scanner",
+    "/mobile-sign",
+    "/account-link/callback",
+    "/link",
+  ].some((route) => pathname === route || pathname.startsWith(`${route}/`));
+}
