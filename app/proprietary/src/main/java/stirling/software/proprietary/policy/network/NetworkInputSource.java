@@ -73,11 +73,7 @@ public class NetworkInputSource implements InputSource {
     @Override
     public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
             throws IOException {
-        return resolve(source.toInputSpec(), ctx);
-    }
-
-    @Override
-    public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
+        InputSpec spec = source.toInputSpec();
         NetworkConfig config = connectionResolver.resolve(spec.options());
         // A listing failure propagates so the sweep reads it as "could not list" (which vetoes
         // presence cleanup), never as "verifiably no files".

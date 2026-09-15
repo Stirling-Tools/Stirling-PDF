@@ -80,11 +80,7 @@ public class FolderInputSource implements InputSource {
     @Override
     public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
             throws IOException {
-        return resolve(source.toInputSpec(), ctx);
-    }
-
-    @Override
-    public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
+        InputSpec spec = source.toInputSpec();
         FolderConfig config = FolderConfig.from(spec.options());
         Path inputDir = accessGuard.requirePermitted(config.directory());
         if (!Files.isDirectory(inputDir)) {

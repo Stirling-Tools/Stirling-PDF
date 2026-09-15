@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
@@ -81,11 +82,14 @@ class NetworkInputSourceTest {
     void trackKeepsOriginalsAndOnlyClaimsChangedFiles() throws Exception {
         server.put("in/doc.pdf", "data", 1000);
         InputSpec tracked = sftp(Map.of("mode", "track"));
-        source.resolve(tracked, ctx).getFirst().onComplete().accept(true);
-        assertTrue(source.resolve(tracked, ctx).isEmpty());
-        assertEquals(1, source.resolve(sftp(Map.of("mode", "snapshot")), ctx).size());
+        source.resolve(persistedSource(tracked), ctx, "alice").getFirst().onComplete().accept(true);
+        assertTrue(source.resolve(persistedSource(tracked), ctx, "alice").isEmpty());
+        assertEquals(
+                1,
+                source.resolve(persistedSource(sftp(Map.of("mode", "snapshot"))), ctx, "alice")
+                        .size());
         server.put("in/doc.pdf", "changed", 2000);
-        assertEquals(1, source.resolve(tracked, ctx).size());
+        assertEquals(1, source.resolve(persistedSource(tracked), ctx, "alice").size());
     }
 
     @Test
@@ -100,24 +104,24 @@ class NetworkInputSourceTest {
     void consumeRemovesTheFileOnceProcessed() throws Exception {
         server.put("in/doc.pdf", "data", 1000);
 
-        List<ResolvedInput> work = source.resolve(sftp(Map.of()), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(sftp(Map.of())), ctx, "alice");
 
         assertEquals(1, work.size());
         assertEquals(1, work.get(0).inputs().primary().size());
         // In flight: still on the server, but a second sweep does not pick it up again.
         assertTrue(server.has("in/doc.pdf"));
-        assertTrue(source.resolve(sftp(Map.of()), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(sftp(Map.of())), ctx, "alice").isEmpty());
 
         work.get(0).onComplete().accept(true);
         assertFalse(server.has("in/doc.pdf"));
-        assertTrue(source.resolve(sftp(Map.of()), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(sftp(Map.of())), ctx, "alice").isEmpty());
     }
 
     @Test
     void aFileReplacedMidRunSurvivesTheDeleteAndRunsAgain() throws Exception {
         server.put("in/doc.pdf", "data", 1000);
 
-        List<ResolvedInput> work = source.resolve(sftp(Map.of()), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(sftp(Map.of())), ctx, "alice");
         // A new version lands while the run is executing (different size/mtime = new gate).
         server.put("in/doc.pdf", "new data, different size", 2000);
         work.get(0).onComplete().accept(true);
@@ -125,7 +129,7 @@ class NetworkInputSourceTest {
         // The delete is version-guarded: the replacement is not the file that ran, so it stays and
         // is claimed as fresh work next sweep.
         assertTrue(server.has("in/doc.pdf"));
-        assertEquals(1, source.resolve(sftp(Map.of()), ctx).size());
+        assertEquals(1, source.resolve(persistedSource(sftp(Map.of())), ctx, "alice").size());
     }
 
     @Test
@@ -133,8 +137,9 @@ class NetworkInputSourceTest {
         server.put("in/doc.pdf", "data", 1000);
         RecordingContext other = new RecordingContext("p2");
 
-        List<ResolvedInput> mine = source.resolve(sftp(Map.of()), ctx);
-        List<ResolvedInput> theirs = source.resolve(sftp(Map.of()), other);
+        List<ResolvedInput> mine = source.resolve(persistedSource(sftp(Map.of())), ctx, "alice");
+        List<ResolvedInput> theirs =
+                source.resolve(persistedSource(sftp(Map.of())), other, "alice");
         assertEquals(1, mine.size());
         assertEquals(1, theirs.size());
 
@@ -149,13 +154,16 @@ class NetworkInputSourceTest {
     void aFailedFileStaysInPlaceAndIsNotRetriedUntilItChanges() throws Exception {
         server.put("in/doc.pdf", "data", 1000);
 
-        source.resolve(sftp(Map.of()), ctx).get(0).onComplete().accept(false);
+        source.resolve(persistedSource(sftp(Map.of())), ctx, "alice")
+                .get(0)
+                .onComplete()
+                .accept(false);
 
         assertTrue(server.has("in/doc.pdf"));
-        assertTrue(source.resolve(sftp(Map.of()), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(sftp(Map.of())), ctx, "alice").isEmpty());
 
         server.put("in/doc.pdf", "data", 2000); // touched: new mtime is a new version
-        assertEquals(1, source.resolve(sftp(Map.of()), ctx).size());
+        assertEquals(1, source.resolve(persistedSource(sftp(Map.of())), ctx, "alice").size());
     }
 
     @Test
@@ -163,9 +171,9 @@ class NetworkInputSourceTest {
         server.put("in/doc.pdf", "data", 1000);
         InputSpec spec = sftp(Map.of("mode", "snapshot"));
 
-        List<ResolvedInput> first = source.resolve(spec, ctx);
+        List<ResolvedInput> first = source.resolve(persistedSource(spec), ctx, "alice");
         first.get(0).onComplete().accept(true);
-        List<ResolvedInput> second = source.resolve(spec, ctx);
+        List<ResolvedInput> second = source.resolve(persistedSource(spec), ctx, "alice");
 
         assertEquals(1, first.size());
         assertEquals(1, second.size()); // no ledger involvement
@@ -177,7 +185,7 @@ class NetworkInputSourceTest {
     void streamsTheFileContent() throws Exception {
         server.put("in/doc.pdf", "hello", 1000);
 
-        List<ResolvedInput> work = source.resolve(sftp(Map.of()), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(sftp(Map.of())), ctx, "alice");
         try (InputStream in = work.get(0).inputs().primary().get(0).getInputStream()) {
             assertEquals("hello", new String(in.readAllBytes(), StandardCharsets.UTF_8));
         }

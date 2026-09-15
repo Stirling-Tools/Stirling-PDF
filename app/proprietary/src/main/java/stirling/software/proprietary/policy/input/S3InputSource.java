@@ -91,11 +91,7 @@ public class S3InputSource implements InputSource {
     @Override
     public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
             throws IOException {
-        return resolve(source.toInputSpec(), ctx);
-    }
-
-    @Override
-    public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
+        InputSpec spec = source.toInputSpec();
         S3Config config = connectionResolver.resolve(spec.options());
         S3Client client = connectionPool.clientFor(config);
         // A listing failure propagates so the sweep reads it as "could not list" (which vetoes

@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -75,12 +76,12 @@ class S3InputSourceTest {
     void trackKeepsOriginalsAndOnlyClaimsChangedObjects() throws IOException {
         listingReturns(object("doc.pdf", "etag-1"));
         InputSpec tracked = new InputSpec("s3", options(Map.of("mode", "track")));
-        source.resolve(tracked, ctx).getFirst().onComplete().accept(true);
-        assertTrue(source.resolve(tracked, ctx).isEmpty());
+        source.resolve(persistedSource(tracked), ctx, "alice").getFirst().onComplete().accept(true);
+        assertTrue(source.resolve(persistedSource(tracked), ctx, "alice").isEmpty());
         verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
         verify(s3Client, never()).headObject(any(HeadObjectRequest.class));
         listingReturns(object("doc.pdf", "etag-2"));
-        assertEquals(1, source.resolve(tracked, ctx).size());
+        assertEquals(1, source.resolve(persistedSource(tracked), ctx, "alice").size());
     }
 
     @Test
@@ -88,16 +89,16 @@ class S3InputSourceTest {
         listingReturns(object("doc.pdf", "\"etag-1\""));
         headReturns("doc.pdf", "\"etag-1\"");
 
-        List<ResolvedInput> work = source.resolve(spec(), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec()), ctx, "alice");
 
         assertEquals(1, work.size());
         assertEquals(1, work.get(0).inputs().primary().size());
         // In flight: a second sweep does not pick it up again.
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
 
         work.get(0).onComplete().accept(true);
         verify(s3Client).deleteObject(any(DeleteObjectRequest.class));
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
     }
 
     @Test
@@ -106,14 +107,14 @@ class S3InputSourceTest {
         // The object is overwritten while the run is executing.
         headReturns("doc.pdf", "\"etag-2\"");
 
-        List<ResolvedInput> work = source.resolve(spec(), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec()), ctx, "alice");
         work.get(0).onComplete().accept(true);
 
         // The delete is version-guarded: the replacement is not the object that ran, so it stays
         // and is claimed as fresh work instead of being marked processed.
         verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
         listingReturns(object("doc.pdf", "\"etag-2\""));
-        assertEquals(1, source.resolve(spec(), ctx).size());
+        assertEquals(1, source.resolve(persistedSource(spec()), ctx, "alice").size());
     }
 
     @Test
@@ -122,8 +123,8 @@ class S3InputSourceTest {
         headReturns("doc.pdf", "\"etag-1\"");
         RecordingContext other = new RecordingContext("p2");
 
-        List<ResolvedInput> mine = source.resolve(spec(), ctx);
-        List<ResolvedInput> theirs = source.resolve(spec(), other);
+        List<ResolvedInput> mine = source.resolve(persistedSource(spec()), ctx, "alice");
+        List<ResolvedInput> theirs = source.resolve(persistedSource(spec()), other, "alice");
         assertEquals(1, mine.size());
         assertEquals(1, theirs.size());
 
@@ -139,14 +140,14 @@ class S3InputSourceTest {
     void aFailedObjectStaysAndIsNotRetriedUntilItChanges() throws IOException {
         listingReturns(object("doc.pdf", "\"etag-1\""));
 
-        source.resolve(spec(), ctx).get(0).onComplete().accept(false);
+        source.resolve(persistedSource(spec()), ctx, "alice").get(0).onComplete().accept(false);
 
         verify(s3Client, never()).deleteObject(any(DeleteObjectRequest.class));
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
 
         // A new upload carries a new ETag, which reads as a new version and retries.
         listingReturns(object("doc.pdf", "\"etag-2\""));
-        assertEquals(1, source.resolve(spec(), ctx).size());
+        assertEquals(1, source.resolve(persistedSource(spec()), ctx, "alice").size());
     }
 
     @Test
@@ -154,9 +155,9 @@ class S3InputSourceTest {
         listingReturns(object("doc.pdf", "\"etag-1\""));
         InputSpec spec = new InputSpec("s3", options(Map.of("mode", "snapshot")));
 
-        List<ResolvedInput> first = source.resolve(spec, ctx);
+        List<ResolvedInput> first = source.resolve(persistedSource(spec), ctx, "alice");
         first.get(0).onComplete().accept(true);
-        List<ResolvedInput> second = source.resolve(spec, ctx);
+        List<ResolvedInput> second = source.resolve(persistedSource(spec), ctx, "alice");
 
         assertEquals(1, first.size());
         assertEquals(1, second.size());
@@ -172,7 +173,7 @@ class S3InputSourceTest {
                 object(".stirling/tmp/staged.pdf", "\"etag-3\""),
                 object("incoming/.hidden.pdf", "\"etag-4\""));
 
-        List<ResolvedInput> work = source.resolve(spec(), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec()), ctx, "alice");
 
         assertEquals(1, work.size());
         assertEquals(List.of("s3://" + BUCKET + "/doc.pdf"), ctx.present);
@@ -190,7 +191,7 @@ class S3InputSourceTest {
         when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
                 .thenReturn(firstPage, secondPage);
 
-        assertEquals(2, source.resolve(spec(), ctx).size());
+        assertEquals(2, source.resolve(persistedSource(spec()), ctx, "alice").size());
     }
 
     @Test
@@ -198,7 +199,9 @@ class S3InputSourceTest {
         when(s3Client.listObjectsV2(any(ListObjectsV2Request.class)))
                 .thenThrow(SdkClientException.create("connection refused"));
 
-        assertThrows(SdkClientException.class, () -> source.resolve(spec(), ctx));
+        assertThrows(
+                SdkClientException.class,
+                () -> source.resolve(persistedSource(spec()), ctx, "alice"));
     }
 
     @Test
@@ -211,7 +214,12 @@ class S3InputSourceTest {
                                 GetObjectResponse.builder().build(),
                                 AbortableInputStream.create(new ByteArrayInputStream(payload))));
 
-        var resource = source.resolve(spec(), ctx).get(0).inputs().primary().get(0);
+        var resource =
+                source.resolve(persistedSource(spec()), ctx, "alice")
+                        .get(0)
+                        .inputs()
+                        .primary()
+                        .get(0);
 
         assertEquals("doc.pdf", resource.getFilename());
         // Content length comes from the listing, not a download.
@@ -226,10 +234,10 @@ class S3InputSourceTest {
         Instant modified = Instant.parse("2026-01-01T00:00:00Z");
         listingReturns(S3Object.builder().key("doc.pdf").size(4L).lastModified(modified).build());
 
-        assertEquals(1, source.resolve(spec(), ctx).size());
+        assertEquals(1, source.resolve(persistedSource(spec()), ctx, "alice").size());
         // The same gate on the next sweep reads as already claimed.
         listingReturns(S3Object.builder().key("doc.pdf").size(4L).lastModified(modified).build());
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
     }
 
     @Test

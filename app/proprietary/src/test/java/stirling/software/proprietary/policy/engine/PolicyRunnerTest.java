@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -34,7 +35,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
-import stirling.software.proprietary.policy.input.FolderInputSource;
+import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
@@ -62,7 +63,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
 class PolicyRunnerTest {
 
     @Mock private PolicyEngine policyEngine;
-    @Mock private FolderInputSource folderSource;
+    @Mock private InputSource folderSource;
     @Mock private ProcessedLedger processedLedger;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
@@ -71,7 +72,6 @@ class PolicyRunnerTest {
 
     @BeforeEach
     void setUp() throws IOException {
-        lenient().when(folderSource.resolve(any(Source.class), any(), any())).thenCallRealMethod();
         runner =
                 new PolicyRunner(
                         policyEngine,
@@ -119,7 +119,10 @@ class PolicyRunnerTest {
         ledger.claim("p1", "/in/failed.pdf", "g2", null);
         ledger.settle("p1", "/in/failed.pdf", "g2", null, false);
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any()))
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
                 .thenAnswer(
                         invocation -> {
                             ResolveContext ctx = invocation.getArgument(1);
@@ -142,7 +145,10 @@ class PolicyRunnerTest {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any()))
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
                 .thenReturn(
                         List.of(
                                 ResolvedInput.of(PolicyInputs.of(List.of())),
@@ -162,7 +168,11 @@ class PolicyRunnerTest {
         AtomicBoolean outcome = new AtomicBoolean(false);
         ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), null, outcome::set);
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
+                .thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));
@@ -183,7 +193,11 @@ class PolicyRunnerTest {
         AtomicBoolean outcome = new AtomicBoolean(true);
         ResolvedInput unit = new ResolvedInput(PolicyInputs.of(List.of()), null, outcome::set);
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
+                .thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));
@@ -211,7 +225,10 @@ class PolicyRunnerTest {
         Policy policy = policy(List.of(spec));
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.listsExhaustively()).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any()))
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
                 .thenAnswer(
                         invocation -> {
                             ResolveContext ctx = invocation.getArgument(1);
@@ -232,7 +249,10 @@ class PolicyRunnerTest {
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any()))
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
                 .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
         when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
@@ -251,8 +271,15 @@ class PolicyRunnerTest {
         Policy policy = policy(List.of(broken, healthy));
         when(folderSource.supports(any())).thenReturn(true);
         when(folderSource.listsExhaustively()).thenReturn(true);
-        when(folderSource.resolve(eq(broken), any())).thenThrow(new IOException("mount gone"));
-        when(folderSource.resolve(eq(healthy), any()))
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(broken)),
+                        any(),
+                        eq("owner")))
+                .thenThrow(new IOException("mount gone"));
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(healthy)),
+                        any(),
+                        eq("owner")))
                 .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
         when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
@@ -282,7 +309,11 @@ class PolicyRunnerTest {
         Policy policy = policy(List.of(spec));
         when(folderSource.supports(spec)).thenReturn(true);
         when(folderSource.listsExhaustively()).thenReturn(false);
-        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of());
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
+                .thenReturn(List.of());
 
         runner.run(policy);
 
@@ -335,7 +366,10 @@ class PolicyRunnerTest {
         Policy policy = policy(List.of(spec));
         String sourceId = policy.inputs().getFirst().sourceId();
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any()))
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
                 .thenReturn(
                         List.of(
                                 ResolvedInput.forFile(
@@ -514,7 +548,11 @@ class PolicyRunnerTest {
         ResolvedInput unit =
                 new ResolvedInput(PolicyInputs.of(List.of()), "/in/doc.pdf", outcome::set);
         when(folderSource.supports(spec)).thenReturn(true);
-        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit));
+        when(folderSource.resolve(
+                        argThat(stored -> stored != null && stored.toInputSpec().equals(spec)),
+                        any(),
+                        eq("owner")))
+                .thenReturn(List.of(unit));
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PolicyRunHandle("r", completion));

@@ -5,6 +5,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -80,14 +81,14 @@ class WebhookLocalDeliveryE2eTest {
         assertThat(response.getStatusCode().value()).isEqualTo(202);
         verify(trigger).fireForWebhook(WEBHOOK_ID);
 
-        List<ResolvedInput> work = inputSource.resolve(spec(), ctx);
+        List<ResolvedInput> work = inputSource.resolve(persistedSource(spec()), ctx, "alice");
         assertThat(work).hasSize(1);
         assertThat(work.get(0).inputs().primary().get(0).getFilename()).isEqualTo("invoice.pdf");
         assertThat(read(work.get(0))).isEqualTo("a pdf");
-        assertThat(inputSource.resolve(spec(), ctx)).isEmpty();
+        assertThat(inputSource.resolve(persistedSource(spec()), ctx, "alice")).isEmpty();
 
         work.get(0).onComplete().accept(true);
-        assertThat(inputSource.resolve(spec(), ctx)).isEmpty();
+        assertThat(inputSource.resolve(persistedSource(spec()), ctx, "alice")).isEmpty();
     }
 
     private static InputSpec spec() {

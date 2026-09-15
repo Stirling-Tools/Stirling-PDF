@@ -101,11 +101,12 @@ class ProcessingFolderControllerTest {
 
     private User user;
     private Folder folder;
+    private ApplicationProperties properties;
     private ProcessingFolderController controller;
 
     @BeforeEach
     void setUp() {
-        ApplicationProperties properties = new ApplicationProperties();
+        properties = new ApplicationProperties();
         properties.getSecurity().setEnableLogin(true);
         properties.getStorage().setEnabled(true);
 
@@ -534,6 +535,29 @@ class ProcessingFolderControllerTest {
                         null));
 
         assertThat(controller.list()).hasSize(1);
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void existingStorageFolderRejectsFileAccessAfterLoginIsDisabled(boolean retry) {
+        var view = controller.save(request(null, "new_version")).getBody();
+        properties.getSecurity().setEnableLogin(false);
+
+        assertThatThrownBy(
+                        () -> {
+                            if (retry) {
+                                controller.retryFile(
+                                        view.id(),
+                                        new ProcessingFolderController.RetryFileRequest(
+                                                "private.pdf"));
+                            } else {
+                                controller.files(view.id());
+                            }
+                        })
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+        verifyNoInteractions(storedFileRepository);
     }
 
     @ParameterizedTest

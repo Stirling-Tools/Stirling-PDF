@@ -70,11 +70,7 @@ public class WebhookInputSource implements InputSource {
     @Override
     public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
             throws IOException {
-        return resolve(source.toInputSpec(), ctx);
-    }
-
-    @Override
-    public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
+        InputSpec spec = source.toInputSpec();
         WebhookConfig config = WebhookConfig.from(spec.options());
         Path dir = spool.dirFor(config.webhookId());
         if (!Files.isDirectory(dir)) {

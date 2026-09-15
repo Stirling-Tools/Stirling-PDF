@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.input;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -98,7 +99,8 @@ class S3InputSourceMinioTest {
         put("incoming/doc.pdf", "pdf bytes");
         put("incoming/other.txt", "text");
 
-        List<ResolvedInput> work = source.resolve(spec(Map.of("prefix", "incoming/")), ctx);
+        List<ResolvedInput> work =
+                source.resolve(persistedSource(spec(Map.of("prefix", "incoming/"))), ctx, "alice");
 
         assertThat(work).hasSize(2);
         assertThat(ctx.present)
@@ -107,7 +109,10 @@ class S3InputSourceMinioTest {
                         "s3://" + bucket + "/incoming/other.txt");
         assertThat(read(work.get(0))).isIn("pdf bytes", "text");
         // In flight: nothing to claim on a second sweep.
-        assertThat(source.resolve(spec(Map.of("prefix", "incoming/")), ctx)).isEmpty();
+        assertThat(
+                        source.resolve(
+                                persistedSource(spec(Map.of("prefix", "incoming/"))), ctx, "alice"))
+                .isEmpty();
 
         work.forEach(unit -> unit.onComplete().accept(true));
         assertThat(exists("incoming/doc.pdf")).isFalse();
@@ -118,22 +123,25 @@ class S3InputSourceMinioTest {
     void aFailedObjectStaysInTheBucket() throws IOException {
         put("doc.pdf", "data");
 
-        source.resolve(spec(Map.of()), ctx).get(0).onComplete().accept(false);
+        source.resolve(persistedSource(spec(Map.of())), ctx, "alice")
+                .get(0)
+                .onComplete()
+                .accept(false);
 
         assertThat(exists("doc.pdf")).isTrue();
-        assertThat(source.resolve(spec(Map.of()), ctx)).isEmpty();
+        assertThat(source.resolve(persistedSource(spec(Map.of())), ctx, "alice")).isEmpty();
     }
 
     @Test
     void anObjectOverwrittenMidRunSurvivesTheDeleteAndRunsAgain() throws IOException {
         put("doc.pdf", "v1");
 
-        List<ResolvedInput> work = source.resolve(spec(Map.of()), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec(Map.of())), ctx, "alice");
         put("doc.pdf", "v2 with a different etag");
         work.get(0).onComplete().accept(true);
 
         assertThat(exists("doc.pdf")).isTrue();
-        assertThat(source.resolve(spec(Map.of()), ctx)).hasSize(1);
+        assertThat(source.resolve(persistedSource(spec(Map.of())), ctx, "alice")).hasSize(1);
     }
 
     @Test
@@ -141,7 +149,8 @@ class S3InputSourceMinioTest {
         put("incoming/doc.pdf", "data");
         put("archive/old.pdf", "data");
 
-        List<ResolvedInput> work = source.resolve(spec(Map.of("prefix", "incoming/")), ctx);
+        List<ResolvedInput> work =
+                source.resolve(persistedSource(spec(Map.of("prefix", "incoming/"))), ctx, "alice");
 
         assertThat(work).hasSize(1);
         assertThat(ctx.present).containsExactly("s3://" + bucket + "/incoming/doc.pdf");
