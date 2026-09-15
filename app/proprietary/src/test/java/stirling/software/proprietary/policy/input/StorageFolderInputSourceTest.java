@@ -13,7 +13,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Supplier;
 
@@ -75,7 +74,6 @@ class StorageFolderInputSourceTest {
     void claimsEachFileOncePerContentVersion() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
         when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
 
         List<ResolvedInput> work = source.resolve(spec(), ctx);
 
@@ -98,7 +96,13 @@ class StorageFolderInputSourceTest {
 
         // The run replaces the file's content in place before completion fires.
         file.setUpdatedAt(T2);
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
+        blobContent = "processed-output".getBytes();
+        ((StoredFileBacked) work.getFirst().inputs().primary().getFirst())
+                .recordReplacement(
+                        stirling.software.proprietary.policy.ledger.StorageFileIdentities.gate(
+                                file),
+                        stirling.software.proprietary.policy.ledger.StorageFileIdentities
+                                .contentHash(storageProvider, file));
         work.get(0).onComplete().accept(true);
 
         // The next sweep sees the bumped version already settled — no self-feeding loop.
@@ -109,7 +113,6 @@ class StorageFolderInputSourceTest {
     void aGenuineEditIsPickedUpAgain() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
         when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
 
         source.resolve(spec(), ctx).get(0).onComplete().accept(true);
 
@@ -123,7 +126,6 @@ class StorageFolderInputSourceTest {
     void aMetadataOnlyBumpDoesNotReprocess() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
         when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
 
         source.resolve(spec(), ctx).get(0).onComplete().accept(true);
 
@@ -147,7 +149,6 @@ class StorageFolderInputSourceTest {
     void aFailedRunLeavesTheFileForItsNextVersion() throws IOException {
         StoredFile file = storedFile(1L, "doc.pdf", T1);
         when(storedFileRepository.findAllByFolderId(FOLDER)).thenReturn(List.of(file));
-        when(storedFileRepository.findById(1L)).thenReturn(Optional.of(file));
 
         source.resolve(spec(), ctx).get(0).onComplete().accept(false);
 

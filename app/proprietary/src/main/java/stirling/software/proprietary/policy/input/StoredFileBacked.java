@@ -7,4 +7,10 @@ package stirling.software.proprietary.policy.input;
 public interface StoredFileBacked {
 
     Long storedFileId();
+
+    /** Content revision captured when the input was discovered, required for conditional writes. */
+    long storedFileVersion();
+
+    /** Record only a committed replacement produced by this run, never a later user upload. */
+    void recordReplacement(String gate, String contentHash);
 }
