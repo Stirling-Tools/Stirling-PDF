@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useWallet } from "@app/hooks/useWallet";
+import { useWallet, type UseWalletOptions } from "@app/hooks/useWallet";
 import {
   readCachedCredits,
   writeCachedCredits,
@@ -29,8 +29,11 @@ function toCredits(
  * animates in. The seed is read once, at first render: later reads would fight
  * the live value, and the whole point is that the row stops moving.
  */
-export function useFreeCreditsSummary(): NavFooterCredits | null {
-  const { wallet } = useWallet();
+export function useFreeCreditsSummary(
+  options?: UseWalletOptions,
+): NavFooterCredits | null {
+  const enabled = options?.enabled ?? true;
+  const { wallet } = useWallet({ enabled });
   const [seed] = useState(readCachedCredits);
 
   const live = wallet
@@ -40,9 +43,13 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   // useWallet reuses the snapshot reference when nothing changed, so keying on
   // it writes only on a real change, not on every render.
   useEffect(() => {
-    if (live !== undefined) writeCachedCredits(live);
+    if (enabled && live !== undefined) writeCachedCredits(live);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallet]);
+  }, [enabled, wallet]);
 
+  // Disabled gates the seed as well as the fetch, the way the portal gates both on linkage: the
+  // cache outlives the build that wrote it, so a desktop that once ran against the cloud would
+  // otherwise keep showing that session's figures with nothing left to refresh them.
+  if (!enabled) return null;
   return (live !== undefined ? live : seed) ?? null;
 }
