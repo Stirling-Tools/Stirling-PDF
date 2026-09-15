@@ -16,6 +16,58 @@ const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
+// Let the two precompression passes saturate more than the default 4 libuv
+// threads. Must be set before zlib first uses the threadpool, so it lives at
+// the top of the config module.
+process.env.UV_THREADPOOL_SIZE ??= "64";
+
+// Extensions never precompressed by either pass; the compression plugin's
+// regex and the static-copy walk derive from one list so they cannot drift.
+const COMPRESSION_EXCLUDED_EXTENSIONS = [
+  ".gz",
+  ".br",
+  ".png",
+  ".jpg",
+  ".jpeg",
+  ".gif",
+  ".webp",
+  ".woff",
+  ".woff2",
+];
+const COMPRESSION_EXCLUDE_REGEX = new RegExp(
+  `\\.(${COMPRESSION_EXCLUDED_EXTENSIONS.map((e) => e.slice(1)).join("|")})$`,
+);
+const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
+
+/**
+ * Writes .gz and .br siblings for one file, both encoders in flight at once.
+ *
+ * Only ever reads inside the build output dir. All inputs derive from a walk of
+ * dist, but the guard keeps any stray path from escaping it.
+ */
+async function compressFile(file: string, distDir: string): Promise<void> {
+  const resolved = path.resolve(file);
+  if (!resolved.startsWith(`${path.resolve(distDir)}${path.sep}`)) return;
+
+  const ext = path.extname(resolved).toLowerCase();
+  if (EXCLUDED_EXTENSION_SET.has(ext)) return;
+  const content = await fs.readFile(resolved);
+  if (content.length < 1024) return;
+
+  const [gzipped, brotlied] = await Promise.all([
+    gzipPromise(content, { level: 9 }),
+    brotliPromise(content, {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: 11,
+      },
+    }),
+  ]);
+  await Promise.all([
+    fs.writeFile(`${resolved}.gz`, gzipped),
+    fs.writeFile(`${resolved}.br`, brotlied),
+  ]);
+}
+
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
@@ -24,53 +76,31 @@ function compressStaticCopyPlugin(): PluginOption {
       const distDir = path.resolve(__dirname, "dist");
       const targets = ["pdfium", "vendor", "pdfjs"];
 
-      const excludedExtensions = [
-        ".gz",
-        ".br",
-        ".png",
-        ".jpg",
-        ".jpeg",
-        ".gif",
-        ".webp",
-        ".woff",
-        ".woff2",
-      ];
-
-      async function walkAndCompress(dirOrFile: string) {
-        let stat;
+      // Collect first, then compress with bounded concurrency. zlib's async API
+      // runs on libuv's threadpool, so a serial loop idles most cores on the
+      // build's most CPU-heavy step.
+      const files: string[] = [];
+      const walk = async (dir: string) => {
+        let entries;
         try {
-          stat = await fs.stat(dirOrFile);
+          entries = await fs.readdir(dir, { withFileTypes: true });
         } catch {
           return;
         }
-
-        if (stat.isFile()) {
-          const ext = path.extname(dirOrFile).toLowerCase();
-          if (stat.size >= 1024 && !excludedExtensions.includes(ext)) {
-            const content = await fs.readFile(dirOrFile);
-
-            // Gzip (level 9)
-            const gzipped = await gzipPromise(content, { level: 9 });
-            await fs.writeFile(`${dirOrFile}.gz`, gzipped);
-
-            // Brotli (quality 11)
-            const brotlied = await brotliPromise(content, {
-              params: {
-                [constants.BROTLI_PARAM_QUALITY]: 11,
-              },
-            });
-            await fs.writeFile(`${dirOrFile}.br`, brotlied);
-          }
-        } else if (stat.isDirectory()) {
-          const files = await fs.readdir(dirOrFile);
-          for (const file of files) {
-            await walkAndCompress(path.join(dirOrFile, file));
-          }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walk(p);
+          else files.push(p);
         }
-      }
+      };
 
-      for (const target of targets) {
-        await walkAndCompress(path.join(distDir, target));
+      for (const target of targets) await walk(path.join(distDir, target));
+
+      const POOL = 8;
+      for (let i = 0; i < files.length; i += POOL) {
+        await Promise.all(
+          files.slice(i, i + POOL).map((f) => compressFile(f, distDir)),
+        );
       }
     },
   };
@@ -330,7 +360,7 @@ export default defineConfig(async ({ mode, command }) => {
       }),
       compression({
         threshold: 1024,
-        exclude: [/\.(png|jpg|jpeg|gif|webp|woff|woff2)$/],
+        exclude: [COMPRESSION_EXCLUDE_REGEX],
         algorithms: [
           defineAlgorithm("gzip", { level: 9 }),
           defineAlgorithm("brotliCompress", {
