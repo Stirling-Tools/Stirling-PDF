@@ -29,9 +29,6 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
     panRef.current = pan;
   }, [pan]);
 
-  // Track previous isPanning value to detect changes
-  const prevIsPanningRef = useRef<boolean>(isPanning);
-
   useEffect(() => {
     const currentPan = panRef.current;
     if (currentPan) {
@@ -52,28 +49,22 @@ function PanAPIBridgeInner({ documentId }: { documentId: string }) {
           toggle: () => {
             currentPan.togglePan();
           },
-          makePanDefault: () => {
-            // v2.5.0: makePanDefault may not exist, enable pan as fallback
-            const withDefault = currentPan as { makePanDefault?: () => void };
-            if (typeof withDefault.makePanDefault === "function") {
-              withDefault.makePanDefault();
-            } else {
-              currentPan.enablePan();
-            }
-          },
         },
       });
 
-      if (prevIsPanningRef.current !== isPanning) {
-        prevIsPanningRef.current = isPanning;
-        triggerImmediatePanUpdate(isPanning);
-      }
+      triggerImmediatePanUpdate(isPanning);
     }
 
     return () => {
       registerBridge("pan", null);
     };
   }, [isPanning, registerBridge, triggerImmediatePanUpdate]);
+
+  useEffect(() => {
+    return () => {
+      triggerImmediatePanUpdate(false);
+    };
+  }, [triggerImmediatePanUpdate]);
 
   return null;
 }

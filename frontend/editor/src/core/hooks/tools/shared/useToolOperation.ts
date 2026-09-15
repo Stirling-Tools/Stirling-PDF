@@ -1,5 +1,9 @@
 import { useCallback, useRef, useEffect, useContext } from "react";
 import apiClient from "@app/services/apiClient";
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
@@ -168,11 +172,16 @@ export const useToolOperation = <TParams>(
       ) {
         return;
       }
+      // The request body, not TParams: buildFormData posts what toApiParams returns, and the two
+      // shapes are free to disagree. A tool with no mapper stashes its UI shape and says so, so
+      // the row keeps its plain retry without anything re-running those parameters unattended.
+      const apiParams = config.toApiParams?.(params);
       void errorCodeOf(error).then((errorCode) =>
         stashRetryPayload({
           operation: config.operationType,
           endpoint: runtimeEndpoint,
-          params: params as Record<string, unknown>,
+          params: (apiParams ?? params) as Record<string, unknown>,
+          paramsMapped: apiParams !== undefined,
           fileIds,
           multiFile: config.toolType === ToolType.multiFile,
           errorCode,
@@ -180,7 +189,7 @@ export const useToolOperation = <TParams>(
         }),
       );
     },
-    [config.operationType, config.toolType, notificationsAvailable],
+    [config, notificationsAvailable],
   );
 
   const getCompatibleFiles = useCallback(
@@ -220,6 +229,16 @@ export const useToolOperation = <TParams>(
 
   const executeOperation = useCallback(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
+      const policyIds = selectedFiles.flatMap((file) => {
+        const stub = selectors.getStirlingFileStub(file.fileId);
+        return stub ? policySourceIds(stub) : [file.fileId];
+      });
+      try {
+        assertFilesNotBlocked(policyIds);
+      } catch (error) {
+        actions.setError(extractErrorMessage(error));
+        return;
+      }
       // Validation
       if (selectedFiles.length === 0) {
         actions.setError(t("noFileSelected", "No file loaded"));
@@ -298,6 +317,7 @@ export const useToolOperation = <TParams>(
       window.addEventListener(FILE_EVENTS.markError, errorListener);
 
       try {
+        assertFilesNotBlocked(policyIds);
         let processedFiles: File[];
         let successSourceIds: FileId[] = [];
 
@@ -476,6 +496,7 @@ export const useToolOperation = <TParams>(
         }
 
         if (processedFiles.length > 0) {
+          assertFilesNotBlocked(policyIds);
           trackEditorOperation(
             config.operationType,
             successSourceIds.length || validFiles.length,
@@ -491,6 +512,7 @@ export const useToolOperation = <TParams>(
           actions.setGeneratingThumbnails(false);
 
           actions.setThumbnails(thumbnails);
+          assertFilesNotBlocked(policyIds);
 
           // Determine whether outputs are new versions of their inputs or independent artifacts.
           // A version operation produces exactly one output per successful input, all in the same
@@ -578,6 +600,7 @@ export const useToolOperation = <TParams>(
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
             });
+            assertFilesNotBlocked(policyIds);
             const outputFileIds = await consumeFiles(
               toConsumeInputIds,
               outputStirlingFiles,
@@ -654,6 +677,7 @@ export const useToolOperation = <TParams>(
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
             });
+            assertFilesNotBlocked(policyIds);
             const outputFileIds = await consumeFiles(
               toConsumeInputIds,
               outputStirlingFiles,

@@ -19,6 +19,8 @@ class WalletSnapshotResponseTest {
         return new WalletSnapshotResponse(
                 7L,
                 "subscribed",
+                new WalletSnapshotResponse.TeamHolding(true, 100, 12),
+                new WalletSnapshotResponse.ProcessorHolding(true),
                 "leader",
                 "2026-06-01",
                 "2026-07-01",
@@ -26,6 +28,7 @@ class WalletSnapshotResponseTest {
                 /* billableLimit= */ 100,
                 /* freeAllowance= */ 500,
                 /* freeRemaining= */ 488,
+                /* freeUserAllowance= */ 5,
                 new BigDecimal("1.5"),
                 "usd",
                 /* estimatedBillMinor= */ 1800L,
@@ -60,6 +63,7 @@ class WalletSnapshotResponseTest {
         assertThat(r.billableLimit()).isEqualTo(100);
         assertThat(r.freeAllowance()).isEqualTo(500);
         assertThat(r.freeRemaining()).isEqualTo(488);
+        assertThat(r.freeUserAllowance()).isEqualTo(5);
         assertThat(r.pricePerDocMinor()).isEqualByComparingTo("1.5");
         assertThat(r.currency()).isEqualTo("usd");
         assertThat(r.estimatedBillMinor()).isEqualTo(1800L);
@@ -100,6 +104,8 @@ class WalletSnapshotResponseTest {
                 new WalletSnapshotResponse(
                         7L,
                         "free",
+                        new WalletSnapshotResponse.TeamHolding(false, null, 1),
+                        new WalletSnapshotResponse.ProcessorHolding(false),
                         "member",
                         "2026-06-01",
                         "2026-07-01",
@@ -107,6 +113,7 @@ class WalletSnapshotResponseTest {
                         null,
                         500,
                         500,
+                        5,
                         null,
                         null,
                         null,

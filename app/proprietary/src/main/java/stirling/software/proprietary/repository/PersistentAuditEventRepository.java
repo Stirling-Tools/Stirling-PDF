@@ -285,10 +285,10 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
 
     @Query(
             "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
-                    + "WHERE e.source = :source AND e.type <> :excludeType AND e.timestamp > :since")
-    long countDistinctPrincipalsBySourceExcludingTypeAfter(
+                    + "WHERE e.source = :source AND e.type IN :types AND e.timestamp > :since")
+    long countDistinctPrincipalsBySourceAndTypeInAfter(
             @Param("source") String source,
-            @Param("excludeType") String excludeType,
+            @Param("types") List<String> types,
             @Param("since") Instant since);
 
     // Team-scoped (SaaS) variants: same free-UI counts, constrained to a team's member principals.
@@ -304,11 +304,11 @@ public interface PersistentAuditEventRepository extends JpaRepository<Persistent
 
     @Query(
             "SELECT COUNT(DISTINCT e.principal) FROM PersistentAuditEvent e "
-                    + "WHERE e.source = :source AND e.type <> :excludeType "
+                    + "WHERE e.source = :source AND e.type IN :types "
                     + "AND e.principal IN :principals AND e.timestamp > :since")
-    long countDistinctPrincipalsBySourceExcludingTypeAndPrincipalInAfter(
+    long countDistinctPrincipalsBySourceAndTypeInAndPrincipalInAfter(
             @Param("source") String source,
-            @Param("excludeType") String excludeType,
+            @Param("types") List<String> types,
             @Param("principals") List<String> principals,
             @Param("since") Instant since);
 }

@@ -3,12 +3,17 @@ package stirling.software.common.util;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -198,6 +203,113 @@ class YamlHelperMoreTest {
             assertThat(YamlHelper.isInteger(null)).isFalse();
             assertThat(YamlHelper.isInteger((byte) 3)).isTrue();
             assertThat(YamlHelper.isInteger((short) 9)).isTrue();
+        }
+    }
+
+    @Nested
+    @DisplayName("publishing a saved file")
+    class Publishing {
+
+        private void posixOnly() {
+            Assumptions.assumeTrue(
+                    FileSystems.getDefault().supportedFileAttributeViews().contains("posix"));
+        }
+
+        private void bumpPort(Path file) throws IOException {
+            YamlHelper h = new YamlHelper(file);
+            h.updateValue(List.of("server", "port"), "9090");
+            h.saveOverride(file);
+        }
+
+        @Test
+        @DisplayName("keeps the target's existing permissions")
+        void preservesMode(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path file = dir.resolve("settings.yml");
+            Files.writeString(file, "server:\n  port: 80\n");
+            Set<PosixFilePermission> mode = PosixFilePermissions.fromString("rw-rw-r--");
+            Files.setPosixFilePermissions(file, mode);
+
+            bumpPort(file);
+
+            assertThat(Files.readString(file)).contains("9090");
+            assertThat(Files.getPosixFilePermissions(file)).isEqualTo(mode);
+        }
+
+        @Test
+        @DisplayName("stages the content in an owner-only file")
+        void stagingFileIsOwnerOnly(@TempDir Path dir) throws IOException {
+            posixOnly();
+
+            Path staged = YamlHelper.createStagingFile(dir);
+
+            assertThat(Files.getPosixFilePermissions(staged))
+                    .containsExactlyInAnyOrder(
+                            PosixFilePermission.OWNER_READ, PosixFilePermission.OWNER_WRITE);
+        }
+
+        @Test
+        @DisplayName("keeps an owner-only target owner-only")
+        void preservesTightMode(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path file = dir.resolve("settings.yml");
+            Files.writeString(file, "server:\n  port: 80\n");
+            Set<PosixFilePermission> mode = PosixFilePermissions.fromString("rw-------");
+            Files.setPosixFilePermissions(file, mode);
+
+            bumpPort(file);
+
+            assertThat(Files.readString(file)).contains("9090");
+            assertThat(Files.getPosixFilePermissions(file)).isEqualTo(mode);
+        }
+
+        @Test
+        @DisplayName("writes through a symlink whose target does not exist yet")
+        void followsDanglingSymlink(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path seed = dir.resolve("seed.yml");
+            Files.writeString(seed, "server:\n  port: 80\n");
+            Path real = dir.resolve("real.yml");
+            Path link = dir.resolve("settings.yml");
+            Files.createSymbolicLink(link, real.getFileName());
+
+            YamlHelper h = new YamlHelper(seed);
+            h.updateValue(List.of("server", "port"), "9090");
+            h.saveOverride(link);
+
+            assertThat(Files.isSymbolicLink(link)).isTrue();
+            assertThat(Files.readString(real)).contains("9090");
+        }
+
+        @Test
+        @DisplayName("writes through a symlink instead of replacing it")
+        void followsSymlink(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path real = dir.resolve("real.yml");
+            Files.writeString(real, "server:\n  port: 80\n");
+            Path link = dir.resolve("settings.yml");
+            Files.createSymbolicLink(link, real);
+
+            bumpPort(link);
+
+            assertThat(Files.isSymbolicLink(link)).isTrue();
+            assertThat(Files.readString(real)).contains("9090");
+        }
+
+        @Test
+        @DisplayName("falls back to an in-place write when the directory will not take a temp file")
+        void stagingFailureStillPublishes(@TempDir Path dir) throws IOException {
+            posixOnly();
+            Path locked = Files.createDirectory(dir.resolve("configs"));
+            Path file = locked.resolve("settings.yml");
+            Files.writeString(file, "server:\n  port: 80\n");
+            Files.setPosixFilePermissions(locked, PosixFilePermissions.fromString("r-x------"));
+            try {
+                bumpPort(file);
+                assertThat(Files.readString(file)).contains("9090");
+            } finally {
+                Files.setPosixFilePermissions(locked, PosixFilePermissions.fromString("rwx------"));
+            }
         }
     }
 }
