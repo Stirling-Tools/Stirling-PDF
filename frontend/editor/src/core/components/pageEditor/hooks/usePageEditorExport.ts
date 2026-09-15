@@ -6,6 +6,10 @@ import { pdfExportService } from "@app/services/pdfExportService";
 import { exportProcessedDocumentsToFiles } from "@app/services/pdfExportHelpers";
 import { FileId } from "@app/types/file";
 import { PDFDocument, PDFPage } from "@app/types/pageEditor";
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
 
 type FileActions = ReturnType<typeof useFileActions>["actions"];
 type FileSelectors = ReturnType<typeof useFileState>["selectors"];
@@ -69,6 +73,18 @@ export const usePageEditorExport = ({
   clearPersistedDocument,
   updateCurrentPages,
 }: UsePageEditorExportParams) => {
+  const getPolicyIds = useCallback(() => {
+    const ids = new Set([
+      ...selectedFileIds,
+      ...(displayDocument?.pages.flatMap((page) =>
+        page.originalFileId ? [page.originalFileId] : [],
+      ) ?? []),
+    ]);
+    return [...ids].flatMap((id) => {
+      const stub = selectors.getStirlingFileStub(id);
+      return stub ? policySourceIds(stub) : [id];
+    });
+  }, [selectedFileIds, displayDocument, selectors]);
   const getSourceFiles = useCallback((): Map<FileId, File> | null => {
     const sourceFiles = new Map<FileId, File>();
 
@@ -107,7 +123,9 @@ export const usePageEditorExport = ({
     if (!displayDocument || selectedPageIds.length === 0) return;
 
     setExportLoading(true);
+    const policyIds = getPolicyIds();
     try {
+      assertFilesNotBlocked(policyIds);
       const processedDocuments =
         documentManipulationService.applyDOMChangesToDocument(
           displayDocument,
@@ -154,6 +172,7 @@ export const usePageEditorExport = ({
             },
           );
 
+      assertFilesNotBlocked(policyIds);
       pdfExportService.downloadFile(result.blob, result.filename);
       setHasUnsavedChanges(false);
       setSplitPositions(new Set());
@@ -168,6 +187,8 @@ export const usePageEditorExport = ({
     splitPositions,
     getSourceFiles,
     getExportFilename,
+    selectedFileIds,
+    getPolicyIds,
     setHasUnsavedChanges,
     setExportLoading,
   ]);
@@ -176,7 +197,9 @@ export const usePageEditorExport = ({
     if (!displayDocument) return;
 
     setExportLoading(true);
+    const policyIds = getPolicyIds();
     try {
+      assertFilesNotBlocked(policyIds);
       const processedDocuments =
         documentManipulationService.applyDOMChangesToDocument(
           displayDocument,
@@ -219,9 +242,11 @@ export const usePageEditorExport = ({
         const zipBlob = await zip.generateAsync({ type: "blob" });
         const zipFilename = exportFilename.replace(/\.pdf$/i, ".zip");
 
+        assertFilesNotBlocked(policyIds);
         pdfExportService.downloadFile(zipBlob, zipFilename);
       } else {
         const file = files[0];
+        assertFilesNotBlocked(policyIds);
         pdfExportService.downloadFile(file, file.name);
       }
 
@@ -237,6 +262,8 @@ export const usePageEditorExport = ({
     splitPositions,
     getSourceFiles,
     getExportFilename,
+    selectedFileIds,
+    getPolicyIds,
     setHasUnsavedChanges,
     setExportLoading,
   ]);
@@ -245,7 +272,9 @@ export const usePageEditorExport = ({
     if (!displayDocument) return;
 
     setExportLoading(true);
+    const policyIds = getPolicyIds();
     try {
+      assertFilesNotBlocked(policyIds);
       const processedDocuments =
         documentManipulationService.applyDOMChangesToDocument(
           displayDocument,
@@ -277,6 +306,8 @@ export const usePageEditorExport = ({
         exportFilename,
       );
 
+      assertFilesNotBlocked(policyIds);
+
       // Add "_multitool" suffix to filenames
       const renamedFiles = files.map((file) => {
         const nameParts = file.name.match(/^(.+?)(\.pdf)$/i);
@@ -304,6 +335,7 @@ export const usePageEditorExport = ({
         await actions.removeFiles(sourceFileIds, true);
       }
 
+      assertFilesNotBlocked(policyIds);
       const newStirlingFiles = await actions.addFiles(renamedFiles, {
         selectFiles: true,
         skipUploadTracking: true,
@@ -339,8 +371,9 @@ export const usePageEditorExport = ({
     splitPositions,
     getSourceFiles,
     getExportFilename,
-    actions,
     selectedFileIds,
+    getPolicyIds,
+    actions,
     setHasUnsavedChanges,
     setExportLoading,
     clearPersistedDocument,
