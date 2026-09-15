@@ -12,6 +12,7 @@ import {
 } from "@app/components/shared/PolicyBadges";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
+import { useInViewport } from "@app/hooks/useInViewport";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { formatFileSize, IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
@@ -300,13 +301,15 @@ export const FileItem = React.memo(function FileItem({
 
   // Only use raster thumbnails for PDFs and images — everything else uses scalable SVG icons
   const useRasterThumb = ext === "pdf" || IMAGE_EXTENSIONS.has(ext);
+  const itemRef = useRef<HTMLDivElement>(null);
+  const isNearViewport = useInViewport(itemRef);
   const resolvedThumbnail = useLazyThumbnail(
     fileId,
     size ?? 0,
     useRasterThumb ? thumbnailUrl : undefined,
+    isNearViewport,
   );
 
-  const itemRef = useRef<HTMLDivElement>(null);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
   const [menuOpened, setMenuOpened] = useState(false);
 
