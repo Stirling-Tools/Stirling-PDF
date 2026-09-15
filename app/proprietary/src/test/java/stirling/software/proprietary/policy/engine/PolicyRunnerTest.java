@@ -345,7 +345,13 @@ class PolicyRunnerTest {
         runner.run(policy);
 
         verify(policyEngine)
-                .runPolicy(eq(policy), any(), any(), eq(sourceId), eq("/in/doc.pdf"), any());
+                .runPolicy(
+                        eq(policy),
+                        any(),
+                        any(),
+                        eq(sourceStore.get(sourceId).orElseThrow()),
+                        eq("/in/doc.pdf"),
+                        any());
     }
 
     @Test
@@ -373,6 +379,36 @@ class PolicyRunnerTest {
 
         String key = EditorSource.counterKey(7L);
         assertEquals(2, docCounter.statsFor(List.of(key)).get(key).total());
+    }
+
+    @Test
+    void sourcesWithoutReachableOwnersAreNotClaimedOrPruned() {
+        ApplicationProperties loginOn = new ApplicationProperties();
+        loginOn.getSecurity().setEnableLogin(true);
+        PolicyRunner enforced =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        loginOn,
+                        guardOver(loginOn, noUsers()));
+        for (String owner : new String[] {null, "", "deleted-user"}) {
+            Source source =
+                    sourceStore.save(
+                            new Source(
+                                    null,
+                                    "Input",
+                                    "folder",
+                                    Map.of("directory", "/in"),
+                                    true,
+                                    owner,
+                                    null));
+            SweepOutcome outcome = enforced.run(policyReferencing(List.of(source.id())));
+            assertTrue(outcome.runIds().isEmpty());
+        }
+        verifyNoInteractions(folderSource, policyEngine, processedLedger);
     }
 
     @Test
