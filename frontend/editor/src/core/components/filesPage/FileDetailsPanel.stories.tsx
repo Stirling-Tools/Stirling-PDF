@@ -29,6 +29,13 @@ const folder: FolderRecord = {
 const meta = {
   title: "FilesPage/FileDetailsPanel",
   component: FileDetailsPanel,
+  decorators: [
+    (Story) => (
+      <div style={{ width: 320, height: 420, display: "flex" }}>
+        <Story />
+      </div>
+    ),
+  ],
 } satisfies Meta<typeof FileDetailsPanel>;
 export default meta;
 type Story = StoryObj<typeof meta>;
