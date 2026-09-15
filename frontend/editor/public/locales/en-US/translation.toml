@@ -9671,6 +9671,7 @@ sentenceTrial = "set up your trial workspace"
 [portal.procurement.journey]
 daysLeft_one = "{{count}} day left"
 daysLeft_other = "{{count}} days left"
+expired = "Trial expired"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "One signature covers MSA, order form, EULA and DPA."
