@@ -131,11 +131,23 @@ export function QuickNavRailHost() {
     : [reader];
 
   const within: QuickNavEntry[] = [
+    ...(!host?.hasOpenFromComputer
+      ? []
+      : [
+          {
+            id: "openFromComputer",
+            label: t("fileSidebar.openFromComputer", "Open from computer"),
+            icon: <Icon name="file-up" size={SIZE} />,
+            testId: "files-button",
+            onClick: () => host?.actions.current?.openFromComputer?.(),
+          },
+        ]),
     {
       id: "files",
       label: t("fileSidebar.myFiles", "File library"),
       icon: <Icon name="folder" size={SIZE} />,
       current: Boolean(host?.fileLibrary),
+      testId: "my-files-button",
       // Through the app where possible: the library is a view, not a route. From the
       // processor there is no editor to ask, so the path carries it and HomePage seeds
       // the view on arrival. Unwrapped: setting the view runs the app's own

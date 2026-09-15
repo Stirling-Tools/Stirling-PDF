@@ -318,6 +318,14 @@ export default function HomePage() {
     });
   }, []);
 
+  const openFromComputerRef = useRef<(() => void) | null>(null);
+  const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
+    openFromComputerRef.current = open;
+  }, []);
+  const openFromComputer = useCallback(() => {
+    openFromComputerRef.current?.();
+  }, []);
+
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
   );
@@ -479,6 +487,9 @@ export default function HomePage() {
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}
         toolReasons={quickNavToolReasons}
+        onOpenFromComputer={
+          navigationState.workbench === "myFiles" ? undefined : openFromComputer
+        }
       />
       <FilesPageProvider>
         {isMobile ? (
@@ -653,6 +664,7 @@ export default function HomePage() {
                 collapsed={fileSidebarCollapsed}
                 onToggleCollapse={handleSidebarToggle}
                 onOpenSettings={openSettings}
+                onRegisterOpenFromComputer={registerOpenFromComputer}
               />
             </div>
             <Workbench />

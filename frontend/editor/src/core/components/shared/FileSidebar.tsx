@@ -98,6 +98,8 @@ export interface FileSidebarProps {
   accountHoisted?: boolean;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
+  /** Publishes the sidebar's picker so the quick navigation rail can reuse it. */
+  onRegisterOpenFromComputer?: (open: (() => void) | null) => void;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
   /** Action rows inserted under Open-from-computer (New folder, Refresh). A
@@ -189,6 +191,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onOpenSettings,
       accountHoisted = false,
       onUploadFiles,
+      onRegisterOpenFromComputer,
       onPickGoogleDriveFiles,
       extraActions,
     },
@@ -811,6 +814,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [ingestFiles],
     );
 
+    useEffect(() => {
+      if (!onRegisterOpenFromComputer) return;
+      onRegisterOpenFromComputer(() => nativeFileInputRef.current?.click());
+      return () => onRegisterOpenFromComputer(null);
+    }, [onRegisterOpenFromComputer]);
+
     // Native OS file drop onto the sidebar - mirrors the workbench drop zone.
     // Only react to OS file drags ("Files" type); internal element drags (e.g.
     // watched-folder file moves) set their own dataTransfer keys and must pass
@@ -989,29 +998,21 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             onToggleCollapse={onToggleCollapse}
           />
 
-          {/* Box 1 — top controls (open / my files / cloud). No title. File
-              search lives in the global super search (top bar), not here. */}
-          <NavSurface className="file-sidebar-controls">
-            {/* Hidden native file input - kept outside the !collapsed gate so
-                the "Open from computer" row below (always rendered) can fire
-                it in either sidebar state without a silent no-op. */}
-            <input
-              ref={nativeFileInputRef}
-              type="file"
-              multiple
-              // No `accept` filter - this picker feeds the global workspace,
-              // not a specific tool, so users may legitimately upload PNGs,
-              // ZIPs, etc. for the convert/merge/extract tools to handle.
-              style={{ display: "none" }}
-              onChange={handleNativeFilePick}
-              data-testid="file-input"
-            />
-            {/* Open from Computer + My Files + Google Drive */}
-            {/* Tooltips only fire when collapsed - when expanded the visible
-                text label below already identifies each row, so a tooltip
-                would just flash a duplicate. Distinct icons (UploadFile for
-                "Open from computer" vs FolderOpen for "File library") so the
-                collapsed rail isn't two identical folder icons either. */}
+          <input
+            ref={nativeFileInputRef}
+            type="file"
+            multiple
+            // No `accept` filter - this picker feeds the global workspace,
+            // not a specific tool, so users may legitimately upload PNGs,
+            // ZIPs, etc. for the convert/merge/extract tools to handle.
+            style={{ display: "none" }}
+            onChange={handleNativeFilePick}
+            data-testid="file-input"
+          />
+
+          {/* The expanded library header owns these actions; retain their compact
+              versions for the existing narrow sidebar. */}
+          <NavSurface className="file-sidebar-controls" hidden={!collapsed}>
             <Tooltip
               label={t("fileSidebar.openFromComputer", "Open from computer")}
               position="right"
@@ -1020,12 +1021,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             >
               <div
                 className="file-sidebar-action-row"
-                // `files-button` is the long-standing upload entry-point
-                // testid: click + setInputFiles on `file-input` above. Tour
-                // anchor lives here too - the tour now spotlights the native
-                // picker shortcut rather than the old modal.
-                data-testid="files-button"
-                data-tour="files-button"
+                data-testid="files-rail-button"
                 onClick={() => {
                   // "Open from computer" goes straight to the native OS file
                   // picker. The full file manager (recent + drives + folders)
@@ -1227,9 +1223,28 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     >
                       <Icon name="maximize-2" size={"1rem"} />
                     </ActionIcon>
+                    {isGoogleDriveEnabled && (
+                      <ActionIcon
+                        variant="quiet"
+                        className="file-sidebar-section-btn file-sidebar-section-btn-drive"
+                        onClick={handleGoogleDriveClick}
+                        title={t(
+                          "fileSidebar.googleDrive",
+                          "Open from Google Drive",
+                        )}
+                        aria-label={t(
+                          "fileSidebar.googleDrive",
+                          "Open from Google Drive",
+                        )}
+                        data-testid="google-drive-button"
+                      >
+                        <Icon name="googledrive" size={16} />
+                      </ActionIcon>
+                    )}
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-add"
+                      data-testid="pdf-library-add-files"
                       onClick={() => nativeFileInputRef.current?.click()}
                       title={t("fileSidebar.addFiles", "Add files")}
                       aria-label={t("fileSidebar.addFiles", "Add files")}
