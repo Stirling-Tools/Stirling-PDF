@@ -3,7 +3,7 @@ import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSuppressQuickNavRail } from "@app/contexts/QuickNavHostContext";
-import HomePage from "@app/pages/HomePage";
+import { AppRoot } from "@app/components/layout/AppRoot";
 import { useBackendProbe } from "@app/hooks/useBackendProbe";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import AuthLayout from "@app/routes/authShared/AuthLayout";
@@ -14,8 +14,8 @@ import { Button } from "@app/ui/Button";
 /**
  * Landing component - Smart router based on authentication status
  *
- * If login is disabled: Show HomePage directly (anonymous mode)
- * If user is authenticated: Show HomePage
+ * If login is disabled: Show the app directly (anonymous mode)
+ * If user is authenticated: Show the app
  * If user is not authenticated: Show Login or redirect to /login
  */
 export default function Landing() {
@@ -26,7 +26,8 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const loading = authLoading || configLoading || backendProbe.loading;
+  const loading =
+    authLoading || (configLoading && !config) || backendProbe.loading;
 
   // The backend-down screen is not the app. Loading is: it resolves in a moment.
   useSuppressQuickNavRail(!session && backendProbe.status !== "up");
@@ -125,7 +126,7 @@ export default function Landing() {
   // If login is disabled, show app directly (anonymous mode)
   if (config?.enableLogin === false || backendProbe.loginDisabled) {
     console.debug("[Landing] Login disabled - showing app in anonymous mode");
-    return <HomePage />;
+    return <AppRoot />;
   }
 
   // If backend is not up yet and user is not authenticated, show a branded status screen
@@ -175,14 +176,16 @@ export default function Landing() {
   // If we have a session, show the main app
   // Note: First login password change is now handled by the onboarding flow
   if (session) {
-    return <HomePage />;
+    return <AppRoot />;
   }
 
   // No session - redirect to login page. The URL always shows /login when not
   // authenticated, and carries where we came from so signing in returns there
   // (going to /editor and logging in lands back on /editor, not the role
   // router). Also passed as router state; the query is what survives a reload.
-  const returnTo = encodeURIComponent(location.pathname + location.search);
+  const returnTo = encodeURIComponent(
+    location.pathname + location.search + location.hash,
+  );
   return config?.enableLogin === true && !backendProbe.loginDisabled ? (
     <Navigate
       to={`/login?from=${returnTo}`}
@@ -190,6 +193,6 @@ export default function Landing() {
       state={{ from: location }}
     />
   ) : (
-    <HomePage />
+    <AppRoot />
   );
 }

@@ -1,41 +1,36 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import CategoryOutlinedIcon from "@mui/icons-material/CategoryOutlined";
-import GavelOutlinedIcon from "@mui/icons-material/GavelOutlined";
-import LayersOutlinedIcon from "@mui/icons-material/LayersOutlined";
-import AltRouteOutlinedIcon from "@mui/icons-material/AltRouteOutlined";
-import ScheduleOutlinedIcon from "@mui/icons-material/ScheduleOutlined";
+import { Icon } from "@app/ui/Icon";
 import { CardRail } from "@app/ui/CardRail";
 import { OptionCard } from "@app/ui/OptionCard";
 
 const items = [
   {
-    icon: <ShieldOutlinedIcon />,
+    icon: <Icon name="shield" />,
     title: "Security",
     desc: "Redact, sanitize, and watermark every document.",
   },
   {
-    icon: <CategoryOutlinedIcon />,
+    icon: <Icon name="shapes" />,
     title: "Classification",
     desc: "Tag each document against your team's labels.",
   },
   {
-    icon: <GavelOutlinedIcon />,
+    icon: <Icon name="gavel" />,
     title: "Compliance",
     desc: "Enforce frameworks and keep an audit trail.",
   },
   {
-    icon: <LayersOutlinedIcon />,
+    icon: <Icon name="layers" />,
     title: "Ingestion",
     desc: "OCR and flatten documents as they arrive.",
   },
   {
-    icon: <AltRouteOutlinedIcon />,
+    icon: <Icon name="git-fork" />,
     title: "Routing",
     desc: "Send finished documents where they belong.",
   },
   {
-    icon: <ScheduleOutlinedIcon />,
+    icon: <Icon name="clock" />,
     title: "Retention",
     desc: "Archive and expire on your schedule.",
   },

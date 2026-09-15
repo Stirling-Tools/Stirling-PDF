@@ -190,6 +190,8 @@ function openUrl(url: string): boolean {
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Return to payment choices without cancelling the saved quote; omitted for top-ups. */
+  onBack?: () => void;
   /** Drives teamId, per-run rate, currency, and top-up vs first-buy copy. */
   wallet: Wallet;
   /** Fired after a completed purchase so the parent can refetch the wallet. */
@@ -201,6 +203,7 @@ type Phase = "calc" | "pay";
 export function BundleCheckoutModal({
   open,
   onClose,
+  onBack,
   wallet,
   onComplete,
 }: Props) {
@@ -662,11 +665,17 @@ export function BundleCheckoutModal({
   const footer =
     phase === "calc" ? (
       <div className="portal-billing__checkout-cap-actions">
-        <Button variant="quiet" disabled={pdfBusy} onClick={onClose}>
-          {t("portal.billing.prepaid.buy.cancel", "Cancel")}
+        <Button
+          variant="quiet"
+          disabled={busy || pdfBusy}
+          onClick={onBack ?? onClose}
+        >
+          {onBack
+            ? t("portal.billing.prepaid.buy.back", "Back")
+            : t("portal.billing.prepaid.buy.cancel", "Cancel")}
         </Button>
         <Button
-          disabled={!canContinue || pdfBusy}
+          disabled={!canContinue || busy || pdfBusy}
           onClick={handleContinue}
           rightSection={<span aria-hidden>›</span>}
         >

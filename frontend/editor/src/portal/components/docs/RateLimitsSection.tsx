@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Card, CodeBlock } from "@app/ui";
 import type { RateLimit } from "@portal/api/docs";
-import { DocsSection } from "@portal/components/docs/DocsSection";
+import { DocsSection } from "@core/components/docs/DocsSection";
 
 export function RateLimitsSection({ rateLimit }: { rateLimit: RateLimit }) {
   const { t } = useTranslation();

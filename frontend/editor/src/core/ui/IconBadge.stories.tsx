@@ -1,14 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { Icon } from "@app/ui/Icon";
 import { IconBadge } from "@app/ui/IconBadge";
 
 function Glyph() {
-  return (
-    <svg viewBox="0 0 24 24" width={16} height={16} fill="currentColor">
-      <rect x="3" y="4" width="18" height="4" rx="1" />
-      <rect x="3" y="10" width="18" height="4" rx="1" />
-      <rect x="3" y="16" width="18" height="4" rx="1" />
-    </svg>
-  );
+  return <Icon name="star" size={16} />;
 }
 
 const meta: Meta<typeof IconBadge> = {

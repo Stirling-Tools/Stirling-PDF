@@ -41,15 +41,7 @@ import {
   FIELD_TYPE_ICON,
   FIELD_TYPE_COLOR,
 } from "@app/tools/formFill/fieldMeta";
-import SaveIcon from "@mui/icons-material/Save";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
-import EditNoteIcon from "@mui/icons-material/EditNote";
-import PostAddIcon from "@mui/icons-material/PostAdd";
-import BuildCircleIcon from "@mui/icons-material/BuildCircle";
-import DescriptionIcon from "@mui/icons-material/Description";
-import FileDownloadIcon from "@mui/icons-material/FileDownload";
-import FileUploadIcon from "@mui/icons-material/FileUpload";
+import { Icon } from "@app/ui/Icon";
 import {
   extractFormFieldsCsv,
   extractFormFieldsXlsx,
@@ -114,17 +106,21 @@ const FormFill = (_props: BaseToolProps) => {
       {
         id: "fill",
         label: t("formFill.mode.fill", "Fill"),
-        icon: <EditNoteIcon className={styles.modeTabIcon} />,
+        icon: (
+          <Icon name="file-pen" size="1rem" className={styles.modeTabIcon} />
+        ),
       },
       {
         id: "create",
         label: t("formFill.mode.create", "Create"),
-        icon: <PostAddIcon className={styles.modeTabIcon} />,
+        icon: (
+          <Icon name="file-plus" size="1rem" className={styles.modeTabIcon} />
+        ),
       },
       {
         id: "modify",
         label: t("formFill.mode.modify", "Modify"),
-        icon: <BuildCircleIcon className={styles.modeTabIcon} />,
+        icon: <Icon name="wrench" size="1rem" className={styles.modeTabIcon} />,
       },
     ],
     [t],
@@ -648,7 +644,7 @@ const FormFill = (_props: BaseToolProps) => {
             {/* Error state */}
             {formState.error && (
               <Alert
-                icon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
+                icon={<Icon name="triangle-alert" size={16} />}
                 color="red"
                 variant="light"
                 p="xs"
@@ -714,7 +710,7 @@ const FormFill = (_props: BaseToolProps) => {
                 <div className={styles.actionBar}>
                   <div className={styles.primaryActions}>
                     <Button
-                      leftSection={<SaveIcon sx={{ fontSize: 14 }} />}
+                      leftSection={<Icon name="save" size={14} />}
                       size="sm"
                       onClick={handleSave}
                       loading={saving}
@@ -737,7 +733,7 @@ const FormFill = (_props: BaseToolProps) => {
                           "Re-scan form fields",
                         )}
                       >
-                        <RefreshIcon sx={{ fontSize: 16 }} />
+                        <Icon name="refresh-cw" size={16} />
                       </ActionIcon>
                     </Tooltip>
                   </div>
@@ -753,7 +749,7 @@ const FormFill = (_props: BaseToolProps) => {
                     >
                       <Button
                         variant="secondary"
-                        leftSection={<FileUploadIcon sx={{ fontSize: 14 }} />}
+                        leftSection={<Icon name="upload" size={14} />}
                         onClick={() => importInputRef.current?.click()}
                         size="sm"
                       >
@@ -778,7 +774,7 @@ const FormFill = (_props: BaseToolProps) => {
                   {/* Four formats don't fit this panel with an icon each, so
                       the row is labelled once instead. */}
                   <Text size="xs" c="dimmed" className={styles.exportLabel}>
-                    <FileDownloadIcon sx={{ fontSize: 12 }} />
+                    <Icon name="download" size={12} />
                     {t("formFill.exportAs", "Export data as")}
                   </Text>
                   <div className={styles.secondaryActions}>
@@ -830,7 +826,11 @@ const FormFill = (_props: BaseToolProps) => {
               formState.fields.length === 0 &&
               !formState.error && (
                 <div className={styles.emptyState}>
-                  <DescriptionIcon className={styles.emptyStateIcon} />
+                  <Icon
+                    name="file-text"
+                    size="2.5rem"
+                    className={styles.emptyStateIcon}
+                  />
                   <span className={styles.emptyStateText}>
                     {t(
                       "formFill.noFields",
