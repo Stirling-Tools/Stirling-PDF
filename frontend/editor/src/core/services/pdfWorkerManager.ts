@@ -14,6 +14,7 @@ import {
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
   private activeDocuments = new Set<PDFDocumentProxy>();
+  private destroyingDocuments = new WeakSet<PDFDocumentProxy>();
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
   private isInitialized = false;
@@ -119,15 +120,18 @@ class PDFWorkerManager {
    * Properly destroy a PDF document and clean up resources
    */
   async destroyDocument(pdf: PDFDocumentProxy): Promise<void> {
-    if (this.activeDocuments.has(pdf)) {
-      try {
-        await pdf.destroy();
-      } catch {
-        // Still remove from tracking if destroy fails.
-      } finally {
-        this.activeDocuments.delete(pdf);
-        this.workerCount = Math.max(0, this.workerCount - 1);
-      }
+    if (!this.activeDocuments.has(pdf) || this.destroyingDocuments.has(pdf)) {
+      return;
+    }
+    this.destroyingDocuments.add(pdf);
+    try {
+      await pdf.destroy();
+    } catch {
+      // Still remove from tracking if destroy fails.
+    } finally {
+      this.destroyingDocuments.delete(pdf);
+      this.activeDocuments.delete(pdf);
+      this.workerCount = Math.max(0, this.workerCount - 1);
     }
   }
 
