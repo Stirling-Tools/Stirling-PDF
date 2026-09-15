@@ -1,6 +1,5 @@
 package stirling.software.proprietary.cluster.valkey;
 
-import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -22,12 +21,9 @@ public class ValkeyClusterBackplane implements ClusterBackplane {
     @Override
     public boolean isHealthy() {
         try {
-            // template.execute() borrows from the pool and returns the connection in a finally
-            // block - critical because isHealthy() is hit on every k8s liveness/readiness probe
-            // tick. Calling getConnectionFactory().getConnection() directly leaks the connection
-            // and exhausts the pool under monitoring load.
-            String pong = template.execute((RedisCallback<String>) connection -> connection.ping());
-            return "PONG".equalsIgnoreCase(pong);
+            // Single-key EXISTS, not PING: on Cluster spring-data fans PING to every node and
+            // fails if any is down. The key need not exist; a completed round trip is the signal.
+            return template.hasKey("stirling:health:" + localNodeId()) != null;
         } catch (RuntimeException ex) {
             log.warn("Valkey backplane health check failed: {}", ex.getMessage());
             return false;

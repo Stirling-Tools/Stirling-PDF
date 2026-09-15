@@ -1,0 +1,115 @@
+# Valkey Sentinel HA overlay: 1 primary + 2 replicas + 3 sentinels. Up: ./start-multinode-test.sh --valkey sentinel
+# Never overrides valkey.command, so the base 'valkey' service survives and this composes with any other overlay in any order.
+
+x-sentinel-deps: &sentinel-deps
+  sentinel-1:
+    condition: service_healthy
+  sentinel-2:
+    condition: service_healthy
+  sentinel-3:
+    condition: service_healthy
+
+services:
+  # No --replica-announce-ip: a hostname makes sentinel discard the replica, and
+  # 'resolve-hostnames yes' is not a workaround (see the TILT note on the sentinel below).
+  valkey-replica-1: &valkey-replica
+    image: valkey/valkey:8-alpine
+    container_name: multinode-valkey-replica-1
+    restart: unless-stopped
+    depends_on:
+      valkey:
+        condition: service_healthy
+    command:
+      - valkey-server
+      - --save
+      - ""
+      - --appendonly
+      - "no"
+      # Runtime files in the container layer, not the image's anonymous /data volume, so a
+      # `compose up` recreate always starts from clean state.
+      - --dir
+      - /tmp
+      - --replicaof
+      - valkey
+      - "6379"
+      - --replica-read-only
+      - "yes"
+    healthcheck:
+      test: ["CMD-SHELL", "valkey-cli ping | grep -q PONG"]
+      interval: 3s
+      timeout: 5s
+      retries: 30
+    networks:
+      - stirling-multinode
+
+  valkey-replica-2:
+    <<: *valkey-replica
+    container_name: multinode-valkey-replica-2
+
+  # No host-mounted conf: sentinel rewrites it at runtime, so a read-only mount kills boot and a
+  # read-write one replays stale known-replica IPs. The entrypoint generates it into /tmp instead.
+  sentinel-1: &valkey-sentinel
+    image: valkey/valkey:8-alpine
+    container_name: multinode-valkey-sentinel-1
+    restart: unless-stopped
+    depends_on:
+      valkey:
+        condition: service_healthy
+    # Monitor a RESOLVED IP, never the name 'valkey': killing the primary drops its DNS record,
+    # sentinel's synchronous lookup stalls its event loop, and TILT suspends failover.
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        set -e
+        for i in $$(seq 1 30); do
+          PRIMARY_IP=$$(getent hosts valkey | awk '{print $$1; exit}')
+          [ -n "$$PRIMARY_IP" ] && break
+          echo "waiting for DNS: valkey"; sleep 2
+        done
+        [ -n "$$PRIMARY_IP" ] || { echo "FATAL: could not resolve 'valkey'"; exit 1; }
+        echo "sentinel monitoring primary valkey -> $$PRIMARY_IP"
+        cat > /tmp/sentinel.conf <<EOF
+        port 26379
+        dir /tmp
+        sentinel monitor mymaster $$PRIMARY_IP 6379 2
+        sentinel down-after-milliseconds mymaster 5000
+        sentinel failover-timeout mymaster 10000
+        sentinel parallel-syncs mymaster 1
+        EOF
+        exec valkey-sentinel /tmp/sentinel.conf
+    # ckquorum alone is NOT enough: it reports "OK 3 usable Sentinels" even with ZERO discovered
+    # replicas, i.e. no failover candidate. Assert both.
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - valkey-cli -p 26379 sentinel ckquorum mymaster | grep -q '^OK' && [ "$$(valkey-cli -p 26379 sentinel replicas mymaster | grep -c '^name$$')" -ge 2 ]
+      interval: 3s
+      timeout: 5s
+      retries: 40
+    networks:
+      - stirling-multinode
+
+  sentinel-2:
+    <<: *valkey-sentinel
+    container_name: multinode-valkey-sentinel-2
+
+  sentinel-3:
+    <<: *valkey-sentinel
+    container_name: multinode-valkey-sentinel-3
+
+  # ---- App nodes: point the backplane at the sentinel set ------------------
+  # Only the keys that differ from the base file - compose merges `environment` across -f files.
+  stirling-1:
+    depends_on: *sentinel-deps
+    environment:
+      CLUSTER_VALKEY_MODE: "sentinel"
+      CLUSTER_VALKEY_SENTINEL_MASTER: "mymaster"
+      CLUSTER_VALKEY_SENTINEL_NODES: "sentinel-1:26379,sentinel-2:26379,sentinel-3:26379"
+
+  stirling-2:
+    depends_on: *sentinel-deps
+    environment:
+      CLUSTER_VALKEY_MODE: "sentinel"
+      CLUSTER_VALKEY_SENTINEL_MASTER: "mymaster"
+      CLUSTER_VALKEY_SENTINEL_NODES: "sentinel-1:26379,sentinel-2:26379,sentinel-3:26379"
