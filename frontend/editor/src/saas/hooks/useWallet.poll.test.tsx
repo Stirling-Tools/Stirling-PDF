@@ -155,4 +155,36 @@ describe("useWallet — keeping the figures fresh", () => {
     await waitFor(() => expect(get.mock.calls.length).toBe(afterMount + 1));
     visibility.mockRestore();
   });
+
+  it("stops a disabled reader and discards its in-flight wallet response", async () => {
+    const { result, rerender } = renderHook(
+      ({ enabled }) => useWallet({ enabled }),
+      { initialProps: { enabled: false } },
+    );
+    expect(get).not.toHaveBeenCalled();
+
+    rerender({ enabled: true });
+    await waitFor(() => expect(result.current.wallet).not.toBeNull());
+
+    let finishPoll: (value: ReturnType<typeof walletWith>) => void = () => {};
+    get.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishPoll = resolve;
+      }),
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(30_000);
+    });
+    expect(get).toHaveBeenCalledTimes(2);
+
+    rerender({ enabled: false });
+    await act(async () => {
+      finishPoll(walletWith(480));
+      vi.advanceTimersByTime(90_000);
+    });
+    expect(get).toHaveBeenCalledTimes(2);
+    expect(result.current.wallet).toBeNull();
+    expect(result.current.loading).toBe(false);
+    expect(result.current.error).toBeNull();
+  });
 });

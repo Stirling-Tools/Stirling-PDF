@@ -18,12 +18,18 @@ export function useConfirmedSaaSMode(): boolean {
   const [isSaaSMode, setIsSaaSMode] = useState(false);
 
   useEffect(() => {
-    void connectionModeService
-      .getCurrentMode()
-      .then((mode) => setIsSaaSMode(mode === "saas"));
-    return connectionModeService.subscribeToModeChanges((cfg) =>
-      setIsSaaSMode(cfg.mode === "saas"),
-    );
+    let current = true;
+    void connectionModeService.getCurrentMode().then((mode) => {
+      if (current) setIsSaaSMode(mode === "saas");
+    });
+    const unsubscribe = connectionModeService.subscribeToModeChanges((cfg) => {
+      current = false;
+      setIsSaaSMode(cfg.mode === "saas");
+    });
+    return () => {
+      current = false;
+      unsubscribe();
+    };
   }, []);
 
   return isSaaSMode;

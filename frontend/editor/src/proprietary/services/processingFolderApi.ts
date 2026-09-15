@@ -128,7 +128,7 @@ export interface ProcessingFolderRun {
   stepCount?: number;
 }
 
-/** Runs belonging to a processing folder, newest first — drives the progress display. */
+/** Newest runs first. Poll failures reject without global toasts. */
 export async function fetchProcessingFolderRuns(
   policyId: string,
 ): Promise<ProcessingFolderRun[]> {
@@ -136,7 +136,10 @@ export async function fetchProcessingFolderRuns(
   // against a backend that ignores the parameter.
   const res = await apiClient.get<
     (ProcessingFolderRun & { policyId?: string })[]
-  >("/api/v1/policies/runs", { params: { policyId } });
+  >("/api/v1/policies/runs", {
+    params: { policyId },
+    suppressErrorToast: true,
+  });
   return (res.data ?? []).filter((run) => run.policyId === policyId);
 }
 
@@ -186,9 +189,11 @@ export interface MountedFile {
   hasOriginal?: boolean;
 }
 
+/** Reads file progress for polling; failures reject without global toasts. */
 export async function fetchMountedFiles(id: string): Promise<MountedFile[]> {
   const res = await apiClient.get<MountedFile[]>(
     `/api/v1/processing-folders/${id}/files`,
+    { suppressErrorToast: true },
   );
   return res.data ?? [];
 }
