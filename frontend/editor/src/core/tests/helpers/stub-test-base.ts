@@ -3,7 +3,6 @@ import {
   bypassOnboarding,
   mockAppApis,
   seedCookieConsent,
-  skipOnboarding,
   type MockAppApiOptions,
 } from "@app/tests/helpers/api-stubs";
 import { suppressNativeFilePicker } from "@app/tests/helpers/ui-helpers";
@@ -54,7 +53,7 @@ const STUB_JWT = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJzdHViLXVzZXIifQ.signature";
 
 export const test = base.extend<StubFixtures>({
   stubOptions: [{}, { option: true }],
-  // The editor's own URL, not "/". "/" is a role-based router that redirects,
+  // The editor's own URL, not "/". "/" is a landing router that redirects,
   // and /editor renders the editor in every flavour, so tests land straight on
   // the app instead of racing a redirect on every single test.
   autoGoto: ["/editor", { option: true }],
@@ -63,16 +62,11 @@ export const test = base.extend<StubFixtures>({
   page: async ({ page, stubOptions, autoGoto, seedJwt }, use) => {
     suppressNativeFilePicker(page);
     await seedCookieConsent(page);
+    await bypassOnboarding(page);
     if (seedJwt) {
-      // Logged-in users hit the orchestrator path that surfaces the
-      // analytics opt-in / MFA prompts — use the stronger bypass-all flag
-      // so those overlays don't block clicks.
-      await bypassOnboarding(page);
       await page.addInitScript((token) => {
         localStorage.setItem("stirling_jwt", token);
       }, STUB_JWT);
-    } else {
-      await skipOnboarding(page);
     }
     await mockAppApis(page, stubOptions);
     if (autoGoto !== false) {

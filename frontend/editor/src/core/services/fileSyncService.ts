@@ -11,6 +11,7 @@ import { alert } from "@app/components/toast";
 import { StirlingFileStub, StirlingFile } from "@app/types/fileContext";
 import { FileId } from "@app/types/fileContext";
 import { FolderId, parseFolderId } from "@app/types/folder";
+import { virtualFolderStorage } from "@app/services/virtualFolderStorage";
 import {
   isZipBundle,
   loadShareBundleEntries,
@@ -119,6 +120,15 @@ export async function reconcileServerFiles(
   }
 
   let combinedStubs: StirlingFileStub[];
+  // Virtual folders are browser-owned, so a stub sitting in one must keep its
+  // membership through the reconcile — the server's folderId (always null for them) is
+  // not an opinion about it.
+  const virtualFolderIds = new Set<FolderId>(
+    await virtualFolderStorage
+      .getAllFolders()
+      .then((folders) => folders.map((folder) => folder.id))
+      .catch(() => []),
+  );
   const localRemoteIds = new Set(
     localStubs
       .map((s) => s.remoteStorageId)
@@ -202,7 +212,12 @@ export async function reconcileServerFiles(
         // Server is authoritative for cloud-stored files. Don't fall back to
         // stub.folderId on null - that would resurrect a stale folder pointer
         // after the server SET_NULL'd it (e.g. owner deleted the folder).
-        folderId: safeParseFolderId(serverFile.folderId),
+        // EXCEPT when the stub sits in a browser-owned (virtual) folder: the
+        // server has never heard of that folder, so its null says nothing
+        // about the membership and must not eject the file from it.
+        folderId: virtualFolderIds.has((stub.folderId ?? "") as FolderId)
+          ? stub.folderId
+          : safeParseFolderId(serverFile.folderId),
       };
     });
 
@@ -470,6 +485,10 @@ export async function materializeServerStubs(
       const primary = ingested[ingested.length - 1]!;
       const newId = primary.fileId as FileId;
       const remoteUpdates = {
+        // The ingest above made a new local file, which starts in no folder. Without
+        // carrying membership across, materialising a file to open it moves it to the
+        // library root - the copy is the file as far as the library is concerned.
+        folderId: stub.folderId ?? null,
         remoteStorageId: stub.remoteStorageId,
         remoteStorageUpdatedAt: stub.remoteStorageUpdatedAt,
         remoteOwnerUsername: stub.remoteOwnerUsername,

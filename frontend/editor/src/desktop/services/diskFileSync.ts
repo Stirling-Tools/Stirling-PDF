@@ -1,0 +1,418 @@
+import { FileId, StirlingFileStub } from "@app/types/fileContext";
+import {
+  DiskFileState,
+  DiskUnavailableReason,
+  PresentDiskFileState,
+  desktopFileLinkingSupported,
+  getDiskFileState,
+  readFileFromDisk,
+} from "@app/services/desktopFileLink";
+import { fileStorage } from "@app/services/fileStorage";
+
+// Keeps desktop files 1:1 with disk: the stored copy is a cache, not truth, so
+// every read re-checks disk. No-op off desktop, where the copy is the truth.
+
+/** What a linked file's disk state means for the copy we are holding. */
+export type DiskSyncOutcome =
+  /** Not a desktop-linked file: the stored copy is the only truth. */
+  | { status: "not-linked" }
+  /** A superseded version. It inherited the path but no longer represents it,
+   *  and its stored bytes are the only copy of that version. */
+  | { status: "superseded" }
+  | { status: "missing" }
+  | { status: "unavailable"; reason: DiskUnavailableReason }
+  /** Disk matches what we last read; the stored copy is current. */
+  | { status: "unchanged" }
+  /** Disk moved on, but we hold unsaved in-app edits, so we keep ours. */
+  | { status: "conflict" }
+  | { status: "too-large"; size: number }
+  /** Disk moved on and we had nothing unsaved, so these are the live bytes. */
+  | { status: "updated"; file: File; state: PresentDiskFileState };
+
+/** Did disk change since our last read? No baseline means we cannot prove the
+ *  copy is current, so re-read once; size settles it when mtime is missing. */
+export function hasDiskChanged(
+  stub: Pick<StirlingFileStub, "diskSyncedSize" | "diskSyncedModifiedMs">,
+  state: PresentDiskFileState,
+): boolean {
+  if (stub.diskSyncedSize == null || stub.diskSyncedModifiedMs == null) {
+    return true;
+  }
+  if (state.size !== stub.diskSyncedSize) return true;
+  if (state.modifiedMs === 0) return false;
+  return state.modifiedMs !== stub.diskSyncedModifiedMs;
+}
+
+export function diskAvailabilityFields(
+  state: DiskFileState,
+): Pick<StirlingFileStub, "diskUnavailableReason"> {
+  return {
+    diskUnavailableReason:
+      state.availability === "unavailable" ? state.reason : undefined,
+  };
+}
+
+/** The fields a fresh disk read stamps onto the stub and the stored record. */
+export function diskBaseline(
+  state: PresentDiskFileState,
+): Pick<StirlingFileStub, "diskSyncedSize" | "diskSyncedModifiedMs"> {
+  return {
+    diskSyncedSize: state.size,
+    diskSyncedModifiedMs: state.modifiedMs,
+  };
+}
+
+/** Fields marking a file as having lost its disk original. Applied in storage
+ *  and the workbench so save paths stop writing to the deleted path. */
+export function detachedFields(
+  path: string | undefined,
+): Pick<
+  StirlingFileStub,
+  | "localFilePath"
+  | "diskSyncedSize"
+  | "diskSyncedModifiedMs"
+  | "diskConflictAt"
+  | "diskUnavailableReason"
+  | "orphanedFilePath"
+> {
+  return {
+    localFilePath: undefined,
+    diskSyncedSize: undefined,
+    diskSyncedModifiedMs: undefined,
+    diskConflictAt: undefined,
+    diskUnavailableReason: undefined,
+    orphanedFilePath: path,
+  };
+}
+
+const AUTO_RELOAD_MAX_BYTES = 512 * 1024 * 1024; // 512 MB
+
+// A save writes onto the watched path, so the watcher reports our own write as
+// an external change. Paths are muted until the post-save re-baseline lands.
+const SELF_WRITE_MAX_MS = 10_000;
+const selfWrites = new Map<string, number>();
+
+/** Mute disk checks for a path we are about to write ourselves. */
+export function beginSelfWrite(path: string): void {
+  selfWrites.set(path, Date.now() + SELF_WRITE_MAX_MS);
+}
+
+/** Unmute once the write is accounted for. Safe for an unknown path. */
+export function endSelfWrite(path: string): void {
+  selfWrites.delete(path);
+}
+
+function isSelfWrite(path: string): boolean {
+  const until = selfWrites.get(path);
+  if (until == null) return false;
+  // A save that never re-baselined must not blind us forever.
+  if (Date.now() > until) {
+    selfWrites.delete(path);
+    return false;
+  }
+  return true;
+}
+
+/** Test seam: the register is module state and would leak between cases. */
+export function __resetSelfWrites(): void {
+  selfWrites.clear();
+}
+
+/** @param hasUnsavedWork in-app edits not yet committed to a version. The stub's
+ *  own isDirty only says a tool produced one, so an open page editor, annotation
+ *  or redaction session is invisible to it and disk would silently win. */
+export async function syncLinkedFileFromDisk(
+  stub: StirlingFileStub,
+  hasUnsavedWork = false,
+): Promise<DiskSyncOutcome> {
+  if (!desktopFileLinkingSupported || !stub.localFilePath) {
+    return { status: "not-linked" };
+  }
+
+  // Our own write is in flight: reporting it as an external change would accuse
+  // the user of conflicting with themselves.
+  if (isSelfWrite(stub.localFilePath)) return { status: "unchanged" };
+
+  const state = await getDiskFileState(stub.localFilePath);
+  if (state.availability === "gone") return { status: "missing" };
+  if (state.availability === "unavailable") {
+    return { status: "unavailable", reason: state.reason };
+  }
+  if (!hasDiskChanged(stub, state)) return { status: "unchanged" };
+  // Deliberately below the missing and unavailable checks: a superseded version
+  // still wants its link state reported, it just must never be replaced.
+  // createChildStub copies the parent's path onto the child, so every version in
+  // a chain claims the same file while only the leaf still answers for it. The
+  // rest hold the sole copy of their bytes against a baseline that predates the
+  // child's write, so "changed" here means the child was saved - and reloading
+  // would overwrite that version for good.
+  if (stub.isLeaf === false) return { status: "superseded" };
+  if (stub.isDirty || hasUnsavedWork) return { status: "conflict" };
+  if (state.size > AUTO_RELOAD_MAX_BYTES) {
+    return { status: "too-large", size: state.size };
+  }
+
+  const bytes = await readFileFromDisk(stub.localFilePath);
+  if (!bytes) return { status: "unchanged" };
+
+  // The file may still have been being written while we read it. Only commit
+  // bytes whose size and mtime held still across the read.
+  const after = await getDiskFileState(stub.localFilePath);
+  if (
+    after.availability !== "present" ||
+    after.size !== state.size ||
+    after.modifiedMs !== state.modifiedMs ||
+    bytes.byteLength !== state.size
+  ) {
+    // Baseline deliberately left un-stamped, so the next event re-reads.
+    return { status: "unchanged" };
+  }
+
+  const file = new File([bytes], stub.name, {
+    type: stub.type || "application/pdf",
+    lastModified: state.modifiedMs || Date.now(),
+  });
+  return { status: "updated", file, state };
+}
+
+/** Read the disk version, discarding unsaved in-app edits. Only from the "Use
+ *  disk version" action - losing unsaved work must be the user's choice. No
+ *  settle check here: declining silently would make the button look dead. */
+export async function loadDiskVersion(
+  stub: StirlingFileStub,
+): Promise<{ file: File; state: PresentDiskFileState } | null> {
+  if (!desktopFileLinkingSupported || !stub.localFilePath) return null;
+  const state = await getDiskFileState(stub.localFilePath);
+  if (state.availability !== "present") return null;
+  const bytes = await readFileFromDisk(stub.localFilePath);
+  if (!bytes) return null;
+  const file = new File([bytes], stub.name, {
+    type: stub.type || "application/pdf",
+    lastModified: state.modifiedMs || Date.now(),
+  });
+  return { file, state };
+}
+
+/** Replace stored bytes with the disk read and re-stamp the baseline. Cached
+ *  metadata and thumbnail describe the old bytes, so both are cleared. */
+export async function persistDiskUpdate(
+  fileId: FileId,
+  file: File,
+  state: PresentDiskFileState,
+  reloadedAt: number,
+): Promise<void> {
+  await fileStorage.updateFileMetadata(fileId, {
+    data: file,
+    size: file.size,
+    lastModified: file.lastModified,
+    quickKey: `${file.name}|${file.size}|${file.lastModified}`,
+    thumbnail: undefined,
+    thumbnailStoredAt: undefined,
+    // The disk version is now the one on screen, so any earlier divergence is
+    // settled and the pickup is recorded where the UI can show it.
+    isDirty: false,
+    diskConflictAt: undefined,
+    diskReloadedAt: reloadedAt,
+    ...diskBaseline(state),
+  });
+}
+
+/** After a write-back, disk IS our copy, so re-stamp the baseline or the next
+ *  open re-reads for nothing. Returns the new baseline, or null if none. */
+export async function refreshDiskBaselineAfterSave(
+  fileId: FileId,
+  path: string,
+): Promise<Pick<
+  StirlingFileStub,
+  "diskSyncedSize" | "diskSyncedModifiedMs" | "diskConflictAt"
+> | null> {
+  try {
+    if (!desktopFileLinkingSupported) return null;
+    const state = await getDiskFileState(path);
+    if (state.availability !== "present") return null;
+    // Writing our version out is one way of resolving a divergence, so the
+    // conflict marker goes with it.
+    const baseline = { ...diskBaseline(state), diskConflictAt: undefined };
+    await fileStorage.updateFileMetadata(fileId, baseline);
+    return baseline;
+  } finally {
+    // The write is now accounted for, however it went.
+    endSelfWrite(path);
+  }
+}
+
+/** Drop a linked file whose disk original is gone, copy and all. */
+export async function deleteVanishedFile(fileId: FileId): Promise<void> {
+  try {
+    await fileStorage.deleteStirlingFile(fileId);
+  } catch (error) {
+    console.error("[diskFileSync] Failed to delete vanished file:", error);
+  }
+}
+
+/** Write an orphaned file somewhere new and re-link it; backs the toast's
+ *  "Save as…" action. Returns the new path, or null if cancelled or failed. */
+export async function saveOrphanAsCopy(
+  stub: StirlingFileStub,
+): Promise<{ path: string; updates: Partial<StirlingFileStub> } | null> {
+  try {
+    // Only the export gateway is lazy - it is heavy and this path is rare.
+    // fileStorage is already a module-level import.
+    const { downloadFileWithPolicy } =
+      await import("@app/services/exportWithPolicy");
+    const file = await fileStorage.getStirlingFile(stub.id);
+    if (!file) return null;
+
+    // No localPath, so this always prompts for a location - which is the point.
+    const result = await downloadFileWithPolicy({
+      data: file,
+      filename: stub.name,
+      fileId: stub.id,
+    });
+    if (result.cancelled || !result.savedPath) return null;
+
+    const state = await getDiskFileState(result.savedPath);
+    const updates: Partial<StirlingFileStub> = {
+      localFilePath: result.savedPath,
+      orphanedFilePath: undefined,
+      diskConflictAt: undefined,
+      diskUnavailableReason: undefined,
+      isDirty: false,
+      ...(state.availability === "present" ? diskBaseline(state) : {}),
+    };
+    await fileStorage.updateFileMetadata(stub.id, updates);
+    return { path: result.savedPath, updates };
+  } catch (error) {
+    console.error("[diskFileSync] Save as copy failed:", error);
+    return null;
+  }
+}
+
+/** The bit of i18next this module needs, if it has been initialised at all. */
+interface Translator {
+  t: (key: string, options?: Record<string, unknown>) => string;
+}
+
+function isTranslator(value: unknown): value is Translator {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as Translator).t === "function"
+  );
+}
+
+/** Best-effort translation: runs from hydration paths with no i18n context,
+ *  and the English default is already interpolated. */
+function translate(
+  key: string,
+  defaultValue: string,
+  params?: Record<string, string | number>,
+): string {
+  try {
+    const i18next = (globalThis as Record<string, unknown>).i18next;
+    if (isTranslator(i18next)) {
+      return i18next.t(key, { defaultValue, ...params });
+    }
+  } catch {
+    /* translation is best-effort; the English default still reads fine */
+  }
+  return defaultValue;
+}
+
+interface ToastSpec {
+  title: string;
+  body: string;
+  durationMs?: number;
+  isPersistentPopup?: boolean;
+  alertType?: "warning" | "neutral";
+  buttonText?: string;
+  buttonCallback?: () => void;
+}
+
+/** Lazy: this sits on the hydration path and the toast barrel pulls in the
+ *  whole icon set, costing ~3s of module load per file open. */
+function toast({ alertType = "warning", ...options }: ToastSpec): void {
+  void import("@app/components/toast")
+    .then(({ alert }) => alert({ alertType, expandable: false, ...options }))
+    .catch((error) => console.error("[diskFileSync] toast failed:", error));
+}
+
+/** Tell the user a file they were opening is gone - the race the list-time
+ *  prune cannot catch. Nothing to offer, so it stays a plain notice. */
+export function notifyFileVanished(name: string): void {
+  toast({
+    title: translate("desktopFileLink.missing.title", "File no longer exists"),
+    body: translate(
+      "desktopFileLink.missing.body",
+      `"${name}" has been deleted or moved on disk, so it has been removed from your files.`,
+      { name },
+    ),
+    durationMs: 8000,
+  });
+}
+
+/** An open file lost its disk original - an unresolved decision, not an event,
+ *  so the toast persists and says saving will ask for a new location. */
+export function notifyOpenFileDeleted(
+  names: string[],
+  onSaveAs?: () => void,
+): void {
+  const single = names.length === 1;
+  toast({
+    title: translate(
+      "desktopFileLink.openDeleted.title",
+      single ? "File deleted on disk" : "Files deleted on disk",
+      { count: names.length },
+    ),
+    body: translate(
+      "desktopFileLink.openDeleted.body",
+      single
+        ? `"${names[0]}" no longer exists on disk. It is still open here - saving will ask you for a new location.`
+        : `${names.length} files no longer exist on disk. They are still open here - saving each one will ask you for a new location.`,
+      { count: names.length, name: names[0] },
+    ),
+    isPersistentPopup: true,
+    ...(onSaveAs && single
+      ? {
+          buttonText: translate("desktopFileLink.saveAs", "Save as…"),
+          buttonCallback: onSaveAs,
+        }
+      : {}),
+  });
+}
+
+export function notifyDiskTooLarge(name: string, onReload?: () => void): void {
+  toast({
+    title: translate("desktopFileLink.tooLarge.title", "File changed on disk"),
+    body: translate(
+      "desktopFileLink.tooLarge.body",
+      `"${name}" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone.`,
+      { name },
+    ),
+    isPersistentPopup: true,
+    ...(onReload
+      ? {
+          buttonText: translate(
+            "desktopFileLink.useDiskVersion",
+            "Use disk version",
+          ),
+          buttonCallback: onReload,
+        }
+      : {}),
+  });
+}
+
+/** Say an external edit was picked up: swapping bytes silently is right, but
+ *  with no trace nobody can tell whose version is on screen. */
+export function notifyDiskReloaded(name: string): void {
+  toast({
+    alertType: "neutral",
+    title: translate("desktopFileLink.reloaded.title", "Updated from disk"),
+    body: translate(
+      "desktopFileLink.reloaded.body",
+      `"${name}" changed on disk and has been reloaded.`,
+      { name },
+    ),
+    durationMs: 6000,
+  });
+}

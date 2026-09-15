@@ -47,11 +47,14 @@ function buildDevPreviewWallet(role: WalletRole): Wallet {
   return {
     teamId: null,
     status: subscribed ? "subscribed" : "free",
+    team: { held: false, licensedUsers: null, usersInUse: 1 },
+    processor: { active: subscribed },
     role,
     billingPeriodStart: isoDay(periodStart),
     billingPeriodEnd: isoDay(periodEnd),
     billableUsed: 62,
     billableLimit: subscribed ? 1250 : 500,
+    freeUserAllowance: 5,
     freeAllowance: 500,
     // One-time grant: a free team has used 62 of 500 (438 left); the dev
     // subscribed team is shown with its grant fully spent (kept across the

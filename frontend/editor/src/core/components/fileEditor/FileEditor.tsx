@@ -382,7 +382,7 @@ const FileEditor = ({
             <div
               style={{
                 display: "grid",
-                gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))",
+                gridTemplateColumns: "repeat(auto-fill, minmax(276px, 1fr))",
                 rowGap: "1.5rem",
                 padding: "1rem",
                 pointerEvents: "auto",

@@ -35,12 +35,15 @@ export const getFilenameFromHeaders = (
  * @returns File object
  */
 export const createFileFromApiResponse = (
-  responseData: any,
-  headers: any,
+  responseData: BlobPart,
+  headers: Record<string, unknown> | null | undefined,
   fallbackFilename: string,
 ): File => {
-  const contentType = headers?.["content-type"] || "application/octet-stream";
-  const contentDisposition = headers?.["content-disposition"] || "";
+  const contentType =
+    (headers?.["content-type"] as string | undefined) ||
+    "application/octet-stream";
+  const contentDisposition =
+    (headers?.["content-disposition"] as string | undefined) || "";
 
   const filename =
     getFilenameFromHeaders(contentDisposition) || fallbackFilename;

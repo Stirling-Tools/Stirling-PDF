@@ -1,16 +1,14 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
-import ComputerIcon from "@mui/icons-material/Computer";
-import CloudDoneIcon from "@mui/icons-material/CloudDone";
-import GroupIcon from "@mui/icons-material/Group";
-
+import { Icon } from "@app/ui/Icon";
 import { FileOrigin } from "@app/components/filesPage/fileOrigin";
 
 interface FileOriginBadgeProps {
   origin: FileOrigin;
   /** Compact (icon-only) vs full (icon + text). */
   compact?: boolean;
+  tooltip?: string;
 }
 
 const styles = {
@@ -44,6 +42,7 @@ const styles = {
 export function FileOriginBadge({
   origin,
   compact = false,
+  tooltip,
 }: FileOriginBadgeProps) {
   const { t } = useTranslation();
 
@@ -52,7 +51,7 @@ export function FileOriginBadge({
       case "cloud":
         return {
           label: t("filesPage.origin.cloud", "Cloud"),
-          icon: <CloudDoneIcon style={{ fontSize: "0.85rem" }} />,
+          icon: <Icon name="cloud-check" size={"0.85rem"} />,
           style: styles.cloud,
           tooltip: t(
             "filesPage.origin.cloudHint",
@@ -62,7 +61,7 @@ export function FileOriginBadge({
       case "shared-with-me":
         return {
           label: t("filesPage.origin.shared", "Shared"),
-          icon: <GroupIcon style={{ fontSize: "0.85rem" }} />,
+          icon: <Icon name="users" size={"0.85rem"} />,
           style: styles.shared,
           tooltip: t("filesPage.origin.sharedHint", "Shared with you via link"),
         };
@@ -70,7 +69,7 @@ export function FileOriginBadge({
       default:
         return {
           label: t("filesPage.origin.local", "Local"),
-          icon: <ComputerIcon style={{ fontSize: "0.85rem" }} />,
+          icon: <Icon name="monitor" size={"0.85rem"} />,
           style: styles.local,
           tooltip: t(
             "filesPage.origin.localHint",
@@ -88,7 +87,7 @@ export function FileOriginBadge({
   );
 
   return (
-    <Tooltip label={config.tooltip} withinPortal>
+    <Tooltip label={tooltip ?? config.tooltip} withinPortal>
       {badge}
     </Tooltip>
   );

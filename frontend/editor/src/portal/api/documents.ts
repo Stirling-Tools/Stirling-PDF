@@ -123,10 +123,8 @@ export const DOC_AUDIT_TONE: Record<DocAuditKind, StatusTone> = {
   elevation: "purple",
 };
 
-/** GET the audit-derived Documents feed; SaaS or local, scoped server-side. `tier` ignored. */
+/** GET the audit-derived Documents feed, scoped server-side. `tier` ignored. */
 export async function fetchDocuments(tier: Tier): Promise<DocumentsResponse> {
   const path = `/api/v1/proprietary/ui-data/documents?tier=${encodeURIComponent(tier)}`;
-  return apiClient.saas.isConfigured()
-    ? apiClient.saas.json<DocumentsResponse>(path)
-    : apiClient.local.json<DocumentsResponse>(path);
+  return apiClient.local.json<DocumentsResponse>(path);
 }

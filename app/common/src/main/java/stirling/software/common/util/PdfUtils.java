@@ -47,6 +47,9 @@ import stirling.software.common.service.CustomPDFDocumentFactory;
 @UtilityClass
 public class PdfUtils {
 
+    // Print-quality raster for flattening a page to an image; capped by system maxDPI
+    private static final int PDF_TO_IMAGE_DPI = 300;
+
     private final RegexPatternUtils patternCache = RegexPatternUtils.getInstance();
 
     public PDRectangle textToPageSize(String size) {
@@ -370,12 +373,12 @@ public class PdfUtils {
                 final int pageIndex = page;
                 BufferedImage bim;
 
-                // Use global maximum DPI setting, fallback to 300 if not set
-                int renderDpi = 300; // Default fallback
+                // maxDPI is a safety ceiling for user-supplied values, not a target resolution
+                int renderDpi = PDF_TO_IMAGE_DPI;
                 ApplicationProperties properties =
                         ApplicationContextProvider.getBean(ApplicationProperties.class);
                 if (properties != null && properties.getSystem() != null) {
-                    renderDpi = properties.getSystem().getMaxDPI();
+                    renderDpi = Math.min(renderDpi, properties.getSystem().getMaxDPI());
                 }
                 final int dpi = renderDpi;
 
@@ -490,7 +493,7 @@ public class PdfUtils {
             pageSize = new PDRectangle(pageSize.getHeight(), pageSize.getWidth());
         }
 
-        if ("fitDocumentToImage".equals(fitOption)) {
+        if ("fitDocumentToImage".equals(fitOption) || "fitDocumentToPage".equals(fitOption)) {
             pageSize = new PDRectangle(image.getWidth(), image.getHeight());
         }
 
@@ -502,7 +505,9 @@ public class PdfUtils {
 
         try (PDPageContentStream contentStream =
                 new PDPageContentStream(doc, page, AppendMode.APPEND, true, true)) {
-            if ("fillPage".equals(fitOption) || "fitDocumentToImage".equals(fitOption)) {
+            if ("fillPage".equals(fitOption)
+                    || "fitDocumentToImage".equals(fitOption)
+                    || "fitDocumentToPage".equals(fitOption)) {
                 contentStream.drawImage(image, 0, 0, pageWidth, pageHeight);
             } else if ("maintainAspectRatio".equals(fitOption)) {
                 float imageAspectRatio = (float) image.getWidth() / (float) image.getHeight();

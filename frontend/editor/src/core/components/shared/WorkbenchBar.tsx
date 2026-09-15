@@ -11,7 +11,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Icon } from "@app/ui/Icon";
 import {
   clearFilesPageReturnRoute,
   getFilesPageReturnRoute,
@@ -31,7 +31,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationState } from "@app/contexts/NavigationContext";
 import { ViewerContext, useViewer } from "@app/contexts/ViewerContext";
 import { WorkbenchType, isBaseWorkbench } from "@app/types/workbench";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
 import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import ViewerShareButton from "@app/components/viewer/ViewerShareButton";
@@ -50,8 +49,6 @@ import {
   WorkbenchBarRenderContext,
   WorkbenchBarSection,
 } from "@app/types/workbenchBar";
-import InsertDriveFileOutlinedIcon from "@mui/icons-material/InsertDriveFileOutlined";
-import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import WorkbenchBarDesktopActions from "@app/components/shared/workbenchBar/WorkbenchBarDesktopActions";
 import WorkbenchBarMobileActions from "@app/components/shared/workbenchBar/WorkbenchBarMobileActions";
 import WorkbenchBarToolbarHandle from "@app/components/shared/workbenchBar/WorkbenchBarToolbarHandle";
@@ -167,6 +164,24 @@ export default function WorkbenchBar({
     if (currentView === "pageEditor") return pageEditorSelectedCount;
     return selectedFileIds.length;
   }, [currentView, pageEditorSelectedCount, selectedFileIds.length]);
+
+  // Registered into the bar's own row rather than the tool row below it. Already
+  // sorted by order when registered.
+  const barRowButtons = useMemo(
+    () =>
+      buttons.filter((btn) => btn.section === "bar" && (btn.visible ?? true)),
+    [buttons],
+  );
+
+  // Beside the view switcher rather than among the actions: what the view is showing
+  // reads as part of the view, not as something to do to it.
+  const barLeadButtons = useMemo(
+    () =>
+      buttons.filter(
+        (btn) => btn.section === "bar-lead" && (btn.visible ?? true),
+      ),
+    [buttons],
+  );
 
   const sectionsWithButtons = useMemo(() => {
     return SECTION_ORDER.map((section) => {
@@ -334,12 +349,14 @@ export default function WorkbenchBar({
   // stay in step; each renders the same actions in its own shape.
   const globalActionProps: WorkbenchBarActionsProps = {
     currentView,
-    isCustomView,
+    // Save, Save As and Close act on an open document. The library has none: it
+    // lists files, and opening one is what the other views are for.
+    showsFileActions: !isCustomView && currentView !== "myFiles",
     actionsDisabled,
     policyEnforcing,
     downloadLabel: downloadTooltip,
-    downloadIconName: icons.downloadIconName,
-    saveAsIconName: icons.saveAsIconName,
+    downloadIconName: icons.download,
+    saveAsIconName: icons.saveAs,
     onPrint: handlePrint,
     onExport: handleExportAll,
     onClose: handleClose,
@@ -402,29 +419,29 @@ export default function WorkbenchBar({
   );
 
   // View options
+  // Tools that own a custom workbench ship their own canvas.
+  const ownsCustomWorkbenchAsDefault = selectedTool === "pdfTextEditor";
   const viewOptions: ViewOption[] = [
+    ...(ownsCustomWorkbenchAsDefault
+      ? []
+      : [
+          {
+            value: "viewer" as WorkbenchType,
+            label: t("workbenchBar.viewer", "Viewer"),
+            icon: <Icon name="file" size={20} />,
+          },
+        ]),
     {
-      value: "viewer",
-      label: t("workbenchBar.viewer", "Viewer"),
-      icon: <InsertDriveFileOutlinedIcon fontSize="small" />,
-    },
-    {
-      value: "fileEditor",
+      value: "fileEditor" as WorkbenchType,
       label: t("workbenchBar.activeFiles", "Active Files"),
-      icon: <FolderOutlinedIcon fontSize="small" />,
+      icon: <Icon name="folder" size={20} />,
     },
     ...(selectedTool === "multiTool"
       ? [
           {
             value: "pageEditor" as WorkbenchType,
             label: t("workbenchBar.multiTool", "Multi-Tool"),
-            icon: (
-              <LocalIcon
-                icon="dashboard-customize-outline-rounded"
-                width="1rem"
-                height="1rem"
-              />
-            ),
+            icon: <Icon name="layout-dashboard" size="1rem" />,
           },
         ]
       : []),
@@ -433,7 +450,7 @@ export default function WorkbenchBar({
       .map((v) => ({
         value: v.workbenchId,
         label: v.label,
-        icon: v.icon ?? <InsertDriveFileOutlinedIcon fontSize="small" />,
+        icon: v.icon ?? <Icon name="file" size={20} />,
       })),
   ];
 
@@ -506,7 +523,7 @@ export default function WorkbenchBar({
                   : "Back to File library",
                 { folder: returnRoute.label ?? "" },
               )}
-              leftSection={<ArrowBackIcon style={{ fontSize: "1.1rem" }} />}
+              leftSection={<Icon name="arrow-left" size={"1.1rem"} />}
             >
               <span className="workbench-bar-view-label">
                 {returnRoute.label
@@ -519,7 +536,9 @@ export default function WorkbenchBar({
             <div className="workbench-bar-divider" />
           </>
         )}
-        {(hasFiles || isCustomView) && (
+        {/* Not in the library: it browses files rather than showing one, and the
+            rail is what moves between surfaces. */}
+        {currentView !== "myFiles" && (hasFiles || isCustomView) && (
           <SegmentedControl<WorkbenchType>
             className="workbench-bar-views"
             size="sm"
@@ -537,6 +556,16 @@ export default function WorkbenchBar({
             }))}
           />
         )}
+        {barLeadButtons.map((btn) => {
+          const content = renderButton(btn);
+          if (!content) return null;
+          return (
+            <div className="workbench-bar-lead" key={btn.id}>
+              <div className="workbench-bar-divider" />
+              {content}
+            </div>
+          );
+        })}
       </div>
 
       {/* Global super search - always present, even on the homepage */}
@@ -592,6 +621,19 @@ export default function WorkbenchBar({
 
       {/* Right: Global buttons - export group left, close anchored right */}
       <div className="workbench-bar-globals">
+        {/* A view's own controls, ahead of the globals every view shares. */}
+        {barRowButtons.map((btn) => {
+          const content = renderButton(btn);
+          if (!content) return null;
+          return (
+            <div key={btn.id} className="workbench-bar-action-wrapper">
+              {content}
+            </div>
+          );
+        })}
+        {barRowButtons.length > 0 && (
+          <div className="workbench-bar-divider workbench-bar-globals-sep" />
+        )}
         {/* Share (viewer only; opens the same modal as My Files "Manage sharing") */}
         {currentView === "viewer" && sharingEnabled && (
           <ViewerShareButton disabled={actionsDisabled} />

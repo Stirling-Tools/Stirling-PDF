@@ -12,6 +12,11 @@ import stirling.software.proprietary.model.dto.TeamWithUserCountDTO;
 
 @Repository
 public interface TeamRepository extends JpaRepository<Team, Long> {
+    @org.springframework.data.jpa.repository.Lock(
+            jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @Query("SELECT t FROM Team t WHERE t.id = :id")
+    Optional<Team> lockById(@org.springframework.data.repository.query.Param("id") Long id);
+
     Optional<Team> findByName(String name);
 
     @Query(

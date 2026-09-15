@@ -13,7 +13,8 @@ vi.mock("@app/hooks/usePolicies", () => ({
     policies: {
       security: {
         configured: true,
-        status: "active",
+        runsOnEditor: true,
+        enabled: true,
         backendId: "backend-1",
         runOn: "upload",
       },
@@ -27,7 +28,10 @@ vi.mock("@app/services/policyApi", () => ({
   resolvePolicyRunTarget: () => "saas",
 }));
 vi.mock("@app/services/fileStorage", () => ({
-  fileStorage: { getStirlingFile: vi.fn(), getStirlingFileStub: vi.fn() },
+  fileStorage: {
+    getStirlingFile: vi.fn(),
+    getStirlingFileStub: vi.fn().mockResolvedValue(null),
+  },
 }));
 vi.mock("@app/contexts/IndexedDBContext", () => ({
   useIndexedDB: () => ({ bumpRevision: vi.fn() }),
@@ -85,7 +89,7 @@ describe("auto-run queue-rejection retry", () => {
 
     recordRunStart({
       runId: "run-1",
-      categoryId: "security",
+      policyKey: "security",
       fileId: "file-1",
       fileName: "doc.pdf",
       fileSize: 1234,

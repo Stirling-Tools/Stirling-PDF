@@ -43,6 +43,7 @@ class CheckConstrainedEnumsTest {
         assertThat(persisted)
                 .doesNotContain(
                         FailureAudience.class,
+                        FailureActionSlot.class,
                         FailureActionId.class,
                         FailureActionId.Execution.class,
                         Ownership.class);
