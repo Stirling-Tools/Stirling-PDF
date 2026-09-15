@@ -67,6 +67,7 @@ const CertSign = (props: BaseToolProps) => {
       case "JKS":
         return !!params.jksFile;
       case "WINDOWS_STORE":
+      case "MACOS_KEYCHAIN":
         return !!params.alias;
       case "PKCS11":
         return !!(params.pkcs11LibraryPath && params.alias);
