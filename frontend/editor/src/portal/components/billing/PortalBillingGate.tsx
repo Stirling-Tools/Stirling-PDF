@@ -1,4 +1,5 @@
 import { useServerPlan } from "@portal/hooks/useServerPlan";
+import { useAuth } from "@app/auth/UseSession";
 import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
 import { useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
@@ -22,6 +23,12 @@ import type { Wallet } from "@portal/api/billing";
  * the wallet would flip the whole portal to linked.
  */
 export function PortalBillingGate() {
+  const { user, isAdmin, loading } = useAuth();
+  if (loading || !isAdmin || user?.orgOwner !== true) return null;
+  return <OwnerBilling />;
+}
+
+function OwnerBilling() {
   const applyLinkFacts = useApplyLinkFacts();
   const { openLinkModal, trialSetupRequested } = useUI();
   const { loading, gated, connect } = useConnectGate();

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { WithOrgOwner } from "@portal/test/WithOrgOwner";
 import { http, HttpResponse } from "msw";
 import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
 import { ConnectAccountRail } from "@portal/components/ConnectAccountRail";
@@ -28,6 +29,7 @@ const withLinkState = (state: LinkState) => [
 const meta: Meta<typeof ConnectAccountRail> = {
   title: "Portal/AccountLink/ConnectAccountRail",
   component: ConnectAccountRail,
+  decorators: [WithOrgOwner],
   parameters: { layout: "padded" },
 };
 export default meta;
