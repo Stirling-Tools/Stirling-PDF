@@ -29,6 +29,7 @@ import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.instance.InstanceUsageIngestService;
 import stirling.software.saas.payg.model.BillingCategory;
 import stirling.software.saas.payg.model.EntitlementState;
+import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.policy.PricingPolicy;
 import stirling.software.saas.payg.policy.PricingPolicyService;
 import stirling.software.saas.repository.SaasTeamExtensionsRepository;
@@ -102,7 +103,8 @@ public class InstanceController {
             // counters on the [periodStart, periodEnd) boundary.
             UnitCalcPolicy unitCalcPolicy,
             LocalDateTime periodStart,
-            LocalDateTime periodEnd) {}
+            LocalDateTime periodEnd,
+            int automationStepLimit) {}
 
     @GetMapping("/whoami")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
@@ -227,22 +229,18 @@ public class InstanceController {
                         policy.getMinChargeUnits(),
                         policy.getFileUnitCap()),
                 snap.periodStart(),
-                snap.periodEnd());
+                snap.periodEnd(),
+                policy.resolveStepLimit(JobSource.PIPELINE));
     }
 
     /**
-     * Users the team's Team plan covers, or null when it has no user limit.
-     *
-     * <p>Read from the seat cap the subscription writes, so the instance and the cloud team enforce
-     * one number. {@code Integer.MAX_VALUE} is the historic "unlimited" sentinel and becomes null
-     * here: the wire contract expresses no-limit as absence, so nothing downstream can accidentally
-     * do arithmetic on it.
+     * Users the team's Team plan covers, or null when it has no user limit. Read from the seat cap
+     * the subscription writes, so the instance and the cloud team enforce one number.
      */
     private Integer licensedUsers(Long teamId) {
         return teamExtensionsRepository
                 .findByTeamId(teamId)
-                .map(SaasTeamExtensions::getMaxSeats)
-                .filter(max -> max != null && max > 0 && max < Integer.MAX_VALUE)
+                .map(SaasTeamExtensions::licensedUsers)
                 .orElse(null);
     }
 

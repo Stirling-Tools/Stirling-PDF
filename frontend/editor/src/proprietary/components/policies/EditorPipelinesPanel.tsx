@@ -19,7 +19,7 @@ import { ActionIcon } from "@app/ui/ActionIcon";
 import "@app/components/policies/EditorPipelinesPanel.css";
 
 const PIPELINES_PATH = `${PORTAL_BASENAME}/pipelines`;
-const ICON_SX = { fontSize: "1.05rem" } as const;
+const ICON_SIZE = "1.05rem";
 const TRIGGER_SX = { fontSize: "0.8125rem" } as const;
 
 function rowState(pipeline: EditorPipeline): "running" | "failed" | "idle" {
@@ -58,7 +58,7 @@ function PipelineRow({
   const body = (
     <>
       <span className="editor-pipelines__row-icon" aria-hidden>
-        {policyCategoryIcon(pipeline.policyKey, ICON_SX)}
+        {policyCategoryIcon(pipeline.policyKey, ICON_SIZE)}
       </span>
       <span className="editor-pipelines__row-label">{pipeline.label}</span>
       <TriggerIcon

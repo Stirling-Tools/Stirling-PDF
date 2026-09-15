@@ -4931,6 +4931,8 @@ test.describe("PDF text editor - stress: save+reopen multi-cycle", () => {
   test("save+reopen three times in a row (with one edit each) doesn't compound ghost objects", async ({
     page,
   }) => {
+    // Three persistence round-trips can exceed the single-operation budget on CI runners.
+    test.setTimeout(120_000);
     // Reach: a leak that adds one ghost text object per round-trip would grow
     // page 0's run count linearly with cycles.
     await loadFixture(page);
