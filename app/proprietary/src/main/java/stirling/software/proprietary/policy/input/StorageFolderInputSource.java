@@ -195,6 +195,9 @@ public class StorageFolderInputSource implements InputSource {
         private final String filename;
         private final long sizeBytes;
         private final long version;
+
+        // Set at claim, replaced when an in-place output commits, and read by whichever thread
+        // completes the run. The two writes cannot overlap: delivery follows discovery.
         private volatile CompletionVersion completed;
 
         private record CompletionVersion(String gate, String contentHash) {}

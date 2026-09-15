@@ -118,12 +118,7 @@ class StorageOutputSinkTest {
         StoredInput input = new StoredInput();
         when(files.findById(10L)).thenReturn(Optional.of(origin));
         when(storage.replaceFile(
-                        eq(owner),
-                        eq(origin),
-                        any(),
-                        isNull(),
-                        isNull(),
-                        eq(StoredInput.VERSION)))
+                        eq(owner), eq(origin), any(), isNull(), isNull(), eq(StoredInput.VERSION)))
                 .thenReturn(origin);
 
         sink.deliver(
@@ -133,12 +128,7 @@ class StorageOutputSinkTest {
 
         verify(storage)
                 .replaceFile(
-                        eq(owner),
-                        eq(origin),
-                        any(),
-                        isNull(),
-                        isNull(),
-                        eq(StoredInput.VERSION));
+                        eq(owner), eq(origin), any(), isNull(), isNull(), eq(StoredInput.VERSION));
         assertThat(origin.getOwner()).isSameAs(owner);
         // Completion must settle at what this run produced, not at whatever the row holds later.
         assertThat(input.recordedGate).isEqualTo(StorageFileIdentities.gate(origin));
