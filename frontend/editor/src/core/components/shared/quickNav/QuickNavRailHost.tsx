@@ -69,7 +69,7 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  // The three apps you switch between. Reader is a mode over the editor rather
+  // The apps you switch between. Reader is a mode over the editor rather
   // than a place of its own, but it leads the group because it is where most
   // visits start.
   const reader: QuickNavEntry = {
@@ -125,10 +125,13 @@ export function QuickNavRailHost() {
     },
   };
 
-  // Editor and processor only pair off where there is a processor to reach.
-  const apps: QuickNavEntry[] = HAS_PORTAL
-    ? [reader, editor, processor]
-    : [reader];
+  // The processor is additive: dropping the editor with it left a lone reader
+  // toggle in builds without a portal, with no way back out of reader mode.
+  const apps: QuickNavEntry[] = [
+    reader,
+    editor,
+    ...(HAS_PORTAL ? [processor] : []),
+  ];
 
   const within: QuickNavEntry[] = [
     {
