@@ -6,7 +6,7 @@
   "license": "SEE LICENSE IN https://raw.githubusercontent.com/Stirling-Tools/Stirling-PDF/refs/heads/main/proprietary/LICENSE",
   "proxy": "http://localhost:8080",
   "dependencies": {
-    "@atlaskit/pragmatic-drag-and-drop": "^1.7.7",
+    "@atlaskit/pragmatic-drag-and-drop": "^2.0.2",
     "@cantoo/pdf-lib": "^2.8.2",
     "@dnd-kit/core": "^6.3.1",
     "@embedpdf/core": "^2.15.0",
