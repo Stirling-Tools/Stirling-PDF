@@ -389,9 +389,7 @@ const SignSettings = ({
   );
 
   const handleDeleteSavedSignature = useCallback(
-    (signature: SavedSignature) => {
-      removeSignature(signature.id);
-    },
+    (signature: SavedSignature) => removeSignature(signature.id),
     [removeSignature],
   );
 
@@ -1175,7 +1173,7 @@ const SignSettings = ({
           ? placementInstructions()
           : translate(
               "instructions.resumeHint",
-              "Resume placement to click and add your signature.",
+              'Placement is paused — clicking the PDF won\'t add your signature. Click "Resume placement" below (or press Esc) to continue.',
             ),
       }
     : {
@@ -1219,7 +1217,12 @@ const SignSettings = ({
   const placementToggleControl =
     onActivateSignaturePlacement || onDeactivateSignature ? (
       isPlacementMode ? (
-        <Tooltip label={translate("mode.pause", "Pause placement")}>
+        <Tooltip
+          label={translate(
+            "mode.pauseHint",
+            "Stop placing signatures so you can scroll and click the PDF without adding one.",
+          )}
+        >
           <Button
             variant="secondary"
             aria-label={translate("mode.pause", "Pause placement")}
@@ -1233,7 +1236,12 @@ const SignSettings = ({
           </Button>
         </Tooltip>
       ) : (
-        <Tooltip label={translate("mode.resume", "Resume placement")}>
+        <Tooltip
+          label={translate(
+            "mode.resumeHint",
+            "Turn placement back on so clicking the PDF adds your signature.",
+          )}
+        >
           <Button
             variant="secondary"
             aria-label={translate("mode.resume", "Resume placement")}
