@@ -202,4 +202,63 @@ class InstanceEntitlementGateWiringTest {
         assertEquals(GateDecision.Reason.FLAG_OFF, d.reason());
         verify(store, never()).isLinked();
     }
+
+    @Test
+    void serverApiDoesNotReadOrConsumeCreditAllowances() {
+        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+
+        assertEquals(
+                GateDecision.allow(GateDecision.Reason.SERVER_LICENSE), gate.evaluate(true, true));
+        verifyNoInteractions(store, cache, syncState, localUsage, freeTier);
+    }
+
+    @ParameterizedTest
+    @EnumSource(EntitlementState.class)
+    void serverApiRemainsIncludedWhenLinked(EntitlementState state) {
+        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(store.isLinked()).thenReturn(true);
+        when(cache.current())
+                .thenReturn(Optional.of(new InstanceEntitlement(false, 0, 0, null, state)));
+
+        assertEquals(
+                GateDecision.allow(GateDecision.Reason.SERVER_LICENSE), gate.evaluate(true, true));
+        verifyNoInteractions(store, cache, localUsage, freeTier);
+    }
+
+    @Test
+    void serverProcessorWorkStillRequiresCredits() {
+        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(freeTier.balance()).thenReturn(grant(0));
+
+        assertEquals(
+                GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED),
+                gate.evaluate(true, false));
+    }
+
+    @Test
+    void teamAllowanceWithoutServerLicenceDoesNotExemptApi() {
+        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(store.isLinked()).thenReturn(true);
+        when(cache.current())
+                .thenReturn(
+                        Optional.of(
+                                new InstanceEntitlement(
+                                        false, 0, 0, null, EntitlementState.OVER_LIMIT)));
+        when(localUsage.currentPeriodUnsynced())
+                .thenReturn(new LocalUsageService.LocalUsage(null, 0, 0, 0, 0));
+
+        assertEquals(GateDecision.block(GateDecision.Reason.OVER_LIMIT), gate.evaluate(true, true));
+    }
+
+    @Test
+    void expiredServerLicenceRestoresApiCreditEnforcement() {
+        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        assertTrue(gate.evaluate(true, true).allowed());
+
+        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(freeTier.balance()).thenReturn(grant(0));
+        assertEquals(
+                GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED),
+                gate.evaluate(true, true));
+    }
 }
