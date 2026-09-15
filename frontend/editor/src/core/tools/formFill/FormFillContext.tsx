@@ -182,9 +182,7 @@ function reducer(state: FormFillState, action: Action): FormFillState {
             if (
               !mergedWidgets.some(
                 (mw) =>
-                  mw.pageIndex === w.pageIndex &&
-                  mw.x === w.x &&
-                  mw.y === w.y,
+                  mw.pageIndex === w.pageIndex && mw.x === w.x && mw.y === w.y,
               )
             ) {
               mergedWidgets.push(w);
@@ -240,8 +238,10 @@ export interface FormFillContextValue {
     fileId?: string,
     options?: { exhaustive?: boolean },
   ) => Promise<void>;
-  /** Loads a page's fields on demand (form overlays call this on mount) */
+  /** Ensure form fields are loaded for a given page index (on-demand loading) */
   ensurePageFields?: (pageIndex: number) => Promise<void>;
+  /** Ensure every page's fields are loaded (save-time validation) */
+  ensureAllFields?: () => Promise<void>;
   /** Update a single field value */
   setValue: (fieldName: string, value: string) => void;
   /** Set the currently focused field */
@@ -547,7 +547,11 @@ export function FormFillProvider({
   }, []);
 
   const fetchFields = useCallback(
-    async (file: File | Blob, fileId?: string) => {
+    async (
+      file: File | Blob,
+      fileId?: string,
+      options?: { exhaustive?: boolean },
+    ) => {
       // Increment version so any in-flight fetch for a previous file is discarded.
       // NOTE: setProviderMode() also increments fetchVersionRef to invalidate
       // in-flight fetches when switching providers. This is intentional — the
@@ -631,7 +635,9 @@ export function FormFillProvider({
         // pdfium ones by name, since appending would list a signature twice.
         if (providerModeRef.current === "pdfbox") {
           try {
-            // Share the cached buffer; the provider reads the same Blob.
+            // Cache-shared read: the pdfium provider path reads the same Blob
+            // through documentBytesCache, so this must not mint a second
+            // full-file copy.
             const arrayBuffer = await getDocumentBytes(file);
             const sigFields =
               await fetchSignatureFieldsWithAppearances(arrayBuffer);
@@ -781,23 +787,55 @@ export function FormFillProvider({
 
   const ensurePageFields = useCallback(
     async (pageIndex: number) => {
-      if (isExhaustiveRef.current || loadedPagesRef.current.has(pageIndex)) return;
+      if (isExhaustiveRef.current || loadedPagesRef.current.has(pageIndex))
+        return;
       loadedPagesRef.current.add(pageIndex);
       const file = activeFileRef.current;
-      if (!file) return;
+      if (!file) {
+        loadedPagesRef.current.delete(pageIndex);
+        return;
+      }
+      const version = fetchVersionRef.current;
       try {
         const pageFields = await providerRef.current.fetchFields(file, {
           pageIndices: [pageIndex],
         });
+        if (
+          fetchVersionRef.current !== version ||
+          activeFileRef.current !== file
+        )
+          return;
         if (pageFields.length > 0) {
-          dispatch({ type: "MERGE_PAGE_FIELDS", pageIndex, fields: pageFields });
+          dispatch({
+            type: "MERGE_PAGE_FIELDS",
+            pageIndex,
+            fields: pageFields,
+          });
         }
       } catch (err) {
-        console.warn(`[FormFill] Failed to load fields for page ${pageIndex}:`, err);
+        loadedPagesRef.current.delete(pageIndex);
+        console.warn(
+          `[FormFill] Failed to load fields for page ${pageIndex}:`,
+          err,
+        );
       }
     },
     [dispatch],
   );
+
+  /**
+   * Load every page's fields when a flow needs the complete set (save-time
+   * required-field validation). Reuses the version-guarded full fetch, which
+   * also invalidates in-flight per-page loads.
+   */
+  const ensureAllFields = useCallback(async () => {
+    if (isExhaustiveRef.current) return;
+    const file = activeFileRef.current;
+    if (!file) return;
+    await fetchFields(file, forFileIdRef.current ?? undefined, {
+      exhaustive: true,
+    });
+  }, [fetchFields]);
 
   const reset = useCallback(() => {
     // Increment version to invalidate any in-flight fetch
@@ -1010,6 +1048,7 @@ export function FormFillProvider({
       state,
       fetchFields,
       ensurePageFields,
+      ensureAllFields,
       setValue,
       setActiveField,
       submitForm,
@@ -1057,6 +1096,7 @@ export function FormFillProvider({
       state,
       fetchFields,
       ensurePageFields,
+      ensureAllFields,
       setValue,
       setActiveField,
       submitForm,
