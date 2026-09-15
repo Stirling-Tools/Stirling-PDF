@@ -179,6 +179,9 @@ async function gotoFilesPage(page: Page): Promise<void> {
 }
 
 test.describe("Files page", () => {
+  // Most of these read the library as cards.
+  test.use({ filesViewMode: "grid" });
+
   test.describe("Selection model", () => {
     test.beforeEach(async ({ page }) => {
       await stubStorageApis(page);
@@ -1021,6 +1024,61 @@ test.describe("Files page", () => {
       );
 
       expect(inFolder).toBe(atRoot);
+    });
+  });
+
+  test.describe("List view", () => {
+    test.use({ autoGoto: false, filesViewMode: null });
+
+    const FOLDER = "11111111-2222-4333-8444-555555555595";
+
+    /** The library opens as a list, and remembers the grid once it is chosen. */
+    test("is where the library starts, and the choice sticks", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "l-1", name: "l-1.pdf", remoteStorageId: null },
+      ]);
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+
+      await expect(page.locator(".files-page-list-row").first()).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.locator(".files-page-card")).toHaveCount(0);
+
+      await page
+        .locator('.files-page-view-toggle-icon[title="Grid view"]')
+        .first()
+        .click();
+      await expect(page.locator(".files-page-card").first()).toBeVisible();
+
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await expect(page.locator(".files-page-card").first()).toBeVisible({
+        timeout: 15_000,
+      });
+    });
+
+    /** A processing folder tells the same story in either view. */
+    test("a processing folder carries its counts in a row", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [{ id: "l-2", name: "l-2.pdf", remoteStorageId: null }],
+        [{ id: FOLDER, name: "Scans" }],
+      );
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+
+      const row = page
+        .locator(".files-page-list-row")
+        .filter({ hasText: "Scans" });
+      await expect(row).toBeVisible({ timeout: 15_000 });
+      await row.getByRole("button", { name: /folder actions/i }).click();
+      await expect(
+        page.getByRole("menuitem", { name: /Process files in this folder/i }),
+      ).toBeVisible();
     });
   });
 
