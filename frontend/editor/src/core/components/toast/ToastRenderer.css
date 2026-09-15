@@ -235,3 +235,11 @@
   color: var(--c-text);
   border-color: var(--c-border);
 }
+
+@media (max-width: 64rem) {
+  .toast-container--bottom-left,
+  .toast-container--bottom-right,
+  .toast-container--bottom-center {
+    bottom: calc(3.75rem + env(safe-area-inset-bottom, 0px));
+  }
+}

@@ -4,8 +4,6 @@ import { SidebarToggleButton } from "@app/components/shared/SidebarToggleButton"
 export interface SidebarHeaderProps {
   collapsed?: boolean;
   onToggleCollapse?: () => void;
-  toggleAriaLabel?: string;
-  toggleIcon?: React.ReactNode;
   className?: string;
 }
 
@@ -13,8 +11,6 @@ export interface SidebarHeaderProps {
 export function SidebarHeader({
   collapsed,
   onToggleCollapse,
-  toggleAriaLabel,
-  toggleIcon,
   className,
 }: SidebarHeaderProps) {
   return (
@@ -24,8 +20,6 @@ export function SidebarHeader({
         <SidebarToggleButton
           collapsed={collapsed}
           onToggle={onToggleCollapse}
-          ariaLabel={toggleAriaLabel}
-          icon={toggleIcon}
         />
       )}
     </div>

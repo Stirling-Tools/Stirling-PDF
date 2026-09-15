@@ -93,6 +93,7 @@ jobs:
             VERSION_TAG=v2-alpha
             STIRLING_FLAVOR=saas
             VITE_BUILD_MODE=development
+            VITE_INCLUDE_PORTAL=true
             VITE_SUPABASE_URL=${{ steps.config.outputs.supabase_url }}
             VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=${{ secrets.SAAS_SUPABASE_PUBLISHABLE_KEY }}
           platforms: linux/amd64

@@ -12,15 +12,12 @@ import {
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
-import MyLocationIcon from "@mui/icons-material/MyLocation";
+import { Icon } from "@app/ui/Icon";
 import { useViewer } from "@app/contexts/ViewerContext";
 import {
   pendingSelectionName,
   pendingIdFrom,
 } from "@app/tools/formFill/pendingSelection";
-import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import {
   CREATABLE_FIELD_TYPES,
@@ -151,7 +148,7 @@ export function FormFieldCreatePanel({
 
         {error && (
           <Alert
-            icon={<WarningAmberIcon sx={{ fontSize: 16 }} />}
+            icon={<Icon name="triangle-alert" size={16} />}
             color="red"
             variant="light"
             p="xs"
@@ -227,7 +224,7 @@ export function FormFieldCreatePanel({
                           }}
                           data-testid={`form-pending-goto-${pf.id}`}
                         >
-                          <MyLocationIcon sx={{ fontSize: 16 }} />
+                          <Icon name="locate-fixed" size={16} />
                         </ActionIcon>
                       </Tooltip>
                       <Tooltip
@@ -248,7 +245,7 @@ export function FormFieldCreatePanel({
                           }}
                           data-testid={`form-pending-remove-${pf.id}`}
                         >
-                          <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                          <Icon name="trash" size={16} />
                         </ActionIcon>
                       </Tooltip>
                     </Group>
@@ -302,7 +299,7 @@ export function FormFieldCreatePanel({
             onPointerLeave={() => setPreviewing(false)}
             onPointerCancel={() => setPreviewing(false)}
             onBlur={() => setPreviewing(false)}
-            leftSection={<VisibilityOutlinedIcon fontSize="small" />}
+            leftSection={<Icon name="eye" size={20} />}
           >
             {t("formFill.create.preview", "Hold to preview")}
           </Button>
