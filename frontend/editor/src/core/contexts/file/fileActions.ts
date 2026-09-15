@@ -529,8 +529,7 @@ export async function addFiles(
       stirlingFiles.push(stirlingFile);
 
       // Capture per-file hydration task — scheduled after batch dispatch below
-      if (!options.skipMetadataHydration)
-        pendingHydrations.push(async () => {
+      const hydrate = async () => {
         const targetFile = filesRef.current.get(fileId);
         if (!targetFile) {
           return;
@@ -598,7 +597,8 @@ export async function addFiles(
             // Non-critical — regenerated lazily on next hover
           }
         }
-      });
+      };
+      if (!options.skipMetadataHydration) pendingHydrations.push(hydrate);
 
       reportBulkAddProgress(++scannedCount, filesToProcess.length);
       if (stirlingFileStubs.length - flushedStubs >= DISPATCH_CHUNK) {

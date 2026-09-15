@@ -106,7 +106,9 @@ const GROUPS: ClassificationDemoGroupCount[] = [
     id: "hr",
     name: "HR",
     count: 5,
-    labels: [{ id: "employment-contract", name: "Employment contract", count: 5 }],
+    labels: [
+      { id: "employment-contract", name: "Employment contract", count: 5 },
+    ],
   },
   {
     id: "medical",
@@ -376,9 +378,7 @@ export const Results: Story = {
 
 /** More left in the folder than the free allowance covers, so the offer is a batch. */
 export const ResultsAllowanceCapped: Story = {
-  render: () => (
-    <ResultsView groups={GROUPS} remaining={612} batchSize={450} />
-  ),
+  render: () => <ResultsView groups={GROUPS} remaining={612} batchSize={450} />,
 };
 
 /** The folder is fully swept: no follow-up, just Done. */
@@ -407,7 +407,11 @@ export const AllSingletons: Story = {
             { id: "legal-notice", name: "Legal notice", count: 1 },
             { id: "contract", name: "Contract", count: 1 },
             { id: "lease", name: "Lease agreement", count: 1 },
-            { id: "employment-contract", name: "Employment contract", count: 1 },
+            {
+              id: "employment-contract",
+              name: "Employment contract",
+              count: 1,
+            },
           ],
         },
       ]}
@@ -560,7 +564,9 @@ function WalkthroughDemo({
           },
         ]}
         onAction={(action) =>
-          action === "start" ? void run(CLASSIFICATION_DEMO_BATCH_SIZE) : close()
+          action === "start"
+            ? void run(CLASSIFICATION_DEMO_BATCH_SIZE)
+            : close()
         }
         onClose={close}
       />

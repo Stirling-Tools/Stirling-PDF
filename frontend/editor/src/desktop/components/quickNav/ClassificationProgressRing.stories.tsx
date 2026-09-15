@@ -41,7 +41,11 @@ const SIZE = "1.125rem";
 
 /** The rail column the ring sits in, so it is judged at the size it will really be. */
 function Rail({ children }: { children: ReactNode }) {
-  const entry = (id: string, label: string, icon: ReactNode): QuickNavEntry => ({
+  const entry = (
+    id: string,
+    label: string,
+    icon: ReactNode,
+  ): QuickNavEntry => ({
     id,
     label,
     icon,
@@ -56,24 +60,40 @@ function Rail({ children }: { children: ReactNode }) {
               entry(
                 "reader",
                 "Reader",
-                <LocalIcon icon="menu-book-outline-rounded" width={SIZE} height={SIZE} />,
+                <LocalIcon
+                  icon="menu-book-outline-rounded"
+                  width={SIZE}
+                  height={SIZE}
+                />,
               ),
               entry(
                 "editor",
                 "Editor",
-                <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />,
+                <LocalIcon
+                  icon="edit-outline-rounded"
+                  width={SIZE}
+                  height={SIZE}
+                />,
               ),
             ],
             [
               entry(
                 "files",
                 "File library",
-                <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />,
+                <LocalIcon
+                  icon="folder-outline-rounded"
+                  width={SIZE}
+                  height={SIZE}
+                />,
               ),
               entry(
                 "automate",
                 "Automate",
-                <LocalIcon icon="rebase-outline-rounded" width={SIZE} height={SIZE} />,
+                <LocalIcon
+                  icon="rebase-outline-rounded"
+                  width={SIZE}
+                  height={SIZE}
+                />,
               ),
             ],
           ]}
@@ -177,6 +197,10 @@ function LiveRing({
 export const Live: Story = {
   args: { total: 558 },
   render: (args) => (
-    <LiveRing variant={args.variant ?? "fraction"} total={args.total} msPerFile={25} />
+    <LiveRing
+      variant={args.variant ?? "fraction"}
+      total={args.total}
+      msPerFile={25}
+    />
   ),
 };
