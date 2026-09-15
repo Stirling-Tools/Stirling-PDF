@@ -11,6 +11,7 @@ const pdfium = vi.hoisted(() => {
     heap: new Uint8Array(1 << 20),
     closeCalls: [] as number[],
     freeCalls: [] as number[],
+    allocationOrder: [] as string[],
     removeCalls: [] as number[],
     lastGetBlock: null as
       | ((param: number, position: number, ptr: number, size: number) => number)
@@ -27,6 +28,7 @@ const pdfium = vi.hoisted(() => {
     state.heap = heap;
     state.closeCalls = [];
     state.freeCalls = [];
+    state.allocationOrder = [];
     state.removeCalls = [];
     state.lastGetBlock = null;
     state.failOpen = false;
