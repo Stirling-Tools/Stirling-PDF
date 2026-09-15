@@ -1,26 +1,3 @@
-/* ---- File list ---- */
-.file-sidebar-file-list {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 0 8px 0 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.file-sidebar-file-list::-webkit-scrollbar {
-  width: 4px;
-}
-.file-sidebar-file-list::-webkit-scrollbar-track {
-  background: transparent;
-}
-.file-sidebar-file-list::-webkit-scrollbar-thumb {
-  background: var(--c-border);
-  border-radius: 2px;
-}
-
 /* ---- File item ---- */
 .file-sidebar-file-item {
   position: relative;

@@ -67,6 +67,12 @@
       }
     },
     "macOS": {
+      "dmg": {
+        "background": "macos/dmg/background.png",
+        "windowSize": { "width": 660, "height": 400 },
+        "appPosition": { "x": 200, "y": 210 },
+        "applicationFolderPosition": { "x": 460, "y": 210 }
+      },
       "minimumSystemVersion": "10.15",
       "signingIdentity": null,
       "entitlements": null,

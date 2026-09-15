@@ -3,6 +3,7 @@
  * The backend composes the source + policy pair behind the route.
  */
 
+import type { WireRoutingRule } from "@app/policies/types";
 import apiClient from "@app/services/apiClient";
 import { readDiskFile } from "@app/services/localFolderContents";
 
@@ -25,6 +26,8 @@ export interface ProcessingFolder {
   enabled: boolean;
   steps: ProcessingFolderStep[];
   output: Record<string, unknown>;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
 }
 
 /** Exactly one of `folderId` (app storage) or `directory` (server-disk path) says where a
@@ -36,6 +39,8 @@ export interface SaveProcessingFolderRequest {
   enabled?: boolean;
   steps: ProcessingFolderStep[];
   output?: Record<string, unknown>;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
 }
 
 /** Every processing folder the current user owns. */

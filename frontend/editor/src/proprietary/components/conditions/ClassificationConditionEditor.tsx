@@ -6,12 +6,14 @@ import type { MatchesAnyCondition } from "@app/conditions/types";
 interface ClassificationConditionEditorProps {
   condition: MatchesAnyCondition;
   onChange: (condition: MatchesAnyCondition) => void;
+  disabled?: boolean;
 }
 
 /** Edits classification values without owning the destination or action taken on a match. */
 export function ClassificationConditionEditor({
   condition,
   onChange,
+  disabled = false,
 }: ClassificationConditionEditorProps) {
   const { t } = useTranslation();
   const labelData = LABEL_FAMILIES.map((family) => ({
@@ -41,6 +43,7 @@ export function ClassificationConditionEditor({
       value={condition.values}
       onChange={(values) => onChange({ ...condition, values })}
       invalid={condition.values.length === 0}
+      disabled={disabled}
       searchable
       clearable
       maxDropdownHeight={280}
