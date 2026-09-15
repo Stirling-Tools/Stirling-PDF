@@ -12,6 +12,7 @@ import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getToolOgImage } from "@app/data/ogImage";
+import urlSeoOverrides from "@app/data/urlSeoOverrides.json";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -61,6 +62,8 @@ import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
+import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
@@ -102,7 +105,7 @@ function writePersistedSidebarCollapsed(collapsed: boolean): void {
 type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const policiesEnabled = usePoliciesEnabled();
   const { sidebarRefs } = useSidebarContext();
 
@@ -123,12 +126,21 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { config } = useAppConfig();
+  const processingFolderCreation = useProcessingFolderCreation();
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const location = useLocation();
+  useEffect(() => {
+    if (
+      processingFolderCreation.open &&
+      consumeProcessingFolderCreationRequest()
+    ) {
+      processingFolderCreation.open();
+    }
+  }, [location.key, processingFolderCreation.open]);
   // The user's preference, and the only thing that decides it: reading mode forces
   // the sidebar shut without writing, so leaving reading restores this.
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
@@ -321,6 +333,14 @@ export default function HomePage() {
     });
   }, []);
 
+  const openFromComputerRef = useRef<(() => void) | null>(null);
+  const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
+    openFromComputerRef.current = open;
+  }, []);
+  const openFromComputer = useCallback(() => {
+    openFromComputerRef.current?.();
+  }, []);
+
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
   );
@@ -446,25 +466,45 @@ export default function HomePage() {
 
   const baseUrl = useBaseUrl();
 
-  // Update document meta when tool changes
+  // Update document meta when tool changes. Convert aliases (e.g. /pdf-to-word)
+  // all share the one `convert` tool, so prefer a per-URL SEO override when the
+  // path has one - this keeps the hydrated title/description matching the
+  // keyword-targeted copy that crawlers see in the prerendered HTML.
   const appName = config?.appNameNavbar || "Stirling PDF";
+  // The override copy is English-only (it mirrors the prerendered HTML), so
+  // every other locale keeps its translated tool name and description.
+  const isEnglish = (i18n.resolvedLanguage || i18n.language || "").startsWith(
+    "en",
+  );
+  const seoOverride = isEnglish
+    ? (
+        urlSeoOverrides as Record<
+          string,
+          { title: string; description: string }
+        >
+      )[location.pathname]
+    : undefined;
+  const defaultDescription = t(
+    "app.description",
+    "A free, private PDF editor you can run on any infrastructure.",
+  );
+  const metaTitle = seoOverride
+    ? `${seoOverride.title} - ${appName}`
+    : selectedTool
+      ? `${selectedTool.name} - ${appName}`
+      : appName;
+  const metaDescription =
+    seoOverride?.description || selectedTool?.description || defaultDescription;
   useDocumentMeta({
-    title: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    description:
-      selectedTool?.description ||
-      t(
-        "app.description",
-        "The Free Adobe Acrobat alternative (10M+ Downloads)",
-      ),
-    ogTitle: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    ogDescription:
-      selectedTool?.description ||
-      t(
-        "app.description",
-        "The Free Adobe Acrobat alternative (10M+ Downloads)",
-      ),
+    title: metaTitle,
+    description: metaDescription,
+    ogTitle: metaTitle,
+    ogDescription: metaDescription,
     ogImage: getToolOgImage(baseUrl, selectedToolKey),
-    ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl,
+    ogUrl:
+      seoOverride || selectedTool
+        ? `${baseUrl}${window.location.pathname}`
+        : baseUrl,
   });
 
   // Note: File selection limits are now handled directly by individual tools
@@ -472,6 +512,7 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
+      {processingFolderCreation.dialog}
       {policiesEnabled && <PolicyAutoRunController />}
       <QuickNavHostBridge
         requestNavigation={requestNavigation}
@@ -482,7 +523,11 @@ export default function HomePage() {
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}
+        onCreateProcessingFolder={processingFolderCreation.open}
         toolReasons={quickNavToolReasons}
+        onOpenFromComputer={
+          navigationState.workbench === "myFiles" ? undefined : openFromComputer
+        }
       />
       <FilesPageProvider>
         {isMobile ? (
@@ -657,6 +702,7 @@ export default function HomePage() {
                 collapsed={fileSidebarCollapsed}
                 onToggleCollapse={handleSidebarToggle}
                 onOpenSettings={openSettings}
+                onRegisterOpenFromComputer={registerOpenFromComputer}
               />
             </div>
             <Workbench />

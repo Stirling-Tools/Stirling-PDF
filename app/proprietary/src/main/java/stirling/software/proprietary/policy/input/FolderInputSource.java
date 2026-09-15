@@ -29,6 +29,7 @@ import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.source.Source;
 
 /**
  * Reads input files from a directory; each ready file is its own unit of work, claimed through the
@@ -73,6 +74,13 @@ public class FolderInputSource implements InputSource {
     @Override
     public List<Path> watchTargets(InputSpec spec) {
         return List.of(FolderConfig.from(spec.options()).directory());
+    }
+
+    /** Filesystem permissions follow the installation's {@link FolderAccessGuard}. */
+    @Override
+    public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        return resolve(source.toInputSpec(), ctx);
     }
 
     @Override
