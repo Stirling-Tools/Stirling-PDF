@@ -10,12 +10,28 @@
  * 2. **Folder Scanning JSON** — the format consumed by the backend
  *    PipelineDirectoryProcessor. Operation names are full backend endpoint
  *    paths (e.g. "/api/v1/general/merge-pdfs").
+ *
+ * Two Adobe formats are accepted for migration:
+ *
+ * 3. **Acrobat Action (`.sequ`)** - Action Wizard XML, see acrobatSequence.ts.
+ * 4. **Distiller job options (`.joboptions`)** - PostScript settings
+ *    dictionary, see distillerJobOptions.ts.
  */
 
 import { AutomationConfig, AutomationOperation } from "@app/types/automation";
 import { ToolRegistry } from "@app/data/toolsTaxonomy";
 import { downloadFile } from "@app/services/downloadService";
 import { ToolId } from "@app/types/toolId";
+import {
+  importAcrobatSequence,
+  looksLikeAcrobatSequence,
+  type AcrobatStepMapping,
+} from "@app/utils/acrobatSequence";
+import {
+  importJobOptions,
+  looksLikeJobOptions,
+  type JobOptionsImportNote,
+} from "@app/utils/distillerJobOptions";
 
 /**
  * Pipeline configuration format used by folder scanning.
@@ -40,20 +56,43 @@ interface FolderScanningPipeline {
   outputFileName: string;
 }
 
+/** Every format {@link parseAutomationFile} understands. */
+export type AutomationImportFormat =
+  | "automate"
+  | "folderScanning"
+  | "acrobatSequence"
+  | "distillerJobOptions";
+
+interface ParsedAutomationImportBase {
+  automation: Omit<AutomationConfig, "id" | "createdAt" | "updatedAt">;
+  /** Operations with no matching tool, kept verbatim in the automation. */
+  unresolvedOperations: string[];
+  /**
+   * Human-readable messages about anything that did not survive the import.
+   * Always present so callers can render them without switching on `format`.
+   */
+  warnings: string[];
+}
+
 /**
  * Discriminated result returned by {@link parseAutomationFile}.
  */
-export type ParsedAutomationImport =
-  | {
-      format: "automate";
-      automation: Omit<AutomationConfig, "id" | "createdAt" | "updatedAt">;
-      unresolvedOperations: string[];
-    }
-  | {
-      format: "folderScanning";
-      automation: Omit<AutomationConfig, "id" | "createdAt" | "updatedAt">;
-      unresolvedOperations: string[];
-    };
+export type ParsedAutomationImport = ParsedAutomationImportBase &
+  (
+    | { format: "automate" }
+    | { format: "folderScanning" }
+    | {
+        format: "acrobatSequence";
+        /** One entry per Acrobat command, in file order. */
+        mappings: AcrobatStepMapping[];
+        /** `<Instruction>` text from the Action. */
+        instructions: string[];
+      }
+    | {
+        format: "distillerJobOptions";
+        notes: JobOptionsImportNote[];
+      }
+  );
 
 /**
  * Sanitize a filename so it works on Windows / macOS / Linux.
@@ -362,6 +401,16 @@ export function parseAutomationConfigJson(
   };
 }
 
+/** Display names used in format-mismatch errors and in the import UI. */
+export const FORMAT_LABELS: Record<AutomationImportFormat | "unknown", string> =
+  {
+    automate: "Automate JSON",
+    folderScanning: "Folder Scanning JSON",
+    acrobatSequence: "Acrobat Action (.sequ)",
+    distillerJobOptions: "Distiller job options (.joboptions)",
+    unknown: "an unrecognised format",
+  };
+
 /**
  * Heuristic format detector. Folder-scanning JSON uses a `pipeline` array;
  * native Automate JSON uses an `operations` array. Both is invalid.
@@ -379,15 +428,94 @@ export function detectAutomationFormat(
 }
 
 /**
- * Parse a JSON file's text content into a normalized AutomationConfig.
+ * Detect the on-disk format from raw file text.
+ *
+ * The Adobe formats are recognised by their own markers (XML root element,
+ * PostScript dictionary); anything else is treated as JSON and discriminated
+ * by {@link detectAutomationFormat}.
+ */
+export function detectAutomationFileFormat(
+  fileText: string,
+): AutomationImportFormat | "unknown" {
+  const trimmed = fileText.trim();
+  if (!trimmed) return "unknown";
+  if (looksLikeAcrobatSequence(trimmed)) return "acrobatSequence";
+  if (looksLikeJobOptions(trimmed)) return "distillerJobOptions";
+  try {
+    return detectAutomationFormat(JSON.parse(trimmed));
+  } catch {
+    return "unknown";
+  }
+}
+
+/**
+ * Turn an Acrobat command mapping list into user-facing warning lines.
+ * Skipped steps are intentionally omitted - they are noise, not warnings.
+ */
+function acrobatWarnings(mappings: AcrobatStepMapping[]): string[] {
+  return mappings
+    .filter((mapping) => mapping.note && mapping.confidence !== "skipped")
+    .map((mapping) => `${mapping.command}: ${mapping.note}`);
+}
+
+/**
+ * Parse a file's text content into a normalized AutomationConfig.
  * Auto-detects the format unless `expectedFormat` is supplied; throws with a
  * user-readable message on any structural problem.
+ *
+ * @param fileName Original file name, used to name imports whose format
+ *                 carries no name of its own (Distiller job options).
  */
 export function parseAutomationFile(
   fileText: string,
   toolRegistry: Partial<ToolRegistry>,
-  expectedFormat?: "automate" | "folderScanning",
+  expectedFormat?: AutomationImportFormat,
+  fileName?: string,
 ): ParsedAutomationImport {
+  const detected = detectAutomationFileFormat(fileText);
+  const format = expectedFormat ?? detected;
+
+  if (expectedFormat && detected !== "unknown" && detected !== expectedFormat) {
+    throw new Error(
+      `Expected ${FORMAT_LABELS[expectedFormat]} but file looks like ${FORMAT_LABELS[detected]}.`,
+    );
+  }
+
+  if (format === "acrobatSequence") {
+    const result = importAcrobatSequence(fileText, toolRegistry, fileName);
+    return {
+      format: "acrobatSequence",
+      automation: {
+        name: result.name,
+        description: result.description,
+        operations: result.operations,
+      },
+      // Acrobat commands are mapped, not passed through, so anything without
+      // a tool is reported here rather than left in the operation list.
+      unresolvedOperations: result.mappings
+        .filter((mapping) => mapping.confidence === "manual")
+        .map((mapping) => mapping.command),
+      warnings: acrobatWarnings(result.mappings),
+      mappings: result.mappings,
+      instructions: result.instructions,
+    };
+  }
+
+  if (format === "distillerJobOptions") {
+    const result = importJobOptions(fileText, fileName);
+    return {
+      format: "distillerJobOptions",
+      automation: {
+        name: result.name,
+        description: result.description,
+        operations: result.operations,
+      },
+      unresolvedOperations: [],
+      warnings: result.notes.map((note) => `${note.setting}: ${note.message}`),
+      notes: result.notes,
+    };
+  }
+
   let raw: unknown;
   try {
     raw = JSON.parse(fileText);
@@ -397,31 +525,22 @@ export function parseAutomationFile(
     });
   }
 
-  const detected = detectAutomationFormat(raw);
-  const format = expectedFormat ?? detected;
-
-  if (expectedFormat && detected !== "unknown" && detected !== expectedFormat) {
-    throw new Error(
-      `Expected ${
-        expectedFormat === "automate"
-          ? "Automate JSON (operations array)"
-          : "Folder Scanning JSON (pipeline array)"
-      } but file looks like ${
-        detected === "automate" ? "Automate JSON" : "Folder Scanning JSON"
-      }.`,
-    );
-  }
-
   if (format === "automate") {
-    const result = parseAutomationConfigJson(raw, toolRegistry);
-    return { format: "automate", ...result };
+    return {
+      format: "automate",
+      warnings: [],
+      ...parseAutomationConfigJson(raw, toolRegistry),
+    };
   }
   if (format === "folderScanning") {
-    const result = parseFolderScanningConfig(raw, toolRegistry);
-    return { format: "folderScanning", ...result };
+    return {
+      format: "folderScanning",
+      warnings: [],
+      ...parseFolderScanningConfig(raw, toolRegistry),
+    };
   }
 
   throw new Error(
-    "Unrecognized JSON shape. Expected an Automate config (operations[]) or a Folder Scanning config (pipeline[]).",
+    "Unrecognized file. Expected an Automate config (operations[]), a Folder Scanning config (pipeline[]), an Acrobat Action (.sequ) or Distiller job options (.joboptions).",
   );
 }
