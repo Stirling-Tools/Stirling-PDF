@@ -2,7 +2,6 @@ import { describe, expect, it } from "vitest";
 import {
   assemblePolicies,
   buildWireFromSetup,
-  assemblePolicies,
   parseSimplePolicy,
   type PolicySetupResult,
   type WirePolicy,
