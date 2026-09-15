@@ -26,8 +26,8 @@ const ALL_TEAMS = "__all__";
 /** Tab key for members belonging to no team. */
 const UNASSIGNED = "__none__";
 
-/** Teams that can't be renamed/deleted (system-managed). */
-const SYSTEM_TEAMS = new Set(["Default", "Internal"]);
+const DEFAULT_TEAM = "Default";
+const INTERNAL_TEAM = "Internal";
 
 interface UsersDirectoryProps {
   members: Member[];
@@ -183,6 +183,15 @@ export function UsersDirectory({
     return byId;
   }, [teams]);
 
+  const showEmail = useMemo(
+    () => members.some((m) => !!m.email && m.email !== m.name),
+    [members],
+  );
+  const showStatus = useMemo(
+    () => members.some((m) => m.status === "suspended" || m.locked),
+    [members],
+  );
+
   const columns = useMemo<DataTableColumn<Member>[]>(() => {
     function rowKebab(m: Member): CellAction {
       const removeLabel =
@@ -253,12 +262,19 @@ export function UsersDirectory({
         primary: (m) => m.name,
         suffix: (m) => (m.isSelf ? t("users.you", "(you)") : undefined),
       }),
-      column.muted({
-        key: "email",
-        header: t("users.columns.email", "Email"),
-        // Blank when the name already is the email (no separate display name).
-        get: (m) => (m.email !== m.name ? m.email : undefined),
-      }),
+    ];
+
+    if (showEmail) {
+      cols.push(
+        column.muted({
+          key: "email",
+          header: t("users.columns.email", "Email"),
+          get: (m) => (m.email !== m.name ? m.email : undefined),
+        }),
+      );
+    }
+
+    cols.push(
       column.labels({
         key: "team",
         header: t("users.columns.team", "Team"),
@@ -269,23 +285,34 @@ export function UsersDirectory({
           return name ? [{ label: name, accent: "neutral" }] : [];
         },
       }),
-      column.labels({
-        key: "status",
-        header: t("users.columns.status", "Status"),
-        get: (m) => {
-          const out: CellLabel[] = [];
-          if (m.status === "suspended") {
-            out.push({
-              label: t("users.suspended", "Suspended"),
-              accent: "danger",
-            });
-          }
-          if (m.locked) {
-            out.push({ label: t("users.locked", "Locked"), accent: "warning" });
-          }
-          return out;
-        },
-      }),
+    );
+
+    if (showStatus) {
+      cols.push(
+        column.labels({
+          key: "status",
+          header: t("users.columns.status", "Status"),
+          get: (m) => {
+            const out: CellLabel[] = [];
+            if (m.status === "suspended") {
+              out.push({
+                label: t("users.suspended", "Suspended"),
+                accent: "danger",
+              });
+            }
+            if (m.locked) {
+              out.push({
+                label: t("users.locked", "Locked"),
+                accent: "warning",
+              });
+            }
+            return out;
+          },
+        }),
+      );
+    }
+
+    cols.push(
       column.caps({
         key: "capabilities",
         header: t("users.columns.capabilities", "Capabilities"),
@@ -329,7 +356,7 @@ export function UsersDirectory({
         header: t("users.lastActive", "Last active"),
         get: (m) => m.lastActive,
       }),
-    ];
+    );
 
     if (capabilities.changeRole) {
       cols.push(
@@ -365,6 +392,8 @@ export function UsersDirectory({
     capabilities,
     roleOptions,
     showApprover,
+    showEmail,
+    showStatus,
     teamNameById,
     onChangeRole,
     onGrantProcessor,
@@ -396,8 +425,8 @@ export function UsersDirectory({
           },
         ]
       : [];
-    // A team whose name/membership is system-managed - no rename/delete.
-    const managed = SYSTEM_TEAMS.has(team.name) || team.isPersonal === true;
+    const isDefault = team.name === DEFAULT_TEAM;
+    const immutable = team.name === INTERNAL_TEAM || team.isPersonal === true;
     const items: CellMenuItem[] = [];
     if (capabilities.manageGrants) {
       items.push(
@@ -415,16 +444,18 @@ export function UsersDirectory({
             },
       );
     }
-    if (!managed) {
+    if (!immutable) {
       const divider = capabilities.manageGrants;
       if (capabilities.renameTeam) {
         items.push({
-          label: t("users.action.rename", "Rename team"),
+          label: isDefault
+            ? t("users.action.createFromDefault", "Create team from Default")
+            : t("users.action.rename", "Rename team"),
           onClick: () => onRenameTeam(team),
           dividerBefore: divider,
         });
       }
-      if (capabilities.deleteTeam) {
+      if (capabilities.deleteTeam && !isDefault) {
         items.push({
           label: t("users.action.deleteTeam", "Delete team"),
           tone: "danger",

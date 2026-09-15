@@ -48,12 +48,13 @@ function renderDirectory(
   caps: typeof saasCaps,
   teams: Team[] = TEAMS,
   seatsFull = false,
+  members: Member[] = [MEMBER],
 ) {
   const onRemove = vi.fn();
   render(
     <MantineProvider>
       <UsersDirectory
-        members={[MEMBER]}
+        members={members}
         teams={teams}
         capabilities={caps}
         seatsFull={seatsFull}
@@ -108,6 +109,19 @@ describe("UsersDirectory — remove action gating", () => {
     expect(screen.queryByText("Rename team")).not.toBeInTheDocument();
   });
 
+  it("offers to create a team from the self-hosted Default team", async () => {
+    renderDirectory(selfHostedCaps, [
+      { id: 1, name: "Default", userCount: 1, owners: [] },
+    ]);
+    fireEvent.click(teamTab("Default", 1));
+    fireEvent.click(screen.getByRole("button", { name: "Team actions" }));
+
+    expect(
+      await screen.findByText("Create team from Default"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Delete team")).not.toBeInTheDocument();
+  });
+
   it("offers a team with no members yet, so its first member can be added", () => {
     renderDirectory(selfHostedCaps, [
       ...TEAMS,
@@ -128,6 +142,29 @@ describe("UsersDirectory — remove action gating", () => {
 });
 
 describe("UsersDirectory — team strip", () => {
+  it("hides identity and status columns that contain no distinct values", () => {
+    const emailOnlyMember = {
+      ...MEMBER,
+      name: MEMBER.email,
+    };
+    renderDirectory(selfHostedCaps, TEAMS, false, [emailOnlyMember]);
+
+    expect(
+      screen.queryByRole("columnheader", { name: "Email" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("columnheader", { name: "Status" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("shows identity and status columns when they carry information", () => {
+    renderDirectory(selfHostedCaps, TEAMS, false, [
+      { ...MEMBER, status: "suspended" },
+    ]);
+    expect(screen.getByRole("columnheader", { name: "Email" })).toBeVisible();
+    expect(screen.getByRole("columnheader", { name: "Status" })).toBeVisible();
+  });
+
   it("narrows the flat roster to the selected team", () => {
     const other: Member = {
       ...MEMBER,

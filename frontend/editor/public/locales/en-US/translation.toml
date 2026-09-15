@@ -12104,6 +12104,7 @@ you = "(you)"
 
 [users.action]
 cancelInvite = "Cancel invitation"
+createFromDefault = "Create team from Default"
 deleteTeam = "Delete team"
 disableMfa = "Reset MFA"
 move = "Move to team"
@@ -12233,6 +12234,9 @@ title = "New team"
 
 [users.renameTeam]
 apply = "Rename"
+defaultApply = "Create and move"
+defaultDescription = "Default will remain available for new users. Everyone currently in Default will be moved to the new team."
+defaultTitle = "Create team from Default"
 name = "Team name"
 title = "Rename team"
 
