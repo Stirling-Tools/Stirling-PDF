@@ -128,23 +128,15 @@ export function PrivacyNote() {
       <LockOutlinedIcon fontSize="small" className={styles.noteIcon} />
       {t(
         "classificationDemo.offer.privacy",
-        "Everything stays on this device and you can stop anytime.",
+        "Your PDFs stay on this device. Your connected server records processing usage.",
       )}
     </div>
   );
 }
 
-/** The follow-up offer. A batch smaller than what is left means the allowance is the
- *  limit, so the copy names the number it can actually cover. */
-export function FollowUpPanel({
-  remaining,
-  batchSize,
-}: {
-  remaining: number;
-  batchSize: number;
-}) {
+/** The connected server owns allowances and charging for further classification. */
+export function FollowUpPanel({ remaining }: { remaining: number }) {
   const { t } = useTranslation();
-  const partial = batchSize < remaining;
   return (
     <div className={styles.panel}>
       <div className={styles.panelTitle}>
@@ -155,16 +147,10 @@ export function FollowUpPanel({
         )}
       </div>
       <div className={styles.panelBody}>
-        {partial
-          ? t(
-              "classificationDemo.followUp.partial",
-              "{{count}} of them are covered by your remaining free allowance.",
-              { count: batchSize },
-            )
-          : t(
-              "classificationDemo.followUp.free",
-              "They are all covered by your remaining free allowance.",
-            )}{" "}
+        {t(
+          "classificationDemo.followUp.serverCredits",
+          "Your connected server manages credits for processing these files.",
+        )}{" "}
         {t(
           "classificationDemo.followUp.background",
           "This runs in the background. The ring on the left shows progress.",

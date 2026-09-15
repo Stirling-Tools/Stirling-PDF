@@ -3426,10 +3426,8 @@ title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
 background = "This runs in the background. The ring on the left shows progress."
-batchCta = "Process another {{count}}"
-free = "They are all covered by your remaining free allowance."
-partial = "{{count}} of them are covered by your remaining free allowance."
 restCta = "Process the rest"
+serverCredits = "Your connected server manages credits for processing these files."
 title = "Want to keep going? You have {{count}} more PDFs in your Downloads folder."
 
 [classificationDemo.groups]
@@ -3438,7 +3436,7 @@ other = "Other"
 [classificationDemo.offer]
 body = "Classify and organise the {{count}} most recent PDFs in your Downloads folder by type."
 cta = "Process my Downloads folder"
-privacy = "Everything stays on this device and you can stop anytime."
+privacy = "Your PDFs stay on this device. Your connected server records processing usage."
 title = "See what Stirling can do with a whole folder"
 
 [classificationDemo.phase]
@@ -5637,6 +5635,7 @@ terms = "Terms and Conditions"
 title = "3rd Party Licenses"
 
 [localMode]
+automationUnavailable = "Sign in to Stirling Cloud or a self-hosted server to use processing folders and pipelines."
 toolUnavailable = "This tool requires an account. Sign in to Stirling Cloud or connect to a self-hosted server to use it."
 
 [localMode.toolPicker]
