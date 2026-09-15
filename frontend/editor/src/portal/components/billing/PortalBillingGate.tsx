@@ -1,18 +1,18 @@
-import { useServerPlan } from "@portal/hooks/useServerPlan";
+import { useServerPlan } from "@app/portal/hooks/useServerPlan";
 import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
 import { useCallback, useEffect, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { ServerLicenseSection } from "@portal/components/billing/ServerLicenseSection";
+import { ServerLicenseSection } from "@app/portal/components/billing/ServerLicenseSection";
 import {
   useApplyLinkFacts,
   useLinkOptional,
-} from "@portal/contexts/LinkContext";
-import { useUI } from "@portal/contexts/UIContext";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
-import { usePortalAdmin } from "@portal/hooks/usePortalAdmin";
-import { FreeTierPlanView } from "@portal/components/billing/FreeTierPlanView";
-import { Usage } from "@portal/views/Usage";
-import type { Wallet } from "@portal/api/billing";
+} from "@app/portal/contexts/LinkContext";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { useConnectGate } from "@app/portal/hooks/useConnectGate";
+import { usePortalAdmin } from "@app/portal/hooks/usePortalAdmin";
+import { FreeTierPlanView } from "@app/portal/components/billing/FreeTierPlanView";
+import { Usage } from "@app/portal/views/Usage";
+import type { Wallet } from "@app/portal/api/billing";
 
 /**
  * The seam the SaaS build shadows: picks which usage page this instance has one of.
@@ -73,6 +73,7 @@ export function PortalBillingGate() {
       renderLicenseSection={(onSaved) => (
         <ServerLicenseSection onSaved={onSaved} />
       )}
+      sessionRecoveryInShell
     />
   );
 }

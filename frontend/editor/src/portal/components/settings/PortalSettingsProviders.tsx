@@ -1,9 +1,12 @@
 import type { ReactNode } from "react";
-import { LinkProvider } from "@portal/contexts/LinkContext";
-import { TierProvider } from "@portal/contexts/TierContext";
-import { UIProvider, useUI } from "@portal/contexts/UIContext";
-import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
-import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
+import { LinkProvider } from "@app/portal/contexts/LinkContext";
+import { TierProvider } from "@app/portal/contexts/TierContext";
+import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
+import { AccountLinkProvider } from "@app/portal/contexts/AccountLinkContext";
+import { AccountLinkSessionBoundary } from "@app/portal/components/account-link/AccountLinkSessionBoundary";
+import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
+import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
+import { LinkAccountModal } from "@app/portal/components/account-link/LinkAccountModal";
 
 function LinkModalHost() {
   const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
@@ -25,10 +28,14 @@ export function PortalSettingsProviders({ children }: { children: ReactNode }) {
     <LinkProvider initialState="unlinked" statusKnown={false}>
       <TierProvider>
         <UIProvider>
-          <AccountLinkProvider>
-            {children}
-            <LinkModalHost />
-          </AccountLinkProvider>
+          <AccountLinkSessionBoundary>
+            <AccountLinkProvider>
+              <SaasSessionBanner />
+              {children}
+              <LinkModalHost />
+              <ConnectCallbackHost />
+            </AccountLinkProvider>
+          </AccountLinkSessionBoundary>
         </UIProvider>
       </TierProvider>
     </LinkProvider>

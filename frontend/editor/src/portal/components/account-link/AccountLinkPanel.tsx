@@ -3,21 +3,23 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Skeleton } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
 import { AccountConnectionLayout } from "@app/components/settings/AccountConnectionLayout";
-import { useAsync } from "@portal/hooks/useAsync";
-import { useAccountLinkContext } from "@portal/contexts/AccountLinkContext";
-import { HttpError } from "@portal/api/http";
+import { useAsync } from "@app/portal/hooks/useAsync";
+import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
+import { HttpError } from "@app/portal/api/http";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 import {
   fetchInstances,
   revokeInstance as apiRevokeInstance,
   type LinkedInstanceRow,
-} from "@portal/api/link";
-import { LinkAccountCard } from "@portal/components/account-link/LinkAccountCard";
-import { LinkedInstancesTable } from "@portal/components/account-link/LinkedInstancesTable";
-import "@portal/views/AccountLink.css";
+} from "@app/portal/api/link";
+import { LinkAccountCard } from "@app/portal/components/account-link/LinkAccountCard";
+import { LinkedInstancesTable } from "@app/portal/components/account-link/LinkedInstancesTable";
+import "@app/portal/views/AccountLink.css";
 
 /** Self-hosted connection status plus the owning team's connected instances. */
 export function AccountLinkPanel() {
   const { t } = useTranslation();
+  const { revision: sessionRevision } = usePortalSaasSession();
   const link = useAccountLinkContext();
 
   const linked = link.status?.linked ?? false;
@@ -28,7 +30,7 @@ export function AccountLinkPanel() {
   // (so showing the team's other instances would be confusing).
   const instancesState = useAsync<LinkedInstanceRow[]>(
     () => (linked ? fetchInstances() : Promise.resolve([])),
-    [reloadKey, linked],
+    [reloadKey, linked, sessionRevision],
   );
 
   const [revokingId, setRevokingId] = useState<number | null>(null);

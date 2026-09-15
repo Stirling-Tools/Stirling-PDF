@@ -1,15 +1,30 @@
+import type { ReactNode } from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
-import { PortalSettingsSectionHost } from "@portal/components/settings/PortalSettingsSectionHost";
-import { useLinkOptional } from "@portal/contexts/LinkContext";
+import { PortalSettingsSectionHost } from "@app/portal/components/settings/PortalSettingsSectionHost";
+import { useLinkOptional } from "@app/portal/contexts/LinkContext";
 
 const { fetchStatus } = vi.hoisted(() => ({ fetchStatus: vi.fn() }));
-vi.mock("@portal/api/link", () => ({ fetchStatus }));
-vi.mock("@portal/auth/saasSupabase", () => ({
+vi.mock("@app/portal/api/link", () => ({ fetchStatus }));
+vi.mock("@app/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
-vi.mock("@portal/components/account-link/LinkAccountModal", () => ({
+vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
   LinkAccountModal: () => null,
+}));
+
+vi.mock(
+  "@app/portal/components/account-link/AccountLinkSessionBoundary",
+  () => ({
+    AccountLinkSessionBoundary: ({ children }: { children: ReactNode }) =>
+      children,
+  }),
+);
+vi.mock("@app/portal/components/account-link/SaasSessionBanner", () => ({
+  SaasSessionBanner: () => null,
+}));
+vi.mock("@app/portal/components/account-link/ConnectCallbackHost", () => ({
+  ConnectCallbackHost: () => null,
 }));
 
 function LinkState() {

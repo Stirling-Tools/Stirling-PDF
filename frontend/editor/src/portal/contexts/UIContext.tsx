@@ -7,7 +7,8 @@ import {
 } from "react";
 import { navigateToSettings } from "@app/utils/settingsNavigation";
 import type { NavKey } from "@app/components/shared/config/types";
-import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
+import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
+import { clearPendingConnect } from "@app/portal/auth/pendingConnect";
 
 /**
  * Why the dialog is open. All three run the same handshake; the mode only chooses the pitch.
@@ -121,6 +122,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       openLinkModal: (mode: LinkModalMode = "link") => {
         setMobileNavOpen(false);
         setLinkModalMode(mode);
+        setConnectOutcome(null);
         setLinkModalOpen(true);
       },
       trialSetupRequested,
@@ -133,11 +135,13 @@ export function UIProvider({ children }: { children: ReactNode }) {
       publishConnectOutcome: (outcome: ConnectOutcome) => {
         setMobileNavOpen(false);
         setConnectOutcome(outcome);
-        setLinkModalMode("link");
+        setLinkModalMode(outcome.mode ?? "link");
         setLinkModalOpen(true);
       },
       clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
+        connectOutcome?.cancel?.();
+        clearPendingConnect();
         setLinkModalOpen(false);
         setLinkModalMode("link");
         // A reopen from a CTA is a fresh flow, not a handshake already dismissed.

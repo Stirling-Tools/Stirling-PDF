@@ -1,4 +1,4 @@
-import { apiClient } from "@portal/api/http";
+import { apiClient } from "@app/portal/api/http";
 import type { LinkedInstanceRow } from "@app/types/linkedInstance";
 
 export type { LinkedInstanceRow };
@@ -75,7 +75,8 @@ export type ConnectPhase =
   | "LINKED"
   | "EXPIRED"
   | "REJECTED"
-  | "UNAVAILABLE";
+  | "UNAVAILABLE"
+  | "CALLBACK_MISMATCH";
 
 export interface ConnectStatus {
   phase: ConnectPhase;

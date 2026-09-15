@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { ensureSaasSupabase } from "@portal/auth/saasSupabase";
+import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 
 /**
  * Current browser SaaS identity, independent of the local server login or connection owner.
  * Null means no email is available. Tracks sign-in and sign-out without depending on LinkContext.
  */
 export function useLinkedAccountEmail(): string | null {
+  const { revision } = usePortalSaasSession();
   const [email, setEmail] = useState<string | null>(null);
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export function useLinkedAccountEmail(): string | null {
       cancelled = true;
       subscription.unsubscribe();
     };
-  }, []);
+  }, [revision]);
 
   return email;
 }

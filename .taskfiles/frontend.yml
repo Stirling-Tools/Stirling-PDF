@@ -83,6 +83,7 @@ tasks:
     ignore_error: true
     vars:
       MODE: '{{.MODE}}'
+      SAAS_BASE_URL: '{{.SAAS_BASE_URL | default ""}}'
       PORT: '{{.PORT | default "5173"}}'
       BACKEND_URL: '{{.BACKEND_URL | default "http://localhost:8080"}}'
       OPEN: '{{.OPEN | default ""}}'
@@ -90,7 +91,7 @@ tasks:
       BACKEND_URL: '{{.BACKEND_URL}}'
       STIRLING_DEV_LABEL: '{{.DEV_LABEL}}'
     cmds:
-      - npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}
+      - '{{if .SAAS_BASE_URL}}VITE_SAAS_API_URL={{.SAAS_BASE_URL}} {{end}}npx vite editor --mode {{.MODE}} --port {{.PORT}}{{if .OPEN}} --open{{end}}'
 
   # Separate from dev:_run rather than a flag on it: Task sets an `env:` key even
   # when its value resolves to empty, and Vite treats an empty process.env VITE_* as
@@ -152,7 +153,7 @@ tasks:
     deps: [prepare]
     cmds:
       - task: dev:_run
-        vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', OPEN: '{{.OPEN}}' }
+        vars: { MODE: proprietary, PORT: '{{.PORT}}', BACKEND_URL: '{{.BACKEND_URL}}', SAAS_BASE_URL: '{{.SAAS_BASE_URL}}', OPEN: '{{.OPEN}}' }
 
   dev:saas:
     desc: "Start frontend dev server in SaaS mode (SAAS_ENV=dev|staging|prod)"

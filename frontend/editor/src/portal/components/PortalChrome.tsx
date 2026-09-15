@@ -1,9 +1,10 @@
 import { useLocation } from "react-router-dom";
+import type { ReactNode } from "react";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { ErrorBoundary } from "@portal/components/ErrorBoundary";
-import { AppShell } from "@portal/components/AppShell";
-import { ViewRouter } from "@portal/ViewRouter";
+import { ErrorBoundary } from "@app/portal/components/ErrorBoundary";
+import { AppShell } from "@app/portal/components/AppShell";
+import { ViewRouter } from "@app/portal/ViewRouter";
 
 /**
  * The routed view, wrapped in an error boundary so a single view crashing can't
@@ -26,7 +27,7 @@ function RoutedContent() {
  * overlays (e.g. the self-hosted account-link modal) are mounted by
  * PortalProviders, not here.
  */
-export function PortalChrome() {
+export function PortalChrome({ banner }: { banner?: ReactNode } = {}) {
   return (
     // One app-config instance for every portal consumer (the search gates, the
     // sidebar) so they can't fetch twice or disagree.
@@ -34,6 +35,7 @@ export function PortalChrome() {
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
         <AppShell>
+          {banner}
           <RoutedContent />
         </AppShell>
       </ToolRegistryProvider>

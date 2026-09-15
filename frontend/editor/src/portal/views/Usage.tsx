@@ -10,35 +10,36 @@ import { useTranslation } from "react-i18next";
 import { useSearchParams } from "react-router-dom";
 import { Banner, Button } from "@app/ui";
 import { BillingScreen } from "@app/billing";
-import { useUI } from "@portal/contexts/UIContext";
-import { useProcurement } from "@portal/components/procurement/useProcurement";
-import { ControlledDealStatusHero } from "@portal/components/procurement/ProcurementBanner";
-import { ProcurementFlow } from "@portal/components/procurement/ProcurementFlow";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { useProcurement } from "@app/portal/components/procurement/useProcurement";
+import { ControlledDealStatusHero } from "@app/portal/components/procurement/ProcurementBanner";
+import { ProcurementFlow } from "@app/portal/components/procurement/ProcurementFlow";
 import {
   fetchWallet,
   refreshWalletCache,
   type Wallet,
-} from "@portal/api/billing";
+} from "@app/portal/api/billing";
 import {
   fetchLocalUsage,
   triggerLocalSync,
   type LocalUsage,
-} from "@portal/api/link";
-import { useStripePortal } from "@portal/hooks/useStripePortal";
-import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
-import { FreePlanView } from "@portal/components/billing/FreePlanView";
-import { PaymentSection } from "@portal/components/billing/PaymentSection";
-import { InvoicesSection } from "@portal/components/billing/InvoicesSection";
-import { useFleetStats } from "@portal/queries/infrastructure";
+} from "@app/portal/api/link";
+import { useStripePortal } from "@app/portal/hooks/useStripePortal";
+import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
+import { FreePlanView } from "@app/portal/components/billing/FreePlanView";
+import { PaymentSection } from "@app/portal/components/billing/PaymentSection";
+import { InvoicesSection } from "@app/portal/components/billing/InvoicesSection";
+import { useFleetStats } from "@app/portal/queries/infrastructure";
+import { useBundleFlowState } from "@app/portal/hooks/useBundleFlowState";
 import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
-import { SubscribedPlanView } from "@portal/components/billing/SubscribedPlanView";
+import { SubscribedPlanView } from "@app/portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
   SaasNotLinkedError,
   SaasUnconfiguredError,
-} from "@portal/api/http";
-import "@portal/views/Usage.css";
-import "@portal/components/billing/billing.css";
+} from "@app/portal/api/http";
+import "@app/portal/views/Usage.css";
+import "@app/portal/components/billing/billing.css";
 
 export interface UsageProps {
   serverPlan?: ServerPlan;
@@ -56,6 +57,8 @@ export interface UsageProps {
    * is owned by the app, so this path never triggers).
    */
   onReauth?: () => void;
+  /** Self-hosted supplies a shared recovery banner for usage, checkout and settings. */
+  sessionRecoveryInShell?: boolean;
   /** Only the self-hosted host supplies local license management; notify after activation. */
   renderLicenseSection?: (onSaved: () => void) => ReactNode;
 }
@@ -74,9 +77,11 @@ export function Usage({
   serverPlanAction,
   onWalletLoaded,
   onReauth,
+  sessionRecoveryInShell = false,
   renderLicenseSection,
 }: UsageProps = {}) {
   const { t } = useTranslation();
+  const { revision: sessionRevision } = usePortalSaasSession();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const procurement = useProcurement();
   const { trialSetupRequested, clearTrialSetupRequest } = useUI();
@@ -216,7 +221,7 @@ export function Usage({
     return () => {
       cancelled = true;
     };
-  }, [refreshKey, onWalletLoaded, t]);
+  }, [refreshKey, onWalletLoaded, t, sessionRevision]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
   const refreshAfterLicense = useCallback(() => {
@@ -312,7 +317,7 @@ export function Usage({
               {procurement.error}
             </Banner>
           )}
-          {sessionExpired && (
+          {sessionExpired && !sessionRecoveryInShell && (
             <Banner
               tone="warning"
               title={t("portal.usage.sessionExpired.title", "Session expired")}
