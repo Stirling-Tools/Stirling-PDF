@@ -2,10 +2,31 @@ import { useEffect, useState, type RefObject } from "react";
 
 const DEFAULT_ROOT_MARGIN = "400px";
 
+// A row scrolled out of the sidebar list is clipped by that list before it ever
+// reaches the viewport, so `root: null` sees it as non-intersecting no matter
+// what rootMargin says (MDN, "Clipping and the intersection rectangle") and the
+// warm-up never happens. The closest scroll container is the root MDN
+// recommends for exactly this case.
+function nearestScrollableAncestor(element: Element): Element | null {
+  let parent = element.parentElement;
+  while (parent) {
+    const { overflowY } = window.getComputedStyle(parent);
+    if (
+      overflowY === "auto" ||
+      overflowY === "scroll" ||
+      overflowY === "overlay"
+    ) {
+      return parent;
+    }
+    parent = parent.parentElement;
+  }
+  return null;
+}
+
 /**
- * True once the referenced element has come within `rootMargin` of the
- * viewport, and stays true after. The margin warms rows just before they
- * scroll into view, so content is usually ready by the time it is seen.
+ * True once the referenced element has come within `rootMargin` of its scroll
+ * container (or the viewport when nothing scrolls), and stays true after. The
+ * margin warms rows just before they scroll into view.
  *
  * Fails open where IntersectionObserver is unavailable, so callers never stall.
  */
@@ -31,7 +52,7 @@ export function useInViewport(
           observer.disconnect();
         }
       },
-      { rootMargin },
+      { root: nearestScrollableAncestor(element), rootMargin },
     );
     observer.observe(element);
     return () => observer.disconnect();

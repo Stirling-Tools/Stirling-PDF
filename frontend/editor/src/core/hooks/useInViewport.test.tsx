@@ -21,8 +21,9 @@ function entry(
 
 class FakeIntersectionObserver implements IntersectionObserver {
   static instances: FakeIntersectionObserver[] = [];
-  readonly root = null;
+  readonly root: Element | Document | null;
   readonly rootMargin: string;
+  readonly scrollMargin = "0px";
   readonly thresholds: readonly number[] = [];
   observe = vi.fn();
   unobserve = vi.fn();
@@ -33,6 +34,7 @@ class FakeIntersectionObserver implements IntersectionObserver {
     private readonly callback: IntersectionObserverCallback,
     options?: IntersectionObserverInit,
   ) {
+    this.root = options?.root ?? null;
     this.rootMargin = options?.rootMargin ?? "0px";
     FakeIntersectionObserver.instances.push(this);
   }
@@ -77,6 +79,18 @@ describe("useInViewport", () => {
     expect(observer.rootMargin).toBe("120px");
     expect(observer.observe).toHaveBeenCalledWith(screen.getByTestId("target"));
     unmount();
+  });
+
+  it("observes through the nearest scroll container", () => {
+    vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
+    render(
+      <div data-testid="scroller" style={{ overflowY: "auto" }}>
+        <Probe />
+      </div>,
+    );
+
+    const observer = FakeIntersectionObserver.instances[0];
+    expect(observer.root).toBe(screen.getByTestId("scroller"));
   });
 
   it("fails open when IntersectionObserver is unavailable", () => {
