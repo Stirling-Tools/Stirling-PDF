@@ -138,13 +138,12 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 0.5rem;
-  /* Allow this container to shrink below its intrinsic content width so
-     the bulk-action group + filter selects + view toggle can compete for
-     space without bursting out of the toolbar (which previously bled
-     under the right-hand details panel at wider viewports). */
+  /* Shrinks rather than bursting out of the toolbar (it used to bleed under
+     the right-hand details panel); the group wraps to a second row instead. */
   min-width: 0;
 }
 
+/* Pinned: sharing the shrink truncated these to "All s" / "A" at 1025-1180px. */
 .files-page-toolbar-actions > .mantine-Select-root,
 .files-page-toolbar-actions > .mantine-MultiSelect-root,
 .files-page-toolbar-actions > .mantine-TextInput-root {
