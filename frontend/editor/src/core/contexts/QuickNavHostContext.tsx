@@ -30,6 +30,8 @@ export interface QuickNavViewData {
   notificationsOpen: boolean;
   /** Translated; absent means usable. */
   toolReasons: QuickNavToolReasons;
+  /** Mirrors `openFromComputer`, which lives in a ref and so cannot trigger a render. */
+  hasOpenFromComputer: boolean;
 }
 
 export interface QuickNavHostActions {
@@ -41,6 +43,7 @@ export interface QuickNavHostActions {
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
   requestNavigation?: (go: () => void) => void;
+  openFromComputer?: () => void;
   /**
    * Absent unless the app says the hidden novelty features are enabled, which
    * is the only gate the rail gets - see useBrandFlourish. `originRect` is the
@@ -70,6 +73,7 @@ const EMPTY_VIEW: QuickNavViewData = {
   fileLibrary: false,
   activeTool: null,
   notificationsOpen: false,
+  hasOpenFromComputer: false,
 };
 
 function sameReasons(
@@ -102,6 +106,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         activeTool: next.activeTool ?? null,
         notificationsOpen: next.notificationsOpen ?? false,
         toolReasons: next.toolReasons ?? prev.toolReasons,
+        hasOpenFromComputer: next.hasOpenFromComputer ?? false,
       };
       const unchanged =
         merged.appMounted === prev.appMounted &&
@@ -109,6 +114,7 @@ export function QuickNavHostProvider({ children }: { children: ReactNode }) {
         merged.fileLibrary === prev.fileLibrary &&
         merged.activeTool === prev.activeTool &&
         merged.notificationsOpen === prev.notificationsOpen &&
+        merged.hasOpenFromComputer === prev.hasOpenFromComputer &&
         // Compared by value: the object is rebuilt every render.
         sameReasons(merged.toolReasons, prev.toolReasons);
       return unchanged ? prev : merged;
@@ -170,6 +176,7 @@ export function useRegisterQuickNavView(
     notificationsOpen,
     toolReasons,
   } = data;
+  const hasOpenFromComputer = Boolean(actions.openFromComputer);
   useEffect(() => {
     setViewData?.({
       readerMode,
@@ -177,6 +184,7 @@ export function useRegisterQuickNavView(
       activeTool,
       notificationsOpen,
       toolReasons,
+      hasOpenFromComputer,
     });
   }, [
     setViewData,
@@ -185,6 +193,7 @@ export function useRegisterQuickNavView(
     activeTool,
     notificationsOpen,
     toolReasons,
+    hasOpenFromComputer,
   ]);
 
   const setActions = host?.setActions;

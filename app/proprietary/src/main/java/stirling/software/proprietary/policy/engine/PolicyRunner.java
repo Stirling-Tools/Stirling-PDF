@@ -144,7 +144,12 @@ public class PolicyRunner {
                 context.vetoCleanup();
                 continue;
             }
-            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec(), context, admission));
+            if (policyAccessGuard.isOrphaned(source)) {
+                log.warn("Source {} has no reachable owner; not sweeping it", sourceId);
+                context.vetoCleanup();
+                continue;
+            }
+            runIds.addAll(pullAndRun(policy, source, context, admission));
         }
         boolean fullPolicy = inputs.size() == policy.inputs().size();
         if (fullPolicy && context.cleanupAllowed()) {
@@ -222,11 +227,8 @@ public class PolicyRunner {
      * this sweep's ledger cleanup.
      */
     private List<String> pullAndRun(
-            Policy policy,
-            String sourceId,
-            InputSpec spec,
-            PolicySweep context,
-            Semaphore admission) {
+            Policy policy, Source storedSource, PolicySweep context, Semaphore admission) {
+        InputSpec spec = storedSource.toInputSpec();
         InputSource source = sourceFor(spec);
         if (source == null) {
             log.warn(
@@ -257,20 +259,20 @@ public class PolicyRunner {
             runIds.add(
                     startRun(
                             policy,
-                            sourceId,
+                            storedSource,
                             unit.fileIdentity(),
                             unit.inputs(),
                             unit.onComplete(),
                             admission));
             docsFed += unit.inputs().primary().size();
         }
-        docCounter.record(sourceId, docsFed);
+        docCounter.record(storedSource.id(), docsFed);
         return runIds;
     }
 
     private String startRun(
             Policy policy,
-            String sourceId,
+            Source source,
             String fileIdentity,
             PolicyInputs inputs,
             Consumer<Boolean> onComplete,
@@ -281,7 +283,7 @@ public class PolicyRunner {
                         policy,
                         inputs,
                         PolicyProgressListener.NOOP,
-                        sourceId,
+                        source,
                         fileIdentity,
                         admission);
         handle.completion()

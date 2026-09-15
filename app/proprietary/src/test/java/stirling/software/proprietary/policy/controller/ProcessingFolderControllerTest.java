@@ -57,6 +57,7 @@ import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
@@ -168,7 +169,8 @@ class ProcessingFolderControllerTest {
                                         fileStorageService,
                                         processedLedger,
                                         storageProvider,
-                                        properties),
+                                        properties,
+                                        mock(UserService.class)),
                                 diskFolderSink),
                         List.of(),
                         sourceStore,

@@ -301,7 +301,7 @@ function initialWizardState(
       category.id === "classification"
         ? seeded.map((tool) => ({ ...tool, enabled: true }))
         : seeded,
-    required: policy?.state.required ?? true,
+    required: policy?.state.required ?? category.id !== "classification",
     submitting: false,
     error: null,
   };
