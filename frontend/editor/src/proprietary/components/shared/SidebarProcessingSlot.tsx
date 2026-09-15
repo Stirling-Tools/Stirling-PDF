@@ -2,16 +2,13 @@ import { type SidebarProcessingSlotProps } from "@core/components/shared/Sidebar
 export { type SidebarProcessingSlotProps };
 
 import { DownloadsProcessingWizard } from "@app/components/policies/DownloadsProcessingWizard";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 
-/**
- * The Downloads offer, beside the sidebar's other file-entry actions — one more way of
- * getting files in. Not gated on policies being available: it gates itself by asking the
- * server for a readable Downloads directory, and renders nothing without one. Hidden on
- * the collapsed rail — it is a sentence, not an icon.
- */
+/** Offers Downloads processing where a server can execute and meter it. */
 export function SidebarProcessingSlot({
   collapsed,
 }: SidebarProcessingSlotProps) {
-  if (collapsed) return null;
+  const enabled = usePoliciesEnabled();
+  if (collapsed || !enabled) return null;
   return <DownloadsProcessingWizard />;
 }

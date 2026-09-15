@@ -8,7 +8,6 @@ import CloseRoundedIcon from "@mui/icons-material/CloseRounded";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { BrandMark } from "@app/components/shared/BrandMark";
-import { readCachedCredits } from "@app/services/navFooterCache";
 import { claimRun } from "@app/components/onboarding/classificationDemo/classificationDemoSession";
 import { useClassificationDemo } from "@app/components/onboarding/classificationDemo/useClassificationDemo";
 import type { ClassificationDemoViewData } from "@app/components/onboarding/classificationDemo/classificationDemoShared";
@@ -35,9 +34,6 @@ export function ClassificationDemoWorkbenchView({
 }) {
   const { t } = useTranslation();
   const trick = useClassificationDemo(true);
-  // Re-read when a sweep settles, not once at mount: the first batch spends allowance, so
-  // a mount-time snapshot would size the follow-up (and its copy) from credits already gone.
-  const [credits, setCredits] = useState(readCachedCredits);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Claimed from the session, not a ref: a remount would reset a ref and run the same
   // sweep again from zero, re-reading and re-metering every document.
@@ -47,10 +43,6 @@ export function ClassificationDemoWorkbenchView({
     setSelectedId(null);
     trick.start(data.limit);
   }, [data.runToken, data.limit, trick]);
-
-  useEffect(() => {
-    if (trick.status === "done") setCredits(readCachedCredits());
-  }, [trick.status]);
 
   const processingLabel = useProcessingLabel(
     trick.progress.phase,
@@ -62,13 +54,8 @@ export function ClassificationDemoWorkbenchView({
   const colours = useSliceColours(groups);
   const selected = groups.find((group) => group.id === selectedId) ?? null;
 
-  // An unknown balance offers everything rather than inventing a cap. The figure is the
-  // sidebar's last known wallet, so it can lag a beat; it phrases the offer, never gates it.
   const remaining = trick.outcome?.remaining ?? 0;
-  const freeLeft = credits ? Math.max(credits.remaining, 0) : null;
-  const batchSize =
-    freeLeft !== null ? Math.min(remaining, freeLeft) : remaining;
-  const canContinue = remaining > 0 && batchSize > 0;
+  const canContinue = remaining > 0;
 
   // The sweep opens nothing, so it has no workbench state to tear down — and clearing
   // here would close whatever the user already had open.
@@ -167,9 +154,7 @@ export function ClassificationDemoWorkbenchView({
         </div>
 
         <footer className={styles.resultsFooter}>
-          {canContinue && (
-            <FollowUpPanel remaining={remaining} batchSize={batchSize} />
-          )}
+          {canContinue && <FollowUpPanel remaining={remaining} />}
           <div className={styles.viewActions}>
             <Button variant="quiet" accent="neutral" onClick={leave}>
               {canContinue
@@ -177,17 +162,8 @@ export function ClassificationDemoWorkbenchView({
                 : t("classificationDemo.buttons.done", "Done")}
             </Button>
             {canContinue && (
-              <Button onClick={() => trick.start(batchSize)}>
-                {batchSize < remaining
-                  ? t(
-                      "classificationDemo.followUp.batchCta",
-                      "Process another {{count}}",
-                      { count: batchSize },
-                    )
-                  : t(
-                      "classificationDemo.followUp.restCta",
-                      "Process the rest",
-                    )}
+              <Button onClick={() => trick.start(remaining)}>
+                {t("classificationDemo.followUp.restCta", "Process the rest")}
               </Button>
             )}
           </div>
