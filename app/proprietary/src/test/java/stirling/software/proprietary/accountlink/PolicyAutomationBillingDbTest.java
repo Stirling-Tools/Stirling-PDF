@@ -92,7 +92,7 @@ class PolicyAutomationBillingDbTest {
         interceptor =
                 new InstanceEntitlementInterceptor(
                         gate, entitlementCache, meterProvider, freeTierUsageService, tempFiles);
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         when(meterProvider.getIfAvailable())
                 .thenReturn(

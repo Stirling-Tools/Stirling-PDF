@@ -18,6 +18,7 @@ import stirling.software.common.service.LicenseServiceInterface;
  *   <li>Flag off → always allow (feature inert).
  *   <li>Manual tool → always allow (manual tools are free, never metered).
  *   <li>Enterprise license → always allow, with local-only metering.
+ *   <li>Server license + direct PDF tool API → allow without credit metering.
  *   <li>Billable + not linked → {@code FREE_TIER} while units remain, else {@code
  *       FREE_TIER_EXHAUSTED}. Linking buys a further grant, it does not activate the feature.
  *   <li>Billable + linked + entitlement unknown (unreachable) → <b>fail open</b>, allow — unless
@@ -69,6 +70,14 @@ public class InstanceEntitlementGate {
 
     /** Evaluates the gate for a request, resolving live state from the store + cache. */
     public GateDecision evaluate(boolean billable) {
+        return evaluate(billable, false);
+    }
+
+    /**
+     * {@code directToolApi} is true only for direct PDF tool API calls, never Processor runs, AI
+     * tools or internally dispatched automation steps.
+     */
+    public GateDecision evaluate(boolean billable, boolean directToolApi) {
         if (!properties.isEnabled()) {
             return GateDecision.allow(GateDecision.Reason.FLAG_OFF);
         }
@@ -77,6 +86,9 @@ public class InstanceEntitlementGate {
         }
         if (licenseService.isRunningEE()) {
             return GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE);
+        }
+        if (directToolApi && licenseService.isRunningProOrHigher()) {
+            return GateDecision.allow(GateDecision.Reason.SERVER_LICENSE);
         }
         boolean linked = credentialStore.isLinked();
         long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();
