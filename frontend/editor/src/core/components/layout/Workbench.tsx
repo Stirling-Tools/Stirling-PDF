@@ -58,10 +58,8 @@ export default function Workbench() {
   const {
     previewFile,
     pageEditorFunctions,
-    sidebarsVisible,
     setPreviewFile,
     setPageEditorFunctions,
-    setSidebarsVisible,
     customWorkbenchViews,
     readerMode,
   } = useToolWorkflow();
@@ -163,8 +161,6 @@ export default function Workbench() {
     if (currentView === "viewer" && signingOverlay?.file) {
       return (
         <Viewer
-          sidebarsVisible={sidebarsVisible}
-          setSidebarsVisible={setSidebarsVisible}
           previewFile={signingOverlay.file}
           signaturePreviews={signingOverlay.signaturePreviews}
           signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
@@ -217,12 +213,7 @@ export default function Workbench() {
 
       case "viewer":
         return (
-          <Viewer
-            sidebarsVisible={sidebarsVisible}
-            setSidebarsVisible={setSidebarsVisible}
-            previewFile={previewFile}
-            onClose={handlePreviewClose}
-          />
+          <Viewer previewFile={previewFile} onClose={handlePreviewClose} />
         );
 
       case "pageEditor":

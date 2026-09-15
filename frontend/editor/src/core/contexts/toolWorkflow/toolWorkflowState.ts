@@ -4,8 +4,7 @@ import { preferencesService } from "@app/services/preferencesService";
 
 export interface ToolWorkflowState {
   // UI State
-  sidebarsVisible: boolean;
-  leftPanelView: "toolPicker" | "toolContent" | "hidden";
+  leftPanelView: "toolPicker" | "toolContent";
   readerMode: boolean;
   toolPanelMode: ToolPanelMode;
 
@@ -18,10 +17,9 @@ export interface ToolWorkflowState {
 
 // Actions
 export type ToolWorkflowAction =
-  | { type: "SET_SIDEBARS_VISIBLE"; payload: boolean }
   | {
       type: "SET_LEFT_PANEL_VIEW";
-      payload: "toolPicker" | "toolContent" | "hidden";
+      payload: "toolPicker" | "toolContent";
     }
   | { type: "SET_READER_MODE"; payload: boolean }
   | { type: "SET_TOOL_PANEL_MODE"; payload: ToolPanelMode }
@@ -31,7 +29,6 @@ export type ToolWorkflowAction =
   | { type: "RESET_UI_STATE" };
 
 export const baseState: Omit<ToolWorkflowState, "toolPanelMode"> = {
-  sidebarsVisible: true,
   leftPanelView: "toolPicker",
   readerMode: false,
   previewFile: null,
@@ -49,8 +46,6 @@ export function toolWorkflowReducer(
   action: ToolWorkflowAction,
 ): ToolWorkflowState {
   switch (action.type) {
-    case "SET_SIDEBARS_VISIBLE":
-      return { ...state, sidebarsVisible: action.payload };
     case "SET_LEFT_PANEL_VIEW":
       return { ...state, leftPanelView: action.payload };
     case "SET_READER_MODE":

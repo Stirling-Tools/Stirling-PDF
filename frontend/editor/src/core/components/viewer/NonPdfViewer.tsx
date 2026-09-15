@@ -21,8 +21,6 @@ import { TextViewer } from "@app/components/viewer/nonpdf/TextViewer";
 import { HtmlViewer } from "@app/components/viewer/nonpdf/HtmlViewer";
 
 export interface ViewerProps {
-  sidebarsVisible: boolean;
-  setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
 }

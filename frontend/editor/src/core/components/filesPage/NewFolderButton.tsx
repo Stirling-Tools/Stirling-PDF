@@ -12,8 +12,6 @@ export interface NewFolderButtonProps {
   size?: "sm" | "md";
   /** "icon" matches the workbench bar's controls; "row" the file sidebar's. */
   trigger?: "labelled" | "icon" | "row";
-  /** Row trigger only: the sidebar is a rail, so the label goes. */
-  collapsed?: boolean;
   /** Row trigger only, for the tests and callers that look the row up. */
   testId?: string;
   /** Set when a folder cannot be created here at all; also the tooltip. */
@@ -37,7 +35,6 @@ export function NewFolderButton({
   label,
   size = "sm",
   trigger = "labelled",
-  collapsed = false,
   testId,
   disabledReason,
   serverDisabledReason,
@@ -50,10 +47,8 @@ export function NewFolderButton({
   const iconOnly = trigger === "icon";
   const asRow = trigger === "row";
 
-  /** The sidebar's own action-row markup, so the row reads as one of its own.
-   *  `nativeTitle` for the menu shape, which Menu.Target's clone leaves no room to
-   *  wrap in a Tooltip. */
-  const row = (onClick?: () => void, nativeTitle = false) => (
+  /** The sidebar's own action-row markup, so the row reads as one of its own. */
+  const row = (onClick?: () => void) => (
     <div
       className={`file-sidebar-action-row${disabledReason ? " disabled" : ""}`}
       data-testid={testId}
@@ -61,7 +56,6 @@ export function NewFolderButton({
       tabIndex={disabledReason ? -1 : 0}
       aria-disabled={Boolean(disabledReason)}
       aria-label={label}
-      title={nativeTitle && collapsed ? label : undefined}
       onClick={disabledReason ? undefined : onClick}
       // Not onClick: in the menu shape the click handler belongs to Menu.Target,
       // which binds the pointer only. A div has no native Enter/Space either way.
@@ -76,11 +70,9 @@ export function NewFolderButton({
       <span className="file-sidebar-action-icon">
         <Icon name="folder-plus" />
       </span>
-      {!collapsed && (
-        <span className="file-sidebar-action-label sidebar-content-fade">
-          {label}
-        </span>
-      )}
+      <span className="file-sidebar-action-label sidebar-content-fade">
+        {label}
+      </span>
     </div>
   );
 
@@ -129,16 +121,7 @@ export function NewFolderButton({
     const open = () =>
       currentFolderId !== null ? onOpenDialog() : onOpenDialog(null, "server");
     if (asRow) {
-      return (
-        <Tooltip
-          label={label}
-          position="right"
-          withinPortal
-          disabled={!collapsed}
-        >
-          {row(open)}
-        </Tooltip>
-      );
+      return row(open);
     }
     if (iconOnly) {
       return (
@@ -174,7 +157,7 @@ export function NewFolderButton({
     <Menu shadow="md" position="bottom-end" withinPortal>
       <Menu.Target>
         {asRow ? (
-          row(undefined, true)
+          row()
         ) : iconOnly ? (
           <Tooltip label={label} withinPortal>
             <ActionIcon variant="tertiary" size="sm" aria-label={label}>

@@ -28,22 +28,6 @@ html[data-window-controls="custom"] .tool-panel .sui-panelhdr {
   margin-top: var(--wincontrols-h);
 }
 
-/* Right panel, collapsed: the strip is narrower than the controls, so push its
-   expand toggle straight down. */
-html[data-window-controls="custom"] .tool-panel__collapsed-strip {
-  padding-top: calc(10px + var(--wincontrols-h));
-}
-
-/* Viewer top bar: when the right panel is collapsed the bar widens under the
-   controls. :has() detects the collapsed strip (no flag needed in core) and we
-   push the right cluster clear. --nav-rail-w is the collapsed strip's width, so
-   only the controls' overhang past it is reserved. */
-html[data-window-controls="custom"]
-  .app-frame__content:has(.tool-panel__collapsed-strip)
-  .workbench-bar-globals {
-  margin-right: calc(var(--wincontrols-w) - var(--nav-rail-w));
-}
-
 /* Mobile layout: the top bar spans the full width. Keep the brand top-left
    (already clear of the top-right controls) and drop the view switcher below
    them by top-aligning the row and nudging the switcher down. */

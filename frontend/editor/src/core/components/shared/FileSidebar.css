@@ -9,26 +9,13 @@
   height: 100%;
   position: relative;
   /* Above the workbench column (also z-10, but later in the DOM, so it would
-     otherwise paint over us). The brand switcher's menu is wider than the
-     collapsed rail and has to spill across that boundary intact. */
+     otherwise paint over us), so the brand switcher's menu spills across that
+     boundary intact. */
   z-index: var(--z-dropdown);
   flex-shrink: 0;
-  /* Slide the rail between collapsed/expanded. The delayed content-fade
-     (sidebar-content-in, 0.18s) is timed against this 0.22s so labels resolve
-     only after the width has settled — no squashed text mid-animation. */
-  transition:
-    width var(--motion-spring),
-    min-width var(--motion-spring),
-    max-width var(--motion-spring);
   /* Gap around the floating boxes. */
   padding: var(--nav-gutter);
   gap: var(--nav-gutter);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .file-sidebar {
-    transition: none;
-  }
 }
 
 .file-sidebar-inner {
@@ -46,7 +33,30 @@
   border-radius: 0;
 }
 
-/* ---- Header row (wordmark + collapse toggle) ---- */
+/* Back from reading: in over the edge it left by. Transform only, so the
+   workbench is already at its narrower width while the wing arrives. */
+[data-wings-returning] .file-sidebar {
+  animation: file-sidebar-return 220ms ease-out both;
+}
+
+@keyframes file-sidebar-return {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-wings-returning] .file-sidebar {
+    animation: none;
+  }
+}
+
+/* ---- Header row ---- */
 .file-sidebar-header {
   display: flex;
   align-items: center;
@@ -58,15 +68,6 @@
 .file-sidebar-collapse-toggle {
   margin-left: auto;
   flex-shrink: 0;
-}
-
-/* Collapsed the row holds only the toggle, so centre it. */
-.file-sidebar[data-collapsed="true"] .file-sidebar-header {
-  justify-content: center;
-  padding: 0;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-collapse-toggle {
-  margin-left: 0;
 }
 
 /* ---- Three floating nav-surface boxes (controls / files / footer) ---- */
@@ -86,27 +87,6 @@
 }
 /* The footer is the shared <NavFooter>: it brings its own boxes and padding,
    so this class only positions it in the column. */
-
-/* Collapsed rail: the file tree isn't rendered, so hide its (empty) box and
-   let the boxes stack at the top — controls, then the settings footer right
-   after — instead of the files box stretching to fill. */
-.file-sidebar[data-collapsed="true"] .file-sidebar-controls {
-  padding: 0.25rem;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-files-box {
-  display: none;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-inner {
-  flex: 0 0 auto;
-}
-/* Centre each row's icon in the narrow rail (no side padding/margin to shove
-   it off the edge). */
-.file-sidebar[data-collapsed="true"] .file-sidebar-action-row,
-.file-sidebar[data-collapsed="true"] .file-sidebar-cloud-row {
-  justify-content: center;
-  padding-inline: 0;
-  margin: 0;
-}
 
 /* ---- Native file drag-and-drop ---- */
 .file-sidebar[data-file-drag-over] {
@@ -595,9 +575,8 @@
   margin-left: auto;
 }
 
-/* ---- Sidebar content fade (for collapsed state) ---- */
-/* Elements are conditionally rendered so use animation (not transition) to fade in from 0.
-   Delay until the width animation is nearly done (0.18s of 0.22s) to avoid squashed-text effect. */
+/* Rows are conditionally rendered, so they fade in with an animation rather than
+   a transition, which has nothing to run from. */
 @keyframes sidebar-content-in {
   from {
     opacity: 0;
@@ -609,10 +588,4 @@
 
 .sidebar-content-fade {
   animation: sidebar-content-in 0.12s ease 0.18s both;
-}
-
-.file-sidebar[data-collapsed="true"] .sidebar-content-fade {
-  opacity: 0;
-  pointer-events: none;
-  animation: none;
 }

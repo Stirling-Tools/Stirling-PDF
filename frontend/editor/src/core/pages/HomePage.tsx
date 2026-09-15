@@ -71,6 +71,9 @@ import "@app/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
 
+/** Outlasts the wings' own slide-in, which the two rails' stylesheets own. */
+const WINGS_RETURN_MS = 320;
+
 function readSwipeHintSeen(): boolean {
   try {
     return window.localStorage.getItem(SWIPE_HINT_SEEN_STORAGE_KEY) === "true";
@@ -220,6 +223,24 @@ export default function HomePage() {
     const onReadPath = location.pathname.startsWith(READER_PATH);
     if (onReadPath !== readerMode) setReaderMode(onReadPath);
   }, [location.pathname, readerMode, setReaderMode]);
+
+  // Leaving reading puts both wings back on screen at once. They arrive over the
+  // edge they left by rather than appearing in place, so the workspace reads as
+  // coming back rather than blinking into a different layout. Cleared once the
+  // animation has run, so a later render doesn't replay it.
+  const [wingsReturning, setWingsReturning] = useState(false);
+  const readingRef = useRef(readerMode);
+  useEffect(() => {
+    const leftReading = readingRef.current && !readerMode;
+    readingRef.current = readerMode;
+    if (!leftReading) return;
+    setWingsReturning(true);
+    const done = window.setTimeout(
+      () => setWingsReturning(false),
+      WINGS_RETURN_MS,
+    );
+    return () => window.clearTimeout(done);
+  }, [readerMode]);
 
   // Reading moved, so the path follows. Pushed, not replaced, so Back leaves it.
   const wasReadingRef = useRef(readerMode);
@@ -628,6 +649,7 @@ export default function HomePage() {
             h="100%"
             className="flex-nowrap flex"
             bg="var(--c-bg)"
+            data-wings-returning={wingsReturning || undefined}
           >
             {/* Reading is a surface of its own: the document and nothing beside it,
                 so the wing goes rather than shrinking to a rail. Everywhere else it
@@ -738,10 +760,9 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
               // The same control the library's other surfaces use, so one row
               // cannot offer less than another: where a folder can go decides
               // its shape.
-              render: ({ collapsed }) => (
+              render: () => (
                 <NewFolderButton
                   trigger="row"
-                  collapsed={collapsed}
                   testId="files-rail-new-folder"
                   label={t("filesPage.newFolder", "New folder")}
                   disabledReason={newFolderDisabledReason}
