@@ -141,7 +141,7 @@ trailer
 
 /**
  * jsdom has no real `Blob.arrayBuffer()`, and setupTests stubs it with eight
- * dummy bytes — so a plain `new File([...])` cannot be read back. Attach a
+ * dummy bytes - so a plain `new File([...])` cannot be read back. Attach a
  * working implementation for the files under test.
  */
 function fileWithBytes(content: string | Uint8Array, name: string): File {

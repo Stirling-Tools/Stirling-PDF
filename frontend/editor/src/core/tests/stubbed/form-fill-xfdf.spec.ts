@@ -109,7 +109,7 @@ async function openFormFill(page: Page): Promise<void> {
   });
 }
 
-test.describe("Form Fill — XFDF / FDF exchange", () => {
+test.describe("Form Fill - XFDF / FDF exchange", () => {
   test("importing an XFDF export fills the matching fields and reports the rest", async ({
     page,
   }) => {

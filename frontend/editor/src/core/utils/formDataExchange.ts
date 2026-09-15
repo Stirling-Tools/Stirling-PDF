@@ -57,6 +57,30 @@ export interface FormDataImport {
   pdfHref?: string;
 }
 
+/** Why a form-data file could not be parsed. */
+export type FormDataParseErrorCode =
+  | "invalidXml"
+  | "xfdfDoctype"
+  | "notXfdf"
+  | "notFdf"
+  | "fdfNoFields"
+  | "unrecognised";
+
+/**
+ * Thrown when a picked file is not usable form data. `code` lets the UI pick a
+ * translated message; the English `message` is for logs only.
+ */
+export class FormDataParseError extends Error {
+  constructor(
+    public readonly code: FormDataParseErrorCode,
+    message: string,
+    public readonly detail?: string,
+  ) {
+    super(message);
+    this.name = "FormDataParseError";
+  }
+}
+
 /** Join a hierarchical field path the way PDF fully-qualified names do. */
 const qualify = (path: string[]): string => path.join(".");
 
@@ -65,7 +89,8 @@ const XFDF_NS = "http://ns.adobe.com/xfdf/";
 /**
  * Parse XFDF text into field values.
  *
- * @throws if the text is not well-formed XML or has no `<xfdf>` root.
+ * @throws {FormDataParseError} if the text is not well-formed XML or has no
+ * `<xfdf>` root.
  */
 export function parseXfdf(xmlText: string): FormDataImport {
   const doc = new DOMParser().parseFromString(xmlText, "application/xml");
@@ -73,20 +98,30 @@ export function parseXfdf(xmlText: string): FormDataImport {
   // DOMParser signals XML syntax errors with a <parsererror> node.
   const parserError = doc.getElementsByTagName("parsererror")[0];
   if (parserError) {
-    throw new Error(
-      `File is not valid XML: ${parserError.textContent?.trim().split("\n")[0] ?? "unknown error"}`,
+    const detail =
+      parserError.textContent?.trim().split("\n")[0] ?? "unknown error";
+    throw new FormDataParseError(
+      "invalidXml",
+      `File is not valid XML: ${detail}`,
+      detail,
     );
   }
 
   // XFDF never carries a DTD. Rejecting one states the hardening instead
   // of leaning on the engine to ignore entities.
   if (doc.doctype) {
-    throw new Error("XFDF must not declare a DOCTYPE.");
+    throw new FormDataParseError(
+      "xfdfDoctype",
+      "XFDF must not declare a DOCTYPE.",
+    );
   }
 
   const root = doc.documentElement;
   if (!root || root.localName !== "xfdf") {
-    throw new Error("Not an XFDF file: expected an <xfdf> root element.");
+    throw new FormDataParseError(
+      "notXfdf",
+      "Not an XFDF file: expected an <xfdf> root element.",
+    );
   }
 
   const values: Record<string, string> = {};
@@ -418,7 +453,8 @@ export function decodeLatin1(bytes: ArrayBuffer | Uint8Array): string {
  * Parse FDF into field values.
  *
  * @param source Raw FDF bytes, or latin1-decoded text.
- * @throws if no `/FDF` dictionary with a `/Fields` array is present.
+ * @throws {FormDataParseError} if no `/FDF` dictionary with a `/Fields` array
+ * is present.
  */
 export function parseFdf(
   source: ArrayBuffer | Uint8Array | string,
@@ -436,14 +472,16 @@ export function parseFdf(
     }
   }
   if (!fdf) {
-    throw new Error(
+    throw new FormDataParseError(
+      "notFdf",
       "Not an FDF file: no /FDF dictionary found. Acrobat writes '<< /FDF << /Fields [...] >> >>'.",
     );
   }
 
   const fields = psArray(resolve(fdf.Fields));
   if (!fields) {
-    throw new Error(
+    throw new FormDataParseError(
+      "fdfNoFields",
       "FDF file has no /Fields array - there is no form data to import.",
     );
   }
@@ -492,7 +530,7 @@ export class FormDataTooLargeError extends Error {
  * rather than its extension.
  *
  * @throws {FormDataTooLargeError} when the file exceeds {@link MAX_FORM_DATA_BYTES}.
- * @throws with a user-readable message when the file is neither format.
+ * @throws {FormDataParseError} when the file is neither format.
  */
 export async function parseFormDataFile(
   file: File | Blob,
@@ -507,7 +545,8 @@ export async function parseFormDataFile(
     // XFDF is XML and may be UTF-8; re-decode before handing it to DOMParser.
     return parseXfdf(new TextDecoder("utf-8").decode(buffer));
   }
-  throw new Error(
+  throw new FormDataParseError(
+    "unrecognised",
     "Unrecognised form data file. Expected XFDF (<xfdf> XML) or FDF (%FDF-).",
   );
 }

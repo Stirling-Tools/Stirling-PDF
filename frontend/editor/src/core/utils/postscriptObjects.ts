@@ -1,15 +1,13 @@
 /**
  * Minimal reader for PostScript / PDF object syntax.
  *
- * Shared by the two Adobe migration importers, which both consume files
- * written in this syntax:
- * - Distiller `.joboptions` - a `<< … >> setdistillerparams` dictionary
- * - Acrobat `.fdf` form data - `1 0 obj << /FDF << … >> >> endobj`
+ * Reads Acrobat `.fdf` form data (`1 0 obj << /FDF << … >> >> endobj`) for
+ * formDataExchange.ts, its only consumer.
  *
  * This is deliberately not a PDF parser: there is no xref, no stream
  * decoding and no indirect-reference resolution. It reads the object
  * *syntax* - dictionaries, arrays, names, strings, numbers - which is all
- * either format needs.
+ * FDF needs.
  *
  * Strings are returned as raw bytes widened to one char each (latin1), so
  * callers can detect a UTF-16 BOM and re-decode. Feed it latin1-decoded text

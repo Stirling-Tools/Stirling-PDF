@@ -48,10 +48,12 @@ import {
 } from "@app/tools/formFill/formApi";
 import {
   buildXfdf,
+  FormDataParseError,
   FormDataTooLargeError,
   MAX_FORM_DATA_BYTES,
   parseFormDataFile,
   reconcileImportedValues,
+  type FormDataParseErrorCode,
 } from "@app/utils/formDataExchange";
 import type { FormMode } from "@app/tools/formFill/types";
 import { FormFieldCreatePanel } from "@app/tools/formFill/FormFieldCreatePanel";
@@ -68,6 +70,34 @@ interface ModeTabDef {
   label: string;
   icon: React.ReactNode;
 }
+
+/** Locale key and English fallback per parse-failure code. */
+const IMPORT_ERROR_KEYS: Record<FormDataParseErrorCode, [string, string]> = {
+  invalidXml: [
+    "formFill.importInvalidXml",
+    "File is not valid XML: {{detail}}",
+  ],
+  xfdfDoctype: [
+    "formFill.importXfdfDoctype",
+    "XFDF must not declare a DOCTYPE.",
+  ],
+  notXfdf: [
+    "formFill.importNotXfdf",
+    "Not an XFDF file: expected an <xfdf> root element.",
+  ],
+  notFdf: [
+    "formFill.importNotFdf",
+    "Not an FDF file: no /FDF dictionary found.",
+  ],
+  fdfNoFields: [
+    "formFill.importFdfNoFields",
+    "FDF file has no /Fields array - there is no form data to import.",
+  ],
+  unrecognised: [
+    "formFill.importUnrecognised",
+    "Unrecognised form data file. Expected XFDF (<xfdf> XML) or FDF (%FDF-).",
+  ],
+};
 
 // ---------------------------------------------------------------------------
 // Main FormFill component
@@ -322,6 +352,11 @@ const FormFill = (_props: BaseToolProps) => {
               { limit: Math.round(MAX_FORM_DATA_BYTES / (1024 * 1024)) },
             ),
           );
+          return;
+        }
+        if (err instanceof FormDataParseError) {
+          const [key, fallback] = IMPORT_ERROR_KEYS[err.code];
+          setSaveError(t(key, fallback, { detail: err.detail ?? "" }));
           return;
         }
         setSaveError(
