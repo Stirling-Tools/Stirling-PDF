@@ -1281,6 +1281,204 @@ export async function getMetadata(
   }
 }
 
+export interface PdfiumFullMetadata {
+  title: string;
+  author: string;
+  subject: string;
+  keywords: string;
+  creator: string;
+  producer: string;
+  creationDate: string;
+  modificationDate: string;
+  trapped: "True" | "False" | "Unknown";
+  customMetadata: Array<{ id: string; key: string; value: string }>;
+}
+
+export async function getFullMetadata(
+  data: ArrayBuffer | Uint8Array,
+  password?: string,
+): Promise<PdfiumFullMetadata> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data, password);
+  try {
+    const readTag = (tag: string): string => {
+      const len = m.FPDF_GetMetaText(docPtr, tag, 0, 0);
+      if (len <= 2) return "";
+      const buf = m.pdfium.wasmExports.malloc(len);
+      try {
+        m.FPDF_GetMetaText(docPtr, tag, buf, len);
+        return readUtf16(m, buf, len);
+      } finally {
+        m.pdfium.wasmExports.free(buf);
+      }
+    };
+
+    const title = readTag("Title");
+    const author = readTag("Author");
+    const subject = readTag("Subject");
+    const keywords = readTag("Keywords");
+    const creator = readTag("Creator");
+    const producer = readTag("Producer");
+    const creationDate = readTag("CreationDate");
+    const modificationDate = readTag("ModDate");
+
+    let trapped: "True" | "False" | "Unknown" = "Unknown";
+    if (typeof m.EPDF_GetMetaTrapped === "function") {
+      const rawTrapped = Number(m.EPDF_GetMetaTrapped(docPtr));
+      if (rawTrapped === 1) trapped = "True";
+      else if (rawTrapped === 2) trapped = "False";
+    }
+
+    const customMetadata: Array<{ id: string; key: string; value: string }> =
+      [];
+    if (
+      typeof m.EPDF_GetMetaKeyCount === "function" &&
+      typeof m.EPDF_GetMetaKeyName === "function"
+    ) {
+      const customCount = Number(m.EPDF_GetMetaKeyCount(docPtr, true));
+      for (let i = 0; i < customCount; i++) {
+        const keyLen = m.EPDF_GetMetaKeyName(docPtr, i, true, 0, 0);
+        if (keyLen > 0) {
+          const keyBuf = m.pdfium.wasmExports.malloc(keyLen);
+          try {
+            m.EPDF_GetMetaKeyName(docPtr, i, true, keyBuf, keyLen);
+            const keyName = m.pdfium.UTF8ToString(keyBuf);
+            if (keyName) {
+              const val = readTag(keyName);
+              if (val) {
+                customMetadata.push({
+                  id: `custom${i + 1}`,
+                  key: keyName,
+                  value: val,
+                });
+              }
+            }
+          } finally {
+            m.pdfium.wasmExports.free(keyBuf);
+          }
+        }
+      }
+    }
+
+    return {
+      title,
+      author,
+      subject,
+      keywords,
+      creator,
+      producer,
+      creationDate,
+      modificationDate,
+      trapped,
+      customMetadata,
+    };
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
+export interface ReadAloudTextItem {
+  str: string;
+  transform: number[];
+  width: number;
+  height: number;
+  viewportTransform: number[];
+}
+
+export async function extractPageTextItemsForReadAloud(
+  data: ArrayBuffer | Uint8Array,
+  pageIndex: number,
+  zoom: number,
+): Promise<ReadAloudTextItem[]> {
+  const m = await getPdfiumModule();
+  const docPtr = await openRawDocumentSafe(data);
+  let pagePtr: number | null = null;
+  let textPagePtr: number | null = null;
+  const rectMem = m.pdfium.wasmExports.malloc(32);
+  const l = rectMem;
+  const r = rectMem + 8;
+  const b = rectMem + 16;
+  const t = rectMem + 24;
+
+  try {
+    pagePtr = m.FPDF_LoadPage(docPtr, pageIndex);
+    if (!pagePtr) return [];
+
+    const pHeight =
+      typeof m.FPDF_GetPageHeightF === "function"
+        ? m.FPDF_GetPageHeightF(pagePtr)
+        : m.FPDF_GetPageHeight(pagePtr);
+
+    textPagePtr = m.FPDFText_LoadPage(pagePtr);
+    if (!textPagePtr) return [];
+
+    const charCount = m.FPDFText_CountChars(textPagePtr);
+    if (charCount <= 0) return [];
+
+    const viewportTransform = [zoom, 0, 0, -zoom, 0, pHeight * zoom];
+    const items: ReadAloudTextItem[] = [];
+
+    let currentChars: string[] = [];
+    let minLeft = Infinity;
+    let maxRight = -Infinity;
+    let minBottom = Infinity;
+    let maxTop = -Infinity;
+
+    const flushWord = () => {
+      if (currentChars.length === 0) return;
+      const str = currentChars.join("");
+      const width = Math.max(0, maxRight - minLeft);
+      const height = Math.max(0, maxTop - minBottom);
+      if (width > 0 && height > 0) {
+        items.push({
+          str,
+          transform: [1, 0, 0, 1, minLeft, minBottom],
+          width,
+          height,
+          viewportTransform,
+        });
+      }
+      currentChars = [];
+      minLeft = Infinity;
+      maxRight = -Infinity;
+      minBottom = Infinity;
+      maxTop = -Infinity;
+    };
+
+    for (let i = 0; i < charCount; i++) {
+      const uc = m.FPDFText_GetUnicode(textPagePtr, i);
+      const char = String.fromCodePoint(uc);
+
+      if (char === "\n" || char === "\r" || char === " " || char === "\t") {
+        flushWord();
+        continue;
+      }
+
+      m.FPDFText_GetCharBox(textPagePtr, i, l, r, b, t);
+      const left = m.pdfium.getValue(l, "double");
+      const right = m.pdfium.getValue(r, "double");
+      const bottom = m.pdfium.getValue(b, "double");
+      const top = m.pdfium.getValue(t, "double");
+
+      if (Number.isFinite(left) && Number.isFinite(right)) {
+        currentChars.push(char);
+        if (left < minLeft) minLeft = left;
+        if (right > maxRight) maxRight = right;
+        if (bottom < minBottom) minBottom = bottom;
+        if (top > maxTop) maxTop = top;
+      }
+    }
+    flushWord();
+
+    return items;
+  } finally {
+    m.pdfium.wasmExports.free(rectMem);
+    if (textPagePtr != null) m.FPDFText_ClosePage(textPagePtr);
+    if (pagePtr != null) m.FPDF_ClosePage(pagePtr);
+    closeDocAndFreeBuffer(m, docPtr);
+  }
+}
+
 export interface PdfiumSignatureFieldRect {
   pageIndex: number;
   x: number;

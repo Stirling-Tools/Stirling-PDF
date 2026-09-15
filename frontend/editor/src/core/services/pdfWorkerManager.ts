@@ -5,11 +5,9 @@
  * and ensuring proper cleanup when operations complete.
  */
 
-import {
-  GlobalWorkerOptions,
-  getDocument,
-  PDFDocumentProxy,
-} from "pdfjs-dist/legacy/build/pdf.mjs";
+import type { PDFDocumentProxy } from "pdfjs-dist/legacy/build/pdf.mjs";
+
+type PdfjsModule = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
 
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
@@ -17,10 +15,9 @@ class PDFWorkerManager {
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
   private isInitialized = false;
+  private pdfjsPromise: Promise<PdfjsModule> | null = null;
 
-  private constructor() {
-    this.initializeWorker();
-  }
+  private constructor() {}
 
   static getInstance(): PDFWorkerManager {
     if (!PDFWorkerManager.instance) {
@@ -30,15 +27,37 @@ class PDFWorkerManager {
   }
 
   /**
-   * Initialize PDF.js worker once globally
+   * Load pdfjs-dist on first use and configure its worker once globally.
+   * The static import would put pdf.js into the initial bundle, which
+   * viewer-first flows must avoid (they run fully on PDFium).
    */
-  private initializeWorker(): void {
+  private loadPdfjs(): Promise<PdfjsModule> {
+    if (!this.pdfjsPromise) {
+      this.pdfjsPromise = import("pdfjs-dist/legacy/build/pdf.mjs").then(
+        (pdfjs) => {
+          this.initializeWorker(pdfjs);
+          return pdfjs;
+        },
+        (error: unknown) => {
+          this.pdfjsPromise = null;
+          throw error;
+        },
+      );
+    }
+    return this.pdfjsPromise;
+  }
+
+  /**
+   * Initialize PDF.js worker configuration once globally
+   */
+  private initializeWorker(pdfjs: PdfjsModule): void {
     if (!this.isInitialized) {
-      GlobalWorkerOptions.workerSrc = new URL(
+      pdfjs.GlobalWorkerOptions.workerSrc = new URL(
         "pdfjs-dist/legacy/build/pdf.worker.min.mjs",
         import.meta.url,
       ).toString();
-      (GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl = undefined;
+      (pdfjs.GlobalWorkerOptions as { docBaseUrl?: string }).docBaseUrl =
+        undefined;
       this.isInitialized = true;
     }
   }
@@ -56,6 +75,7 @@ class PDFWorkerManager {
       verbosity?: number;
     } = {},
   ): Promise<PDFDocumentProxy> {
+    const pdfjs = await this.loadPdfjs();
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
       await this.waitForAvailableWorker();
@@ -73,7 +93,7 @@ class PDFWorkerManager {
       pdfData = data; // Pass through as-is
     }
 
-    const loadingTask = getDocument(
+    const loadingTask = pdfjs.getDocument(
       typeof pdfData === "string"
         ? {
             url: pdfData,
@@ -105,7 +125,7 @@ class PDFWorkerManager {
       // If document creation fails, make sure to clean up the loading task
       if (loadingTask) {
         try {
-          loadingTask.destroy();
+          await loadingTask.destroy();
         } catch {
           // Ignore errors
         }
@@ -115,30 +135,32 @@ class PDFWorkerManager {
   }
 
   /**
-   * Properly destroy a PDF document and clean up resources
+   * Properly destroy a PDF document and clean up resources.
+   * Returns a promise so sequential open-close-open flows can await teardown
+   * before creating the next document.
    */
-  destroyDocument(pdf: PDFDocumentProxy): void {
-    if (this.activeDocuments.has(pdf)) {
-      try {
-        pdf.destroy();
-        this.activeDocuments.delete(pdf);
-        this.workerCount = Math.max(0, this.workerCount - 1);
-      } catch {
-        // Still remove from tracking even if destroy failed
-        this.activeDocuments.delete(pdf);
-        this.workerCount = Math.max(0, this.workerCount - 1);
-      }
+  async destroyDocument(pdf: PDFDocumentProxy): Promise<void> {
+    if (!this.activeDocuments.has(pdf)) {
+      return;
+    }
+    try {
+      await pdf.destroy();
+    } catch {
+      // Still remove from tracking even if destroy failed
+    } finally {
+      this.activeDocuments.delete(pdf);
+      this.workerCount = Math.max(0, this.workerCount - 1);
     }
   }
 
   /**
    * Destroy all active PDF documents
    */
-  destroyAllDocuments(): void {
+  async destroyAllDocuments(): Promise<void> {
     const documentsToDestroy = Array.from(this.activeDocuments);
-    documentsToDestroy.forEach((pdf) => {
-      this.destroyDocument(pdf);
-    });
+    await Promise.allSettled(
+      documentsToDestroy.map((pdf) => this.destroyDocument(pdf)),
+    );
 
     this.activeDocuments.clear();
     this.workerCount = 0;
@@ -178,7 +200,7 @@ class PDFWorkerManager {
     // Force destroy all documents
     this.activeDocuments.forEach((pdf) => {
       try {
-        pdf.destroy();
+        void Promise.resolve(pdf.destroy()).catch(() => {});
       } catch {
         // Ignore errors
       }

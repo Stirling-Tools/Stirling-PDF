@@ -72,24 +72,19 @@ global.URL.createObjectURL = vi.fn(() => "mocked-url");
 global.URL.revokeObjectURL = vi.fn();
 
 // Mock File and Blob API methods that aren't available in jsdom
-if (!globalThis.File.prototype.arrayBuffer) {
-  globalThis.File.prototype.arrayBuffer = function () {
-    // Return a simple ArrayBuffer with some mock data
-    const buffer = new ArrayBuffer(8);
-    const view = new Uint8Array(buffer);
-    view.set([1, 2, 3, 4, 5, 6, 7, 8]);
-    return Promise.resolve(buffer);
+if (!globalThis.Blob.prototype.arrayBuffer) {
+  globalThis.Blob.prototype.arrayBuffer = function () {
+    return new Promise<ArrayBuffer>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as ArrayBuffer);
+      reader.onerror = () => reject(reader.error);
+      reader.readAsArrayBuffer(this);
+    });
   };
 }
 
-if (!globalThis.Blob.prototype.arrayBuffer) {
-  globalThis.Blob.prototype.arrayBuffer = function () {
-    // Return a simple ArrayBuffer with some mock data
-    const buffer = new ArrayBuffer(8);
-    const view = new Uint8Array(buffer);
-    view.set([1, 2, 3, 4, 5, 6, 7, 8]);
-    return Promise.resolve(buffer);
-  };
+if (!globalThis.File.prototype.arrayBuffer) {
+  globalThis.File.prototype.arrayBuffer = globalThis.Blob.prototype.arrayBuffer;
 }
 
 // Mock crypto.subtle for hashing in tests - force override even if exists
