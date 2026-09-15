@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import {
   Alert,
   Group,
@@ -13,12 +13,17 @@ import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import { CertSignParameters } from "@app/hooks/tools/certSign/useCertSignParameters";
 import {
-  getHardwareSigningCapabilities,
-  HardwareCertificateInfo,
-  listPkcs11Certificates,
-  listWindowsCertificates,
-  Pkcs11LibraryInfo,
-} from "@app/services/hardwareSigningService";
+  CUSTOM_LIBRARY_VALUE,
+  useHardwareCertificates,
+} from "@app/hooks/tools/certSign/useHardwareCertificates";
+import { HardwareCertificateInfo } from "@app/services/hardwareSigningService";
+import {
+  displayName,
+  distinctIssuer,
+  expiryDate,
+  validityOf,
+} from "@app/utils/certSign/hardwareCertificateDisplay";
+import HardwareCertificateModal from "@app/components/tools/certSign/modals/HardwareCertificateModal";
 
 interface HardwareCertificateSettingsProps {
   parameters: CertSignParameters;
@@ -29,8 +34,6 @@ interface HardwareCertificateSettingsProps {
   disabled?: boolean;
 }
 
-const CUSTOM_LIBRARY_VALUE = "__custom__";
-
 const HardwareCertificateSettings = ({
   parameters,
   onParameterChange,
@@ -39,15 +42,62 @@ const HardwareCertificateSettings = ({
   const { t } = useTranslation();
   const isWindowsStore = parameters.certType === "WINDOWS_STORE";
 
-  const [certs, setCerts] = useState<HardwareCertificateInfo[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const [libraries, setLibraries] = useState<Pkcs11LibraryInfo[]>([]);
   const [librarySelection, setLibrarySelection] = useState<string>("");
   const [customLibrary, setCustomLibrary] = useState<string>("");
-  const [supported, setSupported] = useState({ windows: true, pkcs11: true });
-  const [capsReady, setCapsReady] = useState(false);
+  const [picking, setPicking] = useState(false);
+
+  const onSoleCertificate = useCallback(
+    (alias: string) => {
+      if (!parameters.alias) {
+        onParameterChange("alias", alias);
+      }
+    },
+    [onParameterChange, parameters.alias],
+  );
+
+  const onWindowsStoreUnavailable = useCallback(() => {
+    // Nothing on mac or Linux answers for the Windows store, so the token path is the only one.
+    if (parameters.certType === "WINDOWS_STORE") {
+      onParameterChange("certType", "PKCS11");
+    }
+  }, [onParameterChange, parameters.certType]);
+
+  const onDriverDetected = useCallback(
+    (path: string) => {
+      if (parameters.pkcs11LibraryPath) {
+        return;
+      }
+      setLibrarySelection(path);
+      onParameterChange("pkcs11LibraryPath", path);
+    },
+    [onParameterChange, parameters.pkcs11LibraryPath],
+  );
+
+  const {
+    certs,
+    loading,
+    error,
+    libraries,
+    supported,
+    capsReady,
+    clear,
+    loadWindowsCerts,
+    loadPkcs11Certs,
+  } = useHardwareCertificates({
+    isWindowsStore,
+    pkcs11: {
+      libraryPath: parameters.pkcs11LibraryPath,
+      pin: parameters.password,
+      slot: parameters.pkcs11Slot,
+    },
+    onSoleCertificate,
+    onWindowsStoreUnavailable,
+    onDriverDetected,
+  });
+
+  const selected: HardwareCertificateInfo | undefined = certs.find(
+    (cert) => cert.alias === parameters.alias,
+  );
 
   const selectKind = (kind: "WINDOWS_STORE" | "PKCS11") => {
     if (parameters.certType === kind) {
@@ -55,221 +105,24 @@ const HardwareCertificateSettings = ({
     }
     onParameterChange("certType", kind);
     onParameterChange("alias", undefined);
-    setCerts([]);
-    setError(null);
+    clear();
   };
-
-  // A GUID-only name (e.g. Microsoft device certs) is unreadable; prefer a real name.
-  const isGuidish = (s?: string | null) =>
-    !s ||
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      s.trim(),
-    );
-
-  // Best human-readable name: the Windows friendly name (alias) beats a GUID subject CN.
-  const displayName = (cert: HardwareCertificateInfo): string => {
-    if (cert.subjectCommonName && !isGuidish(cert.subjectCommonName)) {
-      return cert.subjectCommonName;
-    }
-    if (cert.alias && !isGuidish(cert.alias)) {
-      return cert.alias;
-    }
-    return cert.subjectCommonName || cert.alias;
-  };
-
-  const isUsable = (cert: HardwareCertificateInfo) =>
-    !cert.expired && !cert.notYetValid;
-
-  // Build a readable label for a certificate option.
-  const certLabel = useCallback(
-    (cert: HardwareCertificateInfo): string => {
-      const name = displayName(cert);
-      // Omit the issuer when it's the same as the name (self-signed) - avoids "X · X".
-      const showIssuer =
-        cert.issuerCommonName &&
-        cert.issuerCommonName !== cert.subjectCommonName &&
-        cert.issuerCommonName !== name;
-      const issuer = showIssuer ? ` · ${cert.issuerCommonName}` : "";
-      let suffix = "";
-      if (cert.expired) {
-        suffix = ` (${t("certSign.hardware.expired", "expired")})`;
-      } else if (cert.notYetValid) {
-        suffix = ` (${t("certSign.hardware.notYetValid", "not yet valid")})`;
-      } else if (cert.notAfter) {
-        const date = cert.notAfter.slice(0, 10);
-        suffix = ` (${t("certSign.hardware.expires", "expires")} ${date})`;
-      }
-      return `${name}${issuer}${suffix}`;
-    },
-    [t],
-  );
-
-  // Rank: usable + readable first, system/GUID certs next, expired/not-yet-valid last.
-  const rank = (cert: HardwareCertificateInfo): number => {
-    if (!isUsable(cert)) return 3;
-    if (isGuidish(cert.subjectCommonName) && isGuidish(cert.alias)) return 2;
-    return 0;
-  };
-
-  const applyCerts = useCallback(
-    (loaded: HardwareCertificateInfo[]) => {
-      setCerts(loaded);
-      // Auto-select when there is exactly one usable certificate.
-      const usable = loaded.filter((c) => !c.expired && !c.notYetValid);
-      if (usable.length === 1 && !parameters.alias) {
-        onParameterChange("alias", usable[0].alias);
-      }
-    },
-    [onParameterChange, parameters.alias],
-  );
-
-  // Load capabilities once: which hardware kinds are supported and the detected
-  // PKCS#11 driver libraries.
-  useEffect(() => {
-    let cancelled = false;
-    getHardwareSigningCapabilities()
-      .then((caps) => {
-        if (cancelled) {
-          return;
-        }
-        setSupported({
-          windows: caps.windowsStoreSupported,
-          pkcs11: caps.pkcs11Supported,
-        });
-        // Non-Windows (mac/Linux) has no Windows store; default the device to the USB-token path.
-        if (
-          !caps.windowsStoreSupported &&
-          parameters.certType === "WINDOWS_STORE"
-        ) {
-          onParameterChange("certType", "PKCS11");
-        }
-        setCapsReady(true);
-        setLibraries(caps.detectedLibraries);
-        // Pre-select a detected library, or the one already chosen.
-        if (parameters.pkcs11LibraryPath) {
-          const match = caps.detectedLibraries.find(
-            (l) => l.path === parameters.pkcs11LibraryPath,
-          );
-          setLibrarySelection(match ? match.path : CUSTOM_LIBRARY_VALUE);
-          if (!match) {
-            setCustomLibrary(parameters.pkcs11LibraryPath);
-          }
-        } else if (caps.detectedLibraries.length > 0) {
-          setLibrarySelection(caps.detectedLibraries[0].path);
-          onParameterChange(
-            "pkcs11LibraryPath",
-            caps.detectedLibraries[0].path,
-          );
-        }
-      })
-      .catch(() => {
-        if (cancelled) {
-          return;
-        }
-        /* capabilities are best-effort; the user can still type a path */
-        setCapsReady(true);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  const loadWindowsCerts = useCallback(() => {
-    setLoading(true);
-    setError(null);
-    listWindowsCertificates()
-      .then(applyCerts)
-      .catch((e) => {
-        const err = e as {
-          response?: { data?: { message?: string } };
-          message?: string;
-        };
-        setError(
-          err?.response?.data?.message ||
-            err?.message ||
-            t(
-              "certSign.hardware.windowsLoadError",
-              "Could not read the Windows certificate store",
-            ),
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [applyCerts, t]);
-
-  // Windows store certificates can be enumerated without a PIN, so load eagerly -
-  // but only once capabilities confirm the store exists (avoids a spurious call on mac/Linux).
-  useEffect(() => {
-    if (capsReady && isWindowsStore && supported.windows) {
-      loadWindowsCerts();
-    }
-  }, [isWindowsStore, supported.windows, capsReady]);
 
   const onLibraryChange = (value: string | null) => {
     const selection = value ?? "";
     setLibrarySelection(selection);
-    setCerts([]);
+    clear();
     onParameterChange("alias", undefined);
-    if (selection === CUSTOM_LIBRARY_VALUE) {
-      onParameterChange("pkcs11LibraryPath", customLibrary || "");
-    } else {
-      onParameterChange("pkcs11LibraryPath", selection);
-    }
+    onParameterChange(
+      "pkcs11LibraryPath",
+      selection === CUSTOM_LIBRARY_VALUE ? customLibrary || "" : selection,
+    );
   };
-
-  const loadPkcs11Certs = useCallback(() => {
-    if (!parameters.pkcs11LibraryPath || !parameters.password) {
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    listPkcs11Certificates({
-      libraryPath: parameters.pkcs11LibraryPath,
-      slot: parameters.pkcs11Slot,
-      pin: parameters.password,
-    })
-      .then(applyCerts)
-      .catch((e) => {
-        const err = e as {
-          response?: { data?: { message?: string } };
-          message?: string;
-        };
-        setError(
-          err?.response?.data?.message ||
-            err?.message ||
-            t(
-              "certSign.hardware.pkcs11LoadError",
-              "Could not read certificates from the token. Check the PIN and driver.",
-            ),
-        );
-      })
-      .finally(() => setLoading(false));
-  }, [
-    applyCerts,
-    parameters.password,
-    parameters.pkcs11LibraryPath,
-    parameters.pkcs11Slot,
-    t,
-  ]);
-
-  const certOptions = [...certs]
-    .sort(
-      (a, b) =>
-        rank(a) - rank(b) || displayName(a).localeCompare(displayName(b)),
-    )
-    .map((cert) => ({
-      value: cert.alias,
-      label: certLabel(cert),
-      // Expired / not-yet-valid certs can't produce a valid signature - show but block.
-      disabled: !isUsable(cert),
-    }));
 
   const libraryOptions = [
     // Label = driver name only; the long path goes under the dropdown so the
     // input doesn't overflow / scroll horizontally.
-    ...libraries.map((l) => ({
-      value: l.path,
-      label: l.name,
-    })),
+    ...libraries.map((l) => ({ value: l.path, label: l.name })),
     {
       value: CUSTOM_LIBRARY_VALUE,
       label: t("certSign.hardware.customLibrary", "Custom driver path…"),
@@ -279,6 +132,69 @@ const HardwareCertificateSettings = ({
     librarySelection && librarySelection !== CUSTOM_LIBRARY_VALUE
       ? librarySelection
       : null;
+
+  /**
+   * The chosen certificate, or the reason there is nothing to show yet.
+   *
+   * <p>Only the alias is carried in the tool's parameters, so the rest is looked up in the list
+   * that was loaded. On a token that list needs the PIN, so after the panel is reopened the alias
+   * can be all there is to show.
+   */
+  const summary = () => {
+    if (selected) {
+      const issuer = distinctIssuer(selected);
+      const validity = validityOf(selected);
+      return (
+        <Stack gap={2}>
+          <Text size="sm" fw={600}>
+            {displayName(selected)}
+          </Text>
+          {issuer && (
+            <Text size="xs" c="dimmed">
+              {issuer}
+            </Text>
+          )}
+          <Text size="xs" c={validity === "valid" ? "dimmed" : "red"}>
+            {validity === "valid"
+              ? `${t("certSign.hardware.expires", "expires")} ${expiryDate(selected)}`
+              : validity === "expired"
+                ? t("certSign.hardware.expired", "expired")
+                : t("certSign.hardware.notYetValid", "not yet valid")}
+          </Text>
+        </Stack>
+      );
+    }
+    if (parameters.alias) {
+      return (
+        <Text size="sm" style={{ wordBreak: "break-all" }}>
+          {parameters.alias}
+        </Text>
+      );
+    }
+    return (
+      <Text size="sm" c="dimmed">
+        {t("certSign.hardware.noneChosen", "No certificate chosen yet")}
+      </Text>
+    );
+  };
+
+  const certificateRow = (
+    <Stack gap="xs">
+      <Text size="sm" fw={500}>
+        {t("certSign.hardware.certificate", "Certificate")}
+      </Text>
+      {summary()}
+      <Button
+        variant="secondary"
+        onClick={() => setPicking(true)}
+        disabled={disabled || loading}
+      >
+        {parameters.alias
+          ? t("certSign.hardware.change", "Change certificate")
+          : t("certSign.hardware.browse", "Choose certificate…")}
+      </Button>
+    </Stack>
+  );
 
   // Hold the UI until capabilities are known, so the kind toggle / Windows-store
   // section don't render and then vanish on mac/Linux (no flicker).
@@ -336,32 +252,7 @@ const HardwareCertificateSettings = ({
               "Pick a certificate from your Windows store. Signing uses the key on your card/token - Windows will prompt for the PIN.",
             )}
           </Text>
-          <Group gap="xs" align="flex-end">
-            <Select
-              style={{ flex: 1 }}
-              label={t("certSign.hardware.certificate", "Certificate")}
-              placeholder={t(
-                "certSign.hardware.selectCert",
-                "Select certificate",
-              )}
-              data={certOptions}
-              value={parameters.alias ?? null}
-              onChange={(v) => onParameterChange("alias", v ?? undefined)}
-              disabled={disabled || loading}
-              searchable
-              nothingFoundMessage={t(
-                "certSign.hardware.noCerts",
-                "No signing certificates found",
-              )}
-            />
-            <Button
-              variant="secondary"
-              onClick={loadWindowsCerts}
-              disabled={disabled || loading}
-            >
-              {t("certSign.hardware.refresh", "Refresh")}
-            </Button>
-          </Group>
+          {certificateRow}
         </>
       ) : (
         <>
@@ -442,20 +333,7 @@ const HardwareCertificateSettings = ({
           >
             {t("certSign.hardware.listCerts", "List certificates")}
           </Button>
-          {certs.length > 0 && (
-            <Select
-              label={t("certSign.hardware.certificate", "Certificate")}
-              placeholder={t(
-                "certSign.hardware.selectCert",
-                "Select certificate",
-              )}
-              data={certOptions}
-              value={parameters.alias ?? null}
-              onChange={(v) => onParameterChange("alias", v ?? undefined)}
-              disabled={disabled || loading}
-              searchable
-            />
-          )}
+          {certs.length > 0 && certificateRow}
         </>
       )}
 
@@ -472,6 +350,17 @@ const HardwareCertificateSettings = ({
           {error}
         </Alert>
       )}
+
+      <HardwareCertificateModal
+        opened={picking}
+        onClose={() => setPicking(false)}
+        certs={certs}
+        loading={loading}
+        error={error}
+        selectedAlias={parameters.alias}
+        onSelect={(cert) => onParameterChange("alias", cert.alias)}
+        onRefresh={isWindowsStore ? loadWindowsCerts : loadPkcs11Certs}
+      />
     </Stack>
   );
 };
