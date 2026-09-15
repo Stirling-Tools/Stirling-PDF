@@ -3,9 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box, Center, Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import LockIcon from "@mui/icons-material/Lock";
-
+import { Icon } from "@app/ui/Icon";
 import {
   useAllFiles,
   useFileSelector,
@@ -33,8 +31,13 @@ import type {
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
-import { FileId } from "@app/types/file";
+import {
+  isStirlingFile,
+  getFormFillFileId,
+  type StirlingFile,
+  documentBytesReplaced,
+  type DocumentIdentity,
+} from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
@@ -69,6 +72,13 @@ export interface EmbedPdfViewerProps {
   /** Viewer is showing the pinned portfolio panel; don't render a second one. */
   portfolioPinned?: boolean;
 }
+
+/** Cache identity of a document, not of the file holding it: a disk reload
+ *  replaces the bytes under an unchanged fileId, and an outline cached under the
+ *  id alone would then describe a document nobody is looking at. Preload keys are
+ *  matched against this, so both call sites must derive it the same way. */
+const documentCacheKey = (file: StirlingFile): string =>
+  `${file.fileId}|${file.quickKey}`;
 
 const EmbedPdfViewerContent = ({
   sidebarsVisible: _sidebarsVisible,
@@ -287,19 +297,19 @@ const EmbedPdfViewerContent = ({
     return null;
   }, [previewFile, activeFiles, activeFileId]);
 
-  // Namespaced identifier for form-fill state; keep this aligned with FormFill.
+  // Identity of the bytes: the viewer's mount key, its blob URL and form-fill
+  // state all have to turn over when a disk reload swaps the file under an
+  // unchanged fileId. Keep aligned with FormFill.
   const currentFileId = React.useMemo(
     () => getFormFillFileId(currentFile),
     [currentFile],
   );
 
-  // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
-  const currentFileStableId = currentFile
-    ? isStirlingFile(currentFile) && currentFile.fileId
-      ? currentFile.fileId
-      : (`${currentFile.name || "blob"}-${currentFile.size}-${currentFile.lastModified || ""}` as FileId)
-    : null;
-  const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
+  // The workbench record to act on. Bare id, not the content key above: the
+  // consume/undo paths below pass it back as a FileId.
+  const currentFileStableId =
+    currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
+  const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
 
   // Clear signature image store when the active document changes or viewer unmounts
   useEffect(() => {
@@ -331,7 +341,7 @@ const EmbedPdfViewerContent = ({
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
-      return currentFile.fileId;
+      return documentCacheKey(currentFile);
     }
 
     if (previewFile) {
@@ -358,12 +368,9 @@ const EmbedPdfViewerContent = ({
     }
 
     return activeFiles
-      .map((file) => {
-        if (isStirlingFile(file)) {
-          return file.fileId;
-        }
-        return undefined;
-      })
+      .map((file) =>
+        isStirlingFile(file) ? documentCacheKey(file) : undefined,
+      )
       .filter(Boolean) as string[];
   }, [activeFiles, previewFile, bookmarkCacheKey]);
 
@@ -537,6 +544,31 @@ const EmbedPdfViewerContent = ({
     viewerKeyCommand,
     selectionActions,
     getScrollState,
+  ]);
+
+  // Accepting a disk reload swaps the bytes under an unchanged fileId, which
+  // remounts the inner viewer with a clean history but leaves these flags
+  // describing edits that no longer exist: every later disk change then reads as
+  // a conflict, and navigation keeps warning about work already discarded.
+  const documentIdentityRef = useRef<DocumentIdentity | null>(null);
+  useEffect(() => {
+    const previous = documentIdentityRef.current;
+    const current =
+      currentFileStableId && currentFileId
+        ? { id: currentFileStableId, key: currentFileId }
+        : null;
+    documentIdentityRef.current = current;
+
+    if (!documentBytesReplaced(previous, current)) return;
+
+    hasAnnotationChangesRef.current = false;
+    setHasUnsavedChanges(false);
+    setRedactionsApplied(false);
+  }, [
+    currentFileStableId,
+    currentFileId,
+    setHasUnsavedChanges,
+    setRedactionsApplied,
   ]);
 
   // Watch the annotation history API to detect when the document becomes "dirty".
@@ -1187,7 +1219,7 @@ const EmbedPdfViewerContent = ({
           }}
           onClick={onClose}
         >
-          <CloseIcon />
+          <Icon name="x" />
         </ActionIcon>
       )}
 
@@ -1203,7 +1235,7 @@ const EmbedPdfViewerContent = ({
       ) : isCurrentFileEncrypted ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
-            <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
+            <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
             <Text fw={500}>
               {t(
                 "encryptedPdfUnlock.viewerLocked",

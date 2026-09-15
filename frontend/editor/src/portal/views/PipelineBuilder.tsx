@@ -77,6 +77,7 @@ import { useCanManagePolicies } from "@portal/queries/policyPermissions";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
@@ -188,6 +189,13 @@ function isClassifyStep(step: WorkingToolStep): boolean {
   return step.operation === CLASSIFY_OPERATION;
 }
 
+function isClassifyTool(tool: ExecutableTool): boolean {
+  return (
+    tool.endpoint === CLASSIFY_OPERATION ||
+    tool.endpoints?.includes(CLASSIFY_OPERATION) === true
+  );
+}
+
 /** Whether a source can be written to, i.e. offered as a pipeline destination. */
 function isWritableSource(source: SourceView): boolean {
   return (availableOutputModes() as string[]).includes(source.type);
@@ -220,6 +228,10 @@ export function PipelineBuilder() {
   // runs in the background so run/pause/delete act on the last-saved version.
   const handoff = location.state as { draft?: Policy } | null;
   const seedDraft = handoff?.draft ?? null;
+  const {
+    classificationEnabled: aiClassificationEnabled,
+    loading: aiAvailabilityLoading,
+  } = useAiEngineEnabled();
   const { allTools } = useToolRegistry();
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
@@ -807,6 +819,13 @@ export function PipelineBuilder() {
         "Add a Classify step, or turn off routing by document type",
       ),
     );
+  if (classifies && !aiAvailabilityLoading && !aiClassificationEnabled)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.aiClassification",
+        "Enable AI classification in Settings, or remove the Classify step",
+      ),
+    );
   if (hasUnconfiguredSteps)
     blockers.push(
       t("portal.pipelines.builder.blocker.setup", {
@@ -1164,7 +1183,7 @@ export function PipelineBuilder() {
     }
   }
 
-  if (isEdit && !seeded) {
+  if (aiAvailabilityLoading || (isEdit && !seeded)) {
     return (
       <div className="portal-builder__loading">
         <Spinner />
@@ -1357,6 +1376,7 @@ export function PipelineBuilder() {
             destinations={writableSources}
             onCreateDestination={() => createSourceFor("output")}
             canClassify={classifies}
+            aiClassificationEnabled={aiClassificationEnabled}
           />
           <DestinationPicker
             label={
@@ -1582,6 +1602,14 @@ export function PipelineBuilder() {
           operations={STEP_OPERATIONS}
           onPickOperation={addOperationStep}
           precedingOutput={precedingOutput}
+          unavailableReason={(tool) =>
+            isClassifyTool(tool) && !aiClassificationEnabled
+              ? t(
+                  "portal.pipelines.builder.routing.aiToolDisabled",
+                  "Unavailable until AI classification is enabled in Settings",
+                )
+              : undefined
+          }
           onClose={() => setPickerAt(null)}
         />
       </Modal>

@@ -4,7 +4,7 @@ import {
   useWorkbenchBarButtons,
   WorkbenchBarButtonWithAction,
 } from "@app/hooks/useWorkbenchBarButtons";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import PageSelectByNumberButton from "@app/components/pageEditor/PageSelectByNumberButton";
 
 interface PageEditorWorkbenchBarButtonsParams {
@@ -64,7 +64,7 @@ export function usePageEditorWorkbenchBarButtons(
     return [
       {
         id: "page-select-all",
-        icon: <LocalIcon icon="select-all" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="select-all" size="1.5rem" />,
         tooltip: selectAllLabel,
         ariaLabel: selectAllLabel,
         section: "top" as const,
@@ -75,13 +75,7 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-deselect-all",
-        icon: (
-          <LocalIcon
-            icon="crop-square-outline"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="square" size="1.5rem" />,
         tooltip: deselectAllLabel,
         ariaLabel: deselectAllLabel,
         section: "top" as const,
@@ -113,13 +107,7 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-delete-selected",
-        icon: (
-          <LocalIcon
-            icon="delete-outline-rounded"
-            width="1.5rem"
-            height="1.5rem"
-          />
-        ),
+        icon: <Icon name="trash" size="1.5rem" />,
         tooltip: deleteSelectedLabel,
         ariaLabel: deleteSelectedLabel,
         section: "top" as const,
@@ -130,7 +118,7 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-export-selected",
-        icon: <LocalIcon icon="download" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="download" size="1.5rem" />,
         tooltip: exportSelectedLabel,
         ariaLabel: exportSelectedLabel,
         section: "top" as const,
@@ -141,7 +129,7 @@ export function usePageEditorWorkbenchBarButtons(
       },
       {
         id: "page-save-changes",
-        icon: <LocalIcon icon="save" width="1.5rem" height="1.5rem" />,
+        icon: <Icon name="save" size="1.5rem" />,
         tooltip: saveChangesLabel,
         ariaLabel: saveChangesLabel,
         section: "top" as const,
