@@ -13,6 +13,7 @@ import ShareLinkPage from "@app/routes/ShareLinkPage";
 import ParticipantView from "@app/components/workflow/ParticipantView";
 import Onboarding from "@app/components/onboarding/Onboarding";
 import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
@@ -49,6 +50,7 @@ function ParticipantViewPage() {
 }
 
 export default function App() {
+  const connectedServer = useConnectedServer();
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
@@ -121,7 +123,9 @@ export default function App() {
                       <Route path="/*" element={<Landing />} />
                     </Routes>
                     <Onboarding />
-                    {WATCHED_FOLDERS_ENABLED && <WatchedFoldersRegistration />}
+                    {WATCHED_FOLDERS_ENABLED && connectedServer && (
+                      <WatchedFoldersRegistration />
+                    )}
                   </AppLayout>
                 </AppProviders>
               </RootGate>
