@@ -6,6 +6,7 @@ import { useState, useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { isAxiosError } from "axios";
 import { dispatchFormApply } from "@app/tools/formFill/formFillEvents";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 
 /**
  * responseType "blob" means an error's ProblemDetail arrives as a Blob, so read
@@ -43,7 +44,9 @@ export function useFormCommit(onApplied?: (blob: Blob) => void) {
       setCommitting(true);
       setError(null);
       try {
+        assertFilesNotBlocked();
         const blob = await run();
+        assertFilesNotBlocked();
         dispatchFormApply(blob);
         onApplied?.(blob);
       } catch (err) {

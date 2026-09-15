@@ -271,6 +271,10 @@ export default defineConfig(async ({ mode, command }) => {
       "node_modules",
       `.vite-${effectiveMode}`,
     ),
+    resolve: {
+      // Linked workspace dependencies must share the renderer's React instance.
+      dedupe: ["react", "react-dom"],
+    },
     define: {
       __DEV_WORKTREE_LABEL__: JSON.stringify(devWorktreeLabel),
     },
@@ -342,6 +346,11 @@ export default defineConfig(async ({ mode, command }) => {
           {
             src: "src/core/assets/brand/modern-logo/*",
             dest: "modern-logo",
+          },
+          {
+            // Fallback TrueType fonts for PDFium (Noto Sans, CJK, Arabic, etc.)
+            src: "../../app/core/src/main/resources/static/fonts/*.ttf",
+            dest: "fonts",
           },
         ],
       }),

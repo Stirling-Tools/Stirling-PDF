@@ -55,6 +55,19 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 @ExtendWith(MockitoExtension.class)
 class SaasTeamServiceTest {
 
+    @org.junit.jupiter.api.BeforeEach
+    void ownershipLocks() {
+        org.mockito.Mockito.lenient()
+                .when(teamRepository.lockById(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(
+                        i -> {
+                            Long id = i.getArgument(0);
+                            if (id.equals(100L)) return Optional.of(team(id, "Acme"));
+                            return teamRepository.findById(id);
+                        });
+    }
+
+    @Mock private jakarta.persistence.EntityManager entityManager;
     @Mock private TeamRepository teamRepository;
     @Mock private TeamMembershipRepository membershipRepository;
     @Mock private TeamInvitationRepository invitationRepository;

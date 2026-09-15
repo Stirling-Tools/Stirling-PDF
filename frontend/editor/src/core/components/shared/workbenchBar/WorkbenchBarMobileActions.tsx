@@ -1,10 +1,7 @@
 import { Menu } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import PrintIcon from "@mui/icons-material/Print";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { WorkbenchBarActionsProps } from "@app/components/shared/workbenchBar/types";
 
 /**
@@ -42,13 +39,13 @@ export default function WorkbenchBarMobileActions({
           className="workbench-bar-action-icon"
           aria-label={t("workbenchBar.moreActions", "More actions")}
         >
-          <MoreVertIcon sx={{ fontSize: "1.25rem" }} />
+          <Icon name="ellipsis-vertical" size={"1.25rem"} />
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
         {showPrint && (
           <Menu.Item
-            leftSection={<PrintIcon sx={{ fontSize: "1.1rem" }} />}
+            leftSection={<Icon name="printer" size={"1.1rem"} />}
             disabled={exportDisabled}
             onClick={onPrint}
           >
@@ -57,13 +54,7 @@ export default function WorkbenchBarMobileActions({
         )}
         {showFileActions && (
           <Menu.Item
-            leftSection={
-              <LocalIcon
-                icon={downloadIconName}
-                width="1.1rem"
-                height="1.1rem"
-              />
-            }
+            leftSection={<Icon name={downloadIconName} size="1.1rem" />}
             disabled={exportDisabled}
             onClick={() => void onExport()}
           >
@@ -72,9 +63,7 @@ export default function WorkbenchBarMobileActions({
         )}
         {showFileActions && saveAsIconName && (
           <Menu.Item
-            leftSection={
-              <LocalIcon icon={saveAsIconName} width="1.1rem" height="1.1rem" />
-            }
+            leftSection={<Icon name={saveAsIconName} size="1.1rem" />}
             disabled={exportDisabled}
             onClick={() => void onExport(true)}
           >
@@ -85,7 +74,7 @@ export default function WorkbenchBarMobileActions({
           <>
             <Menu.Divider />
             <Menu.Item
-              leftSection={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
+              leftSection={<Icon name="x" size={"1.1rem"} />}
               disabled={actionsDisabled}
               onClick={() => void onClose()}
             >

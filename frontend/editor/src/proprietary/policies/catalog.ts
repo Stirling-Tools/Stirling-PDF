@@ -56,6 +56,7 @@ export interface PolicyState {
   /** The saved destinations and per-document routes; the routing category edits these. */
   outputIds?: string[];
   routingRules?: WireRoutingRule[];
+  trigger?: WireTriggerConfig | null;
   configured: boolean;
   status: PolicyStatus;
   /** A policy rather than an ordinary pipeline (see `Policy.required`). */
