@@ -1,4 +1,8 @@
-import { classificationCondition } from "@app/data/classificationConditions";
+import {
+  classificationCondition,
+  documentFieldCondition,
+  requiresClassification,
+} from "@app/data/classificationConditions";
 import { useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -26,6 +30,8 @@ import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig"
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPdfaConfig } from "@app/components/policies/PolicyPdfaConfig";
 import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
+import { useAiClassificationEnabled } from "@app/hooks/useAiClassificationEnabled";
+import { isConditionComplete } from "@app/conditions/validation";
 import "@app/components/policies/PolicySetupWizard.css";
 
 /** What a host frame needs to wrap the form: the middle content plus submit state. */
@@ -307,6 +313,7 @@ function PolicySetupWizardBody({
   children?: (frame: PolicySetupFrame) => ReactNode;
 }) {
   const { t } = useTranslation();
+  const aiClassificationEnabled = useAiClassificationEnabled();
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
@@ -314,13 +321,15 @@ function PolicySetupWizardBody({
   const isRouting = category.id === "routing";
   const [routing, setRouting] = useState<RoutingSetup>(() => ({
     sourceId: policy?.state.sources?.[0] ?? "",
-    trigger: null,
+    trigger: policy?.state.trigger ?? null,
     outputIds: (policy?.state.outputIds ?? []).slice(0, 1),
     // One blank route so the form and the saved result agree: an empty list would render a route
     // the user could fill in and then submit as none.
     routingRules: policy?.state.routingRules ?? [
       {
-        condition: classificationCondition(),
+        condition: aiClassificationEnabled
+          ? classificationCondition()
+          : documentFieldCondition("document.extension"),
         outputId: "",
       },
     ],
@@ -395,9 +404,16 @@ function PolicySetupWizardBody({
 
   /** The wizard's current state as a submit result: shared by Save and Customise. */
   function collectResult(): PolicySetupResult {
-    const steps: PipelineStep[] = enabledTools.map((tl) =>
-      policyStepToWire(tl),
+    const routingNeedsClassification = routing.routingRules.some((rule) =>
+      requiresClassification(rule.condition),
     );
+    const steps: PipelineStep[] = isRouting
+      ? routingNeedsClassification
+        ? tools
+            .filter((tool) => tool.toolId === "classify")
+            .map((tool) => policyStepToWire(tool))
+        : []
+      : enabledTools.map((tool) => policyStepToWire(tool));
     return {
       required,
       // Preserve stored options this wizard has no UI for rather than wiping them on save;
@@ -433,7 +449,7 @@ function PolicySetupWizardBody({
 
   async function submit() {
     if (submitting) return;
-    if (enabledTools.length === 0) {
+    if (!isRouting && enabledTools.length === 0) {
       setError(t("portal.policies.wizard.errors.noTools"));
       return;
     }
@@ -449,7 +465,18 @@ function PolicySetupWizardBody({
     }
   }
 
-  const canSubmit = enabledTools.length > 0;
+  const routingNeedsClassification = routing.routingRules.some((rule) =>
+    requiresClassification(rule.condition),
+  );
+  const routingComplete =
+    routing.sourceId !== "" &&
+    routing.outputIds.length === 1 &&
+    routing.routingRules.length > 0 &&
+    routing.routingRules.every(
+      (rule) => isConditionComplete(rule.condition) && rule.outputId !== "",
+    ) &&
+    (!routingNeedsClassification || aiClassificationEnabled);
+  const canSubmit = isRouting ? routingComplete : enabledTools.length > 0;
   const content = (
     <>
       {error && (
@@ -480,7 +507,7 @@ function PolicySetupWizardBody({
 
       {isRouting && routingConfig?.({ value: routing, onChange: setRouting })}
 
-      {!isClassification && (
+      {!isClassification && !isRouting && (
         <div className="portal-policies__wizard-section">
           <p className="portal-policies__wizard-desc">
             {t(

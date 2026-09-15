@@ -5,8 +5,7 @@ import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
 
 /*
  * Procurement models the enterprise commercial journey: trial → quote → agreement → payment →
- * implementation. It is surfaced by the deal-status hero on Home and the takeover flow beside it;
- * there is no separate procurement route.
+ * implementation. Usage & Billing hosts the deal summary and its flow dialogs.
  */
 
 /* ──────────────────────────────────────────────────────────────────────── */
@@ -221,7 +220,10 @@ export function startTrial(
 ): Promise<ProcurementSnapshot> {
   return apiClient.saas.json<ProcurementSnapshot>(
     "/api/v1/procurement/trial/start",
-    { method: "POST", body: { deployment, users: seats, ...details } },
+    {
+      method: "POST",
+      body: { deployment, users: seats, ...details },
+    },
   );
 }
 

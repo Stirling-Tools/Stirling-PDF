@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildWireFromSetup,
+  assemblePolicies,
   parseSimplePolicy,
   type PolicySetupResult,
 } from "@portal/api/policies";
@@ -108,6 +109,47 @@ describe("parseSimplePolicy", () => {
     expect(entry?.policy?.activity).toHaveLength(1);
     expect(entry?.policy?.activity[0]?.doc).toBe("invoice_redacted.pdf");
     expect(entry?.policy?.stats.enforced).toBe(1);
+  });
+});
+
+describe("assemblePolicies", () => {
+  it("keeps routing bindings in decorated state when a saved policy is reopened", () => {
+    const routingRule = {
+      condition: {
+        input: { source: "document" as const, field: "document.extension" },
+        operator: "matches-any" as const,
+        values: ["pdf"],
+      },
+      outputId: "finance",
+    };
+    const response = assemblePolicies(
+      [
+        {
+          id: "route-1",
+          name: "Route documents",
+          enabled: true,
+          inputs: [
+            {
+              sourceId: "inbox",
+              trigger: { type: "folder-watch", options: {} },
+            },
+          ],
+          steps: [],
+          output: { type: "inline", options: { categoryId: "routing" } },
+          outputIds: ["archive"],
+          routingRules: [routingRule],
+          editor: { allowed: false, runOn: "upload" },
+        },
+      ],
+      [],
+    );
+
+    const state = response.catalogue.find(
+      (entry) => entry.category.id === "routing",
+    )?.policy?.state;
+    expect(state?.trigger).toEqual({ type: "folder-watch", options: {} });
+    expect(state?.outputIds).toEqual(["archive"]);
+    expect(state?.routingRules).toEqual([routingRule]);
   });
 });
 

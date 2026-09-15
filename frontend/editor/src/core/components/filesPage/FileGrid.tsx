@@ -33,6 +33,7 @@ import {
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
+import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
@@ -1422,6 +1423,7 @@ const FileCard = React.memo(function FileCard({
         )}
         <div className="files-page-card-origin">
           <FileOriginBadge origin={getFileOrigin(file)} compact />
+          <DiskLinkBadge file={file} compact />
         </div>
         <FileStateBadge
           state={processingState}
@@ -2071,6 +2073,7 @@ const FileRow = React.memo(function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
+        <DiskLinkBadge file={file} compact />
         <PolicyBadgeRow policies={badges} />
         <FileStateBadge
           state={processingState}

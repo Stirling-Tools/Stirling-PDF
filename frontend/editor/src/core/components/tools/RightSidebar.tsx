@@ -4,8 +4,6 @@ import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import ToolPanel from "@app/components/tools/ToolPanel";
-import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
-import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
 import { ToolIcon } from "@app/components/shared/ToolIcon";
 import { ToolPanelHeader } from "@app/components/shared/ToolPanelHeader";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -40,7 +38,6 @@ export default function RightSidebar() {
     handleBackToTools,
   } = useToolWorkflow();
 
-  const policiesEnabled = usePoliciesEnabled();
   const fullscreenExpanded = useIsFullscreenExpanded();
   const fullscreenGeometry = useToolPanelGeometry({
     enabled: fullscreenExpanded,
@@ -97,9 +94,6 @@ export default function RightSidebar() {
         padding: "0",
       }}
     >
-      {/* Headless: enforces enabled policies on every uploaded file. */}
-      {policiesEnabled && <PolicyAutoRunController />}
-
       {!fullscreenExpanded && (
         <div
           style={{

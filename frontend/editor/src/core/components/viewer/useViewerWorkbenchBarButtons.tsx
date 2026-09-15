@@ -203,7 +203,7 @@ export function useViewerWorkbenchBarButtons(
                     aria-label={searchLabel}
                     onClick={viewer.searchInterfaceActions.toggle}
                   >
-                    <Icon name="file-search" size={20} />
+                    <Icon name="file-search" size="1.25rem" />
                   </ActionIcon>
                 </Tooltip>
               </div>
@@ -221,7 +221,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-pan-mode",
-        icon: <Icon name="hand" size={16} />,
+        icon: <Icon name="hand" size="1rem" />,
         tooltip:
           !isPanning && pendingCount > 0 && redactionActiveType !== null
             ? applyRedactionsLabel
@@ -242,7 +242,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-ruler",
-        icon: <Icon name="ruler" size={16} />,
+        icon: <Icon name="ruler" size={"1rem"} />,
         tooltip: rulerLabel,
         ariaLabel: rulerLabel,
         section: "top" as const,
@@ -261,7 +261,7 @@ export function useViewerWorkbenchBarButtons(
         ? [
             {
               id: "viewer-ruler-settings",
-              icon: <Icon name="settings" size={24} />,
+              icon: <Icon name="settings" size={"1.5rem"} />,
               tooltip: rulerSettingsLabel,
               ariaLabel: rulerSettingsLabel,
               section: "top" as const,
@@ -284,7 +284,7 @@ export function useViewerWorkbenchBarButtons(
         : []),
       {
         id: "viewer-rotate-left",
-        icon: <Icon name="rotate-ccw" size={16} />,
+        icon: <Icon name="rotate-ccw" size="1rem" />,
         tooltip: rotateLeftLabel,
         ariaLabel: rotateLeftLabel,
         section: "top" as const,
@@ -295,7 +295,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-rotate-right",
-        icon: <Icon name="rotate-cw" size={16} />,
+        icon: <Icon name="rotate-cw" size="1rem" />,
         tooltip: rotateRightLabel,
         ariaLabel: rotateRightLabel,
         section: "top" as const,
@@ -318,7 +318,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-bookmarks",
-        icon: <Icon name="bookmark-plus" size={20} />,
+        icon: <Icon name="bookmark-plus" size="1.25rem" />,
         tooltip: bookmarkLabel,
         ariaLabel: bookmarkLabel,
         section: "top" as const,
@@ -330,7 +330,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-attachments",
-        icon: <Icon name="paperclip" size={20} />,
+        icon: <Icon name="paperclip" size="1.25rem" />,
         tooltip: attachmentLabel,
         ariaLabel: attachmentLabel,
         section: "top" as const,
@@ -344,7 +344,7 @@ export function useViewerWorkbenchBarButtons(
         ? [
             {
               id: "viewer-toggle-layers",
-              icon: <Icon name="layers" size={16} />,
+              icon: <Icon name="layers" size={"1rem"} />,
               tooltip: layersLabel,
               ariaLabel: layersLabel,
               section: "top" as const,
@@ -358,7 +358,7 @@ export function useViewerWorkbenchBarButtons(
         : []),
       {
         id: "viewer-toggle-comments",
-        icon: <Icon name="message-square" size={16} />,
+        icon: <Icon name="message-square" size="1rem" />,
         tooltip: commentsLabel,
         ariaLabel: commentsLabel,
         section: "top" as const,
@@ -406,9 +406,9 @@ export function useViewerWorkbenchBarButtons(
                     onClick={handleReadAloud}
                   >
                     {isReadingAloud ? (
-                      <Icon name="square" size={16} />
+                      <Icon name="square" size={"1rem"} />
                     ) : (
-                      <Icon name="volume-2" size={16} />
+                      <Icon name="volume-2" size={"1rem"} />
                     )}
                   </ActionIcon>
                 </Tooltip>
@@ -510,7 +510,7 @@ export function useViewerWorkbenchBarButtons(
               aria-pressed={isAnnotationsActive}
               aria-label={annotationsLabel}
             >
-              <Icon name="pencil" size={16} />
+              <Icon name="pencil" size="1rem" />
             </ActionIcon>
           </Tooltip>
         ),
@@ -552,7 +552,7 @@ export function useViewerWorkbenchBarButtons(
               aria-pressed={isFormFillActive}
               aria-label={formFillLabel}
             >
-              <Icon name="type" size={16} />
+              <Icon name="type" size={"1rem"} />
             </ActionIcon>
           </Tooltip>
         ),
