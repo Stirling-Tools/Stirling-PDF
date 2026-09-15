@@ -8,8 +8,8 @@
   overflow: hidden;
 }
 
-/* The library's own row: the tabs, then the folder path. What the library brings
-   sits here rather than in the shared bar above, which carries only what every view
+/* The library's own row, carrying the folder path. What the library brings sits
+   here rather than in the shared bar above, which carries only what every view
    has. */
 .files-page-tabs-row {
   display: flex;
@@ -495,9 +495,6 @@
    state; a not-yet-processed file is also inert (no open, no menu) until its
    result exists, and reads that way. */
 .files-page-state-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -508,6 +505,15 @@
   background: var(--c-surface-raised);
   border: 1px solid var(--c-border-subtle);
   color: var(--c-text-muted);
+}
+
+/* Pinned to the corner on a card, which is positioned for it. A row is a grid:
+   the badge sits in its cell, and absolute positioning would escape the row
+   entirely - the nearest positioned ancestor is the scrolling area. */
+.files-page-card .files-page-state-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
 }
 
 .files-page-state-badge.is-failed {
@@ -542,10 +548,33 @@
 .files-page-folder-actions {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.15rem;
   margin-left: 0.6rem;
   padding-left: 0.6rem;
   border-left: 1px solid var(--c-border-subtle);
+}
+
+/* Icons alone: the row already reads as chrome, and a box each made five of them
+   look like a toolbar bolted on. */
+.files-page-folder-actions .sui-ai {
+  border-color: transparent;
+  background: transparent;
+}
+
+/* The strip between the toolbar and the listing: what the listing is showing
+   (state chips) on the left, what acts on the current selection on the right.
+   Selection actions live here rather than in the toolbar so that selecting
+   files never reflows the toolbar - a shifting toolbar moves every row under
+   it, which breaks double-click-to-open. Matches the toolbar's side padding so
+   the chips line up with the count above them. */
+.files-page-above-table {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  /* Tall enough for the tallest thing it can hold, so it takes the same space
+     empty as it does full. */
+  min-height: 2.5rem;
+  padding: 0 1.25rem;
 }
 
 /* State filter chips above a working folder's listing. */
@@ -553,7 +582,6 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0 0 0.6rem;
   flex-wrap: wrap;
 }
 
@@ -618,15 +646,6 @@
 
 /* In a row the counts share one line with the tag beside them, and the row's height
    is fixed: they never wrap, and the full labels live in the title. */
-.files-page-folder-stats.is-compact {
-  display: inline-flex;
-  flex-wrap: nowrap;
-  gap: 0.3rem;
-  margin-top: 0;
-  margin-left: 0.4rem;
-  vertical-align: middle;
-}
-
 .files-page-folder-stat {
   display: inline-flex;
   align-items: center;
@@ -1466,9 +1485,9 @@
    right edge. */
 @media (max-width: 1024px) {
   .files-page-toolbar {
-    /* nowrap so "7 items" + "Select all" sit on the same row as the
-       filter dropdowns and view-toggle instead of stacking on three
-       separate lines. Runs to the app's mobile breakpoint: capping it at
+    /* nowrap so the item count sits on the same row as the filter
+       dropdowns and view-toggle instead of stacking on separate
+       lines. Runs to the app's mobile breakpoint: capping it at
        900px left 901-1024px wrapping to two rows, which is the band the
        mobile layout actually renders in.
 
@@ -1509,15 +1528,6 @@
     min-width: 0;
     max-width: 7.5rem;
     width: auto !important;
-  }
-  /* The "Select all" / "Clear selection" toggle is a Mantine Button
-     directly inside .files-page-toolbar (NOT inside the actions group),
-     so the icon-only collapse from base styles doesn't apply to it.
-     Pin it to full text + nowrap so it never truncates to "Select al"
-     mid-word. */
-  .files-page-toolbar > .mantine-Button-root {
-    flex-shrink: 0;
-    white-space: nowrap;
   }
 }
 

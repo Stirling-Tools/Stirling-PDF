@@ -892,19 +892,13 @@ const FolderCard = React.memo(function FolderCard({
   );
 });
 
-/**
- * A working folder's live per-state counts, wherever the folder is drawn. `compact`
- * is the list's shape: the same numbers on one line, in a row that may not change
- * height.
- */
+/** A working folder's live per-state counts, spelled out under the folder's name. */
 function ProcessingFolderStats({
   recordId,
   listFiles,
-  compact = false,
 }: {
   recordId: string;
   listFiles: (recordId: string) => Promise<{ state: string }[]>;
-  compact?: boolean;
 }) {
   const { t } = useTranslation();
   const counts = useProcessingFolderCounts(recordId, listFiles);
@@ -920,14 +914,14 @@ function ProcessingFolderStats({
   if (parts.length === 0) return null;
   return (
     <div
-      className={`files-page-folder-stats${compact ? " is-compact" : ""}`}
+      className="files-page-folder-stats"
       title={parts
         .map(([state, label]) => `${counts[state]} ${label}`)
         .join(" · ")}
     >
       {parts.map(([state, label]) => (
         <span key={state} className={`files-page-folder-stat is-${state}`}>
-          {counts[state]} {compact ? "" : label}
+          {counts[state]} {label}
         </span>
       ))}
     </div>
@@ -1114,6 +1108,30 @@ function FileStateBadge({
       {t("filesPage.diskState.waiting", "Queued")}
     </span>
   );
+}
+
+/**
+ * A processing folder's state as one pill: the worst thing happening inside it, which
+ * is what a row has space to say. Nothing to report while every file is done.
+ */
+function FolderStatePill({
+  recordId,
+  listFiles,
+}: {
+  recordId: string;
+  listFiles: (recordId: string) => Promise<{ state: string }[]>;
+}) {
+  const counts = useProcessingFolderCounts(recordId, listFiles);
+  if (!counts) return null;
+  const state: DiskFileState | undefined =
+    (counts.failed ?? 0) > 0
+      ? "failed"
+      : (counts.processing ?? 0) > 0
+        ? "processing"
+        : (counts.waiting ?? 0) > 0
+          ? "waiting"
+          : undefined;
+  return <FileStateBadge state={state} />;
 }
 
 /** Stable empty value so badge-less rows keep identical props across renders. */
@@ -1798,10 +1816,9 @@ const FolderRow = React.memo(function FolderRow({
       </span>
       <span role="gridcell" className="files-page-list-status">
         {processing && (
-          <ProcessingFolderStats
+          <FolderStatePill
             recordId={processing.id}
             listFiles={listProcessingFiles}
-            compact
           />
         )}
       </span>
