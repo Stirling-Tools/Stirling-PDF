@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.proprietary.accountlink.EntitlementCache;
 import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.accountlink.UsageMeterService;
@@ -33,18 +34,22 @@ import stirling.software.proprietary.billing.UnitCalcPolicy;
 @ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
 public class AccountLinkAutomationRunBiller implements AutomationRunBiller {
 
+    private final LicenseServiceInterface licenseService;
     private final EntitlementCache entitlementCache;
     private final ObjectProvider<UsageMeterService> meterProvider;
 
     public AccountLinkAutomationRunBiller(
-            EntitlementCache entitlementCache, ObjectProvider<UsageMeterService> meterProvider) {
+            EntitlementCache entitlementCache,
+            ObjectProvider<UsageMeterService> meterProvider,
+            LicenseServiceInterface licenseService) {
+        this.licenseService = licenseService;
         this.entitlementCache = entitlementCache;
         this.meterProvider = meterProvider;
     }
 
     @Override
     public void recordAutomationRun(List<FileSize> inputs) {
-        if (inputs.isEmpty()) {
+        if (inputs.isEmpty() || licenseService.isRunningEE()) {
             return;
         }
         UsageMeterService meter = meterProvider.getIfAvailable();

@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -101,11 +102,24 @@ class InstanceEntitlementInterceptorTest {
     }
 
     @Test
-    void metersTheFreeTierLedgerWhenUnlinked() throws Exception {
-        // FREE_TIER is the gate saying "unlinked, inside the grant", so the op must land on the
-        // local ledger with the compiled-in policy and never touch the cloud one.
+    void enterpriseProcessingWithoutFilesDoesNotAccrueUsage() throws Exception {
         when(gate.evaluate(anyBoolean()))
-                .thenReturn(GateDecision.allow(GateDecision.Reason.FREE_TIER));
+                .thenReturn(GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE));
+        InstanceEntitlementInterceptor interceptor = interceptor();
+        MockHttpServletRequest request = new MockHttpServletRequest("POST", "/api/v1/ai/tools/x");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertTrue(interceptor.preHandle(request, response, new Object()));
+        interceptor.afterCompletion(request, response, new Object(), null);
+        verifyNoInteractions(
+                freeTierUsageService, entitlementCache, meterProvider, tempFileManager);
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = GateDecision.Reason.class,
+            names = {"FREE_TIER", "ENTERPRISE_LICENSE"})
+    void metersLocallyWithoutConsultingCloudBilling(GateDecision.Reason reason) throws Exception {
+        when(gate.evaluate(anyBoolean())).thenReturn(GateDecision.allow(reason));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         MockMultipartHttpServletRequest req = fileRequest("/api/v1/ai/tools/x");

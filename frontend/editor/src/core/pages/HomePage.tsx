@@ -26,15 +26,13 @@ import {
 import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import AppsIcon from "@mui/icons-material/AppsRounded";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
+import { Icon } from "@app/ui/Icon";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   getStartupNavigationAction,
   getDefaultWorkbenchForFileCount,
@@ -63,8 +61,6 @@ import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
@@ -576,7 +572,7 @@ export default function HomePage() {
                   }
                 }}
               >
-                <AppsIcon sx={{ fontSize: "1.5rem" }} />
+                <Icon name="layout-grid" size={"1.5rem"} />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.allTools", "Tools")}
                 </span>
@@ -594,11 +590,7 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <LocalIcon
-                    icon="automation-outline"
-                    width="1.5rem"
-                    height="1.5rem"
-                  />
+                  <Icon name="workflow" size="1.5rem" />
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
@@ -610,11 +602,7 @@ export default function HomePage() {
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => navigate("/files")}
               >
-                <LocalIcon
-                  icon="folder-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <Icon name="folder" size="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.files", "Files")}
                 </span>
@@ -625,11 +613,7 @@ export default function HomePage() {
                 aria-label={t("quickAccess.config", "Config")}
                 onClick={openSettings}
               >
-                <LocalIcon
-                  icon="settings-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <Icon name="settings" size="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.config", "Config")}
                 </span>
@@ -745,7 +729,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
           onPickGoogleDriveFiles={handleUpload}
           extraActions={[
             {
-              icon: <CreateNewFolderIcon />,
+              icon: <Icon name="folder-plus" />,
               label: t("filesPage.newFolder", "New folder"),
               onClick: createFolderHere,
               disabled: newFolderDisabledReason !== null,
@@ -771,7 +755,8 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
             },
             {
               icon: (
-                <RefreshIcon
+                <Icon
+                  name="refresh-cw"
                   className={refreshing ? "file-sidebar-spin" : undefined}
                 />
               ),
@@ -784,7 +769,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
             ...(mobileUploadAvailable
               ? [
                   {
-                    icon: <QrCode2Icon />,
+                    icon: <Icon name="qr-code" />,
                     label: t(
                       "filesPage.uploadFromMobile",
                       "Upload from Mobile",

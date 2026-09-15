@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavRailContainer";
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 import type { ToolId } from "@app/types/toolId";
@@ -17,6 +16,7 @@ import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
 import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 
+import { Icon } from "@app/ui/Icon";
 const SIZE = "1.125rem";
 
 /** Entries come from the URL, not either app's context, so the rail survives a switch. */
@@ -75,9 +75,7 @@ export function QuickNavRailHost() {
   const reader: QuickNavEntry = {
     id: "reader",
     label: t("quickNav.reader", "Reader"),
-    icon: (
-      <LocalIcon icon="menu-book-outline-rounded" width={SIZE} height={SIZE} />
-    ),
+    icon: <Icon name="book-open" size={SIZE} />,
     // A surface you are on, not a switch left on, so each of the three states the
     // condition that excludes the others.
     current: inEditor && Boolean(host?.readerMode),
@@ -96,11 +94,7 @@ export function QuickNavRailHost() {
   const editor: QuickNavEntry = {
     id: "editor",
     label: t("quickNav.editor", "Editor"),
-    icon: inEditor ? (
-      <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
-    ) : (
-      <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
-    ),
+    icon: <Icon name="pencil" size={SIZE} filled={inEditor} />,
     // The library and reading are places of their own, not the editor with a
     // different centre.
     current: inEditor && !host?.fileLibrary && !host?.readerMode,
@@ -117,12 +111,7 @@ export function QuickNavRailHost() {
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
-    // Two literals, not a computed name: the offline icon bundle scans for `icon="..."`.
-    icon: inPortal ? (
-      <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
-    ) : (
-      <LocalIcon icon="memory-outline-rounded" width={SIZE} height={SIZE} />
-    ),
+    icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
     current: inPortal,
     disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
     reason:
@@ -150,9 +139,7 @@ export function QuickNavRailHost() {
     {
       id: "files",
       label: t("fileSidebar.myFiles", "File library"),
-      icon: (
-        <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="folder" size={SIZE} />,
       current: Boolean(host?.fileLibrary),
       // Through the app where possible: the library is a view, not a route. From the
       // processor there is no editor to ask, so the path carries it and HomePage seeds
@@ -170,9 +157,7 @@ export function QuickNavRailHost() {
     {
       id: "automate",
       label: t("quickAccess.automate", "Automate"),
-      icon: (
-        <LocalIcon icon="rebase-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="git-branch" size={SIZE} />,
       ...openingTool("automate"),
       ...unusable("automate"),
       onClick: () => openTool("automate", "/automate"),
@@ -180,9 +165,7 @@ export function QuickNavRailHost() {
     {
       id: "sharedSign",
       label: t("home.sharedSign.title", "Shared Signing"),
-      icon: (
-        <LocalIcon icon="draw-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="pen-tool" size={SIZE} />,
       badge: host?.signingBadge,
       badgeTone: "warning",
       ...openingTool("sharedSign"),

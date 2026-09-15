@@ -50,7 +50,7 @@ function BannerSetter() {
   useEffect(() => {
     setBanner(
       <AppBanner
-        icon="info-rounded"
+        icon="info"
         title="Heads up"
         message="This workspace is running in offline mode."
       />,

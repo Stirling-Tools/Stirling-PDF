@@ -10,6 +10,7 @@ import { Loader, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { NavSurface } from "@app/ui/NavSurface";
 import { Button } from "@app/ui/Button";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useFileState, useFileActions } from "@app/contexts/file/fileHooks";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -29,25 +30,17 @@ import {
   useIndexedDB,
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
-import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import AddIcon from "@mui/icons-material/Add";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import type { FileId } from "@app/types/file";
 import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   FileSidebarGroupControls,
   useFileSidebarGroups,
 } from "@app/components/shared/fileSidebarGrouping";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -982,7 +975,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       >
         {isFileDragOver && (
           <div className="file-sidebar-drop-overlay" aria-hidden="true">
-            <UploadFileIcon className="file-sidebar-drop-overlay-icon" />
+            <Icon name="file-up" className="file-sidebar-drop-overlay-icon" />
             {!collapsed && (
               <span className="file-sidebar-drop-overlay-text">
                 {t("fileSidebar.dropToAdd", "Drop files to add")}
@@ -1049,7 +1042,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   }
                 }}
               >
-                <UploadFileIcon className="file-sidebar-action-icon" />
+                <Icon name="file-up" className="file-sidebar-action-icon" />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
                     {t("fileSidebar.openFromComputer", "Open from computer")}
@@ -1144,13 +1137,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   }
                 >
                   <div className="file-sidebar-cloud-icon-wrapper">
-                    <GoogleDriveIcon
+                    <Icon
+                      name="googledrive"
+                      colorless
+                      size={18}
                       className="file-sidebar-cloud-icon-gray"
-                      style={{ color: "var(--c-text-muted)" }}
                     />
                     {isGoogleDriveEnabled && (
-                      <GoogleDriveIcon
-                        colored
+                      <Icon
+                        name="googledrive"
+                        size={18}
                         className="file-sidebar-cloud-icon-color"
                       />
                     )}
@@ -1181,7 +1177,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     : undefined
                 }
               >
-                <FolderSpecialIcon className="file-sidebar-action-icon" />
+                <Icon
+                  name="folder-bookmark"
+                  className="file-sidebar-action-icon"
+                />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
                     {t("watchedFolders.sidebarTitle", "Watched Folders")}
@@ -1223,7 +1222,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       )}
                       data-testid="open-files-page"
                     >
-                      <OpenInFullIcon sx={{ fontSize: "1rem" }} />
+                      <Icon name="maximize-2" size={"1rem"} />
                     </ActionIcon>
                     <ActionIcon
                       variant="quiet"
@@ -1232,7 +1231,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       title={t("fileSidebar.addFiles", "Add files")}
                       aria-label={t("fileSidebar.addFiles", "Add files")}
                     >
-                      <AddIcon sx={{ fontSize: "1rem" }} />
+                      <Icon name="plus" size={"1rem"} />
                     </ActionIcon>
                   </div>
 
@@ -1264,20 +1263,15 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                                   }
                                   aria-expanded={isOpen}
                                   leftSection={
-                                    <>
-                                      {isOpen ? (
-                                        <KeyboardArrowDownIcon
-                                          sx={{ fontSize: "1.1rem" }}
-                                        />
-                                      ) : (
-                                        <KeyboardArrowRightIcon
-                                          sx={{ fontSize: "1.1rem" }}
-                                        />
-                                      )}
+                                    <span
+                                      className="file-sidebar-group-symbol"
+                                      data-has-icon={!!group.icon}
+                                      aria-hidden="true"
+                                    >
                                       {group.icon && (
-                                        <LocalIcon
-                                          icon={group.icon}
-                                          width="1.05rem"
+                                        <Icon
+                                          name={group.icon}
+                                          size="1.05rem"
                                           className="file-sidebar-group-icon"
                                           style={
                                             group.color
@@ -1286,7 +1280,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                                           }
                                         />
                                       )}
-                                    </>
+                                      <Icon
+                                        name={
+                                          isOpen
+                                            ? "chevron-down"
+                                            : "chevron-right"
+                                        }
+                                        size="1.1rem"
+                                        className="file-sidebar-group-disclosure"
+                                      />
+                                    </span>
                                   }
                                   rightSection={
                                     <span className="file-sidebar-group-count">
@@ -1311,9 +1314,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                             className="file-sidebar-view-all"
                             onClick={() => navActions.setWorkbench("myFiles")}
                             rightSection={
-                              <KeyboardArrowRightIcon
-                                sx={{ fontSize: "1rem" }}
-                              />
+                              <Icon name="chevron-right" size={"1rem"} />
                             }
                           >
                             {t(
