@@ -369,6 +369,11 @@ class CompressPdfParams(ApiModel):
     )
 
 
+class CreatePortfolioParams(ApiModel):
+    cover_title: str = Field("PDF Portfolio", description="Title shown on the portfolio cover page.")
+    files: list[bytes] = Field(..., description="The files to bundle into the PDF Portfolio.")
+
+
 class CropParams(ApiModel):
     auto_crop: bool | None = Field(None, description="Enable auto-crop to detect and remove white space")
     height: float | None = Field(None, description="The height of the crop area")
@@ -491,6 +496,15 @@ class EmlToPdfParams(ApiModel):
     )
 
 
+class EncodeCharcodesParams(ApiModel):
+    font_name: str | None = None
+    font_sha256: str | None = None
+    locator_char: str | None = None
+    page_index: int | None = None
+    pdf_base64: str | None = None
+    text: str | None = None
+
+
 class ExtractAttachmentsParams(ApiModel):
     pass
 
@@ -530,6 +544,10 @@ class FlattenParams(ApiModel):
     )
 
 
+class FlattenPortfolioParams(ApiModel):
+    pass
+
+
 class HtmlToPdfParams(ApiModel):
     zoom: float = Field(1, description="Zoom level for displaying the website. Default is '1'.")
 
@@ -563,6 +581,7 @@ class FitOption(StrEnum):
 
     fill_page = "fillPage"
     fit_document_to_image = "fitDocumentToImage"
+    fit_document_to_page = "fitDocumentToPage"
     maintain_aspect_ratio = "maintainAspectRatio"
 
 
@@ -1547,6 +1566,7 @@ class Model(
         | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
+        | EncodeCharcodesParams
         | PdfToSinglePageParams
         | RearrangePagesParams
         | RemoveImagePdfParams
@@ -1565,11 +1585,13 @@ class Model(
         | AutoRotatePdfParams
         | AutoSplitPdfParams
         | CompressPdfParams
+        | CreatePortfolioParams
         | DeleteAttachmentParams
         | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
+        | FlattenPortfolioParams
         | OcrPdfParams
         | RemoveBlanksParams
         | RenameAttachmentParams
@@ -1623,6 +1645,7 @@ class Model(
         | EditTextParams
         | MergePdfsParams
         | MultiPageLayoutParams
+        | EncodeCharcodesParams
         | PdfToSinglePageParams
         | RearrangePagesParams
         | RemoveImagePdfParams
@@ -1641,11 +1664,13 @@ class Model(
         | AutoRotatePdfParams
         | AutoSplitPdfParams
         | CompressPdfParams
+        | CreatePortfolioParams
         | DeleteAttachmentParams
         | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
+        | FlattenPortfolioParams
         | OcrPdfParams
         | RemoveBlanksParams
         | RenameAttachmentParams
@@ -1700,6 +1725,7 @@ type ParamToolModel = (
     | EditTextParams
     | MergePdfsParams
     | MultiPageLayoutParams
+    | EncodeCharcodesParams
     | PdfToSinglePageParams
     | RearrangePagesParams
     | RemoveImagePdfParams
@@ -1718,11 +1744,13 @@ type ParamToolModel = (
     | AutoRotatePdfParams
     | AutoSplitPdfParams
     | CompressPdfParams
+    | CreatePortfolioParams
     | DeleteAttachmentParams
     | ExtractAttachmentsParams
     | ExtractImageScansParams
     | ExtractImagesParams
     | FlattenParams
+    | FlattenPortfolioParams
     | OcrPdfParams
     | RemoveBlanksParams
     | RenameAttachmentParams
@@ -1778,6 +1806,7 @@ class ToolEndpoint(StrEnum):
     EDIT_TEXT = "/api/v1/general/edit-text"
     MERGE_PDFS = "/api/v1/general/merge-pdfs"
     MULTI_PAGE_LAYOUT = "/api/v1/general/multi-page-layout"
+    ENCODE_CHARCODES = "/api/v1/general/pdf-text-editor/encode-charcodes"
     PDF_TO_SINGLE_PAGE = "/api/v1/general/pdf-to-single-page"
     REARRANGE_PAGES = "/api/v1/general/rearrange-pages"
     REMOVE_IMAGE_PDF = "/api/v1/general/remove-image-pdf"
@@ -1796,11 +1825,13 @@ class ToolEndpoint(StrEnum):
     AUTO_ROTATE_PDF = "/api/v1/misc/auto-rotate-pdf"
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
+    CREATE_PORTFOLIO = "/api/v1/misc/create-portfolio"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
     EXTRACT_ATTACHMENTS = "/api/v1/misc/extract-attachments"
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
+    FLATTEN_PORTFOLIO = "/api/v1/misc/flatten-portfolio"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
@@ -1854,6 +1885,7 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.EDIT_TEXT: EditTextParams,
     ToolEndpoint.MERGE_PDFS: MergePdfsParams,
     ToolEndpoint.MULTI_PAGE_LAYOUT: MultiPageLayoutParams,
+    ToolEndpoint.ENCODE_CHARCODES: EncodeCharcodesParams,
     ToolEndpoint.PDF_TO_SINGLE_PAGE: PdfToSinglePageParams,
     ToolEndpoint.REARRANGE_PAGES: RearrangePagesParams,
     ToolEndpoint.REMOVE_IMAGE_PDF: RemoveImagePdfParams,
@@ -1872,11 +1904,13 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_ROTATE_PDF: AutoRotatePdfParams,
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
+    ToolEndpoint.CREATE_PORTFOLIO: CreatePortfolioParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,
     ToolEndpoint.EXTRACT_ATTACHMENTS: ExtractAttachmentsParams,
     ToolEndpoint.EXTRACT_IMAGE_SCANS: ExtractImageScansParams,
     ToolEndpoint.EXTRACT_IMAGES: ExtractImagesParams,
     ToolEndpoint.FLATTEN: FlattenParams,
+    ToolEndpoint.FLATTEN_PORTFOLIO: FlattenPortfolioParams,
     ToolEndpoint.OCR_PDF: OcrPdfParams,
     ToolEndpoint.REMOVE_BLANKS: RemoveBlanksParams,
     ToolEndpoint.RENAME_ATTACHMENT: RenameAttachmentParams,

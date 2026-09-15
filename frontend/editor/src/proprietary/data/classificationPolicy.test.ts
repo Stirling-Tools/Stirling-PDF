@@ -1,32 +1,28 @@
 import { describe, it, expect } from "vitest";
 import {
-  isClassificationCategory,
-  orderRewritesFirst,
+  isClassificationPolicy,
+  localVerdictNeedsEscalation,
+  orderedRewritingPolicies,
   policyDeliversOutputFiles,
-  policyRequiresAiEngine,
   policyRewritesDocument,
-  shouldDispatchToAi,
 } from "@app/data/classificationPolicy";
-import type { StirlingFileStub } from "@app/types/fileContext";
+import type { PoliciesByKey } from "@app/types/policies";
 
-const stub = (
-  confidence?: StirlingFileStub["classificationConfidence"],
-): StirlingFileStub =>
-  ({ classificationConfidence: confidence }) as StirlingFileStub;
-
-const derivedStub = (
-  confidence?: StirlingFileStub["classificationConfidence"],
-): StirlingFileStub =>
+const rewriter = (order: number) =>
   ({
-    derivedFromTool: true,
-    classificationConfidence: confidence,
-  }) as StirlingFileStub;
+    configured: true,
+    enabled: true,
+    backendId: `backend-${order}`,
+    runsOnEditor: true,
+    runOn: "upload",
+    order,
+  }) as unknown as PoliciesByKey[string];
 
-describe("isClassificationCategory", () => {
+describe("isClassificationPolicy", () => {
   it("recognises the classification category and nothing else", () => {
-    expect(isClassificationCategory("classification")).toBe(true);
-    expect(isClassificationCategory("security")).toBe(false);
-    expect(isClassificationCategory("")).toBe(false);
+    expect(isClassificationPolicy("classification")).toBe(true);
+    expect(isClassificationPolicy("security")).toBe(false);
+    expect(isClassificationPolicy("")).toBe(false);
   });
 });
 
@@ -42,73 +38,54 @@ describe("policy capabilities", () => {
     expect(policyDeliversOutputFiles("security")).toBe(true);
     expect(policyDeliversOutputFiles("classification")).toBe(false);
   });
-
-  it("marks classification as the AI-escalation policy", () => {
-    expect(policyRequiresAiEngine("classification")).toBe(true);
-    expect(policyRequiresAiEngine("security")).toBe(false);
-  });
 });
 
-describe("orderRewritesFirst", () => {
-  it("moves annotating policies to the end, preserving other order", () => {
-    expect(
-      orderRewritesFirst(["classification", "security", "compliance"]),
-    ).toEqual(["security", "compliance", "classification"]);
-  });
-
-  it("leaves an order without an annotating policy untouched", () => {
-    expect(orderRewritesFirst(["security", "compliance"])).toEqual([
-      "security",
+describe("orderedRewritingPolicies", () => {
+  it("lists only file-producing policies, ordered by order, excluding classification", () => {
+    const policies = {
+      classification: rewriter(0), // annotating: excluded despite being active
+      security: rewriter(2),
+      compliance: rewriter(1),
+    } as unknown as PoliciesByKey;
+    // classification is filtered by policyDeliversOutputFiles, not by the shape above.
+    expect(orderedRewritingPolicies(policies)).toEqual([
       "compliance",
-    ]);
-  });
-
-  it("is a no-op when the annotating policy is already last", () => {
-    expect(orderRewritesFirst(["security", "classification"])).toEqual([
       "security",
-      "classification",
     ]);
   });
 
-  it("handles the annotating policy as the only one", () => {
-    expect(orderRewritesFirst(["classification"])).toEqual(["classification"]);
+  it("excludes inactive, non-editor, export-triggered, and unconfigured policies", () => {
+    const mixed = {
+      security: rewriter(0),
+      inactive: { ...rewriter(1), enabled: false },
+      notEditor: { ...rewriter(2), runsOnEditor: false },
+      onExport: { ...rewriter(3), runOn: "export" },
+      unconfigured: { ...rewriter(4), configured: false },
+      noBackend: { ...rewriter(5), backendId: undefined },
+    } as unknown as PoliciesByKey;
+    expect(orderedRewritingPolicies(mixed)).toEqual(["security"]);
+  });
+
+  it("is empty when classification is the only policy", () => {
+    const only = {
+      classification: rewriter(0),
+    } as unknown as PoliciesByKey;
+    expect(orderedRewritingPolicies(only)).toEqual([]);
   });
 });
 
-describe("shouldDispatchToAi", () => {
-  it("always dispatches a policy that is not classification", () => {
-    expect(shouldDispatchToAi("security", stub())).toBe(true);
-    expect(shouldDispatchToAi("security", stub("high"))).toBe(true);
-  });
-
-  it("holds back until the local heuristic has reported", () => {
-    // Not a skip: dispatching now races the local pass and pays for a free answer;
-    // the caller re-evaluates once the verdict lands.
-    expect(shouldDispatchToAi("classification", stub())).toBe(false);
-  });
-
+describe("localVerdictNeedsEscalation", () => {
   it("lets a confident local verdict stand", () => {
-    expect(shouldDispatchToAi("classification", stub("high"))).toBe(false);
+    expect(localVerdictNeedsEscalation("high")).toBe(false);
+  });
+
+  it("does not escalate when no verdict has been recorded yet", () => {
+    expect(localVerdictNeedsEscalation(undefined)).toBe(false);
   });
 
   it("escalates anything less than confident", () => {
-    expect(shouldDispatchToAi("classification", stub("medium"))).toBe(true);
-    expect(shouldDispatchToAi("classification", stub("low"))).toBe(true);
-    expect(shouldDispatchToAi("classification", stub("none"))).toBe(true);
-  });
-
-  it("escalates a tool-derived file with no verdict at all", () => {
-    // A derived file gets no local pass (useClientSideClassification skips it), so
-    // there is no verdict to wait for: holding back would skip it forever. This is
-    // the chained case for a new_file-mode output, or a version made before the
-    // upload's verdict landed.
-    expect(shouldDispatchToAi("classification", derivedStub())).toBe(true);
-  });
-
-  it("lets a derived file's inherited verdict decide like an upload's own", () => {
-    expect(shouldDispatchToAi("classification", derivedStub("high"))).toBe(
-      false,
-    );
-    expect(shouldDispatchToAi("classification", derivedStub("low"))).toBe(true);
+    expect(localVerdictNeedsEscalation("medium")).toBe(true);
+    expect(localVerdictNeedsEscalation("low")).toBe(true);
+    expect(localVerdictNeedsEscalation("none")).toBe(true);
   });
 });

@@ -1,0 +1,128 @@
+import { useCallback, useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import apiClient from "@app/services/apiClient";
+import { qk } from "@app/query/keys";
+
+export interface FormDetectionCatalogEntry {
+  id: string;
+  displayName: string;
+  description: string;
+  license: string;
+  sizeBytes: number;
+  onnxUrl: string;
+  sha256: string;
+}
+
+export type FormDetectionState =
+  | "not_installed"
+  | "downloading"
+  | "verifying"
+  | "ready"
+  | "failed";
+
+export interface FormDetectionModelStatus {
+  status: FormDetectionState;
+  progress: number;
+  activeModelId: string;
+  installed: string[];
+  error: string | null;
+  writable: boolean;
+  catalog: FormDetectionCatalogEntry[];
+  enabled: boolean;
+  serverEngineAvailable: boolean;
+  downloadingModelId?: string | null;
+}
+
+const STATUS_URL = "/api/v1/form/form-detection-model/status";
+const INSTALL_URL = "/api/v1/form/form-detection-model/install";
+const CONFIG_URL = "/api/v1/form/form-detection-model/config";
+const MODEL_URL = "/api/v1/form/form-detection-model";
+
+/**
+ * Polls model status while an install is in flight and exposes the admin actions. Readiness flips
+ * invalidate the endpoint-availability cache so the tool tile enables/disables.
+ */
+export function useFormDetectionModelStatus() {
+  const queryClient = useQueryClient();
+  const [status, setStatus] = useState<FormDetectionModelStatus | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchStatus = useCallback(async () => {
+    try {
+      const res = await apiClient.get<FormDetectionModelStatus>(STATUS_URL);
+      setStatus(res.data);
+      setError(null);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Failed to load model status");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchStatus();
+  }, [fetchStatus]);
+
+  const active = status?.status;
+  const featureEnabled = status?.enabled;
+
+  // Poll only while an install is in flight.
+  useEffect(() => {
+    if (active === "downloading" || active === "verifying") {
+      const id = setInterval(fetchStatus, 1500);
+      return () => clearInterval(id);
+    }
+    return undefined;
+  }, [active, fetchStatus]);
+
+  // Readiness and the master switch both gate the endpoint, so either flipping must refresh
+  // the tool availability cache.
+  useEffect(() => {
+    if (active === "ready" || active === "not_installed") {
+      void queryClient.invalidateQueries({
+        queryKey: qk.endpointsAvailability(),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: qk.endpointEnabled("form-detection"),
+      });
+    }
+  }, [active, featureEnabled, queryClient]);
+
+  const install = useCallback(
+    async (modelId: string) => {
+      await apiClient.post(INSTALL_URL, { modelId });
+      await fetchStatus();
+    },
+    [fetchStatus],
+  );
+
+  const uninstall = useCallback(
+    async (modelId?: string) => {
+      const url = modelId
+        ? `${MODEL_URL}?modelId=${encodeURIComponent(modelId)}`
+        : MODEL_URL;
+      await apiClient.delete(url);
+      await fetchStatus();
+    },
+    [fetchStatus],
+  );
+
+  const setConfig = useCallback(
+    async (config: { enabled?: boolean }) => {
+      await apiClient.post(CONFIG_URL, config);
+      await fetchStatus();
+    },
+    [fetchStatus],
+  );
+
+  return {
+    status,
+    loading,
+    error,
+    refetch: fetchStatus,
+    install,
+    uninstall,
+    setConfig,
+  };
+}

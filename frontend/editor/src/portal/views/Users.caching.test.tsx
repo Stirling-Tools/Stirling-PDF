@@ -17,7 +17,10 @@ import {
   teamSaasHandlers,
   resetTeamSaasStore,
 } from "@portal/mocks/handlers/teamSaas";
-import { createPortalQueryClient } from "@portal/queryClient";
+import {
+  getPortalQueryClient,
+  resetPortalQueryClient,
+} from "@portal/queryClient";
 import { qk } from "@portal/queries/keys";
 
 /**
@@ -98,11 +101,14 @@ function renderUsers(client: QueryClient): RenderResult {
   );
 }
 
+// The client outlives a mount now, so each case starts from a cold one.
+beforeEach(resetPortalQueryClient);
+
 describe("Users view caching", () => {
   it("serves the roster from cache on remount (no refetch)", async () => {
     // One client across both mounts — the real app keeps it at the portal root,
     // above the router, for exactly this reason.
-    const client = createPortalQueryClient();
+    const client = getPortalQueryClient();
 
     const first = renderUsers(client);
     expect(await screen.findByText("leader@acme.com")).toBeInTheDocument();
@@ -116,7 +122,7 @@ describe("Users view caching", () => {
   });
 
   it("collapses the SaaS /team/my call to one per mount", async () => {
-    const client = createPortalQueryClient();
+    const client = getPortalQueryClient();
     renderUsers(client);
     await screen.findByText("leader@acme.com");
 

@@ -25,6 +25,6 @@ const BADGE_ACCENT: Record<string, string> = {
  * CSS colour var for a policy category's badge accent (blue for unknown
  * categories) — the tint used by the file badges and the enforcement overlay.
  */
-export function policyAccentVar(categoryId: string): string {
-  return `var(--color-${BADGE_ACCENT[categoryId] ?? "blue"})`;
+export function policyAccentVar(policyKey: string): string {
+  return `var(--color-${BADGE_ACCENT[policyKey] ?? "blue"})`;
 }

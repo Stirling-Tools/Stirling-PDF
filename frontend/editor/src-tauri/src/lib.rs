@@ -11,6 +11,7 @@ use commands::{
     clear_opened_files,
     clear_refresh_token,
     clear_user_info,
+    file_disk_state,
     forward_files_to_window,
     is_default_pdf_handler,
     get_auth_token,
@@ -21,6 +22,9 @@ use commands::{
     open_in_new_window,
     pop_opened_files,
     pop_window_file_ids,
+    release_window_watches,
+    unwatch_disk_paths,
+    watch_disk_paths,
     get_refresh_token,
     get_user_info,
     is_first_launch,
@@ -146,6 +150,17 @@ pub fn run() {
     .setup(|app| {
       add_log("🚀 Tauri app setup started".to_string());
 
+      // Windows: drop the native title bar so the in-app custom title bar
+      // (window controls + drag region) takes over. Runtime toggle because the
+      // main window is defined in tauri.conf.json; spawned windows set it at
+      // build time in window.rs. macOS/Linux keep their native decorations.
+      #[cfg(target_os = "windows")]
+      {
+        if let Some(window) = app.get_webview_window(MAIN_WINDOW_LABEL) {
+          let _ = window.set_decorations(false);
+        }
+      }
+
       // Files passed on the command line at first launch load into the main
       // window once the frontend mounts.
       let args: Vec<String> = std::env::args().collect();
@@ -201,6 +216,9 @@ pub fn run() {
       get_opened_files,
       pop_opened_files,
       clear_opened_files,
+      file_disk_state,
+      watch_disk_paths,
+      unwatch_disk_paths,
       open_in_new_window,
       open_files_in_new_window,
       pop_window_file_ids,
@@ -257,6 +275,9 @@ pub fn run() {
               let _ = window.destroy();
             }
           }
+        }
+        RunEvent::WindowEvent { event: WindowEvent::Destroyed, label, .. } => {
+          release_window_watches(app_handle, &label);
         }
         RunEvent::WindowEvent { event: WindowEvent::DragDrop(drag_drop_event), label, .. } => {
           use tauri::DragDropEvent;

@@ -63,18 +63,7 @@ import stirling.software.common.util.WebResponseUtils;
 @RequiredArgsConstructor
 public class OCRController {
 
-    /**
-     * Resolution pages are rasterised at before Tesseract sees them.
-     *
-     * <p>{@code system.maxDPI} is documented as "maximum allowed DPI" and defaults to 500, and this
-     * used to adopt that number as the target - which is a misreading of a ceiling, and the reason
-     * forcing OCR on an ordinary A4 document failed on the desktop app: 500 DPI is 24 megapixels,
-     * or about 92 MB per page in memory, against a 2 GB heap. {@code AutoRotateController} already
-     * reads the setting the right way, choosing its own resolution and clamping to the maximum.
-     *
-     * <p>300 is the resolution Tesseract's own documentation asks for; beyond it the extra pixels
-     * cost memory and time without buying accuracy.
-     */
+    // Tesseract's recommended minimum; more pixels cost time without improving recognition
     private static final int OCR_RENDER_DPI = 300;
 
     private final ApplicationProperties applicationProperties;

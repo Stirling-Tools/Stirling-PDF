@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Brings up the multi-node stack (Postgres/Valkey/MinIO/2 app nodes/nginx LB), seeds teams/users/an S3 connection/policies, then leaves it running for manual testing.
+# Brings up the multi-node stack (Postgres/Valkey/Silo/2 app nodes/nginx LB), seeds teams/users/an S3 connection/policies, then leaves it running for manual testing.
 # Usage: ./start-multinode-test.sh [--no-seed | --down]
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -24,7 +24,7 @@ fi
 echo "==> Building the Stirling image (first run compiles the app; be patient)..."
 $COMPOSE build
 
-echo "==> Starting Postgres + Valkey + MinIO + 2 app nodes + nginx..."
+echo "==> Starting Postgres + Valkey + Silo + 2 app nodes + nginx..."
 $COMPOSE up -d
 
 echo "==> Waiting for both app nodes to report healthy..."
@@ -48,7 +48,7 @@ cat <<EOF
  Multi-node Stirling is UP.
 
    App (via load balancer): http://localhost:8080     (admin / stirling)
-   MinIO console:           http://localhost:9001     (minioadmin / minioadmin)
+   Silo console:            http://localhost:9001     (minioadmin / minioadmin)
    Postgres:                localhost:5434            (stirling / stirling, db 'stirling')
 
    Seeded users:            user01..user40@stirling.test / Password123!
