@@ -1,4 +1,8 @@
 import { EditorDeliverySelect } from "@portal/components/pipelines/EditorDeliverySelect";
+import {
+  parseTrigger,
+  buildTriggerFor,
+} from "@portal/components/pipelines/inputTriggerConfig";
 import { requiresClassification } from "@app/data/classificationConditions";
 import { isConditionComplete } from "@app/conditions/validation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
@@ -58,7 +62,6 @@ import {
   type PolicyRunView,
   type RunOutputFile,
   type TestRunAsset,
-  type TriggerConfig,
   type TriggerInfo,
   type TriggerOutcome,
 } from "@portal/api/pipelines";
@@ -123,7 +126,6 @@ import {
   MANUAL_OPTION,
   PipelineInputTrigger,
   type EditorRunOn,
-  type ScheduleUnit,
   type WorkingInput,
 } from "@portal/components/pipelines/PipelineInputTrigger";
 import "@portal/views/PipelineBuilder.css";
@@ -138,28 +140,6 @@ type RunResult = {
   text: string;
 };
 
-function parseTrigger(trigger: TriggerConfig | null): {
-  triggerType: string;
-  count: string;
-  unit: ScheduleUnit;
-} {
-  if (!trigger) return { triggerType: MANUAL, count: "1", unit: "HOURS" };
-  if (trigger.type === "schedule") {
-    const schedule = trigger.options?.schedule as
-      | { type?: string; count?: number; unit?: ScheduleUnit }
-      | undefined;
-    if (schedule?.type === "every") {
-      return {
-        triggerType: "schedule",
-        count: String(schedule.count ?? 1),
-        unit: schedule.unit ?? "HOURS",
-      };
-    }
-    return { triggerType: "schedule", count: "1", unit: "HOURS" };
-  }
-  return { triggerType: trigger.type, count: "1", unit: "HOURS" };
-}
-
 /** The input row with nothing chosen yet: no source, manual trigger. */
 function blankInput(): WorkingInput {
   return {
@@ -168,24 +148,6 @@ function blankInput(): WorkingInput {
     scheduleCount: "1",
     scheduleUnit: "HOURS",
   };
-}
-
-/** The trigger config for the input row, or null for a manual (on-demand) input. */
-function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
-  if (input.triggerType === MANUAL) return null;
-  if (input.triggerType === "schedule") {
-    return {
-      type: "schedule",
-      options: {
-        schedule: {
-          type: "every",
-          count: Number(input.scheduleCount),
-          unit: input.scheduleUnit,
-        },
-      },
-    };
-  }
-  return { type: input.triggerType, options: {} };
 }
 
 /**
@@ -197,14 +159,12 @@ const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
 function isClassifyStep(step: WorkingToolStep): boolean {
   return step.operation === CLASSIFY_OPERATION;
 }
-
 function isClassifyTool(tool: ExecutableTool): boolean {
   return (
     tool.endpoint === CLASSIFY_OPERATION ||
     tool.endpoints?.includes(CLASSIFY_OPERATION) === true
   );
 }
-
 /** Whether a source can be written to, i.e. offered as a pipeline destination. */
 function isWritableSource(source: { type: string }): boolean {
   return (availableOutputModes() as string[]).includes(source.type);

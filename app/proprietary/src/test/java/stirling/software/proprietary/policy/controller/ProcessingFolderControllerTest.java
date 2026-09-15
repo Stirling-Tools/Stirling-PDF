@@ -71,6 +71,7 @@ class ProcessingFolderControllerTest {
 
     @TempDir Path tempDir;
 
+    @Mock private stirling.software.proprietary.policy.source.SourceAccessGuard sourceAccessGuard;
     @Mock private PolicyRunner policyRunner;
     @Mock private PolicyTriggerManager policyTriggerManager;
     @Mock private ProcessedLedger processedLedger;
@@ -173,6 +174,7 @@ class ProcessingFolderControllerTest {
                 new ProcessingFolderController(
                         policyStore,
                         sourceStore,
+                        sourceAccessGuard,
                         validator,
                         policyRunner,
                         policyTriggerManager,
@@ -183,6 +185,55 @@ class ProcessingFolderControllerTest {
                         accessGuard,
                         folderAccessGuard,
                         properties);
+    }
+
+    @Test
+    void databaseDestinationIsValidatedBeforeChangingTheFolderPair() {
+        var destination =
+                sourceStore.save(
+                        new stirling.software.proprietary.policy.source.Source(
+                                "rag-output", "RAG", "vectordb", Map.of(), true, null, null));
+        when(sourceAccessGuard.canAccess(destination)).thenReturn(false);
+        var request =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        false,
+                        request(null, "new_version").steps(),
+                        Map.of("destinationId", destination.id()));
+        assertThatThrownBy(() -> controller.save(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("inaccessible output source");
+        assertThat(policyStore.all()).isEmpty();
+        assertThat(sourceStore.all()).containsExactly(destination);
+    }
+
+    @Test
+    void folderCannotUseAnOrdinarySourceAsADatabaseDestination() {
+        var destination =
+                sourceStore.save(
+                        new stirling.software.proprietary.policy.source.Source(
+                                "other-folder",
+                                "Other",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                null,
+                                null));
+        when(sourceAccessGuard.canAccess(destination)).thenReturn(true);
+        var request =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        false,
+                        request(null, "new_version").steps(),
+                        Map.of("destinationId", destination.id()));
+        assertThatThrownBy(() -> controller.save(request))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("RAG database source");
+        assertThat(policyStore.all()).isEmpty();
     }
 
     @Test

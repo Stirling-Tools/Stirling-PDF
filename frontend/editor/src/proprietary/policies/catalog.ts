@@ -10,6 +10,7 @@ import {
 } from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
 import type {
+  WirePipelineInput,
   WirePipelineStep,
   WireRoutingRule,
   WireTriggerConfig,
@@ -49,12 +50,17 @@ export interface PolicyConfigDef {
   rules: string[];
   scopeLabel: string;
   fields: PolicyField[];
+  /**
+   * Whether the wizard asks where documents come from. Off by default: most templates run on
+   * documents the user opens in the editor, so a source picker would be dead weight. On for
+   * templates whose whole point is processing a location nobody is sitting in front of.
+   */
+  needsSource?: boolean;
   defaultOperations: PolicyToolStep[];
 }
 
 export interface PolicyState {
   /** The saved destinations and per-document routes; the routing category edits these. */
-  outputIds?: string[];
   routingRules?: WireRoutingRule[];
   trigger?: WireTriggerConfig | null;
   configured: boolean;
@@ -66,6 +72,8 @@ export interface PolicyState {
   /** Options the wizard doesn't model, preserved so a wizard save round-trips them (see codec). */
   extraOptions?: Record<string, unknown>;
   sources: string[];
+  inputs?: WirePipelineInput[];
+  outputIds?: string[];
   /** Whether the editor runs this policy per file; stored, not derived from `sources`. */
   runsOnEditor?: boolean;
   scopeTypes: string[];
@@ -84,13 +92,14 @@ export interface PolicyState {
 export interface PolicySetupResult {
   /** Bound by the routing category only; every other category leaves these alone. */
   trigger?: WireTriggerConfig | null;
-  outputIds?: string[];
   routingRules?: WireRoutingRule[];
   required: boolean;
   /** Stored options the wizard doesn't model, carried through so a save preserves them (see codec). */
   extraOptions?: Record<string, unknown>;
   fieldValues: Record<string, boolean | string | string[]>;
   sources: string[];
+  inputs?: WirePipelineInput[];
+  outputIds?: string[];
   runsOnEditor: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
@@ -161,9 +170,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     id: "ingestion",
     label: "portal.policies.categories.ingestion.label",
     tone: "blue",
-    desc: "portal.policies.categories.ingestion.desc",
-    providesClassification: true,
-    comingSoon: true,
+    desc: "portal.policies.categories.ingestion.description",
   },
   {
     id: "security",
@@ -202,7 +209,7 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
 
 export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
   ingestion: {
-    summary: "portal.policies.config.ingestion.summary",
+    summary: "portal.policies.config.ingestion.description",
     rules: [
       "portal.policies.config.ingestion.rules.0",
       "portal.policies.config.ingestion.rules.1",
@@ -210,23 +217,16 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.ingestion.rules.3",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("ocr"), policyStep("flatten")],
-    fields: [
-      {
-        label: "portal.policies.config.ingestion.fields.minConfidence",
-        key: "minConfidence",
-        type: "select",
-        value: "p80",
-        options: ["p60", "p70", "p80", "p90", "p95"],
-      },
-      {
-        label: "portal.policies.config.ingestion.fields.belowThreshold",
-        key: "belowThreshold",
-        type: "select",
-        value: "flagForReview",
-        options: ["flagForReview", "routeToBucket", "hold"],
-      },
+    // OCR then ingest. Flatten is deliberately absent: a full flatten rasterises every
+    // page, which destroys the text layer OCR just added and leaves rag-ingest with
+    // nothing to extract. OCR is seeded with a language because it validates on having
+    // one, and a template that cannot be saved without opening a step is not a template.
+    defaultOperations: [
+      policyStep("ocr", { languages: ["eng"] }),
+      policyStep("ragIngest"),
     ],
+    fields: [],
+    needsSource: true,
   },
   security: {
     summary: "portal.policies.config.security.summary",

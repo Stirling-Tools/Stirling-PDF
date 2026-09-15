@@ -1,9 +1,11 @@
 import { describe, expect, it } from "vitest";
 import {
+  assemblePolicies,
   buildWireFromSetup,
   assemblePolicies,
   parseSimplePolicy,
   type PolicySetupResult,
+  type WirePolicy,
 } from "@portal/api/policies";
 import { policyStep, policyStepToWire } from "@app/policies/operations";
 import type { Policy } from "@portal/api/pipelines";
@@ -164,5 +166,123 @@ describe("buildWireFromSetup", () => {
     const wire = buildWireFromSetup(entry!, setupResult(), t);
     expect(wire.icon).toBe("shield");
     expect(wire.name).toBe("My classifier");
+  });
+});
+
+it("round-trips source bindings, schedule, paused state and database target", () => {
+  const policy: Policy = {
+    ...classificationPolicy(false),
+    name: "Archive ingestion",
+    enabled: false,
+    icon: "database",
+    inputs: [
+      {
+        sourceId: "incoming",
+        trigger: {
+          type: "schedule",
+          options: { schedule: { type: "every", count: 15, unit: "MINUTES" } },
+        },
+      },
+    ],
+    outputIds: ["knowledge"],
+    editor: { allowed: false, runOn: "upload" },
+    steps: [
+      policyStepToWire(policyStep("ocr", { languages: ["eng"] })),
+      policyStepToWire(
+        policyStep("ragIngest", {
+          index: "false",
+          includeOriginal: "false",
+          exportChunksJsonl: "true",
+        }),
+      ),
+    ],
+    output: {
+      type: "inline",
+      options: { categoryId: "ingestion", customMetadata: "kept" },
+    },
+  };
+  const entry = parseSimplePolicy(policy, [])!;
+  expect(entry).not.toBeNull();
+  const result = {
+    ...setupResult(),
+    runsOnEditor: false,
+    inputs: entry.policy!.state.inputs,
+    outputIds: entry.policy!.state.outputIds,
+    steps: entry.policy!.steps,
+    extraOptions: entry.policy!.state.extraOptions,
+  };
+  const wire = buildWireFromSetup(entry, result, t, false);
+  expect(wire.inputs).toEqual(policy.inputs);
+  expect(wire.outputIds).toEqual(["knowledge"]);
+  expect(wire.steps).toEqual(policy.steps);
+  expect(wire.output.options).toMatchObject({ customMetadata: "kept" });
+  expect(wire.enabled).toBe(false);
+  expect(wire.name).toBe("Archive ingestion");
+  expect(wire.icon).toBe("database");
+});
+
+it("keeps advanced triggers and inline output types in the full builder", () => {
+  const policy = classificationPolicy(false);
+  expect(
+    parseSimplePolicy(
+      {
+        ...policy,
+        inputs: [
+          {
+            sourceId: "in",
+            trigger: {
+              type: "schedule",
+              options: { schedule: { type: "cron", expression: "0 0 * * *" } },
+            },
+          },
+        ],
+      },
+      [],
+    ),
+  ).toBeNull();
+  expect(
+    parseSimplePolicy(
+      {
+        ...policy,
+        output: { type: "folder", options: { categoryId: "classification" } },
+      },
+      [],
+    ),
+  ).toBeNull();
+});
+
+it("preserves source bindings and custom identity through catalogue setup links", () => {
+  const policy: WirePolicy = {
+    id: "contracts-policy",
+    trigger: null,
+    steps: [policyStepToWire(policyStep("classify"))],
+    output: { type: "inline", options: { categoryId: "classification" } },
+    name: "Contracts classifier",
+    icon: "shield",
+    enabled: false,
+    inputs: [{ sourceId: "contracts", trigger: null }],
+    outputIds: ["archive"],
+  };
+  const entry = assemblePolicies([policy], []).catalogue.find(
+    (entry) => entry.category.id === "classification",
+  )!;
+  const state = entry.policy!.state;
+  const wire = buildWireFromSetup(
+    entry,
+    {
+      ...setupResult(),
+      inputs: state.inputs,
+      outputIds: state.outputIds,
+      runsOnEditor: false,
+    },
+    t,
+    false,
+  );
+  expect(wire).toMatchObject({
+    name: policy.name,
+    icon: policy.icon,
+    enabled: false,
+    inputs: policy.inputs,
+    outputIds: policy.outputIds,
   });
 });

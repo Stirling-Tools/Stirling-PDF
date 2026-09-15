@@ -121,6 +121,7 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       return {
         id: record.id,
         enabled: record.enabled,
+        output: record.output,
         steps: record.steps.map((step) => ({
           operation: step.operation,
           parameters: step.parameters ?? {},
