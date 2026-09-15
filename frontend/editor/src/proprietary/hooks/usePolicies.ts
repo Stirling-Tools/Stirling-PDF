@@ -1,9 +1,10 @@
 /**
  * Read-only Policies state for the editor's enforcement path. The backend
  * (`/api/v1/policies`) is the source of truth: we reconcile the local cache
- * against the stored policies on mount and whenever the signed-in user changes. localStorage is a fast-render cache +
- * offline fallback. Managing policies (create/edit/pause/delete) lives on the
- * portal Pipelines page, not here; the editor only reads them and runs them.
+ * against the stored policies on mount and whenever the signed-in user
+ * changes. localStorage is a fast-render cache + offline fallback. Managing
+ * policies (create/edit/pause/delete) lives on the portal Pipelines page, not
+ * here; the editor only reads them and runs them.
  */
 
 import { useState, useEffect, useRef } from "react";
