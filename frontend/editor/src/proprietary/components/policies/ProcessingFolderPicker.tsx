@@ -1,4 +1,4 @@
-import { useId, useState } from "react";
+import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   ActionIcon,
@@ -21,9 +21,11 @@ import {
   processingFolderPath,
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
+import { useFolderPickerBack } from "@app/components/policies/useFolderPickerBack";
 import "@app/components/filesPage/FilesPage.css";
 
 export interface ProcessingFolderPickerProps {
+  active: boolean;
   folders: FolderRecord[];
   canPickDirectory: boolean;
   serverDisabledReason: string | null;
@@ -35,6 +37,7 @@ export interface ProcessingFolderPickerProps {
 
 /** Chooses a destination without creating or mounting anything on cancellation. */
 export function ProcessingFolderPicker({
+  active,
   folders,
   canPickDirectory,
   serverDisabledReason,
@@ -76,6 +79,21 @@ export function ProcessingFolderPicker({
     target?.kind === "local" ? target.directory : null,
   );
   const [search, setSearch] = useState("");
+  const visits = useRef<
+    { id: FolderId | null; search: string; location: "server" | "local" }[]
+  >([]);
+  const [hasHistory, setHasHistory] = useState(false);
+  const goBack = useFolderPickerBack(active && hasHistory, () => {
+    const previous = visits.current.pop();
+    if (previous) {
+      setLocation(previous.location);
+      showFolder(previous.id, previous.location);
+      setSearch(previous.search);
+    }
+    const remaining = visits.current.length > 0;
+    setHasHistory(remaining);
+    return remaining;
+  });
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const available = folders.filter((folder) => folderKind(folder) === location);
@@ -111,16 +129,6 @@ export function ProcessingFolderPicker({
       ? target.folder.id
       : null;
   const parent = parentId ? byId.get(parentId) : undefined;
-  const selectedPath =
-    target?.kind === "existing"
-      ? processingFolderPath(target.folder, folders)
-      : target?.kind === "local"
-        ? target.directory.path
-        : creating
-          ? parent
-            ? processingFolderPath(parent, folders)
-            : rootLabel
-          : null;
 
   function updateDraft(
     nextName = name,
@@ -151,16 +159,37 @@ export function ProcessingFolderPicker({
     }
   }
 
-  function navigate(folder: FolderRecord | null) {
-    setCurrentId(folder?.id ?? null);
+  function showFolder(id: FolderId | null, nextLocation = location) {
+    setCurrentId(id);
     setSearch("");
-    if (folder) select(folder);
-    else {
-      setParentId(null);
-      setDirectory(null);
-      if (creating) updateDraft(name, null, null);
-      else onChange(null);
-    }
+    const folder = folders.find((item) => item.id === id);
+    const picked = folder?.directory
+      ? { path: folder.directory, name: folder.name }
+      : null;
+    setParentId(id);
+    setDirectory(picked);
+    onChange(
+      creating
+        ? nextLocation === "server"
+          ? { kind: "server", name, parentId: id }
+          : picked
+            ? { kind: "local", directory: picked, name }
+            : null
+        : folder
+          ? { kind: "existing", folder }
+          : null,
+    );
+  }
+
+  function remember() {
+    visits.current.push({ id: currentId, search, location });
+    setHasHistory(true);
+  }
+
+  function navigate(folder: FolderRecord | null) {
+    if ((folder?.id ?? null) === currentId && !search) return;
+    remember();
+    showFolder(folder?.id ?? null);
   }
 
   function toggleCreation() {
@@ -218,6 +247,7 @@ export function ProcessingFolderPicker({
           ariaLabel={t("processingFolders.setup.location")}
           value={location}
           onChange={(value) => {
+            remember();
             setLocation(value);
             setCurrentId(null);
             setParentId(null);
@@ -261,16 +291,18 @@ export function ProcessingFolderPicker({
         />
         {location === "local" && (
           <Button
+            title={directory?.path}
             variant="secondary"
             onClick={() => void browse()}
             loading={picking}
             leftSection={<Icon name="folder-open" size={18} />}
           >
-            {t(
-              creating
-                ? "processingFolders.setup.chooseParent"
-                : "processingFolders.setup.browseComputer",
-            )}
+            {directory?.name ??
+              t(
+                creating
+                  ? "processingFolders.setup.chooseParent"
+                  : "processingFolders.setup.browseComputer",
+              )}
           </Button>
         )}
         <Button
@@ -283,27 +315,37 @@ export function ProcessingFolderPicker({
           {t("processingFolders.setup.newFolder")}
         </Button>
       </div>
-      <nav
-        className="files-page-breadcrumbs folder-setup__breadcrumbs"
-        aria-label={t("processingFolders.setup.location")}
-      >
-        {[{ id: null, name: rootLabel }, ...trail].map((item, index) => (
-          <span key={item.id ?? "root"} className="folder-setup__inline">
-            {index > 0 && <Icon name="chevron-right" size={14} />}
-            <button
-              type="button"
-              className="files-page-breadcrumb"
-              disabled={blocked}
-              aria-current={item.id === currentId ? "location" : undefined}
-              onClick={() =>
-                navigate(item.id ? (byId.get(item.id) ?? null) : null)
-              }
-            >
-              {item.name}
-            </button>
-          </span>
-        ))}
-      </nav>
+      <div className="folder-setup__folder-navigation">
+        <ActionIcon
+          aria-label={t("filesPage.back", "Back")}
+          variant="tertiary"
+          disabled={!hasHistory || picking}
+          onClick={goBack}
+        >
+          <Icon name="arrow-left" size={18} />
+        </ActionIcon>
+        <nav
+          className="files-page-breadcrumbs folder-setup__breadcrumbs"
+          aria-label={t("processingFolders.setup.location")}
+        >
+          {[{ id: null, name: rootLabel }, ...trail].map((item, index) => (
+            <span key={item.id ?? "root"} className="folder-setup__inline">
+              {index > 0 && <Icon name="chevron-right" size={14} />}
+              <button
+                type="button"
+                className="files-page-breadcrumb"
+                disabled={blocked}
+                aria-current={item.id === currentId ? "location" : undefined}
+                onClick={() =>
+                  navigate(item.id ? (byId.get(item.id) ?? null) : null)
+                }
+              >
+                {item.name}
+              </button>
+            </span>
+          ))}
+        </nav>
+      </div>
       <div className="folder-setup__folder-scroll">
         <div
           className="files-page-list folder-setup__folder-list"
@@ -426,14 +468,6 @@ export function ProcessingFolderPicker({
             {t("cancel", "Cancel")}
           </Button>
         </div>
-      )}
-      {selectedPath && (
-        <p className="folder-setup__path">
-          {creating && (
-            <strong>{t("processingFolders.setup.createIn")}: </strong>
-          )}
-          {selectedPath}
-        </p>
       )}
       {error && <Banner tone="danger" description={error} />}
     </div>

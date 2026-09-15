@@ -16,6 +16,10 @@ import { createFolderId, type FolderRecord } from "@app/types/folder";
 import { assemblePolicies } from "@app/policies/overview";
 import { POLICY_CATEGORIES } from "@app/policies/catalog";
 
+vi.mock("@app/components/policies/useFolderPickerBack", () => ({
+  useFolderPickerBack: (_enabled: boolean, onBack: () => boolean) => onBack,
+}));
+
 const folder: FolderRecord = {
   id: createFolderId(),
   name: "Invoices",
@@ -62,6 +66,40 @@ function createServerFolder() {
 }
 
 describe("ProcessingFolderWizard", () => {
+  it("goes back through visited folders and search without repeating the folder path below the list", () => {
+    const child: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      parentFolderId: folder.id,
+      name: "2026",
+    };
+    renderWizard({ folders: [folder, child] });
+    const back = screen.getByRole("button", { name: "filesPage.back" });
+    expect(back).toBeDisabled();
+    const search = screen.getByRole("textbox", { name: key("searchFolders") });
+    fireEvent.change(search, { target: { value: "2026" } });
+    fireEvent.doubleClick(
+      screen.getByRole("radio", { name: "2026" }).closest('[role="row"]')!,
+    );
+    expect(back).toBeEnabled();
+    expect(
+      document.querySelector(".folder-setup__picker > .folder-setup__path"),
+    ).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: folder.name }));
+    expect(screen.getByRole("radio", { name: "2026" })).toBeVisible();
+    fireEvent.click(back);
+    expect(screen.queryByRole("radio", { name: "2026" })).toBeNull();
+    fireEvent.click(back);
+    expect(search).toHaveValue("2026");
+    expect(screen.getByRole("radio", { name: "2026" })).toBeVisible();
+    expect(back).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Server storage" }));
+    expect(search).toHaveValue("");
+    expect(screen.getByRole("radio", { name: folder.name })).toBeVisible();
+    fireEvent.click(back);
+    expect(search).toHaveValue("2026");
+  });
+
   it("selects nested folders from the library list and retains selection when returning", async () => {
     const child: FolderRecord = {
       ...folder,
@@ -272,7 +310,10 @@ describe("ProcessingFolderWizard", () => {
     await waitFor(() => expect(pickDirectory).toHaveBeenCalledTimes(1));
     expect(button("chooseProcessing")).toBeDisabled();
     fireEvent.click(button("browseComputer"));
-    await screen.findByText("C:/Invoices");
+    expect(
+      await screen.findByRole("button", { name: "Invoices" }),
+    ).toHaveAttribute("title", "C:/Invoices");
+    expect(screen.queryByText("C:/Invoices")).toBeNull();
     expect(button("chooseProcessing")).toBeEnabled();
   });
 

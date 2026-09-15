@@ -28,7 +28,7 @@ import "@app/components/policies/FolderProcessingSetup.css";
 
 export interface ProcessingFolderWizardProps extends Omit<
   ProcessingFolderPickerProps,
-  "target" | "onChange"
+  "target" | "onChange" | "active"
 > {
   /** An existing-folder entry skips destination selection. */
   initialFolder?: FolderRecord;
@@ -283,6 +283,7 @@ export function ProcessingFolderWizard({
           >
             <ProcessingFolderPicker
               key={pickerVersion}
+              active={stage === "folder"}
               folders={folders}
               canPickDirectory={canPickDirectory}
               serverDisabledReason={serverDisabledReason}

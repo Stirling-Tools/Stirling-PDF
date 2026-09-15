@@ -103,6 +103,7 @@
 .folder-setup__picker > :not(.folder-setup__folder-scroll) {
   flex-shrink: 0;
 }
+.folder-setup__folder-navigation,
 .folder-setup__folder-toolbar,
 .folder-setup__new-folder {
   display: flex;
@@ -115,6 +116,8 @@
   min-width: 0;
 }
 .folder-setup__breadcrumbs {
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
   height: auto;
   min-height: 1.75rem;
