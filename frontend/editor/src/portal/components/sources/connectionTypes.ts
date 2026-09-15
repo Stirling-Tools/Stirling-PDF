@@ -898,6 +898,30 @@ export const CREATABLE_CONNECTION_TYPES: CreatableConnectionType[] = [
     requiresCustomApi: true,
     fields: CUSTOM_API_FIELDS,
   },
+  {
+    id: "vectordb",
+    integrationType: "VECTOR_DB",
+    kind: "preset",
+    category: "storage",
+    labelKey: `${PREFIX}.vectordb.label`,
+    descriptionKey: `${PREFIX}.vectordb.description`,
+    searchTerms: ["rag", "vector", "weaviate", "pinecone", "knowledge"],
+    fields: [
+      {
+        key: "vendor",
+        control: "select",
+        required: true,
+        defaultValue: "weaviate",
+        labelKey: `${PREFIX}.vectordb.vendor`,
+        options: [
+          { value: "weaviate", labelKey: `${PREFIX}.vectordb.weaviate` },
+          { value: "pinecone", labelKey: `${PREFIX}.vectordb.pinecone` },
+        ],
+      },
+      field.baseUrl("vectordb"),
+      field.apiKey(),
+    ],
+  },
 ];
 
 /** Free-text match over name, description-agnostic keywords and category. */

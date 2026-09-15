@@ -7,5 +7,5 @@ import type { PipelineOutputMode } from "@portal/api/pipelines";
  * not offered there and only S3 remains).
  */
 export function availableOutputModes(): PipelineOutputMode[] {
-  return ["folder", "s3"];
+  return ["folder", "s3", "vectordb"];
 }

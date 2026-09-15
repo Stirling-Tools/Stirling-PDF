@@ -285,7 +285,7 @@ class PolicyControllerTest {
                             new OutputSpec("s3", Map.of("connectionId", 999)));
             doThrow(new IllegalArgumentException("unknown or inaccessible s3 connection"))
                     .when(policyValidator)
-                    .validateOutput(any());
+                    .validateOutput(any(), any());
 
             assertThatThrownBy(() -> controller.run(definition, null, new PolicyRunFiles()))
                     .isInstanceOf(ResponseStatusException.class)
