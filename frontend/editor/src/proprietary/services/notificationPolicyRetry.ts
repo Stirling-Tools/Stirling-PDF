@@ -152,6 +152,7 @@ async function submit(
     fileName: document.name,
     fileSize: document.size,
     target: runTarget,
+    externalOutput: loadPolicies()[policyKey]?.externalOutput,
     status: "PENDING",
     outputs: [],
     error: null,

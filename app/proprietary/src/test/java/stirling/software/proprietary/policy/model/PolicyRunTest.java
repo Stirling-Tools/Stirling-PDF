@@ -20,6 +20,36 @@ class PolicyRunTest {
     }
 
     @Test
+    void externalDeliveryIsCapturedInTheRunView() {
+        PolicyRun run =
+                new PolicyRun(
+                        "run",
+                        "policy",
+                        new PipelineDefinition(
+                                "copy", List.of(), List.of(OutputSpec.folder("/out"))),
+                        null,
+                        null,
+                        null);
+        assertTrue(PolicyRunView.of(run).externalOutput());
+        assertFalse(PolicyRunView.of(run()).externalOutput());
+    }
+
+    @Test
+    void sharedJobProjectionPreservesExternalDelivery() {
+        var entry =
+                new stirling.software.common.cluster.JobStoreEntry(
+                        "run",
+                        stirling.software.common.cluster.JobStoreEntry.JobState.COMPLETE,
+                        "node-a",
+                        java.time.Instant.now(),
+                        null,
+                        null,
+                        List.of("receipt"),
+                        java.util.Map.of("policyId", "policy", "externalOutput", "true"));
+        assertTrue(PolicyRunView.ofEntry(entry).externalOutput());
+    }
+
+    @Test
     void aCancelledRunCannotStart() {
         PolicyRun run = run();
         assertTrue(run.cancel());
