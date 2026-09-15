@@ -89,7 +89,11 @@ async function initPdfiumModule(): Promise<WrappedPdfiumModule> {
   startEagerWasmCompilation();
 
   const overrides: PdfiumModuleOverrides = { locateFile: () => wasmUrl() };
-  const precompiled = await pdfiumWasmModulePromise;
+  const container = await pdfiumWasmModulePromise;
+  // Pre-compiled modules arrive as `{ module }`; test doubles may resolve a
+  // module-shaped value, so fall back to the container itself.
+  const precompiled =
+    container?.module ?? (container as unknown as WebAssembly.Module | null);
 
   let reportFailure: (error: unknown) => void = () => {};
   const instantiateFailed = new Promise<never>((_, reject) => {
