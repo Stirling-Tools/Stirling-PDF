@@ -417,7 +417,9 @@ describe("useProcessorSearchResults helpers", () => {
 
     const { result, rerender } = renderHook(
       ({ query }) =>
-        useProcessorSearchResults(query, true, { scopeIds: ["portal-users"] }),
+        useProcessorSearchResults(query, true, {
+          scopeIds: ["portal-users"],
+        }),
       {
         initialProps: { query: "alice" },
         wrapper: queryWrapper(),

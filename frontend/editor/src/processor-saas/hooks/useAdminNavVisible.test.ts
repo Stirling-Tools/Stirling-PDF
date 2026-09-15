@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { renderHook } from "@testing-library/react";
-// Resolves to the SaaS override (src/processor-saas) via the @portal cascade.
+// Resolves to the SaaS override (src/processor-saas) via the @processor cascade.
 import { useAdminNavVisible } from "@processor/hooks/useAdminNavVisible";
 
 describe("useAdminNavVisible (SaaS)", () => {

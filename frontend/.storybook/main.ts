@@ -1,6 +1,13 @@
 import { resolve } from "node:path";
 import type { StorybookConfig } from "@storybook/react-vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+// oxlint-disable-next-line no-restricted-imports -- config runs in node, before the aliases exist
+import { iconSvgr } from "../editor/scripts/icons/svgrOptions.mts";
+// By path, not @app/*: this file runs in node, before the aliases exist.
+// oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
+import { legacyIconsPlugin } from "../editor/scripts/icons/legacyIcons.vite.mts";
+// oxlint-disable-next-line no-restricted-imports -- config runs before aliases exist
+import { usedIconsPlugin } from "../editor/scripts/icons/usedIcons.vite.mts";
 
 /**
  * Storybook 9 ships essentials, interactions, and docs as built-ins, so the
@@ -48,6 +55,10 @@ const config: StorybookConfig = {
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
+      "@app/services/supabaseClient": resolve(
+        __dirname,
+        "billingSupabaseClient.ts",
+      ),
       "@processor": resolve(__dirname, "../editor/src/processor"),
       // Direct layer aliases so .storybook config files (preview.tsx), which sit
       // outside src/ and so aren't covered by tsconfigPaths, can import layer
@@ -60,7 +71,12 @@ const config: StorybookConfig = {
       "@public": resolve(__dirname, "../editor/public"),
     };
     config.plugins = config.plugins ?? [];
+    config.plugins.push(iconSvgr());
     config.plugins.push(editorPathAliases());
+    // Reads the audit's "before" glyphs from the icon packages, so none of their artwork is checked in.
+    config.plugins.push(legacyIconsPlugin(resolve(__dirname, "..")));
+    // Scanned at startup rather than committed, so the gallery's "in use" view cannot go stale.
+    config.plugins.push(usedIconsPlugin(resolve(__dirname, "../editor/src")));
     // Worker bundles are a separate Rollup pass and do NOT inherit `plugins`, so
     // without this a worker importing @app/* fails to resolve while the same
     // import works everywhere else. Mirrors editor/vite.config.ts.

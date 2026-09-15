@@ -194,6 +194,8 @@ For a broader explanation of the frontend layering and override architecture, re
 
 Before touching colours or theming (tokens, dark mode, accent colours), read @frontend/editor/src/core/theme/README.md — it explains the palette/`--c-*` token system and the rule that literal colours live only in `primitives.css`.
 
+Before adding or styling an icon, read @frontend/editor/src/core/icons/README.md — `<Icon name="…" />` comes from `@app/ui/Icon`, icon sources live as `.svg` files in `core/icons/svg/`, and inline `<svg>` in TS/TSX is linted out.
+
 ```typescript
 // ✅ CORRECT - Use @app/* for all imports
 import { AppLayout } from "@app/components/AppLayout";

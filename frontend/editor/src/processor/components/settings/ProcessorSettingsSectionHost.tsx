@@ -1,30 +1,10 @@
 import { type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { getProcessorQueryClient } from "@processor/queryClient";
-import { LinkProvider } from "@processor/contexts/LinkContext";
-import { TierProvider } from "@processor/contexts/TierContext";
-import { UIProvider } from "@processor/contexts/UIContext";
-import { AccountLinkProvider } from "@processor/contexts/AccountLinkContext";
-import { LinkAccountModal } from "@processor/components/account-link/LinkAccountModal";
+import { ProcessorSettingsProviders } from "@processor/components/settings/ProcessorSettingsProviders";
 import { ErrorBoundary } from "@processor/components/ErrorBoundary";
-import { useUI } from "@processor/contexts/UIContext";
 import "@processor/theme/base.css";
 import "@processor/components/settings/ProcessorSettingsSectionHost.css";
-
-/** The one account-link dialog for this subtree, mounted only while open. */
-function LinkModalHost() {
-  const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
-    useUI();
-  if (!linkModalOpen) return null;
-  return (
-    <LinkAccountModal
-      open
-      mode={linkModalMode}
-      onClose={closeLinkModal}
-      outcome={connectOutcome}
-    />
-  );
-}
 
 /**
  * Runs a processor-authored view inside the settings page. Those views are written
@@ -42,16 +22,9 @@ export function ProcessorSettingsSectionHost({
   return (
     <QueryClientProvider client={getProcessorQueryClient()}>
       <div className="processor-settings-section processor-scope">
-        <LinkProvider initialState="unlinked">
-          <TierProvider>
-            <UIProvider>
-              <AccountLinkProvider>
-                <ErrorBoundary>{children}</ErrorBoundary>
-                <LinkModalHost />
-              </AccountLinkProvider>
-            </UIProvider>
-          </TierProvider>
-        </LinkProvider>
+        <ProcessorSettingsProviders>
+          <ErrorBoundary>{children}</ErrorBoundary>
+        </ProcessorSettingsProviders>
       </div>
     </QueryClientProvider>
   );

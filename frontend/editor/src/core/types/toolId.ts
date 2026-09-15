@@ -56,6 +56,7 @@ export const CORE_REGULAR_TOOL_IDS = [
   "extractImages",
   "addStamp",
   "addAttachments",
+  "createPortfolio",
   "changeMetadata",
   "overlayPdfs",
   "getPdfInfo",

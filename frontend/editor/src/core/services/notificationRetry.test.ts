@@ -1,6 +1,10 @@
+import { readFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import "fake-indexeddb/auto";
 import { indexedDBManager } from "@app/services/indexedDBManager";
+import type { RetryPayload } from "@app/services/notificationRetry";
 
 // The stash survives a reload, cannot grow without bound, and never holds a password.
 
@@ -20,11 +24,16 @@ vi.mock("@app/services/apiClient", () => ({
 }));
 
 const {
+  KIND_ERROR_CODES,
   stashRetryPayload,
   clearRetryPayload,
   loadRetryPayload,
   hasLocalFile,
+  repairDocuments,
+  retryInputIds,
+  retryWithFiles,
   retryWithPassword,
+  stashMatchesKind,
   unlockLocalDocument,
 } = await import("@app/services/notificationRetry");
 
@@ -41,8 +50,15 @@ function payload(overrides: Partial<Record<string, unknown>> = {}) {
     multiFile: false,
     errorCode: "E004",
     recordedAt: 1_000,
+    replayUnfaithful: false,
     ...overrides,
-  } as Parameters<typeof stashRetryPayload>[0];
+  } as RetryPayload;
+}
+
+/** What a tool hands the stash: the request body it posted, plus whether it could map one. */
+function stashable(overrides: Partial<Record<string, unknown>> = {}) {
+  const { replayUnfaithful: _flag, ...rest } = payload(overrides);
+  return { ...rest, paramsMapped: true, ...overrides };
 }
 
 /** Reads records straight out of IndexedDB, bypassing the service's own mapping. */
@@ -73,7 +89,7 @@ beforeEach(async () => {
 describe("the retry stash", () => {
   it("gives back what was stashed, keyed on the file the failure was filed against", async () => {
     await stashRetryPayload(
-      payload({ params: { onlyPages: "1-3" }, fileIds: ["f-1", "f-2"] }),
+      stashable({ params: { onlyPages: "1-3" }, fileIds: ["f-1", "f-2"] }),
     );
 
     await expect(loadRetryPayload("f-1")).resolves.toEqual({
@@ -83,6 +99,7 @@ describe("the retry stash", () => {
       fileIds: ["f-1", "f-2"],
       multiFile: false,
       errorCode: "E004",
+      replayUnfaithful: false,
       recordedAt: 1_000,
     });
     // Every file in the run gets a record, so the bell can retry from any of them.
@@ -92,7 +109,7 @@ describe("the retry stash", () => {
   });
 
   it("has nothing for a file it never saw, or for no file at all", async () => {
-    await stashRetryPayload(payload());
+    await stashRetryPayload(stashable());
 
     await expect(loadRetryPayload("f-other")).resolves.toBeNull();
     await expect(loadRetryPayload(null)).resolves.toBeNull();
@@ -101,10 +118,16 @@ describe("the retry stash", () => {
 
   it("keeps the most recent operation that failed on a file, matching the server's one-incident-per-file dedup", async () => {
     await stashRetryPayload(
-      payload({ operation: "compress", endpoint: "/api/v1/misc/compress-pdf" }),
+      stashable({
+        operation: "compress",
+        endpoint: "/api/v1/misc/compress-pdf",
+      }),
     );
     await stashRetryPayload(
-      payload({ operation: "rotate", endpoint: "/api/v1/general/rotate-pdf" }),
+      stashable({
+        operation: "rotate",
+        endpoint: "/api/v1/general/rotate-pdf",
+      }),
     );
 
     await expect(loadRetryPayload("f-1")).resolves.toMatchObject({
@@ -117,7 +140,9 @@ describe("the retry stash", () => {
   it("evicts the oldest once it is full, so it cannot grow for the lifetime of the origin", async () => {
     // One past the cap: the first failure stashed is the one that goes.
     for (let i = 0; i < 26; i += 1) {
-      await stashRetryPayload(payload({ fileIds: [`f-${i}`], recordedAt: i }));
+      await stashRetryPayload(
+        stashable({ fileIds: [`f-${i}`], recordedAt: i }),
+      );
     }
 
     expect(await storedRecords()).toHaveLength(25);
@@ -131,7 +156,7 @@ describe("the retry stash", () => {
     // One failed multi-file run writes a record per file under one recordedAt, so evicting by
     // time alone would keep an arbitrary 25 of them and offer no retry for the rest.
     const batch = Array.from({ length: 30 }, (_, i) => `b-${i}`);
-    await stashRetryPayload(payload({ fileIds: batch, recordedAt: 100 }));
+    await stashRetryPayload(stashable({ fileIds: batch, recordedAt: 100 }));
 
     expect(await storedRecords()).toHaveLength(30);
     for (const fileId of [batch[0], batch[15], batch[29]]) {
@@ -142,10 +167,10 @@ describe("the retry stash", () => {
   });
 
   it("evicts earlier failures before the batch that just landed", async () => {
-    await stashRetryPayload(payload({ fileIds: ["old"], recordedAt: 1 }));
+    await stashRetryPayload(stashable({ fileIds: ["old"], recordedAt: 1 }));
     const batch = Array.from({ length: 25 }, (_, i) => `n-${i}`);
 
-    await stashRetryPayload(payload({ fileIds: batch, recordedAt: 2 }));
+    await stashRetryPayload(stashable({ fileIds: batch, recordedAt: 2 }));
 
     // The row on screen is the new one, so it is the older unrelated stash that goes.
     await expect(loadRetryPayload("old")).resolves.toBeNull();
@@ -155,7 +180,7 @@ describe("the retry stash", () => {
   });
 
   it("forgets a file's stash once its failure is resolved", async () => {
-    await stashRetryPayload(payload({ fileIds: ["f-1", "f-2"] }));
+    await stashRetryPayload(stashable({ fileIds: ["f-1", "f-2"] }));
 
     await clearRetryPayload("f-1");
 
@@ -168,7 +193,7 @@ describe("the retry stash", () => {
 
   it("stores no password, whichever field the tool submitted it in", async () => {
     await stashRetryPayload(
-      payload({
+      stashable({
         params: {
           password: "hunter2",
           newOwnerPassword: "hunter2",
@@ -187,10 +212,54 @@ describe("the retry stash", () => {
       /pass(word|phrase)|token/i,
     );
     // The rest survive: without them a retry re-runs a different operation than the one that failed.
-    expect((await loadRetryPayload("f-1"))?.params).toEqual({
+    const loaded = await loadRetryPayload("f-1");
+    expect(loaded?.params).toEqual({
       nested: { keep: "yes" },
       keepThese: ["a", "b"],
     });
+    // And the loss is recorded: a re-run without the password is not the run that failed.
+    expect(loaded?.replayUnfaithful).toBe(true);
+  });
+
+  it("marks a stash unfaithful when the tool could not map its request body", async () => {
+    // A tool whose UI settings have no mapping to the API's own names would replay under the
+    // wrong field names, run the server's defaults, and then be reported as the fix. Only the
+    // automatic re-run is withheld; the plain retry still opens the tool with its settings.
+    await stashRetryPayload(
+      stashable({ params: { compressionLevel: "5" }, paramsMapped: false }),
+    );
+
+    expect((await loadRetryPayload("f-1"))?.replayUnfaithful).toBe(true);
+  });
+
+  it("knows when nothing was dropped, so a faithful re-run stays on offer", async () => {
+    await stashRetryPayload(stashable({ params: { level: "5" } }));
+
+    expect((await loadRetryPayload("f-1"))?.replayUnfaithful).toBe(false);
+  });
+
+  it("assumes a record from before the flag dropped something", async () => {
+    // Fail closed: the only cost is an automatic re-run withheld, and the plain retry remains.
+    const db = await indexedDBManager.openDatabase({
+      name: DB_NAME,
+      version: 1,
+      stores: [{ name: STORE_NAME, keyPath: "fileId" }],
+    });
+    await new Promise<void>((resolve, reject) => {
+      const transaction = db.transaction([STORE_NAME], "readwrite");
+      transaction.oncomplete = () => resolve();
+      transaction.onerror = () => reject(transaction.error);
+      transaction.objectStore(STORE_NAME).put({
+        fileId: "f-old",
+        operation: "compress",
+        endpoint: "/api/v1/misc/compress-pdf",
+        params: {},
+        fileIds: ["f-old"],
+        recordedAt: 1,
+      });
+    });
+
+    expect((await loadRetryPayload("f-old"))?.replayUnfaithful).toBe(true);
   });
 
   it("stops descending into a pathologically deep object without exhausting the stack", async () => {
@@ -199,7 +268,7 @@ describe("the retry stash", () => {
     for (let i = 0; i < 5000; i++) deep = { down: deep };
 
     await expect(
-      stashRetryPayload(payload({ params: { deep } })),
+      stashRetryPayload(stashable({ params: { deep } })),
     ).resolves.toBeUndefined();
     expect(await loadRetryPayload("f-1")).not.toBeNull();
   });
@@ -209,7 +278,7 @@ describe("the retry stash", () => {
     let past: Record<string, unknown> = { password: "hunter2" };
     for (let i = 0; i < 25; i++) past = { down: past };
 
-    await stashRetryPayload(payload({ params: { past } }));
+    await stashRetryPayload(stashable({ params: { past } }));
 
     // Where the walk gives up it must not hand back a subtree it never examined.
     expect(JSON.stringify(await storedRecords())).not.toContain("hunter2");
@@ -221,7 +290,7 @@ describe("the retry stash", () => {
     cyclic.self = cyclic;
 
     await expect(
-      stashRetryPayload(payload({ params: { cyclic } })),
+      stashRetryPayload(stashable({ params: { cyclic } })),
     ).resolves.toBeUndefined();
     expect(await loadRetryPayload("f-1")).not.toBeNull();
   });
@@ -363,5 +432,215 @@ describe("unlockLocalDocument", () => {
     expect(result.ok).toBe(false);
     expect(result.message).toBe("The password is incorrect.");
     expect(result.message).not.toContain("wrong");
+  });
+});
+
+/** The codes each server-side kind claims, which both sides assert against. */
+function sharedFixtureCodes(): Record<string, string[]> {
+  const here = dirname(fileURLToPath(import.meta.url));
+  const fixture = resolve(
+    here,
+    "../../../../../testing/failure-kind-codes.json",
+  );
+  return JSON.parse(readFileSync(fixture, "utf8")).kinds;
+}
+
+describe("the mirrored error codes", () => {
+  it("claim exactly what the server claims", () => {
+    // A Java test cannot read this file, so the shared fixture is the tie between them: adding
+    // a code to the server without adding it here would match a stash to the wrong row.
+    expect(KIND_ERROR_CODES).toEqual(sharedFixtureCodes());
+  });
+
+  it("route every fixture code to its kind, and away from UNKNOWN", () => {
+    // The equality above compares the table; this proves the lookup built from it agrees, so a
+    // table that is right but read wrongly still fails.
+    for (const [kindId, codes] of Object.entries(sharedFixtureCodes())) {
+      for (const errorCode of codes) {
+        expect(stashMatchesKind(kindId, payload({ errorCode }))).toBe(true);
+        expect(stashMatchesKind("UNKNOWN", payload({ errorCode }))).toBe(false);
+      }
+    }
+  });
+});
+
+/** The stash is per file, but a file can carry only one; these say which row may claim it. */
+describe("stashMatchesKind", () => {
+  it("matches a kind against every code it claims, not just the first", async () => {
+    // E001 and E002 are both INPUT_CORRUPTED: a merge reports the second, a single load the first.
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E001" })),
+    ).toBe(true);
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E002" })),
+    ).toBe(true);
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E003" })),
+    ).toBe(true);
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: "E004" })),
+    ).toBe(false);
+  });
+
+  it("keeps a broken encryption apart from a missing password", async () => {
+    // Adjacent to a reader, unrelated to the fix: no password helps E003, no repair helps E004.
+    expect(
+      stashMatchesKind(
+        "INPUT_PASSWORD_PROTECTED",
+        payload({ errorCode: "E003" }),
+      ),
+    ).toBe(false);
+  });
+
+  it("gives an unclaimed code to UNKNOWN, and a claimed one never", async () => {
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E005" }))).toBe(
+      true,
+    );
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: null }))).toBe(
+      true,
+    );
+    expect(stashMatchesKind("UNKNOWN", payload({ errorCode: "E001" }))).toBe(
+      false,
+    );
+  });
+
+  it("refuses a kind that claims codes when the stash recorded none", async () => {
+    expect(
+      stashMatchesKind("INPUT_CORRUPTED", payload({ errorCode: null })),
+    ).toBe(false);
+  });
+});
+
+describe("retryInputIds", () => {
+  it("sends the whole batch for a multi-file endpoint, since that is what failed", async () => {
+    expect(
+      retryInputIds(
+        payload({ fileIds: ["f-1", "f-2"], multiFile: true }),
+        "f-2",
+      ),
+    ).toEqual(["f-1", "f-2"]);
+  });
+
+  it("sends only the document named for a one-file-per-call endpoint", async () => {
+    expect(
+      retryInputIds(
+        payload({ fileIds: ["f-1", "f-2"], multiFile: false }),
+        "f-2",
+      ),
+    ).toEqual(["f-2"]);
+  });
+
+  it("falls back to the first input when the named one was not part of the run", async () => {
+    expect(
+      retryInputIds(payload({ fileIds: ["f-1", "f-2"] }), "f-other"),
+    ).toEqual(["f-1"]);
+  });
+});
+
+describe("repairDocuments", () => {
+  it("repairs one document per call, since the endpoint takes one at a time", async () => {
+    getStirlingFiles.mockImplementation(async (ids: string[]) =>
+      ids.map((id) => new File(["%PDF-1.7"], `${id}.pdf`)),
+    );
+    post.mockResolvedValue({ data: new Blob(["fixed"]), headers: {} });
+
+    const result = await repairDocuments(["f-1", "f-2"]);
+
+    expect(result.ok).toBe(true);
+    expect(post).toHaveBeenCalledTimes(2);
+    expect((post.mock.calls[0] as [string])[0]).toBe("/api/v1/misc/repair");
+    // Paired back to the input, so each output versions the document it came from.
+    expect(result.repaired?.map((doc) => doc.fileId)).toEqual(["f-1", "f-2"]);
+  });
+
+  it("never sends a password, having none to send", async () => {
+    getStirlingFiles.mockResolvedValue([new File(["%PDF-1.7"], "doc.pdf")]);
+    post.mockResolvedValue({ data: new Blob(["fixed"]), headers: {} });
+
+    await repairDocuments(["f-1"]);
+
+    expect(
+      (post.mock.calls[0] as [string, FormData])[1].get("password"),
+    ).toBeNull();
+  });
+
+  it("fails the whole batch when one document cannot be repaired", async () => {
+    // All or nothing: a partial repair still fails the re-run.
+    getStirlingFiles.mockImplementation(async (ids: string[]) =>
+      ids.map((id) => new File(["%PDF-1.7"], `${id}.pdf`)),
+    );
+    post
+      .mockResolvedValueOnce({ data: new Blob(["fixed"]), headers: {} })
+      .mockRejectedValueOnce({ response: { data: "Repair failed." } });
+
+    const result = await repairDocuments(["f-1", "f-2"]);
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe("Repair failed.");
+    expect(result.repaired).toBeUndefined();
+  });
+
+  it("reports the file is gone rather than repairing nothing quietly", async () => {
+    getStirlingFiles.mockResolvedValue([]);
+
+    const result = await repairDocuments(["f-1"]);
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("fileMissing");
+    expect(post).not.toHaveBeenCalled();
+  });
+
+  it("refuses an empty list instead of reporting a vacuous success", async () => {
+    const result = await repairDocuments([]);
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("fileMissing");
+    expect(post).not.toHaveBeenCalled();
+  });
+});
+
+/** The second half of a repair: the operation that failed, re-run over what repair produced. */
+describe("retryWithFiles", () => {
+  it("re-runs the stashed operation over the documents handed to it", async () => {
+    post.mockResolvedValue({ data: new Blob(["out"]), headers: {} });
+    const repaired = new File(["%PDF-1.7"], "doc_repaired.pdf");
+
+    const result = await retryWithFiles(
+      payload({
+        endpoint: "/api/v1/misc/compress-pdf",
+        params: { level: "5" },
+      }),
+      [repaired],
+    );
+
+    expect(result.ok).toBe(true);
+    const [path, formData] = post.mock.calls[0] as [string, FormData];
+    expect(path).toBe("/api/v1/misc/compress-pdf");
+    expect(formData.get("level")).toBe("5");
+    // The repaired bytes, not a re-read of the original from storage.
+    expect(formData.get("fileInput")).toBe(repaired);
+    expect(getStirlingFiles).not.toHaveBeenCalled();
+  });
+
+  it("sends every document at once, which is what a multi-file endpoint failed on", async () => {
+    post.mockResolvedValue({ data: new Blob(["out"]), headers: {} });
+
+    await retryWithFiles(payload({ multiFile: true }), [
+      new File(["a"], "a.pdf"),
+      new File(["b"], "b.pdf"),
+    ]);
+
+    expect(post).toHaveBeenCalledTimes(1);
+    expect(
+      (post.mock.calls[0] as [string, FormData])[1].getAll("fileInput"),
+    ).toHaveLength(2);
+  });
+
+  it("refuses when repair produced nothing to re-run", async () => {
+    const result = await retryWithFiles(payload(), []);
+
+    expect(result.ok).toBe(false);
+    expect(result.reason).toBe("fileMissing");
+    expect(post).not.toHaveBeenCalled();
   });
 });

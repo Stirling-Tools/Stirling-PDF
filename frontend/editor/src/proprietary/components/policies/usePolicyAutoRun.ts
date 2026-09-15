@@ -34,6 +34,10 @@ import type {
   PolicyRunView,
 } from "@app/services/policyPipeline";
 import { dispatchPaygLimitReached } from "@app/services/usageLimitBridge";
+import {
+  dispatchableFileId,
+  type DispatchableFileId,
+} from "@app/components/policies/policyLocalPass";
 import type { FileId } from "@app/types/file";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
 import { readClassificationLabelsFromFile } from "@app/services/fileClassification";
@@ -42,6 +46,8 @@ import {
   policyDeliversOutputFiles,
 } from "@app/data/classificationPolicy";
 import { runPolicyOnFile } from "@app/services/policyDispatch";
+import { policyAcceptsFile } from "@app/services/policyInput";
+import { splitFileName } from "@app/utils/fileUtils";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 import type { PoliciesByKey } from "@app/types/policies";
 import { usePolicies } from "@app/hooks/usePolicies";
@@ -198,10 +204,12 @@ export function usePolicyAutoRun(): void {
     setTimeout(
       () => {
         removeRun(runId);
+        // Retrying an existing run: a locked file never produced one, and
+        // runPolicyOnFile re-checks the persisted stub regardless.
         void runPolicyOnFile(
           rec.policyKey,
           backendId,
-          rec.fileId as FileId,
+          rec.fileId as DispatchableFileId,
           rec.fileName,
         );
       },
@@ -234,21 +242,33 @@ export function usePolicyAutoRun(): void {
     [scheduleQueueRetry],
   );
 
-  // Fire only the FIRST upload policy per file; the chaining effect below runs the rest
+  // Fire only the first compatible upload policy per file; the chaining effect below runs the rest
   // on each previous output, so policies apply cumulatively in order.
   useEffect(() => {
-    const firstPolicyKey = orderedUploadPolicyKeys[0];
-    if (!firstPolicyKey) return;
-    const backendId = policies[firstPolicyKey]?.backendId;
-    if (!backendId) return;
+    // An older cache has no input metadata; wait for reconciliation to preserve the team's order.
+    if (
+      orderedUploadPolicyKeys.some(
+        (key) => policies[key].firstOperation === undefined,
+      )
+    )
+      return;
     for (const stub of fileStubs) {
       // Input-mode policies cover uploads only; tool-produced files are left to
       // export-mode policies at export time.
       if (stub.derivedFromTool) continue;
+      // Null when the classification is locked, i.e. produced outside the policy system.
+      const target = dispatchableFileId(stub);
+      if (!target) continue;
       // Held while the unlock prompt is open: the run would fail on a document the user is
       // about to decrypt, bill for it, and leave a row about a version soon replaced. Skipping
       // the prompt releases it, so a document nobody unlocks still records its failure.
       if (isAwaitingUnlock(stub.id)) continue;
+      const firstPolicyKey = orderedUploadPolicyKeys.find((key) =>
+        policyAcceptsFile(policies[key], stub),
+      );
+      if (!firstPolicyKey) continue;
+      const backendId = policies[firstPolicyKey]?.backendId;
+      if (!backendId) continue;
       const key = dispatchKey(firstPolicyKey, stub.id);
       // Skip if already run (persisted) or in flight - the in-memory guard covers the async wait.
       if (
@@ -258,7 +278,7 @@ export function usePolicyAutoRun(): void {
         continue;
       }
       dispatching.current.add(key);
-      void runPolicyOnFile(firstPolicyKey, backendId, stub.id, stub.name)
+      void runPolicyOnFile(firstPolicyKey, backendId, target, stub.name)
         .catch(() => {
           // Backstop: runPolicyOnFile handles its own failures.
         })
@@ -272,32 +292,26 @@ export function usePolicyAutoRun(): void {
     for (const run of runs) {
       if (run.status !== "COMPLETED" || !run.imported) continue;
       if (chained.current.has(run.runId)) continue;
-      const nextPolicyKey = nextUploadPolicyKey(
-        orderedUploadPolicyKeys,
-        run.policyKey,
-      );
+      const index = orderedUploadPolicyKeys.indexOf(run.policyKey);
+      const remainingKeys =
+        index < 0 ? [] : orderedUploadPolicyKeys.slice(index + 1);
+      if (
+        remainingKeys.some((key) => policies[key].firstOperation === undefined)
+      )
+        continue;
       const outputIds = run.outputFileIds ?? [];
-      if (!nextPolicyKey || outputIds.length === 0) {
+      if (remainingKeys.length === 0 || outputIds.length === 0) {
         // End of the chain (or nothing to chain onto): don't revisit this run.
         chained.current.add(run.runId);
         continue;
       }
-      const backendId = policies[nextPolicyKey]?.backendId;
-      // Next policy not ready yet (still reconciling) — retry when policies change.
-      if (!backendId) continue;
       chained.current.add(run.runId);
-      // Chain onto EVERY output: a run that produced several files (split, ZIP-unpacked)
-      // would otherwise silently skip the next policy on outputs 2..N.
-      for (const outputId of outputIds) {
-        if (isDispatched(nextPolicyKey, outputId as FileId)) continue;
-        void runPolicyOnFile(
-          nextPolicyKey,
-          backendId,
-          outputId as FileId,
-          run.fileName,
-          true, // chained → jump the dispatch queue ahead of new files
-        ).catch(() => {});
-      }
+      void chainUploadPolicies(
+        outputIds,
+        remainingKeys,
+        policies,
+        fileStubsRef.current,
+      ).catch(() => chained.current.delete(run.runId));
     }
   }, [runs, policies, orderedUploadPolicyKeys]);
 
@@ -438,14 +452,30 @@ function applyOutputName(
     : `${base}_${outputName}${ext}`;
 }
 
-/** Next upload policy in the chain, or undefined if last or no longer eligible. */
-function nextUploadPolicyKey(
-  orderedUploadPolicyKeys: string[],
-  policyKey: string,
-): string | undefined {
-  const index = orderedUploadPolicyKeys.indexOf(policyKey);
-  if (index < 0) return undefined;
-  return orderedUploadPolicyKeys[index + 1];
+async function chainUploadPolicies(
+  outputIds: string[],
+  remainingKeys: string[],
+  policies: PoliciesByKey,
+  stubs: StirlingFileStub[],
+): Promise<void> {
+  await Promise.all(
+    outputIds.map(async (outputId) => {
+      // Converters and splitters can produce different types, so each output needs its own match.
+      const stub =
+        stubs.find((s) => s.id === outputId) ??
+        (await fileStorage.getStirlingFileStub(outputId as FileId));
+      if (!stub) return;
+      const target = dispatchableFileId(stub);
+      if (!target) return;
+      const nextPolicyKey = remainingKeys.find((key) =>
+        policyAcceptsFile(policies[key], stub),
+      );
+      if (!nextPolicyKey || isDispatched(nextPolicyKey, stub.id)) return;
+      const backendId = policies[nextPolicyKey]?.backendId;
+      if (!backendId) return;
+      await runPolicyOnFile(nextPolicyKey, backendId, target, stub.name, true);
+    }),
+  );
 }
 
 async function reconcileServerRuns(policies: PoliciesByKey): Promise<void> {
@@ -636,10 +666,13 @@ async function importOutputs(
   const settled = await Promise.allSettled(
     pending.map(async (out) => {
       const blob = await downloadPolicyOutput(out.fileId, run.target);
+      const [base, inputExtension] = splitFileName(targetName);
+      const [, outputExtension] = splitFileName(out.fileName);
       return {
         fileId: out.fileId,
-        file: new File([blob], targetName ?? out.fileName ?? run.fileName, {
-          type: blob.type || "application/pdf",
+        // Conversions must retain the output extension so later policies see the resulting type.
+        file: new File([blob], base + (outputExtension || inputExtension), {
+          type: blob.type,
         }),
       };
     }),

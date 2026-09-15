@@ -1,12 +1,8 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, StatusBadge } from "@app/ui";
+import { Banner, Button } from "@app/ui";
 import type { Wallet } from "@processor/api/billing";
-import type { LocalUsage } from "@processor/api/link";
 import type { SaasCurrency } from "@processor/billing/stripe";
-import { WalletMeter } from "@processor/components/billing/WalletMeter";
-import { FreePdfEditorsCard } from "@processor/components/billing/FreePdfEditorsCard";
-import { EnterpriseUpsell } from "@processor/components/billing/EnterpriseUpsell";
 import { StripeCheckoutModal } from "@processor/components/billing/StripeCheckoutModal";
 import { ActivationChoiceModal } from "@processor/components/billing/ActivationChoiceModal";
 import { BundleCheckoutModal } from "@processor/components/billing/BundleCheckoutModal";
@@ -15,8 +11,13 @@ import { useBundleFlowState } from "@processor/hooks/useBundleFlowState";
 
 interface Props {
   wallet: Wallet;
-  /** Instance-local usage not yet synced to SaaS; folded into the trial meter. */
-  unsynced?: LocalUsage | null;
+  /**
+   * Which activation modal is open, when the host wants to drive it. Supplied so the Processor
+   * row's own door can start this flow: the flow itself, its bundle state and its modals all stay
+   * here, and only the step is lifted.
+   */
+  step?: "choose" | "payg" | "prepay" | null;
+  onStepChange?: (step: "choose" | "payg" | "prepay" | null) => void;
   /**
    * Runs the post-checkout activation poll and resolves true once the wallet
    * reads subscribed (false if it's lagging past the poll window). The checkout
@@ -34,11 +35,20 @@ function isSaasCurrency(c: string | null): c is SaasCurrency {
  * editor fleet, the Processor trial meter (with the inline "Switch on the
  * Processor" CTA → embedded Stripe Checkout), and the Enterprise upsell.
  */
-export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
+export function FreePlanView({
+  wallet,
+  step: controlledStep,
+  onStepChange,
+  onSubscribed,
+}: Props) {
   const { t } = useTranslation();
   // Activation fork (demo D97): choose → the metered checkout (payg) or the
   // discounted bundle (prepay). Exactly one is open at a time.
-  const [step, setStep] = useState<"choose" | "payg" | "prepay" | null>(null);
+  const [ownStep, setOwnStep] = useState<"choose" | "payg" | "prepay" | null>(
+    null,
+  );
+  const step = onStepChange ? (controlledStep ?? null) : ownStep;
+  const setStep = onStepChange ?? setOwnStep;
   const [missingTeam, setMissingTeam] = useState<string | null>(null);
 
   const isLeader = wallet.role === "leader";
@@ -65,12 +75,8 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
     return true;
   }
 
-  // No quote yet → open the pay-as-you-go vs prepay fork. A quote already in flight
-  // → skip the fork and reopen the bundle modal directly; its resume effect lands
-  // on the calculator (quote) or the payment step (invoice awaiting payment).
-  function openActivation() {
-    if (requireTeam()) setStep("choose");
-  }
+  // Reopens the bundle modal directly; its resume effect lands on the calculator (quote) or the
+  // payment step (invoice awaiting payment).
   function resumeBundle() {
     if (requireTeam()) setStep("prepay");
   }
@@ -82,53 +88,28 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
     flow.refresh();
   }
 
-  const switchOnAction = isLeader ? (
-    <Button
-      variant="primary"
-      onClick={flow.status === "none" ? openActivation : resumeBundle}
-      disabled={wallet.teamId == null}
-    >
-      {flow.status === "invoice"
-        ? t("processor.billing.freePlan.payInvoice", "Pay invoice to complete")
-        : flow.status === "quote"
-          ? t("processor.billing.freePlan.viewQuote", "View quote")
-          : t(
-              "processor.billing.freePlan.switchOnProcessor",
-              "Switch on the Processor →",
-            )}
-    </Button>
-  ) : null;
+  // Starting the Processor is the row's own door. What survives here is the case that door
+  // cannot express: a quote or invoice already raised, which resumes rather than starts.
+  const resumeAction =
+    isLeader && flow.status !== "none" ? (
+      <Button
+        variant="primary"
+        onClick={resumeBundle}
+        disabled={wallet.teamId == null}
+      >
+        {flow.status === "invoice"
+          ? t(
+              "processor.billing.freePlan.payInvoice",
+              "Pay invoice to complete",
+            )
+          : t("processor.billing.freePlan.viewQuote", "View quote")}
+      </Button>
+    ) : null;
 
   return (
     <div className="processor-billing__stack">
-      {/* Current plan */}
-      <div className="processor-billing__current-plan">
-        <span className="processor-billing__eyebrow">
-          {t("processor.billing.freePlan.currentPlan", "Current plan")}
-        </span>
-        <div className="processor-billing__current-plan-row">
-          <h2 className="processor-billing__current-plan-name">
-            {t("processor.billing.freePlan.planName", "Editor")}
-          </h2>
-          <StatusBadge tone="success" size="sm" showDot={false}>
-            {t("processor.billing.freePlan.freeForever", "Free forever")}
-          </StatusBadge>
-          <StatusBadge tone="info" size="sm" showDot={false}>
-            {t("processor.billing.freePlan.everyPdfTool", "Every PDF tool")}
-          </StatusBadge>
-          <StatusBadge tone="purple" size="sm" showDot={false}>
-            {t(
-              "processor.billing.freePlan.anywhere",
-              "Web, desktop & self-hosted",
-            )}
-          </StatusBadge>
-        </div>
-      </div>
-
-      <FreePdfEditorsCard />
-
-      {/* Prepaid capacity is usable independent of a metered subscription, so surface it here on the
-          free plan too (not just the subscribed dashboard) whenever the team holds a live pool. */}
+      {/* A live pool is usable without a metered subscription, so it surfaces on the free plan
+          too. The no-pool upsell face never does. */}
       {wallet.prepaidUnitsRemaining > 0 && (
         <PrepaidCapacityCard
           wallet={wallet}
@@ -136,12 +117,9 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
         />
       )}
 
-      {/* Processor trial — meter with the inline upgrade CTA */}
-      <WalletMeter
-        wallet={wallet}
-        unsynced={unsynced}
-        action={switchOnAction}
-      />
+      {resumeAction && (
+        <div className="processor-billing__prepaid-foot">{resumeAction}</div>
+      )}
 
       {missingTeam && (
         <Banner
@@ -154,18 +132,6 @@ export function FreePlanView({ wallet, unsynced, onSubscribed }: Props) {
           {missingTeam}
         </Banner>
       )}
-      {!isLeader && (
-        <p className="processor-billing__plan-readonly">
-          {t(
-            "processor.billing.freePlan.ownerOnly",
-            "Only the team owner can switch on the Processor plan.",
-          )}
-        </p>
-      )}
-
-      {/* Volume discount / Enterprise */}
-      <EnterpriseUpsell />
-
       <ActivationChoiceModal
         open={step === "choose"}
         onClose={closeModals}

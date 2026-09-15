@@ -19,7 +19,7 @@ async function fetchProcessorAccess(): Promise<boolean> {
 }
 
 /**
- * Whether the current user can open the processor, straight
+ * Whether the current user can open the processor (admin processor), straight
  * from the backend (`/api/v1/auth/me` → `processorAccess`) — the same signal the
  * processor's own SaasProcessorGate uses. Components that must mirror processor
  * access (the sidebar's editor⇄processor switcher and its footer row) ask here.
@@ -37,7 +37,7 @@ async function fetchProcessorAccess(): Promise<boolean> {
  * instead of appearing a request later. Guests skip the request entirely.
  */
 export function useProcessorAccessState(): ProcessorAccessState {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
   const userId = user?.id ?? null;
   // The query cache is per-tree and per-load, so it can't help a cold start or
   // the hop into the processor, which mounts its own client. Seed from the last
@@ -45,7 +45,7 @@ export function useProcessorAccessState(): ProcessorAccessState {
   // there at first paint. Marked ancient so it still revalidates immediately.
   const [seed] = useState(readCachedOtherApp);
 
-  const { data, isSuccess, isFetched } = useQuery({
+  const { data, isSuccess, isFetched, isFetching } = useQuery({
     queryKey: qk.processorAccess(userId),
     queryFn: fetchProcessorAccess,
     // Signed out: nothing to ask, and any previous answer is void.
@@ -67,8 +67,8 @@ export function useProcessorAccessState(): ProcessorAccessState {
   // once. Otherwise the seeded value is a guess until the probe comes back -
   // callers that hide UI on "no access" must not act on the guess.
   return {
-    granted: data === true,
-    settled: userId === null || isFetched,
+    granted: userId !== null && data === true,
+    settled: !loading && (userId === null || (isFetched && !isFetching)),
   };
 }
 

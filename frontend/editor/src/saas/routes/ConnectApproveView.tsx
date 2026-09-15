@@ -27,7 +27,6 @@ function ApproveShell({
   const { t } = useTranslation();
   return (
     <div className="saas-connect">
-      {/* No onClose: this is a page, so there is nowhere to close back to. */}
       <StepModalHeader
         brand
         title={title}
@@ -61,6 +60,8 @@ export interface PendingConnect {
   insecureTransport: boolean;
   /** REAUTH cannot rebind: the team is pinned from the device credential at request time. */
   mode?: "LINK" | "REAUTH";
+  canApprove: boolean;
+  canDeny: boolean;
 }
 
 export interface ConnectApproveViewProps {
@@ -73,6 +74,8 @@ export interface ConnectApproveViewProps {
   onDecide: (approve: boolean) => void;
   /** Sign out and come back here, keeping the request so it survives the detour. */
   onSwitchAccount: () => void;
+  /** Forget the local intent and return to the app without settling the server request. */
+  onDismiss: () => void;
 }
 
 /** Presentation for the connect approval page. */
@@ -84,6 +87,7 @@ export function ConnectApproveView({
   error,
   onDecide,
   onSwitchAccount,
+  onDismiss,
 }: ConnectApproveViewProps) {
   const { t } = useTranslation();
   // Gates the primary action: anyone can create a request, so the approver reading
@@ -152,10 +156,15 @@ export function ConnectApproveView({
       title={t("connect.confirm.title", "Connect this server?")}
     >
       <p className="saas-connect__lead">
-        {t(
-          "connect.confirm.lead",
-          "A Stirling server is asking to connect to your team. Check the address below is yours before you approve.",
-        )}
+        {pending?.canApprove
+          ? t(
+              "connect.confirm.lead",
+              "A Stirling server is asking to connect to your team. Check the address below is yours before you approve.",
+            )
+          : t(
+              "connect.confirm.cannotDecide",
+              "Only a team owner can approve or decline this connection. Use a different account or dismiss this prompt to continue using Stirling.",
+            )}
       </p>
 
       {/* One panel, because the account and the address are two halves of the same
@@ -207,31 +216,41 @@ export function ConnectApproveView({
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      <Checkbox
-        checked={acknowledged}
-        disabled={busy}
-        onChange={(e) => setAcknowledged(e.currentTarget.checked)}
-        label={t(
-          "connect.confirm.acknowledge",
-          "I recognise this address and want to connect it to my team",
-        )}
-      />
+      {pending?.canApprove ? (
+        <Checkbox
+          checked={acknowledged}
+          disabled={busy}
+          onChange={(e) => setAcknowledged(e.currentTarget.checked)}
+          label={t(
+            "connect.confirm.acknowledge",
+            "I recognise this address and want to connect it to my team",
+          )}
+        />
+      ) : null}
 
       <div className="saas-connect__actions">
-        <Button
-          variant="secondary"
-          disabled={busy}
-          onClick={() => onDecide(false)}
-        >
-          {t("connect.confirm.deny", "Decline")}
-        </Button>
-        <Button
-          variant="primary"
-          disabled={busy || !acknowledged}
-          onClick={() => onDecide(true)}
-        >
-          {t("connect.confirm.approve", "Connect server")}
-        </Button>
+        {pending?.canDeny ? (
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => onDecide(false)}
+          >
+            {t("connect.confirm.deny", "Decline")}
+          </Button>
+        ) : (
+          <Button variant="secondary" disabled={busy} onClick={onDismiss}>
+            {t("connect.confirm.dismiss", "Dismiss")}
+          </Button>
+        )}
+        {pending?.canApprove ? (
+          <Button
+            variant="primary"
+            disabled={busy || !acknowledged}
+            onClick={() => onDecide(true)}
+          >
+            {t("connect.confirm.approve", "Connect server")}
+          </Button>
+        ) : null}
       </div>
     </ApproveShell>
   );

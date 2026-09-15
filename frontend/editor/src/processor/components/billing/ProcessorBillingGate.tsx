@@ -1,4 +1,8 @@
+import { ServerLicenseSection } from "@processor/components/billing/ServerLicenseSection";
+import { useServerPlan } from "@processor/hooks/useServerPlan";
+import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
 import { useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   useApplyLinkFacts,
   useLinkOptional,
@@ -7,6 +11,7 @@ import { useUI } from "@processor/contexts/UIContext";
 import { useConnectGate } from "@processor/hooks/useConnectGate";
 import { useProcessorAdmin } from "@processor/hooks/useProcessorAdmin";
 import { FreeTierPlanView } from "@processor/components/billing/FreeTierPlanView";
+import { toProcessorPath } from "@processor/contexts/ViewContext";
 import { Usage } from "@processor/views/Usage";
 import type { Wallet } from "@processor/api/billing";
 
@@ -22,22 +27,47 @@ export function ProcessorBillingGate() {
   const { openLinkModal } = useUI();
   const { loading } = useConnectGate();
   const isAdmin = useProcessorAdmin();
+  const { serverPlan, loading: licenseLoading } = useServerPlan(isAdmin);
+  const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
+  const navigate = useNavigate();
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
     [applyLinkFacts],
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
+  // The processor owns a separate UIProvider, so its entry route must raise the trial request.
+  const onEnterpriseQuote = useCallback(() => {
+    navigate(toProcessorPath("/procurement"));
+  }, [navigate]);
 
   // Administrators only: the figures are instance-wide and the endpoints ADMIN-gated. The nav
   // hides the entry to match, so this is the backstop for a typed URL.
   if (!isAdmin) return null;
   // Neither page while the answer is unknown: showing the local meter to a linked instance would
   // present a dormant ledger as its live one.
-  if (loading) return null;
+  if (loading || licenseLoading) return null;
   // A positively known link, not merely "not gated": linking turned off and a failed status
   // check are neither, and must not reach a SaaS this instance has no address for.
-  if (!link?.isLinked) return <FreeTierPlanView />;
-  return <Usage onWalletLoaded={onWalletLoaded} onReauth={onReauth} />;
+  if (!link?.isLinked)
+    return (
+      <FreeTierPlanView
+        serverPlan={serverPlan}
+        serverPlanAction={serverPlanAction}
+        licenseSection={<ServerLicenseSection onSaved={() => {}} />}
+      />
+    );
+  return (
+    <Usage
+      serverPlan={serverPlan}
+      serverPlanAction={serverPlanAction}
+      renderLicenseSection={(onSaved) => (
+        <ServerLicenseSection onSaved={onSaved} />
+      )}
+      onWalletLoaded={onWalletLoaded}
+      onReauth={onReauth}
+      onEnterpriseQuote={onEnterpriseQuote}
+    />
+  );
 }

@@ -29,7 +29,9 @@ vi.mock("@app/services/notificationRetry", async (importOriginal) => ({
 }));
 
 const rechainPolicyOnDocument = vi.fn();
+const canPlacePolicy = vi.fn();
 vi.mock("@app/services/notificationPolicyRetry", () => ({
+  canPlacePolicy: (...args: unknown[]) => canPlacePolicy(...args),
   rechainPolicyOnDocument: (...args: unknown[]) =>
     rechainPolicyOnDocument(...args),
 }));
@@ -132,9 +134,79 @@ beforeEach(() => {
   rechainPolicyOnDocument
     .mockReset()
     .mockResolvedValue({ ok: true, tracked: true });
+  // Placeable by default: the browser still holds the policy the failure names.
+  canPlacePolicy.mockReset().mockReturnValue(true);
 });
 
 describe("useResolutionContinuation", () => {
+  it("carries a manual repair through a damaged document's policy and closes the row", async () => {
+    // Manual repair counts as the resolution, same as the button.
+    fetchNotifications.mockResolvedValue({
+      notifications: [
+        policyRow({
+          kindId: "INPUT_CORRUPTED",
+          fileId: "f-damaged",
+          actions: [
+            offer("REPAIR", "RESOLUTION"),
+            offer("OPEN_IN_TOOL", "OVERFLOW"),
+          ],
+        }),
+      ],
+      viewerReviewsTeam: false,
+    });
+
+    continuation()(
+      unlockRun({
+        operation: "repair",
+        inputFileIds: ["f-damaged"],
+        outputs: [
+          {
+            file: new File(["pdf"], "repaired.pdf", {
+              type: "application/pdf",
+            }),
+            fileId: "f-repaired",
+            sourceFileId: "f-damaged",
+          },
+        ],
+      }),
+    );
+
+    await waitFor(() =>
+      expect(reportNotificationResolved).toHaveBeenCalledWith("failure:evt-1"),
+    );
+    expect(rechainPolicyOnDocument).toHaveBeenCalledWith(
+      { policyId: "pol-1", fileId: "f-damaged" },
+      expect.any(File),
+      "f-repaired",
+    );
+  });
+
+  it("does not let a manual repair close a password failure on the same document", async () => {
+    // Both kinds can sit on one file, and repair is no answer to a missing password.
+    fetchNotifications.mockResolvedValue({
+      notifications: [policyRow({ fileId: "f-damaged" })],
+      viewerReviewsTeam: false,
+    });
+
+    continuation()(
+      unlockRun({
+        operation: "repair",
+        inputFileIds: ["f-damaged"],
+        outputs: [
+          {
+            file: new File(["pdf"], "repaired.pdf"),
+            fileId: "f-repaired",
+            sourceFileId: "f-damaged",
+          },
+        ],
+      }),
+    );
+
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
+  });
+
   it("carries a manual unlock through the failed policy and closes the row", async () => {
     fetchNotifications.mockResolvedValue({
       notifications: [policyRow()],
@@ -179,6 +251,22 @@ describe("useResolutionContinuation", () => {
     await waitFor(() => expect(rechainPolicyOnDocument).toHaveBeenCalled());
     expect(reportNotificationResolved).not.toHaveBeenCalled();
     expect(refreshNotificationsNow).not.toHaveBeenCalled();
+  });
+
+  it("submits nothing when the policy cannot be placed, however the fix arrived", async () => {
+    // The buttons are gated on this, and a manual run reaches the same submission, so without
+    // the same guard here the billed-but-uncollectable run is simply one route further along.
+    fetchNotifications.mockResolvedValue({
+      notifications: [policyRow()],
+      viewerReviewsTeam: false,
+    });
+    canPlacePolicy.mockReturnValue(false);
+
+    continuation()(unlockRun());
+
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalled());
+    expect(rechainPolicyOnDocument).not.toHaveBeenCalled();
+    expect(reportNotificationResolved).not.toHaveBeenCalled();
   });
 
   it("leaves the row open when the server refuses the re-run", async () => {

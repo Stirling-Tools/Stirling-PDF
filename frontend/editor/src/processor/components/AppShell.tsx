@@ -84,8 +84,7 @@ export function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="processor-shell">
-      {/* processorAccess: being here is proof the processor is available. */}
-      <QuickNavHostBridge processorAccess />
+      <QuickNavHostBridge />
       <div className="workspace-frame">
         <Sidebar />
       </div>

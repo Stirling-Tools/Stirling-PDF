@@ -27,7 +27,6 @@ import {
   useUnsavedChanges,
 } from "@app/contexts/UnsavedChangesContext";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { stripBasePath } from "@app/constants/app";
 import { takeSettingsOrigin } from "@app/utils/settingsNavigation";
@@ -52,9 +51,6 @@ const SettingsPageInner: React.FC = () => {
   const isMobile = useIsMobile();
   const licenseAlert = useLicenseAlert();
   const { confirmIfDirty } = useUnsavedChanges();
-  // The rail sits outside every app, so each page tells it what only the
-  // signed-in session knows.
-  const otherApp = useOtherAppSwitch();
   // The same bar as the editor and the processor, so search is one thing
   // everywhere; settings results deep-link straight back into this page.
   const searchScopes = useEditorSearchScopes();
@@ -196,10 +192,7 @@ const SettingsPageInner: React.FC = () => {
 
   return (
     <div className="settings-page" data-tour="settings-modal">
-      <QuickNavHostBridge
-        processorAccess={Boolean(otherApp)}
-        requestNavigation={requestNavigation}
-      />
+      <QuickNavHostBridge requestNavigation={requestNavigation} />
 
       <aside
         className={`settings-page__nav modal-nav ${isMobile ? "mobile" : ""}`}

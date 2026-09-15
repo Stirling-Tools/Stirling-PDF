@@ -1,47 +1,46 @@
+import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button } from "@app/ui";
 import { meterState } from "@app/billing";
 import type { Wallet } from "@processor/api/billing";
-import type { LocalUsage } from "@processor/api/link";
 import { useStripePortal } from "@processor/hooks/useStripePortal";
-import { FreePdfEditorsCard } from "@processor/components/billing/FreePdfEditorsCard";
-import { PdfsProcessedCard } from "@processor/components/billing/PdfsProcessedCard";
-import { PrepaidCapacityCard } from "@processor/components/billing/PrepaidCapacityCard";
 import { BundleCheckoutModal } from "@processor/components/billing/BundleCheckoutModal";
-import { SpendThisMonthCard } from "@processor/components/billing/SpendThisMonthCard";
-import { SpendLimitCard } from "@processor/components/billing/SpendLimitCard";
-import { PaymentMethodCard } from "@processor/components/billing/PaymentMethodCard";
-import { InvoicesList } from "@processor/components/billing/InvoicesList";
+import { SpendLimitModal } from "@processor/components/billing/SpendLimitModal";
 
 interface Props {
   wallet: Wallet;
-  /** Instance-local usage not yet synced to SaaS; folded into the PDFs-processed card. */
-  unsynced?: LocalUsage | null;
+  pendingUnits?: number;
   onWalletChange?: () => void;
+  /**
+   * Whether the spend-limit editor is open, when the host drives it. Lets the Processor row's
+   * "Raise limit" door reach the control that already exists here.
+   */
+  adjusting?: boolean;
+  onAdjustingChange?: (adjusting: boolean) => void;
 }
 
 /**
- * Linked + subscribed — the full Processor-plan dashboard, matching the
- * marketing layout and reusing the free view's building blocks:
- *   - team editor fleet ({@link FreePdfEditorsCard}, shared with the free view)
- *   - PDFs processed + category split ({@link PdfsProcessedCard})
- *   - spend-vs-cap meter, projection, and the leader-only cap editor
- *     ({@link SpendLimitCard} → shared {@code SpendCapControl})
- *   - Enterprise upsell ({@link EnterpriseUpsell}, shared with the free view)
- *   - per-member usage, Stripe invoices, and the default payment method
+ * The flows a subscribed team needs that {@link BillingScreen} has no room for: the spend-limit
+ * dialog its Processor row opens, and the bundle checkout.
  *
- * Card / subscription management lives in Stripe's hosted portal — both the
- * page-header "Manage Payment" action and the payment card's "Update" button
- * deep-link there via {@link useStripePortal}.
+ * <p>Nothing renders here at rest. Every card this view used to stack under the page either
+ * restated the screen above it or was an upsell, and both now live inside a dialog or not at all.
  */
 export function SubscribedPlanView({
   wallet,
-  unsynced,
+  pendingUnits = 0,
   onWalletChange,
+  adjusting: controlledAdjusting,
+  onAdjustingChange,
 }: Props) {
   const { t } = useTranslation();
-  const [adjusting, setAdjusting] = useState(false);
+  const estimatedMinor = estimatedBillWithPending(wallet, pendingUnits);
+  const [ownAdjusting, setOwnAdjusting] = useState(false);
+  const adjusting = onAdjustingChange
+    ? (controlledAdjusting ?? false)
+    : ownAdjusting;
+  const setAdjusting = onAdjustingChange ?? setOwnAdjusting;
   const [bundleOpen, setBundleOpen] = useState(false);
   const processor = useStripePortal(wallet);
 
@@ -49,17 +48,13 @@ export function SubscribedPlanView({
   // Buying/topping up prepaid capacity is a commercial action — leader-only, and
   // needs a resolved team to scope checkout.
   const canBuyBundle = isLeader && wallet.teamId != null;
-  const spent =
-    wallet.estimatedBillMinor != null ? wallet.estimatedBillMinor / 100 : 0;
+  const spent = estimatedMinor != null ? estimatedMinor / 100 : 0;
   const capActive = !wallet.noCap && wallet.capUsd != null;
   const { state, pct } = meterState(spent, wallet.capUsd ?? 0);
   const showCapWarn = capActive && state !== "FULL";
 
   function raiseLimit() {
     setAdjusting(true);
-    document
-      .getElementById("processor-spend-limit")
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
   return (
@@ -104,30 +99,12 @@ export function SubscribedPlanView({
         </Banner>
       )}
 
-      <FreePdfEditorsCard />
-
-      <PrepaidCapacityCard
+      <SpendLimitModal
+        open={adjusting}
+        onClose={() => setAdjusting(false)}
         wallet={wallet}
-        onBuy={canBuyBundle ? () => setBundleOpen(true) : undefined}
-      />
-
-      <PdfsProcessedCard wallet={wallet} unsynced={unsynced} />
-
-      <div className="processor-billing__spend-row">
-        <SpendThisMonthCard wallet={wallet} />
-        <SpendLimitCard
-          wallet={wallet}
-          onWalletChange={onWalletChange}
-          adjusting={adjusting}
-          onAdjustingChange={setAdjusting}
-        />
-      </div>
-
-      <InvoicesList />
-
-      <PaymentMethodCard
-        onManage={processor.open}
-        managing={processor.opening}
+        onWalletChange={onWalletChange}
+        onBuyBundle={canBuyBundle ? () => setBundleOpen(true) : undefined}
       />
 
       {processor.error && (

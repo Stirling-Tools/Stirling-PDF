@@ -1,7 +1,6 @@
 import { Suspense, lazy } from "react";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import "@app/components/docs/DocsPage.css";
 
 // Its own chunk: the generated docs manifest is bundled JSON.
@@ -17,12 +16,9 @@ const DeveloperDocs = lazy(async () => {
  * likely to need them.
  */
 export default function DocsPage() {
-  // The rail sits outside every app, so each page tells it what only the
-  // signed-in session knows. Null in builds with no processor to switch to.
-  const otherApp = useOtherAppSwitch();
   return (
     <div className="docs-page">
-      <QuickNavHostBridge processorAccess={Boolean(otherApp)} />
+      <QuickNavHostBridge />
       <Suspense fallback={<LoadingFallback />}>
         <DeveloperDocs />
       </Suspense>

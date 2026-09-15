@@ -1,4 +1,6 @@
 import { withBasePath } from "@app/constants/app";
+import { useNavigate } from "react-router-dom";
+import { toProcessorPath } from "@processor/contexts/ViewContext";
 import { Usage } from "@processor/views/Usage";
 
 /**
@@ -11,8 +13,10 @@ import { Usage } from "@processor/views/Usage";
  * without this a "Session expired" notice would dead-end until a manual reload.
  */
 export function ProcessorBillingGate() {
+  const navigate = useNavigate();
   return (
     <Usage
+      onEnterpriseQuote={() => navigate(toProcessorPath("/procurement"))}
       onReauth={() => {
         window.location.href = withBasePath("/login");
       }}

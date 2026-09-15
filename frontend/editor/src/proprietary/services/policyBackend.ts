@@ -61,6 +61,7 @@ export function decodedToState(
     runOn: decoded.folder.runOn,
     folderId: localFolderId,
     backendId: decoded.id,
+    firstOperation: decoded.firstOperation,
     // Server-side run-order position (team-wide); drives the settings reorder list.
     order: decoded.order,
     // Catalog-category policies are built-in defaults (not deletable); a builder pipeline is not.

@@ -1,3 +1,4 @@
+import { Icon } from "@app/ui/Icon";
 import React, {
   useCallback,
   useEffect,
@@ -20,25 +21,12 @@ import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
-import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
-import GridViewIcon from "@mui/icons-material/GridView";
-import ViewListIcon from "@mui/icons-material/ViewList";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import RefreshIcon from "@mui/icons-material/Refresh";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
+import { useFileLibraryWorkbenchBarButtons } from "@app/components/filesPage/useFileLibraryWorkbenchBarButtons";
 
 import { useAuth } from "@app/auth/UseSession";
 import { useSharingEnabled } from "@app/hooks/useSharingEnabled";
@@ -76,24 +64,13 @@ import {
   FilesPageEntry,
   type DiskFileState,
 } from "@app/components/filesPage/FileGrid";
-import AutoModeIcon from "@mui/icons-material/AutoMode";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
-import ReplayIcon from "@mui/icons-material/Replay";
-import TuneIcon from "@mui/icons-material/Tune";
-import HistoryIcon from "@mui/icons-material/History";
-import PaletteIcon from "@mui/icons-material/Palette";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
-import SuperSearch from "@app/components/shared/superSearch/SuperSearch";
-import { useEditorSearchScopes } from "@app/hooks/useSuperSearch";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
-import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import {
@@ -102,6 +79,7 @@ import {
   pickFolderColor,
 } from "@app/types/folder";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
+import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { writeIntoMount } from "@app/services/mountWrites";
 import {
   canListDirectory,
@@ -133,7 +111,6 @@ export default function FileManagerView() {
   const navigate = useNavigate();
   const location = useLocation();
   const openFolder = useOpenFolder();
-  const searchScopes = useEditorSearchScopes();
 
   // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
@@ -161,8 +138,6 @@ export default function FileManagerView() {
   const { addFiles } = useFileHandler();
   const { config: appConfig } = useAppConfig();
   const isMobile = useIsMobile();
-  const isMobileUploadAvailable =
-    Boolean(appConfig?.enableMobileScanner) && !isMobile;
   // Guests (anonymous sessions) have no server-side storage, so every cloud
   // action is account-only. Rather than let the click fire a guaranteed 401
   // (which surfaced as an error toast), we disable the control and explain why
@@ -184,7 +159,6 @@ export default function FileManagerView() {
           "filesPage.saveToServerDisabledHint",
           "Saving to the server isn't enabled on this server. Ask your admin to enable it.",
         ));
-  const [mobileUploadModalOpen, setMobileUploadModalOpen] = useState(false);
   const { actions: navActions } = useNavigationActions();
   const { requestNavigation } = useNavigationGuard();
   const { setActiveFileId } = useViewer();
@@ -501,10 +475,12 @@ export default function FileManagerView() {
   const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
   const [diskLoading, setDiskLoading] = useState(false);
   // Bumped when this view writes into the directory, so the listing re-reads.
-  const [diskRefreshTick, setDiskRefreshTick] = useState(0);
+  const { diskRevision, bumpDiskRevision } = filesPage;
   useEffect(() => {
     if (!currentLocalDirectory || !canListDirectory) {
-      setDiskEntries([]);
+      // Same array when it is already empty: a refresh outside a mount re-runs this
+      // and a fresh one would re-render every reader of the listing for nothing.
+      setDiskEntries((prev) => (prev.length > 0 ? [] : prev));
       // Leaving a mount mid-listing cancels the in-flight reset, so clear the
       // flag here or the skeleton covers every folder for the rest of the session.
       setDiskLoading(false);
@@ -572,7 +548,7 @@ export default function FileManagerView() {
     currentFolderId,
     registerDiskSubfolders,
     setFolderError,
-    diskRefreshTick,
+    diskRevision,
     t,
   ]);
 
@@ -949,7 +925,6 @@ export default function FileManagerView() {
   // ─── upload (drag-from-desktop or button) ───────────────────────────────
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
 
   const handleNativeUpload = useCallback(
     async (files: File[]) => {
@@ -978,7 +953,7 @@ export default function FileManagerView() {
             }),
           );
         }
-        setDiskRefreshTick((tick) => tick + 1);
+        bumpDiskRevision();
         return;
       }
       // Everywhere else membership is set with the stub rather than by a move that
@@ -1383,6 +1358,8 @@ export default function FileManagerView() {
   const { addLocalFolder } = useNewFolderFlow();
 
   // null = New folder actionable; string = disabled tooltip reason.
+  const { refreshing, refresh: handleRefresh } = useLibraryRefresh();
+
   const newFolderDisabledReason: string | null = useMemo(() => {
     // Only All/Cloud render folders, so creating one elsewhere would look inert.
     if (
@@ -1422,137 +1399,102 @@ export default function FileManagerView() {
     t,
   ]);
 
+  // Stable identities, here and for the controls built below: the bar re-registers
+  // whenever what it was given changes, so a value rebuilt per render turns that into
+  // an endless register -> render -> register loop.
+  const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
+
+  const newFolderControl = useMemo(
+    () => (
+      <NewFolderButton
+        trigger="icon"
+        label={t("filesPage.newFolder", "New folder")}
+        disabledReason={newFolderDisabledReason}
+        serverDisabledReason={serverFolderDisabledReason}
+        currentFolderId={folders.currentFolderId}
+        canAddLocalFolder={canPickDirectory}
+        onAddLocalFolder={() => void addLocalFolder()}
+        onOpenDialog={openNewFolderDialog}
+      />
+    ),
+    [
+      t,
+      newFolderDisabledReason,
+      serverFolderDisabledReason,
+      folders.currentFolderId,
+      addLocalFolder,
+      openNewFolderDialog,
+    ],
+  );
+  // Reads the trail from context, so it takes no props to change. Only the
+  // folder-rooted tabs have a trail to show: the rest list files by predicate.
+  const path = useMemo(
+    () =>
+      currentTab === "all" || currentTab === "cloud" ? <Breadcrumbs /> : null,
+    [currentTab],
+  );
+
+  const libraryActions = useMemo(
+    () => (
+      <>
+        <Tooltip
+          label={
+            signInRequiredReason ??
+            t("filesPage.refresh", "Refresh from server")
+          }
+          withinPortal
+        >
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            loading={refreshing}
+            disabled={refreshing || Boolean(signInRequiredReason)}
+            aria-busy={refreshing}
+            aria-label={t("filesPage.refresh", "Refresh from server")}
+            onClick={handleRefresh}
+          >
+            <Icon name="refresh-cw" size={20} />
+          </ActionIcon>
+        </Tooltip>
+        {newFolderControl}
+        <Tooltip label={t("filesPage.upload", "Upload")} withinPortal>
+          <ActionIcon
+            variant="tertiary"
+            size="sm"
+            aria-label={t("filesPage.upload", "Upload")}
+            onClick={openFilePicker}
+          >
+            <Icon name="file-up" size={20} />
+          </ActionIcon>
+        </Tooltip>
+      </>
+    ),
+    [
+      t,
+      signInRequiredReason,
+      refreshing,
+      handleRefresh,
+      newFolderControl,
+      openFilePicker,
+    ],
+  );
+
+  // The file sidebar carries these on desktop. Mobile has no sidebar to put them
+  // in, so there they go in the bar - the only chrome its layout shows.
+  useFileLibraryWorkbenchBarButtons({
+    path: isMobile ? path : null,
+    actions: isMobile ? libraryActions : null,
+  });
+
   return (
     <div className="files-page" ref={dropZoneRef}>
-      <header className="files-page-header">
-        {/* Breadcrumb only for folder-rooted tabs. */}
-        {(currentTab === "all" || currentTab === "cloud") && <Breadcrumbs />}
-        {(currentTab === "recent" ||
-          currentTab === "shared" ||
-          currentTab === "sharedByMe") && (
-          <div
-            style={{
-              fontSize: "0.95rem",
-              fontWeight: 600,
-              padding: "0.25rem 0.5rem",
-              color: "var(--c-text)",
-            }}
-          >
-            {currentTab === "recent"
-              ? t("filesPage.tabName.recent", "Recent")
-              : currentTab === "shared"
-                ? t("filesPage.tabName.shared", "Shared with me")
-                : t("filesPage.tabName.sharedByMe", "Shared by me")}
-          </div>
-        )}
-        {(() => {
-          // Both the inline desktop buttons and the mobile kebab menu need
-          // these handlers - extract once so we don't drift two copies.
-          const handleRefresh = async () => {
-            setRefreshing(true);
-            try {
-              // In a mount, refresh means the directory: the listing only re-reads when told.
-              if (currentLocalDirectory) {
-                setDiskRefreshTick((tick) => tick + 1);
-              }
-              // pullFromServer bumps the folder revision, which the
-              // FolderProvider's effect reacts to by re-running refresh() -
-              // no need to await folders.refresh() manually.
-              const result = await folders.pullFromServer();
-              if (!result.ok && result.reason !== "endpoint-missing") {
-                folders.setError(
-                  result.reason === "network"
-                    ? t(
-                        "filesPage.syncError.network",
-                        "Could not reach the server.",
-                      )
-                    : result.reason === "server"
-                      ? t(
-                          "filesPage.syncError.server",
-                          "Server error during folder sync.",
-                        )
-                      : t("filesPage.syncError.client", "Folder sync failed."),
-                );
-              }
-              await refresh();
-            } finally {
-              setRefreshing(false);
-            }
-          };
-          return (
-            <>
-              <div className="files-page-header-search">
-                <SuperSearch scopes={searchScopes} />
-              </div>
-              <div className="files-page-header-actions">
-                <Tooltip
-                  label={
-                    signInRequiredReason ??
-                    t("filesPage.refresh", "Refresh from server")
-                  }
-                  withinPortal
-                >
-                  <ActionIcon
-                    variant="secondary"
-                    size="sm"
-                    loading={refreshing}
-                    disabled={refreshing || Boolean(signInRequiredReason)}
-                    aria-busy={refreshing}
-                    onClick={handleRefresh}
-                    aria-label={t("filesPage.refresh", "Refresh from server")}
-                  >
-                    <RefreshIcon />
-                  </ActionIcon>
-                </Tooltip>
-                <NewFolderButton
-                  label={t("filesPage.newFolder", "New folder")}
-                  disabledReason={newFolderDisabledReason}
-                  serverDisabledReason={serverFolderDisabledReason}
-                  currentFolderId={folders.currentFolderId}
-                  canAddLocalFolder={canPickDirectory}
-                  onAddLocalFolder={() => void addLocalFolder()}
-                  onOpenDialog={openNewFolderDialog}
-                />
-                <Button
-                  size="sm"
-                  leftSection={<UploadFileIcon fontSize="small" />}
-                  onClick={() => fileInputRef.current?.click()}
-                >
-                  {t("filesPage.upload", "Upload")}
-                </Button>
-                {isMobileUploadAvailable && (
-                  <Tooltip
-                    label={t(
-                      "filesPage.uploadFromMobile",
-                      "Upload from Mobile",
-                    )}
-                    withinPortal
-                  >
-                    <ActionIcon
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setMobileUploadModalOpen(true)}
-                      aria-label={t(
-                        "filesPage.uploadFromMobile",
-                        "Upload from Mobile",
-                      )}
-                    >
-                      <QrCode2Icon fontSize="small" />
-                    </ActionIcon>
-                  </Tooltip>
-                )}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  style={{ display: "none" }}
-                  onChange={onFileInputChange}
-                />
-              </div>
-            </>
-          );
-        })()}
-      </header>
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        style={{ display: "none" }}
+        onChange={onFileInputChange}
+      />
 
       {folders.error && (
         <div
@@ -1590,89 +1532,98 @@ export default function FileManagerView() {
 
       <div className="files-page-body">
         <main className="files-page-main">
-          {/* Tab strip filters the file list; ARIA Tabs keyboard model. */}
-          {(() => {
-            const TAB_DEFS = [
-              { id: "all", label: t("filesPage.tabs.all", "All") },
-              { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
-              // Sharing tabs only when sharingEnabled.
-              ...(sharingEnabled
-                ? [
-                    {
-                      id: "shared" as const,
-                      label: t("filesPage.tabs.shared", "Shared with me"),
-                    },
-                    {
-                      id: "sharedByMe" as const,
-                      label: t("filesPage.tabs.sharedByMe", "Shared by me"),
-                    },
-                  ]
-                : []),
-            ] as const;
-            const focusTab = (id: string) => {
-              const el = document.getElementById(`filesPage-tab-${id}`);
-              el?.focus();
-            };
-            return (
-              <div
-                className="files-page-tabs"
-                role="tablist"
-                aria-label={t("filesPage.tabs.ariaLabel", "File views")}
-                onKeyDown={(e) => {
-                  const idx = TAB_DEFS.findIndex((t2) => t2.id === currentTab);
-                  if (idx < 0) return;
-                  let next: number;
-                  if (e.key === "ArrowRight")
-                    next = (idx + 1) % TAB_DEFS.length;
-                  else if (e.key === "ArrowLeft")
-                    next = (idx - 1 + TAB_DEFS.length) % TAB_DEFS.length;
-                  else if (e.key === "Home") next = 0;
-                  else if (e.key === "End") next = TAB_DEFS.length - 1;
-                  else return;
-                  e.preventDefault();
-                  const target = TAB_DEFS[next];
-                  setCurrentTab(target.id);
-                  focusTab(target.id);
-                }}
-                style={{
-                  display: "flex",
-                  gap: "0.1rem",
-                  padding: "0.2rem 1rem 0.2rem",
-                }}
-              >
-                {TAB_DEFS.map((tab) => (
-                  <button
-                    key={tab.id}
-                    id={`filesPage-tab-${tab.id}`}
-                    role="tab"
-                    type="button"
-                    aria-selected={currentTab === tab.id}
-                    aria-controls="filesPage-tabpanel"
-                    tabIndex={currentTab === tab.id ? 0 : -1}
-                    onClick={() => setCurrentTab(tab.id)}
-                    style={{
-                      background:
-                        currentTab === tab.id
-                          ? "var(--c-hover)"
-                          : "transparent",
-                      border: "none",
-                      borderRadius: "0.3rem",
-                      padding: "0.2rem 0.6rem",
-                      color:
-                        currentTab === tab.id
-                          ? "var(--c-text)"
-                          : "var(--c-text-subtle)",
-                      fontWeight: currentTab === tab.id ? 500 : 400,
-                      fontSize: "0.75rem",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+          {/* Tab strip filters the file list; ARIA Tabs keyboard model. The
+              library's path and actions share the row: kept out of the tablist
+              itself, which may only contain tabs. */}
+          <div className="files-page-tabs-row">
+            {(() => {
+              const TAB_DEFS = [
+                { id: "all", label: t("filesPage.tabs.all", "All") },
+                { id: "recent", label: t("filesPage.tabs.recent", "Recent") },
+                // Sharing tabs only when sharingEnabled.
+                ...(sharingEnabled
+                  ? [
+                      {
+                        id: "shared" as const,
+                        label: t("filesPage.tabs.shared", "Shared with me"),
+                      },
+                      {
+                        id: "sharedByMe" as const,
+                        label: t("filesPage.tabs.sharedByMe", "Shared by me"),
+                      },
+                    ]
+                  : []),
+              ] as const;
+              const focusTab = (id: string) => {
+                const el = document.getElementById(`filesPage-tab-${id}`);
+                el?.focus();
+              };
+              return (
+                <div
+                  className="files-page-tabs"
+                  role="tablist"
+                  aria-label={t("filesPage.tabs.ariaLabel", "File views")}
+                  onKeyDown={(e) => {
+                    const idx = TAB_DEFS.findIndex(
+                      (t2) => t2.id === currentTab,
+                    );
+                    if (idx < 0) return;
+                    let next: number;
+                    if (e.key === "ArrowRight")
+                      next = (idx + 1) % TAB_DEFS.length;
+                    else if (e.key === "ArrowLeft")
+                      next = (idx - 1 + TAB_DEFS.length) % TAB_DEFS.length;
+                    else if (e.key === "Home") next = 0;
+                    else if (e.key === "End") next = TAB_DEFS.length - 1;
+                    else return;
+                    e.preventDefault();
+                    const target = TAB_DEFS[next];
+                    setCurrentTab(target.id);
+                    focusTab(target.id);
+                  }}
+                  style={{
+                    display: "flex",
+                    gap: "0.1rem",
+                    padding: "0.2rem 1rem 0.2rem",
+                  }}
+                >
+                  {TAB_DEFS.map((tab) => (
+                    <button
+                      key={tab.id}
+                      id={`filesPage-tab-${tab.id}`}
+                      role="tab"
+                      type="button"
+                      aria-selected={currentTab === tab.id}
+                      aria-controls="filesPage-tabpanel"
+                      tabIndex={currentTab === tab.id ? 0 : -1}
+                      onClick={() => setCurrentTab(tab.id)}
+                      style={{
+                        background:
+                          currentTab === tab.id
+                            ? "var(--c-hover)"
+                            : "transparent",
+                        border: "none",
+                        borderRadius: "0.3rem",
+                        padding: "0.2rem 0.6rem",
+                        color:
+                          currentTab === tab.id
+                            ? "var(--c-text)"
+                            : "var(--c-text-subtle)",
+                        fontWeight: currentTab === tab.id ? 500 : 400,
+                        fontSize: "0.75rem",
+                        cursor: "pointer",
+                      }}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
+            {!isMobile && (
+              <>{path && <div className="files-page-tabs-path">{path}</div>}</>
+            )}
+          </div>
 
           <div className="files-page-toolbar">
             <FilesToolbarCount
@@ -1700,7 +1651,7 @@ export default function FileManagerView() {
                         "Process files in this folder...",
                       )}
                     >
-                      <AutoModeIcon fontSize="small" />
+                      <Icon name="workflow" size={20} />
                     </ActionIcon>
                   </Tooltip>
                 ) : (
@@ -1730,7 +1681,7 @@ export default function FileManagerView() {
                                   "Retry failed files",
                                 )}
                               >
-                                <ReplayIcon fontSize="small" />
+                                <Icon name="rotate-ccw" size={20} />
                               </ActionIcon>
                             </Tooltip>
                           )}
@@ -1755,7 +1706,7 @@ export default function FileManagerView() {
                               "Pause processing",
                             )}
                           >
-                            <PauseIcon fontSize="small" />
+                            <Icon name="pause" size={20} />
                           </ActionIcon>
                         </Tooltip>
                       </>
@@ -1781,7 +1732,7 @@ export default function FileManagerView() {
                             "Resume processing",
                           )}
                         >
-                          <PlayArrowIcon fontSize="small" />
+                          <Icon name="play" size={20} />
                         </ActionIcon>
                       </Tooltip>
                     )}
@@ -1801,7 +1752,7 @@ export default function FileManagerView() {
                           "Edit processing...",
                         )}
                       >
-                        <TuneIcon fontSize="small" />
+                        <Icon name="sliders-horizontal" size={20} />
                       </ActionIcon>
                     </Tooltip>
                     {folderKind(currentFolder) === "local" && (
@@ -1821,7 +1772,7 @@ export default function FileManagerView() {
                             "Restore all originals",
                           )}
                         >
-                          <HistoryIcon fontSize="small" />
+                          <Icon name="rotate-ccw-clock" size={20} />
                         </ActionIcon>
                       </Tooltip>
                     )}
@@ -1846,7 +1797,7 @@ export default function FileManagerView() {
                           "Remove processing",
                         )}
                       >
-                        <AutoModeIcon fontSize="small" />
+                        <Icon name="workflow" size={20} />
                       </ActionIcon>
                     </Tooltip>
                   </>
@@ -1869,7 +1820,7 @@ export default function FileManagerView() {
                           "Unmount from Stirling",
                         )}
                       >
-                        <DeleteIcon fontSize="small" />
+                        <Icon name="trash" size={20} />
                       </ActionIcon>
                     </Tooltip>
                   )
@@ -1886,7 +1837,7 @@ export default function FileManagerView() {
                         disabled={headerEditsDisabled}
                         aria-label={t("filesPage.rename", "Rename")}
                       >
-                        <DriveFileRenameOutlineIcon fontSize="small" />
+                        <Icon name="file-pen" size={20} />
                       </ActionIcon>
                     </Tooltip>
                     <Menu shadow="md" position="bottom-start" withinPortal>
@@ -1904,7 +1855,7 @@ export default function FileManagerView() {
                               "Appearance",
                             )}
                           >
-                            <PaletteIcon fontSize="small" />
+                            <Icon name="palette" size={20} />
                           </ActionIcon>
                         </Tooltip>
                       </Menu.Target>
@@ -1950,7 +1901,7 @@ export default function FileManagerView() {
                           "Delete folder",
                         )}
                       >
-                        <DeleteIcon fontSize="small" />
+                        <Icon name="trash" size={20} />
                       </ActionIcon>
                     </Tooltip>
                   </>
@@ -2037,7 +1988,9 @@ export default function FileManagerView() {
                           <Tooltip label={addLabel} withinPortal>
                             <Button
                               size="sm"
-                              leftSection={<OpenInNewIcon fontSize="small" />}
+                              leftSection={
+                                <Icon name="external-link" size={20} />
+                              }
                               onClick={() =>
                                 handleAddToWorkspace(selectedFiles)
                               }
@@ -2064,7 +2017,7 @@ export default function FileManagerView() {
                                 size="sm"
                                 variant="secondary"
                                 leftSection={
-                                  <CloudUploadIcon fontSize="small" />
+                                  <Icon name="cloud-upload" size={20} />
                                 }
                                 disabled={Boolean(saveToServerDisabledReason)}
                                 onClick={() =>
@@ -2098,9 +2051,7 @@ export default function FileManagerView() {
                                 <Button
                                   size="sm"
                                   variant="secondary"
-                                  leftSection={
-                                    <InfoOutlinedIcon fontSize="small" />
-                                  }
+                                  leftSection={<Icon name="info" size={20} />}
                                   onClick={() => setMobileDetailsOpen(true)}
                                   aria-label={t(
                                     "filesPage.showDetails",
@@ -2116,7 +2067,7 @@ export default function FileManagerView() {
                               size="sm"
                               variant="secondary"
                               leftSection={
-                                <DriveFileMoveIcon fontSize="small" />
+                                <Icon name="folder-input" size={20} />
                               }
                               onClick={() => promptMoveFiles(selectedFiles)}
                               aria-label={moveLabel}
@@ -2129,7 +2080,7 @@ export default function FileManagerView() {
                               size="sm"
                               accent="danger"
                               variant="secondary"
-                              leftSection={<DeleteIcon fontSize="small" />}
+                              leftSection={<Icon name="trash" size={20} />}
                               onClick={() => handleRemoveFiles(selectedFiles)}
                               aria-label={removeLabel}
                             >
@@ -2247,7 +2198,7 @@ export default function FileManagerView() {
                           "filesPage.search.placeholder",
                           "Filter files…",
                         )}
-                        leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
+                        leftSection={<Icon name="search" size={"1rem"} />}
                         rightSection={
                           search ? (
                             <ActionIcon
@@ -2259,7 +2210,7 @@ export default function FileManagerView() {
                                 "Clear filter",
                               )}
                             >
-                              <CloseIcon sx={{ fontSize: "0.9rem" }} />
+                              <Icon name="x" size={"0.9rem"} />
                             </ActionIcon>
                           ) : null
                         }
@@ -2347,7 +2298,7 @@ export default function FileManagerView() {
                             className="files-page-view-toggle-icon"
                             title={t("filesPage.viewMode.grid", "Grid view")}
                           >
-                            <GridViewIcon fontSize="small" />
+                            <Icon name="layout-grid" size={20} />
                             <span className="files-page-sr-only">
                               {t("filesPage.viewMode.grid", "Grid view")}
                             </span>
@@ -2361,7 +2312,7 @@ export default function FileManagerView() {
                             className="files-page-view-toggle-icon"
                             title={t("filesPage.viewMode.list", "List view")}
                           >
-                            <ViewListIcon fontSize="small" />
+                            <Icon name="list" size={20} />
                             <span className="files-page-sr-only">
                               {t("filesPage.viewMode.list", "List view")}
                             </span>
@@ -2473,7 +2424,7 @@ export default function FileManagerView() {
             {isDraggingExternal && (
               <div className="files-page-drop-overlay" aria-live="polite">
                 <span className="files-page-drop-overlay-icon">
-                  <UploadFileIcon />
+                  <Icon name="file-up" />
                 </span>
                 <span>
                   {t("filesPage.dropOverlay", "Drop files to upload")}
@@ -2673,16 +2624,6 @@ export default function FileManagerView() {
         files={saveToServerTarget ?? []}
         onUploaded={refresh}
       />
-
-      <MobileUploadModal
-        opened={mobileUploadModalOpen}
-        onClose={() => setMobileUploadModalOpen(false)}
-        onFilesReceived={(files) => {
-          if (files.length > 0) {
-            void addFiles(files);
-          }
-        }}
-      />
     </div>
   );
 }
@@ -2776,7 +2717,7 @@ function Breadcrumbs() {
           <Menu shadow="md" position="bottom-start" withinPortal>
             <Menu.Target>
               <ActionIcon
-                variant="quiet"
+                variant="tertiary"
                 size="sm"
                 className="files-page-breadcrumb-overflow"
                 aria-label={t(
@@ -2784,7 +2725,7 @@ function Breadcrumbs() {
                   "Show parent folders",
                 )}
               >
-                <MoreHorizIcon fontSize="small" />
+                <Icon name="ellipsis" size={20} />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
@@ -2798,9 +2739,10 @@ function Breadcrumbs() {
               ))}
             </Menu.Dropdown>
           </Menu>
-          <KeyboardArrowRightIcon
+          <Icon
+            name="chevron-right"
+            size={20}
             className="files-page-breadcrumb-sep"
-            fontSize="small"
             aria-hidden="true"
           />
         </>
@@ -2819,9 +2761,10 @@ function Breadcrumbs() {
               {entry.name}
             </button>
             {!isLast && (
-              <KeyboardArrowRightIcon
+              <Icon
+                name="chevron-right"
+                size={20}
                 className="files-page-breadcrumb-sep"
-                fontSize="small"
                 aria-hidden="true"
               />
             )}
