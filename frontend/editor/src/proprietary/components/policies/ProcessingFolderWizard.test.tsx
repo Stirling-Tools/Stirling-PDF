@@ -17,6 +17,12 @@ import { assemblePolicies } from "@app/policies/overview";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { classificationCondition } from "@app/data/classificationConditions";
 import { POLICY_CATEGORIES } from "@app/policies/catalog";
+import { directoryFromDrop } from "@app/services/directoryDrop";
+
+vi.mock("@app/services/directoryDrop", () => ({
+  canDropDirectory: true,
+  directoryFromDrop: vi.fn(),
+}));
 
 vi.mock("@app/components/policies/useFolderPickerBack", () => ({
   useFolderPickerBack: (_enabled: boolean, onBack: () => boolean) => onBack,
@@ -59,17 +65,97 @@ function button(name: string) {
   return screen.getByRole("button", { name: key(name) });
 }
 
+function addFolderButton() {
+  return within(
+    document.querySelector(".folder-setup__folder-toolbar") as HTMLElement,
+  ).getByRole("button", { name: key("addFolder") });
+}
+
+function addServerDraft() {
+  fireEvent.click(
+    within(screen.getByRole("form", { name: key("newFolder") })).getByRole(
+      "button",
+      { name: key("addFolder") },
+    ),
+  );
+}
+
 function createServerFolder() {
-  fireEvent.click(button("newFolder"));
+  fireEvent.click(addFolderButton());
   fireEvent.change(screen.getByLabelText(new RegExp(key("folderName"))), {
-    target: { value: "Invoices" },
+    target: { value: "Receipts" },
   });
-  fireEvent.click(button("chooseProcessing"));
+  addServerDraft();
+}
+
+async function returnToFoldersAfterAdding() {
+  fireEvent.click(await screen.findByRole("button", { name: key("change") }));
 }
 
 describe("ProcessingFolderWizard", () => {
+  it("selects a dropped folder and goes straight to processing without saving", async () => {
+    const directory = { path: "C:/Dropped", name: "Dropped" };
+    vi.mocked(directoryFromDrop).mockResolvedValueOnce(directory);
+    const props = renderWizard({ canPickDirectory: true });
+    const dropzone = document.querySelector(".folder-setup__dropzone")!;
+    const dataTransfer = { types: ["Files"], dropEffect: "none" };
+    fireEvent.dragEnter(dropzone, { dataTransfer });
+    expect(dropzone).toHaveAttribute("data-dragging", "true");
+    fireEvent.drop(dropzone, { dataTransfer });
+    expect(
+      await screen.findByRole("button", { name: key("enable") }),
+    ).toBeVisible();
+    expect(screen.getByTitle("Dropped")).toBeVisible();
+    expect(props.resolveTarget).not.toHaveBeenCalled();
+    expect(props.save).not.toHaveBeenCalled();
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.resolveTarget).toHaveBeenCalledWith({
+        kind: "local",
+        directory,
+        name: null,
+      }),
+    );
+  });
+
+  it("keeps invalid drops on the folder step and clears drag feedback", async () => {
+    vi.mocked(directoryFromDrop).mockResolvedValueOnce(null);
+    renderWizard({ canPickDirectory: true });
+    const dropzone = document.querySelector(".folder-setup__dropzone")!;
+    const dataTransfer = { types: ["Files"], dropEffect: "none" };
+    fireEvent.dragEnter(dropzone, { dataTransfer });
+    fireEvent.drop(dropzone, { dataTransfer });
+    expect(await screen.findByText(key("dropError"))).toBeVisible();
+    expect(dropzone).not.toHaveAttribute("data-dragging");
+    expect(button("chooseProcessing")).toBeDisabled();
+  });
+
+  it("offers computer folders and the Downloads demo without showing modified dates", async () => {
+    const onProcessDownloads = vi.fn();
+    const props = renderWizard({
+      canPickDirectory: true,
+      serverDisabledReason: "Server unavailable",
+      downloadsProcessing: { count: 50, start: onProcessDownloads },
+      pickDirectory: vi
+        .fn()
+        .mockResolvedValue({ path: "C:/Documents", name: "Documents" }),
+    });
+    expect(
+      screen.queryByRole("columnheader", { name: "filesPage.column.modified" }),
+    ).toBeNull();
+    fireEvent.click(button("dropHeading"));
+    await returnToFoldersAfterAdding();
+    expect(
+      await screen.findByRole("radio", { name: "Documents" }),
+    ).toBeChecked();
+    fireEvent.click(button("downloadsAction"));
+    expect(onProcessDownloads).toHaveBeenCalledOnce();
+    expect(props.resolveTarget).not.toHaveBeenCalled();
+    expect(props.save).not.toHaveBeenCalled();
+  });
+
   it.each([true, false])(
-    "marks existing processing (enabled: %s) and warns through review before saving",
+    "marks existing processing (enabled: %s) and warns before saving directly from processing",
     async (enabled) => {
       const record = {
         id: "existing-processing",
@@ -91,8 +177,6 @@ describe("ProcessingFolderWizard", () => {
       fireEvent.click(screen.getByRole("radio", { name: folder.name }));
       expect(screen.getByText(key("replaceWarning"))).toBeVisible();
       fireEvent.click(button("chooseProcessing"));
-      expect(screen.getByText(key("replaceWarning"))).toBeVisible();
-      fireEvent.click(button("review"));
       expect(screen.getByText(key("replaceWarning"))).toBeVisible();
       expect(props.save).not.toHaveBeenCalled();
       fireEvent.click(button("saveChanges"));
@@ -124,10 +208,10 @@ describe("ProcessingFolderWizard", () => {
     });
     fireEvent.click(screen.getByRole("radio", { name: folder.name }));
     expect(screen.getByText(key("replaceWarning"))).toBeVisible();
-    fireEvent.click(button("newFolder"));
+    fireEvent.click(addFolderButton());
     expect(screen.queryByText(key("replaceWarning"))).toBeNull();
     fireEvent.click(
-      within(screen.getByRole("region", { name: key("newFolder") })).getByRole(
+      within(screen.getByRole("form", { name: key("newFolder") })).getByRole(
         "button",
         { name: "cancel" },
       ),
@@ -157,17 +241,19 @@ describe("ProcessingFolderWizard", () => {
         recordFor: (item) => (item.id === local.id ? record : undefined),
         pickDirectory: vi.fn().mockResolvedValue({ path, name: "Invoices" }),
       });
-      fireEvent.click(button("newFolder"));
+      fireEvent.click(addFolderButton());
       fireEvent.click(
         await screen.findByRole("menuitem", {
-          name: "filesPage.newFolderMenu.addExisting",
+          name: key("fromComputer"),
         }),
       );
       expect(await screen.findByText(key("replaceWarning"))).toBeVisible();
+      await returnToFoldersAfterAdding();
+      expect(screen.getByRole("radio", { name: local.name })).toBeChecked();
       expect(screen.getByText("filesPage.processing.paused")).toBeVisible();
       fireEvent.click(button("chooseProcessing"));
       expect(screen.getByText(key("replaceWarning"))).toBeVisible();
-      expect(button("review")).toBeEnabled();
+      expect(button("saveChanges")).toBeEnabled();
     },
   );
 
@@ -202,7 +288,6 @@ describe("ProcessingFolderWizard", () => {
       fireEvent.click(
         screen.getByRole("button", { name: entry.category.label }),
       );
-      fireEvent.click(button("review"));
       fireEvent.click(button("enable"));
       await waitFor(() =>
         expect(props.save).toHaveBeenCalledWith(
@@ -251,8 +336,7 @@ describe("ProcessingFolderWizard", () => {
       }),
     ).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByText("Watch")).toBeNull();
-    expect(button("review")).toBeEnabled();
-    fireEvent.click(button("review"));
+    expect(button("enable")).toBeEnabled();
     fireEvent.click(button("enable"));
     await waitFor(() =>
       expect(props.save).toHaveBeenCalledWith(
@@ -262,7 +346,7 @@ describe("ProcessingFolderWizard", () => {
     );
   });
 
-  it("offers Routing but requires routes and a fallback before reviewing", () => {
+  it("offers Routing but requires routes and a fallback before enabling processing", () => {
     renderWizard({
       initialFolder: folder,
       destinations: [{ id: "archive", name: "Archive" }],
@@ -272,7 +356,7 @@ describe("ProcessingFolderWizard", () => {
     });
     expect(routing).toBeEnabled();
     fireEvent.click(routing);
-    expect(button("review")).toBeDisabled();
+    expect(button("enable")).toBeDisabled();
     expect(
       screen.getByRole("textbox", {
         name: "portal.pipelines.builder.routing.fallback",
@@ -307,7 +391,7 @@ describe("ProcessingFolderWizard", () => {
     expect(search).toHaveValue("2026");
     expect(screen.getByRole("radio", { name: "2026" })).toBeVisible();
     expect(back).toBeDisabled();
-    fireEvent.click(screen.getByRole("button", { name: "Server storage" }));
+    fireEvent.click(screen.getByRole("button", { name: "filesPage.tree" }));
     expect(search).toHaveValue("");
     expect(screen.getByRole("radio", { name: folder.name })).toBeVisible();
     fireEvent.click(back);
@@ -351,12 +435,266 @@ describe("ProcessingFolderWizard", () => {
     fireEvent.click(button("change"));
     expect(screen.getByRole("radio", { name: "2026" })).toBeChecked();
     fireEvent.click(button("chooseProcessing"));
-    fireEvent.click(button("review"));
     fireEvent.click(button("enable"));
     await waitFor(() =>
       expect(props.resolveTarget).toHaveBeenCalledWith({
         kind: "existing",
         folder: child,
+      }),
+    );
+  });
+
+  it("shows both storage locations and searches across them from inside a folder", async () => {
+    const local: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      name: "Documents",
+      kind: "local",
+      directory: "C:/Documents",
+    };
+    const localChild: FolderRecord = {
+      ...local,
+      id: createFolderId(),
+      name: "2026 local",
+      parentFolderId: local.id,
+      directory: "C:/Documents/2026",
+    };
+    const serverChild: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      name: "2026 server",
+      parentFolderId: folder.id,
+    };
+    const props = renderWizard({
+      folders: [folder, serverChild, local, localChild],
+      canPickDirectory: true,
+      resolveTarget: vi.fn().mockResolvedValue(localChild),
+    });
+    const serverRow = screen
+      .getByRole("radio", { name: folder.name })
+      .closest('[role="row"]')!;
+    const localRow = screen
+      .getByRole("radio", { name: local.name })
+      .closest('[role="row"]')!;
+    expect(
+      within(serverRow as HTMLElement).getByText("Server storage"),
+    ).toBeVisible();
+    expect(
+      within(localRow as HTMLElement).getByText(key("computer")),
+    ).toBeVisible();
+    fireEvent.doubleClick(serverRow);
+    fireEvent.change(
+      screen.getByRole("textbox", { name: key("searchFolders") }),
+      {
+        target: { value: "2026" },
+      },
+    );
+    expect(screen.getByRole("radio", { name: serverChild.name })).toBeVisible();
+    fireEvent.click(screen.getByRole("radio", { name: localChild.name }));
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("change"));
+    expect(screen.getByRole("radio", { name: localChild.name })).toBeChecked();
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.resolveTarget).toHaveBeenCalledWith({
+        kind: "existing",
+        folder: localChild,
+      }),
+    );
+  });
+
+  it("keeps existing folders selectable while the new-folder form is open", async () => {
+    const local: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      name: "Documents",
+      kind: "local",
+      directory: "C:/Documents",
+    };
+    const props = renderWizard({ folders: [folder, local] });
+    fireEvent.click(addFolderButton());
+    fireEvent.change(screen.getByLabelText(new RegExp(key("folderName"))), {
+      target: { value: "Receipts" },
+    });
+    expect(screen.getByRole("radio", { name: local.name })).toBeEnabled();
+    expect(screen.getByRole("radio", { name: folder.name })).toBeEnabled();
+    fireEvent.click(screen.getByRole("radio", { name: local.name }));
+    expect(screen.queryByRole("form", { name: key("newFolder") })).toBeNull();
+    expect(screen.getByRole("radio", { name: local.name })).toBeChecked();
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.resolveTarget).toHaveBeenCalledWith({
+        kind: "existing",
+        folder: local,
+      }),
+    );
+  });
+
+  it("restricts only the location picker and selects a new server folder after adding it", async () => {
+    const local: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      name: "Documents",
+      kind: "local",
+      directory: "C:/Documents",
+    };
+    const props = renderWizard({ folders: [folder, local] });
+    fireEvent.click(addFolderButton());
+    fireEvent.change(screen.getByLabelText(new RegExp(key("folderName"))), {
+      target: { value: "Receipts" },
+    });
+    fireEvent.click(button("changeLocation"));
+    const locations = await screen.findByRole("dialog", {
+      name: key("changeLocation"),
+      hidden: true,
+    });
+    // JSDOM has no layout, so Floating UI hides the picker after positioning.
+    expect(
+      within(locations).getByRole("button", {
+        name: local.directory,
+        hidden: true,
+      }),
+    ).toBeDisabled();
+    expect(screen.getByRole("radio", { name: local.name })).toBeEnabled();
+    fireEvent.click(
+      within(locations).getByRole("button", {
+        name: folder.name,
+        hidden: true,
+      }),
+    );
+    expect(
+      within(screen.getByRole("form", { name: key("newFolder") })).getByText(
+        `Server storage / ${folder.name}`,
+      ),
+    ).toBeVisible();
+    expect(screen.getByRole("radio", { name: folder.name })).not.toBeChecked();
+    expect(button("chooseProcessing")).toBeDisabled();
+    addServerDraft();
+    await returnToFoldersAfterAdding();
+    expect(screen.getByRole("radio", { name: "Receipts" })).toBeChecked();
+    expect(screen.queryByRole("form", { name: key("newFolder") })).toBeNull();
+    expect(props.resolveTarget).not.toHaveBeenCalled();
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.resolveTarget).toHaveBeenCalledWith({
+        kind: "server",
+        name: "Receipts",
+        parentId: folder.id,
+      }),
+    );
+  });
+
+  it("returns to root when switching from a desktop directory to server creation", async () => {
+    const local: FolderRecord = {
+      ...folder,
+      id: createFolderId(),
+      name: "Documents",
+      kind: "local",
+      directory: "C:/Documents",
+    };
+    renderWizard({ folders: [folder, local], canPickDirectory: true });
+    fireEvent.doubleClick(
+      screen.getByRole("radio", { name: local.name }).closest('[role="row"]')!,
+    );
+    expect(screen.getByRole("button", { name: local.name })).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
+    fireEvent.click(addFolderButton());
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: /filesPage.newFolderMenu.server/,
+      }),
+    );
+    expect(
+      screen.getByRole("button", { name: "filesPage.tree" }),
+    ).toHaveAttribute("aria-current", "location");
+    expect(screen.queryByRole("button", { name: local.name })).toBeNull();
+    expect(screen.getByRole("radio", { name: local.name })).toBeEnabled();
+    expect(screen.getByRole("radio", { name: folder.name })).toBeEnabled();
+    expect(
+      screen.getByRole("button", { name: "filesPage.back" }),
+    ).toBeDisabled();
+    expect(
+      within(screen.getByRole("form", { name: key("newFolder") })).getByText(
+        "Server storage",
+      ),
+    ).toBeVisible();
+  });
+
+  it("keeps a valid server parent, preserves cancellation, and adds native folders at root", async () => {
+    const picked = { path: "C:/Documents", name: "Documents" };
+    const pickDirectory = vi
+      .fn()
+      .mockResolvedValueOnce(null)
+      .mockResolvedValueOnce(picked);
+    const props = renderWizard({ canPickDirectory: true, pickDirectory });
+    fireEvent.doubleClick(
+      screen.getByRole("radio", { name: folder.name }).closest('[role="row"]')!,
+    );
+    fireEvent.click(addFolderButton());
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: /filesPage.newFolderMenu.server/,
+      }),
+    );
+    const name = screen.getByRole("textbox", {
+      name: new RegExp(key("folderName")),
+    });
+    fireEvent.change(name, { target: { value: "Receipts" } });
+    expect(screen.getByRole("button", { name: folder.name })).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
+    expect(
+      within(screen.getByRole("form", { name: key("newFolder") })).getByText(
+        `Server storage / ${folder.name}`,
+      ),
+    ).toBeVisible();
+    await waitFor(() =>
+      expect(screen.queryByRole("menu", { hidden: true })).toBeNull(),
+    );
+    fireEvent.click(addFolderButton());
+    // JSDOM has no layout, so Floating UI hides the menu after positioning.
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: key("fromComputer"),
+        hidden: true,
+      }),
+    );
+    await waitFor(() => expect(pickDirectory).toHaveBeenCalledTimes(1));
+    expect(name).toHaveValue("Receipts");
+    expect(screen.getByRole("button", { name: folder.name })).toHaveAttribute(
+      "aria-current",
+      "location",
+    );
+    await waitFor(() => expect(addFolderButton()).toBeEnabled());
+    fireEvent.click(addFolderButton());
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: key("fromComputer"),
+        hidden: true,
+      }),
+    );
+    await returnToFoldersAfterAdding();
+    expect(screen.getByRole("radio", { name: picked.name })).toBeChecked();
+    expect(
+      screen.getByRole("button", { name: "filesPage.tree" }),
+    ).toHaveAttribute("aria-current", "location");
+    expect(
+      screen.getByRole("button", { name: "filesPage.back" }),
+    ).toBeDisabled();
+    expect(screen.queryByRole("form", { name: key("newFolder") })).toBeNull();
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.resolveTarget).toHaveBeenCalledWith({
+        kind: "local",
+        directory: picked,
+        name: null,
       }),
     );
   });
@@ -374,13 +712,21 @@ describe("ProcessingFolderWizard", () => {
       { target: { value: "2026" } },
     );
     fireEvent.click(screen.getByRole("radio", { name: "2026" }));
-    fireEvent.click(button("newFolder"));
+    fireEvent.click(addFolderButton());
     fireEvent.change(screen.getByLabelText(new RegExp(key("folderName"))), {
       target: { value: "Receipts" },
     });
+    fireEvent.click(button("changeLocation"));
+    fireEvent.click(
+      within(
+        await screen.findByRole("dialog", {
+          name: key("changeLocation"),
+          hidden: true,
+        }),
+      ).getByRole("button", { name: `${folder.name} / 2026`, hidden: true }),
+    );
+    addServerDraft();
     expect(props.resolveTarget).not.toHaveBeenCalled();
-    fireEvent.click(button("chooseProcessing"));
-    fireEvent.click(button("review"));
     fireEvent.click(button("enable"));
     await waitFor(() =>
       expect(props.resolveTarget).toHaveBeenCalledWith({
@@ -391,7 +737,7 @@ describe("ProcessingFolderWizard", () => {
     );
   });
 
-  it("limits rows to the chosen storage and blocks unavailable server selection", async () => {
+  it("keeps local folders and search usable while server rows and creation are unavailable", async () => {
     const local: FolderRecord = {
       ...folder,
       id: createFolderId(),
@@ -404,14 +750,17 @@ describe("ProcessingFolderWizard", () => {
       canPickDirectory: true,
       serverDisabledReason: "Sign in first",
     });
-    expect(screen.queryByRole("radio", { name: folder.name })).toBeNull();
-    fireEvent.click(screen.getByRole("radio", { name: local.name }));
-    expect(button("chooseProcessing")).toBeEnabled();
-    fireEvent.click(screen.getByRole("radio", { name: "Server storage" }));
-    expect(screen.queryByRole("radio", { name: local.name })).toBeNull();
     expect(screen.getByRole("radio", { name: folder.name })).toBeDisabled();
-    expect(button("newFolder")).toBeEnabled();
-    fireEvent.click(button("newFolder"));
+    expect(screen.getByRole("radio", { name: local.name })).toBeEnabled();
+    expect(
+      screen.getByRole("textbox", { name: key("searchFolders") }),
+    ).toBeEnabled();
+    fireEvent.click(
+      screen.getByRole("radio", { name: folder.name }).closest('[role="row"]')!,
+    );
+    expect(button("chooseProcessing")).toBeDisabled();
+    expect(addFolderButton()).toBeEnabled();
+    fireEvent.click(addFolderButton());
     // JSDOM has no layout, so Floating UI hides the menu after positioning.
     const menu = await screen.findByRole("menu", { hidden: true });
     expect(
@@ -422,44 +771,40 @@ describe("ProcessingFolderWizard", () => {
     ).toHaveAttribute("data-disabled", "true");
     expect(
       within(menu).getByRole("menuitem", {
-        name: "filesPage.newFolderMenu.addExisting",
+        name: key("fromComputer"),
         hidden: true,
       }),
     ).not.toHaveAttribute("data-disabled");
-    fireEvent.click(button("newFolder"));
-    fireEvent.click(
-      screen.getByRole("radio", { name: folder.name }).closest('[role="row"]')!,
-    );
-    expect(button("chooseProcessing")).toBeDisabled();
+    fireEvent.click(addFolderButton());
+    fireEvent.click(screen.getByRole("radio", { name: local.name }));
+    expect(button("chooseProcessing")).toBeEnabled();
   });
 
-  it("defers folder creation until review and retains processing choices when going back", async () => {
+  it("defers folder creation until processing is enabled and retains processing choices when going back", async () => {
     const props = renderWizard();
+    const progress = screen.getByRole("list", { name: key("progress") });
+    expect(within(progress).getAllByRole("listitem")).toHaveLength(2);
+    expect(within(progress).getByText(key("folder"))).toBeVisible();
+    expect(within(progress).getByText(key("processing"))).toBeVisible();
     createServerFolder();
+    expect(button("enable")).toBeEnabled();
+    expect(screen.queryByRole("button", { name: key("review") })).toBeNull();
     fireEvent.click(
       screen.getByRole("button", {
         name: "portal.policies.categories.classification.label",
       }),
     );
     expect(props.resolveTarget).not.toHaveBeenCalled();
-    fireEvent.click(button("review"));
-    expect(
-      screen.getByText("portal.policies.endpoints.classifyAndLabel"),
-    ).toBeVisible();
     fireEvent.click(
       screen.getByRole("button", { name: "filesPage.processingSetup.back" }),
     );
-    fireEvent.click(button("change"));
-    expect(screen.getByLabelText(new RegExp(key("folderName")))).toHaveValue(
-      "Invoices",
-    );
+    expect(screen.getByRole("radio", { name: "Receipts" })).toBeChecked();
     fireEvent.click(button("chooseProcessing"));
     expect(
       screen.getByRole("button", {
         name: "portal.policies.categories.classification.label",
       }),
     ).toHaveAttribute("aria-pressed", "true");
-    fireEvent.click(button("review"));
     fireEvent.click(button("enable"));
     await waitFor(() =>
       expect(props.save).toHaveBeenCalledWith(
@@ -475,7 +820,7 @@ describe("ProcessingFolderWizard", () => {
     );
     expect(props.resolveTarget).toHaveBeenCalledWith({
       kind: "server",
-      name: "Invoices",
+      name: "Receipts",
       parentId: null,
     });
   }, 20_000);
@@ -487,14 +832,12 @@ describe("ProcessingFolderWizard", () => {
       .mockResolvedValueOnce(undefined);
     const props = renderWizard({ save });
     createServerFolder();
-    fireEvent.click(button("review"));
     fireEvent.click(button("enable"));
     await screen.findByText("Server unavailable");
     fireEvent.click(button("change"));
     expect(screen.getByRole("radio", { name: folder.name })).toBeChecked();
     expect(screen.queryByLabelText(new RegExp(key("folderName")))).toBeNull();
     fireEvent.click(button("chooseProcessing"));
-    fireEvent.click(button("review"));
     fireEvent.click(button("enable"));
     await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
     expect(props.resolveTarget).toHaveBeenLastCalledWith({
@@ -521,7 +864,6 @@ describe("ProcessingFolderWizard", () => {
       screen.queryByRole("button", { name: key("chooseProcessing") }),
     ).toBeNull();
     expect(screen.queryByRole("button", { name: key("change") })).toBeNull();
-    fireEvent.click(button("review"));
     fireEvent.click(button("saveChanges"));
     await waitFor(() => expect(props.save).toHaveBeenCalledTimes(1));
   });
@@ -536,89 +878,159 @@ describe("ProcessingFolderWizard", () => {
       serverDisabledReason: "Sign in first",
       pickDirectory,
     });
-    fireEvent.click(button("newFolder"));
+    fireEvent.click(addFolderButton());
     fireEvent.click(
       await screen.findByRole("menuitem", {
-        name: "filesPage.newFolderMenu.addExisting",
+        name: key("fromComputer"),
       }),
     );
     await waitFor(() => expect(pickDirectory).toHaveBeenCalledTimes(1));
     expect(button("chooseProcessing")).toBeDisabled();
-    fireEvent.click(button("newFolder"));
+    fireEvent.click(addFolderButton());
     fireEvent.click(
       await screen.findByRole("menuitem", {
-        name: "filesPage.newFolderMenu.addExisting",
+        name: key("fromComputer"),
       }),
     );
-    expect(
-      await screen.findByRole("button", { name: "Invoices" }),
-    ).toHaveAttribute("title", "C:/Invoices");
+    await returnToFoldersAfterAdding();
+    await screen.findByRole("row", { selected: true });
+    expect(screen.queryByRole("button", { name: "Invoices" })).toBeNull();
     expect(screen.queryByText("C:/Invoices")).toBeNull();
+    expect(
+      within(screen.getByRole("row", { selected: true })).getByRole("radio", {
+        name: "Invoices",
+      }),
+    ).toBeChecked();
     expect(button("chooseProcessing")).toBeEnabled();
   });
 
-  it("switches to local storage when the library menu picks a directory from the server tab", async () => {
+  it("adds a selected native directory alongside server folders in the same list", async () => {
     const props = renderWizard({
       canPickDirectory: true,
       pickDirectory: vi
         .fn()
         .mockResolvedValue({ path: "C:/Documents", name: "Documents" }),
     });
-    expect(screen.getByRole("radio", { name: "Server storage" })).toBeChecked();
-    fireEvent.click(button("newFolder"));
+    expect(
+      screen.getByRole("button", { name: "filesPage.tree" }),
+    ).toBeVisible();
+    fireEvent.click(addFolderButton());
     fireEvent.click(
       await screen.findByRole("menuitem", {
-        name: "filesPage.newFolderMenu.addExisting",
+        name: key("fromComputer"),
       }),
     );
-    await waitFor(() =>
-      expect(
-        screen.getByRole("radio", { name: key("computer") }),
-      ).toBeChecked(),
-    );
-    expect(screen.getByRole("button", { name: "Documents" })).toHaveAttribute(
-      "title",
-      "C:/Documents",
-    );
+    await returnToFoldersAfterAdding();
+    expect(screen.getByRole("radio", { name: "Documents" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: folder.name })).toBeVisible();
+    expect(screen.queryByRole("button", { name: "Documents" })).toBeNull();
     expect(props.resolveTarget).not.toHaveBeenCalled();
     expect(button("chooseProcessing")).toBeEnabled();
   });
 
-  it("opens the server name panel from the local menu and updates its destination when a parent is selected", async () => {
-    const props = renderWizard({ canPickDirectory: true });
-    fireEvent.click(screen.getByRole("radio", { name: key("computer") }));
-    fireEvent.click(button("newFolder"));
+  it("shows a known nested native pick at root and preserves its selection when returning", async () => {
+    const parent: FolderRecord = {
+      ...folder,
+      name: "Documents",
+      kind: "local",
+      directory: "C:/Documents",
+    };
+    const child: FolderRecord = {
+      ...parent,
+      id: createFolderId(),
+      parentFolderId: parent.id,
+      name: "Invoices",
+      directory: "C:/Documents/Invoices",
+    };
+    renderWizard({
+      folders: [parent, child],
+      canPickDirectory: true,
+      pickDirectory: vi.fn().mockResolvedValue({
+        path: "c:\\DOCUMENTS\\Invoices\\",
+        name: "Invoices",
+      }),
+    });
+    fireEvent.click(addFolderButton());
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: key("fromComputer"),
+      }),
+    );
+    await returnToFoldersAfterAdding();
+    expect(screen.getByRole("radio", { name: child.name })).toBeChecked();
+    expect(
+      screen.getByRole("button", { name: "filesPage.tree" }),
+    ).toHaveAttribute("aria-current", "location");
+    expect(screen.queryByRole("button", { name: parent.name })).toBeNull();
+    fireEvent.click(screen.getByRole("radio", { name: parent.name }));
+    expect(screen.getByRole("radio", { name: child.name })).toBeVisible();
+    fireEvent.click(screen.getByRole("radio", { name: child.name }));
+    fireEvent.click(button("chooseProcessing"));
+    fireEvent.click(button("change"));
+    expect(screen.getByRole("radio", { name: child.name })).toBeChecked();
+  });
+
+  it("retains added folders when another folder is selected and allows editing a server draft", async () => {
+    const props = renderWizard({
+      canPickDirectory: true,
+      pickDirectory: vi
+        .fn()
+        .mockResolvedValue({ path: "C:/Documents", name: "Documents" }),
+    });
+    fireEvent.click(addFolderButton());
+    fireEvent.click(
+      await screen.findByRole("menuitem", { name: key("fromComputer") }),
+    );
+    await returnToFoldersAfterAdding();
+    await screen.findByRole("radio", { name: "Documents" });
+    fireEvent.click(addFolderButton());
     fireEvent.click(
       await screen.findByRole("menuitem", {
         name: /filesPage.newFolderMenu.server/,
       }),
     );
-    const panel = screen.getByRole("region", { name: key("newFolder") });
-    const name = within(panel).getByRole("textbox", {
-      name: new RegExp(key("folderName")),
-    });
-    expect(name).toHaveFocus();
-    expect(screen.getByRole("radio", { name: "Server storage" })).toBeChecked();
-    expect(within(panel).getByText("Server storage")).toBeVisible();
+    const name = screen.getByLabelText(new RegExp(key("folderName")));
     fireEvent.change(name, { target: { value: "Bad/name" } });
     expect(name).toHaveAttribute("aria-invalid", "true");
     expect(button("chooseProcessing")).toBeDisabled();
     fireEvent.change(name, { target: { value: "Receipts" } });
+    addServerDraft();
+    await returnToFoldersAfterAdding();
+    expect(screen.getByRole("radio", { name: "Receipts" })).toBeChecked();
+    fireEvent.click(screen.getByRole("radio", { name: "Documents" }));
+    expect(screen.getByRole("radio", { name: "Documents" })).toBeChecked();
+    expect(screen.getByRole("radio", { name: "Receipts" })).toBeVisible();
     fireEvent.click(screen.getByRole("radio", { name: folder.name }));
-    expect(
-      within(panel).getByText(`Server storage / ${folder.name}`),
-    ).toBeVisible();
-    expect(button("chooseProcessing")).toBeEnabled();
+    fireEvent.click(screen.getByRole("radio", { name: "Receipts" }));
+    fireEvent.click(button("editFolder"));
+    expect(screen.getByLabelText(new RegExp(key("folderName")))).toHaveValue(
+      "Receipts",
+    );
+    fireEvent.change(screen.getByLabelText(new RegExp(key("folderName"))), {
+      target: { value: "Expenses" },
+    });
+    fireEvent.click(button("saveFolder"));
+    expect(screen.getByRole("radio", { name: "Expenses" })).toBeChecked();
+    expect(screen.queryByRole("radio", { name: "Receipts" })).toBeNull();
     expect(props.resolveTarget).not.toHaveBeenCalled();
-    fireEvent.click(within(panel).getByRole("button", { name: "cancel" }));
-    expect(screen.queryByRole("region", { name: key("newFolder") })).toBeNull();
-    expect(screen.getByRole("radio", { name: folder.name })).toBeChecked();
   });
 
-  it("does not offer native folders in browser builds and explains unavailable storage", () => {
-    renderWizard({ serverDisabledReason: "Sign in first" });
-    expect(screen.queryByRole("radio", { name: key("computer") })).toBeNull();
-    expect(screen.getByText("Sign in first")).toBeVisible();
+  it("keeps unavailable actions disabled without a server warning or computer panel", () => {
+    renderWizard({
+      serverDisabledReason: "Sign in first",
+      downloadsProcessing: { count: 50, start: vi.fn() },
+    });
+    expect(
+      screen.queryByRole("button", { name: key("dropHeading") }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: key("downloadsAction") }),
+    ).toBeNull();
+    expect(
+      screen.queryByRole("columnheader", { name: "filesPage.column.modified" }),
+    ).toBeNull();
+    expect(addFolderButton()).toBeDisabled();
+    expect(screen.queryByText("Sign in first")).toBeNull();
     expect(button("chooseProcessing")).toBeDisabled();
   });
 
@@ -629,7 +1041,7 @@ describe("ProcessingFolderWizard", () => {
       onRetry: vi.fn(),
     });
     expect(screen.getByText("Could not load processing")).toBeVisible();
-    expect(button("review")).toBeDisabled();
+    expect(button("enable")).toBeDisabled();
   });
 
   it("shows every portal preset with its canonical name and a separate info button", () => {
@@ -685,7 +1097,6 @@ describe("ProcessingFolderWizard", () => {
       "portal.policies.categories.compliance.label",
     );
     expect(first).toHaveAttribute("aria-pressed", "true");
-    fireEvent.click(button("review"));
     expect(screen.queryByText("When it runs")).toBeNull();
     expect(screen.queryByText("Files and originals")).toBeNull();
     fireEvent.click(button("enable"));
@@ -722,7 +1133,7 @@ describe("ProcessingFolderWizard", () => {
         name: "portal.policies.categories.classification.label",
       }),
     ).toBeDisabled();
-    expect(button("review")).toBeEnabled();
+    expect(button("enable")).toBeEnabled();
   });
 
   it("keeps the dialog and preset focus when switching between saved and default presets", async () => {
@@ -756,7 +1167,6 @@ describe("ProcessingFolderWizard", () => {
       expect(preset).toHaveFocus();
       expect(preset).toHaveAttribute("aria-pressed", "true");
     }
-    fireEvent.click(button("review"));
     fireEvent.click(button("enable"));
     await waitFor(() =>
       expect(props.save).toHaveBeenCalledWith(

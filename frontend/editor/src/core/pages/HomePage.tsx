@@ -60,6 +60,8 @@ import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
+import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
@@ -121,6 +123,7 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { config } = useAppConfig();
+  const processingFolderCreation = useProcessingFolderCreation();
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
@@ -128,6 +131,14 @@ export default function HomePage() {
   const isProgrammaticScroll = useRef(false);
   const otherApp = useOtherAppSwitch();
   const location = useLocation();
+  useEffect(() => {
+    if (
+      processingFolderCreation.open &&
+      consumeProcessingFolderCreationRequest()
+    ) {
+      processingFolderCreation.open();
+    }
+  }, [location.key, processingFolderCreation.open]);
   // The user's preference, and the only thing that decides it: reading mode forces
   // the sidebar shut without writing, so leaving reading restores this.
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
@@ -471,6 +482,7 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
+      {processingFolderCreation.dialog}
       <QuickNavHostBridge
         portalAccess={Boolean(otherApp)}
         requestNavigation={requestNavigation}
@@ -481,6 +493,7 @@ export default function HomePage() {
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}
+        onCreateProcessingFolder={processingFolderCreation.open}
         toolReasons={quickNavToolReasons}
       />
       <FilesPageProvider>

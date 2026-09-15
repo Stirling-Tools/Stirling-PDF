@@ -13,6 +13,7 @@ interface FolderListRowProps extends HTMLAttributes<HTMLDivElement> {
   status?: ReactNode;
   leading?: ReactNode;
   trailing?: ReactNode;
+  showModified?: boolean;
 }
 
 /** Library row presentation; the caller supplies selection, navigation, or management controls. */
@@ -23,6 +24,7 @@ export function FolderListRow({
   status,
   leading,
   trailing,
+  showModified = true,
   className = "",
   ...props
 }: FolderListRowProps) {
@@ -76,9 +78,11 @@ export function FolderListRow({
           ? "-"
           : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
       </span>
-      <span role="gridcell">
-        {getFileDate({ lastModified: folder.updatedAt })}
-      </span>
+      {showModified && (
+        <span role="gridcell">
+          {getFileDate({ lastModified: folder.updatedAt })}
+        </span>
+      )}
       <span role="gridcell">{trailing}</span>
     </div>
   );

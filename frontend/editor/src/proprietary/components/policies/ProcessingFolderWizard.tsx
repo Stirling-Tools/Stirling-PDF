@@ -3,11 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Modal } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
 import { folderKind, type FolderRecord } from "@app/types/folder";
-import {
-  humanizeEndpoint,
-  type PolicySetupResult,
-  type CatalogueEntry,
-} from "@app/policies/catalog";
+import type { PolicySetupResult, CatalogueEntry } from "@app/policies/catalog";
 import {
   PolicyRoutingDestinations,
   type RoutingDestination,
@@ -33,7 +29,7 @@ import "@app/components/policies/FolderProcessingSetup.css";
 
 export interface ProcessingFolderWizardProps extends Omit<
   ProcessingFolderPickerProps,
-  "target" | "onChange" | "active"
+  "target" | "onChange" | "onFolderAdded" | "active"
 > {
   /** An existing-folder entry skips destination selection. */
   initialFolder?: FolderRecord;
@@ -52,7 +48,7 @@ export interface ProcessingFolderWizardProps extends Omit<
   onRetry?: () => void;
 }
 
-type Stage = "folder" | "processing" | "review";
+type Stage = "folder" | "processing";
 /** Both entry flows share the same mounted configuration, including when revisiting earlier steps. */
 export function ProcessingFolderWizard({
   initialFolder,
@@ -67,6 +63,7 @@ export function ProcessingFolderWizard({
   serverDisabledReason,
   serverLabel,
   pickDirectory,
+  downloadsProcessing,
   recordFor,
   resolveTarget,
   save,
@@ -146,8 +143,8 @@ export function ProcessingFolderWizard({
       (!destinationsLoading && !destinationsError)),
   );
   const stages: Stage[] = initialFolder
-    ? ["processing", "review"]
-    : ["folder", "processing", "review"];
+    ? ["processing"]
+    : ["folder", "processing"];
 
   async function submit(_entry: unknown, result: PolicySetupResult) {
     if (!target || !canContinue)
@@ -164,8 +161,7 @@ export function ProcessingFolderWizard({
   }
 
   function back() {
-    if (stage === "review") setStage("processing");
-    else if (stage === "processing" && !initialFolder) setStage("folder");
+    if (stage === "processing" && !initialFolder) setStage("folder");
     else onClose();
   }
 
@@ -200,7 +196,7 @@ export function ProcessingFolderWizard({
         </>
       )}
     >
-      {({ content, steps, submit: confirm, submitting, canSubmit, error }) => (
+      {({ content, submit: confirm, submitting, canSubmit, error }) => (
         <Modal
           open
           width="xl"
@@ -226,28 +222,23 @@ export function ProcessingFolderWizard({
               </Button>
               <Button
                 onClick={
-                  stage === "review"
-                    ? confirm
-                    : () =>
-                        setStage(stage === "folder" ? "processing" : "review")
+                  stage === "folder" ? () => setStage("processing") : confirm
                 }
                 disabled={!canContinue || (stage !== "folder" && !canSubmit)}
                 loading={submitting}
                 rightSection={
                   <Icon
-                    name={stage === "review" ? "check" : "arrow-right"}
+                    name={stage === "folder" ? "arrow-right" : "check"}
                     size={16}
                   />
                 }
               >
                 {t(
-                  stage === "review"
-                    ? existing
+                  stage === "folder"
+                    ? "processingFolders.setup.chooseProcessing"
+                    : existing
                       ? "processingFolders.setup.saveChanges"
-                      : "processingFolders.setup.enable"
-                    : stage === "folder"
-                      ? "processingFolders.setup.chooseProcessing"
-                      : "processingFolders.setup.review",
+                      : "processingFolders.setup.enable",
                 )}
               </Button>
             </div>
@@ -286,10 +277,12 @@ export function ProcessingFolderWizard({
           )}
           {stage !== "folder" && target && (
             <div className="folder-setup__destination">
-              <Icon name={local ? "monitor" : "cloud"} size={22} />
+              <Icon name={local ? "monitor" : "cloud"} size={16} />
               <div>
-                <strong>{selectedName}</strong>
-                <span className="folder-setup__path">{path}</span>
+                <strong title={selectedName}>{selectedName}</strong>
+                <span className="folder-setup__path" title={path}>
+                  {path}
+                </span>
               </div>
               {!initialFolder && (
                 <Button
@@ -324,12 +317,16 @@ export function ProcessingFolderWizard({
               serverLabel={serverLabel}
               target={target}
               onChange={setTarget}
+              onFolderAdded={() => setStage("processing")}
+              onClose={onClose}
               pickDirectory={pickDirectory}
+              downloadsProcessing={downloadsProcessing}
             />
           </div>
           <div
             className="folder-setup__processing-stage"
             hidden={stage !== "processing"}
+            inert={submitting}
           >
             <div className="folder-setup__processing">
               {!existing && (
@@ -384,21 +381,6 @@ export function ProcessingFolderWizard({
               </div>
             </div>
           </div>
-          {stage === "review" && (
-            <div className="folder-setup__review">
-              <h2 className="folder-setup__heading">
-                {t(entry.category.label)}
-              </h2>
-              <ol className="folder-setup__review-steps">
-                {steps.map((step, index) => (
-                  <li key={`${index}-${step.operation}`}>
-                    <span>{index + 1}</span>
-                    {humanizeEndpoint(step.operation, t)}
-                  </li>
-                ))}
-              </ol>
-            </div>
-          )}
           {existing && (
             <Banner
               tone="warning"

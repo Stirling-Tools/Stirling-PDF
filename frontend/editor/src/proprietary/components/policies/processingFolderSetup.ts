@@ -15,11 +15,11 @@ import {
 import { policyStepFromWire, policyStepToWire } from "@app/policies/operations";
 import type { PipelineStep } from "@app/policies/catalog";
 
-/** New folders are materialised only when the user confirms the review. */
+/** New folders are materialised only when processing is enabled; native directories mount at the root. */
 export type ProcessingFolderTarget =
   | { kind: "existing"; folder: FolderRecord }
   | { kind: "server"; name: string; parentId: FolderId | null }
-  | { kind: "local"; directory: PickedDirectory; name: string | null };
+  | { kind: "local"; directory: PickedDirectory; name: null };
 
 /** Native selections of an existing mount must surface its saved processing before confirmation. */
 export function processingFolderForTarget(
@@ -27,7 +27,7 @@ export function processingFolderForTarget(
   folders: FolderRecord[],
 ): FolderRecord | undefined {
   if (target?.kind === "existing") return target.folder;
-  if (target?.kind !== "local" || target.name !== null) return undefined;
+  if (target?.kind !== "local") return undefined;
   const directory = directoryKey(target.directory.path);
   return folders.find(
     (folder) =>

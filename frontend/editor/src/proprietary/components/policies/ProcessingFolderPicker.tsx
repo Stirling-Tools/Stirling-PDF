@@ -1,35 +1,65 @@
 import { useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ActionIcon,
-  Banner,
-  Button,
-  FormField,
-  Input,
-  SegmentedControl,
-} from "@app/ui";
+import { ActionIcon, Banner, Button, FormField, Input } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import { FolderListRow } from "@app/components/filesPage/FolderListRow";
 import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
 import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
 import {
+  createFolderId,
+  diskFolderId,
   folderKind,
   type FolderId,
-  type FolderKind,
   type FolderRecord,
 } from "@app/types/folder";
 import type { PickedDirectory } from "@app/services/directoryPicker";
+import {
+  canDropDirectory,
+  directoryFromDrop,
+} from "@app/services/directoryDrop";
 import { directoryKey } from "@app/services/localFolderStorage";
 import { getFolderChain } from "@app/utils/folderPath";
 import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 import {
   processingFolderPath,
+  processingFolderForTarget,
   isValidProcessingFolderName,
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
 import { useFolderPickerBack } from "@app/components/policies/useFolderPickerBack";
+import { ProcessingFolderLocationPicker } from "@app/components/policies/ProcessingFolderLocationPicker";
+import { ProcessingFolderActionCard } from "@app/components/policies/ProcessingFolderActionCard";
+import type { DownloadsProcessing } from "@app/hooks/useDownloadsProcessing";
 import "@app/components/filesPage/FilesPage.css";
+
+type AddedFolder = {
+  folder: FolderRecord;
+  target: Exclude<ProcessingFolderTarget, { kind: "existing" }>;
+};
+
+function addedFolder(
+  target: AddedFolder["target"],
+  id?: FolderId,
+): AddedFolder {
+  const local = target.kind === "local";
+  return {
+    target,
+    folder: {
+      id:
+        id ??
+        (local
+          ? diskFolderId(directoryKey(target.directory.path))
+          : createFolderId()),
+      kind: target.kind,
+      name: local ? target.directory.name : target.name,
+      directory: local ? target.directory.path : undefined,
+      parentFolderId: local ? null : target.parentId,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    },
+  };
+}
 
 export interface ProcessingFolderPickerProps {
   active: boolean;
@@ -40,7 +70,10 @@ export interface ProcessingFolderPickerProps {
   serverLabel: string;
   target: ProcessingFolderTarget | null;
   onChange: (target: ProcessingFolderTarget | null) => void;
+  onFolderAdded: () => void;
+  onClose: () => void;
   pickDirectory: () => Promise<PickedDirectory | null>;
+  downloadsProcessing?: DownloadsProcessing;
 }
 
 /** Chooses a destination without creating or mounting anything on cancellation. */
@@ -53,50 +86,48 @@ export function ProcessingFolderPicker({
   serverLabel,
   target,
   onChange,
+  onFolderAdded,
+  onClose,
   pickDirectory,
+  downloadsProcessing,
 }: ProcessingFolderPickerProps) {
   const { t } = useTranslation();
   const selectionName = useId();
-  const targetLocation =
-    target?.kind === "existing" ? folderKind(target.folder) : target?.kind;
-  const [location, setLocation] = useState<"server" | "local">(
-    targetLocation === "local" ||
-      (!target && canPickDirectory && serverDisabledReason)
-      ? "local"
-      : "server",
+  const selectedFolder = processingFolderForTarget(target, folders);
+  // Draft rows survive selection changes without persisting folders before confirmation.
+  const [added, setAdded] = useState<AddedFolder[]>(() =>
+    target && target.kind !== "existing"
+      ? [
+          selectedFolder
+            ? { folder: selectedFolder, target }
+            : addedFolder(target),
+        ]
+      : [],
   );
-  const [creating, setCreating] = useState(
-    target?.kind === "server" ||
-      (target?.kind === "local" && target.name !== null),
-  );
-  const [name, setName] = useState(
-    target?.kind === "server" || target?.kind === "local"
-      ? (target.name ?? "")
-      : "",
-  );
+  const pendingSelection = added.find((item) => item.target === target);
+  const [creating, setCreating] = useState(false);
+  const [name, setName] = useState("");
+  const [editingId, setEditingId] = useState<FolderId | undefined>();
+  const previousTarget = useRef(target);
   const [currentId, setCurrentId] = useState<FolderId | null>(
-    target?.kind === "existing"
-      ? target.folder.parentFolderId
-      : target?.kind === "server"
-        ? target.parentId
-        : null,
+    target?.kind === "local"
+      ? null
+      : selectedFolder
+        ? selectedFolder.parentFolderId
+        : target?.kind === "server"
+          ? target.parentId
+          : null,
   );
   const [parentId, setParentId] = useState<FolderId | null>(
     target?.kind === "server" ? target.parentId : null,
   );
-  const [directory, setDirectory] = useState<PickedDirectory | null>(
-    target?.kind === "local" ? target.directory : null,
-  );
   const [search, setSearch] = useState("");
-  const visits = useRef<
-    { id: FolderId | null; search: string; location: "server" | "local" }[]
-  >([]);
+  const visits = useRef<{ id: FolderId | null; search: string }[]>([]);
   const [hasHistory, setHasHistory] = useState(false);
   const goBack = useFolderPickerBack(active && hasHistory, () => {
     const previous = visits.current.pop();
     if (previous) {
-      setLocation(previous.location);
-      showFolder(previous.id, previous.location);
+      showFolder(previous.id);
       setSearch(previous.search);
     }
     const remaining = visits.current.length > 0;
@@ -105,96 +136,82 @@ export function ProcessingFolderPicker({
   });
   const [picking, setPicking] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const available = folders.filter((folder) => folderKind(folder) === location);
+  const available = [
+    ...folders.filter((folder) => folderKind(folder) !== "virtual"),
+    ...added
+      .filter((item) => !processingFolderForTarget(item.target, folders))
+      .map((item) => item.folder),
+  ];
+  const hasFolders = available.length > 0;
+  const showLibrary = hasFolders || !canPickDirectory || creating;
+  const emptyServer = !canPickDirectory && !hasFolders;
+  const offerServerCreation = canPickDirectory && !serverDisabledReason;
+  const addedLocalIds = new Set(
+    added
+      .filter((item) => item.target.kind === "local")
+      .map(
+        (item) =>
+          processingFolderForTarget(item.target, folders)?.id ?? item.folder.id,
+      ),
+  );
   const byId = new Map(available.map((folder) => [folder.id, folder]));
-  const blocked = location === "server" && Boolean(serverDisabledReason);
-  const rootLabel =
-    location === "server" ? serverLabel : t("processingFolders.setup.computer");
   const query = search.trim().toLocaleLowerCase();
   const visible = available
     .filter((folder) =>
       query
         ? folder.name.toLocaleLowerCase().includes(query)
         : currentId === null
-          ? !folder.parentFolderId || !byId.has(folder.parentFolderId)
+          ? !folder.parentFolderId ||
+            !byId.has(folder.parentFolderId) ||
+            addedLocalIds.has(folder.id)
           : folder.parentFolderId === currentId,
     )
     .sort((a, b) => a.name.localeCompare(b.name));
   const trail = getFolderChain(currentId, byId);
-  const selectedId = creating
-    ? location === "server"
-      ? parentId
-      : directory &&
-        available.find(
-          (folder) =>
-            folder.directory !== undefined &&
-            directoryKey(folder.directory) === directoryKey(directory.path),
-        )?.id
-    : target?.kind === "existing"
-      ? target.folder.id
-      : null;
+  const selectedId = selectedFolder?.id ?? pendingSelection?.folder.id ?? null;
   const parent = parentId ? byId.get(parentId) : undefined;
-  const creationParentId = selectedId ?? currentId;
-  const newFolderBlockedReason =
-    blocked && (creationParentId !== null || !canPickDirectory)
-      ? serverDisabledReason
-      : null;
-  const parentPath =
-    location === "local"
-      ? directory?.path
-      : parent
-        ? `${serverLabel} / ${processingFolderPath(parent, folders)}`
-        : serverLabel;
+  const creationParentId = currentId;
+  const newFolderBlockedReason = canPickDirectory ? null : serverDisabledReason;
+  const parentPath = parent
+    ? `${serverLabel} / ${processingFolderPath(parent, folders)}`
+    : serverLabel;
 
-  function updateDraft(
-    nextName = name,
-    nextParent = parentId,
-    nextDirectory = directory,
-    nextLocation = location,
-  ) {
-    onChange(
-      nextLocation === "server"
-        ? { kind: "server", name: nextName, parentId: nextParent }
-        : nextDirectory
-          ? { kind: "local", directory: nextDirectory, name: nextName }
-          : null,
-    );
+  function folderDisabledReason(folder: FolderRecord) {
+    if (folderKind(folder) === "server") return serverDisabledReason;
+    return null;
   }
 
   function select(folder: FolderRecord) {
-    if (blocked) return;
-    if (creating) {
-      setParentId(folder.id);
-      const picked = folder.directory
-        ? { path: folder.directory, name: folder.name }
-        : null;
-      setDirectory(picked);
-      updateDraft(name, folder.id, picked);
-    } else {
-      setDirectory(null);
-      onChange({ kind: "existing", folder });
-    }
+    if (folderDisabledReason(folder)) return;
+    setCreating(false);
+    onChange(
+      added.find(
+        (item) =>
+          (processingFolderForTarget(item.target, folders)?.id ??
+            item.folder.id) === folder.id,
+      )?.target ?? {
+        kind: "existing",
+        folder,
+      },
+    );
   }
 
-  function showFolder(id: FolderId | null, nextLocation = location) {
+  function showFolder(id: FolderId | null) {
+    const folder = folders.find((item) => item.id === id);
+    if (folder && folderDisabledReason(folder)) return;
     setCurrentId(id);
     setSearch("");
-    const folder = folders.find((item) => item.id === id);
-    const picked = folder?.directory
-      ? { path: folder.directory, name: folder.name }
-      : null;
-    setParentId(id);
-    setDirectory(picked);
-    if (creating) updateDraft(name, id, picked, nextLocation);
-    else onChange(folder ? { kind: "existing", folder } : null);
+    if (folder) select(folder);
   }
 
   function remember() {
-    visits.current.push({ id: currentId, search, location });
+    visits.current.push({ id: currentId, search });
     setHasHistory(true);
   }
 
   function navigate(folder: FolderRecord | null) {
+    if (folder && folderDisabledReason(folder)) return;
+    if (folder && !folders.some((item) => item.id === folder.id)) return;
     if ((folder?.id ?? null) === currentId && !search) return;
     remember();
     showFolder(folder?.id ?? null);
@@ -202,61 +219,69 @@ export function ProcessingFolderPicker({
 
   function cancelCreation() {
     setCreating(false);
-    onChange(
-      location === "local" && directory
-        ? { kind: "local", directory, name: null }
-        : parent
-          ? { kind: "existing", folder: parent }
-          : null,
-    );
+    onChange(previousTarget.current);
   }
 
-  function startCreation(requestedParent?: FolderId | null, kind?: FolderKind) {
-    const selected =
-      target?.kind === "existing"
-        ? target.folder
-        : currentId
-          ? byId.get(currentId)
-          : undefined;
-    const nextLocation = kind === "server" ? "server" : location;
-    const nextParent =
-      requestedParent === undefined ? (selected?.id ?? null) : requestedParent;
-    const nextDirectory =
-      nextLocation === "local"
-        ? selected?.directory
-          ? { path: selected.directory, name: selected.name }
-          : directory
-        : null;
-    if (nextLocation !== location) {
-      remember();
-      setLocation(nextLocation);
+  function startCreation(requestedParent = creationParentId) {
+    const requested = requestedParent ? byId.get(requestedParent) : undefined;
+    const current = currentId ? byId.get(currentId) : undefined;
+    const invalidLocation =
+      (requested && folderKind(requested) !== "server") ||
+      (current && folderKind(current) !== "server");
+    const nextParent = !invalidLocation && requested ? requested.id : null;
+    if (invalidLocation) {
       setCurrentId(null);
       setSearch("");
     }
+    visits.current = [];
+    setHasHistory(false);
     setCreating(true);
+    setEditingId(undefined);
+    setName("");
     setParentId(nextParent);
-    setDirectory(nextDirectory);
     setError(null);
-    updateDraft(name, nextParent, nextDirectory, nextLocation);
+    if (!creating) previousTarget.current = target;
+    onChange(null);
   }
 
-  async function browse(asParent = false) {
+  function addTarget(nextTarget: AddedFolder["target"], id?: FolderId) {
+    const existing = processingFolderForTarget(nextTarget, folders);
+    const item = existing
+      ? { folder: existing, target: nextTarget }
+      : addedFolder(nextTarget, id);
+    setAdded((current) => [
+      ...current.filter((entry) => entry.folder.id !== item.folder.id),
+      item,
+    ]);
+    visits.current = [];
+    setHasHistory(false);
+    setCurrentId(nextTarget.kind === "server" ? nextTarget.parentId : null);
+    setSearch("");
+    setCreating(false);
+    onChange(nextTarget);
+    if (!id) onFolderAdded();
+  }
+
+  function editFolder(item: AddedFolder) {
+    if (item.target.kind !== "server") return;
+    previousTarget.current = target;
+    setName(item.target.name);
+    setParentId(item.target.parentId);
+    setEditingId(item.folder.id);
+    setCreating(true);
+    onChange(null);
+  }
+
+  async function browse() {
     setPicking(true);
     setError(null);
     try {
       const picked = await pickDirectory();
       if (picked) {
-        if (location !== "local") remember();
-        setLocation("local");
-        setCurrentId(null);
-        setParentId(null);
-        setSearch("");
-        setCreating(asParent);
-        setDirectory(picked);
-        onChange({
+        addTarget({
           kind: "local",
           directory: picked,
-          name: asParent ? name : null,
+          name: null,
         });
       }
     } catch (cause) {
@@ -266,270 +291,363 @@ export function ProcessingFolderPicker({
     }
   }
 
+  async function dropDirectory(dataTransfer: DataTransfer) {
+    setPicking(true);
+    setError(null);
+    try {
+      const directory = await directoryFromDrop(dataTransfer);
+      if (directory) {
+        addTarget({ kind: "local", directory, name: null });
+      } else {
+        setError(t("processingFolders.setup.dropError"));
+      }
+    } catch {
+      setError(t("processingFolders.setup.dropError"));
+    } finally {
+      setPicking(false);
+    }
+  }
+
   return (
     <div className="folder-setup__picker">
-      {canPickDirectory && (
-        <SegmentedControl
-          ariaLabel={t("processingFolders.setup.location")}
-          value={location}
-          onChange={(value) => {
-            remember();
-            setLocation(value);
-            setCurrentId(null);
-            setParentId(null);
-            setDirectory(null);
-            setSearch("");
-            setCreating(false);
-            setError(null);
-            onChange(null);
-          }}
-          options={[
-            {
-              value: "server",
-              label: (
-                <span className="folder-setup__inline">
-                  <Icon name="cloud" size={16} />
-                  {serverLabel}
-                </span>
-              ),
-            },
-            {
-              value: "local",
-              label: (
-                <span className="folder-setup__inline">
-                  <Icon name="monitor" size={16} />
-                  {t("processingFolders.setup.computer")}
-                </span>
-              ),
-            },
-          ]}
-        />
-      )}
-      {blocked && <Banner tone="warning" description={serverDisabledReason} />}
-      <div className="folder-setup__folder-toolbar">
-        <Input
-          aria-label={t("processingFolders.setup.searchFolders")}
-          placeholder={t("processingFolders.setup.searchFolders")}
-          leadingIcon={<Icon name="search" size={18} />}
-          value={search}
-          disabled={blocked}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        {location === "local" && directory && !creating && (
-          <Button
-            title={directory?.path}
-            variant="secondary"
-            onClick={() => void browse()}
-            loading={picking}
-            leftSection={<Icon name="folder-open" size={18} />}
-          >
-            {directory.name}
-          </Button>
-        )}
-        <NewFolderButton
-          label={t("processingFolders.setup.newFolder")}
-          currentFolderId={creationParentId}
-          canAddLocalFolder={canPickDirectory}
-          disabledReason={
-            picking ? t("loading", "Loading...") : newFolderBlockedReason
-          }
-          serverDisabledReason={serverDisabledReason}
-          onAddLocalFolder={() => void browse()}
-          onOpenDialog={startCreation}
-          returnFocus={!creating}
-        />
-      </div>
-      {creating && (
-        <section
-          className="folder-setup__new-folder"
-          aria-label={t("processingFolders.setup.newFolder")}
-        >
-          <div className="folder-setup__new-folder-icon">
-            <Icon name="folder" size={22} />
-          </div>
-          <FormField
-            label={t("processingFolders.setup.folderName")}
-            required
-            error={
-              name.trim() && !isValidProcessingFolderName(name)
-                ? t("processingFolders.setup.invalidName")
-                : undefined
-            }
-          >
-            <Input
-              autoFocus
-              value={name}
-              maxLength={120}
-              disabled={blocked}
-              placeholder={t("processingFolders.setup.namePlaceholder")}
-              onChange={(event) => {
-                setName(event.target.value);
-                updateDraft(event.target.value);
-              }}
-            />
-          </FormField>
-          <div className="folder-setup__new-folder-location">
-            <span>{t("processingFolders.setup.createIn")}</span>
-            {parentPath ? (
-              <div title={parentPath}>
-                <Icon
-                  name={location === "local" ? "monitor" : "cloud"}
-                  size={18}
-                />
-                <span>{parentPath}</span>
-              </div>
-            ) : (
-              <Button
-                variant="tertiary"
-                onClick={() => void browse(true)}
-                loading={picking}
-              >
-                {t("processingFolders.setup.chooseParent")}
-              </Button>
-            )}
-          </div>
-          <ActionIcon
-            variant="tertiary"
-            aria-label={t("cancel", "Cancel")}
-            onClick={cancelCreation}
-          >
-            <Icon name="x" size={18} />
-          </ActionIcon>
-        </section>
-      )}
-      <div className="folder-setup__folder-navigation">
-        <ActionIcon
-          aria-label={t("filesPage.back", "Back")}
-          variant="tertiary"
-          disabled={!hasHistory || picking}
-          onClick={goBack}
-        >
-          <Icon name="arrow-left" size={18} />
-        </ActionIcon>
-        <nav
-          className="files-page-breadcrumbs folder-setup__breadcrumbs"
-          aria-label={t("processingFolders.setup.location")}
-        >
-          {[{ id: null, name: rootLabel }, ...trail].map((item, index) => (
-            <span key={item.id ?? "root"} className="folder-setup__inline">
-              {index > 0 && <Icon name="chevron-right" size={14} />}
-              <button
-                type="button"
-                className="files-page-breadcrumb"
-                disabled={blocked}
-                aria-current={item.id === currentId ? "location" : undefined}
-                onClick={() =>
-                  navigate(item.id ? (byId.get(item.id) ?? null) : null)
-                }
-              >
-                {item.name}
-              </button>
-            </span>
-          ))}
-        </nav>
-      </div>
-      <div className="folder-setup__folder-scroll">
-        <div
-          className="files-page-list folder-setup__folder-list"
-          role="grid"
-          aria-label={t("processingFolders.setup.selectFolder")}
-        >
-          <div className="files-page-list-row is-header" role="row">
-            <span
-              role="columnheader"
-              aria-label={t("processingFolders.setup.selectFolder")}
-            />
-            <span role="columnheader">
-              {t("filesPage.column.name", "Name")}
-            </span>
-            <span role="columnheader">
-              {t("filesPage.column.type", "Type")}
-            </span>
-            <span role="columnheader" />
-            <span role="columnheader">
-              {t("filesPage.column.modified", "Modified")}
-            </span>
-            <span role="columnheader" />
-          </div>
-          {visible.map((folder) => {
-            const processing = recordFor(folder);
-            return (
-              <FolderListRow
-                key={folder.id}
-                folder={folder}
-                status={
-                  processing && (
-                    <FolderProcessingTag enabled={processing.enabled} />
-                  )
-                }
-                parentPath={
-                  query && folder.parentFolderId
-                    ? processingFolderPath(
-                        byId.get(folder.parentFolderId) ?? folder,
-                        folders,
-                      )
+      <div
+        className={`folder-setup__folder-layout${canPickDirectory && showLibrary ? " folder-setup__folder-layout--computer" : ""}`}
+      >
+        {canPickDirectory && (
+          <aside className="folder-setup__computer">
+            <ProcessingFolderActionCard
+              title={t(
+                canDropDirectory
+                  ? "processingFolders.setup.dropHeading"
+                  : "processingFolders.setup.computerHeading",
+              )}
+              description={t(
+                canDropDirectory
+                  ? "processingFolders.setup.dropDescription"
+                  : "processingFolders.setup.computerDescription",
+              )}
+              onDrop={
+                canDropDirectory
+                  ? (dataTransfer) => void dropDirectory(dataTransfer)
+                  : undefined
+              }
+              disabled={picking || !active}
+              onChoose={() => void browse()}
+              footer={
+                offerServerCreation
+                  ? {
+                      label: t("processingFolders.setup.serverAction"),
+                      onClick: () => {
+                        if (!creating) startCreation(null);
+                      },
+                    }
+                  : downloadsProcessing
+                    ? {
+                        label: t("processingFolders.setup.downloadsAction"),
+                        onClick: downloadsProcessing.start,
+                      }
                     : undefined
-                }
-                aria-selected={folder.id === selectedId}
-                aria-disabled={blocked || undefined}
-                className={folder.id === selectedId ? "is-selected" : ""}
-                tabIndex={blocked ? -1 : 0}
-                onClick={() => select(folder)}
-                onDoubleClick={() => {
-                  if (!blocked) navigate(folder);
-                }}
-                onKeyDown={(event) => {
-                  if (event.target !== event.currentTarget || blocked) return;
-                  if (event.key === " " || event.key === "Enter") {
-                    event.preventDefault();
-                    select(folder);
+              }
+            />
+          </aside>
+        )}
+        {showLibrary && (
+          <div className="folder-setup__library">
+            {hasFolders && (
+              <div className="folder-setup__folder-toolbar">
+                <Input
+                  aria-label={t("processingFolders.setup.searchFolders")}
+                  placeholder={t("processingFolders.setup.searchFolders")}
+                  leadingIcon={<Icon name="search" size={18} />}
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                />
+                <NewFolderButton
+                  label={t("processingFolders.setup.addFolder")}
+                  localFolderLabel={t("processingFolders.setup.fromComputer")}
+                  currentFolderId={creationParentId}
+                  allowKindSelection
+                  canAddLocalFolder={canPickDirectory}
+                  disabledReason={
+                    picking
+                      ? t("loading", "Loading...")
+                      : newFolderBlockedReason
+                  }
+                  serverDisabledReason={serverDisabledReason}
+                  onAddLocalFolder={() => void browse()}
+                  onOpenDialog={startCreation}
+                  returnFocus={!creating}
+                />
+              </div>
+            )}
+            {(creating || emptyServer) && (
+              <form
+                className="folder-setup__new-folder"
+                aria-label={t("processingFolders.setup.newFolder")}
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  if (
+                    isValidProcessingFolderName(name) &&
+                    !serverDisabledReason
+                  ) {
+                    addTarget(
+                      { kind: "server", name: name.trim(), parentId },
+                      editingId,
+                    );
                   }
                 }}
-                leading={
-                  <input
-                    type="radio"
-                    name={selectionName}
-                    aria-label={folder.name}
-                    checked={folder.id === selectedId}
-                    disabled={blocked}
-                    tabIndex={-1}
-                    onChange={() => select(folder)}
+              >
+                <div
+                  className="folder-setup__new-folder-icon"
+                  aria-hidden="true"
+                >
+                  <Icon name="folder" size={22} />
+                </div>
+                <FormField
+                  label={t("processingFolders.setup.folderName")}
+                  required
+                  error={
+                    name.trim() && !isValidProcessingFolderName(name)
+                      ? t("processingFolders.setup.invalidName")
+                      : undefined
+                  }
+                >
+                  <Input
+                    autoFocus={active}
+                    data-autofocus={active || undefined}
+                    value={name}
+                    maxLength={120}
+                    disabled={Boolean(serverDisabledReason)}
+                    placeholder={t("processingFolders.setup.namePlaceholder")}
+                    onChange={(event) => setName(event.target.value)}
                   />
-                }
-                trailing={
-                  (location === "server" ||
-                    available.some(
-                      (child) => child.parentFolderId === folder.id,
-                    )) && (
-                    <ActionIcon
-                      aria-label={t("processingFolders.setup.openFolder", {
-                        name: folder.name,
-                      })}
-                      variant="tertiary"
-                      size="sm"
-                      disabled={blocked}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        navigate(folder);
-                      }}
-                      onDoubleClick={(event) => event.stopPropagation()}
+                </FormField>
+                <div className="folder-setup__new-folder-location">
+                  <span>{t("processingFolders.setup.createIn")}</span>
+                  <div title={parentPath}>
+                    <Icon name="cloud" size={18} />
+                    <span>{parentPath}</span>
+                    <ProcessingFolderLocationPicker
+                      folders={folders}
+                      parentId={parentId}
+                      serverLabel={serverLabel}
+                      onChange={setParentId}
+                    />
+                    <Button
+                      type="submit"
+                      disabled={
+                        !isValidProcessingFolderName(name) ||
+                        Boolean(serverDisabledReason)
+                      }
                     >
-                      <Icon name="chevron-right" size={18} />
-                    </ActionIcon>
-                  )
-                }
-              />
-            );
-          })}
-        </div>
-        {visible.length === 0 && (
-          <p className="folder-setup__empty" role="status">
-            {t(
-              query
-                ? "processingFolders.setup.noMatchingFolders"
-                : "processingFolders.setup.noFolders",
+                      {t(
+                        editingId
+                          ? "processingFolders.setup.saveFolder"
+                          : "processingFolders.setup.addFolder",
+                      )}
+                    </Button>
+                  </div>
+                </div>
+                <ActionIcon
+                  variant="tertiary"
+                  aria-label={t("cancel", "Cancel")}
+                  onClick={emptyServer ? onClose : cancelCreation}
+                >
+                  <Icon name="x" size={18} />
+                </ActionIcon>
+              </form>
             )}
-          </p>
+            {hasFolders && (
+              <>
+                <div className="folder-setup__folder-navigation">
+                  <ActionIcon
+                    aria-label={t("filesPage.back", "Back")}
+                    variant="tertiary"
+                    disabled={!hasHistory || picking}
+                    onClick={goBack}
+                  >
+                    <Icon name="arrow-left" size={18} />
+                  </ActionIcon>
+                  <nav
+                    className="files-page-breadcrumbs folder-setup__breadcrumbs"
+                    aria-label={t("processingFolders.setup.location")}
+                  >
+                    {[
+                      { id: null, name: t("filesPage.tree", "Folders") },
+                      ...trail,
+                    ].map((item, index) => (
+                      <span
+                        key={item.id ?? "root"}
+                        className="folder-setup__inline"
+                      >
+                        {index > 0 && <Icon name="chevron-right" size={14} />}
+                        <button
+                          type="button"
+                          className="files-page-breadcrumb"
+                          aria-current={
+                            item.id === currentId ? "location" : undefined
+                          }
+                          onClick={() =>
+                            navigate(
+                              item.id ? (byId.get(item.id) ?? null) : null,
+                            )
+                          }
+                        >
+                          {item.name}
+                        </button>
+                      </span>
+                    ))}
+                  </nav>
+                </div>
+                <div className="folder-setup__folder-scroll">
+                  <div
+                    className="files-page-list folder-setup__folder-list"
+                    role="grid"
+                    aria-label={t("processingFolders.setup.selectFolder")}
+                  >
+                    <div className="files-page-list-row is-header" role="row">
+                      <span
+                        role="columnheader"
+                        aria-label={t("processingFolders.setup.selectFolder")}
+                      />
+                      <span role="columnheader">
+                        {t("filesPage.column.name", "Name")}
+                      </span>
+                      <span role="columnheader">
+                        {t("processingFolders.setup.location")}
+                      </span>
+                      <span role="columnheader" />
+                      <span role="columnheader" />
+                    </div>
+                    {visible.map((folder) => {
+                      const draft = added.find(
+                        (item) => item.folder.id === folder.id,
+                      );
+                      const processing = recordFor(folder);
+                      const local = folderKind(folder) === "local";
+                      const disabledReason = folderDisabledReason(folder);
+                      const blocked = Boolean(disabledReason);
+                      return (
+                        <FolderListRow
+                          key={folder.id}
+                          folder={folder}
+                          showModified={false}
+                          title={disabledReason ?? undefined}
+                          status={
+                            <div className="folder-setup__folder-details">
+                              <span>
+                                {local
+                                  ? t("processingFolders.setup.computer")
+                                  : serverLabel}
+                              </span>
+                              {processing && (
+                                <FolderProcessingTag
+                                  enabled={processing.enabled}
+                                />
+                              )}
+                            </div>
+                          }
+                          parentPath={
+                            (query || addedLocalIds.has(folder.id)) &&
+                            folder.parentFolderId
+                              ? processingFolderPath(
+                                  byId.get(folder.parentFolderId) ?? folder,
+                                  folders,
+                                )
+                              : undefined
+                          }
+                          aria-selected={folder.id === selectedId}
+                          aria-disabled={blocked || undefined}
+                          className={
+                            folder.id === selectedId ? "is-selected" : ""
+                          }
+                          tabIndex={blocked ? -1 : 0}
+                          onClick={() => select(folder)}
+                          onDoubleClick={() => {
+                            if (!blocked) navigate(folder);
+                          }}
+                          onKeyDown={(event) => {
+                            if (event.target !== event.currentTarget || blocked)
+                              return;
+                            if (event.key === " " || event.key === "Enter") {
+                              event.preventDefault();
+                              select(folder);
+                            }
+                          }}
+                          leading={
+                            <input
+                              type="radio"
+                              name={selectionName}
+                              aria-label={folder.name}
+                              checked={folder.id === selectedId}
+                              disabled={blocked}
+                              tabIndex={-1}
+                              onChange={() => select(folder)}
+                            />
+                          }
+                          trailing={
+                            draft?.target.kind === "server" ? (
+                              <ActionIcon
+                                aria-label={t(
+                                  "processingFolders.setup.editFolder",
+                                  {
+                                    name: folder.name,
+                                  },
+                                )}
+                                variant="tertiary"
+                                size="sm"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  editFolder(draft);
+                                }}
+                              >
+                                <Icon name="pencil" size={16} />
+                              </ActionIcon>
+                            ) : (
+                              (!local ||
+                                available.some(
+                                  (child) => child.parentFolderId === folder.id,
+                                )) && (
+                                <ActionIcon
+                                  aria-label={t(
+                                    "processingFolders.setup.openFolder",
+                                    {
+                                      name: folder.name,
+                                    },
+                                  )}
+                                  variant="tertiary"
+                                  size="sm"
+                                  disabled={blocked}
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    navigate(folder);
+                                  }}
+                                  onDoubleClick={(event) =>
+                                    event.stopPropagation()
+                                  }
+                                >
+                                  <Icon name="chevron-right" size={18} />
+                                </ActionIcon>
+                              )
+                            )
+                          }
+                        />
+                      );
+                    })}
+                  </div>
+                  {visible.length === 0 && (
+                    <p className="folder-setup__empty" role="status">
+                      {t(
+                        query
+                          ? "processingFolders.setup.noMatchingFolders"
+                          : "processingFolders.setup.noFolders",
+                      )}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         )}
       </div>
       {error && <Banner tone="danger" description={error} />}

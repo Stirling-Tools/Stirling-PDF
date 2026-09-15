@@ -56,6 +56,8 @@ objc2-foundation = { version = "0.3.2", features = ["NSObject", "NSString", "NSU
 objc2-pdf-kit = { version = "0.3.2", features = ["PDFDocument", "objc2-app-kit"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
+webview2-com = "0.38.2"
+webview2-core = { package = "windows-core", version = "0.61" }
 windows = { version = "0.62", features = [
     "Win32_Foundation",
     "Win32_System_Com",

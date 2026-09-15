@@ -11,6 +11,7 @@ import { useFolders } from "@app/contexts/FolderContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useAiEngineEnabled } from "@app/hooks/useAiEngineEnabled";
+import { useDownloadsProcessing } from "@app/hooks/useDownloadsProcessing";
 import {
   useProcessingFolders,
   refreshProcessingFolders,
@@ -50,6 +51,7 @@ export function ProcessingFolderSetupFlow({
   const { addFiles } = useFileHandler();
   const serverDisabledReason = useServerFolderBlock();
   const aiEngineEnabled = useAiEngineEnabled();
+  const downloadsProcessing = useDownloadsProcessing();
   const navigate = useNavigate();
   const outputModes = usePolicyOutputModes();
   const [sources, setSources] = useState<{
@@ -120,13 +122,10 @@ export function ProcessingFolderSetupFlow({
         target.parentId,
         "server",
       );
-    const mounted = await folders.mountLocalFolder(
+    return folders.mountLocalFolder(
       target.directory.path,
       target.directory.name,
     );
-    return target.name === null
-      ? mounted
-      : folders.createFolder(target.name.trim(), mounted.id);
   }
 
   async function save(selected: FolderRecord, result: PolicySetupResult) {
@@ -181,6 +180,17 @@ export function ProcessingFolderSetupFlow({
       }}
       canPickDirectory={canPickDirectory}
       pickDirectory={pickDirectory}
+      downloadsProcessing={
+        downloadsProcessing
+          ? {
+              ...downloadsProcessing,
+              start: () => {
+                onClose();
+                downloadsProcessing.start();
+              },
+            }
+          : undefined
+      }
       serverDisabledReason={serverDisabledReason}
       serverLabel={t("processingFolders.setup.server")}
       recordFor={processing.recordFor}

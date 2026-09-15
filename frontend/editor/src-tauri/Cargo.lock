@@ -4583,7 +4583,9 @@ dependencies = [
  "tokio",
  "url",
  "urlencoding",
+ "webview2-com",
  "windows 0.62.2",
+ "windows-core 0.61.2",
 ]
 
 [[package]]
