@@ -35,6 +35,8 @@ import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.StorageOutputSink;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
 import stirling.software.proprietary.storage.repository.FileShareAccessRepository;
@@ -46,10 +48,13 @@ import stirling.software.proprietary.storage.service.StorageCleanupQueue;
 
 class StorageProcessingVersionTest {
 
+    private static final String USERNAME = "owner@example.com";
+
     private final StoredFileRepository files = mock(StoredFileRepository.class);
     private final FolderRepository folders = mock(FolderRepository.class);
     private final StorageProvider blobs = mock(StorageProvider.class);
     private final ResolveContext context = mock(ResolveContext.class);
+    private final UserService userService = mock(UserService.class);
     private final ApplicationProperties properties = new ApplicationProperties();
     private final UUID folderId = UUID.randomUUID();
     private final User owner = new User();
@@ -59,6 +64,12 @@ class StorageProcessingVersionTest {
         properties.getSecurity().setEnableLogin(true);
         properties.getStorage().setEnabled(true);
         owner.setId(7L);
+        owner.setUsername(USERNAME);
+        Folder folder = new Folder();
+        folder.setOwner(owner);
+        when(userService.getCurrentUsername()).thenReturn(USERNAME);
+        when(userService.findByUsername(USERNAME)).thenReturn(Optional.of(owner));
+        when(folders.findByIdAndOwner(folderId, owner)).thenReturn(Optional.of(folder));
         when(blobs.load(anyString()))
                 .thenAnswer(call -> new ByteArrayResource(call.<String>getArgument(0).getBytes()));
         when(context.claim(anyString(), anyString(), any()))
@@ -188,8 +199,9 @@ class StorageProcessingVersionTest {
     }
 
     private ResolvedInput resolve(StoredFile file) throws IOException {
-        when(files.findAllByFolderId(folderId)).thenReturn(List.of(file));
-        return new StorageFolderInputSource(files, folders, blobs, properties)
+        when(files.findAllByFolderIdAndOwner(folderId, owner)).thenReturn(List.of(file));
+        when(files.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
+        return new StorageFolderInputSource(files, folders, blobs, properties, userService)
                 .resolve(
                         new InputSpec("storage-folder", Map.of("folderId", folderId.toString())),
                         context)
@@ -198,9 +210,15 @@ class StorageProcessingVersionTest {
 
     private void deliver(ResolvedInput work, FileStorageService storage) throws IOException {
         new StorageOutputSink(
-                        files, folders, storage, mock(ProcessedLedger.class), blobs, properties)
+                        files,
+                        folders,
+                        storage,
+                        mock(ProcessedLedger.class),
+                        blobs,
+                        properties,
+                        userService)
                 .deliver(
-                        new OutputDelivery("run", "policy", work.inputs()),
+                        new OutputDelivery("run", "policy", work.inputs(), USERNAME),
                         List.of(new ByteArrayResource("processed PDF".getBytes())),
                         new OutputSpec("storage", Map.of("mode", "new_version")));
     }

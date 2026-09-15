@@ -17,13 +17,7 @@ import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useTranslation } from "react-i18next";
 import { LogoIcon } from "@app/components/shared/LogoIcon";
 import { Wordmark } from "@app/components/shared/Wordmark";
-import CheckCircleRoundedIcon from "@mui/icons-material/CheckCircleRounded";
-import ErrorRoundedIcon from "@mui/icons-material/ErrorRounded";
-import UndoRoundedIcon from "@mui/icons-material/UndoRounded";
-import DeleteOutlineRoundedIcon from "@mui/icons-material/DeleteOutlineRounded";
-import AddPhotoAlternateRoundedIcon from "@mui/icons-material/AddPhotoAlternateRounded";
-import PhotoCameraRoundedIcon from "@mui/icons-material/PhotoCameraRounded";
-import SendRoundedIcon from "@mui/icons-material/SendRounded";
+import { Icon } from "@app/ui/Icon";
 import {
   MobileDrawCanvas,
   type MobileDrawCanvasHandle,
@@ -258,7 +252,7 @@ export default function MobileSignPage() {
       <Box p="md" maw={480} mx="auto">
         {header}
         <Alert
-          icon={<ErrorRoundedIcon style={{ fontSize: "1rem" }} />}
+          icon={<Icon name="circle-alert" size={"1rem"} />}
           color="red"
           title={t("mobileSign.invalidSession", "Session expired")}
         >
@@ -282,7 +276,7 @@ export default function MobileSignPage() {
 
       {justSent && (
         <Alert
-          icon={<CheckCircleRoundedIcon style={{ fontSize: "1rem" }} />}
+          icon={<Icon name="circle-check" size={"1rem"} />}
           color="green"
           mb="sm"
           withCloseButton
@@ -296,7 +290,7 @@ export default function MobileSignPage() {
       )}
       {sendError && (
         <Alert
-          icon={<ErrorRoundedIcon style={{ fontSize: "1rem" }} />}
+          icon={<Icon name="circle-alert" size={"1rem"} />}
           color="red"
           mb="sm"
         >
@@ -387,7 +381,7 @@ export default function MobileSignPage() {
                 size="sm"
                 disabled={!hasInk}
                 onClick={() => canvasHandle.current?.undo()}
-                leftSection={<UndoRoundedIcon style={{ fontSize: 16 }} />}
+                leftSection={<Icon name="undo-2" size={16} />}
               >
                 {t("mobileSign.undo", "Undo")}
               </DSButton>
@@ -397,9 +391,7 @@ export default function MobileSignPage() {
                 size="sm"
                 disabled={!hasInk}
                 onClick={() => canvasHandle.current?.clear()}
-                leftSection={
-                  <DeleteOutlineRoundedIcon style={{ fontSize: 16 }} />
-                }
+                leftSection={<Icon name="trash" size={16} />}
               >
                 {t("mobileSign.clear", "Clear")}
               </DSButton>
@@ -495,16 +487,14 @@ export default function MobileSignPage() {
             <DSButton
               variant="secondary"
               onClick={() => cameraInputRef.current?.click()}
-              leftSection={<PhotoCameraRoundedIcon style={{ fontSize: 18 }} />}
+              leftSection={<Icon name="camera" size={18} />}
             >
               {t("mobileSign.photo.takePhoto", "Take a photo")}
             </DSButton>
             <DSButton
               variant="secondary"
               onClick={() => photoInputRef.current?.click()}
-              leftSection={
-                <AddPhotoAlternateRoundedIcon style={{ fontSize: 18 }} />
-              }
+              leftSection={<Icon name="image-plus" size={18} />}
             >
               {t("mobileSign.photo.fromGallery", "From gallery")}
             </DSButton>
@@ -542,7 +532,7 @@ export default function MobileSignPage() {
           disabled={!canSend}
           loading={isSending}
           onClick={handleSend}
-          leftSection={<SendRoundedIcon style={{ fontSize: 18 }} />}
+          leftSection={<Icon name="send" size={18} />}
         >
           {sentCount > 0
             ? t("mobileSign.sendAnother", "Send another signature")

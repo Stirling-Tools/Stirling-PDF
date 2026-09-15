@@ -16,6 +16,9 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.FilePurpose;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
@@ -42,6 +45,7 @@ public class StorageFolderInputSource implements InputSource {
     private final FolderRepository folderRepository;
     private final StorageProvider storageProvider;
     private final ApplicationProperties applicationProperties;
+    private final UserService userService;
 
     @Override
     public String type() {
@@ -53,24 +57,42 @@ public class StorageFolderInputSource implements InputSource {
         return spec != null && TYPE.equals(spec.type());
     }
 
-    /** Fails fast at save time: storage must be on and the folder must exist. */
+    /** Private folders must belong to the authenticated caller configuring the source. */
     @Override
     public void validate(InputSpec spec) {
+        requireStorageEnabled();
+        requireOwnedFolder(folderId(spec), requireOwner(userService.getCurrentUsername()));
+    }
+
+    private void requireStorageEnabled() {
         if (!applicationProperties.getSecurity().isEnableLogin()
                 || !applicationProperties.getStorage().isEnabled()) {
             throw new IllegalArgumentException("file storage is not enabled on this server");
-        }
-        if (!folderRepository.existsById(folderId(spec))) {
-            throw new IllegalArgumentException(
-                    "unknown storage folder: " + spec.options().get("folderId"));
         }
     }
 
     @Override
     public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
+        return resolveForOwner(spec, ctx, userService.getCurrentUsername());
+    }
+
+    @Override
+    public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        if (policyOwner == null || !policyOwner.equals(source.owner())) {
+            throw new IllegalArgumentException("Storage folder sources are private to their owner");
+        }
+        return resolveForOwner(source.toInputSpec(), ctx, policyOwner);
+    }
+
+    private List<ResolvedInput> resolveForOwner(InputSpec spec, ResolveContext ctx, String username)
+            throws IOException {
+        requireStorageEnabled();
+        User owner = requireOwner(username);
         UUID folderId = folderId(spec);
+        requireOwnedFolder(folderId, owner);
         List<StoredFile> files =
-                storedFileRepository.findAllByFolderId(folderId).stream()
+                storedFileRepository.findAllByFolderIdAndOwner(folderId, owner).stream()
                         .filter(StorageFolderInputSource::ingestible)
                         .toList();
 
@@ -80,12 +102,14 @@ public class StorageFolderInputSource implements InputSource {
         for (StoredFile file : files) {
             String identity = identity(file);
             String gate = gate(file);
-            StoredFileResource resource = new StoredFileResource(storageProvider, file);
+            StoredFileResource resource = new StoredFileResource(file, folderId, owner);
+            // The hash tier turns metadata-only gate bumps (a folder move, a rename) into a gate
+            // refresh instead of a reprocess; only genuinely new content runs again.
             if (!ctx.claim(
                     identity,
                     gate,
                     () -> {
-                        String hash = StorageFileIdentities.contentHash(storageProvider, file);
+                        String hash = ownedContentHash(file, folderId, owner);
                         resource.rememberInputHash(hash);
                         return hash;
                     })) {
@@ -98,6 +122,41 @@ public class StorageFolderInputSource implements InputSource {
                             success -> resource.settle(ctx, identity, success)));
         }
         return work;
+    }
+
+    private User requireOwner(String username) {
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Storage folder input requires an authenticated owner");
+        }
+        return userService
+                .findByUsername(username)
+                .filter(user -> user.getId() != null)
+                .orElseThrow(
+                        () -> new IllegalArgumentException("Storage folder owner is unavailable"));
+    }
+
+    private void requireOwnedFolder(UUID folderId, User owner) {
+        if (folderRepository.findByIdAndOwner(folderId, owner).isEmpty()) {
+            throw new IllegalArgumentException("Unknown or inaccessible storage folder");
+        }
+    }
+
+    private void requireOwnedFile(Long fileId, UUID folderId, User owner) {
+        // Reads and completion hashing can outlive discovery. These queries deliberately recheck
+        // both owners each time so a cached permission cannot survive an ownership change.
+        requireOwnedFolder(folderId, owner);
+        if (storedFileRepository
+                .findByIdAndOwner(fileId, owner)
+                .filter(StorageFolderInputSource::ingestible)
+                .isEmpty()) {
+            throw new IllegalArgumentException("Unknown or inaccessible stored file");
+        }
+    }
+
+    private String ownedContentHash(StoredFile file, UUID folderId, User owner) {
+        requireOwnedFile(file.getId(), folderId, owner);
+        return StorageFileIdentities.contentHash(storageProvider, file);
     }
 
     /** Only generic user files are processed — purpose-bound artifacts belong to their feature. */
@@ -122,11 +181,15 @@ public class StorageFolderInputSource implements InputSource {
         }
     }
 
-    /** Captures input identity and the exact version this run may replace or mark processed. */
-    private static final class StoredFileResource extends AbstractResource
-            implements StoredFileBacked {
+    /**
+     * Streams the stored blob on demand, presenting the user-visible filename, and carries the
+     * exact revision this run is allowed to replace or mark processed. Reads recheck ownership
+     * because they can outlive discovery.
+     */
+    private final class StoredFileResource extends AbstractResource implements StoredFileBacked {
 
-        private final StorageProvider storageProvider;
+        private final UUID folderId;
+        private final User owner;
         private final Long fileId;
         private final String storageKey;
         private final String filename;
@@ -136,8 +199,9 @@ public class StorageFolderInputSource implements InputSource {
 
         private record CompletionVersion(String gate, String contentHash) {}
 
-        private StoredFileResource(StorageProvider storageProvider, StoredFile file) {
-            this.storageProvider = storageProvider;
+        private StoredFileResource(StoredFile file, UUID folderId, User owner) {
+            this.folderId = folderId;
+            this.owner = owner;
             this.fileId = file.getId();
             this.storageKey = file.getStorageKey();
             this.filename = file.getOriginalFilename();
@@ -172,6 +236,7 @@ public class StorageFolderInputSource implements InputSource {
 
         @Override
         public InputStream getInputStream() throws IOException {
+            requireOwnedFile(fileId, folderId, owner);
             return storageProvider.load(storageKey).getInputStream();
         }
 

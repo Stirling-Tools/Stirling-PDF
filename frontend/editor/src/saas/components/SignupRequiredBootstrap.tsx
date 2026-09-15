@@ -11,7 +11,7 @@ import type { PaygSignupRequiredDetail } from "@app/services/paygErrorIntercepto
  * Bootstrap that listens for {@code payg:signupRequired} (dispatched by
  * the {@code apiClient} response interceptor when an anonymous user hits
  * a billable endpoint and the server returns {@code 401 SIGNUP_REQUIRED})
- * and opens a Mantine modal explaining the free 500-op/month allowance
+ * and opens a Mantine modal explaining the free monthly allowance
  * with a "Sign up free" CTA.
  *
  * <h2>Why an event bus instead of direct render</h2>
@@ -92,8 +92,8 @@ export default function SignupRequiredBootstrap() {
       <Stack gap="md">
         <Text>
           {t(
-            "payg.signupRequired.body",
-            "Stirling PDF gives every signed-up account 500 free operations a month, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing.",
+            "payg.signupRequired.bodyMonthlyAllowance",
+            "Stirling PDF gives every signed-up account a free monthly allowance for operations. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing.",
           )}
         </Text>
         <Text size="sm" c="dimmed">
