@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { PoliciesByKey, PolicyState } from "@app/types/policies";
 
 // Which policies export-time enforcement picks up: the policy's own editor flag, not its scope.
@@ -8,16 +8,17 @@ vi.mock("@app/services/policyStorage", () => ({
   loadPolicies: () => loadPolicies(),
 }));
 
-const runStoredPolicy = vi.fn(async (_id: string) => "run-1");
+const runStoredPolicy = vi.fn(async (_id: string, _files: File[]) => "run-1");
+const output = { name: "doc.pdf", type: "application/pdf" };
 vi.mock("@app/services/policyApi", () => ({
-  runStoredPolicy: (id: string) => runStoredPolicy(id),
+  runStoredPolicy: (id: string, files: File[]) => runStoredPolicy(id, files),
   // One output, so a run completes rather than throwing "produced no output" - which would abort
   // the per-file policy loop after the first policy and hide the order under test.
   getPolicyRun: async () => ({
     status: "COMPLETED",
-    outputs: [{ fileId: "out-1", fileName: "doc.pdf" }],
+    outputs: [{ fileId: "out-1", fileName: output.name }],
   }),
-  downloadPolicyOutput: async () => new Blob(),
+  downloadPolicyOutput: async () => new Blob([], { type: output.type }),
   resolvePolicyRunTarget: () => "local",
 }));
 
@@ -44,6 +45,7 @@ const exportPolicy = (over: Partial<PolicyState>): PolicyState =>
     configured: true,
     enabled: true,
     backendId: "backend-1",
+    firstOperation: "/api/v1/misc/compress-pdf",
     sources: [],
     runsOnEditor: false,
     scopeTypes: [],
@@ -60,7 +62,69 @@ const pdf = () =>
   new File(["%PDF-1.4"], "doc.pdf", { type: "application/pdf" });
 
 describe("export-time policy selection", () => {
-  beforeEach(() => runStoredPolicy.mockClear());
+  beforeEach(() => {
+    vi.useFakeTimers();
+    runStoredPolicy.mockClear();
+    output.name = "doc.pdf";
+    output.type = "application/pdf";
+  });
+  afterEach(() => vi.useRealTimers());
+
+  it("selects each pipeline by its first input and rechecks converted outputs", async () => {
+    const image = new File(["image"], "scan.PNG", { type: "image/png" });
+    const word = new File(["word"], "letter.docx");
+    loadPolicies.mockReturnValue({
+      image: exportPolicy({
+        runsOnEditor: true,
+        backendId: "image",
+        order: 0,
+        firstOperation: "/api/v1/convert/img/pdf",
+      }),
+      pdf: exportPolicy({
+        runsOnEditor: true,
+        backendId: "pdf",
+        order: 1,
+      }),
+      laterImage: exportPolicy({
+        runsOnEditor: true,
+        backendId: "later-image",
+        order: 2,
+        firstOperation: "/api/v1/convert/img/pdf",
+      }),
+    });
+    output.type = "";
+
+    const enforcement = enforceExportPolicies([pdf(), image, word]);
+    await vi.runAllTimersAsync();
+    const result = await enforcement;
+
+    expect(runStoredPolicy.mock.calls.map(([id]) => id)).toEqual([
+      "pdf",
+      "image",
+      "pdf",
+    ]);
+    expect(runStoredPolicy.mock.calls[1][1]).toEqual([image]);
+    expect(runStoredPolicy.mock.calls[2][1][0].name).toBe("doc.pdf");
+    expect(result.map((file) => file.name)).toEqual([
+      "doc.pdf",
+      "scan.pdf",
+      "letter.docx",
+    ]);
+    expect(result[2]).toBe(word);
+  });
+
+  it("passes incompatible files through without dispatching", async () => {
+    loadPolicies.mockReturnValue({
+      image: exportPolicy({
+        runsOnEditor: true,
+        firstOperation: "/api/v1/convert/img/pdf",
+      }),
+    });
+    const files = [pdf(), new File(["word"], "letter.docx")];
+
+    expect(await enforceExportPolicies(files)).toBe(files);
+    expect(runStoredPolicy).not.toHaveBeenCalled();
+  });
 
   it("enforces an editor pipeline set to run on export", async () => {
     loadPolicies.mockReturnValue({
@@ -71,9 +135,14 @@ describe("export-time policy selection", () => {
       }),
     } as unknown as PoliciesByKey);
 
-    await enforceExportPolicies([pdf()], ["file-1"]);
+    const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
+    await vi.runAllTimersAsync();
+    await enforcement;
 
-    expect(runStoredPolicy).toHaveBeenCalledWith("backend-editor");
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-editor",
+      expect.anything(),
+    );
   });
 
   it("leaves a swept pipeline alone, even though its source list is blank", async () => {
@@ -85,7 +154,9 @@ describe("export-time policy selection", () => {
       }),
     } as unknown as PoliciesByKey);
 
-    await enforceExportPolicies([pdf()], ["file-1"]);
+    const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
+    await vi.runAllTimersAsync();
+    await enforcement;
 
     expect(runStoredPolicy).not.toHaveBeenCalled();
   });
@@ -100,9 +171,14 @@ describe("export-time policy selection", () => {
       }),
     } as unknown as PoliciesByKey);
 
-    await enforceExportPolicies([pdf()], ["file-1"]);
+    const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
+    await vi.runAllTimersAsync();
+    await enforcement;
 
-    expect(runStoredPolicy).toHaveBeenCalledWith("backend-security");
+    expect(runStoredPolicy).toHaveBeenCalledWith(
+      "backend-security",
+      expect.anything(),
+    );
   });
 
   it("enforces in the team's run order, not object order", async () => {
@@ -119,7 +195,9 @@ describe("export-time policy selection", () => {
       }),
     } as unknown as PoliciesByKey);
 
-    await enforceExportPolicies([pdf()], ["file-1"]);
+    const enforcement = enforceExportPolicies([pdf()], ["file-1"]);
+    await vi.runAllTimersAsync();
+    await enforcement;
 
     expect(runStoredPolicy.mock.calls.map(([id]) => id)).toEqual([
       "backend-first",

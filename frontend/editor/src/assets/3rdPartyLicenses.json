@@ -197,6 +197,13 @@
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
+      "moduleName": "@iconify-json/material-symbols",
+      "moduleUrl": "https://icon-sets.iconify.design/material-symbols/",
+      "moduleVersion": "1.2.90",
+      "moduleLicense": "Apache-2.0",
+      "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0"
+    },
+    {
       "moduleName": "@mantine/core",
       "moduleUrl": "https://github.com/mantinedev/mantine",
       "moduleVersion": "8.3.18",
@@ -227,14 +234,14 @@
     {
       "moduleName": "@mui/icons-material",
       "moduleUrl": "https://github.com/mui/material-ui",
-      "moduleVersion": "9.3.1",
+      "moduleVersion": "9.4.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
     {
       "moduleName": "@mui/material",
       "moduleUrl": "https://github.com/mui/material-ui",
-      "moduleVersion": "9.3.1",
+      "moduleVersion": "9.4.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
@@ -283,7 +290,7 @@
     {
       "moduleName": "@tanstack/react-query",
       "moduleUrl": "https://github.com/TanStack/query",
-      "moduleVersion": "5.101.4",
+      "moduleVersion": "5.102.0",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
     },
@@ -398,6 +405,13 @@
       "moduleVersion": "6.8.5",
       "moduleLicense": "MIT",
       "moduleLicenseUrl": "https://opensource.org/licenses/MIT"
+    },
+    {
+      "moduleName": "lucide-static",
+      "moduleUrl": "https://github.com/lucide-icons/lucide",
+      "moduleVersion": "1.41.0",
+      "moduleLicense": "ISC",
+      "moduleLicenseUrl": "https://opensource.org/licenses/ISC"
     },
     {
       "moduleName": "pdfjs-dist",

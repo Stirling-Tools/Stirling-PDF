@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.model;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 /** A stored automation: ordered tool steps, input bindings, and output destinations. */
 public record Policy(
@@ -19,6 +20,7 @@ public record Policy(
         EditorConfig editor,
         /** The owning product surface; {@link #SURFACE_POLICY} unless stamped otherwise. */
         String surface,
+        List<RoutingRule> routingRules,
         String origin) {
 
     public Policy {
@@ -29,6 +31,7 @@ public record Policy(
         outputIds = outputIds == null ? List.of() : List.copyOf(outputIds);
         editor = editor == null ? EditorConfig.disabled() : editor;
         surface = surface == null || surface.isBlank() ? SURFACE_POLICY : surface;
+        routingRules = routingRules == null ? List.of() : List.copyOf(routingRules);
     }
 
     /** The record belongs to the org policies surface (the default). */
@@ -57,7 +60,41 @@ public record Policy(
             String surface) {
         this(
                 id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
-                editor, surface, null);
+                editor, surface, List.of(), null);
+    }
+
+    /** Without a provenance marker: an ordinary policy created through the UI or a seeder. */
+    public Policy(
+            String id,
+            String name,
+            String owner,
+            boolean enabled,
+            boolean required,
+            String icon,
+            List<PipelineInput> inputs,
+            List<PipelineStep> steps,
+            OutputSpec output,
+            List<String> outputIds,
+            Long teamId,
+            EditorConfig editor,
+            String surface,
+            List<RoutingRule> routingRules) {
+        this(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules,
+                null);
     }
 
     /**
@@ -89,8 +126,7 @@ public record Policy(
                 outputIds,
                 teamId,
                 editor,
-                SURFACE_POLICY,
-                null);
+                SURFACE_POLICY);
     }
 
     /**
@@ -122,8 +158,7 @@ public record Policy(
                 outputIds,
                 teamId,
                 null,
-                SURFACE_POLICY,
-                null);
+                SURFACE_POLICY);
     }
 
     /**
@@ -184,15 +219,41 @@ public record Policy(
     /** A copy with the inline output replaced (e.g. resolved for the engine, or migrated). */
     public Policy withOutput(OutputSpec resolved) {
         return new Policy(
-                id, name, owner, enabled, required, icon, inputs, steps, resolved, outputIds,
-                teamId, editor, surface, origin);
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                resolved,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules,
+                origin);
     }
 
     /** A copy under a different owner (e.g. moving a seed off a placeholder name). */
     public Policy withOwner(String newOwner) {
         return new Policy(
-                id, name, newOwner, enabled, required, icon, inputs, steps, output, outputIds,
-                teamId, editor, surface, origin);
+                id,
+                name,
+                newOwner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules,
+                origin);
     }
 
     /** A copy referencing the given saved output destinations. */
@@ -211,6 +272,7 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
+                routingRules,
                 origin);
     }
 
@@ -229,7 +291,38 @@ public record Policy(
                 teamId,
                 editor,
                 surface,
+                routingRules,
                 origin);
+    }
+
+    public Policy withSteps(List<PipelineStep> newSteps) {
+        return new Policy(
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                newSteps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules,
+                origin);
+    }
+
+    /**
+     * Every saved destination this policy can deliver to: the {@code outputIds} fallback plus each
+     * routing rule's destination. Used to resolve them all up front and to validate references.
+     */
+    public List<String> allOutputIds() {
+        return Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
+                .filter(outputId -> outputId != null && !outputId.isBlank())
+                .distinct()
+                .toList();
     }
 
     public Policy withSurface(String newSurface) {
@@ -247,14 +340,28 @@ public record Policy(
                 teamId,
                 editor,
                 newSurface,
+                routingRules,
                 origin);
     }
 
     /** Provenance is stamped server-side; a caller cannot label its own creation as migrated. */
     public Policy withOrigin(String newOrigin) {
         return new Policy(
-                id, name, owner, enabled, required, icon, inputs, steps, output, outputIds, teamId,
-                editor, surface, newOrigin);
+                id,
+                name,
+                owner,
+                enabled,
+                required,
+                icon,
+                inputs,
+                steps,
+                output,
+                outputIds,
+                teamId,
+                editor,
+                surface,
+                routingRules,
+                newOrigin);
     }
 
     /**
