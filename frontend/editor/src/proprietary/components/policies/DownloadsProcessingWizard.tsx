@@ -154,6 +154,8 @@ export function DownloadsProcessingWizard({
     cancelRequested.current = false;
     setPhase("working");
     setUnreadable(0);
+    // A cancelled run's ids outlive close(): its in-flight batch appends after the reset.
+    setTrackedIds([]);
     const batch = found.entries.slice(0, SCAN_LIMIT);
     setQueued(batch.map((entry) => entry.name));
 
@@ -347,18 +349,20 @@ export function DownloadsProcessingWizard({
               className="downloads-wizard__tick"
               size="1em"
             />{" "}
-            {tracked.length === 0
+            {tracked.length === 0 && unreadable < total
               ? t("processingFolders.downloads.nothingNew", {
-                  count: 0,
+                  count: total - unreadable,
                   defaultValue:
                     "Nothing new to process - these {{count}} files have already been through.",
                 })
-              : t("processingFolders.downloads.finished", {
-                  count: classified,
-                  opened: tracked.length,
-                  defaultValue:
-                    "Classified {{count}} files and opened {{opened}} of them here, ready to work on.",
-                })}
+              : tracked.length === 0
+                ? null
+                : t("processingFolders.downloads.finished", {
+                    count: classified,
+                    opened: tracked.length,
+                    defaultValue:
+                      "Classified {{count}} files and opened {{opened}} of them here, ready to work on.",
+                  })}
             {typesFound > 0 && (
               <>
                 {" · "}

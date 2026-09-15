@@ -10,7 +10,7 @@ import { getDownloadsDirectory } from "@app/services/downloadsDirectory";
 describe("getDownloadsDirectory (desktop)", () => {
   beforeEach(() => {
     // Braces matter: mockReset() returns the mock for chaining, and a function returned from a
-    // hook is treated as a teardown callback — which would call the mock after every test.
+    // hook is treated as a teardown callback - which would call the mock after every test.
     downloadDirMock.mockReset();
   });
 

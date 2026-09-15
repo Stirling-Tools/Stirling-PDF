@@ -126,6 +126,20 @@ describe("DownloadsProcessingWizard", () => {
     expect(screen.queryByRole("button", { name: /Downloads/i })).toBeNull();
   });
 
+  it("stays hidden when the server will not run the classification policy", async () => {
+    h.classificationActive = false;
+    render(<DownloadsProcessingWizard />);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.queryByRole("button", { name: /Downloads/i })).toBeNull();
+  });
+
+  it("stays hidden when the machine reports no Downloads folder", async () => {
+    h.downloadsDir = null;
+    render(<DownloadsProcessingWizard />);
+    await new Promise((r) => setTimeout(r, 0));
+    expect(screen.queryByRole("button", { name: /Downloads/i })).toBeNull();
+  });
+
   it("stays hidden when Downloads holds no PDFs", async () => {
     h.listing = { files: [], directories: [] };
     render(<DownloadsProcessingWizard />);
