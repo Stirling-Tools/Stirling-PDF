@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { uploadableFile } from "@app/utils/uploadableFile";
 
-/** jsdom's Blob has no text(); FileReader is the one byte read it implements. */
+/** jsdom's Blob has no text(). */
 const textOf = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();

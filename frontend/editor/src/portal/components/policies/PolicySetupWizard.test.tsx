@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { t } from "i18next";
 import {
   fireEvent,
   render as baseRender,
@@ -7,9 +8,11 @@ import {
 } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { PolicySetupWizard } from "@portal/components/policies/PolicySetupWizard";
+import { PolicySetupWizard as SharedPolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import {
   POLICY_CATEGORIES,
   POLICY_CONFIG,
+  buildWireFromSetup,
   type CatalogueEntry,
   type DecoratedPolicy,
   type PolicySetupResult,
@@ -37,15 +40,22 @@ vi.mock("@portal/api/integrations", () => ({
   fetchIntegrations: () => fetchIntegrations(),
 }));
 
+const fetchSources = vi.fn();
+vi.mock("@portal/api/sources", () => ({
+  fetchSources: () => fetchSources(),
+}));
+
+vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+
 const SAVE_CHANGES = "portal.policies.wizard.actions.saveChanges";
 const ENABLE = "portal.policies.wizard.actions.enablePolicy";
 
 const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
+const routing = POLICY_CATEGORIES.find((c) => c.id === "routing")!;
+const routingConfig = POLICY_CONFIG.routing;
 const securityConfig = POLICY_CONFIG.security;
 const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
 const complianceConfig = POLICY_CONFIG.compliance;
-
-const PURVIEW_LABEL = "Apply a Microsoft Purview sensitivity label";
 
 function editEntry(steps: PipelineStep[]): CatalogueEntry {
   const policy: DecoratedPolicy = {
@@ -80,9 +90,16 @@ async function submitWizard(saveLabel: string) {
   fireEvent.click(await screen.findByRole("button", { name: saveLabel }));
 }
 
+const routingEntry: CatalogueEntry = {
+  category: routing,
+  config: routingConfig,
+  policy: null,
+};
+
 describe("PolicySetupWizard", () => {
   beforeEach(() => {
     fetchIntegrations.mockResolvedValue([]);
+    fetchSources.mockResolvedValue({ kpis: [], sources: [] });
   });
 
   it("round-trips a saved step's backend params on edit", async () => {
@@ -141,53 +158,6 @@ describe("PolicySetupWizard", () => {
     expect(result.extraOptions).toEqual({ automation: { name: "x" } });
   });
 
-  it("hides the Purview step when no Purview tenant is connected", async () => {
-    fetchIntegrations.mockResolvedValue([]);
-    const entry: CatalogueEntry = {
-      category: compliance,
-      config: complianceConfig,
-      policy: null,
-    };
-
-    render(
-      <PolicySetupWizard
-        entry={entry}
-        onClose={vi.fn()}
-        onSubmit={vi.fn()}
-        onCustomise={vi.fn()}
-      />,
-    );
-
-    // Sanitize is in the same chain and always shows, so once it renders the chain has loaded.
-    await screen.findByText("Strip active content");
-    // The Purview option can only fail without a connection, so it is not offered at all.
-    expect(screen.queryByText(PURVIEW_LABEL)).toBeNull();
-  });
-
-  it("offers the Purview step once a Purview connection exists", async () => {
-    fetchIntegrations.mockResolvedValue([
-      { id: 1, name: "Corp Purview", integrationType: "PURVIEW", config: {} },
-    ]);
-    const entry: CatalogueEntry = {
-      category: compliance,
-      config: complianceConfig,
-      policy: null,
-    };
-
-    render(
-      <PolicySetupWizard
-        entry={entry}
-        onClose={vi.fn()}
-        onSubmit={vi.fn()}
-        onCustomise={vi.fn()}
-      />,
-    );
-
-    await waitFor(() =>
-      expect(screen.getByText(PURVIEW_LABEL)).toBeInTheDocument(),
-    );
-  });
-
   it("seeds the preset chain for a new policy (redact + sanitize on, watermark off)", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const entry: CatalogueEntry = {
@@ -218,6 +188,67 @@ describe("PolicySetupWizard", () => {
     expect(redact.listOfText).toBeTruthy();
   });
 
+  it("submits configured routing destinations without editor participation", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <SharedPolicySetupWizard
+        entry={routingEntry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        routingConfig={({ onChange }) => (
+          <button
+            onClick={() =>
+              onChange({
+                sourceId: "inbox",
+                trigger: { type: "folder-watch", options: {} },
+                outputIds: ["archive"],
+                routingRules: [
+                  {
+                    condition: {
+                      input: {
+                        source: "document",
+                        field: "classification.labels",
+                      },
+                      operator: "matches-any",
+                      values: ["invoice"],
+                    },
+                    outputId: "finance",
+                  },
+                ],
+              })
+            }
+          >
+            Configure routing
+          </button>
+        )}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Configure routing" }));
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.steps.map((step) => step.operation)).toEqual([
+      "/api/v1/ai/tools/classify-and-label",
+    ]);
+    const wire = buildWireFromSetup(routingEntry, result, t);
+    expect(wire.editor?.allowed).toBe(false);
+    expect(wire.inputs).toEqual([
+      { sourceId: "inbox", trigger: { type: "folder-watch", options: {} } },
+    ]);
+    expect(wire.outputIds).toEqual(["archive"]);
+    expect(wire.routingRules).toEqual([
+      {
+        condition: {
+          input: { source: "document", field: "classification.labels" },
+          operator: "matches-any",
+          values: ["invoice"],
+        },
+        outputId: "finance",
+      },
+    ]);
+  });
+
   it("defaults a new security policy to enforcing on export", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const entry: CatalogueEntry = {
@@ -239,5 +270,101 @@ describe("PolicySetupWizard", () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
     expect(result.runOn).toBe("export");
+    expect(result.runsOnEditor).toBe(true);
+  });
+
+  it("locks the wizard for a non-manager", async () => {
+    // Only a manager (admin / team leader) may create or edit; a non-manager sees it read-only.
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        canManagePolicies={false}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("switch", {
+        name: "portal.pipelines.enforce.label",
+      }),
+    ).toBeDisabled();
+    expect(await screen.findByRole("button", { name: ENABLE })).toBeDisabled();
+  });
+
+  it("defaults a new template to a policy (blocking)", async () => {
+    // A template's failure should block the file, so a new one defaults to required, independent of
+    // who is creating it.
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.required).toBe(true);
+  });
+
+  it("seeds the compliance chain so the gate judges the delivered document", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: compliance,
+      config: complianceConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    expect(
+      await screen.findByText("Convert to PDF/A for archiving"),
+    ).toBeInTheDocument();
+    // PDF/UA is not offered: conforming needs per-figure alt text nothing in the product can
+    // supply, so a gate pointed at it would fail every run.
+    expect(screen.queryByText(/PDF\/UA/)).toBeNull();
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    // Flatten is absent: it rasterises pages, which would leave the archive without a text layer.
+    expect(result.steps.map((s) => s.operation)).toEqual([
+      "/api/v1/security/sanitize-pdf",
+      "/api/v1/convert/pdf/pdfa",
+      "/api/v1/security/validate-compliance",
+    ]);
+    // Both metadata streams go, but fonts stay - PDF/A needs them embedded.
+    expect(result.steps[0].parameters).toMatchObject({
+      removeMetadata: true,
+      removeXMPMetadata: true,
+      removeFonts: false,
+    });
+    expect(result.steps[1].parameters).toMatchObject({
+      outputFormat: "pdfa-2b",
+    });
   });
 });

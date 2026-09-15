@@ -18,7 +18,7 @@ function sentForm(): FormData {
   return post.mock.calls.at(-1)?.[1] as FormData;
 }
 
-/** jsdom's Blob has no text(); FileReader is the one byte read it implements. */
+/** jsdom's Blob has no text(). */
 const textOf = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
@@ -56,7 +56,6 @@ describe("runStoredPolicy", () => {
   });
 
   it("uploads a fresh File over the caller's bytes, never the caller's File object", async () => {
-    // A File restored from IndexedDB serialises as an empty body in WebKit; a wrapper does not.
     const source = document();
     await runStoredPolicy("policy-1", [source], "editor-file-1");
 

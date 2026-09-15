@@ -1,3 +1,5 @@
+import { requiresClassification } from "@app/data/classificationConditions";
+import { isConditionComplete } from "@app/conditions/validation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -66,9 +68,12 @@ import {
 } from "@portal/api/pipelineAssets";
 import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
+import { RoutingSection } from "@portal/components/policies/RoutingRules";
+import type { WireRoutingRule } from "@app/policies/types";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
+import { useCanManagePolicies } from "@portal/queries/policyPermissions";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
@@ -173,6 +178,16 @@ function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
   return { type: input.triggerType, options: {} };
 }
 
+/**
+ * Routing reads the verdict this step writes, so a rule is only offered once the pipeline has one.
+ * Mirrors ClassificationStepPlanner.CLASSIFY_ENDPOINT.
+ */
+const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
+
+function isClassifyStep(step: WorkingToolStep): boolean {
+  return step.operation === CLASSIFY_OPERATION;
+}
+
 /** Whether a source can be written to, i.e. offered as a pipeline destination. */
 function isWritableSource(source: SourceView): boolean {
   return (availableOutputModes() as string[]).includes(source.type);
@@ -227,6 +242,8 @@ export function PipelineBuilder() {
     [id],
   );
   const sourcesState = useSources();
+  const { canManage: canManagePolicies, isLoading: permissionsLoading } =
+    useCanManagePolicies();
   const triggersState = useAsync<TriggerInfo[]>(
     async () => await fetchTriggers(),
     [],
@@ -274,8 +291,9 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
-  // Org-mandated policy (see Policy.required). Admin sets it; members can't pause/delete a required
-  // pipeline, and it enforces on their documents when it runs on the editor.
+  const [routingRules, setRoutingRules] = useState<WireRoutingRule[]>([]);
+  // A policy (blocking on failure) vs an ordinary pipeline (see Policy.required). Only meaningful for
+  // an editor-sourced pipeline, so the toggle is shown only then and reset off otherwise (see save).
   const [required, setRequired] = useState(false);
   // First-class row icon (see Policy.icon), chosen from the picker in the header. Empty falls back to
   // the template category glyph in the list; a custom pipeline defaults to none until picked.
@@ -410,6 +428,7 @@ export function PipelineBuilder() {
       (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
     );
     setOutputIds(seedsEditor ? [] : (policy?.outputIds ?? []));
+    setRoutingRules(seedsEditor ? [] : (policy?.routingRules ?? []));
     setSeeded(true);
   }, [
     isEdit,
@@ -718,6 +737,7 @@ export function PipelineBuilder() {
     outputType,
     outputOptions,
     outputIds: [...outputIds].sort(),
+    routingRules,
   });
   const baseline = useRef<string | null>(null);
   useEffect(() => {
@@ -748,6 +768,17 @@ export function PipelineBuilder() {
   const inputValid = sourceChosen && scheduleValid;
   // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
   const outputValid = isEditorInput || outputIds.length === 1;
+  const classifies = steps.some(isClassifyStep);
+  // Mirrors PolicyValidator.validateRoutingRules: a rule with nothing to match on, or nowhere to
+  // send, would be rejected on save - so it is named here rather than surfaced as a server error.
+  const routingValid = routingRules.every(
+    (rule) => isConditionComplete(rule.condition) && rule.outputId !== "",
+  );
+  // Rules outliving the step that feeds them: the classify step was removed after they were set.
+  // Every document would fall through to the fallback, so this is named rather than left to run.
+  const routingHasVerdict = routingRules.every(
+    (rule) => !requiresClassification(rule.condition) || classifies,
+  );
 
   // The single source of truth for "can this be committed": every reason it can't be, in the order
   // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
@@ -762,6 +793,20 @@ export function PipelineBuilder() {
     blockers.push(t("portal.pipelines.builder.blocker.schedule"));
   if (!outputValid)
     blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  if (!routingValid)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.routing",
+        "Give every route document types and a destination",
+      ),
+    );
+  if (!routingHasVerdict)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.routingNeedsClassify",
+        "Add a Classify step, or turn off routing by document type",
+      ),
+    );
   if (hasUnconfiguredSteps)
     blockers.push(
       t("portal.pipelines.builder.blocker.setup", {
@@ -860,7 +905,9 @@ export function PipelineBuilder() {
         id: policyState.data?.id ?? seedDraft?.id ?? undefined,
         name: name.trim(),
         enabled: enabledOverride ?? enabled,
-        required,
+        // Blocking is only meaningful for an editor pipeline; a source-backed one is never a policy,
+        // so don't persist a stale flag if the source was switched away from the editor.
+        required: isEditorInput && required,
         icon,
         // The editor is virtual - there is no stored Source to pull from, and nothing server-side
         // sweeps it - so it is never a wire input; its participation is recorded on `editor` below.
@@ -875,6 +922,7 @@ export function PipelineBuilder() {
         // An editor pipeline delivers back into the workspace. A stored destination would send the
         // run to a folder or bucket instead, leaving the editor's copy untouched.
         outputIds: isEditorInput ? [] : outputIds,
+        routingRules: isEditorInput ? [] : routingRules,
       };
       await savePipeline(policy);
       await invalidatePipelines();
@@ -1204,6 +1252,7 @@ export function PipelineBuilder() {
       inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
       steps: steps.map((step) => serializeToolStep(step, allTools)),
       outputIds,
+      routingRules,
     },
     null,
     2,
@@ -1301,13 +1350,30 @@ export function PipelineBuilder() {
 
     if (selected === "output") {
       return (
-        <DestinationPicker
-          sources={writableSources}
-          value={outputIds}
-          onChange={setOutputIds}
-          onCreateNew={() => createSourceFor("output")}
-          onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
-        />
+        <>
+          <RoutingSection
+            rules={routingRules}
+            onChange={setRoutingRules}
+            destinations={writableSources}
+            onCreateDestination={() => createSourceFor("output")}
+            canClassify={classifies}
+          />
+          <DestinationPicker
+            label={
+              routingRules.length > 0
+                ? t(
+                    "portal.pipelines.builder.routing.fallback",
+                    "Everything else goes to",
+                  )
+                : undefined
+            }
+            sources={writableSources}
+            value={outputIds}
+            onChange={setOutputIds}
+            onCreateNew={() => createSourceFor("output")}
+            onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
+          />
+        </>
       );
     }
 
@@ -1336,6 +1402,9 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
+          runsOnEditor={isEditorInput}
+          canManagePolicies={canManagePolicies}
+          permissionsLoading={permissionsLoading}
           enabled={enabled}
           onTogglePause={handleTogglePause}
           togglingEnabled={togglingEnabled}
@@ -1358,6 +1427,9 @@ export function PipelineBuilder() {
           onIconChange={setIcon}
           required={required}
           onRequiredChange={setRequired}
+          runsOnEditor={isEditorInput}
+          canManagePolicies={canManagePolicies}
+          permissionsLoading={permissionsLoading}
           canSave={canSave}
           blockers={blockers}
           saving={submitting}
@@ -1433,6 +1505,14 @@ export function PipelineBuilder() {
                       label:
                         chosenDestination?.name ??
                         t("portal.pipelines.builder.chooseDestination"),
+                      // With routing on, the destination on the node is only the fallback, so the
+                      // node says how many routes come first rather than implying one endpoint.
+                      detail:
+                        routingRules.length > 0
+                          ? t("portal.pipelines.builder.routing.nodeSummary", {
+                              count: routingRules.length,
+                            })
+                          : undefined,
                       warning: outputValid
                         ? undefined
                         : t("portal.pipelines.builder.needsDestination"),

@@ -835,7 +835,7 @@ export function WatchedFolderManagementModal({
               >
                 {isEditMode
                   ? t("watchedFolders.modal.saveChanges", "Save changes")
-                  : t("watchedFolders.modal.createFolder", "Create folder")}
+                  : t("watchedFolders.modal.createFolder", "New folder")}
               </Button>
             </Group>
           </div>

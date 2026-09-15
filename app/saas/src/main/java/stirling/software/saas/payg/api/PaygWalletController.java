@@ -36,6 +36,8 @@ import stirling.software.proprietary.model.TeamMembership;
 import stirling.software.proprietary.security.database.repository.UserRepository;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
+import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.ActivityRow;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.CategoryBreakdown;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
@@ -53,6 +55,7 @@ import stirling.software.saas.payg.repository.WalletLedgerRepository;
 import stirling.software.saas.payg.repository.WalletPolicyRepository;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 import stirling.software.saas.payg.wallet.WalletPolicy;
+import stirling.software.saas.repository.SaasTeamExtensionsRepository;
 import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
@@ -110,6 +113,7 @@ public class PaygWalletController {
     private final UserRepository userRepository;
     private final PrepaidBundleService prepaidBundleService;
     private final UserTeamResolver userTeamResolver;
+    private final SaasTeamExtensionsRepository teamExtensionsRepository;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -121,7 +125,8 @@ public class PaygWalletController {
             PaygShadowChargeRepository shadowRepo,
             UserRepository userRepository,
             PrepaidBundleService prepaidBundleService,
-            UserTeamResolver userTeamResolver) {
+            UserTeamResolver userTeamResolver,
+            SaasTeamExtensionsRepository teamExtensionsRepository) {
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
@@ -133,6 +138,8 @@ public class PaygWalletController {
         this.prepaidBundleService =
                 Objects.requireNonNull(prepaidBundleService, "prepaidBundleService");
         this.userTeamResolver = Objects.requireNonNull(userTeamResolver, "userTeamResolver");
+        this.teamExtensionsRepository =
+                Objects.requireNonNull(teamExtensionsRepository, "teamExtensionsRepository");
     }
 
     /** The single wallet fetch the frontend makes; every figure on the Plan page comes from it. */
@@ -165,6 +172,9 @@ public class PaygWalletController {
         EntitlementSnapshot snap = entitlementService.getSnapshot(teamId);
 
         String status = billing.subscribed() ? STATUS_SUBSCRIBED : STATUS_FREE;
+        WalletSnapshotResponse.ProcessorHolding processor =
+                new WalletSnapshotResponse.ProcessorHolding(billing.subscribed());
+        WalletSnapshotResponse.TeamHolding team = teamHolding(teamId);
 
         boolean noCap = billing.subscribed() && billing.capMoneyMinor() == null;
         Integer capMajor =
@@ -214,6 +224,8 @@ public class PaygWalletController {
                 new WalletSnapshotResponse(
                         teamId,
                         status,
+                        team,
+                        processor,
                         isLeader ? ROLE_LEADER : ROLE_MEMBER,
                         ISO_DATE.format(snap.periodStart().toLocalDate()),
                         ISO_DATE.format(snap.periodEnd().toLocalDate()),
@@ -221,6 +233,7 @@ public class PaygWalletController {
                         limit,
                         clampToInt(billing.freeGrantUnits()),
                         clampToInt(billing.freeRemainingUnits()),
+                        UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                         billing.perDocMinor(),
                         billing.currency(),
                         estimatedBill,
@@ -241,6 +254,20 @@ public class PaygWalletController {
                         billingMode,
                         bundleRatePerCreditMinor);
         return ResponseEntity.ok(body);
+    }
+
+    /**
+     * The team's user-capacity holding. The cap is written from the Team subscription, so a team
+     * holds Team exactly when {@link SaasTeamExtensions#licensedUsers()} states one.
+     */
+    private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId) {
+        int usersInUse = Math.toIntExact(memberRepo.countByTeamId(teamId));
+        Integer licensed =
+                teamExtensionsRepository
+                        .findByTeamId(teamId)
+                        .map(SaasTeamExtensions::licensedUsers)
+                        .orElse(null);
+        return new WalletSnapshotResponse.TeamHolding(licensed != null, licensed, usersInUse);
     }
 
     /** Per-category size-scaled units + input-file counts for the same window. */
@@ -475,6 +502,8 @@ public class PaygWalletController {
         return new WalletSnapshotResponse(
                 null, // teamId — unknown when the caller has no team membership
                 STATUS_FREE,
+                new WalletSnapshotResponse.TeamHolding(false, null, 0),
+                new WalletSnapshotResponse.ProcessorHolding(false),
                 ROLE_MEMBER,
                 ISO_DATE.format(window[0].toLocalDate()),
                 ISO_DATE.format(window[1].toLocalDate()),
@@ -482,6 +511,7 @@ public class PaygWalletController {
                 FREE_TIER_LIMIT_UNITS_FALLBACK,
                 FREE_TIER_LIMIT_UNITS_FALLBACK,
                 FREE_TIER_LIMIT_UNITS_FALLBACK,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                 null,
                 null,
                 null,
