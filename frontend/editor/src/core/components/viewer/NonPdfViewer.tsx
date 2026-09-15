@@ -1,9 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { Box, Center, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import ArticleIcon from "@mui/icons-material/Article";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-
+import { Icon } from "@app/ui/Icon";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -71,11 +69,10 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
         return (
           <Center style={{ flex: 1 }}>
             <Stack align="center" gap="sm">
-              <ArticleIcon
-                style={{
-                  fontSize: "3rem",
-                  color: "var(--mantine-color-gray-4)",
-                }}
+              <Icon
+                name="file-text"
+                size={"3rem"}
+                style={{ color: "var(--mantine-color-gray-4)" }}
               />
               <Text c="dimmed" size="sm">
                 Preview not available for this file type
@@ -84,7 +81,7 @@ export function NonPdfViewer({ file }: NonPdfViewerProps) {
                 <Button
                   variant="secondary"
                   accent="warning"
-                  leftSection={<PictureAsPdfIcon />}
+                  leftSection={<Icon name="file-pdf" />}
                   onClick={handleConvertToPdf}
                 >
                   Convert to PDF
