@@ -10,7 +10,7 @@ import { fileURLToPath } from "node:url";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const nodeModulesDir = path.resolve(here, "../node_modules");
-const scripts = ["patch-embedpdf-engines.mjs"];
+const scripts = ["patch-embedpdf-engines.mjs", "patch-embedpdf-plugins.mjs"];
 
 function run(script, args = []) {
   return (
