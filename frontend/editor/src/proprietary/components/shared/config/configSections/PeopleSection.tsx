@@ -594,6 +594,7 @@ User: ${user.username}`)
                         size={32}
                         color={user.enabled ? "blue" : "gray"}
                         src={avatars[String(user.id)]}
+                        alt=""
                         styles={{
                           root: {
                             border: user.isActive
