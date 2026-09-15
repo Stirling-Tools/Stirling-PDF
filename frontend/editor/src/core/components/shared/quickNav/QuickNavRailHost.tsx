@@ -69,7 +69,7 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  // The three apps you switch between. Reader is a mode over the editor rather
+  // The apps you switch between. Reader is a mode over the editor rather
   // than a place of its own, but it leads the group because it is where most
   // visits start.
   const reader: QuickNavEntry = {
@@ -125,17 +125,33 @@ export function QuickNavRailHost() {
     },
   };
 
-  // Editor and processor only pair off where there is a processor to reach.
-  const apps: QuickNavEntry[] = HAS_PORTAL
-    ? [reader, editor, processor]
-    : [reader];
+  // The processor is additive: dropping the editor with it left a lone reader
+  // toggle in builds without a portal, with no way back out of reader mode.
+  const apps: QuickNavEntry[] = [
+    reader,
+    editor,
+    ...(HAS_PORTAL ? [processor] : []),
+  ];
 
   const within: QuickNavEntry[] = [
+    ...(!host?.hasOpenFromComputer
+      ? []
+      : [
+          {
+            id: "openFromComputer",
+            label: t("fileSidebar.openFromComputer", "Open from computer"),
+            icon: <Icon name="file-up" size={SIZE} />,
+            testId: "files-button",
+            tourId: "files-button",
+            onClick: () => host?.actions.current?.openFromComputer?.(),
+          },
+        ]),
     {
       id: "files",
       label: t("fileSidebar.myFiles", "File library"),
       icon: <Icon name="folder" size={SIZE} />,
       current: Boolean(host?.fileLibrary),
+      testId: "my-files-button",
       // Through the app where possible: the library is a view, not a route. From the
       // processor there is no editor to ask, so the path carries it and HomePage seeds
       // the view on arrival. Unwrapped: setting the view runs the app's own

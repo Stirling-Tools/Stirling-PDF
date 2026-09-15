@@ -6,8 +6,7 @@ import { Tooltip } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { createPortal } from "react-dom";
 import { useEffect, useState, useRef, useCallback } from "react";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import { Icon } from "@app/ui/Icon";
 import { useRedaction } from "@app/contexts/RedactionContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import "@app/components/viewer/TextSelectionMenu.css";
@@ -134,7 +133,7 @@ function RedactionSelectionMenuInner({
           onClick={handleRemove}
           aria-label={t("viewer.redaction.removeMark", "Remove this mark")}
         >
-          <DeleteIcon style={{ fontSize: 18 }} />
+          <Icon name="trash" size={18} />
         </button>
       </Tooltip>
 
@@ -153,7 +152,7 @@ function RedactionSelectionMenuInner({
           className="embedpdf-floating-badge-btn"
           onClick={handleApply}
         >
-          <CheckCircleIcon style={{ fontSize: 16 }} />
+          <Icon name="circle-check" size={16} />
           <span>{t("redact.manual.apply", "Apply")}</span>
         </button>
       </Tooltip>

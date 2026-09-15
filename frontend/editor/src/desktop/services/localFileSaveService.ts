@@ -2,7 +2,9 @@ import type {
   SaveResult,
   MultiFileSaveResult,
 } from "@core/services/localFileSaveService";
+import { beginSelfWrite, endSelfWrite } from "@app/services/diskFileSync";
 export type { SaveResult, MultiFileSaveResult };
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 
 /**
  * Save file data to a local filesystem path (Tauri desktop only)
@@ -15,12 +17,17 @@ export async function saveToLocalPath(
   data: Blob | File,
   filePath: string,
 ): Promise<SaveResult> {
+  // Muted before the first byte so the watcher cannot report our own write as an
+  // external change. Released by the post-save re-baseline, or by its deadline.
+  beginSelfWrite(filePath);
   try {
     const { writeFile } = await import("@tauri-apps/plugin-fs");
     const arrayBuffer = await data.arrayBuffer();
+    assertFilesNotBlocked();
     await writeFile(filePath, new Uint8Array(arrayBuffer));
     return { success: true };
   } catch (error) {
+    endSelfWrite(filePath);
     const message = error instanceof Error ? error.message : String(error);
     console.error("[LocalFileSave] Failed to save:", message);
     return { success: false, error: message };

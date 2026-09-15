@@ -15,9 +15,7 @@ import { setScarfConfig, firePixel } from "@app/utils/scarfTracking";
  */
 export function useScarfTracking() {
   const { config } = useAppConfig();
-  const { isServiceAccepted } = useCookieConsent({
-    analyticsEnabled: config?.enableAnalytics === true,
-  });
+  const { isServiceAccepted } = useCookieConsent();
 
   // Update scarf config whenever config or consent changes
   useEffect(() => {

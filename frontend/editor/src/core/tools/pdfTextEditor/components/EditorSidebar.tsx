@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Box, Center, Group, Stack, Tabs, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import HighlightAltIcon from "@mui/icons-material/HighlightAltOutlined";
+import { Icon } from "@app/ui/Icon";
 import { useToolbarController } from "@app/tools/pdfTextEditor/hooks/useToolbarController";
 import { useSelectionGeometry } from "@app/tools/pdfTextEditor/hooks/useSelectionGeometry";
 import { DocumentInspector } from "@app/tools/pdfTextEditor/components/inspector/DocumentInspector";
@@ -138,12 +138,10 @@ function NothingSelected() {
   return (
     <Center p="xl" data-testid="pdf-editor-nothing-selected">
       <Stack align="center" gap={6}>
-        <HighlightAltIcon
-          style={{
-            fontSize: 34,
-            color: "var(--mantine-color-dimmed)",
-            opacity: 0.5,
-          }}
+        <Icon
+          name="square-dashed"
+          size={34}
+          style={{ color: "var(--mantine-color-dimmed)", opacity: 0.5 }}
         />
         <Text size="sm" fw={500} c="dimmed">
           {t("pdfTextEditor.inspector.nothingSelected", "Nothing selected")}
