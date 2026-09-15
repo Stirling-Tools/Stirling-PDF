@@ -1,8 +1,12 @@
 package stirling.software.proprietary.security.controller.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.argThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 
 import java.io.IOException;
@@ -599,17 +603,25 @@ class AdminSettingsControllerTest {
     class RestartApplication {
 
         @Test
-        @DisplayName("returns 503 when not running from a JAR (dev mode)")
-        void devModeUnavailable() {
+        @DisplayName("restarts through the helper when not running from a JAR (dev mode)")
+        void devModeRestartsThroughHelper() throws IOException {
+            controller = spy(controller);
+            doNothing().when(controller).restartInDevelopmentMode(any(), anyList());
+            java.nio.file.Path helper =
+                    java.nio.file.Files.createTempFile("restart-helper-", ".jar");
+
             try (MockedStatic<stirling.software.common.util.JarPathUtil> jar =
                     mockStatic(stirling.software.common.util.JarPathUtil.class)) {
                 jar.when(stirling.software.common.util.JarPathUtil::currentJar).thenReturn(null);
+                jar.when(stirling.software.common.util.JarPathUtil::restartHelperJar)
+                        .thenReturn(helper);
 
                 ResponseEntity<Map<String, Object>> response = controller.restartApplication();
 
-                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.SERVICE_UNAVAILABLE);
-                assertThat(response.getBody().get("error").toString()).contains("development mode");
+                assertThat(response.getStatusCode().is2xxSuccessful()).isTrue();
+                verify(controller).restartInDevelopmentMode(any(), anyList());
             }
+            java.nio.file.Files.deleteIfExists(helper);
         }
 
         @Test
