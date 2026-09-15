@@ -203,6 +203,29 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         }
         console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
       }
+      // closeBundle hooks run concurrently in Vite, not in plugin order, so a
+      // sibling plugin cannot reliably compress files written here. Compress the
+      // freshly written route HTML here instead (index.html is already handled by
+      // the main compression plugin) so Spring's EncodedResourceResolver can
+      // serve it precompressed. Nested routes (e.g. dist/settings/people.html)
+      // are included, so walk the whole dist tree.
+      const htmlFiles: string[] = [];
+      const walkHtml = async (dir: string) => {
+        let entries;
+        try {
+          entries = await fs.readdir(dir, { withFileTypes: true });
+        } catch {
+          return;
+        }
+        for (const entry of entries) {
+          const p = path.join(dir, entry.name);
+          if (entry.isDirectory()) await walkHtml(p);
+          else if (entry.name.endsWith(".html") && entry.name !== "index.html")
+            htmlFiles.push(p);
+        }
+      };
+      await walkHtml(distDir);
+      await Promise.all(htmlFiles.map((f) => compressFile(f, distDir)));
     },
   };
 }
