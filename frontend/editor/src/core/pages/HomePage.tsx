@@ -30,6 +30,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Icon } from "@app/ui/Icon";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
+import { ReaderSuperSearch } from "@app/components/viewer/readerRail/ReaderSuperSearch";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
@@ -155,38 +156,24 @@ export default function HomePage() {
 
   const { searchInterfaceActions } = useViewer();
 
-  // Super search lives in the bar that reading hides, so Ctrl+K leaves reading to
-  // reach it. Find in document does not: the rail carries it. e.code, for
-  // non-QWERTY layouts.
-  const focusSearchAfterRestore = useRef(false);
+  // Find in document lives in the rail, not the bar reading hides, so the
+  // shortcut opens it where the reader already is. e.code, for non-QWERTY
+  // layouts. Ctrl+K belongs to ReaderSuperSearch, which floats the global
+  // search over the page rather than leaving reading to reach it.
   useEffect(() => {
     if (!readerMode) return;
     const onKeyDown = (e: KeyboardEvent) => {
       const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
-      if (!combo) return;
-      if (e.code !== "KeyK" && e.code !== "KeyF") return;
+      if (!combo || e.code !== "KeyF") return;
       // Same carve-out the search itself makes: a dialog owns the keyboard.
       if ((e.target as HTMLElement | null)?.closest?.('[role="dialog"]'))
         return;
       e.preventDefault();
-      if (e.code === "KeyF") {
-        searchInterfaceActions.open();
-        return;
-      }
-      setReaderMode(false);
-      focusSearchAfterRestore.current = true;
+      searchInterfaceActions.open();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [readerMode, setReaderMode, searchInterfaceActions]);
-
-  useEffect(() => {
-    if (readerMode || !focusSearchAfterRestore.current) return;
-    focusSearchAfterRestore.current = false;
-    requestAnimationFrame(() =>
-      window.dispatchEvent(new Event("superSearch:focus")),
-    );
-  }, [readerMode]);
+  }, [readerMode, searchInterfaceActions]);
 
   // Clean slate: no tool, out of the file library and reading.
   const goToDefaultState = useCallback(() => {
@@ -714,6 +701,7 @@ export default function HomePage() {
                 Both render together only while the panel is on its way out. */}
             {wingsMounted && !hideToolPanel && <RightSidebar />}
             {readerMode && <ReaderRail />}
+            {readerMode && <ReaderSuperSearch />}
             <FileManager selectedTool={selectedTool} />
           </Group>
         )}
