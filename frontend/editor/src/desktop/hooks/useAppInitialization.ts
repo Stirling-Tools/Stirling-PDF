@@ -1,8 +1,13 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { useOpenedFile } from "@app/hooks/useOpenedFile";
-import { fileOpenService } from "@app/services/fileOpenService";
+import {
+  fileOpenService,
+  FileAccessDeniedError,
+} from "@app/services/fileOpenService";
 import { useFileManagement } from "@app/contexts/file/fileHooks";
 import { createQuickKey } from "@app/types/fileContext";
+import { alert } from "@app/components/toast";
 
 /**
  * App initialization hook
@@ -11,6 +16,8 @@ import { createQuickKey } from "@app/types/fileContext";
  * - Handles files opened with the app (adds directly to FileContext)
  */
 export function useAppInitialization(): void {
+  const { t } = useTranslation();
+
   // Get file management actions
   const { addFiles, updateStirlingFileStub } = useFileManagement();
 
@@ -57,6 +64,19 @@ export function useAppInitialization(): void {
                   quickKey: createQuickKey(file),
                 };
               } catch (error) {
+                // Expected, environmental failure (e.g. Windows blocking reads
+                // of Outlook's attachment cache): tell the user how to recover
+                // instead of failing silently and capturing an exception.
+                if (error instanceof FileAccessDeniedError) {
+                  alert({
+                    alertType: "error",
+                    title: t("fileOpen.accessDenied.title", {
+                      fileName: error.fileName,
+                    }),
+                    body: t("fileOpen.accessDenied.body"),
+                  });
+                  return null;
+                }
                 console.error(
                   "[Desktop] Failed to load file:",
                   filePath,
@@ -103,6 +123,7 @@ export function useAppInitialization(): void {
     addFiles,
     updateStirlingFileStub,
     consumeOpenedFilePaths,
+    t,
   ]);
 }
 
