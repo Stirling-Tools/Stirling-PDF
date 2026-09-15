@@ -14,7 +14,7 @@ public record GateDecision(boolean allowed, Reason reason) {
         MANUAL_FREE,
         /** Linked + within entitlement — billable work allowed. */
         ENTITLED,
-        /** Active local Enterprise licence includes processing without credit charges. */
+        /** Enterprise license permits processing with local-only usage metering. */
         ENTERPRISE_LICENSE,
         FREE_TIER,
         /** Entitlement source unreachable — fail open, allow. */

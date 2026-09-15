@@ -1,8 +1,8 @@
-import { ServerLicenseSection } from "@app/portal/components/billing/ServerLicenseSection";
 import { useServerPlan } from "@app/portal/hooks/useServerPlan";
 import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
-import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { ServerLicenseSection } from "@app/portal/components/billing/ServerLicenseSection";
 import {
   useApplyLinkFacts,
   useLinkOptional,
@@ -11,7 +11,6 @@ import { useUI } from "@app/portal/contexts/UIContext";
 import { useConnectGate } from "@app/portal/hooks/useConnectGate";
 import { usePortalAdmin } from "@app/portal/hooks/usePortalAdmin";
 import { FreeTierPlanView } from "@app/portal/components/billing/FreeTierPlanView";
-import { toPortalPath } from "@app/portal/contexts/ViewContext";
 import { Usage } from "@app/portal/views/Usage";
 import type { Wallet } from "@app/portal/api/billing";
 
@@ -24,23 +23,30 @@ import type { Wallet } from "@app/portal/api/billing";
  */
 export function PortalBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
-  const { openLinkModal } = useUI();
-  const { loading } = useConnectGate();
+  const { openLinkModal, trialSetupRequested } = useUI();
+  const { loading, gated, connect } = useConnectGate();
   const isAdmin = usePortalAdmin();
   const { serverPlan, loading: licenseLoading } = useServerPlan(isAdmin);
   const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prompted = useRef(false);
+  const procurementRequested =
+    trialSetupRequested || searchParams.get("procurement") === "start";
+
+  useEffect(() => {
+    if (!procurementRequested || link?.isLinked) prompted.current = false;
+    else if (isAdmin && !loading && gated && !prompted.current) {
+      prompted.current = true;
+      connect();
+    }
+  }, [procurementRequested, link?.isLinked, isAdmin, loading, gated, connect]);
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
     [applyLinkFacts],
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
-  // The processor owns a separate UIProvider, so its entry route must raise the trial request.
-  const onEnterpriseQuote = useCallback(() => {
-    navigate(toPortalPath("/procurement"));
-  }, [navigate]);
 
   // Administrators only: the figures are instance-wide and the endpoints ADMIN-gated. The nav
   // hides the entry to match, so this is the backstop for a typed URL.
@@ -62,12 +68,11 @@ export function PortalBillingGate() {
     <Usage
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
+      onWalletLoaded={onWalletLoaded}
+      onReauth={onReauth}
       renderLicenseSection={(onSaved) => (
         <ServerLicenseSection onSaved={onSaved} />
       )}
-      onWalletLoaded={onWalletLoaded}
-      onReauth={onReauth}
-      onEnterpriseQuote={onEnterpriseQuote}
       sessionRecoveryInShell
     />
   );

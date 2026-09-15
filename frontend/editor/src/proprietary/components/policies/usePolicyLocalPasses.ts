@@ -15,6 +15,7 @@ import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { runPolicyOnFile } from "@app/services/policyDispatch";
 import {
+  dispatchableFileId,
   localPassFor,
   type LocalPass,
 } from "@app/components/policies/policyLocalPass";
@@ -79,6 +80,8 @@ export function usePolicyLocalPasses(): void {
     outer: for (const active of passes) {
       for (const stub of fileStubs) {
         if (batch.length >= LOCAL_PASS_BATCH) break outer;
+        // Null when the classification is locked: no pass, and so no escalation.
+        if (!dispatchableFileId(stub)) continue;
         if (!active.pass.eligible(stub)) continue;
         if (claimed.current.has(claimKey(active.policyKey, stub))) continue;
         batch.push({ active, stub });
@@ -116,7 +119,7 @@ export function usePolicyLocalPasses(): void {
             void runPolicyOnFile(
               active.policyKey,
               active.backendId,
-              stub.id,
+              dispatchableFileId(stub)!,
               stub.name,
             ).catch(() => {
               // Backstop: runPolicyOnFile handles its own failures.

@@ -57,7 +57,12 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
         const callbackUrl = callback.toString();
         const status = reauth
           ? await startReauth(callbackUrl)
-          : await startConnect(window.location.hostname, callbackUrl);
+          : await startConnect(
+              new URL(withBasePath("/"), window.location.origin)
+                .toString()
+                .replace(/\/$/, ""),
+              callbackUrl,
+            );
         if (!mounted.current) return;
         if (status.phase === "CALLBACK_MISMATCH") {
           setError(

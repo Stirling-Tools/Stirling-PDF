@@ -19,6 +19,9 @@ vi.mock("@app/portal/auth/saasSupabase", () => ({
   // Step 3 reads the connected account's email off this session.
   ensureSaasSupabase: () => ({
     auth: {
+      onAuthStateChange: () => ({
+        data: { subscription: { unsubscribe: () => {} } },
+      }),
       getSession: () =>
         Promise.resolve({ data: { session: { user: { email: EMAIL } } } }),
     },
@@ -30,6 +33,11 @@ import type { ConnectOutcome } from "@app/portal/components/account-link/Connect
 import { freeWallet } from "@app/portal/components/billing/walletFixtures";
 
 const AUTHORIZE = "http://localhost:5174/link?request=req-1";
+const deployment = vi.hoisted(() => ({ basePath: "" }));
+vi.mock("@app/constants/app", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@app/constants/app")>()),
+  withBasePath: (path: string) => `${deployment.basePath}${path}`,
+}));
 
 const BENEFITS = "Pipelines, policies, sources and audit";
 const GHOST = /Taking you to stirling\.com/;
@@ -73,6 +81,7 @@ describe("LinkAccountModal", () => {
     vi.clearAllMocks();
     sessionStorage.clear();
     localStorage.setItem("stirling.portalSaasOwner", "owner");
+    deployment.basePath = "";
     fetchWallet.mockResolvedValue(freeWallet);
     startConnect.mockResolvedValue({
       phase: "PENDING",
@@ -196,7 +205,7 @@ describe("LinkAccountModal", () => {
     expect(filledSteps()).toBe(2);
     // The backend checks this against the request's Origin header.
     expect(startConnect).toHaveBeenCalledWith(
-      "localhost",
+      "http://localhost:5173",
       expect.stringMatching(
         /^http:\/\/localhost:5173\/account-link\/callback\?state=/,
       ),
@@ -224,6 +233,22 @@ describe("LinkAccountModal", () => {
     );
     expect(startConnect).not.toHaveBeenCalled();
     await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+  });
+
+  it("names a new connection using its deployment URL without the current route or query", async () => {
+    deployment.basePath = "/pdf";
+    window.location.href =
+      "http://localhost:5173/pdf/settings/account-link?view=account#details";
+    renderModal();
+    click(CONNECT);
+    await waitFor(() =>
+      expect(startConnect).toHaveBeenCalledWith(
+        "http://localhost:5173/pdf",
+        expect.stringMatching(
+          /^http:\/\/localhost:5173\/pdf\/account-link\/callback\?state=/,
+        ),
+      ),
+    );
   });
 
   it("falls back to step 1 with the reason when the handshake cannot start", async () => {
