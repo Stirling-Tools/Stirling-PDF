@@ -296,6 +296,13 @@ interface AddFileOptions {
    * landed somewhere else.
    */
   folderId?: string;
+  /**
+   * Store the bytes and stub only: no thumbnail or page-count parse, and with
+   * {@link skipWorkspaceDispatch} the File is dropped from memory once written. For a
+   * bulk import nobody is looking at yet; the library draws thumbnails lazily from
+   * storage (useLazyThumbnail), so nothing is lost, only deferred.
+   */
+  skipMetadataHydration?: boolean;
 }
 
 /**
@@ -405,6 +412,10 @@ export async function addFiles(
     const DISPATCH_CHUNK = 5;
     let flushedStubs = 0;
     let flushedHydrations = 0;
+    // Nothing in state and no hydration pending means nothing reads these bytes again.
+    const releaseAfterWrite = Boolean(
+      options.skipWorkspaceDispatch && options.skipMetadataHydration,
+    );
     // Flushes the pending chunk and returns this chunk's persistence promises,
     // so the caller can await the writes (see the loop's yield) before the policy
     // auto-run tries to read the file back from storage.
@@ -435,6 +446,9 @@ export async function addFiles(
                   sf.name,
                   error,
                 );
+              })
+              .then(() => {
+                if (releaseAfterWrite) filesRef.current.delete(stub.id);
               });
             chunkWrites.push(write);
             persistPromises.push(write);
@@ -515,7 +529,8 @@ export async function addFiles(
       stirlingFiles.push(stirlingFile);
 
       // Capture per-file hydration task — scheduled after batch dispatch below
-      pendingHydrations.push(async () => {
+      if (!options.skipMetadataHydration)
+        pendingHydrations.push(async () => {
         const targetFile = filesRef.current.get(fileId);
         if (!targetFile) {
           return;

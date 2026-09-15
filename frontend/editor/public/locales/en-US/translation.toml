@@ -3412,6 +3412,9 @@ will = "Will"
 work-instruction = "Work instruction"
 work-order = "Work order"
 
+[classificationDemo]
+folderName = "Downloads"
+
 [classificationDemo.buttons]
 done = "Done"
 notNow = "Not now"
@@ -3430,6 +3433,7 @@ cta = "Make Stirling my default"
 title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
+background = "This runs in the background. The ring on the left shows progress."
 batchCta = "Process another {{count}}"
 free = "They are all covered by your remaining free allowance."
 partial = "{{count}} of them are covered by your remaining free allowance."
@@ -3463,6 +3467,12 @@ heading = "Your Downloads, sorted"
 summary = "Stirling read {{documents}} and sorted them into {{types}}."
 typeCount_one = "{{count}} type"
 typeCount_other = "{{count}} types"
+
+[classificationDemo.ring]
+done = "{{folder}} classified"
+doneDetail = "{{count}} PDFs sorted by type"
+progress = "{{done}} of {{total}} PDFs ({{percent}}%)"
+running = "Classifying {{folder}}"
 
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
