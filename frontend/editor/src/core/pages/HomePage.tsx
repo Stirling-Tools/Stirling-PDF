@@ -26,30 +26,26 @@ import {
 import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import AppsIcon from "@mui/icons-material/AppsRounded";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-
+import { Icon } from "@app/ui/Icon";
 import RightSidebar from "@app/components/tools/RightSidebar";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import AppConfigModal from "@app/components/shared/AppConfigModalLazy";
 import {
   getStartupNavigationAction,
   getDefaultWorkbenchForFileCount,
 } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { stripBasePath } from "@app/constants/app";
+import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
@@ -59,8 +55,14 @@ import { useFolders } from "@app/contexts/FolderContext";
 import { folderKind } from "@app/types/folder";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
+import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
+import MobileUploadModal from "@app/components/shared/MobileUploadModal";
+import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
+import { useAuth } from "@app/auth/UseSession";
+import { canPickDirectory } from "@app/services/directoryPicker";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { FolderTreePanel } from "@app/components/filesPage/FolderTreePanel";
+import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
+import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
@@ -103,6 +105,7 @@ type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const policiesEnabled = usePoliciesEnabled();
   const { sidebarRefs } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
@@ -122,58 +125,33 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { config } = useAppConfig();
+  const processingFolderCreation = useProcessingFolderCreation();
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
-  const [configModalOpen, setConfigModalOpen] = useState(false);
-  const otherApp = useOtherAppSwitch();
   const location = useLocation();
-  // Persisted user preference for the FileSidebar collapsed state. Auto-
-  // collapse on /files is layered on top in the transition effect below and
-  // doesn't write to storage, so deep-linking to /files won't overwrite what
-  // the user actually chose last time.
+  useEffect(() => {
+    if (
+      processingFolderCreation.open &&
+      consumeProcessingFolderCreationRequest()
+    ) {
+      processingFolderCreation.open();
+    }
+  }, [location.key, processingFolderCreation.open]);
+  // The user's preference, and the only thing that decides it: reading mode forces
+  // the sidebar shut without writing, so leaving reading restores this.
   const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
-    readPersistedSidebarCollapsed,
+    // Reader mode outlives this page (settings swaps it out and back), and it
+    // collapses the sidebar without persisting that, so it wins on mount too.
+    () => readerMode || readPersistedSidebarCollapsed(),
   );
 
-  // Open the config modal whenever the URL is /settings/* (e.g. from the admin
-  // tour's openConfigModal action which navigates to /settings/overview).
-  useEffect(() => {
-    const isSettings = location.pathname.startsWith("/settings");
-    setConfigModalOpen(isSettings);
-  }, [location.pathname]);
-
-  useEffect(() => {
-    const handler = () => setConfigModalOpen(true);
-    window.addEventListener("appConfig:open", handler);
-    return () => window.removeEventListener("appConfig:open", handler);
-  }, []);
-
-  // Where the user was before settings opened, so close can restore it. Null
-  // when opened directly on a /settings URL (deep link) - close falls back to
-  // the editor root.
-  const settingsOriginRef = useRef<string | null>(null);
-  const wasConfigOpenRef = useRef(false);
-  useEffect(() => {
-    if (configModalOpen && !wasConfigOpenRef.current) {
-      settingsOriginRef.current = location.pathname.startsWith("/settings")
-        ? null
-        : location.pathname;
-    }
-    wasConfigOpenRef.current = configModalOpen;
-  }, [configModalOpen, location.pathname]);
-
-  const handleCloseConfig = useCallback(() => {
-    // Restore the URL before clearing the flag, or a late /settings commit
-    // re-opens the modal. Read window.location, not useLocation: a tab switch
-    // updates the URL synchronously while the router's commit lags. Replace to
-    // the origin rather than navigate(-1), which webkit can drop.
-    if (stripBasePath(window.location.pathname).startsWith("/settings")) {
-      navigate(settingsOriginRef.current ?? EDITOR_BASENAME, { replace: true });
-    }
-    setConfigModalOpen(false);
+  // Settings is its own page; it restores the recorded origin on Back.
+  const openSettings = useCallback(() => {
+    rememberSettingsOrigin();
+    navigate("/settings");
   }, [navigate]);
 
   const { activeFiles } = useFileContext();
@@ -226,56 +204,47 @@ export default function HomePage() {
   // Clean slate: no tool, out of the file library and reading.
   const goToDefaultState = useCallback(() => {
     handleBackToTools();
-    if (location.pathname.startsWith("/files")) navigate(EDITOR_BASENAME);
     actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
-  }, [
-    handleBackToTools,
-    location.pathname,
-    navigate,
-    actions,
-    activeFiles.length,
-  ]);
+  }, [handleBackToTools, actions, activeFiles.length]);
 
-  // Sync the /files* URL into the workbench state so the file manager view
-  // takes over the workbench area when the user lands on it. This is the
-  // only state-of-truth for the active workbench, so keep the URL pinned.
+  // The library is a view like the viewer and the file editor: which view is on screen
+  // is state, the path says which folder you are in. Each side moves the other on a
+  // transition only: asserting either on every render lets the path re-impose
+  // "myFiles" a render after anything else has set a view.
+
+  // Path moved, so the path is the cause: arrival, back/forward, or a deliberate
+  // navigate. Mount included, which is what seeds a deep link.
+  const derivedFromPath = actions.viewDerivedFromPathRef;
   useEffect(() => {
+    if (derivedFromPath.current === location.pathname) return;
     if (location.pathname.startsWith("/files")) {
       if (navigationState.workbench !== "myFiles") {
         actions.setWorkbench("myFiles");
       }
-    } else if (
-      navigationState.workbench === "myFiles" &&
-      !isApplyingRestoredView()
-    ) {
-      // The URL no longer supports the file manager - drop back to a sensible default. Stays a
-      // state check rather than a transition one: HomePage remounts without NavigationContext
-      // (a share link, a login bounce), and the view has to be corrected on arrival too.
-      // Skipped mid-restore, which is reopening a recorded view onto files still loading.
-      actions.setWorkbench(activeFiles.length > 1 ? "fileEditor" : "viewer");
+    } else if (navigationState.workbench === "myFiles") {
+      // A restore is reopening a recorded view onto files still loading. Leave the
+      // path unmarked so the correction runs once those files land.
+      if (isApplyingRestoredView()) return;
+      actions.setWorkbench(getDefaultWorkbenchForFileCount(activeFiles.length));
     }
-  }, [
-    location.pathname,
-    navigationState.workbench,
-    actions,
-    activeFiles.length,
-  ]);
+    derivedFromPath.current = location.pathname;
+    // Deliberately not keyed on the workbench: this reacts to the path only.
+  }, [location.pathname, actions, derivedFromPath, activeFiles.length]);
 
-  // Auto-collapse the FileSidebar while on /files; restore the user's persisted
-  // preference on leave. Auto-collapse doesn't write to storage so deep-linking
-  // to /files won't overwrite what the user actually chose.
-  const prevWorkbenchRef = useRef(navigationState.workbench);
+  // View moved, so the path follows. Pushed, not replaced, so Back leaves the library.
+  const wasInLibraryRef = useRef(navigationState.workbench === "myFiles");
   useEffect(() => {
-    const prev = prevWorkbenchRef.current;
-    const curr = navigationState.workbench;
-    if (curr === "myFiles" && prev !== "myFiles") {
-      if (!fileSidebarCollapsed) setFileSidebarCollapsed(true);
-    } else if (curr !== "myFiles" && prev === "myFiles") {
-      setFileSidebarCollapsed(readPersistedSidebarCollapsed());
+    const inLibrary = navigationState.workbench === "myFiles";
+    if (inLibrary === wasInLibraryRef.current) return;
+    wasInLibraryRef.current = inLibrary;
+    const onFilesPath = location.pathname.startsWith("/files");
+    if (inLibrary && !onFilesPath) {
+      navigate("/files");
+    } else if (!inLibrary && onFilesPath) {
+      navigate(EDITOR_BASENAME);
     }
-    prevWorkbenchRef.current = curr;
-    // fileSidebarCollapsed read as snapshot on transition only.
-  }, [navigationState.workbench]);
+  }, [navigationState.workbench, location.pathname, navigate]);
+
   // Imperative, so the toggle still works while reading. Never persisted: not a preference.
   const prevReaderModeRef = useRef(readerMode);
   useEffect(() => {
@@ -354,18 +323,22 @@ export default function HomePage() {
     return reasons;
   }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
 
-  // Shared with the sidebar's own toggle. On /files it leaves rather than collapses.
+  // The collapse is a preference, so it is written as one; every view reads it back.
   const handleSidebarToggle = useCallback(() => {
-    if (navigationState.workbench === "myFiles") {
-      navigate(EDITOR_BASENAME);
-      return;
-    }
     setFileSidebarCollapsed((c) => {
       const next = !c;
       writePersistedSidebarCollapsed(next);
       return next;
     });
-  }, [navigationState.workbench, navigate]);
+  }, []);
+
+  const openFromComputerRef = useRef<(() => void) | null>(null);
+  const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
+    openFromComputerRef.current = open;
+  }, []);
+  const openFromComputer = useCallback(() => {
+    openFromComputerRef.current?.();
+  }, []);
 
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
@@ -397,10 +370,8 @@ export default function HomePage() {
     [dismissSwipeHint],
   );
 
-  // The /files URL pins the workbench to myFiles, so changing view while the
-  // file manager is open does nothing until we navigate off it. Desktop leaves
-  // via the sidebar's back arrow; mobile renders no sidebar, so without this the
-  // bottom bar could not get out of My Files at all.
+  // Mobile's bottom bar sets no view of its own, so leaving the library is the path
+  // moving; the reconciliation effect takes the view with it.
   const leaveMyFiles = useCallback(() => {
     if (navigationState.workbench === "myFiles") navigate(EDITOR_BASENAME);
   }, [navigationState.workbench, navigate]);
@@ -520,16 +491,22 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
+      {processingFolderCreation.dialog}
+      {policiesEnabled && <PolicyAutoRunController />}
       <QuickNavHostBridge
-        portalAccess={Boolean(otherApp)}
-        onOpenSettings={() => setConfigModalOpen(true)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
+        fileLibrary={navigationState.workbench === "myFiles"}
         onSetReaderMode={setReaderMode}
         onGoToDefaultState={goToDefaultState}
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
+        onShowFileLibrary={() => actions.setWorkbench("myFiles")}
+        onCreateProcessingFolder={processingFolderCreation.open}
         toolReasons={quickNavToolReasons}
+        onOpenFromComputer={
+          navigationState.workbench === "myFiles" ? undefined : openFromComputer
+        }
       />
       <FilesPageProvider>
         {isMobile ? (
@@ -537,10 +514,9 @@ export default function HomePage() {
             className="mobile-layout"
             data-files-mode={navigationState.workbench === "myFiles"}
           >
-            {/* On /files the FileManagerView already has its own Back +
-              breadcrumb + tabs chrome - the tools/workspace toggle would
-              just duplicate vertical space. Keep the toggle on every
-              other route. */}
+            {/* The library brings its own tabs and folder path, so the
+              tools/workspace toggle would only cost it vertical space. Every
+              other view keeps the toggle. */}
             {navigationState.workbench !== "myFiles" && (
               <div className="mobile-toggle">
                 <div className="mobile-brand">
@@ -640,7 +616,7 @@ export default function HomePage() {
                   }
                 }}
               >
-                <AppsIcon sx={{ fontSize: "1.5rem" }} />
+                <Icon name="layout-grid" size={"1.5rem"} />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.allTools", "Tools")}
                 </span>
@@ -658,11 +634,7 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <LocalIcon
-                    icon="automation-outline"
-                    width="1.5rem"
-                    height="1.5rem"
-                  />
+                  <Icon name="workflow" size="1.5rem" />
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
@@ -674,11 +646,7 @@ export default function HomePage() {
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => navigate("/files")}
               >
-                <LocalIcon
-                  icon="folder-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <Icon name="folder" size="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.files", "Files")}
                 </span>
@@ -687,23 +655,15 @@ export default function HomePage() {
                 variant="tertiary"
                 className="mobile-bottom-button"
                 aria-label={t("quickAccess.config", "Config")}
-                onClick={() => setConfigModalOpen(true)}
+                onClick={openSettings}
               >
-                <LocalIcon
-                  icon="settings-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <Icon name="settings" size="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.config", "Config")}
                 </span>
               </Button>
             </div>
             <FileManager selectedTool={selectedTool} />
-            <AppConfigModal
-              opened={configModalOpen}
-              onClose={handleCloseConfig}
-            />
           </div>
         ) : (
           <Group
@@ -717,34 +677,16 @@ export default function HomePage() {
               <MyFilesAwareFileSidebar
                 ref={quickAccessRef}
                 accountHoisted
-                toggleAriaLabel={
-                  navigationState.workbench === "myFiles"
-                    ? t("fileSidebar.leaveMyFiles", "Leave File library")
-                    : undefined
-                }
-                toggleIcon={
-                  navigationState.workbench === "myFiles" ? (
-                    <ArrowBackIcon />
-                  ) : undefined
-                }
                 active={navigationState.workbench === "myFiles"}
-                // Forced: a deep link to /files has no transition to collapse on.
-                collapsed={
-                  navigationState.workbench === "myFiles" ||
-                  fileSidebarCollapsed
-                }
+                collapsed={fileSidebarCollapsed}
                 onToggleCollapse={handleSidebarToggle}
-                onOpenSettings={() => setConfigModalOpen(true)}
+                onOpenSettings={openSettings}
+                onRegisterOpenFromComputer={registerOpenFromComputer}
               />
             </div>
-            <FolderTreePanel active={navigationState.workbench === "myFiles"} />
             <Workbench />
             {!hideToolPanel && <RightSidebar />}
             <FileManager selectedTool={selectedTool} />
-            <AppConfigModal
-              opened={configModalOpen}
-              onClose={handleCloseConfig}
-            />
           </Group>
         )}
       </FilesPageProvider>
@@ -756,7 +698,7 @@ interface MyFilesAwareFileSidebarProps extends FileSidebarProps {
   active: boolean;
 }
 
-/** Wraps FileSidebar with /files-aware overrides when `active`. */
+/** Wraps FileSidebar with the library's overrides while the library is on screen. */
 const MyFilesAwareFileSidebar = forwardRef<
   HTMLDivElement,
   MyFilesAwareFileSidebarProps
@@ -774,8 +716,20 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
     const filesPage = useFilesPage();
     const folders = useFolders();
     const { addFiles } = useFileHandler();
-    const { createFolderHere, createFolderHereBlockedReason } =
+    const { addLocalFolder, createFolderHere, createFolderHereBlockedReason } =
       useNewFolderFlow();
+    const { refreshing, refresh: refreshLibrary } = useLibraryRefresh();
+    const { isAnonymous } = useAuth();
+    const { config: appConfig } = useAppConfig();
+    const [mobileUploadOpen, setMobileUploadOpen] = useState(false);
+    const isMobileViewport = useIsMobile();
+    // The scanner sends files from a phone to this screen, so it is a desktop
+    // affordance: on a phone you are already where the files are.
+    const mobileUploadAvailable =
+      Boolean(appConfig?.enableMobileScanner) && !isMobileViewport;
+    const signInRequired = isAnonymous
+      ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
+      : null;
 
     const handleUpload = useCallback(
       async (files: File[]) => {
@@ -807,20 +761,74 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
         : createFolderHereBlockedReason;
 
     return (
-      <FileSidebar
-        ref={ref}
-        {...props}
-        onUploadFiles={handleUpload}
-        onPickGoogleDriveFiles={handleUpload}
-        extraAction={{
-          icon: <CreateNewFolderIcon />,
-          label: t("filesPage.newFolder", "New folder"),
-          onClick: createFolderHere,
-          disabled: newFolderDisabledReason !== null,
-          disabledTooltip: newFolderDisabledReason ?? undefined,
-          testId: "files-rail-new-folder",
-        }}
-      />
+      <>
+        <FileSidebar
+          ref={ref}
+          {...props}
+          onUploadFiles={handleUpload}
+          onPickGoogleDriveFiles={handleUpload}
+          extraActions={[
+            {
+              icon: <Icon name="folder-plus" />,
+              label: t("filesPage.newFolder", "New folder"),
+              onClick: createFolderHere,
+              disabled: newFolderDisabledReason !== null,
+              disabledTooltip: newFolderDisabledReason ?? undefined,
+              testId: "files-rail-new-folder",
+              // The same control the library's other surfaces use, so one row
+              // cannot offer less than another: where a folder can go decides
+              // its shape.
+              render: ({ collapsed }) => (
+                <NewFolderButton
+                  trigger="row"
+                  collapsed={collapsed}
+                  testId="files-rail-new-folder"
+                  label={t("filesPage.newFolder", "New folder")}
+                  disabledReason={newFolderDisabledReason}
+                  serverDisabledReason={serverFolderBlock ?? undefined}
+                  currentFolderId={folders.currentFolderId}
+                  canAddLocalFolder={canPickDirectory}
+                  onAddLocalFolder={() => void addLocalFolder()}
+                  onOpenDialog={filesPage.openNewFolderDialog}
+                />
+              ),
+            },
+            {
+              icon: (
+                <Icon
+                  name="refresh-cw"
+                  className={refreshing ? "file-sidebar-spin" : undefined}
+                />
+              ),
+              label: t("filesPage.refresh", "Refresh from server"),
+              onClick: () => void refreshLibrary(),
+              disabled: refreshing || signInRequired !== null,
+              disabledTooltip: signInRequired ?? undefined,
+              testId: "files-rail-refresh",
+            },
+            ...(mobileUploadAvailable
+              ? [
+                  {
+                    icon: <Icon name="qr-code" />,
+                    label: t(
+                      "filesPage.uploadFromMobile",
+                      "Upload from Mobile",
+                    ),
+                    onClick: () => setMobileUploadOpen(true),
+                    testId: "files-rail-mobile-upload",
+                  },
+                ]
+              : []),
+          ]}
+        />
+        <MobileUploadModal
+          opened={mobileUploadOpen}
+          onClose={() => setMobileUploadOpen(false)}
+          onFilesReceived={(files) => {
+            if (files.length > 0) void handleUpload(files);
+          }}
+        />
+      </>
     );
   },
 );

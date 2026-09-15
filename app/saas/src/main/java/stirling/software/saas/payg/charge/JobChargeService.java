@@ -28,7 +28,6 @@ import stirling.software.saas.payg.job.JoinOrOpenResult;
 import stirling.software.saas.payg.job.ProcessingJob;
 import stirling.software.saas.payg.meter.PaygMeterReportingService;
 import stirling.software.saas.payg.model.BillingCategory;
-import stirling.software.saas.payg.model.JobSource;
 import stirling.software.saas.payg.model.JobStatus;
 import stirling.software.saas.payg.model.LedgerBucket;
 import stirling.software.saas.payg.model.LedgerEntryType;
@@ -114,7 +113,7 @@ public class JobChargeService {
         }
 
         PricingPolicy policy = policyService.getEffectivePolicy(ctx.ownerTeamId());
-        int stepLimit = resolveStepLimit(policy, ctx.source());
+        int stepLimit = policy.resolveStepLimit(ctx.source());
 
         JobContext jobCtx =
                 new JobContext(
@@ -126,8 +125,7 @@ public class JobChargeService {
                         stepLimit,
                         ctx.runId());
 
-        List<Path> paths = inputs.stream().map(JobInput::path).toList();
-        JoinOrOpenResult result = jobService.joinOrOpen(jobCtx, paths);
+        JoinOrOpenResult result = jobService.joinOrOpen(jobCtx, lineagePaths(ctx, inputs));
 
         if (result.disposition() == JoinOrOpenResult.Disposition.JOINED) {
             return new ChargeOutcome(result.job().getId(), 0, ChargeOutcome.Disposition.JOINED);
@@ -181,7 +179,7 @@ public class JobChargeService {
 
         PricingPolicy policy = policyService.getEffectivePolicy(ctx.ownerTeamId());
         int chargeUnits = Math.max(units, policy.getMinChargeUnits());
-        int stepLimit = resolveStepLimit(policy, ctx.source());
+        int stepLimit = policy.resolveStepLimit(ctx.source());
 
         JobContext jobCtx =
                 new JobContext(
@@ -341,20 +339,19 @@ public class JobChargeService {
         ledgerRepository.save(entry);
     }
 
-    private int resolveStepLimit(PricingPolicy policy, JobSource source) {
-        Integer fromPolicy =
-                policy.getStepLimits() == null ? null : policy.getStepLimits().get(source);
-        if (fromPolicy != null && fromPolicy > 0) {
-            return fromPolicy;
+    private static List<Path> lineagePaths(ChargeContext ctx, List<JobInput> inputs) {
+        if (ctx.runId() != null) {
+            // PolicyExecutor sends primary documents as fileInput, with assets in named fields.
+            List<Path> primaryPaths =
+                    inputs.stream()
+                            .filter(input -> "fileInput".equals(input.multipart().getName()))
+                            .map(JobInput::path)
+                            .toList();
+            if (!primaryPaths.isEmpty()) {
+                return primaryPaths;
+            }
         }
-        // Defensive default — every JobSource should have an entry per the V12 seed, but a
-        // hand-edited policy could be missing one. Fall back to the smallest documented limit
-        // (10 — WEB/API/DESKTOP_APP default) so an admin slip-up never spawns unbounded chains.
-        log.debug(
-                "PricingPolicy {} missing stepLimit for source={}; using fallback of 10.",
-                policy.getId(),
-                source);
-        return 10;
+        return inputs.stream().map(JobInput::path).toList();
     }
 
     private int computeUnits(List<JobInput> inputs, PricingPolicy policy) {

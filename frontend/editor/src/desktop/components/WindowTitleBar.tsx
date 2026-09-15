@@ -2,10 +2,7 @@ import { useEffect, useState } from "react";
 import { useIsomorphicEffect } from "@mantine/hooks";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { isTauri } from "@tauri-apps/api/core";
-import MinimizeIcon from "@mui/icons-material/Minimize";
-import CropSquareIcon from "@mui/icons-material/CropSquare";
-import FilterNoneIcon from "@mui/icons-material/FilterNone";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
 import { getDesktopOs, DesktopOs } from "@app/services/platformService";
 import styles from "@app/components/WindowTitleBar.module.css";
 // Desktop-only skin that reserves the controls' corner across core layout
@@ -157,7 +154,7 @@ export function WindowTitleBar() {
           aria-label="Minimize"
           tabIndex={-1}
         >
-          <MinimizeIcon fontSize="inherit" />
+          <Icon name="minus" size="1em" />
         </button>
         <button
           type="button"
@@ -167,9 +164,9 @@ export function WindowTitleBar() {
           tabIndex={-1}
         >
           {maximized ? (
-            <FilterNoneIcon fontSize="inherit" className={styles.restoreIcon} />
+            <Icon name="copy" size="1em" className={styles.restoreIcon} />
           ) : (
-            <CropSquareIcon fontSize="inherit" />
+            <Icon name="square" size="1em" />
           )}
         </button>
         <button
@@ -179,7 +176,7 @@ export function WindowTitleBar() {
           aria-label="Close"
           tabIndex={-1}
         >
-          <CloseIcon fontSize="inherit" />
+          <Icon name="x" size="1em" />
         </button>
       </div>
     </div>

@@ -2,8 +2,7 @@ import { useState } from "react";
 import { Box, Flex, Group, Text, TextInput, Select } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import SearchIcon from "@mui/icons-material/Search";
-import SortIcon from "@mui/icons-material/Sort";
+import { Icon } from "@app/ui/Icon";
 import FileCard from "@app/components/shared/FileCard";
 import { StirlingFileStub } from "@app/types/fileContext";
 import { FileId } from "@app/types/file";
@@ -82,7 +81,7 @@ const FileGrid = ({
             {showSearch && (
               <TextInput
                 placeholder={t("fileManager.searchFiles", "Search files...")}
-                leftSection={<SearchIcon fontSize="small" />}
+                leftSection={<Icon name="search" size={20} />}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.currentTarget.value)}
                 style={{ flexGrow: 1, maxWidth: 300, minWidth: 200 }}
@@ -108,7 +107,7 @@ const FileGrid = ({
                 ]}
                 value={sortBy}
                 onChange={(value) => setSortBy(value as SortOption)}
-                leftSection={<SortIcon fontSize="small" />}
+                leftSection={<Icon name="list-sort-descending" size={20} />}
                 style={{ minWidth: 150 }}
               />
             )}

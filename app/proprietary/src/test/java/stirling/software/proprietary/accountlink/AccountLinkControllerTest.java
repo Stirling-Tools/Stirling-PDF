@@ -8,6 +8,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ class AccountLinkControllerTest {
     private ConnectService connectService;
     private UsageSyncService syncService;
     private ObjectProvider<UsageSyncService> syncProvider;
+    private FreeTierUsageService freeTierService;
     private AccountLinkController controller;
 
     @BeforeEach
@@ -35,9 +37,14 @@ class AccountLinkControllerTest {
         connectService = mock(ConnectService.class);
         syncService = mock(UsageSyncService.class);
         syncProvider = mock(ObjectProvider.class);
+        freeTierService = mock(FreeTierUsageService.class);
         controller =
                 new AccountLinkController(
-                        service, connectService, mock(LocalUsageService.class), syncProvider);
+                        service,
+                        connectService,
+                        mock(LocalUsageService.class),
+                        freeTierService,
+                        syncProvider);
     }
 
     // These asserted POST /link's error mapping, which distinguished 401/403 so the portal could
@@ -90,6 +97,22 @@ class AccountLinkControllerTest {
 
         assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.NO_CONTENT);
         verify(syncService).syncNow();
+    }
+
+    @Test
+    void freeTier_reportsTheLocalGrant() {
+        LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
+        when(freeTierService.balance())
+                .thenReturn(
+                        new FreeTierUsageService.FreeTierBalance(
+                                500, 120, 380, start, start.plusMonths(1)));
+
+        ResponseEntity<FreeTierUsageService.FreeTierBalance> resp = controller.freeTier();
+
+        assertThat(resp.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(resp.getBody()).isNotNull();
+        assertThat(resp.getBody().remainingUnits()).isEqualTo(380);
+        assertThat(resp.getBody().periodEnd()).isEqualTo(start.plusMonths(1));
     }
 
     @Test
