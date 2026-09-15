@@ -68,6 +68,108 @@ function createServerFolder() {
 }
 
 describe("ProcessingFolderWizard", () => {
+  it.each([true, false])(
+    "marks existing processing (enabled: %s) and warns through review before saving",
+    async (enabled) => {
+      const record = {
+        id: "existing-processing",
+        enabled,
+        steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
+      };
+      const props = renderWizard({ recordFor: () => record });
+      const row = screen
+        .getByRole("radio", { name: folder.name })
+        .closest('[role="row"]')!;
+      expect(
+        within(row as HTMLElement).getByText(
+          enabled
+            ? "filesPage.processing.active"
+            : "filesPage.processing.paused",
+        ),
+      ).toBeVisible();
+      expect(screen.queryByText(key("replaceWarning"))).toBeNull();
+      fireEvent.click(screen.getByRole("radio", { name: folder.name }));
+      expect(screen.getByText(key("replaceWarning"))).toBeVisible();
+      fireEvent.click(button("chooseProcessing"));
+      expect(screen.getByText(key("replaceWarning"))).toBeVisible();
+      fireEvent.click(button("review"));
+      expect(screen.getByText(key("replaceWarning"))).toBeVisible();
+      expect(props.save).not.toHaveBeenCalled();
+      fireEvent.click(button("saveChanges"));
+      await waitFor(() =>
+        expect(props.save).toHaveBeenCalledWith(
+          folder,
+          expect.objectContaining({
+            steps: expect.arrayContaining([
+              expect.objectContaining({
+                operation: "/api/v1/misc/compress-pdf",
+              }),
+            ]),
+          }),
+        ),
+      );
+    },
+  );
+
+  it("clears the replacement warning for a new child or an ordinary folder", () => {
+    const ordinary = { ...folder, id: createFolderId(), name: "Receipts" };
+    const record = {
+      id: "existing-processing",
+      enabled: true,
+      steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
+    };
+    renderWizard({
+      folders: [folder, ordinary],
+      recordFor: (item) => (item.id === folder.id ? record : undefined),
+    });
+    fireEvent.click(screen.getByRole("radio", { name: folder.name }));
+    expect(screen.getByText(key("replaceWarning"))).toBeVisible();
+    fireEvent.click(button("newFolder"));
+    expect(screen.queryByText(key("replaceWarning"))).toBeNull();
+    fireEvent.click(
+      within(screen.getByRole("region", { name: key("newFolder") })).getByRole(
+        "button",
+        { name: "cancel" },
+      ),
+    );
+    expect(screen.getByText(key("replaceWarning"))).toBeVisible();
+    fireEvent.click(screen.getByRole("radio", { name: ordinary.name }));
+    expect(screen.queryByText(key("replaceWarning"))).toBeNull();
+    expect(screen.getAllByText("filesPage.processing.active")).toHaveLength(1);
+  });
+
+  it("recognises existing local processing when its directory is selected through the native picker", async () => {
+    const local: FolderRecord = {
+      ...folder,
+      kind: "local",
+      directory: "C:/Invoices",
+    };
+    const record = {
+      id: "local-processing",
+      enabled: false,
+      steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
+    };
+    renderWizard({
+      folders: [local],
+      canPickDirectory: true,
+      recordFor: (item) => (item.id === local.id ? record : undefined),
+      pickDirectory: vi
+        .fn()
+        .mockResolvedValue({ path: "C:/Invoices/", name: "Invoices" }),
+    });
+    fireEvent.click(button("newFolder"));
+    fireEvent.click(
+      await screen.findByRole("menuitem", {
+        name: "filesPage.newFolderMenu.addExisting",
+      }),
+    );
+    expect(await screen.findByText(key("replaceWarning"))).toBeVisible();
+    expect(screen.getByText("filesPage.processing.paused")).toBeVisible();
+    fireEvent.click(button("chooseProcessing"));
+    expect(screen.getByText(key("replaceWarning"))).toBeVisible();
+    expect(button("review")).toBeEnabled();
+  });
+
   it.each(["security", "classification", "compliance"])(
     "submits the same default steps as the Processor %s template",
     async (categoryId) => {

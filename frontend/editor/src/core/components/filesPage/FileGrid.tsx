@@ -59,6 +59,7 @@ import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
 import { FolderListRow } from "@app/components/filesPage/FolderListRow";
+import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
 import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
@@ -722,11 +723,7 @@ const FolderCard = React.memo(function FolderCard({
         <div className="files-page-card-meta">
           {processing ? (
             <>
-              <span className="files-page-processing-tag">
-                {processing.enabled
-                  ? t("filesPage.processing.active", "Processing folder")
-                  : t("filesPage.processing.paused", "Processing paused")}
-              </span>
+              <FolderProcessingTag enabled={processing.enabled} />
               {fileCount > 0 && (
                 <span>
                   {" · "}
@@ -1706,11 +1703,7 @@ const FolderRow = React.memo(function FolderRow({
       parentPath={parentPath}
       status={
         processing ? (
-          <span className="files-page-processing-tag">
-            {processing.enabled
-              ? t("filesPage.processing.active", "Processing folder")
-              : t("filesPage.processing.paused", "Processing paused")}
-          </span>
+          <FolderProcessingTag enabled={processing.enabled} />
         ) : undefined
       }
       trailing={

@@ -11,6 +11,8 @@ import {
 import { Icon } from "@app/ui/Icon";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import { FolderListRow } from "@app/components/filesPage/FolderListRow";
+import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
+import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
 import {
   folderKind,
   type FolderId,
@@ -29,6 +31,7 @@ import "@app/components/filesPage/FilesPage.css";
 export interface ProcessingFolderPickerProps {
   active: boolean;
   folders: FolderRecord[];
+  recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
   canPickDirectory: boolean;
   serverDisabledReason: string | null;
   serverLabel: string;
@@ -41,6 +44,7 @@ export interface ProcessingFolderPickerProps {
 export function ProcessingFolderPicker({
   active,
   folders,
+  recordFor,
   canPickDirectory,
   serverDisabledReason,
   serverLabel,
@@ -462,68 +466,76 @@ export function ProcessingFolderPicker({
             </span>
             <span role="columnheader" />
           </div>
-          {visible.map((folder) => (
-            <FolderListRow
-              key={folder.id}
-              folder={folder}
-              parentPath={
-                query && folder.parentFolderId
-                  ? processingFolderPath(
-                      byId.get(folder.parentFolderId) ?? folder,
-                      folders,
-                    )
-                  : undefined
-              }
-              aria-selected={folder.id === selectedId}
-              aria-disabled={blocked || undefined}
-              className={folder.id === selectedId ? "is-selected" : ""}
-              tabIndex={blocked ? -1 : 0}
-              onClick={() => select(folder)}
-              onDoubleClick={() => {
-                if (!blocked) navigate(folder);
-              }}
-              onKeyDown={(event) => {
-                if (event.target !== event.currentTarget || blocked) return;
-                if (event.key === " " || event.key === "Enter") {
-                  event.preventDefault();
-                  select(folder);
+          {visible.map((folder) => {
+            const processing = recordFor(folder);
+            return (
+              <FolderListRow
+                key={folder.id}
+                folder={folder}
+                status={
+                  processing && (
+                    <FolderProcessingTag enabled={processing.enabled} />
+                  )
                 }
-              }}
-              leading={
-                <input
-                  type="radio"
-                  name={selectionName}
-                  aria-label={folder.name}
-                  checked={folder.id === selectedId}
-                  disabled={blocked}
-                  tabIndex={-1}
-                  onChange={() => select(folder)}
-                />
-              }
-              trailing={
-                (location === "server" ||
-                  available.some(
-                    (child) => child.parentFolderId === folder.id,
-                  )) && (
-                  <ActionIcon
-                    aria-label={t("processingFolders.setup.openFolder", {
-                      name: folder.name,
-                    })}
-                    variant="tertiary"
-                    size="sm"
+                parentPath={
+                  query && folder.parentFolderId
+                    ? processingFolderPath(
+                        byId.get(folder.parentFolderId) ?? folder,
+                        folders,
+                      )
+                    : undefined
+                }
+                aria-selected={folder.id === selectedId}
+                aria-disabled={blocked || undefined}
+                className={folder.id === selectedId ? "is-selected" : ""}
+                tabIndex={blocked ? -1 : 0}
+                onClick={() => select(folder)}
+                onDoubleClick={() => {
+                  if (!blocked) navigate(folder);
+                }}
+                onKeyDown={(event) => {
+                  if (event.target !== event.currentTarget || blocked) return;
+                  if (event.key === " " || event.key === "Enter") {
+                    event.preventDefault();
+                    select(folder);
+                  }
+                }}
+                leading={
+                  <input
+                    type="radio"
+                    name={selectionName}
+                    aria-label={folder.name}
+                    checked={folder.id === selectedId}
                     disabled={blocked}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      navigate(folder);
-                    }}
-                    onDoubleClick={(event) => event.stopPropagation()}
-                  >
-                    <Icon name="chevron-right" size={18} />
-                  </ActionIcon>
-                )
-              }
-            />
-          ))}
+                    tabIndex={-1}
+                    onChange={() => select(folder)}
+                  />
+                }
+                trailing={
+                  (location === "server" ||
+                    available.some(
+                      (child) => child.parentFolderId === folder.id,
+                    )) && (
+                    <ActionIcon
+                      aria-label={t("processingFolders.setup.openFolder", {
+                        name: folder.name,
+                      })}
+                      variant="tertiary"
+                      size="sm"
+                      disabled={blocked}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        navigate(folder);
+                      }}
+                      onDoubleClick={(event) => event.stopPropagation()}
+                    >
+                      <Icon name="chevron-right" size={18} />
+                    </ActionIcon>
+                  )
+                }
+              />
+            );
+          })}
         </div>
         {visible.length === 0 && (
           <p className="folder-setup__empty" role="status">

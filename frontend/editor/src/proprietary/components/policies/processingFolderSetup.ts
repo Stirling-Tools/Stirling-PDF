@@ -1,4 +1,8 @@
-import type { FolderId, FolderRecord } from "@app/types/folder";
+import {
+  folderKind,
+  type FolderId,
+  type FolderRecord,
+} from "@app/types/folder";
 import type { PickedDirectory } from "@app/services/directoryPicker";
 import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
 import {
@@ -14,6 +18,21 @@ export type ProcessingFolderTarget =
   | { kind: "existing"; folder: FolderRecord }
   | { kind: "server"; name: string; parentId: FolderId | null }
   | { kind: "local"; directory: PickedDirectory; name: string | null };
+
+/** Native selections of an existing mount must surface its saved processing before confirmation. */
+export function processingFolderForTarget(
+  target: ProcessingFolderTarget | null,
+  folders: FolderRecord[],
+): FolderRecord | undefined {
+  if (target?.kind === "existing") return target.folder;
+  if (target?.kind !== "local" || target.name !== null) return undefined;
+  const directory = target.directory.path.trim().replace(/[/\\]+$/, "");
+  return folders.find(
+    (folder) =>
+      folderKind(folder) === "local" &&
+      folder.directory?.trim().replace(/[/\\]+$/, "") === directory,
+  );
+}
 
 /** Configured portal policies come first; availability keeps the remaining portal order stable. */
 export function sortFolderPresets(

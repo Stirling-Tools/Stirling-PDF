@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Modal } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
 import { folderKind, type FolderRecord } from "@app/types/folder";
-import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
 import {
   humanizeEndpoint,
   type PolicySetupResult,
@@ -25,6 +24,7 @@ import {
   canEditFolderSteps,
   folderSetupEntry,
   processingFolderPath,
+  processingFolderForTarget,
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
@@ -42,7 +42,6 @@ export interface ProcessingFolderWizardProps extends Omit<
   destinationsLoading?: boolean;
   destinationsError?: string | null;
   onCreateDestination?: () => void;
-  recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
   /** Resolves a selection or creates its folder; must not enable processing. */
   resolveTarget: (target: ProcessingFolderTarget) => Promise<FolderRecord>;
   save: (folder: FolderRecord, result: PolicySetupResult) => Promise<void>;
@@ -97,7 +96,7 @@ export function ProcessingFolderWizard({
     presets.find((item) => !unavailableReason(item)) ??
     presets[0];
   const [pickerVersion, setPickerVersion] = useState(0);
-  const folder = target?.kind === "existing" ? target.folder : undefined;
+  const folder = processingFolderForTarget(target, folders);
   const existing = folder ? recordFor(folder) : undefined;
   const savedSteps = existing ?? presetProcessingRecord(preset);
   const unsupportedSteps = savedSteps && !canEditFolderSteps(savedSteps);
@@ -320,6 +319,7 @@ export function ProcessingFolderWizard({
               key={pickerVersion}
               active={stage === "folder"}
               folders={folders}
+              recordFor={recordFor}
               canPickDirectory={canPickDirectory}
               serverDisabledReason={serverDisabledReason}
               serverLabel={serverLabel}
@@ -399,6 +399,15 @@ export function ProcessingFolderWizard({
                 ))}
               </ol>
             </div>
+          )}
+          {existing && (
+            <Banner
+              tone="warning"
+              className="folder-setup__replacement"
+              description={t("processingFolders.setup.replaceWarning", {
+                name: selectedName,
+              })}
+            />
           )}
         </Modal>
       )}

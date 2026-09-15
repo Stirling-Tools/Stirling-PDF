@@ -43,7 +43,8 @@ const meta = {
       path: "C:/Documents/Invoices",
       name: "Invoices",
     }),
-    recordFor: (): ProcessingRecordSummary | undefined => undefined,
+    recordFor: (_folder: FolderRecord): ProcessingRecordSummary | undefined =>
+      undefined,
     resolveTarget: async () => invoices,
     save: async () => {},
     onClose: () => {},
@@ -54,6 +55,23 @@ type Story = StoryObj<typeof meta>;
 
 export const Create: Story = {};
 export const ExistingFolder: Story = { args: { initialFolder: invoices } };
+export const ProcessingFolders: Story = {
+  args: {
+    folders: [
+      invoices,
+      archive,
+      { ...invoices, id: createFolderId(), name: "Receipts" },
+    ],
+    recordFor: (folder) =>
+      folder.id === invoices.id || folder.id === archive.id
+        ? {
+            id: `processing-${folder.id}`,
+            enabled: folder.id === invoices.id,
+            steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
+          }
+        : undefined,
+  },
+};
 export const Desktop: Story = {
   args: {
     canPickDirectory: true,
