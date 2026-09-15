@@ -6,8 +6,10 @@
  * gated on a live "authenticated" status from authService rather than a
  * Supabase session.
  *
- * Teams are a cloud-only surface: the endpoints (/api/v1/team/**) live on the
- * SaaS backend, not the local bundled backend or a self-hosted server. The
+ * Teams are a cloud-only surface: every path SaaSTeamContext calls (/my,
+ * /invitations/**, /{id}/members, /invite) is declared only on the SaaS backend. A
+ * self-hosted server does serve /api/v1/team/**, but a disjoint admin-only set
+ * (/create, /rename, /delete, /addUser) that this context never calls. The
  * SaaSTeamProvider is mounted unconditionally in AppProviders, so canUseTeams
  * is the ONLY thing stopping its mount effect from fetching teams. It must
  * therefore also require SaaS connection mode — otherwise an authenticated user
