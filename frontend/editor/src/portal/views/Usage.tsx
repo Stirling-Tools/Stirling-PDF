@@ -267,6 +267,7 @@ export function Usage({
         </>
       }
       editorsDeployed={editorsDeployed}
+      pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
       onAddCapacity={
         checkout && wallet?.role === "leader" ? addCapacity : undefined
       }

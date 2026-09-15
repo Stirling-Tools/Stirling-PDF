@@ -49,6 +49,8 @@ export interface BillingScreenProps {
   invoicesSection?: ReactNode;
   /** Null when the backend cannot compute it, which omits the row rather than showing a zero. */
   editorsDeployed?: number | null;
+  /** Overrides wallet analytics when supplied; null omits an unavailable activity count. */
+  pdfsProcessed?: number | null;
   /** The enterprise door. Omitted for a team already on an agreement. */
   onEnterpriseQuote?: () => void;
   /** Host-owned surfaces that are not sections of this card: modals, upsells, detail cards. */
@@ -95,6 +97,7 @@ export function BillingScreen({
   procurementSection,
   licenseSection,
   editorsDeployed,
+  pdfsProcessed,
   paymentSection,
   invoicesSection,
   onEnterpriseQuote,
@@ -111,6 +114,10 @@ export function BillingScreen({
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active) && !enterpriseProcessor;
   const teamHeld = Boolean(wallet?.team?.held);
+  const processedCount =
+    pdfsProcessed === undefined
+      ? wallet?.docsProcessedThisPeriod
+      : pdfsProcessed;
 
   const chips = useMemo(() => {
     const out: Array<[string, string]> = [];
@@ -374,10 +381,15 @@ export function BillingScreen({
                         </div>
                       )}
 
-                      <KvRow
-                        label={t("portal.billing.cycle.pdfs", "PDFs processed")}
-                        value={wallet.docsProcessedThisPeriod.toLocaleString()}
-                      />
+                      {processedCount != null && (
+                        <KvRow
+                          label={t(
+                            "portal.billing.cycle.pdfs",
+                            "PDFs processed",
+                          )}
+                          value={processedCount.toLocaleString()}
+                        />
+                      )}
                       {(serverPlan
                         ? serverPlan.usersInUse != null
                         : showTeam) && (
