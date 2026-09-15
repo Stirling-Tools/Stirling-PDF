@@ -22,8 +22,7 @@ import type { ProcurementController } from "@portal/components/procurement/usePr
  * The procurement takeover flow: the full-screen journey modal (quote builder →
  * quote & agreement → payment → live) plus the licence-key, schedule-call, trial-setup,
  * and trial-management modals. Driven entirely by a shared ProcurementController
- * so it can sit next to a deal-status hero rendered elsewhere (e.g. inside the
- * tier hero card on Home).
+ * so it can sit alongside the deal-status section in Usage & Billing.
  */
 export function ProcurementFlow({
   controller,
