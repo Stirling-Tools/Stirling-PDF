@@ -115,6 +115,10 @@ import stirling.software.SPDF.model.json.PdfJsonStream;
 import stirling.software.SPDF.model.json.PdfJsonTextColor;
 import stirling.software.SPDF.model.json.PdfJsonTextElement;
 import stirling.software.SPDF.service.pdfjson.PdfJsonFontService;
+import stirling.software.SPDF.service.pdfjson.PdfTokenRewriteEngine;
+import stirling.software.SPDF.service.pdfjson.encoding.PdfTextEncoder;
+import stirling.software.SPDF.service.pdfjson.font.PdfFontResolver;
+import stirling.software.SPDF.service.pdfjson.parsing.PdfGlyphCounter;
 import stirling.software.SPDF.service.pdfjson.type3.Type3ConversionRequest;
 import stirling.software.SPDF.service.pdfjson.type3.Type3FontConversionService;
 import stirling.software.SPDF.service.pdfjson.type3.Type3GlyphExtractor;
@@ -147,6 +151,8 @@ public class PdfJsonConversionService {
     private final PdfJsonFontService fontService;
     private final Type3FontConversionService type3FontConversionService;
     private final Type3GlyphExtractor type3GlyphExtractor;
+    private final PdfFontResolver pdfFontResolver;
+    private final PdfGlyphCounter pdfGlyphCounter;
     private final stirling.software.common.model.ApplicationProperties applicationProperties;
     private final Map<String, PDFont> type3NormalizedFontCache = new ConcurrentHashMap<>();
     private final Map<String, Set<Integer>> type3GlyphCoverageCache = new ConcurrentHashMap<>();
@@ -741,14 +747,16 @@ public class PdfJsonConversionService {
                     } else if (!preservedStreams.isEmpty()) {
                         log.debug("Attempting token rewrite for page {}", pageNumberValue);
                         rewriteSucceeded =
-                                rewriteTextOperators(
+                                PdfTokenRewriteEngine.rewriteTextOperators(
                                         document,
                                         page,
                                         elements,
                                         false,
                                         false,
                                         fontLookup,
-                                        pageNumberValue);
+                                        pageNumberValue,
+                                        pdfFontResolver,
+                                        pdfGlyphCounter);
                         if (!rewriteSucceeded) {
                             log.debug(
                                     "Token rewrite failed for page {}, regenerating text stream",
@@ -938,14 +946,11 @@ public class PdfJsonConversionService {
     }
 
     private String buildFontKey(String jobId, int pageNumber, String fontId) {
-        // Include jobId to ensure font UIDs are globally unique across concurrent jobs
-        String jobPrefix = (jobId != null && !jobId.isEmpty()) ? jobId + ":" : "";
-        return jobPrefix + pageNumber + ":" + fontId;
+        return pdfFontResolver.buildFontKey(jobId, pageNumber, fontId);
     }
 
     private String buildFontKey(String jobId, Integer pageNumber, String fontId) {
-        int page = pageNumber != null ? pageNumber : -1;
-        return buildFontKey(jobId, page, fontId);
+        return pdfFontResolver.buildFontKey(jobId, pageNumber, fontId);
     }
 
     private String resolveFontCacheKey(PdfJsonFont font) {
@@ -975,19 +980,6 @@ public class PdfJsonConversionService {
             lookup.put(buildFontKey(null, font.getPageNumber(), font.getId()), font);
         }
         return lookup;
-    }
-
-    private PdfJsonFont resolveFontModel(
-            Map<String, PdfJsonFont> lookup, int pageNumber, String fontId) {
-        if (lookup == null || fontId == null) {
-            return null;
-        }
-        // JSON->PDF conversion: no jobId context, pass null
-        PdfJsonFont model = lookup.get(buildFontKey(null, pageNumber, fontId));
-        if (model != null) {
-            return model;
-        }
-        return lookup.get(buildFontKey(null, -1, fontId));
     }
 
     private List<PdfJsonFont> cloneFontList(Collection<PdfJsonFont> source) {
@@ -1856,7 +1848,8 @@ public class PdfJsonConversionService {
                 continue;
             }
 
-            PdfJsonFont fontModel = resolveFontModel(fontLookup, pageNumber, element.getFontId());
+            PdfJsonFont fontModel =
+                    pdfFontResolver.resolve(fontLookup, pageNumber, element.getFontId());
             if (font instanceof PDType3Font && fontModel != null) {
                 Set<Integer> supportedGlyphs =
                         type3GlyphCache.computeIfAbsent(
@@ -3245,11 +3238,13 @@ public class PdfJsonConversionService {
                                 activeFont = run.font();
                             }
                             PdfJsonFont runFontModel =
-                                    resolveFontModel(runFontLookup, pageNumber, run.fontId());
+                                    pdfFontResolver.resolve(
+                                            runFontLookup, pageNumber, run.fontId());
                             if (runFontModel == null) {
                                 runFontLookup = buildFontModelLookup(fontModels);
                                 runFontModel =
-                                        resolveFontModel(runFontLookup, pageNumber, run.fontId());
+                                        pdfFontResolver.resolve(
+                                                runFontLookup, pageNumber, run.fontId());
                             }
                             // Check if this is a normalized Type3 font (has Type3 metadata but is
                             // not PDType3Font)
@@ -3276,7 +3271,7 @@ public class PdfJsonConversionService {
                                 if (run.font() instanceof PDType3Font
                                         && run.charCodes() != null
                                         && !run.charCodes().isEmpty()) {
-                                    encoded = encodeType3CharCodes(run.charCodes());
+                                    encoded = PdfTextEncoder.encodeType3CharCodes(run.charCodes());
                                     if (encoded == null || encoded.length == 0) {
                                         log.warn(
                                                 "[FONT-DEBUG] Failed to emit raw Type3 char codes for font {} on page {}",
@@ -3295,7 +3290,7 @@ public class PdfJsonConversionService {
                                                         ? runFontModel.getId()
                                                         : "null");
                                         encoded =
-                                                encodeTextWithFont(
+                                                PdfTextEncoder.encode(
                                                         run.font(),
                                                         runFontModel,
                                                         run.text(),
@@ -3386,7 +3381,7 @@ public class PdfJsonConversionService {
         }
 
         Map<String, PdfJsonFont> runFontLookup = buildFontModelLookup(fontModels);
-        PdfJsonFont baseFontModel = resolveFontModel(runFontLookup, pageNumber, baseFontId);
+        PdfJsonFont baseFontModel = pdfFontResolver.resolve(runFontLookup, pageNumber, baseFontId);
         boolean baseIsType3 =
                 baseFontModel != null
                         && baseFontModel.getSubtype() != null
@@ -3789,17 +3784,6 @@ public class PdfJsonConversionService {
         }
     }
 
-    private String abbreviate(String value) {
-        if (value == null) {
-            return "";
-        }
-        String trimmed = WHITESPACE_PATTERN.matcher(value).replaceAll(" ").trim();
-        if (trimmed.length() <= 32) {
-            return trimmed;
-        }
-        return trimmed.substring(0, 29) + "...";
-    }
-
     private static class FontProgramData {
         private final String base64;
         private final String format;
@@ -3899,572 +3883,6 @@ public class PdfJsonConversionService {
 
         private List<Integer> charCodes() {
             return charCodes;
-        }
-    }
-
-    private boolean rewriteTextOperators(
-            PDDocument document,
-            PDPage page,
-            List<PdfJsonTextElement> elements,
-            boolean removeOnly,
-            boolean forceRegenerate,
-            Map<String, PdfJsonFont> fontLookup,
-            int pageNumber) {
-        if (forceRegenerate) {
-            log.debug("forceRegenerate flag set; skipping token rewrite for page");
-            return false;
-        }
-        if (elements == null || elements.isEmpty()) {
-            return true;
-        }
-        PDResources resources = page.getResources();
-        if (resources == null) {
-            return false;
-        }
-        try {
-            log.debug("Attempting token-level rewrite for page");
-            PDFStreamParser parser = new PDFStreamParser(page);
-            List<Object> tokens = parser.parse();
-            log.debug("Parsed {} tokens for rewrite", tokens.size());
-            TextElementCursor cursor = new TextElementCursor(elements);
-            PDFont currentFont = null;
-            String currentFontName = null;
-            PdfJsonFont currentFontModel = null;
-
-            boolean encounteredModifiedFont = false;
-
-            for (int i = 0; i < tokens.size(); i++) {
-                Object token = tokens.get(i);
-                if (!(token instanceof Operator operator)) {
-                    continue;
-                }
-                String operatorName = operator.getName();
-                switch (operatorName) {
-                    case "Tf":
-                        if (i >= 2 && tokens.get(i - 2) instanceof COSName fontResourceName) {
-                            currentFont = resources.getFont(fontResourceName);
-                            currentFontName = fontResourceName.getName();
-                            currentFontModel =
-                                    resolveFontModel(fontLookup, pageNumber, currentFontName);
-                            log.trace(
-                                    "Encountered Tf operator; switching to font resource {}",
-                                    currentFontName);
-                            if (forceRegenerate) {
-                                encounteredModifiedFont = true;
-                            }
-                        } else {
-                            currentFont = null;
-                            currentFontName = null;
-                            currentFontModel = null;
-                            log.debug(
-                                    "Tf operator missing resource operand; clearing current font");
-                        }
-                        break;
-                    case "Tj":
-                        if (i == 0 || !(tokens.get(i - 1) instanceof COSString)) {
-                            log.debug(
-                                    "Encountered Tj without preceding string operand; aborting rewrite");
-                            return false;
-                        }
-                        log.trace(
-                                "Rewriting Tj operator using font {} (token index {}, cursor remaining {})",
-                                currentFontName,
-                                i,
-                                cursor.remaining());
-                        if (!rewriteShowText(
-                                tokens,
-                                i - 1,
-                                currentFont,
-                                currentFontModel,
-                                currentFontName,
-                                cursor,
-                                removeOnly)) {
-                            log.debug("Failed to rewrite Tj operator; aborting rewrite");
-                            return false;
-                        }
-                        break;
-                    case "TJ":
-                        if (i == 0 || !(tokens.get(i - 1) instanceof COSArray array)) {
-                            log.debug("Encountered TJ without array operand; aborting rewrite");
-                            return false;
-                        }
-                        log.trace(
-                                "Rewriting TJ operator using font {} (token index {}, cursor remaining {})",
-                                currentFontName,
-                                i,
-                                cursor.remaining());
-                        if (!rewriteShowTextArray(
-                                array,
-                                currentFont,
-                                currentFontModel,
-                                currentFontName,
-                                cursor,
-                                removeOnly)) {
-                            log.debug("Failed to rewrite TJ operator; aborting rewrite");
-                            return false;
-                        }
-                        break;
-                    default:
-                        break;
-                }
-            }
-
-            if (cursor.hasRemaining()) {
-                log.debug("Rewrite cursor still has {} elements; falling back", cursor.remaining());
-                return false;
-            }
-
-            if (forceRegenerate && encounteredModifiedFont) {
-                log.debug(
-                        "Rewrite succeeded but forceRegenerate=true, returning false to trigger rebuild");
-                return false;
-            }
-
-            PDStream newStream = new PDStream(document);
-            try (OutputStream outputStream = newStream.createOutputStream(COSName.FLATE_DECODE)) {
-                new ContentStreamWriter(outputStream).writeTokens(tokens);
-            }
-            page.setContents(newStream);
-            log.debug("Token rewrite completed successfully");
-            return true;
-        } catch (IOException ex) {
-            log.debug("Failed to rewrite content stream: {}", ex.getMessage());
-            return false;
-        }
-    }
-
-    private boolean rewriteShowText(
-            List<Object> tokens,
-            int tokenIndex,
-            PDFont font,
-            PdfJsonFont fontModel,
-            String expectedFontName,
-            TextElementCursor cursor,
-            boolean removeOnly)
-            throws IOException {
-        if (font == null) {
-            log.debug(
-                    "rewriteShowText aborted: no active font for expected resource {}",
-                    expectedFontName);
-            return false;
-        }
-        COSString cosString = (COSString) tokens.get(tokenIndex);
-        int glyphCount = countGlyphs(cosString, font);
-        log.trace(
-                "rewriteShowText consuming {} glyphs at cursor index {} for font {}",
-                glyphCount,
-                cursor.index,
-                expectedFontName);
-        List<PdfJsonTextElement> consumed = cursor.consume(expectedFontName, glyphCount);
-        if (consumed == null) {
-            log.debug(
-                    "Failed to consume {} glyphs for font {} (cursor remaining {})",
-                    glyphCount,
-                    expectedFontName,
-                    cursor.remaining());
-            return false;
-        }
-        if (removeOnly) {
-            tokens.set(tokenIndex, new COSString(new byte[0]));
-            return true;
-        }
-        MergedText replacement = mergeText(consumed);
-        try {
-            byte[] encoded =
-                    encodeTextWithFont(
-                            font, fontModel, replacement.text(), replacement.charCodes());
-            if (encoded == null) {
-                log.debug(
-                        "Failed to map replacement text to glyphs for font {} (text='{}')",
-                        expectedFontName,
-                        replacement.text());
-                return false;
-            }
-            tokens.set(tokenIndex, new COSString(encoded));
-            return true;
-        } catch (IOException | IllegalArgumentException | UnsupportedOperationException ex) {
-            log.debug(
-                    "Failed to encode replacement text with font {}: {}",
-                    expectedFontName,
-                    ex.getMessage());
-            return false;
-        }
-    }
-
-    private boolean rewriteShowTextArray(
-            COSArray array,
-            PDFont font,
-            PdfJsonFont fontModel,
-            String expectedFontName,
-            TextElementCursor cursor,
-            boolean removeOnly)
-            throws IOException {
-        if (font == null) {
-            log.debug(
-                    "rewriteShowTextArray aborted: no active font for expected resource {}",
-                    expectedFontName);
-            return false;
-        }
-        for (int i = 0; i < array.size(); i++) {
-            COSBase element = array.get(i);
-            if (element instanceof COSString cosString) {
-                int glyphCount = countGlyphs(cosString, font);
-                List<PdfJsonTextElement> consumed = cursor.consume(expectedFontName, glyphCount);
-                if (consumed == null) {
-                    log.debug(
-                            "Failed to consume {} glyphs for font {} in TJ segment {} (cursor remaining {})",
-                            glyphCount,
-                            expectedFontName,
-                            i,
-                            cursor.remaining());
-                    return false;
-                }
-                if (removeOnly) {
-                    array.set(i, new COSString(new byte[0]));
-                    continue;
-                }
-                MergedText replacement = mergeText(consumed);
-                try {
-                    byte[] encoded =
-                            encodeTextWithFont(
-                                    font, fontModel, replacement.text(), replacement.charCodes());
-                    if (encoded == null) {
-                        log.debug(
-                                "Failed to map replacement text in TJ array for font {} segment {}",
-                                expectedFontName,
-                                i);
-                        return false;
-                    }
-                    array.set(i, new COSString(encoded));
-                } catch (IOException
-                        | IllegalArgumentException
-                        | UnsupportedOperationException ex) {
-                    log.debug(
-                            "Failed to encode replacement text in TJ array for font {} segment {}: {}",
-                            expectedFontName,
-                            i,
-                            ex.getMessage());
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private byte[] encodeTextWithFont(
-            PDFont font, PdfJsonFont fontModel, String text, List<Integer> rawCharCodes)
-            throws IOException {
-        boolean isType3Font = font instanceof PDType3Font;
-        boolean hasType3Metadata =
-                fontModel != null
-                        && fontModel.getType3Glyphs() != null
-                        && !fontModel.getType3Glyphs().isEmpty();
-
-        // For normalized Type3 fonts (font is NOT Type3 but has Type3 metadata)
-        if (!isType3Font && hasType3Metadata) {
-            // If loaded as full font (not subset), use standard Unicode encoding
-            // Try standard encoding first - this works when the font has all glyphs
-            try {
-                byte[] encoded = font.encode(text);
-                // NOTE: Do NOT sanitize encoded bytes for normalized Type3 fonts
-                // Multi-byte encodings (UTF-16BE, CID fonts) have null bytes that are essential
-                // Removing them corrupts the byte boundaries and produces garbled text
-                log.debug(
-                        "[TYPE3] Encoded text '{}' for normalized font {}: encoded={} bytes",
-                        text.length() > 20 ? text.substring(0, 20) + "..." : text,
-                        fontModel.getId(),
-                        encoded != null ? encoded.length : 0);
-                if (encoded != null && encoded.length > 0) {
-                    log.debug(
-                            "[TYPE3] Successfully encoded text for normalized Type3 font {} using standard encoding",
-                            fontModel.getId());
-                    return encoded;
-                }
-                log.debug(
-                        "[TYPE3] Standard encoding produced empty result for normalized Type3 font {}, falling through to Type3 mapping",
-                        fontModel.getId());
-            } catch (IOException | IllegalArgumentException ex) {
-                log.debug(
-                        "[TYPE3] Standard encoding failed for normalized Type3 font {}: {}",
-                        fontModel.getId(),
-                        ex.getMessage());
-            }
-            // If standard encoding failed, fall through to Type3 glyph mapping (for subset fonts)
-            // or return null to trigger fallback font
-        } else if (!isType3Font || fontModel == null) {
-            // For non-Type3 fonts without Type3 metadata, use standard encoding
-            try {
-                byte[] encoded = font.encode(text);
-                return sanitizeEncoded(encoded);
-            } catch (IllegalArgumentException ex) {
-                log.debug(
-                        "[FONT-DEBUG] Font {} cannot encode text '{}': {}",
-                        font.getName(),
-                        text,
-                        ex.getMessage());
-                // Return null to trigger fallback font mechanism
-                return null;
-            }
-        }
-
-        // Type3 glyph mapping logic (for actual Type3 fonts AND normalized Type3 fonts)
-        List<PdfJsonFontType3Glyph> glyphs = fontModel.getType3Glyphs();
-        if (glyphs == null || glyphs.isEmpty()) {
-            return null;
-        }
-
-        // For normalized Type3 fonts, DO NOT use rawCharCodes because:
-        // 1. They may be stale if text was edited
-        // 2. The subset font only has glyphs from the original PDF
-        // Instead, try Type3 glyph mapping and return null if glyphs are missing
-        // (null will trigger fallback font usage in the calling code)
-
-        // Build Unicode to character code mapping from Type3 glyphs
-        Map<Integer, Integer> unicodeToCode = new HashMap<>();
-        for (PdfJsonFontType3Glyph glyph : glyphs) {
-            if (glyph == null) {
-                continue;
-            }
-            Integer unicode = glyph.getUnicode();
-            Integer charCode = glyph.getCharCode();
-            if (unicode == null || charCode == null) {
-                continue;
-            }
-            unicodeToCode.putIfAbsent(unicode, charCode);
-        }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        boolean mappedAll = true;
-        for (int offset = 0; offset < text.length(); ) {
-            int codePoint = text.codePointAt(offset);
-            offset += Character.charCount(codePoint);
-            Integer charCode = unicodeToCode.get(codePoint);
-            if (charCode == null) {
-                log.debug(
-                        "[TYPE3] Missing glyph mapping for code point U+{} in font {}",
-                        Integer.toHexString(codePoint).toUpperCase(Locale.ROOT),
-                        fontModel.getId());
-                mappedAll = false;
-                break;
-            }
-            if (charCode < 0 || charCode > 0xFF) {
-                log.debug(
-                        "[TYPE3] Unsupported Type3 charCode {} for font {} (only 1-byte codes supported)",
-                        charCode,
-                        fontModel.getId());
-                mappedAll = false;
-                break;
-            }
-            baos.write(charCode);
-        }
-        if (mappedAll) {
-            return sanitizeEncoded(baos.toByteArray());
-        }
-        // Fallback to rawCharCodes for actual Type3 fonts if mapping failed
-        if (rawCharCodes != null && !rawCharCodes.isEmpty()) {
-            boolean valid = true;
-            ByteArrayOutputStream fallbackBytes = new ByteArrayOutputStream(rawCharCodes.size());
-            for (Integer code : rawCharCodes) {
-                if (code == null || code < 0 || code > 0xFF) {
-                    valid = false;
-                    break;
-                }
-                fallbackBytes.write(code);
-            }
-            if (valid) {
-                return fallbackBytes.toByteArray();
-            }
-        }
-        return null;
-    }
-
-    private byte[] encodeType3CharCodes(List<Integer> charCodes) {
-        if (charCodes == null || charCodes.isEmpty()) {
-            return null;
-        }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(charCodes.size());
-        for (Integer code : charCodes) {
-            if (code == null || code < 0 || code > 0xFF) {
-                return null;
-            }
-            baos.write(code);
-        }
-        return baos.toByteArray();
-    }
-
-    private byte[] sanitizeEncoded(byte[] encoded) {
-        if (encoded == null || encoded.length == 0) {
-            return new byte[0];
-        }
-        ByteArrayOutputStream baos = new ByteArrayOutputStream(encoded.length);
-        for (byte b : encoded) {
-            if (isStrippedControlByte(b)) {
-                continue;
-            }
-            baos.write(b);
-        }
-        byte[] sanitized = baos.toByteArray();
-        if (sanitized.length == 0) {
-            return sanitized;
-        }
-        return sanitized;
-    }
-
-    private boolean isStrippedControlByte(byte value) {
-        if (value == 0) {
-            return true;
-        }
-        int unsigned = Byte.toUnsignedInt(value);
-        if (unsigned <= 0x1F) {
-            return !(unsigned == 0x09 || unsigned == 0x0A || unsigned == 0x0D);
-        }
-        return false;
-    }
-
-    private int countGlyphs(COSString value, PDFont font) {
-        if (value == null) {
-            return 0;
-        }
-        if (font != null) {
-            try (ByteArrayInputStream inputStream = new ByteArrayInputStream(value.getBytes())) {
-                int count = countCodesProtected(inputStream, font::readCode);
-                if (count > 0) {
-                    return count;
-                }
-            } catch (IOException ex) {
-                log.debug("Failed to decode glyphs: {}", ex.getMessage());
-            }
-        }
-        byte[] bytes = value.getBytes();
-        return Math.max(1, bytes.length);
-    }
-
-    /**
-     * Functional accessor for {@link PDFont#readCode(InputStream)} so the bounded counting loop can
-     * be exercised in isolation without instantiating a {@link PDFont}.
-     */
-    @FunctionalInterface
-    interface CodeReader {
-        int readCode(InputStream stream) throws IOException;
-    }
-
-    /**
-     * Count how many codes the supplied {@code reader} can extract from {@code inputStream}, with
-     * two safety nets that PDFBox's raw {@link PDFont#readCode(InputStream)} loop lacks:
-     *
-     * <ol>
-     *   <li>Stop when the stream is empty (a corrupt CMap can otherwise loop forever returning
-     *       successfully-matched zero-bytes from an exhausted {@link ByteArrayInputStream}).
-     *   <li>Stop when a {@code readCode} call did not consume any bytes, even if it returned a
-     *       non-{@code -1} value.
-     * </ol>
-     *
-     * <p>Both conditions were observed in the wild on round-tripped fallback fonts where the
-     * embedded ToUnicode CMap matched 0x00 sequences, hanging the JSON&rarr;PDF rebuild.
-     */
-    static int countCodesProtected(ByteArrayInputStream inputStream, CodeReader reader)
-            throws IOException {
-        int count = 0;
-        int previousAvailable = inputStream.available();
-        while (previousAvailable > 0) {
-            int code = reader.readCode(inputStream);
-            if (code == -1) {
-                break;
-            }
-            int currentAvailable = inputStream.available();
-            if (currentAvailable >= previousAvailable) {
-                // No progress made; break to avoid infinite loop on corrupt CMaps.
-                break;
-            }
-            count++;
-            previousAvailable = currentAvailable;
-        }
-        return count;
-    }
-
-    private MergedText mergeText(List<PdfJsonTextElement> elements) {
-        StringBuilder builder = new StringBuilder();
-        List<Integer> combinedCodes = new ArrayList<>();
-        for (PdfJsonTextElement element : elements) {
-            builder.append(Objects.toString(element.getText(), ""));
-            int[] codes = element.getCharCodes();
-            if (codes != null && codes.length > 0) {
-                for (int code : codes) {
-                    combinedCodes.add(code);
-                }
-            }
-        }
-        return new MergedText(builder.toString(), combinedCodes.isEmpty() ? null : combinedCodes);
-    }
-
-    private record MergedText(String text, List<Integer> charCodes) {}
-
-    private static class TextElementCursor {
-        private final List<PdfJsonTextElement> elements;
-        private int index = 0;
-
-        TextElementCursor(List<PdfJsonTextElement> elements) {
-            this.elements = elements;
-        }
-
-        boolean hasRemaining() {
-            return index < elements.size();
-        }
-
-        int remaining() {
-            return Math.max(0, elements.size() - index);
-        }
-
-        List<PdfJsonTextElement> consume(String expectedFontName, int glyphCount) {
-            if (glyphCount <= 0) {
-                return Collections.emptyList();
-            }
-            List<PdfJsonTextElement> consumed = new ArrayList<>();
-            int remaining = glyphCount;
-            while (remaining > 0 && index < elements.size()) {
-                PdfJsonTextElement element = elements.get(index);
-                if (!fontMatches(expectedFontName, element.getFontId())) {
-                    log.debug(
-                            "Cursor consume failed: font mismatch (expected={}, actual={}) at element {}",
-                            expectedFontName,
-                            element.getFontId(),
-                            index);
-                    return null;
-                }
-                consumed.add(element);
-                remaining -= countGlyphs(element);
-                index++;
-            }
-            if (remaining > 0) {
-                log.debug(
-                        "Cursor consume failed: ran out of elements (remaining={}, currentIndex={}, total={})",
-                        remaining,
-                        index,
-                        elements.size());
-                return null;
-            }
-            return consumed;
-        }
-
-        private boolean fontMatches(String expected, String actual) {
-            if (expected == null || expected.isEmpty()) {
-                return true;
-            }
-            if (actual == null) {
-                return false;
-            }
-            return Objects.equals(expected, actual);
-        }
-
-        private int countGlyphs(PdfJsonTextElement element) {
-            int[] codes = element.getCharCodes();
-            if (codes != null && codes.length > 0) {
-                return codes.length;
-            }
-            String text = element.getText();
-            if (text != null && !text.isEmpty()) {
-                return Math.max(1, text.codePointCount(0, text.length()));
-            }
-            return 1;
         }
     }
 
@@ -5962,20 +5380,6 @@ public class PdfJsonConversionService {
                     .components(effective)
                     .build();
         }
-
-        private String sanitizeForLog(String value) {
-            if (value == null) {
-                return "null";
-            }
-            return value.replace("\n", "\\n").replace("\r", "\\r");
-        }
-
-        private String describeColor(PdfJsonTextColor color) {
-            if (color == null || color.getComponents() == null) {
-                return "null";
-            }
-            return color.getColorSpace() + "=" + color.getComponents();
-        }
     }
 
     private RenderingMode toRenderingMode(Integer renderingMode) {
@@ -6831,8 +6235,16 @@ public class PdfJsonConversionService {
 
         if (hasText && !preflightResult.usesFallback()) {
             boolean rewriteSucceeded =
-                    rewriteTextOperators(
-                            document, page, textElements, false, true, fontLookup, pageNumberValue);
+                    PdfTokenRewriteEngine.rewriteTextOperators(
+                            document,
+                            page,
+                            textElements,
+                            false,
+                            true,
+                            fontLookup,
+                            pageNumberValue,
+                            pdfFontResolver,
+                            pdfGlyphCounter);
             if (rewriteSucceeded) {
                 return RegenerateMode.REUSE_EXISTING;
             }
