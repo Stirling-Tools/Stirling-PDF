@@ -384,6 +384,18 @@ public class UserLicenseSettingsService {
         return refreshLinkedTeamUsers();
     }
 
+    /** Only a previously purchased Team grant permits infrastructure to boot in recovery mode. */
+    public boolean isTeamOfflineExpired() {
+        EntitlementCache cache = entitlementCache.getIfAvailable();
+        if (cache == null) return false;
+        cache.current();
+        var settings = getOrCreateSettings();
+        return cache.isGraceExpired()
+                && settings.getLinkedTeamUsers() != null
+                && settings.getLinkedTeamUsers() > 0
+                && Objects.equals(cache.linkedDeviceId(), settings.getLinkedTeamDeviceId());
+    }
+
     /**
      * Drops the cached entitlement so the next read goes to SaaS. For a caller with reason to
      * believe the plan just changed; the ordinary path waits out the cache's own TTL.
@@ -427,6 +439,7 @@ public class UserLicenseSettingsService {
         }
         if (deviceId == null) return null;
         Optional<InstanceEntitlement> answer = currentEntitlement();
+        if (cache.isGraceExpired()) return null;
         if (answer.isEmpty()) {
             return settings.getLinkedTeamUsers();
         }

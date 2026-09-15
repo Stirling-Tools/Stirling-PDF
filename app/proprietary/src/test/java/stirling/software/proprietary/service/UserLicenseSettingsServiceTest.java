@@ -80,6 +80,36 @@ class UserLicenseSettingsServiceTest {
     }
 
     @Test
+    void offlineExpirySuspendsTeamAllowanceWithoutDestroyingItAndReconnectRestoresIt() {
+        EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+        when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        when(cache.linkedDeviceId()).thenReturn("device");
+        mockSettings.setLinkedTeamDeviceId("device");
+        mockSettings.setLinkedTeamUsers(300);
+        when(cache.current()).thenReturn(Optional.empty());
+        when(cache.isGraceExpired()).thenReturn(true);
+        assertEquals(null, service.refreshLinkedTeamUsers());
+        assertEquals(300, mockSettings.getLinkedTeamUsers());
+        assertEquals(80, service.calculateMaxAllowedUsers());
+        when(cache.isGraceExpired()).thenReturn(false);
+        when(cache.current())
+                .thenReturn(
+                        Optional.of(
+                                new stirling.software.proprietary.accountlink.InstanceEntitlement(
+                                        true,
+                                        0,
+                                        0,
+                                        null,
+                                        stirling.software.proprietary.accountlink.EntitlementState
+                                                .OK,
+                                        null,
+                                        null,
+                                        null,
+                                        300)));
+        assertEquals(300, service.calculateMaxAllowedUsers());
+    }
+
+    @Test
     void noLicense_returnsGrandfatheredLimit() {
         // No license active
         when(premium.isEnabled()).thenReturn(false);

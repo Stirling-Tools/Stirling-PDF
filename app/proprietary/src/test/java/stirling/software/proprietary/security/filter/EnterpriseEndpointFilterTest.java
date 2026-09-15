@@ -15,7 +15,7 @@ class EnterpriseEndpointFilterTest {
     void purchaseAndRevocationChangeAccessWithoutRestart() throws Exception {
         LicenseServiceInterface license = mock(LicenseServiceInterface.class);
         EnterpriseEndpointFilter filter = new EnterpriseEndpointFilter(license);
-        for (String path : new String[] {"/actuator/prometheus", "/saml2/authenticate/company"}) {
+        for (String path : new String[] {"/actuator/prometheus"}) {
             when(license.isRunningProOrHigher()).thenReturn(true);
             MockHttpServletResponse paid = new MockHttpServletResponse();
             filter.doFilter(
@@ -29,7 +29,7 @@ class EnterpriseEndpointFilterTest {
                     new MockHttpServletRequest("GET", path),
                     revoked,
                     (req, res) -> res.setContentType("passed"));
-            assertEquals(path.startsWith("/saml2") ? 403 : 404, revoked.getStatus());
+            assertEquals(404, revoked.getStatus());
         }
     }
 }

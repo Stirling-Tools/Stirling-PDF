@@ -29,12 +29,6 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        String path = request.getRequestURI().substring(request.getContextPath().length());
-        boolean saml = path.startsWith("/saml2/") || path.startsWith("/login/saml2/");
-        if (saml && !licenseService.isRunningProOrHigher()) {
-            response.sendError(HttpStatus.FORBIDDEN.value(), "A paid plan is required for SAML");
-            return;
-        }
         if (isPrometheusEndpointRequest(request) && !licenseService.isRunningProOrHigher()) {
             // Allow only health checks to pass through for non-pro users
             String uri = request.getRequestURI();

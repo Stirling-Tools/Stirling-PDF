@@ -32,6 +32,7 @@ import stirling.software.proprietary.storage.crypto.FileEncryptionMasterKey;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionAuditListener;
 import stirling.software.proprietary.storage.crypto.StorageEncryptionState;
 import stirling.software.proprietary.storage.provider.DatabaseStorageProvider;
+import stirling.software.proprietary.storage.provider.LicensedStorageProvider;
 import stirling.software.proprietary.storage.provider.LocalStorageProvider;
 import stirling.software.proprietary.storage.provider.S3StorageProvider;
 import stirling.software.proprietary.storage.provider.StorageProvider;
@@ -139,8 +140,25 @@ public class StorageProviderConfig {
     @Bean(destroyMethod = "close")
     public StorageProvider storageProvider(
             StorageEncryptionState encryptionState, Optional<TempFileManager> tempFileManager) {
-        return new EncryptingStorageProvider(
-                innerStorageProvider(), encryptionState, tempFileManager.orElse(null));
+        StorageProvider provider =
+                new EncryptingStorageProvider(
+                        innerStorageProvider(), encryptionState, tempFileManager.orElse(null));
+        String providerName =
+                Optional.ofNullable(applicationProperties.getStorage().getProvider())
+                        .orElse("local")
+                        .trim();
+        boolean paidStorage =
+                encryptionState.isWriteEnabled()
+                        || "s3".equalsIgnoreCase(providerName)
+                        || "database".equalsIgnoreCase(providerName);
+        return paidStorage
+                ? new LicensedStorageProvider(
+                        provider,
+                        () -> {
+                            License tier = licenseKeyChecker.premiumTier();
+                            return tier == License.SERVER || tier == License.ENTERPRISE;
+                        })
+                : provider;
     }
 
     private StorageProvider innerStorageProvider() {

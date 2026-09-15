@@ -423,7 +423,8 @@ public class ConfigController {
                 if (applicationContext.containsBean("SSOAutoLogin")) {
                     configData.put(
                             "SSOAutoLogin",
-                            applicationContext.getBean("SSOAutoLogin", Boolean.class));
+                            Boolean.TRUE.equals(isRunningProOrHigher())
+                                    && applicationContext.getBean("SSOAutoLogin", Boolean.class));
                 }
             } catch (Exception e) {
                 // EE features not available, continue without them

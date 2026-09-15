@@ -58,14 +58,14 @@ class LicenseFilterHttpTest {
     }
 
     @Test
-    void licenceGateRunsBeforeSecurityCanRedirectOrHandleSaml() throws Exception {
+    void samlHandshakeCanIdentifyGrandfatheredUsersWithoutAPaidPlan() throws Exception {
         for (String path :
                 new String[] {
                     "/saml2/authenticate/company",
                     "/saml2/metadata/company",
                     "/login/saml2/sso/company"
                 }) {
-            assertThat(request("GET", path)).isEqualTo(403);
+            assertThat(request("GET", path)).isEqualTo(302);
             when(license.isRunningProOrHigher()).thenReturn(true);
             assertThat(request("GET", path)).isEqualTo(302);
             when(license.isRunningProOrHigher()).thenReturn(false);

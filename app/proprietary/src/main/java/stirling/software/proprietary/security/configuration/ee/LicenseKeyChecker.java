@@ -203,10 +203,18 @@ public class LicenseKeyChecker {
         return licenseKeyResult;
     }
 
-    /** Rejects a paid-only configuration using the current effective tier. */
+    /** Keeps configured infrastructure available for recovery after an offline Team expiry. */
+    public boolean isTeamOfflineExpired() {
+        return licenseKeyResult == License.NORMAL && licenseSettingsService.isTeamOfflineExpired();
+    }
+
+    /**
+     * Validates paid startup configuration, allowing expired Team infrastructure to boot for
+     * recovery.
+     */
     public void requireProOrEnterprise(String configuredAs) {
         License tier = premiumTier();
-        if (tier != License.SERVER && tier != License.ENTERPRISE) {
+        if (tier != License.SERVER && tier != License.ENTERPRISE && !isTeamOfflineExpired()) {
             throw new IllegalStateException(configuredAs + " requires a Pro or Enterprise license");
         }
     }

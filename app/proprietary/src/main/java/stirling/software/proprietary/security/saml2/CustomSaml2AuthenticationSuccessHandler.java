@@ -14,6 +14,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.LockedException;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.security.web.savedrequest.SavedRequest;
 
@@ -70,27 +71,12 @@ public class CustomSaml2AuthenticationSuccessHandler
 
             boolean userExists = userService.usernameExistsIgnoreCase(username);
 
-            // Check if user is eligible for SAML (grandfathered or system has ENTERPRISE license)
-            if (userExists) {
-                stirling.software.proprietary.security.model.User user =
-                        userService.findByUsernameIgnoreCase(username).orElse(null);
-
-                if (user != null && !licenseSettingsService.isSamlEligible(user)) {
-                    // User is not grandfathered and no ENTERPRISE license - block SAML login
-                    log.warn(
-                            "SAML2 login blocked for existing user '{}' - not eligible (not grandfathered and no ENTERPRISE license)",
-                            username);
-                    String origin = resolveOrigin(request);
-                    response.sendRedirect(origin + "/logout?saml2RequiresLicense=true");
-                    return;
-                }
-            } else if (!licenseSettingsService.isSamlEligible(null)) {
-                // No existing user and no ENTERPRISE license -> block auto creation
-                log.warn(
-                        "SAML2 login blocked for new user '{}' - not eligible (no ENTERPRISE license for auto-creation)",
-                        username);
-                String origin = resolveOrigin(request);
-                response.sendRedirect(origin + "/logout?saml2RequiresLicense=true");
+            var user = userService.findByUsernameIgnoreCase(username).orElse(null);
+            if (!licenseSettingsService.isSamlEligible(user)) {
+                SecurityContextHolder.clearContext();
+                HttpSession deniedSession = request.getSession(false);
+                if (deniedSession != null) deniedSession.invalidate();
+                response.sendRedirect(resolveOrigin(request) + "/logout?saml2RequiresLicense=true");
                 return;
             }
 
