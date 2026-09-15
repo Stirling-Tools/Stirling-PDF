@@ -12093,7 +12093,6 @@ visits = "Visits"
 
 [users]
 lastActive = "Last active"
-learnMore = "Learn more about roles and access."
 locked = "Locked"
 roleFor = "Role for {{name}}"
 rowActions = "Actions for {{name}}"

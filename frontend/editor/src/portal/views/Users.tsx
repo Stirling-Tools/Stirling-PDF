@@ -337,10 +337,7 @@ export function Users() {
         <div>
           <h1 className="portal-users__title">{t("users.title", "Users")}</h1>
           <p className="portal-users__sub">
-            {t("users.subtitle2", "Your people, teams, and access levels.")}{" "}
-            <a className="portal-users__link" href="/docs">
-              {t("users.learnMore", "Learn more about roles and access.")}
-            </a>
+            {t("users.subtitle2", "Your people, teams, and access levels.")}
           </p>
         </div>
         <div className="portal-users__head-actions">

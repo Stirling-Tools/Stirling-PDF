@@ -278,14 +278,6 @@
   align-items: center;
 }
 
-.portal-users__link {
-  color: var(--c-accent-text);
-  text-decoration: none;
-}
-.portal-users__link:hover {
-  text-decoration: underline;
-}
-
 .portal-users__directory {
   display: flex;
   flex-direction: column;
