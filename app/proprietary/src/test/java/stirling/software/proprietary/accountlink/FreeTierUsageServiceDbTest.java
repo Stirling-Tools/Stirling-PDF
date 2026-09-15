@@ -172,23 +172,57 @@ class FreeTierUsageServiceDbTest {
     }
 
     @Test
-    void repeatingAnInputSetInsideTheWorkflowWindowIsNotCharged() {
+    void stepsForTheSameDocumentShareACharge() {
         FreeTierUsageService service = service(500);
 
-        service.accrue(BillingCategory.API, 20, "a".repeat(64));
-        service.accrue(BillingCategory.API, 20, "a".repeat(64));
+        service.accrue(BillingCategory.AUTOMATION, 20, "run:0");
+        service.accrue(BillingCategory.AUTOMATION, 30, "run:0");
 
         assertThat(service.balance().usedUnits()).isEqualTo(20);
     }
 
     @Test
-    void aDifferentInputSetIsChargedSeparately() {
+    void differentDocumentsAreChargedSeparately() {
         FreeTierUsageService service = service(500);
 
-        service.accrue(BillingCategory.API, 20, "a".repeat(64));
-        service.accrue(BillingCategory.API, 7, "b".repeat(64));
+        service.accrue(BillingCategory.AUTOMATION, 20, "run:0");
+        service.accrue(BillingCategory.AUTOMATION, 7, "run:1");
 
         assertThat(service.balance().usedUnits()).isEqualTo(27);
+    }
+
+    @Test
+    void freeTierRebillsCurrentInputsAfterTheDefaultStepAllowance() {
+        FreeTierUsageService service = service(500);
+        for (int step = 0; step < 10; step++) {
+            service.accrue(BillingCategory.AUTOMATION, 3, "run:0");
+        }
+        assertThat(service.balance().usedUnits()).isEqualTo(3);
+
+        service = service(500);
+        service.accrue(BillingCategory.AUTOMATION, 7, "run:0");
+
+        assertThat(service.balance().usedUnits()).isEqualTo(10);
+    }
+
+    @Test
+    void freeTierAndLinkedStepAllowancesStaySeparate() {
+        FreeTierUsageService service = service(500);
+        UsageMeterService cloud =
+                new UsageMeterService(cloudCounters, signatures, new AccountLinkProperties());
+        service.accrue(BillingCategory.AUTOMATION, 3, "run:0");
+        cloud.accrue(T0, BillingCategory.AUTOMATION, 7, "run:0", 1);
+        cloud.accrue(T0, BillingCategory.AUTOMATION, 7, "run:0", 1);
+        service.accrue(BillingCategory.AUTOMATION, 3, "run:0");
+
+        em.clear();
+        assertThat(service.balance().usedUnits()).isEqualTo(3);
+        assertThat(
+                        cloudCounters.findAll().stream()
+                                .mapToLong(UsageCounter::getCumulativeUnits)
+                                .sum())
+                .isEqualTo(14);
+        assertThat(signatures.count()).isEqualTo(2);
     }
 
     @Test

@@ -14,9 +14,14 @@
 import { resolveRunOn, type PolicyRunOn } from "@app/policies/runOn";
 import type { AutomationConfig } from "@app/types/automation";
 import type { PolicyFolderSettings } from "@app/types/policies";
+import {
+  isToolEndpoint,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 
 /** A single backend pipeline step: a tool endpoint path + its scalar params. */
 export interface BackendPipelineStep {
+  /** Stored pipelines can contain endpoints this frontend version does not recognise. */
   operation: string;
   parameters: Record<string, unknown>;
   fileParameters?: Record<string, string>;
@@ -105,6 +110,8 @@ export interface PolicyRunView {
 /** The decoded policy read back from the backend. */
 export interface DecodedPolicy {
   id: string;
+  /** Validated first endpoint; null for an empty pipeline or an unrecognised first step. */
+  firstOperation: ToolEndpoint | null;
   /** The policy this record belongs to, read from `output.options.categoryId`. */
   policyKey: string;
   name: string;
@@ -144,8 +151,11 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
   const num = (v: unknown, fallback: number) =>
     typeof v === "number" ? v : fallback;
   const policyKey = str(meta.categoryId);
+  const firstOperation = policy.steps[0]?.operation;
   return {
     id: policy.id,
+    firstOperation:
+      firstOperation && isToolEndpoint(firstOperation) ? firstOperation : null,
     policyKey,
     name: policy.name,
     enabled: policy.enabled,

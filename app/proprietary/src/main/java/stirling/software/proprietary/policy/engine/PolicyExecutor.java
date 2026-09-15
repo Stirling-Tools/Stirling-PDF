@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -20,6 +21,7 @@ import org.springframework.util.MultiValueMap;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import stirling.software.common.service.AutomationRunContext;
 import stirling.software.common.service.InternalApiClient;
 import stirling.software.common.service.InternalApiTimeoutException;
 import stirling.software.common.service.ToolMetadataService;
@@ -64,12 +66,11 @@ public class PolicyExecutor {
     // payload the tool surfaced alongside or instead of a file.
     private record ToolResult(List<Resource> files, JsonNode report) {}
 
-    // A step's output files paired with each file's origin (the index into the original pipeline
-    // inputs it traces back to, or null when it has no single source). Origins compose across steps
-    // so the final result can be mapped back onto the files that entered the pipeline.
+    // A merge can lose its single-source attribution while continuing an input's billing group.
+    private record PipelineFile(Resource resource, Integer origin, Integer billingOrigin) {}
+
     // oneOfMany is set when the report is one document's answer out of several the step processed.
-    private record StepOutput(
-            List<Resource> files, List<Integer> origins, JsonNode report, boolean oneOfMany) {}
+    private record StepOutput(List<PipelineFile> files, JsonNode report, boolean oneOfMany) {}
 
     /**
      * Run every step in order, feeding each step's output into the next. Supporting files in {@code
@@ -81,18 +82,14 @@ public class PolicyExecutor {
     public PolicyExecutionResult execute(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener)
             throws IOException {
+        // Zero steps is a pure routing policy: inputs pass through unchanged and
+        // are delivered to the policy's output destinations.
         List<PipelineStep> steps = definition.steps();
-        if (steps.isEmpty()) {
-            throw new IllegalArgumentException("Pipeline definition has no steps");
-        }
 
-        List<Resource> currentFiles = inputs.primary();
+        List<PipelineFile> currentFiles = new ArrayList<>();
         Map<String, List<Resource>> supportingFiles = inputs.supportingFiles();
-        // Seed each input with its own index as origin; steps carry these through so the final
-        // outputs can be traced back to the files that entered the pipeline.
-        List<Integer> currentOrigins = new ArrayList<>();
-        for (int k = 0; k < currentFiles.size(); k++) {
-            currentOrigins.add(k);
+        for (int k = 0; k < inputs.primary().size(); k++) {
+            currentFiles.add(new PipelineFile(inputs.primary().get(k), k, k));
         }
         // Last non-null report wins: the terminal step defines the output.
         JsonNode lastReport = null;
@@ -115,10 +112,8 @@ public class PolicyExecutor {
             // Fill in references to earlier steps' outputs before dispatch; document- and run-scope
             // placeholders are left for the tool to resolve per document.
             PipelineStep resolved = resolveStepReferences(step, runContext);
-            StepOutput stepResult =
-                    executeStep(resolved, currentFiles, currentOrigins, supportingFiles);
+            StepOutput stepResult = executeStep(resolved, currentFiles, supportingFiles);
             currentFiles = stepResult.files();
-            currentOrigins = stepResult.origins();
             if (stepResult.report() != null) {
                 lastReport = stepResult.report();
                 lastReportTool = operation;
@@ -128,7 +123,11 @@ public class PolicyExecutor {
             listener.onStepComplete(i + 1, steps.size(), operation);
         }
 
-        return new PolicyExecutionResult(currentFiles, currentOrigins, lastReport, lastReportTool);
+        return new PolicyExecutionResult(
+                currentFiles.stream().map(PipelineFile::resource).toList(),
+                currentFiles.stream().map(PipelineFile::origin).toList(),
+                lastReport,
+                lastReportTool);
     }
 
     /**
@@ -138,51 +137,51 @@ public class PolicyExecutor {
      */
     private StepOutput executeStep(
             PipelineStep step,
-            List<Resource> inputFiles,
-            List<Integer> inputOrigins,
+            List<PipelineFile> inputFiles,
             Map<String, List<Resource>> supportingFiles)
             throws IOException {
-        requireAcceptedTypes(step.operation(), inputFiles);
-        List<Resource> files = new ArrayList<>();
-        List<Integer> origins = new ArrayList<>();
+        List<Resource> resources = inputFiles.stream().map(PipelineFile::resource).toList();
+        requireAcceptedTypes(step.operation(), resources);
+        List<PipelineFile> files = new ArrayList<>();
         JsonNode report = null;
         if (toolMetadataService.isMultiInput(step.operation())) {
-            // One call over all inputs. The outputs derive from a single input only when exactly
-            // one entered; otherwise (a genuine merge) there is no single source.
-            ToolResult r = callEndpoint(step, inputFiles, supportingFiles);
-            Integer origin = inputOrigins.size() == 1 ? inputOrigins.getFirst() : null;
+            Integer origin = sharedOrigin(inputFiles);
+            // Synchronous, ordered dispatch makes the last surviving input's group the newest,
+            // matching SaaS's choice when a merge joins several previously processed documents.
+            Integer billingOrigin =
+                    inputFiles.isEmpty() ? null : inputFiles.getLast().billingOrigin();
+            ToolResult r;
+            try (AutomationRunContext.Scope doc = documentScope(billingOrigin)) {
+                r = callEndpoint(step, resources, supportingFiles);
+            }
             for (Resource file : r.files()) {
-                files.add(file);
-                origins.add(origin);
+                files.add(new PipelineFile(file, origin, billingOrigin));
             }
             report = r.report();
         } else if (inputFiles.isEmpty()) {
             ToolResult r = callEndpoint(step, List.of(), supportingFiles);
             for (Resource file : r.files()) {
-                files.add(file);
-                origins.add(null);
+                files.add(new PipelineFile(file, null, null));
             }
             report = r.report();
         } else {
-            // One call per file: every output of this call inherits that input's origin, so a 1:1
-            // op keeps its chain and a split (one input, many outputs) tags each output with the
-            // same source.
-            for (int k = 0; k < inputFiles.size(); k++) {
-                Integer origin = inputOrigins.get(k);
-                ToolResult r = callEndpoint(step, List.of(inputFiles.get(k)), supportingFiles);
+            for (PipelineFile input : inputFiles) {
+                ToolResult r;
+                try (AutomationRunContext.Scope doc = documentScope(input.billingOrigin())) {
+                    r = callEndpoint(step, List.of(input.resource()), supportingFiles);
+                }
                 for (Resource file : r.files()) {
-                    files.add(file);
-                    origins.add(origin);
+                    files.add(new PipelineFile(file, input.origin(), input.billingOrigin()));
                 }
                 if (report == null) {
                     report = r.report();
                 }
             }
             if (report != null && inputFiles.size() > 1) {
-                return new StepOutput(files, origins, report, true);
+                return new StepOutput(files, report, true);
             }
         }
-        return new StepOutput(files, origins, report, false);
+        return new StepOutput(files, report, false);
     }
 
     /**
@@ -290,6 +289,24 @@ public class PolicyExecutor {
         } catch (JacksonException e) {
             return null;
         }
+    }
+
+    private static Integer sharedOrigin(List<PipelineFile> files) {
+        if (files.isEmpty()) {
+            return null;
+        }
+        Integer origin = files.getFirst().origin();
+        return files.stream().allMatch(file -> Objects.equals(origin, file.origin()))
+                ? origin
+                : null;
+    }
+
+    private static AutomationRunContext.Scope documentScope(Integer billingOrigin) {
+        String runId = AutomationRunContext.current();
+        if (runId == null || billingOrigin == null) {
+            return () -> {};
+        }
+        return AutomationRunContext.openDocument(runId + ":" + billingOrigin);
     }
 
     /**

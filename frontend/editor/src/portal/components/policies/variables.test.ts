@@ -246,6 +246,7 @@ describe("catalogue parity with the backend context", () => {
   );
   const backend = "app/proprietary/src/main/java/stirling/software/proprietary";
   const sources = [
+    `${backend}/document/DocumentFacts.java`,
     `${backend}/integration/api/DocumentContext.java`,
     `${backend}/integration/api/ExternalApiCallController.java`,
   ];

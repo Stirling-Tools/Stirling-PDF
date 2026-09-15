@@ -532,10 +532,10 @@ export function SourceModal({
   }
 
   // A field can gate itself on another's current value (e.g. change detection
-  // only applies in consume mode), so a knob that does nothing never shows.
+  // applies to the tracked modes), so a knob that does nothing never shows.
   function fieldVisible(field: SourceFieldDef): boolean {
     const cond = field.visibleWhen;
-    return !cond || (options[cond.key] ?? "") === cond.equals;
+    return !cond || cond.oneOf.includes(options[cond.key] ?? "");
   }
 
   const visibleFields = type.fields.filter(fieldVisible);

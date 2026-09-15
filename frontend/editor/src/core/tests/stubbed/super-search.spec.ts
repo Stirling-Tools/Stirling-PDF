@@ -140,8 +140,8 @@ test.describe("Super search — bar basics", () => {
     // router never sees — the sink must leave /files through the router or
     // the myFiles workbench swallows the selection (and "/" is a role router
     // on processor-shipping builds, so the exit must target the editor home).
-    await expect(page.locator(".files-page-header-search")).not.toBeVisible({
-      timeout: 5000,
+    await expect(page.locator(".files-page")).toHaveCount(0, {
+      timeout: 5_000,
     });
     await expect(page).toHaveURL(/\/merge/);
   });
