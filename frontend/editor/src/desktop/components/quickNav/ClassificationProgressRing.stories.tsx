@@ -6,15 +6,12 @@ import {
   QuickNavRailBase,
   type QuickNavEntry,
 } from "@app/components/shared/quickNav/QuickNavRailBase";
-import {
-  ClassificationProgressRing,
-  type ClassificationProgressRingVariant,
-} from "@app/components/quickNav/ClassificationProgressRing";
+import { ClassificationProgressRing } from "@app/components/quickNav/ClassificationProgressRing";
 import "@app/components/shared/quickNav/QuickNavRailContainer.css";
 
 /**
  * Draft of the rail indicator for a folder being classified in the background. The ring
- * fills in proportion to the whole folder, the count sits inside, and hovering names it.
+ * fills in proportion to the whole folder, the percentage sits inside, and hovering names it.
  * `Live` runs one whole job: filling, tick, collapse, gone.
  */
 const meta = {
@@ -25,11 +22,9 @@ const meta = {
     processed: 55,
     total: 558,
     status: "running",
-    variant: "fraction",
     folderName: "Downloads",
   },
   argTypes: {
-    variant: { control: "radio", options: ["fraction", "count"] },
     status: { control: "radio", options: ["running", "done"] },
   },
 } satisfies Meta<typeof ClassificationProgressRing>;
@@ -110,7 +105,7 @@ const inRail: Story["render"] = (args) => (
   </Rail>
 );
 
-/** 55 of 558 done: a tenth of the ring filled, x over y inside. Hover for the tooltip. */
+/** 55 of 558 done: a tenth of the ring filled, "10%" inside. Hover for the tooltip. */
 export const TenPercent: Story = { render: inRail };
 
 export const Half: Story = {
@@ -123,27 +118,13 @@ export const NearlyDone: Story = {
   render: inRail,
 };
 
-/** Just x inside; the total lives in the tooltip. Larger digits, less to read. */
-export const CountOnly: Story = {
-  args: { variant: "count", processed: 279 },
-  render: inRail,
-};
-
 /** The moment it finishes: full ring, tick, then it collapses out of the rail. */
 export const Done: Story = {
   args: { processed: 558, status: "done" },
   render: inRail,
 };
 
-function LiveRing({
-  variant,
-  total,
-  msPerFile,
-}: {
-  variant: ClassificationProgressRingVariant;
-  total: number;
-  msPerFile: number;
-}) {
+function LiveRing({ total, msPerFile }: { total: number; msPerFile: number }) {
   const [processed, setProcessed] = useState(0);
   const [done, setDone] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -183,7 +164,6 @@ function LiveRing({
           processed={Math.max(processed, 50)}
           total={total}
           status={done ? "done" : "running"}
-          variant={variant}
           folderName="Downloads"
           onSettled={settle}
         />
@@ -196,11 +176,5 @@ function LiveRing({
  *  collapses, gone, and again. */
 export const Live: Story = {
   args: { total: 558 },
-  render: (args) => (
-    <LiveRing
-      variant={args.variant ?? "fraction"}
-      total={args.total}
-      msPerFile={25}
-    />
-  ),
+  render: (args) => <LiveRing total={args.total} msPerFile={25} />,
 };

@@ -1,5 +1,5 @@
 /** Rail indicator for a folder being classified in the background: a ring that fills in
- *  proportion to the folder done, the count inside, and a tick that takes it away. */
+ *  proportion to the folder done, the percentage inside, and a tick that takes it away. */
 
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,16 +16,12 @@ const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 /** How long the tick is shown before {@link ClassificationProgressRingProps.onSettled}. */
 const SETTLE_MS = 1800;
 
-export type ClassificationProgressRingVariant = "fraction" | "count";
-
 export interface ClassificationProgressRingProps {
   /** Documents classified so far. */
   processed: number;
   /** PDFs in the folder; the ring is full when every one is done. */
   total: number;
   status: "running" | "done";
-  /** "fraction" stacks x over y inside the ring; "count" shows x and keeps y for the tooltip. */
-  variant?: ClassificationProgressRingVariant;
   /** Folder name for the tooltip and accessible name, e.g. "Downloads". */
   folderName: string;
   onClick?: () => void;
@@ -37,7 +33,6 @@ export function ClassificationProgressRing({
   processed,
   total,
   status,
-  variant = "fraction",
   folderName,
   onClick,
   onSettled,
@@ -121,13 +116,8 @@ export function ClassificationProgressRing({
         <span className={styles.centre} aria-hidden="true">
           {done ? (
             <CheckRoundedIcon className={styles.tick} />
-          ) : variant === "fraction" ? (
-            <span className={styles.stacked}>
-              <span className={styles.numerator}>{processed}</span>
-              <span className={styles.denominator}>{total}</span>
-            </span>
           ) : (
-            <span className={styles.count}>{processed}</span>
+            <span className={styles.percent}>{percent}%</span>
           )}
         </span>
       </button>

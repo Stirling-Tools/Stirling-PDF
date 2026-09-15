@@ -56,27 +56,9 @@
   pointer-events: none;
 }
 
-.stacked {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 1px;
-  font-size: 0.4375rem; /* 7px */
-}
-
-.numerator {
-  padding-bottom: 1px;
-  border-bottom: 1px solid var(--c-text-subtle);
-  min-width: 0.75rem;
-  text-align: center;
-}
-
-.denominator {
-  color: var(--c-text-muted);
-}
-
-.count {
-  font-size: 0.625rem; /* 10px */
+.percent {
+  font-size: 0.5625rem; /* 9px */
+  letter-spacing: -0.02em;
 }
 
 .item svg.tick {
