@@ -26,6 +26,7 @@ import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbn
 import type { CompareWorkbenchData } from "@app/types/compare";
 import { getDefaultWorkbench } from "@app/types/workbench";
 import { truncateCenter } from "@app/utils/textUtils";
+import { registerPolicyFileUsage } from "@app/services/policyBlockRegistry";
 import {
   FileSelectorPicker as PopoverFileSelector,
   FileSelectorResult,
@@ -69,6 +70,13 @@ const Compare = (props: BaseToolProps) => {
   // Slot state — files loaded directly for comparison, never added to workbench
   const [baseSlot, setBaseSlot] = useState<FileSelectorResult | null>(null);
   const [compSlot, setCompSlot] = useState<FileSelectorResult | null>(null);
+  useEffect(
+    () =>
+      registerPolicyFileUsage(
+        [baseSlot, compSlot].flatMap((slot) => (slot ? [slot.stub] : [])),
+      ),
+    [baseSlot, compSlot],
+  );
 
   // Sync params fileIds from slots (needed for operation result matching)
   useEffect(() => {

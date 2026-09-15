@@ -14,9 +14,14 @@
 import { resolveRunOn, type PolicyRunOn } from "@app/policies/runOn";
 import type { AutomationConfig } from "@app/types/automation";
 import type { PolicyFolderSettings } from "@app/types/policies";
+import {
+  isToolEndpoint,
+  type ToolEndpoint,
+} from "@app/hooks/tools/shared/toolApiMapping";
 
 /** A single backend pipeline step: a tool endpoint path + its scalar params. */
 export interface BackendPipelineStep {
+  /** Stored pipelines can contain endpoints this frontend version does not recognise. */
   operation: string;
   parameters: Record<string, unknown>;
   fileParameters?: Record<string, string>;
@@ -39,7 +44,7 @@ export interface BackendPolicy {
   /** Blank on create — the backend assigns an id and returns it. */
   id: string;
   name: string;
-  owner: string;
+  owner: string | null;
   /** Gates automatic triggering; an explicit run ignores it. */
   enabled: boolean;
   /** Null for a manual-only (client-driven) policy — the editor fires runs on
@@ -49,6 +54,8 @@ export interface BackendPolicy {
   output: BackendOutputSpec;
   /** Whether the editor runs this policy per file, and on which moment. */
   editor?: BackendEditorConfig;
+  /** A policy (blocking on failure) rather than an ordinary pipeline; see Policy.required. */
+  required?: boolean;
 }
 
 /** Mirrors the backend `EditorConfig`. */
@@ -105,15 +112,21 @@ export interface PolicyRunView {
 /** The decoded policy read back from the backend. */
 export interface DecodedPolicy {
   id: string;
+  /** Validated first endpoint; null for an empty pipeline or an unrecognised first step. */
+  firstOperation: ToolEndpoint | null;
   /** The policy this record belongs to, read from `output.options.categoryId`. */
   policyKey: string;
   name: string;
+  /** The backend owner's username; empty when no owner is assigned. */
+  owner: string;
   enabled: boolean;
   /** Null if the stored policy carried no automation blob. */
   automation: AutomationConfig | null;
   sources: string[];
   /** Whether the editor runs this policy per file, straight from the policy's own flag. */
   runsOnEditor: boolean;
+  /** A policy (blocking on failure) rather than an ordinary pipeline (see Policy.required). */
+  required: boolean;
   scopeTypes: string[];
   reviewerEmail: string;
   fieldValues: Record<string, boolean | string | string[]>;
@@ -144,10 +157,14 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
   const num = (v: unknown, fallback: number) =>
     typeof v === "number" ? v : fallback;
   const policyKey = str(meta.categoryId);
+  const firstOperation = policy.steps[0]?.operation;
   return {
     id: policy.id,
+    firstOperation:
+      firstOperation && isToolEndpoint(firstOperation) ? firstOperation : null,
     policyKey,
     name: policy.name,
+    owner: str(policy.owner),
     enabled: policy.enabled,
     automation: (output.automation as AutomationConfig | undefined) ?? null,
     sources: Array.isArray(meta.sources) ? (meta.sources as string[]) : [],
@@ -158,6 +175,7 @@ export function fromBackendPolicy(policy: BackendPolicy): DecodedPolicy {
     fieldValues:
       (meta.fieldValues as DecodedPolicy["fieldValues"] | undefined) ?? {},
     runsOnEditor: editor?.allowed === true,
+    required: policy.required === true,
     folder: {
       runOn: resolveRunOn(editor?.runOn, policyKey),
       // Legacy/missing output.mode defaults to new_version, not new_file.

@@ -250,9 +250,12 @@
   flex-shrink: 0;
 }
 
+/* The colorless brand mark follows currentColor, so the muted tone lives here
+   and tracks the theme: dark grey on light, light grey on dark. */
 .file-sidebar-cloud-icon-gray {
   position: absolute;
   inset: 0;
+  color: var(--c-text-muted);
   transition: opacity 0.2s ease;
   opacity: 1;
 }
