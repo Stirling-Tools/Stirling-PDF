@@ -1,10 +1,5 @@
-/**
- * Whether the app is backed by a server that serves the non-core API surface —
- * policies, processing folders, the AI engine.
- *
- * Always true here: a web build is served by the very backend that answers those
- * calls. Builds whose bundled backend cannot serve them shadow this file.
- */
+/** Whether a server serving the non-core API — policies, processing folders, AI — backs the app.
+ *  Always true on web, which is served by that backend; builds without one shadow this file. */
 export function useConnectedServer(): boolean {
   return true;
 }

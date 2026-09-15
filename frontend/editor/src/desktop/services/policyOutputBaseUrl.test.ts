@@ -37,8 +37,8 @@ describe("getPolicyOutputBaseUrl", () => {
   });
 
   test("self-hosted stays absolute so an offline blip cannot divert the download to the bundled backend", () => {
-    // /api/v1/general/files is a tool endpoint, and operationRouter falls back to the
-    // local backend for those while the server is unreachable.
+    // Outputs come from a tool endpoint, which the router diverts to the bundled backend
+    // while the server is unreachable.
     mocks.mode = "selfhosted";
     mocks.serverConfig = { url: "https://pdf.example.internal" };
     expect(getPolicyOutputBaseUrl("saas").startsWith("https://")).toBe(true);
