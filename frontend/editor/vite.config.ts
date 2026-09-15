@@ -480,6 +480,12 @@ export default defineConfig(async ({ mode, command }) => {
     },
     build: {
       target: "esnext",
+      // The build already precompresses for real, so the per-chunk gzip
+      // measurement Vite prints is wasted CI time.
+      reportCompressedSize: false,
+      // Vite defaults CSS to esbuild; lightningcss (Rust) minifies in one pass
+      // and can drop prefixes for the esnext target.
+      cssMinify: "lightningcss" as const,
       rollupOptions: {
         output: {
           manualChunks(id) {
