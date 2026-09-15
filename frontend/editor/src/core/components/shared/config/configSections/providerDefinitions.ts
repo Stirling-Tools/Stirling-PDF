@@ -16,8 +16,13 @@ export interface ProviderField {
   defaultValue?: FieldValue;
 }
 
+/** Signing in with this provider, versus wiring the server to another service. */
+export type ProviderCategory = "signin" | "integration";
+
 export interface Provider {
   id: string;
+  /** Which settings page lists it; defaults to "signin" when unset. */
+  category?: ProviderCategory;
   name: string;
   icon: string;
   type: ProviderType;
@@ -335,6 +340,7 @@ const useSMTPProvider = (): Provider => {
 
   return {
     id: "smtp",
+    category: "integration",
     name: t("provider.smtp.name", "SMTP Mail"),
     icon: "mail-rounded",
     type: "oauth2",
@@ -409,6 +415,7 @@ const useTelegramProvider = (): Provider => {
 
   return {
     id: "telegram",
+    category: "integration",
     name: t("admin.settings.telegram.title", "Telegram Bot"),
     icon: "send-rounded",
     type: "telegram",
@@ -809,6 +816,7 @@ const useGoogleDriveProvider = (): Provider => {
 
   return {
     id: "googledrive",
+    category: "integration",
     name: t("provider.googledrive.name", "Google Drive"),
     icon: "/images/google-drive.svg",
     type: "googledrive",

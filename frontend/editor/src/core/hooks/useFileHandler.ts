@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { useFileActions } from "@app/contexts/FileContext";
-import type { StirlingFile } from "@app/types/fileContext";
+import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
 
 export const useFileHandler = () => {
   const { actions } = useFileActions();
@@ -19,6 +19,11 @@ export const useFileHandler = () => {
         skipUploadTracking?: boolean;
         /** Folder every added file is born into (see AddFileOptions). */
         folderId?: string;
+        /** Classification computed outside the policy system (see AddFileOptions). */
+        presetClassification?: {
+          labels: string[];
+          confidence: StirlingFileStub["classificationConfidence"];
+        };
       } = {},
     ): Promise<StirlingFile[]> => {
       // Merge default options with passed options - passed options take precedence

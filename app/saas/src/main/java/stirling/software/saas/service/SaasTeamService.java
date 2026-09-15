@@ -21,6 +21,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
+import stirling.software.proprietary.service.UserLicenseSettingsService;
 import stirling.software.saas.accountlink.LinkedInstanceRepository;
 import stirling.software.saas.billing.repository.BillingSubscriptionRepository;
 import stirling.software.saas.config.SupabaseConfigurationProperties;
@@ -35,6 +36,7 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 @Slf4j
 public class SaasTeamService {
 
+    private final jakarta.persistence.EntityManager entityManager;
     private final TeamRepository teamRepository;
     private final TeamMembershipRepository membershipRepository;
     private final TeamInvitationRepository invitationRepository;
@@ -126,7 +128,12 @@ public class SaasTeamService {
         Team savedTeam = teamRepository.save(team);
 
         saasTeamExtensionService.setPersonal(savedTeam, true);
-        saasTeamExtensionService.setSeats(savedTeam, 1, 1);
+        // The free allowance, not 1: a linked instance reads this number as its own ceiling, so
+        // a 1 here would refuse every user it tried to create.
+        saasTeamExtensionService.setSeats(
+                savedTeam,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                UserLicenseSettingsService.DEFAULT_USER_LIMIT);
         saasTeamExtensionService.setCreatedByUserId(savedTeam, user.getId());
         saasTeamExtensionsRepository.incrementSeatsUsed(savedTeam.getId());
 
@@ -189,16 +196,24 @@ public class SaasTeamService {
      */
     private void returnUserToHome(User user) {
         Long homeId = resolveHomeTeamId(user);
-        Team home = homeId == null ? null : teamRepository.findById(homeId).orElse(null);
+        Team home = homeId == null ? null : teamRepository.lockById(homeId).orElse(null);
         if (home == null) {
             createPersonalTeam(user);
             return;
         }
         if (membershipRepository.findByTeamIdAndUserId(home.getId(), user.getId()).isEmpty()) {
+            // A former founder must not be re-added to the shared team they just left.
+            if (!saasTeamExtensionService.isPersonal(home)) {
+                createPersonalTeam(user);
+                return;
+            }
             TeamMembership membership = new TeamMembership();
             membership.setTeam(home);
             membership.setUser(user);
-            membership.setRole(TeamRole.LEADER);
+            membership.setRole(
+                    membershipRepository.countByTeamIdAndRole(home.getId(), TeamRole.LEADER) == 0
+                            ? TeamRole.LEADER
+                            : TeamRole.MEMBER);
             membership.setInvitedAt(LocalDateTime.now());
             membership.setAcceptedAt(LocalDateTime.now());
             membershipRepository.save(membership);
@@ -243,7 +258,10 @@ public class SaasTeamService {
                     team.getName(),
                     inviter.getUsername());
             saasTeamExtensionService.setPersonal(team, false);
-            // Unlimited seats once converted to standard
+            // Still the unlimited sentinel, which is what a standard team is until it buys: nothing
+            // enforces capacity for one. Writing the free allowance here instead would state a
+            // ceiling nothing honours, and SaasTeamController's availableSeats would go negative as
+            // the team grew past it. The sentinel goes when enforcement arrives.
             saasTeamExtensionService.setSeats(team, Integer.MAX_VALUE, Integer.MAX_VALUE);
         }
 
@@ -468,6 +486,7 @@ public class SaasTeamService {
      */
     @Transactional
     public void removeTeamMember(Long teamId, Long memberUserId, User remover) {
+        teamRepository.lockById(teamId).orElseThrow();
         // Validate: remover is team leader
         TeamMembership removerMembership =
                 membershipRepository
@@ -475,6 +494,7 @@ public class SaasTeamService {
                         .orElseThrow(
                                 () -> new SecurityException("You are not a member of this team"));
 
+        entityManager.refresh(removerMembership);
         if (!removerMembership.isLeader()) {
             throw new SecurityException("Only team leaders can remove members");
         }
@@ -565,12 +585,14 @@ public class SaasTeamService {
      */
     @Transactional
     public void leaveTeam(Long teamId, User user) {
+        teamRepository.lockById(teamId).orElseThrow();
         TeamMembership membership =
                 membershipRepository
                         .findByTeamIdAndUserId(teamId, user.getId())
                         .orElseThrow(
                                 () -> new IllegalArgumentException("Not a member of this team"));
 
+        entityManager.refresh(membership);
         // Cannot leave if you're the only leader
         if (membership.isLeader()) {
             List<TeamMembership> leaders =
@@ -732,6 +754,7 @@ public class SaasTeamService {
      */
     @Transactional
     public void updateTeamSeats(Long teamId, Integer maxSeats) {
+        teamRepository.lockById(teamId).orElseThrow();
         if (maxSeats == null || maxSeats < 1) {
             throw new IllegalArgumentException("maxSeats must be at least 1");
         }

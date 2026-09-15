@@ -25,6 +25,12 @@ import {
   reportBulkAddProgress,
   clearBulkAddProgress,
 } from "@app/services/bulkAddProgress";
+import {
+  type ReconcilePort,
+  reconcileBeforeOpen,
+  reconcileOpenFiles,
+  sourceLinkForNewFile,
+} from "@app/contexts/file/storedFileReconciler";
 const DEBUG = process.env.NODE_ENV === "development";
 /** How long a file may sit unhydrated before the console says so. Reporting only:
  *  the read is never abandoned, because large files legitimately take time. */
@@ -225,6 +231,11 @@ export function createChildStub(
 
     // Mark as dirty if parent has a localFilePath (modified file not yet saved to disk)
     isDirty: parentStub.localFilePath ? true : undefined,
+
+    // Disk markers describe the parent's relationship with disk at conflict
+    // time; inheriting diskConflictAt also suppresses the child's own prompt.
+    diskConflictAt: undefined,
+    diskReloadedAt: undefined,
   };
 
   if (DEBUG) {
@@ -273,6 +284,12 @@ interface AddFileOptions {
   /** When true, marks every added stub as derivedFromTool so the policy
    *  auto-run skips it — used for policy outputs imported via addFiles. */
   derivedFromTool?: boolean;
+  /** A classification computed outside the policy system, written at stub birth and
+   *  locked, so no policy can reclassify it or escalate it to the AI. */
+  presetClassification?: {
+    labels: string[];
+    confidence: StirlingFileStub["classificationConfidence"];
+  };
   /**
    * The folder every added file is born into — membership set at creation, atomically
    * with the stub, instead of a separate move that can fail after the file already
@@ -450,6 +467,14 @@ export async function addFiles(
       // Create new filestub with minimal metadata; hydrate thumbnails/processedFile asynchronously
       const fileStub = createNewStirlingFileStub(file, fileId);
       if (options.derivedFromTool) fileStub.derivedFromTool = true;
+      if (options.presetClassification) {
+        // Set together: a stub that is labelled but not yet locked is exactly the window
+        // a policy pass could claim it in.
+        fileStub.classificationLabels = options.presetClassification.labels;
+        fileStub.classificationConfidence =
+          options.presetClassification.confidence;
+        fileStub.classificationLocked = true;
+      }
       if (options.folderId) {
         fileStub.folderId = options.folderId as StirlingFileStub["folderId"];
       }
@@ -473,34 +498,7 @@ export async function addFiles(
         }
       }
 
-      // Check for pending file path mapping from Tauri file dialog (desktop only)
-      try {
-        const { pendingFilePathMappings } =
-          await import("@app/services/pendingFilePathMappings");
-        // DEBUG-gated: these fire per file, and a 300-file drop emitting 4 log
-        // lines each measurably stalls the main thread with devtools open.
-        if (DEBUG) {
-          console.log(
-            `[FileActions] Checking for localFilePath mapping for quickKey: ${quickKey}`,
-          );
-        }
-        const localFilePath = pendingFilePathMappings.get(quickKey);
-        if (localFilePath) {
-          if (DEBUG)
-            console.log(
-              `[FileActions] ✓ Found localFilePath: ${localFilePath}`,
-            );
-          fileStub.localFilePath = localFilePath;
-          pendingFilePathMappings.delete(quickKey); // Clean up after use
-        }
-      } catch (error) {
-        if (DEBUG)
-          console.log(
-            "[FileActions] Could not check for localFilePath:",
-            error,
-          );
-        // FileManagerContext may not be available in all contexts
-      }
+      Object.assign(fileStub, await sourceLinkForNewFile(quickKey));
 
       // Store insertion position if provided
       if (options.insertAfterPageId !== undefined) {
@@ -769,14 +767,22 @@ export async function undoConsumeFiles(
     }
 
     // Restore isLeaf in IDB — modal reads IDB directly and misses files if isLeaf=false.
+    // isDirty rides along: the dispatch above only reaches memory, and a restored
+    // version that reads clean on the next open is reloaded from the disk copy the
+    // undone operation wrote, putting the undone bytes back for good.
     await Promise.all(
-      inputStirlingFileStubs.map((stub) =>
-        fileStorage.markFileAsLeaf(stub.id).catch((error) => {
-          console.warn(
-            `📄 undoConsumeFiles: Failed to restore isLeaf for ${stub.id}:`,
-            error,
-          );
-        }),
+      stubsWithDirtyMarked.map((stub) =>
+        fileStorage
+          .updateFileMetadata(stub.id, {
+            isLeaf: true,
+            ...(stub.isDirty ? { isDirty: true } : {}),
+          })
+          .catch((error) => {
+            console.warn(
+              `📄 undoConsumeFiles: Failed to restore isLeaf for ${stub.id}:`,
+              error,
+            );
+          }),
       ),
     );
 
@@ -802,6 +808,79 @@ export async function undoConsumeFiles(
 /**
  * Action factory functions
  */
+
+/** Regenerate page metadata and thumbnails for a file whose bytes are current.
+ *  Queued, because parsing several PDFs at once is what the limit bounds. */
+function hydrateMetadataFor(
+  fileId: FileId,
+  stirlingFile: StirlingFile,
+  stateRef: React.MutableRefObject<FileContextState>,
+  lifecycleManager: FileLifecycleManager,
+): void {
+  if (!stirlingFile.type.startsWith("application/pdf")) return;
+  scheduleMetadataHydration(async () => {
+    const processedFileMetadata =
+      await generateProcessedFileMetadata(stirlingFile);
+    if (!processedFileMetadata) return;
+
+    const updates: Partial<StirlingFileStub> = {
+      processedFile: processedFileMetadata,
+    };
+
+    // Update thumbnail only if current stub doesn't have one
+    const currentStub = stateRef.current.files.byId[fileId];
+    if (!currentStub?.thumbnailUrl && processedFileMetadata.thumbnailUrl) {
+      updates.thumbnailUrl = processedFileMetadata.thumbnailUrl;
+      if (processedFileMetadata.thumbnailUrl.startsWith("blob:")) {
+        lifecycleManager.trackBlobUrl(processedFileMetadata.thumbnailUrl);
+      }
+    }
+
+    lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
+  });
+}
+
+/** Hand the reconciler the workbench, so it can settle a record in place
+ *  without core knowing what it settles it against. */
+function reconcilePort(
+  stateRef: React.MutableRefObject<FileContextState>,
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  lifecycleManager: FileLifecycleManager,
+): ReconcilePort {
+  return {
+    getStub: (fileId) => stateRef.current.files.byId[fileId],
+    listStubs: () => Object.values(stateRef.current.files.byId),
+    putFile: (fileId, file) =>
+      filesRef.current.set(fileId, createStirlingFile(file, fileId)),
+    updateStub: (fileId, updates) =>
+      lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef),
+    dropFile: (fileId) => lifecycleManager.removeFiles([fileId], stateRef),
+    reprocessFile: (fileId) => {
+      const file = filesRef.current.get(fileId);
+      if (file) {
+        hydrateMetadataFor(
+          fileId,
+          createStirlingFile(file, fileId),
+          stateRef,
+          lifecycleManager,
+        );
+      }
+    },
+  };
+}
+
+/** Tell the reconciler that something changed at these source locations. */
+export async function reconcileOpenFilesAt(
+  locations: string[],
+  stateRef: React.MutableRefObject<FileContextState>,
+  filesRef: React.MutableRefObject<Map<FileId, File>>,
+  lifecycleManager: FileLifecycleManager,
+): Promise<void> {
+  await reconcileOpenFiles(
+    locations,
+    reconcilePort(stateRef, filesRef, lifecycleManager),
+  );
+}
 
 /**
  * Add files using existing StirlingFileStubs from storage - preserves all metadata
@@ -866,33 +945,8 @@ export async function addStirlingFileStubs(
       // Load File object and hydrate metadata in background (non-blocking)
       const fileId = stub.id;
 
-      // Regenerate page metadata + thumbnails. Queued, because parsing several
-      // PDFs at once is what the concurrency limit exists to bound.
-      const scheduleMetadataFor = (stirlingFile: StirlingFile): void => {
-        scheduleMetadataHydration(async () => {
-          const processedFileMetadata =
-            await generateProcessedFileMetadata(stirlingFile);
-          if (!processedFileMetadata) return;
-
-          const updates: Partial<StirlingFileStub> = {
-            processedFile: processedFileMetadata,
-          };
-
-          // Update thumbnail only if current stub doesn't have one
-          const currentStub = stateRef.current.files.byId[fileId];
-          if (
-            !currentStub?.thumbnailUrl &&
-            processedFileMetadata.thumbnailUrl
-          ) {
-            updates.thumbnailUrl = processedFileMetadata.thumbnailUrl;
-            if (processedFileMetadata.thumbnailUrl.startsWith("blob:")) {
-              lifecycleManager.trackBlobUrl(processedFileMetadata.thumbnailUrl);
-            }
-          }
-
-          lifecycleManager.updateStirlingFileStub(fileId, updates, stateRef);
-        });
-      };
+      const scheduleMetadataFor = (stirlingFile: StirlingFile): void =>
+        hydrateMetadataFor(fileId, stirlingFile, stateRef, lifecycleManager);
 
       // Load and publish the File, ahead of any parsing. NOT queued: whether a
       // file opens at all must not wait on other files' parses.
@@ -906,9 +960,22 @@ export async function addStirlingFileStubs(
             ),
           STALLED_LOAD_MS,
         );
-        const stirlingFile = await fileStorage
-          .getStirlingFile(fileId)
-          .finally(() => clearTimeout(stall));
+        // A record can be a cache of something outside the app, so settle it
+        // BEFORE serving it, or an edit made out there stays invisible and a
+        // file deleted out there still opens.
+        const port = reconcilePort(stateRef, filesRef, lifecycleManager);
+        const decision = await reconcileBeforeOpen(stub, port);
+        if (decision.drop) {
+          lifecycleManager.removeFiles([fileId], stateRef);
+          clearTimeout(stall);
+          return;
+        }
+        // Bytes the reconciler holds win over the stored copy.
+        const stirlingFile = await (
+          decision.file
+            ? Promise.resolve(createStirlingFile(decision.file, fileId))
+            : fileStorage.getStirlingFile(fileId)
+        ).finally(() => clearTimeout(stall));
         if (!stirlingFile) {
           // A row with no bytes renders empty and its clicks look dead, so take it
           // back out. Storage keeps the record; fileStorage has said why.
@@ -920,19 +987,26 @@ export async function addStirlingFileStubs(
         }
 
         filesRef.current.set(fileId, stirlingFile);
-        // filesRef is a ref, so the selectors gating the workbench only see the
-        // file once something dispatches. Parsing it can't be a precondition.
-        lifecycleManager.updateStirlingFileStub(fileId, {}, stateRef);
+
+        // Workbench selectors only see the file once something dispatches, and
+        // updateStirlingFileStub drops updates for a file not yet in filesRef,
+        // so this must follow the write above - and must happen even when the
+        // reconciler had nothing to say, or the bytes never become visible.
+        lifecycleManager.updateStirlingFileStub(
+          fileId,
+          decision.updates ?? {},
+          stateRef,
+        );
+        decision.afterPublish?.();
 
         const needsProcessing =
+          // Bytes just changed underneath us, so whatever was cached is stale.
+          decision.contentReplaced === true ||
           !stub.processedFile ||
           !stub.processedFile.pages ||
           stub.processedFile.pages.length === 0 ||
           stub.processedFile.totalPages !== stub.processedFile.pages.length;
-        if (
-          stirlingFile.type.startsWith("application/pdf") &&
-          needsProcessing
-        ) {
+        if (needsProcessing) {
           scheduleMetadataFor(stirlingFile);
         }
       })().catch((error) =>

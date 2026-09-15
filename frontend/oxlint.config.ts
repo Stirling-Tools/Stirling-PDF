@@ -72,22 +72,6 @@ const modernGlobals: OxlintGlobals = {
   SuppressedError: "readonly",
 };
 
-// Folders not yet conformant to the stricter no-explicit-any rule
-const noExplicitAnyExcludes = [
-  "editor/src/core/components/shared/config/configSections/ProviderCard.tsx",
-  "editor/src/core/components/viewer/layerUtils.ts",
-  "editor/src/core/components/viewer/SignatureAPIBridge.tsx",
-  "editor/src/core/components/viewer/HistoryAPIBridge.tsx",
-  "editor/src/core/components/viewer/TextSelectionHandler.tsx",
-  "editor/src/core/components/viewer/RulerOverlay.tsx",
-  "editor/src/core/components/viewer/viewerTypes.ts",
-  "editor/src/core/components/viewer/EmbedPdfViewer.tsx",
-  "editor/src/core/components/viewer/RedactionSelectionMenu.tsx",
-  "editor/src/core/tools/annotate/useAnnotationSelection.ts",
-  "editor/src/core/types/fileContext.ts",
-  "editor/src/core/types/automation.ts",
-];
-
 export default defineConfig({
   plugins: ["typescript", "import"],
   categories: {
@@ -197,6 +181,7 @@ export default defineConfig({
         allowInterfaces: "with-single-extends",
       },
     ],
+    "typescript/no-explicit-any": "error",
     "typescript/no-extra-non-null-assertion": "error",
     "typescript/no-misused-new": "error",
     "typescript/no-namespace": "error",
@@ -392,15 +377,6 @@ export default defineConfig({
             patterns: [aliasOverRelative, aliasOverSrc],
           },
         ],
-      },
-    },
-    {
-      // Stricter no-explicit-any, enabled everywhere in the editor app EXCEPT
-      // the folders that are not yet conformant (migrated incrementally).
-      files: [APP_SOURCE],
-      excludeFiles: noExplicitAnyExcludes,
-      rules: {
-        "typescript/no-explicit-any": "error",
       },
     },
     {

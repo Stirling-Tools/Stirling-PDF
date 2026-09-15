@@ -9,7 +9,10 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -32,11 +35,15 @@ import stirling.software.proprietary.policy.model.PolicyInputs;
  * {@link ResolveContext} ledger rather than moved aside, so nothing accumulates in a work
  * directory. Options: "mode" is "consume" (default: a processed file is removed once every policy
  * that claimed it has settled successfully and it is still the version that ran; failures stay in
- * place and are not retried until they change) or "snapshot" (stateless, every run sees the full
- * set); "recursive" descends into subdirectories; "identity" is "stat" (default, any size/mtime
- * change is a new version) or "hash" (content-verified, so a touch does not reprocess). Hidden
- * files and directories, including the legacy {@code .stirling} work dir, are never picked up, and
- * files mid-write are skipped by the readiness check.
+ * place and are not retried until they change), "track" (the same claim-once-per-version tracking
+ * with no removal, for a directory the user owns and expects to stay intact - their Downloads, a
+ * scanner drop), or "snapshot" (stateless, every run sees the full set); "recursive" descends into
+ * subdirectories; "identity" is "stat" (default, any size/mtime change is a new version) or "hash"
+ * (content-verified, so a touch does not reprocess); "extensions" restricts the sweep to files with
+ * one of the given suffixes (dot optional, case-insensitive) - anything else in the directory is
+ * entirely out of scope, not a skipped failure. Hidden files and directories, including the legacy
+ * {@code .stirling} work dir, are never picked up, and files mid-write are skipped by the readiness
+ * check.
  */
 @Slf4j
 @Service
@@ -81,6 +88,22 @@ public class FolderInputSource implements InputSource {
         }
         Path canonicalDir = FolderIdentities.canonicalDir(inputDir);
         List<Path> present = listFiles(inputDir, config.recursive());
+        // Filtered before anything observes the listing: an out-of-scope file is invisible to the
+        // ledger and the sweep alike, so it neither burns the sweep limit nor parks as a failure.
+        if (!config.extensions().isEmpty()) {
+            present.removeIf(
+                    file ->
+                            config.extensions().stream()
+                                    .noneMatch(
+                                            ext ->
+                                                    file.getFileName()
+                                                            .toString()
+                                                            .toLowerCase(Locale.ROOT)
+                                                            .endsWith(ext)));
+        }
+        // Newest first: a capped sweep must spend its budget on what the user most recently added,
+        // not on whichever old files sort first. Unreadable mtimes sort oldest and are taken last.
+        present.sort(Comparator.comparingLong(FolderInputSource::mtimeForOrdering).reversed());
 
         if (config.snapshot()) {
             List<ResolvedInput> work = new ArrayList<>();
@@ -99,6 +122,16 @@ public class FolderInputSource implements InputSource {
 
         List<ResolvedInput> work = new ArrayList<>();
         for (Path file : present) {
+            // "limit" caps how much one sweep takes on, not what it observes: the full listing is
+            // reported above, and files beyond the cap keep their rows for later sweeps.
+            if (config.limit() > 0 && work.size() >= config.limit()) {
+                log.debug(
+                        "Folder {} has more ready files than this sweep's limit of {}; the rest"
+                                + " follow on later sweeps",
+                        inputDir,
+                        config.limit());
+                break;
+            }
             if (!readinessChecker.isReady(file)) {
                 continue;
             }
@@ -117,15 +150,79 @@ public class FolderInputSource implements InputSource {
             if (!claimed) {
                 continue;
             }
+            String claimedGate = gate;
             work.add(
                     ResolvedInput.forFile(
                             PolicyInputs.of(List.of(fileResource(file))),
                             identity,
-                            success ->
-                                    completeConsumed(
-                                            ctx, identity, file, gate, contentHash, success)));
+                            success -> {
+                                if (config.track()) {
+                                    completeTracked(
+                                            ctx,
+                                            identity,
+                                            file,
+                                            claimedGate,
+                                            contentHash,
+                                            config.hashIdentity(),
+                                            success);
+                                    return;
+                                }
+                                completeConsumed(
+                                        ctx, identity, file, claimedGate, contentHash, success);
+                            }));
         }
+        // Within the batch, smallest first: the sweep's first results should appear within
+        // seconds of it starting, not after its largest document.
+        work.sort(Comparator.comparingLong(FolderInputSource::workSize));
         return work;
+    }
+
+    /**
+     * Settle a tracked file at its post-run version. Track mode never removes the input, so an
+     * in-place pipeline has replaced the file with its own output by now: settling the claimed gate
+     * would leave the folder reprocessing that output forever.
+     *
+     * <p>The content hash is re-read for the same reason. Settling null here would leave the
+     * verification tier blind for the rest of the file's life - every later metadata-only bump (a
+     * touch, an rsync, a backup restore) would then fail the {@code hash.equals(stored)} check
+     * against a null and reprocess an unchanged document, which is exactly what {@code identity:
+     * hash} is chosen to prevent.
+     */
+    private static void completeTracked(
+            ResolveContext ctx,
+            String identity,
+            Path file,
+            String claimedGate,
+            MemoizedContentHash contentHash,
+            boolean hashIdentity,
+            boolean success) {
+        if (!success) {
+            ctx.settle(identity, claimedGate, claimedHash(file, claimedGate, contentHash), success);
+            return;
+        }
+        // Hash before gate: a file changed between the two then reads as an older gate carrying
+        // newer content, so the next sweep reprocesses. The reverse order could skip a real edit.
+        String finalHash = hashIdentity ? currentHash(file) : null;
+        ctx.settle(identity, currentGate(file, claimedGate), finalHash, true);
+    }
+
+    /** The file's content hash as it is now; null when it cannot be read. */
+    private static String currentHash(Path file) {
+        try {
+            return FolderIdentities.contentHash(file);
+        } catch (IOException | UncheckedIOException e) {
+            log.debug("Could not hash {} at settle: {}", file, e.getMessage());
+            return null;
+        }
+    }
+
+    /** The file's stat gate as it is now; the claimed gate when it cannot be read. */
+    private static String currentGate(Path file, String claimedGate) {
+        try {
+            return FolderIdentities.statGate(file);
+        } catch (IOException gone) {
+            return claimedGate;
+        }
     }
 
     /**
@@ -209,6 +306,26 @@ public class FolderInputSource implements InputSource {
     }
 
     /** Every non-hidden regular file in the source, readable or not. */
+    /** The file's mtime for selection ordering; unreadable sorts oldest, taken last. */
+    private static long mtimeForOrdering(Path file) {
+        try {
+            return Files.getLastModifiedTime(file).toMillis();
+        } catch (IOException e) {
+            return Long.MIN_VALUE;
+        }
+    }
+
+    /** A claimed unit's primary size, for run ordering; unknown sorts last. */
+    private static long workSize(ResolvedInput unit) {
+        try {
+            return unit.inputs().primary().isEmpty()
+                    ? Long.MAX_VALUE
+                    : unit.inputs().primary().get(0).contentLength();
+        } catch (IOException e) {
+            return Long.MAX_VALUE;
+        }
+    }
+
     private static List<Path> listFiles(Path inputDir, boolean recursive) throws IOException {
         List<Path> files = new ArrayList<>();
         if (!recursive) {
@@ -271,15 +388,25 @@ public class FolderInputSource implements InputSource {
         };
     }
 
-    record FolderConfig(Path directory, boolean snapshot, boolean recursive, boolean hashIdentity) {
+    record FolderConfig(
+            Path directory,
+            boolean snapshot,
+            boolean track,
+            boolean recursive,
+            boolean hashIdentity,
+            int limit,
+            List<String> extensions) {
 
         private static final String DIRECTORY_OPTION = "directory";
         private static final String MODE_OPTION = "mode";
         private static final String MODE_SNAPSHOT = "snapshot";
+        private static final String MODE_TRACK = "track";
         private static final String RECURSIVE_OPTION = "recursive";
         private static final String IDENTITY_OPTION = "identity";
         private static final String IDENTITY_STAT = "stat";
         private static final String IDENTITY_HASH = "hash";
+        private static final String LIMIT_OPTION = "limit";
+        private static final String EXTENSIONS_OPTION = "extensions";
 
         static FolderConfig from(Map<String, Object> options) {
             Object directory = options.get(DIRECTORY_OPTION);
@@ -288,6 +415,7 @@ public class FolderInputSource implements InputSource {
             }
             Object mode = options.get(MODE_OPTION);
             boolean snapshot = mode != null && MODE_SNAPSHOT.equals(mode.toString());
+            boolean track = mode != null && MODE_TRACK.equals(mode.toString());
             Object recursive = options.get(RECURSIVE_OPTION);
             boolean recurse = recursive != null && Boolean.parseBoolean(recursive.toString());
             Object identity = options.get(IDENTITY_OPTION);
@@ -298,7 +426,28 @@ public class FolderInputSource implements InputSource {
                 throw new IllegalArgumentException(
                         "folder input 'identity' must be 'stat' or 'hash'");
             }
-            return new FolderConfig(Path.of(directory.toString()), snapshot, recurse, hash);
+            Object limit = options.get(LIMIT_OPTION);
+            int max = 0;
+            if (limit != null && !limit.toString().isBlank()) {
+                try {
+                    max = Math.max(0, Integer.parseInt(limit.toString().trim()));
+                } catch (NumberFormatException e) {
+                    throw new IllegalArgumentException("folder input 'limit' must be a number", e);
+                }
+            }
+            List<String> extensions = List.of();
+            if (options.get(EXTENSIONS_OPTION) instanceof Collection<?> values) {
+                extensions =
+                        values.stream()
+                                .map(String::valueOf)
+                                .map(String::trim)
+                                .filter(value -> !value.isEmpty())
+                                .map(value -> value.startsWith(".") ? value : "." + value)
+                                .map(value -> value.toLowerCase(Locale.ROOT))
+                                .toList();
+            }
+            return new FolderConfig(
+                    Path.of(directory.toString()), snapshot, track, recurse, hash, max, extensions);
         }
     }
 }
