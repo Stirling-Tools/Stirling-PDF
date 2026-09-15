@@ -8,5 +8,5 @@ import type { PipelineOutputMode } from "@portal/api/pipelines";
  * pipeline they would simply expire unseen.
  */
 export function availableOutputModes(): PipelineOutputMode[] {
-  return ["s3"];
+  return ["s3", "vectordb"];
 }
