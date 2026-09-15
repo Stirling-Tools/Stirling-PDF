@@ -37,7 +37,7 @@ Point an endpoint at 2002 and every conversion fails with connection refused,
 because `soffice` is only accepting on the container's loopback.
 
 2003 carries **no authentication**. Anyone who can reach it can call `info()`,
-convert a file, and choose the output path — see
+convert a file, and choose the output path - see
 [Security hardening](#security-hardening-libreoffice-ssrf-containment) below for
 why the shipped compose keeps that port on an `internal` network.
 
@@ -163,7 +163,7 @@ Most often the endpoint port, not `hostLocation`. In order of likelihood:
   a DNS failure on the service name rather than a refusal.
 
 ### "Network is unreachable" from inside a UNO container
-Working as intended — `uno-internal` is an `internal` network and has no default
+Working as intended - `uno-internal` is an `internal` network and has no default
 route. Do not "fix" this by adding the UNO containers to a routable network; see
 [Security hardening](#security-hardening-libreoffice-ssrf-containment).
 
@@ -176,7 +176,7 @@ route. Do not "fix" this by adding the UNO containers to a routable network; see
 - **Common**: LibreOffice profile corruption
 - **Fix**: `docker compose down && docker compose up -d`. The profile lives in the
   container's own filesystem (`UNOSERVER_PROFILE_DIR`), not a volume, so
-  recreating the container is enough — this stack declares no volumes to prune.
+  recreating the container is enough - this stack declares no volumes to prune.
 
 ## Comparison: Local vs Remote UNO Servers
 
@@ -262,7 +262,7 @@ environment:
 > Linux-only `LD_PRELOAD` shim that Stirling's own Dockerfiles compile and
 > install; it is not part of the JAR. Run Stirling-PDF from the JAR, from a
 > package, from the desktop build, or from your own base image, and LibreOffice
-> converts documents with **completely unrestricted network access** — outbound
+> converts documents with **completely unrestricted network access** - outbound
 > to your LAN, your cloud metadata endpoint, and the internet. `LD_PRELOAD` is
 > also ignored by macOS, so a macOS host has no guard even if the shim is
 > present. Sanitization (layer 1) is in the JAR and still applies, but it does
@@ -295,11 +295,11 @@ services:
 ```
 
 Every service also runs with `security_opt: [no-new-privileges:true]` and
-`cap_drop: [ALL]`. The UNO containers need nothing added back — the image already
+`cap_drop: [ALL]`. The UNO containers need nothing added back - the image already
 runs as a non-root user. The app adds back six. Four are fatal to drop: `SETUID`
 and `SETGID`, without which the entrypoint's `setpriv` to `PUID`/`PGID` fails
 outright, and `CHOWN` and `DAC_OVERRIDE`, without which it cannot create or
-re-own the data directories first — in all four cases the container exits before
+re-own the data directories first - in all four cases the container exits before
 the app starts. `FOWNER` is not fatal; it lets root `chmod` the directories it
 has just handed to the runtime uid, and without it those `chmod`s fail and the
 modes are left as they were. `KILL` lets PID 1 signal across the uid boundary it
@@ -334,8 +334,8 @@ compromised `unoserver1` can still open connections to `unoserver2:2003` and to
 every configured remote endpoint is unreachable, Stirling does not fail the
 conversion: it falls back to running `soffice` inside the app container, which
 sits on the routable `stirling-network` and therefore has a default route out.
-Conversion then has only the `LD_PRELOAD` guard in front of it, which — see above
-— is not containment. The fallback is logged, not silent:
+Conversion then has only the `LD_PRELOAD` guard in front of it, which - see above
+- is not containment. The fallback is logged, not silent:
 
 ```
 WARN  Unoconvert command failed (...). Falling back to soffice command.
@@ -344,7 +344,7 @@ INFO  Running command: /usr/bin/soffice ...
 
 Alert on that first line, and keep `restart: on-failure` on the UNO services so an
 unhealthy one comes back. If the fallback is not acceptable to you at all, the
-place to stop it is an egress policy on the app container itself — the app keeps
+place to stop it is an egress policy on the app container itself - the app keeps
 its own route out for reasons unrelated to conversion.
 
 **Residual coverage.** Content sanitization covers OOXML/ODF, flat-ODF and HTML.

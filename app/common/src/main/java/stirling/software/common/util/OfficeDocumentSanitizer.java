@@ -174,7 +174,7 @@ public class OfficeDocumentSanitizer {
     /**
      * Raised for an upload this sanitizer cannot make safe, so the caller must refuse it rather
      * than convert it. The message is fixed: it is copied into the response body, and the parts of
-     * these documents that a message would want to name — a ZIP entry name, a parser complaint —
+     * these documents that a message would want to name - a ZIP entry name, a parser complaint -
      * are attacker-chosen text.
      */
     public static class UnsanitizableDocumentException extends IOException {
@@ -627,7 +627,7 @@ public class OfficeDocumentSanitizer {
      * Flat XML: anything but a #fragment, a data: URI or a {@code wordml:} name points outside the
      * document and is stripped. {@code wordml://Image1} is how MS Word 2003 XML addresses a picture
      * it carries itself, in the {@code <w:binData w:name>} beside it, and it can resolve to nothing
-     * else — there is no {@code wordml} protocol handler to reach the network with. Stripping it
+     * else - there is no {@code wordml} protocol handler to reach the network with. Stripping it
      * cost every picture in every WordML upload.
      */
     private static boolean isOutsideDocumentRef(String url) {
@@ -691,7 +691,7 @@ public class OfficeDocumentSanitizer {
     /**
      * Parses with every external-resolution route off. {@code afterDoctypeRewrite} is for the retry
      * that follows {@link #stripExternalDoctypeIdentifier}: by then the declaration names no
-     * external identifier, so what it can still declare is entities, and those must be expanded —
+     * external identifier, so what it can still declare is entities, and those must be expanded -
      * an unexpanded reference would be serialized with its declaration gone, and an expanded one
      * puts the value where {@link #stripExternalHrefs} can see and strip it. Expansion stays
      * bounded by {@code jdk.xml.entityExpansionLimit} under secure processing, and callers on this

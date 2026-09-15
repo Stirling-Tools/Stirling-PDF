@@ -27,7 +27,7 @@ import stirling.software.common.util.OfficeDocumentSanitizer;
  * <p>What is fetched is decided by the field type in the WW8 field tables, which the instruction
  * text does not have to agree with: an instruction reading {@code MERGEFIELD} or {@code HYPERLINK}
  * is fetched all the same when the table says {@code INCLUDEPICTURE}. So the reference, not the
- * keyword, is what this blanks — an instruction carrying an external reference goes whatever it
+ * keyword, is what this blanks - an instruction carrying an external reference goes whatever it
  * calls itself, which costs a genuine {@code HYPERLINK} its target while leaving the display text
  * the field result holds.
  *
@@ -46,8 +46,8 @@ final class WordBinarySanitizer {
     private static final int FIELD_END = 0x15;
 
     /**
-     * Field instructions blanked on the keyword alone, so an argument naming no scheme — a bare
-     * relative path, which the importer resolves against the directory the upload is staged in —
+     * Field instructions blanked on the keyword alone, so an argument naming no scheme - a bare
+     * relative path, which the importer resolves against the directory the upload is staged in -
      * goes with them.
      */
     private static final Set<String> RESOLVING_FIELDS =
