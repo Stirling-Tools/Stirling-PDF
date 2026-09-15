@@ -28,7 +28,10 @@ import tools.jackson.databind.node.ObjectNode;
 @Slf4j
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class AccountLinkClient {
 
     static final String HEADER_DEVICE_ID = "X-Device-Id";
@@ -354,7 +357,8 @@ public class AccountLinkClient {
                 parseUnitCalcPolicy(root),
                 parseDateTime(root, "periodStart"),
                 parseDateTime(root, "periodEnd"),
-                licensedUsers);
+                licensedUsers,
+                root.path("automationStepLimit").asInt(0));
     }
 
     /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */

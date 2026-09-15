@@ -3,9 +3,17 @@
  * and the editor's folder-processing setup both read it.
  */
 
-import { policyStep, type PolicyToolStep } from "@app/policies/operations";
+import {
+  policyStep,
+  type PolicyToolStep,
+  type UntypedPolicyEndpoint,
+} from "@app/policies/operations";
 import type { ToolEndpoint } from "@app/types/toolApiTypes";
-import type { WirePipelineStep } from "@app/policies/types";
+import type {
+  WirePipelineStep,
+  WireRoutingRule,
+  WireTriggerConfig,
+} from "@app/policies/types";
 
 export type { WirePipelineStep as PipelineStep } from "@app/policies/types";
 
@@ -28,6 +36,11 @@ export interface PolicyCategory {
   desc: string;
   providesClassification?: boolean;
   comingSoon?: boolean;
+  /**
+   * The category binds its own source and destinations (routing's Watch and routes). A surface that
+   * supplies the folder itself, and has no destination UI, cannot host one.
+   */
+  bindsOwnSource?: boolean;
   requiresAiEngine?: boolean;
 }
 
@@ -40,6 +53,10 @@ export interface PolicyConfigDef {
 }
 
 export interface PolicyState {
+  /** The saved destinations and per-document routes; the routing category edits these. */
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
+  trigger?: WireTriggerConfig | null;
   configured: boolean;
   status: PolicyStatus;
   /** A policy rather than an ordinary pipeline (see `Policy.required`). */
@@ -65,6 +82,10 @@ export interface PolicyState {
 }
 
 export interface PolicySetupResult {
+  /** Bound by the routing category only; every other category leaves these alone. */
+  trigger?: WireTriggerConfig | null;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
   required: boolean;
   /** Stored options the wizard doesn't model, carried through so a save preserves them (see codec). */
   extraOptions?: Record<string, unknown>;
@@ -102,7 +123,7 @@ export interface CatalogueEntry {
 }
 
 const ENDPOINT_LABELS: Partial<
-  Record<ToolEndpoint | "/api/v1/ai/tools/classify-and-label", string>
+  Record<ToolEndpoint | UntypedPolicyEndpoint, string>
 > = {
   "/api/v1/security/auto-redact": "portal.policies.endpoints.autoRedact",
   "/api/v1/security/sanitize-pdf": "portal.policies.endpoints.sanitizePdf",
@@ -110,6 +131,9 @@ const ENDPOINT_LABELS: Partial<
   "/api/v1/misc/ocr-pdf": "portal.policies.endpoints.ocrPdf",
   "/api/v1/misc/flatten": "portal.policies.endpoints.flatten",
   "/api/v1/misc/compress-pdf": "portal.policies.endpoints.compressPdf",
+  "/api/v1/convert/pdf/pdfa": "portal.policies.endpoints.pdfa",
+  "/api/v1/security/validate-compliance":
+    "portal.policies.endpoints.validateCompliance",
   "/api/v1/ai/tools/classify-and-label":
     "portal.policies.endpoints.classifyAndLabel",
 };
@@ -159,14 +183,13 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "portal.policies.categories.compliance.label",
     tone: "amber",
     desc: "portal.policies.categories.compliance.desc",
-    comingSoon: true,
   },
   {
     id: "routing",
     label: "portal.policies.categories.routing.label",
     tone: "green",
     desc: "portal.policies.categories.routing.desc",
-    comingSoon: true,
+    bindsOwnSource: true,
   },
   {
     id: "retention",
@@ -245,44 +268,22 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.compliance.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
+    // Gate last, so it judges the document that actually ships. No flatten step: it rasterises
+    // whole pages, and an archive without a text layer is not an archive. Nothing writes to the
+    // document between the conversion and the gate, so what the gate passes is what was converted.
     defaultOperations: [
-      policyStep("sanitize"),
-      policyStep("flatten"),
-      policyStep("purviewApplyLabel"),
+      // Hidden data is the usual disclosure route: strip scripts, attachments and both metadata
+      // streams. Fonts stay - PDF/A requires them embedded.
+      policyStep("sanitize", {
+        removeMetadata: true,
+        removeXMPMetadata: true,
+      }),
+      policyStep("pdfa"),
+      policyStep("complianceCheck"),
     ],
-    fields: [
-      {
-        label: "portal.policies.config.compliance.fields.frameworks",
-        key: "frameworks",
-        type: "chips",
-        value: ["hipaa"],
-        options: ["hipaa", "gdpr", "soc2", "fedramp", "pciDss", "iso27001"],
-      },
-      {
-        label: "portal.policies.config.compliance.fields.onViolation",
-        key: "onViolation",
-        type: "select",
-        value: "flagForReview",
-        options: [
-          "flagForReview",
-          "blockExport",
-          "autoRedactPhi",
-          "quarantineDocument",
-        ],
-      },
-      {
-        label: "portal.policies.config.compliance.fields.auditTrail",
-        key: "auditTrail",
-        type: "toggle",
-        value: true,
-      },
-      {
-        label: "portal.policies.config.compliance.fields.accessLog",
-        key: "accessLog",
-        type: "toggle",
-        value: true,
-      },
-    ],
+    // No policy-level settings: what this policy does is the step chain, and nothing on the
+    // backend reads fieldValues, so a framework picker here could only ever be decoration.
+    fields: [],
   },
   routing: {
     summary: "portal.policies.config.routing.summary",
@@ -292,28 +293,8 @@ export const POLICY_CONFIG: Record<string, PolicyConfigDef> = {
       "portal.policies.config.routing.rules.2",
     ],
     scopeLabel: "portal.policies.config.scopeAll",
-    defaultOperations: [policyStep("compress")],
-    fields: [
-      {
-        label: "portal.policies.config.routing.fields.destination",
-        key: "destination",
-        type: "select",
-        value: "documents",
-        options: ["documents", "s3Bucket", "sharePoint", "webhook"],
-      },
-      {
-        label: "portal.policies.config.routing.fields.webhookUrl",
-        key: "webhookUrl",
-        type: "text",
-        value: "",
-      },
-      {
-        label: "portal.policies.config.routing.fields.notify",
-        key: "notify",
-        type: "toggle",
-        value: false,
-      },
-    ],
+    defaultOperations: [policyStep("classify")],
+    fields: [],
   },
   retention: {
     summary: "portal.policies.config.retention.summary",

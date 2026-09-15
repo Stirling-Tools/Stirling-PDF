@@ -78,6 +78,8 @@ class UserControllerMoreTest {
                         licenseSettingsService,
                         loginAttemptService,
                         teamMembershipService,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class),
                         loginLandingService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
@@ -448,10 +450,9 @@ class UserControllerMoreTest {
     class DeleteUser {
 
         @Test
-        @DisplayName("deletes another user and expires their sessions")
+        @DisplayName("delegates deletion and session expiry to the guarded service")
         void success() throws Exception {
             when(userService.usernameExistsIgnoreCase("bob")).thenReturn(true);
-            when(sessionRegistry.getAllSessions("bob", false)).thenReturn(java.util.List.of());
 
             mockMvc.perform(post("/api/v1/user/admin/deleteUser/bob").principal(auth("admin")))
                     .andExpect(status().isOk())

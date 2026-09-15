@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   buildWireFromSetup,
+  assemblePolicies,
   parseSimplePolicy,
   type PolicySetupResult,
 } from "@portal/api/policies";
@@ -45,12 +46,12 @@ function classificationPolicy(required: boolean): Policy {
 
 describe("parseSimplePolicy", () => {
   it("carries required through so the wizard reopens org-mandated", () => {
-    const entry = parseSimplePolicy(classificationPolicy(true));
+    const entry = parseSimplePolicy(classificationPolicy(true), []);
     expect(entry?.policy?.state.required).toBe(true);
   });
 
   it("keeps a non-required policy non-required", () => {
-    const entry = parseSimplePolicy(classificationPolicy(false));
+    const entry = parseSimplePolicy(classificationPolicy(false), []);
     expect(entry?.policy?.state.required).toBe(false);
   });
 
@@ -65,9 +66,90 @@ describe("parseSimplePolicy", () => {
       },
       editor: { allowed: true, runOn: "export" },
     };
-    const entry = parseSimplePolicy(policy);
+    const entry = parseSimplePolicy(policy, []);
     expect(entry?.policy?.state.runOn).toBe("export");
     expect(entry?.policy?.state.runsOnEditor).toBe(true);
+  });
+
+  it("carries the run history of the policy it was handed", () => {
+    const policy = classificationPolicy(true);
+    const runs = [
+      {
+        runId: "admin:r1",
+        policyId: policy.id,
+        status: "COMPLETED",
+        currentStep: 2,
+        stepCount: 2,
+        error: null,
+        errorCode: null,
+        errorSubscribed: null,
+        outputs: [{ fileName: "invoice_redacted.pdf" }],
+        createdAt: Date.now(),
+        fileName: null,
+      },
+      // A run belonging to some other policy must not leak in.
+      {
+        ...{},
+        runId: "admin:r2",
+        policyId: "other",
+        status: "COMPLETED",
+        currentStep: 1,
+        stepCount: 1,
+        error: null,
+        errorCode: null,
+        errorSubscribed: null,
+        outputs: [],
+        createdAt: Date.now(),
+        fileName: null,
+      },
+    ] as unknown as Parameters<typeof parseSimplePolicy>[1];
+
+    const entry = parseSimplePolicy(policy, runs);
+
+    expect(entry?.policy?.activity).toHaveLength(1);
+    expect(entry?.policy?.activity[0]?.doc).toBe("invoice_redacted.pdf");
+    expect(entry?.policy?.stats.enforced).toBe(1);
+  });
+});
+
+describe("assemblePolicies", () => {
+  it("keeps routing bindings in decorated state when a saved policy is reopened", () => {
+    const routingRule = {
+      condition: {
+        input: { source: "document" as const, field: "document.extension" },
+        operator: "matches-any" as const,
+        values: ["pdf"],
+      },
+      outputId: "finance",
+    };
+    const response = assemblePolicies(
+      [
+        {
+          id: "route-1",
+          name: "Route documents",
+          enabled: true,
+          inputs: [
+            {
+              sourceId: "inbox",
+              trigger: { type: "folder-watch", options: {} },
+            },
+          ],
+          steps: [],
+          output: { type: "inline", options: { categoryId: "routing" } },
+          outputIds: ["archive"],
+          routingRules: [routingRule],
+          editor: { allowed: false, runOn: "upload" },
+        },
+      ],
+      [],
+    );
+
+    const state = response.catalogue.find(
+      (entry) => entry.category.id === "routing",
+    )?.policy?.state;
+    expect(state?.trigger).toEqual({ type: "folder-watch", options: {} });
+    expect(state?.outputIds).toEqual(["archive"]);
+    expect(state?.routingRules).toEqual([routingRule]);
   });
 });
 
@@ -78,7 +160,7 @@ describe("buildWireFromSetup", () => {
       name: "My classifier",
       icon: "shield",
     };
-    const entry = parseSimplePolicy(policy);
+    const entry = parseSimplePolicy(policy, []);
     const wire = buildWireFromSetup(entry!, setupResult(), t);
     expect(wire.icon).toBe("shield");
     expect(wire.name).toBe("My classifier");

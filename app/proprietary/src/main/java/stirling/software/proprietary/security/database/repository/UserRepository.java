@@ -19,6 +19,10 @@ import stirling.software.proprietary.security.model.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
+    @Query(
+            "SELECT u FROM User u JOIN u.authorities a WHERE a.authority = 'ROLE_ADMIN' AND (u.enabled IS NULL OR u.enabled = true) ORDER BY u.id ASC")
+    List<User> findEnabledAdminsByIdAsc();
+
     Optional<User> findByUsernameIgnoreCase(String username);
 
     @Query("FROM User u LEFT JOIN FETCH u.settings where upper(u.username) = upper(:username)")

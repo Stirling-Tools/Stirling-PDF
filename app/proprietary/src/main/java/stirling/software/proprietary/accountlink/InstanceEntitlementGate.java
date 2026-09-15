@@ -7,6 +7,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 
+import stirling.software.common.service.LicenseServiceInterface;
+
 /**
  * Decides whether a request may proceed under combined billing on a self-hosted instance.
  *
@@ -15,7 +17,9 @@ import org.springframework.stereotype.Service;
  * <ol>
  *   <li>Flag off → always allow (feature inert).
  *   <li>Manual tool → always allow (manual tools are free, never metered).
- *   <li>Billable + not linked → block with {@code NOT_LINKED} ("link to activate").
+ *   <li>Enterprise license → always allow, with local-only metering.
+ *   <li>Billable + not linked → {@code FREE_TIER} while units remain, else {@code
+ *       FREE_TIER_EXHAUSTED}. Linking buys a further grant, it does not activate the feature.
  *   <li>Billable + linked + entitlement unknown (unreachable) → <b>fail open</b>, allow — unless
  *       metering is on and SaaS has been unreachable past the grace window, then block with {@code
  *       GRACE_EXPIRED} so the fail-open can't grant unbounded free/unbilled work forever.
@@ -24,32 +28,43 @@ import org.springframework.stereotype.Service;
  *   <li>Billable + linked + over limit → block with {@code OVER_LIMIT}.
  * </ol>
  *
+ * <p>The local grant is read only when unlinked; a linked instance's pre-link counters sit
+ * untouched, and are what it resumes on if it unlinks.
+ *
  * <p>The decision logic is the pure static {@link #decide}; the Spring wrapper supplies the live
- * flag / linked-state / entitlement and computes whether the grace window has expired. This is the
- * unit-tested core.
+ * flag / linked-state / entitlement / balances and resolves the grace window.
  */
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class InstanceEntitlementGate {
 
+    private final LicenseServiceInterface licenseService;
     private final AccountLinkProperties properties;
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
     private final AccountLinkSyncStateRepository syncStateRepository;
     private final LocalUsageService localUsageService;
+    private final FreeTierUsageService freeTierUsageService;
 
     public InstanceEntitlementGate(
             AccountLinkProperties properties,
             DeviceCredentialStore credentialStore,
             EntitlementCache entitlementCache,
             AccountLinkSyncStateRepository syncStateRepository,
-            LocalUsageService localUsageService) {
+            LocalUsageService localUsageService,
+            FreeTierUsageService freeTierUsageService,
+            LicenseServiceInterface licenseService) {
+        this.licenseService = licenseService;
         this.properties = properties;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
         this.syncStateRepository = syncStateRepository;
         this.localUsageService = localUsageService;
+        this.freeTierUsageService = freeTierUsageService;
     }
 
     /** Evaluates the gate for a request, resolving live state from the store + cache. */
@@ -60,7 +75,11 @@ public class InstanceEntitlementGate {
         if (!billable) {
             return GateDecision.allow(GateDecision.Reason.MANUAL_FREE);
         }
+        if (licenseService.isRunningEE()) {
+            return GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE);
+        }
         boolean linked = credentialStore.isLinked();
+        long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();
         Optional<InstanceEntitlement> entitlement =
                 linked ? entitlementCache.current() : Optional.empty();
         boolean graceExpired = linked && entitlement.isEmpty() && isGraceExpired();
@@ -71,7 +90,8 @@ public class InstanceEntitlementGate {
                 entitlement.map(InstanceEntitlementGate::depletesCeiling).orElse(false)
                         ? localUsageService.currentPeriodUnsynced().totalUnsyncedUnits()
                         : 0L;
-        return decide(true, true, linked, entitlement, graceExpired, pendingUnsynced);
+        return decide(
+                true, true, linked, entitlement, graceExpired, pendingUnsynced, freeTierRemaining);
     }
 
     /** Whether local unsynced usage pushes against a real ceiling (free grant or a spend cap). */
@@ -88,6 +108,8 @@ public class InstanceEntitlementGate {
      *     free grant (unsubscribed) or the spend cap (capped subscription) in real time so the gate
      *     stops without waiting for the next sync (0 for uncapped-subscribed / unknown-entitlement
      *     cases, where it has no effect).
+     * @param freeTierRemainingUnits the sole ceiling when unlinked. 0 blocks, so a caller that
+     *     cannot read the local ledger must throw instead: a throw fails open, 0 reads as empty.
      */
     public static GateDecision decide(
             boolean flagEnabled,
@@ -95,7 +117,8 @@ public class InstanceEntitlementGate {
             boolean linked,
             Optional<InstanceEntitlement> entitlement,
             boolean graceExpired,
-            long pendingUnsyncedUnits) {
+            long pendingUnsyncedUnits,
+            long freeTierRemainingUnits) {
         if (!flagEnabled) {
             return GateDecision.allow(GateDecision.Reason.FLAG_OFF);
         }
@@ -103,7 +126,9 @@ public class InstanceEntitlementGate {
             return GateDecision.allow(GateDecision.Reason.MANUAL_FREE);
         }
         if (!linked) {
-            return GateDecision.block(GateDecision.Reason.NOT_LINKED);
+            return freeTierRemainingUnits > 0
+                    ? GateDecision.allow(GateDecision.Reason.FREE_TIER)
+                    : GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED);
         }
         if (entitlement.isEmpty()) {
             // Linked but entitlement unreachable: fail open, unless the grace window has expired

@@ -11,12 +11,17 @@
 
 import type { TFunction } from "i18next";
 import { apiClient } from "@portal/api/http";
-import { fromWirePolicy, toWirePolicy } from "@app/policies/codec";
+import {
+  fromWirePolicy,
+  policyInputs,
+  toWirePolicy,
+} from "@app/policies/codec";
 import { runsToActivity, runsToStats } from "@app/policies/runs";
 import {
   policyStepFromWire,
   type PolicyToolId,
 } from "@app/policies/operations";
+import { HttpError } from "@portal/api/http";
 import type { Policy } from "@portal/api/pipelines";
 import type {
   PolicyDecodedState,
@@ -61,6 +66,9 @@ function decoratePolicy(
     required: decoded.required,
     extraOptions: decoded.extraOptions,
     sources: decoded.sources,
+    trigger: decoded.trigger,
+    outputIds: decoded.outputIds,
+    routingRules: decoded.routingRules,
     runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
@@ -90,11 +98,22 @@ export function fetchPoliciesList(): Promise<WirePolicy[]> {
   return apiClient.local.json<WirePolicy[]>("/api/v1/policies");
 }
 
-/** GET /api/v1/policies/runs — best-effort (empty on a backend without runs). */
+/**
+ * GET /api/v1/policies/runs.
+ *
+ * <p>Only a 404 means "this backend has no run history", which is the case worth treating as an
+ * empty list. Swallowing every failure made an unreachable or forbidden endpoint render exactly
+ * like a policy that has never run, so a missing activity list could not be told from a broken one.
+ */
 export function fetchPolicyRuns(): Promise<PolicyRunView[]> {
   return apiClient.local
     .json<PolicyRunView[]>("/api/v1/policies/runs")
-    .catch(() => [] as PolicyRunView[]);
+    .catch((e: unknown) => {
+      if (e instanceof HttpError && e.status === 404) {
+        return [] as PolicyRunView[];
+      }
+      throw e;
+    });
 }
 
 /**
@@ -151,7 +170,7 @@ function isOrderedSubset<T>(inner: T[], outer: T[]): boolean {
  */
 export function parseSimplePolicy(
   policy: Policy,
-  runs: PolicyRunView[] = [],
+  runs: PolicyRunView[],
 ): CatalogueEntry | null {
   const rawCategory = policy.output?.options?.categoryId;
   const categoryId = typeof rawCategory === "string" ? rawCategory : "";
@@ -180,7 +199,9 @@ export function parseSimplePolicy(
     name: policy.name,
     enabled: policy.enabled,
     required: policy.required,
-    trigger: null,
+    inputs: policy.inputs ?? [],
+    outputIds: policy.outputIds ?? [],
+    routingRules: policy.routingRules ?? [],
     steps: policy.steps as WirePipelineStep[],
     // The options bag is untyped on the pipeline record; the codec reads it defensively.
     output: {
@@ -274,6 +295,10 @@ export function buildWireFromSetup(
       required: result.required,
       extraOptions: result.extraOptions,
       policyKey: entry.category.id,
+      inputs: policyInputs(result.sources, result.trigger ?? null),
+      trigger: result.trigger ?? null,
+      outputIds: result.outputIds ?? stored?.outputIds ?? [],
+      routingRules: result.routingRules ?? stored?.routingRules ?? [],
       sources: result.sources,
       runsOnEditor: result.runsOnEditor,
       scopeTypes: result.scopeTypes,

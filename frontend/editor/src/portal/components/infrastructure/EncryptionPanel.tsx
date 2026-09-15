@@ -32,6 +32,7 @@ import { SectionHeader } from "@portal/components/infrastructure/SectionHeader";
 import { EncryptionKeyTable } from "@portal/components/infrastructure/EncryptionKeyTable";
 import { EncryptionMigrationCard } from "@portal/components/infrastructure/EncryptionMigrationCard";
 import { EncryptionRotationCard } from "@portal/components/infrastructure/EncryptionRotationCard";
+import "@portal/components/infrastructure/infrastructure.css";
 import "@portal/components/infrastructure/EncryptionPanel.css";
 
 /** How often to re-read migration progress while a run is going. */

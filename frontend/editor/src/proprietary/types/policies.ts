@@ -9,6 +9,7 @@
  */
 
 import type { ReactNode } from "react";
+import type { ToolEndpoint } from "@app/types/toolApiTypes";
 
 /** Static definition of a policy category (the "what it does"). */
 export interface PolicyCategory {
@@ -45,8 +46,15 @@ export interface PolicyState {
   sources: string[];
   /** The policy's own name. Set for builder pipelines, which have no built-in category label. */
   name?: string;
+  /** The owner's username (email on SaaS), used to direct recovery requests. */
+  owner?: string;
   /** Whether the policy runs in the editor as each file passes through (resolved at decode). */
   runsOnEditor?: boolean;
+  /**
+   * A policy (blocking) rather than an ordinary pipeline: when it fails on an editor file the file
+   * is blocked (unusable), whereas a pipeline failure only warns. See the pipeline `Policy.required`.
+   */
+  required?: boolean;
   /** When non-empty, narrows the policy to these document types. */
   scopeTypes: string[];
   /** Email that low-confidence enforcements are routed to. */
@@ -85,6 +93,8 @@ export interface PolicyState {
    * it has been persisted server-side; used to update/delete/run it.
    */
   backendId?: string;
+  /** First stored step's endpoint; absent before fetch, null for an empty or unknown first step. */
+  firstOperation?: ToolEndpoint | null;
   /**
    * A built-in policy (one of the shipped catalog categories) rather than a
    * user-created one. Default policies are configurable but NOT deletable — the

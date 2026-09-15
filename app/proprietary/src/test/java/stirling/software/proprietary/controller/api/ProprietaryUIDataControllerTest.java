@@ -92,7 +92,9 @@ class ProprietaryUIDataControllerTest {
                         mfaService,
                         loginAttemptService,
                         resourceAccessService,
-                        inviteTokenRepository);
+                        inviteTokenRepository,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class));
     }
 
     @Test
