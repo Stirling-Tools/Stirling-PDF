@@ -8,6 +8,7 @@ import java.util.Locale;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -432,8 +433,23 @@ public class ExceptionUtils {
      * @return PdfPasswordException with user-friendly message
      */
     public static PdfPasswordException createPdfPasswordException(Exception cause) {
+        return createPdfPasswordException(null, cause);
+    }
+
+    /**
+     * Create a PdfPasswordException naming what could not be opened, so a multi-file operation can
+     * say which input needs unlocking rather than failing anonymously.
+     *
+     * @param context the affected file(s), or null for the bare message
+     * @param cause the original exception
+     * @return PdfPasswordException with user-friendly message
+     */
+    public static PdfPasswordException createPdfPasswordException(String context, Exception cause) {
         requireNonNull(cause, "cause");
         String message = getMessage(ErrorCode.PDF_PASSWORD);
+        if (context != null && !context.isEmpty()) {
+            message = message + " (" + context + ")";
+        }
         return new PdfPasswordException(message, cause, ErrorCode.PDF_PASSWORD.getCode());
     }
 
@@ -1055,7 +1071,7 @@ public class ExceptionUtils {
         }
 
         if (isPasswordError(e)) {
-            return createPdfPasswordException(e);
+            return createPdfPasswordException(context, e);
         }
 
         return e; // Return original exception if no specific handling needed
@@ -1412,10 +1428,11 @@ public class ExceptionUtils {
      * @param e the exception to check
      * @return true if it's an encryption error, false otherwise
      */
-    public static boolean isEncryptionError(IOException e) {
-        String message = e.getMessage();
-        if (message == null) return false;
+    public static boolean isEncryptionError(Throwable e) {
+        return anyCauseMatches(e, ExceptionUtils::isEncryptionMessage);
+    }
 
+    private static boolean isEncryptionMessage(String message) {
         return message.contains("BadPaddingException")
                 || message.contains("Given final block not properly padded")
                 || message.contains("AES initialization vector not fully read")
@@ -1423,18 +1440,40 @@ public class ExceptionUtils {
     }
 
     /**
-     * Check if an exception indicates a PDF password error.
+     * Check if an exception indicates a PDF password error. The whole cause chain is inspected, so
+     * a wrapper carrying a fixed message does not hide the underlying reason.
      *
      * @param e the exception to check
      * @return true if it's a password error, false otherwise
      */
-    public static boolean isPasswordError(IOException e) {
-        String message = e.getMessage();
-        if (message == null) return false;
+    public static boolean isPasswordError(Throwable e) {
+        return anyCauseMatches(e, ExceptionUtils::isPasswordMessage);
+    }
 
+    private static boolean isPasswordMessage(String message) {
         return message.contains("password is incorrect")
                 || message.contains("Password is not provided")
-                || message.contains("PDF contains an encryption dictionary");
+                || message.contains("PDF contains an encryption dictionary")
+                // JPDFium's wording when a document needs a password to open.
+                || message.contains("Password required/incorrect");
+    }
+
+    /** Bounds the cause walk so a self-referencing or cyclic chain cannot spin. */
+    private static final int MAX_CAUSE_DEPTH = 10;
+
+    private static boolean anyCauseMatches(Throwable throwable, Predicate<String> matcher) {
+        Throwable current = throwable;
+        for (int depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
+            String message = current.getMessage();
+            if (message != null && matcher.test(message)) {
+                return true;
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+            current = current.getCause();
+        }
+        return false;
     }
 
     /** Exception thrown when EML file format is invalid. */

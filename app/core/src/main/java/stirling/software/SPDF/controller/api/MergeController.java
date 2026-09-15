@@ -274,7 +274,10 @@ public class MergeController {
         try (TempFile mt = new TempFile(tempFileManager, ".pdf")) {
 
             List<Path> inputPaths = new ArrayList<>(files.length);
-            List<Integer> invalidIndexes = new ArrayList<>();
+            List<String> lockedNames = new ArrayList<>();
+            List<String> unreadableNames = new ArrayList<>();
+            Exception lockedCause = null;
+            Exception unreadableCause = null;
             for (int index = 0; index < files.length; index++) {
                 MultipartFile multipartFile = files[index];
                 File tempFile = tempFileManager.convertMultipartFileToFile(multipartFile);
@@ -284,8 +287,28 @@ public class MergeController {
                 try (PdfDocument ignored = PdfDocument.open(tempFile.toPath())) {
                 } catch (Exception e) {
                     ExceptionUtils.logException("PDF pre-validate", e);
-                    invalidIndexes.add(index);
+                    if (ExceptionUtils.isPasswordError(e)) {
+                        lockedNames.add(describeInput(multipartFile, index));
+                        if (lockedCause == null) {
+                            lockedCause = e;
+                        }
+                    } else {
+                        unreadableNames.add(describeInput(multipartFile, index));
+                        if (unreadableCause == null) {
+                            unreadableCause = e;
+                        }
+                    }
                 }
+            }
+
+            // Password first: it is the one the user can act on without repairing anything.
+            if (lockedCause != null) {
+                throw ExceptionUtils.createPdfPasswordException(
+                        String.join(", ", lockedNames), lockedCause);
+            }
+            if (unreadableCause != null) {
+                throw ExceptionUtils.createPdfCorruptedException(
+                        String.join(", ", unreadableNames), unreadableCause);
             }
 
             int[] pageCounts;
@@ -376,6 +399,11 @@ public class MergeController {
         return WebResponseUtils.pdfFileToWebResponse(outputTempFile, mergedFileName);
     }
 
+    private static String describeInput(MultipartFile file, int index) {
+        String name = file != null ? file.getOriginalFilename() : null;
+        return name != null && !name.isBlank() ? name : "file " + (index + 1);
+    }
+
     private int[] mergeWithJpdfium(
             List<Path> inputPaths, MultipartFile[] files, boolean generateToc, Path outputPath)
             throws IOException {
@@ -415,7 +443,7 @@ public class MergeController {
                 }
             }
         } catch (RuntimeException e) {
-            throw new IOException("JPDFium merge failed", e);
+            throw new IOException("JPDFium merge failed: " + e.getMessage(), e);
         } finally {
             for (PdfDocument doc : docs) {
                 try {

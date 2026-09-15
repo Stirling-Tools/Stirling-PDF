@@ -2,6 +2,7 @@ package stirling.software.SPDF.controller.api.misc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -287,16 +288,16 @@ class BlankPageControllerMoreTest {
     class Errors {
 
         @Test
-        @DisplayName("loader IOException is caught and returned as a 500 response")
-        void corruptPdfReturnsServerError() throws Exception {
+        @DisplayName("loader IOException propagates so it can be classified")
+        void corruptPdfPropagates() throws Exception {
             RemoveBlankPagesRequest req = request("garbage".getBytes(), 10, 99.9f);
             when(pdfDocumentFactory.load(
                             any(org.springframework.web.multipart.MultipartFile.class)))
                     .thenThrow(new IOException("bad pdf"));
 
-            // The controller swallows IOException from the loader and maps it to HTTP 500.
-            ResponseEntity<Resource> response = controller.removeBlankPages(req);
-            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+            IOException thrown =
+                    assertThrows(IOException.class, () -> controller.removeBlankPages(req));
+            assertEquals("bad pdf", thrown.getMessage());
         }
     }
 
