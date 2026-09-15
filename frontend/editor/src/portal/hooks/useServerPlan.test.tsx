@@ -56,11 +56,11 @@ describe("local licence entitlements", () => {
     state.licenseInfo!.enabled = false;
     const { result } = renderHook(() => useServerPlan(true));
     expect(result.current.serverPlan).toBeUndefined();
-    expect(state.fetchUsers).not.toHaveBeenCalled();
+    expect(state.fetchUsers).toHaveBeenCalled();
   });
   it.each([undefined, "", "00000000-0000-0000-0000-000000000000"])(
     "keeps keyless SERVER features on Team billing with key %s",
-    (licenseKey) => {
+    async (licenseKey) => {
       state.licenseInfo = {
         licenseType: "SERVER",
         enabled: true,
@@ -70,11 +70,12 @@ describe("local licence entitlements", () => {
       };
       const addCapacity = vi.fn();
       function LinkedTeamBilling() {
-        const { serverPlan } = useServerPlan(true);
+        const { serverPlan, usersInUse } = useServerPlan(true);
         return (
           <BillingScreen
             selfHosted
             serverPlan={serverPlan}
+            usersInUse={usersInUse}
             wallet={{
               ...freeWallet,
               team: { held: true, licensedUsers: 200, usersInUse: 40 },
@@ -85,12 +86,14 @@ describe("local licence entitlements", () => {
       }
       render(<LinkedTeamBilling />);
       expect(screen.getByText("Team")).toBeInTheDocument();
-      expect(screen.getByText("40 of 200 users")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getByText("37 of 200 users")).toBeInTheDocument(),
+      );
       expect(screen.queryByText("Server")).not.toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Add capacity" }));
       expect(addCapacity).toHaveBeenCalledOnce();
       expect(state.licenseInfo.licenseType).toBe("SERVER");
-      expect(state.fetchUsers).not.toHaveBeenCalled();
+      expect(state.fetchUsers).toHaveBeenCalled();
     },
   );
   it.each(["installed-server-key", "file:/licenses/server.cert"])(

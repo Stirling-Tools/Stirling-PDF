@@ -30,6 +30,23 @@ beforeEach(() => {
 });
 
 describe("createServerPlanCheckoutSession", () => {
+  it("preserves the server's subscription failure reason", async () => {
+    invoke.mockResolvedValue({
+      data: null,
+      error: {
+        message: "Edge Function returned a non-2xx status code",
+        context: new Response(
+          JSON.stringify({
+            error: "Resolve the pending payment in Manage billing first.",
+          }),
+          { status: 400 },
+        ),
+      },
+    });
+    await expect(createServerPlanCheckoutSession(plan)).rejects.toThrow(
+      "Resolve the pending payment in Manage billing first.",
+    );
+  });
   it("keeps Enterprise on the licence-issuing path", async () => {
     getSession.mockResolvedValue({ data: { session: null } });
     invoke.mockResolvedValue({

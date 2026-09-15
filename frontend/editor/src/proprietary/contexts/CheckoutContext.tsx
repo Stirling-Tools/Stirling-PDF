@@ -4,6 +4,7 @@ import React, {
   useState,
   useCallback,
   useEffect,
+  useRef,
   lazy,
   Suspense,
   ReactNode,
@@ -94,16 +95,12 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   // Lazy-loaded plans state (no fetch on mount)
   const [plans, setPlans] = useState<PlanTier[]>([]);
   const [plansLoaded, setPlansLoaded] = useState(false);
-  const [plansLoading, setPlansLoading] = useState(false);
+  const openingCheckout = useRef(false);
 
   // Lazy fetch plans only when needed
   const fetchPlansIfNeeded = useCallback(
     async (currency: string) => {
-      // Don't fetch if already loading
-      if (plansLoading) return;
-
       try {
-        setPlansLoading(true);
         const response = await licenseService.getPlans(
           planFeatures,
           planHighlights,
@@ -111,14 +108,13 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         );
         setPlans(response.plans);
         setPlansLoaded(true);
+        return response.plans;
       } catch (error) {
         console.error("Failed to fetch plans:", error);
-        // Don't block - let components handle the error
-      } finally {
-        setPlansLoading(false);
+        return [];
       }
     },
-    [plansLoading, planFeatures, planHighlights],
+    [planFeatures, planHighlights],
   );
 
   const refetchPlans = useCallback(() => {
@@ -328,6 +324,8 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
 
   const openCheckout = useCallback(
     async (tier: "server" | "enterprise", options: CheckoutOptions = {}) => {
+      if (openingCheckout.current) return;
+      openingCheckout.current = true;
       try {
         setIsLoading(true);
 
@@ -345,9 +343,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         }
 
         // Fetch plans if not already loaded
-        if (!plansLoaded) {
-          await fetchPlansIfNeeded(currency);
-        }
+        const availablePlans =
+          !plansLoaded || currency !== currentCurrency
+            ? await fetchPlansIfNeeded(currency)
+            : plans;
 
         // Fetch license info and user data for seat calculations
         let licenseInfo: LicenseInfo | null = null;
@@ -392,7 +391,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         }
 
         // Find the plan group for the requested tier
-        const planGroups = licenseService.groupPlansByTier(plans);
+        const planGroups = licenseService.groupPlansByTier(availablePlans);
         const planGroup = planGroups.find((pg) => pg.tier === tier);
 
         if (!planGroup) {
@@ -408,8 +407,10 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         const errorMessage =
           err instanceof Error ? err.message : "Failed to open checkout";
         console.error("Error opening checkout:", errorMessage);
+        alert({ alertType: "error", title: errorMessage });
         options.onError?.(errorMessage);
       } finally {
+        openingCheckout.current = false;
         setIsLoading(false);
       }
     },

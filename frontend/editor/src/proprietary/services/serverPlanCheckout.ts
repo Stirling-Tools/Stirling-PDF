@@ -80,7 +80,23 @@ export async function createServerPlanCheckoutSession(
   );
 
   if (error) {
-    throw new Error(`Failed to create checkout session: ${error.message}`);
+    let message = error.message;
+    if (error.context instanceof Response) {
+      try {
+        const details: unknown = await error.context.clone().json();
+        if (
+          details &&
+          typeof details === "object" &&
+          "error" in details &&
+          typeof details.error === "string"
+        ) {
+          message = details.error;
+        }
+      } catch {
+        // A gateway response may have no JSON body; keep the transport error.
+      }
+    }
+    throw new Error(`Failed to create checkout session: ${message}`);
   }
   if (data?.error) {
     throw new Error(data.error);

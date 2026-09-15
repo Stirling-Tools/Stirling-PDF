@@ -20,21 +20,27 @@ export function useServerPlan(enabled: boolean) {
   useEffect(() => {
     let cancelled = false;
     setUsersInUse(null);
-    if (licenseType) {
+    const refreshUsers = () => {
+      if (!enabled) return;
       usersBackend
         .fetchUsers(licenseType === "ENTERPRISE" ? "enterprise" : "pro")
         .then(({ summary }) => {
           if (!cancelled) setUsersInUse(summary.seatsUsed);
         })
-        .catch(() => {});
-    }
+        .catch(() => {
+          if (!cancelled) setUsersInUse(null);
+        });
+    };
+    refreshUsers();
+    window.addEventListener("focus", refreshUsers);
     return () => {
       cancelled = true;
+      window.removeEventListener("focus", refreshUsers);
     };
-  }, [licenseType, licenseInfo]);
+  }, [enabled, licenseType, licenseInfo]);
   const serverPlan: ServerPlan | undefined =
     licenseType && licenseInfo
       ? { licenseType, maxUsers: licenseInfo.maxUsers, usersInUse }
       : undefined;
-  return { serverPlan, loading: loading && !licenseInfo };
+  return { serverPlan, usersInUse, loading: loading && !licenseInfo };
 }
