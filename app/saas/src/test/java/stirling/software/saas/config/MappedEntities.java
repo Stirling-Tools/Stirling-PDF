@@ -104,7 +104,7 @@ final class MappedEntities {
 
     /**
      * The table an entity maps, prefixed by its schema when it declares one. Two entities can map
-     * the same table name in different schemas — {@code auth.users} and {@code users} do — so this
+     * the same table name in different schemas - {@code auth.users} and {@code users} do - so this
      * is the key to use wherever they must stay apart.
      */
     static String qualifiedTableOf(Class<?> entity) {

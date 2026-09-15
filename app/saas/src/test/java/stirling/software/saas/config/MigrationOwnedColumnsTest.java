@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
  * a column: {@link MigrationOwnedSchemaFilter} refuses create, alter and validate on it, and
  * staging pins {@code spring.jpa.hibernate.ddl-auto=none} besides. The column simply is not there,
  * and the first sign of it is every read of that entity failing on a SaaS deployment. Nothing else
- * here notices — the ownership test checks the table and never its columns, and the filter's whole
+ * here notices - the ownership test checks the table and never its columns, and the filter's whole
  * job is to stop Hibernate looking.
  *
  * <p>So the mapped column set is compared against {@code migration-owned-columns.txt}. Changing an
@@ -58,7 +58,7 @@ class MigrationOwnedColumnsTest {
                         refuses create/alter/validate, and staging runs ddl-auto=none), so a column added \
                         here does not exist on SaaS until a migration in Stirling-PDF-SaaS adds it, and \
                         every read of the entity fails until then. Consider whether the state belongs on a \
-                        Hibernate-managed table instead — user_settings, for one, is a collection table \
+                        Hibernate-managed table instead - user_settings, for one, is a collection table \
                         this filter leaves alone.
 
                         Once the migration is agreed, update %s to the mapping below."""

@@ -826,6 +826,8 @@ public class UserController {
         // Set force password change flag before changing password so both are saved together
         user.setForcePasswordChange(forcePasswordChange);
         userService.changePassword(user, finalPassword);
+        // An admin reset is an out-of-band handover, so the invite may no longer be re-issued.
+        userService.clearInvitePending(user);
 
         // Invalidate all active sessions to force reauthentication
         userService.invalidateUserSessions(username);

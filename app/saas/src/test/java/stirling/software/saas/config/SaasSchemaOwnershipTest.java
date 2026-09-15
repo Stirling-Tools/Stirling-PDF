@@ -19,7 +19,7 @@ import org.junit.jupiter.api.Test;
  *
  * <p>"Maps" is meant precisely: the scan covers the packages named by the {@code @EntityScan}
  * declarations the app actually boots with, not everything under {@code stirling.software}. See
- * {@link MappedEntities}. Note this only enforces one direction — {@link SaasSchemaOwnership}
+ * {@link MappedEntities}. Note this only enforces one direction - {@link SaasSchemaOwnership}
  * documents the drift it cannot see, and {@link MigrationOwnedColumnsTest} covers the columns
  * within a table this one has already placed.
  */

@@ -65,7 +65,7 @@ async function generateLinkWithEmail() {
   });
 }
 
-describe("InviteMembersModal — invite link delivery reporting", () => {
+describe("InviteMembersModal - invite link delivery reporting", () => {
   beforeEach(() => {
     h.alert.mockClear();
     h.generateInviteLink.mockReset();

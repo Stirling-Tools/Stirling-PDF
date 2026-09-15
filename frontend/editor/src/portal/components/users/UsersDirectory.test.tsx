@@ -115,7 +115,7 @@ describe("UsersDirectory — remove action gating", () => {
   });
 });
 
-describe("UsersDirectory — never-used invites", () => {
+describe("UsersDirectory - never-used invites", () => {
   const INVITED: Member = { ...MEMBER, invitePending: true };
 
   it("self-hosted marks an unused invite and offers Resend invite", async () => {

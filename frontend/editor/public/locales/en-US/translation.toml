@@ -13130,6 +13130,7 @@ error = "Failed to send invites"
 partialFailure = "Some invites failed"
 submit = "Send Invites"
 success = "user(s) invited successfully"
+undelivered = "Accounts created, but the invite email could not be sent"
 
 [workspace.people.inviteLink]
 copied = "Link copied to clipboard"

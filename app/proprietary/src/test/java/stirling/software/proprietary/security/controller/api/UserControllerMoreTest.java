@@ -410,6 +410,25 @@ class UserControllerMoreTest {
             verify(userService).changePassword(target, "newpass");
             verify(userService).invalidateUserSessions("bob");
         }
+
+        @Test
+        @DisplayName("retires the invite marker, since an admin reset is an out-of-band handover")
+        void clearsInvitePending() throws Exception {
+            User target = user("bob");
+            markInvitePending(target);
+            when(userService.findByUsernameIgnoreCase("bob")).thenReturn(Optional.of(target));
+
+            mockMvc.perform(
+                            post("/api/v1/user/admin/changePasswordForUser")
+                                    .principal(auth("admin"))
+                                    .param("username", "bob")
+                                    .param("newPassword", "newpass"))
+                    .andExpect(status().isOk());
+
+            InOrder order = inOrder(userService);
+            order.verify(userService).changePassword(target, "newpass");
+            order.verify(userService).clearInvitePending(target);
+        }
     }
 
     @Nested
