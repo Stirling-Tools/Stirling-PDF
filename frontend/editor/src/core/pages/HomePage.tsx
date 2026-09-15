@@ -38,13 +38,14 @@ import {
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
@@ -104,6 +105,7 @@ type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const policiesEnabled = usePoliciesEnabled();
   const { sidebarRefs } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
@@ -129,7 +131,6 @@ export default function HomePage() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
-  const otherApp = useOtherAppSwitch();
   const location = useLocation();
   useEffect(() => {
     if (
@@ -483,8 +484,8 @@ export default function HomePage() {
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
       {processingFolderCreation.dialog}
+      {policiesEnabled && <PolicyAutoRunController />}
       <QuickNavHostBridge
-        portalAccess={Boolean(otherApp)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
         fileLibrary={navigationState.workbench === "myFiles"}

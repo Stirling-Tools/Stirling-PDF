@@ -9,17 +9,23 @@ import {
   Select,
   ToggleSwitch,
 } from "@app/ui";
-import { ClassificationConditionEditor } from "@app/components/conditions/ClassificationConditionEditor";
+import { RoutingConditionEditor } from "@app/components/conditions/RoutingConditionEditor";
 import {
   classificationCondition,
+  documentFieldCondition,
   requiresClassification,
 } from "@app/data/classificationConditions";
 import type { WireRoutingRule } from "@app/policies/types";
 import "@app/components/policies/RoutingRules.css";
 
-export function blankRoutingRule(destinationId = ""): WireRoutingRule {
+export function blankRoutingRule(
+  destinationId = "",
+  classificationAvailable = true,
+): WireRoutingRule {
   return {
-    condition: classificationCondition(),
+    condition: classificationAvailable
+      ? classificationCondition()
+      : documentFieldCondition("document.extension"),
     outputId: destinationId,
   };
 }
@@ -36,6 +42,9 @@ interface RoutingRulesProps {
   destinations: DestinationOption[];
   /** Open the source builder to create a destination; omitted when offered elsewhere. */
   onCreateDestination?: () => void;
+  /** Classification requires both an available AI service and, in the full builder, its step. */
+  classificationAvailable?: boolean;
+  classificationUnavailableReason?: string;
 }
 
 /**
@@ -48,6 +57,8 @@ export function RoutingRules({
   onChange,
   destinations,
   onCreateDestination,
+  classificationAvailable = true,
+  classificationUnavailableReason,
 }: RoutingRulesProps) {
   const { t } = useTranslation();
 
@@ -80,14 +91,28 @@ export function RoutingRules({
 
   return (
     <>
+      {rules.some((rule) => requiresClassification(rule.condition)) &&
+        !classificationAvailable && (
+          <Banner
+            tone="warning"
+            description={
+              classificationUnavailableReason ??
+              t(
+                "portal.pipelines.builder.routing.aiUnavailable",
+                "Document-type routing is disabled because AI classification is unavailable. Route on a document property instead.",
+              )
+            }
+          />
+        )}
       <Card padding="none">
         <div className="portal-routing__rules">
           {rules.map((rule, index) => (
             <div key={index} className="portal-routing__rule">
               <div className="portal-routing__row">
-                <ClassificationConditionEditor
+                <RoutingConditionEditor
                   condition={rule.condition}
                   onChange={(condition) => update(index, { condition })}
+                  classificationAvailable={classificationAvailable}
                 />
                 <Select
                   inputSize="sm"
@@ -130,7 +155,13 @@ export function RoutingRules({
         size="sm"
         leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
         onClick={() =>
-          onChange([...rules, blankRoutingRule(destinations[0]?.id ?? "")])
+          onChange([
+            ...rules,
+            blankRoutingRule(
+              destinations[0]?.id ?? "",
+              classificationAvailable,
+            ),
+          ])
         }
       >
         {t("portal.pipelines.builder.routing.addRule", "Add a route")}
@@ -142,22 +173,29 @@ export function RoutingRules({
 interface RoutingSectionProps extends RoutingRulesProps {
   /** Whether the pipeline classifies, i.e. whether there is a verdict for a rule to read. */
   canClassify: boolean;
+  aiClassificationEnabled?: boolean;
 }
 
-/**
- * Routing as an opt-in on an ordinary pipeline: off is the whole of the plain case - one
- * destination, every document to it - so a pipeline that never meets classification never sees the
- * routes. It stays switched off until the pipeline has a classify step, because routing reads a
- * verdict rather than producing one, and leaving that step the user's to place is what lets
- * classification sit mid-chain instead of being welded to this control.
- */
-export function RoutingSection({ canClassify, ...rules }: RoutingSectionProps) {
+/** Document-property routes work without AI; document-type routes require an available classification step. */
+export function RoutingSection({
+  canClassify,
+  aiClassificationEnabled = true,
+  ...rules
+}: RoutingSectionProps) {
   const { t } = useTranslation();
   const enabled = rules.rules.length > 0;
-  const needsClassification = enabled
-    ? rules.rules.some((rule) => requiresClassification(rule.condition))
-    : requiresClassification(classificationCondition());
-  const missingClassification = needsClassification && !canClassify;
+  const classificationAvailable = canClassify && aiClassificationEnabled;
+  const unavailableReason = !aiClassificationEnabled
+    ? t(
+        "portal.pipelines.builder.routing.aiDisabled",
+        "AI classification is not enabled. Enable it in Settings, or route on a document property instead.",
+      )
+    : !canClassify
+      ? t(
+          "portal.pipelines.builder.routing.needsClassify",
+          "Add a Classify step to use document-type routing, or match on a document property instead.",
+        )
+      : undefined;
 
   return (
     <>
@@ -165,12 +203,16 @@ export function RoutingSection({ canClassify, ...rules }: RoutingSectionProps) {
         <ToggleSwitch
           size="sm"
           checked={enabled}
-          // Always switchable off, so a pipeline whose classify step was removed can be put
-          // right from here rather than only by putting the step back.
-          disabled={missingClassification && !enabled}
           onChange={(next) =>
             rules.onChange(
-              next ? [blankRoutingRule(rules.destinations[0]?.id ?? "")] : [],
+              next
+                ? [
+                    blankRoutingRule(
+                      rules.destinations[0]?.id ?? "",
+                      classificationAvailable,
+                    ),
+                  ]
+                : [],
             )
           }
           label={t(
@@ -178,20 +220,15 @@ export function RoutingSection({ canClassify, ...rules }: RoutingSectionProps) {
             "Send document types to different places",
           )}
           description={
-            missingClassification
+            enabled
               ? t(
-                  "portal.pipelines.builder.routing.needsClassify",
-                  "Add a Classify step to the pipeline first - routes read the document type it works out.",
+                  "portal.pipelines.builder.routing.toggleOn",
+                  "Documents are routed by the first document condition they match.",
                 )
-              : enabled
-                ? t(
-                    "portal.pipelines.builder.routing.toggleOn",
-                    "Documents are routed by the type the Classify step works out.",
-                  )
-                : t(
-                    "portal.pipelines.builder.routing.toggleOff",
-                    "Every document goes to the destination below.",
-                  )
+              : t(
+                  "portal.pipelines.builder.routing.toggleOff",
+                  "Every document goes to the destination below.",
+                )
           }
           data-testid="routing-toggle"
         />
@@ -202,7 +239,11 @@ export function RoutingSection({ canClassify, ...rules }: RoutingSectionProps) {
           <h3 className="portal-routing__heading">
             {t("portal.pipelines.builder.routing.heading", "Routes")}
           </h3>
-          <RoutingRules {...rules} />
+          <RoutingRules
+            {...rules}
+            classificationAvailable={classificationAvailable}
+            classificationUnavailableReason={unavailableReason}
+          />
         </>
       )}
     </>

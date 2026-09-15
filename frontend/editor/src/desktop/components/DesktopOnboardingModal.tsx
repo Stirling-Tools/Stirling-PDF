@@ -9,6 +9,7 @@ import { SetupWizard } from "@app/components/SetupWizard";
 import WelcomeSlide from "@app/components/onboarding/slides/WelcomeSlide";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { ClassificationDemoModal } from "@app/components/onboarding/classificationDemo/ClassificationDemoModal";
+import { useBypassOnboarding } from "@app/components/onboarding/useBypassOnboarding";
 
 /** Bumped whenever the welcome copy changes materially: it means "has seen the current
  *  welcome", not "has launched before". The old key is left behind, not migrated. */
@@ -20,6 +21,7 @@ const CLASSIFICATION_DEMO_KEY = "stirling-desktop-classification-demo-seen";
  *  aimed at server admins. Uses the shared shell, as every other onboarding does. */
 export function DesktopOnboardingModal() {
   const { t } = useTranslation();
+  const bypassOnboarding = useBypassOnboarding();
   const [visible, setVisible] = useState(
     () => !localStorage.getItem(ONBOARDING_KEY),
   );
@@ -84,6 +86,8 @@ export function DesktopOnboardingModal() {
   // Called as a data factory (not rendered as a component) — memoised so it isn't
   // reconstructed on every render while the modal is open.
   const welcomeSlide = useMemo(() => WelcomeSlide(), []);
+
+  if (bypassOnboarding) return null;
 
   if (!visible) {
     // Accepting the offer hands the workbench canvas to the sweep, which outlives this

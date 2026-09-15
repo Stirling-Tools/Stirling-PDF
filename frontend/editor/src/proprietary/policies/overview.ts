@@ -34,6 +34,7 @@ function decoratePolicy(
     required: decoded.required,
     extraOptions: decoded.extraOptions,
     sources: decoded.sources,
+    trigger: decoded.trigger,
     runsOnEditor: decoded.runsOnEditor,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,

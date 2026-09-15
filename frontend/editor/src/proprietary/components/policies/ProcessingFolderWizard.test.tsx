@@ -6,7 +6,7 @@ import {
   within,
 } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ProcessingFolderWizard,
   type ProcessingFolderWizardProps,
@@ -15,9 +15,20 @@ import { createFolderId, type FolderRecord } from "@app/types/folder";
 
 import { assemblePolicies } from "@app/policies/overview";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
-import { classificationCondition } from "@app/data/classificationConditions";
+import {
+  classificationCondition,
+  documentFieldCondition,
+} from "@app/data/classificationConditions";
 import { POLICY_CATEGORIES } from "@app/policies/catalog";
 import { directoryFromDrop } from "@app/services/directoryDrop";
+
+const classification = vi.hoisted(() => ({ available: true }));
+vi.mock("@app/hooks/useAiClassificationEnabled", () => ({
+  useAiClassificationEnabled: () => classification.available,
+}));
+beforeEach(() => {
+  classification.available = true;
+});
 
 vi.mock("@app/services/directoryDrop", () => ({
   canDropDirectory: true,
@@ -298,53 +309,86 @@ describe("ProcessingFolderWizard", () => {
     },
   );
 
-  it("keeps configured routing rules and fallback when applying the template to a folder", async () => {
-    const routingRules = [
-      { condition: classificationCondition(["invoice"]), outputId: "finance" },
-    ];
-    const catalogue = assemblePolicies(
-      [
-        {
-          id: "saved-routing",
-          name: "Routing",
-          enabled: true,
-          inputs: [],
-          output: { type: "inline", options: { categoryId: "routing" } },
-          steps: [
-            {
-              operation: "/api/v1/ai/tools/classify-and-label",
-              parameters: {},
-            },
-          ],
-          outputIds: ["archive"],
-          routingRules,
-        },
-      ],
-      [],
-    ).catalogue;
-    const props = renderWizard({
-      initialFolder: folder,
-      catalogue,
-      destinations: [
-        { id: "finance", name: "Finance" },
-        { id: "archive", name: "Archive" },
-      ],
-    });
-    expect(
-      screen.getByRole("button", {
-        name: "portal.policies.categories.routing.label",
-      }),
-    ).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByText("Watch")).toBeNull();
-    expect(button("enable")).toBeEnabled();
-    fireEvent.click(button("enable"));
-    await waitFor(() =>
-      expect(props.save).toHaveBeenCalledWith(
-        folder,
-        expect.objectContaining({ outputIds: ["archive"], routingRules }),
-      ),
-    );
-  });
+  it.each([
+    {
+      ai: true,
+      condition: classificationCondition(["invoice"]),
+      canSave: true,
+    },
+    {
+      ai: false,
+      condition: classificationCondition(["invoice"]),
+      canSave: false,
+    },
+    {
+      ai: false,
+      condition: documentFieldCondition("document.extension", ["pdf"]),
+      canSave: true,
+    },
+  ])(
+    "keeps saved routing with AI=$ai and condition=$condition.input.field",
+    async ({ ai, condition, canSave }) => {
+      classification.available = ai;
+      const routingRules = [{ condition, outputId: "finance" }];
+      const catalogue = assemblePolicies(
+        [
+          {
+            id: "saved-routing",
+            name: "Routing",
+            enabled: true,
+            inputs: [],
+            output: { type: "inline", options: { categoryId: "routing" } },
+            steps: [
+              {
+                operation: "/api/v1/ai/tools/classify-and-label",
+                parameters: {},
+              },
+            ],
+            outputIds: ["archive"],
+            routingRules,
+          },
+        ],
+        [],
+      ).catalogue;
+      const props = renderWizard({
+        initialFolder: folder,
+        catalogue,
+        destinations: [
+          { id: "finance", name: "Finance" },
+          { id: "archive", name: "Archive" },
+        ],
+      });
+      expect(
+        screen.getByRole("button", {
+          name: "portal.policies.categories.routing.label",
+        }),
+      ).toHaveAttribute("aria-pressed", "true");
+      expect(screen.queryByText("Watch")).toBeNull();
+      if (!canSave) {
+        expect(button("enable")).toBeDisabled();
+        expect(props.save).not.toHaveBeenCalled();
+        return;
+      }
+      expect(button("enable")).toBeEnabled();
+      fireEvent.click(button("enable"));
+      await waitFor(() =>
+        expect(props.save).toHaveBeenCalledWith(
+          folder,
+          expect.objectContaining({
+            outputIds: ["archive"],
+            routingRules,
+            steps: ai
+              ? [
+                  expect.objectContaining({
+                    operation: "/api/v1/ai/tools/classify-and-label",
+                  }),
+                ]
+              : [],
+          }),
+        ),
+      );
+    },
+  );
 
   it("offers Routing but requires routes and a fallback before enabling processing", () => {
     renderWizard({

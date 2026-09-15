@@ -1,9 +1,6 @@
+import { Icon } from "@app/ui/Icon";
 import type { ReactNode } from "react";
 import { Menu, Text, Tooltip } from "@mantine/core";
-import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
-import CloudIcon from "@mui/icons-material/Cloud";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
-import DriveFolderUploadIcon from "@mui/icons-material/DriveFolderUpload";
 import { useTranslation } from "react-i18next";
 
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -85,7 +82,7 @@ export function NewFolderButton({
       }}
     >
       <span className="file-sidebar-action-icon">
-        <CreateNewFolderIcon />
+        <Icon name="folder-plus" />
       </span>
       {!collapsed && (
         <span className="file-sidebar-action-label sidebar-content-fade">
@@ -116,13 +113,13 @@ export function NewFolderButton({
               aria-label={label}
               style={{ pointerEvents: "auto" }}
             >
-              <CreateNewFolderIcon fontSize="small" />
+              <Icon name="folder-plus" size={20} />
             </ActionIcon>
           ) : (
             <Button
               variant="secondary"
               size={size}
-              leftSection={<CreateNewFolderIcon fontSize="small" />}
+              leftSection={<Icon name="folder-plus" size={20} />}
               disabled
               style={{ pointerEvents: "auto" }}
             >
@@ -158,7 +155,7 @@ export function NewFolderButton({
             aria-label={label}
             onClick={open}
           >
-            <CreateNewFolderIcon fontSize="small" />
+            <Icon name="folder-plus" size={20} />
           </ActionIcon>
         </Tooltip>
       );
@@ -167,7 +164,7 @@ export function NewFolderButton({
       <Button
         variant="secondary"
         size={size}
-        leftSection={<CreateNewFolderIcon fontSize="small" />}
+        leftSection={<Icon name="folder-plus" size={20} />}
         onClick={() =>
           currentFolderId !== null
             ? onOpenDialog()
@@ -192,15 +189,15 @@ export function NewFolderButton({
         ) : iconOnly ? (
           <Tooltip label={label} withinPortal>
             <ActionIcon variant="tertiary" size="sm" aria-label={label}>
-              <CreateNewFolderIcon fontSize="small" />
+              <Icon name="folder-plus" size={20} />
             </ActionIcon>
           </Tooltip>
         ) : (
           <Button
             variant="secondary"
             size={size}
-            leftSection={<CreateNewFolderIcon fontSize="small" />}
-            rightSection={<ArrowDropDownIcon fontSize="small" />}
+            leftSection={<Icon name="folder-plus" size={20} />}
+            rightSection={<Icon name="chevron-down" size={20} />}
           >
             {label}
           </Button>
@@ -209,8 +206,9 @@ export function NewFolderButton({
       <Menu.Dropdown>
         <Menu.Item
           leftSection={
-            <DriveFolderUploadIcon
-              fontSize="small"
+            <Icon
+              name="folder-up"
+              size={20}
               style={{ marginRight: "0.3rem" }}
             />
           }
@@ -221,7 +219,7 @@ export function NewFolderButton({
         </Menu.Item>
         <Menu.Item
           className="files-page-new-folder-option"
-          leftSection={<CloudIcon fontSize="small" />}
+          leftSection={<Icon name="cloud" size={20} />}
           disabled={Boolean(serverDisabledReason)}
           onClick={() => onOpenDialog(currentFolderId, "server")}
         >

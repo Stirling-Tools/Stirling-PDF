@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Modal } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
 import { folderKind, type FolderRecord } from "@app/types/folder";
+import { useAiClassificationEnabled } from "@app/hooks/useAiClassificationEnabled";
 import type { PolicySetupResult, CatalogueEntry } from "@app/policies/catalog";
 import {
   PolicyRoutingDestinations,
@@ -73,6 +74,7 @@ export function ProcessingFolderWizard({
   onRetry,
 }: ProcessingFolderWizardProps) {
   const { t } = useTranslation();
+  const aiClassificationEnabled = useAiClassificationEnabled();
   const [stage, setStage] = useState<Stage>(
     initialFolder ? "processing" : "folder",
   );
@@ -191,6 +193,7 @@ export function ProcessingFolderWizard({
             {...props}
             destinations={destinations}
             onCreateDestination={onCreateDestination}
+            classificationAvailable={aiClassificationEnabled}
             compact
           />
         </>

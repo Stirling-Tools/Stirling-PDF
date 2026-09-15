@@ -494,7 +494,7 @@
 }
 .folder-setup details > summary {
   cursor: pointer;
-  color: var(--c-accent-fg);
+  color: var(--c-text-muted);
   font-size: 0.8125rem;
 }
 .folder-setup details[open] > summary {

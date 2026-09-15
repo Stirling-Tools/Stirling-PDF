@@ -36,7 +36,10 @@ editSecret = "Edit this value"
 editYourNewFiles = "Edit your new file(s)"
 exportAndContinue = "Export & Continue"
 false = "False"
+fileChangedOnDisk = "Changed on disk since you edited it"
+fileDiskUnavailable = "Cannot reach the file on disk"
 fileNotSavedToDisk = "Not saved to disk"
+fileOriginalDeleted = "Original deleted - save to keep a copy"
 fileSavedToDisk = "File saved to disk"
 fileSelected = "{{filename}}"
 filesSelected = "{{count}} files"
@@ -4088,6 +4091,36 @@ title = "Settings Opened"
 message = "Stirling PDF is now your default PDF editor"
 title = "Default App Set"
 
+[desktopFileLink]
+saveAs = "Save as…"
+useDiskVersion = "Use disk version"
+
+[desktopFileLink.conflict]
+hint = "Keeping your changes overwrites the file on disk when you next save."
+keepMine = "Keep my changes"
+prompt = "This file changed on disk while you had unsaved changes here. Only one version can be kept."
+remaining = "{{count}} more to review"
+title = "File changed on disk"
+useDisk = "Use the disk version"
+
+[desktopFileLink.missing]
+body = "\"{{name}}\" has been deleted or moved on disk, so it has been removed from your files."
+title = "File no longer exists"
+
+[desktopFileLink.openDeleted]
+body_one = "\"{{name}}\" no longer exists on disk. It is still open here - saving will ask you for a new location."
+body_other = "{{count}} files no longer exist on disk. They are still open here - saving each one will ask you for a new location."
+title_one = "File deleted on disk"
+title_other = "Files deleted on disk"
+
+[desktopFileLink.reloaded]
+body = "\"{{name}}\" changed on disk and has been reloaded."
+title = "Updated from disk"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone."
+title = "File changed on disk"
+
 [desktopUpdate]
 downloading = "Downloading update..."
 installing = "Installing update..."
@@ -4608,6 +4641,16 @@ device = "This device only"
 deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
+
+[filesPage.diskLink]
+conflict = "Disk changed"
+conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
+orphaned = "Not on disk"
+orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
+unavailable = "Unavailable"
+unavailableHintOffline = "The drive or share this file lives on is not connected. Reconnect it to pick up changes again."
+unavailableHintPermission = "Stirling is not allowed to read this location. Grant access in System Settings to pick up changes again."
+unavailableHintUnknown = "This file cannot be reached right now. The copy here is unchanged."
 
 [filesPage.diskState]
 all = "All"
@@ -7192,7 +7235,7 @@ applying = "Applying {{names}}"
 applyingProgress = "Applying {{names}} ({{done}} of {{total}})"
 exportFailureBody = "Security policies couldn't be applied. Files were exported as-is."
 exportFailureTitle = "Exported without enforcement"
-failureBody = "{{failures}} of {{total}} file(s) couldn't be processed and were exported as-is."
+failureBody = "Some policies couldn't be applied to {{failures}} of {{total}} file(s)."
 failureTitle = "Exported without full enforcement"
 printPolicyAppliedBody = "This PDF was updated to meet a policy. Review the changes, then print again."
 printPolicyAppliedTitle = "Policy applied before printing"
@@ -7225,6 +7268,24 @@ badgeRunning = "{{name}} running..."
 blockingAction = "{{action}} blocked while enforcing policy, please wait..."
 dismiss = "Dismiss overlay"
 enforcingTitle = "Enforcing policy..."
+exportBlocked = "A required policy failed. The export was cancelled. Try exporting again."
+recoveryBody = "We couldn't apply a required policy to these files. Try again, or close the affected files to continue working."
+recoveryClose_one = "Close file"
+recoveryClose_other = "Close {{count}} files"
+recoveryClosing_one = "Closing file..."
+recoveryClosing_other = "Closing {{count}} files..."
+recoveryContactAdmin = "Contact your administrator for help."
+recoveryContactOwner = "Contact {{owner}} for help."
+recoveryError = "The action couldn't be completed. Try again."
+recoveryOwnedPolicy = "Check the policy settings, then retry."
+recoveryRetry_one = "Retry file"
+recoveryRetry_other = "Retry {{count}} files"
+recoveryRetrying_one = "Retrying file..."
+recoveryRetrying_other = "Retrying {{count}} files..."
+recoverySummary_one = "{{count}} file affected."
+recoverySummary_other = "{{count}} files affected."
+recoveryTechnicalDetails = "Technical details"
+recoveryTitle = "Policy enforcement failed"
 viewAnyway = "View file (policy still enforcing)"
 
 [policyOption]
@@ -7233,23 +7294,25 @@ pdfa-2b = "PDF/A-2b"
 pdfa-3b = "PDF/A-3b"
 
 [portal.accountLink.card]
-billingNote = "Unattended processing bills against your org wallet."
-eyebrow = "Account link"
-linkButton = "Link your Stirling account"
-linked = "Linked"
-linkedAs = "Linked as {{name}}."
-linkedGeneric = "This instance is linked."
-notLinked = "Not linked"
-title = "Link this org to its Stirling account"
-unlink = "Unlink"
+billingNote = "This server shares your team’s processing allowance in Stirling Cloud."
+connectDescription = "Connect this server to use your team’s processing allowance in Stirling Cloud."
+disconnectBody = "This server will stop using your team’s processing allowance in Stirling Cloud. Your local files stay on this server. To connect again, follow the original connection steps."
+disconnectTitle = "Disconnect this instance?"
+eyebrow = "This instance"
+linkButton = "Connect your Stirling account"
+loading = "Checking account connection"
+notLinked = "Not connected"
+signedInAs = "Signed in to Stirling Cloud as"
+statusError = "Couldn’t check the account connection"
+title = "Stirling Cloud"
+unlink = "Disconnect this instance"
 
 [portal.accountLink.card.error]
-title = "Couldn't link"
+title = "Couldn’t update the connection"
 
 [portal.accountLink.card.loginNotConfigured]
-after = "to enable account linking against the hosted Stirling account. In dev you can simulate sign-in from the link dialog."
-before = "Set"
-title = "SaaS login not configured"
+description = "Ask your server administrator to enable the connection to Stirling Cloud."
+title = "Account connection unavailable"
 
 [portal.accountLink.connect]
 close = "Close"
@@ -7310,30 +7373,13 @@ title = "Connecting"
 retry = "Try again"
 
 [portal.accountLink.instances]
-active = "Active"
-revoke = "Revoke"
-revoked = "Revoked"
 unnamed = "Unnamed instance"
 
-[portal.accountLink.instances.columns]
-instance = "Instance"
-lastSeen = "Last seen"
-linked = "Linked"
-status = "Status"
-
 [portal.accountLink.instances.empty]
-description = "Link this org's account, then register your self-hosted instances to see them here."
-title = "No linked instances"
-
-[portal.accountLink.instances.time]
-daysAgo_one = "{{count}}d ago"
-daysAgo_other = "{{count}}d ago"
-hoursAgo_one = "{{count}}h ago"
-hoursAgo_other = "{{count}}h ago"
-justNow = "just now"
-minutesAgo_one = "{{count}}m ago"
-minutesAgo_other = "{{count}}m ago"
-never = "never"
+description = "Connect a self-hosted server to your team to see it here."
+otherDescription = "This is the only connected instance shown for your team."
+otherTitle = "No other connected instances"
+title = "No connected instances"
 
 [portal.accountLink.modal]
 cancel = "Cancel"
@@ -7351,15 +7397,18 @@ before = "Set"
 title = "Stirling connection not configured"
 
 [portal.accountLink.panel]
-instancesSub = "Every self-hosted instance registered to this org. Revoke a credential to immediately cut off its unattended access."
-instancesTitle = "Linked instances"
+instancesSub = "Self-hosted servers connected to the same team."
+instancesTitle = "Connected instances"
+manageCloud = "Manage on stirling.com"
+otherInstancesSub = "Other self-hosted servers connected to the same team in Stirling Cloud."
+otherInstancesTitle = "Other connected instances"
 revokeError = "Couldn't revoke instance"
-sub = "Link this self-hosted org to its Stirling account so unattended processing bills against your org wallet."
+sub = "Manage this server’s connection to your Stirling Cloud account."
 
 [portal.accountLink.panel.loadError]
-forbidden = "Only the team owner can view the org's linked instances."
-generic = "Couldn't load the team's linked instances. Try again in a moment."
-title = "Couldn't load linked instances"
+forbidden = "Only the team owner can manage connected instances."
+generic = "Your connections could not be checked. Try again."
+title = "Couldn’t load connected instances"
 
 [portal.accountLink.rail]
 cta = "Connect"
@@ -8850,6 +8899,7 @@ usesDefaults = "Runs with default settings"
 viewDefinition = "View definition"
 
 [portal.pipelines.builder.blocker]
+aiClassification = "Enable AI classification in Settings, or remove the Classify step"
 destination = "Choose a destination"
 heading = "To create this pipeline:"
 incompatible = "Fix steps that can't run in order: {{tools}}"
@@ -8875,14 +8925,27 @@ label = "Change icon"
 
 [portal.pipelines.builder.routing]
 addRule = "Add a route"
+aiDisabled = "AI classification is not enabled. Enable it in Settings, or route on a document property instead."
+aiToolDisabled = "Unavailable until AI classification is enabled in Settings"
+aiUnavailable = "Document-type routing is disabled because AI classification is unavailable. Route on a document property instead."
+extensionPlaceholder = "pdf, docx, png"
 fallback = "Everything else goes to"
 heading = "Routes"
-needsClassify = "Add a Classify step to the pipeline first - routes read the document type it works out."
+matchAuthor = "PDF author"
+matchBy = "Match by"
+matchDocumentType = "Document type (AI classification)"
+matchDocumentTypeDisabled = "Document type (AI unavailable)"
+matchExtension = "File extension"
+matchFilename = "Exact filename"
+matchTitle = "PDF title"
+matchValues = "Values to match"
+needsClassify = "Add a Classify step to use document-type routing, or match on a document property instead."
 nodeSummary_one = "1 route, then a fallback"
 nodeSummary_other = "{{count}} routes, then a fallback"
 toggle = "Send document types to different places"
 toggleOff = "Every document goes to the destination below."
-toggleOn = "Documents are routed by the type the Classify step works out."
+toggleOn = "Documents are routed by the first document condition they match."
+valuePlaceholder = "Enter exact values, separated by commas"
 
 [portal.pipelines.composer]
 addTool = "Add a tool"
@@ -9124,42 +9187,6 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 1 = "Remove JavaScript"
 2 = "Watermark"
 
-[portal.policies.detail]
-enforces = "Steps"
-managerOnly = "Only an admin or team leader can modify this policy"
-onEveryExport = "On every export"
-onEveryUpload = "On every upload"
-outputAsNewFile = "as a new file"
-outputAsNewVersion = "as a new version"
-recentActivity = "Recent activity"
-showLess = "Show less"
-showMore = "Show more"
-sources = "Sources"
-
-[portal.policies.detail.actions]
-clearHistory = "Clear processed history"
-delete = "Delete"
-editSettings = "Edit settings"
-pause = "Pause"
-resume = "Resume"
-
-[portal.policies.detail.clearHistory]
-body = "This pipeline will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
-cancel = "Cancel"
-confirm = "Clear history"
-title = "Clear processed history?"
-
-[portal.policies.detail.delete]
-bodyActive = "\"{{name}}\" is active and enforcing on your documents. Deleting it stops that immediately and cannot be undone. Pause it instead if you only want it to stop running."
-bodyPaused = "\"{{name}}\" will be removed for everyone. This cannot be undone."
-cancel = "Cancel"
-confirm = "Delete"
-title = "Delete this pipeline?"
-
-[portal.policies.detail.emptyActivity]
-description = "Documents will appear here once this pipeline runs."
-title = "No activity yet"
-
 [portal.policies.endpoints]
 addWatermark = "Watermark"
 autoRedact = "Redact PII"
@@ -9365,15 +9392,6 @@ label = "Post the document to a webhook"
 [portal.policies.operations.zapierNotify]
 description = "Hands the run's details to your automation."
 label = "Trigger a Zap or Make scenario"
-
-[portal.policies.stats]
-activeFor = "Active"
-dataProcessed = "Data processed"
-docsEnforced = "Docs processed"
-
-[portal.policies.status]
-active = "Active"
-paused = "Paused"
 
 [portal.policies.wizard.actions]
 cancel = "Cancel"
@@ -9650,6 +9668,7 @@ sentenceTrial = "set up your trial workspace"
 [portal.procurement.journey]
 daysLeft_one = "{{count}} day left"
 daysLeft_other = "{{count}} days left"
+expired = "Trial expired"
 
 [portal.procurement.journeySteps.agreement]
 blurb = "One signature covers MSA, order form, EULA and DPA."
@@ -9769,7 +9788,7 @@ subtitle = "Anything from your policy runs and your team's editors that needs yo
 title = "Review"
 
 [portal.settings.sections]
-account-link = "Account link"
+account-link = "Account connection"
 
 [portal.shell.sidebar]
 appEditor = "Editor"
@@ -10899,6 +10918,38 @@ mcp = "MCP Server"
 storageSharing = "File Storage & Sharing"
 systemSettings = "System Settings"
 
+[settings.connectedInstances]
+confirmBody = "This revokes the instance’s access to your team in Stirling Cloud. It does not delete local files or remove usage already recorded. To connect again, follow the original connection steps on the instance."
+confirmTitle = "Remove {{name}}?"
+connectedAt = "Connected: {{date}}"
+connectedDate = "Connected"
+connectHelp = "To connect a server, open Settings → Account connection on your self-hosted instance and follow the connection steps."
+copied = "ID copied"
+copyError = "Couldn’t copy the ID. Select it to copy manually."
+copyId = "Copy ID"
+details = "Details"
+displayName = "Display name (optional)"
+editName = "Edit name"
+empty = "No connected instances"
+id = "Instance ID"
+justConnected = "Connected just now"
+lastSeen = "Last seen: {{date}}"
+loadError = "Couldn’t load connected instances"
+loadErrorBody = "Your connections could not be checked. Try again."
+loading = "Loading connected instances"
+ownerOnly = "Only the team owner can manage connected instances."
+remove = "Remove connection"
+removedSuccess = "{{name}} has been disconnected from your team."
+removeError = "Couldn’t remove the connection. Try again."
+renameError = "Couldn’t save the name. Try again."
+retry = "Try again"
+saveName = "Save name"
+subtitle = "Manage the self-hosted servers connected to your team."
+teamNote = "These instances share your team’s processing allowance."
+title = "Connected instances"
+unknown = "Not available"
+yourTeam = "Your team"
+
 [settings.connection]
 description = "Work locally on this machine or connect the app to a Stirling server."
 localDescription = "You are using the local backend without an account. Some tools requiring cloud processing or a self-hosted server are unavailable."
@@ -11856,17 +11907,26 @@ leaveButton = "Leave Team"
 leaveError = "Failed to leave team"
 leaveSuccess = "Successfully left team"
 loading = "Loading team information..."
+makeOwner = "Make owner"
 memberCount_one = "{{count}} member"
 memberCount_other = "{{count}} members"
 memberCount_zero = "no members"
 memberRemoved = "Member removed successfully"
 namePlaceholder = "Enter team name"
+noOwner = "This team has no owner"
 personal = "Personal"
+recoverBody = "An existing member can recover ownership to manage the team and its billing settings."
+recoverOwner = "Become team owner"
+recoverSuccess = "You are now the team owner."
 removeError = "Failed to remove member"
 renameCancel = "Cancel rename"
 renameError = "Failed to rename team"
 renameSubmit = "Save team name"
 renameSuccess = "Team renamed successfully"
+transferBody = "Make {{email}} the team owner? They will control team membership and organization billing settings. You will become a member. The team’s subscription and wallet stay with the team."
+transferError = "Ownership could not be transferred. Refresh the team and try again."
+transferSuccess = "Team ownership transferred. Your role is now member."
+transferTitle = "Transfer team ownership"
 
 [team.invitationBanner]
 acceptButton = "Accept"
@@ -12143,6 +12203,7 @@ visits = "Visits"
 lastActive = "Last active"
 learnMore = "Learn more about roles and access."
 locked = "Locked"
+ownerSetupRequired = "The organization owner has not completed first login. Complete setup or ask the server operator to recover ownership before transferring ownership."
 roleFor = "Role for {{name}}"
 rowActions = "Actions for {{name}}"
 showAll = "Show all {{count}}"
@@ -12164,6 +12225,7 @@ removeTeam = "Remove from team"
 rename = "Rename team"
 resetPw = "Reset password"
 suspend = "Suspend"
+transferOwnership = "Transfer ownership"
 unlock = "Unlock account"
 
 [users.activity]
@@ -12202,6 +12264,8 @@ disableMfaTitle = "Reset MFA"
 removeBody = "Permanently remove {{name}} from the organization? This cannot be undone."
 removeTeamBody = "Remove {{name}} from the team? They keep their account but lose access to this team's resources."
 removeTitle = "Remove member"
+transferOwnershipBody = "Make {{name}} the organization owner? They will become an admin. You will remain an admin but lose ownership. Only the new owner or the server operator can transfer it back."
+transferOwnershipTitle = "Transfer organization ownership"
 
 [users.empty]
 description = "Invite your team to start collaborating."
@@ -12209,11 +12273,11 @@ title = "No members yet"
 
 [users.group]
 addToTeam = "Add to team"
+administrators = "{{count}} administrators"
 guestCount = "{{count}} guest"
 guests = "Guests"
 ledBy = "led by {{owner}}"
 org = "Organization"
-owners = "{{count}} owner"
 team = "{{name}} team"
 teamMeta = "{{count}} people"
 
@@ -12273,15 +12337,9 @@ title = "Move to team"
 [users.newTeam]
 action = "+ New team"
 create = "Create team"
-emailError = "Enter a valid email address"
 name = "Team name"
 namePlaceholder = "e.g. Finance"
 nameRequired = "Team name is required"
-owner = "Team Owner"
-ownerFailed = "Team created, but the owner couldn't be invited. Assign one from the roster."
-ownerHelper = "Every team has a leader. They'll be invited as Team Owner, with the Processor on, and can add the rest. You can reassign later."
-ownerPlaceholder = "owner@company.com"
-subtitle = "Group people under a Team Owner who manages their access."
 title = "New team"
 
 [users.renameTeam]
@@ -12305,10 +12363,11 @@ title = "Reset password"
 tooShort = "Password must be at least 8 characters"
 
 [users.role]
+admin = "Admin"
 guest = "Guest"
 member = "Member"
 orgOwner = "Org Owner"
-teamOwner = "Team Owner"
+teamOwner = "Team Lead"
 
 [users.team]
 grantProcessor = "Grant Processor to team"
@@ -12977,6 +13036,7 @@ lockedBadge = "Locked"
 loginRequired = "Enable login mode first"
 memberActions = "Member actions"
 noMembersFound = "No members found"
+ownerLocked = "Transfer organization ownership in Settings → Workspace → Users before changing the owner’s role or account."
 role = "Role"
 searchMembers = "Search members..."
 team = "Team"

@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from "react";
+import { VisuallyHidden } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon, Banner, Button, FormField, Input } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
@@ -506,18 +507,21 @@ export function ProcessingFolderPicker({
                     aria-label={t("processingFolders.setup.selectFolder")}
                   >
                     <div className="files-page-list-row is-header" role="row">
-                      <span
-                        role="columnheader"
-                        aria-label={t("processingFolders.setup.selectFolder")}
-                      />
+                      <span role="columnheader">
+                        <VisuallyHidden>
+                          {t("processingFolders.setup.selectFolder")}
+                        </VisuallyHidden>
+                      </span>
                       <span role="columnheader">
                         {t("filesPage.column.name", "Name")}
                       </span>
                       <span role="columnheader">
                         {t("processingFolders.setup.location")}
                       </span>
-                      <span role="columnheader" />
-                      <span role="columnheader" />
+                      <span aria-hidden="true" />
+                      <span role="columnheader">
+                        <VisuallyHidden>{t("common.actions")}</VisuallyHidden>
+                      </span>
                     </div>
                     {visible.map((folder) => {
                       const draft = added.find(

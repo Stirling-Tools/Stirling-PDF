@@ -14,7 +14,11 @@ import type {
 
 // @app/ui Button is a Mantine wrapper, so it needs the provider in the tree.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, {
+    wrapper: ({ children }) => (
+      <MantineProvider env="test">{children}</MantineProvider>
+    ),
+  });
 
 // The bell's own two jobs: what counts as read, and how a row behaves around an action.
 

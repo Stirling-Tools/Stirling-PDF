@@ -5,7 +5,7 @@ import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHo
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 import {
   QuickNavHostProvider,
-  useRegisterQuickNavHost,
+  useRegisterQuickNavView,
   type QuickNavHostActions,
 } from "@app/contexts/QuickNavHostContext";
 import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
@@ -31,7 +31,7 @@ vi.mock("@app/components/shared/quickNav/QuickNavRailContainer", () => ({
 }));
 
 function Host({ actions }: { actions: QuickNavHostActions }) {
-  useRegisterQuickNavHost({}, actions);
+  useRegisterQuickNavView({}, actions);
   const { pathname } = useLocation();
   return <output aria-label="Current path">{pathname}</output>;
 }

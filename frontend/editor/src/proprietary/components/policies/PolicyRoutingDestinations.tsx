@@ -13,6 +13,8 @@ interface PolicyRoutingDestinationsProps {
   onChange: (next: RoutingSetup) => void;
   destinations: RoutingDestination[];
   onCreateDestination?: () => void;
+  classificationAvailable?: boolean;
+  classificationUnavailableReason?: string;
   compact?: boolean;
 }
 
@@ -22,6 +24,8 @@ export function PolicyRoutingDestinations({
   onChange,
   destinations,
   onCreateDestination,
+  classificationAvailable,
+  classificationUnavailableReason,
   compact = false,
 }: PolicyRoutingDestinationsProps) {
   const { t } = useTranslation();
@@ -43,6 +47,8 @@ export function PolicyRoutingDestinations({
         onChange={(routingRules) => onChange({ ...value, routingRules })}
         destinations={destinations}
         onCreateDestination={onCreateDestination}
+        classificationAvailable={classificationAvailable}
+        classificationUnavailableReason={classificationUnavailableReason}
       />
 
       <h3 className="portal-policies__wizard-heading">

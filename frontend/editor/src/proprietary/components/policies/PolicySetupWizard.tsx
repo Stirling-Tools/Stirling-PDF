@@ -1,5 +1,9 @@
 import { isConditionComplete } from "@app/conditions/validation";
-import { classificationCondition } from "@app/data/classificationConditions";
+import {
+  classificationCondition,
+  documentFieldCondition,
+  requiresClassification,
+} from "@app/data/classificationConditions";
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import TuneRoundedIcon from "@mui/icons-material/TuneRounded";
@@ -27,6 +31,7 @@ import { PolicyRedactConfig } from "@app/components/policies/PolicyRedactConfig"
 import { PolicyWatermarkConfig } from "@app/components/policies/PolicyWatermarkConfig";
 import { PolicyPdfaConfig } from "@app/components/policies/PolicyPdfaConfig";
 import { ClassificationLabelsSection } from "@app/components/policies/ClassificationLabelsSection";
+import { useAiClassificationEnabled } from "@app/hooks/useAiClassificationEnabled";
 import "@app/components/policies/PolicySetupWizard.css";
 
 /** What a host frame needs to wrap the form: the middle content plus submit state. */
@@ -37,7 +42,7 @@ export interface PolicySetupFrame {
   submit: () => void;
   submitting: boolean;
   error: string | null;
-  /** False while no step is enabled, when submitting would be a no-op. */
+  /** Routing requires complete rules and a fallback; other presets need an enabled step. */
   canSubmit: boolean;
 }
 
@@ -268,7 +273,10 @@ interface PolicySetupState {
   error: string | null;
 }
 
-function initialWizardState(entry: CatalogueEntry): PolicySetupState {
+function initialWizardState(
+  entry: CatalogueEntry,
+  aiClassificationEnabled: boolean,
+): PolicySetupState {
   const { category, policy } = entry;
   const seeded = seedTools(entry);
   return {
@@ -276,11 +284,16 @@ function initialWizardState(entry: CatalogueEntry): PolicySetupState {
     policyId: policy?.state.backendId,
     routing: {
       sourceId: policy?.state.sources?.[0] ?? "",
-      trigger: null,
+      trigger: policy?.state.trigger ?? null,
       outputIds: (policy?.state.outputIds ?? []).slice(0, 1),
       // A blank route lets the form and the submitted rules share the same initial state.
       routingRules: policy?.state.routingRules ?? [
-        { condition: classificationCondition(), outputId: "" },
+        {
+          condition: aiClassificationEnabled
+            ? classificationCondition()
+            : documentFieldCondition("document.extension"),
+          outputId: "",
+        },
       ],
     },
     // Classification has no toggle, so its only tool must remain enabled.
@@ -369,19 +382,22 @@ function PolicySetupWizardBody({
   children?: (frame: PolicySetupFrame) => ReactNode;
 }) {
   const { t } = useTranslation();
+  const aiClassificationEnabled = useAiClassificationEnabled();
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
   const isClassification = category.id === "classification";
   const isRouting = category.id === "routing";
-  const [form, setForm] = useState(() => initialWizardState(entry));
+  const [form, setForm] = useState(() =>
+    initialWizardState(entry, aiClassificationEnabled),
+  );
   const { routing, tools, required, submitting, error } = form;
   // Reset before rendering the new preset, preserving the modal and its focus trap.
   if (
     form.categoryId !== category.id ||
     form.policyId !== policy?.state.backendId
   ) {
-    setForm(initialWizardState(entry));
+    setForm(initialWizardState(entry, aiClassificationEnabled));
   }
   const fieldValues = resolveFieldValues(entry);
   const scopeTypes = policy?.state.scopeTypes ?? [];
@@ -434,9 +450,16 @@ function PolicySetupWizardBody({
 
   /** The wizard's current state as a submit result: shared by Save and Customise. */
   function collectResult(): PolicySetupResult {
-    const steps: PipelineStep[] = enabledTools.map((tl) =>
-      policyStepToWire(tl),
+    const routingNeedsClassification = routing.routingRules.some((rule) =>
+      requiresClassification(rule.condition),
     );
+    const steps: PipelineStep[] = isRouting
+      ? routingNeedsClassification
+        ? tools
+            .filter((tool) => tool.toolId === "classify")
+            .map((tool) => policyStepToWire(tool))
+        : []
+      : enabledTools.map((tool) => policyStepToWire(tool));
     return {
       required,
       outputIds: policy?.state.outputIds,
@@ -474,7 +497,7 @@ function PolicySetupWizardBody({
 
   async function submit() {
     if (submitting || !routingComplete) return;
-    if (enabledTools.length === 0) {
+    if (!isRouting && enabledTools.length === 0) {
       setForm((current) => ({
         ...current,
         error: t("portal.policies.wizard.errors.noTools"),
@@ -495,17 +518,22 @@ function PolicySetupWizardBody({
     }
   }
 
+  const routingNeedsClassification = routing.routingRules.some((rule) =>
+    requiresClassification(rule.condition),
+  );
   const routingComplete =
     !isRouting ||
     Boolean(
       (folderSetup || routing.sourceId) &&
       routing.outputIds.length === 1 &&
       routing.outputIds[0] &&
+      routing.routingRules.length > 0 &&
       routing.routingRules.every(
         (rule) => rule.outputId && isConditionComplete(rule.condition),
-      ),
+      ) &&
+      (!routingNeedsClassification || aiClassificationEnabled),
     );
-  const canSubmit = enabledTools.length > 0 && routingComplete;
+  const canSubmit = isRouting ? routingComplete : enabledTools.length > 0;
   const content = (
     <Fragment key={`${category.id}:${policy?.state.backendId ?? "new"}`}>
       {error && !folderSetup && (
@@ -543,7 +571,7 @@ function PolicySetupWizardBody({
             setForm((current) => ({ ...current, routing: next })),
         })}
 
-      {!isClassification && (
+      {!isClassification && !isRouting && (
         <div className="portal-policies__wizard-section">
           {!folderSetup && (
             <p className="portal-policies__wizard-desc">
