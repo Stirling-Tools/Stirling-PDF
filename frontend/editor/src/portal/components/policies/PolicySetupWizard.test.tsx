@@ -300,6 +300,18 @@ describe("PolicySetupWizard", () => {
     await waitFor(() => expect(onSubmit).toHaveBeenCalled());
     const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
     expect(result.steps).toEqual([]);
+    // The deterministic condition reaches the wire unchanged - the backend's
+    // ConditionEvaluator reads any document.* field off DocumentFacts.
+    expect(buildWireFromSetup(routingEntry, result, t).routingRules).toEqual([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: ["pdf"],
+        },
+        outputId: "finance",
+      },
+    ]);
   });
 
   it("defaults a new security policy to enforcing on export", async () => {

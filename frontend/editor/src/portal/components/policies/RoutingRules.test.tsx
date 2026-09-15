@@ -122,6 +122,52 @@ describe("RoutingRules", () => {
     ]);
   });
 
+  it("switches match type and emits the document-field condition the backend evaluates", () => {
+    const onChange = setupBare([rule(["invoice"], "src-finance")]);
+
+    fireEvent.click(screen.getByRole("textbox", { name: "Match by" }));
+    fireEvent.click(screen.getByText("PDF title"));
+
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        condition: {
+          input: { source: "document", field: "document.title" },
+          operator: "matches-any",
+          values: [],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+  });
+
+  it("splits typed values on commas, trimmed, for a document-field route", () => {
+    const onChange = setupBare([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: [],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Values to match" }), {
+      target: { value: "pdf,  DOCX , png" },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: ["pdf", "DOCX", "png"],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+  });
+
   it("can still be switched off after the classify step is removed", () => {
     const onChange = setup([rule(["invoice"], "src-finance")], false);
 
@@ -135,7 +181,7 @@ describe("RoutingRules", () => {
 
     expect(
       screen.getByText(
-        "AI classification is not enabled. Enable it in Settings, or route using a no-AI document property.",
+        "AI classification is not enabled. Enable it in Settings, or route on a document property instead.",
       ),
     ).toBeInTheDocument();
     expect(
