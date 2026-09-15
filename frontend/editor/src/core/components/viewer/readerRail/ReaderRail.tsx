@@ -152,15 +152,24 @@ export function ReaderRail() {
           styles={{ dropdown: { maxHeight: "70vh", overflowY: "auto" } }}
         >
           <Menu.Target>
-            <ActionIcon
-              variant="tertiary"
-              size="md"
-              shape="circle"
-              // The name is in the dropdown; the trigger says what it opens.
-              aria-label={t("reader.rail.switchDocument", "Switch document")}
+            {/* Labelled like every other control in the rail: icons only, so the
+                tooltip is the only name a pointer ever sees. */}
+            <AppTooltip
+              content={t("reader.rail.switchDocument", "Switch document")}
+              position="left"
+              arrow
+              delay={0}
             >
-              <Icon name="file-text" size={SIZE} />
-            </ActionIcon>
+              <ActionIcon
+                variant="tertiary"
+                size="md"
+                shape="circle"
+                // The name is in the dropdown; the trigger says what it opens.
+                aria-label={t("reader.rail.switchDocument", "Switch document")}
+              >
+                <Icon name="file-text" size={SIZE} />
+              </ActionIcon>
+            </AppTooltip>
           </Menu.Target>
           <Menu.Dropdown>
             {documents.map((doc) => (

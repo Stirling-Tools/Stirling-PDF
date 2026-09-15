@@ -155,7 +155,9 @@ export default function HomePage() {
 
   const { searchInterfaceActions } = useViewer();
 
-  // Reading hides both search controls, so leave it first. e.code, for non-QWERTY layouts.
+  // Super search lives in the bar that reading hides, so Ctrl+K leaves reading to
+  // reach it. Find in document does not: the rail carries it. e.code, for
+  // non-QWERTY layouts.
   const focusSearchAfterRestore = useRef(false);
   useEffect(() => {
     if (!readerMode) return;
@@ -167,13 +169,12 @@ export default function HomePage() {
       if ((e.target as HTMLElement | null)?.closest?.('[role="dialog"]'))
         return;
       e.preventDefault();
-      setReaderMode(false);
-      if (e.code === "KeyK") {
-        focusSearchAfterRestore.current = true;
+      if (e.code === "KeyF") {
+        searchInterfaceActions.open();
         return;
       }
-      // Visibility is state, so it can open before the bar it renders in exists.
-      searchInterfaceActions.open();
+      setReaderMode(false);
+      focusSearchAfterRestore.current = true;
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
