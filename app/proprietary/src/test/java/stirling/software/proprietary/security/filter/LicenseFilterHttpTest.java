@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.net.CookieManager;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -21,6 +22,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import jakarta.servlet.FilterChain;
@@ -40,7 +42,8 @@ class LicenseFilterHttpTest {
     @LocalServerPort int port;
     @Autowired LicenseServiceInterface license;
     @Autowired ApplicationProperties properties;
-    private final HttpClient client = HttpClient.newHttpClient();
+    private final HttpClient client =
+            HttpClient.newBuilder().cookieHandler(new CookieManager()).build();
 
     @BeforeEach
     void reset() {
@@ -49,10 +52,20 @@ class LicenseFilterHttpTest {
     }
 
     private int request(String method, String path) throws Exception {
+        var builder = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path));
+        if (!"GET".equals(method)) {
+            var tokenResponse =
+                    client.send(
+                            HttpRequest.newBuilder(URI.create("http://localhost:" + port + "/csrf"))
+                                    .GET()
+                                    .build(),
+                            HttpResponse.BodyHandlers.discarding());
+            builder.header(
+                    "X-CSRF-TOKEN",
+                    tokenResponse.headers().firstValue("X-CSRF-TOKEN").orElseThrow());
+        }
         return client.send(
-                        HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
-                                .method(method, HttpRequest.BodyPublishers.noBody())
-                                .build(),
+                        builder.method(method, HttpRequest.BodyPublishers.noBody()).build(),
                         HttpResponse.BodyHandlers.discarding())
                 .statusCode();
     }
@@ -106,8 +119,7 @@ class LicenseFilterHttpTest {
 
         @Bean
         SecurityFilterChain security(HttpSecurity http) throws Exception {
-            http.csrf(csrf -> csrf.disable())
-                    .authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
+            http.authorizeHttpRequests(auth -> auth.anyRequest().permitAll());
             http.addFilterBefore(
                     new OncePerRequestFilter() {
                         @Override
@@ -115,6 +127,9 @@ class LicenseFilterHttpTest {
                                 HttpServletRequest request,
                                 HttpServletResponse response,
                                 FilterChain chain) {
+                            CsrfToken token =
+                                    (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+                            response.setHeader("X-CSRF-TOKEN", token.getToken());
                             response.setStatus(
                                     request.getRequestURI().contains("saml2") ? 302 : 204);
                         }

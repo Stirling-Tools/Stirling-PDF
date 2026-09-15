@@ -3,7 +3,7 @@ import { useLicense } from "@app/contexts/LicenseContext";
 import { usersBackend } from "@app/portal/usersBackend";
 import type { ServerPlan } from "@app/billing/serverPlan";
 
-/** Installed licences own this billing view; account-purchased Team uses the wallet despite sharing SERVER features. */
+/** Reads installed-plan details and the local roster; keyless Team also needs the roster for seat usage. */
 export function useServerPlan(enabled: boolean) {
   const { licenseInfo, loading } = useLicense();
   const [usersInUse, setUsersInUse] = useState<number | null>(null);

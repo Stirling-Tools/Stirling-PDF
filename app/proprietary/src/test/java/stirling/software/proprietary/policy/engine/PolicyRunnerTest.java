@@ -409,7 +409,10 @@ class PolicyRunnerTest {
                         docCounter,
                         processedLedger,
                         loginOn,
-                        guardOver(loginOn, noUsers()));
+                        guardOver(loginOn, noUsers()),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class));
         for (String owner : new String[] {null, "", "deleted-user"}) {
             Source source =
                     sourceStore.save(
