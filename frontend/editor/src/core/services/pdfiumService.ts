@@ -144,9 +144,15 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
  * Next call to getPdfiumModule() will create a fresh instance.
  */
 export function resetPdfiumModule(): void {
+<<<<<<< HEAD
   // The module is discarded here, so a handle no reader holds is closed now.
   // A handle a reader still holds is left to that reader: its close frees the
   // data buffer against the module it captured.
+=======
+  // The whole module (and its linear memory with it) is discarded here, so
+  // closing documents inside it is pointless and can throw on a dead
+  // instance. Drop the shared handle outright instead of releasing it.
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
   try {
     if (sharedDocument && sharedDocument.refs <= 0 && _module) {
       closeDocumentNow(_module, sharedDocument.docPtr);
@@ -340,10 +346,16 @@ export class PdfiumOpenError extends Error {
 }
 
 /**
+<<<<<<< HEAD
  * One open document shared by every scan of the same bytes. Each reopen parses
  * the file again through the file-access callback and leaves PDFium caches
  * behind, growing the heap high-water per scan. Password opens are never
  * shared.
+=======
+ * One open document shared by every scan of the same bytes. Each reopen copies
+ * the file into the WASM heap again and leaves PDFium caches behind, growing
+ * the heap high-water per scan. Password opens are never shared.
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
  *
  * A document released while scans still hold it is closed by the last reader:
  * `releaseSharedDocument()` only arms `sharedReleasePending` when refs are
@@ -357,6 +369,7 @@ interface SharedDocument {
 let sharedDocument: SharedDocument | null = null;
 let sharedReleasePending = false;
 
+<<<<<<< HEAD
 /**
  * Opens the document through an FPDF_FILEACCESS callback instead of copying the
  * whole file into the WASM heap. PDFium reads 64 KB blocks from the JS bytes as
@@ -420,10 +433,19 @@ function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
   if (heapCopy) {
     m.pdfium.wasmExports.free(heapCopy);
     _docHeapCopies.delete(docPtr);
+=======
+function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
+  m.FPDF_CloseDocument(docPtr);
+  const dataPtr = _docDataPtrs.get(docPtr);
+  if (dataPtr) {
+    m.pdfium.wasmExports.free(dataPtr);
+    _docDataPtrs.delete(docPtr);
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
   }
 }
 
 /**
+<<<<<<< HEAD
  * The pre-callback path: one copy of the bytes in the WASM heap, freed by
  * closeDocumentNow. Kept for runtimes without the function-table helpers.
  */
@@ -447,17 +469,35 @@ function openWithHeapCopy(
  * Open a PDF in PDFium and return the document pointer. The bytes stay in JS
  * and PDFium reads them through the file-access callback; the caller MUST call
  * `closeRawDocument(docPtr)` when finished.
+=======
+ * Load a PDF into PDFium memory and return the document pointer.
+ * Caller MUST call `closeRawDocument(docPtr)` when finished.
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
  */
 export async function openRawDocument(
   data: ArrayBuffer | Uint8Array,
   password?: string,
 ): Promise<number> {
   const m = await getPdfiumModule();
+<<<<<<< HEAD
+=======
 
   if (!password && sharedDocument && sharedDocument.bytes === data) {
     sharedDocument.refs++;
     return sharedDocument.docPtr;
   }
+
+  const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
+  const len = bytes.length;
+  const ptr = m.pdfium.wasmExports.malloc(len);
+  copyToWasmHeap(m, bytes, ptr);
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
+
+  if (!password && sharedDocument && sharedDocument.bytes === data) {
+    sharedDocument.refs++;
+    return sharedDocument.docPtr;
+  }
+<<<<<<< HEAD
 
   // A different document is being opened, so an idle shared one goes before the
   // new buffer is allocated: two large copies must not sit in the heap at once.
@@ -475,6 +515,22 @@ export async function openRawDocument(
     // A scan still reading the previous document keeps it open; only adopt the
     // new one once its refs drop to zero.
     sharedDocument = { bytes: data, docPtr, refs: 1 };
+=======
+  // Keep the buffer alive — freed by closeDocumentNow()
+  _docDataPtrs.set(docPtr, ptr);
+
+  if (!password) {
+    // A scan still reading the previous document keeps it open; only adopt the
+    // new one once its refs drop to zero.
+    if (sharedDocument && sharedDocument.refs <= 0) {
+      closeDocumentNow(m, sharedDocument.docPtr);
+      sharedDocument = null;
+      sharedReleasePending = false;
+    }
+    if (!sharedDocument) {
+      sharedDocument = { bytes: data, docPtr, refs: 1 };
+    }
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
   }
 
   return docPtr;
@@ -501,7 +557,11 @@ export async function closeRawDocument(docPtr: number): Promise<void> {
 }
 
 /**
+<<<<<<< HEAD
  * Synchronous release, for use inside `finally` blocks that already have the
+=======
+ * Synchronous release — for use inside `finally` blocks that already have the
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
  * module reference.
  */
 export function closeDocAndFreeBuffer(
@@ -519,9 +579,37 @@ export function closeDocAndFreeBuffer(
       return;
     }
     // No release pending: the handle lingers for the next same-bytes scan.
+<<<<<<< HEAD
     // Not falling through to closeDocumentNow on purpose: that would
     // double-close it and leave `sharedDocument` dangling.
     return;
+=======
+    // Not falling through to closeDocumentNow on purpose — that would
+    // double-close it and leave `sharedDocument` dangling.
+    return;
+  }
+  closeDocumentNow(m, docPtr);
+}
+
+/**
+ * Drop the shared document, e.g. when its file leaves the workbench. With
+ * readers outstanding the close is deferred to the last `closeDocAndFreeBuffer`.
+ */
+export function releaseSharedDocument(): void {
+  if (!sharedDocument) {
+    sharedReleasePending = false;
+    return;
+  }
+  if (sharedDocument.refs > 0) {
+    sharedReleasePending = true;
+    return;
+  }
+  const session = sharedDocument;
+  sharedDocument = null;
+  sharedReleasePending = false;
+  if (_module) {
+    closeDocumentNow(_module, session.docPtr);
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
   }
   closeDocumentNow(m, docPtr);
 }
@@ -633,7 +721,11 @@ export interface PdfiumFormField {
   flags: number;
   options: Array<{ label: string; isSelected: boolean }>;
   widgets: PdfiumWidgetRect[];
+<<<<<<< HEAD
   tooltip?: string | null;
+=======
+  _tooltip?: string | null;
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
 }
 
 export interface PdfiumWidgetRect {
@@ -1073,7 +1165,11 @@ function this_extractAnnotation(
       const existing = fieldMap.get(fieldName);
       if (existing) {
         if (widgetRect) existing.widgets.push(widgetRect);
+<<<<<<< HEAD
         if (tooltip && !existing.tooltip) existing.tooltip = tooltip;
+=======
+        if (tooltip && !existing._tooltip) existing._tooltip = tooltip;
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
       } else {
         fieldMap.set(fieldName, {
           name: fieldName,
@@ -1085,7 +1181,11 @@ function this_extractAnnotation(
           flags: fieldFlags,
           options,
           widgets: widgetRect ? [widgetRect] : [],
+<<<<<<< HEAD
           tooltip,
+=======
+          _tooltip: tooltip,
+>>>>>>> 153be0b53b (perf(pdfium): share one open document across scans)
         });
       }
     }
