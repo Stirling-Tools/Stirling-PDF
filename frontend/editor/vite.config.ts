@@ -516,11 +516,20 @@ export default defineConfig(async ({ mode, command }) => {
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
+              // Leaf UI packages: they import react/emotion but are not imported
+              // by them, so they split without creating a chunk cycle. Keeping
+              // them separate stops icon edits from invalidating all of vendor-ui.
+              if (id.includes("@mui/icons-material")) return "vendor-mui-icons";
+              if (id.includes("@iconify/react")) return "vendor-iconify";
+              // react/react-dom/scheduler/emotion/mui/mantine are mutually
+              // circular, so they must stay in one chunk or module init order
+              // breaks at runtime (TDZ ReferenceError).
               if (
                 id.includes("react") ||
+                id.includes("scheduler") ||
                 id.includes("@mantine") ||
-                id.includes("@emotion") ||
                 id.includes("@mui") ||
+                id.includes("@emotion") ||
                 id.includes("@iconify")
               ) {
                 return "vendor-ui";
