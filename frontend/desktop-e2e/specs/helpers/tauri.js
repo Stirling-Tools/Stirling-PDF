@@ -1,4 +1,4 @@
-// `browser`, `$` and `expect` are injected as globals by WebdriverIO's mocha
+// `browser`, `$` and `expect` are injected as globals by WebdriverIO's jasmine
 // framework (injectGlobals defaults to true), so specs and helpers use them
 // without importing.
 

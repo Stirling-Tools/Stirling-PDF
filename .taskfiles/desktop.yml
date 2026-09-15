@@ -105,7 +105,7 @@ tasks:
       - cargo test
 
   # ============================================================
-  # Rust checks — no JRE/JAR needed, so they run in ~2min
+  # Rust checks - no JRE/JAR needed, so they run in ~2min
   # ============================================================
 
   test:rust:
@@ -131,7 +131,7 @@ tasks:
       - task: test:rust
 
   # ============================================================
-  # E2E — drives the real built app through tauri-driver
+  # E2E - drives the real built app through tauri-driver
   # ============================================================
 
   e2e:install:

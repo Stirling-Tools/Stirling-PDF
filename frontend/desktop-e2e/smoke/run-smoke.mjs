@@ -68,12 +68,26 @@ function launchApp(binary) {
     rejectPort = reject;
   });
 
+  let portFound = false;
+  let pending = "";
   const scan = (chunk) => {
     const text = chunk.toString();
     output.push(text);
+    if (portFound) return;
+    // Whole lines only: a chunk boundary can fall anywhere, including mid-number, so
+    // matching per chunk misses the port and matching the raw buffer truncates it.
+    pending += text;
+    const end = pending.lastIndexOf("\n");
+    if (end < 0) return;
+    const lines = pending.slice(0, end);
+    pending = pending.slice(end + 1);
     for (const pattern of PORT_PATTERNS) {
-      const match = text.match(pattern);
-      if (match) resolvePort(Number(match[1]));
+      const match = lines.match(pattern);
+      if (match) {
+        portFound = true;
+        resolvePort(Number(match[1]));
+        return;
+      }
     }
   };
 
