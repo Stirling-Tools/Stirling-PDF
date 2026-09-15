@@ -172,6 +172,8 @@ public class StorageFolderInputSource implements InputSource {
     }
 
     private void requireOwnedFile(Long fileId, UUID folderId, User owner) {
+        // Reads and completion hashing can outlive discovery. These queries deliberately recheck
+        // both owners each time so a cached permission cannot survive an ownership change.
         requireOwnedFolder(folderId, owner);
         if (storedFileRepository
                 .findByIdAndOwner(fileId, owner)

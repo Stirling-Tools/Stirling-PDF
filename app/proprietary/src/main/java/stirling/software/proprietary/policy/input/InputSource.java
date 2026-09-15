@@ -42,10 +42,8 @@ public interface InputSource {
      * without request authentication. Both identities must come from server-owned records, never
      * input options. Sources backed by private user storage must enforce this authority.
      */
-    default List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
-            throws IOException {
-        return resolve(source.toInputSpec(), ctx);
-    }
+    List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException;
 
     /**
      * Whether {@link #resolve} observes everything in the source (a complete listing) rather than

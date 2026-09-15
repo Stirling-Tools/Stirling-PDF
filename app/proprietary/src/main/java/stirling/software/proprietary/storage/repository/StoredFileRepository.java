@@ -61,8 +61,6 @@ public interface StoredFileRepository extends JpaRepository<StoredFile, Long> {
 
     List<StoredFile> findAllByOwner(User owner);
 
-    List<StoredFile> findAllByFolderId(UUID folderId);
-
     List<StoredFile> findAllByFolderIdAndOwner(UUID folderId, User owner);
 
     /**
