@@ -86,7 +86,7 @@ public enum FailureKind {
             FailureSeverity.ERROR,
             FailureRemedy.NEEDS_FILE_FIX,
             FailureScope.FILE,
-            errorCodes("E006", "E014", "E018", "E061"),
+            errorCodes("E006", "E014", "E018", "E061", "E075"),
             fallback("This document is not a format the step can open, so it could not be read."),
             global(VIEW_FILE, OWNER, SECONDARY),
             global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),

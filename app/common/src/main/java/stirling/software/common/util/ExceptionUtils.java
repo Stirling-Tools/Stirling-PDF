@@ -656,9 +656,9 @@ public class ExceptionUtils {
         return new IllegalArgumentException(message);
     }
 
-    public static IllegalArgumentException createFileNullOrEmptyException() {
+    public static FileValidationException createFileNullOrEmptyException() {
         String message = getMessage(ErrorCode.FILE_NULL_OR_EMPTY);
-        return new IllegalArgumentException(message);
+        return new FileValidationException(message, ErrorCode.FILE_NULL_OR_EMPTY.getCode());
     }
 
     public static IllegalArgumentException createFileNoNameException() {
@@ -710,6 +710,26 @@ public class ExceptionUtils {
     public static ComplianceNotMetException createComplianceNotMetException(String detail) {
         String message = getMessage(ErrorCode.COMPLIANCE_NOT_MET, detail);
         return new ComplianceNotMetException(message, ErrorCode.COMPLIANCE_NOT_MET.getCode());
+    }
+
+    /**
+     * A step refused its input on type alone, before running.
+     *
+     * @param operation the step that refused it, as the run records it
+     * @param accepted the types the step takes, for a message that says what would have worked
+     * @param actual the extension handed to it, not the filename: this message is persisted on the
+     *     failure record, which holds no document names
+     */
+    public static StepInputTypeException createStepInputTypeException(
+            String operation, List<String> accepted, String actual) {
+        String message =
+                getMessage(
+                        ErrorCode.STEP_INPUT_TYPE_REJECTED.getMessageKey(),
+                        ErrorCode.STEP_INPUT_TYPE_REJECTED.getDefaultMessage(),
+                        operation,
+                        accepted,
+                        actual);
+        return new StepInputTypeException(message, ErrorCode.STEP_INPUT_TYPE_REJECTED.getCode());
     }
 
     /** Create system requirement exceptions. */
@@ -1231,6 +1251,13 @@ public class ExceptionUtils {
         // profile and failing rules.
         COMPLIANCE_NOT_MET("E074", "error.complianceNotMet", "{0}"),
 
+        // Raised before a step runs, by whoever knows both what the step accepts and what it was
+        // handed. Distinct from PDF_NOT_PDF, which speaks only for steps that want a PDF.
+        STEP_INPUT_TYPE_REJECTED(
+                "E075",
+                "error.stepInputTypeRejected",
+                "Step {0} accepts {1} but received a ''{2}'' file"),
+
         // System errors
         MD5_ALGORITHM("E080", "error.md5Algorithm", "MD5 algorithm not available"),
         OUT_OF_MEMORY_DPI(
@@ -1299,6 +1326,13 @@ public class ExceptionUtils {
         }
     }
 
+    /** Exception thrown when a step is handed a file of a type it does not accept. */
+    public static class StepInputTypeException extends BaseAppException {
+        public StepInputTypeException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
     /** Exception thrown when FFmpeg is not available on the host system. */
     public static class FfmpegRequiredException extends BaseAppException {
         public FfmpegRequiredException(String message, String errorCode) {
@@ -1360,6 +1394,17 @@ public class ExceptionUtils {
         protected BaseValidationException(String message, Throwable cause, String errorCode) {
             super(message, cause);
             this.errorCode = errorCode;
+        }
+    }
+
+    /**
+     * Exception thrown when a submitted file fails a validation a caller could correct, such as
+     * arriving empty. Coded, so the same refusal is recognisable to a failure record rather than
+     * reaching the generic handler that attaches no code.
+     */
+    public static class FileValidationException extends BaseValidationException {
+        public FileValidationException(String message, String errorCode) {
+            super(message, errorCode);
         }
     }
 

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatCode;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.List;
 import java.util.stream.Stream;
 
 import org.junit.jupiter.api.DisplayName;
@@ -100,6 +101,23 @@ class FailureClassifierTest {
                     .isEqualTo(FailureKind.TOOL_NOT_INSTALLED);
             assertThat(classifier.classify(problemDetail(HttpStatus.INTERNAL_SERVER_ERROR, "E054")))
                     .isEqualTo(FailureKind.STEP_CANNOT_RENDER_PAGE);
+        }
+
+        @Test
+        void aStepRefusingItsInputTypeIsAWrongTypeNotAnUnknown() {
+            // The engine refuses on extension before the step runs, so the reader that would have
+            // named the type is never reached and this is the only account of what went wrong.
+            ExceptionUtils.StepInputTypeException e =
+                    ExceptionUtils.createStepInputTypeException(
+                            "/api/v1/security/auto-redact", List.of("pdf"), "cbr");
+            assertThat(classifier.classify(e)).isEqualTo(FailureKind.INPUT_WRONG_TYPE);
+            assertThat(e.getMessage()).contains("pdf").contains("cbr");
+        }
+
+        @Test
+        void anEmptyUploadIsAnEmptyFileNotAnUnknown() {
+            assertThat(classifier.classify(ExceptionUtils.createFileNullOrEmptyException()))
+                    .isEqualTo(FailureKind.INPUT_EMPTY);
         }
 
         @Test
