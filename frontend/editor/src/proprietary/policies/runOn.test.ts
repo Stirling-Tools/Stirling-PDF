@@ -2,12 +2,14 @@ import { describe, it, expect } from "vitest";
 import { defaultRunOn, resolveRunOn } from "@app/policies/runOn";
 
 describe("defaultRunOn", () => {
-  it("defaults Security to export", () => {
+  it("defaults Security and Compliance to export", () => {
     expect(defaultRunOn("security")).toBe("export");
+    // Compliance is an archival gate: it judges the document that ships.
+    expect(defaultRunOn("compliance")).toBe("export");
   });
 
   it("defaults any other, unknown or missing category to upload", () => {
-    for (const id of ["classification", "compliance", "nope", "", undefined]) {
+    for (const id of ["classification", "nope", "", undefined]) {
       expect(defaultRunOn(id)).toBe("upload");
     }
   });

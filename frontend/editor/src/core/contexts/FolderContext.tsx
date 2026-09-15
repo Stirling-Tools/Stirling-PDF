@@ -50,6 +50,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 import { useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/constants/routes";
+import { getFolderChain } from "@app/utils/folderPath";
 
 interface FolderContextValue {
   folders: FolderRecord[];
@@ -323,7 +324,10 @@ export function FolderProvider({ children }: FolderProviderProps) {
     };
   }, []);
 
+  const serverSnapshotVersion = useRef(0);
+
   const refresh = useCallback(async () => {
+    const versionAtStart = serverSnapshotVersion.current;
     setLoading(true);
     try {
       // Three systems of record behind one list; kind says which rules a row follows.
@@ -333,7 +337,15 @@ export function FolderProvider({ children }: FolderProviderProps) {
         localFolderStorage.getAllFolders(),
       ]);
       if (!mountedRef.current) return;
-      setFolders([...server, ...virtual, ...local]);
+      setFolders((current) =>
+        serverSnapshotVersion.current === versionAtStart
+          ? [...server, ...virtual, ...local]
+          : [
+              ...current.filter((folder) => folderKind(folder) === "server"),
+              ...virtual,
+              ...local,
+            ],
+      );
     } catch (err) {
       console.error("[FolderContext] cache read failed", err);
       if (mountedRef.current) {
@@ -404,6 +416,7 @@ export function FolderProvider({ children }: FolderProviderProps) {
         console.warn("[FolderContext] cache replace failed", cacheErr);
       }
       if (mountedRef.current) {
+        serverSnapshotVersion.current += 1;
         // Server-wins is for server rows: the other kinds have no server copy.
         setFolders((prev) => [
           ...remote,
@@ -466,25 +479,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const breadcrumbs = useMemo<FolderBreadcrumbEntry[]>(() => {
     // Root name is a placeholder - consumers should detect
     // `entry.id === ROOT_FOLDER_ID` and substitute their own translated label.
-    const path: FolderBreadcrumbEntry[] = [
+    return [
       { id: ROOT_FOLDER_ID, name: "All files" },
+      ...getFolderChain(currentFolderId, foldersById).map(({ id, name }) => ({
+        id,
+        name,
+      })),
     ];
-    if (currentFolderId === null) return path;
-    const chain: FolderRecord[] = [];
-    let cursor: FolderId | null = currentFolderId;
-    const seen = new Set<FolderId>();
-    while (cursor !== null) {
-      if (seen.has(cursor)) break;
-      seen.add(cursor);
-      const folder = foldersById.get(cursor);
-      if (!folder) break;
-      chain.unshift(folder);
-      cursor = folder.parentFolderId;
-    }
-    for (const folder of chain) {
-      path.push({ id: folder.id, name: folder.name });
-    }
-    return path;
   }, [currentFolderId, foldersById]);
 
   const getChildFolderIds = useCallback(
