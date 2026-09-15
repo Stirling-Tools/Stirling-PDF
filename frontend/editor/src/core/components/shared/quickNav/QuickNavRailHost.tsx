@@ -127,18 +127,33 @@ export function QuickNavRailHost() {
     },
   };
 
-  // Editor and processor only pair off where there is a processor to reach. Reading
-  // sits outside that condition, or it would vanish from every build without a portal.
-  const surfaces: QuickNavEntry[] = HAS_PORTAL
-    ? [reader, editor, processor]
-    : [reader];
+  // The processor is additive: dropping the editor with it left a lone reader
+  // entry in builds without a portal, with no way back out of reading.
+  const surfaces: QuickNavEntry[] = [
+    reader,
+    editor,
+    ...(HAS_PORTAL ? [processor] : []),
+  ];
 
   const within: QuickNavEntry[] = [
+    ...(!host?.hasOpenFromComputer
+      ? []
+      : [
+          {
+            id: "openFromComputer",
+            label: t("fileSidebar.openFromComputer", "Open from computer"),
+            icon: <Icon name="file-up" size={SIZE} />,
+            testId: "files-button",
+            tourId: "files-button",
+            onClick: () => host?.actions.current?.openFromComputer?.(),
+          },
+        ]),
     {
       id: "files",
       label: t("fileSidebar.myFiles", "File library"),
       icon: <Icon name="folder" size={SIZE} />,
       current: Boolean(host?.fileLibrary),
+      testId: "my-files-button",
       // Through the app where possible: the library is a view, not a route. From the
       // processor there is no editor to ask, so the path carries it and HomePage seeds
       // the view on arrival. Unwrapped: setting the view runs the app's own
