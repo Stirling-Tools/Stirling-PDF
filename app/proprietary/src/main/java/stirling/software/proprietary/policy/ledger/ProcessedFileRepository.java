@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -15,7 +14,6 @@ import org.springframework.transaction.annotation.Transactional;
  * clause the state it was decided against, so a racing claim loses cleanly with 0 rows updated.
  * Transactional per call so the ledger can run them without an enclosing transaction.
  */
-@Repository
 public interface ProcessedFileRepository
         extends JpaRepository<ProcessedFileEntity, ProcessedFileId> {
 
