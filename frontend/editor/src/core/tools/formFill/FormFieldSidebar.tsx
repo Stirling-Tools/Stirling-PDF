@@ -18,8 +18,7 @@ import {
   FIELD_TYPE_COLOR,
 } from "@app/tools/formFill/fieldMeta";
 import type { FormField } from "@app/tools/formFill/types";
-import CloseIcon from "@mui/icons-material/Close";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
+import { Icon } from "@app/ui/Icon";
 import styles from "@app/tools/formFill/FormFill.module.css";
 
 interface FormFieldSidebarProps {
@@ -101,7 +100,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-          <TextFieldsIcon sx={{ fontSize: 18, opacity: 0.7 }} />
+          <Icon name="type" size={18} style={{ opacity: 0.7 }} />
           <Text fw={600} size="sm">
             Form Fields
           </Text>
@@ -115,7 +114,7 @@ export function FormFieldSidebar({ visible, onToggle }: FormFieldSidebarProps) {
           onClick={onToggle}
           aria-label={t("formFill.sidebar.close", "Close sidebar")}
         >
-          <CloseIcon sx={{ fontSize: 16 }} />
+          <Icon name="x" size={16} />
         </ActionIcon>
       </div>
 

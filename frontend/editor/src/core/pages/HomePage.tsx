@@ -38,13 +38,14 @@ import {
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
@@ -102,6 +103,7 @@ type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
   const { t } = useTranslation();
+  const policiesEnabled = usePoliciesEnabled();
   const { sidebarRefs } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
@@ -126,7 +128,6 @@ export default function HomePage() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
-  const otherApp = useOtherAppSwitch();
   const location = useLocation();
   // The user's preference, and the only thing that decides it: reading mode forces
   // the sidebar shut without writing, so leaving reading restores this.
@@ -320,6 +321,14 @@ export default function HomePage() {
     });
   }, []);
 
+  const openFromComputerRef = useRef<(() => void) | null>(null);
+  const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
+    openFromComputerRef.current = open;
+  }, []);
+  const openFromComputer = useCallback(() => {
+    openFromComputerRef.current?.();
+  }, []);
+
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),
   );
@@ -471,8 +480,8 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
+      {policiesEnabled && <PolicyAutoRunController />}
       <QuickNavHostBridge
-        portalAccess={Boolean(otherApp)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
         fileLibrary={navigationState.workbench === "myFiles"}
@@ -482,6 +491,9 @@ export default function HomePage() {
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}
         toolReasons={quickNavToolReasons}
+        onOpenFromComputer={
+          navigationState.workbench === "myFiles" ? undefined : openFromComputer
+        }
       />
       <FilesPageProvider>
         {isMobile ? (
@@ -656,6 +668,7 @@ export default function HomePage() {
                 collapsed={fileSidebarCollapsed}
                 onToggleCollapse={handleSidebarToggle}
                 onOpenSettings={openSettings}
+                onRegisterOpenFromComputer={registerOpenFromComputer}
               />
             </div>
             <Workbench />
