@@ -293,6 +293,8 @@ function FileContextInner({
           labels: string[];
           confidence: StirlingFileStub["classificationConfidence"];
         };
+        /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
+        skipMetadataHydration?: boolean;
       },
     ): Promise<StirlingFile[]> => {
       const stirlingFiles = await addFiles(
