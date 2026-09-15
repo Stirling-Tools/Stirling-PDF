@@ -45,12 +45,12 @@ function classificationPolicy(required: boolean): Policy {
 
 describe("parseSimplePolicy", () => {
   it("carries required through so the wizard reopens org-mandated", () => {
-    const entry = parseSimplePolicy(classificationPolicy(true));
+    const entry = parseSimplePolicy(classificationPolicy(true), []);
     expect(entry?.policy?.state.required).toBe(true);
   });
 
   it("keeps a non-required policy non-required", () => {
-    const entry = parseSimplePolicy(classificationPolicy(false));
+    const entry = parseSimplePolicy(classificationPolicy(false), []);
     expect(entry?.policy?.state.required).toBe(false);
   });
 
@@ -65,9 +65,49 @@ describe("parseSimplePolicy", () => {
       },
       editor: { allowed: true, runOn: "export" },
     };
-    const entry = parseSimplePolicy(policy);
+    const entry = parseSimplePolicy(policy, []);
     expect(entry?.policy?.state.runOn).toBe("export");
     expect(entry?.policy?.state.runsOnEditor).toBe(true);
+  });
+
+  it("carries the run history of the policy it was handed", () => {
+    const policy = classificationPolicy(true);
+    const runs = [
+      {
+        runId: "admin:r1",
+        policyId: policy.id,
+        status: "COMPLETED",
+        currentStep: 2,
+        stepCount: 2,
+        error: null,
+        errorCode: null,
+        errorSubscribed: null,
+        outputs: [{ fileName: "invoice_redacted.pdf" }],
+        createdAt: Date.now(),
+        fileName: null,
+      },
+      // A run belonging to some other policy must not leak in.
+      {
+        ...{},
+        runId: "admin:r2",
+        policyId: "other",
+        status: "COMPLETED",
+        currentStep: 1,
+        stepCount: 1,
+        error: null,
+        errorCode: null,
+        errorSubscribed: null,
+        outputs: [],
+        createdAt: Date.now(),
+        fileName: null,
+      },
+    ] as unknown as Parameters<typeof parseSimplePolicy>[1];
+
+    const entry = parseSimplePolicy(policy, runs);
+
+    expect(entry?.policy?.activity).toHaveLength(1);
+    expect(entry?.policy?.activity[0]?.doc).toBe("invoice_redacted.pdf");
+    expect(entry?.policy?.stats.enforced).toBe(1);
   });
 });
 
@@ -78,7 +118,7 @@ describe("buildWireFromSetup", () => {
       name: "My classifier",
       icon: "shield",
     };
-    const entry = parseSimplePolicy(policy);
+    const entry = parseSimplePolicy(policy, []);
     const wire = buildWireFromSetup(entry!, setupResult(), t);
     expect(wire.icon).toBe("shield");
     expect(wire.name).toBe("My classifier");

@@ -6,13 +6,10 @@ test.describe("21. Password Change Flow", () => {
     test("should change password end-to-end", async ({ page }) => {
       await loginAndSetup(page);
 
-      // Open settings dialog
-      await page
-        .getByRole("button", { name: /settings/i })
-        .first()
-        .click();
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
-      await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+      // Settings is reached by URL or the account menu; the rail has no cog.
+      await page.goto("/settings");
+      const settingsDialog = page.locator(".settings-page");
+      await expect(settingsDialog).toBeVisible({ timeout: 30_000 });
 
       // Navigate to Account Settings section
       const accountNav = page.getByText(/Account Settings/i).first();
@@ -58,13 +55,10 @@ test.describe("21. Password Change Flow", () => {
     test("should reject mismatched passwords with error", async ({ page }) => {
       await loginAndSetup(page);
 
-      // Open settings dialog
-      await page
-        .getByRole("button", { name: /settings/i })
-        .first()
-        .click();
-      const settingsDialog = page.locator(".mantine-Modal-content").first();
-      await expect(settingsDialog).toBeVisible({ timeout: 5000 });
+      // Settings is reached by URL or the account menu; the rail has no cog.
+      await page.goto("/settings");
+      const settingsDialog = page.locator(".settings-page");
+      await expect(settingsDialog).toBeVisible({ timeout: 30_000 });
 
       // Navigate to Account Settings section
       const accountNav = page.getByText(/Account Settings/i).first();

@@ -6,7 +6,7 @@ the @when/@then decorators or they would register twice.
 """
 import requests
 
-BASE_URL = "http://localhost:8080"
+from api_base import BASE_URL
 API_HEADERS = {"X-API-KEY": "123456789"}
 CLEANUP_URL = f"{BASE_URL}/api/v1/general/jobs/cleanup"
 

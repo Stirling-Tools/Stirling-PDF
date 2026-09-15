@@ -1,0 +1,24 @@
+.admin-system__card {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3, 0.75rem);
+}
+
+/* Permanent, not just during the focus pulse: an anchored jump would otherwise
+   land the heading under the sticky search bar. */
+.admin-system__heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  scroll-margin-top: 1rem;
+  font-size: 0.9375rem;
+  font-weight: var(--font-weight-semibold, 600);
+  color: var(--c-text);
+}
+
+.admin-system__description {
+  margin: -0.35rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-subtle);
+}

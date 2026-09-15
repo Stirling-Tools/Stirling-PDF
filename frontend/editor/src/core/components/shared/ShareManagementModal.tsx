@@ -13,11 +13,7 @@ import {
   Select,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import ContentCopyRoundedIcon from "@mui/icons-material/ContentCopyRounded";
-import DeleteIcon from "@mui/icons-material/Delete";
-import HistoryIcon from "@mui/icons-material/History";
-import LinkIcon from "@mui/icons-material/Link";
-import ShareIcon from "@mui/icons-material/Share";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 
 import apiClient from "@app/services/apiClient";
@@ -484,7 +480,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
       centered
       title={
         <Group gap="xs" wrap="nowrap">
-          <ShareIcon style={{ fontSize: 20 }} />
+          <Icon name="share-2" size={20} />
           <Text fw={600} size="lg">
             {t("storageShare.manageTitle", "Manage Sharing")}
           </Text>
@@ -583,7 +579,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                   )}
                   <Group justify="flex-end" gap="sm">
                     <Button
-                      leftSection={<LinkIcon style={{ fontSize: 18 }} />}
+                      leftSection={<Icon name="link" size={18} />}
                       onClick={() => createShareLink()}
                       loading={isLoading}
                     >
@@ -753,9 +749,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                               variant="secondary"
                               accent="danger"
                               size="sm"
-                              leftSection={
-                                <DeleteIcon style={{ fontSize: 16 }} />
-                              }
+                              leftSection={<Icon name="trash" size={16} />}
                               onClick={() =>
                                 setConfirmRemoveUser(user.username)
                               }
@@ -814,11 +808,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                               <Button
                                 variant="tertiary"
                                 size="sm"
-                                leftSection={
-                                  <ContentCopyRoundedIcon
-                                    style={{ fontSize: 16 }}
-                                  />
-                                }
+                                leftSection={<Icon name="copy" size={16} />}
                                 onClick={() => handleCopyLink(link.token)}
                               >
                                 {t("storageShare.copy", "Copy")}
@@ -876,7 +866,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                 variant={isSelected ? "secondary" : "primary"}
                                 size="sm"
                                 leftSection={
-                                  <HistoryIcon style={{ fontSize: 16 }} />
+                                  <Icon name="rotate-ccw-clock" size={16} />
                                 }
                                 onClick={() =>
                                   setSelectedActivityToken((prev) =>
@@ -919,9 +909,7 @@ const ShareManagementModal: React.FC<ShareManagementModalProps> = ({
                                   variant="secondary"
                                   accent="danger"
                                   size="sm"
-                                  leftSection={
-                                    <DeleteIcon style={{ fontSize: 16 }} />
-                                  }
+                                  leftSection={<Icon name="trash" size={16} />}
                                   onClick={() =>
                                     setConfirmRevokeToken(link.token)
                                   }

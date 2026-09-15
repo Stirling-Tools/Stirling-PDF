@@ -1,30 +1,19 @@
-// Utility helpers to open the settings/config modal programmatically
-// and optionally navigate to a specific section (e.g., 'plan').
+// Programmatic entry into the settings page from outside the router (cloud
+// modals, onboarding checklists, service callbacks).
 
 import type { NavKey } from "@app/components/shared/config/types";
-
-let pendingNavKey: NavKey | null = null;
-
-/** Read and clear the section a caller asked to open the modal on (if any). */
-export function consumePendingSettingsNav(): NavKey | null {
-  const key = pendingNavKey;
-  pendingNavKey = null;
-  return key;
-}
+import { navigateToSettings } from "@app/utils/settingsNavigation";
 
 export function openAppSettings(targetKey?: NavKey, notice?: string) {
   try {
-    const detail: { key?: NavKey; notice?: string } = {};
-    if (targetKey) detail.key = targetKey;
-    if (notice) detail.notice = notice;
-    // Stash the target so a not-yet-mounted (lazy) modal starts on it.
-    if (targetKey) pendingNavKey = targetKey;
-    // Ask the UI to open the App Config modal
-    window.dispatchEvent(new CustomEvent("appConfig:open", { detail }));
-    // Navigate there too — handles the case where the modal is already mounted.
-    if (targetKey) {
+    navigateToSettings(targetKey ?? "overview");
+    // The Plan section shows why the caller sent the user here (e.g. "Not
+    // enough credits"), and only it listens.
+    if (notice) {
       window.dispatchEvent(
-        new CustomEvent("appConfig:navigate", { detail: { key: targetKey } }),
+        new CustomEvent("appConfig:notice", {
+          detail: { key: targetKey, notice },
+        }),
       );
     }
   } catch (_e) {

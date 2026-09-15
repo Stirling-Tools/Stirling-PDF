@@ -20,8 +20,8 @@ import {
 } from "@portal/api/access";
 import { deleteTeam as apiDeleteTeam } from "@portal/api/teams";
 import { errorMessage } from "@portal/api/http";
-import { usersCapabilities as caps } from "@app/portal/usersCapabilities";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
+import { usersCapabilities as buildCaps } from "@app/portal/usersCapabilities";
+import type { UsersCapabilities } from "@portal/api/usersCapabilities";
 import { UsersDirectory } from "@portal/components/users/UsersDirectory";
 import { PendingInvitations } from "@portal/components/users/PendingInvitations";
 import { InviteMemberModal } from "@portal/components/users/InviteMemberModal";
@@ -47,9 +47,43 @@ interface Confirm {
  */
 export function Users() {
   const { t } = useTranslation();
-  const { guard, gated, connect } = useConnectGate();
   const { usersState, grantsState, teamsState, authState, refresh } =
     useUsersData();
+
+  // Who the viewer is, read off their own row in the roster the backend just
+  // returned. Only an org owner or a team lead may change anything here; for
+  // everyone else the roster is a directory, so the management controls come
+  // off rather than standing there returning 403.
+  const viewer = usersState.data?.members.find((m) => m.isSelf) ?? null;
+  const canManage =
+    viewer !== null
+      ? viewer.role === "admin" || viewer.teamLead === true
+      : // Not in the roster we were served: only an empty one is safe to offer
+        // controls for, so the first member can still be invited.
+        (usersState.data?.members.length ?? 0) === 0;
+  const caps = useMemo<UsersCapabilities>(
+    () =>
+      canManage
+        ? buildCaps
+        : {
+            ...buildCaps,
+            changeRole: false,
+            createTeam: false,
+            deleteTeam: false,
+            renameTeam: false,
+            emailInvite: false,
+            manageInvitations: false,
+            directCreate: false,
+            resetPassword: false,
+            unlock: false,
+            resetMfa: false,
+            suspend: false,
+            moveTeam: false,
+            manageGrants: false,
+            removeMember: false,
+          },
+    [canManage],
+  );
 
   const [actionError, setActionError] = useState<string | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
@@ -65,19 +99,13 @@ export function Users() {
 
   const [searchParams, setSearchParams] = useSearchParams();
 
-  // Ref so the effect does not loop: it writes the param back, which would re-run it.
-  const connectRef = useRef(connect);
-  connectRef.current = connect;
-
-  // Sets the modal directly, so it needs the gate in its own right.
   useEffect(() => {
     if (searchParams.get("invite") === null) return;
-    if (gated) connectRef.current();
-    else setInviteOpen(true);
+    setInviteOpen(true);
     const next = new URLSearchParams(searchParams);
     next.delete("invite");
     setSearchParams(next, { replace: true });
-  }, [searchParams, setSearchParams, gated]);
+  }, [searchParams, setSearchParams]);
 
   // Scroll to and flash the row for ?member=<id> (deep link from the super
   // search), once the roster has rendered; then strip the param. Scoped to the
@@ -155,6 +183,9 @@ export function Users() {
     (caps.directCreate
       ? (usersState.data?.emailInvitesEnabled ?? false)
       : true);
+  // Either route to a new member: an emailed invite, or creating the account
+  // outright. With neither, the invite controls have nothing to open.
+  const canAddMembers = canEmailInvite || caps.directCreate;
   const loading = usersState.loading && usersState.data === null;
   const loadError = !usersState.loading && usersState.error !== null;
   const isEmpty = !usersState.loading && !loadError && members.length === 0;
@@ -203,12 +234,13 @@ export function Users() {
     if (!grant) return;
     run(() => revokeGrant(grant.id));
   }
-  // Teams need a linked account, so inviting or creating one asks for the connection first.
-  const openInvite = guard((teamId: number | null) => {
+  function openInvite(teamId: number | null) {
     setInviteTeamId(teamId);
     setInviteOpen(true);
-  });
-  const openNewTeam = guard(() => setNewTeamOpen(true));
+  }
+  function openNewTeam() {
+    setNewTeamOpen(true);
+  }
 
   // Kebab actions
   function toggleEnabled(member: Member) {
@@ -297,9 +329,11 @@ export function Users() {
               {t("users.newTeam.action", "+ New team")}
             </Button>
           )}
-          <Button fat onClick={() => openInvite(null)}>
-            {t("users.invite.action", "Invite people")}
-          </Button>
+          {canAddMembers && (
+            <Button fat onClick={() => openInvite(null)}>
+              {t("users.invite.action", "Invite people")}
+            </Button>
+          )}
         </div>
       </header>
 
@@ -340,9 +374,11 @@ export function Users() {
             "Invite your team to start collaborating.",
           )}
           actions={
-            <Button onClick={() => openInvite(null)}>
-              {t("users.invite.action", "Invite people")}
-            </Button>
+            canAddMembers ? (
+              <Button onClick={() => openInvite(null)}>
+                {t("users.invite.action", "Invite people")}
+              </Button>
+            ) : undefined
           }
         />
       )}
@@ -363,7 +399,7 @@ export function Users() {
             processorTeamIds={processorTeamIds}
             onGrantTeamProcessor={grantTeamProcessor}
             onRevokeTeamProcessor={revokeTeamProcessor}
-            onAddToTeam={(team) => openInvite(team.id)}
+            onAddToTeam={canAddMembers ? (team) => openInvite(team.id) : null}
             onResetPassword={setResetPwMember}
             onMoveToTeam={setMoveMember}
             onToggleEnabled={toggleEnabled}
