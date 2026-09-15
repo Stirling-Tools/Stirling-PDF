@@ -104,6 +104,10 @@ known-first-party = ["stirling", "tests"]
 
 [tool.pyright]
 pythonVersion = "3.13"
+# The eval packages are never installed - their runners put `evals/` on sys.path themselves -
+# so pyright needs it spelled out. Naming any extraPaths drops the default resolution of
+# `stirling` through the editable install, hence `src` alongside it.
+extraPaths = ["src", "evals"]
 reportImportCycles = "warning"
 reportUnnecessaryCast = "warning"
 reportUnnecessaryTypeIgnoreComment = "warning"
@@ -114,8 +118,9 @@ reportDeprecated = "warning"
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 # ``tests`` is on the path so test modules can import shared helpers (e.g.
-# ``from conftest import build_app_settings``) without packaging the tests dir.
-pythonpath = ["src", "tests"]
+# ``from conftest import build_app_settings``) without packaging the tests dir. ``evals``
+# is on it for the same reason: the eval runners put it there themselves at import time.
+pythonpath = ["src", "tests", "evals"]
 # Use importlib import mode so test directories don't need __init__.py files
 # and duplicate basenames (e.g. multiple test_routes.py) collect cleanly.
 addopts = "--import-mode=importlib"

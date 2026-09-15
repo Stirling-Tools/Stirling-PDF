@@ -46,3 +46,7 @@ logs/
 # OS
 .DS_Store
 Thumbs.db
+
+# Eval run outputs - measurements, not source.
+evals/*/results/
+evals/*/results-*/
