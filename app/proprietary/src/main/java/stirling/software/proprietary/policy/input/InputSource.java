@@ -40,7 +40,8 @@ public interface InputSource {
     /**
      * Resolve a persisted source on behalf of its policy owner, including on background threads
      * without request authentication. Both identities must come from server-owned records, never
-     * input options. Sources backed by private user storage must enforce this authority.
+     * input options. Sources backed by private user storage must scope their reads to that owner;
+     * sources over a connection shared by a policy's whole team say why they need not.
      */
     List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
             throws IOException;

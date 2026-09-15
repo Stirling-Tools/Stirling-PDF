@@ -39,6 +39,7 @@ export interface QuickNavHostActions {
   selectTool?: (toolId: ToolId) => void;
   setReaderMode?: (on: boolean) => void;
   showFileLibrary?: () => void;
+  createProcessingFolder?: () => void;
   toggleNotifications?: () => void;
   goToDefaultState?: () => void;
   requestNavigation?: (go: () => void) => void;
