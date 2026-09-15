@@ -31,6 +31,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
@@ -45,9 +47,12 @@ import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.output.StorageOutputSink;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
@@ -184,7 +189,131 @@ class ProcessingFolderControllerTest {
                         fileStorageService,
                         accessGuard,
                         folderAccessGuard,
+                        new SourceAccessGuard(userService, properties, policyManagementAuthority),
                         properties);
+    }
+
+    @Test
+    void routingTemplatePersistsDestinationsAndRetainsThemAcrossPauseRequests() {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Archive",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "reece",
+                                3L));
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("classification.labels"),
+                                        List.of("invoice")),
+                                destination.id()));
+        var baseline = request(null, "new_version");
+        var created =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        baseline.steps(),
+                                        Map.of("categoryId", "routing"),
+                                        List.of(destination.id()),
+                                        routes))
+                        .getBody();
+        assertThat(created.outputIds()).containsExactly(destination.id());
+        assertThat(created.routingRules()).isEqualTo(routes);
+        assertThat(created.steps().getFirst().operation())
+                .isEqualTo("/api/v1/ai/tools/classify-and-label");
+        assertThat(created.steps().getFirst().parameters()).containsEntry("reclassify", true);
+        var paused =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        created.id(),
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        false,
+                                        created.steps(),
+                                        created.output()))
+                        .getBody();
+        assertThat(paused.enabled()).isFalse();
+        assertThat(paused.outputIds()).isEqualTo(created.outputIds());
+        assertThat(paused.routingRules()).isEqualTo(routes);
+        assertThat(controller.list().getFirst().routingRules()).isEqualTo(routes);
+        Policy stored = policyStore.get(created.id()).orElseThrow();
+        assertThat(stored.outputIds()).containsExactly(destination.id());
+        assertThat(stored.routingRules()).isEqualTo(routes);
+        var cleared =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        created.id(),
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        false,
+                                        created.steps(),
+                                        created.output(),
+                                        List.of(),
+                                        List.of()))
+                        .getBody();
+        assertThat(cleared.outputIds()).isEmpty();
+        assertThat(cleared.routingRules()).isEmpty();
+    }
+
+    @Test
+    void rejectsRoutingToAnotherTeamsDestinationBeforeCreatingTheFolderPair() {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Foreign archive",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "someone-else",
+                                99L));
+        var baseline = request(null, "new_version");
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("classification.labels"),
+                                        List.of("invoice")),
+                                destination.id()));
+        var malicious =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        List.of(),
+                        routes);
+        assertThatThrownBy(() -> controller.save(malicious))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("inaccessible");
+        assertThat(policyStore.all()).isEmpty();
+        assertThat(sourceStore.all()).hasSize(1);
+        var fallback =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        List.of(destination.id()),
+                        List.of());
+        assertThatThrownBy(() -> controller.save(fallback))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("inaccessible");
     }
 
     @Test

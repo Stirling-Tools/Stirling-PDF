@@ -96,6 +96,8 @@ describe("runClassificationDemoSweep", () => {
         // open file, so nothing is selected and the user's workspace is left alone.
         skipWorkspaceDispatch: true,
         selectFiles: false,
+        // Already parsed once by the heuristic; no second parse, no File kept in memory.
+        skipMetadataHydration: true,
       }),
     );
     expect(outcome.processed).toBe(2);
@@ -192,6 +194,26 @@ describe("runClassificationDemoSweep", () => {
     // The first document was swept; the second was never started, so it stays eligible.
     expect(outcome.sweptPaths).toEqual(["/downloads/a.pdf"]);
     expect(outcome.remaining).toBe(1);
+  });
+
+  test("reads the next document while the current one is being classified", async () => {
+    let finishFirst!: (verdict: unknown) => void;
+    classifyFileHeuristically.mockReturnValueOnce(
+      new Promise((resolve) => {
+        finishFirst = resolve;
+      }),
+    );
+    const run = runClassificationDemoSweep("/downloads", deps());
+
+    // The first classification is still pending, and the second read has started.
+    await vi.waitFor(() => expect(readDiskFile).toHaveBeenCalledTimes(2));
+    expect(classifyFileHeuristically).toHaveBeenCalledTimes(1);
+
+    finishFirst({ labels: ["invoice"], confidence: "low", score: 10 });
+    const outcome = await run;
+    expect(outcome.processed).toBe(2);
+    // Read-ahead never over-reads: two PDFs, two reads.
+    expect(readDiskFile).toHaveBeenCalledTimes(2);
   });
 
   test("stops between files once cancelled", async () => {

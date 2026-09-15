@@ -18,11 +18,16 @@ export interface NewFolderButtonProps {
   disabledReason?: string | null;
   /** Set when only the server destination is unavailable; also its tooltip. */
   serverDisabledReason?: string | null;
-  /** A subfolder inherits its parent's kind, so inside one there is no choice. */
+  /** A subfolder inherits its parent's kind unless the host offers a type switch. */
   currentFolderId: FolderId | null;
+  /** Keeps the type menu available inside folders; the caller validates the chosen parent. */
+  allowKindSelection?: boolean;
   /** Whether this build can put a directory on screen to be mounted. */
   canAddLocalFolder: boolean;
+  localFolderLabel?: string;
   onAddLocalFolder: () => void;
+  /** False when the selected action transfers focus into an inline form. */
+  returnFocus?: boolean;
   onOpenDialog: (parentId?: FolderId | null, kind?: FolderKind) => void;
 }
 
@@ -39,8 +44,11 @@ export function NewFolderButton({
   disabledReason,
   serverDisabledReason,
   currentFolderId,
+  allowKindSelection = false,
   canAddLocalFolder,
+  localFolderLabel,
   onAddLocalFolder,
+  returnFocus = true,
   onOpenDialog,
 }: NewFolderButtonProps): ReactNode {
   const { t } = useTranslation();
@@ -115,9 +123,7 @@ export function NewFolderButton({
     );
   }
 
-  // Inside a folder the kind is inherited, and on the web the server is the only
-  // place a folder can go.
-  if (currentFolderId !== null || !canAddLocalFolder) {
+  if ((!allowKindSelection && currentFolderId !== null) || !canAddLocalFolder) {
     const open = () =>
       currentFolderId !== null ? onOpenDialog() : onOpenDialog(null, "server");
     if (asRow) {
@@ -154,7 +160,12 @@ export function NewFolderButton({
   }
 
   return (
-    <Menu shadow="md" position="bottom-end" withinPortal>
+    <Menu
+      shadow="md"
+      position="bottom-end"
+      withinPortal
+      returnFocus={returnFocus}
+    >
       <Menu.Target>
         {asRow ? (
           row()
@@ -186,13 +197,14 @@ export function NewFolderButton({
           }
           onClick={onAddLocalFolder}
         >
-          {t("filesPage.newFolderMenu.addExisting", "Add local folder")}
+          {localFolderLabel ??
+            t("filesPage.newFolderMenu.addExisting", "Add local folder")}
         </Menu.Item>
         <Menu.Item
           className="files-page-new-folder-option"
           leftSection={<Icon name="cloud" size={20} />}
           disabled={Boolean(serverDisabledReason)}
-          onClick={() => onOpenDialog(null, "server")}
+          onClick={() => onOpenDialog(currentFolderId, "server")}
         >
           {t("filesPage.newFolderMenu.server", "New folder on the server")}
           {/* The reason is the caption: a disabled item with no explanation

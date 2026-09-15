@@ -15,6 +15,8 @@ import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
 import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
+import { canCreateProcessingFolders } from "@app/hooks/useProcessingFolderCreation";
+import { requestProcessingFolderCreation } from "@app/utils/pendingProcessingFolderCreation";
 
 import { Icon } from "@app/ui/Icon";
 const SIZE = "1.125rem";
@@ -167,6 +169,24 @@ export function QuickNavRailHost() {
         else go("/files");
       },
     },
+    ...(canCreateProcessingFolders
+      ? [
+          {
+            id: "createProcessingFolder",
+            label: t("processingFolders.setup.title"),
+            icon: <Icon name="folder-plus" size={SIZE} />,
+            onClick: () => {
+              const open = host?.actions.current?.createProcessingFolder;
+              if (open) open();
+              else
+                guarded(() => {
+                  requestProcessingFolderCreation();
+                  navigate(EDITOR_BASENAME);
+                });
+            },
+          },
+        ]
+      : []),
     {
       id: "automate",
       label: t("quickAccess.automate", "Automate"),

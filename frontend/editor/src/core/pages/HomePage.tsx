@@ -68,6 +68,8 @@ import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
+import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
@@ -128,12 +130,21 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { config } = useAppConfig();
+  const processingFolderCreation = useProcessingFolderCreation();
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
   const location = useLocation();
+  useEffect(() => {
+    if (
+      processingFolderCreation.open &&
+      consumeProcessingFolderCreationRequest()
+    ) {
+      processingFolderCreation.open();
+    }
+  }, [location.key, processingFolderCreation.open]);
 
   // Settings is its own page; it restores the recorded origin on Back.
   const openSettings = useCallback(() => {
@@ -501,6 +512,7 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
+      {processingFolderCreation.dialog}
       {policiesEnabled && <PolicyAutoRunController />}
       <QuickNavHostBridge
         requestNavigation={requestNavigation}
@@ -511,6 +523,7 @@ export default function HomePage() {
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}
+        onCreateProcessingFolder={processingFolderCreation.open}
         toolReasons={quickNavToolReasons}
         onOpenFromComputer={
           navigationState.workbench === "myFiles" ? undefined : openFromComputer

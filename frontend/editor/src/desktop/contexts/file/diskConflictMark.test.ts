@@ -4,6 +4,7 @@ import type {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import type { FileId } from "@app/types/file";
+import { addStirlingFileStubs } from "@app/contexts/file/fileActions";
 
 // updateStirlingFileStub drops updates for a file not yet in filesRef, so marking
 // the conflict before the bytes are published loses the badge with no visible failure.
@@ -49,10 +50,6 @@ beforeEach(() => {
 });
 
 async function hydrate() {
-  vi.resetModules();
-  const { addStirlingFileStubs } =
-    await import("@app/contexts/file/fileActions");
-
   const state = {
     files: { ids: [], byId: {} },
     pinnedFiles: new Set(),
