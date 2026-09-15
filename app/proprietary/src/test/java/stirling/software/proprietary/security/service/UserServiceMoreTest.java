@@ -79,6 +79,8 @@ class UserServiceMoreTest {
     @Mock private TeamMembershipService teamMembershipService;
     @Mock private ApiKeyAuthenticationService apiKeyAuthenticationService;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private UserService userService;
 
     @AfterEach
