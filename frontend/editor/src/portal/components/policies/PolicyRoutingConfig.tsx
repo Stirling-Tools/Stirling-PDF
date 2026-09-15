@@ -8,6 +8,7 @@ import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { RoutingRules } from "@portal/components/policies/RoutingRules";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { useSources } from "@portal/queries/sources";
+import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 
 interface PolicyRoutingConfigProps {
   value: RoutingSetup;
@@ -16,13 +17,13 @@ interface PolicyRoutingConfigProps {
 }
 
 /** What pulls a watched source; a folder is watched, a webhook pushes, anything else is swept. */
-function triggerFor(type: string | undefined): WireTriggerConfig | null {
+export function triggerFor(type: string | undefined): WireTriggerConfig | null {
   if (!type) return null;
   if (type === "folder") return { type: "folder-watch", options: {} };
   if (type === "webhook") return { type: "webhook", options: {} };
   return {
     type: "schedule",
-    options: { schedule: { every: 1, unit: "HOURS" } },
+    options: { schedule: { type: "every", count: 1, unit: "HOURS" } },
   };
 }
 
@@ -34,6 +35,7 @@ export function PolicyRoutingConfig({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const sourcesAsync = useSources();
+  const { classificationEnabled, loading: aiLoading } = useAiEngineEnabled();
 
   const sources = useMemo(
     () =>
@@ -117,6 +119,15 @@ export function PolicyRoutingConfig({
         onChange={(routingRules) => onChange({ ...value, routingRules })}
         destinations={destinations}
         onCreateDestination={connectSource}
+        classificationAvailable={aiLoading || classificationEnabled}
+        classificationUnavailableReason={
+          aiLoading
+            ? undefined
+            : t(
+                "portal.pipelines.builder.routing.aiDisabled",
+                "AI classification is not enabled. Enable it in Settings, or route on a document property instead.",
+              )
+        }
       />
 
       <h3 className="portal-policies__wizard-heading">
