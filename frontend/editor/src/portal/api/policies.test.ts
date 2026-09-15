@@ -253,7 +253,6 @@ it("keeps advanced triggers and inline output types in the full builder", () => 
 it("preserves source bindings and custom identity through catalogue setup links", () => {
   const policy: WirePolicy = {
     id: "contracts-policy",
-    trigger: null,
     steps: [policyStepToWire(policyStep("classify"))],
     output: { type: "inline", options: { categoryId: "classification" } },
     name: "Contracts classifier",
