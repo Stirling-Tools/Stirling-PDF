@@ -21,6 +21,7 @@ import {
 } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import {
   useProcessingFolders,
   type ProcessingFolderState,
@@ -669,6 +670,7 @@ const FolderCard = React.memo(function FolderCard({
     );
   const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
+  const processingBlock = useServerProcessingBlock();
   const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -796,7 +798,8 @@ const FolderCard = React.memo(function FolderCard({
             {editsHidden && (
               <ProcessingMenuItems
                 processing={processing}
-                disabled={false}
+                disabled={Boolean(processingBlock)}
+                disabledHint={processingBlock ?? undefined}
                 onRun={() => void runProcessing("process folder now")}
                 onStop={() => void stopProcessing("pause processing folder")}
                 onStart={() => actions.startProcessing(folder)}
@@ -848,8 +851,8 @@ const FolderCard = React.memo(function FolderCard({
                 <ProcessingMenuItems
                   processing={processing}
                   continuous={kind === "virtual"}
-                  disabled={editsDisabled}
-                  disabledHint={offlineHint}
+                  disabled={editsDisabled || Boolean(processingBlock)}
+                  disabledHint={processingBlock ?? offlineHint}
                   onRun={() => void runProcessing("process folder now")}
                   onStop={() => void stopProcessing("pause processing folder")}
                   onStart={() => actions.startProcessing(folder)}
@@ -1707,6 +1710,7 @@ const FolderRow = React.memo(function FolderRow({
     );
   const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
+  const processingBlock = useServerProcessingBlock();
   const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -1837,7 +1841,8 @@ const FolderRow = React.memo(function FolderRow({
             {editsHidden && (
               <ProcessingMenuItems
                 processing={processing}
-                disabled={false}
+                disabled={Boolean(processingBlock)}
+                disabledHint={processingBlock ?? undefined}
                 onRun={() => void runProcessing("process folder now")}
                 onStop={() => void stopProcessing("pause processing folder")}
                 onStart={() => actions.startProcessing(folder)}
@@ -1889,8 +1894,8 @@ const FolderRow = React.memo(function FolderRow({
                 <ProcessingMenuItems
                   processing={processing}
                   continuous={kind === "virtual"}
-                  disabled={editsDisabled}
-                  disabledHint={offlineHint}
+                  disabled={editsDisabled || Boolean(processingBlock)}
+                  disabledHint={processingBlock ?? offlineHint}
                   onRun={() => void runProcessing("process folder now")}
                   onStop={() => void stopProcessing("pause processing folder")}
                   onStart={() => actions.startProcessing(folder)}
