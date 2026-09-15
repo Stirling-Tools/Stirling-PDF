@@ -21,7 +21,9 @@ import { applyDevWorktreeLabel } from "@app/utils/applyDevWorktreeLabel";
 import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 
 applyDevWorktreeLabel();
-startEagerWasmCompilation();
+// Defer precompile until boot settles: fetching + compiling alongside
+// translations and dynamic imports contends for bandwidth and the main
+// thread, and WebKit cancels the losers as page errors.
 if (typeof window !== "undefined") {
   const scheduleCompilation = () =>
     requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
