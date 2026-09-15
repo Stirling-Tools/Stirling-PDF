@@ -1,12 +1,6 @@
 import { EditorDeliverySelect } from "@portal/components/pipelines/EditorDeliverySelect";
 import { requiresClassification } from "@app/data/classificationConditions";
 import { isConditionComplete } from "@app/conditions/validation";
-import {
-  isRagIngestStep,
-  ragIngestStepConfigured,
-  vectorDestinationConfigured,
-  prepareVectorDestination,
-} from "@portal/components/pipelines/docparseStep";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
