@@ -15,7 +15,7 @@ const LEADING_DASH = /^\s*[-–—]\s/;
 const DEFAULT_PATTERNS = [
   /\bt\(\s*(["'`])[A-Za-z0-9_.-]+\1\s*,\s*(["'`])((?:[^\\]|\\.)*?)\2/gs,
   /\bdefaults\s*=\s*\{?\s*(["'`])((?:[^\\]|\\.)*?)\1/gs,
-  /\b(?:labelEn|descEn|titleEn|textEn)\s*:\s*(["'`])((?:[^\\]|\\.)*?)\1/gs,
+  /\b(?:labelEn|descEn|titleEn|textEn|contentDefault)\s*:\s*(["'`])((?:[^\\]|\\.)*?)\1/gs,
 ];
 
 const collectSourceFiles = (dir: string): string[] => {
