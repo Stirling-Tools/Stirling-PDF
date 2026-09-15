@@ -5,15 +5,25 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
+import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageTree;
+import org.apache.pdfbox.pdmodel.PDResources;
 import org.apache.pdfbox.pdmodel.common.PDRectangle;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
+import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationWidget;
+import org.apache.pdfbox.pdmodel.interactive.form.PDAcroForm;
+import org.apache.pdfbox.pdmodel.interactive.form.PDField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDNonTerminalField;
+import org.apache.pdfbox.pdmodel.interactive.form.PDTerminalField;
 import org.springframework.stereotype.Service;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +45,12 @@ class ManualRedactionService {
 
     private static final float DEFAULT_TEXT_PADDING_MULTIPLIER = 0.6f;
     private static final float REDACTION_WIDTH_REDUCTION_FACTOR = 0.9f;
+
+    /**
+     * Depth beyond which an AcroForm field subtree is dropped rather than walked. A hostile or
+     * corrupt /Kids chain is otherwise only bounded by the JVM stack.
+     */
+    private static final int MAX_FIELD_TREE_DEPTH = 64;
 
     private final TempFileManager tempFileManager;
 
@@ -107,19 +123,112 @@ class ManualRedactionService {
         Color redactColor = decodeOrDefault(request.getPageRedactionColor());
         List<Integer> pageNumbers = getPageNumbers(request, allPages.getCount());
 
+        Set<COSDictionary> wipedAnnotations = new HashSet<>();
+
         for (Integer pageNumber : pageNumbers) {
             PDPage page = allPages.get(pageNumber);
 
+            // OVERWRITE, not APPEND: appending a filled rect only hides the page, leaving the
+            // text underneath in the content stream and still extractable.
+            PDRectangle box = page.getBBox();
+            for (PDAnnotation annotation : page.getAnnotations()) {
+                wipedAnnotations.add(annotation.getCOSObject());
+            }
+            page.setAnnotations(Collections.emptyList());
+            page.setResources(new PDResources());
+
             try (PDPageContentStream contentStream =
                     new PDPageContentStream(
-                            document, page, PDPageContentStream.AppendMode.APPEND, true, true)) {
+                            document, page, PDPageContentStream.AppendMode.OVERWRITE, true, true)) {
                 contentStream.setNonStrokingColor(redactColor);
 
-                PDRectangle box = page.getBBox();
                 contentStream.addRect(0, 0, box.getWidth(), box.getHeight());
                 contentStream.fill();
             }
         }
+
+        dropFieldsWithoutWidgets(document, wipedAnnotations);
+    }
+
+    /**
+     * Drops the AcroForm fields whose every widget sat on a wiped page. Clearing /Annots alone
+     * leaves the field dictionary reachable from /AcroForm /Fields, so its /V value and /AP
+     * appearance stream survive the wipe and are still readable from the file.
+     */
+    private void dropFieldsWithoutWidgets(
+            PDDocument document, Set<COSDictionary> wipedAnnotations) {
+        if (wipedAnnotations.isEmpty()) {
+            return;
+        }
+        PDAcroForm form = document.getDocumentCatalog().getAcroForm();
+        if (form == null) {
+            return;
+        }
+        List<PDField> fields = form.getFields();
+        Set<COSDictionary> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+        List<PDField> kept = retainedFields(fields, wipedAnnotations, visited, 0);
+        if (kept.size() != fields.size()) {
+            form.setFields(kept);
+        }
+    }
+
+    private List<PDField> retainedFields(
+            List<PDField> fields,
+            Set<COSDictionary> wipedAnnotations,
+            Set<COSDictionary> visited,
+            int depth) {
+        List<PDField> kept = new ArrayList<>(fields.size());
+        for (PDField field : fields) {
+            if (isRetained(field, wipedAnnotations, visited, depth)) {
+                kept.add(field);
+            }
+        }
+        return kept;
+    }
+
+    /**
+     * Fails closed on a field tree that is cyclic, over-deep, or reaches the same dictionary twice:
+     * such a subtree is dropped rather than walked, so a malformed /Kids graph cannot keep a value
+     * alive by making the walk unbounded. {@code visited} is identity-based on the COS dictionary
+     * because a PDField wrapper is rebuilt on every {@code getChildren()} call.
+     */
+    private boolean isRetained(
+            PDField field,
+            Set<COSDictionary> wipedAnnotations,
+            Set<COSDictionary> visited,
+            int depth) {
+        if (depth >= MAX_FIELD_TREE_DEPTH || !visited.add(field.getCOSObject())) {
+            return false;
+        }
+        if (field instanceof PDNonTerminalField nonTerminal) {
+            List<PDField> children = nonTerminal.getChildren();
+            List<PDField> kept = retainedFields(children, wipedAnnotations, visited, depth + 1);
+            if (kept.isEmpty()) {
+                return false;
+            }
+            if (kept.size() != children.size()) {
+                nonTerminal.setChildren(kept);
+            }
+            return true;
+        }
+        if (!(field instanceof PDTerminalField terminal)) {
+            return true;
+        }
+        List<PDAnnotationWidget> widgets = terminal.getWidgets();
+        if (widgets.isEmpty()) {
+            return true;
+        }
+        List<PDAnnotationWidget> kept =
+                widgets.stream()
+                        .filter(widget -> !wipedAnnotations.contains(widget.getCOSObject()))
+                        .toList();
+        if (kept.isEmpty()) {
+            return false;
+        }
+        if (kept.size() != widgets.size()) {
+            terminal.setWidgets(kept);
+        }
+        return true;
     }
 
     // -----------------------------------------------------------------------
