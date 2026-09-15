@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@app/auth/context";
 import { Button } from "@app/ui";
 import { useConnectGate } from "@portal/hooks/useConnectGate";
 import "@portal/components/ConnectAccountRail.css";

@@ -9,12 +9,14 @@ const { auth, openLinkModal, unlink } = vi.hoisted(() => ({
   openLinkModal: vi.fn(),
   unlink: vi.fn(),
 }));
-vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
+vi.mock("@app/auth/context", () => ({ useAuth: () => auth }));
 vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),
 }));
 
-vi.mock("@portal/hooks/useLinkedAccountEmail", () => ({ useLinkedAccountEmail: () => null }));
+vi.mock("@portal/hooks/useLinkedAccountEmail", () => ({
+  useLinkedAccountEmail: () => null,
+}));
 
 const link: UseAccountLink = {
   loginConfigured: true,
@@ -41,7 +43,9 @@ describe("account-link ownership", () => {
         </PortalTestProviders>,
       );
       const action = screen.getByRole("button", {
-        name: linked ? "Disconnect this instance" : "Connect your Stirling account",
+        name: linked
+          ? "Disconnect this instance"
+          : "Connect your Stirling account",
       });
       expect(action).toBeDisabled();
       fireEvent.click(action);
@@ -64,12 +68,18 @@ describe("account-link ownership", () => {
       );
       fireEvent.click(
         screen.getByRole("button", {
-          name: linked ? "Disconnect this instance" : "Connect your Stirling account",
+          name: linked
+            ? "Disconnect this instance"
+            : "Connect your Stirling account",
         }),
       );
       if (linked) {
         expect(unlink).not.toHaveBeenCalled();
-        fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Disconnect this instance" }));
+        fireEvent.click(
+          within(screen.getByRole("dialog")).getByRole("button", {
+            name: "Disconnect this instance",
+          }),
+        );
       }
       expect(linked ? unlink : openLinkModal).toHaveBeenCalledTimes(1);
     },

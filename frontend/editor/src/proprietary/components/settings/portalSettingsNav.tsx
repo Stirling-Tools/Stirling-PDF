@@ -53,8 +53,7 @@ const AccountLinkSection = portalSection((m) => m.PortalAccountLinkSection);
  * @param includeEncryption encryption at rest is deployment-wide server
  *   configuration, so only a self-hosted admin can act on it. SaaS operates
  *   the storage itself and passes false for every user.
- * @param includeBilling what the deployment spends is the operator's business,
- *   not every member's, so self-hosted passes its admin flag. On SaaS the
+ * @param includeBilling self-hosted billing is reserved for the org owner. On SaaS the
  *   signed-in account owns the wallet, so it stays on.
  *
  * These flags only decide what is offered: the endpoints behind each section

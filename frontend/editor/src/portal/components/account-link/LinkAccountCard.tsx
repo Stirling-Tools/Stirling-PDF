@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@app/auth/UseSession";
+import { useAuth } from "@app/auth/context";
 import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Modal, Skeleton } from "@app/ui";
@@ -86,8 +86,8 @@ export function LinkAccountCard({ link, instanceName }: Props) {
             )}
           </div>
         </div>
-  
-      {!linked && (
+
+        {!linked && (
           <span className="portal-link__status">
             <Icon name="unlink" size={20} />
             {t("portal.accountLink.card.notLinked", "Not connected")}
@@ -148,7 +148,14 @@ export function LinkAccountCard({ link, instanceName }: Props) {
         </Banner>
       )}
 
-      {!canLink && <p>{t("portal.accountLink.ownerRequired", "Only the org owner can link or unlink this server.")}</p>}
+      {!canLink && (
+        <p>
+          {t(
+            "portal.accountLink.ownerRequired",
+            "Only the org owner can link or unlink this server.",
+          )}
+        </p>
+      )}
       {!linked && (
         <div className="portal-link__connect">
           <p>
@@ -157,7 +164,11 @@ export function LinkAccountCard({ link, instanceName }: Props) {
               "Connect this server to use your team’s processing allowance in Stirling Cloud.",
             )}
           </p>
-          <Button loading={linking} disabled={!canLink} onClick={() => openLinkModal()}>
+          <Button
+            loading={linking}
+            disabled={!canLink}
+            onClick={() => openLinkModal()}
+          >
             {t(
               "portal.accountLink.card.linkButton",
               "Connect your Stirling account",

@@ -14,8 +14,15 @@ import { MantineProvider } from "@mantine/core";
  * with no link to this server, so loading a wallet there would flip the whole portal to linked.
  */
 const gate = { gated: false, loading: false, available: true };
-// Administrator by default: the page is theirs, and one case below is the member.
 const admin = { is: true };
+const owner = { is: true, loading: false };
+vi.mock("@app/auth/UseSession", () => ({
+  useAuth: () => ({
+    isAdmin: admin.is,
+    user: { orgOwner: owner.is },
+    loading: owner.loading,
+  }),
+}));
 const link = { is: false };
 const connect = vi.fn();
 const applyLinkFacts = vi.fn();
@@ -106,6 +113,8 @@ const renderGate = () => render(<GateTree />);
 describe("PortalBillingGate — self-hosted", () => {
   beforeEach(() => {
     admin.is = true;
+    owner.is = true;
+    owner.loading = false;
     link.is = false;
     connect.mockReset();
     applyLinkFacts.mockReset();
@@ -127,6 +136,39 @@ describe("PortalBillingGate — self-hosted", () => {
     renderGate();
     expect(screen.getByTestId("free-tier")).toBeInTheDocument();
     expect(screen.queryByTestId("usage")).toBeNull();
+  });
+
+  it.each([false, true])(
+    "blocks direct billing access for another admin with linked=%s",
+    (linked) => {
+      owner.is = false;
+      link.is = linked;
+      renderGate();
+      expect(screen.queryByTestId("usage")).toBeNull();
+      expect(screen.queryByTestId("free-tier")).toBeNull();
+      expect(applyLinkFacts).not.toHaveBeenCalled();
+      expect(connect).not.toHaveBeenCalled();
+    },
+  );
+
+  it("removes billing on transfer and allows the successor after the session refresh", () => {
+    link.is = true;
+    const view = renderGate();
+    expect(screen.getByTestId("usage")).toBeInTheDocument();
+    owner.is = false;
+    view.rerender(<GateTree />);
+    expect(screen.queryByTestId("usage")).toBeNull();
+    owner.is = true;
+    view.rerender(<GateTree />);
+    expect(screen.getByTestId("usage")).toBeInTheDocument();
+  });
+
+  it("does not load billing while ownership is being refreshed", () => {
+    owner.loading = true;
+    link.is = true;
+    renderGate();
+    expect(screen.queryByTestId("usage")).toBeNull();
+    expect(applyLinkFacts).not.toHaveBeenCalled();
   });
 
   it("asks for nothing on the way in", () => {
