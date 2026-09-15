@@ -210,6 +210,7 @@ export function UsersDirectory({
           (team) => team.id === m.teamId && team.isPersonal === false,
         ));
     function rowKebab(m: Member): CellAction {
+      const protectedOwner = isOwner(m);
       const removeLabel =
         capabilities.removeScope === "team"
           ? t("users.action.removeTeam", "Remove from team")
@@ -218,13 +219,14 @@ export function UsersDirectory({
       if (capabilities.resetPassword) {
         items.push({
           label: t("users.action.resetPw", "Reset password"),
-          disabled: m.isSelf || isOwner(m),
+          disabled: m.isSelf || protectedOwner,
           onClick: () => onResetPassword(m),
         });
       }
       if (capabilities.moveTeam) {
         items.push({
           label: t("users.action.move", "Move to team"),
+          disabled: protectedOwner,
           onClick: () => onMoveToTeam(m),
         });
       }
@@ -234,7 +236,7 @@ export function UsersDirectory({
             m.status === "suspended"
               ? t("users.action.reinstate", "Reinstate")
               : t("users.action.suspend", "Suspend"),
-          disabled: m.isSelf || isOwner(m),
+          disabled: m.isSelf || protectedOwner,
           onClick: () => onToggleEnabled(m),
         });
       }
@@ -247,7 +249,7 @@ export function UsersDirectory({
       if (capabilities.resetMfa && m.mfaEnabled) {
         items.push({
           label: t("users.action.disableMfa", "Reset MFA"),
-          disabled: m.isSelf || isOwner(m),
+          disabled: m.isSelf || protectedOwner,
           onClick: () => onDisableMfa(m),
         });
       }
@@ -255,7 +257,7 @@ export function UsersDirectory({
         items.push({
           label: removeLabel,
           tone: "danger",
-          disabled: m.isSelf || isOwner(m),
+          disabled: m.isSelf || protectedOwner,
           onClick: () => onRemove(m),
           dividerBefore: items.length > 0,
         });
