@@ -9189,42 +9189,6 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 1 = "Remove JavaScript"
 2 = "Watermark"
 
-[portal.policies.detail]
-enforces = "Steps"
-managerOnly = "Only an admin or team leader can modify this policy"
-onEveryExport = "On every export"
-onEveryUpload = "On every upload"
-outputAsNewFile = "as a new file"
-outputAsNewVersion = "as a new version"
-recentActivity = "Recent activity"
-showLess = "Show less"
-showMore = "Show more"
-sources = "Sources"
-
-[portal.policies.detail.actions]
-clearHistory = "Clear processed history"
-delete = "Delete"
-editSettings = "Edit settings"
-pause = "Pause"
-resume = "Resume"
-
-[portal.policies.detail.clearHistory]
-body = "This pipeline will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
-cancel = "Cancel"
-confirm = "Clear history"
-title = "Clear processed history?"
-
-[portal.policies.detail.delete]
-bodyActive = "\"{{name}}\" is active and enforcing on your documents. Deleting it stops that immediately and cannot be undone. Pause it instead if you only want it to stop running."
-bodyPaused = "\"{{name}}\" will be removed for everyone. This cannot be undone."
-cancel = "Cancel"
-confirm = "Delete"
-title = "Delete this pipeline?"
-
-[portal.policies.detail.emptyActivity]
-description = "Documents will appear here once this pipeline runs."
-title = "No activity yet"
-
 [portal.policies.endpoints]
 addWatermark = "Watermark"
 autoRedact = "Redact PII"
@@ -9430,15 +9394,6 @@ label = "Post the document to a webhook"
 [portal.policies.operations.zapierNotify]
 description = "Hands the run's details to your automation."
 label = "Trigger a Zap or Make scenario"
-
-[portal.policies.stats]
-activeFor = "Active"
-dataProcessed = "Data processed"
-docsEnforced = "Docs processed"
-
-[portal.policies.status]
-active = "Active"
-paused = "Paused"
 
 [portal.policies.wizard.actions]
 cancel = "Cancel"
