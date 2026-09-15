@@ -356,7 +356,7 @@ export function ProcessingFolderPicker({
           aria-label={t("processingFolders.setup.newFolder")}
         >
           <div className="folder-setup__new-folder-icon">
-            <Icon name="folder" size={28} />
+            <Icon name="folder" size={22} />
           </div>
           <FormField
             label={t("processingFolders.setup.folderName")}
