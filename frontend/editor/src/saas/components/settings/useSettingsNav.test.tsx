@@ -39,7 +39,7 @@ vi.mock("@app/components/settings/portalSettingsNav", () => ({
     },
   ],
   PORTAL_SECTION_ALIASES: {},
-  PORTAL_SUPERSEDED_SECTION_KEYS: [],
+  portalSupersededSectionKeys: () => [],
 }));
 
 import { useSettingsNav } from "@app/components/settings/useSettingsNav";
