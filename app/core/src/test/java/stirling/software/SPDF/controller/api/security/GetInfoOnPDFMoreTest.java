@@ -265,21 +265,6 @@ class GetInfoOnPDFMoreTest {
     class Errors {
 
         @Test
-        @DisplayName("empty file input yields an error response")
-        void emptyFile() throws Exception {
-            MockMultipartFile mf =
-                    new MockMultipartFile("fileInput", "x.pdf", "application/pdf", new byte[0]);
-            PDFFile request = new PDFFile();
-            request.setFileInput(mf);
-            ResponseEntity<byte[]> resp = getInfoOnPDF.getPdfInfo(request);
-            // createErrorResponse returns HTTP 200 with a JSON body carrying an "error" field.
-            assertThat(resp.getBody()).isNotNull();
-            JsonNode body = om.readTree(resp.getBody());
-            assertThat(body.has("error")).isTrue();
-            assertThat(body.get("error").asText("")).contains("Invalid");
-        }
-
-        @Test
         @DisplayName("veraPDF failure is swallowed and a report is still produced")
         void veraPdfFailureSwallowed() throws Exception {
             when(veraPDFService.validatePDF(any())).thenThrow(new RuntimeException("veraPDF boom"));

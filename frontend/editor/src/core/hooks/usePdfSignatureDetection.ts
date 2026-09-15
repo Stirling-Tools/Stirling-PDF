@@ -36,14 +36,16 @@ export const usePdfSignatureDetection = (
                 intent: "display",
               });
 
-              annotations.forEach((annotation: any) => {
-                if (
-                  annotation.subtype === "Widget" &&
-                  annotation.fieldType === "Sig"
-                ) {
-                  foundSignature = true;
-                }
-              });
+              annotations.forEach(
+                (annotation: { subtype?: string; fieldType?: string }) => {
+                  if (
+                    annotation.subtype === "Widget" &&
+                    annotation.fieldType === "Sig"
+                  ) {
+                    foundSignature = true;
+                  }
+                },
+              );
 
               if (foundSignature) break;
             }

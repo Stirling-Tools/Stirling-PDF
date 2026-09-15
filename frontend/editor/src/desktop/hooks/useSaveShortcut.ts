@@ -1,5 +1,9 @@
 import { useEffect } from "react";
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import {
+  useFileSelector,
+  useFileSelectors,
+  useFileActions,
+} from "@app/contexts/FileContext";
 // Save through the export gateway so a "run on export" policy enforces before
 // the file is written out (no-op when no such policy is active).
 import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWithPolicy";
@@ -10,7 +14,8 @@ import { downloadFileWithPolicy as downloadFile } from "@app/services/exportWith
  * Matches WorkbenchBar button behavior: saves selected files if any, otherwise all files
  */
 export function useSaveShortcut() {
-  const { selectors, state } = useFileState();
+  const selectors = useFileSelectors();
+  const currentSelectedFileIds = useFileSelector((s) => s.ui.selectedFileIds);
   const { actions: fileActions } = useFileActions();
 
   useEffect(() => {
@@ -20,7 +25,7 @@ export function useSaveShortcut() {
         event.preventDefault();
 
         // Get selected files or all files if nothing selected
-        const selectedFileIds = state.ui.selectedFileIds;
+        const selectedFileIds = currentSelectedFileIds;
         const filesToSave =
           selectedFileIds.length > 0
             ? selectors.getFiles(selectedFileIds)
@@ -63,5 +68,5 @@ export function useSaveShortcut() {
 
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [selectors, state.ui.selectedFileIds, fileActions]);
+  }, [selectors, currentSelectedFileIds, fileActions]);
 }

@@ -2,26 +2,24 @@ import type { Meta, StoryObj } from "@storybook/react-vite";
 import HoverActionMenu, {
   type HoverAction,
 } from "@app/components/shared/HoverActionMenu";
-import { iconMap } from "@app/components/tools/automate/iconMap";
-
-const { EditIcon, DeleteIcon, DownloadIcon } = iconMap;
+import { Icon } from "@app/ui/Icon";
 
 const actions: HoverAction[] = [
   {
     id: "edit",
-    icon: <EditIcon style={{ fontSize: 16 }} />,
+    icon: <Icon name="pencil" size={16} />,
     label: "Edit",
     onClick: () => {},
   },
   {
     id: "download",
-    icon: <DownloadIcon style={{ fontSize: 16 }} />,
+    icon: <Icon name="download" size={16} />,
     label: "Download",
     onClick: () => {},
   },
   {
     id: "delete",
-    icon: <DeleteIcon style={{ fontSize: 16 }} />,
+    icon: <Icon name="trash" size={16} />,
     label: "Delete",
     onClick: () => {},
     color: "var(--text-error)",

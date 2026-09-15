@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { Anchor, Group, Stack, Text, Paper, Skeleton } from "@mantine/core";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import ApiKeySection from "./apiKeys/ApiKeySection";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import RefreshModal from "./apiKeys/RefreshModal";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import useApiKey from "./apiKeys/hooks/useApiKey";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";

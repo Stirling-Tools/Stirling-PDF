@@ -136,6 +136,12 @@ public class InternalApiClient {
         if (runId != null && !runId.isEmpty()) {
             headers.add(AutomationRunContext.RUN_ID_HEADER, runId);
         }
+        // Each source document gets its own charge grouping and step allowance on a linked
+        // instance. SaaS groups by lineage instead.
+        String documentId = AutomationRunContext.currentDocument();
+        if (documentId != null && !documentId.isEmpty()) {
+            headers.add(AutomationRunContext.DOCUMENT_ID_HEADER, documentId);
+        }
 
         // Forward the parent policy name (set in MDC by the policy runner) so the audited sub-step
         // ties back to its policy. Single-line, length-capped: it becomes an HTTP header value.
@@ -157,7 +163,7 @@ public class InternalApiClient {
         boolean hasFilePart =
                 body.values().stream()
                         .flatMap(java.util.List::stream)
-                        .anyMatch(v -> v instanceof Resource);
+                        .anyMatch(Resource.class::isInstance);
         if (isAiTool && !hasFilePart) {
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
         }

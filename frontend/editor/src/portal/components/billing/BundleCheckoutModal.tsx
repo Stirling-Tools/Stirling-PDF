@@ -34,6 +34,7 @@ import {
   type LatestBundleQuote,
 } from "@portal/billing/stripe";
 import { PrepayModalHeader } from "@portal/components/billing/PrepayModalHeader";
+import "@portal/theme/surface.css";
 
 /**
  * Prepaid-bundle purchase modal for the Processor billing page — "12 months for
@@ -189,6 +190,8 @@ function openUrl(url: string): boolean {
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Return to payment choices without cancelling the saved quote; omitted for top-ups. */
+  onBack?: () => void;
   /** Drives teamId, per-run rate, currency, and top-up vs first-buy copy. */
   wallet: Wallet;
   /** Fired after a completed purchase so the parent can refetch the wallet. */
@@ -200,6 +203,7 @@ type Phase = "calc" | "pay";
 export function BundleCheckoutModal({
   open,
   onClose,
+  onBack,
   wallet,
   onComplete,
 }: Props) {
@@ -661,12 +665,17 @@ export function BundleCheckoutModal({
   const footer =
     phase === "calc" ? (
       <div className="portal-billing__checkout-cap-actions">
-        <Button variant="quiet" disabled={pdfBusy} onClick={onClose}>
-          {t("portal.billing.prepaid.buy.cancel", "Cancel")}
+        <Button
+          variant="quiet"
+          disabled={busy || pdfBusy}
+          onClick={onBack ?? onClose}
+        >
+          {onBack
+            ? t("portal.billing.prepaid.buy.back", "Back")
+            : t("portal.billing.prepaid.buy.cancel", "Cancel")}
         </Button>
         <Button
-          accent="premium"
-          disabled={!canContinue || pdfBusy}
+          disabled={!canContinue || busy || pdfBusy}
           onClick={handleContinue}
           rightSection={<span aria-hidden>›</span>}
         >
@@ -686,7 +695,7 @@ export function BundleCheckoutModal({
         >
           {t("portal.billing.prepaid.buy.cancelPurchase", "Cancel purchase")}
         </Button>
-        <Button accent="premium" disabled={busy || pdfBusy} onClick={payOnline}>
+        <Button disabled={busy || pdfBusy} onClick={payOnline}>
           {t("portal.billing.prepaid.pay.payOnline", "Pay online")}
         </Button>
       </div>
@@ -701,7 +710,6 @@ export function BundleCheckoutModal({
           {t("portal.billing.prepaid.buy.back", "Back")}
         </Button>
         <Button
-          accent="premium"
           disabled={!canAccept || busy || pdfBusy}
           onClick={handleFinalise}
         >
@@ -1168,7 +1176,7 @@ function CalculatorStep({
       </div>
 
       {/* Finer settings as progressive-disclosure rows — a "Change" blooms the card picker. */}
-      <div className="portal-billing__bundle-rows">
+      <div className="portal-surface portal-billing__bundle-rows">
         {rows.map((row) => {
           const open = expanded === row.id;
           return (

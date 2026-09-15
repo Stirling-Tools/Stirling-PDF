@@ -230,4 +230,7 @@ test.describe("Compare tool slot selection", () => {
       page.locator('[data-testid="compare-slot-comparison"]'),
     ).toHaveAttribute("data-slot-state", "empty");
   });
+
+  // These specs stop at slot state. Actually running a comparison lives in
+  // `engine-capabilities.spec.ts`, which is cross-browser in PR CI.
 });

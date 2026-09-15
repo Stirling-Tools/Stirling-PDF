@@ -23,12 +23,19 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIOSource;
 import stirling.software.common.model.tool.ToolIOSpec;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
+import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
+import stirling.software.proprietary.policy.asset.PolicyAsset;
+import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
+import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
@@ -46,6 +53,7 @@ class PolicyValidatorTest {
     @Mock private PipelineStepValidator stepValidator;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
+    private final PolicyAssetStore assetStore = new InProcessPolicyAssetStore();
     private PolicyValidator validator;
 
     @BeforeEach
@@ -57,6 +65,7 @@ class PolicyValidatorTest {
                         List.of(outputSink),
                         List.of(stepValidator),
                         sourceStore,
+                        assetStore,
                         new ToolChainValidator(path -> java.util.Optional.empty()));
     }
 
@@ -118,6 +127,90 @@ class PolicyValidatorTest {
         assertThrows(
                 IllegalArgumentException.class,
                 () -> validator.validateOutput(new OutputSpec("s3", Map.of("connectionId", 1))));
+    }
+
+    @Test
+    void acceptsAStepBindingThatReferencesATeamAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+        PolicyAsset asset =
+                assetStore.save(
+                        new PolicyAsset(null, "logo.png", null, 0, "owner", null, 1L),
+                        new byte[] {1});
+
+        validator.validate(withFileBinding(PolicyAssetRefs.PREFIX + asset.id(), null));
+    }
+
+    @Test
+    void acceptsARunSuppliedFileKey() {
+        // No asset: prefix, so the binding names a file uploaded with the run - it existed before
+        // stored assets did, and pausing such a policy must not start failing.
+        when(inputSource.supports(any())).thenReturn(true);
+        when(outputSink.supports(any())).thenReturn(true);
+
+        validator.validate(withFileBinding("company-logo", null));
+    }
+
+    @Test
+    void rejectsAStepBindingToAnUnknownAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                validator.validate(
+                                        withFileBinding(
+                                                PolicyAssetRefs.PREFIX + "missing-asset", null)));
+        assertTrue(ex.getMessage().contains("unknown stored file"));
+    }
+
+    @Test
+    void rejectsAStepBindingToAnotherTeamsAsset() {
+        when(inputSource.supports(any())).thenReturn(true);
+        PolicyAsset foreign =
+                assetStore.save(
+                        new PolicyAsset(null, "secret.p12", null, 0, "owner", 99L, 1L),
+                        new byte[] {1});
+
+        // Policy has no team; the asset belongs to team 99 - must read as unknown, not leak.
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () ->
+                                validator.validate(
+                                        withFileBinding(
+                                                PolicyAssetRefs.PREFIX + foreign.id(), null)));
+        assertTrue(ex.getMessage().contains("unknown stored file"));
+    }
+
+    @Test
+    void rejectsAnAssetBindingWithNoIds() {
+        when(inputSource.supports(any())).thenReturn(true);
+
+        IllegalArgumentException ex =
+                assertThrows(
+                        IllegalArgumentException.class,
+                        () -> validator.validate(withFileBinding(PolicyAssetRefs.PREFIX, null)));
+        assertTrue(ex.getMessage().contains("empty file binding"));
+    }
+
+    /** A manual-only policy whose single step binds a file field to the given asset key. */
+    private Policy withFileBinding(String assetKey, Long teamId) {
+        PipelineStep step =
+                new PipelineStep(
+                        "/api/v1/security/add-watermark",
+                        Map.of(),
+                        Map.of("watermarkImage", assetKey));
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                List.of(PipelineInput.manual(folderSourceId())),
+                List.of(step),
+                OutputSpec.inline(),
+                teamId);
     }
 
     @Test
@@ -184,6 +277,7 @@ class PolicyValidatorTest {
                 List.of(outputSink),
                 List.of(stepValidator),
                 sourceStore,
+                assetStore,
                 new ToolChainValidator(toolIO));
     }
 
@@ -229,6 +323,89 @@ class PolicyValidatorTest {
         IllegalArgumentException ex =
                 assertThrows(IllegalArgumentException.class, () -> validator.validate(twoOutputs));
         assertTrue(ex.getMessage().contains("at most one output"));
+    }
+
+    // A routing rule that can never fire is worse than no rule: its documents go to the fallback
+    // destination while the policy still reads as if it routed them, so each way of writing one is
+    // rejected at save time.
+
+    @Test
+    void acceptsARoutingRuleWhoseDestinationResolves() {
+        when(outputSink.supports(any())).thenReturn(true);
+        String destinationId = folderSourceId();
+
+        validator.validate(routingPolicy(rule("classification.labels", "invoice", destinationId)));
+
+        verify(outputSink).validate(sourceStore.get(destinationId).orElseThrow().toOutputSpec());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoField() {
+        Policy policy = routingPolicy(rule(" ", "invoice", folderSourceId()));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("must name a field"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoCondition() {
+        Policy policy = routingPolicy(new RoutingRule(null, "dest"));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("a condition is required"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNothingToMatchAgainst() {
+        Policy policy = routingPolicy(rule("classification.labels", " ", folderSourceId()));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("nothing to match against"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWithNoDestination() {
+        Policy policy = routingPolicy(rule("classification.labels", "invoice", ""));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("no destination"), ex.getMessage());
+    }
+
+    @Test
+    void rejectsARoutingRuleWhoseDestinationIsNotAStoredSource() {
+        Policy policy = routingPolicy(rule("classification.labels", "invoice", "src-deleted"));
+
+        IllegalArgumentException ex =
+                assertThrows(IllegalArgumentException.class, () -> validator.validate(policy));
+        assertTrue(ex.getMessage().contains("unknown routing destination"), ex.getMessage());
+    }
+
+    private static RoutingRule rule(String field, String value, String destinationId) {
+        return new RoutingRule(
+                new Condition.MatchesAny(new ConditionInput.DocumentField(field), List.of(value)),
+                destinationId);
+    }
+
+    private static Policy routingPolicy(RoutingRule... rules) {
+        return new Policy(
+                "p1",
+                "p",
+                "owner",
+                true,
+                false,
+                "",
+                List.of(),
+                List.of(),
+                OutputSpec.inline(),
+                List.of(),
+                null,
+                null,
+                null,
+                List.of(rules));
     }
 
     @Test

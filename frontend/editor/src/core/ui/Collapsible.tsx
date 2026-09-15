@@ -5,25 +5,21 @@ export interface CollapsibleProps {
   /** Whether the section is expanded. Controlled — pair with `onToggle`. */
   open: boolean;
   onToggle: () => void;
-  /** Header content (left/main side); the chevron is appended automatically. */
+  /** The toggle's label, shown after the chevron. */
   header: ReactNode;
-  /** Right-aligned header content shown before the chevron (a count, a label). */
-  aside?: ReactNode;
   children: ReactNode;
   className?: string;
 }
 
 /**
- * A single bordered disclosure section: an always-visible header that toggles,
- * and a body that animates open/closed via a grid-rows transition (no magic
- * max-height). Stack several to build an accordion. Header content is fully
- * caller-supplied, so it suits both terse and rich (icon + chips + count) rows.
+ * A lightweight inline disclosure: a chevron-led label that toggles, and a body
+ * that animates open/closed via a grid-rows transition (no magic max-height).
+ * No surface or box - it sits inline within a form or panel.
  */
 export function Collapsible({
   open,
   onToggle,
   header,
-  aside,
   children,
   className,
 }: CollapsibleProps) {
@@ -37,25 +33,22 @@ export function Collapsible({
         onClick={onToggle}
         aria-expanded={open}
       >
-        <span className="sui-collapsible__head-main">{header}</span>
-        <span className="sui-collapsible__head-end">
-          {aside}
-          <svg
-            className="sui-collapsible__chevron"
-            data-open={open}
-            viewBox="0 0 24 24"
-            width={16}
-            height={16}
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            aria-hidden
-          >
-            <polyline points="6 9 12 15 18 9" />
-          </svg>
-        </span>
+        <svg
+          className="sui-collapsible__chevron"
+          data-open={open}
+          viewBox="0 0 24 24"
+          width={16}
+          height={16}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          aria-hidden
+        >
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
+        {header}
       </button>
       <div className="sui-collapsible__body" data-open={open}>
         <div className="sui-collapsible__body-inner">{children}</div>

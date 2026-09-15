@@ -17,6 +17,7 @@ const EMPTY = {
   trialExtensionsUsed: 0,
   licensed: false,
   licenseKey: null,
+  agreementSignedVersion: null,
   latestQuote: null,
 };
 
@@ -161,7 +162,9 @@ export function priceQuote(cfg: Cfg) {
   seq += 1;
   return {
     quoteId: seq,
-    quoteNumber: `QT-DEMO-${String(seq).padStart(4, "0")}`,
+    // A draft has no reference: Stripe assigns the quote number at finalisation, so the mock leaves
+    // it null here and fills it when the quote is issued, exactly as the real flow does.
+    quoteNumber: null,
     status: "draft",
     currency: "USD",
     annualNetMinor,
@@ -205,10 +208,21 @@ export function resetProcurementSaasStore() {
 
 export const procurementSaasHandlers = [
   http.get(`${SAAS}/api/v1/procurement`, () => HttpResponse.json(deal)),
+  // Interest: creates the deal at `exploring` when there is none, and never disturbs one that
+  // already exists — so the enterprise surface only appears for accounts that asked for it.
+  http.post(`${SAAS}/api/v1/procurement/interest`, () => {
+    if (deal.dealId == null) {
+      deal = { ...deal, dealId: 1, stage: "exploring" };
+    }
+    return HttpResponse.json(deal);
+  }),
   http.post(`${SAAS}/api/v1/procurement/trial/start`, async ({ request }) => {
     const body = (await request.json().catch(() => ({}))) as Partial<{
       deployment: string;
       users: number;
+      businessName: string;
+      contactName: string;
+      contactEmail: string;
     }>;
     const allowed = ["cloud", "selfhost", "airgap"];
     const now = Date.now();
@@ -224,6 +238,9 @@ export const procurementSaasHandlers = [
       trialExtensionsUsed: 0,
       licensed: true,
       licenseKey: "MOCK-TRIAL-KEY-0001",
+      businessName: body.businessName ?? null,
+      contactName: body.contactName ?? null,
+      contactEmail: body.contactEmail ?? null,
       latestQuote: null,
     };
     return HttpResponse.json(deal);
@@ -239,7 +256,7 @@ export const procurementSaasHandlers = [
       stage: "quote",
       licensed: true,
       latestQuote: quote,
-    } as never;
+    };
     return HttpResponse.json(quote);
   }),
   http.post(`${SAAS}/api/v1/procurement/trial/extend`, () => {
@@ -256,6 +273,78 @@ export const procurementSaasHandlers = [
   http.post(`${SAAS}/api/v1/procurement/agreement`, () => {
     (deal as Record<string, unknown>).stage = "security";
     return HttpResponse.json(deal);
+  }),
+  http.get(`${SAAS}/api/v1/procurement/agreement/document`, () => {
+    const q = (deal as { latestQuote: { quoteNumber?: string } | null })
+      .latestQuote;
+    if (!q) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json({
+      docId: "enterprise-agreement",
+      version: "0.9.1",
+      versionLabel: "SEA v0.9.1",
+      displayName: "Stirling Enterprise Agreement",
+      effectiveDate: "2026-07-10",
+      status: "draft",
+      markdown: [
+        "# Stirling Enterprise Agreement",
+        "## Part A — Master Services Agreement",
+        "Provider will provide the Stirling PDF Processor and Editor as described in the Order Form.",
+        `## Part B — Order Form · ${q.quoteNumber ?? "Q-MOCK"}`,
+        "| Term | Value |",
+        "| --- | --- |",
+        "| Subscription | Enterprise · Stirling Cloud |",
+        "| Escalator | +3% at each anniversary during the Term |",
+        "## Part C — Data Processing Addendum",
+        "Provider processes Personal Data only on Customer's documented instructions.",
+      ].join("\n\n"),
+    });
+  }),
+  http.post(
+    `${SAAS}/api/v1/procurement/agreement/sign`,
+    async ({ request }) => {
+      const body = (await request.json().catch(() => ({}))) as Partial<{
+        signatoryName: string;
+        authorityConfirmed: boolean;
+      }>;
+      if (!body.signatoryName || !body.authorityConfirmed) {
+        return new HttpResponse(null, { status: 400 });
+      }
+      // Surface the signed agreement for download on the payment/live stage.
+      (deal as Record<string, unknown>).agreementSignedVersion = "SEA v0.9.1";
+      return HttpResponse.json({
+        signatureId: 1,
+        versionLabel: "SEA v0.9.1",
+        pdfStored: true,
+      });
+    },
+  ),
+  http.get(`${SAAS}/api/v1/procurement/agreement/signature/pdf`, () => {
+    const signed = (deal as { agreementSignedVersion?: string })
+      .agreementSignedVersion;
+    if (!signed) return new HttpResponse(null, { status: 404 });
+    // A minimal one-page PDF so the browser download works in mock mode.
+    const pdf =
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+      "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+      "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]>>endobj\n" +
+      "trailer<</Root 1 0 R>>\n%%EOF";
+    return new HttpResponse(pdf, {
+      headers: { "Content-Type": "application/pdf" },
+    });
+  }),
+  http.get(`${SAAS}/api/v1/procurement/agreement/document/pdf`, () => {
+    // The unsigned agreement PDF is available once a quote exists.
+    if (!(deal as { latestQuote: unknown }).latestQuote) {
+      return new HttpResponse(null, { status: 404 });
+    }
+    const pdf =
+      "%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n" +
+      "2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n" +
+      "3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 300 120]>>endobj\n" +
+      "trailer<</Root 1 0 R>>\n%%EOF";
+    return new HttpResponse(pdf, {
+      headers: { "Content-Type": "application/pdf" },
+    });
   }),
   http.post(`${SAAS}/api/v1/procurement/go-live`, () => {
     const d = deal as Record<string, unknown>;
@@ -281,6 +370,34 @@ export const procurementSaasHandlers = [
     resetProcurementSaasStore();
     return HttpResponse.json(EMPTY);
   }),
+  http.get(`${SAAS}/api/v1/legal/:docId`, ({ params }) => {
+    const docId = String(params.docId);
+    const titles: Record<string, string> = {
+      eula: "Stirling EULA & Commercial Terms",
+      sla: "Stirling SLA Exhibit",
+      subprocessors: "Stirling Subprocessors",
+    };
+    if (!(docId in titles)) return new HttpResponse(null, { status: 404 });
+    return HttpResponse.json({
+      docId,
+      version: "1.0.0",
+      versionLabel: `${docId.toUpperCase()} v1.0.0`,
+      displayName: titles[docId],
+      effectiveDate: "2026-07-10",
+      status: "draft",
+      markdown: `# ${titles[docId]}\n\nThis is a mock of the ${docId} document for local development.\n\n## 1. Terms\n\nThe real text is served from the backend legal registry.`,
+    });
+  }),
+  http.post(`${SAAS}/api/v1/legal/consent`, async ({ request }) => {
+    const body = (await request.json().catch(() => ({}))) as Partial<{
+      documentId: string;
+      context: string;
+    }>;
+    if (!body.documentId || !body.context) {
+      return new HttpResponse(null, { status: 400 });
+    }
+    return new HttpResponse(null, { status: 200 });
+  }),
 
   // Stripe Quote edge functions (supabase.functions.invoke → ${url}/functions/v1/{name}).
   http.post(`${SAAS}/functions/v1/issue-procurement-quote`, () => {
@@ -289,6 +406,9 @@ export const procurementSaasHandlers = [
     if (q) {
       q.status = "sent";
       q.stripeQuoteId = `qt_mock_${q.quoteId}`;
+      // Issuing is what mints the reference. Stripe's shape is
+      // QT-{customer invoice prefix}-{quote seq}-{revision}.
+      q.quoteNumber = `QT-MOCKPFX-${String(q.quoteId).padStart(4, "0")}-1`;
     }
     return HttpResponse.json(q);
   }),

@@ -211,11 +211,9 @@ export default function StackedBarChart({
           setTooltipContent(html);
           const tooltip = tooltipRef.current;
           if (tooltip) tooltip.style.opacity = "1";
-          positionTooltip(event as unknown as MouseEvent);
+          positionTooltip(event);
         })
-        .on("mousemove", (event: MouseEvent) =>
-          positionTooltip(event as unknown as MouseEvent),
-        )
+        .on("mousemove", (event: MouseEvent) => positionTooltip(event))
         .on("mouseleave", hideTooltip);
 
       // Animate reveal of used segments (only on first load, not on re-renders)

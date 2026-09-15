@@ -8,5 +8,5 @@
     // sync-portal-docs.mts imports the shared transform by its .ts path (run via tsx).
     "allowImportingTsExtensions": true
   },
-  "include": ["./**/*.ts", "./**/*.mts"]
+  "include": ["./**/*.ts", "./**/*.mts", "../../oxlint.config.ts"]
 }

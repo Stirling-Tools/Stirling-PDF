@@ -18,7 +18,7 @@ import {
 import type { ToolId } from "@app/types/toolId";
 import {
   getToolDisabledReason,
-  getDisabledLabel,
+  resolveDisabledMessage,
 } from "@app/components/tools/fullscreen/shared";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { CloudBadge } from "@app/components/shared/CloudBadge";
@@ -74,7 +74,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
   const { hotkeys } = useHotkeys();
   const binding = hotkeys[id];
   const { getToolNavigation } = useToolNavigation();
-  const fav = isFavorite(id as ToolId);
+  const fav = isFavorite(id);
 
   // Check if this tool will route to SaaS backend (desktop only)
   const rawEndpoint = tool.operationConfig?.endpoint;
@@ -102,9 +102,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       ? getToolNavigation(id, tool)
       : null;
 
-  const { key: disabledKey, fallback: disabledFallback } =
-    getDisabledLabel(disabledReason);
-  const disabledMessage = t(disabledKey, disabledFallback);
+  const disabledMessage = resolveDisabledMessage(t, disabledReason, tool);
 
   const tooltipContent = visuallyUnavailable ? (
     <span>
@@ -286,7 +284,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       accent="neutral"
       onClick={() => handleClick(id)}
       size="sm"
-      p="sm"
+      p="none"
       fullWidth
       justify="start"
       className="tool-button"
@@ -297,6 +295,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
         borderRadius: 0,
         cursor: visuallyUnavailable ? "not-allowed" : undefined,
         overflow: "visible",
+        ...selectedBg,
       }}
     >
       {buttonContent}
@@ -307,7 +306,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
     hasStars && !visuallyUnavailable ? (
       <FavoriteStar
         isFavorite={fav}
-        onToggle={() => toggleFavorite(id as ToolId)}
+        onToggle={() => toggleFavorite(id)}
         className="tool-button-star"
         size="xs"
       />

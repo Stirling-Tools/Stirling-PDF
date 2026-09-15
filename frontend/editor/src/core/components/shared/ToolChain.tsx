@@ -6,8 +6,8 @@
 import React from "react";
 import { Text, Tooltip, Badge, Group } from "@mantine/core";
 import { ToolOperation } from "@app/types/file";
+import { toolOperationLabel } from "@app/utils/toolOperationLabel";
 import { useTranslation } from "react-i18next";
-import { ToolId } from "@app/types/toolId";
 
 interface ToolChainProps {
   toolChain: ToolOperation[];
@@ -22,16 +22,14 @@ const ToolChain: React.FC<ToolChainProps> = ({
   maxWidth = "100%",
   displayStyle = "text",
   size = "xs",
-  color = "var(--mantine-color-blue-7)",
+  // A fixed palette shade cannot follow the colour scheme; the accent's text
+  // token carries the readable step for whichever theme is active.
+  color = "var(--c-accent-text)",
 }) => {
   const { t } = useTranslation();
   if (!toolChain || toolChain.length === 0) return null;
 
-  const toolIds = toolChain.map((tool) => tool.toolId);
-
-  const getToolName = (toolId: ToolId) => {
-    return t(`home.${toolId}.title`, toolId);
-  };
+  const getToolName = (tool: ToolOperation) => toolOperationLabel(tool, t);
 
   // Create full tool chain for tooltip
   const fullChainDisplay =
@@ -40,7 +38,7 @@ const ToolChain: React.FC<ToolChainProps> = ({
         {toolChain.map((tool, index) => (
           <React.Fragment key={`${tool.toolId}-${index}`}>
             <Badge size="sm" variant="light" color="blue">
-              {getToolName(tool.toolId)}
+              {getToolName(tool)}
             </Badge>
             {index < toolChain.length - 1 && (
               <Text size="sm" c="dimmed">
@@ -51,18 +49,21 @@ const ToolChain: React.FC<ToolChainProps> = ({
         ))}
       </Group>
     ) : (
-      <Text size="sm">{toolIds.map(getToolName).join(" → ")}</Text>
+      <Text size="sm">{toolChain.map(getToolName).join(" → ")}</Text>
     );
 
   // Create truncated display based on available space
   const getTruncatedDisplay = () => {
-    if (toolIds.length <= 2) {
+    if (toolChain.length <= 2) {
       // Show all tools if 2 or fewer
-      return { text: toolIds.map(getToolName).join(" → "), isTruncated: false };
+      return {
+        text: toolChain.map(getToolName).join(" → "),
+        isTruncated: false,
+      };
     } else {
       // Show first tool ... last tool for longer chains
       return {
-        text: `${getToolName(toolIds[0])} → +${toolIds.length - 2} → ${getToolName(toolIds[toolIds.length - 1])}`,
+        text: `${getToolName(toolChain[0])} → +${toolChain.length - 2} → ${getToolName(toolChain[toolChain.length - 1])}`,
         isTruncated: true,
       };
     }
@@ -73,10 +74,10 @@ const ToolChain: React.FC<ToolChainProps> = ({
   // Compact style for very small spaces
   if (displayStyle === "compact") {
     const compactText =
-      toolIds.length === 1
-        ? getToolName(toolIds[0])
-        : `${toolIds.length} tools`;
-    const isCompactTruncated = toolIds.length > 1;
+      toolChain.length === 1
+        ? getToolName(toolChain[0])
+        : `${toolChain.length} tools`;
+    const isCompactTruncated = toolChain.length > 1;
 
     const compactElement = (
       <Text
@@ -114,7 +115,7 @@ const ToolChain: React.FC<ToolChainProps> = ({
           {toolChain.slice(0, 3).map((tool, index) => (
             <React.Fragment key={`${tool.toolId}-${index}`}>
               <Badge size={size} variant="light" color="blue">
-                {getToolName(tool.toolId)}
+                {getToolName(tool)}
               </Badge>
               {index < Math.min(toolChain.length - 1, 2) && (
                 <Text size="xs" c="dimmed">
@@ -129,7 +130,7 @@ const ToolChain: React.FC<ToolChainProps> = ({
                 ...
               </Text>
               <Badge size={size} variant="light" color="blue">
-                {getToolName(toolChain[toolChain.length - 1].toolId)}
+                {getToolName(toolChain[toolChain.length - 1])}
               </Badge>
             </>
           )}
@@ -138,7 +139,7 @@ const ToolChain: React.FC<ToolChainProps> = ({
     );
 
     return isBadgesTruncated ? (
-      <Tooltip label={`${toolIds.map(getToolName).join(" → ")}`} withinPortal>
+      <Tooltip label={`${toolChain.map(getToolName).join(" → ")}`} withinPortal>
         {badgesElement}
       </Tooltip>
     ) : (

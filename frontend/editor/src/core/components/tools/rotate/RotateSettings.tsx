@@ -1,11 +1,10 @@
-import { useMemo, useState, useEffect } from "react";
+import { useEffect } from "react";
 import { Stack, Text, Box, Group, Center } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
+import { Icon } from "@app/ui/Icon";
 import { RotateParametersHook } from "@app/hooks/tools/rotate/useRotateParameters";
-import { useAllFiles } from "@app/contexts/FileContext";
+import { useViewScopedFileStubs } from "@app/hooks/tools/shared/useViewScopedFiles";
 import DocumentThumbnail from "@app/components/shared/filePreview/DocumentThumbnail";
 
 interface RotateSettingsProps {
@@ -18,19 +17,9 @@ const RotateSettings = ({
   disabled = false,
 }: RotateSettingsProps) => {
   const { t } = useTranslation();
-  const { fileStubs } = useAllFiles();
-
-  // Get the first file for preview
-  const selectedStub = useMemo(() => {
-    return fileStubs.length > 0 ? fileStubs[0] : null;
-  }, [fileStubs]);
-
-  // Get thumbnail for the selected file
-  const [thumbnail, setThumbnail] = useState<string | null>(null);
-
-  useEffect(() => {
-    setThumbnail(selectedStub?.thumbnailUrl || null);
-  }, [selectedStub]);
+  // Preview the document the rotation will actually apply to, so it follows
+  // the viewer when the user switches files with the tool open.
+  const [previewStub = null] = useViewScopedFileStubs();
 
   // Calculate current angle display
   const currentAngle = parameters.parameters.angle;
@@ -86,7 +75,10 @@ const RotateSettings = ({
                 justifyContent: "center",
               }}
             >
-              <DocumentThumbnail file={selectedStub} thumbnail={thumbnail} />
+              <DocumentThumbnail
+                file={previewStub}
+                thumbnail={previewStub?.thumbnailUrl ?? null}
+              />
             </Box>
           </Box>
         </Center>
@@ -102,7 +94,7 @@ const RotateSettings = ({
           aria-label={t("rotate.rotateLeft", "Rotate Anticlockwise")}
           title={t("rotate.rotateLeft", "Rotate Anticlockwise")}
         >
-          <RotateLeftIcon style={{ fontSize: "1.5rem" }} />
+          <Icon name="rotate-ccw" size={"1.5rem"} />
         </ActionIcon>
 
         <ActionIcon
@@ -113,7 +105,7 @@ const RotateSettings = ({
           aria-label={t("rotate.rotateRight", "Rotate Clockwise")}
           title={t("rotate.rotateRight", "Rotate Clockwise")}
         >
-          <RotateRightIcon style={{ fontSize: "1.5rem" }} />
+          <Icon name="rotate-cw" size={"1.5rem"} />
         </ActionIcon>
       </Group>
     </Stack>

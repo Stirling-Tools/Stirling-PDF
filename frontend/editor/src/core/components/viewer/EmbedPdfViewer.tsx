@@ -1,19 +1,17 @@
-import React, {
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Center, Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import LockIcon from "@mui/icons-material/Lock";
-
-import { useFileState, useFileActions } from "@app/contexts/FileContext";
+import { Icon } from "@app/ui/Icon";
+import {
+  useAllFiles,
+  useFileSelector,
+  useFileSelectors,
+  useFileActions,
+} from "@app/contexts/FileContext";
 import { useFileWithUrl } from "@app/hooks/useFileWithUrl";
+import { ZoomMode } from "@embedpdf/plugin-zoom/react";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
 import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
@@ -33,113 +31,28 @@ import type {
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import {
+  isStirlingFile,
+  getFormFillFileId,
+  type StirlingFile,
+  documentBytesReplaced,
+  type DocumentIdentity,
+} from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
   RulerOverlay,
-  type PageMeasureScales,
-  type PageScaleInfo,
-  type ViewportScale,
+  type RulerOverlayHandle,
 } from "@app/components/viewer/RulerOverlay";
-import type { PDFDict, PDFNumber } from "@cantoo/pdf-lib";
 import { useWheelZoom } from "@app/hooks/useWheelZoom";
 import { useFormFill } from "@app/tools/formFill/FormFillContext";
 import { FormSaveBar } from "@app/tools/formFill/FormSaveBar";
+import { FORM_APPLY_EVENT } from "@app/tools/formFill/formFillEvents";
 import { useViewerKeyCommand } from "@app/hooks/useViewerKeyCommand";
+import { useMeasurementManager } from "@app/hooks/useMeasurementManager";
+import { ScaleCalibrationDialog } from "@app/components/viewer/ScaleCalibrationDialog";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
 import { alert } from "@app/components/toast";
-
-// ─── Measure dictionary extraction ────────────────────────────────────────────
-
-async function extractPageMeasureScales(
-  file: Blob,
-): Promise<PageMeasureScales | null> {
-  try {
-    const {
-      PDFDocument,
-      PDFDict,
-      PDFName,
-      PDFArray,
-      PDFNumber,
-      PDFString,
-      PDFHexString,
-    } = await import("@cantoo/pdf-lib");
-    const pdfDoc = await PDFDocument.load(await file.arrayBuffer(), {
-      ignoreEncryption: true,
-    });
-
-    // Parse a Measure dict into a MeasureScale, or return null if malformed.
-    const parseScale = (measureObj: unknown) => {
-      if (!(measureObj instanceof PDFDict)) return null;
-      // @cantoo/pdf-lib ships without individual .d.ts files so instanceof can't narrow `unknown`
-      const m = measureObj as PDFDict;
-      const rObj = m.lookup(PDFName.of("R"));
-      const ratioLabel =
-        rObj instanceof PDFString || rObj instanceof PDFHexString
-          ? rObj.decodeText()
-          : "";
-      // D = distance array, X = x-axis fallback
-      let fmtArray = m.lookup(PDFName.of("D"));
-      if (!(fmtArray instanceof PDFArray)) fmtArray = m.lookup(PDFName.of("X"));
-      if (!(fmtArray instanceof PDFArray)) return null;
-      const firstFmt = fmtArray.lookup(0);
-      if (!(firstFmt instanceof PDFDict)) return null;
-      const cObj = firstFmt.lookup(PDFName.of("C"));
-      const uObj = firstFmt.lookup(PDFName.of("U"));
-      if (!(cObj instanceof PDFNumber) || cObj.asNumber() <= 0) return null;
-      const unit =
-        uObj instanceof PDFString || uObj instanceof PDFHexString
-          ? uObj.decodeText()
-          : "units";
-      return { factor: cObj.asNumber(), unit, ratioLabel };
-    };
-
-    const result: PageMeasureScales = new Map();
-
-    for (let i = 0; i < pdfDoc.getPageCount(); i++) {
-      const page = pdfDoc.getPage(i);
-      const pageHeight = page.getHeight();
-      const pageNode = page.node as unknown as PDFDict;
-      const viewports: ViewportScale[] = [];
-
-      // Spec-conformant: /VP array — each viewport can have its own scale and BBox
-      const vpObj = pageNode.lookup(PDFName.of("VP"));
-      if (vpObj instanceof PDFArray) {
-        for (let j = 0; j < vpObj.size(); j++) {
-          const vpEntry = vpObj.lookup(j);
-          if (!(vpEntry instanceof PDFDict)) continue;
-          const scale = parseScale(vpEntry.lookup(PDFName.of("Measure")));
-          if (!scale) continue;
-          let bbox: ViewportScale["bbox"] = null;
-          const bboxObj = vpEntry.lookup(PDFName.of("BBox"));
-          if (bboxObj instanceof PDFArray && bboxObj.size() >= 4) {
-            bbox = [
-              (bboxObj.lookup(0) as PDFNumber).asNumber(),
-              (bboxObj.lookup(1) as PDFNumber).asNumber(),
-              (bboxObj.lookup(2) as PDFNumber).asNumber(),
-              (bboxObj.lookup(3) as PDFNumber).asNumber(),
-            ];
-          }
-          viewports.push({ bbox, scale });
-        }
-      }
-
-      // Fallback: /Measure directly on page (non-conforming but seen in the wild)
-      if (viewports.length === 0) {
-        const scale = parseScale(pageNode.lookup(PDFName.of("Measure")));
-        if (scale) viewports.push({ bbox: null, scale });
-      }
-
-      if (viewports.length > 0)
-        result.set(i, { viewports, pageHeight } satisfies PageScaleInfo);
-    }
-
-    return result.size > 0 ? result : null;
-  } catch {
-    return null;
-  }
-}
 
 // ──────────────────────────────────────────────────────────────────────────────
 
@@ -156,7 +69,16 @@ export interface EmbedPdfViewerProps {
   signaturePlacementType?: "canvas" | "image" | "text";
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
+  /** Viewer is showing the pinned portfolio panel; don't render a second one. */
+  portfolioPinned?: boolean;
 }
+
+/** Cache identity of a document, not of the file holding it: a disk reload
+ *  replaces the bytes under an unchanged fileId, and an outline cached under the
+ *  id alone would then describe a document nobody is looking at. Preload keys are
+ *  matched against this, so both call sites must derive it the same way. */
+const documentCacheKey = (file: StirlingFile): string =>
+  `${file.fileId}|${file.quickKey}`;
 
 const EmbedPdfViewerContent = ({
   sidebarsVisible: _sidebarsVisible,
@@ -170,6 +92,7 @@ const EmbedPdfViewerContent = ({
   signaturePlacementType,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
+  portfolioPinned,
 }: EmbedPdfViewerProps) => {
   const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
@@ -259,9 +182,9 @@ const EmbedPdfViewerContent = ({
   const redactionTrackerRef = useRef<RedactionPendingTrackerAPI>(null);
 
   // Get current file from FileContext
-  const { selectors } = useFileState();
+  const selectors = useFileSelectors();
   const { actions } = useFileActions();
-  const activeFiles = selectors.getFiles();
+  const { files: activeFiles } = useAllFiles();
   const activeFilesRef = useRef(activeFiles);
   activeFilesRef.current = activeFiles;
   const activeFileIds = activeFiles.map((f) => f.fileId);
@@ -373,10 +296,19 @@ const EmbedPdfViewerContent = ({
     return null;
   }, [previewFile, activeFiles, activeFileId]);
 
-  // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
+  // Identity of the bytes: the viewer's mount key, its blob URL and form-fill
+  // state all have to turn over when a disk reload swaps the file under an
+  // unchanged fileId. Keep aligned with FormFill.
+  const currentFileId = React.useMemo(
+    () => getFormFillFileId(currentFile),
+    [currentFile],
+  );
+
+  // The workbench record to act on. Bare id, not the content key above: the
+  // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
-  const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
+  const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
@@ -392,15 +324,15 @@ const EmbedPdfViewerContent = ({
   }, [previewFile, fileWithUrl]);
 
   // Check if the current file is encrypted (gate the viewer to prevent PDFium crash)
-  const isCurrentFileEncrypted = React.useMemo(() => {
-    if (!currentFile || !isStirlingFile(currentFile)) return false;
-    const stub = selectors.getStirlingFileStub(currentFile.fileId);
-    return stub?.processedFile?.isEncrypted === true;
-  }, [currentFile, selectors]);
+  const isCurrentFileEncrypted = useFileSelector((s) =>
+    currentFile && isStirlingFile(currentFile)
+      ? s.files.byId[currentFile.fileId]?.processedFile?.isEncrypted === true
+      : false,
+  );
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
-      return currentFile.fileId;
+      return documentCacheKey(currentFile);
     }
 
     if (previewFile) {
@@ -427,12 +359,9 @@ const EmbedPdfViewerContent = ({
     }
 
     return activeFiles
-      .map((file) => {
-        if (isStirlingFile(file)) {
-          return file.fileId;
-        }
-        return undefined;
-      })
+      .map((file) =>
+        isStirlingFile(file) ? documentCacheKey(file) : undefined,
+      )
       .filter(Boolean) as string[];
   }, [activeFiles, previewFile, bookmarkCacheKey]);
 
@@ -505,7 +434,7 @@ const EmbedPdfViewerContent = ({
                 return;
               case "0":
                 event.preventDefault();
-                zoomActions.requestZoom("fit-width");
+                zoomActions.requestZoom(ZoomMode.FitWidth);
                 return;
             }
           }
@@ -608,6 +537,31 @@ const EmbedPdfViewerContent = ({
     getScrollState,
   ]);
 
+  // Accepting a disk reload swaps the bytes under an unchanged fileId, which
+  // remounts the inner viewer with a clean history but leaves these flags
+  // describing edits that no longer exist: every later disk change then reads as
+  // a conflict, and navigation keeps warning about work already discarded.
+  const documentIdentityRef = useRef<DocumentIdentity | null>(null);
+  useEffect(() => {
+    const previous = documentIdentityRef.current;
+    const current =
+      currentFileStableId && currentFileId
+        ? { id: currentFileStableId, key: currentFileId }
+        : null;
+    documentIdentityRef.current = current;
+
+    if (!documentBytesReplaced(previous, current)) return;
+
+    hasAnnotationChangesRef.current = false;
+    setHasUnsavedChanges(false);
+    setRedactionsApplied(false);
+  }, [
+    currentFileStableId,
+    currentFileId,
+    setHasUnsavedChanges,
+    setRedactionsApplied,
+  ]);
+
   // Watch the annotation history API to detect when the document becomes "dirty".
   // We treat any change that makes the history undoable as unsaved changes until
   // the user explicitly applies them via applyChanges.
@@ -706,7 +660,6 @@ const EmbedPdfViewerContent = ({
       if (hadPendingRedactions) {
         console.log("[Viewer] Committing pending redactions before export");
         redactionTrackerRef.current?.commitAllPending();
-        // Give a small delay for the commit to process
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
@@ -837,7 +790,6 @@ const EmbedPdfViewerContent = ({
         pendingRotationRestoreRef.current = currentRotation;
         rotationRestoreAttemptsRef.current = 0;
 
-        // Track the new file ID so the viewer follows it after the list reorders
         const newFileId = stubs[0]?.id;
         if (newFileId) setActiveFileId(newFileId);
 
@@ -868,8 +820,8 @@ const EmbedPdfViewerContent = ({
         handleFormApply(blob);
       }
     };
-    window.addEventListener("formfill:apply", handler);
-    return () => window.removeEventListener("formfill:apply", handler);
+    window.addEventListener(FORM_APPLY_EVENT, handler);
+    return () => window.removeEventListener(FORM_APPLY_EVENT, handler);
   }, [handleFormApply]);
 
   // Apply layer visibility changes - reload the modified PDF into the viewer
@@ -974,6 +926,9 @@ const EmbedPdfViewerContent = ({
       scrollRestoreAttemptsRef.current = 0;
       pendingRotationRestoreRef.current = currentRotation;
       rotationRestoreAttemptsRef.current = 0;
+
+      const newFileId = stubs[0]?.id;
+      if (newFileId) setActiveFileId(newFileId);
 
       // Consume only the current file (replace in context)
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
@@ -1143,28 +1098,37 @@ const EmbedPdfViewerContent = ({
     };
   }, [applyChanges, setApplyChanges]);
 
-  // Ruler / measurement tool state
-  const [isRulerActive, setIsRulerActive] = useState(false);
-  const [pageMeasureScales, setPageMeasureScales] =
-    useState<PageMeasureScales | null>(null);
+  // Ruler / measurement tool state is handled by the dedicated hook.
+  const rulerOverlayRef = useRef<RulerOverlayHandle | null>(null);
 
-  useEffect(() => {
-    const file = effectiveFile?.file;
-    if (!file) {
-      setPageMeasureScales(null);
-      return;
-    }
-    let cancelled = false;
-    extractPageMeasureScales(file).then((scales) => {
-      if (!cancelled) setPageMeasureScales(scales);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [effectiveFile]);
+  const {
+    isRulerActive,
+    setIsRulerActive,
+    pageMeasureScales,
+    customScale,
+    handleSetCustomScale,
+    isScaleCalibrationActive,
+    scaleCalibrationMeasurement,
+    startScaleCalibration,
+    cancelScaleCalibration,
+    handleScaleCalibrationMeasurement,
+    applyScaleCalibration,
+  } = useMeasurementManager({
+    currentFile,
+    effectiveFile,
+    rulerOverlayRef,
+  });
 
   // Register workbench bar buttons for the viewer
-  useViewerWorkbenchBarButtons(isRulerActive, setIsRulerActive);
+  useViewerWorkbenchBarButtons(
+    isRulerActive,
+    setIsRulerActive,
+    customScale,
+    handleSetCustomScale,
+    isScaleCalibrationActive,
+    startScaleCalibration,
+    cancelScaleCalibration,
+  );
 
   // Auto-fetch form fields when a PDF is loaded in the viewer.
   // In normal viewer mode, this uses PDFium WASM (frontend-only).
@@ -1173,10 +1137,6 @@ const EmbedPdfViewerContent = ({
   const formFillProviderRef = useRef(isFormFillToolActive);
 
   // Generate a unique identifier for the current file to detect file changes
-  const currentFileId = React.useMemo(() => {
-    return getFormFillFileId(currentFile);
-  }, [currentFile]);
-
   useEffect(() => {
     const fileChanged = currentFileId !== formFillFileIdRef.current;
     const providerChanged =
@@ -1214,7 +1174,7 @@ const EmbedPdfViewerContent = ({
   ]);
 
   const sidebarWidthRem = 15;
-  const commentsSidebarWidthRem = 18;
+  const commentsSidebarWidthRem = 15;
   const totalRightMargin =
     (isThumbnailSidebarVisible ? sidebarWidthRem : 0) +
     (isBookmarkSidebarVisible ? sidebarWidthRem : 0) +
@@ -1250,13 +1210,13 @@ const EmbedPdfViewerContent = ({
           }}
           onClick={onClose}
         >
-          <CloseIcon />
+          <Icon name="x" />
         </ActionIcon>
       )}
 
       {!effectiveFile ? (
         <Center style={{ flex: 1 }}>
-          <Text c="red">
+          <Text c="var(--color-red-dark)">
             {t(
               "viewer.error.noFileProvided",
               "Error: No file provided to viewer",
@@ -1266,7 +1226,7 @@ const EmbedPdfViewerContent = ({
       ) : isCurrentFileEncrypted ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
-            <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
+            <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
             <Text fw={500}>
               {t(
                 "encryptedPdfUnlock.viewerLocked",
@@ -1318,10 +1278,11 @@ const EmbedPdfViewerContent = ({
               showBakedAnnotations={isAnnotationsVisible}
               enableRedaction={shouldEnableRedaction}
               enableFormFill={shouldEnableFormFill}
+              formEditingActive={isFormFillToolActive}
               isManualRedactionMode={isManualRedactMode}
-              signatureApiRef={signatureApiRef as React.RefObject<any>}
-              annotationApiRef={annotationApiRef as React.RefObject<any>}
-              historyApiRef={historyApiRef as React.RefObject<any>}
+              signatureApiRef={signatureApiRef}
+              annotationApiRef={annotationApiRef}
+              historyApiRef={historyApiRef}
               redactionTrackerRef={
                 redactionTrackerRef as React.RefObject<RedactionPendingTrackerAPI>
               }
@@ -1353,11 +1314,22 @@ const EmbedPdfViewerContent = ({
               signatureConfig={signatureConfig}
             />
             <RulerOverlay
+              ref={rulerOverlayRef}
               containerRef={pdfContainerRef}
               isActive={isRulerActive}
               pageMeasureScales={pageMeasureScales}
+              customScale={customScale}
+              isCalibrationActive={isScaleCalibrationActive}
+              onCalibrationMeasure={handleScaleCalibrationMeasurement}
             />
           </Box>
+          <ScaleCalibrationDialog
+            opened={!!scaleCalibrationMeasurement}
+            measurement={scaleCalibrationMeasurement}
+            defaultUnit={customScale?.unit ?? "m"}
+            onApplyScale={applyScaleCalibration}
+            onClose={cancelScaleCalibration}
+          />
         </>
       )}
 
@@ -1400,13 +1372,15 @@ const EmbedPdfViewerContent = ({
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
       />
-      <AttachmentSidebar
-        visible={isAttachmentSidebarVisible}
-        thumbnailVisible={isThumbnailSidebarVisible}
-        bookmarkVisible={isBookmarkSidebarVisible}
-        documentCacheKey={bookmarkCacheKey}
-        preloadCacheKeys={allBookmarkCacheKeys}
-      />
+      {!portfolioPinned && (
+        <AttachmentSidebar
+          visible={isAttachmentSidebarVisible}
+          thumbnailVisible={isThumbnailSidebarVisible}
+          bookmarkVisible={isBookmarkSidebarVisible}
+          documentCacheKey={bookmarkCacheKey}
+          preloadCacheKeys={allBookmarkCacheKeys}
+        />
+      )}
       <LayerSidebar
         visible={isLayerSidebarVisible}
         rightOffset={

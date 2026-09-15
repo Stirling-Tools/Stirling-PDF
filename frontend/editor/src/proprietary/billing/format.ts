@@ -33,7 +33,7 @@ export function formatMinor(
   minor: number,
   currency: string | null | undefined,
 ): string {
-  const num = new Intl.NumberFormat(undefined, {
+  const num = new Intl.NumberFormat("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 3,
   }).format(minor / 100);
@@ -45,14 +45,14 @@ export function formatMoneyMajor(
   major: number,
   currency: string | null | undefined,
 ): string {
-  return `${currencySymbol(currency)}${major.toLocaleString()}`;
+  return `${currencySymbol(currency)}${major.toLocaleString("en-US")}`;
 }
 
 /**
  * Paid PDFs a monthly cap buys — mirror of the backend's {@code docCapForMoney}:
- * floor(capMinor / rate). The one-time free grant is a separate lifetime pool and
- * is NOT added here. Returns null when there's no cap or no resolvable rate (the
- * caller hides the estimate).
+ * floor(capMinor / rate). The free grant is a separate per-period pool and is NOT
+ * added here. Returns null when there's no cap or no resolvable rate (the caller
+ * hides the estimate).
  */
 export function docCapForMoney(
   capUsdMajor: number | null,
@@ -87,8 +87,6 @@ export function formatPeriodDate(
     return datePart;
   }
 }
-
-// ─── Prepaid bundle pricing (run-based brain) ───────────────────────────────
 
 /**
  * "12 months for the price of 10" — months granted vs paid. Mirrors the Stripe
@@ -292,6 +290,29 @@ export function computeBundleQuote(
 }
 
 export type MeterState = "FULL" | "WARNED" | "DEGRADED";
+
+/**
+ * Meter for a balance that is spent DOWN — a free grant, a prepaid pool. The
+ * bar shows what is LEFT, so full reads as "plenty" and empty as "none", which
+ * is how the sidebar footer's credits row reads and the only direction that
+ * matches a figure quoting the remainder.
+ *
+ * The state bands still key on consumption, so the tone is unchanged: amber
+ * once 80% is gone, red once it's exhausted. Meters for money SPENT against a
+ * cap keep using {@link meterState} directly — there a full bar correctly means
+ * "at your ceiling".
+ */
+export function remainingMeter(
+  remaining: number,
+  total: number,
+): { state: MeterState; pct: number } {
+  const { state } = meterState(Math.max(0, total - remaining), total);
+  const pct =
+    total > 0
+      ? Math.min(100, Math.max(0, (Math.max(0, remaining) / total) * 100))
+      : 0;
+  return { state, pct };
+}
 
 /** Warn (≥80%) / degrade (≥100%) band for a usage meter; mirrors the BE thresholds. */
 export function meterState(

@@ -13,6 +13,8 @@ import {
 import { StirlingFile } from "@app/types/fileContext";
 import type { TooltipTip } from "@app/types/tips";
 import type { ExecuteDisabledReason } from "@app/hooks/tools/shared/toolOperationTypes";
+import classes from "@app/components/tools/shared/createToolFlow.module.css";
+import { ToolFileEligibility } from "@app/contexts/ToolFileEligibilityContext";
 
 export interface FilesStepConfig {
   selectedFiles: StirlingFile[];
@@ -102,6 +104,13 @@ export function createToolFlow<TParams = unknown>(
 
   return (
     <Stack gap="sm" p="sm">
+      <ToolFileEligibility
+        files={
+          config.files.isVisible === false || config.review.isVisible
+            ? null
+            : config.files.selectedFiles
+        }
+      />
       {/* <Stack gap="sm" p="sm" h="100%" w="100%" style={{ overflow: 'auto' }}> */}
       <ToolStepProvider forceStepNumbers={config.forceStepNumbers}>
         {config.title && <ToolWorkflowTitle {...config.title} />}
@@ -140,7 +149,9 @@ export function createToolFlow<TParams = unknown>(
           config.executeButton.isVisible !== false &&
           (() => {
             const eb = config.executeButton;
-            const hasFiles = (config.files.selectedFiles?.length ?? 0) > 0;
+            const hasFiles =
+              (config.files.selectedFiles?.length ?? 0) >=
+              (config.files.minFiles ?? 1);
             // Compute the disabled reason from structured fields; explicit disabledReason wins if set.
             const effectiveDisabledReason: ExecuteDisabledReason =
               eb.disabledReason !== undefined
@@ -152,8 +163,14 @@ export function createToolFlow<TParams = unknown>(
                     : eb.paramsValid === false
                       ? "invalidParams"
                       : null;
+            // Pin the action only while it is the last thing in the flow; with a
+            // review below it, a sticky footer would float over the results.
             return (
-              <>
+              <div
+                className={
+                  config.review.isVisible ? undefined : classes.executeFooter
+                }
+              >
                 <ScopedOperationButton
                   selectedFiles={config.files.selectedFiles ?? []}
                   disableScopeHints={eb.disableScopeHints}
@@ -172,7 +189,7 @@ export function createToolFlow<TParams = unknown>(
                   data-tour="run-button"
                 />
                 {config.belowExecuteButton}
-              </>
+              </div>
             );
           })()}
 

@@ -46,7 +46,7 @@ export function FileSidebarGroupControls({
       const ids = new Set<string>();
       for (const key of category.labelKeys) {
         for (const stub of byLabel.get(key)?.stubs ?? []) {
-          ids.add(stub.id as string);
+          ids.add(stub.id);
         }
       }
       counts.set(category.id, ids.size);

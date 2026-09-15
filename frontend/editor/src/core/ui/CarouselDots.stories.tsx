@@ -36,11 +36,14 @@ export const Interactive: Story = {
 export const Default: Story = { args: { activeIndex: 1 } };
 
 /** White dots for use over dark photography (auth carousel). */
+// Stand-in for the photo the onImage tone is designed to sit on.
+const IMAGE_BG = "#1e293b"; // theme-allow-color photo stand-in
+
 export const OnImage: Story = {
   args: { activeIndex: 1, tone: "onImage" },
   decorators: [
     (S) => (
-      <div style={{ background: "#1e293b", padding: "2rem", borderRadius: 12 }}>
+      <div style={{ background: IMAGE_BG, padding: "2rem", borderRadius: 12 }}>
         <S />
       </div>
     ),

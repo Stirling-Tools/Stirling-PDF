@@ -32,18 +32,9 @@ import { useNavigationActions } from "@app/contexts/NavigationContext";
 import {
   WATCHED_FOLDER_VIEW_ID,
   WATCHED_FOLDER_WORKBENCH_ID,
-} from "@app/components/watchedFolders/WatchedFoldersRegistration";
-import { timeAgo } from "@app/components/watchedFolders/WatchedFolderWorkbenchView";
+  timeAgo,
+} from "@app/components/watchedFolders/watchedFolderShared";
 import "@app/components/watchedFolders/WatchedFolders.css";
-
-export function humaniseOp(op: string): string {
-  return op
-    .replace(/-pdf$|-pages$|-documents?$/i, "")
-    .replace(/[-_]/g, " ")
-    .replace(/\bocr\b/gi, "OCR")
-    .replace(/\b\w/g, (c) => c.toUpperCase())
-    .trim();
-}
 
 interface FolderCardProps {
   folder: WatchedFolder;
@@ -328,7 +319,7 @@ function HowItWorks() {
           <InfoOutlinedIcon
             style={{
               fontSize: "1rem",
-              color: "var(--mantine-color-blue-filled)",
+              color: "var(--c-accent-text)",
             }}
           />
           <Text fw={600} size="xs">
@@ -367,7 +358,7 @@ function HowItWorks() {
                 height: "1.375rem",
                 borderRadius: "50%",
                 backgroundColor: "var(--mantine-color-blue-light)",
-                color: "var(--mantine-color-blue-filled)",
+                color: "var(--c-accent-text)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",

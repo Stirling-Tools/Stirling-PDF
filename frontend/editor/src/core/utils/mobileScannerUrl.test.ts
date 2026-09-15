@@ -9,9 +9,50 @@
  */
 
 import { describe, test, expect } from "vitest";
-import { buildMobileScannerUrl } from "@app/utils/mobileScannerUrl";
+import {
+  buildMobileRouteUrl,
+  buildMobileScannerUrl,
+} from "@app/utils/mobileScannerUrl";
 
 const sessionId = "abc-123";
+
+describe("buildMobileRouteUrl", () => {
+  test("routes other mobile pages (mobile-sign) with the base path", () => {
+    expect(
+      buildMobileRouteUrl({
+        configuredUrl: "https://app.stirlingpdf.com",
+        sessionId,
+        origin: "https://app.stirlingpdf.com",
+        basePath: "/app",
+        routePath: "mobile-sign",
+      }),
+    ).toBe("https://app.stirlingpdf.com/app/mobile-sign?session=abc-123");
+  });
+
+  test("configured URL with subpath keeps the route un-doubled", () => {
+    expect(
+      buildMobileRouteUrl({
+        configuredUrl: "https://host.example/app/",
+        sessionId,
+        origin: "https://elsewhere.example",
+        basePath: "/app",
+        routePath: "mobile-sign",
+      }),
+    ).toBe("https://host.example/app/mobile-sign?session=abc-123");
+  });
+
+  test("no configured URL falls back to origin + base path", () => {
+    expect(
+      buildMobileRouteUrl({
+        configuredUrl: "",
+        sessionId,
+        origin: "http://192.168.1.20:8080",
+        basePath: "",
+        routePath: "mobile-sign",
+      }),
+    ).toBe("http://192.168.1.20:8080/mobile-sign?session=abc-123");
+  });
+});
 
 describe("buildMobileScannerUrl", () => {
   test("origin-only frontendUrl keeps the app base path (SaaS web regression)", () => {

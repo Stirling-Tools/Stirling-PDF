@@ -11,6 +11,8 @@ public enum AuditEventType {
     USER_FAILED_LOGIN("Failed login attempt"),
 
     // User/admin events - BASIC level
+    ORG_OWNERSHIP_CHANGE("Organization ownership changed"),
+
     USER_PROFILE_UPDATE("User or profile operation"),
 
     // System configuration events - STANDARD level
@@ -18,6 +20,9 @@ public enum AuditEventType {
 
     // File operations - STANDARD level
     FILE_OPERATION("File operation"),
+
+    // Storage encryption at rest - STANDARD level
+    STORAGE_ENCRYPTION("Storage encryption operation"),
 
     // PDF operations - STANDARD level
     PDF_PROCESS("PDF processing operation"),

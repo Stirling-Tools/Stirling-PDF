@@ -5,9 +5,15 @@
 import { FileId } from "@app/types/file";
 import {
   FileContextAction,
+  FileContextState,
   StirlingFileStub,
   ProcessedFilePage,
 } from "@app/types/fileContext";
+import {
+  forgetFile,
+  noteFileSaved,
+  persistedSourceFields,
+} from "@app/contexts/file/storedFileReconciler";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -49,8 +55,9 @@ export class FileLifecycleManager {
    */
   cleanupFile = (
     fileId: FileId,
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
+    forgetFile(fileId);
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
@@ -87,7 +94,7 @@ export class FileLifecycleManager {
   scheduleCleanup = (
     fileId: FileId,
     delay: number = 30000,
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
     // Cancel existing timer
     const existingTimer = this.cleanupTimers.get(fileId);
@@ -126,9 +133,10 @@ export class FileLifecycleManager {
    */
   removeFiles = (
     fileIds: FileId[],
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
     fileIds.forEach((fileId) => {
+      forgetFile(fileId);
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
     });
@@ -142,7 +150,7 @@ export class FileLifecycleManager {
    */
   private cleanupAllResourcesForFile = (
     fileId: FileId,
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
     // Remove from files ref
     this.filesRef.current.delete(fileId);
@@ -180,7 +188,7 @@ export class FileLifecycleManager {
   updateStirlingFileStub = (
     fileId: FileId,
     updates: Partial<StirlingFileStub>,
-    stateRef?: React.MutableRefObject<any>,
+    stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
     // Guard against updating removed files (race condition protection)
     if (!this.filesRef.current.has(fileId)) {
@@ -202,6 +210,29 @@ export class FileLifecycleManager {
       type: "UPDATE_FILE_RECORD",
       payload: { id: fileId, updates },
     });
+
+    // Fire-and-forget: the dispatch above is what the UI reads, and a storage
+    // hiccup must not stall it. Worst case the link reverts to its stored value.
+    const linkUpdates = persistedSourceFields(updates);
+    if (linkUpdates) {
+      void import("@app/services/fileStorage")
+        .then(({ fileStorage }) =>
+          fileStorage.updateFileMetadata(fileId, linkUpdates),
+        )
+        .catch((error) =>
+          console.error(
+            `[Lifecycle] Failed to persist disk link for ${fileId}:`,
+            error,
+          ),
+        );
+    }
+
+    noteFileSaved(fileId, updates, (patch) =>
+      this.dispatch({
+        type: "UPDATE_FILE_RECORD",
+        payload: { id: fileId, updates: patch },
+      }),
+    );
   };
 
   /**

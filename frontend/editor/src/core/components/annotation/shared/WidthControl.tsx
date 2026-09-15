@@ -1,7 +1,7 @@
 import { Tooltip, Popover, Stack, Slider, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import LineWeightIcon from "@mui/icons-material/LineWeight";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 
 interface WidthControlProps {
@@ -34,7 +34,7 @@ export function WidthControl({
             onClick={() => setOpened(!opened)}
             disabled={disabled}
           >
-            <LineWeightIcon style={{ fontSize: 18 }} />
+            <Icon name="line-weight" size={18} />
           </ActionIcon>
         </Tooltip>
       </Popover.Target>

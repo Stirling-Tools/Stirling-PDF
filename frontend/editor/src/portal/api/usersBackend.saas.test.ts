@@ -31,7 +31,7 @@ vi.mock("@portal/auth/saasSupabase", () => ({ ensureSaasSupabase: vi.fn() }));
 // The SaaS usersBackend lives under src/saas; the portal vitest project resolves
 // @app to proprietary (there's no @saas alias here), so the SaaS impl can only be
 // exercised by importing it directly by path.
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import { usersBackend } from "../../saas/portal/usersBackend";
 
 const server = setupServer(...teamSaasHandlers);
@@ -199,4 +199,31 @@ describe("saas usersBackend — mutations hit SaasTeamController", () => {
     expect(seenUrl).toContain("/api/v1/team/invitations/101");
     server.events.removeAllListeners();
   });
+});
+
+it("keeps the active shared team after leadership is transferred", async () => {
+  server.use(
+    http.get("*/api/v1/team/my", () =>
+      HttpResponse.json([
+        {
+          teamId: 71,
+          name: "Personal",
+          isLeader: true,
+          isPersonal: true,
+          current: false,
+          currentUserId: 99,
+        },
+        {
+          teamId: 72,
+          name: "Active shared team",
+          isLeader: false,
+          isPersonal: false,
+          current: true,
+          currentUserId: 99,
+        },
+      ]),
+    ),
+  );
+  const teams = await usersBackend.fetchTeams();
+  expect(teams.map((team) => team.id)).toEqual([72]);
 });

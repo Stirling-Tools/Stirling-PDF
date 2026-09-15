@@ -3,9 +3,6 @@
  */
 
 export const AUTOMATION_CONSTANTS = {
-  // Timeouts
-  OPERATION_TIMEOUT: 300000, // 5 minutes in milliseconds
-
   // Default values
   DEFAULT_TOOL_COUNT: 2,
   MIN_TOOL_COUNT: 2,

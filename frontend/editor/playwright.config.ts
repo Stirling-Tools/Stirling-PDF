@@ -17,10 +17,23 @@ import { defineConfig, devices } from "@playwright/test";
  *
  * @see https://playwright.dev/docs/test-configuration
  */
+/** Shared by every stubbed project so a spec sees one layout on all engines. */
+const STUBBED_VIEWPORT = { width: 1920, height: 1080 };
+
 const chromiumViewport = {
   ...devices["Desktop Chrome"],
-  viewport: { width: 1920, height: 1080 },
+  viewport: STUBBED_VIEWPORT,
 };
+
+// Dedicated dev-server port via V2_PORT so local runs don't collide with a
+// vite already on 5173 from other parallel work. Defaults to 5173.
+const DEV_PORT = process.env.V2_PORT ?? "5173";
+
+// The disk-link suite needs `--mode desktop`: on any other build the file-link
+// seam is the core no-op, nothing reconciles, and every spec in it skips. Its
+// own port so it can run beside a dev server already on DEV_PORT.
+const DESKTOP_PORT = process.env.V2_DESKTOP_PORT ?? "5273";
+const DISK_LINK_SPECS = /disk-link-.*\.spec\.ts/;
 
 export default defineConfig({
   testDir: "./src/core/tests",
@@ -46,7 +59,7 @@ export default defineConfig({
   expect: { timeout: 10_000 },
 
   use: {
-    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
     trace: "on-first-retry",
     screenshot: "only-on-failure",
     video: "on-first-retry",
@@ -55,11 +68,25 @@ export default defineConfig({
   },
 
   projects: [
-    // Stubbed - no backend required, chromium-only for CI speed
+    // Stubbed - no backend required. The chromium arm of the cross-browser
+    // set below; CI fans all three out, one job per engine.
     {
       name: "stubbed",
       testDir: "./src/core/tests/stubbed",
+      testIgnore: DISK_LINK_SPECS,
       use: chromiumViewport,
+    },
+
+    // Desktop-mode arm of the stubbed suite. Separate project because it needs
+    // its own server: the seam it exercises is chosen at build time.
+    {
+      name: "stubbed-desktop",
+      testDir: "./src/core/tests/stubbed",
+      testMatch: DISK_LINK_SPECS,
+      use: {
+        ...chromiumViewport,
+        baseURL: `http://localhost:${DESKTOP_PORT}`,
+      },
     },
 
     // Live setup - runs once before the live suite to perform the real
@@ -93,29 +120,52 @@ export default defineConfig({
       },
     },
 
-    // Cross-browser coverage for the stubbed suite (opt-in locally)
+    // Cross-browser coverage for the stubbed suite. Same viewport as `stubbed`,
+    // or a layout difference here reads as an engine outage.
     {
       name: "stubbed-firefox",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Firefox"] },
+      testIgnore: DISK_LINK_SPECS,
+      use: { ...devices["Desktop Firefox"], viewport: STUBBED_VIEWPORT },
     },
     {
       name: "stubbed-webkit",
       testDir: "./src/core/tests/stubbed",
-      use: { ...devices["Desktop Safari"] },
+      testIgnore: DISK_LINK_SPECS,
+      // Desktop Safari ships deviceScaleFactor 2; the editor now renders
+      // bitmaps at dpr x zoom, so leaving it would 4x every page raster in
+      // this suite. The HiDPI spec opts into 2x deliberately where it matters.
+      use: {
+        ...devices["Desktop Safari"],
+        viewport: STUBBED_VIEWPORT,
+        deviceScaleFactor: 1,
+      },
     },
   ],
 
-  webServer: {
-    // In CI, serve a pre-built `dist/` via `vite preview` so the heavy tool
-    // pages don't pay vite's on-demand transform cost on first hit (which
-    // blew the 30s navigationTimeout under --workers=3 - see
-    // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
-    command: process.env.CI
-      ? "npx vite preview --port 5173 --strictPort"
-      : "npx vite",
-    url: "http://localhost:5173",
-    reuseExistingServer: !process.env.CI,
-    timeout: 120_000,
-  },
+  // PW_DESKTOP picks the desktop-mode server instead of the default one, so a
+  // normal run never pays for a second build it has no project for.
+  webServer:
+    process.env.PW_DESKTOP === "1"
+      ? {
+          command: process.env.CI
+            ? `npx vite preview --outDir dist-desktop --port ${DESKTOP_PORT} --strictPort`
+            : `npx vite --mode desktop --port ${DESKTOP_PORT} --strictPort`,
+          url: `http://localhost:${DESKTOP_PORT}`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        }
+      : {
+          // In CI, serve a pre-built `dist/` via `vite preview` so the heavy tool
+          // pages don't pay vite's on-demand transform cost on first hit (which
+          // blew the 30s navigationTimeout under --workers=3 - see
+          // all-tool-pages-load.spec.ts). Locally, keep `vite` dev for HMR.
+          command: process.env.CI
+            ? `npx vite preview --port ${DEV_PORT} --strictPort`
+            : `npx vite --port ${DEV_PORT} --strictPort`,
+          url:
+            process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${DEV_PORT}`,
+          reuseExistingServer: !process.env.CI,
+          timeout: 120_000,
+        },
 });

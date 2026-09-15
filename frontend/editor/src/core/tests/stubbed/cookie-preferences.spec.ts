@@ -1,7 +1,11 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import { openSettings } from "@app/tests/helpers/ui-helpers";
+import {
+  openSettings,
+  expandSettingsGroups,
+} from "@app/tests/helpers/ui-helpers";
 
 test.describe("18. Cookie Preferences", () => {
+  test.use({ stubOptions: { enableAnalytics: true } });
   test.describe("18.1 Cookie Banner", () => {
     test("should open and configure cookie preferences from Settings → Legal", async ({
       page,
@@ -10,18 +14,19 @@ test.describe("18. Cookie Preferences", () => {
       await page.route("**/api/v1/ui-data/footer-info", (route) =>
         route.fulfill({ json: { analyticsEnabled: true } }),
       );
-      await page.goto("/");
+      await page.goto("/editor");
 
-      // Step 1: The "Cookie Preferences" button lives in Settings → Legal
+      // Step 1: The "Cookie Preferences" button lives in Settings → Legal,
+      // inside the "About" group the page ships folded.
       await openSettings(page);
-      const legalNav = page.locator('[data-tour="admin-legal-nav"]').first();
+      await expandSettingsGroups(page);
+      const legalNav = page.locator('[data-tour="admin-about-nav"]').first();
       await expect(legalNav).toBeVisible({ timeout: 5000 });
       await legalNav.click();
 
       const cookieButton = page.locator("#cookieBanner").first();
       await expect(cookieButton).toBeVisible({ timeout: 10000 });
 
-      // The consent library lazy-loads when the Legal section mounts
       await page.waitForFunction(
         () => (window as unknown as { CookieConsent?: unknown }).CookieConsent,
         { timeout: 10000 },

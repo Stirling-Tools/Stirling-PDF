@@ -70,6 +70,33 @@
           "arity": "SISO"
         }
       ]
+    },
+    "autoRotateShape": {
+      "accepts": ["PDF"],
+      "produces": "PDF",
+      "arity": "SISO",
+      "cases": [
+        {
+          "when": [{ "param": "dryRun", "matches": ["true"], "default": "false" }],
+          "produces": "JSON",
+          "arity": "SISO"
+        }
+      ]
+    },
+    "changePermsShape": {
+      "accepts": ["PDF"],
+      "produces": "PDF_ENCRYPTED",
+      "arity": "SISO",
+      "cases": [
+        {
+          "when": [
+            { "param": "password", "matches": [""], "default": "" },
+            { "param": "ownerPassword", "matches": [""], "default": "" }
+          ],
+          "produces": "PDF",
+          "arity": "SISO"
+        }
+      ]
     }
   },
   "cases": [
@@ -249,6 +276,35 @@
         { "spec": "imageToPdf" }
       ],
       "expected": [{ "stepIndex": 1, "severity": "INFO", "code": "fan-in" }]
+    },
+    {
+      "name": "an absent parameter takes its default, which here does not trigger the case",
+      "steps": [{ "spec": "autoRotateShape" }, { "spec": "pdfToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "an explicit value overrides the default and triggers the case",
+      "steps": [
+        { "spec": "autoRotateShape", "parameters": { "dryRun": "true" } },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
+    },
+    {
+      "name": "an absent parameter whose default triggers the case resolves to that branch",
+      "steps": [{ "spec": "changePermsShape" }, { "spec": "pdfToPdf" }],
+      "expected": []
+    },
+    {
+      "name": "setting the branch parameter away from its default flips the outcome",
+      "steps": [
+        {
+          "spec": "changePermsShape",
+          "parameters": { "password": "hunter2", "ownerPassword": "hunter2" }
+        },
+        { "spec": "pdfToPdf" }
+      ],
+      "expected": [{ "stepIndex": 1, "severity": "ERROR", "code": "format-mismatch" }]
     },
     {
       "name": "an undeclared step warns and stops the chain being checked past it",

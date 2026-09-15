@@ -330,7 +330,7 @@ public class PDFToFile {
 
                 if (outputFiles.size() == 1) {
                     // Return single output file
-                    File outputFile = outputFiles.get(0);
+                    File outputFile = outputFiles.getFirst();
                     if ("txt:Text".equals(outputFormat)) {
                         outputFormat = "txt";
                     }

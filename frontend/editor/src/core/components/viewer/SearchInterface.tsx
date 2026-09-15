@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Box, TextInput, Text, Group } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { ViewerContext } from "@app/contexts/ViewerContext";
 
@@ -13,12 +13,15 @@ interface SearchInterfaceProps {
 export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
   const { t } = useTranslation();
   const viewerContext = React.useContext(ViewerContext);
+  const viewerContextRef = useRef(viewerContext);
+
+  useEffect(() => {
+    viewerContextRef.current = viewerContext;
+  }, [viewerContext]);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const searchTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const searchState = viewerContext?.getSearchState();
-  const searchResults = searchState?.results;
-  const searchActiveIndex = searchState?.activeIndex;
   const searchActions = viewerContext?.searchActions;
   const [searchQuery, setSearchQuery] = useState("");
   const [jumpToValue, setJumpToValue] = useState("");
@@ -89,7 +92,11 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     if (!visible) return;
 
     const checkSearchState = () => {
-      // Use ViewerContext state instead of window APIs
+      // Fetch fresh search state from ViewerContext ref to avoid closure stale values
+      const searchState = viewerContextRef.current?.getSearchState();
+      const searchResults = searchState?.results;
+      const searchActiveIndex = searchState?.activeIndex;
+
       if (searchResults && searchResults.length > 0) {
         const activeIndex = searchActiveIndex || 1;
 
@@ -115,7 +122,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
     const interval = setInterval(checkSearchState, 200);
 
     return () => clearInterval(interval);
-  }, [visible, searchResults, searchActiveIndex, searchQuery]);
+  }, [visible, searchQuery]);
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
@@ -206,7 +213,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
           onClick={handleCloseClick}
           aria-label={t("viewer.search.close", "Close search")}
         >
-          <LocalIcon icon="close" width="1rem" height="1rem" />
+          <Icon name="x" size="1rem" />
         </ActionIcon>
       </Group>
 
@@ -230,7 +237,7 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
                 onClick={handleClearSearch}
                 aria-label={t("viewer.search.clear", "Clear search")}
               >
-                <LocalIcon icon="close" width="0.875rem" height="0.875rem" />
+                <Icon name="x" size="0.875rem" />
               </ActionIcon>
             )
           }
@@ -279,21 +286,19 @@ export function SearchInterface({ visible, onClose }: SearchInterfaceProps) {
             variant="tertiary"
             size="sm"
             onClick={handlePrevious}
-            disabled={!resultInfo || resultInfo.currentIndex <= 1}
+            disabled={!resultInfo || resultInfo.totalResults === 0}
             aria-label={t("viewer.search.previous", "Previous result")}
           >
-            <LocalIcon icon="keyboard-arrow-up" width="1rem" height="1rem" />
+            <Icon name="chevron-up" size="1rem" />
           </ActionIcon>
           <ActionIcon
             variant="tertiary"
             size="sm"
             onClick={handleNext}
-            disabled={
-              !resultInfo || resultInfo.currentIndex >= resultInfo.totalResults
-            }
+            disabled={!resultInfo || resultInfo.totalResults === 0}
             aria-label={t("viewer.search.next", "Next result")}
           >
-            <LocalIcon icon="keyboard-arrow-down" width="1rem" height="1rem" />
+            <Icon name="chevron-down" size="1rem" />
           </ActionIcon>
         </Group>
       </Group>

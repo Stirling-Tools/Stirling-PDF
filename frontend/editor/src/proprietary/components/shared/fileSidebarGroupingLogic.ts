@@ -56,7 +56,7 @@ export function buildLabelGroups(
     if (members.length === 0) continue;
     visible.push({
       id: `category:${category.id}`,
-      label: category.name,
+      label: t(`classification.families.${category.id}`, category.name),
       icon: category.icon,
       stubs: members,
       defaultExpanded: false,
@@ -70,7 +70,7 @@ export function buildLabelGroups(
   // Other = files in no visible group: unlabelled, or labelled only under hidden categories.
   const covered = new Set<string>();
   for (const group of visible) {
-    for (const stub of group.stubs) covered.add(stub.id as string);
+    for (const stub of group.stubs) covered.add(stub.id);
   }
   const other = stubs.filter((stub) => !covered.has(stub.id as string));
 
@@ -78,7 +78,7 @@ export function buildLabelGroups(
     {
       id: "recent",
       label: t("fileSidebar.recent", "Recent"),
-      icon: "history",
+      icon: "rotate-ccw-clock",
       stubs: recent,
       defaultExpanded: true,
     },

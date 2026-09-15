@@ -15,6 +15,7 @@ import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { DocumentsIcon } from "@portal/components/icons";
 import { ReviewQueueTable } from "@portal/components/documents/ReviewQueueTable";
 import { DocumentDrawer } from "@portal/components/documents/DocumentDrawer";
+import { SourceModal } from "@portal/components/sources/SourceModal";
 
 type QueueFilter = "all" | "flagged" | "processed" | "in-review";
 
@@ -55,6 +56,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
   const [filter, setFilter] = useState<QueueFilter>("all");
   const [query, setQuery] = useState("");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [connectSourceOpen, setConnectSourceOpen] = useState(false);
 
   const searched = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -156,9 +158,7 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
               </Button>
               <Button
                 variant="secondary"
-                onClick={() =>
-                  navigate(`${toPortalPath(VIEW_PATHS.sources)}/new`)
-                }
+                onClick={() => setConnectSourceOpen(true)}
               >
                 {t("portal.documents.queue.empty.connectSource")}
               </Button>
@@ -175,6 +175,12 @@ export function ReviewQueue({ documents, loading }: ReviewQueueProps) {
       )}
 
       <DocumentDrawer doc={selected} onClose={() => setSelectedId(null)} />
+
+      <SourceModal
+        open={connectSourceOpen}
+        sourceId={null}
+        onClose={() => setConnectSourceOpen(false)}
+      />
     </div>
   );
 }

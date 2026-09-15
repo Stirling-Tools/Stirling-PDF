@@ -1,10 +1,14 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { AppProviders as ProprietaryAppProviders } from "@proprietary/components/AppProviders";
 import { DesktopConfigSync } from "@app/components/DesktopConfigSync";
+import { WindowTitleBar } from "@app/components/WindowTitleBar";
+import { DesktopQueryCacheReset } from "@app/components/DesktopQueryCacheReset";
 import { DesktopBannerInitializer } from "@app/components/DesktopBannerInitializer";
 import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
+import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
 import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
+import { ClassificationBackgroundRunner } from "@app/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { SignInModal } from "@app/components/SignInModal";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
@@ -61,6 +65,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
   // tree to remount without a full page reload (avoids Windows WebView2 freeze on window.location.reload()).
   const [appKey, setAppKey] = useState(0);
   const hasLoadedInitialMode = useRef(false);
+
+  // Files dropped outside a dropzone must never navigate the webview to the
+  // file (Linux WebKit renders the PDF fullscreen and orphans the app UI).
+  // Dropzone-level handlers run before these window-level listeners, so
+  // in-app drag & drop is unaffected.
+  useEffect(() => {
+    const preventNavigation = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", preventNavigation);
+    window.addEventListener("drop", preventNavigation);
+    return () => {
+      window.removeEventListener("dragover", preventNavigation);
+      window.removeEventListener("drop", preventNavigation);
+    };
+  }, []);
 
   // Load connection mode on mount and subscribe to future changes
   useEffect(() => {
@@ -311,6 +329,9 @@ export function AppProviders({ children }: { children: ReactNode }) {
           autoFetch: false,
         }}
       >
+        {/* Also here: the auth check below switches mode pre-authChecked. */}
+        <DesktopQueryCacheReset />
+        <WindowTitleBar />
         <div style={{ minHeight: "100vh" }} />
         {updatePopupModal}
       </ProprietaryAppProviders>
@@ -336,16 +357,20 @@ export function AppProviders({ children }: { children: ReactNode }) {
             window.dispatchEvent(new CustomEvent(OPEN_SIGN_IN_EVENT)),
         }}
       >
+        <DesktopQueryCacheReset />
+        <WindowTitleBar />
         <SaaSTeamProvider key={appKey}>
           <DesktopConfigSync />
           <DesktopBannerInitializer />
           <SaveShortcutListener />
+          <DiskConflictHost />
           {children}
           {/* Desktop onboarding modal: welcome slide → sign-in slide, shown once on first launch */}
           <DesktopOnboardingModal />
           {/* SaaS product onboarding (cloud flow, minus the desktop-download slide),
               shown once after a SaaS sign-in. Mirrors saas's OnboardingBootstrap. */}
           <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
+          <ClassificationBackgroundRunner />
           {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
               spend-cap). Resolves to the cloud implementation via @app; listens
               for both the imperative open events (direct-call 402s) and the

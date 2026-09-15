@@ -13,6 +13,7 @@ import {
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAllWatchedFolders } from "@app/hooks/useAllWatchedFolders";
 import { slugify } from "@app/utils/slug";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 
 // Inlined to avoid circular imports — must match WatchedFoldersRegistration.tsx
 const WATCHED_FOLDER_VIEW_ID = "watchedFolder";
@@ -160,7 +161,7 @@ export function useWatchedFolderUrlSync() {
         window.history.pushState(null, "", targetPath);
       }
     } else if (prevIsWatchedFolder.current && isWatchedFolderUrl()) {
-      window.history.pushState(null, "", withBasePath("/"));
+      window.history.pushState(null, "", withBasePath(EDITOR_BASENAME));
     }
     prevIsWatchedFolder.current = isWatchedFolderWorkbench;
   }, [isWatchedFolderWorkbench, folderId, idToSlug]);

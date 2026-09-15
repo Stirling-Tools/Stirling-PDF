@@ -54,13 +54,9 @@ def sort_file(path: str, fix: bool) -> bool:
     try:
         reordered = tomllib.loads(expected)
     except tomllib.TOMLDecodeError as exc:
-        raise SortError(
-            f"{path}: refusing to sort, the sorted output is not valid TOML: {exc}"
-        ) from exc
+        raise SortError(f"{path}: refusing to sort, the sorted output is not valid TOML: {exc}") from exc
     if reordered != original:
-        raise SortError(
-            f"{path}: refusing to sort, sorting would change the file's contents"
-        )
+        raise SortError(f"{path}: refusing to sort, sorting would change the file's contents")
 
     if fix:
         Path(path).write_text(expected, encoding="utf-8")

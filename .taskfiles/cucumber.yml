@@ -1,0 +1,44 @@
+version: '3'
+
+tasks:
+  install:
+    desc: "Sync the Python environment with the cucumber test dependencies"
+    run: once
+    # Deliberately no sources/status fingerprint: the engine venv is shared, so it can
+    # already exist while synced to a different dependency group. uv no-ops when correct.
+    cmds:
+      - uv sync --project ../../engine --locked --group cucumber
+
+  run:
+    desc: "Run the cucumber suite against a running server (BASE_URL, default localhost:8080)"
+    deps: [install]
+    cmds:
+      - uv run --project ../../engine --locked --group cucumber python -m behave --no-capture -f plain {{.CLI_ARGS}}
+
+  nightly:
+    desc: "Run the @nightly cucumber scenarios, excluded from the default run"
+    summary: |
+      Heavy LibreOffice/Calibre/Ghostscript conversions. behave.ini excludes @nightly,
+      so this opts back in explicitly.
+
+      Pass extra behave flags via -- :
+        task cucumber:nightly -- --tags=@convert
+    deps: [install]
+    cmds:
+      - uv run --project ../../engine --locked --group cucumber python -m behave --tags=@nightly --no-capture -f plain {{.CLI_ARGS}}
+
+  parallel:
+    desc: "Run the cucumber suite as concurrent shards against one server (SHARDS, default 10)"
+    summary: |
+      Splits the feature files across SHARDS concurrent behave processes hitting a single
+      backend, to shake out cross-request interference. Auth-coupled features are pinned
+      to one shard because they change the admin password mid-scenario.
+
+        task cucumber:parallel
+        task cucumber:parallel SHARDS=4
+        BASE_URL=http://localhost:8081 task cucumber:parallel
+    deps: [install]
+    vars:
+      SHARDS: '{{.SHARDS | default "10"}}'
+    cmds:
+      - bash run-parallel.sh {{.SHARDS}} {{if .CLI_ARGS}}-- {{.CLI_ARGS}}{{end}}

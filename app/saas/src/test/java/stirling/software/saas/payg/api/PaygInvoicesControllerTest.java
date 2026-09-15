@@ -31,6 +31,7 @@ import stirling.software.saas.payg.api.PaygInvoicesController.InvoiceResponse;
 import stirling.software.saas.payg.policy.PaygTeamExtensions;
 import stirling.software.saas.payg.repository.PaygTeamExtensionsRepository;
 import stirling.software.saas.payg.stripe.StripeInvoiceDao;
+import stirling.software.saas.security.UserTeamResolver;
 import stirling.software.saas.util.AuthenticationUtils;
 
 /**
@@ -51,7 +52,9 @@ class PaygInvoicesControllerTest {
 
     @BeforeEach
     void setUp() {
-        controller = new PaygInvoicesController(invoiceDao, extRepo, memberRepo, userRepository);
+        controller =
+                new PaygInvoicesController(
+                        invoiceDao, extRepo, new UserTeamResolver(memberRepo), userRepository);
         auth =
                 new AnonymousAuthenticationToken(
                         "k", "anonymousUser", List.of(new SimpleGrantedAuthority("ROLE_USER")));
@@ -76,7 +79,6 @@ class PaygInvoicesControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of());
 
             ResponseEntity<List<InvoiceResponse>> resp = controller.list(null, auth);
 
@@ -93,7 +95,7 @@ class PaygInvoicesControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(tm));
+            user.setTeam(tm.getTeam());
             when(extRepo.findById(7L)).thenReturn(Optional.empty());
 
             ResponseEntity<List<InvoiceResponse>> resp = controller.list(null, auth);
@@ -130,7 +132,7 @@ class PaygInvoicesControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(tm));
+            user.setTeam(tm.getTeam());
             when(extRepo.findById(7L)).thenReturn(Optional.of(ext));
             // 1000 should clamp to MAX_LIMIT (100) inside the controller.
             when(invoiceDao.findRecentByCustomer(eq("cus_abc"), eq(100))).thenReturn(List.of(row));
@@ -162,7 +164,7 @@ class PaygInvoicesControllerTest {
         try (var mocked = org.mockito.Mockito.mockStatic(AuthenticationUtils.class)) {
             mocked.when(() -> AuthenticationUtils.getCurrentUser(auth, userRepository))
                     .thenReturn(user);
-            when(memberRepo.findPrimaryMembership(42L)).thenReturn(List.of(tm));
+            user.setTeam(tm.getTeam());
             when(extRepo.findById(7L)).thenReturn(Optional.of(ext));
             when(invoiceDao.findRecentByCustomer(anyString(), anyInt())).thenReturn(List.of());
 

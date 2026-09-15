@@ -9,8 +9,8 @@ import {
   Tooltip,
 } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import CloseIcon from "@mui/icons-material/Close";
+import { Icon } from "@app/ui/Icon";
+import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
 import { useTranslation } from "react-i18next";
 
 interface PolicyEnforcingOverlayProps {
@@ -23,6 +23,9 @@ interface PolicyEnforcingOverlayProps {
   /** CSS colour var of the enforcing policy's accent (e.g. `var(--color-orange)`),
    *  so the icon/spinner match that policy's badge instead of a fixed blue. */
   accentVar?: string;
+  /** Category of the enforcing policy — picks its shared icon (shield for
+   *  security, label for classification, …); generic shield when unknown. */
+  policyKey?: string;
 }
 
 /**
@@ -35,6 +38,7 @@ export function PolicyEnforcingOverlay({
   zIndex = 200,
   onDismiss,
   accentVar,
+  policyKey,
 }: PolicyEnforcingOverlayProps) {
   const { t } = useTranslation();
   if (!enforcing) return null;
@@ -64,7 +68,7 @@ export function PolicyEnforcingOverlay({
             }}
             aria-label={t("policy.dismiss", "Dismiss overlay")}
           >
-            <CloseIcon style={{ fontSize: 16 }} />
+            <Icon name="x" size={16} />
           </ActionIcon>
         </Tooltip>
       )}
@@ -87,7 +91,11 @@ export function PolicyEnforcingOverlay({
                 : undefined
             }
           >
-            <ShieldOutlinedIcon style={{ fontSize: 26 }} />
+            {policyKey ? (
+              policyCategoryIcon(policyKey, 26)
+            ) : (
+              <Icon name="shield" size={26} />
+            )}
           </ThemeIcon>
           <Text fw={600} size="sm">
             {t("policy.enforcingTitle", "Enforcing policy…")}

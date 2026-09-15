@@ -7,7 +7,7 @@ test.describe("1. Authentication and Login", () => {
       page,
     }) => {
       // Step 1: Verify the browser redirects to /login
-      await page.goto("/");
+      await page.goto("/editor");
       await expect(page).toHaveURL(/\/login/);
 
       // Step 2: Confirm the login page displays the Stirling PDF logo
@@ -46,9 +46,9 @@ test.describe("1. Authentication and Login", () => {
       // Step 10: Click the "Sign In" button
       await signInButton.click();
 
-      // Step 11: Verify the user is redirected to the home page at /
-      await page.waitForURL("/", { timeout: 15000 });
-      await expect(page).toHaveURL("/");
+      // Step 11: Verify "/" routes the user on to the editor
+      await page.waitForURL("/editor", { timeout: 15000 });
+      await expect(page).toHaveURL("/editor");
 
       // Step 12: Verify the home dashboard loads with tool sidebar and file upload area visible
       await expect(

@@ -1,9 +1,13 @@
 package stirling.software.common.config.swagger;
 
+import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+
+import javax.imageio.ImageIO;
 
 import org.springdoc.core.customizers.GlobalOpenApiCustomizer;
 import org.springdoc.core.customizers.GlobalOperationCustomizer;
@@ -18,6 +22,7 @@ import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.model.tool.ToolIO;
 import stirling.software.common.model.tool.ToolIOCase;
 import stirling.software.common.model.tool.ToolIOWhen;
+import stirling.software.common.service.ToolIOParameterDefaults;
 
 /**
  * Publishes each {@link ToolIO} into the spec as {@code x-stirling-io}, which is how the frontend
@@ -39,6 +44,11 @@ public class ToolIOOperationCustomizer
     public void customise(OpenAPI openApi) {
         Map<String, Object> vocabulary = new LinkedHashMap<>();
         vocabulary.put("formats", names(ToolFormat.values()));
+        Map<String, List<String>> extensions = new LinkedHashMap<>();
+        for (ToolFormat format : ToolFormat.values()) {
+            extensions.put(format.name(), format.getExtensions());
+        }
+        vocabulary.put("extensions", extensions);
         vocabulary.put("arities", names(ToolArity.values()));
         openApi.addExtension(VOCABULARY_EXTENSION_NAME, vocabulary);
     }
@@ -49,40 +59,56 @@ public class ToolIOOperationCustomizer
         if (declaration == null) {
             return operation;
         }
-        operation.addExtension(EXTENSION_NAME, toExtension(declaration));
+        operation.addExtension(EXTENSION_NAME, toExtension(declaration, handlerMethod.getMethod()));
         operation.setDescription(appendSummaryLine(operation.getDescription(), declaration));
         return operation;
     }
 
-    private static Map<String, Object> toExtension(ToolIO declaration) {
+    private static Map<String, Object> toExtension(ToolIO declaration, Method handler) {
         Map<String, Object> extension = new LinkedHashMap<>();
         extension.put("accepts", names(declaration.accepts()));
         extension.put("produces", declaration.produces().name());
         extension.put("arity", declaration.arity().name());
+        if (declaration.imageIOInput()) {
+            extension.put(
+                    "inputExtensions",
+                    Arrays.stream(ImageIO.getReaderFileSuffixes())
+                            .map(suffix -> suffix.toLowerCase(Locale.ROOT))
+                            // The raw reader requires dimensions supplied out of band, not an
+                            // uploaded file.
+                            .filter(suffix -> !suffix.equals("raw"))
+                            .distinct()
+                            .sorted()
+                            .toList());
+        } else if (declaration.inputExtensions().length > 0) {
+            extension.put("inputExtensions", List.of(declaration.inputExtensions()));
+        }
         if (declaration.cases().length > 0) {
-            extension.put("cases", cases(declaration));
+            extension.put("cases", cases(declaration, handler));
         }
         return extension;
     }
 
-    private static List<Map<String, Object>> cases(ToolIO declaration) {
-        return Arrays.stream(declaration.cases()).map(ToolIOOperationCustomizer::toCase).toList();
+    private static List<Map<String, Object>> cases(ToolIO declaration, Method handler) {
+        return Arrays.stream(declaration.cases()).map(rule -> toCase(rule, handler)).toList();
     }
 
-    private static Map<String, Object> toCase(ToolIOCase rule) {
+    private static Map<String, Object> toCase(ToolIOCase rule, Method handler) {
         Map<String, Object> entry = new LinkedHashMap<>();
-        entry.put(
-                "when",
-                Arrays.stream(rule.when()).map(ToolIOOperationCustomizer::toCondition).toList());
+        entry.put("when", Arrays.stream(rule.when()).map(c -> toCondition(c, handler)).toList());
         entry.put("produces", rule.produces().name());
         entry.put("arity", rule.arity().name());
         return entry;
     }
 
-    private static Map<String, Object> toCondition(ToolIOWhen condition) {
+    private static Map<String, Object> toCondition(ToolIOWhen condition, Method handler) {
         Map<String, Object> entry = new LinkedHashMap<>();
         entry.put("param", condition.param());
         entry.put("matches", List.of(condition.matches()));
+        // The default the endpoint uses when this parameter is absent, so a step that never sends
+        // it still resolves. Omitted when the parameter is required with none.
+        ToolIOParameterDefaults.resolve(handler, condition.param())
+                .ifPresent(value -> entry.put("default", value));
         return entry;
     }
 

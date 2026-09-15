@@ -26,7 +26,7 @@ export default function RefreshModal({
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
     >
       <Stack gap="md">
-        <Text size="sm" c="red">
+        <Text size="sm" c="var(--color-red-dark)">
           {t(
             "config.apiKeys.refreshModal.warning",
             "⚠️ Warning: This action will generate new API keys and make your previous keys invalid.",

@@ -1,61 +1,92 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Button, Card } from "@app/ui";
+import { Button } from "@app/ui";
+import { openApiUrl } from "@portal/api/externalUrl";
 import "@portal/views/Procurement.css";
 
 /**
- * The stage-specific cards shown inside the procurement takeover modal once a quote exists: the
- * issued-quote milestone, the subscription-created payment step, and the live confirmation. Each is
- * a pure presentational view driven by props; ProcurementHome owns the state and the actions.
+ * The stage-specific views shown inside the procurement takeover modal once the agreement is signed:
+ * the subscription-created payment step and the live confirmation. Each is a pure presentational view
+ * driven by props; the controller owns the state and the actions.
+ *
+ * Neither is wrapped in a Card: the dialog is already the surface, and a card inside it drew a second
+ * border around content that filled it. Both wear the same eyebrow/title/description stack and put
+ * their actions in the flow's footer bar, so the last two steps of the journey read like the ones
+ * before them rather than like panels that wandered in.
  */
 
-/** The subscription-created step: pay or download the first invoice. */
+/** The subscription-created step: pay or download the first invoice, and the signed agreement. */
 export function PaymentStageCard({
   invoiceUrl,
   invoicePdf,
+  signedAgreementVersion,
+  downloadingAgreement,
+  onDownloadSignedAgreement,
 }: {
   invoiceUrl?: string | null;
   invoicePdf?: string | null;
+  /** Version label of the signed agreement PDF, if one is available to download. */
+  signedAgreementVersion?: string | null;
+  downloadingAgreement?: boolean;
+  onDownloadSignedAgreement?: () => void;
 }) {
   const { t } = useTranslation();
   return (
-    <Card padding="loose">
+    <div className="portal-procstage">
+      <span className="portal-proc__eyebrow">
+        {t("portal.procurement.payment.eyebrow")}
+      </span>
       <h3 className="portal-proc__builder-title">
         {t("portal.procurement.payment.title")}
       </h3>
       <p className="portal-proc__subtitle">
         {t("portal.procurement.payment.description")}
       </p>
-      {(invoiceUrl || invoicePdf) && (
-        <div className="portal-proc__payment-actions">
-          {invoiceUrl && (
-            <Button
-              variant="primary"
-              accent="premium"
-              onClick={() => window.open(invoiceUrl, "_blank", "noopener")}
-            >
-              {t("portal.procurement.payment.viewInvoice")}
-            </Button>
-          )}
-          {invoicePdf && (
-            <Button
-              variant="secondary"
-              onClick={() => window.open(invoicePdf, "_blank", "noopener")}
-            >
-              {t("portal.procurement.payment.downloadInvoice")}
-            </Button>
-          )}
+      {(invoiceUrl || invoicePdf || signedAgreementVersion) && (
+        <div className="portal-qb__foot portal-procstage__foot">
+          <div className="portal-qb__foot-btns">
+            {signedAgreementVersion && onDownloadSignedAgreement && (
+              <Button
+                variant="secondary"
+                loading={downloadingAgreement}
+                onClick={onDownloadSignedAgreement}
+              >
+                {t("portal.procurement.payment.downloadAgreement")}
+              </Button>
+            )}
+            {invoicePdf && (
+              <Button
+                variant="secondary"
+                onClick={() => openApiUrl(invoicePdf)}
+              >
+                {t("portal.procurement.payment.downloadInvoice")}
+              </Button>
+            )}
+            {invoiceUrl && (
+              <Button variant="primary" onClick={() => openApiUrl(invoiceUrl)}>
+                {t("portal.procurement.payment.viewInvoice")}
+              </Button>
+            )}
+          </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
 /** The live confirmation once the deal is active. */
-export function LiveStageCard() {
+export function LiveStageCard({
+  signedAgreementVersion,
+  downloadingAgreement,
+  onDownloadSignedAgreement,
+}: {
+  signedAgreementVersion?: string | null;
+  downloadingAgreement?: boolean;
+  onDownloadSignedAgreement?: () => void;
+} = {}) {
   const { t } = useTranslation();
   return (
-    <Card padding="loose">
+    <div className="portal-procstage">
       <span className="portal-proc__eyebrow">
         {t("portal.procurement.live.eyebrow")}
       </span>
@@ -65,7 +96,20 @@ export function LiveStageCard() {
       <p className="portal-proc__subtitle">
         {t("portal.procurement.live.description")}
       </p>
-    </Card>
+      {signedAgreementVersion && onDownloadSignedAgreement && (
+        <div className="portal-qb__foot portal-procstage__foot">
+          <div className="portal-qb__foot-btns">
+            <Button
+              variant="secondary"
+              loading={downloadingAgreement}
+              onClick={onDownloadSignedAgreement}
+            >
+              {t("portal.procurement.payment.downloadAgreement")}
+            </Button>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
 

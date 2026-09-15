@@ -6,12 +6,14 @@ import {
   useContext,
   useEffect,
   useId,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
   type ReactElement,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import "@app/ui/Dropdown.css";
 
 type Alignment = "start" | "end";
@@ -20,6 +22,8 @@ interface DropdownContextValue {
   open: boolean;
   setOpen: (open: boolean) => void;
   triggerRef: React.RefObject<HTMLElement | null>;
+  /** The portaled menu element, so click-outside can exclude it. */
+  menuRef: React.RefObject<HTMLDivElement | null>;
   menuId: string;
   align: Alignment;
 }
@@ -68,15 +72,20 @@ function Root({
 
   const triggerRef = useRef<HTMLElement | null>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const menuId = useId();
 
-  // Click-outside + Escape close.
+  // Click-outside + Escape close. The menu is portaled to <body>, so it is not
+  // inside containerRef - check it separately or a click on it would close the
+  // menu before the item's handler runs.
   useEffect(() => {
     if (!open) return;
     function onDocClick(e: MouseEvent) {
+      const target = e.target as Node;
       if (
         containerRef.current &&
-        !containerRef.current.contains(e.target as Node)
+        !containerRef.current.contains(target) &&
+        !(menuRef.current && menuRef.current.contains(target))
       ) {
         setOpen(false);
       }
@@ -96,7 +105,7 @@ function Root({
   }, [open, setOpen]);
 
   const value = useMemo<DropdownContextValue>(
-    () => ({ open, setOpen, triggerRef, menuId, align }),
+    () => ({ open, setOpen, triggerRef, menuRef, menuId, align }),
     [open, setOpen, menuId, align],
   );
 
@@ -150,23 +159,79 @@ export interface DropdownMenuProps {
 }
 
 function Menu({ children, className, width }: DropdownMenuProps) {
-  const { open, menuId, align } = useDropdownCtx();
-  if (!open) return null;
-  const style =
-    width !== undefined
+  const { open, menuId, align, triggerRef, menuRef } = useDropdownCtx();
+  // Fixed position tracked to the trigger. Portaling to <body> keeps the menu
+  // out of any `overflow` ancestor (e.g. a table's horizontal scroll area),
+  // which would otherwise clip it and add a scrollbar.
+  const [pos, setPos] = useState<{
+    top?: number;
+    bottom?: number;
+    left?: number;
+    right?: number;
+    maxHeight: number;
+  } | null>(null);
+
+  useLayoutEffect(() => {
+    if (!open) return;
+    const place = () => {
+      const el = triggerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const gap = 4;
+      const margin = 8;
+      const spaceBelow = window.innerHeight - r.bottom - margin;
+      const spaceAbove = r.top - margin;
+      // Flip above when there's more room there, so a trigger near the viewport
+      // bottom doesn't open a fixed menu that runs off-screen and can't scroll.
+      const below = spaceBelow >= spaceAbove;
+      const horizontal =
+        align === "end"
+          ? { right: window.innerWidth - r.right }
+          : { left: r.left };
+      setPos({
+        ...horizontal,
+        ...(below
+          ? { top: r.bottom + gap }
+          : { bottom: window.innerHeight - r.top + gap }),
+        maxHeight: Math.max(0, (below ? spaceBelow : spaceAbove) - gap),
+      });
+    };
+    place();
+    // Track the trigger while scrolling/resizing (capture catches inner scrollers).
+    window.addEventListener("scroll", place, true);
+    window.addEventListener("resize", place);
+    return () => {
+      window.removeEventListener("scroll", place, true);
+      window.removeEventListener("resize", place);
+    };
+  }, [open, align, triggerRef]);
+
+  if (!open || !pos) return null;
+  const style: React.CSSProperties = {
+    position: "fixed",
+    // Explicit auto (not undefined) so the CSS fallback `top`/`left` can't leak
+    // in on the axis this placement isn't pinning.
+    top: pos.top ?? "auto",
+    bottom: pos.bottom ?? "auto",
+    left: pos.left ?? "auto",
+    right: pos.right ?? "auto",
+    maxHeight: pos.maxHeight,
+    overflowY: "auto",
+    ...(width !== undefined
       ? { minWidth: typeof width === "number" ? `${width}px` : width }
-      : undefined;
-  return (
+      : {}),
+  };
+  return createPortal(
     <div
       id={menuId}
       role="menu"
-      className={["sui-dd__menu", `sui-dd__menu--${align}`, className ?? ""]
-        .filter(Boolean)
-        .join(" ")}
+      ref={menuRef}
+      className={["sui-dd__menu", className ?? ""].filter(Boolean).join(" ")}
       style={style}
     >
       {children}
-    </div>
+    </div>,
+    document.body,
   );
 }
 

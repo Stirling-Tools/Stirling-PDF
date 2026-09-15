@@ -420,7 +420,7 @@ public class PdfJsonImageService {
                 throws IOException {
             if (OperatorName.DRAW_OBJECT.equals(operator.getName())
                     && !operands.isEmpty()
-                    && operands.get(0) instanceof COSName name) {
+                    && operands.getFirst() instanceof COSName name) {
                 currentXObjectName = name;
             }
             super.processOperator(operator, operands);

@@ -190,8 +190,7 @@ async function metadata(
   } catch {
     return {};
   }
-  const get = (k: string) =>
-    typeof info[k] === "string" ? (info[k] as string) : "";
+  const get = (k: string) => (typeof info[k] === "string" ? info[k] : "");
   return {
     title: get("Title"),
     author: get("Author"),

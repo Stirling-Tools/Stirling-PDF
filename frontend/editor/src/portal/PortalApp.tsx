@@ -1,11 +1,11 @@
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { PortalAuthBoundary } from "@portal/auth/PortalAuthBoundary";
 import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
 import { SuiProvider } from "@portal/theme/SuiProvider";
 import { PortalProviders } from "@portal/PortalProviders";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
-import { createPortalQueryClient } from "@portal/queryClient";
+import { getPortalQueryClient } from "@portal/queryClient";
 // Reset + typography, scoped to .portal-scope below.
 import "@portal/theme/base.css";
 
@@ -30,9 +30,7 @@ function ThemedSuiProvider({ children }: { children: ReactNode }) {
  * self-hosted mounts the account-link layer, SaaS does not.
  */
 export function PortalApp() {
-  // One client for the portal's lifetime. Sits above the router so its cache
-  // survives view navigation. Cheap and inert when no query hooks are mounted.
-  const [queryClient] = useState(createPortalQueryClient);
+  const queryClient = getPortalQueryClient();
   return (
     <QueryClientProvider client={queryClient}>
       <ThemeProvider>

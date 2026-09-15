@@ -3,6 +3,7 @@ import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import {
   getAllEndpoints,
+  isComingSoonTool,
   type ToolRegistryEntry,
   type ToolRegistry,
 } from "@app/data/toolsTaxonomy";
@@ -167,12 +168,7 @@ export const useToolManagement = (): ToolManagementResult => {
         ? availabilityInfo.available !== false
         : true;
 
-      // Check if tool is "coming soon" (has no component and no link)
-      const isComingSoon =
-        !baseTool.component &&
-        !baseTool.link &&
-        toolKey !== "read" &&
-        toolKey !== "multiTool";
+      const isComingSoon = isComingSoonTool(toolKey, baseTool);
 
       if (preferences.hideUnavailableTools && (!isAvailable || isComingSoon)) {
         return;

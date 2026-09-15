@@ -20,7 +20,8 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
             "stirling.software.saas.ai.repository",
             "stirling.software.saas.payg.repository",
             "stirling.software.saas.payg.bundle",
-            "stirling.software.saas.procurement.repository"
+            "stirling.software.saas.procurement.repository",
+            "stirling.software.saas.legal"
         })
 @EntityScan({
     "stirling.software.saas.accountlink",
@@ -28,6 +29,7 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
     "stirling.software.saas.billing.model",
     "stirling.software.saas.ai.model",
     "stirling.software.saas.payg",
-    "stirling.software.saas.procurement.model"
+    "stirling.software.saas.procurement.model",
+    "stirling.software.saas.legal"
 })
 public class SaasJpaConfig {}

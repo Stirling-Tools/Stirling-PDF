@@ -3,14 +3,7 @@ import { createPortal } from "react-dom";
 import { Group, Loader, Menu, Stack, Text, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import VisibilityOutlinedIcon from "@mui/icons-material/VisibilityOutlined";
-import VisibilityOffOutlinedIcon from "@mui/icons-material/VisibilityOffOutlined";
-import ShieldOutlinedIcon from "@mui/icons-material/ShieldOutlined";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
-import CloudUploadOutlinedIcon from "@mui/icons-material/CloudUploadOutlined";
-import CloudDoneIcon from "@mui/icons-material/CloudDone";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
-import HistoryIcon from "@mui/icons-material/History";
+import { Icon } from "@app/ui/Icon";
 import type { FileId } from "@app/types/file";
 import { FileDocIcon } from "@app/components/shared/FileDocIcon";
 import {
@@ -19,7 +12,9 @@ import {
 } from "@app/components/shared/PolicyBadges";
 import { getFileDocVariant } from "@app/components/shared/filePreview/getFileTypeIcon";
 import { useLazyThumbnail } from "@app/hooks/useLazyThumbnail";
-import { IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
+import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
+import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
+import { formatFileSize, IMAGE_EXTENSIONS } from "@app/utils/fileUtils";
 import "@app/components/shared/FileSidebarFileItem.css";
 
 export function getFileExtension(name: string): string {
@@ -136,6 +131,7 @@ export interface FileItemProps {
   isSelected: boolean;
   isActive: boolean;
   isViewedInViewer: boolean;
+  isToolSkipped?: boolean;
   thumbnailUrl?: string;
   onClick: (fileId: FileId) => void;
   onEyeClick: (fileId: FileId, e: React.MouseEvent) => void;
@@ -153,6 +149,14 @@ export interface FileItemProps {
   primaryLabel?: string;
   /** Delete (local only) from the kebab menu. Omit to hide the menu's delete. */
   onDelete?: (fileId: FileId) => void;
+  /** Download a copy (desktop: save a copy) from the kebab menu. */
+  onDownload?: (fileId: FileId) => void;
+  /** Rename the file from the kebab menu. */
+  onRename?: (fileId: FileId) => void;
+  /** Save a second copy of the file into the library. */
+  onDuplicate?: (fileId: FileId) => void;
+  /** Desktop only: open the file in its own window. Omit where unsupported. */
+  onOpenInNewWindow?: (fileId: FileId) => void;
   /** Save to cloud from the kebab menu. */
   onSaveToCloud?: (fileId: FileId) => void;
   /** Whether the upload-to-server menu item is offered (storage on, signed in). */
@@ -163,11 +167,56 @@ export interface FileItemProps {
   onVersionHistory?: (fileId: FileId) => void;
   /** Whether this file has more than one version (drives the menu item). */
   hasVersionHistory?: boolean;
+  /** The stored bytes are gone (WebKit lost the blob's backing store). The row
+   *  says so instead of pretending the file can open. */
+  dataUnavailable?: boolean;
 }
 
 const MAX_VISIBLE_FOLDER_TAGS = 2;
 
-export function FileItem({
+/** One kebab row. `disabledReason`, when set, greys the row out and says why. */
+function FileMenuItem({
+  disabledReason,
+  icon,
+  color,
+  onClick,
+  children,
+}: {
+  disabledReason?: React.ReactNode;
+  icon: React.ReactNode;
+  color?: string;
+  onClick: (e: React.MouseEvent) => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <Tooltip
+      label={disabledReason}
+      disabled={!disabledReason}
+      position="left"
+      offset={6}
+      withArrow
+    >
+      {/* Disabled items swallow pointer events, so the tooltip needs a live wrapper. */}
+      <div>
+        <Menu.Item
+          disabled={Boolean(disabledReason)}
+          color={color}
+          leftSection={icon}
+          onClick={(e) => {
+            e.stopPropagation();
+            onClick(e);
+          }}
+        >
+          {children}
+        </Menu.Item>
+      </div>
+    </Tooltip>
+  );
+}
+
+// Memoized: sidebar rows bail out unless THEIR props change, so one file's
+// update (e.g. a new version landing) re-renders one row, not the whole list.
+export const FileItem = React.memo(function FileItem({
   fileId,
   name,
   size,
@@ -175,6 +224,8 @@ export function FileItem({
   isSelected,
   isActive,
   isViewedInViewer,
+  isToolSkipped = false,
+  dataUnavailable,
   thumbnailUrl,
   onClick,
   onEyeClick,
@@ -185,6 +236,10 @@ export function FileItem({
   policies = [],
   primaryLabel,
   onDelete,
+  onDownload,
+  onRename,
+  onDuplicate,
+  onOpenInNewWindow,
   onSaveToCloud,
   canSaveToCloud = false,
   isUploadedToCloud = false,
@@ -192,15 +247,23 @@ export function FileItem({
   hasVersionHistory = false,
 }: FileItemProps) {
   const { t } = useTranslation();
+  const toolSkipReason = isToolSkipped
+    ? t("files.notIncludedInToolRun", "Not included in this tool run")
+    : undefined;
+  const terminology = useFileActionTerminology();
+  const downloadIcon = useFileActionIcons().download;
   const ext = getFileExtension(name);
   const dateLabel = lastModified ? formatFileDate(lastModified) : "";
   const typeLabel = ext ? ext.toUpperCase() : "File";
+  const metaLine = [typeLabel, size ? formatFileSize(size) : null, dateLabel]
+    .filter(Boolean)
+    .join(" · ");
 
   const policyEnforcing = policies.some((p) => p.enforcing);
   const enforcingTooltip = (action: string): React.ReactNode => (
     <Stack gap={6} py={2} w={200}>
       <Group gap={6} wrap="nowrap">
-        <ShieldOutlinedIcon style={{ fontSize: 13 }} />
+        <Icon name="shield" size={13} />
         <Text size="xs" fw={600}>
           {t(
             "policy.blockingAction",
@@ -212,6 +275,25 @@ export function FileItem({
       <Loader size="xs" />
     </Stack>
   );
+
+  // Why an action can't run right now: a policy is rewriting the file, or its
+  // bytes are gone. `needsBytes` actions are the ones that read the file.
+  const blockedReason = (
+    action: string,
+    needsBytes = true,
+  ): React.ReactNode | null => {
+    if (policyEnforcing) return enforcingTooltip(action);
+    if (needsBytes && dataUnavailable)
+      return t(
+        "fileSidebar.fileItem.dataLostTooltip",
+        "This browser lost this file's contents. Upload it again to keep working with it.",
+      );
+    return null;
+  };
+
+  const viewerLabel = isViewedInViewer
+    ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
+    : t("fileSidebar.fileItem.openInViewer", "Open in viewer");
 
   const visibleFolders = folders.slice(0, MAX_VISIBLE_FOLDER_TAGS);
   const overflowFolders = folders.slice(MAX_VISIBLE_FOLDER_TAGS);
@@ -226,6 +308,7 @@ export function FileItem({
 
   const itemRef = useRef<HTMLDivElement>(null);
   const [hoverRect, setHoverRect] = useState<DOMRect | null>(null);
+  const [menuOpened, setMenuOpened] = useState(false);
 
   const handleMouseEnter = useCallback(() => {
     setHoverRect(itemRef.current?.getBoundingClientRect() ?? null);
@@ -233,9 +316,10 @@ export function FileItem({
 
   const handleMouseLeave = useCallback(() => setHoverRect(null), []);
 
-  // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready
+  // Reactive: tooltip appears as soon as both hover rect and thumbnail are ready.
+  // The kebab suppresses it - two cards floating off one row read as a glitch.
   const thumbPos =
-    hoverRect && resolvedThumbnail
+    hoverRect && resolvedThumbnail && !menuOpened
       ? {
           top: hoverRect.top + hoverRect.height / 2,
           left: hoverRect.right + 10,
@@ -246,6 +330,9 @@ export function FileItem({
     <>
       <div
         ref={itemRef}
+        data-tool-skipped={isToolSkipped}
+        title={toolSkipReason}
+        aria-description={toolSkipReason}
         className={`file-sidebar-file-item${isSelected ? " selected" : ""}${isActive ? " active" : ""}${isViewedInViewer ? " viewed" : ""}`}
         onClick={() => onClick(fileId)}
         draggable={draggable}
@@ -292,6 +379,21 @@ export function FileItem({
                 </>
               )}
             </span>
+            {dataUnavailable && (
+              <Tooltip
+                label={t(
+                  "fileSidebar.fileItem.dataLostTooltip",
+                  "This browser lost this file's contents. Upload it again to keep working with it.",
+                )}
+                withArrow
+                position="top"
+              >
+                <span className="file-sidebar-datalost-badge" data-no-select>
+                  <Icon name="circle-alert" size={"0.85rem"} />
+                  {t("fileSidebar.fileItem.dataLost", "Data lost")}
+                </span>
+              </Tooltip>
+            )}
             {isUploadedToCloud && (
               <Tooltip
                 label={t(
@@ -302,7 +404,7 @@ export function FileItem({
                 position="top"
               >
                 <span className="file-sidebar-cloud-badge" data-no-select>
-                  <CloudDoneIcon sx={{ fontSize: "0.85rem" }} />
+                  <Icon name="cloud-check" size={"0.85rem"} />
                 </span>
               </Tooltip>
             )}
@@ -367,127 +469,171 @@ export function FileItem({
               onEyeClick(fileId, e);
             }}
             tabIndex={-1}
-            aria-label={
-              isViewedInViewer
-                ? t("fileSidebar.fileItem.closeViewer", "Close viewer")
-                : t("fileSidebar.fileItem.openInViewer", "Open in viewer")
-            }
+            aria-label={viewerLabel}
           >
-            <VisibilityOutlinedIcon
+            <Icon
+              name="eye"
+              size={"1.1rem"}
               className="file-sidebar-eye-open"
-              sx={{ fontSize: "1.1rem" }}
             />
-            <VisibilityOffOutlinedIcon
+            <Icon
+              name="eye-off"
+              size={"1.1rem"}
               className="file-sidebar-eye-closed"
-              sx={{ fontSize: "1.1rem" }}
             />
           </ActionIcon>
-          {(onDelete ||
-            (canSaveToCloud && onSaveToCloud) ||
-            (hasVersionHistory && onVersionHistory)) && (
-            <Menu position="bottom-end" withinPortal shadow="md" width={190}>
-              <Menu.Target>
-                <ActionIcon
-                  variant="tertiary"
-                  size="sm"
-                  className="file-sidebar-kebab-btn"
-                  onClick={(e) => e.stopPropagation()}
-                  tabIndex={-1}
-                  aria-label={t(
-                    "fileSidebar.fileItem.moreActions",
-                    "More actions",
-                  )}
-                >
-                  <MoreVertIcon sx={{ fontSize: "1.1rem" }} />
-                </ActionIcon>
-              </Menu.Target>
-              <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
-                {hasVersionHistory && onVersionHistory && (
-                  <Menu.Item
-                    leftSection={<HistoryIcon sx={{ fontSize: 16 }} />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onVersionHistory(fileId);
-                    }}
-                  >
-                    {t(
-                      "fileSidebar.fileItem.versionHistory",
-                      "Version history",
-                    )}
-                  </Menu.Item>
+          <Menu
+            position="bottom-end"
+            withinPortal
+            shadow="md"
+            width={220}
+            onChange={setMenuOpened}
+          >
+            <Menu.Target>
+              <ActionIcon
+                variant="tertiary"
+                size="sm"
+                className="file-sidebar-kebab-btn"
+                onClick={(e) => e.stopPropagation()}
+                tabIndex={-1}
+                aria-label={t(
+                  "fileSidebar.fileItem.moreActions",
+                  "More actions",
                 )}
-                {canSaveToCloud &&
-                  onSaveToCloud &&
-                  (() => {
-                    const uploadLabel = isUploadedToCloud
-                      ? t(
-                          "fileSidebar.fileItem.updateOnServer",
-                          "Update on server",
-                        )
-                      : t(
-                          "fileSidebar.fileItem.uploadToServer",
-                          "Upload to server",
-                        );
-                    return (
-                      <Tooltip
-                        label={enforcingTooltip(uploadLabel)}
-                        disabled={!policyEnforcing}
-                        position="left"
-                        offset={6}
-                        withArrow
-                      >
-                        <div>
-                          <Menu.Item
-                            disabled={policyEnforcing}
-                            leftSection={
-                              <CloudUploadOutlinedIcon sx={{ fontSize: 16 }} />
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onSaveToCloud(fileId);
-                            }}
-                          >
-                            {uploadLabel}
-                          </Menu.Item>
-                        </div>
-                      </Tooltip>
-                    );
-                  })()}
-                {onDelete &&
-                  (() => {
-                    const deleteLabel = t(
-                      "fileSidebar.fileItem.delete",
-                      "Delete",
-                    );
-                    return (
-                      <Tooltip
-                        label={enforcingTooltip(deleteLabel)}
-                        disabled={!policyEnforcing}
-                        position="left"
-                        offset={6}
-                        withArrow
-                      >
-                        <div>
-                          <Menu.Item
-                            disabled={policyEnforcing}
-                            color="red"
-                            leftSection={
-                              <DeleteOutlineIcon sx={{ fontSize: 16 }} />
-                            }
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              onDelete(fileId);
-                            }}
-                          >
-                            {deleteLabel}
-                          </Menu.Item>
-                        </div>
-                      </Tooltip>
-                    );
-                  })()}
-              </Menu.Dropdown>
-            </Menu>
-          )}
+              >
+                <Icon name="ellipsis-vertical" size={"1.1rem"} />
+              </ActionIcon>
+            </Menu.Target>
+            <Menu.Dropdown onClick={(e) => e.stopPropagation()}>
+              {/* Rows truncate long names; the menu header is where the whole
+                  name (and the size the row has no space for) is readable. */}
+              <Menu.Label className="file-sidebar-kebab-header">
+                <span className="file-sidebar-kebab-header-name">{name}</span>
+                <span className="file-sidebar-kebab-header-meta">
+                  {metaLine}
+                </span>
+              </Menu.Label>
+
+              <FileMenuItem
+                disabledReason={blockedReason(viewerLabel)}
+                icon={
+                  isViewedInViewer ? (
+                    <Icon name="eye-off" size={16} />
+                  ) : (
+                    <Icon name="eye" size={16} />
+                  )
+                }
+                onClick={(e) => onEyeClick(fileId, e)}
+              >
+                {viewerLabel}
+              </FileMenuItem>
+
+              {onOpenInNewWindow && (
+                <FileMenuItem
+                  disabledReason={blockedReason(
+                    t("openInNewWindow", "Open in new window"),
+                  )}
+                  icon={<Icon name="external-link" size={16} />}
+                  onClick={() => onOpenInNewWindow(fileId)}
+                >
+                  {t("openInNewWindow", "Open in new window")}
+                </FileMenuItem>
+              )}
+
+              {(onDownload || onRename || onDuplicate) && <Menu.Divider />}
+
+              {onDownload && (
+                <FileMenuItem
+                  disabledReason={blockedReason(terminology.download)}
+                  icon={<Icon name={downloadIcon} size={16} />}
+                  onClick={() => onDownload(fileId)}
+                >
+                  {terminology.download}
+                </FileMenuItem>
+              )}
+
+              {onRename && (
+                <FileMenuItem
+                  disabledReason={blockedReason(
+                    t("fileSidebar.fileItem.rename", "Rename"),
+                    false,
+                  )}
+                  icon={<Icon name="file-pen" size={16} />}
+                  onClick={() => onRename(fileId)}
+                >
+                  {t("fileSidebar.fileItem.rename", "Rename")}
+                </FileMenuItem>
+              )}
+
+              {onDuplicate && (
+                <FileMenuItem
+                  disabledReason={blockedReason(
+                    t("fileSidebar.fileItem.duplicate", "Duplicate"),
+                  )}
+                  icon={<Icon name="copy" size={16} />}
+                  onClick={() => onDuplicate(fileId)}
+                >
+                  {t("fileSidebar.fileItem.duplicate", "Duplicate")}
+                </FileMenuItem>
+              )}
+
+              {((canSaveToCloud && onSaveToCloud) ||
+                (hasVersionHistory && onVersionHistory)) && <Menu.Divider />}
+
+              {canSaveToCloud &&
+                onSaveToCloud &&
+                (() => {
+                  const uploadLabel = isUploadedToCloud
+                    ? t(
+                        "fileSidebar.fileItem.updateOnServer",
+                        "Update on server",
+                      )
+                    : t(
+                        "fileSidebar.fileItem.uploadToServer",
+                        "Upload to server",
+                      );
+                  return (
+                    <FileMenuItem
+                      disabledReason={blockedReason(uploadLabel)}
+                      icon={<Icon name="cloud-upload" size={16} />}
+                      onClick={() => onSaveToCloud(fileId)}
+                    >
+                      {uploadLabel}
+                    </FileMenuItem>
+                  );
+                })()}
+
+              {hasVersionHistory && onVersionHistory && (
+                <FileMenuItem
+                  disabledReason={blockedReason(
+                    t("fileSidebar.fileItem.versionHistory", "Version history"),
+                    false,
+                  )}
+                  icon={<Icon name="rotate-ccw-clock" size={16} />}
+                  onClick={() => onVersionHistory(fileId)}
+                >
+                  {t("fileSidebar.fileItem.versionHistory", "Version history")}
+                </FileMenuItem>
+              )}
+
+              {onDelete && (
+                <>
+                  <Menu.Divider />
+                  <FileMenuItem
+                    disabledReason={blockedReason(
+                      t("fileSidebar.fileItem.delete", "Delete"),
+                      false,
+                    )}
+                    color="red"
+                    icon={<Icon name="trash" size={16} />}
+                    onClick={() => onDelete(fileId)}
+                  >
+                    {t("fileSidebar.fileItem.delete", "Delete")}
+                  </FileMenuItem>
+                </>
+              )}
+            </Menu.Dropdown>
+          </Menu>
         </div>
       </div>
 
@@ -509,4 +655,4 @@ export function FileItem({
         )}
     </>
   );
-}
+});

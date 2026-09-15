@@ -1,9 +1,5 @@
 import { useState } from "react";
 import type { Meta, StoryObj } from "@storybook/react-vite";
-// The shared preview only loads the portal tokens; the onboarding modal reads
-// the editor theme tokens (--bg-surface, --onboarding-title, …), so load them
-// here or the modal surface renders transparent over the dark overlay.
-import "@app/styles/theme.css";
 import OnboardingModalSlide from "@app/components/onboarding/OnboardingModalSlide";
 import {
   SLIDE_DEFINITIONS,

@@ -3,12 +3,10 @@ package stirling.software.proprietary.accountlink;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
@@ -30,31 +28,23 @@ class AccountLinkServiceTest {
         service = new AccountLinkService(client, store, cache);
     }
 
+    // The two link() tests here are gone with the JWT relay. Storing a credential and invalidating
+    // the entitlement cache is now ConnectService's job and is covered by ConnectServiceTest; what
+    // remains in this service is status and unlink.
+
     @Test
-    void link_storesCredentialAndInvalidatesCache() throws IOException {
-        when(client.register("jwt", "name"))
-                .thenReturn(new AccountLinkClient.RegisterResult("dev-1", "sec-1", 7L));
+    void status_linkedFromTheStoredCredential() {
         DeviceCredential stored = new DeviceCredential();
         stored.setDeviceId("dev-1");
         stored.setTeamId(7L);
         stored.setLinkedAt(LocalDateTime.now());
         when(store.get()).thenReturn(Optional.of(stored));
 
-        AccountLinkService.LinkStatus status = service.link("jwt", "name");
+        AccountLinkService.LinkStatus status = service.status();
 
-        verify(store).save("dev-1", "sec-1", 7L);
-        verify(cache).invalidate();
         assertTrue(status.linked());
         assertEquals("dev-1", status.deviceId());
         assertEquals(7L, status.teamId());
-    }
-
-    @Test
-    void link_propagatesRegisterFailure() throws IOException {
-        when(client.register(any(), any())).thenThrow(new IOException("boom"));
-        org.junit.jupiter.api.Assertions.assertThrows(
-                IOException.class, () -> service.link("jwt", null));
-        verify(cache, org.mockito.Mockito.never()).invalidate();
     }
 
     @Test

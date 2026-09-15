@@ -95,6 +95,7 @@ public class NetworkInputSource implements InputSource {
                         .map(file -> NetworkIdentities.identity(config, file.path()))
                         .toList());
 
+        boolean track = "track".equals(String.valueOf(spec.options().get("mode")).trim());
         List<ResolvedInput> work = new ArrayList<>();
         for (RemoteFile file : files) {
             String identity = NetworkIdentities.identity(config, file.path());
@@ -103,10 +104,11 @@ public class NetworkInputSource implements InputSource {
                 continue;
             }
             work.add(
-                    new ResolvedInput(
+                    ResolvedInput.forFile(
                             PolicyInputs.of(List.of(resource(config, file))),
+                            identity,
                             success ->
-                                    completeConsumed(ctx, config, file, identity, gate, success)));
+                                    complete(ctx, config, file, identity, gate, success, track)));
         }
         return work;
     }
@@ -117,15 +119,16 @@ public class NetworkInputSource implements InputSource {
      * consensus delete. A failed run settles ERROR and never deletes; the DONE row of a file that
      * could not be deleted still stops reprocessing.
      */
-    private void completeConsumed(
+    private void complete(
             ResolveContext ctx,
             NetworkConfig config,
             RemoteFile file,
             String identity,
             String claimGate,
-            boolean success) {
+            boolean success,
+            boolean track) {
         ctx.settle(identity, claimGate, null, success);
-        if (!success) {
+        if (!success || track) {
             return;
         }
         try (RemoteFileClient client = clientFactory.connect(config)) {

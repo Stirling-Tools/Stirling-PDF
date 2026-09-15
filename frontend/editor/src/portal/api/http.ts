@@ -42,6 +42,7 @@
  * admin and uses the Supabase JWT for SaaS reads. Don't add it here.
  */
 import { getPortalSaasToken } from "@portal/auth/portalSaasSession";
+import { reportAccountLinkBlock } from "@portal/services/accountLinkBlock";
 import { resolveDemoResponse } from "@portal/api/demoData";
 import { saasApiBase } from "@portal/api/saasApiBase";
 import {
@@ -130,7 +131,12 @@ async function unwrap<T>(res: Response): Promise<T> {
     } catch {
       // ignore — non-JSON error response
     }
-    throw new HttpError(res.status, res.statusText, body);
+    const error = new HttpError(res.status, res.statusText, body);
+    // The instance's entitlement gate answers a spent free grant here, and the prompt it raises is
+    // the actionable surface. Reported for every domain rather than only the local one because the
+    // classifier keys on a sentinel only the local backend sends, so a SaaS 402 cannot reach it.
+    reportAccountLinkBlock(error);
+    throw error;
   }
   // 204 / empty-body responses have nothing to parse.
   if (res.status === 204 || res.headers.get("Content-Length") === "0") {
@@ -205,6 +211,20 @@ async function localForm<T>(
     method,
     headers: { Accept: "application/json", ...(await localAuthHeader()) },
     body: new URLSearchParams(params),
+  });
+  if (res.status === 401) {
+    onLocalUnauthorized();
+  }
+  return unwrap<T>(res);
+}
+
+/** POST a multipart/form-data body (file uploads), via the localBackend seam. The Content-Type is
+ * deliberately left unset so the browser writes it with the multipart boundary. */
+async function localMultipart<T>(path: string, body: FormData): Promise<T> {
+  const res = await fetch(`${localBaseUrl()}${path}`, {
+    method: "POST",
+    headers: { Accept: "application/json", ...(await localAuthHeader()) },
+    body,
   });
   if (res.status === 401) {
     onLocalUnauthorized();
@@ -302,6 +322,7 @@ export const apiClient = {
   local: {
     json: localJson,
     form: localForm,
+    multipart: localMultipart,
     blob: localBlob,
   },
   /** Hosted SaaS Java. Admin's Supabase JWT auto-attached. */
@@ -309,7 +330,5 @@ export const apiClient = {
     json: saasJson,
     text: saasText,
     blob: saasBlob,
-    /** True when a SaaS base URL is resolvable. Doesn't check session liveness. */
-    isConfigured: (): boolean => saasBaseUrl() !== null,
   },
 } as const;

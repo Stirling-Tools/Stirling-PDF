@@ -52,22 +52,29 @@
 
 .clearButton {
   position: absolute;
-  right: 8px;
+  right: 6px;
   top: 50%;
   transform: translateY(-50%);
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 4px;
-  border-radius: 4px;
-  display: flex;
+  --ai-size: 1.35rem !important;
+  width: 1.35rem !important;
+  height: 1.35rem !important;
+  min-width: 1.35rem !important;
+  min-height: 1.35rem !important;
+  padding: 0 !important;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 16px;
-  transition: background-color 0.2s ease;
+  border-radius: var(--radius-full, 9999px);
+  background: transparent;
+  border: none;
+  cursor: pointer;
   color: var(--c-text-subtle);
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
 }
 
 .clearButton:hover {
-  background-color: var(--c-hover);
+  color: var(--c-text);
+  background-color: var(--c-hover) !important;
 }

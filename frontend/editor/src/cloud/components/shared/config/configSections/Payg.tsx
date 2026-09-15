@@ -32,9 +32,9 @@ import {
   prepaidSnapshotFromWallet,
 } from "@app/components/shared/config/configSections/usageMeters";
 // Relative (not @app/*) so the co-located CSS + sibling component resolve directly.
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import "./Payg.css";
-// eslint-disable-next-line no-restricted-imports
+// oxlint-disable-next-line no-restricted-imports
 import SpendCapControl from "./SpendCapControl";
 import { useTranslation } from "react-i18next";
 import type { Wallet } from "@app/hooks/useWallet";

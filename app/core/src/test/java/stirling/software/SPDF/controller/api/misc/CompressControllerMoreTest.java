@@ -195,7 +195,7 @@ class CompressControllerMoreTest {
 
     // The qpdf output path is the last argument of the command.
     private static Path qpdfOutputPath(List<String> command) {
-        return Path.of(command.get(command.size() - 1));
+        return Path.of(command.getLast());
     }
 
     /** Stub gs to write a valid PDF to its output file and report success. */

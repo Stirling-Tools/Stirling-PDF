@@ -26,6 +26,14 @@ export interface AuthContextType {
   error: Error | null;
   signOut: () => Promise<void>;
   refreshSession: () => Promise<void>;
+  /**
+   * Session-level permission flags, provided by layers whose auth knows them
+   * (proprietary's Spring session carries both). Absent in core OSS, which
+   * has no auth context — consumers must treat undefined as "not granted"
+   * and fall back to app-config gates.
+   */
+  isAdmin?: boolean;
+  portalAccess?: boolean;
 }
 
 /**

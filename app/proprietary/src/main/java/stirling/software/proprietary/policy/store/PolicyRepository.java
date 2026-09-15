@@ -36,6 +36,14 @@ public interface PolicyRepository extends JpaRepository<PolicyEntity, String> {
     List<PolicyEntity> findAllOrdered();
 
     /**
+     * Whether any policy's stored JSON mentions this id. Matched against the raw column rather than
+     * parsed steps so a row we can't deserialize still protects the assets it references; asset ids
+     * are UUIDs, so a substring false positive only ever means "keep".
+     */
+    @Query("select count(p) > 0 from PolicyEntity p where p.policyJson like concat('%', :id, '%')")
+    boolean anyMentioning(@Param("id") String id);
+
+    /**
      * The team's policy rows, locked for the transaction (SELECT … FOR UPDATE). Appending a new
      * policy reads the max {@code sortOrder} from these under the lock, so two concurrent creates
      * serialize instead of both reading a stale max and assigning the same position. Must be called

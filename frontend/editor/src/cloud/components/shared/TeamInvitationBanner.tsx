@@ -3,7 +3,7 @@ import { Group, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
 import LocalIcon from "@app/components/shared/LocalIcon";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import { useSaaSTeam } from "@app/contexts/SaaSTeamContext";
 
 /**
@@ -105,7 +105,7 @@ export function TeamInvitationBanner() {
   );
 
   return (
-    <InfoBanner
+    <AppBanner
       icon="mail"
       message={
         <Group
@@ -120,10 +120,6 @@ export function TeamInvitationBanner() {
       }
       show={shouldShow}
       dismissible={false}
-      background="var(--mantine-color-dark-7)"
-      borderColor="var(--mantine-color-dark-5)"
-      textColor="rgba(255, 255, 255, 0.95)"
-      iconColor="rgba(255, 255, 255, 0.95)"
     />
   );
 }

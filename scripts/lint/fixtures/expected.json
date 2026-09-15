@@ -1,0 +1,63 @@
+{
+  "AaaTest.java": [],
+  "allow.java": [
+    "12:CMT008:error",
+    "17:CMT008:error",
+    "22:CMT008:error",
+    "28:CMT008:error",
+    "29:CMT001:error"
+  ],
+  "apostrophes.java": [
+    "20:CMT001:error"
+  ],
+  "clean.java": [],
+  "clean.ts": [],
+  "deadcode.java": [
+    "5:CMT005:error"
+  ],
+  "docs.java": [
+    "6:CMT007:error"
+  ],
+  "docstrings.py": [
+    "8:CMT007:error",
+    "21:CMT007:error",
+    "34:CMT001:error"
+  ],
+  "narration.java": [
+    "6:CMT003:error",
+    "9:CMT003:error"
+  ],
+  "narration.tsx": [
+    "2:CMT003:error",
+    "5:CMT004:error",
+    "13:CMT001:error"
+  ],
+  "restates.java": [
+    "6:CMT001:error",
+    "9:CMT001:error",
+    "17:CMT002:error",
+    "19:CMT002:error"
+  ],
+  "restates.py": [
+    "2:CMT001:error",
+    "5:CMT002:error"
+  ],
+  "restates.ts": [
+    "2:CMT001:error",
+    "14:CMT002:error",
+    "18:CMT002:error"
+  ],
+  "strings.java": [],
+  "templates.py": [
+    "22:CMT001:error"
+  ],
+  "todos.java": [
+    "6:CMT009:error"
+  ],
+  "trailing.java": [
+    "13:CMT009:error",
+    "14:CMT004:error",
+    "19:CMT009:error",
+    "20:CMT004:error"
+  ]
+}

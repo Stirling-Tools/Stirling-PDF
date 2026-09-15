@@ -271,7 +271,7 @@ export const ColorInput_Default: Story = {
 export const ColorInput_Preselected: Story = {
   render: () => {
     function Bound() {
-      const [color, setColor] = useState("#3B82F6");
+      const [color, setColor] = useState("#3B82F6"); // theme-allow-color the ColorInput value is the datum
       return (
         <FormField label="Accent color">
           <ColorInput value={color} onChange={setColor} />
@@ -285,7 +285,7 @@ export const ColorInput_Preselected: Story = {
 export const ColorInput_SmSize: Story = {
   render: () => {
     function Bound() {
-      const [color, setColor] = useState("#EF4444");
+      const [color, setColor] = useState("#EF4444"); // theme-allow-color the ColorInput value is the datum
       return (
         <FormField label="Badge color">
           <ColorInput value={color} onChange={setColor} inputSize="sm" />
@@ -308,10 +308,12 @@ export const ColorInput_Error: Story = {
   ),
 };
 
+const DISABLED_COLOR_VALUE = "#3B82F6"; // theme-allow-color the ColorInput value is the datum
+
 export const ColorInput_Disabled: Story = {
   render: () => (
     <FormField label="Watermark color">
-      <ColorInput value="#3B82F6" onChange={() => {}} disabled />
+      <ColorInput value={DISABLED_COLOR_VALUE} onChange={() => {}} disabled />
     </FormField>
   ),
 };
@@ -444,6 +446,7 @@ export const Slider_Default: Story = {
             max={1}
             step={0.01}
             formatValue={(x) => x.toFixed(2)}
+            aria-label="Confidence threshold"
           />
         </FormField>
       );
@@ -465,6 +468,7 @@ export const Slider_WithMarks: Story = {
             max={365}
             step={1}
             formatValue={(d) => `${d}d`}
+            aria-label="Retain artifacts for"
             marks={[
               { value: 30, label: "30d" },
               { value: 90, label: "90d" },
@@ -492,6 +496,7 @@ export const Slider_NoLabel: Story = {
             max={100}
             step={1}
             showValue={false}
+            aria-label="Opacity"
           />
         </FormField>
       );

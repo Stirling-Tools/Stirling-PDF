@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { resolveLandingPath } from "@app/utils/loginLanding";
 import { supabase, signInAnonymously } from "@app/auth/supabase";
 import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
@@ -13,6 +14,11 @@ import {
   getBaseUrl,
   withBasePath,
 } from "@app/constants/app";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
+import {
+  rememberPendingDestination,
+  takePendingDestination,
+} from "@app/services/pendingDestination";
 import LinkRoundedIcon from "@mui/icons-material/LinkRounded";
 
 // Import login components
@@ -20,7 +26,6 @@ import ErrorMessage from "@app/auth/ui/ErrorMessage";
 import EmailPasswordForm from "@app/routes/login/EmailPasswordForm";
 import OAuthButtons from "@app/routes/login/OAuthButtons";
 import LoggedInState from "@app/routes/login/LoggedInState";
-import { markLoginLandingPending } from "@app/utils/loginLanding";
 import loginHeader from "@app/assets/brand/modern-logo/LoginLightModeHeader.svg";
 
 export default function Login() {
@@ -48,14 +53,14 @@ export default function Login() {
     }
   }, []);
 
-  // Same-origin relative path to return to after login (e.g. the OAuth
-  // consent page). Same sanitization rules as AuthCallback's `next`.
+  // Same-origin router path to return to after login (e.g. the OAuth consent
+  // page, or the editor a 401 bounced the user off). `?next=` is what this app
+  // writes; `?from=` is what the shared core 401 handler writes.
   const nextPath = useMemo(() => {
     try {
-      const next = new URL(window.location.href).searchParams.get("next");
-      return next && next.startsWith("/") && !next.startsWith("//")
-        ? next
-        : null;
+      const params = new URL(window.location.href).searchParams;
+      const candidate = params.get("next") ?? params.get("from");
+      return isSafePostLoginRedirect(candidate) ? candidate : null;
     } catch (_) {
       return null;
     }
@@ -67,9 +72,14 @@ export default function Login() {
     }
   }, [session, loading, nextPath, navigate]);
 
+  // Stashed as well as held in the URL: leaving to create an account loses the
+  // query string, and the confirmation link cannot carry a `next`.
+  useEffect(() => {
+    if (nextPath) rememberPendingDestination(nextPath);
+  }, [nextPath]);
+
   const baseUrl = getBaseUrl();
 
-  // Set document meta
   useDocumentMeta({
     title: `${t("login.title", "Sign in")} - Stirling PDF`,
     description: t(
@@ -165,10 +175,15 @@ export default function Login() {
         setError(error.message);
       } else if (data.user) {
         console.log("[Login] Email sign in successful");
-        // Fresh login with no explicit destination: let the role-based landing
-        // redirect route team leads to the processor. User is redirected by the
-        // auth state change.
-        if (!nextPath) markLoginLandingPending();
+        // Claimed even when `nextPath` wins: the detour is over either way.
+        const remembered = takePendingDestination();
+        // Resolved here rather than by bouncing through "/", which would tear the app
+        // down and remount it on the way.
+        if (!nextPath) {
+          navigate(remembered ?? (await resolveLandingPath()), {
+            replace: true,
+          });
+        }
       }
     } catch (err) {
       console.error("[Login] Unexpected error]:", err);
@@ -325,7 +340,7 @@ export default function Login() {
                   <p
                     style={{
                       fontSize: "0.875rem",
-                      color: "var(--c-success)",
+                      color: "var(--color-green-dark)",
                       margin: 0,
                     }}
                   >
@@ -404,7 +419,7 @@ export default function Login() {
             border: "none",
             cursor: "pointer",
             fontSize: "0.875rem",
-            color: "var(--c-primary)",
+            color: "var(--c-accent-text)",
           }}
         >
           {t("login.createAccount", "Create an account")}

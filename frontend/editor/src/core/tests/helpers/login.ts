@@ -66,8 +66,8 @@ export async function login(
   // Click Sign In (the submit button inside the auth form)
   await page.locator('button[type="submit"]').click();
 
-  // Wait for redirect to home
-  await page.waitForURL("/", { timeout: 15000 });
+  // "/" routes by role; a signed-in user lands on the editor or the processor.
+  await page.waitForURL(/\/(editor|processor)/, { timeout: 15000 });
 }
 
 /**

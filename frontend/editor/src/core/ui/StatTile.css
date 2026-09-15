@@ -27,7 +27,7 @@
   color: var(--color-amber-dark);
 }
 .sui-stat__value--danger {
-  color: var(--color-red);
+  color: var(--color-red-dark);
 }
 
 /* Inline code in a value (masked keys, model ids, URLs) reads as mono meta. */

@@ -33,6 +33,18 @@ class TeamLeaderPolicyManagementAuthorityTest {
     }
 
     @Test
+    void teamLeaderMayTriggerPolicies() {
+        when(teamSecurity.isCurrentUserTeamLeader()).thenReturn(true);
+        assertTrue(authority().canTriggerPolicies());
+    }
+
+    @Test
+    void nonLeaderMayNotTriggerPolicies() {
+        when(teamSecurity.isCurrentUserTeamLeader()).thenReturn(false);
+        assertFalse(authority().canTriggerPolicies());
+    }
+
+    @Test
     void currentUserTeamIdDelegatesToTeamSecurity() {
         when(teamSecurity.currentUserTeamId()).thenReturn(9L);
         assertEquals(9L, authority().currentUserTeamId());

@@ -1,6 +1,8 @@
 package stirling.software.proprietary.policy.engine;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
@@ -9,12 +11,16 @@ import lombok.RequiredArgsConstructor;
 import stirling.software.common.model.tool.ToolDiagnostic;
 import stirling.software.common.model.tool.ToolFormat;
 import stirling.software.common.service.ToolChainValidator;
+import stirling.software.proprietary.document.conditions.ConditionValidator;
+import stirling.software.proprietary.policy.asset.PolicyAssetRefs;
+import stirling.software.proprietary.policy.asset.PolicyAssetStore;
 import stirling.software.proprietary.policy.input.InputSource;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.source.Source;
@@ -32,11 +38,14 @@ import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 @RequiredArgsConstructor
 public class PolicyValidator {
 
+    private static final int MAX_ROUTING_RULES = 100;
+
     private final List<PolicyTrigger> triggers;
     private final List<InputSource> inputSources;
     private final List<PolicyOutputSink> outputSinks;
     private final List<PipelineStepValidator> stepValidators;
     private final SourceStore sourceStore;
+    private final PolicyAssetStore assetStore;
     private final ToolChainValidator toolChainValidator;
 
     /**
@@ -68,9 +77,76 @@ public class PolicyValidator {
             InputSpec spec = source.toInputSpec();
             inputSourceFor(spec).validate(spec);
         }
+        validateRoutingRules(policy);
         validateSteps(policy.steps());
+        validateAssetReferences(policy);
         validateChain(policy.steps());
         validateOutput(policy.output());
+    }
+
+    /**
+     * A routing rule must name a field, an operator, a destination that resolves to a writable
+     * source, and something to compare against. A rule failing any of these would never fire,
+     * silently sending its documents to the fallback instead, so it is rejected at save time rather
+     * than left to look like it works.
+     */
+    private void validateRoutingRules(Policy policy) {
+        // A cap, like the one on inputs: rules are evaluated per document per run, so an
+        // unreasonable number is a cost multiplier rather than a configuration anyone wants.
+        if (policy.routingRules().size() > MAX_ROUTING_RULES) {
+            throw new IllegalArgumentException(
+                    "a policy supports at most " + MAX_ROUTING_RULES + " routing rules");
+        }
+        for (RoutingRule rule : policy.routingRules()) {
+            ConditionValidator.validate(rule.condition());
+            if (rule.outputId() == null || rule.outputId().isBlank()) {
+                throw new IllegalArgumentException("a routing rule has no destination");
+            }
+            Source destination =
+                    sourceStore
+                            .get(rule.outputId())
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    "unknown routing destination: "
+                                                            + rule.outputId()));
+            validateOutput(destination.toOutputSpec());
+        }
+    }
+
+    /**
+     * A step binding that names stored assets ({@code asset:<id>}) must resolve in the policy's own
+     * team, so a saved pipeline can't fail its later (principal-less) runs on a missing file, and a
+     * client can't bind another team's asset by id. A binding without that prefix names a file
+     * supplied with the run instead, and is only checked when the run arrives.
+     */
+    private void validateAssetReferences(Policy policy) {
+        for (PipelineStep step : policy.steps()) {
+            for (Map.Entry<String, String> binding : step.fileParameters().entrySet()) {
+                if (!PolicyAssetRefs.isAssetRef(binding.getValue())) {
+                    continue;
+                }
+                List<String> ids = PolicyAssetRefs.assetIds(binding.getValue());
+                if (ids.isEmpty()) {
+                    throw new IllegalArgumentException(
+                            "step "
+                                    + step.operation()
+                                    + " has an empty file binding for field '"
+                                    + binding.getKey()
+                                    + "'");
+                }
+                for (String id : ids) {
+                    // One message for absent and other-team: existence must not leak across teams.
+                    assetStore
+                            .get(id)
+                            .filter(asset -> Objects.equals(asset.teamId(), policy.teamId()))
+                            .orElseThrow(
+                                    () ->
+                                            new IllegalArgumentException(
+                                                    "unknown stored file: " + id));
+                }
+            }
+        }
     }
 
     /**

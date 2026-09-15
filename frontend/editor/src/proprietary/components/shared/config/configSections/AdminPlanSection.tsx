@@ -1,5 +1,6 @@
 import React, { useState, useCallback, useEffect, useMemo } from "react";
-import { Divider, Loader, Alert } from "@mantine/core";
+import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
+import { Divider, Loader } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { usePlans } from "@app/hooks/usePlans";
 import licenseService, {
@@ -12,14 +13,13 @@ import AvailablePlansSection from "@app/components/shared/config/configSections/
 import StaticPlanSection from "@app/components/shared/config/configSections/plan/StaticPlanSection";
 import LicenseKeySection from "@app/components/shared/config/configSections/plan/LicenseKeySection";
 import { alert } from "@app/components/toast";
-import { InfoBanner } from "@app/components/shared/InfoBanner";
+import { AppBanner } from "@app/components/shared/AppBanner";
 import { useLicenseAlert } from "@app/hooks/useLicenseAlert";
 import {
   getPreferredCurrency,
   setCachedCurrency,
 } from "@app/utils/currencyDetection";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@core/components/shared/config/LoginRequiredBanner";
 import { isSupabaseConfigured } from "@app/services/supabaseClient";
 
 const AdminPlanSection: React.FC = () => {
@@ -115,10 +115,10 @@ const AdminPlanSection: React.FC = () => {
       if (currentTier === "free" && planGroup.tier === "enterprise") {
         alert({
           alertType: "warning",
-          title: t("plan.enterprise.requiresServer", "Server Plan Required"),
+          title: t("plan.enterprise.requiresServer", "Requires Team plan"),
           body: t(
             "plan.enterprise.requiresServerMessage",
-            "Please upgrade to the Server plan first before upgrading to Enterprise.",
+            "Please upgrade to the Team plan first before upgrading to Enterprise.",
           ),
         });
         return;
@@ -183,24 +183,22 @@ const AdminPlanSection: React.FC = () => {
 
   if (!plans || plans.length === 0) {
     return (
-      <Alert
-        color="yellow"
-        title={t("admin.settings.plan.noData.title", "No data available")}
+      <SettingsEmptyState
+        icon="star-rounded"
+        title={t("admin.settings.plan.noData.title", "No plan data")}
       >
         {t(
           "admin.settings.plan.noData.message",
-          "Plans data is not available at the moment.",
+          "This server could not reach the licence service. Retry, or check the licence key.",
         )}
-      </Alert>
+      </SettingsEmptyState>
     );
   }
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: "2rem" }}>
-      <LoginRequiredBanner show={!loginEnabled} />
-
       {shouldShowLicenseWarning && (
-        <InfoBanner
+        <AppBanner
           icon="warning-rounded"
           tone="warning"
           title={t(
@@ -215,13 +213,6 @@ const AdminPlanSection: React.FC = () => {
           buttonIcon="upgrade-rounded"
           onButtonClick={scrollToPlans}
           dismissible={false}
-          minHeight={68}
-          background="#FFF4E6"
-          borderColor="var(--mantine-color-orange-7)"
-          textColor="#9A3412"
-          iconColor="#EA580C"
-          buttonVariant="filled"
-          buttonColor="orange.7"
         />
       )}
 

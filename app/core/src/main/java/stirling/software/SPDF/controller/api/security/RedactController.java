@@ -1,9 +1,14 @@
 package stirling.software.SPDF.controller.api.security;
 
+import java.awt.Color;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.stream.Collectors;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPageTree;
@@ -43,6 +48,10 @@ import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.WebResponseUtils;
 import stirling.software.common.util.propertyeditor.JsonListPropertyEditor;
 import stirling.software.common.util.propertyeditor.JsonObjectPropertyEditor;
+import stirling.software.jpdfium.PdfDocument;
+import stirling.software.jpdfium.redact.PdfRedactor;
+import stirling.software.jpdfium.redact.RedactOptions;
+import stirling.software.jpdfium.redact.RedactResult;
 
 import tools.jackson.core.type.TypeReference;
 
@@ -140,134 +149,142 @@ public class RedactController {
                             + " patterns. Users can provide text patterns to redact, with options for regex"
                             + " and whole word matching.")
     public ResponseEntity<Resource> redactPdf(@ModelAttribute RedactPdfRequest request) {
-        String rawListOfText = request.getListOfText();
-        boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
-        boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
+        if (request.getFileInput() == null || request.getFileInput().isEmpty()) {
+            log.error("File input is null or empty");
+            throw ExceptionUtils.createFileNullOrEmptyException();
+        }
 
+        String rawListOfText = request.getListOfText();
         if (rawListOfText == null || rawListOfText.trim().isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.redaction.no.patterns", "No text patterns provided for redaction");
         }
 
-        String[] listOfText = rawListOfText.split("\n");
-        if (listOfText.length == 1 && listOfText[0].trim().isEmpty()) {
+        List<String> terms =
+                Arrays.stream(rawListOfText.split("\n"))
+                        .map(String::trim)
+                        .filter(s -> !s.isEmpty() && s.length() <= 4096)
+                        .collect(Collectors.toList());
+
+        if (terms.isEmpty()) {
             throw ExceptionUtils.createIllegalArgumentException(
                     "error.redaction.no.patterns", "No text patterns provided for redaction");
         }
 
-        PDDocument document = null;
-        PDDocument fallbackDocument = null;
+        boolean useRegex = Boolean.TRUE.equals(request.getUseRegex());
+        boolean wholeWordSearchBool = Boolean.TRUE.equals(request.getWholeWordSearch());
 
-        try {
-            if (request.getFileInput() == null) {
-                log.error("File input is null");
-                throw ExceptionUtils.createFileNullOrEmptyException();
+        if (useRegex) {
+            for (String term : terms) {
+                try {
+                    Pattern.compile(term);
+                } catch (PatternSyntaxException e) {
+                    throw ExceptionUtils.createIllegalArgumentException(
+                            "error.redaction.no.patterns", "Invalid regex pattern: " + term);
+                }
             }
+        }
 
-            document = pdfDocumentFactory.load(request.getFileInput());
+        String filename =
+                removeFileExtension(
+                                Objects.requireNonNull(
+                                        Filenames.toSimpleFileName(
+                                                request.getFileInput().getOriginalFilename())))
+                        + "_redacted.pdf";
 
+        Color redactColor = ManualRedactionService.decodeOrDefault(request.getRedactColor());
+        int boxColorInt = redactColor.getRGB();
+
+        try (PDDocument document = pdfDocumentFactory.load(request.getFileInput())) {
             if (document == null) {
                 log.error("Failed to load PDF document");
                 throw ExceptionUtils.createPdfCorruptedException(
                         "during redaction", new IOException("Failed to load PDF document"));
             }
 
-            Map<Integer, List<PDFText>> allFoundTextsByPage =
-                    textRedactionService.findTextToRedact(
-                            document, listOfText, useRegex, wholeWordSearchBool);
+            try (TempFile tempInput = tempFileManager.createManagedTempFile(".pdf")) {
+                try {
+                    request.getFileInput().transferTo(tempInput.getFile());
+                } catch (Exception e) {
+                    document.save(tempInput.getFile());
+                }
 
-            int totalMatches = allFoundTextsByPage.values().stream().mapToInt(List::size).sum();
-            log.info(
-                    "Redaction scan: {} occurrences across {} pages (patterns={}, regex={}, wholeWord={})",
-                    totalMatches,
-                    allFoundTextsByPage.size(),
-                    listOfText.length,
-                    useRegex,
-                    wholeWordSearchBool);
+                RedactOptions options =
+                        RedactOptions.builder()
+                                .addWords(terms)
+                                .useRegex(useRegex)
+                                .wholeWord(wholeWordSearchBool)
+                                .boxColor(boxColorInt)
+                                .padding(request.getCustomPadding())
+                                .removeContent(true)
+                                .convertToImage(Boolean.TRUE.equals(request.getConvertPDFToImage()))
+                                .normalizeFonts(false)
+                                .fixToUnicode(false)
+                                .glyphAware(true)
+                                .ligatureAware(true)
+                                .bidiAware(true)
+                                .graphemeSafe(true)
+                                .sanitizeStructure(false) // WIP/Experimental API
+                                .redactMetadata(true)
+                                .build();
 
-            String filename =
-                    removeFileExtension(
-                                    Objects.requireNonNull(
-                                            Filenames.toSimpleFileName(
-                                                    request.getFileInput().getOriginalFilename())))
-                            + "_redacted.pdf";
+                TempFile tempOutput = tempFileManager.createManagedTempFile(".pdf");
+                try {
+                    try (PdfDocument checkDoc = PdfDocument.open(tempInput.getFile().toPath())) {
+                        if (checkDoc.pageCount() <= 0) {
+                            throw new IOException("Invalid or empty PDF document");
+                        }
+                    }
 
-            if (allFoundTextsByPage.isEmpty()) {
-                log.info("No text found matching redaction patterns");
-                return WebResponseUtils.pdfDocToWebResponse(document, filename, tempFileManager);
+                    log.debug(
+                            "Calling JPDFium PdfRedactor.redact in RedactController (terms={})",
+                            terms);
+                    RedactResult result = PdfRedactor.redact(tempInput.getFile().toPath(), options);
+                    log.debug(
+                            "JPDFium auto-redact complete (matches={})",
+                            result != null ? result.totalMatches() : -1);
+                    if (result == null) {
+                        throw new IOException("JPDFium auto-redact returned null result");
+                    }
+                    try {
+                        result.save(tempOutput.getFile().toPath());
+                        log.info(
+                                "JPDFium auto-redact: {} matches processed into {}",
+                                result.totalMatches(),
+                                filename);
+                        return WebResponseUtils.pdfFileToWebResponse(tempOutput, filename);
+                    } finally {
+                        if (result.document() != null) {
+                            result.document().close();
+                        }
+                    }
+                } catch (Exception e) {
+                    tempOutput.close();
+                    log.warn(
+                            "JPDFium native redaction fell back to manual redaction service: {}",
+                            e.getMessage());
+                    Map<Integer, List<PDFText>> foundTexts =
+                            textRedactionService.findTextToRedact(
+                                    document,
+                                    terms.toArray(new String[0]),
+                                    useRegex,
+                                    wholeWordSearchBool);
+                    TempFile finalized =
+                            manualRedactionService.finalizeRedaction(
+                                    document,
+                                    foundTexts,
+                                    request.getRedactColor(),
+                                    request.getCustomPadding(),
+                                    request.getConvertPDFToImage(),
+                                    false);
+                    return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
+                }
             }
-
-            boolean fallbackToBoxOnlyMode;
-            try {
-                fallbackToBoxOnlyMode =
-                        textRedactionService.performTextReplacement(
-                                document,
-                                allFoundTextsByPage,
-                                listOfText,
-                                useRegex,
-                                wholeWordSearchBool);
-            } catch (Exception e) {
-                log.warn(
-                        "Text replacement redaction failed, falling back to box-only mode: {}",
-                        e.getMessage());
-                fallbackToBoxOnlyMode = true;
-            }
-
-            if (fallbackToBoxOnlyMode) {
-                log.warn(
-                        "Font compatibility issues detected. Using box-only redaction mode for better reliability.");
-
-                fallbackDocument = pdfDocumentFactory.load(request.getFileInput());
-
-                allFoundTextsByPage =
-                        textRedactionService.findTextToRedact(
-                                fallbackDocument, listOfText, useRegex, wholeWordSearchBool);
-
-                TempFile finalized =
-                        manualRedactionService.finalizeRedaction(
-                                fallbackDocument,
-                                allFoundTextsByPage,
-                                request.getRedactColor(),
-                                request.getCustomPadding(),
-                                request.getConvertPDFToImage(),
-                                false);
-
-                return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
-            }
-
-            TempFile finalized =
-                    manualRedactionService.finalizeRedaction(
-                            document,
-                            allFoundTextsByPage,
-                            request.getRedactColor(),
-                            request.getCustomPadding(),
-                            request.getConvertPDFToImage(),
-                            true);
-
-            return WebResponseUtils.pdfFileToWebResponse(finalized, filename);
-
+        } catch (IllegalArgumentException e) {
+            throw e;
         } catch (Exception e) {
             log.error("Redaction operation failed: {}", e.getMessage(), e);
             throw new RuntimeException("Failed to perform PDF redaction: " + e.getMessage(), e);
-
-        } finally {
-            if (document != null) {
-                try {
-                    if (fallbackDocument == null) {
-                        document.close();
-                    }
-                } catch (IOException e) {
-                    log.warn("Failed to close main document: {}", e.getMessage());
-                }
-            }
-
-            if (fallbackDocument != null) {
-                try {
-                    fallbackDocument.close();
-                } catch (IOException e) {
-                    log.warn("Failed to close fallback document: {}", e.getMessage());
-                }
-            }
         }
     }
 

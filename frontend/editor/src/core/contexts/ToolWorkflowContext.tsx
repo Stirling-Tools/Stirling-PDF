@@ -29,6 +29,8 @@ import {
   isBaseWorkbench,
 } from "@app/types/workbench";
 import { useNavigationUrlSync } from "@app/hooks/useUrlSync";
+import { stripBasePath } from "@app/constants/app";
+import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
 import {
@@ -39,23 +41,26 @@ import {
 import type { ToolPanelMode } from "@app/constants/toolPanel";
 import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useToolRegistry } from "@app/contexts/ToolRegistryContext";
+import { ToolFileEligibilityProvider } from "@app/contexts/ToolFileEligibilityContext";
 
 // State interface
 // Types and reducer/state moved to './toolWorkflow/state'
 
 // Context value interface
-export interface CustomWorkbenchViewRegistration {
+export interface CustomWorkbenchViewRegistration<T = unknown> {
   id: string;
   workbenchId: WorkbenchType;
   label: string;
   icon?: React.ReactNode;
-  component: React.ComponentType<{ data: any }>;
+  component: React.ComponentType<{ data: T }>;
   hideTopControls?: boolean;
   hideToolPanel?: boolean;
 }
 
-export interface CustomWorkbenchViewInstance extends CustomWorkbenchViewRegistration {
-  data: any;
+export interface CustomWorkbenchViewInstance<
+  T = unknown,
+> extends CustomWorkbenchViewRegistration<T> {
+  data: T;
 }
 
 interface ToolWorkflowContextValue extends ToolWorkflowState {
@@ -72,6 +77,9 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
+  /** Register work that turns the current preview into a real file. Tool
+   * selection runs it first, so a tool never acts on the wrong document. */
+  registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
 
@@ -105,22 +113,28 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   isFavorite: (toolId: ToolId) => boolean;
 
   customWorkbenchViews: CustomWorkbenchViewInstance[];
-  registerCustomWorkbenchView: (view: CustomWorkbenchViewRegistration) => void;
+  registerCustomWorkbenchView: <T>(
+    view: CustomWorkbenchViewRegistration<T>,
+  ) => void;
   unregisterCustomWorkbenchView: (id: string) => void;
-  setCustomWorkbenchViewData: (id: string, data: any) => void;
+  setCustomWorkbenchViewData: <T>(
+    id: string,
+    data: T | ((prev: T) => T),
+  ) => void;
   clearCustomWorkbenchViewData: (id: string) => void;
 }
 
 // Ensure a single context instance across HMR to avoid provider/consumer mismatches
 const __GLOBAL_CONTEXT_KEY__ = "__ToolWorkflowContext__";
-const existingContext = (globalThis as any)[__GLOBAL_CONTEXT_KEY__] as
-  | React.Context<ToolWorkflowContextValue | undefined>
-  | undefined;
+const existingContext = (globalThis as Record<string, unknown>)[
+  __GLOBAL_CONTEXT_KEY__
+] as React.Context<ToolWorkflowContextValue | undefined> | undefined;
 const ToolWorkflowContext =
   existingContext ??
   createContext<ToolWorkflowContextValue | undefined>(undefined);
 if (!existingContext) {
-  (globalThis as any)[__GLOBAL_CONTEXT_KEY__] = ToolWorkflowContext;
+  (globalThis as Record<string, unknown>)[__GLOBAL_CONTEXT_KEY__] =
+    ToolWorkflowContext;
 }
 
 /**
@@ -142,6 +156,9 @@ export interface ToolWorkflowActionsValue {
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
+  /** Register work that turns the current preview into a real file. Tool
+   * selection runs it first, so a tool never acts on the wrong document. */
+  registerPreviewImport: (importFile: (() => Promise<void>) | null) => void;
   setPageEditorFunctions: (functions: PageEditorFunctions | null) => void;
   setSearchQuery: (query: string) => void;
   registerToolReset: (toolId: string, resetFunction: () => void) => void;
@@ -185,7 +202,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     Record<string, CustomWorkbenchViewRegistration>
   >({});
   const [customViewData, setCustomViewData] = React.useState<
-    Record<string, any>
+    Record<string, unknown>
   >({});
 
   // Navigation actions and state are available since we're inside NavigationProvider
@@ -218,8 +235,8 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const setReaderMode = useCallback(
     (mode: boolean) => {
       if (mode) {
+        // Reading is a mode the open document is put into, not a tool run on it.
         actions.setWorkbench("viewer");
-        actions.setSelectedTool("read");
       }
       dispatch({ type: "SET_READER_MODE", payload: mode });
     },
@@ -245,6 +262,16 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     [actions],
   );
 
+  // A preview is not in the file store, so tools would resolve to whatever the
+  // viewer had open before it. Whoever owns the preview leaves the import here.
+  const previewImportRef = useRef<(() => Promise<void>) | null>(null);
+  const registerPreviewImport = useCallback(
+    (importFile: (() => Promise<void>) | null) => {
+      previewImportRef.current = importFile;
+    },
+    [],
+  );
+
   const setPageEditorFunctions = useCallback(
     (functions: PageEditorFunctions | null) => {
       dispatch({ type: "SET_PAGE_EDITOR_FUNCTIONS", payload: functions });
@@ -257,8 +284,13 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   }, []);
 
   const registerCustomWorkbenchView = useCallback(
-    (view: CustomWorkbenchViewRegistration) => {
-      setCustomViewRegistry((prev) => ({ ...prev, [view.id]: view }));
+    <T,>(view: CustomWorkbenchViewRegistration<T>) => {
+      setCustomViewRegistry((prev) => ({
+        ...prev,
+        // Type-erase the view's data shape for uniform storage; the render site
+        // hands the opaque data back to this same component to narrow.
+        [view.id]: view as CustomWorkbenchViewRegistration,
+      }));
     },
     [],
   );
@@ -298,12 +330,12 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   );
 
   const setCustomWorkbenchViewData = useCallback(
-    (id: string, dataOrUpdater: any | ((prev: any) => any)) => {
+    <T,>(id: string, dataOrUpdater: T | ((prev: T) => T)) => {
       setCustomViewData((prev) => {
-        const currentData = prev[id];
+        const currentData = prev[id] as T;
         const newData =
           typeof dataOrUpdater === "function"
-            ? dataOrUpdater(currentData)
+            ? (dataOrUpdater as (prev: T) => T)(currentData)
             : dataOrUpdater;
         return { ...prev, [id]: newData };
       });
@@ -373,15 +405,28 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   // This runs once to navigate to the user's preferred tab (read/automate)
   // instead of always starting on the tools tab.
   const hasAppliedStartupView = React.useRef(false);
+  // Set when the startup view picks the tool, so the URL sync knows this
+  // selection came from a preference and must not be written to the address.
+  const startupSelectedToolRef = React.useRef<ToolId | null>(null);
   useEffect(() => {
     if (hasAppliedStartupView.current) return;
+    // The URL wins: the startup view decides what you see when you arrive at the
+    // editor's home, never what a deep link to a tool shows. Without this, a
+    // "Reader" preference rewrote every /<tool> link to /read.
+    const path = stripBasePath(window.location.pathname);
+    if (path !== "/" && path !== EDITOR_BASENAME) {
+      hasAppliedStartupView.current = true;
+      return;
+    }
     const startupView = preferences.defaultStartupView;
     if (startupView === "read") {
       hasAppliedStartupView.current = true;
+      startupSelectedToolRef.current = "read";
       setReaderMode(true);
       actions.setSelectedTool("read");
     } else if (startupView === "automate") {
       hasAppliedStartupView.current = true;
+      startupSelectedToolRef.current = "automate";
       actions.setSelectedTool("automate");
       setLeftPanelView("toolContent");
     }
@@ -458,6 +503,14 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
         navigationState.selectedTool !== toolId
       ) {
         actions.requestNavigation(() => handleToolSelect(toolId));
+        return;
+      }
+
+      // Promote the preview first, then reopen this selection against the real file.
+      const importPreview = previewImportRef.current;
+      if (importPreview) {
+        previewImportRef.current = null;
+        void importPreview().then(() => handleToolSelect(toolId));
         return;
       }
 
@@ -573,6 +626,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     handleBackToTools,
     allTools,
     true,
+    startupSelectedToolRef,
   );
 
   // Ref-backed wrappers so callback identities stay stable across renders.
@@ -651,6 +705,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setReaderMode: stableSetReaderMode,
       setToolPanelMode: stableSetToolPanelMode,
       setPreviewFile: stableSetPreviewFile,
+      registerPreviewImport,
       setPageEditorFunctions,
       setSearchQuery,
       registerToolReset,
@@ -709,6 +764,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       setReaderMode,
       setToolPanelMode,
       setPreviewFile,
+      registerPreviewImport,
       setPageEditorFunctions,
       setSearchQuery,
       selectTool: actions.setSelectedTool,
@@ -779,7 +835,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     <ToolWorkflowActionsContext.Provider value={actionsValue}>
       <ToolWorkflowDataContext.Provider value={dataValue}>
         <ToolWorkflowContext.Provider value={contextValue}>
-          {children}
+          <ToolFileEligibilityProvider>{children}</ToolFileEligibilityProvider>
         </ToolWorkflowContext.Provider>
       </ToolWorkflowDataContext.Provider>
     </ToolWorkflowActionsContext.Provider>

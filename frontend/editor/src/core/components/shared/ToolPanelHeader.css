@@ -34,7 +34,7 @@
   height: 1.75rem;
   border-radius: 9999px;
   background: var(--mantine-color-blue-light);
-  color: var(--mantine-color-blue-filled);
+  color: var(--c-accent-text);
   flex-shrink: 0;
 }
 
@@ -79,15 +79,15 @@
     var(--mantine-color-blue-filled) 18%,
     transparent
   );
-  color: var(--mantine-color-blue-3, var(--mantine-color-blue-filled));
+  color: var(--c-accent-text);
 }
 
 /* Dark mode: the subtle gray close button is too dim against the dark rail —
    brighten it to a clearly-visible light grey (near-white on hover). */
 [data-mantine-color-scheme="dark"] .sui-panelhdr__close {
-  color: var(--mantine-color-gray-4);
+  color: var(--c-text-subtle);
 }
 
 [data-mantine-color-scheme="dark"] .sui-panelhdr__close:hover {
-  color: var(--mantine-color-gray-2);
+  color: var(--c-text-subtle);
 }

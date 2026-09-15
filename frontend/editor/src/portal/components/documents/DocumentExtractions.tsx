@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import LockRounded from "@mui/icons-material/LockRounded";
-import { StatusBadge, Table, type TableColumn } from "@app/ui";
+import { column, DataTable, type DataTableColumn } from "@app/ui";
 import { type Extraction, type ReviewDocument } from "@portal/api/documents";
 import {
   confidencePct,
@@ -24,32 +24,30 @@ export function DocumentExtractions({
 }: DocumentExtractionsProps) {
   const { t } = useTranslation();
 
-  const cols: TableColumn<Extraction>[] = [
-    {
+  const cols: DataTableColumn<Extraction>[] = [
+    column.text({
       key: "field",
       header: t("portal.documents.extractions.columns.field"),
-      render: (e) => <span className="portal-documents__field">{e.field}</span>,
-    },
-    {
+      sortable: true,
+      get: (e) => e.field,
+    }),
+    column.mono({
       key: "value",
       header: t("portal.documents.extractions.columns.value"),
-      render: (e) => <span className="portal-documents__mono">{e.value}</span>,
-    },
-    {
+      get: (e) => e.value,
+    }),
+    column.badge({
       key: "confidence",
       header: t("portal.documents.extractions.columns.confidence"),
-      align: "right",
-      width: "7rem",
-      render: (e) => (
-        <StatusBadge
-          tone={confidenceTone(e.confidence)}
-          size="sm"
-          showDot={false}
-        >
-          {confidencePct(e.confidence)}
-        </StatusBadge>
-      ),
-    },
+      sortable: true,
+      // Sort on the whole-percent integer, not the "92%" label (keeps decimals
+      // out of the natural-sort comparator).
+      sortBy: (e) => Math.round(e.confidence * 100),
+      get: (e) => ({
+        tone: confidenceTone(e.confidence),
+        label: confidencePct(e.confidence),
+      }),
+    }),
   ];
 
   if (doc.sensitive && !unlocked) {
@@ -66,7 +64,7 @@ export function DocumentExtractions({
   }
 
   return (
-    <Table<Extraction>
+    <DataTable<Extraction>
       columns={cols}
       rows={doc.extractions}
       rowKey={(e) => e.field}

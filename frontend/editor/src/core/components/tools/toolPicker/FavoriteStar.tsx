@@ -29,7 +29,11 @@ const FavoriteStar: React.FC<FavoriteStarProps> = ({
 
   return (
     <ActionIcon
+      // A span, not a button: this renders inside the tool row's own button in
+      // the fullscreen tool lists, and a control may not nest inside a control.
+      // role="button" is still required for the aria-label to be permitted.
       as="span"
+      role="button"
       variant="tertiary"
       shape="circle"
       size={SIZE_MAP[size]}

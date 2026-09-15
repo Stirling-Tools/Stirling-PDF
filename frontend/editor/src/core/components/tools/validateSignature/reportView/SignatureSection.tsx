@@ -96,7 +96,7 @@ const SignatureSection = ({
           <SignatureStatusBadge signature={signature} />
         </Group>
         {signature.errorMessage && (
-          <Text c="red" size="sm">
+          <Text c="var(--color-red-dark)" size="sm">
             {signature.errorMessage}
           </Text>
         )}

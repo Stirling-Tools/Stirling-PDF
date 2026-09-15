@@ -7,16 +7,11 @@ import React, {
 } from "react";
 import { Text, Checkbox } from "@mantine/core";
 import { useIsMobile } from "@app/hooks/useIsMobile";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
-import ArrowForwardIcon from "@mui/icons-material/ArrowForward";
-import RotateLeftIcon from "@mui/icons-material/RotateLeft";
-import RotateRightIcon from "@mui/icons-material/RotateRight";
-import DeleteIcon from "@mui/icons-material/Delete";
-import ContentCutIcon from "@mui/icons-material/ContentCut";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import { PDFPage, PDFDocument } from "@app/types/pageEditor";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
 import { getFileColorWithOpacity } from "@app/components/pageEditor/fileColors";
+import { type DragHandleProps } from "@app/components/pageEditor/DragDropGrid";
 import styles from "@app/components/pageEditor/PageEditor.module.css";
 import HoverActionMenu, {
   HoverAction,
@@ -38,7 +33,7 @@ interface PageThumbnailProps {
   activeDragIds: string[];
   justMoved?: boolean;
   pageRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
-  dragHandleProps?: any;
+  dragHandleProps?: DragHandleProps;
   onReorderPages: (
     sourcePageNumber: number,
     targetIndex: number,
@@ -323,7 +318,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
     () => [
       {
         id: "move-left",
-        icon: <ArrowBackIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="arrow-left" size={20} />,
         label: "Move Left",
         onClick: (e) => {
           e.stopPropagation();
@@ -336,7 +331,7 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       },
       {
         id: "move-right",
-        icon: <ArrowForwardIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="arrow-right" size={20} />,
         label: "Move Right",
         onClick: (e) => {
           e.stopPropagation();
@@ -350,33 +345,33 @@ const PageThumbnail: React.FC<PageThumbnailProps> = ({
       },
       {
         id: "rotate-left",
-        icon: <RotateLeftIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="rotate-ccw" size={20} />,
         label: "Rotate Left",
         onClick: handleRotateLeft,
       },
       {
         id: "rotate-right",
-        icon: <RotateRightIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="rotate-cw" size={20} />,
         label: "Rotate Right",
         onClick: handleRotateRight,
       },
       {
         id: "delete",
-        icon: <DeleteIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="trash" size={20} />,
         label: "Delete Page",
         onClick: handleDelete,
         color: "red",
       },
       {
         id: "split",
-        icon: <ContentCutIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="scissors" size={20} />,
         label: "Split After",
         onClick: handleSplit,
         hidden: pageIndex >= totalPages - 1,
       },
       {
         id: "insert",
-        icon: <AddIcon style={{ fontSize: 20 }} />,
+        icon: <Icon name="plus" size={20} />,
         label: "Insert File After",
         onClick: handleInsertFileAfter,
       },

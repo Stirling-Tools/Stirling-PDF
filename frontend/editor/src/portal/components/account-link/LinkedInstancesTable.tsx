@@ -1,136 +1,102 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import type { TFunction } from "i18next";
-import {
-  Button,
-  Card,
-  EmptyState,
-  StatusBadge,
-  Table,
-  type TableColumn,
-} from "@app/ui";
-import type { LinkedInstanceRow } from "@portal/api/link";
+import { Button, EmptyState, Modal } from "@app/ui";
+import { ConnectedInstanceRow } from "@app/components/settings/ConnectedInstanceRow";
+import type { LinkedInstanceRow } from "@app/types/linkedInstance";
 
 interface Props {
   instances: LinkedInstanceRow[];
-  /** Called when the leader revokes a (non-revoked) instance. */
   onRevoke: (instance: LinkedInstanceRow) => void;
-  /** instanceId currently being revoked — disables its button + shows progress. */
   revokingId?: number | null;
+  excludingCurrent?: boolean;
 }
 
-function relativeTime(iso: string | null, t: TFunction): string {
-  if (!iso) return t("portal.accountLink.instances.time.never", "never");
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const mins = Math.round(diffMs / 60_000);
-  if (mins < 1)
-    return t("portal.accountLink.instances.time.justNow", "just now");
-  if (mins < 60)
-    return t("portal.accountLink.instances.time.minutesAgo", "{{count}}m ago", {
-      count: mins,
-    });
-  const hrs = Math.round(mins / 60);
-  if (hrs < 24)
-    return t("portal.accountLink.instances.time.hoursAgo", "{{count}}h ago", {
-      count: hrs,
-    });
-  return t("portal.accountLink.instances.time.daysAgo", "{{count}}d ago", {
-    count: Math.round(hrs / 24),
-  });
-}
-
-/** List of linked self-hosted instances with a leader-only revoke action. */
+/** Uses the shared cloud row design while retaining the portal's owner-authorized revoke API. */
 export function LinkedInstancesTable({
   instances,
   onRevoke,
   revokingId,
+  excludingCurrent = false,
 }: Props) {
   const { t } = useTranslation();
-  const cols: TableColumn<LinkedInstanceRow>[] = [
-    {
-      key: "name",
-      header: t("portal.accountLink.instances.columns.instance", "Instance"),
-      render: (i) => (
-        <div className="portal-link__cell-stack">
-          <span className="portal-link__cell-strong">
-            {i.name ??
-              t("portal.accountLink.instances.unnamed", "Unnamed instance")}
-          </span>
-          <code className="portal-link__device-id">{i.deviceId}</code>
-        </div>
-      ),
-    },
-    {
-      key: "status",
-      header: t("portal.accountLink.instances.columns.status", "Status"),
-      render: (i) =>
-        i.revoked ? (
-          <StatusBadge tone="danger" size="sm">
-            {t("portal.accountLink.instances.revoked", "Revoked")}
-          </StatusBadge>
-        ) : (
-          <StatusBadge tone="success" size="sm">
-            {t("portal.accountLink.instances.active", "Active")}
-          </StatusBadge>
-        ),
-    },
-    {
-      key: "lastSeen",
-      header: t("portal.accountLink.instances.columns.lastSeen", "Last seen"),
-      render: (i) => (
-        <span className="portal-link__muted">
-          {relativeTime(i.lastSeenAt, t)}
-        </span>
-      ),
-    },
-    {
-      key: "created",
-      header: t("portal.accountLink.instances.columns.linked", "Linked"),
-      render: (i) => (
-        <span className="portal-link__muted">
-          {relativeTime(i.createdAt, t)}
-        </span>
-      ),
-    },
-    {
-      key: "actions",
-      header: "",
-      align: "right",
-      render: (i) =>
-        i.revoked ? null : (
-          <Button
-            variant="secondary"
-            accent="danger"
-            size="sm"
-            loading={revokingId === i.instanceId}
-            onClick={() => onRevoke(i)}
-          >
-            {t("portal.accountLink.instances.revoke", "Revoke")}
-          </Button>
-        ),
-    },
-  ];
-
+  const [selected, setSelected] = useState<LinkedInstanceRow | null>(null);
+  const connected = instances.filter((instance) => !instance.revoked);
   return (
-    <Card padding="none">
-      {instances.length === 0 ? (
+    <>
+      {connected.length > 0 ? (
+        <ul className="account-connection__list">
+          {connected.map((instance) => (
+            <ConnectedInstanceRow
+              key={instance.instanceId}
+              instance={instance}
+              busy={revokingId != null}
+              onRemove={() => setSelected(instance)}
+            />
+          ))}
+        </ul>
+      ) : (
         <EmptyState
           size="compact"
           title={t(
-            "portal.accountLink.instances.empty.title",
-            "No linked instances",
+            excludingCurrent
+              ? "portal.accountLink.instances.empty.otherTitle"
+              : "portal.accountLink.instances.empty.title",
+            excludingCurrent
+              ? "No other connected instances"
+              : "No connected instances",
           )}
           description={t(
-            "portal.accountLink.instances.empty.description",
-            "Link this org's account, then register your self-hosted instances to see them here.",
+            excludingCurrent
+              ? "portal.accountLink.instances.empty.otherDescription"
+              : "portal.accountLink.instances.empty.description",
+            excludingCurrent
+              ? "This is the only connected instance shown for your team."
+              : "Connect a self-hosted server to your team to see it here.",
           )}
         />
-      ) : (
-        <Table
-          columns={cols}
-          rows={instances}
-          rowKey={(i) => String(i.instanceId)}
-        />
       )}
-    </Card>
+
+      <Modal
+        open={selected !== null}
+        onClose={() => setSelected(null)}
+        width="sm"
+        title={t(
+          "settings.connectedInstances.confirmTitle",
+          "Remove {{name}}?",
+          {
+            name:
+              selected?.name ??
+              t("portal.accountLink.instances.unnamed", "Unnamed instance"),
+          },
+        )}
+        footer={
+          <div className="account-connection__actions">
+            <Button
+              variant="secondary"
+              onClick={() => setSelected(null)}
+              data-autofocus
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              accent="danger"
+              onClick={() => {
+                if (selected) onRevoke(selected);
+                setSelected(null);
+              }}
+            >
+              {t("settings.connectedInstances.remove", "Remove connection")}
+            </Button>
+          </div>
+        }
+      >
+        <p>
+          {t(
+            "settings.connectedInstances.confirmBody",
+            "This revokes the instance’s access to your team in Stirling Cloud. It does not delete local files or remove usage already recorded. To connect again, follow the original connection steps on the instance.",
+          )}
+        </p>
+      </Modal>
+    </>
   );
 }

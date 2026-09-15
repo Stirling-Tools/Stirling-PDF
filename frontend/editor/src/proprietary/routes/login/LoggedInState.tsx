@@ -55,7 +55,7 @@ export default function LoggedInState() {
             style={{
               fontSize: "24px",
               fontWeight: "bold",
-              color: "var(--c-success)",
+              color: "var(--color-green-dark)",
               marginBottom: "8px",
             }}
           >

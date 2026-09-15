@@ -74,6 +74,10 @@ export interface SourceFieldDef {
   helperTextKey?: string;
   options?: { value: string; labelKey: string }[];
   defaultValue?: string;
+  /** Tucked behind the "Advanced" disclosure: power settings whose default suits almost everyone. */
+  advanced?: boolean;
+  /** Only rendered while another field currently holds one of these values (e.g. a knob that only applies in some modes). */
+  visibleWhen?: { key: string; oneOf: string[] };
   /**
    * For `control: "connection"` - the connection-catalogue entry id this slot accepts (e.g.
    * "sftp"). Filters the picker to matching connections and pins the inline "new connection" form.
@@ -116,11 +120,16 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
       labelKey: "portal.sources.networkFields.mode.label",
       control: "select",
       defaultValue: "consume",
-      helperTextKey: "portal.sources.networkFields.mode.helperText",
+      helperTextKey: "portal.sources.processingModeHelp",
+      advanced: true,
       options: [
         {
           value: "consume",
           labelKey: "portal.sources.networkFields.mode.options.consume",
+        },
+        {
+          value: "track",
+          labelKey: "portal.sources.networkFields.mode.options.track",
         },
         {
           value: "snapshot",
@@ -133,6 +142,7 @@ function networkSourceFields(connectionTypeId: string): SourceFieldDef[] {
       labelKey: "portal.sources.networkFields.recursive.label",
       control: "select",
       defaultValue: "false",
+      helperTextKey: "portal.sources.networkFields.recursive.helperText",
       options: [
         {
           value: "false",
@@ -168,10 +178,16 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "portal.sources.types.folder.fields.mode.label",
         control: "select",
         defaultValue: "consume",
+        helperTextKey: "portal.sources.processingModeHelp",
+        advanced: true,
         options: [
           {
             value: "consume",
             labelKey: "portal.sources.types.folder.fields.mode.options.consume",
+          },
+          {
+            value: "track",
+            labelKey: "portal.sources.types.folder.fields.mode.options.track",
           },
           {
             value: "snapshot",
@@ -185,6 +201,8 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "portal.sources.types.folder.fields.recursive.label",
         control: "select",
         defaultValue: "false",
+        helperTextKey:
+          "portal.sources.types.folder.fields.recursive.helperText",
         options: [
           {
             value: "false",
@@ -204,6 +222,10 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         control: "select",
         defaultValue: "stat",
         helperTextKey: "portal.sources.types.folder.fields.identity.helperText",
+        advanced: true,
+        // Change detection governs the ledger, which only consume and track keep;
+        // snapshot re-reads everything regardless.
+        visibleWhen: { key: "mode", oneOf: ["consume", "track"] },
         options: [
           {
             value: "stat",
@@ -243,11 +265,16 @@ export const CREATABLE_SOURCE_TYPES: CreatableSourceType[] = [
         labelKey: "portal.sources.types.s3.fields.mode.label",
         control: "select",
         defaultValue: "consume",
-        helperTextKey: "portal.sources.types.s3.fields.mode.helperText",
+        helperTextKey: "portal.sources.processingModeHelp",
+        advanced: true,
         options: [
           {
             value: "consume",
             labelKey: "portal.sources.types.s3.fields.mode.options.consume",
+          },
+          {
+            value: "track",
+            labelKey: "portal.sources.types.s3.fields.mode.options.track",
           },
           {
             value: "snapshot",

@@ -21,16 +21,17 @@ import argparse
 import json
 import os
 import sys
+from collections.abc import Iterable
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable
+
+from defusedxml.ElementTree import ParseError as _XMLParseError
 
 # `defusedxml` swaps out the stdlib expat parser for one that rejects the
 # usual XML attack vectors (XXE / billion laughs / entity expansion). Even
 # though JaCoCo XML on a CI runner is trusted input, swapping the parser is
 # a one-line change that silences security scanners and costs nothing.
 from defusedxml.ElementTree import parse as _xml_parse
-from defusedxml.ElementTree import ParseError as _XMLParseError
 
 JACOCO_COUNTERS = ("LINE", "BRANCH", "METHOD", "CLASS", "INSTRUCTION", "COMPLEXITY")
 
@@ -48,7 +49,7 @@ class CounterTotals:
     def pct(self) -> float:
         return 100.0 * self.covered / self.total if self.total else 0.0
 
-    def add(self, other: "CounterTotals") -> None:
+    def add(self, other: CounterTotals) -> None:
         self.covered += other.covered
         self.missed += other.missed
 
@@ -108,9 +109,7 @@ def render_jacoco(reports: Iterable[tuple[str, Path]]) -> str:
         return body
 
     lines: list[str] = []
-    lines.append(
-        "| Metric | " + " | ".join(label for label, _ in rows) + " | **Aggregate** |"
-    )
+    lines.append("| Metric | " + " | ".join(label for label, _ in rows) + " | **Aggregate** |")
     lines.append("|---" * (len(rows) + 2) + "|")
 
     for t in ("LINE", "BRANCH", "METHOD", "CLASS"):

@@ -1,0 +1,44 @@
+/**
+ * The empty-pipeline stand-in: a dashed node in the row the first step will take. Dashed rather
+ * than solid so it reads as "not yet a step", and full width so it is an obvious target.
+ */
+
+.portal-graph-placeholder.sui-btn {
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  padding: 0.625rem 0.75rem;
+  background: none;
+  border: 1px dashed var(--c-border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--c-text-muted);
+  font-weight: 400;
+  text-align: left;
+  transition:
+    border-color var(--motion-fast),
+    color var(--motion-fast),
+    background var(--motion-fast);
+}
+
+.portal-graph-placeholder.sui-btn:hover {
+  border-color: var(--c-primary);
+  border-style: solid;
+  color: var(--c-accent-fg, var(--c-primary));
+  background: var(--c-surface);
+}
+
+/* Mantine lays a button's children out inside its label element, not on the root. */
+.portal-graph-placeholder.sui-btn .mantine-Button-label {
+  flex: 1 1 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.625rem;
+  min-width: 0;
+  overflow: visible;
+}
+
+.portal-graph-placeholder__title {
+  font-size: 0.875rem;
+  font-weight: 500;
+}

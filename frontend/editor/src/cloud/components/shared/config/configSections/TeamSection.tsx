@@ -8,6 +8,7 @@ import {
   Table,
   Badge,
   Menu,
+  Modal,
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
@@ -29,9 +30,17 @@ const TeamSection: React.FC = () => {
     inviteUser,
     cancelInvitation,
     removeMember,
+    transferLeadership,
+    claimLeadership,
     leaveTeam,
     refreshTeams,
   } = useSaaSTeam();
+
+  const [transferTarget, setTransferTarget] = useState<{
+    id: number;
+    email: string;
+  } | null>(null);
+  const [transferring, setTransferring] = useState(false);
 
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
@@ -216,6 +225,98 @@ const TeamSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
+      <Modal
+        opened={transferTarget !== null}
+        onClose={() => !transferring && setTransferTarget(null)}
+        title={t("team.transferTitle", "Transfer team ownership")}
+        zIndex={Z_INDEX_OVER_CONFIG_MODAL + 1}
+      >
+        <Stack>
+          {error && <Alert color="red">{error}</Alert>}
+          <Text>
+            {t(
+              "team.transferBody",
+              "Make {{email}} the team owner? They will control team membership and organization billing settings. You will become a member. The team's subscription and wallet stay with the team.",
+              { email: transferTarget?.email },
+            )}
+          </Text>
+          <Group justify="flex-end">
+            <Button
+              variant="tertiary"
+              disabled={transferring}
+              onClick={() => setTransferTarget(null)}
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              accent="danger"
+              disabled={transferring}
+              onClick={async () => {
+                if (!transferTarget) return;
+                setTransferring(true);
+                setError(null);
+                try {
+                  await transferLeadership(transferTarget.id);
+                  setTransferTarget(null);
+                  setSuccess(
+                    t(
+                      "team.transferSuccess",
+                      "Team ownership transferred. Your role is now member.",
+                    ),
+                  );
+                } catch {
+                  setError(
+                    t(
+                      "team.transferError",
+                      "Ownership could not be transferred. Refresh the team and try again.",
+                    ),
+                  );
+                } finally {
+                  setTransferring(false);
+                }
+              }}
+            >
+              {t("team.makeOwner", "Make owner")}
+            </Button>
+          </Group>
+        </Stack>
+      </Modal>
+
+      {!isPersonalTeam &&
+        teamMembers.length > 0 &&
+        !teamMembers.some((m) => m.role === "LEADER") && (
+          <Alert title={t("team.noOwner", "This team has no owner")}>
+            <Text>
+              {t(
+                "team.recoverBody",
+                "An existing member can recover ownership to manage the team and its billing settings.",
+              )}
+            </Text>
+            <Button
+              disabled={transferring}
+              onClick={async () => {
+                setTransferring(true);
+                try {
+                  await claimLeadership();
+                  setSuccess(
+                    t("team.recoverSuccess", "You are now the team owner."),
+                  );
+                } catch {
+                  setError(
+                    t(
+                      "team.transferError",
+                      "Ownership could not be transferred. Refresh the team and try again.",
+                    ),
+                  );
+                } finally {
+                  setTransferring(false);
+                }
+              }}
+            >
+              {t("team.recoverOwner", "Become team owner")}
+            </Button>
+          </Alert>
+        )}
       {/* Header */}
       <div>
         <Group justify="space-between" align="center">
@@ -360,11 +461,9 @@ const TeamSection: React.FC = () => {
           verticalSpacing="sm"
           withRowBorders
           highlightOnHover
-          style={
-            {
-              "--table-border-color": "var(--mantine-color-gray-3)",
-            } as React.CSSProperties
-          }
+          style={{
+            "--table-border-color": "var(--mantine-color-gray-3)",
+          }}
         >
           <Table.Thead>
             <Table.Tr
@@ -439,7 +538,9 @@ const TeamSection: React.FC = () => {
                             : undefined
                         }
                       >
-                        {member.role}
+                        {member.role === "LEADER"
+                          ? t("users.role.orgOwner", "Org Owner")
+                          : t("users.role.member", "Member")}
                       </Badge>
                     </Table.Td>
                     {isTeamLeader && !isPersonalTeam && (
@@ -466,6 +567,16 @@ const TeamSection: React.FC = () => {
                               </ActionIcon>
                             </Menu.Target>
                             <Menu.Dropdown>
+                              <Menu.Item
+                                onClick={() =>
+                                  setTransferTarget({
+                                    id: member.id,
+                                    email: member.email,
+                                  })
+                                }
+                              >
+                                {t("team.makeOwner", "Make owner")}
+                              </Menu.Item>
                               <Menu.Item
                                 color="red"
                                 leftSection={

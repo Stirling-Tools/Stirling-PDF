@@ -18,35 +18,40 @@ const SignatureStatusBadge = ({
     neutral: "status-badge status-badge--neutral",
   } as const;
 
+  // With no details there is nothing to open, so the badge stays a plain label.
+  // Popover.Target stamps aria-haspopup/aria-expanded onto whatever it wraps,
+  // and those are only permitted on an element that is actually a control.
+  if (status.details.length === 0) {
+    return (
+      <Badge className={classMap[status.kind]} variant="light">
+        {status.label}
+      </Badge>
+    );
+  }
+
   return (
-    <Popover
-      withinPortal
-      position="bottom"
-      withArrow
-      shadow="md"
-      disabled={status.details.length === 0}
-    >
+    <Popover withinPortal position="bottom" withArrow shadow="md">
       <Popover.Target>
         <Badge
+          component="button"
+          type="button"
           className={classMap[status.kind]}
           variant="light"
-          style={{ cursor: status.details.length ? "pointer" : "default" }}
+          style={{ cursor: "pointer" }}
         >
           {status.label}
         </Badge>
       </Popover.Target>
-      {status.details.length > 0 && (
-        <Popover.Dropdown>
-          <Text size="sm" fw={600} mb={4}>
-            {t("details", "Details")}
+      <Popover.Dropdown>
+        <Text size="sm" fw={600} mb={4}>
+          {t("details", "Details")}
+        </Text>
+        {status.details.map((d, i) => (
+          <Text size="sm" key={i}>
+            - {d}
           </Text>
-          {status.details.map((d, i) => (
-            <Text size="sm" key={i}>
-              - {d}
-            </Text>
-          ))}
-        </Popover.Dropdown>
-      )}
+        ))}
+      </Popover.Dropdown>
     </Popover>
   );
 };

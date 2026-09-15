@@ -100,8 +100,9 @@ public class WebhookInputSource implements InputSource {
                 continue;
             }
             work.add(
-                    new ResolvedInput(
+                    ResolvedInput.forFile(
                             PolicyInputs.of(List.of(fileResource(file))),
+                            identity,
                             success -> completeConsumed(ctx, identity, file, gate, success)));
         }
         return work;

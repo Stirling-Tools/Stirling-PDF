@@ -8,6 +8,7 @@ Feature: Advanced Forms API Validation (JSON data parts)
         And the pdf has form fields
         And the request includes a JSON part "data" with content "{}"
         When I send the API request to the endpoint "/api/v1/form/fill"
+        And this operation is run 5 times in parallel
         Then the response status code should be 200
         And the response content type should be "application/pdf"
         And the response file should have size greater than 0

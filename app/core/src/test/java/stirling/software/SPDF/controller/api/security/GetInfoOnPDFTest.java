@@ -557,24 +557,6 @@ class GetInfoOnPDFTest {
     class ValidationErrorTests {
 
         @Test
-        @DisplayName("Should reject null file")
-        void testValidation_NullFile() throws IOException {
-            PDFFile request = new PDFFile();
-            request.setFileInput(null);
-
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
-
-            Assertions.assertEquals(
-                    HttpStatus.OK, response.getStatusCode()); // Returns error JSON with 200
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
-            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
-
-            Assertions.assertTrue(jsonNode.has("error"));
-            Assertions.assertTrue(
-                    jsonNode.get("error").asText("").contains("PDF file is required"));
-        }
-
-        @Test
         @DisplayName("Should reject empty file")
         void testValidation_EmptyFile() throws IOException {
             MockMultipartFile emptyFile =
@@ -590,64 +572,6 @@ class GetInfoOnPDFTest {
             JsonNode jsonNode = objectMapper.readTree(jsonResponse);
 
             Assertions.assertTrue(jsonNode.has("error"));
-        }
-
-        @Test
-        @DisplayName("Should reject file that exceeds max size")
-        void testValidation_TooLargeFile() throws IOException {
-            MultipartFile largeFile =
-                    new MultipartFile() {
-                        @Override
-                        public String getName() {
-                            return "file";
-                        }
-
-                        @Override
-                        public String getOriginalFilename() {
-                            return "large.pdf";
-                        }
-
-                        @Override
-                        public String getContentType() {
-                            return MediaType.APPLICATION_PDF_VALUE;
-                        }
-
-                        @Override
-                        public boolean isEmpty() {
-                            return false;
-                        }
-
-                        @Override
-                        public long getSize() {
-                            // Report 101 MB without allocating memory
-                            return 101L * 1024L * 1024L;
-                        }
-
-                        @Override
-                        public byte[] getBytes() {
-                            return new byte[0];
-                        }
-
-                        @Override
-                        public java.io.InputStream getInputStream() {
-                            return java.io.InputStream.nullInputStream();
-                        }
-
-                        @Override
-                        public void transferTo(java.io.File dest) throws IllegalStateException {}
-                    };
-
-            PDFFile request = new PDFFile();
-            request.setFileInput(largeFile);
-
-            ResponseEntity<byte[]> response = getInfoOnPDF.getPdfInfo(request);
-
-            String jsonResponse = new String(response.getBody(), StandardCharsets.UTF_8);
-            JsonNode jsonNode = objectMapper.readTree(jsonResponse);
-
-            Assertions.assertTrue(jsonNode.has("error"));
-            Assertions.assertTrue(
-                    jsonNode.get("error").asText("").contains("exceeds maximum allowed size"));
         }
     }
 

@@ -56,7 +56,7 @@ export const TEST_FILES = {
 test.describe("Stirling-PDF seed", () => {
   test("seed - app loads", async ({ page }) => {
     // Navigate to the Stirling-PDF frontend
-    await page.goto("/");
+    await page.goto("/editor");
 
     // The app may redirect to /login if authentication is enabled.
     // Wait for the app to be ready: either the dashboard layout or the login page.
