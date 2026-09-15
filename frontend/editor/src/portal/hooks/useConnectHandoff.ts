@@ -47,7 +47,12 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
         ).toString();
         const status = reauth
           ? await startReauth(callbackUrl)
-          : await startConnect(window.location.hostname, callbackUrl);
+          : await startConnect(
+              new URL(withBasePath("/"), window.location.origin)
+                .toString()
+                .replace(/\/$/, ""),
+              callbackUrl,
+            );
         if (status.authorizeUrl) {
           window.location.assign(status.authorizeUrl);
           return;

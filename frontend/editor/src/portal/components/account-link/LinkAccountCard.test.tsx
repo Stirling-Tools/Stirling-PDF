@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import { LinkAccountCard } from "@portal/components/account-link/LinkAccountCard";
 import type { UseAccountLink } from "@portal/hooks/useAccountLink";
@@ -13,6 +13,8 @@ vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
 vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),
 }));
+
+vi.mock("@portal/hooks/useLinkedAccountEmail", () => ({ useLinkedAccountEmail: () => null }));
 
 const link: UseAccountLink = {
   loginConfigured: true,
@@ -39,7 +41,7 @@ describe("account-link ownership", () => {
         </PortalTestProviders>,
       );
       const action = screen.getByRole("button", {
-        name: linked ? "Unlink" : "Link your Stirling account",
+        name: linked ? "Disconnect this instance" : "Connect your Stirling account",
       });
       expect(action).toBeDisabled();
       fireEvent.click(action);
@@ -62,9 +64,13 @@ describe("account-link ownership", () => {
       );
       fireEvent.click(
         screen.getByRole("button", {
-          name: linked ? "Unlink" : "Link your Stirling account",
+          name: linked ? "Disconnect this instance" : "Connect your Stirling account",
         }),
       );
+      if (linked) {
+        expect(unlink).not.toHaveBeenCalled();
+        fireEvent.click(within(screen.getByRole("dialog")).getByRole("button", { name: "Disconnect this instance" }));
+      }
       expect(linked ? unlink : openLinkModal).toHaveBeenCalledTimes(1);
     },
   );
