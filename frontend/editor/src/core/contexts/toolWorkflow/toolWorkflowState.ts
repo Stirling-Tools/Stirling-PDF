@@ -1,6 +1,8 @@
 import { PageEditorFunctions } from "@app/types/pageEditor";
 import { type ToolPanelMode } from "@app/constants/toolPanel";
 import { preferencesService } from "@app/services/preferencesService";
+import { stripBasePath } from "@app/constants/app";
+import { READER_PATH } from "@app/routes/readerRoute";
 
 export interface ToolWorkflowState {
   // UI State
@@ -36,8 +38,19 @@ export const baseState: Omit<ToolWorkflowState, "toolPanelMode"> = {
   searchQuery: "",
 };
 
+/**
+ * Reading is seeded from the path rather than switched on by an effect after the
+ * first paint, so a reload at the reader's own URL never paints the editor and
+ * then animates it away.
+ */
+function startsInReader(): boolean {
+  if (typeof window === "undefined") return false;
+  return stripBasePath(window.location.pathname).startsWith(READER_PATH);
+}
+
 export const createInitialState = (): ToolWorkflowState => ({
   ...baseState,
+  readerMode: startsInReader(),
   toolPanelMode: preferencesService.getPreference("defaultToolPanelMode"),
 });
 

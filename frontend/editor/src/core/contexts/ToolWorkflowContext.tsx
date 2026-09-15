@@ -33,6 +33,7 @@ import { stripBasePath } from "@app/constants/app";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
+import { markReaderModeFromPreference } from "@app/utils/pendingReaderMode";
 import {
   ToolWorkflowState,
   createInitialState,
@@ -412,6 +413,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (startupView === "read") {
       hasAppliedStartupView.current = true;
       startupSelectedToolRef.current = "read";
+      markReaderModeFromPreference();
       setReaderMode(true);
       actions.setSelectedTool("read");
     } else if (startupView === "automate") {
@@ -499,6 +501,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       // Handle multiTool selection - enable page editor workbench
       if (toolId === "multiTool") {
         setReaderMode(false);
+        // The page editor is the tool, so the panel beside it stays on the picker:
+        // left on toolContent it would render this tool's header over no body.
+        setLeftPanelView("toolPicker");
         actions.setSelectedTool("multiTool");
         actions.setWorkbench(
           wasInCustomWorkbench ? getDefaultWorkbench() : "pageEditor",

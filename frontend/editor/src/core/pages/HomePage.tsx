@@ -49,7 +49,10 @@ import {
   getToolDisabledReason,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
-import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
+import {
+  consumeReaderModeFromPreference,
+  consumeReaderModeRequest,
+} from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
   useFilesPage,
@@ -72,9 +75,25 @@ import "@app/pages/HomePage.css";
 
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
 
-/** Outlast the wings' own animations, which the two rails' stylesheets own. */
-const WINGS_LEAVE_MS = 220;
-const WINGS_RETURN_MS = 320;
+/**
+ * The wings' slide is `--wings-ms` (dimensions.css). Read from the document so one
+ * value drives both, with the literal as the fallback for a test environment that
+ * loads no stylesheet, and a frame of headroom so the unmount never clips the
+ * last frame of the animation.
+ */
+const WINGS_FALLBACK_MS = 220;
+const WINGS_HEADROOM_MS = 60;
+
+function wingsDurationMs(): number {
+  if (typeof window === "undefined") return WINGS_FALLBACK_MS;
+  const token = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue("--wings-ms")
+    .trim();
+  const parsed = Number.parseFloat(token);
+  if (!Number.isFinite(parsed) || parsed <= 0) return WINGS_FALLBACK_MS;
+  return token.endsWith("ms") ? parsed : parsed * 1000;
+}
 
 function readSwipeHintSeen(): boolean {
   try {
@@ -207,10 +226,13 @@ export default function HomePage() {
     const onFilesPath = location.pathname.startsWith("/files");
     if (inLibrary && !onFilesPath) {
       navigate("/files");
-    } else if (!inLibrary && onFilesPath) {
+    } else if (!inLibrary && onFilesPath && !readerMode) {
+      // Reading also leaves the library, and its own effect names the path it
+      // leaves for. Both navigating puts the editor between the two in history,
+      // so Back out of reading would land somewhere the user never went.
       navigate(EDITOR_BASENAME);
     }
-  }, [navigationState.workbench, location.pathname, navigate]);
+  }, [navigationState.workbench, location.pathname, navigate, readerMode]);
 
   // Path moved, so the path is the cause. The ref starts null so mount counts too:
   // that is what makes a reload land back in reading, and what takes you out of it
@@ -235,20 +257,18 @@ export default function HomePage() {
   useEffect(() => {
     if (readingRef.current === readerMode) return;
     readingRef.current = readerMode;
+    const slide = wingsDurationMs() + WINGS_HEADROOM_MS;
     if (readerMode) {
       setWingsPhase("leaving");
       const gone = window.setTimeout(() => {
         setWingsPhase(null);
         setWingsMounted(false);
-      }, WINGS_LEAVE_MS);
+      }, slide);
       return () => window.clearTimeout(gone);
     }
     setWingsMounted(true);
     setWingsPhase("returning");
-    const settled = window.setTimeout(
-      () => setWingsPhase(null),
-      WINGS_RETURN_MS,
-    );
+    const settled = window.setTimeout(() => setWingsPhase(null), slide);
     return () => window.clearTimeout(settled);
   }, [readerMode]);
 
@@ -259,7 +279,9 @@ export default function HomePage() {
     wasReadingRef.current = readerMode;
     const onReadPath = location.pathname.startsWith(READER_PATH);
     if (readerMode && !onReadPath) {
-      navigate(READER_PATH);
+      navigate(READER_PATH, {
+        replace: consumeReaderModeFromPreference(),
+      });
     } else if (!readerMode && onReadPath) {
       navigate(EDITOR_BASENAME);
     }
