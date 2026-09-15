@@ -25,7 +25,7 @@ interface Case {
   body: string[];
 }
 
-const run = (c: Case) => {
+const run = async (c: Case) => {
   let body = c.body.join("\n");
   let title = c.title;
   if (c.nbsp) {
@@ -1146,7 +1146,8 @@ const CASES: Case[] = [
     ],
   },
   {
-    expect: "",
+    // Spanish: the es pack's lease vocabulary reaches the narrow label.
+    expect: "lease-agreement",
     file: "contrato.pdf",
     title: "CONTRATO DE ARRENDAMIENTO",
     body: [
@@ -2391,7 +2392,9 @@ const CASES: Case[] = [
     ],
   },
   {
-    expect: "",
+    // German, with the text layer's umlauts lost - the de pack has to hold up
+    // without them, which is why phrase matching folds diacritics.
+    expect: "quote",
     file: "angebot_gartenpflege.pdf",
     title: "Angebot Gartenpflege",
     body: [
@@ -2410,8 +2413,8 @@ const CASES: Case[] = [
 describe("heuristic engine broad corpus", () => {
   it.each(CASES.map((c) => [c.expect || `nothing (${c.file})`, c] as const))(
     "labels a %s correctly",
-    (_label, c) => {
-      const r = run(c);
+    async (_label, c) => {
+      const r = await run(c);
       const detail = `expected ${c.expect || "no label"}, got [${r.labels.join(", ")}] (confidence ${r.confidence}, score ${r.score})`;
       if (c.expect === "") {
         expect(r.labels, detail).toEqual([]);

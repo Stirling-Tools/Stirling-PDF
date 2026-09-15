@@ -12,8 +12,28 @@ export interface HeuristicDoc {
   allZone: string;
 }
 
-// "none" = no match or non-English; a real runtime value, not just a type state.
+// "none" = no label cleared the floor; a real runtime value, not just a type state.
 export type HeuristicConfidence = ClassificationConfidence;
+
+/** One language the text scored for, on the detector's own scale. */
+export interface LanguageCandidate {
+  language: string;
+  score: number;
+}
+
+/** What the detector concluded about a document's language. */
+export interface LanguageDetection {
+  /** Best tag (ISO 639-1, region-free), or null when the text proves nothing. */
+  language: string | null;
+  /** Writing system: a script id from `languages.json`, "latin", or null. */
+  script: string | null;
+  /** Ranked candidates, best first — what pack dispatch reads. */
+  candidates: LanguageCandidate[];
+  /** English assumed with no positive evidence (data-dense text: tickets, forms). */
+  assumed: boolean;
+  /** Fewer than 30 words — too little prose for a confident language call. */
+  lowText: boolean;
+}
 
 /** One scored candidate label with the rule hits that produced its score (debug only). */
 export interface LabelScoreExplanation {
@@ -27,9 +47,14 @@ export interface LabelScoreExplanation {
 
 /** Why a document scored the way it did; produced only when explain is requested. */
 export interface HeuristicExplanation {
-  isEnglish: boolean;
+  language: string | null;
+  script: string | null;
+  assumed: boolean;
   lowText: boolean;
-  /** Top candidates by score, best first. Empty when rejected as non-English. */
+  /** Language packs whose rules were merged in; empty for core-only scoring. */
+  packs: string[];
+  languageCandidates: LanguageCandidate[];
+  /** Top candidates by score, best first. */
   candidates: LabelScoreExplanation[];
 }
 
@@ -38,7 +63,9 @@ export interface HeuristicResult {
   labels: string[];
   confidence: HeuristicConfidence;
   score: number;
-  isEnglish: boolean;
+  /** Detected document language; null when the text proved nothing. */
+  language: string | null;
+  packs: string[];
   /** Present only when classify was called with `{ explain: true }`. */
   explain?: HeuristicExplanation;
 }
