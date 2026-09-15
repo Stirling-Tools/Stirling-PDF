@@ -1,3 +1,7 @@
+/**
+ * The editor's live pipelines split by trigger, for the tool sidebar panel. Reads the
+ * policy cache directly; usePolicies would refire a backend reconcile on every mount.
+ */
 import { useEffect, useMemo, useState } from "react";
 import { loadPolicies, onPoliciesChange } from "@app/services/policyStorage";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
@@ -34,6 +38,7 @@ function pipelineLabel(
   );
 }
 
+/** Runs arrive newest-first from the store, so settled[0] is the last finished run. */
 function describeRuns(runs: PolicyRunRecord[], since: number) {
   const running = runs.some(isRunInFlight);
   const settled = runs.filter((r) => !isRunInFlight(r));

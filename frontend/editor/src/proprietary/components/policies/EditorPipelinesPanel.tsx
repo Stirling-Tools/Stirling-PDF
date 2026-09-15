@@ -5,7 +5,7 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import InputOutlinedIcon from "@mui/icons-material/InputOutlined";
 import OutputOutlinedIcon from "@mui/icons-material/OutputOutlined";
-import { useAuth } from "@app/auth/context";
+import { usePortalAccess } from "@app/hooks/usePortalAccess";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { saveEditorReturnPath } from "@app/services/workbenchSession";
@@ -42,7 +42,7 @@ function PipelineRow({
           label: pipeline.label,
         })
       : state === "failed"
-        ? t("policies.editorPanel.rowFailed", "{{label}} — last run failed", {
+        ? t("policies.editorPanel.rowFailed", "{{label}} - last run failed", {
             label: pipeline.label,
           })
         : t("policies.editorPanel.rowIdle", "{{label}} runs automatically", {
@@ -181,7 +181,7 @@ export function EditorPipelinesPanelView({
 
 export function EditorPipelinesPanel() {
   const pipelines = useEditorPipelines();
-  const { portalAccess } = useAuth();
+  const portalAccess = usePortalAccess();
   const navigate = useNavigate();
   const { actions } = useNavigationActions();
 

@@ -24,6 +24,10 @@ export function resolveRunOn(
   return defaultRunOn(policyKey);
 }
 
+/**
+ * The editor event this policy fires on, or null when the editor never runs it.
+ * runOn is already resolved by codec.ts, so an unset value means "upload".
+ */
 export function editorTriggerOf(
   state: PolicyState | undefined,
 ): PolicyRunOn | null {
