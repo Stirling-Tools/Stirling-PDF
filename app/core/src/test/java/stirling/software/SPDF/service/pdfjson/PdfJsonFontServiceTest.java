@@ -57,10 +57,9 @@ class PdfJsonFontServiceTest {
     }
 
     @Test
-    void detectFontFlavor_cffSignature_returnsCff() {
-        // 0x74746366 = "ttcf"
-        byte[] cff = {0x74, 0x74, 0x63, 0x66};
-        assertEquals("cff", service.detectFontFlavor(cff));
+    void detectFontFlavor_ttcSignature_returnsNull() {
+        byte[] ttc = {0x74, 0x74, 0x63, 0x66};
+        assertNull(service.detectFontFlavor(ttc));
     }
 
     @Test
@@ -94,9 +93,9 @@ class PdfJsonFontServiceTest {
     }
 
     @Test
-    void detectTrueTypeFormat_cffSignature_returnsCff() {
-        byte[] cff = {0x74, 0x74, 0x63, 0x66};
-        assertEquals("cff", service.detectTrueTypeFormat(cff));
+    void detectTrueTypeFormat_ttcSignature_returnsNull() {
+        byte[] ttc = {0x74, 0x74, 0x63, 0x66};
+        assertNull(service.detectTrueTypeFormat(ttc));
     }
 
     @Test

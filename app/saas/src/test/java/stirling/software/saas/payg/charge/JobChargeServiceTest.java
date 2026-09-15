@@ -31,6 +31,8 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
+import stirling.software.saas.payg.billing.TeamBillingContext;
+import stirling.software.saas.payg.billing.TeamBillingService;
 import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.docs.DocumentClassifier;
 import stirling.software.saas.payg.docs.DocumentMetrics;
@@ -72,7 +74,12 @@ class JobChargeServiceTest {
     private PaygMeterReportingService meterReporter;
     private WalletLedgerRepository ledgerRepo;
     private PrepaidBundleService prepaidBundleService;
+    private TeamBillingService teamBillingService;
     private JobChargeService service;
+
+    private static final LocalDateTime PERIOD_START = LocalDateTime.of(2026, 8, 1, 0, 0);
+
+    private static final long GRANT = 500L;
 
     @BeforeEach
     void setUp() {
@@ -90,6 +97,8 @@ class JobChargeServiceTest {
         // findByIdForUpdate defaults to Optional.empty() (Mockito) → no free grant consumed unless
         // a test stubs the sidecar row. The free split is decided at openProcess time now, not at
         // close, so the meter tests just set free_units_consumed on the shadow row directly.
+        teamBillingService = Mockito.mock(TeamBillingService.class);
+        when(teamBillingService.forTeam(Mockito.anyLong())).thenReturn(billingContext(GRANT));
         service =
                 new JobChargeService(
                         jobService,
@@ -100,7 +109,22 @@ class JobChargeServiceTest {
                         teamExtRepo,
                         meterReporter,
                         ledgerRepo,
-                        prepaidBundleService);
+                        prepaidBundleService,
+                        teamBillingService);
+    }
+
+    private static TeamBillingContext billingContext(long grant) {
+        return new TeamBillingContext(
+                false,
+                null,
+                PERIOD_START,
+                PERIOD_START.plusMonths(1),
+                grant,
+                grant,
+                null,
+                null,
+                null,
+                null);
     }
 
     @AfterEach
@@ -365,6 +389,7 @@ class JobChargeServiceTest {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setFreeUnitsRemaining(10L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START);
         when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
 
         service.openProcess(
@@ -378,6 +403,96 @@ class JobChargeServiceTest {
         assertThat(captor.getValue().getFreeUnitsConsumed()).isEqualTo(4);
         // Counter decremented in-place and persisted.
         assertThat(ext.getFreeUnitsRemaining()).isEqualTo(6L);
+        verify(teamExtRepo).save(ext);
+    }
+
+    @Test
+    void openProcess_firstChargeOfNewPeriod_resetsGrantAndRestamps(@TempDir Path tmp)
+            throws IOException {
+        // Grant exhausted last period, nothing run since. This charge persists the reset: counter
+        // back to the full grant, drawn from, and re-stamped so the next charge reads the balance.
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 4));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(0L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START.minusMonths(1));
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isEqualTo(4);
+        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(GRANT - 4);
+        assertThat(ext.getFreeUnitsPeriodStart()).isEqualTo(PERIOD_START);
+        verify(teamExtRepo).save(ext);
+    }
+
+    @Test
+    void openProcess_unstampedRow_resetsToGrantAndStamps(@TempDir Path tmp) throws IOException {
+        // An unstamped row must read as owed a reset, not as an exhausted pool.
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 1));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(0L);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isEqualTo(1);
+        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(GRANT - 1);
+        assertThat(ext.getFreeUnitsPeriodStart()).isEqualTo(PERIOD_START);
+    }
+
+    @Test
+    void openProcess_zeroGrantRollover_stampsWithoutDrawing(@TempDir Path tmp) throws IOException {
+        // A zero grant still advances the stamp, or every later charge re-evaluates a stale row.
+        when(teamBillingService.forTeam(100L)).thenReturn(billingContext(0L));
+        PricingPolicy policy = stubPolicy(1, Map.of(JobSource.WEB, 10));
+        when(policyService.getEffectivePolicy(100L)).thenReturn(policy);
+        ProcessingJob newJob = openJob(UUID.randomUUID());
+        when(jobService.joinOrOpen(any(JobContext.class), anyList()))
+                .thenReturn(new JoinOrOpenResult(newJob, JoinOrOpenResult.Disposition.OPENED));
+        when(classifier.classify(any(MultipartFile.class), any(Path.class), eq(policy)))
+                .thenReturn(new DocumentMetrics(50, 1024L, "application/pdf", 3));
+
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(0L);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.openProcess(
+                new ChargeContext(
+                        42L, 100L, JobSource.WEB, ProcessType.SINGLE_TOOL, BillingCategory.API),
+                List.of(jobInput(tmp, "in.pdf", "application/pdf")));
+
+        ArgumentCaptor<PaygShadowCharge> captor = ArgumentCaptor.forClass(PaygShadowCharge.class);
+        verify(shadowRepo).save(captor.capture());
+        assertThat(captor.getValue().getFreeUnitsConsumed()).isZero();
+        assertThat(ext.getFreeUnitsRemaining()).isZero();
+        assertThat(ext.getFreeUnitsPeriodStart()).isEqualTo(PERIOD_START);
         verify(teamExtRepo).save(ext);
     }
 
@@ -396,6 +511,7 @@ class JobChargeServiceTest {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setFreeUnitsRemaining(3L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START);
         when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
 
         service.openProcess(
@@ -426,6 +542,7 @@ class JobChargeServiceTest {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(100L);
         ext.setFreeUnitsRemaining(0L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START);
         when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
 
         service.openProcess(
@@ -544,8 +661,8 @@ class JobChargeServiceTest {
         assertThat(refund.getReferenceId()).isEqualTo(jobId.toString());
         assertThat(refund.getPolicyId()).isEqualTo(7L);
         assertThat(refund.getBillingCategory()).isEqualTo(BillingCategory.API);
-        // This row consumed no free units, so the grant counter is left alone.
-        verify(teamExtRepo, never()).restoreFreeUnits(eq(100L), Mockito.anyLong());
+        // No free units consumed, so the grant counter is never loaded.
+        verify(teamExtRepo, never()).findByIdForUpdate(100L);
     }
 
     @Test
@@ -556,10 +673,35 @@ class JobChargeServiceTest {
         PaygShadowCharge row = chargedShadowRow(jobId, 100L, 10, 3, BillingCategory.API);
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
         when(jobRepo.findById(jobId)).thenReturn(Optional.of(openJob(jobId)));
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(GRANT - 3);
+        ext.setFreeUnitsPeriodStart(PERIOD_START);
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
 
         service.markFirstStepFailed(jobId, "first-step-5xx:503");
 
-        verify(teamExtRepo).restoreFreeUnits(100L, 3L);
+        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(GRANT);
+        verify(teamExtRepo).save(ext);
+    }
+
+    @Test
+    void markFirstStepFailed_refundAfterPeriodTurned_doesNotExceedTheGrant() {
+        // The charge's period is over and the grant already reset, so the restore is capped.
+        UUID jobId = UUID.randomUUID();
+        PaygShadowCharge row = chargedShadowRow(jobId, 100L, 10, 3, BillingCategory.API);
+        when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId)).thenReturn(Optional.of(row));
+        when(jobRepo.findById(jobId)).thenReturn(Optional.of(openJob(jobId)));
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(100L);
+        ext.setFreeUnitsRemaining(0L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START.minusMonths(1));
+        when(teamExtRepo.findByIdForUpdate(100L)).thenReturn(Optional.of(ext));
+
+        service.markFirstStepFailed(jobId, "first-step-5xx:503");
+
+        assertThat(ext.getFreeUnitsRemaining()).isEqualTo(GRANT);
+        assertThat(ext.getFreeUnitsPeriodStart()).isEqualTo(PERIOD_START);
     }
 
     @Test
@@ -886,6 +1028,7 @@ class JobChargeServiceTest {
         ext.setStripeCustomerId("cus_x");
         ext.setPaygSubscriptionId("sub_x");
         ext.setFreeUnitsRemaining(0L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START);
         when(teamExtRepo.findByIdForUpdate(teamId)).thenReturn(Optional.of(ext));
         when(teamExtRepo.findById(teamId)).thenReturn(Optional.of(ext));
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId))
@@ -930,6 +1073,7 @@ class JobChargeServiceTest {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(teamId);
         ext.setFreeUnitsRemaining(50L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START);
         when(teamExtRepo.findByIdForUpdate(teamId)).thenReturn(Optional.of(ext));
         when(teamExtRepo.findById(teamId)).thenReturn(Optional.of(ext));
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId))
@@ -974,6 +1118,7 @@ class JobChargeServiceTest {
         ext.setStripeCustomerId("cus_x");
         ext.setPaygSubscriptionId("sub_x");
         ext.setFreeUnitsRemaining(0L);
+        ext.setFreeUnitsPeriodStart(PERIOD_START);
         when(teamExtRepo.findByIdForUpdate(teamId)).thenReturn(Optional.of(ext));
         when(teamExtRepo.findById(teamId)).thenReturn(Optional.of(ext));
         when(shadowRepo.findFirstByJobIdOrderByIdAsc(jobId))
@@ -1031,8 +1176,6 @@ class JobChargeServiceTest {
         row.setBillingCategory(category);
         return row;
     }
-
-    // --- helpers --------------------------------------------------------------------------------
 
     private static PricingPolicy stubPolicy(int minCharge, Map<JobSource, Integer> stepLimits) {
         PricingPolicy p = new PricingPolicy();

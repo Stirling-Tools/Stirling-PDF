@@ -6,34 +6,6 @@
   gap: 0.75rem;
 }
 
-/* Spend this month | Spend limit — two separate cards, side by side. */
-.portal-billing__spend-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
-  gap: 0.75rem;
-  align-items: stretch;
-}
-@media (max-width: 60rem) {
-  .portal-billing__spend-row {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* Left card is a flex column so the Enterprise upsell pins to the foot and the
-   card matches the spend-limit card's height. */
-.portal-billing__spend-this-month {
-  display: flex;
-  flex-direction: column;
-}
-.portal-billing__spend-foot {
-  margin-top: auto;
-  padding-top: 1rem;
-  border-top: 1px solid var(--c-border);
-}
-.portal-billing__spend-foot:not(:first-child) {
-  margin-top: 1.25rem;
-}
-
 /* Cap editor (in-place, replaces the spend-limit display). */
 .portal-billing__suggested {
   display: inline-flex;

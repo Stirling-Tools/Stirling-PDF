@@ -41,7 +41,6 @@
   width: 1.125rem;
   height: 1.125rem;
   color: inherit;
-  fill: currentColor;
 }
 
 /* Taller than wide (71x79), so height drives the width. */
@@ -136,6 +135,9 @@
   background: transparent;
   padding: 0;
   cursor: pointer;
+  /* Repeated fast clicks otherwise read as a double/triple click and start a
+     text selection in the surrounding chrome. */
+  user-select: none;
 }
 
 .quick-nav-brand-button:focus-visible {

@@ -31,8 +31,9 @@ import {
 } from "@portal/components/icons";
 import type { Tier } from "@portal/contexts/TierContext";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { allDocs, loadDocsNav } from "@portal/docs/manifest/registry";
-import { searchDocs, toPlainText, type SearchDoc } from "@portal/docs/search";
+import { DOCS_PATH } from "@app/routes/docsRoute";
+import { allDocs, loadDocsNav } from "@core/docs/manifest/registry";
+import { searchDocs, toPlainText, type SearchDoc } from "@core/docs/search";
 
 /**
  * The Processor's entity search: users, policies, pipelines and sources,
@@ -124,7 +125,7 @@ export function rankDocsResults(
         .trim() || result.sectionLabel,
     icon: <DocsIcon />,
     score: result.score,
-    onSelect: () => navigate(`${toPortalPath(VIEW_PATHS.docs)}#${result.id}`),
+    onSelect: () => navigate(`${DOCS_PATH}#${result.id}`),
   }));
 }
 
@@ -208,7 +209,7 @@ export function rankPortalPolicyResults(
   entries: CatalogueEntry[],
   trimmed: string,
   t: Translate,
-  openPolicy: (categoryId: string) => void,
+  openPolicy: (policyKey: string) => void,
   limit = ENTITY_GROUP_LIMIT,
 ): SuperSearchResult[] {
   return rankByFuzzy(
@@ -294,9 +295,7 @@ export function buildProcessorEntityGroups(
           icon: <UsersIcon />,
           score,
           onSelect: () =>
-            navigate(
-              `${toPortalPath(VIEW_PATHS.users)}?member=${encodeURIComponent(item.id)}`,
-            ),
+            navigate(`/settings/users?member=${encodeURIComponent(item.id)}`),
         }))
     : [];
   if (users.length > 0) {
@@ -312,9 +311,9 @@ export function buildProcessorEntityGroups(
         entities.policies,
         trimmed,
         t,
-        (categoryId) =>
+        (policyKey) =>
           navigate(
-            `${toPortalPath(VIEW_PATHS.policies)}?category=${encodeURIComponent(categoryId)}`,
+            `${toPortalPath(VIEW_PATHS.pipelines)}?setup=${encodeURIComponent(policyKey)}`,
           ),
         ENTITY_GROUP_LIMIT,
       )

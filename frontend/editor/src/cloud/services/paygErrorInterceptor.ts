@@ -4,7 +4,7 @@
  *
  * <ul>
  *   <li>{@code 402 FEATURE_DEGRADED} — an authenticated (JWT/web) team hit a
- *       billable feature it no longer has: a free team that spent its one-time
+ *       billable feature it no longer has: a free team that spent this period's
  *       allowance, or a subscribed team over its monthly spending cap. Which
  *       one is told by the {@code subscribed} field on the body.</li>
  *   <li>{@code 402 PAYG_LIMIT_REACHED} — same situation reached via an API key

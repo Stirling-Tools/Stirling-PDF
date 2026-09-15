@@ -1,3 +1,4 @@
+import { clearNotificationReadState } from "@app/hooks/useNotifications";
 import { connectionModeService } from "@app/services/connectionModeService";
 import { suspendWorkbenchSession } from "@app/services/workbenchSession";
 
@@ -21,6 +22,8 @@ export function useAccountLogout() {
       // inherit this workbench. Suspends writing too - signing out unmounts the
       // editor, and its flush would otherwise write the record straight back.
       suspendWorkbenchSession();
+      // Same reason: the next person's own failures must not arrive pre-read.
+      clearNotificationReadState();
       await signOut();
 
       const currentConfig = await connectionModeService.getCurrentConfig();
