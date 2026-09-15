@@ -21,6 +21,8 @@ import stirling.software.proprietary.policy.ledger.ProcessedLedger;
  */
 final class PolicySweep implements ResolveContext {
 
+    private static final int MAX_BATCH_CLAIMS = 100;
+
     private final String policyId;
     private final SweepKind kind;
     private final ProcessedLedger ledger;
@@ -36,6 +38,7 @@ final class PolicySweep implements ResolveContext {
     private final Set<String> prefetchedIdentities = new HashSet<>();
     private boolean cleanupVetoed;
     private int retried;
+    private int claimedCount;
 
     PolicySweep(String policyId, SweepKind kind, ProcessedLedger ledger, String target) {
         this.policyId = policyId;
@@ -50,6 +53,9 @@ final class PolicySweep implements ResolveContext {
         // listing would otherwise spend its whole budget claiming other files and never reach the
         // one file that was asked for.
         if (target != null && !target.equals(identity)) {
+            return false;
+        }
+        if (kind == SweepKind.BATCH && claimedCount >= MAX_BATCH_CLAIMS) {
             return false;
         }
         ClaimState observed =
@@ -70,6 +76,7 @@ final class PolicySweep implements ResolveContext {
         }
         boolean claimed = ledger.claim(policyId, identity, gate, contentHash, observed);
         if (claimed) {
+            claimedCount++;
             // A nested source surfacing the same file later in this sweep sees it in flight
             // without another lookup.
             prefetchedIdentities.add(identity);

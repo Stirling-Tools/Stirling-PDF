@@ -230,6 +230,11 @@ public class ApplicationProperties {
         private long scheduleSweepSeconds = 60;
 
         /**
+         * Seconds between checks for new files in server processing folders; minimum one second.
+         */
+        private long storageFolderSweepSeconds = 15;
+
+        /**
          * How often (seconds) the folder-watch trigger reconciles its watch registrations and
          * re-runs every folder-watch policy as a safety net for filesystem events that were missed
          * (NFS, bind mounts, inotify-queue overflow).

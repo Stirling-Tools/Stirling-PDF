@@ -2,6 +2,7 @@ package stirling.software.proprietary.policy.input;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -104,7 +105,13 @@ public class StorageFolderInputSource implements InputSource {
             String gate = gate(file);
             // The hash tier turns metadata-only gate bumps (a folder move, a rename) into a gate
             // refresh instead of a reprocess; only genuinely new content runs again.
-            if (!ctx.claim(identity, gate, () -> ownedContentHash(file, folderId, owner))) {
+            try {
+                if (!ctx.claim(identity, gate, () -> ownedContentHash(file, folderId, owner))) {
+                    continue;
+                }
+            } catch (UncheckedIOException e) {
+                // A missing or unreadable blob must not strand the other files already claimed.
+                log.warn("Could not claim stored input {}: {}", identity, e.getMessage());
                 continue;
             }
             Long fileId = file.getId();
