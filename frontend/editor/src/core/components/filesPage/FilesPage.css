@@ -1556,14 +1556,13 @@
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
   }
-  /* List view at tiny widths becomes cramped - drop the size + type + modified
-     columns and let name + actions take the room. */
+  /* List view at tiny widths becomes cramped - drop the status, type, size and
+     modified columns and let name + actions take the room. The hidden range has to
+     leave exactly three cells, or the survivors wrap past the three tracks below. */
   .files-page-list-row {
     grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
   }
-  .files-page-list-row > :nth-child(3),
-  .files-page-list-row > :nth-child(4),
-  .files-page-list-row > :nth-child(5) {
+  .files-page-list-row > :nth-child(n + 3):nth-child(-n + 6) {
     display: none;
   }
 }

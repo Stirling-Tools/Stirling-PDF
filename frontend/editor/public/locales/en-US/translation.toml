@@ -4564,7 +4564,6 @@ save = "Save"
 saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
 selectAll = "Select all"
-selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
 selectedCount = "{{count}} selected"
 selectFile = "Select file {{name}}"
 serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
@@ -4788,13 +4787,6 @@ server = "Server error during folder sync."
 
 [filesPage.tabName]
 local = "Local"
-
-[filesPage.tabs]
-all = "All"
-ariaLabel = "File views"
-recent = "Recent"
-shared = "Shared with me"
-sharedByMe = "Shared by me"
 
 [filesPage.treeMenu]
 actions = "Folder actions for {{name}}"
