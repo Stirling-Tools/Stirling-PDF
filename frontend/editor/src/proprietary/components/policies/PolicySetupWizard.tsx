@@ -360,9 +360,9 @@ function PolicySetupWizardBody({
   );
   const [maxRetries] = useState(policy?.state.maxRetries ?? 0);
   const [retryDelayMinutes] = useState(policy?.state.retryDelayMinutes ?? 0);
-  // A template is a policy by nature, where a failure blocks the file rather than waving it
-  // through, so a new one defaults to required. Editing preserves what was saved.
-  const [required, setRequired] = useState(policy?.state.required ?? true);
+  const [required, setRequired] = useState(
+    policy?.state.required ?? !isClassification,
+  );
   const readOnly = !canManagePolicies;
 
   const [submitting, setSubmitting] = useState(false);

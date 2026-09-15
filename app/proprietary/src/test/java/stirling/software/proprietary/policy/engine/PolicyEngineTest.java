@@ -16,6 +16,7 @@ import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -60,6 +61,7 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.ToolMetadataService;
 import stirling.software.common.util.FileReadinessChecker;
+import stirling.software.common.util.JobContext;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
@@ -148,10 +150,77 @@ class PolicyEngineTest {
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.
         lenient()
-                .when(jobOwnershipService.createScopedJobKey(anyString()))
+                .when(jobOwnershipService.createScopedJobKey(anyString(), any()))
                 .thenAnswer(inv -> inv.getArgument(0));
         // Default to running immediately; the queueing test overrides this.
         lenient().when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(false);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "editor,bob,bob",
+        "source,bob,carol",
+        "source,,carol",
+        "generator,bob,alice",
+        "generator,,alice"
+    })
+    void separatesDocumentOwnershipFromBillingAndTheTriggeringUser(
+            String inputKind, String actor, String expectedOwner) throws Exception {
+        Source source =
+                "source".equals(inputKind)
+                        ? new Source("input", "Input", "folder", Map.of(), true, "carol", null)
+                        : null;
+        PolicyInputs inputs =
+                PolicyInputs.of(
+                        "generator".equals(inputKind)
+                                ? List.of()
+                                : List.of(pdf("original", "input.pdf")));
+        String[] storedOwner = {null};
+        String[] billedUser = {null};
+        when(jobOwnershipService.createScopedJobKey(anyString(), any()))
+                .thenAnswer(
+                        invocation -> invocation.getArgument(1) + ":" + invocation.getArgument(0));
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        invocation -> {
+                            billedUser[0] = MDC.get("auditPrincipal");
+                            return ResponseEntity.ok(pdf("processed", "output.pdf"));
+                        });
+        when(fileStorage.storeInputStream(any(), anyString()))
+                .thenAnswer(
+                        invocation -> {
+                            storedOwner[0] = JobContext.getOwner();
+                            InputStream input = invocation.getArgument(0);
+                            assertEquals(
+                                    "processed",
+                                    new String(
+                                            input.readAllBytes(),
+                                            java.nio.charset.StandardCharsets.UTF_8));
+                            return new StoredFile("output", 9);
+                        });
+        if (actor != null) {
+            MDC.put("auditPrincipal", actor);
+        }
+        PolicyRun run;
+        try {
+            run =
+                    engine.runPolicy(
+                                    policyOwnedBy("alice"),
+                                    inputs,
+                                    PolicyProgressListener.NOOP,
+                                    source,
+                                    "document")
+                            .completion()
+                            .get(10, TimeUnit.SECONDS);
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        assertTrue(run.getRunId().startsWith(expectedOwner + ":"));
+        assertEquals(expectedOwner, storedOwner[0]);
+        assertEquals("alice", billedUser[0]);
+        assertEquals(actor, run.getTriggeringUser());
+        verify(taskManager).setMultipleFileResults(eq(run.getRunId()), eq(run.getOutputs()));
     }
 
     @ParameterizedTest
@@ -169,7 +238,7 @@ class PolicyEngineTest {
                                 "folder",
                                 Map.of("directory", input.toString(), "mode", mode),
                                 true,
-                                "owner",
+                                "source-owner",
                                 null));
         String outputId =
                 disabled
@@ -240,6 +309,7 @@ class PolicyEngineTest {
                             anyString(),
                             any(Throwable.class));
         }
+        verify(jobOwnershipService, times(2)).createScopedJobKey(anyString(), eq("source-owner"));
         assertFalse(ledger.anyInFlight(policy.id()));
         assertTrue(runner.quiesced(policy.id()));
         assertEquals("first original", Files.readString(input.resolve("first.pdf")));
@@ -363,7 +433,14 @@ class PolicyEngineTest {
                         policyOwnedBy("owner"),
                         PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
                         PolicyProgressListener.NOOP,
-                        "src-s3-invoices",
+                        new Source(
+                                "src-s3-invoices",
+                                "Input",
+                                "folder",
+                                Map.of(),
+                                true,
+                                "carol",
+                                null),
                         "file-hash-1");
         handle.completion().get(10, TimeUnit.SECONDS);
 
@@ -430,7 +507,14 @@ class PolicyEngineTest {
                         policyOwnedBy("alice"),
                         PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
                         PolicyProgressListener.NOOP,
-                        "src-watched-folder",
+                        new Source(
+                                "src-watched-folder",
+                                "Input",
+                                "folder",
+                                Map.of(),
+                                true,
+                                "carol",
+                                null),
                         "file-hash-1")
                 .completion()
                 .get(10, TimeUnit.SECONDS);
