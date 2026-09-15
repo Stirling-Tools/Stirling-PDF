@@ -12,6 +12,9 @@
  * PDF writer didn't embed one), we fall back to a translucent badge overlay.
  */
 import { useStaleBakedFieldNames } from "@app/tools/formFill/FormFillContext";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+import { hasAcroForm } from "@app/utils/asciiBytes";
 import React, { useEffect, useMemo, useRef, useState, memo } from "react";
 import {
   renderSignatureFieldAppearances,
@@ -50,11 +53,14 @@ async function resolveFields(
   _cachedSource = source;
 
   _cachePromise = (async () => {
-    const buf = await source.arrayBuffer();
-    const [appearances, signatures] = await Promise.all([
+    const buf = await getDocumentBytes(source);
+    if (!hasAcroForm(new Uint8Array(buf))) return [];
+    // One main-thread scan at a time, so a second full document copy cannot
+    // be opened while this one runs.
+    const appearances = await runPdfiumScan(() =>
       renderSignatureFieldAppearances(buf),
-      extractSignatures(buf),
-    ]);
+    );
+    const signatures = await runPdfiumScan(() => extractSignatures(buf));
 
     return appearances.map((f, i) => {
       // Positional correlation is only reliable when both arrays have the same
