@@ -26,7 +26,8 @@ export default function Landing() {
   const navigate = useNavigate();
   const { t } = useTranslation();
 
-  const loading = authLoading || configLoading || backendProbe.loading;
+  const loading =
+    authLoading || (configLoading && !config) || backendProbe.loading;
 
   // The backend-down screen is not the app. Loading is: it resolves in a moment.
   useSuppressQuickNavRail(!session && backendProbe.status !== "up");
