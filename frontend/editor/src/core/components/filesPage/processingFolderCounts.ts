@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 export type ProcessingCounts = Record<string, number>;
 
@@ -33,10 +33,9 @@ function subscribe(recordId: string, notify: () => void): () => void {
   timer ??= setInterval(tick, POLL_MS);
   return () => {
     forRecord.delete(notify);
-    if (forRecord.size === 0) {
-      subscribers.delete(recordId);
-      counts.delete(recordId);
-    }
+    // The numbers outlive the last subscriber, so a row the list windows out and
+    // back paints what it had while the next read is in flight.
+    if (forRecord.size === 0) subscribers.delete(recordId);
     if (subscribers.size === 0 && timer) {
       clearInterval(timer);
       timer = null;
@@ -57,9 +56,16 @@ export function useProcessingFolderCounts(
   listFiles: Lister,
 ): ProcessingCounts | null {
   lister = listFiles;
-  return useSyncExternalStore(
-    (notify) => subscribe(recordId, notify),
-    () => counts.get(recordId) ?? null,
-    () => null,
+  // Both are held across renders: useSyncExternalStore resubscribes whenever the
+  // subscribe function's identity changes, and resubscribing reads, which
+  // notifies, which renders - a loop that never reaches the poll interval.
+  const subscribeToRecord = useCallback(
+    (notify: () => void) => subscribe(recordId, notify),
+    [recordId],
   );
+  const readCounts = useCallback(
+    () => counts.get(recordId) ?? null,
+    [recordId],
+  );
+  return useSyncExternalStore(subscribeToRecord, readCounts, () => null);
 }
