@@ -80,6 +80,8 @@ class SaasTeamControllerTest {
     @Mock private UserService userService;
     @Mock private TeamSecurityExpressions teamSecurityExpressions;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @InjectMocks private SaasTeamController controller;
 
     private static final String CURRENT_USERNAME = "alice";
@@ -600,6 +602,7 @@ class SaasTeamControllerTest {
         void existingPersonalTeam_noMigration() {
             stubCurrentUser();
             Team personal = team(1L, "My Team");
+            currentUser.setTeam(personal);
             when(membershipRepository.findByUserId(currentUser.getId()))
                     .thenReturn(List.of(membership(personal, currentUser, TeamRole.LEADER)));
             when(saasTeamExtensionService.isPersonal(personal)).thenReturn(true);
@@ -612,6 +615,10 @@ class SaasTeamControllerTest {
 
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(saasTeamService, never()).createPersonalTeam(any());
+            @SuppressWarnings("unchecked")
+            var dtos = (List<SaasTeamController.TeamDetailsDTO>) response.getBody();
+            assertThat(dtos.getFirst().getCurrent()).isTrue();
+            assertThat(dtos.getFirst().getCurrentUserId()).isEqualTo(currentUser.getId());
         }
 
         @Test

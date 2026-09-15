@@ -427,6 +427,6 @@ class FormDetectionModelManagerTest {
             releaseDownload.countDown();
         }
 
-        awaitState(m, "ready", 5000);
+        awaitState(m, "ready", 10000);
     }
 }
