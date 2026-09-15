@@ -36,7 +36,7 @@ jobs:
             engine/uv.lock
 
       - name: Install Task
-        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+        uses: ./.github/actions/setup-task
 
       - name: Quality-check engine
         id: engine-check
