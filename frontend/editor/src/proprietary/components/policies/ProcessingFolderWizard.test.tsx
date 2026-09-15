@@ -138,37 +138,38 @@ describe("ProcessingFolderWizard", () => {
     expect(screen.getAllByText("filesPage.processing.active")).toHaveLength(1);
   });
 
-  it("recognises existing local processing when its directory is selected through the native picker", async () => {
-    const local: FolderRecord = {
-      ...folder,
-      kind: "local",
-      directory: "C:/Invoices",
-    };
-    const record = {
-      id: "local-processing",
-      enabled: false,
-      steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
-    };
-    renderWizard({
-      folders: [local],
-      canPickDirectory: true,
-      recordFor: (item) => (item.id === local.id ? record : undefined),
-      pickDirectory: vi
-        .fn()
-        .mockResolvedValue({ path: "C:/Invoices/", name: "Invoices" }),
-    });
-    fireEvent.click(button("newFolder"));
-    fireEvent.click(
-      await screen.findByRole("menuitem", {
-        name: "filesPage.newFolderMenu.addExisting",
-      }),
-    );
-    expect(await screen.findByText(key("replaceWarning"))).toBeVisible();
-    expect(screen.getByText("filesPage.processing.paused")).toBeVisible();
-    fireEvent.click(button("chooseProcessing"));
-    expect(screen.getByText(key("replaceWarning"))).toBeVisible();
-    expect(button("review")).toBeEnabled();
-  });
+  it.each(["C:/Invoices/", "c:\\INVOICES\\"])(
+    "recognises existing local processing when the native picker returns %s",
+    async (path) => {
+      const local: FolderRecord = {
+        ...folder,
+        kind: "local",
+        directory: "C:/Invoices",
+      };
+      const record = {
+        id: "local-processing",
+        enabled: false,
+        steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
+      };
+      renderWizard({
+        folders: [local],
+        canPickDirectory: true,
+        recordFor: (item) => (item.id === local.id ? record : undefined),
+        pickDirectory: vi.fn().mockResolvedValue({ path, name: "Invoices" }),
+      });
+      fireEvent.click(button("newFolder"));
+      fireEvent.click(
+        await screen.findByRole("menuitem", {
+          name: "filesPage.newFolderMenu.addExisting",
+        }),
+      );
+      expect(await screen.findByText(key("replaceWarning"))).toBeVisible();
+      expect(screen.getByText("filesPage.processing.paused")).toBeVisible();
+      fireEvent.click(button("chooseProcessing"));
+      expect(screen.getByText(key("replaceWarning"))).toBeVisible();
+      expect(button("review")).toBeEnabled();
+    },
+  );
 
   it.each(["security", "classification", "compliance"])(
     "submits the same default steps as the Processor %s template",

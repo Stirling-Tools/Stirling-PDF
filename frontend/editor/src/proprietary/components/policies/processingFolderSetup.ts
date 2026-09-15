@@ -4,6 +4,8 @@ import {
   type FolderRecord,
 } from "@app/types/folder";
 import type { PickedDirectory } from "@app/services/directoryPicker";
+import { directoryKey } from "@app/services/localFolderStorage";
+import { getFolderPath } from "@app/utils/folderPath";
 import type { ProcessingRecordSummary } from "@app/hooks/useProcessingFolders";
 import {
   POLICY_CATEGORIES,
@@ -26,11 +28,20 @@ export function processingFolderForTarget(
 ): FolderRecord | undefined {
   if (target?.kind === "existing") return target.folder;
   if (target?.kind !== "local" || target.name !== null) return undefined;
-  const directory = target.directory.path.trim().replace(/[/\\]+$/, "");
+  const directory = directoryKey(target.directory.path);
   return folders.find(
     (folder) =>
       folderKind(folder) === "local" &&
-      folder.directory?.trim().replace(/[/\\]+$/, "") === directory,
+      folder.directory !== undefined &&
+      directoryKey(folder.directory) === directory,
+  );
+}
+
+/** A processing-folder name is a non-empty path segment, not a directory path. */
+export function isValidProcessingFolderName(name: string): boolean {
+  const trimmed = name.trim();
+  return (
+    Boolean(trimmed) && !/[\\/]/.test(name) && ![".", ".."].includes(trimmed)
   );
 }
 
@@ -176,15 +187,7 @@ export function processingFolderPath(
   folders: FolderRecord[],
 ): string {
   if (folder.directory) return folder.directory;
-  const names = [folder.name];
-  const seen = new Set<FolderId>([folder.id]);
-  let parentId = folder.parentFolderId;
-  while (parentId && !seen.has(parentId)) {
-    seen.add(parentId);
-    const parent = folders.find((item) => item.id === parentId);
-    if (!parent) break;
-    names.unshift(parent.name);
-    parentId = parent.parentFolderId;
-  }
-  return names.join(" / ");
+  const byId = new Map(folders.map((item) => [item.id, item]));
+  byId.set(folder.id, folder);
+  return getFolderPath(folder.id, byId);
 }

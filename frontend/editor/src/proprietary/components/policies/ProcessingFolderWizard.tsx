@@ -25,6 +25,7 @@ import {
   folderSetupEntry,
   processingFolderPath,
   processingFolderForTarget,
+  isValidProcessingFolderName,
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
 import { policyCategoryIcon } from "@app/components/policies/policyCategoryIcon";
@@ -130,9 +131,7 @@ export function ProcessingFolderWizard({
     target &&
     target.kind !== "existing" &&
     target.name !== null &&
-    (!target.name.trim() ||
-      /[\\/]/.test(target.name) ||
-      [".", ".."].includes(target.name.trim()));
+    !isValidProcessingFolderName(target.name);
   const destinationBlocked = !local && Boolean(serverDisabledReason);
   const presetBlocked = !existing && unavailableReason(preset);
   const canContinue = Boolean(

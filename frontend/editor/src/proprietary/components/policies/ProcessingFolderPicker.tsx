@@ -20,9 +20,12 @@ import {
   type FolderRecord,
 } from "@app/types/folder";
 import type { PickedDirectory } from "@app/services/directoryPicker";
+import { directoryKey } from "@app/services/localFolderStorage";
+import { getFolderChain } from "@app/utils/folderPath";
 import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 import {
   processingFolderPath,
+  isValidProcessingFolderName,
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
 import { useFolderPickerBack } from "@app/components/policies/useFolderPickerBack";
@@ -117,20 +120,16 @@ export function ProcessingFolderPicker({
           : folder.parentFolderId === currentId,
     )
     .sort((a, b) => a.name.localeCompare(b.name));
-  const trail: FolderRecord[] = [];
-  const seen = new Set<FolderId>();
-  let ancestor = currentId ? byId.get(currentId) : undefined;
-  while (ancestor && !seen.has(ancestor.id)) {
-    trail.unshift(ancestor);
-    seen.add(ancestor.id);
-    ancestor = ancestor.parentFolderId
-      ? byId.get(ancestor.parentFolderId)
-      : undefined;
-  }
+  const trail = getFolderChain(currentId, byId);
   const selectedId = creating
     ? location === "server"
       ? parentId
-      : available.find((folder) => folder.directory === directory?.path)?.id
+      : directory &&
+        available.find(
+          (folder) =>
+            folder.directory !== undefined &&
+            directoryKey(folder.directory) === directoryKey(directory.path),
+        )?.id
     : target?.kind === "existing"
       ? target.folder.id
       : null;
@@ -151,9 +150,10 @@ export function ProcessingFolderPicker({
     nextName = name,
     nextParent = parentId,
     nextDirectory = directory,
+    nextLocation = location,
   ) {
     onChange(
-      location === "server"
+      nextLocation === "server"
         ? { kind: "server", name: nextName, parentId: nextParent }
         : nextDirectory
           ? { kind: "local", directory: nextDirectory, name: nextName }
@@ -185,17 +185,8 @@ export function ProcessingFolderPicker({
       : null;
     setParentId(id);
     setDirectory(picked);
-    onChange(
-      creating
-        ? nextLocation === "server"
-          ? { kind: "server", name, parentId: id }
-          : picked
-            ? { kind: "local", directory: picked, name }
-            : null
-        : folder
-          ? { kind: "existing", folder }
-          : null,
-    );
+    if (creating) updateDraft(name, id, picked, nextLocation);
+    else onChange(folder ? { kind: "existing", folder } : null);
   }
 
   function remember() {
@@ -246,13 +237,7 @@ export function ProcessingFolderPicker({
     setParentId(nextParent);
     setDirectory(nextDirectory);
     setError(null);
-    onChange(
-      nextLocation === "server"
-        ? { kind: "server", name, parentId: nextParent }
-        : nextDirectory
-          ? { kind: "local", directory: nextDirectory, name }
-          : null,
-    );
+    updateDraft(name, nextParent, nextDirectory, nextLocation);
   }
 
   async function browse(asParent = false) {
@@ -366,7 +351,7 @@ export function ProcessingFolderPicker({
             label={t("processingFolders.setup.folderName")}
             required
             error={
-              name && (/[\\/]/.test(name) || [".", ".."].includes(name.trim()))
+              name.trim() && !isValidProcessingFolderName(name)
                 ? t("processingFolders.setup.invalidName")
                 : undefined
             }

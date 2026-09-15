@@ -19,6 +19,7 @@ import {
   deliverSweepResults,
 } from "@app/services/processingRunDelivery";
 import { folderKind, type FolderRecord } from "@app/types/folder";
+import { directoryKey } from "@app/services/localFolderStorage";
 import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
@@ -92,12 +93,6 @@ function load(force = false): Promise<void> {
     });
   inFlight = request;
   return request;
-}
-
-/** A directory as a comparison key: one side may carry a trailing separator the other
- *  lost to trimming. */
-function directoryKey(directory: string): string {
-  return directory.trim().replace(/[/\\]+$/, "");
 }
 
 /**
