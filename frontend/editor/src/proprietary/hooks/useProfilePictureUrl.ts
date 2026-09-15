@@ -9,6 +9,7 @@ import { fetchOwnProfilePicture } from "@app/services/profilePictureService";
 let currentUrl: string | null = null;
 let loadPromise: Promise<void> | null = null;
 let loaded = false;
+let loading = false;
 /** Bumped by every refresh so an in-flight load can't overwrite a newer result. */
 let generation = 0;
 const listeners = new Set<() => void>();
@@ -26,6 +27,10 @@ function snapshot(): string | null {
   return currentUrl;
 }
 
+function loadingSnapshot(): boolean {
+  return loading;
+}
+
 function setUrl(next: string | null): void {
   // Object URLs pin the blob in memory until revoked.
   if (currentUrl && currentUrl !== next) URL.revokeObjectURL(currentUrl);
@@ -36,6 +41,8 @@ function setUrl(next: string | null): void {
 function load(): Promise<void> {
   if (!loadPromise) {
     const token = generation;
+    loading = true;
+    emit();
     loadPromise = fetchOwnProfilePicture()
       .then((url) => {
         if (token !== generation) {
@@ -52,6 +59,8 @@ function load(): Promise<void> {
       })
       .finally(() => {
         loadPromise = null;
+        loading = false;
+        emit();
       });
   }
   return loadPromise;
@@ -76,4 +85,9 @@ export function useProfilePictureUrl(): string | null {
   }, [loginEnabled]);
 
   return useSyncExternalStore(subscribe, snapshot, snapshot);
+}
+
+/** Whether the current user's initial picture lookup is still pending. */
+export function useProfilePictureLoading(): boolean {
+  return useSyncExternalStore(subscribe, loadingSnapshot, loadingSnapshot);
 }
