@@ -17,6 +17,7 @@ const policy = (
 ) => ({
   id,
   name: id,
+  owner: "policy-owner@example.com",
   enabled: true,
   inputs: [],
   steps: [{ operation: "/api/v1/misc/compress-pdf", parameters: {} }],
@@ -116,6 +117,7 @@ describe("decodedToState — runsOnEditor", () => {
     );
 
     expect(state.runsOnEditor).toBe(true);
+    expect(state.owner).toBe("policy-owner@example.com");
   });
 
   // Participation is the policy's own flag now, so a tile that never opted in does not run in the

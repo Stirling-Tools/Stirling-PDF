@@ -8,6 +8,7 @@ import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useIsMobile } from "@app/hooks/useIsMobile";
+import { CreateProcessingFolderButton } from "@app/components/policies/CreateProcessingFolderButton";
 
 type LandingActionsProps = {
   fileInputRef: React.RefObject<HTMLInputElement | null>;
@@ -53,6 +54,8 @@ export function LandingActions({
         >
           {terminology.addFiles}
         </Button>
+
+        <CreateProcessingFolderButton />
 
         {config?.enableMobileScanner && !isMobile && (
           <Tooltip label={terminology.mobileUpload} position="bottom">
