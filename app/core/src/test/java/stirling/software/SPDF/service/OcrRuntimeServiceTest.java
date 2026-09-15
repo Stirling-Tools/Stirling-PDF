@@ -1,0 +1,627 @@
+package stirling.software.SPDF.service;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
+import org.junit.jupiter.api.io.TempDir;
+
+import com.sun.net.httpserver.HttpServer;
+
+import stirling.software.SPDF.model.ocr.OcrManifest;
+import stirling.software.SPDF.model.ocr.OcrManifest.OcrArtifact;
+import stirling.software.common.model.ApplicationProperties;
+import stirling.software.common.util.ChecksumUtils;
+
+/**
+ * Covers the parts of on-demand OCR installation where a bug is dangerous rather than merely
+ * annoying: writing outside the target directory, and accepting a file that is not what the
+ * catalogue said it would be.
+ *
+ * <p>Nothing here touches the network - every artefact is served over a {@code file:} URL, which is
+ * the same path an air-gapped install uses.
+ */
+class OcrRuntimeServiceTest {
+
+    @TempDir Path tmp;
+
+    private OcrRuntimeService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new OcrRuntimeService(new ApplicationProperties());
+    }
+
+    private static String sha256(Path path) throws IOException {
+        return ChecksumUtils.checksum(path, "SHA-256");
+    }
+
+    private Path fileWith(String name, String content) throws IOException {
+        Path path = tmp.resolve(name);
+        Files.createDirectories(path.getParent() == null ? tmp : path.getParent());
+        Files.writeString(path, content, StandardCharsets.UTF_8);
+        return path;
+    }
+
+    private static String fileUrl(Path path) {
+        return path.toUri().toString();
+    }
+
+    /**
+     * Exercises the HTTP transport, which every other test here skips.
+     *
+     * <p>That gap let a deadlock reach a real installer: the client was built per call inside a
+     * try-with-resources and the response body handed back from inside it, so {@code close()} -
+     * which since Java 21 blocks until every exchange finishes - waited for a body that could not
+     * be read until it returned. The status endpoint never answered. Serving artefacts over {@code
+     * file:} URLs, as the rest of these tests do, returns before the client is ever reached, so the
+     * logic was covered and the transport was not.
+     *
+     * <p>The timeout is the assertion: with that bug the call hangs rather than fails.
+     */
+    @Nested
+    @DisplayName("HTTP transport")
+    class Transport {
+
+        /**
+         * The body has to be too big to sit in a socket buffer, or this passes for the wrong
+         * reason. A few bytes arrive complete before anything gets a chance to wait on them, so a
+         * tiny response hides the very bug this exists to catch. The real catalogue is ~57 KB and
+         * the engine is 37 MB; 2 MB is enough to behave like them.
+         */
+        @Test
+        @Timeout(20)
+        @DisplayName("a large response body can actually be read back")
+        void readsAResponseBody() throws Exception {
+            byte[] payload = new byte[2 * 1024 * 1024];
+            java.util.Arrays.fill(payload, (byte) 'x');
+
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            server.createContext(
+                    "/manifest",
+                    exchange -> {
+                        exchange.sendResponseHeaders(200, payload.length);
+                        try (OutputStream out = exchange.getResponseBody()) {
+                            out.write(payload);
+                        }
+                    });
+            server.start();
+            try {
+                OcrRuntimeService svc = new OcrRuntimeService(new ApplicationProperties());
+                URI uri =
+                        URI.create(
+                                "http://127.0.0.1:" + server.getAddress().getPort() + "/manifest");
+
+                byte[] body;
+                try (InputStream in = svc.open(uri)) {
+                    body = in.readAllBytes();
+                }
+
+                assertEquals(payload.length, body.length);
+            } finally {
+                server.stop(0);
+            }
+        }
+
+        @Test
+        @Timeout(20)
+        @DisplayName("redirects are followed, which is how a release asset is served")
+        void followsRedirects() throws Exception {
+            HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+            int port = server.getAddress().getPort();
+            server.createContext(
+                    "/start",
+                    exchange -> {
+                        exchange.getResponseHeaders()
+                                .add("Location", "http://127.0.0.1:" + port + "/end");
+                        exchange.sendResponseHeaders(302, -1);
+                        exchange.close();
+                    });
+            server.createContext(
+                    "/end",
+                    exchange -> {
+                        byte[] body = "arrived".getBytes(StandardCharsets.UTF_8);
+                        exchange.sendResponseHeaders(200, body.length);
+                        try (var out = exchange.getResponseBody()) {
+                            out.write(body);
+                        }
+                    });
+            server.start();
+            try {
+                OcrRuntimeService svc = new OcrRuntimeService(new ApplicationProperties());
+                String body;
+                try (InputStream in = svc.open(URI.create("http://127.0.0.1:" + port + "/start"))) {
+                    body = new String(in.readAllBytes(), StandardCharsets.UTF_8);
+                }
+                assertEquals("arrived", body);
+            } finally {
+                server.stop(0);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("download")
+    class Download {
+
+        @Test
+        @DisplayName("accepts a file whose SHA-256 matches the catalogue")
+        void acceptsMatchingDigest() throws IOException {
+            Path source = fileWith("good.bin", "tesseract");
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            fileUrl(source), Files.size(source), sha256(source), "5.4.0", "engine");
+            Path target = tmp.resolve("out.bin");
+
+            service.download(artifact, target, "engine");
+
+            assertTrue(Files.exists(target));
+            assertEquals("tesseract", Files.readString(target));
+        }
+
+        @Test
+        @DisplayName("rejects a mismatched SHA-256 and leaves nothing behind")
+        void rejectsMismatchedDigest() throws IOException {
+            Path source = fileWith("tampered.bin", "not what the catalogue promised");
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            fileUrl(source), Files.size(source), "0".repeat(64), "5.4.0", "engine");
+            Path target = tmp.resolve("out.bin");
+
+            IOException e =
+                    assertThrows(
+                            IOException.class, () -> service.download(artifact, target, "engine"));
+
+            assertTrue(e.getMessage().contains("SHA-256"), e.getMessage());
+            assertFalse(
+                    Files.exists(target),
+                    "a file that failed verification must not be left on disk for something else to"
+                            + " pick up");
+        }
+
+        @Test
+        @DisplayName("refuses an artefact the catalogue lists without a digest")
+        void refusesMissingDigest() throws IOException {
+            Path source = fileWith("unsigned.bin", "anything");
+            OcrArtifact artifact =
+                    new OcrArtifact(fileUrl(source), Files.size(source), null, null, "engine");
+
+            assertThrows(
+                    IOException.class,
+                    () -> service.download(artifact, tmp.resolve("out.bin"), "engine"));
+        }
+
+        @Test
+        @DisplayName("rejects a size that disagrees with the catalogue")
+        void rejectsWrongSize() throws IOException {
+            Path source = fileWith("short.bin", "abc");
+            OcrArtifact artifact =
+                    new OcrArtifact(fileUrl(source), 99999, sha256(source), null, "engine");
+            Path target = tmp.resolve("out.bin");
+
+            assertThrows(IOException.class, () -> service.download(artifact, target, "engine"));
+            assertFalse(Files.exists(target));
+        }
+    }
+
+    @Nested
+    @DisplayName("unzipInto")
+    class Unzip {
+
+        @Test
+        @DisplayName("expands a well-formed archive")
+        void expandsArchive() throws IOException {
+            Path zip =
+                    zipWith(tmp.resolve("ok.zip"), "tessdata/configs/pdf", "tessedit_create_pdf 1");
+            Path dest = Files.createDirectory(tmp.resolve("dest"));
+
+            OcrRuntimeService.unzipInto(zip, dest);
+
+            assertTrue(Files.isRegularFile(dest.resolve("tessdata/configs/pdf")));
+        }
+
+        @Test
+        @DisplayName("refuses an entry that climbs out of the target directory")
+        void refusesZipSlip() throws IOException {
+            // The escape target sits outside @TempDir by definition, so it is named per run and
+            // cleared first: otherwise one escape leaves a file behind that fails every later run.
+            String escapee = "stirling-ocr-escape-" + System.nanoTime() + ".txt";
+            Path outside = tmp.getParent().resolve(escapee);
+            Files.deleteIfExists(outside);
+
+            Path zip = zipWith(tmp.resolve("evil.zip"), "../../" + escapee, "pwned");
+            Path dest = Files.createDirectory(tmp.resolve("dest-slip"));
+
+            try {
+                IOException e =
+                        assertThrows(
+                                IOException.class, () -> OcrRuntimeService.unzipInto(zip, dest));
+
+                assertTrue(e.getMessage().contains("outside"), e.getMessage());
+                assertFalse(
+                        Files.exists(outside),
+                        "the archive entry must not have landed outside the target directory");
+            } finally {
+                Files.deleteIfExists(outside);
+            }
+        }
+
+        private Path zipWith(Path zip, String entryName, String content) throws IOException {
+            try (OutputStream out = Files.newOutputStream(zip);
+                    ZipOutputStream zos = new ZipOutputStream(out)) {
+                zos.putNextEntry(new ZipEntry(entryName));
+                zos.write(content.getBytes(StandardCharsets.UTF_8));
+                zos.closeEntry();
+            }
+            return zip;
+        }
+    }
+
+    @Nested
+    @DisplayName("resolveInside")
+    class ResolveInside {
+
+        @Test
+        @DisplayName("allows a plain relative name")
+        void allowsRelative() throws IOException {
+            Path resolved = OcrRuntimeService.resolveInside(tmp, "spa.traineddata");
+            assertTrue(resolved.startsWith(tmp.toAbsolutePath().normalize()));
+        }
+
+        @Test
+        @DisplayName("refuses traversal, absolute paths and the root itself")
+        void refusesEscapes() {
+            assertThrows(IOException.class, () -> OcrRuntimeService.resolveInside(tmp, "../out"));
+            assertThrows(
+                    IOException.class, () -> OcrRuntimeService.resolveInside(tmp, "a/../../out"));
+            assertThrows(IOException.class, () -> OcrRuntimeService.resolveInside(tmp, ""));
+        }
+    }
+
+    /**
+     * The install endpoints are deliberately reachable without an admin role, so on a self-hosted
+     * server any user can trigger a download. A catalogue that named loopback or a cloud metadata
+     * address would turn that into an SSRF probe - which is what Aikido flagged on this code.
+     */
+    @Nested
+    @DisplayName("server-side fetch guard")
+    class FetchGuard {
+
+        private OcrRuntimeService serviceWithCatalogue(String manifestUrl) {
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getSystem().getOcr().setManifestUrl(manifestUrl);
+            return new OcrRuntimeService(properties);
+        }
+
+        @Test
+        @DisplayName("a public catalogue may not send the server to loopback")
+        void refusesLoopbackFromPublicCatalogue() throws IOException {
+            OcrRuntimeService svc =
+                    serviceWithCatalogue("https://example.invalid/ocr-manifest.json");
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            "https://127.0.0.1/engine.zip", 1, "0".repeat(64), null, "engine");
+
+            IOException e =
+                    assertThrows(
+                            IOException.class,
+                            () -> svc.download(artifact, tmp.resolve("out.bin"), "engine"));
+
+            assertTrue(e.getMessage().contains("must not reach"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("a catalogue host that does not resolve is external, not a mirror")
+        void unresolvableCatalogueIsNotTreatedAsAMirror() throws IOException {
+            // The regression this pins: asking isSensitiveHost whether the catalogue was internal
+            // conflated "resolves inside" with "cannot be resolved at all", so a DNS failure on the
+            // catalogue host read as "internal mirror" and switched the guard off entirely.
+            OcrRuntimeService svc =
+                    serviceWithCatalogue("https://does-not-resolve.invalid/ocr-manifest.json");
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            "https://127.0.0.1/engine.zip", 1, "0".repeat(64), null, "engine");
+
+            IOException e =
+                    assertThrows(
+                            IOException.class,
+                            () -> svc.download(artifact, tmp.resolve("out.bin"), "engine"));
+
+            assertTrue(e.getMessage().contains("must not reach"), e.getMessage());
+        }
+
+        @Test
+        @DisplayName("a local catalogue may name local artefacts, which is how a mirror works")
+        void allowsInternalWhenCatalogueIsLocal() throws IOException {
+            // The point of the setting is air-gapped and corporate installs: a mirror's catalogue
+            // lists artefacts on the same internal network, so banning private addresses outright
+            // would break the feature this exists for.
+            Path source = fileWith("mirror.bin", "engine");
+            OcrRuntimeService svc = serviceWithCatalogue(fileUrl(tmp.resolve("catalogue.json")));
+            OcrArtifact artifact =
+                    new OcrArtifact(
+                            fileUrl(source), Files.size(source), sha256(source), null, "engine");
+
+            svc.download(artifact, tmp.resolve("mirrored.bin"), "engine");
+
+            assertTrue(Files.exists(tmp.resolve("mirrored.bin")));
+        }
+    }
+
+    @Nested
+    @DisplayName("validatedUri")
+    class ValidatedUri {
+
+        @Test
+        @DisplayName("accepts https and local files")
+        void acceptsHttpsAndFile() throws IOException {
+            assertNotNull(OcrRuntimeService.validatedUri("https://example.invalid/manifest.json"));
+            assertNotNull(OcrRuntimeService.validatedUri(tmp.toUri().toString()));
+        }
+
+        @Test
+        @DisplayName("refuses plain http, because it would let the digests be rewritten too")
+        void refusesHttp() {
+            assertThrows(
+                    IOException.class,
+                    () -> OcrRuntimeService.validatedUri("http://example.invalid/manifest.json"));
+        }
+
+        @Test
+        @DisplayName("refuses empty and unusable addresses")
+        void refusesJunk() {
+            assertThrows(IOException.class, () -> OcrRuntimeService.validatedUri(null));
+            assertThrows(IOException.class, () -> OcrRuntimeService.validatedUri("   "));
+            assertThrows(IOException.class, () -> OcrRuntimeService.validatedUri("ftp://a/b"));
+        }
+    }
+
+    @Nested
+    @DisplayName("language codes")
+    class LanguageCodes {
+
+        @Test
+        @DisplayName("accepts real Tesseract codes")
+        void accepts() throws IOException {
+            assertEquals("spa", OcrRuntimeService.requireSafeLanguageCode("spa"));
+            assertEquals("chi_sim", OcrRuntimeService.requireSafeLanguageCode("chi_sim"));
+            assertEquals("aze_cyrl", OcrRuntimeService.requireSafeLanguageCode(" aze_cyrl "));
+        }
+
+        @Test
+        @DisplayName("refuses anything that could become a path")
+        void refusesPaths() {
+            assertThrows(
+                    IOException.class,
+                    () -> OcrRuntimeService.requireSafeLanguageCode("../../evil"));
+            assertThrows(IOException.class, () -> OcrRuntimeService.requireSafeLanguageCode("a/b"));
+            assertThrows(
+                    IOException.class, () -> OcrRuntimeService.requireSafeLanguageCode("C:\\x"));
+            assertThrows(IOException.class, () -> OcrRuntimeService.requireSafeLanguageCode(""));
+            assertThrows(IOException.class, () -> OcrRuntimeService.requireSafeLanguageCode(null));
+        }
+    }
+
+    @Nested
+    @DisplayName("platformKey")
+    class PlatformKey {
+
+        @Test
+        @DisplayName("maps the platforms the manifest names")
+        void maps() {
+            assertEquals("windows-x86_64", OcrRuntimeService.platformKey("Windows 11", "amd64"));
+            assertEquals("macos-aarch64", OcrRuntimeService.platformKey("Mac OS X", "aarch64"));
+            assertEquals("linux-x86_64", OcrRuntimeService.platformKey("Linux", "x86_64"));
+        }
+    }
+
+    /**
+     * The whole install path, driven off a local catalogue and a locally built archive. Uses a
+     * stand-in engine rather than the real 37 MB download so it can run anywhere, but exercises the
+     * same code: fetch, verify, expand, sanity-check, swap in.
+     */
+    @Nested
+    @DisplayName("installEngine")
+    class InstallEngine {
+
+        private Path root;
+
+        @BeforeEach
+        void chooseRoot() {
+            root = tmp.resolve("install").resolve("tesseract");
+        }
+
+        /** Overriding the root is the seam: everything else is the production path. */
+        private OcrRuntimeService serviceWith(Path manifest) {
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getSystem().getOcr().setManifestUrl(fileUrl(manifest));
+            return new OcrRuntimeService(properties) {
+                @Override
+                public Path runtimeRoot() {
+                    return root;
+                }
+            };
+        }
+
+        private String executableName() {
+            return System.getProperty("os.name", "")
+                            .toLowerCase(java.util.Locale.ROOT)
+                            .contains("windows")
+                    ? "tesseract.exe"
+                    : "tesseract";
+        }
+
+        private Path engineArchive(String name, boolean withConfigs) throws IOException {
+            Path zip = tmp.resolve(name);
+            try (OutputStream out = Files.newOutputStream(zip);
+                    ZipOutputStream zos = new ZipOutputStream(out)) {
+                zos.putNextEntry(new ZipEntry(executableName()));
+                zos.write("binary".getBytes(StandardCharsets.UTF_8));
+                zos.closeEntry();
+                zos.putNextEntry(new ZipEntry("tessdata/eng.traineddata"));
+                zos.write("model".getBytes(StandardCharsets.UTF_8));
+                zos.closeEntry();
+                if (withConfigs) {
+                    zos.putNextEntry(new ZipEntry("tessdata/configs/pdf"));
+                    zos.write("tessedit_create_pdf 1".getBytes(StandardCharsets.UTF_8));
+                    zos.closeEntry();
+                }
+            }
+            return zip;
+        }
+
+        private Path catalogueFor(Path archive) throws IOException {
+            String json =
+                    """
+                    {
+                      "schemaVersion": 1,
+                      "engine": { "%s": { "url": "%s", "size": %d, "sha256": "%s",
+                                          "version": "5.4.0" } }
+                    }
+                    """
+                            .formatted(
+                                    OcrRuntimeService.platformKey(
+                                            System.getProperty("os.name"),
+                                            System.getProperty("os.arch")),
+                                    fileUrl(archive),
+                                    Files.size(archive),
+                                    sha256(archive));
+            return fileWith("catalogue.json", json);
+        }
+
+        @Test
+        @DisplayName("unpacks the engine into place")
+        void installsEngine() throws IOException {
+            Path archive = engineArchive("engine-ok.zip", true);
+            OcrRuntimeService service = serviceWith(catalogueFor(archive));
+
+            service.installEngine();
+
+            assertTrue(Files.isRegularFile(root.resolve(executableName())));
+            assertTrue(Files.isRegularFile(root.resolve("tessdata/configs/pdf")));
+            assertTrue(service.isEngineInstalled());
+        }
+
+        @Test
+        @DisplayName("refuses an archive with no tessdata/configs/pdf, which would OCR nothing")
+        void refusesArchiveWithoutConfigs() throws IOException {
+            Path archive = engineArchive("engine-no-configs.zip", false);
+            OcrRuntimeService service = serviceWith(catalogueFor(archive));
+
+            IOException e = assertThrows(IOException.class, service::installEngine);
+
+            assertTrue(e.getMessage().contains("configs/pdf"), e.getMessage());
+            assertFalse(
+                    Files.exists(root),
+                    "a rejected archive must not leave a half-installed runtime behind");
+        }
+
+        @Test
+        @DisplayName("keeps language models across an engine reinstall")
+        void carriesLanguagesOver() throws IOException {
+            Path archive = engineArchive("engine-ok.zip", true);
+            OcrRuntimeService service = serviceWith(catalogueFor(archive));
+            service.installEngine();
+
+            // A language the user added after the first install.
+            Files.writeString(root.resolve("tessdata/spa.traineddata"), "spanish");
+
+            service.installEngine();
+
+            assertTrue(
+                    Files.isRegularFile(root.resolve("tessdata/spa.traineddata")),
+                    "upgrading the engine must not silently discard installed languages");
+            assertTrue(Files.isRegularFile(root.resolve("tessdata/configs/pdf")));
+        }
+
+        @Test
+        @DisplayName("a tampered archive leaves the previous runtime untouched")
+        void keepsPreviousRuntimeOnFailure() throws IOException {
+            Path good = engineArchive("engine-ok.zip", true);
+            serviceWith(catalogueFor(good)).installEngine();
+            Files.writeString(root.resolve("tessdata/spa.traineddata"), "spanish");
+
+            Path tampered = engineArchive("engine-tampered.zip", true);
+            String badCatalogue =
+                    """
+                    {
+                      "schemaVersion": 1,
+                      "engine": { "%s": { "url": "%s", "size": %d, "sha256": "%s",
+                                          "version": "9.9.9" } }
+                    }
+                    """
+                            .formatted(
+                                    OcrRuntimeService.platformKey(
+                                            System.getProperty("os.name"),
+                                            System.getProperty("os.arch")),
+                                    fileUrl(tampered),
+                                    Files.size(tampered),
+                                    "0".repeat(64));
+            OcrRuntimeService service = serviceWith(fileWith("bad-catalogue.json", badCatalogue));
+
+            assertThrows(IOException.class, service::installEngine);
+
+            assertTrue(Files.isRegularFile(root.resolve(executableName())));
+            assertTrue(Files.isRegularFile(root.resolve("tessdata/spa.traineddata")));
+        }
+    }
+
+    @Nested
+    @DisplayName("loadManifest")
+    class LoadManifest {
+
+        @Test
+        @DisplayName(
+                "reads a catalogue from a local file, which is how an air-gapped install works")
+        void readsLocalCatalogue() throws IOException {
+            Path manifest =
+                    fileWith(
+                            "ocr-manifest.json",
+                            """
+                            {
+                              "schemaVersion": 1,
+                              "engine": {
+                                "windows-x86_64": {
+                                  "url": "https://example.invalid/tesseract.zip",
+                                  "size": 41582104,
+                                  "sha256": "abc",
+                                  "version": "5.4.0"
+                                }
+                              },
+                              "languages": {
+                                "spa": {
+                                  "url": "https://example.invalid/spa.traineddata",
+                                  "size": 2294433,
+                                  "sha256": "def",
+                                  "name": "Espanol"
+                                }
+                              }
+                            }
+                            """);
+
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getSystem().getOcr().setManifestUrl(fileUrl(manifest));
+            OcrManifest loaded = new OcrRuntimeService(properties).loadManifest();
+
+            assertEquals(1, loaded.schemaVersion());
+            assertEquals("5.4.0", loaded.engine().get("windows-x86_64").version());
+            assertEquals(2294433, loaded.languages().get("spa").size());
+            // Absent sections must not blow up: a catalogue with no extras is perfectly valid.
+            assertTrue(loaded.extras().isEmpty());
+        }
+    }
+}

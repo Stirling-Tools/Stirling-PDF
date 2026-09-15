@@ -102,6 +102,92 @@ class OCRControllerTest {
         return dir;
     }
 
+    /**
+     * Measured on an ordinary 19-page A4 document: at the 500 DPI the setting defaults to, each
+     * page is 24 megapixels - about 92 MB in memory - and the desktop app, which runs the backend
+     * with -Xmx2g, died rendering page 11. The setting is documented as "maximum allowed DPI", and
+     * AutoRotateController already reads it that way; this one adopted the ceiling as its target.
+     */
+    @Nested
+    @DisplayName("ocrRenderDpi")
+    class RenderDpi {
+
+        private ApplicationProperties withMaxDpi(int maxDpi) {
+            ApplicationProperties properties = new ApplicationProperties();
+            properties.getSystem().setMaxDPI(maxDpi);
+            return properties;
+        }
+
+        @Test
+        @DisplayName("caps at 300 rather than adopting the 500 the setting defaults to")
+        void capsAtThreeHundred() {
+            assertEquals(300, OCRController.ocrRenderDpi(withMaxDpi(500)));
+        }
+
+        @Test
+        @DisplayName("an operator who lowers the ceiling gets the lower value")
+        void honoursALowerCeiling() {
+            assertEquals(150, OCRController.ocrRenderDpi(withMaxDpi(150)));
+        }
+
+        @Test
+        @DisplayName("falls back to 300 with no settings at all")
+        void fallsBackWithoutProperties() {
+            assertEquals(300, OCRController.ocrRenderDpi(null));
+        }
+    }
+
+    /**
+     * Measured against the bundled Tesseract 5.4.0: pointing {@code --tessdata-dir} at a directory
+     * without {@code configs/pdf} makes the run print "read_params_file: Can't open pdf", write no
+     * output file, and still <em>exit 0</em>. A directory of bare .traineddata files is exactly
+     * what the OCR documentation tells users to assemble, so the guard is what keeps the fix from
+     * breaking them.
+     */
+    @Nested
+    @DisplayName("hasTesseractConfigs")
+    class HasTesseractConfigs {
+
+        @Test
+        @DisplayName("true when the directory carries configs/pdf")
+        void trueWhenConfigsPresent() throws IOException {
+            Path tessdata = tessdataDirWith("eng");
+            Files.createDirectories(tessdata.resolve("configs"));
+            Files.createFile(tessdata.resolve("configs").resolve("pdf"));
+
+            assertTrue(OCRController.hasTesseractConfigs(tessdata.toString()));
+        }
+
+        @Test
+        @DisplayName("false for a directory of bare traineddata files")
+        void falseWithoutConfigs() throws IOException {
+            Path tessdata = tessdataDirWith("eng", "spa");
+
+            assertFalse(OCRController.hasTesseractConfigs(tessdata.toString()));
+        }
+
+        @Test
+        @DisplayName("false when configs exists but pdf is missing from it")
+        void falseWhenPdfConfigMissing() throws IOException {
+            Path tessdata = tessdataDirWith("eng");
+            Files.createDirectories(tessdata.resolve("configs"));
+            Files.createFile(tessdata.resolve("configs").resolve("hocr"));
+
+            assertFalse(OCRController.hasTesseractConfigs(tessdata.toString()));
+        }
+
+        @Test
+        @DisplayName("false for missing, null and blank paths")
+        void falseForUnusablePaths() {
+            assertFalse(OCRController.hasTesseractConfigs(null));
+            assertFalse(OCRController.hasTesseractConfigs(""));
+            assertFalse(OCRController.hasTesseractConfigs("   "));
+            assertFalse(
+                    OCRController.hasTesseractConfigs(
+                            baseTmpDir.resolve("does-not-exist").toString()));
+        }
+    }
+
     @Nested
     @DisplayName("getAvailableTesseractLanguages")
     class GetAvailableTesseractLanguages {

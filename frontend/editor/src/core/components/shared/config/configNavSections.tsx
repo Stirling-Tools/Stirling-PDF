@@ -5,6 +5,7 @@ import PreferencesSection from "@app/components/shared/config/configSections/pre
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import AboutSection from "@app/components/shared/config/configSections/AboutSection";
+import OcrSection from "@app/components/shared/config/configSections/OcrSection";
 import type {
   ConfigNavItem,
   ConfigNavSection,
@@ -47,6 +48,12 @@ export const useConfigNavSections = (
           ),
           icon: "tune-rounded",
           component: <PreferencesSection />,
+        },
+        {
+          key: "ocr",
+          label: t("settings.ocr.title", "Text recognition"),
+          icon: "document-scanner-rounded",
+          component: <OcrSection />,
         },
       ],
     },

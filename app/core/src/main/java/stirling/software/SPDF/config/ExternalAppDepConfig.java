@@ -44,6 +44,7 @@ public class ExternalAppDepConfig {
     private final String calibrePath;
     private final String ocrMyPdfPath;
     private final String sOfficePath;
+    private final String tesseractPath;
 
     /**
      * Map of command(binary) -> affected groups (e.g. "gs" -> ["Ghostscript"]). Immutable to avoid
@@ -61,6 +62,7 @@ public class ExternalAppDepConfig {
         this.calibrePath = runtimePathConfig.getCalibrePath();
         this.ocrMyPdfPath = runtimePathConfig.getOcrMyPdfPath();
         this.sOfficePath = runtimePathConfig.getSOfficePath();
+        this.tesseractPath = runtimePathConfig.getTesseractPath();
 
         Map<String, List<String>> tmp = new HashMap<>();
         tmp.put("gs", List.of("Ghostscript"));
@@ -70,7 +72,7 @@ public class ExternalAppDepConfig {
         tmp.put("pdftohtml", List.of("Pdftohtml"));
         tmp.put(unoconvPath, List.of("Unoconvert"));
         tmp.put("qpdf", List.of("qpdf"));
-        tmp.put("tesseract", List.of("tesseract"));
+        tmp.put(tesseractPath, List.of("tesseract"));
         tmp.put("rar", List.of("rar")); // Required for real CBR output
         tmp.put(calibrePath, List.of("Calibre"));
         // ffmpeg disabled due to raised CVEs

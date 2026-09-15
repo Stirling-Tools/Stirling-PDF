@@ -26,6 +26,12 @@ Depending on your requirements, you can choose the appropriate language pack for
 
 **DO NOT REMOVE EXISTING `eng.traineddata`, IT'S REQUIRED.**
 
+**Keep the `configs/` directory too, if the one you are assembling has one.**
+Stirling-PDF asks Tesseract for `pdf` output, and `pdf` is the name of a config
+file read from `<tessdata>/configs` - not an output format. A tessdata directory
+holding nothing but `.traineddata` files makes Tesseract exit successfully having
+written no file at all, so OCR appears to run and produces nothing.
+
 ### Docker Setup
 
 If you are using Docker, you need to expose the Tesseract tessdata directory as a volume in order to use the additional language packs.
@@ -80,6 +86,40 @@ rpm -qa | grep tesseract-langpack | sed 's/tesseract-langpack-//g'
 ```
 
 For Windows:
+
+The desktop app installs its own Tesseract runtime on demand, so nothing has to
+be installed separately and the installer does not carry ~130 MB for a feature
+not everyone uses. Choose OCR and the languages you want during installation, or
+turn it on later from the OCR tool or from Settings; more languages can be added
+at any time and take effect immediately, without restarting.
+
+What gets installed and from where is described by a manifest - a small JSON file
+listing, per platform, the engine and every language model with its size and its
+SHA-256. Nothing is downloaded that the manifest does not describe, and nothing
+is kept whose SHA-256 does not match. The address of that manifest is a setting,
+so an installation can be pointed at an internal mirror or a local copy:
+
+```
+system:
+  ocr:
+    manifestUrl: "" # empty uses the default; set it to use a mirror or work offline
+```
+
+The runtime lands next to the application's own data, so adding a language never
+needs administrator rights.
+
+The rest of this section applies when running the JAR directly, or when you want
+to use a Tesseract you installed yourself. Point Stirling-PDF at it with:
+
+```
+system:
+  customPaths:
+    operations:
+      tesseract: C:/Program Files/Tesseract-OCR/tesseract.exe
+```
+
+When left empty, Stirling-PDF uses the bundled Tesseract if there is one and
+otherwise looks the command up on `PATH`, as it always did.
 
 You must ensure tesseract is installed
 
