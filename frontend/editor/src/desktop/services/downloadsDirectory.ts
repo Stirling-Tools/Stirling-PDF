@@ -1,12 +1,7 @@
 import { downloadDir } from "@tauri-apps/api/path";
 
-/**
- * Desktop: the real Downloads folder, resolved from the OS.
- *
- * Returns null rather than throwing when the OS reports no Download directory, or when the
- * platform refuses access — to a caller that is a "nothing to offer", not an error worth
- * surfacing.
- */
+/** Desktop: the real Downloads folder, from the OS. Null rather than a throw when there is none
+ *  or access is refused — to a caller that is "nothing to offer", not an error. */
 export async function getDownloadsDirectory(): Promise<string | null> {
   try {
     return await downloadDir();
