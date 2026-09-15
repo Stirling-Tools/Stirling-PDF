@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
-import { useProfilePictureUrl } from "@app/hooks/useProfilePictureUrl";
+import {
+  useProfilePictureLoading,
+  useProfilePictureUrl,
+} from "@app/hooks/useProfilePictureUrl";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { accountService } from "@app/services/accountService";
 
@@ -10,6 +13,8 @@ export interface AccountIdentity {
   displayName: string;
   profilePictureUrl: string | null;
   isAnonymous: boolean;
+  /** Display values may be placeholders until the session, name and picture resolve. */
+  loading: boolean;
 }
 
 /**
@@ -25,40 +30,47 @@ export interface AccountIdentity {
  */
 export function useAccountIdentity(): AccountIdentity {
   const { t } = useTranslation();
-  const { config } = useAppConfig();
-  const { displayName: authDisplayName, isAnonymous } = useAuth();
+  const { config, loading: configLoading } = useAppConfig();
+  const {
+    displayName: authDisplayName,
+    isAnonymous,
+    loading: authLoading,
+  } = useAuth();
   const profilePictureUrl = useProfilePictureUrl();
-  const [accountUsername, setAccountUsername] = useState<string | null>(null);
+  const profilePictureLoading = useProfilePictureLoading();
+  const [accountUsername, setAccountUsername] = useState<
+    string | null | undefined
+  >(undefined);
 
   useEffect(() => {
-    if (!config?.enableLogin) {
-      setAccountUsername(null);
+    if (authLoading || !config?.enableLogin || authDisplayName) {
+      setAccountUsername(undefined);
       return;
     }
-    if (authDisplayName) {
-      // The auth context has a name; don't bother hitting the REST
-      // endpoint, but clear any stale cached value from a prior call.
-      setAccountUsername(null);
-      return;
-    }
+    let active = true;
     accountService
       .getAccountData()
       .then((data) => {
-        // Always reflect the latest result - including clearing it on
-        // sign-out, when the endpoint returns no username (or 401s into
-        // the catch branch below). Without this, signing out would leave
-        // the old username on screen.
-        setAccountUsername(data?.username ?? null);
+        if (active) setAccountUsername(data?.username ?? null);
       })
       .catch(() => {
-        setAccountUsername(null);
+        if (active) setAccountUsername(null);
       });
-  }, [config?.enableLogin, authDisplayName]);
+    return () => {
+      active = false;
+    };
+  }, [config?.enableLogin, authDisplayName, authLoading]);
 
   return {
     displayName:
       authDisplayName ?? accountUsername ?? t("auth.displayName.user", "User"),
     profilePictureUrl,
     isAnonymous,
+    loading:
+      authLoading ||
+      profilePictureLoading ||
+      (!authDisplayName &&
+        (configLoading ||
+          (config?.enableLogin === true && accountUsername === undefined))),
   };
 }

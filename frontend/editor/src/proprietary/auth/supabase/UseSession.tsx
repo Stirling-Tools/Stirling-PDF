@@ -175,7 +175,11 @@ export function SupabaseAuthProvider({
         .then(
           (
             data: {
-              user?: { portalAccess?: boolean; teamLead?: boolean };
+              user?: {
+                portalAccess?: boolean;
+                teamLead?: boolean;
+                orgOwner?: boolean;
+              };
             } | null,
           ) => {
             if (cancelled || !data?.user) return;
@@ -187,6 +191,7 @@ export function SupabaseAuthProvider({
                       ...prev.user,
                       portalAccess: data.user?.portalAccess,
                       teamLead: data.user?.teamLead,
+                      orgOwner: data.user?.orgOwner,
                     },
                   }
                 : prev,
