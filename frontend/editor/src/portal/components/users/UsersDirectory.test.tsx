@@ -270,9 +270,7 @@ it("protects the owner when viewed by a second admin", () => {
   expect(
     screen.getByRole("menuitem", { name: "Reset password" }),
   ).toBeDisabled();
-  expect(
-    screen.getByRole("menuitem", { name: "Move to team" }),
-  ).toBeDisabled();
+  expect(screen.getByRole("menuitem", { name: "Move to team" })).toBeDisabled();
   expect(screen.getByRole("menuitem", { name: "Suspend" })).toBeDisabled();
   expect(
     screen.getByRole("menuitem", { name: "Remove from org" }),
