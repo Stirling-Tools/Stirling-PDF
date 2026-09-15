@@ -81,35 +81,35 @@ export function DocsNav({
     const isStatic = section.id === STATIC_SECTION_ID;
     const open = isOpen(section.id);
     return (
-      <div key={section.id} className="portal-docs__nav-group">
+      <div key={section.id} className="processor-docs__nav-group">
         {isStatic ? (
-          <div className="portal-docs__nav-head">{section.label}</div>
+          <div className="processor-docs__nav-head">{section.label}</div>
         ) : (
           <Button
             variant="tertiary"
             fullWidth
             justify="between"
-            className="portal-docs__nav-head portal-docs__nav-head--button"
+            className="processor-docs__nav-head processor-docs__nav-head--button"
             aria-expanded={open}
             onClick={() =>
               setToggled((prev) => ({ ...prev, [section.id]: !open }))
             }
             rightSection={
-              <span className="portal-docs__nav-count">
+              <span className="processor-docs__nav-count">
                 {section.items.length}
               </span>
             }
           >
-            <span className="portal-docs__nav-head-main">
+            <span className="processor-docs__nav-head-main">
               <span
                 className={
-                  "portal-docs__nav-chevron" + (open ? " is-open" : "")
+                  "processor-docs__nav-chevron" + (open ? " is-open" : "")
                 }
                 aria-hidden
               >
                 ▸
               </span>
-              <span className="portal-docs__nav-headlabel">
+              <span className="processor-docs__nav-headlabel">
                 {section.label}
               </span>
             </span>
@@ -119,7 +119,7 @@ export function DocsNav({
         {open && (
           <>
             {section.items.length > 0 && (
-              <ul className="portal-docs__nav-list">
+              <ul className="processor-docs__nav-list">
                 {section.items.map((item) => {
                   const isActive = item.id === active;
                   return (
@@ -130,13 +130,13 @@ export function DocsNav({
                         justify="start"
                         fullWidth
                         className={
-                          "portal-docs__nav-link" +
+                          "processor-docs__nav-link" +
                           (isActive ? " is-active" : "")
                         }
                         aria-current={isActive ? "page" : undefined}
                         onClick={() => onSelect(item.id)}
                       >
-                        <span className="portal-docs__nav-label">
+                        <span className="processor-docs__nav-label">
                           {item.label}
                         </span>
                         {item.badge && (
@@ -154,7 +154,7 @@ export function DocsNav({
               </ul>
             )}
             {children.length > 0 && (
-              <div className="portal-docs__nav-children">
+              <div className="processor-docs__nav-children">
                 {children.map(renderNode)}
               </div>
             )}
@@ -166,8 +166,8 @@ export function DocsNav({
 
   return (
     <nav
-      className="portal-docs__nav"
-      aria-label={t("portal.docs.nav.ariaLabel")}
+      className="processor-docs__nav"
+      aria-label={t("processor.docs.nav.ariaLabel")}
     >
       {tree.map(renderNode)}
     </nav>
@@ -176,12 +176,12 @@ export function DocsNav({
 
 export function DocsNavSkeleton() {
   return (
-    <nav className="portal-docs__nav" aria-hidden>
+    <nav className="processor-docs__nav" aria-hidden>
       {Array.from({ length: 5 }).map((_, gi) => (
-        <div key={gi} className="portal-docs__nav-group">
+        <div key={gi} className="processor-docs__nav-group">
           <Skeleton width="7rem" height="0.75rem" />
           {gi === 0 && (
-            <div className="portal-docs__nav-list">
+            <div className="processor-docs__nav-list">
               {Array.from({ length: 4 }).map((_, li) => (
                 <Skeleton key={li} width="80%" height="0.875rem" />
               ))}

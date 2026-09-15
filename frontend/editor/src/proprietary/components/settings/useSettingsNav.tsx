@@ -2,14 +2,14 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useSettingsNav as useCoreSettingsNav } from "@core/components/settings/useSettingsNav";
 import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
-import { usePortalAccessState } from "@app/hooks/usePortalAccess";
+import { useProcessorAccessState } from "@app/hooks/useProcessorAccess";
 import { useAuth } from "@app/auth/context";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 import {
-  buildPortalSettingsSections,
+  buildProcessorSettingsSections,
   PORTAL_SECTION_ALIASES,
   PORTAL_SUPERSEDED_SECTION_KEYS,
-} from "@app/components/settings/portalSettingsNav";
+} from "@app/components/settings/processorSettingsNav";
 
 export type { SettingsNav };
 
@@ -27,32 +27,32 @@ export type { SettingsNav };
 export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { t } = useTranslation();
   const base = useCoreSettingsNav(onLeave);
-  const { granted: portalAccess, settled: accessSettled } =
-    usePortalAccessState();
+  const { granted: processorAccess, settled: accessSettled } =
+    useProcessorAccessState();
   const { isAdmin } = useAuth();
 
-  const portalSections = useMemo(
+  const processorSections = useMemo(
     () =>
-      portalAccess
-        ? buildPortalSettingsSections(t, {
+      processorAccess
+        ? buildProcessorSettingsSections(t, {
             includeEncryption: isAdmin,
             includeBilling: isAdmin,
             includeAccountLink: isAdmin,
           })
         : [],
-    [portalAccess, isAdmin, t],
+    [processorAccess, isAdmin, t],
   );
 
   const sections = useMemo(
     () =>
-      portalSections.length === 0
+      processorSections.length === 0
         ? base.sections
         : mergeSettingsGroups(
             base.sections,
-            portalSections,
+            processorSections,
             PORTAL_SUPERSEDED_SECTION_KEYS,
           ),
-    [base.sections, portalSections],
+    [base.sections, processorSections],
   );
 
   return {
@@ -60,7 +60,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
     sections,
     pending: !accessSettled,
     aliases:
-      portalSections.length > 0
+      processorSections.length > 0
         ? { ...base.aliases, ...PORTAL_SECTION_ALIASES }
         : base.aliases,
   };

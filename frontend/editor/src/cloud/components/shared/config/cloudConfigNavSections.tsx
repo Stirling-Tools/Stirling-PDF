@@ -40,7 +40,7 @@ export function createCloudPlanNavItem(t: Translate): ConfigNavItem {
 export function createCloudTeamNavItem(t: Translate): ConfigNavItem {
   return {
     key: "users",
-    label: t("portal.nav.users", "Users"),
+    label: t("processor.nav.users", "Users"),
     description: t(
       "config.teamDescription",
       "Who shares this workspace, and invitations still waiting on an answer.",

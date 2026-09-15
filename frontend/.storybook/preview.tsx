@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 // Storybook compiles .storybook/* with the classic JSX runtime, so the JSX in
 // the decorators below transpiles to React.createElement and needs React in
-// scope. (The app + story files use the automatic runtime via the portal vite
+// scope. (The app + story files use the automatic runtime via the processor vite
 // config; this import is specifically for the preview config file.)
 import React, { Suspense, useEffect } from "react";
 import type { Decorator, Preview } from "@storybook/react-vite";
@@ -14,17 +14,17 @@ import { withThemeByDataAttribute } from "@storybook/addon-themes";
 void React;
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { TierProvider, type Tier } from "@portal/contexts/TierContext";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { ThemeProvider, useTheme } from "@portal/contexts/ThemeContext";
-import { UIProvider } from "@portal/contexts/UIContext";
-import { SuiProvider } from "@portal/theme/SuiProvider";
+import { TierProvider, type Tier } from "@processor/contexts/TierContext";
+import { LinkProvider, type LinkState } from "@processor/contexts/LinkContext";
+import { ThemeProvider, useTheme } from "@processor/contexts/ThemeContext";
+import { UIProvider } from "@processor/contexts/UIContext";
+import { SuiProvider } from "@processor/theme/SuiProvider";
 import { MantineProvider } from "@mantine/core";
 import {
   mantineTheme as editorMantineTheme,
   editorCssVariablesResolver,
 } from "@core/theme/mantineTheme";
-import { handlers } from "@portal/mocks/handlers";
+import { handlers } from "@processor/mocks/handlers";
 import { configureSupabase } from "@proprietary/auth/supabase/supabaseClient";
 import i18next from "i18next";
 import { initReactI18next } from "react-i18next";
@@ -40,10 +40,10 @@ import "@core/theme/index.css";
 // and axe measures contrast against colours the app never shows.
 import "@core/styles/theme.css";
 import "@core/tokens/base.css";
-// Portal element reset + typography. Scoped to .portal-scope in the app so it
+// Processor element reset + typography. Scoped to .processor-scope in the app so it
 // can't leak into the editor; the decorator below adds that class around
-// portal stories only, mirroring how PortalApp mounts.
-import "@portal/theme/base.css";
+// processor stories only, mirroring how ProcessorApp mounts.
+import "@processor/theme/base.css";
 
 // Storybook-only: bundle every shipped locale's TOML at build time via a ?raw
 // glob, so the toolbar language switcher can flip between all languages with no
@@ -101,9 +101,9 @@ if (!i18next.isInitialized) {
 // Start MSW once. Storybook runs in a browser so this uses the service worker.
 initialize({ onUnhandledRequest: "bypass" }, handlers);
 
-// PortalApp wraps the app in a QueryClientProvider, so any component reaching a
+// ProcessorApp wraps the app in a QueryClientProvider, so any component reaching a
 // shared query hook throws "No QueryClient set" without one here. `retry: false`
-// matches the portal test providers: a story showing an error state should show
+// matches the processor test providers: a story showing an error state should show
 // it immediately rather than sitting through backoff retries.
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
@@ -206,22 +206,22 @@ const withLocale: Decorator = (Story, context) => {
 
 /**
  * Applies the Mantine theme the story's component actually runs under in the
- * app: PortalApp wraps the Processor in SuiProvider, while the editor wraps
+ * app: ProcessorApp wraps the Processor in SuiProvider, while the editor wraps
  * everything else in its own ThemeProvider. Getting this wrong is not just
  * cosmetic — the two themes carry different neutral ramps, so rendering an
  * editor component under the Processor's theme drops it onto Mantine's stock
  * greys and reports contrast failures the app doesn't have.
  */
 function StoryTheme({
-  isPortalStory,
+  isProcessorStory,
   colorScheme,
   children,
 }: {
-  isPortalStory: boolean;
+  isProcessorStory: boolean;
   colorScheme: "light" | "dark";
   children: React.ReactNode;
 }) {
-  if (isPortalStory) {
+  if (isProcessorStory) {
     return <SuiProvider colorScheme={colorScheme}>{children}</SuiProvider>;
   }
   return (
@@ -246,33 +246,36 @@ const withProviders: Decorator = (Story, context) => {
   // anything that isn't "dark" as light — matching the addon's own
   // `selected || defaultTheme` fallback where defaultTheme is light.
   const colorScheme = context.globals.theme === "dark" ? "dark" : "light";
-  // PortalApp mounts its views inside a .portal-scope wrapper, which is what
-  // the portal's base.css keys its reset/typography on. Give portal stories
-  // the same wrapper (and only them — the scoping exists precisely so portal
+  // ProcessorApp mounts its views inside a .processor-scope wrapper, which is what
+  // the processor's base.css keys its reset/typography on. Give processor stories
+  // the same wrapper (and only them — the scoping exists precisely so processor
   // styles never apply to editor components).
   // `fileName` is only injected by the dev/build pipeline — under the Vitest
-  // runner it is absent, so path alone would silently drop every portal story
-  // onto the editor theme (where portal-only palette entries like `amber`
+  // runner it is absent, so path alone would silently drop every processor story
+  // onto the editor theme (where processor-only palette entries like `amber`
   // resolve to nothing and render unstyled). The title prefix is the fallback
   // that survives both environments.
-  const isPortalStory =
-    (context.parameters.fileName ?? "").includes("/portal/") ||
-    context.title.startsWith("Portal/");
+  const isProcessorStory =
+    (context.parameters.fileName ?? "").includes("/processor/") ||
+    context.title.startsWith("Processor/");
   return (
     <MemoryRouter initialEntries={["/"]}>
       <QueryClientProvider client={queryClient}>
         <ThemeProvider>
           <SchemeSetup scheme={colorScheme} />
           <ThemeBridge theme={colorScheme}>
-            <StoryTheme isPortalStory={isPortalStory} colorScheme={colorScheme}>
+            <StoryTheme
+              isProcessorStory={isProcessorStory}
+              colorScheme={colorScheme}
+            >
               {/* LinkProvider must wrap TierProvider: TierContext derives its tier
                   from useLink() (matches App.tsx's nesting). */}
               <LinkProvider key={linkState} initialState={linkState}>
                 <TierKey tier={tier}>
                   <UIProvider>
                     <Suspense fallback={null}>
-                      {isPortalStory ? (
-                        <div className="portal-scope">
+                      {isProcessorStory ? (
+                        <div className="processor-scope">
                           <Story />
                         </div>
                       ) : (

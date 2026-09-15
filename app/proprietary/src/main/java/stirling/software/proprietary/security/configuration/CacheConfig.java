@@ -22,8 +22,8 @@ public class CacheConfig {
         this.applicationProperties = applicationProperties;
     }
 
-    /** Short-TTL cache of recent audit rows, shared by every audit-derived portal view. */
-    private static final String PORTAL_AUDIT_EVENTS_CACHE = "portalAuditEvents";
+    /** Short-TTL cache of recent audit rows, shared by every audit-derived processor view. */
+    private static final String PROCESSOR_AUDIT_EVENTS_CACHE = "processorAuditEvents";
 
     @Bean
     public CacheManager cacheManager() {
@@ -36,7 +36,7 @@ public class CacheConfig {
                         .recordStats());
         // 30s TTL keeps audit views near-live without re-scanning the DB; one entry per scope.
         cacheManager.registerCustomCache(
-                PORTAL_AUDIT_EVENTS_CACHE,
+                PROCESSOR_AUDIT_EVENTS_CACHE,
                 Caffeine.newBuilder()
                         .maximumSize(256)
                         .expireAfterWrite(Duration.ofSeconds(30))

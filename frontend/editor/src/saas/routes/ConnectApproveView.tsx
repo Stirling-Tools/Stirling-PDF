@@ -3,7 +3,7 @@ import { useTranslation } from "@app/hooks/useTranslation";
 import { Banner, Button, Checkbox, Spinner } from "@app/ui";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
-import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+import { StepModalHeader } from "@processor/components/shared/StepModalHeader";
 
 /**
  * This page is step 2 of a flow that started on the instance, so it wears the same chrome: the admin

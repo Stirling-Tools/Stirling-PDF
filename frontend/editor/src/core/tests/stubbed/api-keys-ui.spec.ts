@@ -8,20 +8,20 @@ import {
 import { seedCookieConsent } from "@app/tests/helpers/api-stubs";
 
 /**
- * E2E coverage for the portal Infrastructure → API Keys tab (PR #6961:
+ * E2E coverage for the processor Infrastructure → API Keys tab (PR #6961:
  * multiple named personal API keys with per-key usage tracking). Drives the
  * list / create-and-reveal / revoke / empty / error flows through the real
- * portal shell.
+ * processor shell.
  *
- * Auth is real (a genuine admin login against the backend) because the portal's
+ * Auth is real (a genuine admin login against the backend) because the processor's
  * Spring AuthProvider doesn't settle under a fully-faked session; only the
  * `api-keys` CRUD responses are stubbed via `page.route`, so the assertions stay
  * deterministic and no real keys are created.
  *
  * Requirements to run for real: a backend on :8080 (reachable through the vite
- * proxy) AND a portal-enabled frontend (`import.meta.env.DEV`, or a build with
- * `VITE_INCLUDE_PORTAL=true`). The CI `vite preview` bundle ships with the
- * portal off, so each test skips cleanly there - the same defensive pattern as
+ * proxy) AND a processor-enabled frontend (`import.meta.env.DEV`, or a build with
+ * `VITE_INCLUDE_PROCESSOR=true`). The CI `vite preview` bundle ships with the
+ * processor off, so each test skips cleanly there - the same defensive pattern as
  * audit-log-ui.spec.ts. Companion unit coverage that always runs in CI lives in
  * ApiKeysTab.test.tsx.
  */
@@ -83,7 +83,7 @@ async function setUpApiKeys(
 ): Promise<boolean> {
   const token = await adminJwt(request);
   if (!token) {
-    test.skip(true, "No backend on :8080 to authenticate the portal");
+    test.skip(true, "No backend on :8080 to authenticate the processor");
     return false;
   }
 
@@ -138,7 +138,7 @@ async function setUpApiKeys(
 }
 
 /**
- * Open the API Keys tab, or skip when the portal isn't in this build (the tab
+ * Open the API Keys tab, or skip when the processor isn't in this build (the tab
  * never renders - e.g. the CI `vite preview` bundle). Returns false when skipped.
  */
 async function openApiKeysTab(page: Page): Promise<boolean> {
@@ -146,7 +146,7 @@ async function openApiKeysTab(page: Page): Promise<boolean> {
   if (!(await tab.isVisible({ timeout: 20_000 }).catch(() => false))) {
     test.skip(
       true,
-      "Portal (/processor) not available/bootstrapped in this build",
+      "Processor (/processor) not available/bootstrapped in this build",
     );
     return false;
   }
@@ -154,7 +154,7 @@ async function openApiKeysTab(page: Page): Promise<boolean> {
   return true;
 }
 
-test.describe("Portal API Keys tab", () => {
+test.describe("Processor API Keys tab", () => {
   test("shows the empty state when the caller has no keys", async ({
     page,
     request,

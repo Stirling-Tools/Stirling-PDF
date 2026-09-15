@@ -8,7 +8,7 @@ export interface QuickNavAccount {
   accountId: string | null;
   identity: QuickNavIdentity | null;
   signingBadge: number;
-  portalAccess: boolean;
+  processorAccess: boolean;
 }
 
 /** Undefined fields retain their previous value; null, false and zero replace it. */
@@ -18,7 +18,7 @@ export const EMPTY_QUICK_NAV_ACCOUNT: QuickNavAccount = {
   accountId: null,
   identity: null,
   signingBadge: 0,
-  portalAccess: false,
+  processorAccess: false,
 };
 
 /** Clears the previous account before applying an update for a different account. */
@@ -35,13 +35,13 @@ export function updateQuickNavAccount(
     identity:
       update.identity === undefined ? current.identity : update.identity,
     signingBadge: update.signingBadge ?? current.signingBadge,
-    portalAccess: update.portalAccess ?? current.portalAccess,
+    processorAccess: update.processorAccess ?? current.processorAccess,
   };
 
   const unchanged =
     next.accountId === previous.accountId &&
     next.signingBadge === previous.signingBadge &&
-    next.portalAccess === previous.portalAccess &&
+    next.processorAccess === previous.processorAccess &&
     next.identity?.displayName === previous.identity?.displayName &&
     next.identity?.profilePictureUrl === previous.identity?.profilePictureUrl;
   return unchanged ? previous : next;

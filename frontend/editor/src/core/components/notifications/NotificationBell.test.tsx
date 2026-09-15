@@ -91,7 +91,7 @@ function offer(
 ): NotificationActionOffer {
   return {
     id,
-    labelKey: `portal.failures.action.${id.toLowerCase()}`,
+    labelKey: `processor.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
     slot,
     enabled: true,
@@ -126,7 +126,7 @@ function notification(
     ownership: "MINE",
     severity: "ERROR",
     status: "NEW",
-    titleKey: `portal.failures.kind.${id}.title`,
+    titleKey: `processor.failures.kind.${id}.title`,
     defaultTitle: title,
     detail: "boom",
     fileId: "f-1",
@@ -511,7 +511,7 @@ describe("NotificationBell", () => {
         actions: [
           offer("VIEW_FILE", "SECONDARY", {
             enabled: false,
-            disabledReasonKey: "portal.failures.disabled.unattended",
+            disabledReasonKey: "processor.failures.disabled.unattended",
           }),
           offer("VIEW_IN_PROCESSOR"),
         ],
@@ -541,11 +541,11 @@ describe("NotificationBell", () => {
         actions: [
           offer("VIEW_IN_PROCESSOR", "SECONDARY", {
             enabled: false,
-            disabledReasonKey: "portal.failures.disabled.closed",
+            disabledReasonKey: "processor.failures.disabled.closed",
           }),
           offer("VIEW_FILE", "SECONDARY", {
             enabled: false,
-            disabledReasonKey: "portal.failures.disabled.closed",
+            disabledReasonKey: "processor.failures.disabled.closed",
           }),
         ],
       }),
@@ -647,7 +647,7 @@ describe("NotificationBell", () => {
     const stack = "org.apache.pdfbox.InvalidPasswordException";
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
-        titleKey: "portal.failures.kind.inputPasswordProtected.title",
+        titleKey: "processor.failures.kind.inputPasswordProtected.title",
         detail: stack,
       }),
     ]);

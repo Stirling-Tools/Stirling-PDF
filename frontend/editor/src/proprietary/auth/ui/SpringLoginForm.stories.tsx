@@ -31,7 +31,7 @@ function mockState(
 
 /**
  * The shared Spring login form body: logo, error, OAuth buttons, divider, and
- * the email/password form. Rendered by both the editor and the portal inside
+ * the email/password form. Rendered by both the editor and the processor inside
  * their own auth shells.
  */
 const meta = {

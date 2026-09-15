@@ -10,8 +10,8 @@ import {
   takeEditorReturnPath,
 } from "@app/services/workbenchSession";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
+import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
 import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
@@ -34,16 +34,16 @@ export function QuickNavRailHost() {
   const path = stripBasePath(pathname);
   const inSettings = path.startsWith("/settings");
   const inDocs = path.startsWith(DOCS_PATH);
-  const inPortal = path.startsWith(PORTAL_BASENAME);
+  const inProcessor = path.startsWith(PROCESSOR_BASENAME);
   // Settings and the docs browser are pages in their own right, so neither app
   // is the current one while you are on them.
-  const inEditor = !inPortal && !inSettings && !inDocs;
+  const inEditor = !inProcessor && !inSettings && !inDocs;
 
   // Only the app knows its own default state.
   const returnHome = () => {
     const reset = host?.actions.current?.goToDefaultState;
     if (reset) reset();
-    else navigate(inPortal ? PORTAL_BASENAME : EDITOR_BASENAME);
+    else navigate(inProcessor ? PROCESSOR_BASENAME : EDITOR_BASENAME);
   };
 
   // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
@@ -108,25 +108,25 @@ export function QuickNavRailHost() {
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
-    icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
-    current: inPortal,
-    disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
+    icon: <Icon name="cpu" size={SIZE} filled={inProcessor} />,
+    current: inProcessor,
+    disabled: HAS_PROCESSOR && !inProcessor && !host?.processorAccess,
     reason:
-      HAS_PORTAL && !inPortal && !host?.portalAccess
+      HAS_PROCESSOR && !inProcessor && !host?.processorAccess
         ? t("quickNav.noProcessorAccess", "Ask an admin for processor access")
         : undefined,
     onClick: () => {
-      if (inPortal) {
+      if (inProcessor) {
         returnHome();
         return;
       }
       if (inEditor) saveEditorReturnPath();
-      go(PORTAL_BASENAME);
+      go(PROCESSOR_BASENAME);
     },
   };
 
   // Editor and processor only pair off where there is a processor to reach.
-  const apps: QuickNavEntry[] = HAS_PORTAL
+  const apps: QuickNavEntry[] = HAS_PROCESSOR
     ? [reader, editor, processor]
     : [reader];
 
@@ -200,9 +200,9 @@ export function QuickNavRailHost() {
       onOpenDocs={openDocs}
       docsActive={inDocs}
       onInvite={
-        // Spelt out: VIEW_PATHS lives in the portal, which core cannot import.
-        HAS_PORTAL && host?.portalAccess
-          ? () => go(`${PORTAL_BASENAME}/users`)
+        // Spelt out: VIEW_PATHS lives in the processor, which core cannot import.
+        HAS_PROCESSOR && host?.processorAccess
+          ? () => go(`${PROCESSOR_BASENAME}/users`)
           : undefined
       }
       onToggleNotifications={() =>

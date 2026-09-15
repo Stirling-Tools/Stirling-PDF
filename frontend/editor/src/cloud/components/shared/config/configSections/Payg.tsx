@@ -734,7 +734,7 @@ const Payg: React.FC<PaygProps> = ({
   const { t } = useTranslation();
   const isLeader = role === "LEADER";
   const prepaid = prepaidSnapshotFromWallet(wallet);
-  // Read-only prepaid display. The buy/top-up flow lives on the portal Processor page (the
+  // Read-only prepaid display. The buy/top-up flow lives on the Processor page (the
   // create-payg-bundle-checkout edge fn is driven from there); this editor Plan page only shows an
   // existing prepaid balance and is slated for removal on a separate branch.
 

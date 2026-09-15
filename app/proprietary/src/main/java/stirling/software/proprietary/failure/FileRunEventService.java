@@ -33,13 +33,13 @@ import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 @RequiredArgsConstructor
 public class FileRunEventService {
 
-    /** Why an offered action came back disabled. Copy lives under {@code portal.failures}. */
-    private static final String CLOSED_REASON_KEY = "portal.failures.disabled.closed";
+    /** Why an offered action came back disabled. Copy lives under {@code processor.failures}. */
+    private static final String CLOSED_REASON_KEY = "processor.failures.disabled.closed";
 
-    private static final String UNATTENDED_REASON_KEY = "portal.failures.disabled.unattended";
+    private static final String UNATTENDED_REASON_KEY = "processor.failures.disabled.unattended";
 
     /** The row never named a document, so unlike the unattended case no client can find one. */
-    private static final String DOCUMENTLESS_REASON_KEY = "portal.failures.disabled.noDocument";
+    private static final String DOCUMENTLESS_REASON_KEY = "processor.failures.disabled.noDocument";
 
     private final FileRunEventStore store;
     private final FailureActionRegistry actionRegistry;

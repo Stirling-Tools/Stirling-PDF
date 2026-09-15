@@ -52,15 +52,20 @@ export function DocsToc({
   };
 
   return (
-    <nav className="portal-docs__toc" aria-label={t("portal.docs.toc.title")}>
-      <div className="portal-docs__toc-title">{t("portal.docs.toc.title")}</div>
-      <ul className="portal-docs__toc-list">
+    <nav
+      className="processor-docs__toc"
+      aria-label={t("processor.docs.toc.title")}
+    >
+      <div className="processor-docs__toc-title">
+        {t("processor.docs.toc.title")}
+      </div>
+      <ul className="processor-docs__toc-list">
         {headings.map((h) => (
           <li key={h.slug}>
             <a
               href={`#${h.slug}`}
               className={
-                "portal-docs__toc-link" +
+                "processor-docs__toc-link" +
                 (h.level === 3 ? " is-sub" : "") +
                 (active === h.slug ? " is-active" : "")
               }

@@ -1,5 +1,5 @@
 /**
- * Bidirectional codec between the portal's frontend `PolicyDecodedState` and
+ * Bidirectional codec between the processor's frontend `PolicyDecodedState` and
  * the backend `WirePolicy`. All policy-level metadata rides in
  * `output.options`; the virtual editor source lives only there, while real
  * backend sources become `inputs` entries (source + trigger) so the backend's

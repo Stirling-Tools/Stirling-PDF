@@ -100,7 +100,7 @@ export default function App() {
 
         {/* Both apps, under a shared frame so the rail renders once outside them. */}
         <Route element={<AppFrame />}>
-          {/* The portal: its own top-level shell, before the catch-all. */}
+          {/* The processor: its own top-level shell, before the catch-all. */}
           {getAdminRouteExtensions()}
 
           {/* Everything else needs the auth/backend providers. RootGate routes "/"

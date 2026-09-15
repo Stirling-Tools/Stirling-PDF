@@ -74,7 +74,7 @@ public class MockEnterpriseLicenseService implements EnterpriseLicenseService {
     @Override
     public String checkOutLicenseFile(String licenseRef) {
         log.info("[procurement][mock-license] check-out licence file ref={}", licenseRef);
-        // A syntactically shaped stand-in so the portal download path is exercisable without
+        // A syntactically shaped stand-in so the processor download path is exercisable without
         // Keygen; not a valid certificate.
         return "-----BEGIN LICENSE FILE-----\nmock-offline-license-for-"
                 + licenseRef

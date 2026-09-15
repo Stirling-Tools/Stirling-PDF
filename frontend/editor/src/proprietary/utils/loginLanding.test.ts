@@ -34,28 +34,28 @@ describe("fetchRootDestination", () => {
 
   it("sends an opted-in user to the processor", async () => {
     h.get.mockResolvedValueOnce(
-      mockMe({ portalAccess: true, loginLandingView: "processor" }),
+      mockMe({ processorAccess: true, loginLandingView: "processor" }),
     );
     expect(await fetchRootDestination()).toBe("processor");
   });
 
   it("sends an admin with no opt-in to the editor", async () => {
     h.get.mockResolvedValueOnce(
-      mockMe({ role: "ROLE_ADMIN", portalAccess: true }),
+      mockMe({ role: "ROLE_ADMIN", processorAccess: true }),
     );
     expect(await fetchRootDestination()).toBe("editor");
   });
 
-  it("sends an opted-in user with no portal access to the editor", async () => {
+  it("sends an opted-in user with no processor access to the editor", async () => {
     h.get.mockResolvedValueOnce(
-      mockMe({ portalAccess: false, loginLandingView: "processor" }),
+      mockMe({ processorAccess: false, loginLandingView: "processor" }),
     );
     expect(await fetchRootDestination()).toBe("editor");
   });
 
   it("decides on one request, without the team list", async () => {
     h.get.mockResolvedValueOnce(
-      mockMe({ portalAccess: true, loginLandingView: "processor" }),
+      mockMe({ processorAccess: true, loginLandingView: "processor" }),
     );
     await fetchRootDestination();
     expect(h.get).toHaveBeenCalledTimes(1);

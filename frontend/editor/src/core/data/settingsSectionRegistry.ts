@@ -50,7 +50,7 @@ export interface SettingsSectionEntry {
    */
   requiresAccount?: boolean;
   /** Section is the processor's; only a session that can enter it sees it. */
-  requiresPortalAccess?: boolean;
+  requiresProcessorAccess?: boolean;
 }
 
 /** Core (OSS) sections — always present in every build. */

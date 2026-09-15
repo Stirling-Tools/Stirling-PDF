@@ -256,7 +256,7 @@ class PolicyFailureOwnershipTest {
                             action -> {
                                 assertThat(action.enabled()).isFalse();
                                 assertThat(action.disabledReasonKey())
-                                        .isEqualTo("portal.failures.disabled.unattended");
+                                        .isEqualTo("processor.failures.disabled.unattended");
                             });
         }
 

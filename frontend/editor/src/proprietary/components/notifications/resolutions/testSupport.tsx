@@ -21,7 +21,7 @@ export function notification(
     ownership: "MINE",
     severity: "ERROR",
     status: "NEW",
-    titleKey: "portal.failures.kind.inputPasswordProtected.title",
+    titleKey: "processor.failures.kind.inputPasswordProtected.title",
     defaultTitle: "Password-protected document",
     detail: "The PDF Document is passworded",
     fileId: "f-1",
@@ -38,7 +38,7 @@ export function notification(
 export function offer(id: string): NotificationActionOffer {
   return {
     id,
-    labelKey: `portal.failures.action.${id.toLowerCase()}`,
+    labelKey: `processor.failures.action.${id.toLowerCase()}`,
     defaultLabel: id,
     slot: "SECONDARY",
     enabled: true,

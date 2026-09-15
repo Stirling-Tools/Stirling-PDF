@@ -1,0 +1,12 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { LoginScreen } from "@processor/components/LoginScreen";
+
+const meta: Meta<typeof LoginScreen> = {
+  title: "Processor/LoginScreen",
+  component: LoginScreen,
+  parameters: { layout: "fullscreen" },
+};
+export default meta;
+type Story = StoryObj<typeof LoginScreen>;
+
+export const Default: Story = {};

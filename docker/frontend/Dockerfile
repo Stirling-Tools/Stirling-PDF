@@ -20,7 +20,7 @@ ARG VITE_BUILD_MODE=production
 # Include the processor (admin portal) route/chunk. SaaS ships it, so its
 # deploy sets this true; without it /processor and the processor's settings
 # sections are absent from the built app.
-ARG VITE_INCLUDE_PORTAL=false
+ARG VITE_INCLUDE_PROCESSOR=false
 ARG VITE_SUPABASE_URL=""
 # pragma: allowlist secret
 ARG VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY=""

@@ -12,10 +12,10 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 
 /**
- * {@code @PreAuthorize} bean for portal-access checks. Active in self-hosted and saas. Convention:
- * every portal-exclusive endpoint is gated with
- * {@code @PreAuthorize("@resourceAccess.canUsePortal()")}; endpoints shared with the editor (e.g.
- * the policies API) must NOT be.
+ * {@code @PreAuthorize} bean for processor-access checks. Active in self-hosted and saas.
+ * Convention: every processor-exclusive endpoint is gated with
+ * {@code @PreAuthorize("@resourceAccess.canUseProcessor()")}; endpoints shared with the editor
+ * (e.g. the policies API) must NOT be.
  */
 @Component("resourceAccess")
 @RequiredArgsConstructor
@@ -24,9 +24,9 @@ public class ResourceAccessSecurity {
     private final ResourceAccessService accessService;
     private final UserService userService;
 
-    public boolean canUsePortal() {
+    public boolean canUseProcessor() {
         User user = currentUser();
-        return user != null && accessService.canAccessPortal(user);
+        return user != null && accessService.canAccessProcessor(user);
     }
 
     private User currentUser() {

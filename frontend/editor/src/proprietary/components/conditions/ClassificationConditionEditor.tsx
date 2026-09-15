@@ -26,13 +26,13 @@ export function ClassificationConditionEditor({
     <MultiSelect
       inputSize="sm"
       aria-label={t(
-        "portal.policies.wizard.routing.labelAria",
+        "processor.policies.wizard.routing.labelAria",
         "Document types",
       )}
       placeholder={
         condition.values.length === 0
           ? t(
-              "portal.policies.wizard.routing.labelPlaceholder",
+              "processor.policies.wizard.routing.labelPlaceholder",
               "Choose document types",
             )
           : undefined

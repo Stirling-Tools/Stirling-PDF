@@ -25,7 +25,7 @@ interface LogoProps {
 /**
  * Shared brand lockup used across editor + processor. The mark is theme-
  * agnostic; the wordmark swaps light/dark via CSS so it tracks the active
- * colour scheme in both the editor (data-mantine-color-scheme) and the portal
+ * colour scheme in both the editor (data-mantine-color-scheme) and the processor
  * (data-theme).
  */
 export function Logo({

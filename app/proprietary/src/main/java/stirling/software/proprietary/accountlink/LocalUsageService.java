@@ -10,8 +10,9 @@ import org.springframework.stereotype.Service;
 import stirling.software.proprietary.billing.BillingCategory;
 
 /**
- * Reads this instance's locally accrued but not-yet-synced usage for the current period. The portal
- * adds this on top of SaaS-synced spend so "current usage" reflects work done since the last sync.
+ * Reads this instance's locally accrued but not-yet-synced usage for the current period. The
+ * processor adds this on top of SaaS-synced spend so "current usage" reflects work done since the
+ * last sync.
  *
  * <p>Unsynced per category = {@code cumulativeUnits − lastSyncedUnits} (floored at 0), scoped to
  * the current period so prior-period leftovers don't inflate it. Zeros when the period is unknown

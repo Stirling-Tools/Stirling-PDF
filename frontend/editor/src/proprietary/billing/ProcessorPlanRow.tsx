@@ -41,12 +41,15 @@ export function ProcessorPlanRow({
   governLabel?: ReactNode;
 }) {
   const { t } = useTranslation();
-  const name = t("portal.billing.processor.rowName", "Processor");
+  const name = t("processor.billing.processor.rowName", "Processor");
   if (included)
     return (
       <MeterRow
         name={name}
-        mid={t("portal.billing.processor.included", "Included in your license")}
+        mid={t(
+          "processor.billing.processor.included",
+          "Included in your license",
+        )}
         fact=""
         tone="paid"
         showTrack={false}
@@ -65,7 +68,7 @@ export function ProcessorPlanRow({
     const mid =
       rate != null
         ? t(
-            "portal.billing.processor.midFree",
+            "processor.billing.processor.midFree",
             "{{rate}} per credit · {{allowance}} free every month",
             {
               rate: formatMinor(rate, wallet.currency),
@@ -73,7 +76,7 @@ export function ProcessorPlanRow({
             },
           )
         : t(
-            "portal.billing.processor.midFreeNoRate",
+            "processor.billing.processor.midFreeNoRate",
             "{{allowance}} free every month",
             {
               allowance: wallet.freeAllowance.toLocaleString(),
@@ -87,7 +90,7 @@ export function ProcessorPlanRow({
         pct={pct}
         tone="free"
         fact={t(
-          "portal.billing.processor.factFree",
+          "processor.billing.processor.factFree",
           "{{used}} of {{allowance}} used",
           {
             used: used.toLocaleString(),
@@ -97,7 +100,10 @@ export function ProcessorPlanRow({
         door={
           onActivate
             ? (activateLabel ??
-              t("portal.billing.processor.activate", "Switch on the Processor"))
+              t(
+                "processor.billing.processor.activate",
+                "Switch on the Processor",
+              ))
             : undefined
         }
         onDoor={onActivate}
@@ -117,25 +123,28 @@ export function ProcessorPlanRow({
   const mid =
     spentMinor != null
       ? t(
-          "portal.billing.processor.midMetered",
+          "processor.billing.processor.midMetered",
           "{{spend}} metered this cycle",
           {
             spend: formatMinor(spentMinor, wallet.currency),
           },
         )
-      : t("portal.billing.processor.midMeteredUnknown", "Metered this cycle");
+      : t(
+          "processor.billing.processor.midMeteredUnknown",
+          "Metered this cycle",
+        );
 
   const fact = capped
-    ? t("portal.billing.processor.factCapped", "{{pct}}% of {{cap}}", {
+    ? t("processor.billing.processor.factCapped", "{{pct}}% of {{cap}}", {
         pct: Math.round(pct).toLocaleString(),
         cap: formatMoneyMajor(wallet.capUsd as number, wallet.currency),
       })
-    : t("portal.billing.processor.factNoCap", "no limit");
+    : t("processor.billing.processor.factNoCap", "no limit");
 
   const door =
     governLabel ??
     (onGovern
-      ? t("portal.billing.processor.raiseLimit", "Raise limit")
+      ? t("processor.billing.processor.raiseLimit", "Raise limit")
       : undefined);
 
   return (
@@ -151,7 +160,7 @@ export function ProcessorPlanRow({
       midTitle={
         capped
           ? t(
-              "portal.billing.processor.capTooltip",
+              "processor.billing.processor.capTooltip",
               "Pauses PDF processing at your spend limit.",
             )
           : undefined

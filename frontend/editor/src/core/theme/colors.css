@@ -1,4 +1,4 @@
-/* COLORS — canonical semantic core (~21 --c-* tokens) mapped from primitives.css per theme; compat.css aliases legacy names onto these. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Portal/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
+/* COLORS — canonical semantic core (~21 --c-* tokens) mapped from primitives.css per theme; compat.css aliases legacy names onto these. Editor: always data-app-theme="custom" + data-mantine-color-scheme=light|dark. Processor/Storybook: data-theme=light|dark → LIGHT/MIDNIGHT. */
 /* Surface elevation: --c-bg (canvas) < --c-bg-raised (sidebars) < --c-surface (cards) < --c-surface-raised < --c-surface-sunken; plus --c-modal-surface (modal panels), --c-input-bg, --c-hover, --c-active, --c-overlay. */
 
 /* ── LIGHT ───────────────────────────────────────────────────────────────── */
@@ -110,7 +110,7 @@ html[data-app-theme="light"] {
   --c-conn-notify: var(--p-art-amber-muted);
   --c-conn-neutral: var(--p-gray-mid);
 
-  /* Always-dark marketing/product hero strip (portal). Same in both themes. */
+  /* Always-dark marketing/product hero strip (processor). Same in both themes. */
   --c-hero-dark: var(--p-zinc-950);
   --c-hero-dark-cta-text: var(--p-navy-700);
 
@@ -137,7 +137,7 @@ html[data-app-theme="light"] {
   --c-onboarding-hero-tile: var(--p-white);
 }
 
-/* ── MIDNIGHT (original navy) — also the default portal/Storybook dark ────── */
+/* ── MIDNIGHT (original navy) — also the default processor/Storybook dark ────── */
 [data-theme="dark"],
 html[data-app-theme="midnight"] {
   --c-bg: var(--p-c-141416);

@@ -3,7 +3,7 @@ import { Modal, Text } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { useAuth } from "@app/auth/UseSession";
-import { usePortalAccessState } from "@app/hooks/usePortalAccess";
+import { useProcessorAccessState } from "@app/hooks/useProcessorAccess";
 import { isUserAnonymous } from "@app/auth/supabase";
 import Overview from "@app/components/shared/config/configSections/Overview";
 import { createSaasConfigNavSections } from "@app/components/shared/config/saasConfigNavSections";
@@ -11,10 +11,10 @@ import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_OVER_SETTINGS_MODAL } from "@app/styles/zIndex";
 import type { SettingsNav } from "@app/components/settings/settingsNavTypes";
 import {
-  buildPortalSettingsSections,
+  buildProcessorSettingsSections,
   PORTAL_SECTION_ALIASES,
   PORTAL_SUPERSEDED_SECTION_KEYS,
-} from "@app/components/settings/portalSettingsNav";
+} from "@app/components/settings/processorSettingsNav";
 import { mergeSettingsGroups } from "@app/components/settings/mergeSettingsGroups";
 
 export type { SettingsNav };
@@ -31,8 +31,8 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   const { signOut, user } = useAuth();
   // Not from useAuth: the editor's Supabase context never carries permission
   // flags, so only this seam knows. The processor has its own auth context.
-  const { granted: portalAccess, settled: accessSettled } =
-    usePortalAccessState();
+  const { granted: processorAccess, settled: accessSettled } =
+    useProcessorAccessState();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const openLogoutConfirm = useCallback(() => setConfirmOpen(true), []);
   const isAnonymous = user ? isUserAnonymous(user) : false;
@@ -43,14 +43,14 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
       t,
       onRequestClose: onLeave,
     });
-    if (!portalAccess) return own;
-    const portal = buildPortalSettingsSections(t, {
+    if (!processorAccess) return own;
+    const portal = buildProcessorSettingsSections(t, {
       includeAccountLink: false,
       includeAudit: true,
     });
     if (portal.length === 0) return own;
     return mergeSettingsGroups(own, portal, PORTAL_SUPERSEDED_SECTION_KEYS);
-  }, [openLogoutConfirm, isAnonymous, t, onLeave, portalAccess]);
+  }, [openLogoutConfirm, isAnonymous, t, onLeave, processorAccess]);
 
   const overlay = (
     <Modal
@@ -89,7 +89,7 @@ export function useSettingsNav(onLeave: () => void): SettingsNav {
   return {
     sections,
     overlay,
-    aliases: portalAccess ? PORTAL_SECTION_ALIASES : undefined,
+    aliases: processorAccess ? PORTAL_SECTION_ALIASES : undefined,
     pending: !accessSettled,
   };
 }

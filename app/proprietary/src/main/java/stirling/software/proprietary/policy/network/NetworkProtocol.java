@@ -2,9 +2,9 @@ package stirling.software.proprietary.policy.network;
 
 /**
  * The file-transfer protocols a network source speaks. Each maps to a {@link RemoteFileClient}
- * implementation and to a portal source type: {@code sftp} -> SFTP, {@code ftp} -> FTP/FTPS, {@code
- * network} -> SMB (a Windows/Samba share). The stored connection carries the protocol; the source
- * type only routes the UI.
+ * implementation and to a processor source type: {@code sftp} -> SFTP, {@code ftp} -> FTP/FTPS,
+ * {@code network} -> SMB (a Windows/Samba share). The stored connection carries the protocol; the
+ * source type only routes the UI.
  */
 public enum NetworkProtocol {
     SFTP(22, "sftp"),
@@ -23,7 +23,7 @@ public enum NetworkProtocol {
         return defaultPort;
     }
 
-    /** The portal source {@code type} string this protocol backs. */
+    /** The processor source {@code type} string this protocol backs. */
     public String sourceType() {
         return sourceType;
     }

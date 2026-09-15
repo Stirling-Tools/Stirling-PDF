@@ -1,7 +1,7 @@
 /**
  * The PAYG wallet contract — the single front-end mirror of the SaaS backend's
  * {@code WalletSnapshotResponse} ({@code GET /api/v1/payg/wallet}). Both the
- * editor cloud surface and the admin portal consume this, so a backend field
+ * editor cloud surface and the admin processor consume this, so a backend field
  * change is a one-line update here instead of three diverging copies.
  */
 

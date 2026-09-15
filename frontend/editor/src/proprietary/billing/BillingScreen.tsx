@@ -117,15 +117,16 @@ export function BillingScreen({
     if (procurementSection)
       out.push([
         "ub-procurement",
-        t("portal.billing.chip.procurement", "Procurement"),
+        t("processor.billing.chip.procurement", "Procurement"),
       ]);
     if (wallet || serverPlan)
-      out.push(["ub-plan", t("portal.billing.chip.plan", "Plan")]);
-    if (wallet) out.push(["ub-usage", t("portal.billing.chip.usage", "Usage")]);
+      out.push(["ub-plan", t("processor.billing.chip.plan", "Plan")]);
+    if (wallet)
+      out.push(["ub-usage", t("processor.billing.chip.usage", "Usage")]);
     if (wallet && paymentSection)
-      out.push(["ub-pay", t("portal.billing.chip.payment", "Payment")]);
+      out.push(["ub-pay", t("processor.billing.chip.payment", "Payment")]);
     if (wallet && invoicesSection)
-      out.push(["ub-inv", t("portal.billing.chip.invoices", "Invoices")]);
+      out.push(["ub-inv", t("processor.billing.chip.invoices", "Invoices")]);
     if (licenseSection)
       out.push([
         "ub-license",
@@ -147,10 +148,10 @@ export function BillingScreen({
       return {
         name:
           serverPlan.licenseType === "SERVER"
-            ? t("portal.billing.serverPlan.server", "Server")
-            : t("portal.billing.serverPlan.enterprise", "Enterprise"),
+            ? t("processor.billing.serverPlan.server", "Server")
+            : t("processor.billing.serverPlan.enterprise", "Enterprise"),
         sub: t(
-          "portal.billing.serverPlan.active",
+          "processor.billing.serverPlan.active",
           "Active self-hosted license",
         ),
         chips: [],
@@ -159,27 +160,27 @@ export function BillingScreen({
     const rate = wallet.pricePerDocMinor;
     if (paying) {
       return {
-        name: t("portal.billing.identity.processor.name", "Processor"),
+        name: t("processor.billing.identity.processor.name", "Processor"),
         sub:
           rate != null
             ? t(
-                "portal.billing.identity.processor.sub",
+                "processor.billing.identity.processor.sub",
                 "Team base plus {{rate}} per credit",
                 {
                   rate: formatMinor(rate, wallet.currency),
                 },
               )
             : t(
-                "portal.billing.identity.processor.subNoRate",
+                "processor.billing.identity.processor.subNoRate",
                 "Team base plus metered processing",
               ),
         chips: [
           t(
-            "portal.billing.identity.processor.chipMetered",
+            "processor.billing.identity.processor.chipMetered",
             "Metered processing",
           ),
           t(
-            "portal.billing.identity.processor.chipPipelines",
+            "processor.billing.identity.processor.chipPipelines",
             "Pipelines & API",
           ),
         ],
@@ -187,30 +188,34 @@ export function BillingScreen({
     }
     if (teamHeld) {
       return {
-        name: t("portal.billing.identity.team.name", "Team"),
+        name: t("processor.billing.identity.team.name", "Team"),
         sub:
           wallet.team.licensedUsers != null
-            ? t("portal.billing.identity.team.sub", "Up to {{users}} users", {
-                users: wallet.team.licensedUsers.toLocaleString(),
-              })
-            : t("portal.billing.identity.team.subNoLimit", "No user limit"),
+            ? t(
+                "processor.billing.identity.team.sub",
+                "Up to {{users}} users",
+                {
+                  users: wallet.team.licensedUsers.toLocaleString(),
+                },
+              )
+            : t("processor.billing.identity.team.subNoLimit", "No user limit"),
         chips: [
-          t("portal.billing.identity.team.chipSso", "SSO"),
-          t("portal.billing.identity.team.chipFleet", "Fleet control"),
+          t("processor.billing.identity.team.chipSso", "SSO"),
+          t("processor.billing.identity.team.chipFleet", "Fleet control"),
         ],
       };
     }
     return {
-      name: t("portal.billing.identity.free.name", "Free"),
-      sub: t("portal.billing.identity.free.sub", "The full PDF Editor."),
+      name: t("processor.billing.identity.free.name", "Free"),
+      sub: t("processor.billing.identity.free.sub", "The full PDF Editor."),
       chips: [
-        t("portal.billing.identity.free.chipTools", "Every PDF tool"),
+        t("processor.billing.identity.free.chipTools", "Every PDF tool"),
         t(
-          "portal.billing.identity.free.chipAnywhere",
+          "processor.billing.identity.free.chipAnywhere",
           "Web, desktop & self-hosted",
         ),
         t(
-          "portal.billing.identity.free.chipCredits",
+          "processor.billing.identity.free.chipCredits",
           "{{allowance}} free credits monthly",
           {
             allowance: wallet.freeAllowance.toLocaleString(),
@@ -239,11 +244,11 @@ export function BillingScreen({
     <div className="billing-page">
       <header className="billing-page__head">
         <h1 className="billing-page__title">
-          {t("portal.usage.title", "Usage & Billing")}
+          {t("processor.usage.title", "Usage & Billing")}
         </h1>
         <p className="billing-page__subtitle">
           {t(
-            "portal.usage.subtitle",
+            "processor.usage.subtitle",
             "Your plan, your usage, and every invoice.",
           )}
         </p>
@@ -262,7 +267,7 @@ export function BillingScreen({
           <div className="billing-card">
             <nav
               className="billing-card__chips"
-              aria-label={t("portal.billing.chip.nav", "Sections")}
+              aria-label={t("processor.billing.chip.nav", "Sections")}
             >
               {chips.map(([id, label]) => (
                 <button
@@ -280,7 +285,10 @@ export function BillingScreen({
               <section
                 id="ub-procurement"
                 className="billing-sec billing-sec--procurement"
-                aria-label={t("portal.billing.chip.procurement", "Procurement")}
+                aria-label={t(
+                  "processor.billing.chip.procurement",
+                  "Procurement",
+                )}
               >
                 {procurementSection}
               </section>
@@ -290,7 +298,7 @@ export function BillingScreen({
               <>
                 <section id="ub-plan" className="billing-sec">
                   <span className="billing-eyebrow">
-                    {t("portal.billing.section.plan", "Your plan")}
+                    {t("processor.billing.section.plan", "Your plan")}
                   </span>
                   <div className="billing-id">
                     <span className="billing-id__name">{identity.name}</span>
@@ -336,12 +344,12 @@ export function BillingScreen({
                     <section id="ub-usage" className="billing-sec">
                       <div className="billing-eyebrow-row">
                         <span className="billing-eyebrow">
-                          {t("portal.billing.section.cycle", "This cycle")}
+                          {t("processor.billing.section.cycle", "This cycle")}
                         </span>
                         {cycle && (
                           <span className="billing-eyebrow-row__fact">
                             {t(
-                              "portal.billing.cycle.day",
+                              "processor.billing.cycle.day",
                               "Day {{day}} of {{of}}",
                               {
                                 day: cycle.day,
@@ -362,12 +370,12 @@ export function BillingScreen({
                           <span className="billing-bignum__note">
                             {pendingUnits > 0
                               ? t(
-                                  "portal.billing.cycle.estimatedPending",
+                                  "processor.billing.cycle.estimatedPending",
                                   "estimated · includes {{pending}} not yet synced from your instances",
                                   { pending: pendingUnits.toLocaleString() },
                                 )
                               : t(
-                                  "portal.billing.cycle.estimated",
+                                  "processor.billing.cycle.estimated",
                                   "estimated · the meter settles at close",
                                 )}
                           </span>
@@ -375,14 +383,17 @@ export function BillingScreen({
                       )}
 
                       <KvRow
-                        label={t("portal.billing.cycle.pdfs", "PDFs processed")}
+                        label={t(
+                          "processor.billing.cycle.pdfs",
+                          "PDFs processed",
+                        )}
                         value={wallet.docsProcessedThisPeriod.toLocaleString()}
                       />
                       {(serverPlan
                         ? serverPlan.usersInUse != null
                         : showTeam) && (
                         <KvRow
-                          label={t("portal.billing.cycle.users", "Users")}
+                          label={t("processor.billing.cycle.users", "Users")}
                           value={(
                             serverPlan?.usersInUse ?? wallet.team.usersInUse
                           ).toLocaleString()}
@@ -391,7 +402,7 @@ export function BillingScreen({
                       {editorsDeployed != null && (
                         <KvRow
                           label={t(
-                            "portal.billing.cycle.editors",
+                            "processor.billing.cycle.editors",
                             "Editors deployed",
                           )}
                           value={editorsDeployed.toLocaleString()}
@@ -399,11 +410,14 @@ export function BillingScreen({
                       )}
                       {paying && (
                         <KvRow
-                          label={t("portal.billing.cycle.credits", "Credits")}
+                          label={t(
+                            "processor.billing.cycle.credits",
+                            "Credits",
+                          )}
                           note={
                             wallet.pricePerDocMinor != null
                               ? t(
-                                  "portal.billing.cycle.creditsNote",
+                                  "processor.billing.cycle.creditsNote",
                                   "{{units}} used · includes free and prepaid credits",
                                   {
                                     units: creditUnits.toLocaleString(),
@@ -423,7 +437,7 @@ export function BillingScreen({
                     {paymentSection && (
                       <section id="ub-pay" className="billing-sec">
                         <span className="billing-eyebrow">
-                          {t("portal.billing.section.payment", "Payment")}
+                          {t("processor.billing.section.payment", "Payment")}
                         </span>
                         {paymentSection}
                       </section>
@@ -432,7 +446,7 @@ export function BillingScreen({
                     {invoicesSection && (
                       <section id="ub-inv" className="billing-sec">
                         <span className="billing-eyebrow">
-                          {t("portal.billing.section.invoices", "Invoices")}
+                          {t("processor.billing.section.invoices", "Invoices")}
                         </span>
                         {invoicesSection}
                       </section>
@@ -461,13 +475,13 @@ export function BillingScreen({
             <div>
               <div className="billing-ent__title">
                 {t(
-                  "portal.billing.enterprise.title",
+                  "processor.billing.enterprise.title",
                   "Running Stirling in a regulated environment?",
                 )}
               </div>
               <div className="billing-ent__sub">
                 {t(
-                  "portal.billing.enterprise.sub",
+                  "processor.billing.enterprise.sub",
                   "Air-gapped deployment, SCIM, data residency, uptime SLAs, and an agreement to match.",
                 )}
               </div>
@@ -477,7 +491,7 @@ export function BillingScreen({
               className="billing-ent__cta"
               onClick={onEnterpriseQuote}
             >
-              {t("portal.billing.enterprise.cta", "Get an enterprise quote")}
+              {t("processor.billing.enterprise.cta", "Get an enterprise quote")}
             </button>
           </div>
         )}

@@ -84,7 +84,7 @@ export default function App() {
 
         {/* Both apps, under a shared frame so the rail renders once outside them. */}
         <Route element={<AppFrame />}>
-          {/* The portal: its own shell, before the catch-all. An empty stub in core. */}
+          {/* The processor: its own shell, before the catch-all. An empty stub in core. */}
           {getAdminRouteExtensions()}
 
           {/* All other routes need AppProviders for backend integration. RootGate

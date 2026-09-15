@@ -34,15 +34,15 @@ export function EnforceAsPolicyControl({
         checked={required}
         onChange={onRequiredChange}
         disabled={disabled}
-        label={t("portal.pipelines.enforce.label")}
+        label={t("processor.pipelines.enforce.label")}
       />
       <InfoTooltip
         label={
           disabled && !permissionsLoading
-            ? t("portal.pipelines.enforce.managerOnly")
-            : t("portal.pipelines.enforce.desc")
+            ? t("processor.pipelines.enforce.managerOnly")
+            : t("processor.pipelines.enforce.desc")
         }
-        ariaLabel={t("portal.pipelines.enforce.info")}
+        ariaLabel={t("processor.pipelines.enforce.info")}
         position="bottom"
       />
     </span>

@@ -1,0 +1,112 @@
+/* Connect flow, the three account-link steps.
+
+   Deliberately flat: bordered rows and plain type, not icon tiles or coloured
+   cards. FlowModal stacks and spaces the body, so these blocks own only their
+   own internals. */
+
+.processor-connect__lede {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.55;
+  color: var(--c-text-muted);
+}
+
+.processor-connect__list {
+  margin: 0;
+  border-top: 1px solid var(--c-border);
+}
+
+.processor-connect__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid var(--c-border);
+}
+
+.processor-connect__row-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.processor-connect__row-detail {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--c-text-muted);
+  text-align: right;
+}
+
+/* ── Step 2: the ghost ──────────────────────────────────────────────────── */
+
+.processor-connect__ghost {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.processor-connect__ghost-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* ── Step 3 ─────────────────────────────────────────────────────────────── */
+
+/* Standalone, so it needs the top edge the benefits list would have given it. */
+.processor-connect__row--standalone {
+  border-top: 1px solid var(--c-border);
+}
+
+/* The shared bar without the plan card it wears on Usage; padded into the row rhythm. */
+.processor-connect__meter {
+  padding: 0.25rem 0 0.5rem;
+}
+
+/* Rows, not full-width buttons: three competing primaries were the loudest thing
+   on a screen whose job is to confirm. Same flat row as step 1, so both ends match. */
+.processor-connect__next {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--c-border);
+}
+
+/* The Account row above draws a bottom edge; both would render as a double line. */
+.processor-connect__row + .processor-connect__next {
+  border-top: 0;
+}
+
+.processor-connect__next-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.625rem 0.25rem;
+  border: 0;
+  border-bottom: 1px solid var(--c-border);
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--c-text);
+  text-align: left;
+  cursor: pointer;
+}
+
+.processor-connect__next-item:hover {
+  color: var(--c-accent-text);
+}
+
+.processor-connect__next-chevron {
+  flex: none;
+  color: var(--c-text-subtle);
+}
+
+.processor-connect__next-item:hover .processor-connect__next-chevron {
+  color: var(--c-accent-text);
+}

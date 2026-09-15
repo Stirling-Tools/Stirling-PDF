@@ -9,7 +9,7 @@ import { Slider } from "@app/ui/Slider";
 import { Stack } from "@app/ui/Stack";
 import { Inline } from "@app/ui/Inline";
 
-// Inline icon to avoid a cross-layer import; shared/ must not depend on portal/.
+// Inline icon to avoid a cross-layer import; shared/ must not depend on processor/.
 function SearchIcon({ size = 14 }: { size?: number }) {
   return (
     <svg

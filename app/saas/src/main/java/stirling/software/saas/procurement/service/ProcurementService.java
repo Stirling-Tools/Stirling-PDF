@@ -41,7 +41,7 @@ import stirling.software.saas.util.LogRedactionUtils;
 /**
  * Orchestrates a linked team's procurement journey: start a (mock-licensed) trial, build a
  * server-priced quote, and accept it. Stripe checkout itself lives in a Supabase edge function the
- * portal calls with the accepted quote; on payment the webhook seeds {@code billing_subscriptions}
+ * processor calls with the accepted quote; on payment the webhook seeds {@code billing_subscriptions}
  * and this service issues the annual licence. All amounts are minor units (cents).
  */
 @Slf4j
@@ -665,7 +665,7 @@ public class ProcurementService {
      * <p>By design a team can self-select air-gapped at trial and download a real signed .lic
      * before paying — that's bounded: the trial licence carries {@code expiry = trialEndsAt}, so
      * the file the verifier accepts self-expires at trial end. The buyer must re-download after
-     * provisioning to get the committed-term file (the portal warns about this).
+     * provisioning to get the committed-term file (the processor warns about this).
      *
      * <p>Once a quote exists, the quote's deployment decides — not the deal's. They are two
      * different values: the deal's is chosen free at trial setup, the quote's is the one carrying

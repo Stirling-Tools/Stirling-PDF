@@ -1,83 +1,83 @@
 import {
-  PORTAL_BASENAME,
-  PORTAL_REVIEW_PATH,
-} from "@app/routes/portalBasename";
+  PROCESSOR_BASENAME,
+  PROCESSOR_REVIEW_PATH,
+} from "@app/routes/processorBasename";
 import { DOCS_PATH } from "@app/routes/docsRoute";
 // A static leaf module (its portal import is type-only), so it doesn't pull
-// the lazy portal chunk into the main bundle the way @portal/* values would.
-import { usersCapabilities } from "@app/portal/usersCapabilities";
+// the lazy portal chunk into the main bundle the way @processor/* values would.
+import { usersCapabilities } from "@app/processor/usersCapabilities";
 import type { ProcessorSearchEntry } from "@core/data/processorSearchIndex";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 
 export type { ProcessorSearchEntry };
 
 /**
  * The portal's in-app views. Deliberately a static mirror of the portal's nav
- * (labels via the same portal.nav.* keys its sidebar uses) rather than an
- * import from @portal/* — referencing the portal package here would pull the
+ * (labels via the same processor.nav.* keys its sidebar uses) rather than an
+ * import from @processor/* — referencing the portal package here would pull the
  * lazy portal chunk into the main bundle.
  */
 const VIEWS: ProcessorSearchEntry[] = [
   {
     id: "home",
-    labelKey: "portal.nav.home",
+    labelKey: "processor.nav.home",
     labelFallback: "Home",
-    path: PORTAL_BASENAME,
+    path: PROCESSOR_BASENAME,
     keywords: ["portal", "processor", "admin"],
   },
   {
     id: "sources",
-    labelKey: "portal.nav.sources",
+    labelKey: "processor.nav.sources",
     labelFallback: "Sources",
-    path: `${PORTAL_BASENAME}/sources`,
+    path: `${PROCESSOR_BASENAME}/sources`,
     keywords: ["s3", "connections", "webhooks", "folders"],
   },
   {
     id: "policies",
-    labelKey: "portal.nav.policies",
+    labelKey: "processor.nav.policies",
     labelFallback: "Policies",
-    path: `${PORTAL_BASENAME}/policies`,
+    path: `${PROCESSOR_BASENAME}/policies`,
     keywords: ["enforcement", "redact", "compliance"],
   },
   {
     id: "pipelines",
-    labelKey: "portal.nav.pipelines",
+    labelKey: "processor.nav.pipelines",
     labelFallback: "Pipelines",
-    path: `${PORTAL_BASENAME}/pipelines`,
+    path: `${PROCESSOR_BASENAME}/pipelines`,
     keywords: ["automation", "workflows", "operations"],
   },
   {
     id: "documents",
-    labelKey: "portal.nav.documents",
+    labelKey: "processor.nav.documents",
     labelFallback: "Documents",
-    path: `${PORTAL_BASENAME}/documents`,
+    path: `${PROCESSOR_BASENAME}/documents`,
     keywords: ["audit", "files"],
   },
   {
     id: "review",
-    labelKey: "portal.nav.review",
+    labelKey: "processor.nav.review",
     labelFallback: "Review",
-    path: `${PORTAL_BASENAME}${PORTAL_REVIEW_PATH}`,
+    path: `${PROCESSOR_BASENAME}${PROCESSOR_REVIEW_PATH}`,
     keywords: ["failures", "errors", "triage", "retry"],
   },
   {
     id: "integrations",
-    labelKey: "portal.nav.integrations",
+    labelKey: "processor.nav.integrations",
     labelFallback: "Integrations",
-    path: `${PORTAL_BASENAME}/integrations`,
+    path: `${PROCESSOR_BASENAME}/integrations`,
     keywords: ["connections", "external", "api", "webhooks"],
   },
   {
     id: "docs",
-    labelKey: "portal.nav.docs",
+    labelKey: "processor.nav.docs",
     labelFallback: "Documentation",
     path: DOCS_PATH,
     keywords: ["api", "documentation", "reference", "guides"],
   },
 ];
 
-// Empty without the portal: these destinations would 404.
-export const PROCESSOR_SEARCH_INDEX: ProcessorSearchEntry[] = HAS_PORTAL
+// Empty without the processor: these destinations would 404.
+export const PROCESSOR_SEARCH_INDEX: ProcessorSearchEntry[] = HAS_PROCESSOR
   ? VIEWS
   : [];
 
@@ -88,7 +88,7 @@ export const PROCESSOR_SEARCH_INDEX: ProcessorSearchEntry[] = HAS_PORTAL
  * UsersCapabilities.listingRequiresAdmin) — offering the lane anyway renders
  * a permanently-empty chip that fires a doomed request on every search.
  */
-export function isPortalEntityScopeAccessible(
+export function isProcessorEntityScopeAccessible(
   scopeId: string,
   isAdmin: boolean,
 ): boolean {

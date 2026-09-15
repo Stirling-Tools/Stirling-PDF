@@ -55,8 +55,8 @@ public class AdminUserSummary {
 
     @Schema(
             description =
-                    "Whether the user may access the portal, per the server-side access policy")
-    private boolean portalAccess;
+                    "Whether the user may access the processor, per the server-side access policy")
+    private boolean processorAccess;
 
     @Schema(description = "User account creation timestamp")
     private LocalDateTime createdAt;
