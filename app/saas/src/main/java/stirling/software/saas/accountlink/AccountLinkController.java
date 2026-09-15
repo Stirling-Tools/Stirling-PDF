@@ -89,7 +89,6 @@ public class AccountLinkController {
     public record RenameRequest(@Size(max = 255) String name) {}
 
     @PatchMapping("/instances/{instanceId}")
-    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Void> rename(
             @PathVariable Long instanceId,
             @Valid @RequestBody RenameRequest request,
