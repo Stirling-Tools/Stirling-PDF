@@ -145,12 +145,15 @@ export class PdfiumFormProvider implements IFormDataProvider {
   /** Provider identifier — kept as 'pdf-lib' for backwards-compatibility. */
   readonly name = "pdf-lib";
 
-  async fetchFields(file: File | Blob): Promise<FormField[]> {
+  async fetchFields(
+    file: File | Blob,
+    options: { pageIndices?: number[] } = {},
+  ): Promise<FormField[]> {
     try {
       if (!(await documentHasFormFieldsFor(file))) return [];
       const arrayBuffer = await getDocumentBytes(file);
       const pdfiumFields = await runPdfiumScan(() =>
-        extractFormFields(arrayBuffer),
+        extractFormFields(arrayBuffer, undefined, options.pageIndices),
       );
 
       // Enrich combo/listbox fields with export/display values from pdf-lib
