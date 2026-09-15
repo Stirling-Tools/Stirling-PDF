@@ -12,6 +12,8 @@ const started = new Set<number>();
  *  (and re-metering) the same files. */
 const swept = new Set<string>();
 const listeners = new Set<() => void>();
+const HAS_RUN_KEY = "stirling-desktop-classification-demo-has-run";
+let hasRun = false;
 
 function emit() {
   for (const listener of listeners) listener();
@@ -34,7 +36,28 @@ export function startClassificationDemo(limit: number): void {
 export function claimRun(runToken: number): boolean {
   if (started.has(runToken)) return false;
   started.add(runToken);
+  hasRun = true;
+  try {
+    localStorage.setItem(HAS_RUN_KEY, "true");
+  } catch {
+    // The session still remembers the run when persistent storage is unavailable.
+  }
+  emit();
   return true;
+}
+
+function getHasRun(): boolean {
+  if (hasRun) return true;
+  try {
+    return localStorage.getItem(HAS_RUN_KEY) === "true";
+  } catch {
+    return false;
+  }
+}
+
+/** Dismissing the offer does not count as running the demo; the first claimed run does. */
+export function useClassificationDemoHasRun(): boolean {
+  return useSyncExternalStore(subscribe, getHasRun, () => false);
 }
 
 /** Paths a follow-up batch should skip, accumulated across the whole session. */
