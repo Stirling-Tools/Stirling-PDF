@@ -118,7 +118,7 @@ class EnterpriseProcessingHttpIntegrationTest {
         signatures.deleteAll();
         cloudCounters.deleteAll();
         syncState.deleteAll();
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         localUsage.accrue(BillingCategory.AUTOMATION, SPENT_GRANT, null);
         assertThat(localUsage.balance().remainingUnits()).isZero();
     }
@@ -201,7 +201,7 @@ class EnterpriseProcessingHttpIntegrationTest {
         assertConvertedPdf(convert(input));
         assertLocalUsage(SPENT_GRANT + PDF_UNITS);
 
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(nextLicense);
+        when(licenseChecker.premiumTier()).thenReturn(nextLicense);
         HttpResponse<byte[]> response = convert(input);
 
         assertThat(response.statusCode()).isEqualTo(402);
