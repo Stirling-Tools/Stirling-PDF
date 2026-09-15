@@ -801,6 +801,9 @@ public class ProcessingFolderController {
 
     /** The storage folder, only if the caller owns it — the authorization boundary here. */
     private Folder requireOwnedFolder(String rawFolderId, User user) {
+        if (user == null || user.getId() == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "No folder: " + rawFolderId);
+        }
         UUID folderId;
         try {
             folderId = UUID.fromString(String.valueOf(rawFolderId));

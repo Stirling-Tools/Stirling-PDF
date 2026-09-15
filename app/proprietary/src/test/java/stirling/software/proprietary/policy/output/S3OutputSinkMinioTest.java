@@ -1,6 +1,7 @@
 package stirling.software.proprietary.policy.output;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -137,10 +138,16 @@ class S3OutputSinkMinioTest {
                 outputSpec(""));
 
         // The producing policy's sweep sees its own output at the recorded gate and skips it.
-        assertThat(source.resolve(inputSpec(), new RecordingContext(POLICY))).isEmpty();
+        assertThat(
+                        source.resolve(
+                                persistedSource(inputSpec()),
+                                new RecordingContext(POLICY),
+                                "alice"))
+                .isEmpty();
 
         // A different policy watching the same bucket has no row and processes it - chaining.
-        List<ResolvedInput> chained = source.resolve(inputSpec(), new RecordingContext("p2"));
+        List<ResolvedInput> chained =
+                source.resolve(persistedSource(inputSpec()), new RecordingContext("p2"), "alice");
         assertThat(chained).hasSize(1);
         try (InputStream stream = chained.get(0).inputs().primary().get(0).getInputStream()) {
             assertThat(new String(stream.readAllBytes(), StandardCharsets.UTF_8))

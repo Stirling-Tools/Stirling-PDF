@@ -207,14 +207,13 @@ class StorageFolderAuthorizationTest {
     }
 
     @Test
-    void directResolutionWithoutAnAuthenticatedOwnerFailsClosed() {
-        when(users.getCurrentUsername()).thenReturn(null);
-
+    void resolutionWithoutAPersistedPolicyOwnerFailsClosed() {
         assertThatThrownBy(
                         () ->
                                 input.resolve(
-                                        source(null, aliceFolder, "alice").toInputSpec(),
-                                        mock(ResolveContext.class)))
+                                        source(null, aliceFolder, "alice"),
+                                        mock(ResolveContext.class),
+                                        null))
                 .isInstanceOf(IllegalArgumentException.class);
 
         verifyNoInteractions(fileRepository, blobs);

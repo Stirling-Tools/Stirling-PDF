@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -78,18 +79,24 @@ class FolderInputSourceTest {
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
 
-        List<ResolvedInput> work = source.resolve(InputSpec.folder(inputDir.toString()), ctx);
+        List<ResolvedInput> work =
+                source.resolve(
+                        persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice");
 
         assertEquals(1, work.size());
         assertEquals(1, work.get(0).inputs().primary().size());
         // In flight: still on disk, but a second sweep does not pick it up again.
         assertTrue(Files.exists(file));
         assertTrue(Files.notExists(inputDir.resolve(".stirling")));
-        assertTrue(source.resolve(InputSpec.folder(inputDir.toString()), ctx).isEmpty());
+        assertTrue(
+                source.resolve(persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice")
+                        .isEmpty());
 
         work.get(0).onComplete().accept(true);
         assertTrue(Files.notExists(file));
-        assertTrue(source.resolve(InputSpec.folder(inputDir.toString()), ctx).isEmpty());
+        assertTrue(
+                source.resolve(persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice")
+                        .isEmpty());
     }
 
     @Test
@@ -98,7 +105,9 @@ class FolderInputSourceTest {
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
 
-        List<ResolvedInput> work = source.resolve(InputSpec.folder(inputDir.toString()), ctx);
+        List<ResolvedInput> work =
+                source.resolve(
+                        persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice");
         // The user saves a new version while the run is executing.
         Files.writeString(file, "new data, different size");
         work.get(0).onComplete().accept(true);
@@ -106,7 +115,10 @@ class FolderInputSourceTest {
         // The delete is version-guarded: the replacement is not the file that ran, so it stays
         // and is claimed as fresh work instead of being marked processed.
         assertTrue(Files.exists(file));
-        assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
+        assertEquals(
+                1,
+                source.resolve(persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice")
+                        .size());
     }
 
     @Test
@@ -117,8 +129,8 @@ class FolderInputSourceTest {
         InputSpec spec = InputSpec.folder(inputDir.toString());
         RecordingContext other = new RecordingContext("p2");
 
-        List<ResolvedInput> mine = source.resolve(spec, ctx);
-        List<ResolvedInput> theirs = source.resolve(spec, other);
+        List<ResolvedInput> mine = source.resolve(persistedSource(spec), ctx, "alice");
+        List<ResolvedInput> theirs = source.resolve(persistedSource(spec), other, "alice");
         assertEquals(1, mine.size());
         assertEquals(1, theirs.size());
 
@@ -138,8 +150,8 @@ class FolderInputSourceTest {
         InputSpec spec = InputSpec.folder(inputDir.toString());
         RecordingContext other = new RecordingContext("p2");
 
-        List<ResolvedInput> mine = source.resolve(spec, ctx);
-        List<ResolvedInput> theirs = source.resolve(spec, other);
+        List<ResolvedInput> mine = source.resolve(persistedSource(spec), ctx, "alice");
+        List<ResolvedInput> theirs = source.resolve(persistedSource(spec), other, "alice");
 
         theirs.get(0).onComplete().accept(false);
         mine.get(0).onComplete().accept(true);
@@ -147,8 +159,8 @@ class FolderInputSourceTest {
         // The failure parks the file for everyone (retried when it changes), regardless of
         // which policy settled last.
         assertTrue(Files.exists(file));
-        assertTrue(source.resolve(spec, ctx).isEmpty());
-        assertTrue(source.resolve(spec, other).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec), ctx, "alice").isEmpty());
+        assertTrue(source.resolve(persistedSource(spec), other, "alice").isEmpty());
     }
 
     @Test
@@ -157,10 +169,16 @@ class FolderInputSourceTest {
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
 
-        source.resolve(InputSpec.folder(inputDir.toString()), ctx).get(0).onComplete().accept(true);
+        source.resolve(persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice")
+                .get(0)
+                .onComplete()
+                .accept(true);
         Files.writeString(file, "data again");
 
-        assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
+        assertEquals(
+                1,
+                source.resolve(persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice")
+                        .size());
     }
 
     @Test
@@ -169,16 +187,21 @@ class FolderInputSourceTest {
         Path file = inputDir.resolve("doc.pdf");
         Files.writeString(file, "data");
 
-        source.resolve(InputSpec.folder(inputDir.toString()), ctx)
+        source.resolve(persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice")
                 .get(0)
                 .onComplete()
                 .accept(false);
 
         assertTrue(Files.exists(file));
-        assertTrue(source.resolve(InputSpec.folder(inputDir.toString()), ctx).isEmpty());
+        assertTrue(
+                source.resolve(persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice")
+                        .isEmpty());
 
         Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(60)));
-        assertEquals(1, source.resolve(InputSpec.folder(inputDir.toString()), ctx).size());
+        assertEquals(
+                1,
+                source.resolve(persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice")
+                        .size());
     }
 
     @Test
@@ -194,8 +217,8 @@ class FolderInputSourceTest {
                 new InputSpec(
                         "folder", Map.of("directory", hashDir.toString(), "identity", "hash"));
 
-        source.resolve(statSpec, ctx).get(0).onComplete().accept(false);
-        source.resolve(hashSpec, ctx).get(0).onComplete().accept(false);
+        source.resolve(persistedSource(statSpec), ctx, "alice").get(0).onComplete().accept(false);
+        source.resolve(persistedSource(hashSpec), ctx, "alice").get(0).onComplete().accept(false);
 
         FileTime touched = FileTime.from(Instant.now().plusSeconds(60));
         Files.setLastModifiedTime(statFile, touched);
@@ -203,8 +226,8 @@ class FolderInputSourceTest {
 
         // Same content, new mtime: stat mode calls that a new version and retries; hash mode
         // verifies the content is unchanged and keeps the failure parked.
-        assertEquals(1, source.resolve(statSpec, ctx).size());
-        assertTrue(source.resolve(hashSpec, ctx).isEmpty());
+        assertEquals(1, source.resolve(persistedSource(statSpec), ctx, "alice").size());
+        assertTrue(source.resolve(persistedSource(hashSpec), ctx, "alice").isEmpty());
     }
 
     @Test
@@ -221,11 +244,13 @@ class FolderInputSourceTest {
                                 "identity", "hash"));
 
         // A run that rewrites the file in place, as an OCR-and-replace pipeline does.
-        ResolvedInput first = source.resolve(spec, ctx).get(0);
+        ResolvedInput first = source.resolve(persistedSource(spec), ctx, "alice").get(0);
         Files.writeString(file, "processed");
         first.onComplete().accept(true);
 
-        assertTrue(source.resolve(spec, ctx).isEmpty(), "the in-place output must not re-claim");
+        assertTrue(
+                source.resolve(persistedSource(spec), ctx, "alice").isEmpty(),
+                "the in-place output must not re-claim");
 
         // A metadata-only bump a month later: a backup restore, an rsync, an antivirus rewrite.
         Files.setLastModifiedTime(file, FileTime.from(Instant.now().plusSeconds(60)));
@@ -233,11 +258,14 @@ class FolderInputSourceTest {
         // Settling a null hash here would leave nothing to compare against, so the content
         // check would fail against null and reprocess an unchanged document.
         assertTrue(
-                source.resolve(spec, ctx).isEmpty(),
+                source.resolve(persistedSource(spec), ctx, "alice").isEmpty(),
                 "an unchanged tracked file must not reprocess on a touch under identity: hash");
 
         Files.writeString(file, "edited by a person");
-        assertEquals(1, source.resolve(spec, ctx).size(), "a real edit must still be picked up");
+        assertEquals(
+                1,
+                source.resolve(persistedSource(spec), ctx, "alice").size(),
+                "a real edit must still be picked up");
     }
 
     @Test
@@ -249,10 +277,10 @@ class FolderInputSourceTest {
                 new InputSpec(
                         "folder", Map.of("directory", inputDir.toString(), "identity", "hash"));
 
-        source.resolve(spec, ctx).get(0).onComplete().accept(false);
+        source.resolve(persistedSource(spec), ctx, "alice").get(0).onComplete().accept(false);
         Files.writeString(file, "data v2 - longer");
 
-        assertEquals(1, source.resolve(spec, ctx).size());
+        assertEquals(1, source.resolve(persistedSource(spec), ctx, "alice").size());
     }
 
     @Test
@@ -263,9 +291,9 @@ class FolderInputSourceTest {
                 new InputSpec(
                         "folder", Map.of("directory", inputDir.toString(), "mode", "snapshot"));
 
-        List<ResolvedInput> first = source.resolve(spec, ctx);
+        List<ResolvedInput> first = source.resolve(persistedSource(spec), ctx, "alice");
         first.get(0).onComplete().accept(true);
-        List<ResolvedInput> second = source.resolve(spec, ctx);
+        List<ResolvedInput> second = source.resolve(persistedSource(spec), ctx, "alice");
 
         assertEquals(1, first.size());
         assertEquals(1, second.size()); // no ledger involvement: every run sees the full set
@@ -281,7 +309,9 @@ class FolderInputSourceTest {
         Path legacy = Files.createDirectories(inputDir.resolve(".stirling").resolve("done"));
         Files.writeString(legacy.resolve("old.pdf"), "processed long ago");
 
-        List<ResolvedInput> work = source.resolve(InputSpec.folder(inputDir.toString()), ctx);
+        List<ResolvedInput> work =
+                source.resolve(
+                        persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice");
 
         assertEquals(1, work.size());
         assertEquals(1, ctx.present.size());
@@ -305,8 +335,11 @@ class FolderInputSourceTest {
                 new InputSpec(
                         "folder", Map.of("directory", inputDir.toString(), "recursive", "true"));
 
-        assertEquals(1, source.resolve(flat, ctx).size());
-        assertEquals(1, source.resolve(recursive, ctx).size()); // top.pdf already claimed above
+        assertEquals(1, source.resolve(persistedSource(flat), ctx, "alice").size());
+        assertEquals(
+                1,
+                source.resolve(persistedSource(recursive), ctx, "alice")
+                        .size()); // top.pdf already claimed above
         assertTrue(ctx.present.stream().anyMatch(identity -> identity.endsWith("nested.pdf")));
         assertTrue(ctx.present.stream().noneMatch(identity -> identity.endsWith("skipped.pdf")));
         assertTrue(ctx.present.stream().noneMatch(identity -> identity.endsWith("half-delivered")));
@@ -319,7 +352,9 @@ class FolderInputSourceTest {
         Files.writeString(file, "partial");
         when(readinessChecker.isReady(file)).thenReturn(false);
 
-        List<ResolvedInput> work = source.resolve(InputSpec.folder(inputDir.toString()), ctx);
+        List<ResolvedInput> work =
+                source.resolve(
+                        persistedSource(InputSpec.folder(inputDir.toString())), ctx, "alice");
 
         assertTrue(work.isEmpty());
         // Reported present so a full sweep does not prune its row while it settles on disk.
@@ -338,15 +373,17 @@ class FolderInputSourceTest {
         InputSpec childFlat = InputSpec.folder(child.toString());
 
         // Same sweep, same policy context: whichever source resolves first wins the file.
-        assertEquals(1, source.resolve(parentRecursive, ctx).size());
-        assertTrue(source.resolve(childFlat, ctx).isEmpty());
+        assertEquals(1, source.resolve(persistedSource(parentRecursive), ctx, "alice").size());
+        assertTrue(source.resolve(persistedSource(childFlat), ctx, "alice").isEmpty());
     }
 
     @Test
     void missingDirectoryOptionFails() {
         assertThrows(
                 IllegalArgumentException.class,
-                () -> source.resolve(new InputSpec("folder", Map.of()), ctx));
+                () ->
+                        source.resolve(
+                                persistedSource(new InputSpec("folder", Map.of())), ctx, "alice"));
     }
 
     @Test
@@ -371,7 +408,12 @@ class FolderInputSourceTest {
         // an empty listing would wipe.
         assertThrows(
                 NoSuchFileException.class,
-                () -> source.resolve(InputSpec.folder(tempDir.resolve("nope").toString()), ctx));
+                () ->
+                        source.resolve(
+                                persistedSource(
+                                        InputSpec.folder(tempDir.resolve("nope").toString())),
+                                ctx,
+                                "alice"));
     }
 
     @Test
@@ -386,7 +428,11 @@ class FolderInputSourceTest {
         Path outside = tempDir.resolveSibling("not-allowed");
         assertThrows(
                 IllegalArgumentException.class,
-                () -> source.resolve(InputSpec.folder(outside.toString()), ctx));
+                () ->
+                        source.resolve(
+                                persistedSource(InputSpec.folder(outside.toString())),
+                                ctx,
+                                "alice"));
         assertThrows(
                 IllegalArgumentException.class,
                 () -> source.validate(InputSpec.folder(outside.toString())));
@@ -448,7 +494,7 @@ class FolderInputSourceTest {
                         "folder",
                         Map.of("directory", inputDir.toString(), "mode", "track", "limit", 2));
 
-        List<ResolvedInput> work = source.resolve(spec, ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec), ctx, "alice");
 
         // The cap goes to the most recently added files, not whichever listed first.
         assertEquals(2, work.size());
@@ -464,7 +510,7 @@ class FolderInputSourceTest {
         InputSpec spec =
                 new InputSpec("folder", Map.of("directory", inputDir.toString(), "mode", "track"));
 
-        List<ResolvedInput> work = source.resolve(spec, ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec), ctx, "alice");
 
         // Name-shaped end to end: the run's display name and the ledger's claim release
         // both resolve this identity as the source produced it.

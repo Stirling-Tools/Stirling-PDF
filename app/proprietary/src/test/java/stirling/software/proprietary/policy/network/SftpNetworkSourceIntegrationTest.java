@@ -3,6 +3,7 @@ package stirling.software.proprietary.policy.network;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -92,7 +93,7 @@ class SftpNetworkSourceIntegrationTest {
     void consumeListsStreamsAndDeletes() throws Exception {
         put("doc.pdf", "hello sftp");
 
-        List<ResolvedInput> work = source.resolve(spec(Map.of()), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec(Map.of())), ctx, "alice");
 
         assertThat(work).hasSize(1);
         String identity =
@@ -104,21 +105,24 @@ class SftpNetworkSourceIntegrationTest {
         assertThat(ctx.present).containsExactly(identity);
         assertThat(read(work.get(0))).isEqualTo("hello sftp");
         // In flight: a second sweep does not re-claim it.
-        assertThat(source.resolve(spec(Map.of()), ctx)).isEmpty();
+        assertThat(source.resolve(persistedSource(spec(Map.of())), ctx, "alice")).isEmpty();
 
         work.get(0).onComplete().accept(true);
         assertThat(exists("doc.pdf")).isFalse();
-        assertThat(source.resolve(spec(Map.of()), ctx)).isEmpty();
+        assertThat(source.resolve(persistedSource(spec(Map.of())), ctx, "alice")).isEmpty();
     }
 
     @Test
     void aFailedFileStaysOnTheServer() throws Exception {
         put("doc.pdf", "data");
 
-        source.resolve(spec(Map.of()), ctx).get(0).onComplete().accept(false);
+        source.resolve(persistedSource(spec(Map.of())), ctx, "alice")
+                .get(0)
+                .onComplete()
+                .accept(false);
 
         assertThat(exists("doc.pdf")).isTrue();
-        assertThat(source.resolve(spec(Map.of()), ctx)).isEmpty();
+        assertThat(source.resolve(persistedSource(spec(Map.of())), ctx, "alice")).isEmpty();
     }
 
     @Test

@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -96,16 +97,16 @@ class StorageFolderInputSourceTest {
                 .thenReturn(List.of(file));
         when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
 
-        List<ResolvedInput> work = source.resolve(spec(), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec()), ctx, "alice");
 
         assertEquals(1, work.size());
         assertEquals("doc.pdf", work.get(0).inputs().primary().get(0).getFilename());
         // In flight: a second sweep does not pick it up again.
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
 
         // Settled at an unchanged version: still nothing new to do.
         work.get(0).onComplete().accept(true);
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
     }
 
     @Test
@@ -114,7 +115,7 @@ class StorageFolderInputSourceTest {
         when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER, owner))
                 .thenReturn(List.of(file));
 
-        List<ResolvedInput> work = source.resolve(spec(), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec()), ctx, "alice");
 
         // The run replaces the file's content in place before completion fires.
         file.setUpdatedAt(T2);
@@ -122,7 +123,7 @@ class StorageFolderInputSourceTest {
         work.get(0).onComplete().accept(true);
 
         // The next sweep sees the bumped version already settled — no self-feeding loop.
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
     }
 
     @Test
@@ -132,12 +133,12 @@ class StorageFolderInputSourceTest {
                 .thenReturn(List.of(file));
         when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
 
-        source.resolve(spec(), ctx).get(0).onComplete().accept(true);
+        source.resolve(persistedSource(spec()), ctx, "alice").get(0).onComplete().accept(true);
 
         // The user re-uploads: gate and content both change — fresh work.
         file.setUpdatedAt(T2);
         blobContent = "content-v2".getBytes();
-        assertEquals(1, source.resolve(spec(), ctx).size());
+        assertEquals(1, source.resolve(persistedSource(spec()), ctx, "alice").size());
     }
 
     @Test
@@ -147,12 +148,12 @@ class StorageFolderInputSourceTest {
                 .thenReturn(List.of(file));
         when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
 
-        source.resolve(spec(), ctx).get(0).onComplete().accept(true);
+        source.resolve(persistedSource(spec()), ctx, "alice").get(0).onComplete().accept(true);
 
         // A folder move / rename bumps updatedAt but not the content: the hash tier refreshes the
         // gate instead of reprocessing.
         file.setUpdatedAt(T2);
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
     }
 
     @Test
@@ -162,7 +163,7 @@ class StorageFolderInputSourceTest {
         when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER, owner))
                 .thenReturn(List.of(signing));
 
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
         assertTrue(ctx.present.isEmpty());
     }
 
@@ -173,13 +174,13 @@ class StorageFolderInputSourceTest {
                 .thenReturn(List.of(file));
         when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
 
-        source.resolve(spec(), ctx).get(0).onComplete().accept(false);
+        source.resolve(persistedSource(spec()), ctx, "alice").get(0).onComplete().accept(false);
 
         // Failed at this version: not retried until the content changes.
-        assertTrue(source.resolve(spec(), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec()), ctx, "alice").isEmpty());
         file.setUpdatedAt(T2);
         blobContent = "content-v2".getBytes();
-        assertEquals(1, source.resolve(spec(), ctx).size());
+        assertEquals(1, source.resolve(persistedSource(spec()), ctx, "alice").size());
     }
 
     @Test

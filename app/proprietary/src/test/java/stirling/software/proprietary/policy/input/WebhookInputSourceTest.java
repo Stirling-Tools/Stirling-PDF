@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.lenient;
+import static stirling.software.proprietary.policy.input.InputSourceTestFixtures.persistedSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -64,23 +65,23 @@ class WebhookInputSourceTest {
     void consumeRemovesTheDeliveryOnceProcessed() throws IOException {
         Path delivered = spool.store(WEBHOOK_ID, "doc.pdf", "data".getBytes());
 
-        List<ResolvedInput> work = source.resolve(spec("consume"), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec("consume")), ctx, "alice");
 
         assertEquals(1, work.size());
         assertEquals("doc.pdf", work.get(0).inputs().primary().get(0).getFilename());
         assertTrue(Files.exists(delivered));
-        assertTrue(source.resolve(spec("consume"), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec("consume")), ctx, "alice").isEmpty());
 
         work.get(0).onComplete().accept(true);
         assertTrue(Files.notExists(delivered));
-        assertTrue(source.resolve(spec("consume"), ctx).isEmpty());
+        assertTrue(source.resolve(persistedSource(spec("consume")), ctx, "alice").isEmpty());
     }
 
     @Test
     void aFailedRunLeavesTheDeliveryInPlace() throws IOException {
         Path delivered = spool.store(WEBHOOK_ID, "doc.pdf", "data".getBytes());
 
-        List<ResolvedInput> work = source.resolve(spec("consume"), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec("consume")), ctx, "alice");
         work.get(0).onComplete().accept(false);
 
         assertTrue(Files.exists(delivered));
@@ -88,7 +89,7 @@ class WebhookInputSourceTest {
 
     @Test
     void nothingDeliveredIsAnEmptySourceNotAnError() throws IOException {
-        List<ResolvedInput> work = source.resolve(spec("consume"), ctx);
+        List<ResolvedInput> work = source.resolve(persistedSource(spec("consume")), ctx, "alice");
         assertTrue(work.isEmpty());
         assertTrue(ctx.present.isEmpty());
     }

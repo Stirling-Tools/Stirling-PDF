@@ -72,11 +72,6 @@ public class StorageFolderInputSource implements InputSource {
     }
 
     @Override
-    public List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException {
-        return resolveForOwner(spec, ctx, userService.getCurrentUsername());
-    }
-
-    @Override
     public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
             throws IOException {
         if (policyOwner == null || !policyOwner.equals(source.owner())) {

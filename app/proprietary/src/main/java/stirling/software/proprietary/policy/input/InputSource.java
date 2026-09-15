@@ -30,18 +30,14 @@ public interface InputSource {
     }
 
     /**
-     * Resolve the spec into zero or more units of work, each carrying one run's files and a
-     * completion hook. Empty list means nothing to run right now. Discovery is read-only - files
-     * stay where the user put them; "already processed" is tracked through {@code ctx} (claim on
-     * pickup, settle on completion, report what is present so stale ledger rows can be pruned).
-     */
-    List<ResolvedInput> resolve(InputSpec spec, ResolveContext ctx) throws IOException;
-
-    /**
      * Resolve a persisted source on behalf of its policy owner, including on background threads
      * without request authentication. Both identities must come from server-owned records, never
      * input options. Sources backed by private user storage must scope their reads to that owner;
      * sources over a connection shared by a policy's whole team say why they need not.
+     *
+     * <p>Each unit carries one run's files and a completion hook; an empty list means no work.
+     * Discovery leaves files in place. Implementations track processing through {@code ctx}: claim
+     * on pickup, settle on completion, and report presence for stale-ledger cleanup.
      */
     List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
             throws IOException;
