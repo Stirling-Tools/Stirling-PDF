@@ -28,6 +28,16 @@ html[data-window-controls="custom"] .tool-panel .sui-panelhdr {
   margin-top: var(--wincontrols-h);
 }
 
+html[data-window-controls="custom"] .reader-rail {
+  padding-top: calc(0.75rem + var(--wincontrols-h));
+}
+
+/* The tool picker draws no header to carry the offset, so the panel takes it. */
+html[data-window-controls="custom"]
+  .tool-panel:not(:has(.tool-panel__compact-header)):not(:has(.sui-panelhdr)) {
+  padding-top: var(--wincontrols-h);
+}
+
 /* Mobile layout: the top bar spans the full width. Keep the brand top-left
    (already clear of the top-right controls) and drop the view switcher below
    them by top-aligning the row and nudging the switcher down. */

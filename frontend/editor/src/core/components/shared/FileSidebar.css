@@ -44,14 +44,11 @@
   inset-block: 0;
   inset-inline-start: 0;
   z-index: var(--z-dropdown);
+  animation: file-sidebar-leave var(--wings-ms) ease-in both;
 }
 
-[data-wings="leaving"] .file-sidebar {
-  animation: file-sidebar-leave 220ms ease-in both;
-}
-
-[data-wings="returning"] .file-sidebar {
-  animation: file-sidebar-return 220ms ease-out both;
+[data-wings="returning"] .workspace-frame {
+  animation: file-sidebar-return var(--wings-ms) ease-out both;
 }
 
 @keyframes file-sidebar-leave {
@@ -72,8 +69,17 @@
   }
 }
 
+/* The wing sits on the trailing edge in RTL, so it leaves by that one. */
+[dir="rtl"] [data-wings="leaving"] .workspace-frame {
+  animation-name: tool-panel-leave;
+}
+
+[dir="rtl"] [data-wings="returning"] .workspace-frame {
+  animation-name: tool-panel-return;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  [data-wings] .file-sidebar {
+  [data-wings] .workspace-frame {
     animation: none;
   }
 }

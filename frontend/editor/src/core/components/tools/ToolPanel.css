@@ -26,11 +26,20 @@
   inset-block: 0;
   inset-inline-end: 0;
   z-index: var(--z-dropdown);
-  animation: tool-panel-leave 220ms ease-in both;
+  animation: tool-panel-leave var(--wings-ms) ease-in both;
 }
 
 [data-wings="returning"] .tool-panel {
-  animation: tool-panel-return 220ms ease-out both;
+  animation: tool-panel-return var(--wings-ms) ease-out both;
+}
+
+/* Mirrored in RTL, where the panel sits on the leading edge. */
+[dir="rtl"] [data-wings="leaving"] .tool-panel {
+  animation-name: file-sidebar-leave;
+}
+
+[dir="rtl"] [data-wings="returning"] .tool-panel {
+  animation-name: file-sidebar-return;
 }
 
 @keyframes tool-panel-leave {

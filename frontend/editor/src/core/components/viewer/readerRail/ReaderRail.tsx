@@ -143,7 +143,14 @@ export function ReaderRail() {
             <Icon name="x" size={SIZE} />
           </ActionIcon>
         </AppTooltip>
-        <Menu shadow="md" width={320} position="left-start">
+        {/* Capped and scrolling: with enough documents open the list would run
+            past the viewport and take Add file off the bottom with it. */}
+        <Menu
+          shadow="md"
+          width={320}
+          position="left-start"
+          styles={{ dropdown: { maxHeight: "70vh", overflowY: "auto" } }}
+        >
           <Menu.Target>
             <ActionIcon
               variant="tertiary"
