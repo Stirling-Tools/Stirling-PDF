@@ -63,7 +63,11 @@ class PdfSigningServiceImplTest {
                                                 eq("Alice"),
                                                 eq("London"),
                                                 eq("approval"),
-                                                eq(false)))
+                                                eq(false),
+                                                any(),
+                                                any(),
+                                                any(),
+                                                any()))
                         .thenAnswer(
                                 inv -> {
                                     ByteArrayOutputStream out = inv.getArgument(2);
@@ -81,7 +85,11 @@ class PdfSigningServiceImplTest {
                                 "Alice",
                                 "London",
                                 "approval",
-                                false);
+                                false,
+                                null,
+                                null,
+                                null,
+                                null);
 
                 assertThat(new String(result)).isEqualTo("signed");
 
@@ -97,7 +105,11 @@ class PdfSigningServiceImplTest {
                                         eq("Alice"),
                                         eq("London"),
                                         eq("approval"),
-                                        eq(false)));
+                                        eq(false),
+                                        any(),
+                                        any(),
+                                        any(),
+                                        any()));
 
                 // Exercise the private ByteArrayMultipartFile wrapper passed to sign().
                 MultipartFile wrapper = fileCaptor.getValue();
@@ -138,7 +150,11 @@ class PdfSigningServiceImplTest {
                                                 any(),
                                                 any(),
                                                 any(),
-                                                org.mockito.ArgumentMatchers.anyBoolean()))
+                                                org.mockito.ArgumentMatchers.anyBoolean(),
+                                                any(),
+                                                any(),
+                                                any(),
+                                                any()))
                         .thenAnswer(inv -> null);
 
                 service.signWithKeystore(
@@ -150,7 +166,11 @@ class PdfSigningServiceImplTest {
                         null,
                         null,
                         null,
-                        false);
+                        false,
+                        null,
+                        null,
+                        null,
+                        null);
 
                 signer.verify(
                         () ->
@@ -164,7 +184,11 @@ class PdfSigningServiceImplTest {
                                         any(),
                                         any(),
                                         any(),
-                                        org.mockito.ArgumentMatchers.anyBoolean()));
+                                        org.mockito.ArgumentMatchers.anyBoolean(),
+                                        any(),
+                                        any(),
+                                        any(),
+                                        any()));
                 assertThat(fileCaptor.getValue().isEmpty()).isTrue();
                 assertThat(fileCaptor.getValue().getSize()).isZero();
             }

@@ -4,6 +4,15 @@ import {
   BaseParametersHook,
 } from "@app/hooks/tools/shared/useBaseParameters";
 
+/** Visible certificate widget position in page fractions (0-1), top-left origin; pageIndex is 0-based. */
+export interface CertAppearanceRect {
+  pageIndex: number;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
 export interface CertSignParameters extends BaseParameters {
   // Where the signing certificate comes from:
   //  MANUAL = upload a keystore file, AUTO = server certificate,
@@ -30,6 +39,8 @@ export interface CertSignParameters extends BaseParameters {
   name: string;
   pageNumber: number;
   showLogo: boolean;
+  /** When set with showSignature, sent as signatureRect* fields for custom size/placement. */
+  certAppearanceRect: CertAppearanceRect | null;
 }
 
 export const defaultParameters: CertSignParameters = {
@@ -42,6 +53,7 @@ export const defaultParameters: CertSignParameters = {
   name: "",
   pageNumber: 1,
   showLogo: true,
+  certAppearanceRect: null,
 };
 
 export type CertSignParametersHook = BaseParametersHook<CertSignParameters>;
