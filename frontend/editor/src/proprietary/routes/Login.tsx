@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  type Location,
   Navigate,
   useLocation,
   useNavigate,
@@ -43,10 +44,13 @@ export default function Login() {
   // a reload of /login. Null means "no specific destination" and the caller
   // falls back to the default landing.
   const resolveReturnPath = (): string | null => {
-    const fromState = (
-      location.state as { from?: { pathname?: string } } | null
-    )?.from?.pathname;
-    if (fromState) return safePath(fromState);
+    const fromState = (location.state as { from?: Partial<Location> } | null)
+      ?.from;
+    if (fromState?.pathname) {
+      return safePath(
+        fromState.pathname + (fromState.search ?? "") + (fromState.hash ?? ""),
+      );
+    }
     const fromQuery = searchParams.get("from");
     if (!fromQuery) return null;
     try {

@@ -28,7 +28,7 @@ export default function Landing() {
 
   // The probe gates only the signed-out backend-down screen: a session means
   // /auth/me already answered.
-  const loading = authLoading || configLoading;
+  const loading = authLoading || (configLoading && !config);
   const probePending = backendProbe.loading;
 
   // The backend-down screen is not the app. Loading is: it resolves in a moment.
@@ -141,7 +141,9 @@ export default function Landing() {
   // authenticated, and carries where we came from so signing in returns there
   // (going to /editor and logging in lands back on /editor, not the role
   // router). Also passed as router state; the query is what survives a reload.
-  const returnTo = encodeURIComponent(location.pathname + location.search);
+  const returnTo = encodeURIComponent(
+    location.pathname + location.search + location.hash,
+  );
   return config?.enableLogin === true && !backendProbe.loginDisabled ? (
     <Navigate
       to={`/login?from=${returnTo}`}

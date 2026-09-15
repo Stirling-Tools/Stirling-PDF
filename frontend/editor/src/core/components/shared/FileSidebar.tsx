@@ -30,24 +30,17 @@ import {
   useIndexedDB,
   useIndexedDBRevision,
 } from "@app/contexts/IndexedDBContext";
-import { GoogleDriveIcon } from "@app/components/shared/CloudStorageIcons";
 import { SidebarHeader } from "@app/components/shared/SidebarHeader";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import FolderSpecialIcon from "@mui/icons-material/FolderSpecial";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import AddIcon from "@mui/icons-material/Add";
-import OpenInFullIcon from "@mui/icons-material/OpenInFull";
 import type { FileId } from "@app/types/file";
 import type { WatchedFolderViewData } from "@app/types/watchedFolders";
 import { FileItem } from "@app/components/shared/FileSidebarFileItem";
 import { useLabelName } from "@app/data/labelDisplay";
 import { useClassificationEnabled } from "@app/hooks/useClassificationEnabled";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
 import {
   FileSidebarGroupControls,
   useFileSidebarGroups,
 } from "@app/components/shared/fileSidebarGrouping";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -105,6 +98,8 @@ export interface FileSidebarProps {
   accountHoisted?: boolean;
   /** Override the Open-from-computer handler (e.g. upload to /files folder). */
   onUploadFiles?: (files: File[]) => void | Promise<void>;
+  /** Publishes the sidebar's picker so the quick navigation rail can reuse it. */
+  onRegisterOpenFromComputer?: (open: (() => void) | null) => void;
   /** Override the Google Drive handler. */
   onPickGoogleDriveFiles?: (files: File[]) => void | Promise<void>;
   /** Action rows inserted under Open-from-computer (New folder, Refresh). A
@@ -196,6 +191,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       onOpenSettings,
       accountHoisted = false,
       onUploadFiles,
+      onRegisterOpenFromComputer,
       onPickGoogleDriveFiles,
       extraActions,
     },
@@ -818,6 +814,12 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       [ingestFiles],
     );
 
+    useEffect(() => {
+      if (!onRegisterOpenFromComputer) return;
+      onRegisterOpenFromComputer(() => nativeFileInputRef.current?.click());
+      return () => onRegisterOpenFromComputer(null);
+    }, [onRegisterOpenFromComputer]);
+
     // Native OS file drop onto the sidebar - mirrors the workbench drop zone.
     // Only react to OS file drags ("Files" type); internal element drags (e.g.
     // watched-folder file moves) set their own dataTransfer keys and must pass
@@ -982,7 +984,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       >
         {isFileDragOver && (
           <div className="file-sidebar-drop-overlay" aria-hidden="true">
-            <UploadFileIcon className="file-sidebar-drop-overlay-icon" />
+            <Icon name="file-up" className="file-sidebar-drop-overlay-icon" />
             {!collapsed && (
               <span className="file-sidebar-drop-overlay-text">
                 {t("fileSidebar.dropToAdd", "Drop files to add")}
@@ -996,70 +998,62 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             onToggleCollapse={onToggleCollapse}
           />
 
-          {/* Box 1 — top controls (open / my files / cloud). No title. File
-              search lives in the global super search (top bar), not here. */}
-          <NavSurface className="file-sidebar-controls">
-            {/* Hidden native file input - kept outside the !collapsed gate so
-                the "Open from computer" row below (always rendered) can fire
-                it in either sidebar state without a silent no-op. */}
-            <input
-              ref={nativeFileInputRef}
-              type="file"
-              multiple
-              // No `accept` filter - this picker feeds the global workspace,
-              // not a specific tool, so users may legitimately upload PNGs,
-              // ZIPs, etc. for the convert/merge/extract tools to handle.
-              style={{ display: "none" }}
-              onChange={handleNativeFilePick}
-              data-testid="file-input"
-            />
-            {/* Open from Computer + My Files + Google Drive */}
-            {/* Tooltips only fire when collapsed - when expanded the visible
-                text label below already identifies each row, so a tooltip
-                would just flash a duplicate. Distinct icons (UploadFile for
-                "Open from computer" vs FolderOpen for "File library") so the
-                collapsed rail isn't two identical folder icons either. */}
-            <Tooltip
-              label={t("fileSidebar.openFromComputer", "Open from computer")}
-              position="right"
-              withinPortal
-              disabled={!collapsed}
-            >
-              <div
-                className="file-sidebar-action-row"
-                // `files-button` is the long-standing upload entry-point
-                // testid: click + setInputFiles on `file-input` above. Tour
-                // anchor lives here too - the tour now spotlights the native
-                // picker shortcut rather than the old modal.
-                data-testid="files-button"
-                data-tour="files-button"
-                onClick={() => {
-                  // "Open from computer" goes straight to the native OS file
-                  // picker. The full file manager (recent + drives + folders)
-                  // is reachable via "File library" below.
-                  nativeFileInputRef.current?.click();
-                }}
-                role="button"
-                tabIndex={0}
-                aria-label={t(
-                  "fileSidebar.openFromComputer",
-                  "Open from computer",
-                )}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    nativeFileInputRef.current?.click();
-                  }
-                }}
+          <input
+            ref={nativeFileInputRef}
+            type="file"
+            multiple
+            // No `accept` filter - this picker feeds the global workspace,
+            // not a specific tool, so users may legitimately upload PNGs,
+            // ZIPs, etc. for the convert/merge/extract tools to handle.
+            style={{ display: "none" }}
+            onChange={handleNativeFilePick}
+            data-testid="file-input"
+          />
+
+          {/* Global actions live in quick navigation while expanded. Library-only
+              actions still belong here; the collapsed rail retains all controls. */}
+          <NavSurface
+            className="file-sidebar-controls"
+            hidden={!collapsed && !extraActions?.length}
+          >
+            {collapsed && (
+              <Tooltip
+                label={t("fileSidebar.openFromComputer", "Open from computer")}
+                position="right"
+                withinPortal
+                disabled={!collapsed}
               >
-                <UploadFileIcon className="file-sidebar-action-icon" />
-                {!collapsed && (
-                  <span className="file-sidebar-action-label sidebar-content-fade">
-                    {t("fileSidebar.openFromComputer", "Open from computer")}
-                  </span>
-                )}
-              </div>
-            </Tooltip>
+                <div
+                  className="file-sidebar-action-row"
+                  data-testid="files-rail-button"
+                  onClick={() => {
+                    // "Open from computer" goes straight to the native OS file
+                    // picker. The full file manager (recent + drives + folders)
+                    // is reachable via "File library" below.
+                    nativeFileInputRef.current?.click();
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={t(
+                    "fileSidebar.openFromComputer",
+                    "Open from computer",
+                  )}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      nativeFileInputRef.current?.click();
+                    }
+                  }}
+                >
+                  <Icon name="file-up" className="file-sidebar-action-icon" />
+                  {!collapsed && (
+                    <span className="file-sidebar-action-label sidebar-content-fade">
+                      {t("fileSidebar.openFromComputer", "Open from computer")}
+                    </span>
+                  )}
+                </div>
+              </Tooltip>
+            )}
 
             {extraActions?.map((action) => (
               <React.Fragment key={action.label}>
@@ -1117,7 +1111,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
               </React.Fragment>
             ))}
 
-            {!shouldHideGoogleDrive && (
+            {collapsed && !shouldHideGoogleDrive && (
               <Tooltip
                 label={
                   !isGoogleDriveEnabled
@@ -1147,13 +1141,16 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   }
                 >
                   <div className="file-sidebar-cloud-icon-wrapper">
-                    <GoogleDriveIcon
+                    <Icon
+                      name="googledrive"
+                      colorless
+                      size={18}
                       className="file-sidebar-cloud-icon-gray"
-                      style={{ color: "var(--c-text-muted)" }}
                     />
                     {isGoogleDriveEnabled && (
-                      <GoogleDriveIcon
-                        colored
+                      <Icon
+                        name="googledrive"
+                        size={18}
                         className="file-sidebar-cloud-icon-color"
                       />
                     )}
@@ -1168,7 +1165,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             )}
 
             {/* Watched Folders entry */}
-            {WATCHED_FOLDERS_ENABLED && (
+            {collapsed && WATCHED_FOLDERS_ENABLED && (
               <div
                 className="file-sidebar-action-row"
                 data-testid="watchedFolders-button"
@@ -1184,7 +1181,10 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     : undefined
                 }
               >
-                <FolderSpecialIcon className="file-sidebar-action-icon" />
+                <Icon
+                  name="folder-bookmark"
+                  className="file-sidebar-action-icon"
+                />
                 {!collapsed && (
                   <span className="file-sidebar-action-label sidebar-content-fade">
                     {t("watchedFolders.sidebarTitle", "Watched Folders")}
@@ -1226,16 +1226,35 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                       )}
                       data-testid="open-files-page"
                     >
-                      <OpenInFullIcon sx={{ fontSize: "1rem" }} />
+                      <Icon name="maximize-2" size={"1rem"} />
                     </ActionIcon>
+                    {isGoogleDriveEnabled && (
+                      <ActionIcon
+                        variant="quiet"
+                        className="file-sidebar-section-btn file-sidebar-section-btn-drive"
+                        onClick={handleGoogleDriveClick}
+                        title={t(
+                          "fileSidebar.googleDrive",
+                          "Open from Google Drive",
+                        )}
+                        aria-label={t(
+                          "fileSidebar.googleDrive",
+                          "Open from Google Drive",
+                        )}
+                        data-testid="google-drive-button"
+                      >
+                        <Icon name="googledrive" size={16} />
+                      </ActionIcon>
+                    )}
                     <ActionIcon
                       variant="quiet"
                       className="file-sidebar-section-btn file-sidebar-section-btn-add"
+                      data-testid="pdf-library-add-files"
                       onClick={() => nativeFileInputRef.current?.click()}
                       title={t("fileSidebar.addFiles", "Add files")}
                       aria-label={t("fileSidebar.addFiles", "Add files")}
                     >
-                      <AddIcon sx={{ fontSize: "1rem" }} />
+                      <Icon name="plus" size={"1rem"} />
                     </ActionIcon>
                   </div>
 
@@ -1273,9 +1292,9 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                                       aria-hidden="true"
                                     >
                                       {group.icon && (
-                                        <LocalIcon
-                                          icon={group.icon}
-                                          width="1.05rem"
+                                        <Icon
+                                          name={group.icon}
+                                          size="1.05rem"
                                           className="file-sidebar-group-icon"
                                           style={
                                             group.color
@@ -1318,9 +1337,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                             className="file-sidebar-view-all"
                             onClick={() => navActions.setWorkbench("myFiles")}
                             rightSection={
-                              <KeyboardArrowRightIcon
-                                sx={{ fontSize: "1rem" }}
-                              />
+                              <Icon name="chevron-right" size={"1rem"} />
                             }
                           >
                             {t(

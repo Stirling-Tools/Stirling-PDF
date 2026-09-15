@@ -40,8 +40,16 @@
   gap: 0.5rem;
 }
 
+.portal-routing__condition {
+  display: flex;
+  flex: 2 1 22rem;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 /* The Mantine wrappers are not .sui-input, so each is named rather than relying on one selector. */
 .portal-routing__row .mantine-MultiSelect-root,
+.portal-routing__row .mantine-InputWrapper-root,
 .portal-routing__row .mantine-Select-root {
   flex: 1 1 11rem;
   min-width: 9rem;

@@ -5,6 +5,7 @@ import {
 } from "@app/tests/helpers/ui-helpers";
 
 test.describe("18. Cookie Preferences", () => {
+  test.use({ stubOptions: { enableAnalytics: true } });
   test.describe("18.1 Cookie Banner", () => {
     test("should open and configure cookie preferences from Settings → Legal", async ({
       page,
@@ -26,7 +27,6 @@ test.describe("18. Cookie Preferences", () => {
       const cookieButton = page.locator("#cookieBanner").first();
       await expect(cookieButton).toBeVisible({ timeout: 10000 });
 
-      // The consent library lazy-loads when the Legal section mounts
       await page.waitForFunction(
         () => (window as unknown as { CookieConsent?: unknown }).CookieConsent,
         { timeout: 10000 },
