@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useLocation } from "react-router-dom";
 import {
   Box,
   Divider,
@@ -18,7 +17,6 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 import { withBasePath } from "@app/constants/app";
 import { Z_INDEX_SIGN_IN_MODAL } from "@app/styles/zIndex";
-import { isStartupRoute } from "@app/constants/routes";
 
 const ACCEPTED_STORAGE_KEY = "loginAgreementAccepted";
 
@@ -77,8 +75,6 @@ export default function LoginAgreementModal({
   const { t, i18n } = useTranslation();
   const { config } = useAppConfig();
   const { user, signOut } = useAuth();
-  const { pathname } = useLocation();
-  const eligibleRoute = isStartupRoute(pathname);
 
   const [opened, setOpened] = useState(false);
   const [resolved, setResolved] = useState(false);
@@ -87,7 +83,6 @@ export default function LoginAgreementModal({
 
   useEffect(() => {
     if (!config) return;
-    if (!eligibleRoute) return;
     setResolved(false);
     setOpened(false);
 
@@ -133,7 +128,7 @@ export default function LoginAgreementModal({
     return () => {
       cancelled = true;
     };
-  }, [config, i18n.language, user?.id, eligibleRoute]);
+  }, [config, i18n.language, user?.id]);
 
   const handleAccept = () => {
     try {
@@ -163,7 +158,6 @@ export default function LoginAgreementModal({
     }
   };
 
-  if (!eligibleRoute) return null;
   if (!opened) return resolved ? <>{children}</> : null;
 
   return (

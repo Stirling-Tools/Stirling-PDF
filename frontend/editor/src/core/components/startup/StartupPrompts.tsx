@@ -1,7 +1,5 @@
-import { useLocation } from "react-router-dom";
 import { useAuth } from "@app/auth/UseSession";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-import { isStartupRoute } from "@app/constants/routes";
 import { StartupSetup } from "@app/components/startup/StartupSetup";
 import LoginAgreementModal from "@app/components/shared/LoginAgreementModal";
 import { useCookieConsentInitialization } from "@app/hooks/useCookieConsentInitialization";
@@ -15,18 +13,12 @@ function StartupTracking() {
   return null;
 }
 
-/** Mount once inside each app's auth, config and theme providers, outside editor tours. */
+/** Mount once in each app's main routes, below its auth, config and theme providers. */
 export function StartupPrompts() {
-  const { pathname } = useLocation();
   const { config } = useAppConfig();
   const { user, loading } = useAuth();
 
-  if (
-    !isStartupRoute(pathname) ||
-    !config ||
-    loading ||
-    (config.enableLogin !== false && !user)
-  ) {
+  if (!config || loading || (config.enableLogin !== false && !user)) {
     return null;
   }
 

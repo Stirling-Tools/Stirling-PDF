@@ -16,6 +16,7 @@ import {
   type AppConfig,
 } from "@app/contexts/AppConfigContext";
 import { AppLayout } from "@app/components/AppLayout";
+import { AppRoot } from "@app/components/layout/AppRoot";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import type StaticOnboardingSlide from "@app/components/onboarding/StaticOnboardingSlide";
 import type { AccountData } from "@app/services/accountService";
@@ -32,6 +33,9 @@ const h = vi.hoisted(() => ({
   logout: vi.fn(),
   tracking: vi.fn(),
 }));
+vi.mock("@app/pages/HomePage", () => ({ default: () => null }));
+vi.mock("@app/pages/SettingsPage", () => ({ default: () => null }));
+vi.mock("@app/components/docs/DocsPage", () => ({ default: () => null }));
 vi.mock("@app/components/shared/NavigationWarningModal", () => ({
   default: () => null,
 }));
@@ -97,6 +101,7 @@ function TestApp({ path, client }: { path: string; client: QueryClient }) {
           <AppConfigProvider>
             <BannerProvider>
               <AppLayout>
+                <AppRoot />
                 <Navigation />
               </AppLayout>
             </BannerProvider>
@@ -172,6 +177,18 @@ describe("startup prompts", () => {
     "/settings/account",
     "/processor",
     "/processor/policies",
+    "/share",
+    "/share/",
+    "/share/token/extra",
+    "/invite",
+    "/workflow/sign",
+    "/mobile-scanner/extra",
+    "/login/extra",
+    "/auth",
+    "/forgot-password",
+    "/reset-password",
+    "/oauth/consent",
+    "/link",
   ])("requires the password change on direct entry to %s", async (path) => {
     account.changeCredsFlag = true;
     renderAt(path);
@@ -183,31 +200,6 @@ describe("startup prompts", () => {
     expect(h.logout).toHaveBeenCalledWith(
       expect.objectContaining({ signOut: h.auth.signOut }),
     );
-  });
-
-  it.each([
-    "/login",
-    "/auth/callback",
-    "/auth/reset",
-    "/invite/token",
-    "/oauth/consent",
-    "/share/token",
-    "/workflow/sign/token",
-    "/mobile-scanner",
-    "/mobile-sign",
-    "/account-link/callback",
-    "/link",
-  ])("does not start setup or consent on %s", async (path) => {
-    account.changeCredsFlag = true;
-    renderAt(path);
-    await act(async () => {});
-    expect(
-      h.get.mock.calls.some(
-        ([url]) => url === "/api/v1/proprietary/ui-data/account",
-      ),
-    ).toBe(false);
-    expect(h.tracking).not.toHaveBeenCalled();
-    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("does not let tour bypass or completed onboarding suppress account setup", async () => {
@@ -233,37 +225,42 @@ describe("startup prompts", () => {
     ).toBeVisible();
   });
 
-  it("sequences analytics, MFA, agreement and cookie consent", async () => {
-    config.enableAnalytics = null;
-    account.mfaRequired = true;
-    disclaimer = {
-      enabled: true,
-      showInAnonymousMode: false,
-      content: "Company agreement",
-      format: "markdown",
-    };
-    renderAt("/processor");
-    expect(
-      await screen.findByRole("dialog", { name: "analytics-choice" }),
-    ).toBeVisible();
-    expect(screen.queryByText("Company agreement")).not.toBeInTheDocument();
-    fireEvent.click(screen.getByText("Decline analytics"));
-    expect(
-      await screen.findByRole("dialog", { name: "mfa-setup" }),
-    ).toBeVisible();
-    expect(h.post).toHaveBeenCalledWith(
-      "/api/v1/settings/update-enable-analytics",
-      expect.any(FormData),
-    );
-    expect((h.post.mock.calls[0][1] as FormData).get("enabled")).toBe("false");
-    fireEvent.click(screen.getByText("Finish MFA"));
-    expect(await screen.findByText("Company agreement")).toBeVisible();
-    expect(h.tracking).not.toHaveBeenCalled();
-    fireEvent.click(
-      screen.getByRole("button", { name: "loginAgreementAccept" }),
-    );
-    await waitFor(() => expect(h.tracking).toHaveBeenCalled());
-  });
+  it.each(["/processor", "/share"])(
+    "sequences analytics, MFA, agreement and cookie consent on %s",
+    async (path) => {
+      config.enableAnalytics = null;
+      account.mfaRequired = true;
+      disclaimer = {
+        enabled: true,
+        showInAnonymousMode: false,
+        content: "Company agreement",
+        format: "markdown",
+      };
+      renderAt(path);
+      expect(
+        await screen.findByRole("dialog", { name: "analytics-choice" }),
+      ).toBeVisible();
+      expect(screen.queryByText("Company agreement")).not.toBeInTheDocument();
+      fireEvent.click(screen.getByText("Decline analytics"));
+      expect(
+        await screen.findByRole("dialog", { name: "mfa-setup" }),
+      ).toBeVisible();
+      expect(h.post).toHaveBeenCalledWith(
+        "/api/v1/settings/update-enable-analytics",
+        expect.any(FormData),
+      );
+      expect((h.post.mock.calls[0][1] as FormData).get("enabled")).toBe(
+        "false",
+      );
+      fireEvent.click(screen.getByText("Finish MFA"));
+      expect(await screen.findByText("Company agreement")).toBeVisible();
+      expect(h.tracking).not.toHaveBeenCalled();
+      fireEvent.click(
+        screen.getByRole("button", { name: "loginAgreementAccept" }),
+      );
+      await waitFor(() => expect(h.tracking).toHaveBeenCalled());
+    },
+  );
 
   it("keeps the analytics prompt open when saving fails", async () => {
     config.enableAnalytics = null;
