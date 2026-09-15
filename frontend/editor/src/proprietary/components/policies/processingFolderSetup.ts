@@ -36,6 +36,9 @@ export function presetProcessingRecord(
         id: entry.policy.state.backendId ?? entry.category.id,
         enabled: entry.policy.state.status === "active",
         steps: entry.policy.steps,
+        categoryId: entry.category.id,
+        outputIds: entry.policy.state.outputIds,
+        routingRules: entry.policy.state.routingRules,
       }
     : undefined;
 }
@@ -77,14 +80,32 @@ export function folderSetupEntry(
   existing?: ProcessingRecordSummary,
 ): CatalogueEntry {
   const record = existing ?? presetProcessingRecord(preset);
-  const savedTools =
-    record?.steps.flatMap((step) => {
-      const tool = policyStepFromWire(step);
-      return tool ? [tool] : [];
-    }) ?? [];
+  if (!record) return preset;
+  if (!existing) {
+    const canonical = preset.config.defaultOperations.map(
+      (tool) => tool.toolId,
+    );
+    const saved = record.steps.map((step) => policyStepFromWire(step)?.toolId);
+    const expected = canonical.filter((id) => saved.includes(id));
+    if (
+      saved.length === expected.length &&
+      saved.every((id, index) => id === expected[index])
+    )
+      return preset;
+  }
+  const savedTools = record.steps.flatMap((step) => {
+    const tool = policyStepFromWire(step);
+    return tool ? [tool] : [];
+  });
   const savedIds = new Set(savedTools.map((tool) => tool.toolId));
   const matchingPreset =
-    savedTools.length > 0
+    (record.categoryId
+      ? POLICY_CATEGORIES.find((category) => category.id === record.categoryId)
+      : undefined) ??
+    (record.routingRules?.length || record.outputIds?.length
+      ? POLICY_CATEGORIES.find((category) => category.id === "routing")
+      : undefined) ??
+    (savedTools.length > 0
       ? POLICY_CATEGORIES.find((preset) =>
           savedTools.every((tool) =>
             POLICY_CONFIG[preset.id].defaultOperations.some(
@@ -92,10 +113,9 @@ export function folderSetupEntry(
             ),
           ),
         )
-      : undefined;
+      : undefined);
   const category = (existing ? matchingPreset : undefined) ?? preset.category;
   const config = POLICY_CONFIG[category.id];
-  if (!record) return preset;
   const savedConfig = {
     ...config,
     defaultOperations: [
@@ -120,6 +140,9 @@ export function folderSetupEntry(
         scopeTypes: [],
         reviewerEmail: "",
         fieldValues: {},
+        ...(!existing ? preset.policy?.state : undefined),
+        outputIds: record.outputIds,
+        routingRules: record.routingRules,
       },
       steps: record.steps,
       stats: { enforced: 0, dataProcessed: "", activeFor: "" },

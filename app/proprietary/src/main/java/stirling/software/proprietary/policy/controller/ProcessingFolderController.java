@@ -51,9 +51,13 @@ import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.FolderOutputSink;
+import stirling.software.proprietary.policy.routing.ClassificationStepPlanner;
+import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
@@ -107,6 +111,7 @@ public class ProcessingFolderController {
     private final FileStorageService fileStorageService;
     private final PolicyAccessGuard policyAccessGuard;
     private final FolderAccessGuard folderAccessGuard;
+    private final SourceAccessGuard sourceAccessGuard;
     private final ApplicationProperties applicationProperties;
 
     public record ProcessingFolderView(
@@ -116,7 +121,9 @@ public class ProcessingFolderController {
             String name,
             boolean enabled,
             List<PipelineStep> steps,
-            Map<String, Object> output) {}
+            Map<String, Object> output,
+            List<String> outputIds,
+            List<RoutingRule> routingRules) {}
 
     /**
      * Create/update payload: null id creates, present id updates. Exactly one of {@code folderId}
@@ -128,7 +135,20 @@ public class ProcessingFolderController {
             String directory,
             Boolean enabled,
             List<PipelineStep> steps,
-            Map<String, Object> output) {}
+            Map<String, Object> output,
+            List<String> outputIds,
+            List<RoutingRule> routingRules) {
+        /** Omitted destinations preserve the saved routing configuration on a pause or resume. */
+        public SaveProcessingFolderRequest(
+                String id,
+                String folderId,
+                String directory,
+                Boolean enabled,
+                List<PipelineStep> steps,
+                Map<String, Object> output) {
+            this(id, folderId, directory, enabled, steps, output, null, null);
+        }
+    }
 
     /** The server's Downloads directory and PDF count; the browser cannot see machine paths. */
     public record DownloadsSuggestion(
@@ -208,6 +228,17 @@ public class ProcessingFolderController {
             sweepBehindTheResponse(existing);
             return ResponseEntity.accepted().body(toView(existing));
         }
+        List<String> outputIds =
+                request.outputIds() != null
+                        ? request.outputIds()
+                        : existing == null ? List.of() : existing.outputIds();
+        List<RoutingRule> routingRules =
+                request.routingRules() != null
+                        ? request.routingRules()
+                        : existing == null ? List.of() : existing.routingRules();
+        Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
+                .distinct()
+                .forEach(this::requireAccessibleDestination);
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
 
         // Held for rollback: the source is written before the policy validates, and a rejected
@@ -232,11 +263,14 @@ public class ProcessingFolderController {
                                 policyAccessGuard.ownerForNewPolicy(),
                                 policyAccessGuard.teamForNewPolicy()));
         Policy policy =
-                new Policy(
+                ClassificationStepPlanner.ensureClassificationFirst(
+                        new Policy(
                                 existing == null ? null : existing.id(),
                                 "Processing folder: " + name,
                                 policyAccessGuard.ownerForNewPolicy(),
                                 request.enabled() == null || request.enabled(),
+                                false,
+                                "",
                                 // Disk directories watch, so arrivals process on their
                                 // own; storage-backed folders stay manual for now.
                                 List.of(
@@ -247,10 +281,11 @@ public class ProcessingFolderController {
                                                         : null)),
                                 request.steps() == null ? List.of() : request.steps(),
                                 outputSpecFor(request, folder),
-                                List.of(),
+                                outputIds,
                                 policyAccessGuard.teamForNewPolicy(),
-                                null)
-                        .withSurface(SURFACE);
+                                null,
+                                SURFACE,
+                                routingRules));
         try {
             policyValidator.validate(policy);
         } catch (IllegalArgumentException e) {
@@ -857,6 +892,29 @@ public class ProcessingFolderController {
      * claim the same way, so a sweep never mistakes the folder's own output for new work. Disk
      * output is what works on an install with no accounts and no file storage.
      */
+    private void requireAccessibleDestination(String outputId) {
+        Source destination =
+                sourceStore
+                        .get(outputId)
+                        .filter(sourceAccessGuard::canAccess)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.BAD_REQUEST,
+                                                "Unknown or inaccessible output source: "
+                                                        + outputId));
+        if (EditorSource.TYPE.equals(destination.type())) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
+        }
+        // Validate on the request thread: connection checks need the caller's authentication.
+        try {
+            policyValidator.validateOutput(destination.toOutputSpec());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
     private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
@@ -890,6 +948,8 @@ public class ProcessingFolderController {
                 policy.name(),
                 policy.enabled(),
                 policy.steps(),
-                output);
+                output,
+                policy.outputIds(),
+                policy.routingRules());
     }
 }

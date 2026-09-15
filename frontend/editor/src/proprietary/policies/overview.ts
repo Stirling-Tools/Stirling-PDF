@@ -28,6 +28,8 @@ function decoratePolicy(
   const status: PolicyStatus = decoded.enabled ? "active" : "paused";
   const state: PolicyState = {
     configured: true,
+    outputIds: decoded.outputIds,
+    routingRules: decoded.routingRules,
     status,
     required: decoded.required,
     extraOptions: decoded.extraOptions,

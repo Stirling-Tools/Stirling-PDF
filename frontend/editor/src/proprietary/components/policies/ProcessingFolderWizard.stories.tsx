@@ -116,3 +116,42 @@ export const ConfiguredPoliciesFirst: Story = {
     ).catalogue,
   },
 };
+
+export const Routing: Story = {
+  args: {
+    initialFolder: invoices,
+    destinations: [
+      { id: "finance", name: "Finance" },
+      { id: "archive", name: "Archive" },
+    ],
+    catalogue: assemblePolicies(
+      [
+        {
+          id: "routing-preset",
+          name: "Routing",
+          enabled: true,
+          inputs: [],
+          output: { type: "inline", options: { categoryId: "routing" } },
+          steps: [
+            {
+              operation: "/api/v1/ai/tools/classify-and-label",
+              parameters: {},
+            },
+          ],
+          outputIds: ["archive"],
+          routingRules: [
+            {
+              condition: {
+                input: { source: "document", field: "classification.labels" },
+                operator: "matches-any",
+                values: ["invoice"],
+              },
+              outputId: "finance",
+            },
+          ],
+        },
+      ],
+      [],
+    ).catalogue,
+  },
+};

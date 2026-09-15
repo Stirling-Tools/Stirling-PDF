@@ -1,3 +1,9 @@
+import {
+  fetchPolicySources,
+  routingDestinations,
+  type PolicySource,
+} from "@app/services/policySources";
+import { usePolicyOutputModes } from "@app/hooks/usePolicyOutputModes";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -22,6 +28,7 @@ import {
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
 import { ProcessingFolderWizard } from "@app/components/policies/ProcessingFolderWizard";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import apiClient from "@app/services/apiClient";
 import { assemblePolicies } from "@app/policies/overview";
 import type { WirePolicy } from "@app/policies/types";
@@ -44,6 +51,12 @@ export function ProcessingFolderSetupFlow({
   const serverDisabledReason = useServerFolderBlock();
   const aiEngineEnabled = useAiEngineEnabled();
   const navigate = useNavigate();
+  const outputModes = usePolicyOutputModes();
+  const [sources, setSources] = useState<{
+    data: PolicySource[];
+    loading: boolean;
+    error: string | null;
+  }>({ data: [], loading: true, error: null });
   const [reload, setReload] = useState(0);
   const [presets, setPresets] = useState(() => ({
     catalogue: assemblePolicies([], []).catalogue,
@@ -71,6 +84,26 @@ export function ProcessingFolderSetupFlow({
             loading: false,
             error: extractErrorMessage(error),
           }));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [reload]);
+
+  useEffect(() => {
+    let cancelled = false;
+    setSources((current) => ({ ...current, loading: true, error: null }));
+    void fetchPolicySources()
+      .then((data) => {
+        if (!cancelled) setSources({ data, loading: false, error: null });
+      })
+      .catch((error: unknown) => {
+        if (!cancelled)
+          setSources({
+            data: [],
+            loading: false,
+            error: extractErrorMessage(error),
+          });
       });
     return () => {
       cancelled = true;
@@ -105,7 +138,13 @@ export function ProcessingFolderSetupFlow({
       id: existing?.id,
       ...(onDisk
         ? { directory: selected.directory }
-        : { folderId: selected.id, output: { mode: "new_version" } }),
+        : { folderId: selected.id }),
+      output: {
+        mode: "new_version",
+        categoryId: result.extraOptions?.categoryId,
+      },
+      outputIds: result.outputIds ?? [],
+      routingRules: result.routingRules ?? [],
       enabled: existing ? existing.enabled : true,
       steps: mergeFolderSteps(existing, result.steps).map((step) => ({
         ...step,
@@ -126,6 +165,13 @@ export function ProcessingFolderSetupFlow({
       initialFolder={folder}
       aiEngineEnabled={aiEngineEnabled}
       catalogue={presets.catalogue}
+      destinations={routingDestinations(sources.data, outputModes)}
+      destinationsLoading={sources.loading}
+      destinationsError={sources.error}
+      onCreateDestination={() => {
+        onClose();
+        navigate(`${PORTAL_BASENAME}/sources/new`);
+      }}
       folders={folders.folders}
       loading={folders.loading || processing.loading || presets.loading}
       loadError={processing.loadError ?? presets.error}

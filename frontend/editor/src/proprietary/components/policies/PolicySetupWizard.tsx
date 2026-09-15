@@ -1,3 +1,4 @@
+import { isConditionComplete } from "@app/conditions/validation";
 import { classificationCondition } from "@app/data/classificationConditions";
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,8 +62,8 @@ interface PolicySetupWizardProps {
   /** Whether a Purview tenant is connected; gates the Purview-backed steps. */
   hasPurviewConnection?: boolean;
   /**
-   * Renders the routing category's source, routes and fallback destination. Portal-only: it reads
-   * the saved Sources. Without it a routing policy shows its steps and nothing to route with.
+   * Renders the routing category's source, routes and fallback destination. Folder hosts supply
+   * their own input selection and render only the destinations here.
    */
   routingConfig?: (props: {
     value: RoutingSetup;
@@ -267,10 +268,7 @@ interface PolicySetupState {
   error: string | null;
 }
 
-function initialWizardState(
-  entry: CatalogueEntry,
-  folderSetup: boolean,
-): PolicySetupState {
+function initialWizardState(entry: CatalogueEntry): PolicySetupState {
   const { category, policy } = entry;
   const seeded = seedTools(entry);
   return {
@@ -285,9 +283,9 @@ function initialWizardState(
         { condition: classificationCondition(), outputId: "" },
       ],
     },
-    // Classification has no toggle in the portal, so its only tool must remain enabled.
+    // Classification has no toggle, so its only tool must remain enabled.
     tools:
-      !folderSetup && category.id === "classification"
+      category.id === "classification"
         ? seeded.map((tool) => ({ ...tool, enabled: true }))
         : seeded,
     required: policy?.state.required ?? true,
@@ -374,18 +372,16 @@ function PolicySetupWizardBody({
 
   const { category, config, policy } = entry;
   const isEdit = policy != null;
-  const isClassification = !folderSetup && category.id === "classification";
+  const isClassification = category.id === "classification";
   const isRouting = category.id === "routing";
-  const [form, setForm] = useState(() =>
-    initialWizardState(entry, folderSetup),
-  );
+  const [form, setForm] = useState(() => initialWizardState(entry));
   const { routing, tools, required, submitting, error } = form;
   // Reset before rendering the new preset, preserving the modal and its focus trap.
   if (
     form.categoryId !== category.id ||
     form.policyId !== policy?.state.backendId
   ) {
-    setForm(initialWizardState(entry, folderSetup));
+    setForm(initialWizardState(entry));
   }
   const fieldValues = resolveFieldValues(entry);
   const scopeTypes = policy?.state.scopeTypes ?? [];
@@ -443,6 +439,8 @@ function PolicySetupWizardBody({
     );
     return {
       required,
+      outputIds: policy?.state.outputIds,
+      routingRules: policy?.state.routingRules,
       // Preserve stored options this wizard has no UI for rather than wiping them on save;
       // the builder is where those are edited.
       extraOptions: policy?.state.extraOptions,
@@ -475,7 +473,7 @@ function PolicySetupWizardBody({
   }
 
   async function submit() {
-    if (submitting) return;
+    if (submitting || !routingComplete) return;
     if (enabledTools.length === 0) {
       setForm((current) => ({
         ...current,
@@ -497,7 +495,17 @@ function PolicySetupWizardBody({
     }
   }
 
-  const canSubmit = enabledTools.length > 0;
+  const routingComplete =
+    !isRouting ||
+    Boolean(
+      (folderSetup || routing.sourceId) &&
+      routing.outputIds.length === 1 &&
+      routing.outputIds[0] &&
+      routing.routingRules.every(
+        (rule) => rule.outputId && isConditionComplete(rule.condition),
+      ),
+    );
+  const canSubmit = enabledTools.length > 0 && routingComplete;
   const content = (
     <Fragment key={`${category.id}:${policy?.state.backendId ?? "new"}`}>
       {error && !folderSetup && (
@@ -510,12 +518,14 @@ function PolicySetupWizardBody({
 
       {isClassification && (
         <div className="portal-policies__wizard-section">
-          <p className="portal-policies__wizard-desc">
-            {t(
-              "portal.policies.wizard.classification.description",
-              "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team.",
-            )}
-          </p>
+          {!folderSetup && (
+            <p className="portal-policies__wizard-desc">
+              {t(
+                "portal.policies.wizard.classification.description",
+                "Every uploaded document is classified against the built-in labels and tagged with the types that fit. The label set is shared across your whole team.",
+              )}
+            </p>
+          )}
           <h3 className="portal-policies__wizard-heading">
             {t(
               "portal.policies.wizard.classification.labelsHeading",
@@ -702,7 +712,7 @@ function PolicySetupWizardBody({
             style={{ marginLeft: "auto" }}
             onClick={submit}
             loading={submitting}
-            disabled={readOnly}
+            disabled={readOnly || !routingComplete}
           >
             {isEdit
               ? t("portal.policies.wizard.actions.saveChanges")

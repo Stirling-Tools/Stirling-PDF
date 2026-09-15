@@ -9,6 +9,10 @@ import {
   type PolicySetupResult,
   type CatalogueEntry,
 } from "@app/policies/catalog";
+import {
+  PolicyRoutingDestinations,
+  type RoutingDestination,
+} from "@app/components/policies/PolicyRoutingDestinations";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import {
   ProcessingFolderPicker,
@@ -34,6 +38,10 @@ export interface ProcessingFolderWizardProps extends Omit<
   initialFolder?: FolderRecord;
   aiEngineEnabled: boolean;
   catalogue: CatalogueEntry[];
+  destinations?: RoutingDestination[];
+  destinationsLoading?: boolean;
+  destinationsError?: string | null;
+  onCreateDestination?: () => void;
   recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
   /** Resolves a selection or creates its folder; must not enable processing. */
   resolveTarget: (target: ProcessingFolderTarget) => Promise<FolderRecord>;
@@ -50,6 +58,10 @@ export function ProcessingFolderWizard({
   initialFolder,
   aiEngineEnabled,
   catalogue,
+  destinations = [],
+  destinationsLoading = false,
+  destinationsError,
+  onCreateDestination,
   folders,
   canPickDirectory,
   serverDisabledReason,
@@ -74,12 +86,9 @@ export function ProcessingFolderWizard({
   const presets = useMemo(() => sortFolderPresets(catalogue), [catalogue]);
 
   function unavailableReason(preset: CatalogueEntry): string | null {
-    if (preset.category.comingSoon && !preset.policy)
-      return t("portal.policies.card.comingSoon");
+    if (preset.category.comingSoon) return t("portal.policies.card.comingSoon");
     if (preset.category.requiresAiEngine && !aiEngineEnabled)
       return t("portal.policies.card.requiresAiEngine");
-    if (preset.category.bindsOwnSource)
-      return t("processingFolders.setup.portalOnlyPreset");
     return null;
   }
 
@@ -134,7 +143,9 @@ export function ProcessingFolderWizard({
     !loading &&
     !loadError &&
     !presetBlocked &&
-    !unsupportedSteps,
+    !unsupportedSteps &&
+    (entry.category.id !== "routing" ||
+      (!destinationsLoading && !destinationsError)),
   );
   const stages: Stage[] = initialFolder
     ? ["processing", "review"]
@@ -149,6 +160,7 @@ export function ProcessingFolderWizard({
     if (target.kind !== "existing") setPickerVersion((version) => version + 1);
     await save(resolved, {
       ...result,
+      extraOptions: { ...result.extraOptions, categoryId: entry.category.id },
       steps: mergeFolderSteps(savedSteps, result.steps),
     });
   }
@@ -166,6 +178,29 @@ export function ProcessingFolderWizard({
       onSubmit={submit}
       enforceControl={false}
       folderSetup
+      routingConfig={(props) => (
+        <>
+          {destinationsError && (
+            <Banner
+              tone="danger"
+              description={destinationsError}
+              action={
+                onRetry && (
+                  <Button onClick={onRetry}>
+                    {t("processingFolders.setup.retry")}
+                  </Button>
+                )
+              }
+            />
+          )}
+          <PolicyRoutingDestinations
+            {...props}
+            destinations={destinations}
+            onCreateDestination={onCreateDestination}
+            compact
+          />
+        </>
+      )}
     >
       {({ content, steps, submit: confirm, submitting, canSubmit, error }) => (
         <Modal

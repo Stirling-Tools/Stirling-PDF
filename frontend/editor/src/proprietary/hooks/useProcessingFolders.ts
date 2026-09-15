@@ -24,20 +24,34 @@ import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
   MountedFileState,
-  ProcessingRecordSummary,
+  ProcessingRecordSummary as CoreProcessingRecordSummary,
   ProcessingFolderState,
-  ProcessingFoldersApi,
+  ProcessingFoldersApi as CoreProcessingFoldersApi,
   ProcessingRunInfo,
 } from "@core/hooks/useProcessingFolders";
 
 // Consumers import the contract's types from @app, which resolves here — re-export them.
 export type {
   MountedFileState,
-  ProcessingRecordSummary,
   ProcessingFolderState,
-  ProcessingFoldersApi,
   ProcessingRunInfo,
 } from "@core/hooks/useProcessingFolders";
+
+import type { WireRoutingRule } from "@app/policies/types";
+
+/** Processing configuration retained when copying or reopening a template. */
+export interface ProcessingRecordSummary extends CoreProcessingRecordSummary {
+  categoryId?: string;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
+}
+
+export interface ProcessingFoldersApi extends Omit<
+  CoreProcessingFoldersApi,
+  "recordFor"
+> {
+  recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
+}
 
 /** One shared list for every consumer: the files page calls this once per folder row, so
  *  per-instance state would mean a request per row and stale siblings after a mutation. */
@@ -129,6 +143,12 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       return {
         id: record.id,
         enabled: record.enabled,
+        categoryId:
+          typeof record.output.categoryId === "string"
+            ? record.output.categoryId
+            : undefined,
+        outputIds: record.outputIds,
+        routingRules: record.routingRules,
         steps: record.steps.map((step) => ({
           operation: step.operation,
           parameters: step.parameters ?? {},

@@ -14,6 +14,8 @@ import {
 import { createFolderId, type FolderRecord } from "@app/types/folder";
 
 import { assemblePolicies } from "@app/policies/overview";
+import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
+import { classificationCondition } from "@app/data/classificationConditions";
 import { POLICY_CATEGORIES } from "@app/policies/catalog";
 
 vi.mock("@app/components/policies/useFolderPickerBack", () => ({
@@ -66,6 +68,115 @@ function createServerFolder() {
 }
 
 describe("ProcessingFolderWizard", () => {
+  it.each(["security", "classification", "compliance"])(
+    "submits the same default steps as the Processor %s template",
+    async (categoryId) => {
+      const catalogue = assemblePolicies([], []).catalogue;
+      const entry = catalogue.find(
+        (preset) => preset.category.id === categoryId,
+      )!;
+      const capture = vi.fn();
+      const template = render(
+        <MantineProvider>
+          <PolicySetupWizard
+            entry={entry}
+            onClose={() => {}}
+            onSubmit={vi.fn()}
+          >
+            {({ content, steps }) => (
+              <>
+                {content}
+                <button onClick={() => capture(steps)}>Capture template</button>
+              </>
+            )}
+          </PolicySetupWizard>
+        </MantineProvider>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Capture template" }));
+      const expectedSteps = capture.mock.calls[0][0];
+      template.unmount();
+      const props = renderWizard({ initialFolder: folder, catalogue });
+      fireEvent.click(
+        screen.getByRole("button", { name: entry.category.label }),
+      );
+      fireEvent.click(button("review"));
+      fireEvent.click(button("enable"));
+      await waitFor(() =>
+        expect(props.save).toHaveBeenCalledWith(
+          folder,
+          expect.objectContaining({ steps: expectedSteps }),
+        ),
+      );
+    },
+  );
+
+  it("keeps configured routing rules and fallback when applying the template to a folder", async () => {
+    const routingRules = [
+      { condition: classificationCondition(["invoice"]), outputId: "finance" },
+    ];
+    const catalogue = assemblePolicies(
+      [
+        {
+          id: "saved-routing",
+          name: "Routing",
+          enabled: true,
+          inputs: [],
+          output: { type: "inline", options: { categoryId: "routing" } },
+          steps: [
+            {
+              operation: "/api/v1/ai/tools/classify-and-label",
+              parameters: {},
+            },
+          ],
+          outputIds: ["archive"],
+          routingRules,
+        },
+      ],
+      [],
+    ).catalogue;
+    const props = renderWizard({
+      initialFolder: folder,
+      catalogue,
+      destinations: [
+        { id: "finance", name: "Finance" },
+        { id: "archive", name: "Archive" },
+      ],
+    });
+    expect(
+      screen.getByRole("button", {
+        name: "portal.policies.categories.routing.label",
+      }),
+    ).toHaveAttribute("aria-pressed", "true");
+    expect(screen.queryByText("Watch")).toBeNull();
+    expect(button("review")).toBeEnabled();
+    fireEvent.click(button("review"));
+    fireEvent.click(button("enable"));
+    await waitFor(() =>
+      expect(props.save).toHaveBeenCalledWith(
+        folder,
+        expect.objectContaining({ outputIds: ["archive"], routingRules }),
+      ),
+    );
+  });
+
+  it("offers Routing but requires routes and a fallback before reviewing", () => {
+    renderWizard({
+      initialFolder: folder,
+      destinations: [{ id: "archive", name: "Archive" }],
+    });
+    const routing = screen.getByRole("button", {
+      name: "portal.policies.categories.routing.label",
+    });
+    expect(routing).toBeEnabled();
+    fireEvent.click(routing);
+    expect(button("review")).toBeDisabled();
+    expect(
+      screen.getByRole("textbox", {
+        name: "portal.pipelines.builder.routing.fallback",
+      }),
+    ).toBeVisible();
+  });
+
   it("goes back through visited folders and search without repeating the folder path below the list", () => {
     const child: FolderRecord = {
       ...folder,
