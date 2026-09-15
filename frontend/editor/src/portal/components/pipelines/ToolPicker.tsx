@@ -34,6 +34,8 @@ interface ToolPickerProps {
    * problem once the step is added.
    */
   precedingOutput?: ToolFormat;
+  /** Keeps an unavailable tool visible and explains why it cannot be added. */
+  unavailableReason?: (tool: ExecutableTool) => string | undefined;
 }
 
 /**
@@ -47,6 +49,7 @@ export function ToolPicker({
   operations = [],
   onPickOperation,
   precedingOutput,
+  unavailableReason,
 }: ToolPickerProps) {
   const { t } = useTranslation();
   const [query, setQuery] = useState("");
@@ -122,6 +125,7 @@ export function ToolPicker({
                 const incompatible = Boolean(
                   precedingOutput && !acceptsPreceding(tool),
                 );
+                const unavailable = unavailableReason?.(tool);
                 return (
                   <Button
                     key={tool.toolId}
@@ -134,6 +138,7 @@ export function ToolPicker({
                     ]
                       .filter(Boolean)
                       .join(" ")}
+                    disabled={Boolean(unavailable)}
                     onClick={() => onPick(tool)}
                     leftSection={
                       <span
@@ -153,6 +158,11 @@ export function ToolPicker({
                           {t("portal.pipelines.builder.cannotFollow", {
                             produced: getToolFormatLabel(t, precedingOutput),
                           })}
+                        </span>
+                      )}
+                      {unavailable && (
+                        <span className="portal-pipelines__picker-note">
+                          {unavailable}
                         </span>
                       )}
                     </span>

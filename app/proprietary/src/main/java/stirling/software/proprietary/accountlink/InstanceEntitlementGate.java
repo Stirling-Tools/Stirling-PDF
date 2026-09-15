@@ -17,7 +17,7 @@ import stirling.software.common.service.LicenseServiceInterface;
  * <ol>
  *   <li>Flag off → always allow (feature inert).
  *   <li>Manual tool → always allow (manual tools are free, never metered).
- *   <li>Active Enterprise licence → allow without consuming credits.
+ *   <li>Enterprise license → always allow, with local-only metering.
  *   <li>Billable + not linked → {@code FREE_TIER} while units remain, else {@code
  *       FREE_TIER_EXHAUSTED}. Linking buys a further grant, it does not activate the feature.
  *   <li>Billable + linked + entitlement unknown (unreachable) → <b>fail open</b>, allow — unless
