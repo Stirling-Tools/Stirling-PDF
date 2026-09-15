@@ -120,7 +120,7 @@ export function isToolFreshnessAcknowledged(
 }
 
 // Records the badge the tool is currently showing as seen. No-ops when nothing is
-// on screen — including while appVersion is unknown — so an unseen badge is never
+// on screen - including while appVersion is unknown - so an unseen badge is never
 // consumed.
 export function acknowledgeToolFreshness(
   toolId: string,
