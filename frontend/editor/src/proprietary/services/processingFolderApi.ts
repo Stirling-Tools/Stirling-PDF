@@ -96,21 +96,6 @@ export function classificationDefaults(
   };
 }
 
-export interface DownloadsSuggestion {
-  directory: string;
-  available: boolean;
-  pdfCount: number;
-  limit: number;
-}
-
-/** The server's Downloads path and PDF count — the browser cannot see machine paths. */
-export async function fetchDownloadsSuggestion(): Promise<DownloadsSuggestion> {
-  const res = await apiClient.get<DownloadsSuggestion>(
-    "/api/v1/processing-folders/downloads-suggestion",
-  );
-  return res.data;
-}
-
 /** One file a run produced. Downloadable by id from the general files endpoint. */
 export interface ProcessingRunOutput {
   fileId: string;
