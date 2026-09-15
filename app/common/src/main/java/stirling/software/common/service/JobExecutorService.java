@@ -219,7 +219,8 @@ public class JobExecutorService {
                         .body(Map.of("error", "Job timed out after " + timeoutToUse + " ms"));
             } catch (RuntimeException e) {
                 Throwable cause = e.getCause();
-                if (e instanceof IllegalArgumentException
+                if (e instanceof org.springframework.web.ErrorResponseException
+                        || e instanceof IllegalArgumentException
                         || cause
                                 instanceof
                                 stirling.software.common.util.ExceptionUtils.BaseAppException

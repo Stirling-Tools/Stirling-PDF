@@ -89,3 +89,15 @@ export function prepareVectorDestination(
     },
   ];
 }
+/** Corpus exports need a saved destination when the editor supplies the input. */
+export function needsCorpusDestination(steps: WorkingToolStep[]): boolean {
+  return steps.some((step) => {
+    if (!isRagIngestStep(step)) return false;
+    const params = step.params as RagIngestStepParams;
+    return (
+      params.exportChunksJsonl === true ||
+      params.exportMarkdown === true ||
+      params.includeOriginal === false
+    );
+  });
+}

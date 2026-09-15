@@ -211,6 +211,8 @@ export function usePolicyAutoRun(): void {
           backendId,
           rec.fileId as DispatchableFileId,
           rec.fileName,
+          false,
+          rec.externalOutput,
         );
       },
       QUEUE_RETRY_BASE_MS * 2 ** attempts,
@@ -242,15 +244,25 @@ export function usePolicyAutoRun(): void {
     [scheduleQueueRetry],
   );
 
-  // Fire only the first compatible upload policy per file; the chaining effect below runs the rest
-  // on each previous output, so policies apply cumulatively in order.
+  // Fire only the first compatible rewriting policy per file; the chaining
+  // effect below runs the rest on each previous output. Background deliveries
+  // independently receive the original upload.
   useEffect(() => {
-    // An older cache has no input metadata; wait for reconciliation to preserve the team's order.
-    if (
-      orderedUploadPolicyKeys.some(
-        (key) => policies[key].firstOperation === undefined,
+    const backgroundPolicyKeys = Object.entries(policies)
+      .filter(
+        ([, policy]) =>
+          policy.configured &&
+          policy.enabled &&
+          policy.runsOnEditor &&
+          policy.externalOutput &&
+          (policy.runOn ?? "upload") === "upload",
       )
-    )
+      .map(([key]) => key);
+    const candidateKeys = [
+      ...new Set([...orderedUploadPolicyKeys, ...backgroundPolicyKeys]),
+    ];
+    // An older cache has no input metadata; wait for reconciliation to preserve the team's order.
+    if (candidateKeys.some((key) => policies[key].firstOperation === undefined))
       return;
     for (const stub of fileStubs) {
       // Input-mode policies cover uploads only; tool-produced files are left to
@@ -266,23 +278,38 @@ export function usePolicyAutoRun(): void {
       const firstPolicyKey = orderedUploadPolicyKeys.find((key) =>
         policyAcceptsFile(policies[key], stub),
       );
-      if (!firstPolicyKey) continue;
-      const backendId = policies[firstPolicyKey]?.backendId;
-      if (!backendId) continue;
-      const key = dispatchKey(firstPolicyKey, stub.id);
-      // Skip if already run (persisted) or in flight - the in-memory guard covers the async wait.
-      if (
-        isDispatched(firstPolicyKey, stub.id) ||
-        dispatching.current.has(key)
-      ) {
-        continue;
+      const keys = [
+        ...new Set(
+          [
+            firstPolicyKey,
+            ...backgroundPolicyKeys.filter((key) =>
+              policyAcceptsFile(policies[key], stub),
+            ),
+          ].filter((key): key is string => Boolean(key)),
+        ),
+      ];
+      for (const policyKey of keys) {
+        const policy = policies[policyKey];
+        if (!policy?.backendId) continue;
+        const key = dispatchKey(policyKey, stub.id);
+        // Skip if already run (persisted) or in flight - the in-memory guard covers the async wait.
+        if (isDispatched(policyKey, stub.id) || dispatching.current.has(key)) {
+          continue;
+        }
+        dispatching.current.add(key);
+        void runPolicyOnFile(
+          policyKey,
+          policy.backendId,
+          target,
+          stub.name,
+          false,
+          policy.externalOutput,
+        )
+          .catch(() => {
+            // Backstop: runPolicyOnFile handles its own failures.
+          })
+          .finally(() => dispatching.current.delete(key));
       }
-      dispatching.current.add(key);
-      void runPolicyOnFile(firstPolicyKey, backendId, target, stub.name)
-        .catch(() => {
-          // Backstop: runPolicyOnFile handles its own failures.
-        })
-        .finally(() => dispatching.current.delete(key));
     }
   }, [fileStubs, policies, orderedUploadPolicyKeys, unlocksVersion]);
 
@@ -290,7 +317,8 @@ export function usePolicyAutoRun(): void {
   // run. isDispatched guards re-dispatch across reloads.
   useEffect(() => {
     for (const run of runs) {
-      if (run.status !== "COMPLETED" || !run.imported) continue;
+      if (run.status !== "COMPLETED" || !run.imported || run.externalOutput)
+        continue;
       if (chained.current.has(run.runId)) continue;
       const index = orderedUploadPolicyKeys.indexOf(run.policyKey);
       const remainingKeys =
@@ -341,6 +369,13 @@ export function usePolicyAutoRun(): void {
         run.imported ||
         importing.current.has(run.runId)
       ) {
+        continue;
+      }
+      if (run.externalOutput) {
+        updateRun(run.runId, {
+          imported: true,
+          outputFileIds: run.fileId ? [run.fileId] : [],
+        });
         continue;
       }
       if (finishedWithNothingToDeliver(run)) {
@@ -490,6 +525,9 @@ async function reconcileServerRuns(policies: PoliciesByKey): Promise<void> {
     updateRun(view.runId, {
       status: view.status,
       outputs: view.outputs,
+      ...(view.externalOutput === undefined
+        ? {}
+        : { externalOutput: view.externalOutput }),
       error: view.error,
     });
     // No-ops if already tracked, so this only adopts runs we'd otherwise have lost.
@@ -506,6 +544,9 @@ async function reconcileServerRuns(policies: PoliciesByKey): Promise<void> {
       target: "saas",
       status: view.status,
       outputs: view.outputs,
+      ...(view.externalOutput === undefined
+        ? {}
+        : { externalOutput: view.externalOutput }),
       error: view.error,
       // Adopted for feed visibility ONLY, never delivery: else a completed run evicted from the capped store gets re-adopted every refresh and re-delivered as a new file (no fileId → no parent), opening phantom duplicates forever. Client-recorded runs (real fileId) still deliver.
       imported: true,
@@ -921,6 +962,9 @@ export async function poll(
       currentStep: view.currentStep,
       stepCount: view.stepCount,
       outputs: view.outputs,
+      ...(view.externalOutput === undefined
+        ? {}
+        : { externalOutput: view.externalOutput }),
       error: view.error,
       errorCode: view.errorCode ?? null,
     });
