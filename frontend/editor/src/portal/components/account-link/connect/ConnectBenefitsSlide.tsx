@@ -4,10 +4,6 @@ import "@portal/components/account-link/connect/connect.css";
 /**
  * Processor is one row naming its parts rather than four competing ones, and credits come last:
  * first, and the screen reads as a price list.
- *
- * <p>TODO(#7712): the credits row promises a monthly allowance the billing model does not grant —
- * {@code freeGrantUnits} is a one-time lifetime pool — so either the grant becomes recurring or the
- * copy drops "per month" before this reaches customers.
  */
 export function ConnectBenefitsSlide() {
   const { t } = useTranslation();
@@ -36,8 +32,8 @@ export function ConnectBenefitsSlide() {
       key: "credits",
       label: t("portal.accountLink.connect.benefits.creditsLabel", "Credits"),
       detail: t(
-        "portal.accountLink.connect.benefits.creditsDetail",
-        "500 free per month",
+        "portal.accountLink.connect.benefits.creditsDetailMonthly",
+        "Free monthly allowance",
       ),
     },
   ];

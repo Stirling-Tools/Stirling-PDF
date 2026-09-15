@@ -1,10 +1,10 @@
 /**
  * Upgrade-to-Processor modal. Three sequential panels inside one frame:
  *
- *   Step 1: Cap selection         — local state only, no side effects
- *   Step 2: Stripe Checkout       — POSTs to /api/v1/payg/checkout, mounts the
+ *   Step 1: Cap selection - local state only, no side effects
+ *   Step 2: Stripe Checkout - POSTs to /api/v1/payg/checkout, mounts the
  *                                   Stripe Embedded Checkout iframe (lazy-loaded)
- *   Step 3: Confirmation          — brief "Welcome to Processor" beat before
+ *   Step 3: Confirmation - brief "Welcome to Processor" beat before
  *                                   the modal closes and the parent's
  *                                   {@code onComplete} triggers a wallet refetch
  *
@@ -13,7 +13,7 @@
  * downloads when the user actually advances to step 2. The main bundle pays
  * nothing for users who never open the modal.
  *
- * <p>Cap state is held locally — nothing reaches the backend until the user
+ * <p>Cap state is held locally - nothing reaches the backend until the user
  * commits in step 2. A user who cancels mid-modal leaves no side effects.
  */
 import React, { Suspense, useState } from "react";
@@ -57,7 +57,7 @@ interface UpgradeModalProps {
   /** ISO 4217 currency code for the cap input. Default USD. */
   currency?: "USD" | "EUR" | "GBP";
   /**
-   * The team's free grant in documents per billing period — the real {@code
+   * The team's free grant in documents per billing period - the real {@code
    * wallet.freeAllowance}, threaded from the free-leader view so the step copy
    * quotes the backend's number instead of a hardcoded one.
    */
@@ -127,7 +127,7 @@ export default function UpgradeModal({
     <div className="upm" role="dialog" aria-modal="true">
       <div className="upm-backdrop" onClick={closeAndReset}>
         <div className="upm-frame" onClick={(e) => e.stopPropagation()}>
-          {/* Header — title + close. Title stays constant; the step indicator
+          {/* Header - title + close. Title stays constant; the step indicator
               below tells the user where they are. */}
           <header className="upm-header">
             <div className="upm-header__left">
@@ -350,7 +350,7 @@ function CapStep({
             <strong>
               {t("payg.upgrade.help.automationTitle", "Automation pipelines")}
             </strong>
-            {" — "}
+            {" - "}
             {t(
               "payg.upgrade.help.automationBody",
               "chained tools or scheduled runs that don't need clicks",
@@ -358,7 +358,7 @@ function CapStep({
           </li>
           <li>
             <strong>{t("payg.upgrade.help.aiTitle", "AI tools")}</strong>
-            {" — "}
+            {" - "}
             {t(
               "payg.upgrade.help.aiBody",
               "summarise, classify, redact, AI-OCR",
@@ -366,7 +366,7 @@ function CapStep({
           </li>
           <li>
             <strong>{t("payg.upgrade.help.apiTitle", "API calls")}</strong>
-            {" — "}
+            {" - "}
             {t(
               "payg.upgrade.help.apiBody",
               "programmatic access to any Stirling endpoint",
@@ -375,8 +375,8 @@ function CapStep({
         </ul>
         <div style={{ marginTop: 8, fontStyle: "italic" }}>
           {t(
-            "payg.upgrade.help.footnote",
-            "Manual tools - viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR - are always free, even past 500. The distinction is the type of work, not where you click.",
+            "payg.upgrade.help.footnoteUnlimited",
+            "Manual tools - viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR - are always free, even after your included credits are used. The distinction is the type of work, not where you click.",
           )}
         </div>
       </div>
@@ -455,7 +455,7 @@ function ConfirmationStep({
       </h3>
       <p className="upm-confirm__body">
         {t(
-          "payg.confirm.body",
+          "payg.confirm.bodyWithAllowance",
           "Your team can now process documents with automation, AI, and the API beyond your {{limit}} free PDFs.",
           { limit: freeLimit.toLocaleString() },
         )}

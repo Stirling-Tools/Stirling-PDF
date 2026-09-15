@@ -1,7 +1,7 @@
 import { Stack, Group } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { Icon } from "@app/ui/Icon";
 import {
   CertificateSelector,
   CertificateType,
@@ -81,7 +81,7 @@ export const CertificateSelectionStep: React.FC<
         <Button
           variant="secondary"
           onClick={onBack}
-          leftSection={<ArrowBackIcon sx={{ fontSize: 16 }} />}
+          leftSection={<Icon name="arrow-left" size={16} />}
         >
           {t("certSign.collab.signRequest.steps.back", "Back")}
         </Button>

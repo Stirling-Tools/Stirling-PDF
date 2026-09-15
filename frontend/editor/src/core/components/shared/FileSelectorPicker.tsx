@@ -24,6 +24,11 @@ import {
 } from "@app/services/shareBundleUtils";
 import { truncateCenter } from "@app/utils/textUtils";
 import { generateThumbnailForFile } from "@app/utils/thumbnailUtils";
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
+import { alert } from "@app/components/toast";
 import styles from "@app/components/shared/FileSelectorPicker.module.css";
 import "@app/components/shared/FileSidebarFileItem.css";
 
@@ -243,6 +248,16 @@ export function FileSelectorPicker({
   const loadAndSelect = useCallback(
     async (stub: StirlingFileStub) => {
       if (loadingId) return;
+      try {
+        assertFilesNotBlocked(policySourceIds(stub));
+      } catch {
+        alert({
+          alertType: "warning",
+          title: t("policy.recoveryTitle"),
+          body: t("policy.recoveryBody"),
+        });
+        return;
+      }
 
       // Workbench file — get StirlingFile directly from FileContext (no loading needed)
       if (workbenchIdSet.has(stub.id)) {
@@ -322,6 +337,7 @@ export function FileSelectorPicker({
               // Non-fatal — thumbnail simply won't show
             }
           }
+          assertFilesNotBlocked(policySourceIds(resolvedStub));
           onSelect({ stub: resolvedStub, stirlingFile });
           setIsOpen(false);
         }
@@ -331,7 +347,7 @@ export function FileSelectorPicker({
         setLoadingId(null);
       }
     },
-    [loadingId, workbenchIdSet, selectors, onSelect],
+    [loadingId, workbenchIdSet, selectors, onSelect, t],
   );
 
   const handleUpload = useCallback(

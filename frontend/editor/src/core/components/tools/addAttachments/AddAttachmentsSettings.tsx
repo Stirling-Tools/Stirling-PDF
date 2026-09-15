@@ -6,7 +6,7 @@
 import { Stack, Text, Group, ScrollArea, Checkbox } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { AddAttachmentsParameters } from "@app/hooks/tools/addAttachments/useAddAttachmentsParameters";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import { Button as DSButton } from "@app/ui/Button";
 interface AddAttachmentsSettingsProps {
@@ -51,7 +51,7 @@ const AddAttachmentsSettings = ({
           as="label"
           htmlFor="attachments-input"
           disabled={disabled}
-          leftSection={<LocalIcon icon="add" width="14" height="14" />}
+          leftSection={<Icon name="plus" size="14" />}
         >
           {parameters.attachments?.length > 0
             ? t("AddAttachmentsRequest.addMoreFiles", "Add more files...")
@@ -111,9 +111,7 @@ const AddAttachmentsSettings = ({
                     </Text>
                   </Group>
                   <DSButton
-                    leftSection={
-                      <LocalIcon icon="close-rounded" width="14" height="14" />
-                    }
+                    leftSection={<Icon name="x" size="14" />}
                     aria-label={t(
                       "AddAttachmentsRequest.removeFile",
                       "Remove file",
@@ -167,10 +165,9 @@ const AddAttachmentsSettings = ({
                 sidebarTooltip={true}
                 pinOnClick={true}
               >
-                <LocalIcon
-                  icon="info-outline-rounded"
-                  width="1.25rem"
-                  height="1.25rem"
+                <Icon
+                  name="info"
+                  size="1.25rem"
                   style={{ color: "var(--icon-files-color)", cursor: "help" }}
                 />
               </Tooltip>

@@ -430,7 +430,7 @@
     "highlight": "highlighter",
     "format-underlined": "underline",
     "strikethrough-s": "strikethrough",
-    "show-chart": "pen-line",
+    "show-chart": "polyline",
     "radio-button-unchecked": "circle",
     "change-history": "triangle",
     "text-fields": "type",
