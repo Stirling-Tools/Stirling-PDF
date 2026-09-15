@@ -33,6 +33,9 @@ export interface MountedFileState {
 }
 
 export interface ProcessingFoldersApi {
+  /** Setup must wait for the saved records before treating a folder as unconfigured. */
+  loading: boolean;
+  loadError: string | null;
   /** The folder's processing state; undefined means an ordinary folder. */
   stateFor: (folder: FolderRecord) => ProcessingFolderState | undefined;
   recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
@@ -67,6 +70,8 @@ const EMPTY_IDS: ReadonlySet<string> = new Set();
  * render, and any state it sets re-renders, which is an unbounded loop.
  */
 const INERT: ProcessingFoldersApi = {
+  loading: false,
+  loadError: null,
   stateFor: () => undefined,
   recordFor: () => undefined,
   enabledFolderIds: EMPTY_IDS,

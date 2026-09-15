@@ -9,8 +9,7 @@ import {
 } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useTranslation } from "react-i18next";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
+import { Icon } from "@app/ui/Icon";
 import { Z_INDEX_AUTOMATE_DROPDOWN } from "@app/styles/zIndex";
 
 interface FormatOption {
@@ -115,9 +114,10 @@ const GroupedFormatDropdown = ({
             <Text size="sm" c={value ? undefined : "dimmed"}>
               {selectedLabel}
             </Text>
-            <KeyboardArrowDownIcon
+            <Icon
+              name="chevron-down"
+              size={"1rem"}
               style={{
-                fontSize: "1rem",
                 transform: dropdownOpened ? "rotate(180deg)" : "rotate(0deg)",
                 transition: "transform 0.2s ease",
                 color: "var(--dropdown-trigger-icon)",
@@ -158,12 +158,10 @@ const GroupedFormatDropdown = ({
                     disabled={option.enabled === false}
                     rightSection={
                       option.usesCloud ? (
-                        <CloudOutlinedIcon
-                          style={{
-                            fontSize: "0.625rem",
-                            marginLeft: "0.25rem",
-                            opacity: 0.7,
-                          }}
+                        <Icon
+                          name="cloud"
+                          size={"0.625rem"}
+                          style={{ marginLeft: "0.25rem", opacity: 0.7 }}
                         />
                       ) : undefined
                     }

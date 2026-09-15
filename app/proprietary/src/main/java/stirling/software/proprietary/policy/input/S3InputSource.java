@@ -19,6 +19,7 @@ import stirling.software.proprietary.policy.s3.S3Config;
 import stirling.software.proprietary.policy.s3.S3ConnectionPool;
 import stirling.software.proprietary.policy.s3.S3ConnectionResolver;
 import stirling.software.proprietary.policy.s3.S3Identities;
+import stirling.software.proprietary.policy.source.Source;
 
 import software.amazon.awssdk.core.exception.SdkException;
 import software.amazon.awssdk.services.s3.S3Client;
@@ -84,6 +85,13 @@ public class S3InputSource implements InputSource {
                             + e.getMessage(),
                     e);
         }
+    }
+
+    /** Remote object access uses the source's configured S3 connection, shared by its policies. */
+    @Override
+    public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        return resolve(source.toInputSpec(), ctx);
     }
 
     @Override
