@@ -143,6 +143,18 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
  * Next call to getPdfiumModule() will create a fresh instance.
  */
 export function resetPdfiumModule(): void {
+  // The whole module (and its linear memory with it) is discarded here, so
+  // closing documents inside it is pointless and can throw on a dead
+  // instance. Drop the shared handle outright instead of releasing it.
+  try {
+    if (sharedDocument && sharedDocument.refs <= 0 && _module) {
+      closeDocumentNow(_module, sharedDocument.docPtr);
+    }
+  } catch {
+    // Module already unusable; dropping the references is the cleanup.
+  }
+  sharedDocument = null;
+  sharedReleasePending = false;
   _module = null;
   _initPromise = null;
   _docDataPtrs.clear();
@@ -325,6 +337,32 @@ export class PdfiumOpenError extends Error {
 }
 
 /**
+ * One open document shared by every scan of the same bytes. Each reopen copies
+ * the file into the WASM heap again and leaves PDFium caches behind, growing
+ * the heap high-water per scan. Password opens are never shared.
+ *
+ * A document released while scans still hold it is closed by the last reader:
+ * `releaseSharedDocument()` only arms `sharedReleasePending` when refs are
+ * outstanding, so the handle is never closed under an active reader.
+ */
+interface SharedDocument {
+  bytes: ArrayBuffer | Uint8Array;
+  docPtr: number;
+  refs: number;
+}
+let sharedDocument: SharedDocument | null = null;
+let sharedReleasePending = false;
+
+function closeDocumentNow(m: WrappedPdfiumModule, docPtr: number): void {
+  m.FPDF_CloseDocument(docPtr);
+  const dataPtr = _docDataPtrs.get(docPtr);
+  if (dataPtr) {
+    m.pdfium.wasmExports.free(dataPtr);
+    _docDataPtrs.delete(docPtr);
+  }
+}
+
+/**
  * Load a PDF into PDFium memory and return the document pointer.
  * Caller MUST call `closeRawDocument(docPtr)` when finished.
  */
@@ -333,6 +371,12 @@ export async function openRawDocument(
   password?: string,
 ): Promise<number> {
   const m = await getPdfiumModule();
+
+  if (!password && sharedDocument && sharedDocument.bytes === data) {
+    sharedDocument.refs++;
+    return sharedDocument.docPtr;
+  }
+
   const bytes = data instanceof Uint8Array ? data : new Uint8Array(data);
   const len = bytes.length;
   const ptr = m.pdfium.wasmExports.malloc(len);
@@ -343,8 +387,22 @@ export async function openRawDocument(
     m.pdfium.wasmExports.free(ptr);
     throw new PdfiumOpenError(m.FPDF_GetLastError());
   }
-  // Keep the buffer alive — freed in closeRawDocument()
+  // Keep the buffer alive — freed by closeDocumentNow()
   _docDataPtrs.set(docPtr, ptr);
+
+  if (!password) {
+    // A scan still reading the previous document keeps it open; only adopt the
+    // new one once its refs drop to zero.
+    if (sharedDocument && sharedDocument.refs <= 0) {
+      closeDocumentNow(m, sharedDocument.docPtr);
+      sharedDocument = null;
+      sharedReleasePending = false;
+    }
+    if (!sharedDocument) {
+      sharedDocument = { bytes: data, docPtr, refs: 1 };
+    }
+  }
+
   return docPtr;
 }
 
@@ -360,7 +418,8 @@ export async function openRawDocumentSafe(
 }
 
 /**
- * Close a raw document pointer and free its backing data buffer.
+ * Close a raw document pointer. Shared documents only lose a reference; the
+ * handle stays open for the next scan of the same bytes.
  */
 export async function closeRawDocument(docPtr: number): Promise<void> {
   const m = await getPdfiumModule();
@@ -368,18 +427,49 @@ export async function closeRawDocument(docPtr: number): Promise<void> {
 }
 
 /**
- * Synchronous close + buffer free — for use inside `finally` blocks that
- * already have the module reference.
+ * Synchronous release — for use inside `finally` blocks that already have the
+ * module reference.
  */
 export function closeDocAndFreeBuffer(
   m: WrappedPdfiumModule,
   docPtr: number,
 ): void {
-  m.FPDF_CloseDocument(docPtr);
-  const dataPtr = _docDataPtrs.get(docPtr);
-  if (dataPtr) {
-    m.pdfium.wasmExports.free(dataPtr);
-    _docDataPtrs.delete(docPtr);
+  if (sharedDocument && sharedDocument.docPtr === docPtr) {
+    if (sharedDocument.refs > 0) {
+      sharedDocument.refs--;
+    }
+    if (sharedDocument.refs === 0 && sharedReleasePending) {
+      closeDocumentNow(m, docPtr);
+      sharedDocument = null;
+      sharedReleasePending = false;
+      return;
+    }
+    // No release pending: the handle lingers for the next same-bytes scan.
+    // Not falling through to closeDocumentNow on purpose — that would
+    // double-close it and leave `sharedDocument` dangling.
+    return;
+  }
+  closeDocumentNow(m, docPtr);
+}
+
+/**
+ * Drop the shared document, e.g. when its file leaves the workbench. With
+ * readers outstanding the close is deferred to the last `closeDocAndFreeBuffer`.
+ */
+export function releaseSharedDocument(): void {
+  if (!sharedDocument) {
+    sharedReleasePending = false;
+    return;
+  }
+  if (sharedDocument.refs > 0) {
+    sharedReleasePending = true;
+    return;
+  }
+  const session = sharedDocument;
+  sharedDocument = null;
+  sharedReleasePending = false;
+  if (_module) {
+    closeDocumentNow(_module, session.docPtr);
   }
 }
 
@@ -443,6 +533,7 @@ export interface PdfiumFormField {
   flags: number;
   options: Array<{ label: string; isSelected: boolean }>;
   widgets: PdfiumWidgetRect[];
+  _tooltip?: string | null;
 }
 
 export interface PdfiumWidgetRect {
@@ -458,7 +549,7 @@ export interface PdfiumWidgetRect {
 }
 
 /**
- * Extract all form fields (Widget annotations) from every page of a document.
+ * Extract form fields (Widget annotations) from specified or all pages of a document.
  *
  * Returns an array of parsed form fields with their widget rectangles already
  * converted to CSS coordinate space (upper-left origin).
@@ -466,6 +557,7 @@ export interface PdfiumWidgetRect {
 export async function extractFormFields(
   data: ArrayBuffer | Uint8Array,
   password?: string,
+  pageIndices?: number[],
 ): Promise<PdfiumFormField[]> {
   const m = await getPdfiumModule();
   let docPtr: number;
@@ -493,7 +585,16 @@ export async function extractFormFields(
     // Map: fieldName → PdfiumFormField (to merge widgets across pages)
     const fieldMap = new Map<string, PdfiumFormField>();
 
-    for (let pageIdx = 0; pageIdx < pageCount; pageIdx++) {
+    const targetPages: number[] = [];
+    if (Array.isArray(pageIndices) && pageIndices.length > 0) {
+      for (const idx of pageIndices) {
+        if (idx >= 0 && idx < pageCount) targetPages.push(idx);
+      }
+    } else {
+      for (let i = 0; i < pageCount; i++) targetPages.push(i);
+    }
+
+    for (const pageIdx of targetPages) {
       let pagePtr: number;
       try {
         pagePtr = m.FPDF_LoadPage(docPtr, pageIdx);
@@ -841,11 +942,38 @@ function this_extractAnnotation(
       }
     }
 
+    // Tooltip (TU), read here so the tooltip pass does not walk every page again.
+    let tooltip: string | null = null;
+    if (formEnvPtr) {
+      try {
+        const altLen = m.FPDFAnnot_GetFormFieldAlternateName(
+          formEnvPtr,
+          annotPtr,
+          0,
+          0,
+        );
+        if (altLen > 0) {
+          const altBuf = m.pdfium.wasmExports.malloc(altLen);
+          m.FPDFAnnot_GetFormFieldAlternateName(
+            formEnvPtr,
+            annotPtr,
+            altBuf,
+            altLen,
+          );
+          tooltip = readUtf16(m, altBuf, altLen) || null;
+          m.pdfium.wasmExports.free(altBuf);
+        }
+      } catch {
+        // Alternate name extraction non-critical
+      }
+    }
+
     // Merge into field map (multiple widgets can share a field name)
     if (fieldName) {
       const existing = fieldMap.get(fieldName);
       if (existing) {
         if (widgetRect) existing.widgets.push(widgetRect);
+        if (tooltip && !existing._tooltip) existing._tooltip = tooltip;
       } else {
         fieldMap.set(fieldName, {
           name: fieldName,
@@ -857,6 +985,7 @@ function this_extractAnnotation(
           flags: fieldFlags,
           options,
           widgets: widgetRect ? [widgetRect] : [],
+          _tooltip: tooltip,
         });
       }
     }
@@ -1569,6 +1698,7 @@ async function renderWidgetAppearance(
 export async function renderSignatureFieldAppearances(
   data: ArrayBuffer | Uint8Array,
   password?: string,
+  pageIndexes?: number[],
 ): Promise<SignatureFieldAppearance[]> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
@@ -1578,8 +1708,10 @@ export async function renderSignatureFieldAppearances(
     const formEnvPtr = m.PDFiumExt_InitFormFillEnvironment(docPtr, formInfoPtr);
     const pageCount = m.FPDF_GetPageCount(docPtr);
     const results: SignatureFieldAppearance[] = [];
+    const pages = pageIndexes ?? Array.from({ length: pageCount }, (_, i) => i);
 
-    for (let pageIdx = 0; pageIdx < pageCount; pageIdx++) {
+    for (const pageIdx of pages) {
+      if (pageIdx < 0 || pageIdx >= pageCount) continue;
       const pagePtr = m.FPDF_LoadPage(docPtr, pageIdx);
       if (!pagePtr) continue;
       if (formEnvPtr) m.FORM_OnAfterLoadPage(pagePtr, formEnvPtr);
@@ -1833,6 +1965,7 @@ export async function renderSignatureFieldAppearances(
 export async function renderButtonFieldAppearances(
   data: ArrayBuffer | Uint8Array,
   password?: string,
+  pageIndexes?: number[],
 ): Promise<SignatureFieldAppearance[]> {
   const m = await getPdfiumModule();
   const docPtr = await openRawDocumentSafe(data, password);
@@ -1842,8 +1975,10 @@ export async function renderButtonFieldAppearances(
     const formEnvPtr = m.PDFiumExt_InitFormFillEnvironment(docPtr, formInfoPtr);
     const pageCount = m.FPDF_GetPageCount(docPtr);
     const buttonResults: SignatureFieldAppearance[] = [];
+    const pages = pageIndexes ?? Array.from({ length: pageCount }, (_, i) => i);
 
-    for (let pageIdx = 0; pageIdx < pageCount; pageIdx++) {
+    for (const pageIdx of pages) {
+      if (pageIdx < 0 || pageIdx >= pageCount) continue;
       const pagePtr = m.FPDF_LoadPage(docPtr, pageIdx);
       if (!pagePtr) continue;
       if (formEnvPtr) m.FORM_OnAfterLoadPage(pagePtr, formEnvPtr);
