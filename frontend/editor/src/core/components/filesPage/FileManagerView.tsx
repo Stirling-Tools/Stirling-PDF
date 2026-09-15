@@ -72,6 +72,7 @@ import {
 } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -570,6 +571,7 @@ export default function FileManagerView() {
   // A working folder lists its real contents; each file wears its pipeline state and a state
   // filter narrows the listing. Files the pipeline never claims carry no state at all.
   const processingApi = useProcessingFolders();
+  const processingEnabled = usePoliciesEnabled();
   const currentProcessing = currentFolder
     ? processingApi.stateFor(currentFolder)
     : undefined;
@@ -1563,7 +1565,7 @@ export default function FileManagerView() {
               totalCount={totalCount}
               selectedCount={selectedFiles.length}
             />
-            {currentFolder && !mobileSelection && (
+            {currentFolder && !mobileSelection && processingEnabled && (
               <div className="files-page-folder-actions">
                 <FolderMenu
                   folder={currentFolder}
@@ -1901,7 +1903,9 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
-              onStartProcessing={setProcessingSetupFolder}
+              onStartProcessing={
+                processingEnabled ? setProcessingSetupFolder : undefined
+              }
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onRetryFile={retryDiskFile}
               onRevertFile={setRevertConfirmName}
@@ -2010,10 +2014,12 @@ export default function FileManagerView() {
           if (revertAllTarget) revertAllInFolder(revertAllTarget);
         }}
       />
-      <FolderProcessingSetup
-        folder={processingBlock ? null : processingSetupFolder}
-        onClose={() => setProcessingSetupFolder(null)}
-      />
+      {processingEnabled && (
+        <FolderProcessingSetup
+          folder={processingBlock ? null : processingSetupFolder}
+          onClose={() => setProcessingSetupFolder(null)}
+        />
+      )}
 
       {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (
