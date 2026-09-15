@@ -10,6 +10,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -156,6 +157,7 @@ const FilesPageContext = createContext<FilesPageContextValue | null>(null);
 
 export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const indexedDB = useIndexedDB();
   const indexedDBRevision = useIndexedDBRevision();
   const folders = useFolders();
@@ -298,11 +300,12 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     async (name: string) => {
       if (folderNameDialog.mode === "new") {
         // Chosen before the dialog opened, and only used at the root.
-        await folders.createFolder(
+        const created = await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
           folderNameDialog.kind,
         );
+        navigate(`/files/${created.id}`);
       } else if (
         folderNameDialog.mode === "rename" &&
         folderNameDialog.folder
@@ -310,7 +313,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         await folders.renameFolder(folderNameDialog.folder.id, name);
       }
     },
-    [folderNameDialog, folders],
+    [folderNameDialog, folders, navigate],
   );
 
   // Dialog: move ------------------------------------------------------------

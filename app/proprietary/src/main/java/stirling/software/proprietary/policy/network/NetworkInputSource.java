@@ -15,6 +15,7 @@ import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.source.Source;
 
 /**
  * Reads input files from a network file server (SFTP, FTP/FTPS, or SMB), one bean serving all three
@@ -66,6 +67,13 @@ public class NetworkInputSource implements InputSource {
             throw new IllegalArgumentException(
                     "cannot access " + config.protocol() + " source: " + e.getMessage(), e);
         }
+    }
+
+    /** Remote file access uses the source's configured network account, shared by its policies. */
+    @Override
+    public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        return resolve(source.toInputSpec(), ctx);
     }
 
     @Override
