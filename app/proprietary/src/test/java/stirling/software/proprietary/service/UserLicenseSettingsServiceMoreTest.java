@@ -57,7 +57,7 @@ class UserLicenseSettingsServiceMoreTest {
         when(settingsRepository.save(any(UserLicenseSettings.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
         when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(licenseKeyChecker);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         service =
@@ -124,7 +124,7 @@ class UserLicenseSettingsServiceMoreTest {
         @DisplayName("a valid licence outranks the SaaS allowance")
         void licenceOutranksSaas() {
             lockedSettings(7);
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
             when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
             cacheReturns(withAllowance(100));
 
@@ -187,7 +187,7 @@ class UserLicenseSettingsServiceMoreTest {
         void teamPlanIsNotAnUnlimitedLicence() {
             lockedSettings(7);
             // What buying Team does: SERVER effective, NORMAL from the key, maxUsers never set.
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
             when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
             cacheReturns(withAllowance(100));
 
@@ -206,7 +206,7 @@ class UserLicenseSettingsServiceMoreTest {
             s.setIntegritySalt("salt");
             s.setLicenseMaxUsers(0);
             when(settingsRepository.findSettings()).thenReturn(Optional.of(s));
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
             when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
             service.updateLicenseMaxUsers();
@@ -412,7 +412,7 @@ class UserLicenseSettingsServiceMoreTest {
             s.setIntegritySalt("salt");
             s.setLicenseMaxUsers(0);
             when(settingsRepository.findSettings()).thenReturn(Optional.of(s));
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
             when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
             service.updateLicenseMaxUsers();
@@ -428,7 +428,7 @@ class UserLicenseSettingsServiceMoreTest {
             s.setIntegritySalt("salt");
             s.setLicenseMaxUsers(0);
             when(settingsRepository.findSettings()).thenReturn(Optional.of(s));
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
             when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
             service.updateLicenseMaxUsers();
@@ -444,7 +444,7 @@ class UserLicenseSettingsServiceMoreTest {
             s.setIntegritySalt("salt");
             s.setLicenseMaxUsers(8);
             when(settingsRepository.findSettings()).thenReturn(Optional.of(s));
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
             when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
             service.updateLicenseMaxUsers();

@@ -5,17 +5,22 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
  * licence lane, and a client-supplied email is what lets it bill the wrong customer, so both
  * absences are the contract — not incidental.
  */
-const { invoke, getSession } = vi.hoisted(() => ({
+const { invoke, getAccessToken } = vi.hoisted(() => ({
   invoke: vi.fn(),
-  getSession: vi.fn(),
+  getAccessToken: vi.fn(),
 }));
 
 vi.mock("@app/services/supabaseClient", () => ({
   isSupabaseConfigured: true,
-  supabase: { functions: { invoke }, auth: { getSession } },
+  supabase: { functions: { invoke } },
 }));
 
-import { createServerPlanCheckoutSession } from "@app/services/serverPlanCheckout";
+vi.mock("@app/auth/session", () => ({ getAccessToken }));
+
+import {
+  createServerPlanCheckoutSession,
+  verifyTeamCheckout,
+} from "@app/services/serverPlanCheckout";
 
 const plan = {
   lookupKey: "selfhosted:server:yearly",
@@ -26,7 +31,7 @@ const plan = {
 
 beforeEach(() => {
   invoke.mockReset();
-  getSession.mockReset().mockResolvedValue({ data: { session: { user: {} } } });
+  getAccessToken.mockReset().mockResolvedValue("native-token");
 });
 
 describe("createServerPlanCheckoutSession", () => {
@@ -48,7 +53,7 @@ describe("createServerPlanCheckoutSession", () => {
     );
   });
   it("keeps Enterprise on the licence-issuing path", async () => {
-    getSession.mockResolvedValue({ data: { session: null } });
+    getAccessToken.mockResolvedValue(null);
     invoke.mockResolvedValue({
       data: { clientSecret: "cs", sessionId: "cs_enterprise" },
       error: null,
@@ -113,7 +118,7 @@ describe("createServerPlanCheckoutSession", () => {
   });
 
   it("refuses before invoking when no Stirling account is signed in", async () => {
-    getSession.mockResolvedValue({ data: { session: null } });
+    getAccessToken.mockResolvedValue(null);
 
     await expect(createServerPlanCheckoutSession(plan)).rejects.toThrow(
       /Sign in to the Stirling account/,
@@ -136,4 +141,15 @@ describe("createServerPlanCheckoutSession", () => {
       /neither/,
     );
   });
+});
+
+it("attaches the platform token to checkout and completion without a browser session", async () => {
+  invoke
+    .mockResolvedValueOnce({ data: { clientSecret: "cs" } })
+    .mockResolvedValueOnce({ data: { ready: true, licensedUsers: 300 } });
+  await createServerPlanCheckoutSession(plan);
+  expect(await verifyTeamCheckout("cs", 3)).toBe(300);
+  for (const [, options] of invoke.mock.calls) {
+    expect(options.headers).toEqual({ Authorization: "Bearer native-token" });
+  }
 });

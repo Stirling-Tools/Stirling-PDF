@@ -662,13 +662,14 @@ public class UserLicenseSettingsService {
         }
     }
 
-    private boolean hasPaidLicense() {
+    /** Whether the effective tier includes Server features. */
+    public boolean hasPaidLicense() {
         LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
         if (checker == null) {
             return false;
         }
 
-        License license = checker.getPremiumLicenseEnabledResult();
+        License license = checker.premiumTier();
         boolean hasPaid = (license == License.SERVER || license == License.ENTERPRISE);
         log.info("License check result: type={}, requiresPaid=true, hasPaid={}", license, hasPaid);
 
@@ -703,7 +704,7 @@ public class UserLicenseSettingsService {
             return false;
         }
 
-        License license = checker.getPremiumLicenseEnabledResult();
+        License license = checker.premiumTier();
         log.info(
                 "License check result: type={}, requiresEnterprise=true, hasEnterprise={}",
                 license,

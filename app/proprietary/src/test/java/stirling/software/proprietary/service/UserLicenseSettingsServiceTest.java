@@ -59,7 +59,7 @@ class UserLicenseSettingsServiceTest {
         when(userService.getTotalUsersCount()).thenReturn(80L);
         when(settingsRepository.save(any(UserLicenseSettings.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
         when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(licenseKeyChecker);
 
@@ -83,7 +83,7 @@ class UserLicenseSettingsServiceTest {
     void noLicense_returnsGrandfatheredLimit() {
         // No license active
         when(premium.isEnabled()).thenReturn(false);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         int result = service.calculateMaxAllowedUsers();
@@ -95,7 +95,7 @@ class UserLicenseSettingsServiceTest {
     void serverLicense_returnsUnlimited() {
         // SERVER license with users=0
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         mockSettings.setLicenseMaxUsers(0);
 
@@ -108,7 +108,7 @@ class UserLicenseSettingsServiceTest {
     void enterpriseLicense_returnsLicenseSeatsOnly() {
         // ENTERPRISE license with 5 seats
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(5);
 
@@ -124,7 +124,7 @@ class UserLicenseSettingsServiceTest {
     void enterpriseLicense_ignoresGrandfathering() {
         // ENTERPRISE with 20 seats, grandfathered was 80
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(20);
         mockSettings.setGrandfatheredUserCount(80); // This should be ignored
@@ -153,7 +153,7 @@ class UserLicenseSettingsServiceTest {
         // Fresh install with SERVER license
         mockSettings.setGrandfatheredUserCount(5);
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         mockSettings.setLicenseMaxUsers(0);
 
@@ -170,7 +170,7 @@ class UserLicenseSettingsServiceTest {
         // Fresh install with ENTERPRISE 10 seats
         mockSettings.setGrandfatheredUserCount(5);
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(10);
 
@@ -196,7 +196,7 @@ class UserLicenseSettingsServiceTest {
         // V1→V2 with 80 users, then buy ENTERPRISE 5 seats
         mockSettings.setGrandfatheredUserCount(80);
         when(premium.isEnabled()).thenReturn(true);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
         mockSettings.setLicenseMaxUsers(5);
 
@@ -293,7 +293,7 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("grandfathered-user");
         user.setOauthGrandfathered(true);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isOAuthEligible(user);
@@ -309,7 +309,7 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isOAuthEligible(user);
@@ -325,7 +325,7 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
         boolean result = service.isOAuthEligible(user);
@@ -342,7 +342,7 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isOAuthEligible(user);
@@ -356,7 +356,7 @@ class UserLicenseSettingsServiceTest {
     @Test
     void isOAuthEligible_newUserWithServerLicense_returnsTrue() {
         // New user (null) with SERVER license should be eligible for auto-creation
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isOAuthEligible(null);
@@ -368,7 +368,7 @@ class UserLicenseSettingsServiceTest {
     @Test
     void isOAuthEligible_newUserWithNoLicense_returnsFalse() {
         // New user (null) without license should NOT be eligible
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isOAuthEligible(null);
@@ -405,7 +405,7 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("grandfathered-user");
         user.setOauthGrandfathered(true);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isSamlEligible(user);
@@ -421,7 +421,7 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
         boolean result = service.isSamlEligible(user);
@@ -440,7 +440,7 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isSamlEligible(user);
@@ -459,7 +459,7 @@ class UserLicenseSettingsServiceTest {
         user.setUsername("test-user");
         user.setOauthGrandfathered(false);
 
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         boolean result = service.isSamlEligible(user);
@@ -473,7 +473,7 @@ class UserLicenseSettingsServiceTest {
     @Test
     void isSamlEligible_newUserWithEnterpriseLicense_returnsTrue() {
         // New user (null) with ENTERPRISE license should be eligible for auto-creation
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
         boolean result = service.isSamlEligible(null);
@@ -487,7 +487,7 @@ class UserLicenseSettingsServiceTest {
     @Test
     void isSamlEligible_newUserWithServerLicense_returnsFalse() {
         // New user (null) with SERVER license should NOT be eligible for SAML
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
         when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         boolean result = service.isSamlEligible(null);

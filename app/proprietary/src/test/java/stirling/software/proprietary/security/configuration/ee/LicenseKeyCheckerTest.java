@@ -30,6 +30,22 @@ class LicenseKeyCheckerTest {
     @Mock private UserLicenseSettingsService userLicenseSettingsService;
 
     @Test
+    void bootGateRefreshesTeamBeforeRejectingPaidConfiguration() {
+        ApplicationProperties properties = new ApplicationProperties();
+        when(userLicenseSettingsService.refreshLinkedTeamUsers())
+                .thenThrow(new IllegalStateException("Database not initialized"))
+                .thenReturn(300);
+        LicenseKeyChecker checker =
+                new LicenseKeyChecker(verifier, properties, userLicenseSettingsService);
+        checker.init();
+        assertEquals(License.NORMAL, checker.getPremiumLicenseEnabledResult());
+        assertThatCode(() -> checker.requireProOrEnterprise("storage.provider=s3"))
+                .doesNotThrowAnyException();
+        assertEquals(License.SERVER, checker.getPremiumLicenseEnabledResult());
+        verifyNoInteractions(verifier);
+    }
+
+    @Test
     void premiumDisabled_skipsVerification() {
         ApplicationProperties props = new ApplicationProperties();
         props.getPremium().setEnabled(false);

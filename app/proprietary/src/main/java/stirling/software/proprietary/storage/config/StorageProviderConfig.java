@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionOperations;
@@ -38,6 +39,7 @@ import stirling.software.proprietary.storage.repository.FileEncryptionKeyReposit
 import stirling.software.proprietary.storage.repository.StoredFileBlobRepository;
 
 @Configuration
+@DependsOn("runningProOrHigher")
 @RequiredArgsConstructor
 @Slf4j
 public class StorageProviderConfig {

@@ -19,20 +19,23 @@ export async function pollTeamCheckout(
     if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
     if (config.isMounted && !config.isMounted()) return { success: false };
     try {
-      if (await verifyTeamCheckout(sessionId, quantity)) {
+      const purchasedUsers = await verifyTeamCheckout(sessionId, quantity);
+      if (purchasedUsers != null) {
         if (!(await requiresLocalTeamActivation())) {
           config.onStatusChange?.("ready");
           return { success: true };
         }
         const result = await resyncExistingLicense({
           isMounted: config.isMounted,
-          onActivated: config.onActivated,
         });
         if (
           result.success &&
+          (result.licenseInfo?.linkedTeamUsers ?? 0) >= purchasedUsers &&
+          (result.licenseInfo?.maxAllowedUsers ?? 0) >= purchasedUsers &&
           (result.licenseType === "SERVER" ||
             result.licenseType === "ENTERPRISE")
         ) {
+          config.onActivated?.(result.licenseInfo!);
           config.onStatusChange?.("ready");
           return result;
         }

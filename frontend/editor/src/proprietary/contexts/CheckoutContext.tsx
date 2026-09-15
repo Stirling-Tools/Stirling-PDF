@@ -111,6 +111,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         return response.plans;
       } catch (error) {
         console.error("Failed to fetch plans:", error);
+        setPlansLoaded(false);
         return [];
       }
     },

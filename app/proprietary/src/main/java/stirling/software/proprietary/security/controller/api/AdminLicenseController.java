@@ -188,6 +188,12 @@ public class AdminLicenseController {
             response.put("success", true);
             response.put("licenseType", license.name());
             response.put("enabled", premium.isEnabled());
+            response.put(
+                    "linkedTeamUsers",
+                    licenseKeyChecker == null ? null : licenseKeyChecker.linkedTeamUsers());
+            response.put(
+                    "maxAllowedUsers",
+                    licenseKeyChecker == null ? null : licenseKeyChecker.maxAllowedUsers());
             response.put("maxUsers", premium.getMaxUsers());
             response.put("message", "License resynced successfully");
 
@@ -234,6 +240,12 @@ public class AdminLicenseController {
 
             ApplicationProperties.Premium premium = applicationProperties.getPremium();
             response.put("enabled", premium.isEnabled());
+            response.put(
+                    "linkedTeamUsers",
+                    licenseKeyChecker == null ? null : licenseKeyChecker.linkedTeamUsers());
+            response.put(
+                    "maxAllowedUsers",
+                    licenseKeyChecker == null ? null : licenseKeyChecker.maxAllowedUsers());
             response.put("maxUsers", premium.getMaxUsers());
             // Presentation only, so the plan page can say "2 servers, 100 users each" rather than a
             // bare 200. Both are 0 on a licence issued before the cap.

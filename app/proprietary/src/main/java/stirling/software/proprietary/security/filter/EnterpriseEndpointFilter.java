@@ -2,6 +2,8 @@ package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
 
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -14,6 +16,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.common.service.LicenseServiceInterface;
 
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class EnterpriseEndpointFilter extends OncePerRequestFilter {
     private final LicenseServiceInterface licenseService;
 

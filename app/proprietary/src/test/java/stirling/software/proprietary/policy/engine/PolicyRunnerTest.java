@@ -62,6 +62,11 @@ import stirling.software.proprietary.policy.source.SourceStore;
 class PolicyRunnerTest {
 
     @Mock private PolicyEngine policyEngine;
+
+    @Mock
+    private stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard
+            databaseLicenseGuard;
+
     @Mock private InputSource folderSource;
     @Mock private ProcessedLedger processedLedger;
 
@@ -79,7 +84,15 @@ class PolicyRunnerTest {
                         docCounter,
                         processedLedger,
                         new ApplicationProperties(),
-                        reachableOwners());
+                        reachableOwners(),
+                        databaseLicenseGuard);
+    }
+
+    @Test
+    void unlicensedDatabaseDoesNotClaimOrProcessSourceFiles() {
+        when(databaseLicenseGuard.requiresActivation()).thenReturn(true);
+        runner.run(policy(List.of(InputSpec.folder("/in"))));
+        verifyNoInteractions(folderSource, policyEngine, processedLedger);
     }
 
     @Test
@@ -109,7 +122,10 @@ class PolicyRunnerTest {
                         new InProcessSourceDocCounter(),
                         ledger,
                         new ApplicationProperties(),
-                        reachableOwners());
+                        reachableOwners(),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class));
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         // One file already processed at its current version, one parked by a failed run.
@@ -402,7 +418,10 @@ class PolicyRunnerTest {
                         docCounter,
                         processedLedger,
                         loginOn,
-                        guardOver(loginOn, noUsers()));
+                        guardOver(loginOn, noUsers()),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class));
 
         SweepOutcome outcome = enforced.run(stranded.withSurface(Policy.SURFACE_PROCESSING_FOLDER));
 

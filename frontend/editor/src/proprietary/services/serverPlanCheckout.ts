@@ -1,5 +1,6 @@
 /** Account-owned Team checkout and the separate installed Enterprise licence checkout. */
 import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
+import { getAccessToken } from "@app/auth/session";
 
 /**
  * A Team-plan checkout, sized in user blocks rather than seats.
@@ -50,8 +51,8 @@ export async function createServerPlanCheckoutSession(
     throw new Error("Supabase is not configured. Checkout is not available.");
   }
 
-  const { data: session } = await supabase.auth.getSession();
-  if (!request.requiresSeats && !session.session) {
+  const token = await getAccessToken();
+  if (!request.requiresSeats && !token) {
     throw new Error(
       "Sign in to the Stirling account you want to buy Team for, then try again.",
     );
@@ -60,6 +61,7 @@ export async function createServerPlanCheckoutSession(
   const { data, error } = await supabase.functions.invoke<CheckoutResponse>(
     "create-checkout",
     {
+      headers: token ? { Authorization: `Bearer ${token}` } : undefined,
       body: {
         lookup_key: request.lookupKey,
         server_quantity: request.serverQuantity,
@@ -67,14 +69,10 @@ export async function createServerPlanCheckoutSession(
         ...(request.requiresSeats ? { self_hosted: true } : {}),
         seat_count: request.seatCount ?? 1,
         ui_mode: request.uiMode,
-        ...(request.installationId
-          ? { installation_id: request.installationId }
-          : {}),
-        ...(request.currentLicenseKey
-          ? { current_license_key: request.currentLicenseKey }
-          : {}),
-        ...(request.successUrl ? { success_url: request.successUrl } : {}),
-        ...(request.cancelUrl ? { cancel_url: request.cancelUrl } : {}),
+        installation_id: request.installationId,
+        current_license_key: request.currentLicenseKey,
+        success_url: request.successUrl,
+        cancel_url: request.cancelUrl,
       },
     },
   );
@@ -109,18 +107,27 @@ export async function createServerPlanCheckoutSession(
   return { clientSecret, url, sessionId: data?.sessionId ?? null };
 }
 
-/** Confirms the account's purchased capacity and requests idempotent fulfilment if the webhook is delayed. */
+/** Returns confirmed purchased seats, or null while fulfilment is pending. */
 export async function verifyTeamCheckout(
   sessionId: string,
   quantity: number,
-): Promise<boolean> {
+): Promise<number | null> {
   if (!supabase) throw new Error("Checkout is not configured");
-  const { data, error } = await supabase.functions.invoke<{ ready: boolean }>(
-    "complete-team-checkout",
-    {
-      body: { session_id: sessionId, quantity },
-    },
-  );
+  const token = await getAccessToken();
+  if (!token) throw new Error("Sign in to verify the Team purchase");
+  const { data, error } = await supabase.functions.invoke<{
+    ready: boolean;
+    licensedUsers?: number;
+  }>("complete-team-checkout", {
+    headers: { Authorization: `Bearer ${token}` },
+    body: { session_id: sessionId, quantity },
+  });
   if (error) throw error;
-  return data?.ready === true;
+  const users = data?.licensedUsers;
+  return data?.ready &&
+    typeof users === "number" &&
+    Number.isInteger(users) &&
+    users > 0
+    ? users
+    : null;
 }

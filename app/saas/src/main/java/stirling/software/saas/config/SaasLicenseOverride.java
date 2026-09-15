@@ -2,12 +2,33 @@ package stirling.software.saas.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 
-/** Saas mode is unconditionally ENTERPRISE (every tenant is a paying Stripe customer). */
+import stirling.software.common.service.LicenseServiceInterface;
+
+/**
+ * SaaS infrastructure is licensed; tenant purchases are enforced by the billing entitlement gate.
+ */
 @Configuration
 @Profile("saas")
-public class SaasLicenseOverride {
+@Primary
+public class SaasLicenseOverride implements LicenseServiceInterface {
+
+    @Override
+    public boolean isRunningProOrHigher() {
+        return true;
+    }
+
+    @Override
+    public boolean isRunningEE() {
+        return true;
+    }
+
+    @Override
+    public String getLicenseTypeName() {
+        return "ENTERPRISE";
+    }
 
     @Bean(name = "runningProOrHigher")
     public boolean runningProOrHigherSaas() {
@@ -21,17 +42,6 @@ public class SaasLicenseOverride {
 
     @Bean(name = "runningEE")
     public boolean runningEnterpriseSaas() {
-        return true;
-    }
-
-    /**
-     * Needed even though nothing reads it here: {@code DatabaseConfig} takes it in its constructor
-     * and carries no profile of its own, so the class is built under saas even though its {@code
-     * dataSource()} bean is not. Saas does run on an external database, so true is also the honest
-     * answer.
-     */
-    @Bean(name = "customDatabaseAllowed")
-    public boolean customDatabaseAllowedSaas() {
         return true;
     }
 }

@@ -338,7 +338,7 @@ public class ConfigController {
                     "enableEasterEggs", applicationProperties.getSystem().isEnableEasterEggs());
 
             // Premium/Enterprise settings
-            configData.put("premiumEnabled", applicationProperties.getPremium().isEnabled());
+            configData.put("premiumEnabled", Boolean.TRUE.equals(isRunningProOrHigher()));
 
             // Whether this instance can link a Stirling (SaaS) account at all. The account-link
             // beans live in :proprietary and are @ConditionalOnProperty on this same key, so when

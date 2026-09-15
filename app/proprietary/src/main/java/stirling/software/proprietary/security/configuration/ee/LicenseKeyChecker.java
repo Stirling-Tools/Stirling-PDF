@@ -32,9 +32,7 @@ public class LicenseKeyChecker {
 
     private final UserLicenseSettingsService licenseSettingsService;
 
-    // volatile: written by evaluateLicense() on the @Scheduled refresh thread, read by request
-    // threads via getPremiumLicenseEnabledResult() / requireProOrEnterprise(). Ensures readers see
-    // the latest tier rather than a stale cached value.
+    // Licence refreshes and request threads share these snapshots.
     private volatile License premiumEnabledResult = License.NORMAL;
 
     /** The licence key's own tier, before any Team-plan promotion. Same volatile contract. */
@@ -54,31 +52,14 @@ public class LicenseKeyChecker {
         evaluateLicense();
     }
 
-    /**
-     * Applies the Team-plan promotion and syncs the licence row.
-     *
-     * <p>A backstop rather than the first attempt: the tier beans have already promoted while they
-     * were built. This catches an instance whose entitlement was unreadable then — SaaS unreachable
-     * at startup, say — without waiting for the first daily sync. Re-verifying the licence key is
-     * deliberately not repeated: that is a Keygen round trip and the key cannot have changed since
-     * boot.
-     */
+    /** Refreshes persisted entitlement without repeating Keygen verification. */
     @EventListener(ApplicationReadyEvent.class)
     public void onApplicationReady() {
         applyTeamPlanPromotion();
         synchronizeLicenseSettings();
     }
 
-    /**
-     * Re-reads the plan whenever the entitlement is refreshed, which costs nothing: the instance
-     * has just spoken to SaaS for its own reasons.
-     *
-     * <p>Deliberately not a schedule of its own. The instance talks to SaaS daily by design, so it
-     * can be offline for reasonable stretches without interruption, and a timer for this would undo
-     * that. A purchase made from this instance refreshes the entitlement on the checkout return,
-     * one made elsewhere is picked up by the next daily sync or the next restart -- the same three
-     * moments a licence key was ever noticed at.
-     */
+    /** Applies a newly synced Team entitlement. */
     @EventListener(EntitlementRefreshedEvent.class)
     public void onEntitlementRefreshed() {
         try {
@@ -126,23 +107,7 @@ public class LicenseKeyChecker {
         return verified;
     }
 
-    /**
-     * Raises the effective tier to SERVER when the linked cloud team holds a Team plan.
-     *
-     * <p>Team is sold on a SaaS account and issues no licence key, so without this the whole of
-     * what a SERVER licence unlocks would be unreachable to a customer who paid for it. Every
-     * licence consumer reads {@link #getPremiumLicenseEnabledResult()}, so promoting the one field
-     * is what lights them up.
-     *
-     * <p>Deliberately outside the {@code premium.enabled} gate. That flag is how an operator
-     * declares they hold a licence and wants the licence machinery on; a Team buyer has no licence
-     * to declare and never edits {@code settings.yml}, so gating on it would withhold what they
-     * bought until they found a YAML flag. Holding a Team plan is itself the declaration.
-     *
-     * <p>Never promotes to ENTERPRISE. Enterprise is contracted and stays licence-only, so {@code
-     * runningEE} and every {@code @EnterpriseEndpoint} keep requiring a real key. Precedence is an
-     * OR, not a replacement: a licence key that already grants more keeps its tier.
-     */
+    /** Team grants Server features independently of the installed-key settings. */
     private void applyTeamPlanPromotion() {
         if (licenseKeyResult != License.NORMAL) {
             premiumEnabledResult = licenseKeyResult;
@@ -152,14 +117,10 @@ public class LicenseKeyChecker {
         try {
             users = purchasedTeamUsers();
         } catch (RuntimeException e) {
-            // Could not ask is not the same answer as no plan. Demoting here would drop a paying
-            // customer to NORMAL because their database was busy or SaaS was briefly unreachable,
-            // so the tier stays where it was and the next refresh decides.
+            // A failed read must not revoke a known entitlement.
             log.debug("Linked team allowance unreadable; keeping the current tier", e);
             return;
         }
-        // A plan for no users is not a plan. SaaS already reports an unpurchased team as no
-        // allowance at all, so this only guards against a zero reaching us some other way.
         boolean entitled = users != null && users > 0;
         if (entitled) {
             log.info("Linked cloud team holds a Team plan for {} users; running as Server.", users);
@@ -167,13 +128,7 @@ public class LicenseKeyChecker {
         premiumEnabledResult = entitled ? License.SERVER : License.NORMAL;
     }
 
-    /**
-     * Users the linked cloud team has bought; null when it has bought none.
-     *
-     * <p>Throws rather than returning null when the allowance cannot be read at all — {@link
-     * #init()} runs before the datasource exists, so it always does there. The caller keeps the two
-     * apart, because "no plan" and "could not ask" must not mean the same thing to a tier.
-     */
+    /** Throws when entitlement cannot be read; null means no purchased Team capacity. */
     private Integer purchasedTeamUsers() {
         return licenseSettingsService.refreshLinkedTeamUsers();
     }
@@ -216,30 +171,14 @@ public class LicenseKeyChecker {
         synchronizeLicenseSettings();
     }
 
-    /**
-     * Re-reads everything that decides the tier, for a caller who knows something just changed.
-     *
-     * <p>Drops the cached entitlement first, so a purchase made seconds ago is seen rather than
-     * waited out: the cache is otherwise reused for its full TTL, and the whole point of an
-     * explicit resync is not to wait.
-     */
+    /** Refreshes the linked entitlement and installed licence after a purchase. */
     public void resyncLicense() {
         licenseSettingsService.forgetEntitlement();
         evaluateLicense();
         synchronizeLicenseSettings();
     }
 
-    /**
-     * The effective tier with the Team-plan promotion applied, for beans created while the context
-     * is still building.
-     *
-     * <p>{@link #init()} cannot promote: it runs before a datasource exists, so the licence row is
-     * unreadable and {@link #purchasedTeamUsers()} returns nothing. Bean methods that
-     * {@code @DependsOn("entityManagerFactory")} call this instead, by which point the row can be
-     * read.
-     *
-     * <p>Idempotent, so each such bean may ask.
-     */
+    /** Resolves the effective tier after the datasource is available. */
     public License premiumTier() {
         applyTeamPlanPromotion();
         return premiumEnabledResult;
@@ -249,25 +188,25 @@ public class LicenseKeyChecker {
         return premiumEnabledResult;
     }
 
-    /**
-     * The tier the installed licence key grants on its own, ignoring any Team-plan promotion.
-     *
-     * <p>For the seat arithmetic only: {@code premium.maxUsers} is a licence figure, so a caller
-     * that reads it has to know whether a licence is what produced the tier. Feature gates want
-     * {@link #getPremiumLicenseEnabledResult()}.
-     */
+    /** Purchased Team capacity, excluding grandfathered and installed-key allowances. */
+    public Integer linkedTeamUsers() {
+        return licenseSettingsService.refreshLinkedTeamUsers();
+    }
+
+    /** Effective admission limit enforced on this instance. */
+    public int maxAllowedUsers() {
+        return licenseSettingsService.calculateMaxAllowedUsers();
+    }
+
+    /** Installed-key tier only; use it for seat arithmetic, not feature gates. */
     public License getLicenseKeyResult() {
         return licenseKeyResult;
     }
 
-    /**
-     * Throws {@link IllegalStateException} if the current license is not Pro or Enterprise. Used by
-     * boot-time gates to fail fast when an operator enables a premium-only setting without a valid
-     * license. {@code configuredAs} is the human-readable property path (e.g. {@code
-     * "storage.provider=s3"}) and appears in the exception message.
-     */
+    /** Rejects a paid-only configuration using the current effective tier. */
     public void requireProOrEnterprise(String configuredAs) {
-        if (premiumEnabledResult != License.SERVER && premiumEnabledResult != License.ENTERPRISE) {
+        License tier = premiumTier();
+        if (tier != License.SERVER && tier != License.ENTERPRISE) {
             throw new IllegalStateException(configuredAs + " requires a Pro or Enterprise license");
         }
     }
