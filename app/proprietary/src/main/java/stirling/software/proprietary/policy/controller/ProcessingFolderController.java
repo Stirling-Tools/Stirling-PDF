@@ -886,12 +886,6 @@ public class ProcessingFolderController {
         return fileName == null ? path.toString() : fileName.toString();
     }
 
-    /**
-     * Both kinds process in place — the folder's contents become their processed selves. The sink
-     * records each replacement in the ledger at the result's version and the input settles its
-     * claim the same way, so a sweep never mistakes the folder's own output for new work. Disk
-     * output is what works on an install with no accounts and no file storage.
-     */
     private void requireAccessibleDestination(String outputId) {
         Source destination =
                 sourceStore
@@ -915,6 +909,12 @@ public class ProcessingFolderController {
         }
     }
 
+    /**
+     * Both kinds process in place — the folder's contents become their processed selves. The sink
+     * records each replacement in the ledger at the result's version and the input settles its
+     * claim the same way, so a sweep never mistakes the folder's own output for new work. Disk
+     * output is what works on an install with no accounts and no file storage.
+     */
     private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
