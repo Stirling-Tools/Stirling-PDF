@@ -123,7 +123,7 @@ export async function dispatchPolicyFile(
     recordRunStart({
       runId: `dispatch-failed:${generateId()}`,
       policyKey,
-      fileId,
+      fileId: fileId ?? "",
       fileName,
       fileSize: file.size,
       target,
