@@ -32,6 +32,7 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.InviteRedemptionService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
 
@@ -44,6 +45,7 @@ class InviteLinkControllerMoreTest {
     @Mock private UserService userService;
     @Mock private EmailService emailService;
     @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock private InviteRedemptionService inviteRedemptionService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -65,7 +67,8 @@ class InviteLinkControllerMoreTest {
                         userService,
                         applicationProperties,
                         Optional.of(emailService),
-                        userLicenseSettingsService);
+                        userLicenseSettingsService,
+                        inviteRedemptionService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -296,13 +299,32 @@ class InviteLinkControllerMoreTest {
             invite.setTeamId(3L);
             when(inviteTokenRepository.findByToken("preset")).thenReturn(Optional.of(invite));
             when(userService.usernameExistsIgnoreCase("preset@ex.com")).thenReturn(false);
+            when(inviteRedemptionService.redeem(invite, "preset@ex.com", "secret123"))
+                    .thenReturn(true);
 
             mockMvc.perform(post("/api/v1/invite/accept/preset").param("password", "secret123"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.username").value("preset@ex.com"));
 
-            verify(userService).saveUserCore(any());
-            verify(inviteTokenRepository).save(invite);
+            verify(inviteRedemptionService).redeem(invite, "preset@ex.com", "secret123");
+        }
+
+        @Test
+        @DisplayName("returns 404 when a concurrent redemption consumed the token first")
+        void losesTheRaceForTheToken() throws Exception {
+            InviteToken invite = validInvite("general");
+            invite.setEmail(null);
+            when(inviteTokenRepository.findByToken("general")).thenReturn(Optional.of(invite));
+            when(userService.usernameExistsIgnoreCase("second@ex.com")).thenReturn(false);
+            when(inviteRedemptionService.redeem(invite, "second@ex.com", "secret123"))
+                    .thenReturn(false);
+
+            mockMvc.perform(
+                            post("/api/v1/invite/accept/general")
+                                    .param("email", "second@ex.com")
+                                    .param("password", "secret123"))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.error").value("Invalid invite link"));
         }
 
         @Test
@@ -320,8 +342,7 @@ class InviteLinkControllerMoreTest {
                     .andExpect(status().isConflict())
                     .andExpect(jsonPath("$.error").value(containsString("limit of 100 users")));
 
-            verify(userService, never()).saveUserCore(any());
-            verify(inviteTokenRepository, never()).save(invite);
+            verify(inviteRedemptionService, never()).redeem(any(), any(), any());
         }
     }
 }

@@ -29,6 +29,7 @@ import stirling.software.proprietary.security.model.InviteToken;
 import stirling.software.proprietary.security.repository.InviteTokenRepository;
 import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.EmailService;
+import stirling.software.proprietary.security.service.InviteRedemptionService;
 import stirling.software.proprietary.security.service.TeamService;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
@@ -41,6 +42,7 @@ class InviteLinkControllerTest {
     @Mock private UserService userService;
     @Mock private EmailService emailService;
     @Mock private UserLicenseSettingsService userLicenseSettingsService;
+    @Mock private InviteRedemptionService inviteRedemptionService;
 
     private ApplicationProperties applicationProperties;
     private MockMvc mockMvc;
@@ -62,7 +64,8 @@ class InviteLinkControllerTest {
                         userService,
                         applicationProperties,
                         Optional.of(emailService),
-                        userLicenseSettingsService);
+                        userLicenseSettingsService,
+                        inviteRedemptionService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
 
@@ -173,6 +176,8 @@ class InviteLinkControllerTest {
         invite.setEmail(null); // email required from request
         when(inviteTokenRepository.findByToken("abc")).thenReturn(Optional.of(invite));
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
+        when(inviteRedemptionService.redeem(invite, "new@example.com", "password123"))
+                .thenReturn(true);
 
         mockMvc.perform(
                         post("/api/v1/invite/accept/abc")
@@ -182,7 +187,6 @@ class InviteLinkControllerTest {
                 .andExpect(jsonPath("$.message").value("Account created successfully"))
                 .andExpect(jsonPath("$.username").value("new@example.com"));
 
-        verify(userService).saveUserCore(any());
-        verify(inviteTokenRepository).save(invite);
+        verify(inviteRedemptionService).redeem(invite, "new@example.com", "password123");
     }
 }
