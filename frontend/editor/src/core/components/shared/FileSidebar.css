@@ -33,9 +33,8 @@
   border-radius: 0;
 }
 
-/* Reading takes the wing off the leading edge, and leaving reading brings it
-   back the same way. Transform only, and out of flow while it leaves, so the
-   workbench holds its reading width throughout instead of reflowing twice. */
+/* Transform only, and out of flow while the wing leaves, so the workbench holds
+   its reading width throughout instead of reflowing twice. */
 [data-wings] {
   position: relative;
 }

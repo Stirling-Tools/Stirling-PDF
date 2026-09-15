@@ -24,14 +24,9 @@ interface RailItem {
 }
 
 /**
- * The controls that belong beside a document being read.
- *
- * The icons are declared here rather than taken from the viewer, so the rail is the
- * same shape with a document open or not: the viewer only mounts once something is
- * open, and a rail that filled in as files arrived would be a moving target. Where
- * the viewer has registered a control, its own behaviour is used - that is how find
- * and read-aloud keep the popovers they already had - and where it has not, the icon
- * is there but disabled.
+ * The controls beside a document being read, declared here rather than taken from the
+ * viewer: the viewer only mounts once something is open, so a rail built from its
+ * registrations would fill in as files arrived.
  *
  * Absent on purpose: page navigation, zoom and the colour filters, which live in the
  * viewer's own toolbar that reading collapses rather than removes; and anything that
@@ -83,8 +78,8 @@ export function ReaderRail() {
   const { requestNavigation } = useNavigationGuard();
   const { files, fileIds } = useAllFiles();
 
-  // The id as the workbench holds it, so the close acts on a document that is
-  // really open rather than one the viewer has not caught up with.
+  // Resolved against the workbench's own ids, so a close cannot act on a document
+  // the viewer has not caught up with.
   const openFileId = useMemo(
     () => fileIds.find((id) => (id as string) === activeFileId) ?? null,
     [fileIds, activeFileId],
@@ -92,10 +87,8 @@ export function ReaderRail() {
 
   // Through the guard, because closing what you are reading is a way out of it and
   // unsaved changes still deserve their prompt. Storage keeps its copy: this closes
-  // the document, it does not delete it. The viewer falls to the next one open.
-  //
-  // Pressable with nothing open, where it does nothing: the rail cannot always read
-  // whether a document is open, and a wrongly greyed-out control is the worse failure.
+  // the document, it does not delete it. Left pressable with nothing open, because
+  // the rail cannot always tell, and a wrongly greyed-out control is the worse failure.
   const closeDocument = useCallback(() => {
     if (!openFileId) return;
     requestNavigation(() => {
@@ -136,8 +129,8 @@ export function ReaderRail() {
       className="reader-rail"
       aria-label={t("reader.rail.label", "Reading tools")}
     >
-      {/* Which document, and whether it stays open: both are about the document
-          itself rather than how it is read, so they lead the rail. */}
+      {/* The document-level controls lead the rail; the groups below act on how it
+          is read. */}
       <div className="reader-rail__group">
         <AppTooltip content={closeLabel} position="left" arrow delay={0}>
           <ActionIcon

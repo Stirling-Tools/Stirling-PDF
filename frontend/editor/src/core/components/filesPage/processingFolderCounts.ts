@@ -48,6 +48,9 @@ function subscribe(recordId: string, notify: () => void): () => void {
  * Live per-state counts for a processing folder. The numbers are shared, so a folder
  * shown as a card and as a row - or the same row remounted by the list's windowing -
  * costs one request per interval rather than one per component.
+ *
+ * One lister serves every subscriber, so callers must pass equivalent ones: the most
+ * recent call's lister is the one the polling uses, for all records.
  */
 export function useProcessingFolderCounts(
   recordId: string,

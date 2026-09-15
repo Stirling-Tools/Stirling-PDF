@@ -78,8 +78,7 @@ const VIEW_MODE_STORAGE_KEY = "stirling.filesPageViewMode";
 
 /**
  * The list is the default: it shows more files per screen and carries the columns the
- * grid has no room for. The grid is one click away, and the choice is the user's from
- * then on.
+ * grid has no room for.
  */
 function readPersistedViewMode(): FilesPageViewMode {
   try {

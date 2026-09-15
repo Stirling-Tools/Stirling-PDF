@@ -212,12 +212,9 @@ export default function HomePage() {
     }
   }, [navigationState.workbench, location.pathname, navigate]);
 
-  // Reading is a surface too, so the path names it and the same two-effect
-  // discipline applies: each side moves the other on a transition only.
-
-  // Path moved, so the path is the cause. Mount included, which is what makes a
-  // reload land back in reading - and what takes you out of it when the library
-  // moves the path to its own, since the two surfaces cannot both be on screen.
+  // Path moved, so the path is the cause. The ref starts null so mount counts too:
+  // that is what makes a reload land back in reading, and what takes you out of it
+  // when the library moves the path to its own.
   const readerDerivedFromPath = useRef<string | null>(null);
   useEffect(() => {
     if (readerDerivedFromPath.current === location.pathname) return;
@@ -226,11 +223,10 @@ export default function HomePage() {
     if (onReadPath !== readerMode) setReaderMode(onReadPath);
   }, [location.pathname, readerMode, setReaderMode]);
 
-  // The wings leave and return over the edge they sit on, so moving between the
-  // editor and reading reads as one workspace rather than two layouts swapping.
-  // Leaving outlives reader mode by the length of its own animation: the rails'
-  // stylesheets take them out of flow while it runs, so what is underneath is
-  // already in its reading position and nothing reflows twice.
+  // The wings animate off their own edge, so the unmount waits out the leave rather
+  // than happening with it. The rails' stylesheets take them out of flow while it
+  // runs, so what is underneath is already in its reading position and nothing
+  // reflows twice.
   const [wingsMounted, setWingsMounted] = useState(!readerMode);
   const [wingsPhase, setWingsPhase] = useState<"leaving" | "returning" | null>(
     null,
@@ -665,9 +661,8 @@ export default function HomePage() {
             bg="var(--c-bg)"
             data-wings={wingsPhase ?? undefined}
           >
-            {/* Reading is a surface of its own: the document and nothing beside it,
-                so the wing goes rather than shrinking to a rail. Everywhere else it
-                is fixed open - see FileSidebar. */}
+            {/* Reading leaves the document and nothing beside it, so the wing goes
+                rather than shrinking to a rail. Everywhere else it is fixed open. */}
             {wingsMounted && (
               <div className="workspace-frame">
                 <MyFilesAwareFileSidebar
@@ -679,9 +674,9 @@ export default function HomePage() {
               </div>
             )}
             <Workbench />
-            {/* Reading gets its own rail in the slot the tool panel holds otherwise:
-                the panel's controls are the editor's, and reading wants the viewer's.
-                Both are here only while the panel is on its way out. */}
+            {/* The reader's rail takes the slot the tool panel holds otherwise: the
+                panel's controls are the editor's, and reading wants the viewer's.
+                Both render together only while the panel is on its way out. */}
             {wingsMounted && !hideToolPanel && <RightSidebar />}
             {readerMode && <ReaderRail />}
             <FileManager selectedTool={selectedTool} />

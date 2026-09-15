@@ -1162,7 +1162,6 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                   the view. */}
               {currentWorkbench === "myFiles" && <FolderTreeSection />}
 
-              {/* Files section - outside the library */}
               {currentWorkbench !== "myFiles" && (
                 <div className="file-sidebar-files-section sidebar-content-fade">
                   <div className="file-sidebar-section-header">

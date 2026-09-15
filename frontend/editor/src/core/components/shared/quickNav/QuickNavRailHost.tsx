@@ -69,15 +69,14 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  // The surfaces you can be on, one at a time. Reading is one of them rather than
-  // a tool inside the editor, and it leads the group because it is where most
-  // visits start.
+  // Reading is a surface of its own rather than a tool inside the editor, and it
+  // leads the group because it is where most visits start.
   const reader: QuickNavEntry = {
     id: "reader",
     label: t("quickNav.reader", "Reader"),
     icon: <Icon name="book-open" size={SIZE} />,
-    // A surface you are on, not a switch left on, so each of the three states the
-    // condition that excludes the others.
+    // Current means the surface you are on, not a switch left on: reader mode set
+    // from the processor does not count until you are in the editor.
     current: inEditor && Boolean(host?.readerMode),
     // From the processor there is no editor to toggle - see pendingReaderMode.
     onClick: () => {
@@ -128,9 +127,8 @@ export function QuickNavRailHost() {
     },
   };
 
-  // Editor and processor only pair off where there is a processor to reach; the
-  // group itself carries no such condition, or reading would vanish from every
-  // build without a portal.
+  // Editor and processor only pair off where there is a processor to reach. Reading
+  // sits outside that condition, or it would vanish from every build without a portal.
   const surfaces: QuickNavEntry[] = HAS_PORTAL
     ? [reader, editor, processor]
     : [reader];
