@@ -50,8 +50,10 @@ export function decodedToState(
     configured: true,
     enabled: decoded.enabled,
     name: decoded.name,
+    owner: decoded.owner,
     sources: decoded.sources,
     runsOnEditor: decoded.runsOnEditor,
+    required: decoded.required,
     scopeTypes: decoded.scopeTypes,
     reviewerEmail: decoded.reviewerEmail,
     fieldValues: decoded.fieldValues,
@@ -61,6 +63,7 @@ export function decodedToState(
     runOn: decoded.folder.runOn,
     folderId: localFolderId,
     backendId: decoded.id,
+    firstOperation: decoded.firstOperation,
     // Server-side run-order position (team-wide); drives the settings reorder list.
     order: decoded.order,
     // Catalog-category policies are built-in defaults (not deletable); a builder pipeline is not.

@@ -1,123 +1,21 @@
-/*
- * Recorded failures list. Colours come from semantic tokens only; no literals.
- * See core/theme/README.md.
- */
+/* Failures chrome only: rows, cells and the filter bar belong to the DataTable. */
 
 .portal-failures {
-  margin-top: var(--space-8, 2rem);
-}
-
-.portal-failures__heading {
-  font-size: 1.05rem;
-  font-weight: 600;
-  color: var(--c-text);
-  margin: 0;
-}
-
-.portal-failures__sub {
-  font-size: 0.85rem;
-  color: var(--c-text-muted);
-  margin: 0.2rem 0 1rem;
-}
-
-.portal-failures__skeleton {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
 }
 
-.portal-failures__list {
-  list-style: none;
+/* One row's raw log inside the View-log modal. */
+.portal-failures__log {
   margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-}
-
-.portal-failures__row {
-  padding: 0.8rem 0.95rem;
-}
-
-.portal-failures__meta {
-  display: flex;
-  align-items: center;
-  gap: 0.55rem;
-  flex-wrap: wrap;
-}
-
-.portal-failures__title {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--c-text);
-}
-
-.portal-failures__count {
-  font-size: 0.75rem;
-  color: var(--c-text-subtle);
-}
-
-.portal-failures__file {
-  font-size: 0.82rem;
-  color: var(--c-text-muted);
-  margin-top: 0.3rem;
-}
-
-/* The raw failure message. Monospace because for an unclassified failure this is
-   a stack-trace-ish diagnostic, not prose. */
-.portal-failures__origin {
-  font-size: 0.75rem;
-  color: var(--c-text-subtle);
-  border: 1px solid var(--c-border-subtle);
-  border-radius: var(--radius-sm, 0.25rem);
-  padding: 0 0.35rem;
-}
-
-.portal-failures__actor {
-  font-size: 0.8125rem;
-  color: var(--c-text-muted);
-}
-
-.portal-failures__detail {
-  font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.76rem;
-  color: var(--c-text-subtle);
-  background: var(--c-surface-sunken);
-  border-radius: 6px;
-  padding: 0.45rem 0.6rem;
-  margin: 0.5rem 0 0;
-  overflow-wrap: anywhere;
-}
-
-.portal-failures__actions {
-  display: flex;
-  gap: 0.45rem;
-  margin-top: 0.7rem;
-  flex-wrap: wrap;
-}
-
-/* ── Dev-only inspector (see FileRunEventList) ─────────────────────────────── */
-.portal-failures__debug {
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
-  align-items: flex-start;
-  margin-bottom: 0.8rem;
   padding: 0.5rem;
-  border: 1px dashed var(--c-border-strong);
-  border-radius: 6px;
-}
-
-.portal-failures__debug-json {
-  flex: 1 1 100%;
-  max-height: 26rem;
   overflow: auto;
-  margin: 0.4rem 0 0;
-  padding: 0.5rem;
   background: var(--c-surface-sunken);
   border-radius: 4px;
   font-family: var(--font-mono, ui-monospace, monospace);
-  font-size: 0.7rem;
-  white-space: pre;
+  font-size: 0.76rem;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
   user-select: all;
 }

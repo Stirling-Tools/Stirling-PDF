@@ -1,3 +1,4 @@
+import { classificationCondition } from "@app/data/classificationConditions";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   fireEvent,
@@ -28,12 +29,22 @@ vi.mock("react-i18next", () => ({
   }),
 }));
 
+vi.mock("@portal/hooks/useAiEngineEnabled", () => ({
+  useAiEngineEnabled: () => ({
+    enabled: true,
+    classificationEnabled: true,
+    loading: false,
+  }),
+}));
+
 const fetchPipeline = vi.fn();
 const fetchTriggers = vi.fn();
 const savePipeline = vi.fn();
 const deletePipeline = vi.fn();
 const triggerPipeline = vi.fn();
 const fetchRun = vi.fn();
+const runPipelineTest = vi.fn();
+const fetchRunOutput = vi.fn();
 vi.mock("@portal/api/pipelines", () => ({
   fetchPipeline: (id: string) => fetchPipeline(id),
   fetchTriggers: () => fetchTriggers(),
@@ -41,6 +52,9 @@ vi.mock("@portal/api/pipelines", () => ({
   deletePipeline: (id: string) => deletePipeline(id),
   triggerPipeline: (id: string) => triggerPipeline(id),
   fetchRun: (runId: string) => fetchRun(runId),
+  fetchPolicyPermissions: () => Promise.resolve({ canManagePolicies: true }),
+  runPipelineTest: (...args: unknown[]) => runPipelineTest(...args),
+  fetchRunOutput: (...args: unknown[]) => fetchRunOutput(...args),
 }));
 
 const uploadPipelineAsset = vi.fn();
@@ -260,6 +274,16 @@ vi.mock("@app/contexts/ToolRegistryContext", () => {
   return { useToolRegistry: () => catalog };
 });
 
+const routingRule = (values: string[]) => ({
+  condition: classificationCondition(values),
+  outputId: "src-1",
+});
+
+const CLASSIFY_STEP = {
+  operation: "/api/v1/ai/tools/classify-and-label",
+  parameters: {},
+};
+
 const POLICY: Policy = {
   id: "plc-1",
   name: "Existing pipeline",
@@ -331,6 +355,8 @@ describe("PipelineBuilder", () => {
     deletePipeline.mockReset();
     triggerPipeline.mockReset();
     fetchRun.mockReset();
+    runPipelineTest.mockReset();
+    runPipelineTest.mockResolvedValue({ runId: "run-test-1" });
     fetchSources.mockReset();
     fetchPipeline.mockResolvedValue(POLICY);
     fetchTriggers.mockResolvedValue([]);
@@ -838,6 +864,80 @@ describe("PipelineBuilder", () => {
     expect(body.outputIds).toEqual([]);
   });
 
+  it("carries a saved pipeline's routes through an unrelated edit", async () => {
+    const routed = routingRule(["invoice"]);
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      // Routing reads the verdict this step writes, so a routing pipeline carries one.
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-1"],
+      routingRules: [routed],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    // The name is a heading until the rename affordance is used.
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    // Routing is edited on the destination node; renaming the pipeline must not drop it.
+    expect(savePipeline.mock.calls[0][0].routingRules).toEqual([routed]);
+  });
+
+  it("refuses to save a route with no document types on it", async () => {
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      steps: [CLASSIFY_STEP],
+      outputIds: ["src-1"],
+      // What the toggle seeds: a rule the user has not filled in yet.
+      routingRules: [routingRule([])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    // The backend's PolicyValidator would reject this; the builder says so first.
+    await waitFor(() => expect(savePipeline).not.toHaveBeenCalled());
+  });
+
+  it("refuses to save routes whose classify step has been removed", async () => {
+    fetchPipeline.mockResolvedValue({
+      ...POLICY,
+      inputs: [{ sourceId: "src-in", trigger: null }],
+      // Rules outliving the step that feeds them: every document would fall to the fallback.
+      steps: [],
+      outputIds: ["src-1"],
+      routingRules: [routingRule(["invoice"])],
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+
+    fireEvent.click(
+      await screen.findByLabelText("portal.pipelines.builder.rename"),
+    );
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Renamed" } },
+    );
+    fireEvent.click(screen.getByText("portal.pipelines.composer.save"));
+
+    await waitFor(() => expect(savePipeline).not.toHaveBeenCalled());
+  });
+
   it("runs an existing pipeline and reports success", async () => {
     renderBuilder("/processor/pipelines/plc-1");
 
@@ -887,6 +987,76 @@ describe("PipelineBuilder", () => {
     expect(
       await screen.findByText("portal.pipelines.run.completed"),
     ).toBeInTheDocument();
+  });
+
+  function twoStepPolicy(): Policy {
+    return {
+      ...POLICY,
+      steps: [
+        { operation: "/api/v1/misc/compress-pdf", parameters: {} },
+        { operation: "/api/v1/misc/extract-images", parameters: {} },
+      ] as unknown as Policy["steps"],
+    };
+  }
+
+  async function runTestWith(view: Record<string, unknown>) {
+    fetchRun.mockResolvedValue({
+      runId: "run-test-1",
+      stepCount: 2,
+      outputs: [],
+      error: null,
+      ...view,
+    });
+    renderBuilder("/processor/pipelines/plc-1");
+    await screen.findByText("portal.pipelines.builder.testRun");
+    const picker = document.querySelector<HTMLInputElement>(
+      'input[type="file"][accept="application/pdf"]',
+    );
+    if (!picker) throw new Error("test-run file input not rendered");
+    fireEvent.change(picker, {
+      target: {
+        files: [new File(["x"], "in.pdf", { type: "application/pdf" })],
+      },
+    });
+    await waitFor(() => expect(runPipelineTest).toHaveBeenCalledTimes(1));
+  }
+
+  it("blames the step that actually failed, not the one after it", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "FAILED", currentStep: 1, error: "boom" });
+
+    await screen.findByLabelText("portal.pipelines.graph.showError");
+    expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull();
+  });
+
+  it("marks only the steps that finished before the one still running", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "RUNNING", currentStep: 2 });
+
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("portal.pipelines.graph.run.done"),
+      ).toHaveLength(1),
+    );
+  });
+
+  it("retires a test result once the chain it ran against changes", async () => {
+    fetchPipeline.mockResolvedValue(twoStepPolicy());
+
+    await runTestWith({ status: "COMPLETED", currentStep: 2 });
+    await waitFor(() =>
+      expect(
+        screen.getAllByText("portal.pipelines.graph.run.done"),
+      ).toHaveLength(2),
+    );
+
+    await addTool("OCR");
+
+    await waitFor(() =>
+      expect(screen.queryByText("portal.pipelines.graph.run.done")).toBeNull(),
+    );
   });
 
   it("uploads a step's supporting file and saves it as an asset binding", async () => {

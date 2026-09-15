@@ -44,6 +44,7 @@ public class ConvertHtmlToPDF {
     // A ZIP of HTML plus its CSS is a first-class input here, and is what convert/pdf/html emits.
     @ToolIO(
             accepts = {ToolFormat.HTML, ToolFormat.ZIP},
+            inputExtensions = {"html", "zip"},
             produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert an HTML or ZIP (containing HTML and CSS) to PDF",

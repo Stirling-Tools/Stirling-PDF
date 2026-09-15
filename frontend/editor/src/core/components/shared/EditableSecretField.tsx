@@ -2,8 +2,8 @@ import { useId, useState, useRef, useEffect } from "react";
 import { PasswordInput, Group, Tooltip, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
-
+import { InfoTooltip } from "@app/ui/InfoTooltip";
+import { Icon } from "@app/ui/Icon";
 interface EditableSecretFieldProps {
   label?: string;
   description?: string;
@@ -66,29 +66,18 @@ export default function EditableSecretField({
 
   return (
     <div>
-      {label && (
-        <label
-          htmlFor={fieldId}
-          style={{
-            display: "block",
-            marginBottom: 4,
-            fontWeight: 500,
-            fontSize: "0.875rem",
-          }}
-        >
-          {label}
-        </label>
-      )}
-      {description && (
-        <p
-          style={{
-            margin: "4px 0 12px 0",
-            fontSize: "0.75rem",
-            color: "var(--c-text-muted)",
-          }}
-        >
-          {description}
-        </p>
+      {(label || description) && (
+        <Group gap={4} mb={4} wrap="nowrap">
+          {label && (
+            <label
+              htmlFor={fieldId}
+              style={{ fontWeight: 500, fontSize: "0.875rem" }}
+            >
+              {label}
+            </label>
+          )}
+          {description && <InfoTooltip label={description} />}
+        </Group>
       )}
 
       {isMasked && !isEditing ? (
@@ -112,7 +101,7 @@ export default function EditableSecretField({
                 "Edit secret value",
               )}
             >
-              <LocalIcon icon="edit" width="1rem" height="1rem" />
+              <Icon name="pencil" size="1rem" />
             </ActionIcon>
           </Tooltip>
         </Group>

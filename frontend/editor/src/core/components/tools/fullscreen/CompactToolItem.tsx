@@ -14,7 +14,7 @@ import {
   getIconStyle,
   getItemClasses,
   useToolMeta,
-  getDisabledLabel,
+  resolveDisabledMessage,
 } from "@app/components/tools/fullscreen/shared";
 import { Button } from "@app/ui/Button";
 
@@ -98,9 +98,7 @@ const CompactToolItem: React.FC<CompactToolItemProps> = ({
     </Button>
   );
 
-  const { key: disabledKey, fallback: disabledFallback } =
-    getDisabledLabel(disabledReason);
-  const disabledMessage = t(disabledKey, disabledFallback);
+  const disabledMessage = resolveDisabledMessage(t, disabledReason, tool);
 
   const tooltipContent = disabled ? (
     <span>

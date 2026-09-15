@@ -13,6 +13,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -20,6 +22,9 @@ import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.MessageSource;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.transaction.support.TransactionSynchronizationUtils;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.enumeration.Role;
@@ -79,7 +84,38 @@ class UserServiceTest {
                     stirling.software.proprietary.service.UserLicenseSettingsService>
             licenseSettingsService;
 
+    @org.mockito.Mock private stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
+
     @Spy @InjectMocks private UserService userService;
+
+    @Test
+    void ownershipRefusalsPreventAllFourUserMutations() throws Exception {
+        User owner = new User();
+        owner.setId(1L);
+        owner.setUsername("owner");
+        owner.addAuthority(new Authority(Role.ADMIN.getRoleId(), owner));
+        doThrow(
+                        new org.springframework.web.server.ResponseStatusException(
+                                org.springframework.http.HttpStatus.BAD_REQUEST))
+                .when(orgOwnerService)
+                .protect(eq(1L), anyBoolean());
+        assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> userService.changeRole(owner, Role.USER.getRoleId()));
+        assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> userService.changeUserEnabled(owner, false));
+        assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> userService.changePassword(owner, "replacement"));
+        when(userRepository.findByUsernameIgnoreCase("owner")).thenReturn(Optional.of(owner));
+        assertThrows(
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> userService.deleteUser("owner"));
+        verify(userRepository, never()).save(any());
+        verify(userRepository, never()).delete(any());
+        verifyNoInteractions(passwordEncoder, sessionRegistry);
+    }
 
     @Test
     void saveUserCore_populatesFieldsAndPersists()
@@ -170,7 +206,6 @@ class UserServiceTest {
         stirling.software.proprietary.service.UserLicenseSettingsService settings =
                 mock(stirling.software.proprietary.service.UserLicenseSettingsService.class);
         when(licenseSettingsService.getIfAvailable()).thenReturn(settings);
-        when(settings.wouldExceedLimit(1)).thenReturn(true);
         when(settings.calculateMaxAllowedUsers()).thenReturn(100);
         when(userRepository.count()).thenReturn(100L);
         when(userRepository.findByUsernameIgnoreCase(Role.INTERNAL_API_USER.getRoleId()))
@@ -371,5 +406,75 @@ class UserServiceTest {
 
         verify(userRepository, never()).delete(any());
         verify(workflowSessionRepository, never()).findByOwnerOrderByCreatedAtDesc(any());
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "username, true", "password, true", "role, true", "enabled, true",
+        "username, false", "password, false", "role, false", "enabled, false"
+    })
+    void userMutationExportsOnlyAfterSuccessfulCommit(String mutation, boolean commit)
+            throws Exception {
+        User user = new User();
+        user.setId(5L);
+        user.setUsername("before");
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            switch (mutation) {
+                case "username" -> userService.changeUsername(user, "after");
+                case "password" -> userService.changePassword(user, "replacement");
+                case "role" -> {
+                    when(authorityRepository.findByUserId(5L))
+                            .thenReturn(new Authority(Role.USER.getRoleId(), user));
+                    userService.changeRole(user, Role.ADMIN.getRoleId());
+                }
+                case "enabled" -> userService.changeUserEnabled(user, false);
+                default -> throw new IllegalArgumentException(mutation);
+            }
+            verify(databaseService, never()).exportDatabase();
+            if (commit) {
+                TransactionSynchronizationUtils.triggerAfterCommit();
+                verify(databaseService).exportDatabase();
+            } else {
+                TransactionSynchronizationUtils.triggerAfterCompletion(
+                        TransactionSynchronization.STATUS_ROLLED_BACK);
+                verify(databaseService, never()).exportDatabase();
+            }
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
+    }
+
+    @Test
+    void saveUserCore_holdsTheDatabaseExportUntilAfterCommit()
+            throws SQLException, UnsupportedProviderException {
+        Team team = new Team();
+        team.setId(7L);
+        when(userRepository.save(any(User.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
+
+        SaveUserRequest request =
+                SaveUserRequest.builder()
+                        .username("deferredExport")
+                        .team(team)
+                        .role(Role.USER.getRoleId())
+                        .authenticationType(AuthenticationType.WEB)
+                        .build();
+
+        TransactionSynchronizationManager.initSynchronization();
+        try {
+            userService.saveUserCore(request);
+
+            // The insert has happened but nothing has committed. Exporting here would write a
+            // backup missing this user (the export uses its own connection) and would hold the
+            // admission lock across an EE notification mail that has no timeout.
+            verify(userRepository).save(any(User.class));
+            verify(databaseService, never()).exportDatabase();
+
+            TransactionSynchronizationUtils.triggerAfterCommit();
+            verify(databaseService).exportDatabase();
+        } finally {
+            TransactionSynchronizationManager.clearSynchronization();
+        }
     }
 }

@@ -22,6 +22,17 @@
 }
 
 /* ---- View switcher (left) ---- */
+/* Follows the view switcher, which claims order 1 in the bar's reflow. */
+.workbench-bar-lead {
+  order: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  height: 38px;
+}
+
 .workbench-bar-views {
   order: 1;
   flex-shrink: 0;
@@ -98,6 +109,7 @@
   order: 2;
   flex: 1 1 auto;
   min-width: 0;
+  container-type: inline-size;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -120,6 +132,12 @@
 
 [data-mantine-color-scheme="dark"] .workbench-bar-search .super-search input {
   background-color: transparent;
+}
+
+@container (max-width: 9rem) {
+  .workbench-bar-search .super-search input::placeholder {
+    color: transparent;
+  }
 }
 
 /* Crowded: drops to its own full-width row between the top row and the tools. */
@@ -237,7 +255,6 @@
 .workbench-bar-action-icon svg,
 .workbench-bar-action-icon img {
   color: inherit !important;
-  fill: currentColor;
 }
 
 .workbench-bar-action-icon:hover {

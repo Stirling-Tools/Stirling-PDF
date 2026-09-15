@@ -5,23 +5,27 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
+import type React from "react";
+
 import { MantineProvider } from "@mantine/core";
 import { HttpError } from "@portal/api/http";
 import { Integrations } from "@portal/views/Integrations";
 import type { IntegrationConfig } from "@portal/api/integrations";
 
-const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
-
-vi.mock("@portal/hooks/useConnectGate", () => ({
-  useConnectGate: () => ({
-    gated: false,
-    loading: false,
-    available: false,
-    connect: vi.fn(),
-    guard: (fn: unknown) => fn,
-  }),
+vi.mock("@mantine/hooks", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@mantine/hooks")>()),
+  useReducedMotion: () => true,
 }));
+
+// Reduced motion also stops transition timers, which env="test" alone still schedules.
+const TestProvider = ({ children }: { children: React.ReactNode }) => (
+  <MantineProvider env="test" theme={{ respectReducedMotion: true }}>
+    {children}
+  </MantineProvider>
+);
+
+const render = (ui: Parameters<typeof baseRender>[0]) =>
+  baseRender(ui, { wrapper: TestProvider });
 
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({

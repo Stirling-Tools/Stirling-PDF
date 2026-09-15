@@ -19,7 +19,7 @@ import {
 import type { ToolId } from "@app/types/toolId";
 import {
   getToolDisabledReason,
-  getDisabledLabel,
+  resolveDisabledMessage,
 } from "@app/components/tools/fullscreen/shared";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { CloudBadge } from "@app/components/shared/CloudBadge";
@@ -103,9 +103,7 @@ const ToolButton: React.FC<ToolButtonProps> = ({
       ? getToolNavigation(id, tool)
       : null;
 
-  const { key: disabledKey, fallback: disabledFallback } =
-    getDisabledLabel(disabledReason);
-  const disabledMessage = t(disabledKey, disabledFallback);
+  const disabledMessage = resolveDisabledMessage(t, disabledReason, tool);
 
   const tooltipContent = visuallyUnavailable ? (
     <span>
