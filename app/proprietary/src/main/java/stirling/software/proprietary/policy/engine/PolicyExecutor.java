@@ -3,11 +3,13 @@ package stirling.software.proprietary.policy.engine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -98,7 +100,7 @@ public class PolicyExecutor {
         // one's response via {{steps.N...}} - e.g. post the share link an upload step returned.
         ObjectNode runContext = objectMapper.createObjectNode();
         ObjectNode stepReports = runContext.putObject("steps");
-        boolean reportsAreOneOfMany = false;
+        Set<Integer> oneOfManyReports = new HashSet<>();
 
         for (int i = 0; i < steps.size(); i++) {
             PipelineStep step = steps.get(i);
@@ -108,7 +110,7 @@ public class PolicyExecutor {
                         "Pipeline step " + (i + 1) + " has no operation");
             }
             listener.onStepStart(i + 1, steps.size(), operation);
-            requireOneAnswerPerReference(step, i + 1, reportsAreOneOfMany);
+            requireOneAnswerPerReference(step, i + 1, oneOfManyReports);
             // Fill in references to earlier steps' outputs before dispatch; document- and run-scope
             // placeholders are left for the tool to resolve per document.
             PipelineStep resolved = resolveStepReferences(step, runContext);
@@ -118,7 +120,9 @@ public class PolicyExecutor {
                 lastReport = stepResult.report();
                 lastReportTool = operation;
                 stepReports.set(String.valueOf(i + 1), stepResult.report());
-                reportsAreOneOfMany |= stepResult.oneOfMany();
+                if (stepResult.oneOfMany()) {
+                    oneOfManyReports.add(i + 1);
+                }
             }
             listener.onStepComplete(i + 1, steps.size(), operation);
         }
@@ -193,8 +197,11 @@ public class PolicyExecutor {
      * document's behalf. Only a raw {@code POST /policies/{id}/run} with repeated {@code fileInput}
      * supplies more than one primary document; every first-party caller sends one.
      */
-    private void requireOneAnswerPerReference(PipelineStep step, int position, boolean oneOfMany) {
-        if (!oneOfMany || step.parameters().values().stream().noneMatch(this::referencesStep)) {
+    private void requireOneAnswerPerReference(
+            PipelineStep step, int position, Set<Integer> oneOfManyReports) {
+        if (oneOfManyReports.isEmpty()
+                || step.parameters().values().stream()
+                        .noneMatch(value -> referencesAnyStep(value, oneOfManyReports, 0))) {
             return;
         }
         throw new IllegalArgumentException(
@@ -203,6 +210,19 @@ public class PolicyExecutor {
                         + " references an earlier step's output, but that step ran over more than"
                         + " one document and kept only the first document's response. Run the"
                         + " pipeline with one document at a time.");
+    }
+
+    private boolean referencesAnyStep(Object value, Set<Integer> stepNumbers, int depth) {
+        if (depth > MAX_PARAMETER_DEPTH) {
+            return false;
+        }
+        if (value instanceof String s) {
+            return StepOutputPlaceholders.referencesAny(s, stepNumbers);
+        }
+        if (value instanceof List<?> list) {
+            return list.stream().anyMatch(item -> referencesAnyStep(item, stepNumbers, depth + 1));
+        }
+        return false;
     }
 
     /**

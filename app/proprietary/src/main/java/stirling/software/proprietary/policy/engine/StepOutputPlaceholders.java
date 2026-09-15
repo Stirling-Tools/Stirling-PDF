@@ -1,5 +1,6 @@
 package stirling.software.proprietary.policy.engine;
 
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -34,6 +35,25 @@ final class StepOutputPlaceholders {
     /** Whether the text references an earlier step at all, so callers can skip resolving. */
     static boolean references(String text) {
         return text != null && STEP_REF.matcher(text).find();
+    }
+
+    /** Whether the text references one of the given 1-based step positions. */
+    static boolean referencesAny(String text, Set<Integer> stepNumbers) {
+        if (text == null || stepNumbers.isEmpty()) {
+            return false;
+        }
+        Matcher matcher = STEP_REF.matcher(text);
+        while (matcher.find()) {
+            String[] path = matcher.group(1).split("\\.", 3);
+            try {
+                if (path.length > 1 && stepNumbers.contains(Integer.valueOf(path[1]))) {
+                    return true;
+                }
+            } catch (NumberFormatException ignored) {
+                // Resolution reports malformed step references with the full path.
+            }
+        }
+        return false;
     }
 
     /**

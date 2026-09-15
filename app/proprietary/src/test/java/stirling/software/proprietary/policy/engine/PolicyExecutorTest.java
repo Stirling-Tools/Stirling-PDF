@@ -470,6 +470,31 @@ class PolicyExecutorTest {
     }
 
     @Test
+    void referencingASafeStepAfterAnAmbiguousStepSucceeds() throws IOException {
+        String perFile = "/api/v1/integration/per-file";
+        String combine = "/api/v1/integration/combine";
+        String notify = "/api/v1/integration/notify";
+        when(internalApiClient.post(eq(perFile), any()))
+                .thenReturn(reportResponse(pdf("a", "a.pdf"), "{\"body\":{\"url\":\"AAA\"}}"))
+                .thenReturn(reportResponse(pdf("b", "b.pdf"), "{\"body\":{\"url\":\"BBB\"}}"));
+        when(toolMetadataService.isMultiInput(anyString()))
+                .thenAnswer(invocation -> combine.equals(invocation.getArgument(0)));
+        stubEndpointWithReport(
+                combine, pdf("combined", "combined.pdf"), "{\"body\":{\"url\":\"SAFE\"}}");
+        stubEndpoint(notify, pdf("notified", "notified.pdf"));
+
+        executor.execute(
+                definition(
+                        new PipelineStep(perFile, Map.of()),
+                        new PipelineStep(combine, Map.of()),
+                        new PipelineStep(notify, Map.of("message", "see {{steps.2.body.url}}"))),
+                PolicyInputs.of(List.of(pdf("in", "in.pdf"), pdf("in2", "in2.pdf"))),
+                PolicyProgressListener.NOOP);
+
+        verify(internalApiClient).post(eq(notify), any());
+    }
+
+    @Test
     void emptyStepsPassInputsThroughUnchanged() throws Exception {
         // A pure routing policy has no steps: inputs are delivered to the
         // destinations untouched, so execute returns them as-is.
