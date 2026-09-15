@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -85,7 +87,8 @@ public class StorageOutputSink implements PolicyOutputSink {
     @Override
     public List<ResultFile> deliver(
             OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
-        StoredFile origin = originOf(delivery);
+        StoredFileBacked input = storedInputOf(delivery);
+        StoredFile origin = originOf(input);
         UUID folderId = folderIdOf(spec);
         User owner = ownerFor(origin, folderId);
         List<ResultFile> results = new ArrayList<>();
@@ -103,7 +106,12 @@ public class StorageOutputSink implements PolicyOutputSink {
                         fileStorageService.replaceFile(
                                 origin.getOwner(),
                                 origin,
-                                new ResourceMultipartFile(output, origin.getOriginalFilename()));
+                                new ResourceMultipartFile(output, origin.getOriginalFilename()),
+                                null,
+                                null,
+                                input.storedFileVersion());
+                input.recordReplacement(
+                        StorageFileIdentities.gate(stored), contentHashOrNull(stored));
             } else {
                 stored = storeIntoFolder(delivery, output, i, owner, origin, folderId);
             }
@@ -159,14 +167,35 @@ public class StorageOutputSink implements PolicyOutputSink {
         return storedFileRepository.save(stored);
     }
 
-    /** The stored file the run's primary input came from; null when the input came from disk. */
-    private StoredFile originOf(OutputDelivery delivery) {
+    private StoredFileBacked storedInputOf(OutputDelivery delivery) {
         return delivery.inputs().primary().stream()
                 .filter(StoredFileBacked.class::isInstance)
-                .map(resource -> ((StoredFileBacked) resource).storedFileId())
-                .flatMap(id -> storedFileRepository.findById(id).stream())
+                .map(StoredFileBacked.class::cast)
                 .findFirst()
                 .orElse(null);
+    }
+
+    private StoredFile originOf(StoredFileBacked input) {
+        if (input == null) {
+            return null;
+        }
+        return storedFileRepository
+                .findById(input.storedFileId())
+                .orElseThrow(
+                        () ->
+                                new ResponseStatusException(
+                                        HttpStatus.CONFLICT,
+                                        "The input file was removed during processing"));
+    }
+
+    private String contentHashOrNull(StoredFile file) {
+        try {
+            return StorageFileIdentities.contentHash(storageProvider, file);
+        } catch (RuntimeException e) {
+            // The replacement already committed; a concurrent upload can remove its blob.
+            log.debug("Could not hash stored output {}", file.getId(), e);
+            return null;
+        }
     }
 
     /**

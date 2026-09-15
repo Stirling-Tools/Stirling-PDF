@@ -26,8 +26,8 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
  * Reads input files from a folder in app storage — the input side of a processing folder. Each
  * stored file is claimed through the ledger at its current content version ({@code updatedAt} +
  * size): unchanged files never rerun, re-uploaded or edited ones run again, nothing is deleted. An
- * in-place output bumps that version, and the completion hook settles the ledger at the post-run
- * version so the next sweep does not re-ingest the run's own output.
+ * in-place output records its committed version on the input, so completion never marks a
+ * concurrent user upload as processed.
  *
  * <p>Options: {@code folderId} — the storage folder's UUID.
  */
@@ -80,46 +80,24 @@ public class StorageFolderInputSource implements InputSource {
         for (StoredFile file : files) {
             String identity = identity(file);
             String gate = gate(file);
-            // The hash tier turns metadata-only gate bumps (a folder move, a rename) into a gate
-            // refresh instead of a reprocess; only genuinely new content runs again.
+            StoredFileResource resource = new StoredFileResource(storageProvider, file);
             if (!ctx.claim(
                     identity,
                     gate,
-                    () -> StorageFileIdentities.contentHash(storageProvider, file))) {
+                    () -> {
+                        String hash = StorageFileIdentities.contentHash(storageProvider, file);
+                        resource.rememberInputHash(hash);
+                        return hash;
+                    })) {
                 continue;
             }
-            Long fileId = file.getId();
             work.add(
                     new ResolvedInput(
-                            PolicyInputs.of(List.of(new StoredFileResource(storageProvider, file))),
+                            PolicyInputs.of(List.of(resource)),
                             identity,
-                            success ->
-                                    settleAtCurrentVersion(ctx, fileId, identity, gate, success)));
+                            success -> resource.settle(ctx, identity, success)));
         }
         return work;
-    }
-
-    /**
-     * Settle at the file's post-run version, not the claimed one — an in-place output bumped {@code
-     * updatedAt}, and the old gate would read it as a fresh edit. A file deleted mid-run settles at
-     * the claimed gate; presence cleanup prunes its row.
-     */
-    private void settleAtCurrentVersion(
-            ResolveContext ctx, Long fileId, String identity, String claimedGate, boolean success) {
-        StoredFile current = storedFileRepository.findById(fileId).orElse(null);
-        if (current == null) {
-            ctx.settle(identity, claimedGate, null, success);
-            return;
-        }
-        // Settle with the content hash so a later metadata-only bump (move/rename) refreshes the
-        // gate instead of reprocessing. Hash failures fall back to gate-only semantics.
-        String finalContentHash = null;
-        try {
-            finalContentHash = StorageFileIdentities.contentHash(storageProvider, current);
-        } catch (RuntimeException e) {
-            log.debug("Could not hash {} at settle: {}", identity, e.getMessage());
-        }
-        ctx.settle(identity, gate(current), finalContentHash, success);
     }
 
     /** Only generic user files are processed — purpose-bound artifacts belong to their feature. */
@@ -144,10 +122,7 @@ public class StorageFolderInputSource implements InputSource {
         }
     }
 
-    /**
-     * Streams the stored blob on demand, presenting the user-visible filename. Content is not
-     * version-pinned: a concurrent replace is reconciled by the gate on the next sweep.
-     */
+    /** Captures input identity and the exact version this run may replace or mark processed. */
     private static final class StoredFileResource extends AbstractResource
             implements StoredFileBacked {
 
@@ -156,6 +131,10 @@ public class StorageFolderInputSource implements InputSource {
         private final String storageKey;
         private final String filename;
         private final long sizeBytes;
+        private final long version;
+        private volatile CompletionVersion completed;
+
+        private record CompletionVersion(String gate, String contentHash) {}
 
         private StoredFileResource(StorageProvider storageProvider, StoredFile file) {
             this.storageProvider = storageProvider;
@@ -163,11 +142,32 @@ public class StorageFolderInputSource implements InputSource {
             this.storageKey = file.getStorageKey();
             this.filename = file.getOriginalFilename();
             this.sizeBytes = file.getSizeBytes();
+            this.version = file.contentVersionOrZero();
+            this.completed = new CompletionVersion(gate(file), null);
         }
 
         @Override
         public Long storedFileId() {
             return fileId;
+        }
+
+        @Override
+        public long storedFileVersion() {
+            return version;
+        }
+
+        @Override
+        public void recordReplacement(String gate, String contentHash) {
+            completed = new CompletionVersion(gate, contentHash);
+        }
+
+        private void rememberInputHash(String contentHash) {
+            completed = new CompletionVersion(completed.gate(), contentHash);
+        }
+
+        private void settle(ResolveContext ctx, String identity, boolean success) {
+            CompletionVersion result = completed;
+            ctx.settle(identity, result.gate(), result.contentHash(), success);
         }
 
         @Override
