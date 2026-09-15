@@ -14,6 +14,9 @@
  * for both providers.
  */
 import { PDF_FORM_FIELD_TYPE } from "@app/services/pdfiumService";
+import { getDocumentBytes } from "@app/services/documentBytesCache";
+import { runPdfiumScan } from "@app/services/pdfiumScanQueue";
+import { hasAcroForm } from "@app/utils/asciiBytes";
 import { FPDF_ANNOT_WIDGET, FLAT_PRINT } from "@app/utils/pdfiumBitmapUtils";
 import type {
   FormField,
@@ -36,10 +39,12 @@ import {
   extractFormFields,
   getPdfiumModule,
   openRawDocumentSafe,
+  readRawFormType,
   readUtf16,
   saveRawDocument,
   type PdfiumFormField,
 } from "@app/services/pdfiumService";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 /**
  * Map PDFium form field type enum to our FormFieldType string.
@@ -71,7 +76,7 @@ function mapFieldType(t: PDF_FORM_FIELD_TYPE): FormFieldType {
  * @param buttonInfo   When provided, sets buttonLabel and buttonAction for push buttons.
  */
 function toFormField(
-  f: PdfiumFormField & { _tooltip?: string | null },
+  f: PdfiumFormField,
   optInfo?: { exportValues: string[]; displayValues: string[] } | null,
   buttonInfo?: { label?: string; action?: ButtonAction } | null,
 ): FormField {
@@ -125,7 +130,7 @@ function toFormField(
     readOnly: f.isReadOnly,
     multiSelect: f.type === PDF_FORM_FIELD_TYPE.LISTBOX,
     multiline: type === "text" && (f.flags & 0x1000) !== 0, // bit 13 = Multiline
-    tooltip: f._tooltip ?? null,
+    tooltip: f.tooltip ?? null,
     widgets,
     buttonLabel: buttonInfo?.label ?? null,
     buttonAction: buttonInfo?.action ?? null,
@@ -144,11 +149,23 @@ export class PdfiumFormProvider implements IFormDataProvider {
 
   async fetchFields(file: File | Blob): Promise<FormField[]> {
     try {
-      const arrayBuffer = await file.arrayBuffer();
-      const pdfiumFields = await extractFormFields(arrayBuffer);
-
-      // Enrich with alternate names (tooltips)
-      await this.enrichWithAlternateNames(arrayBuffer, pdfiumFields);
+      const arrayBuffer = await getDocumentBytes(file);
+      // A literal miss cannot see a catalog inside a compressed object stream
+      // (qpdf --object-streams=generate), so confirm against the catalog's form
+      // type before calling the document form-less.
+      if (!hasAcroForm(new Uint8Array(arrayBuffer))) {
+        // Nothing opens documents this large on the main thread, so a probe
+        // here would cost a second full copy.
+        if (file.size >= LARGE_PDF_PARSE_LIMIT) return [];
+        const formType = await runPdfiumScan(() =>
+          readRawFormType(arrayBuffer),
+        );
+        // null: the pinned build cannot answer; extract rather than miss.
+        if (formType === 0) return [];
+      }
+      const pdfiumFields = await runPdfiumScan(() =>
+        extractFormFields(arrayBuffer),
+      );
 
       // Enrich combo/listbox fields with export/display values from pdf-lib
       const optMap = await this.extractDisplayOptions(
@@ -174,102 +191,6 @@ export class PdfiumFormProvider implements IFormDataProvider {
     } catch (err) {
       console.warn("[PdfiumFormProvider] Failed to extract form fields:", err);
       return [];
-    }
-  }
-
-  /**
-   * Enrich fields with alternate names (tooltip / TU entry) via PDFium.
-   */
-  private async enrichWithAlternateNames(
-    data: ArrayBuffer,
-    fields: PdfiumFormField[],
-  ): Promise<void> {
-    try {
-      const m = await getPdfiumModule();
-      const docPtr = await openRawDocumentSafe(data);
-      try {
-        const formInfoPtr = m.PDFiumExt_OpenFormFillInfo();
-        const formEnvPtr = m.PDFiumExt_InitFormFillEnvironment(
-          docPtr,
-          formInfoPtr,
-        );
-        if (!formEnvPtr) return;
-
-        const pageCount = m.FPDF_GetPageCount(docPtr);
-        const nameToField = new Map(fields.map((f) => [f.name, f]));
-        const enriched = new Set<string>();
-
-        for (
-          let pageIdx = 0;
-          pageIdx < pageCount && enriched.size < nameToField.size;
-          pageIdx++
-        ) {
-          const pagePtr = m.FPDF_LoadPage(docPtr, pageIdx);
-          if (!pagePtr) continue;
-          m.FORM_OnAfterLoadPage(pagePtr, formEnvPtr);
-
-          const annotCount = m.FPDFPage_GetAnnotCount(pagePtr);
-          for (
-            let ai = 0;
-            ai < annotCount && enriched.size < nameToField.size;
-            ai++
-          ) {
-            const annotPtr = m.FPDFPage_GetAnnot(pagePtr, ai);
-            if (!annotPtr) continue;
-            if (m.FPDFAnnot_GetSubtype(annotPtr) !== FPDF_ANNOT_WIDGET) {
-              m.FPDFPage_CloseAnnot(annotPtr);
-              continue;
-            }
-
-            const nl = m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, 0, 0);
-            let name = "";
-            if (nl > 0) {
-              const nb = m.pdfium.wasmExports.malloc(nl);
-              m.FPDFAnnot_GetFormFieldName(formEnvPtr, annotPtr, nb, nl);
-              name = readUtf16(m, nb, nl);
-              m.pdfium.wasmExports.free(nb);
-            }
-
-            if (name && nameToField.has(name) && !enriched.has(name)) {
-              const altLen = m.FPDFAnnot_GetFormFieldAlternateName(
-                formEnvPtr,
-                annotPtr,
-                0,
-                0,
-              );
-              if (altLen > 0) {
-                const altBuf = m.pdfium.wasmExports.malloc(altLen);
-                m.FPDFAnnot_GetFormFieldAlternateName(
-                  formEnvPtr,
-                  annotPtr,
-                  altBuf,
-                  altLen,
-                );
-                const altName = readUtf16(m, altBuf, altLen);
-                m.pdfium.wasmExports.free(altBuf);
-                (
-                  nameToField.get(name) as PdfiumFormField & {
-                    _tooltip?: string | null;
-                  }
-                )._tooltip = altName || null;
-              }
-              enriched.add(name);
-            }
-
-            m.FPDFPage_CloseAnnot(annotPtr);
-          }
-
-          m.FORM_OnBeforeClosePage(pagePtr, formEnvPtr);
-          m.FPDF_ClosePage(pagePtr);
-        }
-
-        m.PDFiumExt_ExitFormFillEnvironment(formEnvPtr);
-        m.PDFiumExt_CloseFormFillInfo(formInfoPtr);
-      } finally {
-        closeDocAndFreeBuffer(m, docPtr);
-      }
-    } catch (e) {
-      console.warn("[PdfiumFormProvider] Failed to enrich alternate names:", e);
     }
   }
 
