@@ -271,14 +271,14 @@ public class ProcessingFolderController {
                                 request.enabled() == null || request.enabled(),
                                 false,
                                 "",
-                                // Disk directories watch, so arrivals process on their
-                                // own; storage-backed folders stay manual for now.
                                 List.of(
                                         new PipelineInput(
                                                 source.id(),
                                                 onDisk
                                                         ? new TriggerConfig(WATCH_TRIGGER, Map.of())
-                                                        : null)),
+                                                        : new TriggerConfig(
+                                                                TriggerConfig.STORAGE_FOLDER_WATCH,
+                                                                Map.of()))),
                                 request.steps() == null ? List.of() : request.steps(),
                                 outputSpecFor(request, folder),
                                 outputIds,
