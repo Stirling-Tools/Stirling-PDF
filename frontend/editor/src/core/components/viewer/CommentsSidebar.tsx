@@ -30,6 +30,7 @@ import { useCommentAuthor } from "@app/contexts/CommentAuthorContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
@@ -304,6 +305,7 @@ export function CommentsSidebar({
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
   const { handleToolSelectForced } = useToolWorkflow();
+  const { actions: navActions } = useNavigationActions();
   const {
     activateAnnotationToolRef,
     activeAnnotationToolId,
@@ -539,14 +541,16 @@ export function CommentsSidebar({
     // post-reload linked annotations, so clearing it removes the annotation
     // from the sidebar (contents is not visually rendered on ink/shape/markup types).
     provides.updateAnnotation(pageIndex, id, getRemoveCommentPatch(ann));
+    navActions?.setHasUnsavedChanges(true);
     setDeleteModal(null);
-  }, [deleteModal, provides]);
+  }, [deleteModal, provides, navActions]);
 
   const handleDeleteAnnotation = useCallback(() => {
     if (!deleteModal) return;
     provides?.deleteAnnotation?.(deleteModal.pageIndex, deleteModal.id);
+    navActions?.setHasUnsavedChanges(true);
     setDeleteModal(null);
-  }, [deleteModal, provides]);
+  }, [deleteModal, provides, navActions]);
 
   const handleClearAllComments = useCallback(() => {
     const annotationsToDelete: Array<{ pageIndex: number; id: string }> = [];
@@ -613,7 +617,8 @@ export function CommentsSidebar({
     setEditingReplyKey(null);
     setDeleteModal(null);
     setClearAllModalOpen(false);
-  }, [byPage, provides]);
+    navActions?.setHasUnsavedChanges(true);
+  }, [byPage, provides, navActions]);
 
   const handleSendMainComment = useCallback(
     (pageIndex: number, annotationId: string, value: string) => {
@@ -623,12 +628,13 @@ export function CommentsSidebar({
         contents: trimmed,
         author: displayName,
       });
+      navActions?.setHasUnsavedChanges(true);
       setDraftContents((prev) => ({
         ...prev,
         [pageIndex + "_" + annotationId]: trimmed,
       }));
     },
-    [provides, displayName],
+    [provides, displayName, navActions],
   );
 
   const handleSendReply = useCallback(
@@ -651,9 +657,10 @@ export function CommentsSidebar({
         author: displayName,
       };
       provides.createAnnotation(pageIndex, reply);
+      navActions?.setHasUnsavedChanges(true);
       setReplyDrafts((prev) => ({ ...prev, [key]: "" }));
     },
-    [provides, replyDrafts, displayName],
+    [provides, replyDrafts, displayName, navActions],
   );
 
   const handleSaveReplyEdit = useCallback(
@@ -664,6 +671,7 @@ export function CommentsSidebar({
         contents: trimmed,
         author: displayName,
       });
+      navActions?.setHasUnsavedChanges(true);
       setReplyEditDrafts((prev) => {
         const next = { ...prev };
         delete next[editKey];
@@ -671,7 +679,7 @@ export function CommentsSidebar({
       });
       setEditingReplyKey(null);
     },
-    [provides, displayName],
+    [provides, displayName, navActions],
   );
 
   const handleAddComment = useCallback(() => {
@@ -997,15 +1005,32 @@ export function CommentsSidebar({
                             </Group>
 
                             {!hasMainContent || isEditingMain ? (
-                              <>
+                              <Group gap="xs" wrap="nowrap" align="flex-end">
                                 <Textarea
                                   placeholder={t(
                                     "viewer.comments.addCommentPlaceholder",
                                     "Add comment...",
                                   )}
-                                  minRows={2}
+                                  size="sm"
                                   autosize
+                                  minRows={1}
+                                  maxRows={6}
                                   value={draft ?? ""}
+                                  onKeyDown={(e) => {
+                                    if (
+                                      e.key === "Enter" &&
+                                      !e.shiftKey &&
+                                      (draft ?? "").trim()
+                                    ) {
+                                      e.preventDefault();
+                                      handleSendMainComment(
+                                        pageIndex,
+                                        id,
+                                        draft ?? "",
+                                      );
+                                      setEditingMainKey(null);
+                                    }
+                                  }}
                                   onChange={(e) => {
                                     const v =
                                       (e?.currentTarget ?? e?.target)?.value ??
@@ -1018,38 +1043,47 @@ export function CommentsSidebar({
                                       handleContentsChange(pageIndex, id, v);
                                     }
                                   }}
-                                  styles={{ root: { width: "100%" } }}
-                                  mb="xs"
+                                  style={{ flex: 1, minWidth: 0 }}
+                                  styles={{
+                                    input: {
+                                      borderColor:
+                                        "var(--mantine-color-blue-3)",
+                                    },
+                                  }}
+                                  autoFocus
                                 />
-                                <Group gap={4} wrap="nowrap" justify="flex-end">
-                                  <Tooltip
-                                    label={t(
+                                <Tooltip
+                                  label={t(
+                                    "viewer.comments.addComment",
+                                    "Add comment",
+                                  )}
+                                >
+                                  <ActionIcon
+                                    variant="primary"
+                                    size="md"
+                                    aria-label={t(
                                       "viewer.comments.addComment",
                                       "Add comment",
                                     )}
+                                    onClick={() => {
+                                      handleSendMainComment(
+                                        pageIndex,
+                                        id,
+                                        draft ?? "",
+                                      );
+                                      setEditingMainKey(null);
+                                    }}
+                                    disabled={!(draft ?? "").trim()}
+                                    style={{
+                                      height: "36px",
+                                      width: "36px",
+                                      flexShrink: 0,
+                                    }}
                                   >
-                                    <ActionIcon
-                                      variant="primary"
-                                      size="sm"
-                                      aria-label={t(
-                                        "viewer.comments.addComment",
-                                        "Add comment",
-                                      )}
-                                      onClick={() => {
-                                        handleSendMainComment(
-                                          pageIndex,
-                                          id,
-                                          draft ?? "",
-                                        );
-                                        setEditingMainKey(null);
-                                      }}
-                                      disabled={!(draft ?? "").trim()}
-                                    >
-                                      <Icon name="check" size={18} />
-                                    </ActionIcon>
-                                  </Tooltip>
-                                </Group>
-                              </>
+                                    <Icon name="check" size={18} />
+                                  </ActionIcon>
+                                </Tooltip>
+                              </Group>
                             ) : (
                               <>
                                 <Text
@@ -1226,14 +1260,27 @@ export function CommentsSidebar({
                                   </Stack>
                                 ) : null}
 
-                                <Group gap="xs" wrap="nowrap" align="flex-end">
+                                <Group gap="xs" wrap="nowrap" align="center">
                                   <TextInput
                                     placeholder={t(
                                       "viewer.comments.addReplyPlaceholder",
                                       "Add reply...",
                                     )}
-                                    size="xs"
+                                    size="sm"
                                     value={replyDraft}
+                                    onKeyDown={(e) => {
+                                      if (
+                                        e.key === "Enter" &&
+                                        replyDraft.trim()
+                                      ) {
+                                        e.preventDefault();
+                                        handleSendReply(
+                                          pageIndex,
+                                          id,
+                                          ann?.rect,
+                                        );
+                                      }
+                                    }}
                                     onChange={(e) => {
                                       const v =
                                         (e?.currentTarget ?? e?.target)
@@ -1248,6 +1295,8 @@ export function CommentsSidebar({
                                       input: {
                                         borderColor:
                                           "var(--mantine-color-blue-3)",
+                                        height: "36px",
+                                        minHeight: "36px",
                                       },
                                     }}
                                   />
@@ -1272,6 +1321,11 @@ export function CommentsSidebar({
                                         )
                                       }
                                       disabled={!replyDraft.trim()}
+                                      style={{
+                                        height: "36px",
+                                        width: "36px",
+                                        flexShrink: 0,
+                                      }}
                                     >
                                       <Icon name="check" size={20} />
                                     </ActionIcon>

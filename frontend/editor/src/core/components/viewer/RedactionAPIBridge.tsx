@@ -1,7 +1,8 @@
 import { useEffect, useImperativeHandle } from "react";
 import { useRedaction as useEmbedPdfRedaction } from "@embedpdf/plugin-redaction/react";
 import { PdfAnnotationSubtype } from "@embedpdf/models";
-import { useRedaction } from "@app/contexts/RedactionContext";
+import { useRedaction, useRedactionMode } from "@app/contexts/RedactionContext";
+import { useNavigationState } from "@app/contexts/NavigationContext";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { useDocumentReady } from "@app/components/viewer/hooks/useDocumentReady";
@@ -27,6 +28,8 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   const { state, provides: redactionProvides } =
     useEmbedPdfRedaction(documentId);
   const { provides: annotationProvides } = useAnnotationCapability();
+  const { isRedactionModeActive } = useRedactionMode();
+  const { selectedTool } = useNavigationState();
   const {
     redactionApiRef,
     setPendingCount,
@@ -36,13 +39,25 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
     manualRedactColor,
   } = useRedaction();
 
-  // Mark bridge as ready on mount, not ready on unmount
+  // Ensure EmbedPDF exits redaction mode whenever we are not in redact tool mode
+  useEffect(() => {
+    if (selectedTool !== "redact") {
+      if (redactionProvides?.isRedactActive?.()) {
+        redactionProvides.endRedact();
+      }
+    }
+  }, [selectedTool, isRedactionModeActive, redactionProvides]);
+
+  // Mark bridge as ready on mount, cleanup on unmount
   useEffect(() => {
     setBridgeReady(true);
     return () => {
       setBridgeReady(false);
+      if (redactionProvides?.isRedactActive?.()) {
+        redactionProvides.endRedact();
+      }
     };
-  }, [setBridgeReady]);
+  }, [setBridgeReady, redactionProvides]);
 
   // The interaction mode is viewer-global, so a stranded redaction mode would block
   // selection for the next document.

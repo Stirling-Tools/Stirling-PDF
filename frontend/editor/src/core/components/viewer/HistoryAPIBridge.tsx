@@ -2,6 +2,7 @@ import { useImperativeHandle, forwardRef, useEffect, useRef } from "react";
 import { useHistoryCapability } from "@embedpdf/plugin-history/react";
 import { useAnnotationCapability } from "@embedpdf/plugin-annotation/react";
 import { useSignature } from "@app/contexts/SignatureContext";
+import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { uuidV4, PdfAnnotationSubtype } from "@embedpdf/models";
 import type { PdfAnnotationObject } from "@embedpdf/models";
 import type {
@@ -31,15 +32,24 @@ export const HistoryAPIBridge = forwardRef<HistoryAPI>(
     const { provides: historyApi } = useHistoryCapability();
     const { provides: annotationApi } = useAnnotationCapability();
     const { getImageData, storeImageData } = useSignature();
+    const { actions: navActions } = useNavigationActions();
     const documentReady = useDocumentReady();
     const restoringIds = useRef<Set<string>>(new Set());
 
-    // Monitor annotation events to detect when annotations are restored
+    // Monitor annotation events to detect when annotations are created/modified/restored
     useEffect(() => {
       if (!annotationApi || !documentReady) return;
 
       const handleAnnotationEvent = (event: AnnotationEvent) => {
         if (event.type === "loaded") return;
+        if (
+          event.type === "create" ||
+          event.type === "update" ||
+          event.type === "delete"
+        ) {
+          navActions?.setHasUnsavedChanges(true);
+        }
+
         const annotation: SignatureAnnotation = event.annotation;
 
         // Store image data for all STAMP annotations immediately when created or modified

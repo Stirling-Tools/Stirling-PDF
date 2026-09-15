@@ -1,0 +1,114 @@
+.embedpdf-floating-menu,
+.embedpdf-text-selection-menu {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  width: max-content;
+  max-width: calc(100vw - 32px);
+  background: var(--c-floating-menu-bg);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 10px;
+  padding: 6px 12px;
+  box-shadow:
+    0 6px 24px rgba(0, 0, 0, 0.45),
+    0 2px 8px rgba(0, 0, 0, 0.25);
+  color: var(--c-floating-menu-text);
+  user-select: none;
+  backdrop-filter: blur(8px);
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.embedpdf-floating-btn,
+.embedpdf-text-selection-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--c-floating-menu-text);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease,
+    color 0.15s ease;
+  outline: none;
+  flex-shrink: 0;
+}
+
+.embedpdf-floating-btn:hover,
+.embedpdf-text-selection-btn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: var(--c-text-on-primary);
+}
+
+.embedpdf-floating-btn:active,
+.embedpdf-text-selection-btn:active {
+  transform: scale(0.92);
+  background-color: rgba(255, 255, 255, 0.18);
+}
+
+.embedpdf-floating-btn:focus-visible,
+.embedpdf-text-selection-btn:focus-visible {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-primary) 60%, transparent);
+}
+
+.embedpdf-floating-btn-danger {
+  color: var(--c-floating-danger);
+}
+
+.embedpdf-floating-btn-danger:hover {
+  background-color: color-mix(
+    in srgb,
+    var(--c-floating-danger) 18%,
+    transparent
+  );
+  color: var(--c-floating-danger-hover);
+}
+
+.embedpdf-floating-btn-active {
+  background-color: rgba(255, 255, 255, 0.2);
+  color: var(--c-text-on-primary);
+}
+
+.embedpdf-floating-badge-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 28px;
+  padding: 0 10px;
+  border-radius: 6px;
+  border: 1px solid
+    color-mix(in srgb, var(--c-floating-danger) 40%, transparent);
+  background: color-mix(in srgb, var(--c-floating-danger) 15%, transparent);
+  color: var(--c-floating-danger-hover);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    transform 0.1s ease,
+    border-color 0.15s ease;
+  white-space: nowrap;
+}
+
+.embedpdf-floating-badge-btn:hover {
+  background: color-mix(in srgb, var(--c-floating-danger) 25%, transparent);
+  border-color: color-mix(in srgb, var(--c-floating-danger) 60%, transparent);
+  color: var(--c-text-on-primary);
+}
+
+.embedpdf-floating-badge-btn:active {
+  transform: scale(0.95);
+}
+
+.embedpdf-floating-divider {
+  width: 1px;
+  height: 18px;
+  background-color: rgba(255, 255, 255, 0.15);
+  margin: 0 2px;
+}
