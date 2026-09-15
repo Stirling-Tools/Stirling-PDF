@@ -17,7 +17,11 @@ vi.mock("react-i18next", () => ({
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 
 describe("useServerProcessingBlock", () => {
-  beforeEach(() => useConnectedServerMock.mockReset());
+  beforeEach(() => {
+    // Braces matter: a function returned from a hook is treated as a teardown callback, and
+    // mockReset() returns the mock.
+    useConnectedServerMock.mockReset();
+  });
   afterEach(() => vi.clearAllMocks());
 
   it("allows processing once a server is connected", () => {
