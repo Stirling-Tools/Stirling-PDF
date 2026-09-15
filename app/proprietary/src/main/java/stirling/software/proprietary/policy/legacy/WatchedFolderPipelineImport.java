@@ -173,7 +173,7 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
             return false;
         }
 
-        Source input = inputSourceFor(directory, teamId);
+        Source input = inputSourceFor(directory, steps, teamId);
         Source destination = destinationSourceFor(config, directory, teamId);
 
         // Archived before the policy exists, because a saved policy is live from the folder-watch
@@ -217,10 +217,17 @@ public class WatchedFolderPipelineImport implements MigratedWatchedFolders {
     }
 
     /** Reuse a source already pointing at this folder, else create a consuming one. */
-    private Source inputSourceFor(Path directory, Long teamId) {
-        String path = directory.toString();
+    private Source inputSourceFor(Path directory, List<PipelineStep> steps, Long teamId) {
+        Map<String, Object> options = new LinkedHashMap<>();
+        options.put("directory", directory.toString());
         // "consume" matches the legacy runner, which removed inputs once processed.
-        Map<String, Object> options = Map.of("directory", path, "mode", "consume");
+        options.put("mode", "consume");
+        // Keeps the legacy scanner's gate: it silently ignored what the first step cannot accept.
+        List<String> accepted =
+                toolMetadataService.getExtensionTypes(false, steps.get(0).operation());
+        if (accepted != null && !accepted.isEmpty()) {
+            options.put("extensions", List.copyOf(accepted));
+        }
         return existingSource(options, teamId)
                 .orElseGet(
                         () ->
