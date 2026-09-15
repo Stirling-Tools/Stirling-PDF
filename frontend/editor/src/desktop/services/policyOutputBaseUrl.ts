@@ -5,15 +5,26 @@ import type { PolicyExecutionTarget } from "@app/services/policyPipeline";
 /**
  * Desktop: a policy run's outputs live on the backend that executed it.
  *
- * Only Stirling Cloud needs an absolute base; every other mode returns "" so the relative
- * path resolves through operationRouter, which already sends a self-hosted call to that
- * server. Returning the cloud base outside SaaS would attach the user's self-hosted token
- * to a Stirling Cloud request, because the request interceptor authenticates any absolute
- * URL under the cloud base.
+ * Absolute in both connected modes. Outputs are fetched from /api/v1/general/files, which
+ * operationRouter classifies as a tool endpoint, so a relative path would be diverted to
+ * the bundled backend whenever the self-hosted server is briefly unreachable — and that
+ * backend has never seen the run's file ids. Naming the server closes that door.
+ *
+ * Returning the cloud base outside SaaS would be worse still: the request interceptor
+ * authenticates any absolute URL under the cloud base, so a self-hosted token would leave
+ * for Stirling Cloud.
  */
 export function getPolicyOutputBaseUrl(target: PolicyExecutionTarget): string {
-  if (target !== "saas" || connectionModeService.getCachedMode() !== "saas") {
-    return "";
+  if (target !== "saas") return "";
+  const mode = connectionModeService.getCachedMode();
+  if (mode === "saas") {
+    return (STIRLING_SAAS_BACKEND_API_URL ?? "").replace(/\/$/, "");
   }
-  return (STIRLING_SAAS_BACKEND_API_URL ?? "").replace(/\/$/, "");
+  if (mode === "selfhosted") {
+    return (connectionModeService.getCachedServerConfig()?.url ?? "").replace(
+      /\/$/,
+      "",
+    );
+  }
+  return "";
 }

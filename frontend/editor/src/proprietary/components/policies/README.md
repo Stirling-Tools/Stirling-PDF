@@ -6,8 +6,10 @@ Automation-backed document-enforcement policies. The editor side is
 uploaded files, blocks the file's exit points while a run is in flight, and
 badges files a policy has produced. Always on in the proprietary/SaaS builds;
 the core (OSS) build has no implementation (`usePoliciesEnabled` stub = false),
-and desktop additionally requires an active SaaS connection (runs bill through
-the cloud). The single gate is `components/policies/usePoliciesEnabled.ts`.
+and desktop additionally requires a connected server — Stirling Cloud or a
+self-hosted instance — because its bundled backend serves no policy engine. Runs
+bill through whichever server is connected. The single gate is
+`components/policies/usePoliciesEnabled.ts`.
 
 ## Layout
 
@@ -18,7 +20,7 @@ the cloud). The single gate is `components/policies/usePoliciesEnabled.ts`.
 | `services/policyStorage.ts` | Local persistence (localStorage) of per-policy state + change events. |
 | `hooks/usePolicies.ts` | Policy state + permission flag, consumed by the auto-run controller. |
 | `hooks/usePolicyFileBadges.ts` | Per-file badge map (which policies produced/are enforcing a file) — drives the shared `PolicyBadges` row and the exit-point blocking. |
-| `components/policies/usePoliciesEnabled.ts` | The single build/connection gate for mounting the auto-run controller. Core stub = false; desktop shadow adds the SaaS-connection check. |
+| `components/policies/usePoliciesEnabled.ts` | The single build/connection gate for mounting the auto-run controller. Core stub = false; desktop shadow requires a connected server (`useConnectedServer`). |
 | `components/policies/PolicyAutoRunController.tsx` | Headless: enforces enabled policies on every uploaded file. Mounted by `RightSidebar`. |
 | `components/policies/usePolicyAutoRun.ts` | The auto-run engine: dispatch, polling, retry, output import, server reconcile. |
 | `components/policies/policyRunStore.ts` | `useSyncExternalStore` store of run records (status, progress, outputs), persisted to localStorage. |

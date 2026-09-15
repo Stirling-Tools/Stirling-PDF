@@ -26,13 +26,17 @@ export function useConnectedServer(): boolean {
 
   useEffect(
     () =>
-      authService.subscribeToAuth((status) => {
-        // "refreshing" and "oauth_pending" are transitional; reading them as signed
-        // out would tear down the gated tree mid-refresh.
+      authService.subscribeToAuth((status, userInfo) => {
+        // subscribeToAuth replays on subscribe, so an instance mounting mid-refresh sees
+        // only "refreshing". That status carries the live user when a session already
+        // exists and null when one never did, which separates a warm token refresh from
+        // a cold OAuth handshake — without it a refresh reads as signed out.
         if (status === "authenticated") {
           setIsAuthenticated(true);
         } else if (status === "unauthenticated") {
           setIsAuthenticated(false);
+        } else {
+          setIsAuthenticated(userInfo != null);
         }
       }),
     [],
