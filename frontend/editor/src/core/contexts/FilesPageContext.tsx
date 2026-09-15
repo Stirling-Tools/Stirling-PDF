@@ -81,6 +81,10 @@ interface FilesPageContextValue {
   fileCountsByFolder: Map<FolderId | null, number>;
   loading: boolean;
   refresh: () => Promise<void>;
+  /** Bumped to re-read a mounted directory, which is listed from disk rather than
+   *  from storage and so has nothing to react to when its contents change. */
+  diskRevision: number;
+  bumpDiskRevision: () => void;
 
   // Selection
   selectedFileIds: Set<FileId>;
@@ -175,6 +179,9 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const setFoldersError = folders.setError;
   const storageEnabled = appConfig?.storageEnabled === true;
   const shareLinksEnabled = appConfig?.storageShareLinksEnabled === true;
+  const [diskRevision, setDiskRevision] = useState(0);
+  const bumpDiskRevision = useCallback(() => setDiskRevision((n) => n + 1), []);
+
   const refresh = useCallback(async () => {
     const gen = ++refreshGenRef.current;
     setLoading(true);
@@ -735,6 +742,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       fileCountsByFolder,
       loading,
       refresh,
+      diskRevision,
+      bumpDiskRevision,
       selectedFileIds,
       setSelectedFileIds,
       clearSelection,
@@ -777,6 +786,8 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
       fileCountsByFolder,
       loading,
       refresh,
+      diskRevision,
+      bumpDiskRevision,
       selectedFileIds,
       clearSelection,
       viewMode,

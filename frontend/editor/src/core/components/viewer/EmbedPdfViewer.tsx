@@ -71,6 +71,8 @@ export interface EmbedPdfViewerProps {
   signaturePlacementType?: "canvas" | "image" | "text";
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
+  /** Viewer is showing the pinned portfolio panel; don't render a second one. */
+  portfolioPinned?: boolean;
 }
 
 /** Cache identity of a document, not of the file holding it: a disk reload
@@ -92,6 +94,7 @@ const EmbedPdfViewerContent = ({
   signaturePlacementType,
   onSignaturePreviewsChange,
   signatureOverlayApiRef,
+  portfolioPinned,
 }: EmbedPdfViewerProps) => {
   const { t } = useTranslation();
   const viewerRef = React.useRef<HTMLDivElement>(null);
@@ -659,7 +662,6 @@ const EmbedPdfViewerContent = ({
       if (hadPendingRedactions) {
         console.log("[Viewer] Committing pending redactions before export");
         redactionTrackerRef.current?.commitAllPending();
-        // Give a small delay for the commit to process
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
@@ -790,7 +792,6 @@ const EmbedPdfViewerContent = ({
         pendingRotationRestoreRef.current = currentRotation;
         rotationRestoreAttemptsRef.current = 0;
 
-        // Track the new file ID so the viewer follows it after the list reorders
         const newFileId = stubs[0]?.id;
         if (newFileId) setActiveFileId(newFileId);
 
@@ -927,6 +928,9 @@ const EmbedPdfViewerContent = ({
       scrollRestoreAttemptsRef.current = 0;
       pendingRotationRestoreRef.current = currentRotation;
       rotationRestoreAttemptsRef.current = 0;
+
+      const newFileId = stubs[0]?.id;
+      if (newFileId) setActiveFileId(newFileId);
 
       // Consume only the current file (replace in context)
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
@@ -1370,13 +1374,15 @@ const EmbedPdfViewerContent = ({
         documentCacheKey={bookmarkCacheKey}
         preloadCacheKeys={allBookmarkCacheKeys}
       />
-      <AttachmentSidebar
-        visible={isAttachmentSidebarVisible}
-        thumbnailVisible={isThumbnailSidebarVisible}
-        bookmarkVisible={isBookmarkSidebarVisible}
-        documentCacheKey={bookmarkCacheKey}
-        preloadCacheKeys={allBookmarkCacheKeys}
-      />
+      {!portfolioPinned && (
+        <AttachmentSidebar
+          visible={isAttachmentSidebarVisible}
+          thumbnailVisible={isThumbnailSidebarVisible}
+          bookmarkVisible={isBookmarkSidebarVisible}
+          documentCacheKey={bookmarkCacheKey}
+          preloadCacheKeys={allBookmarkCacheKeys}
+        />
+      )}
       <LayerSidebar
         visible={isLayerSidebarVisible}
         rightOffset={

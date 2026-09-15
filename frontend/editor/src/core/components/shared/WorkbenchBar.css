@@ -22,6 +22,17 @@
 }
 
 /* ---- View switcher (left) ---- */
+/* Follows the view switcher, which claims order 1 in the bar's reflow. */
+.workbench-bar-lead {
+  order: 2;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  min-width: 0;
+  overflow: hidden;
+  height: 38px;
+}
+
 .workbench-bar-views {
   order: 1;
   flex-shrink: 0;
@@ -244,7 +255,6 @@
 .workbench-bar-action-icon svg,
 .workbench-bar-action-icon img {
   color: inherit !important;
-  fill: currentColor;
 }
 
 .workbench-bar-action-icon:hover {

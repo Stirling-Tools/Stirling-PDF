@@ -65,7 +65,7 @@ import stirling.software.saas.util.AuthenticationUtils;
  * service.
  *
  * <p>{@code afterCompletion}: branches on HTTP status — 2xx hashes the response body for OUTPUT
- * lineage; 4xx records a step append for audit; 5xx triggers refund-and-close (OPENED) or
+ * lineage; any error (4xx or 5xx) is never charged and triggers refund-and-close (OPENED) or
  * step-quota return (JOINED). Closes all input temp files and the response wrapper at the end.
  *
  * <p>Fail-open everywhere: any unexpected {@link RuntimeException} is swallowed, logged at WARN,
@@ -202,7 +202,14 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             // AI document tools (/api/v1/ai/tools/**) live in the proprietary module and can't
             // carry @RequiresFeature, so they're recognised by path — see AiToolRoutes.
             boolean aiToolRoute = AiToolRoutes.matches(request);
-            if (!hasAutoJobPostMapping && !hasRequiresFeature && !aiToolRoute) {
+            // Any internal automation sub-step (X-Stirling-Automation) is billable automation
+            // whatever controller it lands on: integration/third-party steps and other proprietary
+            // tools carry no annotation. Matches self-hosted, which bills by the header regardless.
+            boolean automationSubStep = hasAutomationHeader(request);
+            if (!hasAutoJobPostMapping
+                    && !hasRequiresFeature
+                    && !aiToolRoute
+                    && !automationSubStep) {
                 callsShortCircuit.increment();
                 return true;
             }
@@ -385,9 +392,14 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
             return;
         }
         if (status >= 400) {
-            // 4xx: customer paid for the attempt. No OUTPUT recording, no refund.
-            // Still a successful-from-billing-standpoint OPENED process — meter it below.
-            meterIfOpened(jobId, disposition);
+            // Errored work is never charged: refund the request that opened the process, or drop
+            // the added step for a joined follow-up.
+            if (disposition == ChargeOutcome.Disposition.OPENED) {
+                chargeService.markFirstStepFailed(jobId, "first-step-4xx:" + status);
+                refundsCounter.increment();
+            } else {
+                chargeService.decrementStepCount(jobId);
+            }
             return;
         }
 

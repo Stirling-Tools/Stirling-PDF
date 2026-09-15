@@ -117,6 +117,10 @@ export interface NavigationContextActions {
   ) => void;
   unregisterNavigationWarningHandlers: () => void;
   navigationWarningHandlersRef: React.RefObject<NavigationWarningHandlers | null>;
+  /** The path a view was last derived from. Lives here rather than in the page so a
+   *  remount (a share link, a login bounce, a Suspense boundary resolving) does not
+   *  read an unchanged path as a fresh arrival and re-derive over the user's choice. */
+  viewDerivedFromPathRef: React.RefObject<string | null>;
 }
 
 // Context state values
@@ -152,6 +156,7 @@ export const NavigationProvider: React.FC<{
   const [state, dispatch] = useReducer(navigationReducer, initialState);
   const { allTools: toolRegistry } = useToolRegistry();
   const unsavedChangesCheckerRef = React.useRef<(() => boolean) | null>(null);
+  const viewDerivedFromPathRef = useRef<string | null>(null);
   const navigationWarningHandlersRef = useRef<NavigationWarningHandlers | null>(
     null,
   );
@@ -438,6 +443,7 @@ export const NavigationProvider: React.FC<{
       registerNavigationWarningHandlers,
       unregisterNavigationWarningHandlers,
       navigationWarningHandlersRef,
+      viewDerivedFromPathRef,
     }),
     [
       setWorkbench,
@@ -532,5 +538,6 @@ export const useNavigationGuard = () => {
     unregisterNavigationWarningHandlers:
       actions.unregisterNavigationWarningHandlers,
     navigationWarningHandlersRef: actions.navigationWarningHandlersRef,
+    viewDerivedFromPathRef: actions.viewDerivedFromPathRef,
   };
 };
