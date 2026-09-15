@@ -17,6 +17,7 @@ export interface ProcessingRunInfo {
 }
 
 export interface ProcessingRecordSummary {
+  output?: Record<string, unknown>;
   id: string;
   enabled: boolean;
   steps: {

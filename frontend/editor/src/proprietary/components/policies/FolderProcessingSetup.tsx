@@ -10,6 +10,7 @@ import {
   type PolicySetupResult,
 } from "@app/policies/catalog";
 import { PipelineTemplateCard } from "@app/components/policies/PipelineTemplateCard";
+import { FolderPolicySetupConfig } from "@app/components/policies/FolderPolicySetupConfig";
 import { PolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
 import { Button } from "@app/ui/Button";
 import {
@@ -35,7 +36,7 @@ export type { FolderProcessingSetupProps };
 
 /**
  * The setup flow behind "Process files in this folder": the same guided wizard Processor uses,
- * with the source (this folder) and the output placement already decided, so neither is asked.
+ * with this folder as the input and optional delivery to a connected RAG database.
  */
 export function FolderProcessingSetup({
   folder,
@@ -89,6 +90,12 @@ export function FolderProcessingSetup({
           configured: true,
           status: existing.enabled ? "active" : "paused",
           required: false,
+          runsOnEditor: false,
+          outputIds:
+            typeof existing.output?.destinationId === "string"
+              ? [existing.output?.destinationId]
+              : [],
+          extraOptions: existing.output,
           sources: [],
           scopeTypes: [],
           reviewerEmail: "",
@@ -131,19 +138,29 @@ export function FolderProcessingSetup({
             directory: folder.directory ?? "",
             enabled: existing ? existing.enabled : true,
             steps,
+            output: {
+              ...existing?.output,
+              ...result.extraOptions,
+              destinationId: result.outputIds?.[0] ?? null,
+            },
           }
         : {
             id: existing?.id,
             folderId: folder.id as string,
             enabled: existing ? existing.enabled : true,
             steps,
-            output: { mode: "new_version" },
+            output: {
+              ...existing?.output,
+              ...result.extraOptions,
+              mode: "new_version",
+              destinationId: result.outputIds?.[0] ?? null,
+            },
           },
     );
     void refreshProcessingFolders();
     // A mount's results land on disk where nothing shows them; pull them into
     // the workbench as they settle. Storage results replace in place.
-    if (onDisk) {
+    if (onDisk && !result.outputIds?.length) {
       void deliverSweepResults(saved.id, null, addFiles, {
         excludeRunIds: baseline,
       });
@@ -159,6 +176,9 @@ export function FolderProcessingSetup({
         onClose={() => setWizardEntry(null)}
         onSubmit={submit}
         enforceControl={false}
+        setupConfig={(config) => (
+          <FolderPolicySetupConfig {...config} folderName={folder.name} />
+        )}
       >
         {({ content, submit: startProcessing, submitting, canSubmit }) => (
           <Modal
@@ -183,12 +203,17 @@ export function FolderProcessingSetup({
                 </Button>
                 <Button
                   size="sm"
-                  style={{ marginLeft: "auto" }}
+                  style={{ marginInlineStart: "auto" }}
                   onClick={startProcessing}
                   loading={submitting}
                   disabled={!canSubmit}
                 >
-                  {t("filesPage.processingSetup.start", "Start processing")}
+                  {existing
+                    ? t(
+                        "portal.policies.wizard.actions.saveChanges",
+                        "Save changes",
+                      )
+                    : t("filesPage.processingSetup.start", "Start processing")}
                 </Button>
               </div>
             }
@@ -211,8 +236,8 @@ export function FolderProcessingSetup({
     >
       <p className="folder-setup__lead">
         {t(
-          "filesPage.processingSetup.lead",
-          "Anything added to this folder runs these steps, in place - each file becomes its processed version.",
+          "filesPage.processingSetup.destinationsLead",
+          "Choose how documents in this folder are processed. Results can return to the folder or go to a connected RAG database.",
         )}
       </p>
       <CardRail itemWidth="16rem" itemHeight="10.75rem">

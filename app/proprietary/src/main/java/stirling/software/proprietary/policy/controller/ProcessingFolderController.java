@@ -54,6 +54,7 @@ import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.output.FolderOutputSink;
 import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
@@ -98,6 +99,7 @@ public class ProcessingFolderController {
 
     private final PolicyStore policyStore;
     private final SourceStore sourceStore;
+    private final SourceAccessGuard sourceAccessGuard;
     private final PolicyValidator policyValidator;
     private final PolicyRunner policyRunner;
     private final PolicyTriggerManager policyTriggerManager;
@@ -208,6 +210,7 @@ public class ProcessingFolderController {
             sweepBehindTheResponse(existing);
             return ResponseEntity.accepted().body(toView(existing));
         }
+        List<String> outputIds = destinationIds(request);
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
 
         // Held for rollback: the source is written before the policy validates, and a rejected
@@ -247,7 +250,7 @@ public class ProcessingFolderController {
                                                         : null)),
                                 request.steps() == null ? List.of() : request.steps(),
                                 outputSpecFor(request, folder),
-                                List.of(),
+                                outputIds,
                                 policyAccessGuard.teamForNewPolicy(),
                                 null)
                         .withSurface(SURFACE);
@@ -844,6 +847,40 @@ public class ProcessingFolderController {
                 DISK_SWEEP_LIMIT);
     }
 
+    private List<String> destinationIds(SaveProcessingFolderRequest request) {
+        Object raw = request.output() == null ? null : request.output().get("destinationId");
+        if (raw == null || raw.toString().isBlank()) return List.of();
+        Source source =
+                sourceStore
+                        .get(raw.toString())
+                        .filter(sourceAccessGuard::canAccess)
+                        .orElseThrow(
+                                () ->
+                                        new ResponseStatusException(
+                                                HttpStatus.BAD_REQUEST,
+                                                "Unknown or inaccessible output source"));
+        if (!"vectordb".equals(source.type()) || !source.enabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "A processing folder's external destination must be an enabled RAG database source");
+        }
+        try {
+            policyValidator.validateOutput(
+                    source.toOutputSpec(), request.steps() == null ? List.of() : request.steps());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+        return List.of(source.id());
+    }
+
+    private static boolean exportsCorpus(SaveProcessingFolderRequest request) {
+        if (request.steps() == null || request.steps().isEmpty()) return false;
+        PipelineStep last = request.steps().getLast();
+        return "/api/v1/docparse/rag-ingest".equals(last.operation())
+                && ("true".equals(String.valueOf(last.parameters().get("exportChunksJsonl")))
+                        || "true".equals(String.valueOf(last.parameters().get("exportMarkdown"))));
+    }
+
     /** The trailing path segment ("Downloads"), or the raw path when it has none. */
     private static String diskFolderName(String directory) {
         Path path = Path.of(directory.trim());
@@ -851,24 +888,21 @@ public class ProcessingFolderController {
         return fileName == null ? path.toString() : fileName.toString();
     }
 
-    /**
-     * Both kinds process in place — the folder's contents become their processed selves. The sink
-     * records each replacement in the ledger at the result's version and the input settles its
-     * claim the same way, so a sweep never mistakes the folder's own output for new work. Disk
-     * output is what works on an install with no accounts and no file storage.
-     */
+    /** Corpus exports preserve originals; ordinary PDF processing replaces them. */
     private OutputSpec outputSpecFor(SaveProcessingFolderRequest request, Folder folder) {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
+        options.remove("destinationId");
         if (folder != null) {
+            if (exportsCorpus(request)) options.put("mode", "new_file");
             // Force the output to the caller-owned source folder: the storage sink only checks a
             // folderId exists, not that the caller owns it, so honouring a request-supplied one
-            // would write output into another tenant's folder. Processing is in place anyway.
+            // would write output into another tenant's folder. Results remain in this folder.
             options.put("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);
         }
         options.put("directory", request.directory().trim());
-        options.put("replace", true);
+        options.put("replace", !exportsCorpus(request));
         return new OutputSpec("folder", options);
     }
 
@@ -879,6 +913,8 @@ public class ProcessingFolderController {
     private ProcessingFolderView toView(Policy policy) {
         Map<String, Object> output = new HashMap<>(policy.output().options());
         output.remove(SURFACE_OPTION);
+        if (!policy.outputIds().isEmpty())
+            output.put("destinationId", policy.outputIds().getFirst());
         String sourceId = soleSourceId(policy);
         Source source = sourceId == null ? null : sourceStore.get(sourceId).orElse(null);
         Object folderId = source == null ? null : source.options().get("folderId");
