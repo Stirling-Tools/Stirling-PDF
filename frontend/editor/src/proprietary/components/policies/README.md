@@ -6,8 +6,8 @@ Automation-backed document-enforcement policies. The editor side is
 uploaded files, blocks the file's exit points while a run is in flight, and
 badges files a policy has produced. Always on in the proprietary/SaaS builds;
 the core (OSS) build has no implementation (`usePoliciesEnabled` stub = false),
-and desktop additionally requires a connected server — Stirling Cloud or a
-self-hosted instance — because its bundled backend serves no policy engine. Runs
+and desktop additionally requires a connected server - Stirling Cloud or a
+self-hosted instance - because its bundled backend serves no policy engine. Runs
 bill through whichever server is connected. The single gate is
 `components/policies/usePoliciesEnabled.ts`.
 
