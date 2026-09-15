@@ -34,7 +34,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.document.conditions.Condition;
 import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
