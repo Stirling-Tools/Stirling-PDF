@@ -19,11 +19,13 @@ import type { ToolId } from "@app/types/toolId";
 export interface QuickNavHostBridgeProps {
   portalAccess?: boolean;
   readerMode?: boolean;
+  fileLibrary?: boolean;
   onSetReaderMode?: (on: boolean) => void;
   requestNavigation?: (go: () => void) => void;
   onGoToDefaultState?: () => void;
   onSelectTool?: (toolId: ToolId) => void;
   activeTool?: ToolId | null;
+  onShowFileLibrary?: () => void;
   /** Merged over the reasons worked out here, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
   /** Absent where there is no file workspace to open into, which drops the rail entry. */
@@ -34,10 +36,12 @@ export interface QuickNavHostBridgeProps {
 export function QuickNavHostBridge({
   portalAccess = false,
   readerMode = false,
+  fileLibrary = false,
   onSetReaderMode,
   requestNavigation,
   onSelectTool,
   activeTool = null,
+  onShowFileLibrary,
   onGoToDefaultState,
   toolReasons,
   onOpenFromComputer,
@@ -67,6 +71,7 @@ export function QuickNavHostBridge({
       signingBadge,
       portalAccess,
       readerMode,
+      fileLibrary,
       activeTool,
       notificationsOpen,
       toolReasons: mergedToolReasons,
@@ -75,6 +80,7 @@ export function QuickNavHostBridge({
       requestNavigation,
       selectTool: onSelectTool,
       setReaderMode: onSetReaderMode,
+      showFileLibrary: onShowFileLibrary,
       goToDefaultState: onGoToDefaultState,
       openFromComputer: onOpenFromComputer,
       toggleNotifications: () => setNotificationsOpen((open) => !open),

@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.proprietary.accountlink.GateDecision.Reason;
 
 /**
@@ -24,6 +25,7 @@ import stirling.software.proprietary.accountlink.GateDecision.Reason;
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementGateTest {
 
+    @Mock private LicenseServiceInterface licenseService;
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private EntitlementCache entitlementCache;
     @Mock private AccountLinkSyncStateRepository syncStateRepository;
@@ -266,7 +268,8 @@ class InstanceEntitlementGateTest {
                 entitlementCache,
                 syncStateRepository,
                 localUsageService,
-                freeTierUsageService);
+                freeTierUsageService,
+                licenseService);
     }
 
     private static AccountLinkProperties props(boolean meteringEnabled, int graceDays) {

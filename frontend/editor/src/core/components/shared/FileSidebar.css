@@ -250,9 +250,12 @@
   flex-shrink: 0;
 }
 
+/* The colorless brand mark follows currentColor, so the muted tone lives here
+   and tracks the theme: dark grey on light, light grey on dark. */
 .file-sidebar-cloud-icon-gray {
   position: absolute;
   inset: 0;
+  color: var(--c-text-muted);
   transition: opacity 0.2s ease;
   opacity: 1;
 }
@@ -278,6 +281,34 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
+  margin-top: 4px;
+}
+
+/* A refresh in progress, on a row that has no room for a spinner beside its label. */
+.file-sidebar-spin {
+  animation: file-sidebar-refresh-spin 0.9s linear infinite;
+}
+
+@keyframes file-sidebar-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar-spin {
+    animation-duration: 2s;
+  }
+}
+
+/* Folder navigation fills the box the file list would: in the library it is what the
+   sidebar is for, and a deep tree scrolls within it. */
+.file-sidebar-folders-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
   margin-top: 4px;
 }
 

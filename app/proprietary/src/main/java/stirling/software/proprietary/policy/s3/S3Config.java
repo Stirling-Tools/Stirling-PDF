@@ -57,8 +57,12 @@ public record S3Config(
                     "s3 config requires an 'accessKeyId' and 'secretAccessKey'");
         }
         String mode = trimmed(options.get(MODE_OPTION));
-        if (mode != null && !MODE_CONSUME.equals(mode) && !MODE_SNAPSHOT.equals(mode)) {
-            throw new IllegalArgumentException("s3 config 'mode' must be 'consume' or 'snapshot'");
+        if (mode != null
+                && !MODE_CONSUME.equals(mode)
+                && !MODE_SNAPSHOT.equals(mode)
+                && !"track".equals(mode)) {
+            throw new IllegalArgumentException(
+                    "s3 config 'mode' must be 'consume', 'track' or 'snapshot'");
         }
         // Object Lock: write-once retention, for records that must survive an administrator.
         // COMPLIANCE cannot be shortened or deleted by anyone (not even the account root) before
