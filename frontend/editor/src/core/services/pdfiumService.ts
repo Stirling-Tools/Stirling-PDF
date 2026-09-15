@@ -143,9 +143,8 @@ export async function getPdfiumModule(): Promise<WrappedPdfiumModule> {
  * Next call to getPdfiumModule() will create a fresh instance.
  */
 export function resetPdfiumModule(): void {
-  // The whole module (and its linear memory with it) is discarded here, so
-  // closing documents inside it is pointless and can throw on a dead
-  // instance. Drop the shared handle outright instead of releasing it.
+  // The module is discarded here, so a handle no reader holds is closed now;
+  // with readers it is dropped and their own close does the freeing.
   try {
     if (sharedDocument && sharedDocument.refs <= 0 && _module) {
       closeDocumentNow(_module, sharedDocument.docPtr);
@@ -387,7 +386,7 @@ export async function openRawDocument(
     m.pdfium.wasmExports.free(ptr);
     throw new PdfiumOpenError(m.FPDF_GetLastError());
   }
-  // Keep the buffer alive — freed by closeDocumentNow()
+  // Keep the buffer alive; freed by closeDocumentNow()
   _docDataPtrs.set(docPtr, ptr);
 
   if (!password) {
@@ -427,7 +426,7 @@ export async function closeRawDocument(docPtr: number): Promise<void> {
 }
 
 /**
- * Synchronous release — for use inside `finally` blocks that already have the
+ * Synchronous release, for use inside `finally` blocks that already have the
  * module reference.
  */
 export function closeDocAndFreeBuffer(
@@ -445,7 +444,7 @@ export function closeDocAndFreeBuffer(
       return;
     }
     // No release pending: the handle lingers for the next same-bytes scan.
-    // Not falling through to closeDocumentNow on purpose — that would
+    // Not falling through to closeDocumentNow on purpose: that would
     // double-close it and leave `sharedDocument` dangling.
     return;
   }
@@ -479,6 +478,24 @@ export function releaseSharedDocument(): void {
 export async function getRawPageCount(docPtr: number): Promise<number> {
   const m = await getPdfiumModule();
   return m.FPDF_GetPageCount(docPtr);
+}
+
+/**
+ * Catalog form type without loading pages: 0 none, 1 AcroForm, 2/3 XFA, or
+ * null when the pinned build cannot answer (callers then extract rather than
+ * read "unknown" as "no form").
+ */
+export async function readRawFormType(
+  data: ArrayBuffer | Uint8Array,
+): Promise<number | null> {
+  const m = await getPdfiumModule();
+  if (typeof m.FPDF_GetFormType !== "function") return null;
+  const docPtr = await openRawDocumentSafe(data);
+  try {
+    return m.FPDF_GetFormType(docPtr);
+  } finally {
+    closeDocAndFreeBuffer(m, docPtr);
+  }
 }
 
 /**
@@ -533,7 +550,7 @@ export interface PdfiumFormField {
   flags: number;
   options: Array<{ label: string; isSelected: boolean }>;
   widgets: PdfiumWidgetRect[];
-  _tooltip?: string | null;
+  tooltip?: string | null;
 }
 
 export interface PdfiumWidgetRect {
@@ -973,7 +990,7 @@ function this_extractAnnotation(
       const existing = fieldMap.get(fieldName);
       if (existing) {
         if (widgetRect) existing.widgets.push(widgetRect);
-        if (tooltip && !existing._tooltip) existing._tooltip = tooltip;
+        if (tooltip && !existing.tooltip) existing.tooltip = tooltip;
       } else {
         fieldMap.set(fieldName, {
           name: fieldName,
@@ -985,7 +1002,7 @@ function this_extractAnnotation(
           flags: fieldFlags,
           options,
           widgets: widgetRect ? [widgetRect] : [],
-          _tooltip: tooltip,
+          tooltip,
         });
       }
     }

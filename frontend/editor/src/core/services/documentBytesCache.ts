@@ -7,7 +7,7 @@
  *
  * Files are also keyed by name/size/type/mtime: the add path re-wraps the same
  * bytes as fresh `File` objects, so identity alone would read every document
- * once per wrapper. Bare Blobs stay identity-keyed — they carry no metadata.
+ * once per wrapper. Bare Blobs stay identity-keyed, since they carry no metadata.
  */
 const cache = new WeakMap<Blob, Promise<ArrayBuffer>>();
 const FILE_KEY_CACHE_LIMIT = 64;
