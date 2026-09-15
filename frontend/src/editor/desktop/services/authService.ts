@@ -60,6 +60,8 @@ export class AuthService {
     (status: AuthStatus, userInfo: UserInfo | null) => void
   >();
   private refreshPromise: Promise<boolean> | null = null;
+  /** Bumped when a refresh is abandoned, so its late writes can be ignored. */
+  private refreshEpoch = 0;
 
   /** A keyring read blocks on an OS prompt that may never be answered, so every wait on one is
    *  bounded. Long enough that a user still reading the prompt is not cut off mid-decision. */
@@ -804,6 +806,7 @@ export class AuthService {
       console.warn(
         "[Desktop AuthService] Refresh timed out; treating the session as signed out",
       );
+      this.refreshEpoch += 1;
       this.setAuthStatus("unauthenticated", null);
       return false;
     });
@@ -893,13 +896,18 @@ export class AuthService {
   }
 
   private async _doRefreshToken(serverUrl: string): Promise<boolean> {
+    // A refresh that lost the boundedRefresh race must not write auth state: the UI is
+    // already signed out, and a late logout() would clear the next session's credentials.
+    const epoch = this.refreshEpoch;
     try {
       console.log("[Desktop AuthService] Refreshing auth token");
       this.setAuthStatus("refreshing", this.userInfo);
 
       const currentToken = await this.getAuthToken();
       if (!currentToken) {
-        this.setAuthStatus("unauthenticated", null);
+        if (epoch === this.refreshEpoch) {
+          this.setAuthStatus("unauthenticated", null);
+        }
         return false;
       }
 
@@ -924,8 +932,14 @@ export class AuthService {
         console.error(
           "[Desktop AuthService] Refresh response missing token payload",
         );
-        this.setAuthStatus("unauthenticated", null);
-        await this.logout();
+        if (epoch === this.refreshEpoch) {
+          this.setAuthStatus("unauthenticated", null);
+          await this.logout();
+        }
+        return false;
+      }
+
+      if (epoch !== this.refreshEpoch) {
         return false;
       }
 
@@ -944,7 +958,9 @@ export class AuthService {
       return true;
     } catch (error) {
       console.error("[Desktop AuthService] Token refresh failed:", error);
-      await this.handleRefreshFailure(error);
+      if (epoch === this.refreshEpoch) {
+        await this.handleRefreshFailure(error);
+      }
 
       return false;
     }
@@ -972,6 +988,7 @@ export class AuthService {
   private async _doRefreshSupabaseToken(
     authServerUrl: string,
   ): Promise<boolean> {
+    const epoch = this.refreshEpoch;
     try {
       console.log("[Desktop AuthService] Refreshing Supabase token");
       const currentToken = await this.getAuthToken();
@@ -980,7 +997,9 @@ export class AuthService {
       const refreshToken = await this.getRefreshToken();
       if (!refreshToken) {
         console.error("[Desktop AuthService] No refresh token available");
-        this.setAuthStatus("unauthenticated", null);
+        if (epoch === this.refreshEpoch) {
+          this.setAuthStatus("unauthenticated", null);
+        }
         return false;
       }
 
@@ -1000,6 +1019,10 @@ export class AuthService {
       );
 
       const { access_token, refresh_token: newRefreshToken } = response.data;
+
+      if (epoch !== this.refreshEpoch) {
+        return false;
+      }
 
       // Save new tokens
       await this.saveRefreshedToken(
@@ -1022,7 +1045,9 @@ export class AuthService {
         "[Desktop AuthService] Supabase token refresh failed:",
         error,
       );
-      await this.handleRefreshFailure(error);
+      if (epoch === this.refreshEpoch) {
+        await this.handleRefreshFailure(error);
+      }
 
       return false;
     }

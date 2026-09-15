@@ -28,6 +28,7 @@ describe("keyring timeouts", () => {
     vi.useFakeTimers();
     invokeMock.mockReset();
     postMock.mockReset();
+    axiosPostMock.mockReset();
   });
   afterEach(() => vi.useRealTimers());
 
