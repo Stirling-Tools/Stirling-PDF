@@ -472,7 +472,7 @@
   border-radius: var(--radius-sm, 4px);
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--c-success-text, var(--c-primary));
+  color: var(--c-text);
   background: color-mix(
     in srgb,
     var(--c-success, var(--c-primary)) 14%,
