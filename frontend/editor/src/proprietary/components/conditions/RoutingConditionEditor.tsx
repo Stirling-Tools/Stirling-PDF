@@ -49,29 +49,23 @@ export function RoutingConditionEditor({
       value: DOCUMENT_FIELDS[1],
       label: t(
         "portal.pipelines.builder.routing.matchExtension",
-        "File extension (no AI)",
+        "File extension",
       ),
     },
     {
       value: DOCUMENT_FIELDS[2],
       label: t(
         "portal.pipelines.builder.routing.matchFilename",
-        "Exact filename (no AI)",
+        "Exact filename",
       ),
     },
     {
       value: DOCUMENT_FIELDS[3],
-      label: t(
-        "portal.pipelines.builder.routing.matchTitle",
-        "PDF title (no AI)",
-      ),
+      label: t("portal.pipelines.builder.routing.matchTitle", "PDF title"),
     },
     {
       value: DOCUMENT_FIELDS[4],
-      label: t(
-        "portal.pipelines.builder.routing.matchAuthor",
-        "PDF author (no AI)",
-      ),
+      label: t("portal.pipelines.builder.routing.matchAuthor", "PDF author"),
     },
   ];
 

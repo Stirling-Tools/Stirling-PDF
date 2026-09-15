@@ -125,7 +125,7 @@ export function PolicyRoutingConfig({
             ? undefined
             : t(
                 "portal.pipelines.builder.routing.aiDisabled",
-                "AI classification is not enabled. Enable it in Settings, or route using a no-AI document property.",
+                "AI classification is not enabled. Enable it in Settings, or route on a document property instead.",
               )
         }
       />

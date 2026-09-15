@@ -99,7 +99,7 @@ export function RoutingRules({
               classificationUnavailableReason ??
               t(
                 "portal.pipelines.builder.routing.aiUnavailable",
-                "Document-type routing is disabled because AI classification is unavailable. Choose a no-AI match instead.",
+                "Document-type routing is disabled because AI classification is unavailable. Route on a document property instead.",
               )
             }
           />
@@ -194,12 +194,12 @@ export function RoutingSection({
   const unavailableReason = !aiClassificationEnabled
     ? t(
         "portal.pipelines.builder.routing.aiDisabled",
-        "AI classification is not enabled. Enable it in Settings, or route using a no-AI document property.",
+        "AI classification is not enabled. Enable it in Settings, or route on a document property instead.",
       )
     : !canClassify
       ? t(
           "portal.pipelines.builder.routing.needsClassify",
-          "Add a Classify step to use document-type routing, or choose a no-AI document property.",
+          "Add a Classify step to use document-type routing, or match on a document property instead.",
         )
       : undefined;
 
