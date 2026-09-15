@@ -39,9 +39,9 @@ const settle = () => new Promise((resolve) => setTimeout(resolve, 30));
 /**
  * Stand-in for @embedpdf/plugin-annotation's capability, mirroring the event
  * sequence in dist/index.js: a pointer placement emits `create` twice for the
- * same annotation — synchronously from the history command with
+ * same annotation - synchronously from the history command with
  * `committed: false`, then again from emitCommitEvents with `committed: true`
- * once the engine round-trip resolves — and both carry the pointer context.
+ * once the engine round-trip resolves - and both carry the pointer context.
  * `deactivateToolAfterCreate` disarms the tool between the two. A history redo
  * re-runs the command, so it replays the uncommitted event verbatim.
  */

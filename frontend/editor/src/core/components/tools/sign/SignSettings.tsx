@@ -905,11 +905,8 @@ const SignSettings = ({
     onParameterChange,
   ]);
 
-  // After a single placement (when "place multiple" is off) the
-  // SignatureAPIBridge drops out of placement mode. Without pausing here, the
-  // auto-activate effect below would immediately pull the user back into
-  // placement mode - so single placement would never stick and the "place
-  // multiple" checkbox would appear to do nothing.
+  // Pausing here stops the auto-activate effect below re-entering placement the
+  // instant the bridge leaves it after a single placement.
   const wasPlacementModeRef = useRef(isPlacementMode);
   useEffect(() => {
     const shouldPause = shouldPausePlacementAfterExit({

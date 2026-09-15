@@ -1,7 +1,5 @@
 interface PausePlacementParams {
-  /** Whether placement mode was active on the previous render. */
   wasInPlacementMode: boolean;
-  /** Whether placement mode is active now. */
   isInPlacementMode: boolean;
   /** User opted into dropping several stamps in a row. */
   placeMultiple: boolean;
@@ -9,7 +7,6 @@ interface PausePlacementParams {
   signaturesApplied: boolean;
   /** Whether a signature is configured and placement is allowed. */
   placementEnabled: boolean;
-  /** Whether placement is already manually paused. */
   alreadyPaused: boolean;
 }
 
