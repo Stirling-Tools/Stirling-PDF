@@ -7,6 +7,9 @@
  * the general draft as `serverCertificate` - one hook and one GET fewer.
  */
 
+import type { ToolPanelMode } from "@app/constants/toolPanel";
+import type { StartupView } from "@app/services/preferencesService";
+
 export interface GeneralSettingsData {
   ui: {
     appNameNavbar?: string;
@@ -55,6 +58,8 @@ export interface GeneralSettingsData {
 export interface UiDefaultsSettingsData {
   defaultHideUnavailableTools?: boolean;
   defaultHideUnavailableConversions?: boolean;
+  defaultToolPanelMode?: ToolPanelMode;
+  defaultStartupView?: StartupView;
 }
 
 export interface EndpointsSettingsData {
