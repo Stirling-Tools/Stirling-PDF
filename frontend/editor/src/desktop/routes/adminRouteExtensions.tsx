@@ -8,3 +8,9 @@ import type { ReactElement } from "react";
 export function getAdminRouteExtensions(): ReactElement[] {
   return [];
 }
+
+/**
+ * Warms the chunk the admin route-set lives in, so switching into it is not
+ * gated on a network round-trip. No portal in this build, so nothing to warm.
+ */
+export async function preloadAdminRoutes(): Promise<void> {}

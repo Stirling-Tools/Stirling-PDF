@@ -4,6 +4,11 @@ import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavR
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 import type { ToolId } from "@app/types/toolId";
 import { useQuickNavHost } from "@app/contexts/QuickNavHostContext";
+import {
+  useAppSwitchShortcut,
+  type AppSwitchTarget,
+} from "@app/components/shared/AppSwitch";
+import { useAppSwitch } from "@app/components/shared/AppSwitchProvider";
 import { requestReaderMode } from "@app/utils/pendingReaderMode";
 import {
   saveEditorReturnPath,
@@ -30,6 +35,7 @@ export function QuickNavRailHost() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
+  const { switchToApp } = useAppSwitch();
 
   const appMounted = Boolean(host?.appMounted);
 
@@ -56,6 +62,24 @@ export function QuickNavRailHost() {
   };
 
   const go = (to: string) => guarded(() => navigate(to));
+
+  const switchApp = (target: AppSwitchTarget, path?: string) => {
+    guarded(() => switchToApp(target, path));
+  };
+
+  const openProcessor = () => {
+    saveEditorReturnPath();
+    switchApp("processor");
+  };
+
+  const openEditor = () =>
+    switchApp("editor", takeEditorReturnPath() ?? EDITOR_BASENAME);
+
+  useAppSwitchShortcut(
+    inPortal ? "processor" : "editor",
+    (target) => (target === "processor" ? openProcessor() : openEditor()),
+    appMounted && HAS_PORTAL && (inPortal || Boolean(host?.portalAccess)),
+  );
 
   // Through the app where possible: its route only selects a tool on a fresh mount.
   const openTool = (toolId: ToolId, route: string) => {
@@ -102,8 +126,7 @@ export function QuickNavRailHost() {
         returnHome();
         return;
       }
-      // Back to where you left the editor, not its front door.
-      navigate(takeEditorReturnPath() ?? EDITOR_BASENAME);
+      openEditor();
     },
   };
 
@@ -122,8 +145,7 @@ export function QuickNavRailHost() {
         returnHome();
         return;
       }
-      if (inEditor) saveEditorReturnPath();
-      go(PORTAL_BASENAME);
+      openProcessor();
     },
   };
 

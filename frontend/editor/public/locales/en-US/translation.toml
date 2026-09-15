@@ -10980,6 +10980,8 @@ apiKeysDescription = "Personal keys for calling the Stirling API from scripts an
 title = "Developer"
 
 [settings.general]
+appSwitchStyle = "Editor / Processor transition"
+appSwitchStyleDescription = "How the screen animates when you switch between the editor and the processor."
 autoUnzip = "Auto-unzip API responses"
 autoUnzipFileLimit = "Auto-unzip file limit"
 autoUnzipFileLimitTooltip = "Only unzip if the ZIP contains this many files or fewer. Set higher to extract larger ZIPs."
@@ -11022,6 +11024,13 @@ themeReset = "Restore theme to default"
 themeSystem = "System"
 title = "General"
 user = "User"
+
+[settings.general.appSwitch]
+axis = "Slide"
+depth = "Depth"
+dissolve = "Dissolve"
+panels = "Panels"
+wipe = "Wipe"
 
 [settings.general.enableFeatures]
 action = "Configure"
