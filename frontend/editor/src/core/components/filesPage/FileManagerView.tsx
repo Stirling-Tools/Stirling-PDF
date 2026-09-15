@@ -1339,8 +1339,8 @@ export default function FileManagerView() {
   // disabled item's caption.
   const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
 
-  // Set when folder processing has no server to run on; every processing control
-  // carries it as its disabled reason.
+  // Why folder processing has no server to run on, or null. The controls that open
+  // the setup dialog carry it as their disabled reason.
   const processingBlock = useServerProcessingBlock();
 
   const { addLocalFolder } = useNewFolderFlow();
@@ -1733,24 +1733,28 @@ export default function FileManagerView() {
                       </Tooltip>
                     )}
                     <Tooltip
-                      label={t(
-                        "filesPage.processing.edit",
-                        "Edit processing...",
-                      )}
+                      label={
+                        processingBlock ??
+                        t("filesPage.processing.edit", "Edit processing...")
+                      }
                       withinPortal
                     >
-                      <ActionIcon
-                        size="sm"
-                        variant="secondary"
-                        disabled={Boolean(processingBlock)}
-                        onClick={() => setProcessingSetupFolder(currentFolder)}
-                        aria-label={t(
-                          "filesPage.processing.edit",
-                          "Edit processing...",
-                        )}
-                      >
-                        <Icon name="sliders-horizontal" size={20} />
-                      </ActionIcon>
+                      {/* Mantine drops hover events on a disabled control, so the
+                          tooltip needs a live element to hang off. */}
+                      <span style={{ display: "inline-flex" }}>
+                        <ActionIcon
+                          size="sm"
+                          variant="secondary"
+                          disabled={Boolean(processingBlock)}
+                          onClick={() => setProcessingSetupFolder(currentFolder)}
+                          aria-label={t(
+                            "filesPage.processing.edit",
+                            "Edit processing...",
+                          )}
+                        >
+                          <Icon name="sliders-horizontal" size={20} />
+                        </ActionIcon>
+                      </span>
                     </Tooltip>
                     {folderKind(currentFolder) === "local" && (
                       <Tooltip

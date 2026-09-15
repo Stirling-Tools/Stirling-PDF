@@ -72,8 +72,8 @@ export function DownloadsProcessingWizard({
   const { mountLocalFolder } = useFolders();
   const block = useServerProcessingBlock();
 
-  // Needs a connected server to run the pipeline and a build that can read the disk. Retried
-  // because the server or its session may not be ready at window open, with a bounded wait.
+  // Needs a connected server; without canListDirectory fetchRunOutputFile throws, so the offer
+  // would rewrite the server's own Downloads and show nothing. Retried: session may lag the open.
   useEffect(() => {
     if (!active || block || !canListDirectory) return;
     let cancelled = false;
