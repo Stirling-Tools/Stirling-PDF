@@ -21,6 +21,7 @@ import {
 } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import {
   useProcessingFolders,
   type ProcessingFolderState,
@@ -967,6 +968,8 @@ export function ProcessingMenuItems({
   const heading = (
     <Menu.Label>{t("filesPage.processing.section", "Processing")}</Menu.Label>
   );
+  const enabled = usePoliciesEnabled();
+  if (!enabled) return null;
   if (!processing) {
     return (
       <>

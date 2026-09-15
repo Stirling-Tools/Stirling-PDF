@@ -19,6 +19,8 @@ import {
   deliverSweepResults,
 } from "@app/services/processingRunDelivery";
 import { folderKind, type FolderRecord } from "@app/types/folder";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
+import { useProcessingFolders as useInertProcessingFolders } from "@core/hooks/useProcessingFolders";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
@@ -42,6 +44,7 @@ export type {
  *  per-instance state would mean a request per row and stale siblings after a mutation. */
 let folders: ProcessingFolder[] = [];
 let inFlight: Promise<void> | null = null;
+let generation = 0;
 const listeners = new Set<() => void>();
 
 function subscribe(listener: () => void): () => void {
@@ -58,13 +61,14 @@ function getSnapshot(): ProcessingFolder[] {
  *  in-flight read so a mutation observes its own effect. */
 function load(force = false): Promise<void> {
   if (inFlight && !force) return inFlight;
+  const currentGeneration = generation;
   const request = fetchProcessingFolders()
     .then((next) => {
-      folders = next;
+      if (currentGeneration === generation) folders = next;
     })
     .catch(() => {
       // Storage or login off, or unauthenticated: the files page works without these.
-      folders = [];
+      if (currentGeneration === generation) folders = [];
     })
     .finally(() => {
       if (inFlight === request) inFlight = null;
@@ -86,12 +90,14 @@ function directoryKey(directory: string): string {
  * rather than patching locally, so the list reflects what the server composed.
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
+  const enabled = usePoliciesEnabled();
+  const inert = useInertProcessingFolders();
   const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
   const { addFiles } = useFileHandler();
 
   useEffect(() => {
-    void load();
-  }, []);
+    if (enabled) void load();
+  }, [enabled]);
 
   const recordFor = useCallback(
     (folder: FolderRecord): ProcessingFolder | undefined => {
@@ -304,22 +310,27 @@ export function useProcessingFolders(): ProcessingFoldersApi {
   );
 
   return useMemo(
-    () => ({
-      stateFor,
-      recordFor: recordSummaryFor,
-      enabledFolderIds,
-      anyEnabled,
-      listActiveRuns,
-      listFiles,
-      retryFile,
-      revertFile,
-      revertAll,
-      enable,
-      disable,
-      remove,
-      sweep,
-    }),
+    () =>
+      enabled
+        ? {
+            stateFor,
+            recordFor: recordSummaryFor,
+            enabledFolderIds,
+            anyEnabled,
+            listActiveRuns,
+            listFiles,
+            retryFile,
+            revertFile,
+            revertAll,
+            enable,
+            disable,
+            remove,
+            sweep,
+          }
+        : inert,
     [
+      enabled,
+      inert,
       stateFor,
       recordSummaryFor,
       enabledFolderIds,
@@ -340,4 +351,12 @@ export function useProcessingFolders(): ProcessingFoldersApi {
 /** Reload the shared list — for a caller that created a folder outside these actions. */
 export function refreshProcessingFolders(): Promise<void> {
   return load(true);
+}
+
+/** Drops records from the previous server and ignores its late responses. */
+export function resetProcessingFolders(): void {
+  generation++;
+  folders = [];
+  inFlight = null;
+  listeners.forEach((listener) => listener());
 }
