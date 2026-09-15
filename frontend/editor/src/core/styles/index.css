@@ -5,6 +5,11 @@ body {
   height: 100%;
   overflow: hidden;
   overscroll-behavior: none;
+  scroll-behavior: smooth;
+}
+
+* {
+  -webkit-overflow-scrolling: touch;
 }
 
 body {

@@ -71,6 +71,216 @@ fn parse_launch_files(args: &[String]) -> Vec<String> {
     .collect()
 }
 
+use std::sync::Arc;
+use tokio::sync::RwLock;
+use lru::LruCache;
+use std::num::NonZeroUsize;
+
+fn status_response(status: u16) -> tauri::http::Response<Vec<u8>> {
+    tauri::http::Response::builder()
+        .status(status)
+        .body(Vec::new())
+        .unwrap()
+}
+
+fn full_response(mime: &str, bytes: &[u8]) -> tauri::http::Response<Vec<u8>> {
+    tauri::http::Response::builder()
+        .status(200)
+        .header("Content-Type", mime)
+        .header("Cache-Control", "public, max-age=31536000, immutable")
+        .header("Accept-Ranges", "bytes")
+        .header("Access-Control-Allow-Origin", "*")
+        .body(bytes.to_vec())
+        .unwrap()
+}
+
+fn mime_for(path: &std::path::Path) -> &'static str {
+  match path.extension().and_then(|ext| ext.to_str()) {
+      Some("html")        => "text/html; charset=utf-8",
+      Some("css")         => "text/css; charset=utf-8",
+      Some("js")          => "application/javascript; charset=utf-8",
+      Some("wasm")        => "application/wasm",
+      Some("pdf")         => "application/pdf",
+      Some("png")         => "image/png",
+      Some("jpg")
+      | Some("jpeg")      => "image/jpeg",
+      Some("gif")         => "image/gif",
+      Some("webp")        => "image/webp",
+      Some("svg")         => "image/svg+xml",
+      Some("json")        => "application/json",
+      Some("woff")        => "font/woff",
+      Some("woff2")       => "font/woff2",
+      Some("ttf")         => "font/ttf",
+      Some("ico")         => "image/x-icon",
+      _                   => "application/octet-stream",
+  }
+}
+
+fn parse_range(header: &str, file_len: u64) -> Option<(u64, u64)> {
+    let s = header.strip_prefix("bytes=")?;
+    let mut parts = s.splitn(2, '-');
+    let start: u64 = parts.next()?.parse().ok()?;
+    let end: u64 = parts.next()
+        .and_then(|e| if e.is_empty() { None } else { e.parse().ok() })
+        .unwrap_or(file_len.saturating_sub(1));
+    if start > end || end >= file_len { return None; }
+    Some((start, end))
+}
+
+fn decode_and_canonicalize(uri: &tauri::http::Uri, app_handle: &tauri::AppHandle) -> Option<std::path::PathBuf> {
+  let path_str = urlencoding::decode(uri.path()).unwrap_or(std::borrow::Cow::Borrowed(uri.path())).into_owned();
+
+  #[cfg(target_os = "windows")]
+  let path_str = if path_str.starts_with('/') && path_str.chars().nth(2) == Some(':') {
+      path_str[1..].to_string()
+  } else {
+      path_str
+  };
+
+  let raw_path = std::path::Path::new(&path_str);
+
+  // Canonicalize the requested path to prevent path traversal (e.g. /../)
+  let canonical_path = std::fs::canonicalize(raw_path).ok()?;
+
+  // Resolve allowed roots dynamically
+  let resource_dir = app_handle.path().resource_dir().ok().and_then(|p| std::fs::canonicalize(p).ok());
+  let app_data_dir = app_handle.path().app_local_data_dir().ok().and_then(|p| std::fs::canonicalize(p).ok());
+  let temp_dir = std::fs::canonicalize(std::env::temp_dir()).ok();
+
+  let mut is_allowed = false;
+  if let Some(ref r) = resource_dir {
+      if canonical_path.starts_with(r) { is_allowed = true; }
+  }
+  if let Some(ref a) = app_data_dir {
+      if canonical_path.starts_with(a) { is_allowed = true; }
+  }
+  if let Some(ref t) = temp_dir {
+      if canonical_path.starts_with(t) { is_allowed = true; }
+  }
+
+  if is_allowed {
+      Some(canonical_path)
+  } else {
+      None
+  }
+}
+
+fn validated_compressed(
+    compressed: &std::path::PathBuf,
+    resource_dir: &Option<std::path::PathBuf>,
+    app_data_dir: &Option<std::path::PathBuf>,
+    temp_dir: &Option<std::path::PathBuf>,
+) -> Option<std::path::PathBuf> {
+    let p = std::fs::canonicalize(compressed).ok()?;
+    if !p.is_file() { return None; }
+
+    let mut allowed = false;
+    if let Some(ref r) = resource_dir {
+        if p.starts_with(r) { allowed = true; }
+    }
+    if let Some(ref a) = app_data_dir {
+        if p.starts_with(a) { allowed = true; }
+    }
+    if let Some(ref t) = temp_dir {
+        if p.starts_with(t) { allowed = true; }
+    }
+
+    if allowed {
+        Some(p)
+    } else {
+        None
+    }
+}
+
+async fn serve_range(path: &std::path::Path, range_header: &str, mime: &str) -> tauri::http::Response<Vec<u8>> {
+    let file_len = match tokio::fs::metadata(path).await {
+        Ok(m) => m.len(),
+        Err(_) => return status_response(404),
+    };
+
+    if let Some((start, end)) = parse_range(range_header, file_len) {
+        use tokio::io::{AsyncReadExt, AsyncSeekExt};
+        if let Ok(mut file) = tokio::fs::File::open(path).await {
+            if file.seek(std::io::SeekFrom::Start(start)).await.is_ok() {
+                let chunk_size = (end - start + 1) as usize;
+                let mut buf = vec![0u8; chunk_size];
+                if file.read_exact(&mut buf).await.is_ok() {
+                    return tauri::http::Response::builder()
+                        .status(206) // Partial Content
+                        .header("Content-Range", format!("bytes {}-{}/{}", start, end, file_len))
+                        .header("Accept-Ranges", "bytes")
+                        .header("Content-Length", chunk_size.to_string())
+                        .header("Content-Type", mime)
+                        .header("Cache-Control", "public, max-age=31536000, immutable")
+                        .header("Access-Control-Allow-Origin", "*")
+                        .body(buf)
+                        .unwrap();
+                }
+            }
+        }
+    }
+
+    // Fallback: serve full file using tokio::fs
+    match tokio::fs::read(path).await {
+        Ok(bytes) => full_response(mime, &bytes),
+        Err(_) => status_response(500),
+    }
+}
+
+async fn try_compressed(
+  path: &std::path::Path,
+  mime: &str,
+  resource_dir: &Option<std::path::PathBuf>,
+  app_data_dir: &Option<std::path::PathBuf>,
+  temp_dir: &Option<std::path::PathBuf>,
+) -> Option<tauri::http::Response<Vec<u8>>> {
+  let mut br_path = path.to_path_buf();
+  if let Some(ext) = path.extension() {
+      let mut new_ext = ext.to_os_string();
+      new_ext.push(".br");
+      br_path.set_extension(new_ext);
+  } else {
+      br_path.set_extension("br");
+  }
+
+  let mut gz_path = path.to_path_buf();
+  if let Some(ext) = path.extension() {
+      let mut new_ext = ext.to_os_string();
+      new_ext.push(".gz");
+      gz_path.set_extension(new_ext);
+  } else {
+      gz_path.set_extension("gz");
+  }
+
+  if let Some(br) = validated_compressed(&br_path, resource_dir, app_data_dir, temp_dir) {
+    if let Ok(bytes) = std::fs::read(&br) {
+      return Some(tauri::http::Response::builder()
+        .header("Content-Type", mime)
+        .header("Content-Encoding", "br")
+        .header("Cache-Control", "public, max-age=31536000, immutable")
+        .header("Access-Control-Allow-Origin", "*")
+        .status(200)
+        .body(bytes)
+        .unwrap());
+    }
+  }
+
+  if let Some(gz) = validated_compressed(&gz_path, resource_dir, app_data_dir, temp_dir) {
+    if let Ok(bytes) = std::fs::read(&gz) {
+      return Some(tauri::http::Response::builder()
+        .header("Content-Type", mime)
+        .header("Content-Encoding", "gzip")
+        .header("Cache-Control", "public, max-age=31536000, immutable")
+        .header("Access-Control-Allow-Origin", "*")
+        .status(200)
+        .body(bytes)
+        .unwrap());
+    }
+  }
+
+  None
+}
+
 // URLs the webview is allowed to show: the bundled app and dev server only.
 // Anything else (file://, https://...) must never replace the app UI.
 fn is_app_url(url: &tauri::Url) -> bool {
@@ -92,8 +302,83 @@ pub fn run() {
   if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_none() {
     std::env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
   }
+  let cache: Arc<RwLock<LruCache<String, Arc<Vec<u8>>>>> = Arc::new(RwLock::new(
+    LruCache::new(NonZeroUsize::new(128).unwrap())
+  ));
 
   tauri::Builder::default()
+    .register_asynchronous_uri_scheme_protocol("asset", move |ctx, request, responder| {
+      let app_handle = ctx.app_handle().clone();
+
+      // Decode and canonicalize path synchronously (cheap)
+      let Some(canonical_path) = decode_and_canonicalize(request.uri(), &app_handle) else {
+          responder.respond(status_response(404));
+          return;
+      };
+
+      // Extract Range header
+      let range = request.headers()
+          .get("range")
+          .and_then(|v| v.to_str().ok())
+          .map(|s| s.to_string());
+
+      let cache = Arc::clone(&cache);
+
+      // Spawn on Tokio thread pool
+      tauri::async_runtime::spawn(async move {
+          let mime = mime_for(&canonical_path);
+          let ext = canonical_path.extension().and_then(|e| e.to_str()).unwrap_or("");
+          let is_cacheable = matches!(
+              ext,
+              "js" | "css" | "wasm" | "html" | "woff2"
+          );
+
+          // Range requests bypass cache and compression
+          if let Some(ref r) = range {
+              let response = serve_range(&canonical_path, r, mime).await;
+              responder.respond(response);
+              return;
+          }
+
+          // Check for pre-compressed static assets (no range requests)
+          if is_cacheable {
+              let resource_dir = app_handle.path().resource_dir().ok().and_then(|p| std::fs::canonicalize(p).ok());
+              let app_data_dir = app_handle.path().app_local_data_dir().ok().and_then(|p| std::fs::canonicalize(p).ok());
+              let temp_dir = std::fs::canonicalize(std::env::temp_dir()).ok();
+
+              if let Some(resp) = try_compressed(&canonical_path, mime, &resource_dir, &app_data_dir, &temp_dir).await {
+                  responder.respond(resp);
+                  return;
+              }
+          }
+
+          // LRU cache for hot static assets
+          if is_cacheable {
+              let key = canonical_path.to_string_lossy().to_string();
+              let cached = cache.read().await.peek(&key).cloned();
+              if let Some(bytes) = cached {
+                  responder.respond(full_response(mime, &bytes));
+                  return;
+              }
+              if let Ok(bytes) = tokio::fs::read(&canonical_path).await {
+                  let bytes = Arc::new(bytes);
+                  cache.write().await.put(key, Arc::clone(&bytes));
+                  responder.respond(full_response(mime, &bytes));
+                  return;
+              }
+          }
+
+          // Fallback for large files / user files / uncached data (like PDFs)
+          match tokio::fs::read(&canonical_path).await {
+              Ok(bytes) => {
+                  responder.respond(full_response(mime, &bytes));
+              }
+              Err(_) => {
+                  responder.respond(status_response(500));
+              }
+          }
+      });
+    })
     .plugin(
       // Dropping a file outside a dropzone makes WebKit navigate the webview to
       // that file, killing the app UI and its close handler (window becomes
@@ -251,8 +536,6 @@ pub fn run() {
         RunEvent::ExitRequested { .. } => {
           add_log("🔄 App exit requested, cleaning up...".to_string());
           cleanup_backend();
-          // Use Tauri's built-in cleanup
-          app_handle.cleanup_before_exit();
         }
         RunEvent::WindowEvent { event: WindowEvent::CloseRequested {.. }, label, .. } => {
           add_log("🔄 Window close requested (will cleanup on actual exit)...".to_string());
@@ -286,24 +569,15 @@ pub fn run() {
         }
         #[cfg(target_os = "macos")]
         RunEvent::Opened { urls } => {
-          use urlencoding::decode;
-
           add_log(format!("📂 Tauri file opened event: {:?}", urls));
           let file_paths: Vec<String> = urls
             .iter()
             .filter_map(|url| {
-              let url_str = url.as_str();
-              if !url_str.starts_with("file://") {
-                return None;
-              }
-              let encoded = url_str.strip_prefix("file://").unwrap_or(url_str);
-              // Decode URL-encoded characters (%20 -> space, etc.)
-              match decode(encoded) {
-                Ok(decoded) => Some(decoded.into_owned()),
-                Err(e) => {
-                  add_log(format!("⚠️ Failed to decode file path: {} - {}", encoded, e));
-                  Some(encoded.to_string())
-                }
+              if url.scheme() == "file" {
+                url.to_file_path().ok()
+                  .and_then(|p| p.to_str().map(|s| s.to_string()))
+              } else {
+                None
               }
             })
             .collect();
