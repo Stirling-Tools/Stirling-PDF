@@ -520,6 +520,7 @@ function select<T>(o: {
     options: SelectOption[];
     ariaLabel?: string;
     disabled?: boolean;
+    readOnly?: boolean;
   };
   /** Omit for an uncontrolled select (local UI state only). */
   onChange?: (row: T, value: string | null) => void;
@@ -544,6 +545,7 @@ function select<T>(o: {
             onChange={change ? (v) => change(r, v) : undefined}
             aria-label={s.ariaLabel}
             disabled={s.disabled}
+            readOnly={s.readOnly}
             inputSize="sm"
           />
         </div>

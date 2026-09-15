@@ -38,12 +38,16 @@ export async function extractHeuristicDoc(
     if (pageCount >= 1) {
       // Page 1 feeds three zones (first, title, window); pump its items once.
       const page1 = await pdfDoc.getPage(1);
-      const items = await pageTextItems(page1);
-      firstZone = textFromItems(items);
-      titleZone = titleFromLines(
-        buildLines(items),
-        page1.getViewport({ scale: 1 }).height,
-      );
+      try {
+        const items = await pageTextItems(page1);
+        firstZone = textFromItems(items);
+        titleZone = titleFromLines(
+          buildLines(items),
+          page1.getViewport({ scale: 1 }).height,
+        );
+      } finally {
+        page1.cleanup();
+      }
     }
     const parts: string[] = [];
     for (const pageNo of windowPages(pageCount)) {
@@ -108,7 +112,11 @@ async function pageText(
 ): Promise<string> {
   if (pageNo < 1 || pageNo > pdfDoc.numPages) return "";
   const page = await pdfDoc.getPage(pageNo);
-  return textFromItems(await pageTextItems(page));
+  try {
+    return textFromItems(await pageTextItems(page));
+  } finally {
+    page.cleanup();
+  }
 }
 
 function textFromItems(items: readonly unknown[]): string {

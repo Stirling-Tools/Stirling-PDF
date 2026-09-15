@@ -14,6 +14,7 @@ import {
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
   private activeDocuments = new Set<PDFDocumentProxy>();
+  private destroyingDocuments = new WeakSet<PDFDocumentProxy>();
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
   private isInitialized = false;
@@ -54,11 +55,12 @@ class PDFWorkerManager {
       disableStream?: boolean;
       stopAtErrors?: boolean;
       verbosity?: number;
+      signal?: { cancelled: boolean };
     } = {},
   ): Promise<PDFDocumentProxy> {
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
-      await this.waitForAvailableWorker();
+      await this.waitForAvailableWorker(options.signal);
     }
 
     // Normalize input data to PDF.js format
@@ -105,7 +107,7 @@ class PDFWorkerManager {
       // If document creation fails, make sure to clean up the loading task
       if (loadingTask) {
         try {
-          loadingTask.destroy();
+          void loadingTask.destroy();
         } catch {
           // Ignore errors
         }
@@ -117,43 +119,50 @@ class PDFWorkerManager {
   /**
    * Properly destroy a PDF document and clean up resources
    */
-  destroyDocument(pdf: PDFDocumentProxy): void {
-    if (this.activeDocuments.has(pdf)) {
-      try {
-        pdf.destroy();
-        this.activeDocuments.delete(pdf);
-        this.workerCount = Math.max(0, this.workerCount - 1);
-      } catch {
-        // Still remove from tracking even if destroy failed
-        this.activeDocuments.delete(pdf);
-        this.workerCount = Math.max(0, this.workerCount - 1);
-      }
+  async destroyDocument(pdf: PDFDocumentProxy): Promise<void> {
+    if (!this.activeDocuments.has(pdf) || this.destroyingDocuments.has(pdf)) {
+      return;
+    }
+    this.destroyingDocuments.add(pdf);
+    try {
+      await pdf.destroy();
+    } catch {
+      // Still remove from tracking if destroy fails.
+    } finally {
+      this.destroyingDocuments.delete(pdf);
+      this.activeDocuments.delete(pdf);
+      this.workerCount = Math.max(0, this.workerCount - 1);
     }
   }
 
   /**
    * Destroy all active PDF documents
    */
-  destroyAllDocuments(): void {
+  async destroyAllDocuments(): Promise<void> {
     const documentsToDestroy = Array.from(this.activeDocuments);
-    documentsToDestroy.forEach((pdf) => {
-      this.destroyDocument(pdf);
-    });
-
-    this.activeDocuments.clear();
-    this.workerCount = 0;
+    await Promise.all(
+      documentsToDestroy.map((pdf) => this.destroyDocument(pdf)),
+    );
   }
 
   /**
    * Wait for a worker to become available
    */
-  private async waitForAvailableWorker(): Promise<void> {
-    return new Promise((resolve) => {
+  private async waitForAvailableWorker(signal?: {
+    cancelled: boolean;
+  }): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | null = null;
       const checkAvailability = () => {
+        if (signal?.cancelled) {
+          if (timer !== null) clearTimeout(timer);
+          reject(new Error("CANCELLED"));
+          return;
+        }
         if (this.activeDocuments.size < this.maxWorkers) {
           resolve();
         } else {
-          setTimeout(checkAvailability, 100);
+          timer = setTimeout(checkAvailability, 100);
         }
       };
       checkAvailability();
@@ -178,7 +187,7 @@ class PDFWorkerManager {
     // Force destroy all documents
     this.activeDocuments.forEach((pdf) => {
       try {
-        pdf.destroy();
+        void pdf.destroy();
       } catch {
         // Ignore errors
       }

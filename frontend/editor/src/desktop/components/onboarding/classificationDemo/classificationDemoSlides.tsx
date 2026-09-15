@@ -164,7 +164,11 @@ export function FollowUpPanel({
           : t(
               "classificationDemo.followUp.free",
               "They are all covered by your remaining free allowance.",
-            )}
+            )}{" "}
+        {t(
+          "classificationDemo.followUp.background",
+          "This runs in the background. The ring on the left shows progress.",
+        )}
       </div>
     </div>
   );

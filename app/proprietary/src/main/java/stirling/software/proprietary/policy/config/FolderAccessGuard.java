@@ -23,9 +23,9 @@ import stirling.software.proprietary.policy.source.SourceStore;
  *   <li>denied entirely under the {@code saas} profile;
  *   <li>Stirling's own config dir always rejected, even if an allowed root were misconfigured to
  *       contain it;
- *   <li>with login disabled (desktop, single-user self-host) everything else is permitted: the
- *       local operator picking a directory is the authorization, the same trust the role checks
- *       extend them — an allowlist would only gate the operator from their own machine;
+ *   <li>in the desktop bundle everything else is permitted: the local operator picking a directory
+ *       on their own machine is the authorization, and an allowlist would only gate them from their
+ *       own files;
  *   <li>Stirling-owned "implied" roots are always permitted (even with none configured): the local
  *       server file-storage directory when that storage provider is enabled, and the pipeline
  *       watched-folder directories, so automations use them without the admin listing them;
@@ -64,8 +64,7 @@ public class FolderAccessGuard {
             Environment environment,
             SourceStore sourceStore) {
         this.saasActive = Arrays.asList(environment.getActiveProfiles()).contains("saas");
-        this.desktopOperator =
-                isDesktopBundle() && !applicationProperties.getSecurity().isEnableLogin();
+        this.desktopOperator = isDesktopBundle();
         this.allowedRoots =
                 normalizeAll(applicationProperties.getPolicies().getAllowedFolderRoots());
         this.impliedRoots = impliedRoots(applicationProperties.getStorage(), runtimePathConfig);

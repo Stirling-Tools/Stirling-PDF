@@ -1,5 +1,4 @@
 import { useCallback, useMemo, useState } from "react";
-import { useAccountIdentity } from "@app/hooks/useAccountIdentity";
 import {
   NotificationPanel,
   NOTIFICATIONS_PANEL_ID,
@@ -7,17 +6,16 @@ import {
 import { useNotificationActions } from "@app/components/notifications/notificationActions";
 import { useNotificationPasswordPrompt } from "@app/components/notifications/useNotificationPasswordPrompt";
 import { useQuickNavToolReasons } from "@app/components/shared/quickNav/useQuickNavToolReasons";
+import { useSyncQuickNavAccount } from "@app/components/shared/quickNav/useSyncQuickNavAccount";
 import { useBrandFlourish } from "@app/components/easterEgg/useBrandFlourish";
 import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
-import { useSigningBadgeCount } from "@app/hooks/signing/useSigningBadgeCount";
 import {
-  useRegisterQuickNavHost,
+  useRegisterQuickNavView,
   type QuickNavToolReasons,
 } from "@app/contexts/QuickNavHostContext";
 import type { ToolId } from "@app/types/toolId";
 
 export interface QuickNavHostBridgeProps {
-  portalAccess?: boolean;
   readerMode?: boolean;
   fileLibrary?: boolean;
   onSetReaderMode?: (on: boolean) => void;
@@ -26,13 +24,15 @@ export interface QuickNavHostBridgeProps {
   onSelectTool?: (toolId: ToolId) => void;
   activeTool?: ToolId | null;
   onShowFileLibrary?: () => void;
+  onCreateProcessingFolder?: () => void;
   /** Merged over the reasons worked out here, for what only the app can see. */
   toolReasons?: QuickNavToolReasons;
+  /** Absent where there is no file workspace to open into, which drops the rail entry. */
+  onOpenFromComputer?: () => void;
 }
 
 /** Registers with the rail what only the app can see, and owns the notifications panel. */
 export function QuickNavHostBridge({
-  portalAccess = false,
   readerMode = false,
   fileLibrary = false,
   onSetReaderMode,
@@ -40,11 +40,12 @@ export function QuickNavHostBridge({
   onSelectTool,
   activeTool = null,
   onShowFileLibrary,
+  onCreateProcessingFolder,
   onGoToDefaultState,
   toolReasons,
+  onOpenFromComputer,
 }: QuickNavHostBridgeProps) {
-  const { displayName, profilePictureUrl } = useAccountIdentity();
-  const signingBadge = useSigningBadgeCount();
+  useSyncQuickNavAccount();
   const notificationsAvailable = useNotificationsAvailable();
   // Built even when closed: it carries a one-shot document pickup that would sit unclaimed.
   const notificationActions = useNotificationActions();
@@ -62,11 +63,8 @@ export function QuickNavHostBridge({
   const { requestPassword, promptModal } =
     useNotificationPasswordPrompt(closeNotifications);
 
-  useRegisterQuickNavHost(
+  useRegisterQuickNavView(
     {
-      identity: { displayName, profilePictureUrl },
-      signingBadge,
-      portalAccess,
       readerMode,
       fileLibrary,
       activeTool,
@@ -78,7 +76,9 @@ export function QuickNavHostBridge({
       selectTool: onSelectTool,
       setReaderMode: onSetReaderMode,
       showFileLibrary: onShowFileLibrary,
+      createProcessingFolder: onCreateProcessingFolder,
       goToDefaultState: onGoToDefaultState,
+      openFromComputer: onOpenFromComputer,
       toggleNotifications: () => setNotificationsOpen((open) => !open),
       onBrandFlourish: brandFlourish.trigger,
     },
