@@ -1,8 +1,3 @@
-// Accuracy gate for the hand-authored packs. One realistic specimen per document
-// type per language, asserted on the real engine: the label, and that the clearest
-// ones reach "high" — which is the whole point of field vocabulary, since "high"
-// needs three distinct signals and a document-type name is only one.
-
 import { describe, expect, it } from "vitest";
 import { classifyHeuristic } from "@app/services/heuristic/heuristicEngine";
 import type { HeuristicDoc } from "@app/services/heuristic/types";

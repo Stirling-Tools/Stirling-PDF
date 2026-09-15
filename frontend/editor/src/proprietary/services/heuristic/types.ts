@@ -65,10 +65,6 @@ export interface HeuristicResult {
   score: number;
   /** Detected document language; null when the text proved nothing. */
   language: string | null;
-  /**
-   * Packs that contributed rules. Empty means the document was scored against
-   * the language-neutral core alone, which caps confidence below "high".
-   */
   packs: string[];
   /** Present only when classify was called with `{ explain: true }`. */
   explain?: HeuristicExplanation;

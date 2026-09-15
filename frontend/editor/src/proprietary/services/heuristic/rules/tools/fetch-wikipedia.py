@@ -1,9 +1,3 @@
-"""Fetch long Wikipedia articles per language via interlanguage links.
-
-Random pages are mostly stubs and the API rate-limits the volume we need; a fixed
-set of broad topics exists as a substantial article in every wiki we ship, and
-langlinks give the local title for each without guessing at translations.
-"""
 import json, os, sys, time, urllib.parse, urllib.request, re
 
 SEEDS = ["Water", "History", "Music", "Economy", "Law", "Mathematics", "Medicine",

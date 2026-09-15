@@ -1,13 +1,5 @@
 // Heuristic (non-AI) document classifier: string/regex/structural scoring over
-// extracted text, filename and metadata.
-//
-// This file owns three things and deliberately owns no vocabulary of its own:
-//  - language identification, from the profiles in `rules/languages.json`;
-//  - assembling a rule set for the detected language (core + pack(s), merged);
-//  - the scoring pass and the confidence thresholds.
-//
-// Every word the classifier matches on lives in `rules/` as data. A new language
-// is a new pack file plus a registry line — see `rules/README.md`.
+// extracted text, filename and metadata. Rules lazy-load per detected language.
 
 import LANGUAGE_DATA from "@app/services/heuristic/rules/languages.json";
 import {
@@ -44,36 +36,9 @@ const SEC_FRAC = 0.5;
 const SEC_SIGNALS = 2;
 const SEC_MAX = 4;
 
-// --- dispatch constants ---
-/**
- * A runner-up language this close to the winner gets its pack loaded too.
- * Packs share one label vocabulary, so a second pack cannot contradict the
- * first — its rules either match the document (bilingual invoices, confusable
- * pairs like es/pt) or sit inert. The cost of loading one needlessly is bytes;
- * the cost of missing the right one is a billed AI run, so the bar is generous.
- *
- * <p>Hazard when tuning: English scores on stopword ratio alone (~0.15-0.37 for
- * prose) while the Latin profiles add a diacritic term worth up to 0.9, so the
- * two scales are only comparable in the middle of their ranges.
- */
 const SECOND_PACK_BAR = 0.75;
-/**
- * Cap on packs per document, which rises when the call is uncertain. Measured
- * containment of the true language on 20-word documents: 66% in the top
- * candidate, 84% in the top two, 90% in three, 95% in five. On 200-word documents
- * the same widening moves 98% to 99%, so the depth is only worth paying for while
- * the document is short — which is also when it is cheapest, because scoring cost
- * is rule count times text length. Uncertainty and size pull in opposite
- * directions, so widening here is close to free.
- */
 const MAX_PACKS_CONFIDENT = 2;
 const MAX_PACKS_UNSURE = 5;
-/**
- * Above this much extracted text the cap stays at the confident value however
- * unsure the detector is. A data-dense 50-page statement can reach the uncertain
- * branch, and five mature packs over that much text is the one combination that
- * would actually cost something.
- */
 const UNSURE_MAX_CHARS = 20000;
 /** Below this, confidence is capped so the verdict still reaches the AI engine. */
 const NO_PACK_CONFIDENCE_CAP: HeuristicConfidence = "medium";
@@ -324,11 +289,6 @@ function loadPack(language: string): Promise<RawRules | null> {
   return pending;
 }
 
-/**
- * Fetch core plus the given language packs and keep them for the session.
- * Languages without a pack are ignored rather than rejected. Safe to call
- * repeatedly; each chunk is fetched once.
- */
 export async function ensureRulesLoaded(
   langs: readonly string[] = ["en"],
 ): Promise<void> {
@@ -533,33 +493,12 @@ export function compileRegex(
 
 /** Minimum words before foreign-language evidence is trusted over English. */
 const MIN_WORDS_FOR_FOREIGN = 12;
-/**
- * Distinctive letters below this count score nothing. The density term is worth
- * up to 0.9 — far more than English prose scores on function words — so without a
- * floor a German sign-off on an English invoice outweighs the whole document.
- */
 const MIN_DISTINCTIVE_CHARS = 3;
 /** Distinct profile words a language needs before it counts as a candidate. */
 const MIN_WORD_HITS = 2;
 /** Dominance a script range needs over all letters to decide the writing system. */
 const SCRIPT_SHARE = 0.25;
 
-/**
- * Name the language a document is written in.
- *
- * <p>One mechanism for every writing system: a script range narrows the
- * candidates, and where a range holds more than one language — Japanese and
- * Chinese, Russian and Ukrainian and Bulgarian, Arabic and Persian — the same
- * function-word profiles that separate the Latin languages separate those too.
- *
- * <p>English is the assumption of last resort (`assumed: true`) because
- * data-dense documents — tickets, itineraries, payslips — carry too few function
- * words to prove any language, and the English pack is the one most likely to
- * still match their field labels.
- *
- * <p>`candidates` is ranked best-first and is what the pack dispatch reads;
- * `language` is its head.
- */
 export function detectLanguage(text: string): LanguageDetection {
   const raw = nz(text);
   const letters = countAll(LETTERS, raw);
@@ -649,9 +588,6 @@ export function detectLanguage(text: string): LanguageDetection {
   }
 
   const bar = lowText ? 0.03 : 0.045;
-  // The same floor every other language is held to. "in" is German too, "is" is
-  // Dutch, "at" is Danish: two occurrences of one short word on a forty-word CV
-  // cleared the ratio bar and declared the document English.
   const englishProven =
     latinRatio >= 0.75 &&
     englishScore >= bar &&
@@ -692,16 +628,6 @@ function countWords(
   return { total, distinct: seen.size };
 }
 
-/**
- * Score the given languages against the text, best first. Function-word share
- * plus distinctive-letter density, the two signals that survive a document being
- * mostly nouns and numbers.
- *
- * <p>A language with no evidence at all is left off: among 38 candidates an
- * arbitrary zero is a lottery rather than a hedge. Distinctive letters too few to
- * score still order the rest, which is what keeps German ahead of Catalan on a
- * bank statement made of nouns and numbers.
- */
 function rankLanguages(
   raw: string,
   words: string[],
@@ -715,16 +641,9 @@ function rankLanguages(
     const chars = profile.chars == null ? 0 : countAll(profile.chars, raw);
     const charEvidence = chars >= MIN_DISTINCTIVE_CHARS ? chars : 0;
     const hits = countWords(words, profile);
-    // One function word is noise: a German IBAN starts "DE", which tokenises to
-    // "de" - a word in Catalan, Spanish, French, Dutch and Romanian alike. Two
-    // distinct words, or a distinctive letter, is the floor for being a candidate.
     if (hits.distinct < MIN_WORD_HITS && charEvidence === 0) continue;
     const ratio = hits.total / totalWords;
     const score = ratio + Math.min(charEvidence / totalWords, 0.15) * 6;
-    // Too few distinctive letters to score - amplifying a couple of them let a
-    // German sign-off outrank a whole English invoice - but they are still the
-    // only thing separating German from Catalan on a page of nouns and numbers,
-    // so they order the candidates that score nothing.
     const tiebreak = chars / totalWords;
     if (score > 0 || tiebreak > 0) ranked.push({ language, score, tiebreak });
   }
@@ -732,22 +651,6 @@ function rankLanguages(
   return ranked.map(({ language, score }) => ({ language, score }));
 }
 
-/**
- * Packs to score a document against: the detected language, plus a runner-up
- * within {@link SECOND_PACK_BAR} of it. Languages with no authored pack drop
- * out, so the result is often shorter than the candidate list and may be empty.
- *
- * <p>When English was only assumed, the bar drops to zero and the best
- * alternative with a pack rides along unconditionally. Data-dense documents — a
- * bank statement, a payslip, a delivery note — are mostly nouns and numbers and
- * carry too few function words to prove any language, so for those the pack's own
- * vocabulary is the better evidence. Hedging costs one chunk; guessing English
- * costs the verdict.
- *
- * <p>The bar is not what limits breadth — when there is little to go on the scores
- * bunch up and the bar admits the runner-up on its own. The cap is the limit, so
- * it is the cap that widens on an uncertain short document.
- */
 export function packsFor(
   detection: LanguageDetection,
   chars: number,
@@ -765,20 +668,12 @@ export function packsFor(
   const max = unsure ? MAX_PACKS_UNSURE : MAX_PACKS_CONFIDENT;
   const bar = detection.assumed ? 0 : best * SECOND_PACK_BAR;
   const out: string[] = [];
-  // The interface language, used only when the document proved nothing. A
-  // data-dense statement or payslip names its own type in content words the
-  // detector cannot see, so a reader's locale is the one prior left. It never
-  // overrides evidence: a German user's English invoice proves English and this
-  // never runs.
   if (detection.assumed && localeHint != null) {
     const hinted = localeHint.slice(0, 2).toLowerCase();
     if (hinted !== "en" && hinted in LANGUAGE_PACKS) out.push(hinted);
   }
   for (const candidate of ranked) {
     if (out.length >= max) break;
-    // The bar applies from the first candidate, so a confidently-detected
-    // language with no pack scores against core alone rather than falling
-    // through to whatever pack happens to be next on the list.
     if (candidate.score < bar) break;
     if (!(candidate.language in LANGUAGE_PACKS)) continue;
     if (!out.includes(candidate.language)) out.push(candidate.language);
@@ -827,14 +722,6 @@ function toExplanation(
   };
 }
 
-/**
- * Classify a document: identify its language, fetch the rules for it, and score.
- * Returns emitted label ids (primary + secondaries, capped at 5).
- *
- * <p>A document in a language with no authored pack is still scored, against the
- * language-neutral core alone, but its confidence is capped at
- * {@link NO_PACK_CONFIDENCE_CAP} so the AI engine still gets to rule on it.
- */
 export async function classifyHeuristic(
   doc: HeuristicDoc,
   opts?: { explain?: boolean; localeHint?: string },
@@ -1160,16 +1047,6 @@ function strings(v: unknown): string[] {
     : [];
 }
 
-/**
- * Lower-case, fold diacritics, and flatten the ligatures and no-break spaces
- * pdf.js emits. Phrase text and document text both come through here, so a rule
- * written "zahlbar bis Fälligkeit" still matches a PDF whose text layer lost the
- * umlaut — common in scans and in older generators, and the difference between a
- * pack working on real documents and only on clean ones.
- *
- * <p>Regex rules are matched against raw text instead, so a pattern that needs
- * an accented letter must spell both forms.
- */
 function normalize(text: string | null | undefined): string {
   return fold(
     nz(text)

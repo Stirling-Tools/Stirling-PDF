@@ -1,15 +1,4 @@
 #!/bin/bash
-# Download the corpora the profile derivation and the detection evaluation need.
-#
-#   ./fetch-corpus.sh [target-dir]
-#
-# Two corpora, deliberately different in register so profiles derived from one
-# can be evaluated on the other:
-#   corpora/   Tatoeba sentences (CC-BY 2.0 FR, tatoeba.org) - conversational
-#   wiki/      Wikipedia article prose (CC-BY-SA) - third-person, the register
-#              documents are written in
-#
-# Neither is committed: ~100 MB, and the repo should not carry third-party text.
 set -u
 cd "$(dirname "$0")"
 DEST="${1:-$(pwd)/corpus}"

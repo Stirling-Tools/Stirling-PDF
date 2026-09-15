@@ -1,10 +1,3 @@
-"""Generate a language pack per language from the sourced native terms.
-
-One high-weight phrase per label: the term that language uses for the document
-type. That is the single most diagnostic rule a pack can have, and it is sourced
-rather than guessed. Supporting field vocabulary is left for a native speaker -
-these packs are a floor to build on, not a finished pack.
-"""
 import json, os, os, re, unicodedata
 import concepts
 
@@ -44,13 +37,6 @@ def clean(title: str) -> str | None:
 
 
 def english_leak(native: str, english: str, iso: str) -> bool:
-    """True when the langlink gave back the English term rather than a translation.
-
-    Wikipedia hands back an English title wherever a wiki has no article of its
-    own, and an English phrase inside a non-English pack fires only on English
-    documents. A single-word match is kept, because genuine loanwords exist
-    (patent, faktura, curriculum vitae); a multi-word English phrase never is.
-    """
     a, b = clean(native), clean(english)
     if a is None or b is None or a != b:
         return False

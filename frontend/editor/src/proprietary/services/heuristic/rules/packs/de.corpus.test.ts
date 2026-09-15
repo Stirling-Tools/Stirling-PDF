@@ -1,10 +1,3 @@
-// Accuracy gate for the German pack: one realistic, natural-prose specimen per
-// document type it claims. This is what decides whether the pack is any good —
-// the lint test only proves it is well-formed.
-//
-// Every case is asserted end-to-end on the real engine, so each one also proves
-// the document was detected as German and scored against core + de.
-
 import { describe, expect, it } from "vitest";
 import { classifyHeuristic } from "@app/services/heuristic/heuristicEngine";
 import type { HeuristicDoc } from "@app/services/heuristic/types";
@@ -463,9 +456,6 @@ describe("German pack corpus", () => {
   );
 
   it("scores every German specimen against the German pack", async () => {
-    // Not every one resolves to language "de": a bank statement or a payslip is
-    // mostly nouns and numbers, so English stays the assumed answer and German
-    // rides along as the hedge. Either route has to reach the pack.
     const german = CASES.filter((c) => c.file !== "invoice_berlin_office.pdf");
     for (const c of german) {
       const r = await run(c);

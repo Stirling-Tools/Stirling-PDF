@@ -1,9 +1,3 @@
-"""Fetch each concept's article title in every language we ship.
-
-The title is that language's own name for the document type, which is a sourced
-term rather than a guess. Redirects are followed so "Résumé" and "Delivery note"
-resolve to whatever the canonical article is.
-"""
 import json, os, sys, time, urllib.parse, urllib.request
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import concepts

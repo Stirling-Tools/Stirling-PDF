@@ -1,10 +1,3 @@
-"""Build languages.json: script ranges plus a word/char profile per language.
-
-One mechanism for every writing system. A script range narrows the candidates;
-where a range holds more than one language, function-word profiles separate them,
-scored exactly as the engine scores them. Profiles are derived from the training
-half of the corpus and evaluated on the held-out half.
-"""
 import collections, json, os, re, sys, unicodedata
 
 TRAIN_FRACTION = 0.5
@@ -12,9 +5,6 @@ MAX_WORDS = 18
 MAX_EDGE_WORDS = 10
 MIN_RATE = 0.0015
 DISTINCT_RATIO = 3.0
-# A letter has to be near-absent elsewhere, not merely rarer: French à is three
-# times rarer than Vietnamese à, which was still enough to score a French
-# document as Vietnamese.
 CHAR_DISTINCT_RATIO = 8.0
 MAX_ENGLISH_RATE = 0.002
 CORPUS_ARTIFACTS = {"tom", "tomu", "tomun", "toma", "tomovi", "tomova", "mary",
@@ -80,14 +70,6 @@ def read(directory, iso):
 
 
 def split_halves(iso):
-    """Train and test halves of every corpus, kept separate by register.
-
-    Training on both registers is deliberate. Tatoeba is conversational and
-    Wikipedia is third-person prose; a profile derived from Tatoeba alone fills up
-    with words like "lütfen" and "misin" that a Turkish invoice never contains,
-    and Turkish detection falls to 23% on encyclopedic text. Words frequent in
-    both registers are the ones that survive a real document.
-    """
     train, test = [], {}
     for directory in CORPUS_DIRS:
         lines = read(directory, iso)
@@ -97,11 +79,6 @@ def split_halves(iso):
     return train, test
 
 def counts(lines):
-    """Folded-token frequencies, plus the raw spellings each folded form came from.
-
-    The engine folds rule words before matching, so a profile can carry the
-    natural spelling; storing the folded one would make "його" read as "иого".
-    """
     freq, total = collections.Counter(), 0
     raw_forms = collections.defaultdict(collections.Counter)
     for line in lines:
@@ -124,12 +101,6 @@ def char_counts(lines, exclude_ascii):
     return c, max(n, 1)
 
 def distinctive_chars(mine, others, exclude_ascii):
-    """Letters common here and rare in EVERY rival, not merely rare on average.
-
-    Averaging is what let Irish and Hungarian score on Spanish accents: á é í ó ú
-    are shared by a handful of languages, so across 24 rivals their mean rate
-    stays low even though the overlap is total.
-    """
     c, n = char_counts(mine, exclude_ascii)
     rivals = [char_counts(ls, exclude_ascii) for ls in others]
     keep = []
@@ -143,13 +114,6 @@ def distinctive_chars(mine, others, exclude_ascii):
     return keep
 
 def words_for(iso, group_freq, group_totals, english, raw_forms=None, pooled=False):
-    """Words frequent here and rare in every rival (or, when pooled, on average).
-
-    Per-rival is what separates near-identical siblings: Danish and Norwegian
-    share "jeg er ikke", so against the pooled average both keep it and neither
-    can be told from the other. Pooled is the fallback for a language whose
-    sibling leaves it almost nothing of its own.
-    """
     f, n = group_freq[iso], group_totals[iso]
     rivals = [(group_freq[o], group_totals[o]) for o in group_freq if o != iso]
     pooled_counts, pooled_total = collections.Counter(), 0
@@ -178,15 +142,6 @@ def words_for(iso, group_freq, group_totals, english, raw_forms=None, pooled=Fal
 
 
 def profile_words(iso, group_freq, group_totals, english, raw_forms):
-    """A profile needs mass and edge, so it carries both lists.
-
-    The pooled list is high-frequency words rare across the group as a whole:
-    that volume is what proves a document is not English. The per-rival list is
-    words rare in *every* sibling: that is what separates Danish from Norwegian
-    and Croatian from Serbian, which share almost all of their frequent words.
-    Pooled alone leaves siblings tied; per-rival alone scores too low to beat
-    English at all.
-    """
     mass = words_for(iso, group_freq, group_totals, english, pooled=True)
     edge = words_for(iso, group_freq, group_totals, english, pooled=False)
     merged = list(dict.fromkeys(mass + edge))

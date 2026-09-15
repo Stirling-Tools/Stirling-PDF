@@ -113,10 +113,6 @@ describe("heuristic engine port fidelity", () => {
     const r = await classify("CONTRATO DE ARRENDAMIENTO", body);
     expect(r.language).toBe("es");
     expect(r.packs).toEqual(["es"]);
-    // arrendador, arrendatario and renta mensual are the field vocabulary that
-    // separates a lease from any other contract. With only the document-type term
-    // this reached "contract" at medium; with them it is the narrower label, and
-    // trusted enough to skip the AI engine.
     expect(r.labels[0]).toBe("lease-agreement");
     expect(r.confidence).toBe("high");
   });

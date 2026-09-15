@@ -1,21 +1,7 @@
-// Registry of the classifier's rule data. The core set and every language pack
-// are separate lazy chunks: a document is scored against core plus the pack(s)
-// for the language it is written in, so adding a language costs existing users
-// nothing at runtime.
-//
-// To add a language: drop `packs/<tag>.json` beside the others, add one line to
-// LANGUAGE_PACKS, and add a profile to `languages.json` if the detector cannot
-// already name it. Nothing in heuristicEngine.ts needs to change.
-// Authoring guide: `rules/README.md`.
-
 /** Rule sets shared by every language — label ids, priors, and wordless rules. */
 export const loadCoreRules = () =>
   import("@app/services/heuristic/rules/core.json");
 
-/**
- * Language tag → pack loader. Keys are the tags `detectLanguage` produces
- * (ISO 639-1, region-free: one pack serves pt-BR and pt-PT alike).
- */
 export const LANGUAGE_PACKS: Record<string, () => Promise<unknown>> = {
   ar: () => import("@app/services/heuristic/rules/packs/ar.json"),
   az: () => import("@app/services/heuristic/rules/packs/az.json"),

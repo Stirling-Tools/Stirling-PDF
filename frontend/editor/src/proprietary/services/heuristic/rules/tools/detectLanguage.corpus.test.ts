@@ -1,16 +1,3 @@
-// Accuracy gate for language detection, measured on real corpora rather than on
-// sentences we wrote ourselves. Skipped unless the corpus is present, so CI and a
-// normal `vitest run` ignore it:
-//
-//   rules/tools/fetch-corpus.sh                 # ~100 MB into rules/tools/corpus
-//   CLASSIFIER_CORPUS=<dir> npx vitest run detectLanguage.corpus
-//
-// Two registers, reported separately and on purpose. Tatoeba is conversational;
-// Wikipedia is third-person prose and much closer to the documents the classifier
-// actually sees, so it is the number that matters. Profiles are derived from the
-// training half of both (rules/tools/derive-profiles.py) and this reads the held-
-// out half, so a score here is generalisation rather than recall.
-
 import fs from "fs";
 import path from "path";
 import { describe, expect, it } from "vitest";
@@ -175,14 +162,6 @@ describe.skipIf(!present)("language detection against real corpora", () => {
     }
 
     it("still reaches the right language's pack on a 20-word document", () => {
-      // A receipt or a delivery note is this short. Exactness falls to about
-      // two-thirds, and the runner-up recovers part of the rest.
-      //
-      // This was 84% before candidates needed two distinct word hits to qualify.
-      // Some of that 84% was luck: a single two-letter match put noise in the top
-      // two, and the true language rode along behind it. What replaces it in
-      // production is the reader's interface language, which this measurement
-      // deliberately does not pass.
       const [, top2] = render(
         "WIKIPEDIA held-out · 20 words per document",
         measure(sizedDocs("test_wiki", 20, 25)),
@@ -197,9 +176,6 @@ describe.skipIf(!present)("language detection against real corpora", () => {
     });
 
     it("never trusts a label on short non-document prose", async () => {
-      // None of this text is a business document, so every label is a false
-      // positive. Low and medium escalate to the AI engine and are survivable;
-      // "high" would persist a wrong label without asking anyone.
       let high = 0;
       let labelled = 0;
       let total = 0;

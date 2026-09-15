@@ -1,8 +1,3 @@
-// Language identification, which decides which rule pack scores a document.
-// Getting it wrong is expensive in one direction only: an unrecognised language
-// degrades to the AI engine, but a confidently wrong one scores a document
-// against vocabulary it is not written in. These cases pin both.
-
 import { describe, expect, it } from "vitest";
 import {
   detectLanguage,
@@ -92,9 +87,6 @@ describe("detectLanguage", () => {
     const d = detectLanguage(prose.pt);
     const [best, second] = d.candidates;
     expect(best.language).toBe("pt");
-    // The runner-up is not reliably the language a reader would guess: Portuguese
-    // shares ç and ê with French, so fr outranks es here on diacritics alone.
-    // What has to hold is the gap, which is what keeps the dispatch to one pack.
     expect(second.score).toBeLessThan(best.score * 0.75);
   });
 
@@ -136,9 +128,6 @@ describe("detectLanguage", () => {
     expect(d.lowText).toBe(true);
   });
 
-  // Known limits. They are here so a future change to the profiles shows up as a
-  // diff in this file rather than as a surprise in production: each resolves to
-  // assumed English, which costs an AI engine run but never a wrong label.
   describe("known limits", () => {
     it("reads Danish as assumed English until a da pack is worth dispatching", () => {
       const d = detectLanguage(

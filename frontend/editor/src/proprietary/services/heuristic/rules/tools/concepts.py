@@ -1,9 +1,3 @@
-"""Core label id -> English Wikipedia articles naming that document type.
-
-The article title in each language is the term that language actually uses for the
-document, sourced rather than guessed. weight is what the term proves: a word only
-ever found on that document type scores high, a general one scores low.
-"""
 # (label, [(english wikipedia title, weight, zone)])
 CONCEPTS = [
     ("invoice", [("Invoice", 26, "title"), ("Value-added tax", 10, "any")]),
@@ -152,10 +146,6 @@ SIGNALS = [
     ("signature", "Signature"),
 ]
 
-# Corrections and additions a reader verified against the generated output. Kept
-# here rather than edited into the packs so the review is visible and repeatable:
-# re-running the generator does not lose them.
-#   label -> language -> [(text, weight, zone)]
 OVERRIDES = {
     "invoice": {
         # Wikipedia's ja langlink for "Invoice" resolves to 送り状, a delivery slip.
