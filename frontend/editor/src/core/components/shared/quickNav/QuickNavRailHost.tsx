@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { QuickNavRailContainer } from "@app/components/shared/quickNav/QuickNavRailContainer";
 import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 import type { ToolId } from "@app/types/toolId";
@@ -22,6 +21,7 @@ import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
 import { stripBasePath } from "@app/constants/app";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 
+import { Icon } from "@app/ui/Icon";
 const SIZE = "1.125rem";
 
 /** Entries come from the URL, not either app's context, so the rail survives a switch. */
@@ -53,17 +53,16 @@ export function QuickNavRailHost() {
   };
 
   // Guarded where the app supplies a guard, so leaving mid-edit still prompts.
-  const go = (to: string) => {
+  const guarded = (leave: () => void) => {
     const guard = host?.actions.current?.requestNavigation;
-    if (guard) guard(() => navigate(to));
-    else navigate(to);
+    if (guard) guard(leave);
+    else leave();
   };
 
+  const go = (to: string) => guarded(() => navigate(to));
+
   const switchApp = (target: AppSwitchTarget, path?: string) => {
-    const run = () => switchToApp(target, path);
-    const guard = host?.actions.current?.requestNavigation;
-    if (guard) guard(run);
-    else run();
+    guarded(() => switchToApp(target, path));
   };
 
   const openProcessor = () => {
@@ -100,9 +99,7 @@ export function QuickNavRailHost() {
   const reader: QuickNavEntry = {
     id: "reader",
     label: t("quickNav.reader", "Reader"),
-    icon: (
-      <LocalIcon icon="menu-book-outline-rounded" width={SIZE} height={SIZE} />
-    ),
+    icon: <Icon name="book-open" size={SIZE} />,
     pressed: Boolean(host?.readerMode),
     // From the processor there is no editor to toggle - see pendingReaderMode.
     onClick: () => {
@@ -119,12 +116,9 @@ export function QuickNavRailHost() {
   const editor: QuickNavEntry = {
     id: "editor",
     label: t("quickNav.editor", "Editor"),
-    icon: inEditor ? (
-      <LocalIcon icon="edit-rounded" width={SIZE} height={SIZE} />
-    ) : (
-      <LocalIcon icon="edit-outline-rounded" width={SIZE} height={SIZE} />
-    ),
-    current: inEditor,
+    icon: <Icon name="pencil" size={SIZE} filled={inEditor} />,
+    // The library is a place of its own, not the editor with a different centre.
+    current: inEditor && !host?.fileLibrary,
     onClick: () => {
       if (inEditor) {
         returnHome();
@@ -137,12 +131,7 @@ export function QuickNavRailHost() {
   const processor: QuickNavEntry = {
     id: "processor",
     label: t("quickNav.processor", "Processor"),
-    // Two literals, not a computed name: the offline icon bundle scans for `icon="..."`.
-    icon: inPortal ? (
-      <LocalIcon icon="memory-rounded" width={SIZE} height={SIZE} />
-    ) : (
-      <LocalIcon icon="memory-outline-rounded" width={SIZE} height={SIZE} />
-    ),
+    icon: <Icon name="cpu" size={SIZE} filled={inPortal} />,
     current: inPortal,
     disabled: HAS_PORTAL && !inPortal && !host?.portalAccess,
     reason:
@@ -167,17 +156,25 @@ export function QuickNavRailHost() {
     {
       id: "files",
       label: t("fileSidebar.myFiles", "File library"),
-      icon: (
-        <LocalIcon icon="folder-outline-rounded" width={SIZE} height={SIZE} />
-      ),
-      onClick: () => go("/files"),
+      icon: <Icon name="folder" size={SIZE} />,
+      current: Boolean(host?.fileLibrary),
+      // Through the app where possible: the library is a view, not a route. From the
+      // processor there is no editor to ask, so the path carries it and HomePage seeds
+      // the view on arrival. Unwrapped: setting the view runs the app's own
+      // unsaved-changes check, and asking twice leaves the second ask nowhere to
+      // prompt.
+      onClick: () => {
+        const show = host?.actions.current?.showFileLibrary;
+        // Unwrapped: setting the view runs the app's own unsaved-changes check, and
+        // asking twice leaves the second ask with nowhere to prompt.
+        if (show) show();
+        else go("/files");
+      },
     },
     {
       id: "automate",
       label: t("quickAccess.automate", "Automate"),
-      icon: (
-        <LocalIcon icon="rebase-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="git-branch" size={SIZE} />,
       ...openingTool("automate"),
       ...unusable("automate"),
       onClick: () => openTool("automate", "/automate"),
@@ -185,9 +182,7 @@ export function QuickNavRailHost() {
     {
       id: "sharedSign",
       label: t("home.sharedSign.title", "Shared Signing"),
-      icon: (
-        <LocalIcon icon="draw-outline-rounded" width={SIZE} height={SIZE} />
-      ),
+      icon: <Icon name="pen-tool" size={SIZE} />,
       badge: host?.signingBadge,
       badgeTone: "warning",
       ...openingTool("sharedSign"),
