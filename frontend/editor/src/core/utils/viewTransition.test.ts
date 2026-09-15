@@ -87,6 +87,47 @@ describe("withViewTransition", () => {
     expect(document.documentElement.dataset.viewTransition).toBeUndefined();
   });
 
+  it("keeps the marker until the last overlapping transition settles", async () => {
+    const finishes: Array<() => void> = [];
+    setStartViewTransition(
+      vi.fn((cb: () => void) => {
+        cb();
+        return {
+          finished: new Promise<void>((resolve) => {
+            finishes.push(resolve);
+          }),
+        };
+      }),
+    );
+    stubReducedMotion(false);
+
+    const first = withViewTransition(() => {});
+    const second = withViewTransition(() => {});
+    expect(document.documentElement.dataset.viewTransition).toBe("running");
+
+    finishes[0]();
+    await first;
+    expect(document.documentElement.dataset.viewTransition).toBe("running");
+
+    finishes[1]();
+    await second;
+    expect(document.documentElement.dataset.viewTransition).toBeUndefined();
+  });
+
+  it("clears the marker when the transition cannot start", () => {
+    setStartViewTransition(
+      vi.fn(() => {
+        throw new Error("transition unavailable");
+      }),
+    );
+    stubReducedMotion(false);
+
+    expect(() => withViewTransition(() => {})).toThrow(
+      "transition unavailable",
+    );
+    expect(document.documentElement.dataset.viewTransition).toBeUndefined();
+  });
+
   it("still applies the update where the API is unavailable", async () => {
     stubReducedMotion(false);
     const update = vi.fn();
