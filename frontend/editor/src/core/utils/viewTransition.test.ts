@@ -1,16 +1,20 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import { withViewTransition } from "@app/utils/viewTransition";
 
-// The stub carries only the field the helper reads, hence the cast through unknown.
-type MutableDoc = { startViewTransition?: unknown };
-const doc = document as unknown as MutableDoc;
+function setStartViewTransition(value: unknown): void {
+  Object.defineProperty(document, "startViewTransition", {
+    configurable: true,
+    writable: true,
+    value,
+  });
+}
 
 function stubApi(): ReturnType<typeof vi.fn> {
   const start = vi.fn((cb: () => void) => {
     cb();
     return { finished: Promise.resolve() };
   });
-  doc.startViewTransition = start;
+  setStartViewTransition(start);
   return start;
 }
 
@@ -24,7 +28,8 @@ function stubReducedMotion(reduced: boolean): void {
 }
 
 afterEach(() => {
-  delete doc.startViewTransition;
+  Reflect.deleteProperty(document, "startViewTransition");
+  delete document.documentElement.dataset.viewTransition;
   vi.unstubAllGlobals();
 });
 
@@ -50,6 +55,36 @@ describe("withViewTransition", () => {
 
     expect(start).not.toHaveBeenCalled();
     expect(update).toHaveBeenCalledTimes(1);
+  });
+
+  it("marks the document for the transition's lifetime", async () => {
+    let finish!: () => void;
+    const start = vi.fn((cb: () => void) => {
+      cb();
+      return {
+        finished: new Promise<void>((resolve) => {
+          finish = resolve;
+        }),
+      };
+    });
+    setStartViewTransition(start);
+    stubReducedMotion(false);
+
+    const running = withViewTransition(() => {});
+    expect(document.documentElement.dataset.viewTransition).toBe("running");
+
+    finish();
+    await running;
+    expect(document.documentElement.dataset.viewTransition).toBeUndefined();
+  });
+
+  it("leaves no marker when the transition is skipped", async () => {
+    stubApi();
+    stubReducedMotion(true);
+
+    await withViewTransition(() => {});
+
+    expect(document.documentElement.dataset.viewTransition).toBeUndefined();
   });
 
   it("still applies the update where the API is unavailable", async () => {

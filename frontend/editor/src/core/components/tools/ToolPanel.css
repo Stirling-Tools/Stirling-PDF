@@ -19,6 +19,13 @@
   user-select: none;
 }
 
+/* While a View Transition runs its snapshots animate the rail's geometry, so
+ * the CSS width transition would only re-run layout behind them.
+ * withViewTransition marks the document for the transition's duration. */
+:root[data-view-transition="running"] .tool-panel {
+  transition: none;
+}
+
 /* Flush, with a rule on the workbench side mirroring the file sidebar's. */
 .tool-panel--floating {
   /* Tracks the frame, which is dvh; vh would cut the bottom off on mobile. */
