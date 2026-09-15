@@ -44,7 +44,6 @@ import {
   getToolDisabledReason,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
 import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
@@ -126,7 +125,6 @@ export default function HomePage() {
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
-  const otherApp = useOtherAppSwitch();
   const location = useLocation();
   // The user's preference, and the only thing that decides it: reading mode forces
   // the sidebar shut without writing, so leaving reading restores this.
@@ -474,7 +472,6 @@ export default function HomePage() {
     <div className="h-screen overflow-hidden" data-app-shell="editor">
       <HomePageExtensions />
       <QuickNavHostBridge
-        portalAccess={Boolean(otherApp)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
         fileLibrary={navigationState.workbench === "myFiles"}
