@@ -15,6 +15,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import stirling.software.common.service.LicenseServiceInterface;
 import stirling.software.proprietary.accountlink.GateDecision.Reason;
 
 /**
@@ -24,6 +25,7 @@ import stirling.software.proprietary.accountlink.GateDecision.Reason;
 @ExtendWith(MockitoExtension.class)
 class InstanceEntitlementGateTest {
 
+    @Mock private LicenseServiceInterface licenseService;
     @Mock private DeviceCredentialStore credentialStore;
     @Mock private EntitlementCache entitlementCache;
     @Mock private AccountLinkSyncStateRepository syncStateRepository;
@@ -264,9 +266,9 @@ class InstanceEntitlementGateTest {
                 props,
                 credentialStore,
                 entitlementCache,
-                syncStateRepository,
                 localUsageService,
-                freeTierUsageService);
+                freeTierUsageService,
+                licenseService);
     }
 
     private static AccountLinkProperties props(boolean meteringEnabled, int graceDays) {
@@ -278,46 +280,16 @@ class InstanceEntitlementGateTest {
     }
 
     @Test
-    void evaluate_meteringOff_unreachable_failsOpen_neverGraceBlocks() {
+    void cachedPaidEntitlementExpiresEvenWithMeteringDisabledAndRecovers() {
         when(credentialStore.isLinked()).thenReturn(true);
-        when(entitlementCache.current()).thenReturn(Optional.empty());
-
-        GateDecision d = gate(props(false, 3)).evaluate(true);
-
-        // Metering off → grace never applies, even if a sync is ancient.
-        assertTrue(d.allowed());
-        assertEquals(Reason.FAIL_OPEN, d.reason());
-    }
-
-    @Test
-    void evaluate_neverSynced_pastGraceSinceLink_blocks() {
-        when(credentialStore.isLinked()).thenReturn(true);
-        when(entitlementCache.current()).thenReturn(Optional.empty());
-        when(syncStateRepository.findById(AccountLinkSyncState.SINGLETON_ID))
-                .thenReturn(Optional.empty());
-        DeviceCredential cred = new DeviceCredential();
-        cred.setLinkedAt(LocalDateTime.now().minusDays(5));
-        when(credentialStore.get()).thenReturn(Optional.of(cred));
-
-        GateDecision d = gate(props(true, 3)).evaluate(true);
-
-        assertFalse(d.allowed());
-        assertEquals(Reason.GRACE_EXPIRED, d.reason());
-    }
-
-    @Test
-    void evaluate_recentSync_withinGrace_failsOpen() {
-        when(credentialStore.isLinked()).thenReturn(true);
-        when(entitlementCache.current()).thenReturn(Optional.empty());
-        AccountLinkSyncState state = new AccountLinkSyncState();
-        state.setLastSuccessAt(LocalDateTime.now().minusDays(1));
-        when(syncStateRepository.findById(AccountLinkSyncState.SINGLETON_ID))
-                .thenReturn(Optional.of(state));
-
-        GateDecision d = gate(props(true, 3)).evaluate(true);
-
-        assertTrue(d.allowed());
-        assertEquals(Reason.FAIL_OPEN, d.reason());
+        when(entitlementCache.current())
+                .thenReturn(
+                        Optional.of(
+                                new InstanceEntitlement(true, 0, 0, null, EntitlementState.OK)));
+        when(entitlementCache.isGraceExpired()).thenReturn(true, false);
+        InstanceEntitlementGate gate = gate(props(false, 3));
+        assertEquals(Reason.GRACE_EXPIRED, gate.evaluate(true).reason());
+        assertTrue(gate.evaluate(true).allowed());
     }
 
     @Test

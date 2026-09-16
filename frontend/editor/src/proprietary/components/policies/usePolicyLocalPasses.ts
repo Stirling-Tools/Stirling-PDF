@@ -15,10 +15,12 @@ import { scheduleIdle } from "@app/utils/scheduleIdle";
 import { usePolicies } from "@app/hooks/usePolicies";
 import { runPolicyOnFile } from "@app/services/policyDispatch";
 import {
+  dispatchableFileId,
   localPassFor,
   type LocalPass,
 } from "@app/components/policies/policyLocalPass";
 import { policyRequiresAiEngine } from "@app/data/classificationPolicy";
+import { editorTriggerOf } from "@app/policies/runOn";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
 /** Files processed per idle pass, so a large upload drains over several ticks instead of janking. */
@@ -51,13 +53,7 @@ export function usePolicyLocalPasses(): void {
   const passes = useMemo<ActivePass[]>(() => {
     const out: ActivePass[] = [];
     for (const [policyKey, s] of Object.entries(policies)) {
-      const active =
-        s.configured &&
-        s.enabled &&
-        s.backendId &&
-        s.runsOnEditor &&
-        (s.runOn ?? "upload") === "upload";
-      if (!active) continue;
+      if (editorTriggerOf(s) !== "upload") continue;
       const pass = localPassFor(policyKey);
       if (!pass) continue;
       out.push({
@@ -79,6 +75,8 @@ export function usePolicyLocalPasses(): void {
     outer: for (const active of passes) {
       for (const stub of fileStubs) {
         if (batch.length >= LOCAL_PASS_BATCH) break outer;
+        // Null when the classification is locked: no pass, and so no escalation.
+        if (!dispatchableFileId(stub)) continue;
         if (!active.pass.eligible(stub)) continue;
         if (claimed.current.has(claimKey(active.policyKey, stub))) continue;
         batch.push({ active, stub });
@@ -116,7 +114,7 @@ export function usePolicyLocalPasses(): void {
             void runPolicyOnFile(
               active.policyKey,
               active.backendId,
-              stub.id,
+              dispatchableFileId(stub)!,
               stub.name,
             ).catch(() => {
               // Backstop: runPolicyOnFile handles its own failures.

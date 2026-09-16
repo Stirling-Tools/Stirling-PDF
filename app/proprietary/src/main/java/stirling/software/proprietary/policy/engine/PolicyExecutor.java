@@ -76,10 +76,9 @@ public class PolicyExecutor {
     public PolicyExecutionResult execute(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener)
             throws IOException {
+        // Zero steps is a pure routing policy: inputs pass through unchanged and
+        // are delivered to the policy's output destinations.
         List<PipelineStep> steps = definition.steps();
-        if (steps.isEmpty()) {
-            throw new IllegalArgumentException("Pipeline definition has no steps");
-        }
 
         List<PipelineFile> currentFiles = new ArrayList<>();
         Map<String, List<Resource>> supportingFiles = inputs.supportingFiles();

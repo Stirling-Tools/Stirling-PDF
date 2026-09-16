@@ -23,10 +23,18 @@ import { usedIconsPlugin } from "../editor/scripts/icons/usedIcons.vite.mts";
  * through vite-tsconfig-paths against the proprietary vite tsconfig - so the
  * shared Storybook can host editor components without duplicating the alias map
  * here. Built per pass: the main bundle and the worker bundle each need their own.
+ *
+ * The plugin picks the first project whose include/exclude covers the importing
+ * file. The proprietary project excludes src/desktop, so files under it fall
+ * through to the desktop project and get the desktop→cloud→proprietary→core
+ * cascade their own imports need; every other file still resolves as before.
  */
 const editorPathAliases = () =>
   tsconfigPaths({
-    projects: [resolve(__dirname, "../editor/tsconfig.proprietary.vite.json")],
+    projects: [
+      resolve(__dirname, "../editor/tsconfig.proprietary.vite.json"),
+      resolve(__dirname, "../editor/tsconfig.desktop.vite.json"),
+    ],
   });
 
 const config: StorybookConfig = {
@@ -55,6 +63,10 @@ const config: StorybookConfig = {
     config.resolve = config.resolve ?? {};
     config.resolve.alias = {
       ...(config.resolve.alias ?? {}),
+      "@app/services/supabaseClient": resolve(
+        __dirname,
+        "billingSupabaseClient.ts",
+      ),
       "@portal": resolve(__dirname, "../editor/src/portal"),
       // Direct layer aliases so .storybook config files (preview.tsx), which sit
       // outside src/ and so aren't covered by tsconfigPaths, can import layer

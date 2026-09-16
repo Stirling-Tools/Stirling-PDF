@@ -3,9 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Box, Center, Text, Stack } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import LockIcon from "@mui/icons-material/Lock";
-
+import { Icon } from "@app/ui/Icon";
 import {
   useAllFiles,
   useFileSelector,
@@ -33,7 +31,13 @@ import type {
   SignatureOverlayAPI,
 } from "@app/components/viewer/viewerTypes";
 import { createStirlingFilesAndStubs } from "@app/services/fileStubHelpers";
-import { isStirlingFile, getFormFillFileId } from "@app/types/fileContext";
+import {
+  isStirlingFile,
+  getFormFillFileId,
+  type StirlingFile,
+  documentBytesReplaced,
+  type DocumentIdentity,
+} from "@app/types/fileContext";
 import { useViewerWorkbenchBarButtons } from "@app/components/viewer/useViewerWorkbenchBarButtons";
 import { StampPlacementOverlay } from "@app/components/viewer/StampPlacementOverlay";
 import {
@@ -53,8 +57,6 @@ import { alert } from "@app/components/toast";
 // ──────────────────────────────────────────────────────────────────────────────
 
 export interface EmbedPdfViewerProps {
-  sidebarsVisible: boolean;
-  setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
   // ── Signature overlay pass-through (opt-in; all default off) ──────────────
@@ -69,9 +71,14 @@ export interface EmbedPdfViewerProps {
   portfolioPinned?: boolean;
 }
 
+/** Cache identity of a document, not of the file holding it: a disk reload
+ *  replaces the bytes under an unchanged fileId, and an outline cached under the
+ *  id alone would then describe a document nobody is looking at. Preload keys are
+ *  matched against this, so both call sites must derive it the same way. */
+const documentCacheKey = (file: StirlingFile): string =>
+  `${file.fileId}|${file.quickKey}`;
+
 const EmbedPdfViewerContent = ({
-  sidebarsVisible: _sidebarsVisible,
-  setSidebarsVisible: _setSidebarsVisible,
   onClose,
   previewFile,
   signaturePreviews,
@@ -285,16 +292,19 @@ const EmbedPdfViewerContent = ({
     return null;
   }, [previewFile, activeFiles, activeFileId]);
 
-  // Namespaced identifier for form-fill state; keep this aligned with FormFill.
+  // Identity of the bytes: the viewer's mount key, its blob URL and form-fill
+  // state all have to turn over when a disk reload swaps the file under an
+  // unchanged fileId. Keep aligned with FormFill.
   const currentFileId = React.useMemo(
     () => getFormFillFileId(currentFile),
     [currentFile],
   );
 
-  // Stable id — avoids blob URL churn when FileContext recreates file objects each render.
+  // The workbench record to act on. Bare id, not the content key above: the
+  // consume/undo paths below pass it back as a FileId.
   const currentFileStableId =
     currentFile && isStirlingFile(currentFile) ? currentFile.fileId : null;
-  const fileWithUrl = useFileWithUrl(currentFile, currentFileStableId);
+  const fileWithUrl = useFileWithUrl(currentFile, currentFileId);
 
   // Determine the effective file to display
   const effectiveFile = React.useMemo(() => {
@@ -318,7 +328,7 @@ const EmbedPdfViewerContent = ({
 
   const bookmarkCacheKey = React.useMemo(() => {
     if (currentFile && isStirlingFile(currentFile)) {
-      return currentFile.fileId;
+      return documentCacheKey(currentFile);
     }
 
     if (previewFile) {
@@ -345,12 +355,9 @@ const EmbedPdfViewerContent = ({
     }
 
     return activeFiles
-      .map((file) => {
-        if (isStirlingFile(file)) {
-          return file.fileId;
-        }
-        return undefined;
-      })
+      .map((file) =>
+        isStirlingFile(file) ? documentCacheKey(file) : undefined,
+      )
       .filter(Boolean) as string[];
   }, [activeFiles, previewFile, bookmarkCacheKey]);
 
@@ -526,6 +533,31 @@ const EmbedPdfViewerContent = ({
     getScrollState,
   ]);
 
+  // Accepting a disk reload swaps the bytes under an unchanged fileId, which
+  // remounts the inner viewer with a clean history but leaves these flags
+  // describing edits that no longer exist: every later disk change then reads as
+  // a conflict, and navigation keeps warning about work already discarded.
+  const documentIdentityRef = useRef<DocumentIdentity | null>(null);
+  useEffect(() => {
+    const previous = documentIdentityRef.current;
+    const current =
+      currentFileStableId && currentFileId
+        ? { id: currentFileStableId, key: currentFileId }
+        : null;
+    documentIdentityRef.current = current;
+
+    if (!documentBytesReplaced(previous, current)) return;
+
+    hasAnnotationChangesRef.current = false;
+    setHasUnsavedChanges(false);
+    setRedactionsApplied(false);
+  }, [
+    currentFileStableId,
+    currentFileId,
+    setHasUnsavedChanges,
+    setRedactionsApplied,
+  ]);
+
   // Watch the annotation history API to detect when the document becomes "dirty".
   // We treat any change that makes the history undoable as unsaved changes until
   // the user explicitly applies them via applyChanges.
@@ -624,7 +656,6 @@ const EmbedPdfViewerContent = ({
       if (hadPendingRedactions) {
         console.log("[Viewer] Committing pending redactions before export");
         redactionTrackerRef.current?.commitAllPending();
-        // Give a small delay for the commit to process
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
@@ -755,7 +786,6 @@ const EmbedPdfViewerContent = ({
         pendingRotationRestoreRef.current = currentRotation;
         rotationRestoreAttemptsRef.current = 0;
 
-        // Track the new file ID so the viewer follows it after the list reorders
         const newFileId = stubs[0]?.id;
         if (newFileId) setActiveFileId(newFileId);
 
@@ -892,6 +922,9 @@ const EmbedPdfViewerContent = ({
       scrollRestoreAttemptsRef.current = 0;
       pendingRotationRestoreRef.current = currentRotation;
       rotationRestoreAttemptsRef.current = 0;
+
+      const newFileId = stubs[0]?.id;
+      if (newFileId) setActiveFileId(newFileId);
 
       // Consume only the current file (replace in context)
       await actions.consumeFiles([currentFileId], stirlingFiles, stubs);
@@ -1173,7 +1206,7 @@ const EmbedPdfViewerContent = ({
           }}
           onClick={onClose}
         >
-          <CloseIcon />
+          <Icon name="x" />
         </ActionIcon>
       )}
 
@@ -1189,7 +1222,7 @@ const EmbedPdfViewerContent = ({
       ) : isCurrentFileEncrypted ? (
         <Center style={{ flex: 1 }}>
           <Stack align="center" gap="md">
-            <LockIcon style={{ fontSize: 48, opacity: 0.5 }} />
+            <Icon name="lock" size={48} style={{ opacity: 0.5 }} />
             <Text fw={500}>
               {t(
                 "encryptedPdfUnlock.viewerLocked",

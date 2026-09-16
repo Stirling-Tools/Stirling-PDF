@@ -55,6 +55,19 @@ import stirling.software.saas.repository.TeamInvitationRepository;
 @ExtendWith(MockitoExtension.class)
 class SaasTeamServiceTest {
 
+    @org.junit.jupiter.api.BeforeEach
+    void ownershipLocks() {
+        org.mockito.Mockito.lenient()
+                .when(teamRepository.lockById(org.mockito.ArgumentMatchers.anyLong()))
+                .thenAnswer(
+                        i -> {
+                            Long id = i.getArgument(0);
+                            if (id.equals(100L)) return Optional.of(team(id, "Acme"));
+                            return teamRepository.findById(id);
+                        });
+    }
+
+    @Mock private jakarta.persistence.EntityManager entityManager;
     @Mock private TeamRepository teamRepository;
     @Mock private TeamMembershipRepository membershipRepository;
     @Mock private TeamInvitationRepository invitationRepository;
@@ -310,10 +323,7 @@ class SaasTeamServiceTest {
             service.inviteUserToTeam(teamId, "b@x.com", inviter);
 
             verify(saasTeamExtensionService).setPersonal(t, false);
-            // Still the sentinel. A standard team has no user limit until it buys one, and nothing
-            // enforces capacity for one, so stating the free allowance here would announce a
-            // ceiling nothing honours.
-            verify(saasTeamExtensionService).setSeats(t, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            verify(saasTeamExtensionService).setSeats(t, 5, 5);
         }
 
         @Test

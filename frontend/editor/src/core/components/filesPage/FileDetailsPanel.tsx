@@ -3,17 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Badge, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import HistoryIcon from "@mui/icons-material/History";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import LinkIcon from "@mui/icons-material/Link";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-
+import { Icon } from "@app/ui/Icon";
 import { FileId } from "@app/types/file";
 import { FolderRecord } from "@app/types/folder";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -184,7 +174,7 @@ export function FileDetailsPanel({
             onClick={onClose}
             aria-label={t("filesPage.closeDetails", "Close details")}
           >
-            <CloseIcon fontSize="small" />
+            <Icon name="x" size={20} />
           </ActionIcon>
         </Tooltip>
       </div>
@@ -200,8 +190,10 @@ export function FileDetailsPanel({
               {single.thumbnailUrl ? (
                 <img src={single.thumbnailUrl} alt="" />
               ) : (
-                <PictureAsPdfIcon
-                  style={{ fontSize: "3rem", color: "var(--c-text-subtle)" }}
+                <Icon
+                  name="file-pdf"
+                  size={"3rem"}
+                  style={{ color: "var(--c-text-subtle)" }}
                 />
               )}
             </div>
@@ -232,11 +224,12 @@ export function FileDetailsPanel({
               onClick={() => setFieldsOpen((o) => !o)}
               aria-expanded={fieldsOpen}
               rightSection={
-                <KeyboardArrowDownIcon
+                <Icon
+                  name="chevron-down"
+                  size={20}
                   className={`files-page-details-collapse-chevron${
                     fieldsOpen ? " is-open" : ""
                   }`}
-                  fontSize="small"
                 />
               }
             >
@@ -284,11 +277,12 @@ export function FileDetailsPanel({
                   onClick={() => setClassificationOpen((o) => !o)}
                   aria-expanded={classificationOpen}
                   rightSection={
-                    <KeyboardArrowDownIcon
+                    <Icon
+                      name="chevron-down"
+                      size={20}
                       className={`files-page-details-collapse-chevron${
                         classificationOpen ? " is-open" : ""
                       }`}
-                      fontSize="small"
                     />
                   }
                 >
@@ -336,7 +330,7 @@ export function FileDetailsPanel({
             {versionChain.length > 1 &&
               (compactVersions && onOpenVersionHistory ? (
                 <Button
-                  leftSection={<HistoryIcon fontSize="small" />}
+                  leftSection={<Icon name="rotate-ccw-clock" size={20} />}
                   variant="secondary"
                   onClick={onOpenVersionHistory}
                 >
@@ -356,11 +350,12 @@ export function FileDetailsPanel({
                     onClick={() => setVersionsOpen((o) => !o)}
                     aria-expanded={versionsOpen}
                     rightSection={
-                      <KeyboardArrowDownIcon
+                      <Icon
+                        name="chevron-down"
+                        size={20}
                         className={`files-page-details-collapse-chevron${
                           versionsOpen ? " is-open" : ""
                         }`}
-                        fontSize="small"
                       />
                     }
                   >
@@ -400,7 +395,7 @@ export function FileDetailsPanel({
 
       <div className="files-page-details-actions">
         <Button
-          leftSection={<OpenInNewIcon fontSize="small" />}
+          leftSection={<Icon name="external-link" size={20} />}
           onClick={() => onAddToWorkspace(selectedFileIds)}
         >
           {files.length === 1
@@ -410,7 +405,7 @@ export function FileDetailsPanel({
               })}
         </Button>
         <Button
-          leftSection={<DownloadIcon fontSize="small" />}
+          leftSection={<Icon name="download" size={20} />}
           variant="secondary"
           onClick={handleDownload}
           loading={downloading}
@@ -437,7 +432,7 @@ export function FileDetailsPanel({
             w={260}
           >
             <Button
-              leftSection={<LinkIcon fontSize="small" />}
+              leftSection={<Icon name="link" size={20} />}
               variant="secondary"
               disabled={!sharingEnabled}
               onClick={() => setShareModalOpen(true)}
@@ -451,7 +446,7 @@ export function FileDetailsPanel({
           </Tooltip>
         )}
         <Button
-          leftSection={<DriveFileMoveIcon fontSize="small" />}
+          leftSection={<Icon name="folder-input" size={20} />}
           variant="secondary"
           onClick={() => onMove(selectedFileIds)}
         >
@@ -469,7 +464,7 @@ export function FileDetailsPanel({
             w={260}
           >
             <Button
-              leftSection={<CloudUploadIcon fontSize="small" />}
+              leftSection={<Icon name="cloud-upload" size={20} />}
               variant="secondary"
               disabled={Boolean(saveToServerDisabledReason)}
               onClick={() => onSaveToServer(localOnlyFiles)}
@@ -483,7 +478,7 @@ export function FileDetailsPanel({
           </Tooltip>
         )}
         <Button
-          leftSection={<DeleteIcon fontSize="small" />}
+          leftSection={<Icon name="trash" size={20} />}
           accent="danger"
           onClick={() => onRemove(selectedFileIds)}
         >
