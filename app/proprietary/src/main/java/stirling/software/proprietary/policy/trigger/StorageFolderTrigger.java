@@ -1,13 +1,20 @@
 package stirling.software.proprietary.policy.trigger;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,10 +27,13 @@ import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.storage.event.StorageFolderArrivalEvent;
 
 /**
- * Polls durable storage-folder bindings, so uploads and moves are discovered without an open
- * client. Each folder drains its current batch before another is submitted. Coordination between
+ * Runs storage-folder bindings when files arrive. A placement event sweeps just the folder it names
+ * so an upload is processed promptly; the periodic poll re-sweeps everything as the safety net for
+ * arrivals this instance never saw — another node's placement, or one that landed while it was
+ * down. Each folder drains its current batch before another is submitted. Coordination between
  * backend instances depends on the processed-file ledger and its recovery behaviour.
  */
 @Service
@@ -34,6 +44,11 @@ public class StorageFolderTrigger implements PolicyTrigger {
     private final SourceStore sourceStore;
     private final PolicyRunner policyRunner;
     private final ApplicationProperties applicationProperties;
+
+    /** Folders named by arrivals not yet swept, coalesced so a bulk move costs one sweep. */
+    private final Set<UUID> pendingArrivals = ConcurrentHashMap.newKeySet();
+
+    private final AtomicBoolean flushScheduled = new AtomicBoolean();
     private ScheduledExecutorService scheduler;
 
     @Override
@@ -70,6 +85,61 @@ public class StorageFolderTrigger implements PolicyTrigger {
             scheduler.shutdownNow();
             scheduler = null;
         }
+        pendingArrivals.clear();
+        flushScheduled.set(false);
+    }
+
+    /**
+     * After commit, so the sweep that follows can see the placement it was told about. Handing the
+     * work to the scheduler keeps the request thread off the folder listing, and puts arrival
+     * sweeps on the same single thread as the poll — two sweeps of one folder can never overlap.
+     *
+     * <p>{@code fallbackExecution} covers a publisher running outside a transaction, where this
+     * would otherwise drop the event without a trace. A sweep is idempotent, so a redundant one
+     * costs a listing; a swallowed arrival costs the whole point of the trigger.
+     */
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
+    public void onArrival(StorageFolderArrivalEvent event) {
+        if (event.folderId() == null) {
+            return;
+        }
+        pendingArrivals.add(event.folderId());
+        scheduleFlush();
+    }
+
+    /**
+     * One flush is in flight at a time: arrivals during the quiet period join the pending set
+     * instead of queueing their own sweep, so moving 200 files sweeps the folder once.
+     */
+    private synchronized void scheduleFlush() {
+        if (scheduler == null || !flushScheduled.compareAndSet(false, true)) {
+            return;
+        }
+        long quietMs = Math.max(0, applicationProperties.getPolicies().getWatchQuietPeriodMs());
+        try {
+            scheduler.schedule(this::flushArrivals, quietMs, TimeUnit.MILLISECONDS);
+        } catch (RejectedExecutionException shuttingDown) {
+            flushScheduled.set(false);
+        }
+    }
+
+    private void flushArrivals() {
+        // Cleared before draining: an arrival landing mid-drain schedules the next flush rather
+        // than being dropped, at worst costing one extra sweep of a folder already in hand.
+        flushScheduled.set(false);
+        for (UUID folderId : drainPending()) {
+            try {
+                sweep(folderId);
+            } catch (RuntimeException e) {
+                log.warn("Could not sweep folder {} after arrival: {}", folderId, e.getMessage());
+            }
+        }
+    }
+
+    private Set<UUID> drainPending() {
+        Set<UUID> drained = Set.copyOf(pendingArrivals);
+        pendingArrivals.removeAll(drained);
+        return drained;
     }
 
     private void safeSweep() {
@@ -81,6 +151,11 @@ public class StorageFolderTrigger implements PolicyTrigger {
     }
 
     void sweep() {
+        sweep(null);
+    }
+
+    /** Sweeps every storage folder, or only the one given when an arrival named it. */
+    void sweep(UUID onlyFolderId) {
         if (!applicationProperties.getStorage().isEnabled()
                 || !applicationProperties.getSecurity().isEnableLogin()) {
             return;
@@ -108,6 +183,7 @@ public class StorageFolderTrigger implements PolicyTrigger {
                                                     source.enabled()
                                                             && "storage-folder"
                                                                     .equals(source.type()))
+                                    .filter(source -> watches(source.options(), onlyFolderId))
                                     .isPresent();
                     if (enabledStorage) {
                         policyRunner.runInput(current, latest.input(), SweepKind.BATCH);
@@ -120,5 +196,14 @@ public class StorageFolderTrigger implements PolicyTrigger {
                         e.getMessage());
             }
         }
+    }
+
+    /** A null target matches every folder; otherwise the source must watch exactly that one. */
+    private static boolean watches(Map<String, Object> options, UUID onlyFolderId) {
+        if (onlyFolderId == null) {
+            return true;
+        }
+        Object raw = options.get("folderId");
+        return raw != null && onlyFolderId.toString().equals(raw.toString());
     }
 }

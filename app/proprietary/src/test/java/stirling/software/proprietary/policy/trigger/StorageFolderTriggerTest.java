@@ -27,6 +27,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.input.StorageFolderInputSource;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
+import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.Policy;
@@ -40,6 +41,7 @@ import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
+import stirling.software.proprietary.storage.event.StorageFolderArrivalEvent;
 import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.StoredFile;
 import stirling.software.proprietary.storage.provider.StorageProvider;
@@ -415,5 +417,123 @@ class StorageFolderTriggerTest {
         } finally {
             trigger.stop();
         }
+    }
+
+    @Test
+    void anArrivalSweepsOnlyTheFolderItNames() {
+        processingFolder("p1", false);
+        upload(1);
+        Folder other = otherFolder();
+        processingFolderIn("p2", other);
+        StoredFile elsewhere = uploadTo(2, other);
+
+        trigger.sweep(other.getId());
+
+        assertEquals(List.of(identityOf(elsewhere)), processed);
+    }
+
+    @Test
+    void anArrivalRunsWithoutWaitingForTheNextPoll() throws Exception {
+        // A long poll interval leaves the arrival as the only thing that can start this run.
+        properties.getPolicies().setStorageFolderSweepSeconds(3600);
+        processingFolder("p1", false);
+        trigger.start();
+        try {
+            awaitProcessed(0);
+            upload(1);
+            clearInvocations(ledger);
+
+            trigger.onArrival(new StorageFolderArrivalEvent(folder.getId()));
+
+            awaitProcessed(1);
+        } finally {
+            trigger.stop();
+        }
+    }
+
+    @Test
+    void aBurstOfArrivalsCostsOneSweep() throws Exception {
+        properties.getPolicies().setStorageFolderSweepSeconds(3600);
+        processingFolder("p1", false);
+        trigger.start();
+        try {
+            awaitProcessed(0);
+            upload(1);
+            upload(2);
+            upload(3);
+            clearInvocations(ledger);
+
+            for (int i = 0; i < 3; i++) {
+                trigger.onArrival(new StorageFolderArrivalEvent(folder.getId()));
+            }
+
+            awaitProcessed(3);
+            // Coalesced: three placements enumerate the folder once, not once each.
+            verify(ledger, times(1)).statesFor(eq("p1"), any());
+        } finally {
+            trigger.stop();
+        }
+    }
+
+    /** Waits for the arrival flush, which runs on the trigger's own scheduler thread. */
+    private void awaitProcessed(int expected) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (processed.size() < expected && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10);
+        }
+        assertEquals(expected, processed.size());
+    }
+
+    private Folder otherFolder() {
+        Folder other = new Folder();
+        other.setId(UUID.randomUUID());
+        other.setOwner(owner);
+        when(folders.findByIdAndOwner(other.getId(), owner)).thenReturn(Optional.of(other));
+        when(files.findAllByFolderIdAndOwner(other.getId(), owner))
+                .thenAnswer(
+                        inv ->
+                                stored.values().stream()
+                                        .filter(f -> other.equals(f.getFolder()))
+                                        .toList());
+        return other;
+    }
+
+    private Policy processingFolderIn(String id, Folder target) {
+        Source source =
+                sources.save(
+                        new Source(
+                                id + "-source",
+                                "Input",
+                                "storage-folder",
+                                Map.of("folderId", target.getId().toString()),
+                                true,
+                                "alice",
+                                1L));
+        return policies.save(
+                new Policy(
+                                id,
+                                id,
+                                "alice",
+                                true,
+                                List.of(
+                                        new PipelineInput(
+                                                source.id(),
+                                                new TriggerConfig(
+                                                        TriggerConfig.STORAGE_FOLDER_WATCH,
+                                                        Map.of()))),
+                                List.of(),
+                                OutputSpec.inline(),
+                                1L)
+                        .withSurface(Policy.SURFACE_PROCESSING_FOLDER));
+    }
+
+    private StoredFile uploadTo(long id, Folder target) {
+        StoredFile file = upload(id);
+        file.setFolder(target);
+        return file;
+    }
+
+    private static String identityOf(StoredFile file) {
+        return StorageFileIdentities.identity(file);
     }
 }
