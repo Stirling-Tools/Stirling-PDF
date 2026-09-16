@@ -11,6 +11,12 @@ export interface Area {
 }
 
 /**
+ * Longest edge of the returned image. react-easy-crop reports the crop in natural pixels, so an
+ * uncapped canvas turns a phone photo into a multi-MB lossless PNG that the upload gates reject.
+ */
+const MAX_OUTPUT_EDGE = 512;
+
+/**
  * Creates a cropped image blob from the source image and crop area.
  *
  * @param imageSrc - Data URL or blob URL of the source image
@@ -26,7 +32,6 @@ export async function getCroppedImage(
 
     image.onload = () => {
       try {
-        // Create canvas with crop dimensions
         const canvas = document.createElement("canvas");
         const ctx = canvas.getContext("2d");
 
@@ -35,16 +40,17 @@ export async function getCroppedImage(
           return;
         }
 
-        // Set canvas size to crop dimensions
-        canvas.width = pixelCrop.width;
-        canvas.height = pixelCrop.height;
+        // Downscale to MAX_OUTPUT_EDGE; also keeps the canvas under Safari's ~16.7M pixel ceiling,
+        // past which toBlob returns null.
+        const scale = Math.min(
+          1,
+          MAX_OUTPUT_EDGE / Math.max(pixelCrop.width, pixelCrop.height),
+        );
+        canvas.width = Math.max(1, Math.round(pixelCrop.width * scale));
+        canvas.height = Math.max(1, Math.round(pixelCrop.height * scale));
+        ctx.imageSmoothingQuality = "high";
 
-        // Draw the cropped region
         // drawImage(image, sx, sy, sw, sh, dx, dy, dw, dh)
-        // sx, sy: source x, y coordinates
-        // sw, sh: source width, height
-        // dx, dy: destination x, y coordinates (0, 0 for top-left)
-        // dw, dh: destination width, height
         ctx.drawImage(
           image,
           pixelCrop.x,
@@ -53,8 +59,8 @@ export async function getCroppedImage(
           pixelCrop.height,
           0,
           0,
-          pixelCrop.width,
-          pixelCrop.height,
+          canvas.width,
+          canvas.height,
         );
 
         // Convert canvas to PNG blob

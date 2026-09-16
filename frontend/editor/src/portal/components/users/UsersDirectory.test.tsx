@@ -126,6 +126,30 @@ describe("flavor capabilities — invitations + remove scope", () => {
   });
 });
 
+describe("UsersDirectory - member avatars", () => {
+  // The Avatar wrapper always carries role="img"; the picture is the nested <img>.
+  const pictureOf = () =>
+    document.querySelector<HTMLImageElement>("img.sui-avatar__img");
+
+  it("shows the member's picture when the roster carried one", () => {
+    // Self-hosted supplies a data URL; the row only cares that it has one.
+    const withPicture: Member = {
+      ...MEMBER,
+      avatarUrl: "data:image/png;base64,AQID",
+    };
+    renderDirectory(selfHostedCaps, TEAMS, [withPicture]);
+
+    expect(pictureOf()).toHaveAttribute("src", "data:image/png;base64,AQID");
+  });
+
+  it("falls back to initials when the member has no picture", () => {
+    renderDirectory(selfHostedCaps);
+
+    expect(pictureOf()).toBeNull();
+    // A one-word name renders a single initial.
+    expect(screen.getByText("P")).toBeInTheDocument();
+  });
+});
 const OWNER: Member = {
   ...MEMBER,
   id: "1",

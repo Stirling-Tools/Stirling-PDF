@@ -32,6 +32,7 @@ import UpdateSeatsButton from "@app/components/shared/UpdateSeatsButton";
 import { useLicense } from "@app/contexts/LicenseContext";
 import ChangeUserPasswordModal from "@app/components/shared/ChangeUserPasswordModal";
 import { useAuth } from "@app/auth/UseSession";
+import { useProfilePictureThumbnails } from "@app/hooks/useProfilePictureThumbnails";
 import {
   useAdminUsers,
   useTeams,
@@ -335,6 +336,12 @@ User: ${user.username}`)
     user.username.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  const avatarIds = useMemo(
+    () => users.filter((user) => user.hasProfilePicture).map((user) => user.id),
+    [users],
+  );
+  const avatars = useProfilePictureThumbnails(avatarIds);
+
   const roleOptions = [
     {
       value: "ROLE_ADMIN",
@@ -586,6 +593,8 @@ User: ${user.username}`)
                       <Avatar
                         size={32}
                         color={user.enabled ? "blue" : "gray"}
+                        src={avatars[String(user.id)]}
+                        alt=""
                         styles={{
                           root: {
                             border: user.isActive
