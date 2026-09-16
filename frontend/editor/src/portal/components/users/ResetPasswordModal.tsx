@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Button, Checkbox, FormField, Input, Modal } from "@app/ui";
+import { MIN_PASSWORD_LENGTH } from "@app/constants/passwordPolicy";
 import { resetMemberPassword, type Member } from "@portal/api/users";
 import { errorMessage } from "@portal/api/http";
 import "@portal/views/Users.css";
@@ -74,7 +75,7 @@ export function ResetPasswordModal({
     setError(null);
     const newPassword = autoGenerate ? generated : password;
     if (!autoGenerate) {
-      if (newPassword.length < 8) {
+      if (newPassword.length < MIN_PASSWORD_LENGTH) {
         setError(
           t("users.resetPw.tooShort", "Password must be at least 8 characters"),
         );

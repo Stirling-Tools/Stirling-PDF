@@ -7,6 +7,7 @@ import LocalIcon from "@app/components/shared/LocalIcon";
 import { accountService } from "@app/services/accountService";
 import { alert } from "@app/components/toast";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
+import { MIN_PASSWORD_LENGTH } from "@app/constants/passwordPolicy";
 
 interface FirstLoginModalProps {
   opened: boolean;
@@ -48,7 +49,7 @@ export default function FirstLoginModal({
       return;
     }
 
-    if (newPassword.length < 8) {
+    if (newPassword.length < MIN_PASSWORD_LENGTH) {
       setError(
         t(
           "firstLogin.passwordTooShort",
@@ -200,8 +201,8 @@ export default function FirstLoginModal({
               !currentPassword ||
               !newPassword ||
               !confirmPassword ||
-              newPassword.length < 8 ||
-              confirmPassword.length < 8
+              newPassword.length < MIN_PASSWORD_LENGTH ||
+              confirmPassword.length < MIN_PASSWORD_LENGTH
             }
             style={{ marginTop: "var(--mantine-spacing-md)" }}
           >
