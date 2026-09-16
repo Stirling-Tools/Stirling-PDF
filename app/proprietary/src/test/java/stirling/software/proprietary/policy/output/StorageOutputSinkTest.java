@@ -44,12 +44,15 @@ class StorageOutputSinkTest {
     @Mock private FileStorageService storage;
     @Mock private UserService users;
     private StorageOutputSink sink;
+    private final ApplicationProperties properties = new ApplicationProperties();
     private final UUID folderId = UUID.randomUUID();
     private final User owner = user(1L, "source-owner");
     private final ByteArrayResource output = new ByteArrayResource(new byte[] {1, 2, 3});
 
     @BeforeEach
     void setUp() {
+        properties.getSecurity().setEnableLogin(true);
+        properties.getStorage().setEnabled(true);
         sink =
                 new StorageOutputSink(
                         files,
@@ -57,8 +60,30 @@ class StorageOutputSinkTest {
                         storage,
                         mock(ProcessedLedger.class),
                         mock(StorageProvider.class),
-                        new ApplicationProperties(),
+                        properties,
                         users);
+    }
+
+    @Test
+    void validateRefusesADestinationFolderTheCallerDoesNotOwn() {
+        when(users.getCurrentUsername()).thenReturn("source-owner");
+        when(users.findByUsername("source-owner")).thenReturn(Optional.of(owner));
+        when(folders.findByIdAndOwner(folderId, owner)).thenReturn(Optional.empty());
+
+        // Saving a destination that every later run would reject leaves the user a policy that
+        // fails forever with nothing to point at.
+        assertThatThrownBy(() -> sink.validate(destination()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("inaccessible storage folder");
+    }
+
+    @Test
+    void validateAcceptsTheCallersOwnFolder() {
+        when(users.getCurrentUsername()).thenReturn("source-owner");
+        when(users.findByUsername("source-owner")).thenReturn(Optional.of(owner));
+        when(folders.findByIdAndOwner(folderId, owner)).thenReturn(Optional.of(folder(owner)));
+
+        sink.validate(destination());
     }
 
     @Test
@@ -188,6 +213,7 @@ class StorageOutputSinkTest {
         private static final long VERSION = 4L;
 
         private String recordedGate;
+        private long recordedVersion;
 
         private StoredInput() {
             super(new byte[] {1});
@@ -204,8 +230,9 @@ class StorageOutputSinkTest {
         }
 
         @Override
-        public void recordReplacement(String gate, String contentHash) {
+        public void recordReplacement(String gate, String contentHash, long committedVersion) {
             recordedGate = gate;
+            recordedVersion = committedVersion;
         }
     }
 }

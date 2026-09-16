@@ -123,7 +123,8 @@ class StorageFolderInputSourceTest {
         ((StoredFileBacked) work.getFirst().inputs().primary().getFirst())
                 .recordReplacement(
                         StorageFileIdentities.gate(file),
-                        StorageFileIdentities.contentHash(storageProvider, file));
+                        StorageFileIdentities.contentHash(storageProvider, file),
+                        file.contentVersionOrZero());
         work.get(0).onComplete().accept(true);
 
         // The next sweep sees the bumped version already settled — no self-feeding loop.

@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.core.io.Resource;
@@ -80,8 +81,20 @@ public class StorageOutputSink implements PolicyOutputSink {
             throw new IllegalArgumentException("unknown storage output mode: " + mode);
         }
         UUID folderId = folderIdOf(spec);
-        if (folderId != null && !folderRepository.existsById(folderId)) {
-            throw new IllegalArgumentException("unknown storage folder: " + folderId);
+        if (folderId == null) {
+            return;
+        }
+        // Match what delivery will demand of this folder. Accepting one the caller does not own
+        // would save a policy that then fails on every run with nothing to point the user at.
+        User caller =
+                userService
+                        .findByUsername(userService.getCurrentUsername())
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                "storage output requires an authenticated owner"));
+        if (folderRepository.findByIdAndOwner(folderId, caller).isEmpty()) {
+            throw new IllegalArgumentException("unknown or inaccessible storage folder");
         }
     }
 
@@ -89,7 +102,7 @@ public class StorageOutputSink implements PolicyOutputSink {
     public List<ResultFile> deliver(
             OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
         StoredFileBacked input = storedInputOf(delivery);
-        StoredFile origin = originOf(input);
+        StoredFile origin = originOf(input, spec);
         UUID folderId = folderIdOf(spec);
         User owner = ownerFor(delivery, origin, folderId);
         List<ResultFile> results = new ArrayList<>();
@@ -112,7 +125,9 @@ public class StorageOutputSink implements PolicyOutputSink {
                                 null,
                                 input.storedFileVersion());
                 input.recordReplacement(
-                        StorageFileIdentities.gate(stored), contentHashOrNull(stored));
+                        StorageFileIdentities.gate(stored),
+                        contentHashOrNull(stored),
+                        stored.contentVersionOrZero());
             } else {
                 stored = storeIntoFolder(delivery, output, i, owner, origin, folderId);
             }
@@ -177,21 +192,24 @@ public class StorageOutputSink implements PolicyOutputSink {
     }
 
     /**
-     * The stored row the run's primary input came from; null when the input came from disk. A row
-     * that has since been deleted is a conflict, not a fresh insert: the user removed the file
-     * while it was being processed and the output must not resurrect it.
+     * The stored row the run's primary input came from; null when the input came from disk or when
+     * the row is gone and this mode does not write back to it.
+     *
+     * <p>Replacing in place needs the row: without it the delivery would fall through to storing a
+     * new file, resurrecting the very input the user deleted mid-run. Writing a separate file
+     * resurrects nothing, so a deleted input there costs the run nothing and the output still
+     * lands.
      */
-    private StoredFile originOf(StoredFileBacked input) {
+    private StoredFile originOf(StoredFileBacked input, OutputSpec spec) {
         if (input == null) {
             return null;
         }
-        return storedFileRepository
-                .findById(input.storedFileId())
-                .orElseThrow(
-                        () ->
-                                new ResponseStatusException(
-                                        HttpStatus.CONFLICT,
-                                        "The input file was removed during processing"));
+        Optional<StoredFile> origin = storedFileRepository.findById(input.storedFileId());
+        if (origin.isEmpty() && NEW_VERSION.equals(modeOf(spec))) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "The input file was removed during processing");
+        }
+        return origin.orElse(null);
     }
 
     private String contentHashOrNull(StoredFile file) {

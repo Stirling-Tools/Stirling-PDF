@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -198,6 +199,93 @@ class StorageProcessingVersionTest {
         verifyNoInteractions(storage);
     }
 
+    @Test
+    void aClaimThatSkipsTheVerifierStillSettlesWithAContentHash() throws IOException {
+        // The ledger reclaims a row at an unchanged gate (a retried error, an interrupted run)
+        // without consulting the verifier, so nothing hands the input a hash on the way in.
+        // Settling null there would strip the row's hash tier and turn the next rename into a
+        // reprocess of an already-processed document.
+        StoredFile original = file(2);
+        doReturn(true).when(context).claim(anyString(), anyString(), any());
+        ResolvedInput work = resolve(original);
+
+        // Hashing reads the blob mock, so it cannot happen inside the matcher chain.
+        String inputHash = StorageFileIdentities.contentHash(blobs, original);
+
+        work.onComplete().accept(true);
+
+        verify(context)
+                .settle(
+                        eq("storage:1"),
+                        eq(StorageFileIdentities.gate(original)),
+                        eq(inputHash),
+                        eq(true));
+    }
+
+    @Test
+    void settleDoesNotHashAFileThatLeftTheOwnersFolder() throws IOException {
+        doReturn(true).when(context).claim(anyString(), anyString(), any());
+        ResolvedInput work = resolve(file(2));
+        when(files.findByIdAndOwner(1L, owner)).thenReturn(Optional.empty());
+
+        work.onComplete().accept(true);
+
+        verify(context).settle(eq("storage:1"), anyString(), isNull(), eq(true));
+    }
+
+    @Test
+    void aSecondInPlaceWriteUsesTheRevisionTheFirstCommitted() throws IOException {
+        ResolvedInput work = resolve(file(2));
+        StoredFile current = file(2);
+        when(files.findById(1L)).thenReturn(Optional.of(current));
+        FileStorageService storage = mock(FileStorageService.class);
+        when(storage.replaceFile(eq(owner), eq(current), any(), isNull(), isNull(), eq(2L)))
+                .thenReturn(file(3));
+
+        deliver(work, storage);
+
+        // Pinning the discovery revision for a second write would fail its own run's first one.
+        assertThat(storedInput(work).storedFileVersion()).isEqualTo(3L);
+    }
+
+    @Test
+    void aDeletedInputStillDeliversWhenTheOutputIsASeparateFile() throws IOException {
+        ResolvedInput work = resolve(file(2));
+        when(files.findById(1L)).thenReturn(Optional.empty());
+        when(folders.findById(folderId)).thenReturn(Optional.of(ownedFolder()));
+        when(folders.getReferenceById(folderId)).thenReturn(ownedFolder());
+        StoredFile output = file(3);
+        FileStorageService storage = mock(FileStorageService.class);
+        when(storage.storeFile(eq(owner), any())).thenReturn(output);
+        when(files.save(output)).thenReturn(output);
+
+        deliverNewFile(work, storage);
+
+        // Nothing is resurrected: the output is its own file, so the deleted input costs no work.
+        verify(storage).storeFile(eq(owner), any());
+    }
+
+    private StoredFileBacked storedInput(ResolvedInput work) {
+        return (StoredFileBacked) work.inputs().primary().getFirst();
+    }
+
+    private Folder ownedFolder() {
+        Folder folder = new Folder();
+        folder.setId(folderId);
+        folder.setOwner(owner);
+        return folder;
+    }
+
+    private void deliverNewFile(ResolvedInput work, FileStorageService storage) throws IOException {
+        sink(storage)
+                .deliver(
+                        new OutputDelivery("run", "policy", work.inputs(), USERNAME),
+                        List.of(new ByteArrayResource("processed PDF".getBytes())),
+                        new OutputSpec(
+                                "storage",
+                                Map.of("mode", "new_file", "folderId", folderId.toString())));
+    }
+
     private ResolvedInput resolve(StoredFile file) throws IOException {
         when(files.findAllByFolderIdAndOwner(folderId, owner)).thenReturn(List.of(file));
         when(files.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
@@ -209,18 +297,22 @@ class StorageProcessingVersionTest {
     }
 
     private void deliver(ResolvedInput work, FileStorageService storage) throws IOException {
-        new StorageOutputSink(
-                        files,
-                        folders,
-                        storage,
-                        mock(ProcessedLedger.class),
-                        blobs,
-                        properties,
-                        userService)
+        sink(storage)
                 .deliver(
                         new OutputDelivery("run", "policy", work.inputs(), USERNAME),
                         List.of(new ByteArrayResource("processed PDF".getBytes())),
                         new OutputSpec("storage", Map.of("mode", "new_version")));
+    }
+
+    private StorageOutputSink sink(FileStorageService storage) {
+        return new StorageOutputSink(
+                files,
+                folders,
+                storage,
+                mock(ProcessedLedger.class),
+                blobs,
+                properties,
+                userService);
     }
 
     private StoredFile file(long version) {

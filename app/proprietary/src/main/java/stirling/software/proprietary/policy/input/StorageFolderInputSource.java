@@ -194,10 +194,10 @@ public class StorageFolderInputSource implements InputSource {
         private final String storageKey;
         private final String filename;
         private final long sizeBytes;
-        private final long version;
 
-        // Set at claim, replaced when an in-place output commits, and read by whichever thread
-        // completes the run. The two writes cannot overlap: delivery follows discovery.
+        // Both advance when an in-place output commits, and are read by whichever thread completes
+        // the run. Discovery's write precedes delivery's, so the two never overlap.
+        private volatile long version;
         private volatile CompletionVersion completed;
 
         private record CompletionVersion(String gate, String contentHash) {}
@@ -224,7 +224,8 @@ public class StorageFolderInputSource implements InputSource {
         }
 
         @Override
-        public void recordReplacement(String gate, String contentHash) {
+        public void recordReplacement(String gate, String contentHash, long committedVersion) {
+            version = committedVersion;
             completed = new CompletionVersion(gate, contentHash);
         }
 
@@ -234,7 +235,31 @@ public class StorageFolderInputSource implements InputSource {
 
         private void settle(ResolveContext ctx, String identity, boolean success) {
             CompletionVersion result = completed;
-            ctx.settle(identity, result.gate(), result.contentHash(), success);
+            ctx.settle(identity, result.gate(), hashOrDerived(result), success);
+        }
+
+        /**
+         * The hash describing what this run settled at. The ledger overwrites the stored hash with
+         * whatever settle passes, and it does not consult the verifier when it reclaims a row at an
+         * unchanged gate (a retried error or an interrupted run), so a null here would strip the
+         * hash tier off the row and turn the next rename or folder move into a reprocess. Derive it
+         * from the row instead. Null survives only when the file is gone or has left the owner's
+         * folder, and presence cleanup prunes that row anyway.
+         */
+        private String hashOrDerived(CompletionVersion result) {
+            if (result.contentHash() != null) {
+                return result.contentHash();
+            }
+            try {
+                return storedFileRepository
+                        .findByIdAndOwner(fileId, owner)
+                        .filter(StorageFolderInputSource::ingestible)
+                        .map(file -> StorageFileIdentities.contentHash(storageProvider, file))
+                        .orElse(null);
+            } catch (RuntimeException e) {
+                log.debug("Could not hash stored file {} at settle: {}", fileId, e.getMessage());
+                return null;
+            }
         }
 
         @Override
