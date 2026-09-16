@@ -117,6 +117,10 @@ function compressStaticCopyPlugin(): PluginOption {
       // the whole output: the compression plugin's default include list skips
       // .wasm (the 4.6 MB PDFium binary), and viteStaticCopy output (the PDFium
       // fallback fonts, tens of megabytes) never reaches either other pass.
+      // HTML, sitemap.xml and robots.txt belong to the prerender hook, which
+      // writes them in its own concurrent closeBundle: compressing them here can
+      // snapshot a half-written page, and compressFile then keeps that stale
+      // sibling when the writer's pass runs.
       const files: string[] = [];
       const walk = async (dir: string) => {
         let entries;
@@ -128,7 +132,12 @@ function compressStaticCopyPlugin(): PluginOption {
         for (const entry of entries) {
           const p = path.join(dir, entry.name);
           if (entry.isDirectory()) await walk(p);
-          else files.push(p);
+          else if (
+            !entry.name.endsWith(".html") &&
+            entry.name !== "sitemap.xml" &&
+            entry.name !== "robots.txt"
+          )
+            files.push(p);
         }
       };
 
@@ -249,11 +258,20 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         }
         console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
       }
+      // robots.txt may have just been rewritten with the sitemap pointer; it is
+      // tiny, but it is still owned here so the walk never races with it.
+      const robotsPath = path.join(distDir, "robots.txt");
+      try {
+        await fs.access(robotsPath);
+        lateFiles.push(robotsPath);
+      } catch {
+        // no robots.txt in dist - nothing to compress
+      }
       // closeBundle hooks run concurrently in Vite, not in plugin order, so a
-      // sibling plugin cannot reliably compress files written here. The
-      // rewritten index.html, the prerendered route pages (e.g.
-      // dist/settings/people.html) and sitemap.xml are all written by this hook,
-      // so compress them here for Spring's EncodedResourceResolver.
+      // sibling plugin cannot reliably compress files written here. index.html is
+      // rewritten, the route pages (e.g. dist/settings/people.html) and
+      // sitemap.xml are written by this hook, so compress them here for Spring's
+      // EncodedResourceResolver.
       const walkHtml = async (dir: string) => {
         let entries;
         try {
