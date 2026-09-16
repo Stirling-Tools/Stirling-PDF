@@ -1,9 +1,8 @@
 /** Bodies and hero art for the classification demo's slides; the card chrome around them
  *  belongs to {@link OnboardingSlideShell}. */
 
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { ShellHero } from "@app/components/onboarding/OnboardingSlideShell";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import {
@@ -20,7 +19,7 @@ export function DefaultAppHero() {
 export function FolderHero() {
   return (
     <ShellHero>
-      <FolderOpenRoundedIcon sx={{ fontSize: 30 }} />
+      <Icon name="folder-open" size={30} />
     </ShellHero>
   );
 }
@@ -125,7 +124,7 @@ export function PrivacyNote() {
   const { t } = useTranslation();
   return (
     <div className={styles.note}>
-      <LockOutlinedIcon fontSize="small" className={styles.noteIcon} />
+      <Icon name="lock" size={20} className={styles.noteIcon} />
       {t(
         "classificationDemo.offer.privacy",
         "Everything stays on this device and you can stop anytime.",

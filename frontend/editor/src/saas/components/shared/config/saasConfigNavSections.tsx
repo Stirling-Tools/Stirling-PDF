@@ -4,6 +4,7 @@ import {
   createConfigNavSections as createCoreConfigNavSections,
   type ConfigNavSection,
 } from "@core/components/shared/config/configNavSections";
+import type { ConfigNavItem } from "@app/components/shared/config/types";
 import HotkeysSection from "@app/components/shared/config/configSections/HotkeysSection";
 import GeneralSection from "@app/components/shared/config/configSections/GeneralSection";
 import PreferencesSection from "@core/components/shared/config/configSections/preferences/PreferencesSection";
@@ -42,13 +43,13 @@ function ensurePreferencesSection(
           {
             key: "general",
             label: "General",
-            icon: "settings-rounded",
+            icon: "settings",
             component: <GeneralSection />,
           },
           {
             key: "hotkeys",
             label: "Keyboard Shortcuts",
-            icon: "keyboard-rounded",
+            icon: "keyboard",
             component: <HotkeysSection />,
           },
         ],
@@ -80,7 +81,7 @@ function appendDeveloperSection(
         {
           key: "api-keys",
           label: "API Keys",
-          icon: "key-rounded",
+          icon: "key",
           component: <ApiKeys />,
         },
       ],
@@ -119,14 +120,14 @@ function appendMcpSection(
     return sections;
   }
 
-  const mcpItem = {
+  const mcpItem: ConfigNavItem = {
     key: "mcp" as const,
     label: t("config.mcp.navLabel", "MCP Server"),
     description: t(
       "config.mcp.description",
       "Model Context Protocol (MCP) lets AI assistants like Claude use your Stirling PDF tools directly. Connect a client once and your assistant can convert, edit, secure and process documents on your behalf.",
     ),
-    icon: "smart-toy-rounded",
+    icon: "bot",
     component: <McpSection />,
   };
 
@@ -168,7 +169,7 @@ function appendHelpSection(
         {
           key: "help" as const,
           label: t("settings.help.label", "Tours"),
-          icon: "help-rounded",
+          icon: "circle-question-mark",
           component: (
             <HelpSection isAdmin={false} onRequestClose={onRequestClose} />
           ),
@@ -200,7 +201,7 @@ function appendLegalSection(
         {
           key: "legal" as const,
           label: t("settings.legal.label", "Legal"),
-          icon: "gavel-rounded",
+          icon: "gavel",
           component: <LegalSection />,
         },
       ],
@@ -226,7 +227,7 @@ export function createSaasConfigNavSections(
       {
         key: "overview",
         label: t("config.account.overview.label", "Overview"),
-        icon: "account-circle",
+        icon: "circle-user",
         component: <Overview onLogoutClick={onLogoutClick} />,
       },
       {
