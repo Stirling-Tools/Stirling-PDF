@@ -23,8 +23,12 @@ test.describe("2. Main Dashboard / Home Page", () => {
       // Tool search lives in the global super search bar, always mounted.
       await expect(page.getByPlaceholder(/search/i).first()).toBeVisible();
 
+      // Both wings are fixed open, so they are on screen with nothing to press.
       await expect(
-        page.getByRole("button", { name: /fullscreen|sidebar/i }).first(),
+        page.locator('[data-sidebar="file-sidebar"]').first(),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-sidebar="tool-panel"]').first(),
       ).toBeVisible();
 
       const categories = [
