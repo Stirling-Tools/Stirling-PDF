@@ -1000,6 +1000,19 @@
   background: var(--c-bg-raised);
 }
 
+/* Footer buttons are a full-width stack, so a centred icon+label pair puts the
+   icons in a different column on every row. Taking the icon out of flow pins it
+   to one column and leaves the label centred on the button's full width. */
+.files-page-details-actions .mantine-Button-root {
+  position: relative;
+}
+
+.files-page-details-actions .mantine-Button-section[data-position="left"] {
+  position: absolute;
+  left: var(--button-padding-x);
+  margin: 0;
+}
+
 /* Collapsible "File info" header (size/type/dates). */
 .files-page-details-collapse-toggle {
   display: flex;

@@ -32,6 +32,7 @@ import {
   VersionTimeline,
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
+import "@app/components/filesPage/FilesPage.css";
 
 interface FileDetailsPanelProps {
   selectedFileIds: FileId[];
