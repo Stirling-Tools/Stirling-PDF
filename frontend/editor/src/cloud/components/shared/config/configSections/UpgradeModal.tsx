@@ -1,12 +1,9 @@
 /**
- * Upgrade-to-Processor modal. Three sequential panels inside one frame:
- *
- *   Step 1: Cap selection - local state only, no side effects
- *   Step 2: Stripe Checkout - POSTs to /api/v1/payg/checkout, mounts the
- *                                   Stripe Embedded Checkout iframe (lazy-loaded)
- *   Step 3: Confirmation - brief "Welcome to Processor" beat before
- *                                   the modal closes and the parent's
- *                                   {@code onComplete} triggers a wallet refetch
+ * Upgrade-to-Processor modal. Three sequential panels inside one frame: cap
+ * selection holds local state only and has no side effects; Stripe Checkout POSTs
+ * to /api/v1/payg/checkout and mounts the Stripe Embedded Checkout iframe; and a
+ * brief "Welcome to Processor" beat plays before the modal closes and the parent's
+ * {@code onComplete} triggers a wallet refetch.
  *
  * <p>The Stripe SDK ({@code @stripe/stripe-js} + {@code @stripe/react-stripe-js})
  * is loaded via {@code React.lazy} on a dedicated module so the chunk only
