@@ -42,6 +42,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.input.StorageFolderInputSource;
 import stirling.software.proprietary.policy.ledger.ClaimState;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
@@ -88,7 +89,7 @@ public class ProcessingFolderController {
     public static final String SURFACE = Policy.SURFACE_PROCESSING_FOLDER;
 
     /** The paired source's type; the policies/pipelines surfaces hide sources of this type too. */
-    public static final String SOURCE_TYPE = "storage-folder";
+    public static final String SOURCE_TYPE = StorageFolderInputSource.TYPE;
 
     static final String DISK_SOURCE_TYPE = FolderAccessGuard.FOLDER_TYPE;
 

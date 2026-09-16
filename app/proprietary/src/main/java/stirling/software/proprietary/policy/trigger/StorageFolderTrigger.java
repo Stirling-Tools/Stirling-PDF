@@ -1,8 +1,8 @@
 package stirling.software.proprietary.policy.trigger;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -24,6 +24,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.SourceBatchSettledEvent;
 import stirling.software.proprietary.policy.engine.SweepKind;
+import stirling.software.proprietary.policy.input.StorageFolderInputSource;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
@@ -67,7 +68,7 @@ public class StorageFolderTrigger implements PolicyTrigger {
 
     @Override
     public Set<String> supportedSourceTypes() {
-        return Set.of("storage-folder");
+        return Set.of(StorageFolderInputSource.TYPE);
     }
 
     @Override
@@ -118,12 +119,12 @@ public class StorageFolderTrigger implements PolicyTrigger {
                                 binding -> event.sourceId().equals(binding.input().sourceId()))) {
             return;
         }
-        Source source = sourceStore.get(event.sourceId()).orElse(null);
-        if (source == null || !source.enabled() || !"storage-folder".equals(source.type())) {
+        Source source = liveStorageSource(event.sourceId()).orElse(null);
+        if (source == null) {
             return;
         }
         try {
-            requestSweep(UUID.fromString(String.valueOf(source.options().get("folderId"))));
+            requestSweep(UUID.fromString(folderIdText(source)));
         } catch (IllegalArgumentException e) {
             log.warn("Could not continue processing folder {}: {}", policy.id(), e.getMessage());
         }
@@ -206,14 +207,8 @@ public class StorageFolderTrigger implements PolicyTrigger {
                         continue;
                     }
                     boolean enabledStorage =
-                            sourceStore
-                                    .get(latest.input().sourceId())
-                                    .filter(
-                                            source ->
-                                                    source.enabled()
-                                                            && "storage-folder"
-                                                                    .equals(source.type()))
-                                    .filter(source -> watches(source.options(), onlyFolderId))
+                            liveStorageSource(latest.input().sourceId())
+                                    .filter(source -> watches(source, onlyFolderId))
                                     .isPresent();
                     if (enabledStorage) {
                         policyRunner.runInput(current, latest.input(), SweepKind.BATCH);
@@ -228,12 +223,19 @@ public class StorageFolderTrigger implements PolicyTrigger {
         }
     }
 
+    private Optional<Source> liveStorageSource(String sourceId) {
+        return sourceStore
+                .get(sourceId)
+                .filter(Source::enabled)
+                .filter(source -> StorageFolderInputSource.TYPE.equals(source.type()));
+    }
+
+    private static String folderIdText(Source source) {
+        return String.valueOf(source.options().get("folderId"));
+    }
+
     /** A null target matches every folder; otherwise the source must watch exactly that one. */
-    private static boolean watches(Map<String, Object> options, UUID onlyFolderId) {
-        if (onlyFolderId == null) {
-            return true;
-        }
-        Object raw = options.get("folderId");
-        return raw != null && onlyFolderId.toString().equals(raw.toString());
+    private static boolean watches(Source source, UUID onlyFolderId) {
+        return onlyFolderId == null || onlyFolderId.toString().equals(folderIdText(source));
     }
 }

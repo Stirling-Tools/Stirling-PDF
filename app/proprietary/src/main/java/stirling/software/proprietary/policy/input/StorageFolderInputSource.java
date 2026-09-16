@@ -40,7 +40,7 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 @RequiredArgsConstructor
 public class StorageFolderInputSource implements InputSource {
 
-    private static final String TYPE = "storage-folder";
+    public static final String TYPE = "storage-folder";
 
     private final StoredFileRepository storedFileRepository;
     private final FolderRepository folderRepository;
