@@ -419,8 +419,8 @@ export default defineConfig(async ({ mode, command }) => {
       ...(process.env.ANALYZE === "true"
         ? [
             (await import("rollup-plugin-visualizer")).visualizer({
-              filename: "dist/stats.html",
-              template: "treemap",
+              filename: "dist/stats.json",
+              template: "raw-data",
               gzipSize: true,
               brotliSize: true,
               emitFile: false,
@@ -512,11 +512,31 @@ export default defineConfig(async ({ mode, command }) => {
       rollupOptions: {
         output: {
           assetFileNames: mjsToJsAssetFileNames,
-          manualChunks(id) {
+          manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
+            // The dynamic-import preload helper is imported by the entry. Left to
+            // Rollup it lands in the first dynamic-importing vendor chunk, and
+            // the entry then statically imports that whole chunk (the EmbedPDF
+            // engine chunk in this build).
+            if (id.includes("vite/preload-helper")) return "vendor-preload";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
+              // Keep the EmbedPDF pieces the startup graph actually uses (the
+              // engine stays out of it because only the lazy viewer imports it,
+              // and the spread enum is used by viewer contexts) in their own
+              // chunks, so the single `vendor-embedpdf` bundle is fetched only
+              // when the viewer opens.
+              if (id.includes("@embedpdf/engines")) return "vendor-embedpdf";
+              if (id.includes("@embedpdf/pdfium")) return "vendor-pdfium";
+              if (
+                id.includes("@embedpdf/core") ||
+                id.includes("@embedpdf/models") ||
+                id.includes("@embedpdf/utils") ||
+                id.includes("@embedpdf/plugin-spread")
+              ) {
+                return "vendor-embedpdf-core";
+              }
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
               // Leaf UI packages: they import react/emotion but are not imported
               // by them, so they split without creating a chunk cycle. Keeping
