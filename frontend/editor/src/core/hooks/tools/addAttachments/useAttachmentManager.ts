@@ -19,6 +19,8 @@ export interface DraftAttachmentRow {
   contentType?: string;
   kind: DraftRowKind;
   file?: File;
+  /** Fetch generation this row was staged in, so a late list response can keep it. */
+  stagedGen?: number;
 }
 
 interface UseAttachmentManagerOptions {
@@ -91,7 +93,14 @@ export function useAttachmentManager({
         contentType: att.contentType,
         kind: "existing",
       }));
-      setRows(initialRows);
+      // A user can pick files while the list request is in flight; keep the
+      // rows staged for this generation instead of dropping them on the floor.
+      setRows((prev) => [
+        ...initialRows,
+        ...prev.filter(
+          (row) => row.kind === "staged" && row.stagedGen === currentGen,
+        ),
+      ]);
     } catch (err) {
       if (currentGen !== genRef.current) return;
       setRows([]);
@@ -150,6 +159,7 @@ export function useAttachmentManager({
             contentType: file.type || "application/octet-stream",
             kind: "staged",
             file,
+            stagedGen: genRef.current,
           });
         }
         return [...prev, ...validNewRows];
