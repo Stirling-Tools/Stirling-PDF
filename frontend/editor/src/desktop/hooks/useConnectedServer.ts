@@ -38,10 +38,12 @@ export function useConnectedServer(): boolean {
     void connectionModeService.getCurrentMode().then((mode) => {
       if (current) setIsServer(isServerMode(mode));
     });
-    const unsubscribe = connectionModeService.subscribeToModeChanges((config) => {
-      current = false;
-      setIsServer(isServerMode(config.mode));
-    });
+    const unsubscribe = connectionModeService.subscribeToModeChanges(
+      (config) => {
+        current = false;
+        setIsServer(isServerMode(config.mode));
+      },
+    );
     return () => {
       current = false;
       unsubscribe();
