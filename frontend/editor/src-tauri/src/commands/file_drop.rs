@@ -97,7 +97,9 @@ mod tests {
 
         let copy = directory.join("other/report.pdf");
         std::fs::copy(&path, &copy).unwrap();
-        std::fs::File::open(&copy)
+        std::fs::OpenOptions::new()
+            .write(true)
+            .open(&copy)
             .unwrap()
             .set_modified(modified)
             .unwrap();
