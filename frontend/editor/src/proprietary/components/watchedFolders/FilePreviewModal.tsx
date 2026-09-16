@@ -1,12 +1,21 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Modal, Center, Text, Box, Loader } from "@mantine/core";
 import { FileId } from "@app/types/fileContext";
 import { fileStorage } from "@app/services/fileStorage";
-import { LocalEmbedPDF } from "@app/components/viewer/LocalEmbedPDF";
-import { PdfViewerToolbar } from "@app/components/viewer/PdfViewerToolbar";
 import { ViewerProvider } from "@app/contexts/ViewerContext";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
+
+const LocalEmbedPDF = lazy(() =>
+  import("@app/components/viewer/LocalEmbedPDF").then((m) => ({
+    default: m.LocalEmbedPDF,
+  })),
+);
+const PdfViewerToolbar = lazy(() =>
+  import("@app/components/viewer/PdfViewerToolbar").then((m) => ({
+    default: m.PdfViewerToolbar,
+  })),
+);
 
 interface FilePreviewModalProps {
   fileId?: FileId | null;
@@ -90,10 +99,18 @@ export function FilePreviewModal({
         </Center>
       ) : (
         <ViewerProvider>
-          <PdfViewerToolbar />
-          <Box style={{ flex: 1, minHeight: 0 }}>
-            <LocalEmbedPDF file={file} fileName={fileName} />
-          </Box>
+          <Suspense
+            fallback={
+              <Center h="100%">
+                <Loader size="sm" />
+              </Center>
+            }
+          >
+            <PdfViewerToolbar />
+            <Box style={{ flex: 1, minHeight: 0 }}>
+              <LocalEmbedPDF file={file} fileName={fileName} />
+            </Box>
+          </Suspense>
         </ViewerProvider>
       )}
     </Modal>
