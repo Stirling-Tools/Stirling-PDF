@@ -58,4 +58,10 @@ jobs:
           name: lighthouse-${{ github.run_id }}
           path: frontend/.lighthouse-reports/
           retention-days: 7
-          if-no-files-found: ignore
+          # The reports live in a dot-directory, which upload-artifact treats as
+          # hidden and silently skips by default. Without this the step is green
+          # and the artifact is empty.
+          include-hidden-files: true
+          # warn, not ignore: an empty upload here means the audit produced
+          # nothing, and that should be visible rather than silent.
+          if-no-files-found: warn
