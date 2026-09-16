@@ -50,6 +50,7 @@ import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useAuth } from "@app/auth/UseSession";
 import { useLocation } from "react-router-dom";
 import { isAuthRoute } from "@app/constants/routes";
+import { getFolderChain } from "@app/utils/folderPath";
 
 interface FolderContextValue {
   folders: FolderRecord[];
@@ -478,25 +479,13 @@ export function FolderProvider({ children }: FolderProviderProps) {
   const breadcrumbs = useMemo<FolderBreadcrumbEntry[]>(() => {
     // Root name is a placeholder - consumers should detect
     // `entry.id === ROOT_FOLDER_ID` and substitute their own translated label.
-    const path: FolderBreadcrumbEntry[] = [
+    return [
       { id: ROOT_FOLDER_ID, name: "All files" },
+      ...getFolderChain(currentFolderId, foldersById).map(({ id, name }) => ({
+        id,
+        name,
+      })),
     ];
-    if (currentFolderId === null) return path;
-    const chain: FolderRecord[] = [];
-    let cursor: FolderId | null = currentFolderId;
-    const seen = new Set<FolderId>();
-    while (cursor !== null) {
-      if (seen.has(cursor)) break;
-      seen.add(cursor);
-      const folder = foldersById.get(cursor);
-      if (!folder) break;
-      chain.unshift(folder);
-      cursor = folder.parentFolderId;
-    }
-    for (const folder of chain) {
-      path.push({ id: folder.id, name: folder.name });
-    }
-    return path;
   }, [currentFolderId, foldersById]);
 
   const getChildFolderIds = useCallback(

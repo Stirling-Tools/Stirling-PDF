@@ -7,9 +7,8 @@ interface SidebarToggleIconProps {
 }
 
 /**
- * "Toggle sidebar" glyph — a rounded panel with a divided-off left rail —
- * shared by the editor FileSidebar and the processor Sidebar so their
- * collapse/expand controls read identically. Inherits colour via currentColor.
+ * "Toggle sidebar" glyph — a rounded panel with a divided-off left rail — for
+ * the processor sidebar's collapse control. Inherits colour via currentColor.
  */
 export function SidebarToggleIcon({
   size = 18,

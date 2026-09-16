@@ -29,8 +29,6 @@ import { AdminTourOrchestrationProvider } from "@app/contexts/AdminTourOrchestra
 import { PageEditorProvider } from "@app/contexts/PageEditorContext";
 import { BannerProvider } from "@app/contexts/BannerContext";
 import ErrorBoundary from "@app/components/shared/ErrorBoundary";
-import { usePosthogTracking } from "@app/hooks/usePosthogTracking";
-import { useScarfTracking } from "@app/hooks/useScarfTracking";
 import { useAppInitialization } from "@app/hooks/useAppInitialization";
 import { useLogoAssets } from "@app/hooks/useLogoAssets";
 import AppConfigLoader from "@app/components/shared/AppConfigLoader";
@@ -40,17 +38,6 @@ import { FormFillProvider } from "@app/tools/formFill/FormFillContext";
 import { FolderFileContextProvider } from "@app/contexts/FolderFileContext";
 import { FolderProvider } from "@app/contexts/FolderContext";
 import { WorkbenchSessionPersistence } from "@app/components/session/WorkbenchSessionPersistence";
-
-// Component to initialize scarf tracking (must be inside AppConfigProvider)
-function ScarfTrackingInitializer() {
-  useScarfTracking();
-  return null;
-}
-
-function PosthogTrackingInitializer() {
-  usePosthogTracking();
-  return null;
-}
 
 // Component to run app-level initialization (must be inside AppProviders for context access)
 function AppInitializer() {
@@ -133,8 +120,6 @@ export function AppProviders({
                 retryOptions={appConfigRetryOptions}
                 {...appConfigProviderProps}
               >
-                <PosthogTrackingInitializer />
-                <ScarfTrackingInitializer />
                 <AppConfigLoader />
                 <ServerDefaultsSync />
                 {/* Auto-popup on startup when a newer Stirling-PDF release is available.
