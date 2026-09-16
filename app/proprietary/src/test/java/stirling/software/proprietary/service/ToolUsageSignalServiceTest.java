@@ -61,7 +61,7 @@ class ToolUsageSignalServiceTest {
                 chainRepository,
                 users,
                 Optional.of(membershipRepository),
-                new InProcessKeyValueCache());
+                Optional.of(new InProcessKeyValueCache()));
     }
 
     private static Object[] row(String tool, long recent, long total) {

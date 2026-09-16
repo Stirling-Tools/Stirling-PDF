@@ -7,15 +7,18 @@ export interface ToolRecommendationDto {
 
 const BASE_PATH = "/api/v1/proprietary/ui-data/tool-recommendations";
 
-// A 404 can also be a proxy hiccup mid-deploy, so one is not proof the route is
-// gone. A 501 is the install answering deliberately, and latches immediately.
+// Once the route has answered, a 404 is more likely a proxy hiccup mid-deploy
+// than the API vanishing, so it takes a few before we write it off. A build
+// without the API 404s from the very first call, and that one is conclusive.
 const MISSING_ROUTE_STRIKES = 3;
 
 let backendUnavailable = false;
+let everAnswered = false;
 let consecutiveNotFound = 0;
 
 export function resetToolRecommendationsAvailabilityForTests(): void {
   backendUnavailable = false;
+  everAnswered = false;
   consecutiveNotFound = 0;
 }
 
@@ -29,13 +32,16 @@ function noteFailure(error: unknown): void {
   }
   if (status === 404) {
     consecutiveNotFound += 1;
-    if (consecutiveNotFound >= MISSING_ROUTE_STRIKES) backendUnavailable = true;
+    if (!everAnswered || consecutiveNotFound >= MISSING_ROUTE_STRIKES) {
+      backendUnavailable = true;
+    }
     return;
   }
   consecutiveNotFound = 0;
 }
 
 function noteSuccess(): void {
+  everAnswered = true;
   consecutiveNotFound = 0;
 }
 

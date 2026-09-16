@@ -35,10 +35,10 @@ import stirling.software.proprietary.security.repository.TeamMembershipRepositor
  * aggregates scan far more rows, so they are cached and shared: 50,000 users browsing tools cost
  * one scan per TTL, not 50,000.
  *
- * <p>Two tiers behind one key. A bounded Caffeine cache per node answers the common case without
- * touching anything; behind it {@link KeyValueCache} shares the same entry across the cluster, so
- * with a Valkey backplane a scan one node paid for serves them all. On the default in-process
- * backplane the second tier is a local map and changes nothing.
+ * <p>The bounded Caffeine cache per node is the whole mechanism. Behind it, {@link KeyValueCache}
+ * is an optional bonus: where a cluster backplane is configured, a scan one node paid for serves
+ * the others too. Nothing requires it - with no such bean, or a broken one, each node simply does
+ * its own scan per TTL, which is what it would have done anyway.
  */
 @Slf4j
 @Service
@@ -73,7 +73,7 @@ public class ToolUsageSignalService {
     private final ToolChainStatRepository chainRepository;
     private final Optional<UserRepository> userRepository;
     private final Optional<TeamMembershipRepository> membershipRepository;
-    private final KeyValueCache sharedCache;
+    private final Optional<KeyValueCache> sharedCache;
 
     private final Cache<String, Object> localCache =
             Caffeine.newBuilder().maximumSize(MAX_LOCAL_ENTRIES).expireAfterWrite(TTL).build();
@@ -83,7 +83,7 @@ public class ToolUsageSignalService {
             ToolChainStatRepository chainRepository,
             Optional<UserRepository> userRepository,
             Optional<TeamMembershipRepository> membershipRepository,
-            KeyValueCache sharedCache) {
+            Optional<KeyValueCache> sharedCache) {
         this.usageRepository = usageRepository;
         this.chainRepository = chainRepository;
         this.userRepository = userRepository;
@@ -207,8 +207,9 @@ public class ToolUsageSignalService {
     }
 
     /**
-     * Local cache, then the cluster, then the query. Any cache failure falls through to the query -
-     * the signal is advisory, and a broken backplane must not take the ranking down with it.
+     * Local cache, then the cluster if there is one, then the query. Any cache failure falls
+     * through to the query - the signal is advisory, and a backplane that is absent or broken must
+     * not take the ranking down with it.
      */
     @SuppressWarnings("unchecked")
     private <T> T cached(String key, TypeReference<T> type, Supplier<T> loader) {
@@ -222,8 +223,12 @@ public class ToolUsageSignalService {
     }
 
     private <T> T fromClusterOrLoad(String key, TypeReference<T> type, Supplier<T> loader) {
+        if (sharedCache.isEmpty()) {
+            return loader.get();
+        }
+        KeyValueCache cluster = sharedCache.get();
         try {
-            Optional<String> shared = sharedCache.get(CACHE_NAME, key);
+            Optional<String> shared = cluster.get(CACHE_NAME, key);
             if (shared.isPresent()) {
                 return MAPPER.readValue(shared.get(), type);
             }
@@ -232,7 +237,7 @@ public class ToolUsageSignalService {
         }
         T value = loader.get();
         try {
-            sharedCache.put(CACHE_NAME, key, MAPPER.writeValueAsString(value), TTL);
+            cluster.put(CACHE_NAME, key, MAPPER.writeValueAsString(value), TTL);
         } catch (Exception e) {
             log.debug("Shared signal cache write failed for {}: {}", key, e.getMessage());
         }

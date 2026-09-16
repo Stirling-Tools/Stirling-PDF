@@ -74,6 +74,10 @@ class ToolUsageSignalCachingTest {
 
     /** Another application instance: its own local cache, the same cluster backplane. */
     private ToolUsageSignalService nodeSharing(KeyValueCache shared) {
+        return nodeWith(Optional.of(shared));
+    }
+
+    private ToolUsageSignalService nodeWith(Optional<KeyValueCache> shared) {
         return new ToolUsageSignalService(
                 usageRepository,
                 chainRepository,
@@ -134,6 +138,17 @@ class ToolUsageSignalCachingTest {
         otherNode.globalFrequency(10, 20);
 
         verify(usageRepository, times(2)).sumGlobal(10, 20);
+    }
+
+    @Test
+    @DisplayName("no backplane at all still caches locally, since the cluster tier is a bonus")
+    void noBackplaneStillCachesLocally() {
+        ToolUsageSignalService standalone = nodeWith(Optional.empty());
+
+        assertThat(standalone.globalFrequency(10, 20)).containsEntry("compress", 55.0);
+        assertThat(standalone.globalFrequency(10, 20)).containsEntry("compress", 55.0);
+
+        verify(usageRepository, times(1)).sumGlobal(10, 20);
     }
 
     @Test
