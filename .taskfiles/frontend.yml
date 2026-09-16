@@ -206,8 +206,10 @@ tasks:
   build:
     desc: "Production build (default mode)"
     deps: [prepare]
+    vars:
+      PREVIEW: '{{.PREVIEW | default ""}}'
     cmds:
-      - npx vite build editor
+      - '{{if .PREVIEW}}VITE_BUILD_FOR_PREVIEW=1 {{end}}npx vite build editor'
 
   build:core:
     desc: "Build for core mode"
@@ -509,6 +511,51 @@ tasks:
       - task: typecheck:prototypes
       - task: typecheck:portal
       - task: typecheck:storybook
+
+  # ============================================================
+  # Lighthouse
+  # ============================================================
+
+  lighthouse:browser:
+    internal: true
+    desc: "Install the pinned Chrome the audit runs in"
+    run: once
+    deps: [install]
+    cmds:
+      # Pinned by puppeteer rather than taken from the machine: Lighthouse
+      # numbers move with the Chrome version, so a floating browser would shift
+      # the baseline on an unrelated runner-image bump.
+      - npx puppeteer browsers install chrome
+
+  lighthouse:audit:
+    internal: true
+    desc: "Build for preview and audit the routes in frontend/lighthouse/routes.mjs"
+    deps: [lighthouse:browser]
+    cmds:
+      # PREVIEW=1 so routes below the root resolve their assets under
+      # `vite preview` - see the base comment in editor/vite.config.ts.
+      - task: build
+        vars: { PREVIEW: "1" }
+      - node lighthouse/run.mjs {{.CLI_ARGS}}
+
+  lighthouse:
+    desc: "Audit the key routes with Lighthouse and diff against the committed baseline"
+    summary: |
+      Gates transfer weight and request count per route; category scores and lab
+      timings are reported but never fail, because they are too noisy on shared
+      CI hardware to block a merge on.
+
+      Full reports land in frontend/.lighthouse-reports/ and open in
+      https://googlechrome.github.io/lighthouse/viewer/.
+    cmds:
+      - task: lighthouse:audit
+      - node lighthouse/check.mjs
+
+  lighthouse:record:
+    desc: "Re-record the Lighthouse baseline (run after an intended budget change)"
+    cmds:
+      - task: lighthouse:audit
+      - node lighthouse/check.mjs --record
 
   # ============================================================
   # Quality Gate

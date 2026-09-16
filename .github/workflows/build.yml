@@ -119,6 +119,18 @@ jobs:
     uses: ./.github/workflows/frontend-a11y.yml
     secrets: inherit
 
+  # Required (in all-checks-passed). Gates per-route transfer weight and request
+  # count against a recorded baseline; the Lighthouse score itself is reported
+  # but never blocks, since a wasm-backed editor will never score well and a
+  # permanently red check gets ignored.
+  frontend-lighthouse:
+    if: needs.files-changed.outputs.frontend == 'true'
+    needs: [files-changed]
+    permissions:
+      contents: read
+    uses: ./.github/workflows/frontend-lighthouse.yml
+    secrets: inherit
+
   playwright-e2e:
     if: needs.files-changed.outputs.frontend == 'true'
     needs: [files-changed]
@@ -285,6 +297,7 @@ jobs:
       - check-generateOpenApiDocs
       - frontend-validation
       - frontend-a11y
+      - frontend-lighthouse
       - playwright-e2e
       - playwright-e2e-live
       - playwright-e2e-enterprise
@@ -313,6 +326,7 @@ jobs:
             check-generateOpenApiDocs=${{ needs.check-generateOpenApiDocs.result }}
             frontend-validation=${{ needs.frontend-validation.result }}
             frontend-a11y=${{ needs.frontend-a11y.result }}
+            frontend-lighthouse=${{ needs.frontend-lighthouse.result }}
             playwright-e2e=${{ needs.playwright-e2e.result }}
             playwright-e2e-live=${{ needs.playwright-e2e-live.result }}
             playwright-e2e-enterprise=${{ needs.playwright-e2e-enterprise.result }}

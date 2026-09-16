@@ -1,0 +1,61 @@
+name: Frontend Lighthouse budget gate
+
+# Reusable workflow called from build.yml when frontend sources change.
+#
+# Audits a handful of representative routes against a production build and
+# fails the check when a route's transfer weight or request count regresses
+# past the tolerance in frontend/lighthouse/baseline.json.
+#
+# The Lighthouse *score* is not the gate. A wasm-backed PDF editor is never
+# going to score well on a cold load, and a permanently red check teaches
+# everyone to ignore it. Scores and lab timings are reported in the job summary
+# for the trend; only the byte and request budgets block, because those are the
+# numbers that stay identical run to run and catch the regression that actually
+# hurts - a heavy import landing in an eager chunk.
+on:
+  workflow_call:
+  # Run it by hand against any branch from the Actions tab, which is also how
+  # you get a fresh summary.json to re-record a baseline from.
+  workflow_dispatch:
+  # Pushes to the gate's own branch run it too, so the check can be seen working
+  # before it is wired into anyone else's merge. This block is scoped to that
+  # one branch and is expected to go once it merges.
+  push:
+    branches: ["perf/lighthouse-budget-gate"]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Harden Runner
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
+        with:
+          egress-policy: audit
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: "22"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install Task
+        uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
+      - name: Lighthouse budget gate
+        run: task frontend:lighthouse
+      - name: Upload Lighthouse reports
+        # Three things, each for a different reader. `<route>.html` is
+        # Lighthouse's own report - open it in a browser, no tooling needed.
+        # `<route>.run1.json` and friends are every run's raw data, and
+        # `summary.json` is what `--record` consumes when an increase was meant.
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: lighthouse-${{ github.run_id }}
+          path: frontend/.lighthouse-reports/
+          retention-days: 7
+          if-no-files-found: ignore

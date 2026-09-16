@@ -429,8 +429,19 @@ export default defineConfig(async ({ mode, command }) => {
       target: "esnext",
       rollupOptions: {
         output: {
-          manualChunks(id) {
-            if (id.includes("material-symbols-icons.json"))
+          manualChunks(rawId) {
+            // Match on the package path only, never the absolute one. These are
+            // substring tests, so a checkout directory that happens to contain
+            // "d3" or "react" would otherwise match every module and sweep the
+            // whole vendor tree into one chunk - which splits React away from
+            // `scheduler` and white-screens the build.
+            const path = rawId.replace(/\\/g, "/");
+            const marker = path.lastIndexOf("node_modules/");
+            const id =
+              marker >= 0
+                ? path.slice(marker)
+                : path.slice(path.lastIndexOf("/") + 1);
+            if (rawId.includes("material-symbols-icons.json"))
               return "vendor-iconset";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";

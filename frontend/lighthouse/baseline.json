@@ -1,0 +1,58 @@
+{
+  "recordedAt": "2026-09-16T20:30:38.069Z",
+  "lighthouseVersion": "13.4.1",
+  "chrome": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/146.0.0.0 Safari/537.36",
+  "runs": 3,
+  "routes": {
+    "home": {
+      "path": "/",
+      "budget": {
+        "totalBytes": 6673652,
+        "scriptBytes": 1440518,
+        "requests": 69,
+        "scriptRequests": 44
+      },
+      "scores": {
+        "accessibility": 0.98,
+        "agentic-browsing": 0.67,
+        "best-practices": 0.96,
+        "performance": 0.7,
+        "seo": 1
+      },
+      "timings": {
+        "fcp": 1452.9870999999998,
+        "lcp": 6139.4806499999995,
+        "tbt": 0,
+        "cls": 0,
+        "speedIndex": 1452.9870999999998,
+        "bootupTime": 152.79500000000138,
+        "domSize": 59
+      }
+    },
+    "mobile-scanner": {
+      "path": "/mobile-scanner",
+      "budget": {
+        "totalBytes": 15889416,
+        "scriptBytes": 4121677,
+        "requests": 23,
+        "scriptRequests": 14
+      },
+      "scores": {
+        "accessibility": 0.97,
+        "agentic-browsing": 0.67,
+        "best-practices": 1,
+        "performance": 0.7,
+        "seo": 0.63
+      },
+      "timings": {
+        "fcp": 1475.71375,
+        "lcp": 5613.4565,
+        "tbt": 0,
+        "cls": 0,
+        "speedIndex": 1475.71375,
+        "bootupTime": 1940.9109999999987,
+        "domSize": 20
+      }
+    }
+  }
+}
