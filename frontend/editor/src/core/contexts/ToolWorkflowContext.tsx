@@ -33,6 +33,7 @@ import { stripBasePath } from "@app/constants/app";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
 import { filterToolRegistryByQuery } from "@app/utils/toolSearch";
 import { useToolHistory } from "@app/hooks/tools/useUserToolActivity";
+import { markReaderModeFromPreference } from "@app/utils/pendingReaderMode";
 import {
   ToolWorkflowState,
   createInitialState,
@@ -72,8 +73,7 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
   toolAvailability: ToolAvailabilityMap;
 
   // UI Actions
-  setSidebarsVisible: (visible: boolean) => void;
-  setLeftPanelView: (view: "toolPicker" | "toolContent" | "hidden") => void;
+  setLeftPanelView: (view: "toolPicker" | "toolContent") => void;
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
@@ -105,7 +105,6 @@ interface ToolWorkflowContextValue extends ToolWorkflowState {
     item: [ToolId, ToolRegistryEntry];
     matchedText?: string;
   }>; // Filtered by search
-  isPanelVisible: boolean;
 
   // Tool History
   favoriteTools: ToolId[];
@@ -151,8 +150,7 @@ export interface ToolWorkflowActionsValue {
   handleToolSelectForced: (toolId: ToolId) => void;
   handleBackToTools: () => void;
   handleReaderToggle: () => void;
-  setSidebarsVisible: (visible: boolean) => void;
-  setLeftPanelView: (view: "toolPicker" | "toolContent" | "hidden") => void;
+  setLeftPanelView: (view: "toolPicker" | "toolContent") => void;
   setReaderMode: (mode: boolean) => void;
   setToolPanelMode: (mode: ToolPanelMode) => void;
   setPreviewFile: (file: File | null) => void;
@@ -221,16 +219,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
   const selectedTool = getSelectedTool(navigationState.selectedTool);
 
   // UI Action creators
-  const setSidebarsVisible = useCallback((visible: boolean) => {
-    dispatch({ type: "SET_SIDEBARS_VISIBLE", payload: visible });
+  const setLeftPanelView = useCallback((view: "toolPicker" | "toolContent") => {
+    dispatch({ type: "SET_LEFT_PANEL_VIEW", payload: view });
   }, []);
-
-  const setLeftPanelView = useCallback(
-    (view: "toolPicker" | "toolContent" | "hidden") => {
-      dispatch({ type: "SET_LEFT_PANEL_VIEW", payload: view });
-    },
-    [],
-  );
 
   const setReaderMode = useCallback(
     (mode: boolean) => {
@@ -422,6 +413,7 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (startupView === "read") {
       hasAppliedStartupView.current = true;
       startupSelectedToolRef.current = "read";
+      markReaderModeFromPreference();
       setReaderMode(true);
       actions.setSelectedTool("read");
     } else if (startupView === "automate") {
@@ -438,29 +430,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     preferences.defaultStartupView,
     actions,
     setReaderMode,
-    setLeftPanelView,
-  ]);
-
-  // When in multi-tool, sync left panel visibility with workbench:
-  // hide the panel on pageEditor, show it when navigating to viewer/fileEditor.
-  const prevMultiToolWorkbenchRef = React.useRef<WorkbenchType | null>(null);
-  useEffect(() => {
-    const prev = prevMultiToolWorkbenchRef.current;
-    prevMultiToolWorkbenchRef.current = navigationState.workbench;
-
-    if (navigationState.selectedTool !== "multiTool") return;
-
-    if (navigationState.workbench === "pageEditor" && prev !== "pageEditor") {
-      setLeftPanelView("hidden");
-    } else if (
-      navigationState.workbench !== "pageEditor" &&
-      prev === "pageEditor"
-    ) {
-      setLeftPanelView("toolPicker");
-    }
-  }, [
-    navigationState.workbench,
-    navigationState.selectedTool,
     setLeftPanelView,
   ]);
 
@@ -532,7 +501,9 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       // Handle multiTool selection - enable page editor workbench
       if (toolId === "multiTool") {
         setReaderMode(false);
-        setLeftPanelView("hidden");
+        // The page editor is the tool, so the panel beside it stays on the picker:
+        // left on toolContent it would render this tool's header over no body.
+        setLeftPanelView("toolPicker");
         actions.setSelectedTool("multiTool");
         actions.setWorkbench(
           wasInCustomWorkbench ? getDefaultWorkbench() : "pageEditor",
@@ -611,14 +582,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
     if (!toolRegistry) return [];
     return filterToolRegistryByQuery(toolRegistry, state.searchQuery);
   }, [toolRegistry, state.searchQuery]);
-
-  const isPanelVisible = useMemo(
-    () =>
-      state.sidebarsVisible &&
-      !state.readerMode &&
-      state.leftPanelView !== "hidden",
-    [state.sidebarsVisible, state.readerMode, state.leftPanelView],
-  );
 
   useNavigationUrlSync(
     navigationState.selectedTool,
@@ -700,7 +663,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       handleToolSelectForced: stableHandleToolSelectForced,
       handleBackToTools: stableHandleBackToTools,
       handleReaderToggle: stableHandleReaderToggle,
-      setSidebarsVisible,
       setLeftPanelView,
       setReaderMode: stableSetReaderMode,
       setToolPanelMode: stableSetToolPanelMode,
@@ -719,7 +681,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       stableHandleToolSelectForced,
       stableHandleBackToTools,
       stableHandleReaderToggle,
-      setSidebarsVisible,
       setLeftPanelView,
       stableSetReaderMode,
       stableSetToolPanelMode,
@@ -759,7 +720,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       getSelectedTool,
 
       // Actions
-      setSidebarsVisible,
       setLeftPanelView,
       setReaderMode,
       setToolPanelMode,
@@ -784,7 +744,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
 
       // Computed
       filteredTools,
-      isPanelVisible,
 
       // Tool History
       favoriteTools,
@@ -805,7 +764,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       toolRegistry,
       getSelectedTool,
       toolAvailability,
-      setSidebarsVisible,
       setLeftPanelView,
       setReaderMode,
       setToolPanelMode,
@@ -819,7 +777,6 @@ export function ToolWorkflowProvider({ children }: ToolWorkflowProviderProps) {
       handleBackToTools,
       handleReaderToggle,
       filteredTools,
-      isPanelVisible,
       favoriteTools,
       toggleFavorite,
       isFavorite,
