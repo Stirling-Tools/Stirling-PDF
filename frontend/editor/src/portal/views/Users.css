@@ -431,6 +431,20 @@
   font-size: 0.78rem;
   color: var(--c-text-subtle);
 }
+.portal-users__invite-link {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.portal-users__invite-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.portal-users__invite-link-row > :first-child {
+  flex: 1;
+  min-width: 0;
+}
 .portal-users__invite-access {
   display: flex;
   flex-direction: column;

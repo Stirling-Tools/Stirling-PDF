@@ -24,9 +24,11 @@ function expiryLabel(iso: string | undefined, t: TFunction): string {
 }
 
 /**
- * Pending team invitations (SaaS): the parity gap vs the editor. A single flat
- * list (not a section - there's only ever one) captioned with its title; each
- * row shows the invitee and lets a team leader cancel the invite.
+ * Invitations that have not produced an account yet: SaaS team invitations, or
+ * self-hosted invite links. A single flat list (not a section - there's only ever
+ * one) captioned with its title; each row shows who it is for and lets it be
+ * revoked. A link with no bound address can be redeemed by whoever holds it, so
+ * it is named as such rather than left blank.
  */
 export function PendingInvitations({
   invitations,
@@ -39,8 +41,12 @@ export function PendingInvitations({
       column.entity({
         key: "invitee",
         header: t("users.invites.columns.invitee", "Invitee"),
-        icon: (inv) => <Avatar name={inv.email} size="sm" tone="neutral" />,
-        primary: (inv) => inv.email,
+        icon: (inv) => (
+          <Avatar name={inv.email || "#"} size="sm" tone="neutral" />
+        ),
+        primary: (inv) =>
+          inv.email ||
+          t("users.invites.anyoneWithLink", "Anyone with the link"),
         note: (inv) =>
           inv.invitedBy
             ? t("users.invites.by", "Invited by {{who}}", {
@@ -57,7 +63,7 @@ export function PendingInvitations({
         key: "actions",
         get: (inv) => [
           {
-            label: t("users.invites.cancel", "Cancel"),
+            label: t("users.invites.cancel", "Revoke"),
             onClick: () => onCancel(inv),
           },
         ],

@@ -1,17 +1,39 @@
 import type { UsersBackend } from "@portal/api/usersBackend";
 import {
   fetchAuthConfig,
-  fetchUsers,
+  fetchUsers as fetchAdminUsers,
   inviteMember,
   removeMember,
+  type PendingInvitation,
+  type UsersResponse,
 } from "@portal/api/users";
+import { listInviteLinks, revokeInviteLink } from "@portal/api/inviteLinks";
 import { fetchTeams, renameTeam } from "@portal/api/teams";
+import type { Tier } from "@portal/contexts/TierContext";
 
 /**
- * Self-hosted (proprietary) build: the existing admin-endpoint calls, unchanged.
- * This is exactly the behaviour the Users page had before the seam existed - it
- * just re-exports the `@portal/api/{users,teams}` functions behind the contract.
+ * Self-hosted (proprietary) build: the admin-endpoint calls, plus the invite
+ * links issued but not yet redeemed. A link is this flavor's pending invitation
+ * - the account only exists once someone redeems it - so it lands in the same
+ * `invitations` list the SaaS build fills from TeamInvitations.
  */
+async function fetchUsers(tier: Tier): Promise<UsersResponse> {
+  const roster = await fetchAdminUsers(tier);
+  // Best-effort: the roster is the page, and a mail-disabled or non-admin
+  // instance must still render it rather than fail on the link listing.
+  const invitations = await listInviteLinks()
+    .then((links): PendingInvitation[] =>
+      links.map((link) => ({
+        id: link.id,
+        email: link.email ?? "",
+        invitedBy: link.createdBy,
+        expiresAt: link.expiresAt,
+      })),
+    )
+    .catch(() => []);
+  return { ...roster, invitations };
+}
+
 export const usersBackend: UsersBackend = {
   fetchUsers,
   fetchTeams,
@@ -19,11 +41,5 @@ export const usersBackend: UsersBackend = {
   inviteMember,
   renameTeam,
   removeMember,
-  // Self-hosted has no pending-invite concept; the control is gated off
-  // (manageInvitations=false) so this is never reached.
-  cancelInvitation() {
-    return Promise.reject(
-      new Error("Cancelling invitations is not supported on self-hosted"),
-    );
-  },
+  cancelInvitation: revokeInviteLink,
 };
