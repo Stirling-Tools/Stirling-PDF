@@ -104,7 +104,10 @@ export function buildProcessorSettingsSections(
   if (includeAccountLink && AccountLinkSection) {
     workspace.push({
       key: "account-link",
-      label: t("processor.settings.sections.account-link", "Account connection"),
+      label: t(
+        "processor.settings.sections.account-link",
+        "Account connection",
+      ),
       description: t(
         "processor.accountLink.panel.sub",
         "Manage this server’s connection to your Stirling Cloud account.",

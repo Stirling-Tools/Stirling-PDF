@@ -67,7 +67,9 @@ describe("DealStatusHero trial status", () => {
     fireEvent.click(screen.getByRole("button", { name: "7 days left" }));
     expect(onManageTrial).toHaveBeenCalledOnce();
     fireEvent.click(
-      screen.getByRole("button", { name: "processor.procurement.hero.documents" }),
+      screen.getByRole("button", {
+        name: "processor.procurement.hero.documents",
+      }),
     );
     expect(onDocuments).toHaveBeenCalledOnce();
   });

@@ -6,7 +6,9 @@ import { ViewRouter } from "@processor/ViewRouter";
 import { getAdminRouteExtensions } from "@app/routes/adminRouteExtensions";
 
 vi.mock("@app/routes/hasProcessor", () => ({ HAS_PROCESSOR: true }));
-vi.mock("@processor/ProcessorApp", () => ({ ProcessorApp: () => <ViewRouter /> }));
+vi.mock("@processor/ProcessorApp", () => ({
+  ProcessorApp: () => <ViewRouter />,
+}));
 
 vi.mock("@processor/views/Home", () => ({ Home: () => <div>Home</div> }));
 vi.mock("@processor/views/Users", () => ({ Users: () => null }));

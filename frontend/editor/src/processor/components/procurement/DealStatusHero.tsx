@@ -96,7 +96,9 @@ export function DealStatusHero({
   const trialLabel =
     trialDaysLeft === 0
       ? t("processor.procurement.journey.expired", "Trial expired")
-      : t("processor.procurement.journey.daysLeft", { count: trialDaysLeft ?? 0 });
+      : t("processor.procurement.journey.daysLeft", {
+          count: trialDaysLeft ?? 0,
+        });
   const isLive = stage === "active";
   // A live quote is sitting with the buyer. A draft (or an expired/cancelled one) is not something to
   // accept — that stage still means "finish building it".
