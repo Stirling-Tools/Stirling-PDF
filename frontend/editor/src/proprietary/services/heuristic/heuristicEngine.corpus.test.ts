@@ -1146,7 +1146,6 @@ const CASES: Case[] = [
     ],
   },
   {
-    // Spanish: the es pack's lease vocabulary reaches the narrow label.
     expect: "lease-agreement",
     file: "contrato.pdf",
     title: "CONTRATO DE ARRENDAMIENTO",
@@ -2392,8 +2391,6 @@ const CASES: Case[] = [
     ],
   },
   {
-    // German, with the text layer's umlauts lost - the de pack has to hold up
-    // without them, which is why phrase matching folds diacritics.
     expect: "quote",
     file: "angebot_gartenpflege.pdf",
     title: "Angebot Gartenpflege",

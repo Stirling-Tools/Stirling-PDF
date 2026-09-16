@@ -1,4 +1,3 @@
-/** Rule sets shared by every language — label ids, priors, and wordless rules. */
 export const loadCoreRules = () =>
   import("@app/services/heuristic/rules/core.json");
 
@@ -43,9 +42,4 @@ export const LANGUAGE_PACKS: Record<string, () => Promise<unknown>> = {
   zh: () => import("@app/services/heuristic/rules/packs/zh.json"),
 };
 
-/** Tags with an authored pack, for tests and diagnostics. */
 export const PACK_LANGUAGES: string[] = Object.keys(LANGUAGE_PACKS);
-
-export function hasPack(language: string | null): boolean {
-  return language != null && language in LANGUAGE_PACKS;
-}

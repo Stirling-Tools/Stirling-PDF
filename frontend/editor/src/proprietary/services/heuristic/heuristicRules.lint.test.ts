@@ -1,9 +1,5 @@
 // Structural lint for the rule files: the engine silently drops or clamps
 // malformed rules, so authoring mistakes must fail here instead.
-//
-// It also enforces the core/pack contract, which no type can express: core holds
-// the one label vocabulary and everything language-neutral, a pack holds words.
-// A pack that breaks it still loads, it just quietly stops being portable.
 
 import { beforeAll, describe, expect, it } from "vitest";
 import { compileRegex } from "@app/services/heuristic/heuristicEngine";
@@ -56,8 +52,6 @@ const SIGNALS = new Set([
   "url_heavy",
   "address_block",
 ]);
-// Pattern groups computeStructural asks for by name. A group outside this set is
-// authored data nothing reads.
 const PATTERN_GROUPS = new Set([
   "currency",
   "form_label",

@@ -80,8 +80,6 @@ vi.mock("@app/services/fileStorage", () => ({
       mocks.updateFileMetadata(id, updates),
   },
 }));
-// Fills in the language fields these tests never vary, so a case can return just
-// the labels and confidence it is about.
 vi.mock("@app/services/heuristic/heuristicClassification", () => ({
   classifyFileHeuristically: async (file: File) => ({
     language: "en",

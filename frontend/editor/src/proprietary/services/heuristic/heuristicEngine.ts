@@ -40,7 +40,6 @@ const SECOND_PACK_BAR = 0.75;
 const MAX_PACKS_CONFIDENT = 2;
 const MAX_PACKS_UNSURE = 5;
 const UNSURE_MAX_CHARS = 20000;
-/** Below this, confidence is capped so the verdict still reaches the AI engine. */
 const NO_PACK_CONFIDENCE_CAP: HeuristicConfidence = "medium";
 
 // Language-neutral structural patterns. Anything with a word in it lives in
@@ -63,7 +62,6 @@ const WORD = /[\p{L}']+/gu;
 const WHITESPACE = /[\t\n\x0B\f\r    ]+/g;
 const CURLY_APOSTROPHE = /[‘’]/g;
 const COMBINING_MARKS = /[\u0300-\u036F]/g;
-// Letters NFD leaves alone, so folding has to name them.
 const FOLD_PAIRS: [RegExp, string][] = [
   [/ß/g, "ss"],
   [/æ/g, "ae"],
@@ -77,15 +75,11 @@ const FOLD_PAIRS: [RegExp, string][] = [
 const LIGATURE_FI = /ﬁ/g;
 const LIGATURE_FL = /ﬂ/g;
 
-// --- language profiles (compiled once from rules/languages.json) ---
-
 interface ScriptGroup {
   id: string;
   range: RegExp;
-  /** Languages this writing system can hold, in the file's order. */
   languages: string[];
 }
-/** One language's evidence: its function words and the letters peculiar to it. */
 interface LanguageProfile {
   language: string;
   words: Set<string>;
@@ -111,8 +105,6 @@ interface LanguagesFile {
 
 const languages = LANGUAGE_DATA as LanguagesFile;
 
-// Profile words carry their natural spelling; folding them here is what lets
-// "fur" in a diacritic-stripped PDF still count as German "für".
 const ENGLISH_WORDS = new Set<string>(
   strings(languages.english?.words).map((w) => fold(w.toLowerCase())),
 );
@@ -187,15 +179,12 @@ interface Prior {
   max: number | null;
 }
 
-/** Compiled signal pattern groups, keyed by the group names computeStructural reads. */
 type SignalPatterns = Map<string, RegExp[]>;
 
-/** A scorable rule set: core merged with zero or more language packs. */
 interface PreparedSet {
   labels: PreparedLabel[];
   priors: Map<string, Prior>;
   signals: SignalPatterns;
-  /** Packs merged in, in load order; empty for a core-only set. */
   packs: string[];
 }
 
@@ -234,13 +223,10 @@ const RULE_KINDS = [
   "structural",
 ] as const;
 
-// --- loading ---
-
 let CORE: RawRules | null = null;
 let corePromise: Promise<RawRules> | null = null;
 const PACKS = new Map<string, RawRules>();
 const packPromises = new Map<string, Promise<RawRules>>();
-/** Prepared sets by pack key ("" = core only, "de" , "en+fr" ...). */
 const SETS = new Map<string, PreparedSet>();
 
 function unwrap(mod: unknown): RawRules {
@@ -312,8 +298,6 @@ function mergeRaw(core: RawRules, packs: RawRules[]): RawRules {
   for (const pack of packs) {
     for (const label of pack.labels ?? []) {
       const id = str(label.id);
-      // A pack label the core set does not declare would score to an id the UI
-      // cannot render; the pack lint test rejects it, so drop it here.
       const target = id == null ? undefined : byId.get(id);
       if (target == null) continue;
       for (const kind of RULE_KINDS) {
@@ -491,12 +475,9 @@ export function compileRegex(
 
 // --- language identification ---
 
-/** Minimum words before foreign-language evidence is trusted over English. */
 const MIN_WORDS_FOR_FOREIGN = 12;
 const MIN_DISTINCTIVE_CHARS = 3;
-/** Distinct profile words a language needs before it counts as a candidate. */
 const MIN_WORD_HITS = 2;
-/** Dominance a script range needs over all letters to decide the writing system. */
 const SCRIPT_SHARE = 0.25;
 
 export function detectLanguage(text: string): LanguageDetection {
@@ -537,8 +518,6 @@ export function detectLanguage(text: string): LanguageDetection {
     };
   }
 
-  // Folded before counting: Vietnamese ơ, Turkish ı and Polish ł are Latin
-  // letters, and an ASCII test throws those documents out of the Latin branch.
   const latinRatio = countAll(LATIN_LETTER, fold(raw)) / letters;
   const lowText = totalWords < 30;
 
@@ -602,8 +581,6 @@ export function detectLanguage(text: string): LanguageDetection {
       lowText,
     };
   }
-  // English leads, but the alternatives stay on the list: when English is only
-  // assumed, the runner-up is how a data-dense foreign document is still reached.
   return {
     language: "en",
     script: "latin",
@@ -651,7 +628,7 @@ function rankLanguages(
   return ranked.map(({ language, score }) => ({ language, score }));
 }
 
-export function packsFor(
+function packsFor(
   detection: LanguageDetection,
   chars: number,
   localeHint?: string,
@@ -872,8 +849,6 @@ function score(
       confidence = "low";
     }
   }
-  // Core alone is filenames, producer brands and document shape — enough to
-  // suggest a label, never enough to stand in for the engine's verdict.
   if (set.packs.length === 0 && confidence === "high") {
     confidence = NO_PACK_CONFIDENCE_CAP;
   }

@@ -1,5 +1,4 @@
-// Client-side classification entry point: extract the PDF, classify it against
-// the rules for whatever language it turns out to be written in.
+// Client-side classification entry point: extract the PDF, then classify it.
 
 import i18n from "i18next";
 import { classifyHeuristic } from "@app/services/heuristic/heuristicEngine";
@@ -14,8 +13,6 @@ export async function classifyFileHeuristically(
   const doc = await extractHeuristicDoc(file, file.name);
   return classifyHeuristic(doc, {
     ...opts,
-    // Only consulted for a document whose own text proves no language; the app
-    // bootstraps this i18next singleton at startup, so guard for early calls.
     localeHint: i18n.language ?? undefined,
   });
 }
