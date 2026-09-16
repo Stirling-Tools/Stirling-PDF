@@ -32,6 +32,8 @@ const COMPRESSION_EXCLUDED_EXTENSIONS = [
   ".jpeg",
   ".gif",
   ".webp",
+  ".avif",
+  ".ico",
   ".woff",
   ".woff2",
 ];
@@ -40,13 +42,12 @@ const COMPRESSION_EXCLUDE_REGEX = new RegExp(
 );
 const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
 
-// Emit pdf.js's hashed .mjs worker assets as .js. Cloudflare caches by file
-// extension (not MIME type) and its default list omits .mjs, so those assets
-// bypassed the edge cache on every request. The extension is irrelevant to a
-// `type: "module"` worker. Renaming at emission time lets Rollup substitute the
-// final filename into every `new URL(..., import.meta.url)` reference itself.
-// Shared by the main build and Vite's worker sub-builds, which do not inherit
-// the main build's output options.
+// Cloudflare caches by file extension (not MIME type) and its default list
+// omits .mjs, so pdf.js's hashed worker assets bypassed the edge cache there.
+// The extension is irrelevant to a `type: "module"` worker, and renaming at
+// emission time lets Rollup substitute the final filename into every
+// `new URL(..., import.meta.url)` reference itself. Worker sub-builds need the
+// same option because they do not inherit the main build's output options.
 const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
   assetInfo.names.some((name) => name.endsWith(".mjs"))
     ? "assets/[name]-[hash].js"
@@ -64,6 +65,13 @@ async function compressFile(file: string, distDir: string): Promise<void> {
 
   const ext = path.extname(resolved).toLowerCase();
   if (EXCLUDED_EXTENSION_SET.has(ext)) return;
+  // Bundle-emitted assets already have siblings from the compression plugin.
+  try {
+    await fs.access(`${resolved}.br`);
+    return;
+  } catch {
+    // Not compressed yet.
+  }
   const content = await fs.readFile(resolved);
   if (content.length < 1024) return;
 
@@ -87,11 +95,12 @@ function compressStaticCopyPlugin(): PluginOption {
     apply: "build" as const,
     async closeBundle() {
       const distDir = path.resolve(__dirname, "dist");
-      const targets = ["pdfium", "vendor", "pdfjs"];
 
-      // Collect first, then compress with bounded concurrency. zlib's async API
-      // runs on libuv's threadpool, so a serial loop idles most cores on the
-      // build's most CPU-heavy step.
+      // zlib's async API runs on libuv's threadpool, so compressing serially
+      // idles most cores on the build's most CPU-heavy step. The walk must cover
+      // the whole output: the compression plugin's default include list skips
+      // .wasm (the 4.6 MB PDFium binary), and viteStaticCopy output (the PDFium
+      // fallback fonts, tens of megabytes) never reaches either other pass.
       const files: string[] = [];
       const walk = async (dir: string) => {
         let entries;
@@ -107,7 +116,7 @@ function compressStaticCopyPlugin(): PluginOption {
         }
       };
 
-      for (const target of targets) await walk(path.join(distDir, target));
+      await walk(distDir);
 
       const POOL = 8;
       for (let i = 0; i < files.length; i += POOL) {
@@ -217,11 +226,10 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
       }
       // closeBundle hooks run concurrently in Vite, not in plugin order, so a
-      // sibling plugin cannot reliably compress files written here. Compress the
-      // freshly written route HTML here instead (index.html is already handled by
-      // the main compression plugin) so Spring's EncodedResourceResolver can
-      // serve it precompressed. Nested routes (e.g. dist/settings/people.html)
-      // are included, so walk the whole dist tree.
+      // sibling plugin cannot reliably compress files written here. index.html
+      // is already handled by the main compression plugin; the prerendered
+      // nested routes (e.g. dist/settings/people.html) are not, so walk the
+      // tree and compress them here for Spring's EncodedResourceResolver.
       const htmlFiles: string[] = [];
       const walkHtml = async (dir: string) => {
         let entries;
