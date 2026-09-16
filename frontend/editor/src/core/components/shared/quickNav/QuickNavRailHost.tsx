@@ -71,14 +71,15 @@ export function QuickNavRailHost() {
     return { disabled: Boolean(reason), reason };
   };
 
-  // The apps you switch between. Reader is a mode over the editor rather
-  // than a place of its own, but it leads the group because it is where most
-  // visits start.
+  // Reading is a surface of its own rather than a tool inside the editor, and it
+  // leads the group because it is where most visits start.
   const reader: QuickNavEntry = {
     id: "reader",
     label: t("quickNav.reader", "Reader"),
     icon: <Icon name="book-open" size={SIZE} />,
-    pressed: Boolean(host?.readerMode),
+    // Current means the surface you are on, not a switch left on: reader mode set
+    // from the processor does not count until you are in the editor.
+    current: inEditor && Boolean(host?.readerMode),
     // From the processor there is no editor to toggle - see pendingReaderMode.
     onClick: () => {
       const setMode = host?.actions.current?.setReaderMode;
@@ -95,8 +96,9 @@ export function QuickNavRailHost() {
     id: "editor",
     label: t("quickNav.editor", "Editor"),
     icon: <Icon name="pencil" size={SIZE} filled={inEditor} />,
-    // The library is a place of its own, not the editor with a different centre.
-    current: inEditor && !host?.fileLibrary,
+    // The library and reading are places of their own, not the editor with a
+    // different centre.
+    current: inEditor && !host?.fileLibrary && !host?.readerMode,
     onClick: () => {
       if (inEditor) {
         returnHome();
@@ -128,8 +130,8 @@ export function QuickNavRailHost() {
   };
 
   // The processor is additive: dropping the editor with it left a lone reader
-  // toggle in builds without a portal, with no way back out of reader mode.
-  const apps: QuickNavEntry[] = [
+  // entry in builds without a portal, with no way back out of reading.
+  const surfaces: QuickNavEntry[] = [
     reader,
     editor,
     ...(HAS_PORTAL ? [processor] : []),
@@ -227,7 +229,7 @@ export function QuickNavRailHost() {
 
   return (
     <QuickNavRailContainer
-      groups={[apps, within]}
+      groups={[surfaces, within]}
       onReturnHome={returnHome}
       identity={host?.identity ?? null}
       onOpenAccount={openAccount}
