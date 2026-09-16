@@ -337,7 +337,11 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       fullScreen={isMobile}
       zIndex={Z_INDEX_OVER_CONFIG_MODAL}
       styles={{
-        body: {},
+        header: combinedChoose
+          ? { borderBottom: 0, padding: "1.25rem 1.25rem 0.25rem" }
+          : undefined,
+        body: combinedChoose ? { padding: "0 1.25rem 1.25rem" } : undefined,
+        close: combinedChoose ? { borderRadius: "50%" } : undefined,
         content: {
           maxHeight: "95vh",
         },
