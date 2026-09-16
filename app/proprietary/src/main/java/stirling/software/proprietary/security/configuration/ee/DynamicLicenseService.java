@@ -37,6 +37,11 @@ public class DynamicLicenseService implements LicenseServiceInterface {
     }
 
     @Override
+    public boolean hasServerLicense() {
+        return licenseKeyChecker.getLicenseKeyResult() == License.SERVER;
+    }
+
+    @Override
     public boolean isRunningEE() {
         return getCurrentLicense() == License.ENTERPRISE;
     }
