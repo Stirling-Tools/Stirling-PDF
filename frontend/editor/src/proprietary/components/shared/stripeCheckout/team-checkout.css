@@ -1,0 +1,27 @@
+.team-capacity {
+  padding: 0 0.5rem 0.5rem;
+}
+.team-capacity__selection,
+.team-capacity__receipt {
+  border: 1px solid var(--c-border);
+  border-radius: 0.75rem;
+  padding: 0.875rem;
+}
+.team-capacity__pill {
+  border-radius: 999px;
+  font-weight: 500;
+  min-width: 3rem;
+}
+.team-capacity__pill[aria-pressed="true"] {
+  border-color: var(--c-primary);
+  color: var(--c-accent-fg);
+  background: var(--c-primary-subtle);
+}
+
+.team-capacity__notice {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--c-border);
+  background: var(--c-primary-subtle);
+  color: var(--c-text);
+}
