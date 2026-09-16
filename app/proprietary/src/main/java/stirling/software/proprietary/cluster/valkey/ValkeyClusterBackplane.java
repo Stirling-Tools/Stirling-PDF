@@ -41,8 +41,9 @@ public class ValkeyClusterBackplane implements ClusterBackplane {
     }
 
     /**
-     * Valkey TTL evicts job entries; local cleanup loop is redundant and would race with cluster
-     * state.
+     * Valkey TTLs the shared job row on the same expiry the local sweep uses, so deleting it again
+     * is a wasted round trip. The sweep itself still runs: only it frees this node's heap and
+     * files.
      */
     @Override
     public boolean shouldRunLocalCleanup() {

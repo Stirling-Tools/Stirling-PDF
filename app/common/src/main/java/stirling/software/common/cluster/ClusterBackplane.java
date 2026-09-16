@@ -13,10 +13,10 @@ public interface ClusterBackplane {
     String localNodeId();
 
     /**
-     * Whether this JVM should run the local {@link
-     * stirling.software.common.service.TaskManager#cleanupOldJobs()} loop. Distributed backplanes
-     * own job expiry via their own TTL, so they should override this to return {@code false}.
-     * Defaults to {@code true} so in-process behavior is preserved without an explicit override.
+     * Whether this JVM owns expiry of the <em>shared</em> job row. Distributed backplanes expire it
+     * by TTL, so they override this to {@code false} and the local sweep skips the redundant
+     * delete. It does NOT disable the sweep itself: reclaiming this node's heap and result files is
+     * always local work, and no TTL elsewhere can do it.
      */
     default boolean shouldRunLocalCleanup() {
         return true;
