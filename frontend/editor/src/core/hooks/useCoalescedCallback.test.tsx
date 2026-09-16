@@ -65,4 +65,88 @@ describe("useCoalescedCallback", () => {
     });
     expect(callback).not.toHaveBeenCalled();
   });
+
+  it("waits for an in-flight run before starting the trailing one", async () => {
+    vi.useFakeTimers();
+    let resolveFirst!: () => void;
+    const callback = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolveFirst = resolve;
+        }),
+    );
+
+    const { rerender } = renderHook(
+      ({ trigger }: { trigger: number }) =>
+        useCoalescedCallback(callback, trigger, 100),
+      { initialProps: { trigger: 0 } },
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      rerender({ trigger: 1 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolveFirst();
+      await Promise.resolve();
+    });
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
+
+  it("collapses a burst during a scan into one trailing run", async () => {
+    vi.useFakeTimers();
+    const resolvers: Array<() => void> = [];
+    const callback = vi.fn(
+      () =>
+        new Promise<void>((resolve) => {
+          resolvers.push(resolve);
+        }),
+    );
+
+    const { rerender } = renderHook(
+      ({ trigger }: { trigger: number }) =>
+        useCoalescedCallback(callback, trigger, 100),
+      { initialProps: { trigger: 0 } },
+    );
+    await act(async () => {
+      vi.advanceTimersByTime(1);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    act(() => {
+      rerender({ trigger: 1 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(150);
+      rerender({ trigger: 2 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(150);
+      rerender({ trigger: 3 });
+    });
+    act(() => {
+      vi.advanceTimersByTime(150);
+    });
+    expect(callback).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      resolvers[0]();
+      await Promise.resolve();
+    });
+    expect(callback).toHaveBeenCalledTimes(2);
+
+    await act(async () => {
+      resolvers[1]?.();
+      await Promise.resolve();
+    });
+    expect(callback).toHaveBeenCalledTimes(2);
+  });
 });
