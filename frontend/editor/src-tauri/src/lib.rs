@@ -216,6 +216,7 @@ pub fn run() {
       start_backend,
       get_backend_port,
       get_opened_files,
+      commands::file_drop::resolve_dropped_file_paths,
       pop_opened_files,
       clear_opened_files,
       file_disk_state,

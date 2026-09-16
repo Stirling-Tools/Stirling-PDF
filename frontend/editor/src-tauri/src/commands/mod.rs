@@ -1,5 +1,6 @@
 pub mod backend;
 pub mod files;
+pub mod file_drop;
 pub mod connection;
 pub mod auth;
 pub mod default_app;
