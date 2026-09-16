@@ -1,11 +1,15 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
 import { cleanup, render, waitFor } from "@testing-library/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { LinkProvider, type LinkState } from "@portal/contexts/LinkContext";
-import { useFreeCreditsSummary } from "@portal/hooks/useFreeCreditsSummary";
+import { LinkProvider, type LinkState } from "@app/portal/contexts/LinkContext";
+import { useFreeCreditsSummary } from "@app/portal/hooks/useFreeCreditsSummary";
 
+const ownership = vi.hoisted(() => ({ isOwner: true }));
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => ownership.isOwner,
+}));
 const fetchWallet = vi.fn();
-vi.mock("@portal/api/billing", () => ({
+vi.mock("@app/portal/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
 }));
 
@@ -35,6 +39,7 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
   beforeEach(() => {
     // The figures persist across mounts now, so isolate the suite from itself.
     localStorage.clear();
+    ownership.isOwner = true;
     fetchWallet.mockReset();
     fetchWallet.mockResolvedValue({
       status: "free",
@@ -84,6 +89,16 @@ describe("useFreeCreditsSummary (self-hosted) — wallet behind the link gate", 
     fetchWallet.mockClear();
     const unlinked = renderFor("unlinked");
     expect(unlinked.textContent).toBe("none");
+    expect(fetchWallet).not.toHaveBeenCalled();
+  });
+
+  it("hides cached owner figures and makes no wallet call for a non-owner", async () => {
+    const owner = renderFor("linked-free");
+    await waitFor(() => expect(owner.textContent).toBe("247/500"));
+    cleanup();
+    ownership.isOwner = false;
+    fetchWallet.mockClear();
+    expect(renderFor("linked-free").textContent).toBe("none");
     expect(fetchWallet).not.toHaveBeenCalled();
   });
 

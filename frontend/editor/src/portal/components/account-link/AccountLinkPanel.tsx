@@ -1,4 +1,6 @@
 import { useCallback, useState } from "react";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Skeleton } from "@app/ui";
 import { Icon } from "@app/ui/Icon";
@@ -19,6 +21,11 @@ import "@app/portal/views/AccountLink.css";
 
 /** Self-hosted connection status plus the owning team's connected instances. */
 export function AccountLinkPanel() {
+  const isOwner = useAccountLinkOwner();
+  return isOwner ? <OwnerAccountLinkPanel /> : null;
+}
+
+function OwnerAccountLinkPanel() {
   const { t } = useTranslation();
   const { revision: sessionRevision } = usePortalSaasSession();
   const link = useAccountLinkContext();
@@ -89,6 +96,7 @@ export function AccountLinkPanel() {
         )
       }
     >
+      <SaasSessionBanner />
       <LinkAccountCard link={link} instanceName={currentInstance?.name} />
 
       {linked && (

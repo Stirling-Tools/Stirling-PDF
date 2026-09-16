@@ -18,6 +18,11 @@ const {
   fetchMock: vi.fn(),
 }));
 
+const login = vi.hoisted(() => ({ redirect: vi.fn() }));
+vi.mock("@app/auth/redirectToLogin", () => ({
+  redirectToLogin: login.redirect,
+}));
+
 vi.mock("@app/auth/supabase", () => ({
   supabase: {
     auth: { getSession, refreshSession },
@@ -106,6 +111,7 @@ describe("SaaS billing session", () => {
     ).rejects.toBeInstanceOf(SaasNotLinkedError);
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(refreshSession).not.toHaveBeenCalled();
+    expect(login.redirect).toHaveBeenCalled();
   });
 
   it("reads the current SaaS session after its token changes", async () => {
@@ -121,6 +127,7 @@ describe("SaaS billing session", () => {
     expect(await getPortalSaasToken()).toBeNull();
     await expect(fetchWallet()).rejects.toBeInstanceOf(SaasNotLinkedError);
     expect(fetchMock).not.toHaveBeenCalled();
+    expect(login.redirect).toHaveBeenCalled();
     expect(ensureLinkClient).not.toHaveBeenCalled();
   });
 });

@@ -76,7 +76,7 @@ export function LinkAccountModal({
       footer={stepFooter()}
     >
       <StepModalHeader
-        brand
+        brand={t("portal.accountLink.modal.identity", "Stirling account")}
         title={title}
         {...stepChrome}
         closeLabel={t("portal.accountLink.connect.close", "Close")}

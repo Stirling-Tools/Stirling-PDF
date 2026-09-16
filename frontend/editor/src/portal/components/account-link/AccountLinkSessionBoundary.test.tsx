@@ -20,6 +20,7 @@ const user: AuthUser = {
   email: "owner@example.test",
   username: "owner",
   role: "ROLE_ADMIN",
+  orgOwner: true,
 };
 const pending: AuthContextValue = {
   user: null,
@@ -134,6 +135,14 @@ it.each([
   ["signed out", { ...pending, loading: false }],
   ["another owner", { ...owner, user: { ...user, id: "8" } }],
   ["non-owner", { ...owner, isAdmin: false }],
+  [
+    "admin after ownership transfer",
+    { ...owner, user: { ...user, orgOwner: false } },
+  ],
+  [
+    "admin without ownership information",
+    { ...owner, user: { ...user, orgOwner: undefined } },
+  ],
 ] as const)(
   "clears credentials and cached data when authentication resolves to %s",
   async (_label, auth) => {

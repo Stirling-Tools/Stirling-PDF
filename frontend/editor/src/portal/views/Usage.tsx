@@ -50,15 +50,8 @@ export interface UsageProps {
    * self-hosted maps it onto the link/tier dimension; SaaS ignores it.
    */
   onWalletLoaded?: (wallet: Wallet) => void;
-  /**
-   * Invoked when the SaaS session has lapsed and the user chooses to re-sign-in.
-   * When omitted, the "session expired" notice shows without a sign-in action.
-   * Self-hosted wires this to its re-auth flow; SaaS leaves it unset (its session
-   * is owned by the app, so this path never triggers).
-   */
-  onReauth?: () => void;
-  /** Self-hosted supplies a shared recovery banner for usage, checkout and settings. */
-  sessionRecoveryInShell?: boolean;
+  /** Self-hosted supplies its owner-only renewal notice; hosted authentication belongs to the app. */
+  sessionRecovery?: ReactNode;
   /** Only the self-hosted host supplies local license management; notify after activation. */
   renderLicenseSection?: (onSaved: () => void) => ReactNode;
 }
@@ -76,13 +69,15 @@ export function Usage({
   serverPlan,
   serverPlanAction,
   onWalletLoaded,
-  onReauth,
-  sessionRecoveryInShell = false,
+  sessionRecovery,
   renderLicenseSection,
 }: UsageProps = {}) {
   const { t } = useTranslation();
-  const { revision: sessionRevision } = usePortalSaasSession();
-  const [wallet, setWallet] = useState<Wallet | null>(null);
+  const { revision: sessionRevision, required } = usePortalSaasSession();
+  const [loadedWallet, setWallet] = useState<Wallet | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const needsRenewal = Boolean(sessionRecovery) && (sessionExpired || required);
+  const wallet = needsRenewal ? null : loadedWallet;
   const procurement = useProcurement();
   const { trialSetupRequested, clearTrialSetupRequest } = useUI();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -133,8 +128,6 @@ export function Usage({
   const [localUsage, setLocalUsage] = useState<LocalUsage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  // The SaaS session has lapsed and needs a re-sign-in (self-hosted only).
-  const [sessionExpired, setSessionExpired] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
   const previousDeal = useRef(procurement.data);
   useEffect(() => {
@@ -289,6 +282,14 @@ export function Usage({
   return (
     <BillingScreen
       wallet={wallet}
+      unavailable={
+        needsRenewal
+          ? t(
+              "portal.accountLink.renewal.dataUnavailable",
+              "Your plan and usage will appear after you renew billing access. This server stays connected, and local document processing remains available.",
+            )
+          : undefined
+      }
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
       loading={loading}
@@ -317,24 +318,7 @@ export function Usage({
               {procurement.error}
             </Banner>
           )}
-          {sessionExpired && !sessionRecoveryInShell && (
-            <Banner
-              tone="warning"
-              title={t("portal.usage.sessionExpired.title", "Session expired")}
-              action={
-                onReauth ? (
-                  <Button size="sm" onClick={onReauth}>
-                    {t("portal.usage.sessionExpired.action", "Sign in again")}
-                  </Button>
-                ) : undefined
-              }
-            >
-              {t(
-                "portal.usage.sessionExpired.body",
-                "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
-              )}
-            </Banner>
-          )}
+          {sessionRecovery}
 
           {error && (
             <Banner

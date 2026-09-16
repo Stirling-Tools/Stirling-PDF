@@ -1,4 +1,4 @@
-import { useAuth } from "@app/auth";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useLink } from "@app/portal/contexts/LinkContext";
 import { useEffect, useRef } from "react";
 import { useUI } from "@app/portal/contexts/UIContext";
@@ -13,18 +13,18 @@ import { FREE_TIER_EXHAUSTED_EVENT } from "@app/portal/services/accountLinkBlock
  */
 export function useFreeTierExhaustedPrompt(): void {
   const prompted = useRef(false);
-  const { isAdmin } = useAuth();
+  const isOwner = useAccountLinkOwner();
   const { isLinked } = useLink();
   const { openLinkModal } = useUI();
 
   useEffect(() => {
     const onExhausted = () => {
-      if (!isAdmin || isLinked || prompted.current) return;
+      if (!isOwner || isLinked || prompted.current) return;
       prompted.current = true;
       openLinkModal("exhausted");
     };
     window.addEventListener(FREE_TIER_EXHAUSTED_EVENT, onExhausted);
     return () =>
       window.removeEventListener(FREE_TIER_EXHAUSTED_EVENT, onExhausted);
-  }, [isAdmin, isLinked, openLinkModal]);
+  }, [isOwner, isLinked, openLinkModal]);
 }

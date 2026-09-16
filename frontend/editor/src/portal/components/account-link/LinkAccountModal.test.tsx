@@ -40,7 +40,7 @@ vi.mock("@app/constants/app", async (importOriginal) => ({
 }));
 
 const BENEFITS = "Pipelines, policies, sources and audit";
-const GHOST = /Taking you to stirling\.com/;
+const GHOST = /Opening Stirling sign-in/;
 const CONNECT = /Connect Stirling account/;
 
 function renderModal(

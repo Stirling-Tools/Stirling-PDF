@@ -35,8 +35,13 @@ vi.mock("@app/portal/contexts/AccountLinkContext", () => ({
   useAccountLinkContext: () => ({ refresh }),
 }));
 
+const ownership = vi.hoisted(() => ({ orgOwner: true }));
 vi.mock("@app/auth", () => ({
-  useAuth: () => ({ user: { id: "owner" }, isAdmin: true }),
+  useAuth: () => ({
+    user: { id: "owner", orgOwner: ownership.orgOwner },
+    isAdmin: true,
+    loading: false,
+  }),
 }));
 vi.mock("@app/portal/auth/accountLinkSession", () => ({
   bindAccountLinkSession: vi.fn(),
@@ -109,6 +114,7 @@ function renderFlow() {
 
 describe("account-link callback", () => {
   beforeEach(() => {
+    ownership.orgOwner = true;
     vi.clearAllMocks();
     published = [];
     sessionStorage.clear();
@@ -169,6 +175,17 @@ describe("account-link callback", () => {
       expect(routeState).toBeNull();
     },
   );
+
+  it("discards a former owner's callback without installing a session or showing a modal", async () => {
+    ownership.orgOwner = false;
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+    renderFlow();
+    await waitFor(() => expect(routeState).toBeNull());
+    expect(window.location.hash).toBe("");
+    expect(completeConnect).not.toHaveBeenCalled();
+    expect(setSession).not.toHaveBeenCalled();
+    expect(published).toEqual([]);
+  });
 
   it("removes the token-bearing fragment from the URL", async () => {
     landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);

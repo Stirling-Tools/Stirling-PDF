@@ -2,9 +2,11 @@ package stirling.software.proprietary.accountlink;
 
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,7 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import stirling.software.common.model.enumeration.Role;
+import stirling.software.proprietary.service.OrgOwnerService;
 
 /** Invokes the Spring security proxy, so role checks cannot be bypassed by a direct unit call. */
 class AccountLinkAuthorizationTest {
@@ -33,6 +36,7 @@ class AccountLinkAuthorizationTest {
     private AccountLinkController controller;
     private AccountLinkService service;
     private ConnectService connectService;
+    private OrgOwnerService ownerService;
 
     @Configuration(proxyBeanMethods = false)
     @EnableMethodSecurity
@@ -51,6 +55,8 @@ class AccountLinkAuthorizationTest {
                                 "accountLinkTest",
                                 Map.of("stirling.billing.account-link.enabled", "true")));
         context.register(SecurityConfig.class);
+        ownerService = mock(OrgOwnerService.class);
+        context.registerBean("orgOwnerService", OrgOwnerService.class, () -> ownerService);
         context.registerBean(
                 AccountLinkController.class,
                 () ->
@@ -73,6 +79,7 @@ class AccountLinkAuthorizationTest {
     @Test
     void ownerCanStartRenewalCompleteAndUnlink() throws Exception {
         authenticate(Role.ADMIN);
+        when(ownerService.isCurrentUser(any())).thenReturn(true);
         controller.connectStart(null, new MockHttpServletRequest());
         controller.connectReauth(null, new MockHttpServletRequest());
         controller.connectComplete(new AccountLinkController.ConnectCompleteRequest("nonce"));
@@ -87,6 +94,23 @@ class AccountLinkAuthorizationTest {
     @EnumSource(value = Role.class, mode = EnumSource.Mode.EXCLUDE, names = "ADMIN")
     void everyNonOwnerRoleIsDenied(Role role) {
         authenticate(role);
+        assertDenied();
+    }
+
+    @Test
+    void adminWhoDoesNotOwnTheOrganizationIsDenied() {
+        authenticate(Role.ADMIN);
+        assertDenied();
+    }
+
+    @Test
+    void formerOwnerIsDeniedImmediatelyAfterOwnershipChanges() throws Exception {
+        authenticate(Role.ADMIN);
+        when(ownerService.isCurrentUser(any())).thenReturn(true);
+        controller.connectReauth(null, new MockHttpServletRequest());
+        verify(connectService).startReauth(any());
+        clearInvocations(connectService);
+        when(ownerService.isCurrentUser(any())).thenReturn(false);
         assertDenied();
     }
 
@@ -113,6 +137,22 @@ class AccountLinkAuthorizationTest {
                         AccessDeniedException.class,
                         AuthenticationCredentialsNotFoundException.class);
         assertThatThrownBy(() -> controller.unlink())
+                .isInstanceOfAny(
+                        AccessDeniedException.class,
+                        AuthenticationCredentialsNotFoundException.class);
+        assertThatThrownBy(() -> controller.status())
+                .isInstanceOfAny(
+                        AccessDeniedException.class,
+                        AuthenticationCredentialsNotFoundException.class);
+        assertThatThrownBy(() -> controller.usage())
+                .isInstanceOfAny(
+                        AccessDeniedException.class,
+                        AuthenticationCredentialsNotFoundException.class);
+        assertThatThrownBy(() -> controller.freeTier())
+                .isInstanceOfAny(
+                        AccessDeniedException.class,
+                        AuthenticationCredentialsNotFoundException.class);
+        assertThatThrownBy(() -> controller.syncNow())
                 .isInstanceOfAny(
                         AccessDeniedException.class,
                         AuthenticationCredentialsNotFoundException.class);

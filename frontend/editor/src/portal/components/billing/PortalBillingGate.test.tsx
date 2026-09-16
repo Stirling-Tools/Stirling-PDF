@@ -56,24 +56,24 @@ vi.mock("@app/portal/contexts/LinkContext", () => ({
 vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal: vi.fn() }),
 }));
-vi.mock("@app/portal/hooks/usePortalAdmin", () => ({
-  usePortalAdmin: () => admin.is,
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => admin.is,
 }));
 vi.mock("@app/portal/views/Usage", () => ({
   Usage: ({
     onWalletLoaded,
     renderLicenseSection,
-    sessionRecoveryInShell,
+    sessionRecovery,
   }: {
     onWalletLoaded?: (w: unknown) => void;
-    sessionRecoveryInShell?: boolean;
+    sessionRecovery?: ReactNode;
     renderLicenseSection?: (onSaved: () => void) => ReactNode;
   }) => {
     onWalletLoaded?.({ status: "free" });
     return (
       <div
         data-testid="usage"
-        data-session-recovery-in-shell={sessionRecoveryInShell}
+        data-session-recovery-in-shell={Boolean(sessionRecovery)}
       >
         {renderLicenseSection?.(onLicenseSaved)}
       </div>

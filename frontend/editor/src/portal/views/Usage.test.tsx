@@ -178,7 +178,12 @@ describe("Usage — link-free wallet renderer", () => {
     fetchWallet.mockResolvedValue(walletOf("free"));
     const onWalletLoaded = vi.fn();
 
-    renderUsage(<Usage onWalletLoaded={onWalletLoaded} />);
+    renderUsage(
+      <Usage
+        onWalletLoaded={onWalletLoaded}
+        sessionRecovery={<span>Renew billing access</span>}
+      />,
+    );
 
     // Renders immediately (no link prompt / login) and loads unconditionally.
     expect(screen.getByText("Usage & Billing")).toBeInTheDocument();
@@ -388,10 +393,33 @@ describe("Usage — link-free wallet renderer", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("uses the shell recovery banner without duplicating it in the billing screen", async () => {
+  it("hides stale purchase controls when the billing session becomes unavailable", async () => {
+    fetchWallet.mockResolvedValue({ ...walletOf("free"), role: "leader" });
+    renderUsage(<Usage sessionRecovery={<span>Renew billing access</span>} />);
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Switch on the Processor" }),
+    );
+    expect(screen.getByTestId("activation-step")).toBeInTheDocument();
+    await act(async () => {
+      await withPortalSaasSession(
+        async () => 401,
+        (status) => status === 401,
+      ).catch(() => {});
+    });
+    expect(screen.queryByTestId("activation-step")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Switch on the Processor" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Plan" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Usage" })).toBeInTheDocument();
+  });
+
+  it("shows one recovery notice without a separate expired-session banner", async () => {
     fetchWallet.mockRejectedValue(new SaasSessionRequiredError());
     await act(async () => {
-      renderUsage(<Usage sessionRecoveryInShell />);
+      renderUsage(
+        <Usage sessionRecovery={<span>Renew billing access</span>} />,
+      );
     });
     expect(fetchWallet).toHaveBeenCalledTimes(2);
     expect(screen.queryByText("Session expired")).not.toBeInTheDocument();
@@ -409,8 +437,13 @@ describe("Usage — link-free wallet renderer", () => {
       .mockRejectedValueOnce(new SaasSessionRequiredError())
       .mockResolvedValue(walletOf("free"));
     const onWalletLoaded = vi.fn();
-    renderUsage(<Usage onWalletLoaded={onWalletLoaded} />);
-    await screen.findByText("Session expired");
+    renderUsage(
+      <Usage
+        onWalletLoaded={onWalletLoaded}
+        sessionRecovery={<span>Renew billing access</span>}
+      />,
+    );
+    await screen.findByText(/Your plan and usage will appear/);
     act(() =>
       window.dispatchEvent(new Event("stirling-saas-session-restored")),
     );
@@ -427,8 +460,13 @@ describe("Usage — link-free wallet renderer", () => {
       .mockRejectedValueOnce(new SaasSessionRequiredError())
       .mockResolvedValue(walletOf("free"));
     const onWalletLoaded = vi.fn();
-    renderUsage(<Usage onWalletLoaded={onWalletLoaded} />);
-    await screen.findByText("Session expired");
+    renderUsage(
+      <Usage
+        onWalletLoaded={onWalletLoaded}
+        sessionRecovery={<span>Renew billing access</span>}
+      />,
+    );
+    await screen.findByText(/Your plan and usage will appear/);
     act(() => portalSaasSessionRestored());
     await waitFor(() =>
       expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),

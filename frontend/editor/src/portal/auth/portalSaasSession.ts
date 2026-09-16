@@ -2,6 +2,7 @@ import { isAuthError, isAuthSessionMissingError } from "@supabase/supabase-js";
 import {
   getPortalSessionClient,
   ensurePortalSessionClient,
+  handlePortalSessionRequired,
 } from "@app/portal/auth/sessionClient";
 
 let refreshPromise: Promise<string | null> | null = null;
@@ -60,6 +61,7 @@ function update(required: boolean): void {
 
 function sessionRequired(token: string | null = null): never {
   rejectedToken = token;
+  handlePortalSessionRequired();
   if (!snapshot.required) update(true);
   throw new SaasSessionRequiredError();
 }

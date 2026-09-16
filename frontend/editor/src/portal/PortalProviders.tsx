@@ -6,7 +6,7 @@ import { AccountLinkProvider } from "@app/portal/contexts/AccountLinkContext";
 import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
 import { PortalChrome } from "@app/portal/components/PortalChrome";
 import { AccountLinkSessionBoundary } from "@app/portal/components/account-link/AccountLinkSessionBoundary";
-import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useFreeTierExhaustedPrompt } from "@app/portal/hooks/useFreeTierExhaustedPrompt";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
@@ -24,7 +24,8 @@ function LinkModalHost() {
 
   // Mounted only while open: kept mounted, an interrupted hand-off stays flagged and every
   // later open resumes on a ghost step with no way forward.
-  if (!linkModalOpen) return null;
+  const isOwner = useAccountLinkOwner();
+  if (!isOwner || !linkModalOpen) return null;
   return (
     <LinkAccountModal
       open
@@ -53,7 +54,7 @@ export function PortalProviders() {
                   <CheckoutProvider>
                     <ServerExperienceProvider>
                       <StartupPrompts />
-                      <PortalChrome banner={<SaasSessionBanner />} />
+                      <PortalChrome />
                     </ServerExperienceProvider>
                     <LinkModalHost />
                     <ConnectCallbackHost />

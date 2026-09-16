@@ -4,6 +4,10 @@ import { render, screen } from "@testing-library/react";
 import { PortalSettingsSectionHost } from "@app/portal/components/settings/PortalSettingsSectionHost";
 import { useLinkOptional } from "@app/portal/contexts/LinkContext";
 
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => true,
+}));
+
 const { fetchStatus } = vi.hoisted(() => ({ fetchStatus: vi.fn() }));
 vi.mock("@app/portal/api/link", () => ({ fetchStatus }));
 vi.mock("@app/portal/auth/saasSupabase", () => ({

@@ -9,7 +9,7 @@ export function AccountLinkSessionBoundary({
   children: ReactNode;
 }) {
   const { user, isAdmin, loading } = useAuth();
-  const identity = isAdmin ? (user?.id ?? null) : null;
+  const identity = isAdmin && user?.orgOwner === true ? user.id : null;
   const [bound, setBound] = useState<string | null>();
   useEffect(() => {
     if (loading) return;

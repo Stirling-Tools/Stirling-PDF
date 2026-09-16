@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useLocation, useNavigate } from "react-router-dom";
 import { completeConnect, type ConnectPhase } from "@app/portal/api/link";
 import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
@@ -29,6 +30,7 @@ interface LocationState {
 
 /** Owns the validated callback and publishes its outcome to the existing modal. */
 export function ConnectCallbackHost() {
+  const isOwner = useAccountLinkOwner();
   const location = useLocation();
   const navigate = useNavigate();
   const { refresh } = useAccountLinkContext();
@@ -54,6 +56,12 @@ export function ConnectCallbackHost() {
       replace: true,
       state: null,
     });
+
+    if (!isOwner) {
+      handover.accessToken = null;
+      handover.refreshToken = null;
+      return;
+    }
 
     const callback = handover;
     const { type, nonce, pending } = callback;
@@ -168,7 +176,7 @@ export function ConnectCallbackHost() {
         busy = false;
       }
     }
-  }, [handover, navigate, location.pathname, location.search]);
+  }, [handover, navigate, location.pathname, location.search, isOwner]);
 
   return null;
 }

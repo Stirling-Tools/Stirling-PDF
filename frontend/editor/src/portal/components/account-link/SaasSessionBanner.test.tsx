@@ -5,8 +5,13 @@ import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
 import { LinkProvider } from "@app/portal/contexts/LinkContext";
 import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
 
-const flags = vi.hoisted(() => ({ isAdmin: true }));
-vi.mock("@app/auth", () => ({ useAuth: () => ({ isAdmin: flags.isAdmin }) }));
+const flags = vi.hoisted(() => ({ isAdmin: true, orgOwner: true }));
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({
+    isAdmin: flags.isAdmin,
+    user: { orgOwner: flags.orgOwner },
+  }),
+}));
 vi.mock("@app/auth/supabase/supabaseClient", () => ({
   getSupabaseClient: () => null,
 }));
@@ -40,6 +45,7 @@ function show(linked = true) {
 }
 beforeEach(async () => {
   flags.isAdmin = true;
+  flags.orgOwner = true;
   resetPortalSaasSessionState();
   await expect(
     withPortalSaasSession(
@@ -79,4 +85,11 @@ it("keeps one recovery prompt and restores it after the dialog is dismissed", ()
   expect(screen.getAllByRole("button", { name: "Sign in again" })).toHaveLength(
     1,
   );
+});
+
+it("does not show billing renewal to an admin who is not the organization owner", () => {
+  flags.orgOwner = false;
+  show();
+  expect(screen.queryByText("Renew billing access")).toBeNull();
+  expect(screen.queryByRole("button")).toBeNull();
 });

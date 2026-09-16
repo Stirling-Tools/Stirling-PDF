@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { errorMessage } from "@app/portal/api/http";
 import { isSaasSupabaseConfigured } from "@app/portal/auth/saasSupabase";
 import {
@@ -29,6 +30,7 @@ export interface UseAccountLink {
 }
 
 export function useAccountLink(): UseAccountLink {
+  const isOwner = useAccountLinkOwner();
   const applyLinkFacts = useApplyLinkFacts();
   const { markStatusKnown } = useLink();
   const [status, setStatus] = useState<LinkStatus | null>(null);
@@ -38,6 +40,10 @@ export function useAccountLink(): UseAccountLink {
 
   const refresh = useCallback(async () => {
     setStatusError(null);
+    if (!isOwner) {
+      setStatus(null);
+      return;
+    }
     try {
       const s = await fetchStatus();
       setStatus(s);
@@ -48,13 +54,14 @@ export function useAccountLink(): UseAccountLink {
     } catch (e) {
       setStatusError(errorMessage(e));
     }
-  }, [applyLinkFacts, markStatusKnown]);
+  }, [applyLinkFacts, markStatusKnown, isOwner]);
 
   useEffect(() => {
     void refresh();
   }, [refresh]);
 
   const unlink = useCallback(async () => {
+    if (!isOwner) return;
     setPhase("linking");
     setError(null);
     try {
@@ -67,7 +74,7 @@ export function useAccountLink(): UseAccountLink {
       setError(e instanceof Error ? e.message : String(e));
       setPhase("error");
     }
-  }, [applyLinkFacts]);
+  }, [applyLinkFacts, isOwner]);
 
   return {
     loginConfigured: isSaasSupabaseConfigured,

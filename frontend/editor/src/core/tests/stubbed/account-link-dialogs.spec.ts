@@ -6,7 +6,13 @@ test.use({
   stubOptions: {
     enableLogin: true,
     isAdmin: true,
-    user: { id: 1, username: "owner", role: "ROLE_ADMIN", portalAccess: true },
+    user: {
+      id: 1,
+      username: "owner",
+      role: "ROLE_ADMIN",
+      portalAccess: true,
+      orgOwner: true,
+    },
   },
 });
 
@@ -138,3 +144,112 @@ test("late exhausted-credit responses do not reopen a dismissed dialog", async (
   await page.getByRole("button", { name: "Link Stirling account" }).click();
   await expect(page.getByRole("dialog")).toHaveCount(1);
 });
+
+for (const role of ["ROLE_ADMIN", "ROLE_TEAM_LEAD", "ROLE_USER"]) {
+  for (const path of [
+    "/settings/account-link",
+    "/settings/billing",
+    "/processor/documents",
+  ]) {
+    test(`non-owner ${role} has no account or billing prompts on ${path}`, async ({
+      page,
+    }) => {
+      await page.route("**/api/v1/auth/me", (route) =>
+        route.fulfill({
+          json: {
+            user: {
+              id: 2,
+              username: "colleague",
+              role,
+              portalAccess: true,
+              orgOwner: false,
+            },
+          },
+        }),
+      );
+      let linkRequests = 0;
+      await page.route("**/api/v1/account-link/**", (route) => {
+        linkRequests++;
+        return route.fulfill({ status: 403, json: {} });
+      });
+      await page.goto(path);
+      await expect(
+        page.getByRole("button", { name: "colleague — Account", exact: true }),
+      ).toBeVisible();
+      await page.evaluate(() =>
+        window.dispatchEvent(new Event("stirling:portal-free-tier-exhausted")),
+      );
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(
+        page.getByRole("button", {
+          name: /^(Connect your Stirling account|Connect a Stirling account|Link Stirling account|Sign in again)$/,
+        }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByText("Renew billing access", { exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Usage & Billing", exact: true }),
+      ).toHaveCount(0);
+      expect(linkRequests).toBe(0);
+    });
+  }
+}
+
+for (const linked of [false, true]) {
+  test(`Documents loads local records when the server is ${linked ? "linked without billing access" : "unlinked"}`, async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/account-link/status", (route) =>
+      route.fulfill({ json: { linked, name: "Test server" } }),
+    );
+    const localDocuments = page.waitForRequest(
+      "**/api/v1/proprietary/ui-data/documents?*",
+    );
+    await page.route("**/api/v1/proprietary/ui-data/documents?*", (route) =>
+      route.fulfill({
+        json: {
+          summary: {
+            totalInQueue: 0,
+            processed: 1,
+            errors: 0,
+            processedToday: 1,
+          },
+          documents: [
+            {
+              id: "local-document",
+              name: "Local invoice.pdf",
+              type: "PDF",
+              classification: null,
+              auto: false,
+              note: "Compressed locally",
+              product: "Editor",
+              action: null,
+              user: "owner",
+              status: "processed",
+              reviewer: null,
+              source: "Upload",
+              confidence: null,
+              fieldsExtracted: 0,
+              time: "just now",
+              sensitive: false,
+              extractions: [],
+              audit: [],
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto("/processor/documents");
+    const request = await localDocuments;
+    expect(new URL(request.url()).origin).toBe(new URL(page.url()).origin);
+    await expect(page.getByText("Local invoice.pdf")).toBeVisible();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    await expect(
+      page.getByText("Renew billing access", { exact: true }),
+    ).toHaveCount(0);
+    await expect(
+      page.getByRole("button", { name: "Sign in again", exact: true }),
+    ).toHaveCount(0);
+  });
+}

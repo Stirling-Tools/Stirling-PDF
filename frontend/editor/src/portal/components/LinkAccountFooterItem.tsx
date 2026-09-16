@@ -1,4 +1,4 @@
-import { useAuth } from "@app/auth";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useTranslation } from "react-i18next";
 import { NavItem } from "@app/ui";
 import { useUI } from "@app/portal/contexts/UIContext";
@@ -13,11 +13,11 @@ import { LinkIcon } from "@app/portal/components/icons";
  * IS the SaaS account, so there is nothing to link.
  */
 export function LinkAccountFooterItem() {
-  const { isAdmin } = useAuth();
+  const isOwner = useAccountLinkOwner();
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
   const { linkState, statusKnown } = useLink();
-  if (!isAdmin || !statusKnown || linkState !== "unlinked") return null;
+  if (!isOwner || !statusKnown || linkState !== "unlinked") return null;
   return (
     <NavItem
       id="account-link"

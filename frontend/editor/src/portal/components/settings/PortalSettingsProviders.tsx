@@ -5,13 +5,14 @@ import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
 import { AccountLinkProvider } from "@app/portal/contexts/AccountLinkContext";
 import { AccountLinkSessionBoundary } from "@app/portal/components/account-link/AccountLinkSessionBoundary";
 import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
-import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { LinkAccountModal } from "@app/portal/components/account-link/LinkAccountModal";
 
 function LinkModalHost() {
   const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
     useUI();
-  if (!linkModalOpen) return null;
+  const isOwner = useAccountLinkOwner();
+  if (!isOwner || !linkModalOpen) return null;
   return (
     <LinkAccountModal
       open
@@ -30,7 +31,6 @@ export function PortalSettingsProviders({ children }: { children: ReactNode }) {
         <UIProvider>
           <AccountLinkSessionBoundary>
             <AccountLinkProvider>
-              <SaasSessionBanner />
               {children}
               <LinkModalHost />
               <ConnectCallbackHost />

@@ -9,9 +9,11 @@ import { render } from "@testing-library/react";
  */
 const { openLinkModal, flags } = vi.hoisted(() => ({
   openLinkModal: vi.fn(),
-  flags: { isAdmin: true, isLinked: false },
+  flags: { isAdmin: true, isLinked: false, orgOwner: true },
 }));
-vi.mock("@app/auth", () => ({ useAuth: () => flags }));
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({ ...flags, user: { orgOwner: flags.orgOwner } }),
+}));
 vi.mock("@app/portal/contexts/LinkContext", () => ({ useLink: () => flags }));
 
 vi.mock("@app/portal/contexts/UIContext", () => ({
@@ -37,6 +39,7 @@ describe("the account-link prompt", () => {
   beforeEach(() => {
     openLinkModal.mockReset();
     flags.isAdmin = true;
+    flags.orgOwner = true;
     flags.isLinked = false;
   });
 
@@ -90,4 +93,14 @@ describe("the account-link prompt", () => {
     reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
     expect(openLinkModal).not.toHaveBeenCalled();
   });
+});
+
+it("does not prompt an ordinary admin when the local allowance is exhausted", () => {
+  flags.isAdmin = true;
+  flags.orgOwner = false;
+  flags.isLinked = false;
+  openLinkModal.mockReset();
+  render(<Probe />);
+  window.dispatchEvent(new Event("stirling:portal-free-tier-exhausted"));
+  expect(openLinkModal).not.toHaveBeenCalled();
 });

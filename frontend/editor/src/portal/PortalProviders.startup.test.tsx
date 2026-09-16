@@ -9,7 +9,7 @@ import { PortalProviders } from "@portal/PortalProviders";
 const h = vi.hoisted(() => ({
   get: vi.fn(),
   auth: {
-    user: { id: "admin" },
+    user: { id: "admin", orgOwner: true },
     loading: false,
     isAdmin: true,
     isAnonymous: false,

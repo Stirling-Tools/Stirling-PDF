@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useAuth } from "@app/auth";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
 import { useConnectGate } from "@app/portal/hooks/useConnectGate";
@@ -17,12 +17,12 @@ function readDismissed(): boolean {
 
 /** Session-scoped dismissal, so the ask comes back until it is answered rather than for good. */
 export function ConnectAccountRail() {
-  const { isAdmin } = useAuth();
+  const isOwner = useAccountLinkOwner();
   const { t } = useTranslation();
   const { gated, loading, connect } = useConnectGate();
   const [dismissed, setDismissed] = useState(readDismissed);
 
-  if (!isAdmin || loading || !gated || dismissed) return null;
+  if (!isOwner || loading || !gated || dismissed) return null;
 
   const dismiss = () => {
     try {

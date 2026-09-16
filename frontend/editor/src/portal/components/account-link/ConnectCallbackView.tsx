@@ -149,15 +149,34 @@ function failure(state: ConnectCallbackState, t: Translate, reauth: boolean) {
       ),
     };
     return {
-      tone: "warning" as const,
-      title: t("portal.accountLink.renewal.title", "Renew billing access"),
+      tone: "neutral" as const,
+      title:
+        state === "expired"
+          ? t(
+              "portal.accountLink.renewal.expiredTitle",
+              "Sign-in request expired",
+            )
+          : state === "rejected"
+            ? t(
+                "portal.accountLink.renewal.rejectedTitle",
+                "Sign-in not completed",
+              )
+            : state === "malformed"
+              ? t(
+                  "portal.accountLink.renewal.malformedTitle",
+                  "Could not verify sign-in",
+                )
+              : t(
+                  "portal.accountLink.renewal.retryTitle",
+                  "Billing access not restored",
+                ),
       body: messages[state as keyof typeof messages] ?? messages.retry,
     };
   }
   switch (state) {
     case "expired":
       return {
-        tone: "warning" as const,
+        tone: "neutral" as const,
         title: t(
           "portal.accountLink.connect.callback.expired.title",
           "Request expired",
@@ -169,7 +188,7 @@ function failure(state: ConnectCallbackState, t: Translate, reauth: boolean) {
       };
     case "rejected":
       return {
-        tone: "warning" as const,
+        tone: "neutral" as const,
         title: t(
           "portal.accountLink.connect.callback.rejected.title",
           "Connection not completed",
@@ -193,7 +212,7 @@ function failure(state: ConnectCallbackState, t: Translate, reauth: boolean) {
       };
     default:
       return {
-        tone: "warning" as const,
+        tone: "neutral" as const,
         // Not "retry.*": that key is the button label, and TOML cannot hold a
         // value and a table under the same name.
         title: t(

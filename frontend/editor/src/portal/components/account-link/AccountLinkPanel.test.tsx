@@ -19,6 +19,13 @@ const state = vi.hoisted(() => ({
   status: { linked: true, name: "Production" } as UseAccountLink["status"],
   statusError: null as string | null,
   email: "owner@example.com" as string | null,
+  isOwner: true,
+}));
+vi.mock("@app/portal/hooks/useAccountLinkOwner", () => ({
+  useAccountLinkOwner: () => state.isOwner,
+}));
+vi.mock("@app/portal/contexts/LinkContext", () => ({
+  useLink: () => ({ isLinked: state.status?.linked ?? false }),
 }));
 vi.mock("@app/portal/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => state.email,
@@ -80,6 +87,7 @@ describe("Self-hosted account connection", () => {
     state.unlink.mockReset();
     state.status = { linked: true, name: "Production" };
     state.statusError = null;
+    state.isOwner = true;
     state.email = "owner@example.com";
   });
 
@@ -285,4 +293,13 @@ describe("Self-hosted account connection", () => {
     expect(screen.queryByRole("button", { name: "Try again" })).toBeNull();
     expect(screen.queryByText("Couldn’t load connected instances")).toBeNull();
   });
+});
+
+it("does not mount account management or fetch team instances for a non-owner", () => {
+  state.isOwner = false;
+  state.fetchInstances.mockClear();
+  mount();
+  expect(screen.queryByText("Account connection")).toBeNull();
+  expect(screen.queryByRole("button")).toBeNull();
+  expect(state.fetchInstances).not.toHaveBeenCalled();
 });
