@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +23,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mock.env.MockEnvironment;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
@@ -34,36 +36,54 @@ import stirling.software.proprietary.service.ToolUsageSignalService.ToolChainSum
 class ToolRecommendationServiceTest {
 
     private static final String PRINCIPAL = "alice";
-    private static final TeamScope TEAM = new TeamScope(7L, List.of("bob", "carol"));
+
+    /** Short stand-in names for real tools, so a ranking of eight stays readable. */
+    private static final ToolKeyRegistry TOOL_KEYS =
+            ToolKeyRegistry.forKeys(
+                    Set.of(
+                            "a",
+                            "b",
+                            "c",
+                            "d",
+                            "e",
+                            "f",
+                            "g",
+                            "h",
+                            "compare",
+                            "compress",
+                            "merge",
+                            "ocr",
+                            "split",
+                            "watermark"));
+
+    private static final TeamScope TEAM = new TeamScope(List.of(7L), List.of("bob", "carol"), true);
 
     @Mock private ToolUsageSignalService signalService;
 
     private ApplicationProperties properties;
+    private MockEnvironment environment;
     private ToolRecommendationService service;
 
     @BeforeEach
     void setUp() {
         properties = new ApplicationProperties();
         properties.getSystem().setEnableAnalytics(true);
-        service = new ToolRecommendationService(signalService, properties);
+        environment = new MockEnvironment();
+        service = new ToolRecommendationService(signalService, TOOL_KEYS, properties, environment);
         lenient().when(signalService.resolveTeamScope(anyString())).thenReturn(TeamScope.none());
         lenient()
                 .when(signalService.userFrequency(anyString(), anyLong(), anyLong()))
                 .thenReturn(Map.of());
         lenient().when(signalService.globalFrequency(anyLong(), anyLong())).thenReturn(Map.of());
         lenient()
-                .when(signalService.userTransitions(anyString(), anyString(), anyLong(), anyLong()))
+                .when(signalService.userTransitions(anyString(), anyLong(), anyLong()))
                 .thenReturn(Map.of());
-        lenient()
-                .when(signalService.globalTransitions(anyString(), anyLong(), anyLong()))
-                .thenReturn(Map.of());
+        lenient().when(signalService.globalTransitions(anyLong(), anyLong())).thenReturn(Map.of());
         lenient()
                 .when(signalService.teamFrequency(any(TeamScope.class), anyLong(), anyLong()))
                 .thenReturn(Map.of());
         lenient()
-                .when(
-                        signalService.teamTransitions(
-                                any(TeamScope.class), anyString(), anyLong(), anyLong()))
+                .when(signalService.teamTransitions(any(TeamScope.class), anyLong(), anyLong()))
                 .thenReturn(Map.of());
     }
 
@@ -194,8 +214,8 @@ class ToolRecommendationServiceTest {
         @Test
         @DisplayName("transitions from the current tool outrank plain usage frequency")
         void transitionsOutrankFrequency() {
-            when(signalService.userTransitions(eq(PRINCIPAL), eq("compare"), anyLong(), anyLong()))
-                    .thenReturn(Map.of("ocr", 8.0));
+            when(signalService.userTransitions(eq(PRINCIPAL), anyLong(), anyLong()))
+                    .thenReturn(Map.of("compare", Map.of("ocr", 8.0)));
             when(signalService.userFrequency(eq(PRINCIPAL), anyLong(), anyLong()))
                     .thenReturn(Map.of("merge", 150.0, "ocr", 3.0));
 
@@ -222,8 +242,8 @@ class ToolRecommendationServiceTest {
         void globalCountsAreNormalized() {
             // Whole install uses compress a million times; the user personally always
             // reaches for OCR after compare. OCR must still win.
-            when(signalService.userTransitions(eq(PRINCIPAL), eq("compare"), anyLong(), anyLong()))
-                    .thenReturn(Map.of("ocr", 15.0));
+            when(signalService.userTransitions(eq(PRINCIPAL), anyLong(), anyLong()))
+                    .thenReturn(Map.of("compare", Map.of("ocr", 15.0)));
             when(signalService.globalFrequency(anyLong(), anyLong()))
                     .thenReturn(Map.of("compress", 1_500_000.0));
 
@@ -256,7 +276,7 @@ class ToolRecommendationServiceTest {
             verify(signalService, never())
                     .teamFrequency(any(TeamScope.class), anyLong(), anyLong());
             verify(signalService, never())
-                    .teamTransitions(any(TeamScope.class), anyString(), anyLong(), anyLong());
+                    .teamTransitions(any(TeamScope.class), anyLong(), anyLong());
         }
 
         @Test
@@ -314,9 +334,8 @@ class ToolRecommendationServiceTest {
         void noTransitionQueriesWithoutContext() {
             service.getRecommendations(PRINCIPAL, null, 6);
 
-            verify(signalService, never())
-                    .userTransitions(anyString(), anyString(), anyLong(), anyLong());
-            verify(signalService, never()).globalTransitions(anyString(), anyLong(), anyLong());
+            verify(signalService, never()).userTransitions(anyString(), anyLong(), anyLong());
+            verify(signalService, never()).globalTransitions(anyLong(), anyLong());
         }
     }
 }

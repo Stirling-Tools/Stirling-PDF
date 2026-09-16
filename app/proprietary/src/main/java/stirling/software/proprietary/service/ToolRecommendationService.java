@@ -1,12 +1,14 @@
 package stirling.software.proprietary.service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,7 +42,9 @@ public class ToolRecommendationService {
     static final int MIN_WORKFLOW_TOOLS = 2;
 
     private final ToolUsageSignalService signals;
+    private final ToolKeyRegistry toolKeys;
     private final ApplicationProperties applicationProperties;
+    private final Environment environment;
 
     public record ToolRecommendation(String toolKey, double score) {}
 
@@ -56,6 +60,16 @@ public class ToolRecommendationService {
      * habit into a pipeline.
      */
     public record ToolWorkflow(List<String> tools, long count, WorkflowScope scope) {}
+
+    /**
+     * Whether the install-wide tier may be consulted. On a self-hosted install "everyone here" is
+     * one organisation and is exactly the signal wanted. In SaaS it is every customer on the
+     * platform, so one tenant's aggregate usage would rank another's tools; there, a caller sees
+     * only themselves and their teams.
+     */
+    boolean installWideSignalAllowed() {
+        return !Arrays.asList(environment.getActiveProfiles()).contains("saas");
+    }
 
     /**
      * The most repeated document workflows, the caller's own first and then topped up with their
@@ -91,7 +105,7 @@ public class ToolRecommendationService {
                     WorkflowScope.TEAM,
                     capped);
         }
-        if (workflows.size() < capped) {
+        if (installWideSignalAllowed() && workflows.size() < capped) {
             collect(
                     workflows,
                     seen,
@@ -129,34 +143,41 @@ public class ToolRecommendationService {
         long today = ToolUsageTrackingService.currentEpochDay();
         long cutoff = today - applicationProperties.getToolRecommendations().getWindowDays();
         long recent = today - applicationProperties.getToolRecommendations().getRecentWindowDays();
+        boolean installWide = installWideSignalAllowed();
         TeamScope team = signals.resolveTeamScope(principal);
 
         Map<String, Double> scores = new HashMap<>();
         if (currentTool != null) {
             merge(
                     scores,
-                    signals.userTransitions(principal, currentTool, cutoff, recent),
+                    from(signals.userTransitions(principal, cutoff, recent), currentTool),
                     WEIGHT_TRANSITION_USER);
             if (team.hasMembers()) {
                 merge(
                         scores,
-                        signals.teamTransitions(team, currentTool, cutoff, recent),
+                        from(signals.teamTransitions(team, cutoff, recent), currentTool),
                         WEIGHT_TRANSITION_TEAM);
             }
-            merge(
-                    scores,
-                    signals.globalTransitions(currentTool, cutoff, recent),
-                    WEIGHT_TRANSITION_GLOBAL);
+            if (installWide) {
+                merge(
+                        scores,
+                        from(signals.globalTransitions(cutoff, recent), currentTool),
+                        WEIGHT_TRANSITION_GLOBAL);
+            }
         }
         merge(scores, signals.userFrequency(principal, cutoff, recent), WEIGHT_FREQUENCY_USER);
         if (team.hasMembers()) {
             merge(scores, signals.teamFrequency(team, cutoff, recent), WEIGHT_FREQUENCY_TEAM);
         }
-        merge(scores, signals.globalFrequency(cutoff, recent), WEIGHT_FREQUENCY_GLOBAL);
+        if (installWide) {
+            merge(scores, signals.globalFrequency(cutoff, recent), WEIGHT_FREQUENCY_GLOBAL);
+        }
 
-        // Never answer "what next" with the tool the user is already in.
+        // Never answer "what next" with the tool the user is already in. Keys are checked again
+        // on the way out so rows left by a tool that has since been removed stay out of the UI.
         return scores.entrySet().stream()
                 .filter(e -> !e.getKey().equals(currentTool))
+                .filter(e -> toolKeys.isKnown(e.getKey()))
                 .sorted(
                         Map.Entry.<String, Double>comparingByValue()
                                 .reversed()
@@ -164,6 +185,12 @@ public class ToolRecommendationService {
                 .limit(limit <= 0 ? DEFAULT_LIMIT : Math.min(limit, MAX_LIMIT))
                 .map(e -> new ToolRecommendation(e.getKey(), round(e.getValue())))
                 .toList();
+    }
+
+    /** One source tool's row of the transition matrix; empty when nothing has followed it yet. */
+    private static Map<String, Double> from(
+            Map<String, Map<String, Double>> transitions, String currentTool) {
+        return transitions.getOrDefault(currentTool, Map.of());
     }
 
     /**

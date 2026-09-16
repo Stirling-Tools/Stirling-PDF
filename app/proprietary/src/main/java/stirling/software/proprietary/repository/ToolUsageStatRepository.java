@@ -14,26 +14,31 @@ import stirling.software.proprietary.model.ToolUsageStat;
 import stirling.software.proprietary.model.ToolUsageStatId;
 
 /**
- * Every aggregate returns rows of [toolKey, recentCount, totalCount] over the scoring window, so
- * callers can weight recent activity without a second query. Frequency queries group away {@code
- * fromTool}; transition queries filter on it.
+ * Frequency aggregates return rows of [toolKey, recentCount, totalCount] over the scoring window,
+ * so callers can weight recent activity without a second query.
+ *
+ * <p>Transition aggregates deliberately do not filter on the tool asked about. They return the
+ * whole [fromTool, toolKey, recentCount, totalCount] matrix for the window, so one scan answers
+ * "what follows X" for every X. Filtering per source tool would mean one scan - and one cache entry
+ * - per distinct value a caller asks about, which is a scan the caller gets to trigger.
  */
 @Repository
 public interface ToolUsageStatRepository extends JpaRepository<ToolUsageStat, ToolUsageStatId> {
 
+    String RECENT = "SUM(CASE WHEN s.epochDay >= :recentCutoff THEN s.count ELSE 0 END), ";
+
     String SELECT_TOTALS =
-            "SELECT s.toolKey, "
-                    + "SUM(CASE WHEN s.epochDay >= :recentCutoff THEN s.count ELSE 0 END), "
-                    + "SUM(s.count) FROM ToolUsageStat s WHERE ";
+            "SELECT s.toolKey, " + RECENT + "SUM(s.count) FROM ToolUsageStat s WHERE ";
 
     String GROUP = " GROUP BY s.toolKey";
 
-    /**
-     * Install-wide aggregates count authenticated principals only. See {@link
-     * ToolUsageStat#ANONYMOUS_PREFIX}: the anonymous ones are client-chosen, so counting them lets
-     * an unauthenticated caller mint identities until it owns the ranking.
-     */
-    String NAMED_ONLY = "s.principal NOT LIKE '" + ToolUsageStat.ANONYMOUS_PREFIX + "%' AND ";
+    String SELECT_EDGES =
+            "SELECT s.fromTool, s.toolKey, " + RECENT + "SUM(s.count) FROM ToolUsageStat s WHERE ";
+
+    /** Rows with no predecessor are frequency, not transitions, and would never be looked up. */
+    String HAS_SOURCE = "s.fromTool <> '' AND ";
+
+    String GROUP_EDGES = " GROUP BY s.fromTool, s.toolKey";
 
     @Query(SELECT_TOTALS + "s.principal = :principal AND s.epochDay >= :cutoff" + GROUP)
     List<Object[]> sumByPrincipal(
@@ -47,37 +52,33 @@ public interface ToolUsageStatRepository extends JpaRepository<ToolUsageStat, To
             @Param("cutoff") long cutoff,
             @Param("recentCutoff") long recentCutoff);
 
-    @Query(SELECT_TOTALS + NAMED_ONLY + "s.epochDay >= :cutoff" + GROUP)
+    @Query(SELECT_TOTALS + "s.epochDay >= :cutoff" + GROUP)
     List<Object[]> sumGlobal(
             @Param("cutoff") long cutoff, @Param("recentCutoff") long recentCutoff);
 
     @Query(
-            SELECT_TOTALS
-                    + "s.principal = :principal AND s.fromTool = :fromTool "
-                    + "AND s.epochDay >= :cutoff"
-                    + GROUP)
-    List<Object[]> sumByPrincipalAndFrom(
+            SELECT_EDGES
+                    + HAS_SOURCE
+                    + "s.principal = :principal AND s.epochDay >= :cutoff"
+                    + GROUP_EDGES)
+    List<Object[]> edgesByPrincipal(
             @Param("principal") String principal,
-            @Param("fromTool") String fromTool,
             @Param("cutoff") long cutoff,
             @Param("recentCutoff") long recentCutoff);
 
     @Query(
-            SELECT_TOTALS
-                    + "s.principal IN :principals AND s.fromTool = :fromTool "
-                    + "AND s.epochDay >= :cutoff"
-                    + GROUP)
-    List<Object[]> sumByPrincipalsAndFrom(
+            SELECT_EDGES
+                    + HAS_SOURCE
+                    + "s.principal IN :principals AND s.epochDay >= :cutoff"
+                    + GROUP_EDGES)
+    List<Object[]> edgesByPrincipals(
             @Param("principals") Collection<String> principals,
-            @Param("fromTool") String fromTool,
             @Param("cutoff") long cutoff,
             @Param("recentCutoff") long recentCutoff);
 
-    @Query(SELECT_TOTALS + NAMED_ONLY + "s.fromTool = :fromTool AND s.epochDay >= :cutoff" + GROUP)
-    List<Object[]> sumByFrom(
-            @Param("fromTool") String fromTool,
-            @Param("cutoff") long cutoff,
-            @Param("recentCutoff") long recentCutoff);
+    @Query(SELECT_EDGES + HAS_SOURCE + "s.epochDay >= :cutoff" + GROUP_EDGES)
+    List<Object[]> edgesGlobal(
+            @Param("cutoff") long cutoff, @Param("recentCutoff") long recentCutoff);
 
     /** Returns 0 when today's row does not exist yet, telling the caller to insert it. */
     @Modifying(clearAutomatically = true)

@@ -75,7 +75,8 @@ class ToolUsagePostgresConcurrencyTest {
         ApplicationProperties properties = new ApplicationProperties();
         properties.getSystem().setEnableAnalytics(true);
         trackingService =
-                new ToolUsageTrackingService(usageRepository, chainRepository, properties);
+                new ToolUsageTrackingService(
+                        usageRepository, chainRepository, new ToolKeyRegistry(), properties);
     }
 
     /** Runs {@code task} on {@code NODES} threads at once; returns how many threw. */

@@ -7,23 +7,42 @@ export interface ToolRecommendationDto {
 
 const BASE_PATH = "/api/v1/proprietary/ui-data/tool-recommendations";
 
-// Core-only backends have no recommendations API; remember the 404 so we stop asking.
+// A 404 can also be a proxy hiccup mid-deploy, so one is not proof the route is
+// gone. A 501 is the install answering deliberately, and latches immediately.
+const MISSING_ROUTE_STRIKES = 3;
+
 let backendUnavailable = false;
+let consecutiveNotFound = 0;
 
 export function resetToolRecommendationsAvailabilityForTests(): void {
   backendUnavailable = false;
+  consecutiveNotFound = 0;
 }
 
-function markUnavailableOn404(error: unknown): void {
+function noteFailure(error: unknown): void {
   const status = (error as { response?: { status?: number } })?.response
     ?.status;
-  if (status === 404 || status === 501) backendUnavailable = true;
+  if (status === 501) {
+    // The install records no usage, or has no signed-in user to rank for.
+    backendUnavailable = true;
+    return;
+  }
+  if (status === 404) {
+    consecutiveNotFound += 1;
+    if (consecutiveNotFound >= MISSING_ROUTE_STRIKES) backendUnavailable = true;
+    return;
+  }
+  consecutiveNotFound = 0;
+}
+
+function noteSuccess(): void {
+  consecutiveNotFound = 0;
 }
 
 /**
  * Ranked tools for the current context, or null when the backend cannot serve
- * them (core-only build, logged out, network failure) so callers fall back to
- * the static recommended list.
+ * them (core-only build, login disabled, usage tracking off, network failure)
+ * so callers fall back to the static recommended list.
  */
 export async function fetchToolRecommendations(
   currentTool: string | null,
@@ -39,9 +58,10 @@ export async function fetchToolRecommendations(
       suppressErrorToast: true,
       skipAuthRedirect: true,
     });
+    noteSuccess();
     return response.data?.recommendations ?? [];
   } catch (error) {
-    markUnavailableOn404(error);
+    noteFailure(error);
     return null;
   }
 }
@@ -65,7 +85,8 @@ export async function recordToolUsage(
       { toolKey, priorChains },
       { suppressErrorToast: true, skipAuthRedirect: true },
     );
+    noteSuccess();
   } catch (error) {
-    markUnavailableOn404(error);
+    noteFailure(error);
   }
 }

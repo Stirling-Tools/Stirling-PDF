@@ -17,7 +17,7 @@ export const qk = {
     ["editor", "portalAccess", userId] as const,
   teamDetails: (teamId: number) => ["editor", "teamDetails", teamId] as const,
   teams: () => ["editor", "teams"] as const,
-  toolRecommendations: (context: string, limit: number) =>
-    ["editor", "toolRecommendations", context, limit] as const,
+  toolRecommendations: (context: string, limit: number, completions: number) =>
+    ["editor", "toolRecommendations", context, limit, completions] as const,
   users: () => ["editor", "users"] as const,
 } as const;

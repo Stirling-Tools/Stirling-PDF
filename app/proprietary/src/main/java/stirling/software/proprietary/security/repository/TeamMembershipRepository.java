@@ -1,8 +1,10 @@
 package stirling.software.proprietary.security.repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -43,6 +45,18 @@ public interface TeamMembershipRepository extends JpaRepository<TeamMembership, 
      */
     @Query("SELECT tm FROM TeamMembership tm JOIN FETCH tm.team WHERE tm.user.id = :userId")
     List<TeamMembership> findByUserId(@Param("userId") Long userId);
+
+    /** Team ids alone, for callers that only need to know which rosters a user belongs to. */
+    @Query(
+            "SELECT tm.team.id FROM TeamMembership tm WHERE upper(tm.user.username) = upper(:username)")
+    List<Long> findTeamIdsByUsername(@Param("username") String username);
+
+    /** Usernames alone, ordered and limited by the database, for callers that need no entities. */
+    @Query(
+            "SELECT tm.user.username FROM TeamMembership tm WHERE tm.team.id IN :teamIds"
+                    + " AND tm.user.username IS NOT NULL ORDER BY tm.user.username")
+    List<String> findUsernamesByTeamIds(
+            @Param("teamIds") Collection<Long> teamIds, Pageable pageable);
 
     /**
      * Find all members with a specific role in a team

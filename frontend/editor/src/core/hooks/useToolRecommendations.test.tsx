@@ -22,51 +22,61 @@ describe("useToolRecommendations", () => {
     resetToolUsageTrackerForTests();
   });
 
-  it("maps the backend ranking to known tool ids, keeping the score order", async () => {
-    mockFetch.mockResolvedValue([
+  it("returns the backend ranking with its scores intact", async () => {
+    const ranking = [
       { toolKey: "ocr", score: 5 },
-      { toolKey: "definitelyNotATool", score: 4 },
       { toolKey: "merge", score: 3 },
-    ]);
+    ];
+    mockFetch.mockResolvedValue(ranking);
 
-    const { result } = renderHook(() => useToolRecommendations(), {
+    const { result } = renderHook(() => useToolRecommendations(null), {
       wrapper: TestQueryProvider,
     });
 
     await waitFor(() =>
-      expect(result.current.recommendedToolIds).toEqual(["ocr", "merge"]),
+      expect(result.current.recommendations).toEqual(ranking),
     );
   });
 
   it("reports null when the backend is unavailable (static fallback)", async () => {
     mockFetch.mockResolvedValue(null);
 
-    const { result } = renderHook(() => useToolRecommendations(), {
+    const { result } = renderHook(() => useToolRecommendations(null), {
       wrapper: TestQueryProvider,
     });
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalled());
-    expect(result.current.recommendedToolIds).toBeNull();
+    expect(result.current.recommendations).toBeNull();
   });
 
   it("reports null on a cold start with no usage data", async () => {
     mockFetch.mockResolvedValue([]);
 
-    const { result } = renderHook(() => useToolRecommendations(), {
+    const { result } = renderHook(() => useToolRecommendations(null), {
       wrapper: TestQueryProvider,
     });
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalled());
-    expect(result.current.recommendedToolIds).toBeNull();
+    expect(result.current.recommendations).toBeNull();
   });
 
-  it("asks for recommendations in the context of the last completed tool", async () => {
+  it("asks in the context of the tool that is asking, not the last one to run", async () => {
     mockFetch.mockResolvedValue([]);
 
-    const { result } = renderHook(() => useToolRecommendations(), {
+    renderHook(() => useToolRecommendations("split"), {
       wrapper: TestQueryProvider,
     });
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith(null, 8));
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("split", 8));
+  });
+
+  it("refetches once a tool completes, since that run is the newest evidence", async () => {
+    mockFetch.mockResolvedValue([]);
+
+    renderHook(() => useToolRecommendations("compare"), {
+      wrapper: TestQueryProvider,
+    });
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(1));
 
     act(() =>
       notifyToolCompleted({
@@ -76,7 +86,7 @@ describe("useToolRecommendations", () => {
       }),
     );
 
-    await waitFor(() => expect(mockFetch).toHaveBeenCalledWith("compare", 8));
-    expect(result.current.contextTool).toBe("compare");
+    await waitFor(() => expect(mockFetch).toHaveBeenCalledTimes(2));
+    expect(mockFetch).toHaveBeenLastCalledWith("compare", 8);
   });
 });

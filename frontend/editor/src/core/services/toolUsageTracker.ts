@@ -3,8 +3,10 @@ import type { ToolId } from "@app/types/toolId";
 import type { FileId, ToolOperation } from "@app/types/file";
 
 // Module store rather than a context: tool completions happen deep in operation
-// hooks, and every consumer only needs "which tool finished last".
-let lastCompletedTool: ToolId | null = null;
+// hooks, and every consumer only needs to know one happened. Which tool the
+// suggestions are for comes from the panel showing them, not from here - the
+// panel can belong to a tool that never runs through the operation hooks.
+let completionCount = 0;
 const listeners = new Set<() => void>();
 
 /**
@@ -40,8 +42,9 @@ export interface ToolCompletion {
   outputFileIds: FileId[];
 }
 
-export function getLastCompletedTool(): ToolId | null {
-  return lastCompletedTool;
+/** Bumped on every completion, so a ranking built before one can be refetched. */
+export function getCompletionCount(): number {
+  return completionCount;
 }
 
 /** The tools already applied to this document, newest step last. */
@@ -68,8 +71,6 @@ export function notifyToolCompleted({
   inputs,
   outputFileIds,
 }: ToolCompletion): void {
-  lastCompletedTool = toolId;
-
   const priorChains = distinctChains(inputs.map(getDocumentToolChain));
   const carried = trim([...dominantChain(priorChains), toolId]);
 
@@ -78,6 +79,7 @@ export function notifyToolCompleted({
   for (const fileId of outputFileIds) rememberChain(fileId, carried);
 
   void recordToolUsage(toolId, priorChains);
+  completionCount += 1;
   listeners.forEach((listener) => listener());
 }
 
@@ -126,7 +128,7 @@ function dominantChain(chains: ToolId[][]): ToolId[] {
 }
 
 export function resetToolUsageTrackerForTests(): void {
-  lastCompletedTool = null;
+  completionCount = 0;
   chainsByFileId.clear();
   listeners.clear();
 }

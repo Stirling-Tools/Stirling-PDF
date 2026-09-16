@@ -7,7 +7,6 @@ import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -37,8 +36,6 @@ import stirling.software.proprietary.repository.ToolUsageStatRepository;
 @RequiredArgsConstructor
 public class ToolUsageTrackingService {
 
-    private static final Pattern TOOL_KEY_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{1,64}$");
-
     /** Bounds the work one completion can trigger when many documents go in at once. */
     static final int MAX_CHAINS_PER_EVENT = 5;
 
@@ -51,10 +48,12 @@ public class ToolUsageTrackingService {
 
     private final ToolUsageStatRepository usageRepository;
     private final ToolChainStatRepository chainRepository;
+    private final ToolKeyRegistry toolKeys;
     private final ApplicationProperties applicationProperties;
 
-    public static boolean isValidToolKey(String toolKey) {
-        return toolKey != null && TOOL_KEY_PATTERN.matcher(toolKey).matches();
+    /** Only keys a real tool answers to are recorded; see {@link ToolKeyRegistry}. */
+    public boolean isKnownToolKey(String toolKey) {
+        return toolKeys.isKnown(toolKey);
     }
 
     /** Per-principal usage is profiling, so admin analytics consent gates it too. */
@@ -77,7 +76,7 @@ public class ToolUsageTrackingService {
     public void recordUsage(String principal, String toolKey, List<List<String>> priorChains) {
         if (!isUsageDataAllowed(applicationProperties)
                 || principal == null
-                || !isValidToolKey(toolKey)) {
+                || !isKnownToolKey(toolKey)) {
             return;
         }
         List<List<String>> chains = sanitiseChains(priorChains, toolKey);
@@ -98,8 +97,7 @@ public class ToolUsageTrackingService {
      * a real subsequence), removes the run's own key from the tail so a re-run does not self-loop,
      * and de-duplicates so ten identically-processed inputs count as one workflow, not ten.
      */
-    private static List<List<String>> sanitiseChains(
-            List<List<String>> priorChains, String toolKey) {
+    private List<List<String>> sanitiseChains(List<List<String>> priorChains, String toolKey) {
         if (priorChains == null || priorChains.isEmpty()) {
             return List.of(List.of());
         }
@@ -114,12 +112,11 @@ public class ToolUsageTrackingService {
         return List.copyOf(distinct);
     }
 
-    private static List<String> sanitiseChain(List<String> chain, String toolKey) {
+    private List<String> sanitiseChain(List<String> chain, String toolKey) {
         if (chain == null) {
             return List.of();
         }
-        List<String> valid =
-                chain.stream().filter(ToolUsageTrackingService::isValidToolKey).toList();
+        List<String> valid = chain.stream().filter(this::isKnownToolKey).toList();
         // Re-running the same tool is a correction, not a step: "compress, compress" is "compress".
         int end = valid.size();
         while (end > 0 && toolKey.equals(valid.get(end - 1))) {

@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -46,6 +47,47 @@ class ToolUsageTrackingServiceTest {
     @Mock private ToolUsageStatRepository usageRepository;
     @Mock private ToolChainStatRepository chainRepository;
 
+    /** The longest key the shipped registry holds, so chain trimming is tested at its worst. */
+    private static final String LONGEST_KEY = "editTableOfContents";
+
+    /**
+     * Short stand-in names for real tools, so a chain of eight stays readable. The registry is the
+     * only thing that decides what a tool key is, so the tests declare their own vocabulary.
+     */
+    private static final ToolKeyRegistry TOOL_KEYS =
+            ToolKeyRegistry.forKeys(
+                    Set.of(
+                            "a",
+                            "b",
+                            "c",
+                            "d",
+                            "e",
+                            "f",
+                            "g",
+                            "h",
+                            "x",
+                            "t1",
+                            "t2",
+                            "t3",
+                            "t4",
+                            "t5",
+                            "t6",
+                            "t7",
+                            "t8",
+                            "t9",
+                            "t10",
+                            "tracked",
+                            "compress",
+                            "ocr",
+                            "merge",
+                            "split",
+                            "rotate",
+                            "watermark",
+                            "compare",
+                            "addPassword",
+                            "pdfTextEditor",
+                            LONGEST_KEY));
+
     private ApplicationProperties properties;
     private ToolUsageTrackingService service;
 
@@ -53,7 +95,9 @@ class ToolUsageTrackingServiceTest {
     void setUp() {
         properties = new ApplicationProperties();
         properties.getSystem().setEnableAnalytics(true);
-        service = new ToolUsageTrackingService(usageRepository, chainRepository, properties);
+        service =
+                new ToolUsageTrackingService(
+                        usageRepository, chainRepository, TOOL_KEYS, properties);
     }
 
     @SafeVarargs
@@ -238,14 +282,13 @@ class ToolUsageTrackingServiceTest {
         @DisplayName("the document's whole path is recorded, not just the last step")
         void recordsFullChain() {
             when(chainRepository.incrementCount(
-                            PRINCIPAL, "compress>watermark>add-password", TODAY, 1))
+                            PRINCIPAL, "compress>watermark>addPassword", TODAY, 1))
                     .thenReturn(1);
 
-            service.recordUsage(
-                    PRINCIPAL, "add-password", chains(List.of("compress", "watermark")));
+            service.recordUsage(PRINCIPAL, "addPassword", chains(List.of("compress", "watermark")));
 
             verify(chainRepository)
-                    .incrementCount(PRINCIPAL, "compress>watermark>add-password", TODAY, 1);
+                    .incrementCount(PRINCIPAL, "compress>watermark>addPassword", TODAY, 1);
         }
 
         @Test
@@ -306,8 +349,8 @@ class ToolUsageTrackingServiceTest {
             when(chainRepository.incrementCount(anyString(), anyString(), anyLong(), anyLong()))
                     .thenReturn(1);
             List<List<String>> many = new ArrayList<>();
-            for (int i = 0; i < ToolUsageTrackingService.MAX_CHAINS_PER_EVENT + 5; i++) {
-                many.add(List.of("tool-" + i));
+            for (int i = 1; i <= ToolUsageTrackingService.MAX_CHAINS_PER_EVENT + 5; i++) {
+                many.add(List.of("t" + i));
             }
 
             service.recordUsage(PRINCIPAL, "merge", many);
@@ -353,7 +396,7 @@ class ToolUsageTrackingServiceTest {
         void trailingWindowFitsTheColumn() {
             when(chainRepository.incrementCount(anyString(), anyString(), anyLong(), anyLong()))
                     .thenReturn(1);
-            List<String> prior = Collections.nCopies(20, "a".repeat(64));
+            List<String> prior = Collections.nCopies(20, LONGEST_KEY);
 
             service.recordUsage(PRINCIPAL, "ocr", chains(prior));
 
@@ -438,27 +481,41 @@ class ToolUsageTrackingServiceTest {
         }
 
         @Test
-        @DisplayName("valid keys accept letters, digits, hyphens and underscores")
+        @DisplayName("only keys a real tool answers to are accepted")
         void keyValidation() {
-            assertThat(ToolUsageTrackingService.isValidToolKey("pdfTextEditor")).isTrue();
-            assertThat(ToolUsageTrackingService.isValidToolKey("pdf-to-img_2")).isTrue();
-            assertThat(ToolUsageTrackingService.isValidToolKey("")).isFalse();
-            assertThat(ToolUsageTrackingService.isValidToolKey("has space")).isFalse();
-            assertThat(ToolUsageTrackingService.isValidToolKey("semi;colon")).isFalse();
+            assertThat(service.isKnownToolKey("pdfTextEditor")).isTrue();
+            assertThat(service.isKnownToolKey("notATool")).isFalse();
+            assertThat(service.isKnownToolKey("")).isFalse();
+            assertThat(service.isKnownToolKey(null)).isFalse();
+            assertThat(service.isKnownToolKey("has space")).isFalse();
+        }
+
+        @Test
+        @DisplayName("a key invented by the caller never reaches the tables")
+        void unknownKeysAreNotRecorded() {
+            service.recordUsage(PRINCIPAL, "definitelyNotATool", FRESH);
+
+            verifyNoInteractions(usageRepository, chainRepository);
         }
 
         @Test
         @DisplayName("the chain separator can never appear inside a tool key")
         void separatorIsNotAValidToolKeyCharacter() {
-            assertThat(ToolUsageTrackingService.isValidToolKey("a" + ToolChainStat.SEPARATOR + "b"))
-                    .isFalse();
+            assertThat(service.isKnownToolKey("a" + ToolChainStat.SEPARATOR + "b")).isFalse();
         }
 
         @Test
         @DisplayName("the no-previous-tool sentinel can never collide with a real tool key")
         void sentinelIsNotAValidToolKey() {
-            assertThat(ToolUsageTrackingService.isValidToolKey(ToolUsageStat.NO_PREVIOUS_TOOL))
-                    .isFalse();
+            assertThat(service.isKnownToolKey(ToolUsageStat.NO_PREVIOUS_TOOL)).isFalse();
+        }
+
+        @Test
+        @DisplayName("every shipped tool key is short enough to store a full chain of them")
+        void shippedKeysFitTheChainColumn() {
+            int longestChain = ToolChainStat.MAX_CHAIN_TOOLS * (ToolKeyRegistry.MAX_KEY_LENGTH + 1);
+
+            assertThat(longestChain).isLessThanOrEqualTo(ToolChainStat.MAX_CHAIN_KEY_LENGTH);
         }
     }
 

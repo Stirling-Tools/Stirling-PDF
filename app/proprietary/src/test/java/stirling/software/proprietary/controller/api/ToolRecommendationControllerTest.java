@@ -8,7 +8,6 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -23,7 +22,6 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.ResponseEntity;
@@ -33,15 +31,12 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.RecommendationsResponse;
 import stirling.software.proprietary.controller.api.ToolRecommendationController.UsageRequest;
-import stirling.software.proprietary.model.ToolUsageStat;
 import stirling.software.proprietary.service.ToolRecommendationService;
 import stirling.software.proprietary.service.ToolRecommendationService.ToolRecommendation;
 import stirling.software.proprietary.service.ToolUsageTrackingService;
 
 @ExtendWith(MockitoExtension.class)
 class ToolRecommendationControllerTest {
-
-    private static final String BROWSER_ID = "0f8fad5b-d9cb-469f-a165-70867728950e";
 
     private static final String BASE_PATH = "/api/v1/proprietary/ui-data/tool-recommendations";
 
@@ -63,8 +58,12 @@ class ToolRecommendationControllerTest {
                 new ToolRecommendationController(
                         trackingService, recommendationService, Optional.of(userService));
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
-        // Lenient: the 400 and 404 cases never reach the consent check.
+        // Lenient: the 400 case is rejected before either gate is consulted.
         lenient().when(trackingService.isRecordingEnabled()).thenReturn(true);
+        lenient().when(trackingService.isKnownToolKey(anyString())).thenReturn(true);
+        lenient().when(trackingService.isKnownToolKey("bad key!")).thenReturn(false);
+        lenient().when(trackingService.isKnownToolKey("not a tool!")).thenReturn(false);
+        lenient().when(trackingService.isKnownToolKey(isNull())).thenReturn(false);
     }
 
     @Nested
@@ -79,7 +78,7 @@ class ToolRecommendationControllerTest {
                     .thenReturn(List.of(new ToolRecommendation("ocr", 5.0)));
 
             ResponseEntity<RecommendationsResponse> response =
-                    controller.getRecommendations("compare", 6, null);
+                    controller.getRecommendations("compare", 6);
 
             assertThat(response.getStatusCode().value()).isEqualTo(200);
             assertThat(response.getBody().recommendations())
@@ -87,14 +86,14 @@ class ToolRecommendationControllerTest {
         }
 
         @Test
-        @DisplayName("an invalid currentTool is treated as no context, not an error")
-        void invalidCurrentToolIgnored() {
+        @DisplayName("a currentTool no tool answers to is treated as no context, not an error")
+        void unknownCurrentToolIgnored() {
             when(userService.getCurrentUsername()).thenReturn("alice");
             when(recommendationService.getRecommendations(eq("alice"), isNull(), anyInt()))
                     .thenReturn(List.of());
 
             ResponseEntity<RecommendationsResponse> response =
-                    controller.getRecommendations("not a tool!", 6, null);
+                    controller.getRecommendations("not a tool!", 6);
 
             assertThat(response.getStatusCode().value()).isEqualTo(200);
             verify(recommendationService).getRecommendations("alice", null, 6);
@@ -108,10 +107,35 @@ class ToolRecommendationControllerTest {
                     .thenThrow(new RuntimeException("db down"));
 
             ResponseEntity<RecommendationsResponse> response =
-                    controller.getRecommendations(null, 6, null);
+                    controller.getRecommendations(null, 6);
 
             assertThat(response.getStatusCode().value()).isEqualTo(200);
             assertThat(response.getBody().recommendations()).isEmpty();
+        }
+
+        @Test
+        @DisplayName("with nobody signed in it answers 501 so the client stops asking")
+        void noPrincipalReturns501() {
+            when(userService.getCurrentUsername()).thenReturn(null);
+
+            ResponseEntity<RecommendationsResponse> response =
+                    controller.getRecommendations("compare", 6);
+
+            assertThat(response.getStatusCode().value()).isEqualTo(501);
+            verifyNoInteractions(recommendationService);
+        }
+
+        @Test
+        @DisplayName("an install that declined tracking answers 501 rather than an empty ranking")
+        void declinedInstallReturns501() {
+            when(userService.getCurrentUsername()).thenReturn("alice");
+            when(trackingService.isRecordingEnabled()).thenReturn(false);
+
+            ResponseEntity<RecommendationsResponse> response =
+                    controller.getRecommendations("compare", 6);
+
+            assertThat(response.getStatusCode().value()).isEqualTo(501);
+            verifyNoInteractions(recommendationService);
         }
     }
 
@@ -120,25 +144,24 @@ class ToolRecommendationControllerTest {
     class RecordUsage {
 
         @Test
-        @DisplayName("valid events are recorded for the resolved principal")
+        @DisplayName("valid events are recorded for the signed-in user")
         void recordsUsage() {
             when(userService.getCurrentUsername()).thenReturn("alice");
 
-            ResponseEntity<Void> response =
-                    controller.recordUsage(new UsageRequest("ocr", CHAIN), null);
+            ResponseEntity<Void> response = controller.recordUsage(new UsageRequest("ocr", CHAIN));
 
             assertThat(response.getStatusCode().value()).isEqualTo(204);
             verify(trackingService).recordUsage("alice", "ocr", CHAIN);
         }
 
         @Test
-        @DisplayName("an invalid tool key is rejected with 400")
-        void invalidToolKeyRejected() {
+        @DisplayName("a tool key no tool answers to is rejected with 400")
+        void unknownToolKeyRejected() {
             ResponseEntity<Void> response =
-                    controller.recordUsage(new UsageRequest("bad key!", null), null);
+                    controller.recordUsage(new UsageRequest("bad key!", null));
 
             assertThat(response.getStatusCode().value()).isEqualTo(400);
-            verifyNoInteractions(trackingService);
+            verify(trackingService, never()).recordUsage(anyString(), anyString(), any());
         }
 
         @Test
@@ -146,7 +169,7 @@ class ToolRecommendationControllerTest {
         void chainsPassedThrough() {
             when(userService.getCurrentUsername()).thenReturn("alice");
 
-            controller.recordUsage(new UsageRequest("ocr", JUNK_CHAIN), null);
+            controller.recordUsage(new UsageRequest("ocr", JUNK_CHAIN));
 
             verify(trackingService).recordUsage("alice", "ocr", JUNK_CHAIN);
         }
@@ -154,10 +177,10 @@ class ToolRecommendationControllerTest {
         @Test
         @DisplayName("an install that declined tracking answers 501 so the client stops posting")
         void declinedInstallReturns501() {
+            when(userService.getCurrentUsername()).thenReturn("alice");
             when(trackingService.isRecordingEnabled()).thenReturn(false);
 
-            ResponseEntity<Void> response =
-                    controller.recordUsage(new UsageRequest("ocr", CHAIN), null);
+            ResponseEntity<Void> response = controller.recordUsage(new UsageRequest("ocr", CHAIN));
 
             assertThat(response.getStatusCode().value()).isEqualTo(501);
             verify(trackingService, never()).recordUsage(anyString(), anyString(), any());
@@ -177,66 +200,26 @@ class ToolRecommendationControllerTest {
 
             verifyNoInteractions(recommendationService);
         }
-
-        @Test
-        @DisplayName("a spoofed browser id cannot read the logged-in caller out of their own scope")
-        void browserIdCannotOverrideLoggedInPrincipal() throws Exception {
-            when(userService.getCurrentUsername()).thenReturn("bob");
-            when(recommendationService.getRecommendations(eq("bob"), isNull(), anyInt()))
-                    .thenReturn(List.of());
-
-            mockMvc.perform(get(BASE_PATH).header("X-Browser-Id", BROWSER_ID))
-                    .andExpect(status().isOk());
-
-            verify(recommendationService).getRecommendations("bob", null, 6);
-            verify(recommendationService, never())
-                    .getRecommendations(
-                            eq(ToolUsageStat.ANONYMOUS_PREFIX + BROWSER_ID), any(), anyInt());
-        }
     }
 
     @Nested
     @DisplayName("Principal resolution")
     class PrincipalResolution {
 
+        /**
+         * Rows key on a username the server authenticated. With login disabled the only identity a
+         * caller could offer is one they declared, which would let an unauthenticated client mint
+         * principals to write rows under - so nothing is recorded at all.
+         */
         @Test
-        @DisplayName("no login falls back to the browser id pseudo-identity")
-        void browserIdFallback() {
+        @DisplayName("no login means nothing is recorded")
+        void noLoginRecordsNothing() {
             when(userService.getCurrentUsername()).thenReturn(null);
 
-            controller.recordUsage(new UsageRequest("ocr", null), BROWSER_ID);
+            ResponseEntity<Void> response = controller.recordUsage(new UsageRequest("ocr", CHAIN));
 
-            verify(trackingService)
-                    .recordUsage(ToolUsageStat.ANONYMOUS_PREFIX + BROWSER_ID, "ocr", null);
-        }
-
-        @Test
-        @DisplayName("a malformed browser id falls back to the shared anonymous bucket")
-        void malformedBrowserIdFallback() {
-            when(userService.getCurrentUsername()).thenReturn(null);
-
-            controller.recordUsage(new UsageRequest("ocr", null), "<script>alert(1)</script>");
-
-            verify(trackingService)
-                    .recordUsage(ToolUsageStat.SHARED_ANONYMOUS_PRINCIPAL, "ocr", null);
-        }
-
-        @Test
-        @DisplayName("an anonymous principal is namespaced out of the install-wide aggregates")
-        void anonymousPrincipalsCarryThePrefix() {
-            when(userService.getCurrentUsername()).thenReturn(null);
-
-            controller.recordUsage(new UsageRequest("ocr", null), BROWSER_ID);
-            controller.recordUsage(new UsageRequest("ocr", null), null);
-
-            ArgumentCaptor<String> principals = ArgumentCaptor.forClass(String.class);
-            verify(trackingService, times(2))
-                    .recordUsage(principals.capture(), eq("ocr"), isNull());
-            assertThat(principals.getAllValues())
-                    .allSatisfy(
-                            principal ->
-                                    assertThat(principal)
-                                            .startsWith(ToolUsageStat.ANONYMOUS_PREFIX));
+            assertThat(response.getStatusCode().value()).isEqualTo(501);
+            verify(trackingService, never()).recordUsage(anyString(), anyString(), any());
         }
 
         @Test
@@ -244,10 +227,24 @@ class ToolRecommendationControllerTest {
         void anonymousUserPlaceholderIgnored() {
             when(userService.getCurrentUsername()).thenReturn("anonymousUser");
 
-            controller.recordUsage(new UsageRequest("ocr", null), BROWSER_ID);
+            ResponseEntity<Void> response = controller.recordUsage(new UsageRequest("ocr", CHAIN));
 
-            verify(trackingService)
-                    .recordUsage(ToolUsageStat.ANONYMOUS_PREFIX + BROWSER_ID, "ocr", null);
+            assertThat(response.getStatusCode().value()).isEqualTo(501);
+            verify(trackingService, never()).recordUsage(anyString(), anyString(), any());
+        }
+
+        @Test
+        @DisplayName("a core build with no user service records nothing")
+        void withoutUserServiceRecordsNothing() {
+            ToolRecommendationController coreController =
+                    new ToolRecommendationController(
+                            trackingService, recommendationService, Optional.empty());
+
+            ResponseEntity<Void> response =
+                    coreController.recordUsage(new UsageRequest("ocr", CHAIN));
+
+            assertThat(response.getStatusCode().value()).isEqualTo(501);
+            verify(trackingService, never()).recordUsage(anyString(), anyString(), any());
         }
     }
 }

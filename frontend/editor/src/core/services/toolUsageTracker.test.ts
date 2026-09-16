@@ -2,8 +2,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 
 import { recordToolUsage } from "@app/api/toolRecommendations";
 import {
+  getCompletionCount,
   getDocumentToolChain,
-  getLastCompletedTool,
   notifyToolCompleted,
   resetToolUsageTrackerForTests,
   subscribeToToolCompletions,
@@ -43,7 +43,7 @@ describe("toolUsageTracker", () => {
     run("compare", [uploaded("a")], ["a2"]);
 
     expect(mockRecord).toHaveBeenCalledWith("compare", [[]]);
-    expect(getLastCompletedTool()).toBe("compare");
+    expect(getCompletionCount()).toBe(1);
   });
 
   it("follows the document across operations that replace its id", () => {

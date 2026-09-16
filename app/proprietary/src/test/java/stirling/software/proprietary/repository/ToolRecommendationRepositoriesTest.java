@@ -3,6 +3,7 @@ package stirling.software.proprietary.repository;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -57,6 +58,21 @@ class ToolRecommendationRepositoriesTest {
         assertThat(sums.get("ocr")[1]).isEqualTo(10);
     }
 
+    /** [fromTool, tool, recent, total] rows as fromTool -> tool -> {recent, total}. */
+    private static Map<String, Map<String, long[]>> byEdge(List<Object[]> rows) {
+        Map<String, Map<String, long[]>> byFromTool = new HashMap<>();
+        for (Object[] row : rows) {
+            byFromTool
+                    .computeIfAbsent((String) row[0], key -> new HashMap<>())
+                    .put(
+                            (String) row[1],
+                            new long[] {
+                                ((Number) row[2]).longValue(), ((Number) row[3]).longValue()
+                            });
+        }
+        return byFromTool;
+    }
+
     @Test
     @DisplayName("frequency sums a tool across every predecessor it followed")
     void frequencyGroupsAwayFromTool() {
@@ -86,61 +102,38 @@ class ToolRecommendationRepositoriesTest {
     }
 
     @Test
-    @DisplayName("install-wide sums ignore anonymous principals but scoped sums still see them")
-    void globalSumsExcludeAnonymousPrincipals() {
-        String anon = ToolUsageStat.ANONYMOUS_PREFIX + "browser-1";
-        usageRepository.save(new ToolUsageStat("alice", NONE, "ocr", DAY, 1));
-        usageRepository.save(new ToolUsageStat("alice", "compare", "ocr", DAY, 1));
-        usageRepository.save(new ToolUsageStat(anon, NONE, "ocr", DAY, 900));
-        usageRepository.save(new ToolUsageStat(anon, "compare", "ocr", DAY, 900));
-        usageRepository.save(
-                new ToolUsageStat(ToolUsageStat.SHARED_ANONYMOUS_PRINCIPAL, NONE, "ocr", DAY, 900));
-
-        Map<String, long[]> global = byTool(usageRepository.sumGlobal(DAY - 30, DAY - 7));
-        Map<String, long[]> globalFrom =
-                byTool(usageRepository.sumByFrom("compare", DAY - 30, DAY - 7));
-        Map<String, long[]> theirOwn =
-                byTool(usageRepository.sumByPrincipal(anon, DAY - 30, DAY - 7));
-
-        assertThat(global.get("ocr")[1]).isEqualTo(2);
-        assertThat(globalFrom.get("ocr")[1]).isEqualTo(1);
-        assertThat(theirOwn.get("ocr")[1]).isEqualTo(1800);
-    }
-
-    @Test
-    @DisplayName("install-wide chains ignore anonymous principals")
-    void globalChainsExcludeAnonymousPrincipals() {
-        String anon = ToolUsageStat.ANONYMOUS_PREFIX + "browser-1";
-        chainRepository.save(new ToolChainStat("alice", "compress>ocr", DAY, 2, 1));
-        chainRepository.save(new ToolChainStat(anon, "compress>ocr", DAY, 2, 900));
-
-        List<Object[]> global = chainRepository.topGlobal(DAY - 30, 2, PageRequest.of(0, 10));
-
-        assertThat(((Number) global.get(0)[2]).longValue()).isEqualTo(1);
-        assertThat(chainRepository.topByPrincipal(anon, DAY - 30, 2, PageRequest.of(0, 10)))
-                .hasSize(1);
-    }
-
-    @Test
-    @DisplayName("transitions filter by the tool the user came from")
-    void transitionSumsFilterByFromTool() {
+    @DisplayName("one scan returns every source tool transition, scoped as asked")
+    void transitionScansCoverEverySourceTool() {
         usageRepository.save(new ToolUsageStat("alice", "compare", "ocr", DAY, 2));
         usageRepository.save(new ToolUsageStat("alice", "compare", "ocr", DAY - 10, 3));
         usageRepository.save(new ToolUsageStat("alice", "compare", "merge", DAY, 1));
         usageRepository.save(new ToolUsageStat("alice", "split", "ocr", DAY, 9));
         usageRepository.save(new ToolUsageStat("bob", "compare", "ocr", DAY, 5));
 
-        Map<String, long[]> mine =
-                byTool(
-                        usageRepository.sumByPrincipalAndFrom(
-                                "alice", "compare", DAY - 30, DAY - 7));
-        Map<String, long[]> everyone =
-                byTool(usageRepository.sumByFrom("compare", DAY - 30, DAY - 7));
+        Map<String, Map<String, long[]>> mine =
+                byEdge(usageRepository.edgesByPrincipal("alice", DAY - 30, DAY - 7));
+        Map<String, Map<String, long[]>> everyone =
+                byEdge(usageRepository.edgesGlobal(DAY - 30, DAY - 7));
 
-        assertThat(mine.keySet()).containsExactlyInAnyOrder("ocr", "merge");
-        assertThat(mine.get("ocr")[0]).isEqualTo(2);
-        assertThat(mine.get("ocr")[1]).isEqualTo(5);
-        assertThat(everyone.get("ocr")[1]).isEqualTo(10);
+        assertThat(mine.keySet()).containsExactlyInAnyOrder("compare", "split");
+        assertThat(mine.get("compare").keySet()).containsExactlyInAnyOrder("ocr", "merge");
+        assertThat(mine.get("compare").get("ocr")[0]).isEqualTo(2);
+        assertThat(mine.get("compare").get("ocr")[1]).isEqualTo(5);
+        assertThat(everyone.get("compare").get("ocr")[1]).isEqualTo(10);
+    }
+
+    @Test
+    @DisplayName("scoping transitions by principals covers a team without leaking other users")
+    void transitionScansScopeByPrincipals() {
+        usageRepository.save(new ToolUsageStat("alice", "compare", "ocr", DAY, 2));
+        usageRepository.save(new ToolUsageStat("carol", "compare", "ocr", DAY, 40));
+
+        Map<String, Map<String, long[]>> team =
+                byEdge(
+                        usageRepository.edgesByPrincipals(
+                                List.of("alice", "bob"), DAY - 30, DAY - 7));
+
+        assertThat(team.get("compare").get("ocr")[1]).isEqualTo(2);
     }
 
     @Test
@@ -148,8 +141,7 @@ class ToolRecommendationRepositoriesTest {
     void sentinelRowsExcludedFromTransitions() {
         usageRepository.save(new ToolUsageStat("alice", NONE, "ocr", DAY, 5));
 
-        assertThat(usageRepository.sumByPrincipalAndFrom("alice", "compare", DAY - 30, DAY - 7))
-                .isEmpty();
+        assertThat(usageRepository.edgesByPrincipal("alice", DAY - 30, DAY - 7)).isEmpty();
         assertThat(byTool(usageRepository.sumByPrincipal("alice", DAY - 30, DAY - 7)))
                 .containsKey("ocr");
     }

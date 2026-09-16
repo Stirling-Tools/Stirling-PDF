@@ -46,10 +46,10 @@ public class ToolChainStat implements Serializable {
     public static final int MAX_CHAIN_TOOLS = 8;
 
     /**
-     * Sized for {@link #MAX_CHAIN_TOOLS} keys at the 64-character validation limit, so a chain that
-     * passes validation can always be stored. Real tool keys top out around 20 characters, so a
-     * full-length chain is nearer 160. Tool keys are restricted to ASCII, so this is also the byte
-     * length - the composite key stays far inside Postgres's index-entry limit.
+     * Comfortably clear of the longest chain the tool registry can produce - eight keys of at most
+     * {@code ToolKeyRegistry.MAX_KEY_LENGTH} characters is nearer 160 - so a chain built from known
+     * keys always stores. Tool keys are ASCII, so this is also the byte length, and the composite
+     * key stays far inside Postgres's index-entry limit.
      */
     public static final int MAX_CHAIN_KEY_LENGTH = 520;
 

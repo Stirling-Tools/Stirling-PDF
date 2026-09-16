@@ -56,8 +56,31 @@ describe("toolRecommendations api", () => {
       expect(await fetchToolRecommendations("compare")).toBeNull();
     });
 
-    it("remembers a 404 and stops calling a backend without the API", async () => {
+    it("gives a 404 a few tries before writing the API off", async () => {
       mockGet.mockRejectedValue(http404);
+
+      for (let i = 0; i < 5; i++) await fetchToolRecommendations("compare");
+
+      // Three strikes, then it stops: a lone 404 can be a proxy mid-deploy.
+      expect(mockGet).toHaveBeenCalledTimes(3);
+    });
+
+    it("forgets earlier 404s once a call succeeds", async () => {
+      mockGet.mockRejectedValueOnce(http404).mockRejectedValueOnce(http404);
+      await fetchToolRecommendations("compare");
+      await fetchToolRecommendations("compare");
+
+      mockGet.mockResolvedValueOnce({ data: { recommendations: [] } });
+      await fetchToolRecommendations("compare");
+
+      mockGet.mockRejectedValue(http404);
+      for (let i = 0; i < 5; i++) await fetchToolRecommendations("compare");
+
+      expect(mockGet).toHaveBeenCalledTimes(6);
+    });
+
+    it("stops fetching after a 501 from an install with nothing to rank", async () => {
+      mockGet.mockRejectedValue(http501);
 
       expect(await fetchToolRecommendations("compare")).toBeNull();
       expect(await fetchToolRecommendations("compare")).toBeNull();
@@ -107,10 +130,9 @@ describe("toolRecommendations api", () => {
     it("skips the network entirely once the API is known to be missing", async () => {
       mockPost.mockRejectedValue(http404);
 
-      await recordToolUsage("ocr");
-      await recordToolUsage("ocr");
+      for (let i = 0; i < 5; i++) await recordToolUsage("ocr");
 
-      expect(mockPost).toHaveBeenCalledTimes(1);
+      expect(mockPost).toHaveBeenCalledTimes(3);
     });
 
     it("stops posting after a 501 from an install that declined tracking", async () => {
