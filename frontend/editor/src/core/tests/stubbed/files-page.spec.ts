@@ -1277,7 +1277,7 @@ test.describe("Files page", () => {
     test("renders a window of a long list, not all of it", async ({ page }) => {
       // Seeding 400 records and reading them back is the slowest spec in this
       // file: on webkit in CI the first card paints well past the default waits.
-      test.slow();
+      test.setTimeout(120_000);
       const COUNT = 400;
       await stubStorageApis(page);
       await seedFiles(
