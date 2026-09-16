@@ -53,13 +53,13 @@ public class CustomHtmlSanitizer {
                     .toFactory();
 
     /**
-     * The policy every HTML this application renders passes through — LibreOffice's HTML importer
+     * The policy every HTML this application renders passes through - LibreOffice's HTML importer
      * here, WeasyPrint on the html/eml/markdown endpoints.
      *
      * <p>It carries no CSS reference policy on purpose. {@code Sanitizers.STYLES} is {@code
      * allowStyling()}, which leaves {@code StylingPolicy}'s url rewriter null, and a null rewriter
-     * makes the library drop any declaration holding a {@code url(...)} — escaped, commented,
-     * quoted or bare — while {@code style}, {@code link} and {@code base} are not allowed elements,
+     * makes the library drop any declaration holding a {@code url(...)} - escaped, commented,
+     * quoted or bare - while {@code style}, {@code link} and {@code base} are not allowed elements,
      * so {@code @import} and {@code @font-face} can never reach the output at all. Reopening it
      * takes {@code allowUrlsInStyles} together with an allowed url protocol, and then {@code
      * SsrfProtectionService} at its default MEDIUM level admits any resolvable public host: CSS

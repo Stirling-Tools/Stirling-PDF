@@ -3,7 +3,9 @@ package stirling.software.proprietary.policy.engine;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +35,8 @@ import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.util.ExecutorFactory;
 import stirling.software.common.util.JobContext;
+import stirling.software.proprietary.document.DocumentFacts;
+import stirling.software.proprietary.document.conditions.ConditionEvaluator;
 import stirling.software.proprietary.failure.DownstreamProblemDetail;
 import stirling.software.proprietary.failure.FailureKind;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
@@ -42,12 +46,18 @@ import stirling.software.proprietary.policy.model.PipelineDefinition;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.policy.model.PolicyRun;
+import stirling.software.proprietary.policy.model.RoutedDestination;
 import stirling.software.proprietary.policy.model.WaitState;
 import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.service.DownstreamEntitlementError;
+
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 
 /**
  * Runs pipelines asynchronously as tracked jobs. {@link #submit} returns a run id immediately; the
@@ -88,6 +98,9 @@ public class PolicyEngine {
     private final PolicyAssetResolver assetResolver;
 
     private final ExecutorService asyncExecutor = ExecutorFactory.newVirtualThreadExecutor();
+
+    // Builds the per-document facts routing rules match against. Stateless, so a shared instance.
+    private static final ObjectMapper FACTS_MAPPER = JsonMapper.builder().build();
 
     /** Stop the service-owned executor when the application context is closed or restarted. */
     @PreDestroy
@@ -150,17 +163,17 @@ public class PolicyEngine {
     /**
      * As {@link #runPolicy(Policy, PolicyInputs, PolicyProgressListener)}, recording which source
      * fed the run and its opaque reference to the document. The first says where an unattended
-     * failure came from; the second says which document, and is what lets the same document failing
-     * again fold into one incident. With no source {@code fileIdentity} is the client's own
-     * reference, with one it is that source's hash; this engine only carries it either way.
+     * failure came from; the second identifies repeat failures of the same document. Source-fed
+     * outputs belong to the source owner even when a different user triggers the run. Uploaded
+     * documents belong to the caller; a generator with no input belongs to the pipeline creator.
      */
     public PolicyRunHandle runPolicy(
             Policy policy,
             PolicyInputs inputs,
             PolicyProgressListener listener,
-            String sourceId,
+            Source source,
             String fileIdentity) {
-        return runPolicy(policy, inputs, listener, sourceId, fileIdentity, null);
+        return runPolicy(policy, inputs, listener, source, fileIdentity, null);
     }
 
     /**
@@ -171,43 +184,54 @@ public class PolicyEngine {
             Policy policy,
             PolicyInputs inputs,
             PolicyProgressListener listener,
-            String sourceId,
+            Source source,
             String fileIdentity,
             Semaphore admission) {
-        // Bill the policy owner: trigger-fired runs have no security context, and the async worker
-        // doesn't inherit the caller's, so the owner (stamped at policy creation) is the reliable
-        // billing identity — and for org-wide policies the org/owner is meant to pay. But own the
-        // OUTPUT files as the user who triggered the run (captured here on the request thread) so
-        // they can download their enforced file; otherwise an org-wide policy's output is owned by
-        // the admin and the triggering user is denied it. Trigger-fired runs have no such user, so
-        // the owner owns those outputs.
-        //
-        // The triggering user is also carried on the run, as the actor of any failure it records:
-        // null for a trigger-fired run, which is what makes an unattended incident ownerless rather
-        // than the owner's problem. Three identities, deliberately not interchangeable.
         String triggeringUser = currentActingPrincipal();
-        String fileOwner = triggeringUser != null ? triggeringUser : policy.owner();
-        // Unowned policies (the seeded Classification policy) have no owner to bill; fall back to
-        // the triggering user, or the run goes out principal-less and its tool sub-steps bill the
-        // team-less INTERNAL_API_USER, which PAYG refuses with a usage-limit 402.
+        String sourceId = source == null ? null : source.id();
+        String fileOwner = source == null ? triggeringUser : source.owner();
+        if (source == null && inputs.primary().isEmpty()) {
+            fileOwner = policy.owner() != null ? policy.owner() : triggeringUser;
+        }
+        // The pipeline's payer is independent of the document owner and the incident's actor.
         String billingPrincipal = policy.owner() != null ? policy.owner() : triggeringUser;
-        // Stored supporting files (certificates, watermark images, ...) load here, before the
-        // async hop: worker threads have no principal, so assets bind by the policy's own team.
-        PolicyInputs resolved = assetResolver.resolve(policy, inputs);
-        // Resolve the referenced output destinations live (like sourceIds), so a stored policy
-        // delivers to each of its saved Source destinations. Unreferenced policies fall back to
-        // their inline output.
-        PipelineDefinition definition =
-                new PipelineDefinition(
-                        policy.name(), policy.steps(), outputResolver.resolve(policy));
+        PolicyInputs resolved;
+        PipelineDefinition definition;
+        try {
+            // Supporting files and destinations resolve before the worker loses the request
+            // principal.
+            resolved = assetResolver.resolve(policy, inputs);
+            definition =
+                    new PipelineDefinition(
+                            policy.name(),
+                            policy.steps(),
+                            outputResolver.resolve(policy),
+                            outputResolver.resolveRouting(policy));
+        } catch (RuntimeException e) {
+            if (sourceId == null) {
+                throw e;
+            }
+            // Sources already claimed their inputs; a terminal handle settles every claim normally.
+            PolicyRun run =
+                    registerRun(
+                            policy.id(),
+                            new PipelineDefinition(policy.name(), policy.steps(), List.of()),
+                            sourceId,
+                            fileIdentity,
+                            triggeringUser,
+                            fileOwner);
+            String message = "Policy run could not start: " + e.getMessage();
+            run.fail(message);
+            taskManager.setError(run.getRunId(), message);
+            recordFailure(run, message, e);
+            return new PolicyRunHandle(run.getRunId(), CompletableFuture.completedFuture(run));
+        }
         return submitForPrincipal(
                 billingPrincipal,
                 fileOwner,
                 triggeringUser,
                 policy.id(),
                 definition,
-                // main's asset-resolved inputs, not the raw ones: stored certificates and watermark
-                // images bind here, before the async hop, because worker threads have no principal.
                 resolved,
                 listener,
                 sourceId,
@@ -226,17 +250,10 @@ public class PolicyEngine {
             String sourceId,
             String fileIdentity,
             Semaphore admission) {
-        // Scope the run id to the current user (this request thread) so the file-download
-        // ownership check passes. No-op when security is off.
-        String runId = jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString());
-        taskManager.createTask(runId);
-        // Tag the shared job entry with the policy id so peers can list it as a policy run.
-        if (policyId != null) {
-            taskManager.putMetadata(runId, "policyId", policyId);
-        }
         PolicyRun run =
-                new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
-        registry.register(run);
+                registerRun(
+                        policyId, definition, sourceId, fileIdentity, triggeringUser, fileOwner);
+        String runId = run.getRunId();
         CompletableFuture<PolicyRun> completion = new CompletableFuture<>();
         PolicyProgressListener tracking = trackingListener(runId, run, listener);
         // Re-establish the acting principal as the audit principal on the worker thread. Each tool
@@ -289,6 +306,26 @@ public class PolicyEngine {
             asyncExecutor.execute(task);
         }
         return new PolicyRunHandle(runId, completion);
+    }
+
+    private PolicyRun registerRun(
+            String policyId,
+            PipelineDefinition definition,
+            String sourceId,
+            String fileIdentity,
+            String triggeringUser,
+            String fileOwner) {
+        String runId =
+                jobOwnershipService.createScopedJobKey(UUID.randomUUID().toString(), fileOwner);
+        taskManager.createTask(runId);
+        // Tag the shared job entry with the policy id so peers can list it as a policy run.
+        if (policyId != null) {
+            taskManager.putMetadata(runId, "policyId", policyId);
+        }
+        PolicyRun run =
+                new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
+        registry.register(run);
+        return run;
     }
 
     public PolicyRun getRun(String runId) {
@@ -360,21 +397,7 @@ public class PolicyEngine {
                     taskManager.addNote(runId, "Cancelled before delivery; results discarded");
                     return;
                 }
-                // Deliver the run's files to every destination; no destinations means inline
-                // delivery (results stored/returned to the caller), preserving ad-hoc/AI behaviour.
-                List<OutputSpec> destinations = run.getDefinition().outputs();
-                if (destinations.isEmpty()) {
-                    destinations = List.of(OutputSpec.inline());
-                }
-                List<ResultFile> outputs = new ArrayList<>();
-                for (OutputSpec destination : destinations) {
-                    outputs.addAll(
-                            sinkFor(destination)
-                                    .deliver(
-                                            new OutputDelivery(runId, run.getPolicyId(), inputs),
-                                            result.files(),
-                                            destination));
-                }
+                List<ResultFile> outputs = deliver(run, runId, inputs, result.files());
                 taskManager.setMultipleFileResults(runId, outputs);
                 taskManager.setComplete(runId);
                 run.complete(outputs);
@@ -536,6 +559,67 @@ public class PolicyEngine {
         };
     }
 
+    /**
+     * Deliver a finished run's files. Without routing rules every file goes to every destination.
+     * With them, each file is matched against the rules in order and delivered to the first
+     * destination that claims it (a file no rule claims falls back to the run's outputs). Files are
+     * grouped by destination so a sink - which sets up a connection per call - is called once each.
+     */
+    private List<ResultFile> deliver(
+            PolicyRun run, String runId, PolicyInputs inputs, List<Resource> files)
+            throws IOException {
+        OutputDelivery delivery =
+                new OutputDelivery(runId, run.getPolicyId(), inputs, JobContext.getOwner());
+        List<OutputSpec> fallback = run.getDefinition().outputs();
+        if (fallback.isEmpty()) {
+            // No destinations means inline delivery (results returned to the caller), preserving
+            // ad-hoc/AI behaviour.
+            fallback = List.of(OutputSpec.inline());
+        }
+        List<RoutedDestination> routing = run.getDefinition().routing();
+        if (routing.isEmpty()) {
+            return deliverGrouped(delivery, groupedToAll(files, fallback));
+        }
+        Map<OutputSpec, List<Resource>> byDestination = new LinkedHashMap<>();
+        for (Resource file : files) {
+            JsonNode facts = DocumentFacts.of(file, FACTS_MAPPER);
+            for (OutputSpec target : destinationsFor(routing, fallback, facts)) {
+                byDestination.computeIfAbsent(target, key -> new ArrayList<>()).add(file);
+            }
+        }
+        return deliverGrouped(delivery, byDestination);
+    }
+
+    private static List<OutputSpec> destinationsFor(
+            List<RoutedDestination> routing, List<OutputSpec> fallback, JsonNode facts) {
+        for (RoutedDestination routed : routing) {
+            if (ConditionEvaluator.matches(routed.rule().condition(), facts)) {
+                return List.of(routed.destination());
+            }
+        }
+        return fallback;
+    }
+
+    private static Map<OutputSpec, List<Resource>> groupedToAll(
+            List<Resource> files, List<OutputSpec> destinations) {
+        Map<OutputSpec, List<Resource>> byDestination = new LinkedHashMap<>();
+        for (OutputSpec destination : destinations) {
+            byDestination.put(destination, files);
+        }
+        return byDestination;
+    }
+
+    private List<ResultFile> deliverGrouped(
+            OutputDelivery delivery, Map<OutputSpec, List<Resource>> byDestination)
+            throws IOException {
+        List<ResultFile> outputs = new ArrayList<>();
+        for (Map.Entry<OutputSpec, List<Resource>> entry : byDestination.entrySet()) {
+            outputs.addAll(
+                    sinkFor(entry.getKey()).deliver(delivery, entry.getValue(), entry.getKey()));
+        }
+        return outputs;
+    }
+
     private PolicyOutputSink sinkFor(OutputSpec spec) {
         return outputSinks.stream()
                 .filter(sink -> sink.supports(spec))
@@ -585,15 +669,7 @@ public class PolicyEngine {
      */
     private static void runAsPrincipal(
             String billingPrincipal, String fileOwner, String policyName, Runnable body) {
-        // Billing identity (MDC auditPrincipal) and output-file ownership (JobContext owner) are
-        // set
-        // independently: usage is charged to billingPrincipal, but stored output files are owned by
-        // fileOwner — the user who triggered an org-wide policy — so they can fetch their results.
-        // Either may be null (e.g. login disabled, or a trigger-fired run); each is applied only
-        // when present and restored afterward (defensive — worker threads aren't pooled). The
-        // policy
-        // name rides MDC too so each tool step's loopback dispatch (InternalApiClient) can forward
-        // it as a header, letting the audit tie the step back to its policy.
+        // Tool dispatch reads the billing principal; output storage reads the document owner.
         String previousPrincipal = MDC.get(AUDIT_PRINCIPAL_MDC_KEY);
         String previousPolicyName = MDC.get(InternalApiClient.POLICY_NAME_MDC_KEY);
         String previousOwner = JobContext.getOwner();

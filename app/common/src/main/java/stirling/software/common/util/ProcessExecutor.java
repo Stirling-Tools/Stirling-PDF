@@ -62,7 +62,7 @@ public class ProcessExecutor {
     /**
      * Whether a {@link Processes#LIBRE_OFFICE} command is an office engine that must not be allowed
      * out to the network. Fail-closed: the process type launches only the engine or the unoserver
-     * client, so everything that is not the client is treated as the engine — {@code
+     * client, so everything that is not the client is treated as the engine - {@code
      * system.customPaths.operations.soffice} takes any path, and {@code /usr/bin/libreoffice} is a
      * symlink to the same wrapper as {@code /usr/bin/soffice}.
      */
@@ -560,7 +560,7 @@ public class ProcessExecutor {
      * Resolves, and then applies, the {@code LD_PRELOAD} shim that stops a locally launched
      * LibreOffice engine opening non-loopback sockets.
      *
-     * <p>Resolution is fail-open on purpose — a missing shim must not stop conversions — so every
+     * <p>Resolution is fail-open on purpose - a missing shim must not stop conversions - so every
      * path that leaves the engine unguarded carries a reason and is logged rather than returning a
      * bare null. Linux only: the shim interposes glibc {@code connect}, which macOS ignores for
      * {@code LD_PRELOAD} entirely and which {@code DYLD_INSERT_LIBRARIES} would need a {@code

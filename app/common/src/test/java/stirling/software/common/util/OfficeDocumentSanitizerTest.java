@@ -501,7 +501,7 @@ class OfficeDocumentSanitizerTest {
     @Test
     void sanitize_zipWithARepeatedEntryNameIsRejectedWithoutNamingIt() throws IOException {
         // Readers disagree about which copy of a repeated name wins, so a package carrying one is
-        // refused rather than rewritten — and refused under the fixed message, because the name is
+        // refused rather than rewritten - and refused under the fixed message, because the name is
         // attacker-chosen text that the ZipOutputStream complaint would otherwise put in the
         // response body.
         byte[] duplicated = withARepeatedEntryName(ODF_CONTENT_EXTERNAL);
@@ -516,7 +516,7 @@ class OfficeDocumentSanitizerTest {
     /**
      * A package declaring the same entry name twice. Written under two names of that same length
      * and renamed afterwards, because {@link ZipOutputStream} refuses to write the archive this
-     * describes — which is the whole point of the test.
+     * describes - which is the whole point of the test.
      */
     private static byte[] withARepeatedEntryName(String content) throws IOException {
         Map<String, byte[]> entries = new LinkedHashMap<>();

@@ -32,8 +32,8 @@ import stirling.software.common.util.OfficeDocumentSanitizer;
  *
  * <p>Every fact is read at most once and only when a candidate asks for it, so an extension with a
  * single unconditional candidate never touches the file. Every read is best-effort: anything a
- * hostile file can do to a reader — a compound-file header describing sectors that do not exist,
- * XML that stops mid-element — yields "this fact is unknown", which fails the candidate rather than
+ * hostile file can do to a reader - a compound-file header describing sectors that do not exist,
+ * XML that stops mid-element - yields "this fact is unknown", which fails the candidate rather than
  * the request.
  *
  * <p>Not thread-safe, and scoped to one staged file for one request.
@@ -45,8 +45,8 @@ class OfficeFormatDeclaration {
 
     /**
      * How much of an XML document may be read looking for its root element. The reader stops at
-     * that element, so this bounds only what a document can put in front of it — comments,
-     * whitespace, processing instructions — which is nothing in a real one and unbounded in a
+     * that element, so this bounds only what a document can put in front of it - comments,
+     * whitespace, processing instructions - which is nothing in a real one and unbounded in a
      * hostile one.
      */
     private static final int XML_PROLOG_LIMIT = 4 * 1024 * 1024;

@@ -25,7 +25,7 @@ import stirling.software.common.util.CustomHtmlSanitizer;
  * Removes from Markdown every reference LibreOffice's Markdown importer would dereference.
  *
  * <p>That importer converts Markdown to HTML and hands the result to the Writer/Web importer, so it
- * fetches from image syntax — inline, titled, angle-bracketed, and all three reference forms — and
+ * fetches from image syntax - inline, titled, angle-bracketed, and all three reference forms - and
  * from raw HTML embedded in the document, and it resolves {@code file:} and relative destinations
  * against the staging directory as readily as it resolves {@code http}. Forcing the import filter
  * buys nothing here: the forced filter is the fetcher.
@@ -34,8 +34,8 @@ import stirling.software.common.util.CustomHtmlSanitizer;
  * image destination from the identical text inside a fenced code block or a code span, and those
  * have to survive verbatim. What is written back, though, is the original text with the offending
  * spans spliced out, not the document re-rendered: re-rendering rewrites the whole file in
- * commonmark's own dialect, which escapes what its parser does not model — {@code - [x] } becomes
- * {@code - \[x\] } and stops being a task list — and would damage documents that carry no reference
+ * commonmark's own dialect, which escapes what its parser does not model - {@code - [x] } becomes
+ * {@code - \[x\] } and stops being a task list - and would damage documents that carry no reference
  * to strip at all.
  */
 final class MarkdownSanitizer {
@@ -91,8 +91,8 @@ final class MarkdownSanitizer {
             for (SourceSpan span : spans) {
                 int start = span.getInputIndex();
                 edits.add(new Edit(start, start + span.getLength(), replacement));
-                // A node spanning several lines keeps what lies between its spans — the blockquote
-                // markers or list indentation of the lines it sits on — and is written back onto
+                // A node spanning several lines keeps what lies between its spans - the blockquote
+                // markers or list indentation of the lines it sits on - and is written back onto
                 // the first of them.
                 replacement = "";
             }

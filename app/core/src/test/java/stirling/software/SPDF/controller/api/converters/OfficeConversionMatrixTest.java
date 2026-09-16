@@ -66,8 +66,8 @@ import stirling.software.common.util.OfficeDocumentSanitizer;
 import stirling.software.common.util.TempFileManager;
 
 /**
- * Converts one genuine fixture per allowlisted extension through the real controller path — real
- * sanitizers, real LibreOffice, the forced import filter — and asserts the PDF that comes back is
+ * Converts one genuine fixture per allowlisted extension through the real controller path - real
+ * sanitizers, real LibreOffice, the forced import filter - and asserts the PDF that comes back is
  * readable and still carries the input's content. Exit codes are not evidence: LibreOffice returns
  * 0 for a blank page.
  *
@@ -107,7 +107,7 @@ class OfficeConversionMatrixTest {
      * <p>Unproven, and recorded as pass-through rather than as safe: {@code xls}, {@code xlt},
      * {@code ppt}, and the legacy binaries. LibreOffice's own export filters discard the linked
      * graphics and OLE objects a probe would need, so no fixture carrying a reference could be
-     * built for them. {@code doc} is not in this set for exactly that reason — a fixture could be
+     * built for them. {@code doc} is not in this set for exactly that reason - a fixture could be
      * built for it, and it fetched.
      */
     private static final Set<String> PASS_THROUGH =
@@ -148,7 +148,7 @@ class OfficeConversionMatrixTest {
          * Only that a readable page came back. For the pre-97 Word candidates: LibreOffice has no
          * Word 95 export filter, so the only fixture obtainable here is a Word 97 document with its
          * {@code wIdent} rewritten, which the pre-97 reader loads and renders empty. That still
-         * exercises the whole path — the wrong candidate refuses these bytes outright — but it
+         * exercises the whole path - the wrong candidate refuses these bytes outright - but it
          * cannot carry text through.
          */
         PAGE
@@ -481,7 +481,7 @@ class OfficeConversionMatrixTest {
     /**
      * One way an extension with several candidate filters can legitimately arrive. {@code source}
      * names the fixture builder; {@code expectedFilter} is the filter that candidate set must
-     * force, which is the half a conversion cannot check — LibreOffice ignores a filter name it
+     * force, which is the half a conversion cannot check - LibreOffice ignores a filter name it
      * cannot resolve and quietly autodetects instead.
      */
     private record CandidateCase(
@@ -1364,7 +1364,7 @@ class OfficeConversionMatrixTest {
 
     /**
      * A BIFF4 worksheet as a bare record stream: BOF, two NUMBER records, EOF. Excel 4 wrote these
-     * without a compound file wrapper, and LibreOffice still reads one under the Excel 97 filter —
+     * without a compound file wrapper, and LibreOffice still reads one under the Excel 97 filter -
      * the four BIFF filter names are aliases for a reader that sniffs the version itself.
      */
     private static byte[] flatBiff4() throws IOException {

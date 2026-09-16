@@ -23,7 +23,7 @@ import stirling.software.proprietary.security.repository.TeamRepository;
 import stirling.software.proprietary.security.service.TeamService;
 
 /**
- * Seeds an enabled Classification policy per team; idempotent, skips the internal team. Left
+ * Seeds an enabled Classification pipeline per team; idempotent, skips the internal team. Left
  * unowned: nobody created it, and an owner here would have to name a real user.
  */
 @Slf4j
@@ -95,7 +95,7 @@ public class DefaultClassificationPolicySeeder {
                 && CATEGORY.equals(policy.output().options().get("categoryId"));
     }
 
-    /** The default Classification policy: classify each upload, versioning the file in place. */
+    /** The default Classification pipeline: classify each upload, versioning the file in place. */
     static Policy defaultPolicy(Long teamId) {
         Map<String, Object> options = new HashMap<>();
         options.put("categoryId", CATEGORY);
@@ -110,7 +110,7 @@ public class DefaultClassificationPolicySeeder {
                 // every consumer of owner already handles its absence.
                 null,
                 true,
-                true,
+                false,
                 "",
                 List.of(),
                 List.of(new PipelineStep(CLASSIFY_ENDPOINT, Map.of())),
@@ -119,6 +119,7 @@ public class DefaultClassificationPolicySeeder {
                 teamId,
                 // Classification runs in the editor on every upload.
                 EditorConfig.onUpload(),
-                Policy.SURFACE_POLICY);
+                Policy.SURFACE_POLICY,
+                List.of());
     }
 }

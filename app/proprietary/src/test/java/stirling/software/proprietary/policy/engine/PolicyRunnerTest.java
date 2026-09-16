@@ -34,7 +34,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
-import stirling.software.proprietary.policy.input.InputSource;
+import stirling.software.proprietary.policy.input.FolderInputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
@@ -62,7 +62,7 @@ import stirling.software.proprietary.policy.source.SourceStore;
 class PolicyRunnerTest {
 
     @Mock private PolicyEngine policyEngine;
-    @Mock private InputSource folderSource;
+    @Mock private FolderInputSource folderSource;
     @Mock private ProcessedLedger processedLedger;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
@@ -70,7 +70,8 @@ class PolicyRunnerTest {
     private PolicyRunner runner;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        lenient().when(folderSource.resolve(any(Source.class), any(), any())).thenCallRealMethod();
         runner =
                 new PolicyRunner(
                         policyEngine,
@@ -345,7 +346,13 @@ class PolicyRunnerTest {
         runner.run(policy);
 
         verify(policyEngine)
-                .runPolicy(eq(policy), any(), any(), eq(sourceId), eq("/in/doc.pdf"), any());
+                .runPolicy(
+                        eq(policy),
+                        any(),
+                        any(),
+                        eq(sourceStore.get(sourceId).orElseThrow()),
+                        eq("/in/doc.pdf"),
+                        any());
     }
 
     @Test
@@ -373,6 +380,36 @@ class PolicyRunnerTest {
 
         String key = EditorSource.counterKey(7L);
         assertEquals(2, docCounter.statsFor(List.of(key)).get(key).total());
+    }
+
+    @Test
+    void sourcesWithoutReachableOwnersAreNotClaimedOrPruned() {
+        ApplicationProperties loginOn = new ApplicationProperties();
+        loginOn.getSecurity().setEnableLogin(true);
+        PolicyRunner enforced =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        loginOn,
+                        guardOver(loginOn, noUsers()));
+        for (String owner : new String[] {null, "", "deleted-user"}) {
+            Source source =
+                    sourceStore.save(
+                            new Source(
+                                    null,
+                                    "Input",
+                                    "folder",
+                                    Map.of("directory", "/in"),
+                                    true,
+                                    owner,
+                                    null));
+            SweepOutcome outcome = enforced.run(policyReferencing(List.of(source.id())));
+            assertTrue(outcome.runIds().isEmpty());
+        }
+        verifyNoInteractions(folderSource, policyEngine, processedLedger);
     }
 
     @Test

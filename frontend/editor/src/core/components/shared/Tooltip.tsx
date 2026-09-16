@@ -8,7 +8,7 @@ import React, {
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { addEventListenerWithCleanup } from "@app/utils/genericUtils";
 import { useTooltipPosition } from "@app/hooks/useTooltipPosition";
 import { TooltipTip } from "@app/types/tips";
@@ -448,7 +448,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
           title={t("tooltip.close", "Close tooltip")}
           aria-label={t("tooltip.close", "Close tooltip")}
         >
-          <LocalIcon icon="close-rounded" width="1.25rem" height="1.25rem" />
+          <Icon name="x" size="1.25rem" />
         </ActionIcon>
       )}
       {arrow && !sidebarTooltip && (

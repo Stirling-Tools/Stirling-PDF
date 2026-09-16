@@ -44,7 +44,7 @@ import org.junit.jupiter.params.provider.MethodSource;
  * name produces exactly the autodetected result, which is what the control measures.
  *
  * <p>Two counter-fixtures, because on a document of a filter's own family a resolved name and an
- * ignored one agree by construction — {@code MS Word 97} forced on a Word 97 binary is the
+ * ignored one agree by construction - {@code MS Word 97} forced on a Word 97 binary is the
  * autodetected conversion, byte for byte. A name has to differ on one of them, not on both: the
  * Word 97 binary separates every name but the two Word filters that read it, which the PNG then
  * separates.
@@ -143,7 +143,7 @@ class OfficeImportFilterNameSweepTest {
         }
         fail(
                 "\"%s\" is not a name this LibreOffice resolves: forcing it produced exactly the"
-                        + " outcome of forcing \"%s\" on every counter-fixture — %s. The extensions"
+                        + " outcome of forcing \"%s\" on every counter-fixture - %s. The extensions"
                         + " it serves are therefore imported by content autodetection, which is the"
                         + " type confusion the forced filter exists to close.",
                 importFilter, UNRESOLVABLE_FILTER, String.join(", ", measured));
