@@ -148,7 +148,8 @@ export function InviteMemberModal({
   const emailValid = EMAIL_RE.test(email.trim());
   const usernameValid = username.trim().length >= 3;
   const needsPassword = mode === "direct" && authType === "WEB";
-  const passwordValid = !needsPassword || password.length >= MIN_PASSWORD_LENGTH;
+  const passwordValid =
+    !needsPassword || password.length >= MIN_PASSWORD_LENGTH;
 
   const error =
     (touched && mode === "email" && !emailValid
