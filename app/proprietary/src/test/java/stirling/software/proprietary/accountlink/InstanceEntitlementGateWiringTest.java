@@ -68,7 +68,7 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void enterpriseBypassesExhaustedLocalCredits() {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(freeTier.balance()).thenReturn(grant(0));
 
         assertEquals(
@@ -80,7 +80,7 @@ class InstanceEntitlementGateWiringTest {
     @ParameterizedTest
     @EnumSource(EntitlementState.class)
     void enterpriseBypassesLinkedBillingRestrictions(EntitlementState state) {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         when(store.isLinked()).thenReturn(true);
         when(cache.current())
                 .thenReturn(Optional.of(new InstanceEntitlement(true, 0, 100, 100L, state)));
@@ -95,7 +95,7 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void enterpriseBypassesExpiredCloudSyncGrace() {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         properties.getMetering().setEnabled(true);
         when(store.isLinked()).thenReturn(true);
         when(cache.current()).thenReturn(Optional.empty());
@@ -114,7 +114,7 @@ class InstanceEntitlementGateWiringTest {
             value = License.class,
             names = {"NORMAL", "SERVER"})
     void nonEnterpriseLicensesStillEnforceCredits(License license) {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(license);
+        when(licenseChecker.premiumTier()).thenReturn(license);
         when(freeTier.balance()).thenReturn(grant(0));
 
         assertFalse(gate.evaluate(true).allowed());
@@ -122,7 +122,7 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void licenseChangesTakeEffectOnTheSameGate() {
-        when(licenseChecker.getPremiumLicenseEnabledResult())
+        when(licenseChecker.premiumTier())
                 .thenReturn(License.NORMAL, License.ENTERPRISE, License.NORMAL);
         when(freeTier.balance()).thenReturn(grant(0));
 
@@ -175,7 +175,7 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void enterpriseProcessingDoesNotConsultLinkStatusOrCreditBalances() {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+        when(licenseChecker.premiumTier()).thenReturn(License.ENTERPRISE);
         GateDecision decision = gate.evaluate(true);
         assertTrue(decision.allowed());
         assertEquals(GateDecision.Reason.ENTERPRISE_LICENSE, decision.reason());
@@ -184,8 +184,7 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void removingEnterpriseLicenseRestoresCreditEnforcementWithoutRestart() {
-        when(licenseChecker.getPremiumLicenseEnabledResult())
-                .thenReturn(License.ENTERPRISE, License.NORMAL);
+        when(licenseChecker.premiumTier()).thenReturn(License.ENTERPRISE, License.NORMAL);
         assertTrue(gate.evaluate(true).allowed());
         when(store.isLinked()).thenReturn(false);
         when(freeTier.balance()).thenReturn(grant(0));
@@ -205,7 +204,7 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void serverApiDoesNotReadOrConsumeCreditAllowances() {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
         assertEquals(
                 GateDecision.allow(GateDecision.Reason.SERVER_LICENSE), gate.evaluate(true, true));
@@ -215,7 +214,7 @@ class InstanceEntitlementGateWiringTest {
     @ParameterizedTest
     @EnumSource(EntitlementState.class)
     void serverApiRemainsIncludedWhenLinked(EntitlementState state) {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         when(store.isLinked()).thenReturn(true);
         when(cache.current())
                 .thenReturn(Optional.of(new InstanceEntitlement(false, 0, 0, null, state)));
@@ -227,7 +226,7 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void serverProcessorWorkStillRequiresCredits() {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         when(freeTier.balance()).thenReturn(grant(0));
 
         assertEquals(
@@ -237,7 +236,8 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void teamAllowanceWithoutServerLicenceDoesNotExemptApi() {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseChecker.premiumTier()).thenReturn(License.SERVER);
+        when(licenseChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
         when(store.isLinked()).thenReturn(true);
         when(cache.current())
                 .thenReturn(
@@ -252,10 +252,10 @@ class InstanceEntitlementGateWiringTest {
 
     @Test
     void expiredServerLicenceRestoresApiCreditEnforcement() {
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+        when(licenseChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
         assertTrue(gate.evaluate(true, true).allowed());
 
-        when(licenseChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
         when(freeTier.balance()).thenReturn(grant(0));
         assertEquals(
                 GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED),

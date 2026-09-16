@@ -1,6 +1,5 @@
 package stirling.software.proprietary.accountlink;
 
-import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -10,30 +9,8 @@ import org.springframework.stereotype.Service;
 import stirling.software.common.service.LicenseServiceInterface;
 
 /**
- * Decides whether a request may proceed under combined billing on a self-hosted instance.
- *
- * <p>Rules (in order):
- *
- * <ol>
- *   <li>Flag off → always allow (feature inert).
- *   <li>Manual tool → always allow (manual tools are free, never metered).
- *   <li>Enterprise license → always allow, with local-only metering.
- *   <li>Server license + direct PDF tool API → allow without credit metering.
- *   <li>Billable + not linked → {@code FREE_TIER} while units remain, else {@code
- *       FREE_TIER_EXHAUSTED}. Linking buys a further grant, it does not activate the feature.
- *   <li>Billable + linked + entitlement unknown (unreachable) → <b>fail open</b>, allow — unless
- *       metering is on and SaaS has been unreachable past the grace window, then block with {@code
- *       GRACE_EXPIRED} so the fail-open can't grant unbounded free/unbilled work forever.
- *   <li>Billable + linked + entitled → allow.
- *   <li>Billable + linked + credential revoked → block with {@code REVOKED}.
- *   <li>Billable + linked + over limit → block with {@code OVER_LIMIT}.
- * </ol>
- *
- * <p>The local grant is read only when unlinked; a linked instance's pre-link counters sit
- * untouched, and are what it resumes on if it unlinks.
- *
- * <p>The decision logic is the pure static {@link #decide}; the Spring wrapper supplies the live
- * flag / linked-state / entitlement / balances and resolves the grace window.
+ * Enforces cloud processing allowance and the shared offline deadline. Manual tools and direct PDF
+ * tool API calls covered by a Server licence do not consume processing credits.
  */
 @Service
 @Profile("!saas")
@@ -47,7 +24,6 @@ public class InstanceEntitlementGate {
     private final AccountLinkProperties properties;
     private final DeviceCredentialStore credentialStore;
     private final EntitlementCache entitlementCache;
-    private final AccountLinkSyncStateRepository syncStateRepository;
     private final LocalUsageService localUsageService;
     private final FreeTierUsageService freeTierUsageService;
 
@@ -55,7 +31,6 @@ public class InstanceEntitlementGate {
             AccountLinkProperties properties,
             DeviceCredentialStore credentialStore,
             EntitlementCache entitlementCache,
-            AccountLinkSyncStateRepository syncStateRepository,
             LocalUsageService localUsageService,
             FreeTierUsageService freeTierUsageService,
             LicenseServiceInterface licenseService) {
@@ -63,7 +38,6 @@ public class InstanceEntitlementGate {
         this.properties = properties;
         this.credentialStore = credentialStore;
         this.entitlementCache = entitlementCache;
-        this.syncStateRepository = syncStateRepository;
         this.localUsageService = localUsageService;
         this.freeTierUsageService = freeTierUsageService;
     }
@@ -87,14 +61,18 @@ public class InstanceEntitlementGate {
         if (licenseService.isRunningEE()) {
             return GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE);
         }
-        if (directToolApi && licenseService.isRunningProOrHigher()) {
+        if (directToolApi && licenseService.hasServerLicense()) {
             return GateDecision.allow(GateDecision.Reason.SERVER_LICENSE);
         }
         boolean linked = credentialStore.isLinked();
         long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();
         Optional<InstanceEntitlement> entitlement =
                 linked ? entitlementCache.current() : Optional.empty();
-        boolean graceExpired = linked && entitlement.isEmpty() && isGraceExpired();
+        boolean graceExpired = linked && entitlementCache.isGraceExpired();
+        if (entitlement.isPresent() && entitlement.get().state() == EntitlementState.REVOKED) {
+            return GateDecision.block(GateDecision.Reason.REVOKED);
+        }
+        if (graceExpired) return GateDecision.block(GateDecision.Reason.GRACE_EXPIRED);
         // Deplete the applicable ceiling — free grant (unsubscribed) or spend cap (capped
         // subscription) — by local usage not yet synced, so the gate stops in real time instead of
         // overshooting until the next sync. An uncapped subscription has no ceiling to deplete → 0.
@@ -142,14 +120,11 @@ public class InstanceEntitlementGate {
                     ? GateDecision.allow(GateDecision.Reason.FREE_TIER)
                     : GateDecision.block(GateDecision.Reason.FREE_TIER_EXHAUSTED);
         }
-        if (entitlement.isEmpty()) {
-            // Linked but entitlement unreachable: fail open, unless the grace window has expired
-            // (so
-            // the fail-open can't grant unbounded unbilled work forever).
-            return graceExpired
-                    ? GateDecision.block(GateDecision.Reason.GRACE_EXPIRED)
-                    : GateDecision.allow(GateDecision.Reason.FAIL_OPEN);
+        if (entitlement.isPresent() && entitlement.get().state() == EntitlementState.REVOKED) {
+            return GateDecision.block(GateDecision.Reason.REVOKED);
         }
+        if (graceExpired) return GateDecision.block(GateDecision.Reason.GRACE_EXPIRED);
+        if (entitlement.isEmpty()) return GateDecision.allow(GateDecision.Reason.FAIL_OPEN);
         InstanceEntitlement e = entitlement.get();
         if (e.state() == EntitlementState.REVOKED) {
             // Credential revoked/invalid (authoritative deny) — block, distinct from over-limit.
@@ -158,35 +133,6 @@ public class InstanceEntitlementGate {
         return entitled(e, pendingUnsyncedUnits)
                 ? GateDecision.allow(GateDecision.Reason.ENTITLED)
                 : GateDecision.block(GateDecision.Reason.OVER_LIMIT);
-    }
-
-    /**
-     * True when metering is on and it's been {@code graceDays} since the last authoritative contact
-     * (last successful sync, or link time if never synced). {@code graceDays <= 0} or metering off
-     * disables the backstop.
-     */
-    private boolean isGraceExpired() {
-        AccountLinkProperties.Metering metering = properties.getMetering();
-        if (!metering.isEnabled() || metering.getGraceDays() <= 0) {
-            return false;
-        }
-        LocalDateTime reference = lastAuthoritativeContact();
-        if (reference == null) {
-            return false; // can't determine elapsed time → fail open
-        }
-        return reference.plusDays(metering.getGraceDays()).isBefore(LocalDateTime.now());
-    }
-
-    private LocalDateTime lastAuthoritativeContact() {
-        LocalDateTime lastSuccess =
-                syncStateRepository
-                        .findById(AccountLinkSyncState.SINGLETON_ID)
-                        .map(AccountLinkSyncState::getLastSuccessAt)
-                        .orElse(null);
-        if (lastSuccess != null) {
-            return lastSuccess;
-        }
-        return credentialStore.get().map(DeviceCredential::getLinkedAt).orElse(null);
     }
 
     /** True when the snapshot permits billable work (subscribed, free pool left, or within cap). */

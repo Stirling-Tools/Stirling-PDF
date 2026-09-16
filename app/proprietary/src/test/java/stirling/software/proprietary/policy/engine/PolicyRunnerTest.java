@@ -34,7 +34,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
-import stirling.software.proprietary.policy.input.InputSource;
+import stirling.software.proprietary.policy.input.FolderInputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
@@ -62,7 +62,12 @@ import stirling.software.proprietary.policy.source.SourceStore;
 class PolicyRunnerTest {
 
     @Mock private PolicyEngine policyEngine;
-    @Mock private InputSource folderSource;
+
+    @Mock
+    private stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard
+            databaseLicenseGuard;
+
+    @Mock private FolderInputSource folderSource;
     @Mock private ProcessedLedger processedLedger;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
@@ -70,7 +75,8 @@ class PolicyRunnerTest {
     private PolicyRunner runner;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        lenient().when(folderSource.resolve(any(Source.class), any(), any())).thenCallRealMethod();
         runner =
                 new PolicyRunner(
                         policyEngine,
@@ -79,7 +85,15 @@ class PolicyRunnerTest {
                         docCounter,
                         processedLedger,
                         new ApplicationProperties(),
-                        reachableOwners());
+                        reachableOwners(),
+                        databaseLicenseGuard);
+    }
+
+    @Test
+    void unlicensedDatabaseDoesNotClaimOrProcessSourceFiles() {
+        when(databaseLicenseGuard.requiresActivation()).thenReturn(true);
+        runner.run(policy(List.of(InputSpec.folder("/in"))));
+        verifyNoInteractions(folderSource, policyEngine, processedLedger);
     }
 
     @Test
@@ -109,7 +123,10 @@ class PolicyRunnerTest {
                         new InProcessSourceDocCounter(),
                         ledger,
                         new ApplicationProperties(),
-                        reachableOwners());
+                        reachableOwners(),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class));
         InputSpec spec = InputSpec.folder("/in");
         Policy policy = policy(List.of(spec));
         // One file already processed at its current version, one parked by a failed run.
@@ -393,7 +410,10 @@ class PolicyRunnerTest {
                         docCounter,
                         processedLedger,
                         loginOn,
-                        guardOver(loginOn, noUsers()));
+                        guardOver(loginOn, noUsers()),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class));
         for (String owner : new String[] {null, "", "deleted-user"}) {
             Source source =
                     sourceStore.save(
@@ -438,7 +458,10 @@ class PolicyRunnerTest {
                         docCounter,
                         processedLedger,
                         loginOn,
-                        guardOver(loginOn, noUsers()));
+                        guardOver(loginOn, noUsers()),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class));
 
         SweepOutcome outcome = enforced.run(stranded.withSurface(Policy.SURFACE_PROCESSING_FOLDER));
 

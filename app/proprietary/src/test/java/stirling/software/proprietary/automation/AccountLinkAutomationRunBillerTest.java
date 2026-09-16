@@ -21,6 +21,9 @@ import stirling.software.proprietary.accountlink.UsageMeterService;
 import stirling.software.proprietary.billing.BillingCategory;
 import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
+import stirling.software.proprietary.security.configuration.ee.DynamicLicenseService;
+import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
+import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
 
 class AccountLinkAutomationRunBillerTest {
 
@@ -29,7 +32,7 @@ class AccountLinkAutomationRunBillerTest {
         EntitlementCache cache = mock(EntitlementCache.class);
         UsageMeterService meter = mock(UsageMeterService.class);
         LicenseServiceInterface license = mock(LicenseServiceInterface.class);
-        when(license.isRunningProOrHigher()).thenReturn(true);
+        when(license.hasServerLicense()).thenReturn(true);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(cache, providerOf(meter), license);
 
@@ -44,7 +47,7 @@ class AccountLinkAutomationRunBillerTest {
         when(cache.current()).thenReturn(Optional.of(entitlement(POLICY, PERIOD)));
         UsageMeterService meter = mock(UsageMeterService.class);
         LicenseServiceInterface license = mock(LicenseServiceInterface.class);
-        when(license.isRunningProOrHigher()).thenReturn(true);
+        when(license.hasServerLicense()).thenReturn(true);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(cache, providerOf(meter), license);
 
@@ -60,9 +63,12 @@ class AccountLinkAutomationRunBillerTest {
         EntitlementCache cache = mock(EntitlementCache.class);
         when(cache.current()).thenReturn(Optional.of(entitlement(POLICY, PERIOD)));
         UsageMeterService meter = mock(UsageMeterService.class);
+        LicenseKeyChecker checker = mock(LicenseKeyChecker.class);
+        when(checker.premiumTier()).thenReturn(License.SERVER);
+        when(checker.getLicenseKeyResult()).thenReturn(License.NORMAL);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(
-                        cache, providerOf(meter), mock(LicenseServiceInterface.class));
+                        cache, providerOf(meter), new DynamicLicenseService(checker));
 
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.AUTOMATE);
 
@@ -77,11 +83,11 @@ class AccountLinkAutomationRunBillerTest {
         LicenseServiceInterface license = mock(LicenseServiceInterface.class);
         AccountLinkAutomationRunBiller biller =
                 new AccountLinkAutomationRunBiller(cache, providerOf(meter), license);
-        when(license.isRunningProOrHigher()).thenReturn(true);
+        when(license.hasServerLicense()).thenReturn(true);
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.AUTOMATE);
         org.mockito.Mockito.verifyNoInteractions(cache, meter);
 
-        when(license.isRunningProOrHigher()).thenReturn(false);
+        when(license.hasServerLicense()).thenReturn(false);
         biller.recordAutomationRun(List.of(new FileSize(25, 5000L)), AutomationRunSource.AUTOMATE);
         verify(meter).accrue(PERIOD, BillingCategory.AUTOMATION, 3L, null);
     }

@@ -52,8 +52,7 @@ public class AccountLinkAutomationRunBiller implements AutomationRunBiller {
     public void recordAutomationRun(List<FileSize> inputs, AutomationRunSource source) {
         if (inputs.isEmpty()
                 || licenseService.isRunningEE()
-                || (source == AutomationRunSource.AUTOMATE
-                        && licenseService.isRunningProOrHigher())) {
+                || (source == AutomationRunSource.AUTOMATE && licenseService.hasServerLicense())) {
             return;
         }
         UsageMeterService meter = meterProvider.getIfAvailable();

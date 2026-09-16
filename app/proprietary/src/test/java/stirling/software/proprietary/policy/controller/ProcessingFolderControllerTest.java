@@ -9,6 +9,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Files;
@@ -25,12 +26,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
-import stirling.software.common.service.UserServiceInterface;
+import stirling.software.proprietary.document.conditions.Condition;
+import stirling.software.proprietary.document.conditions.ConditionInput;
 import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
@@ -45,9 +50,12 @@ import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
+import stirling.software.proprietary.policy.model.RoutingRule;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.output.StorageOutputSink;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
+import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
@@ -79,7 +87,7 @@ class ProcessingFolderControllerTest {
     @Mock private FileStorageService fileStorageService;
     @Mock private StoredFileRepository storedFileRepository;
     @Mock private StorageProvider storageProvider;
-    @Mock private UserServiceInterface userService;
+    @Mock private UserService userService;
     @Mock private PolicyManagementAuthority policyManagementAuthority;
     @Mock private FolderAccessGuard folderAccessGuard;
     @Mock private PolicyTrigger folderWatchTrigger;
@@ -131,6 +139,13 @@ class ProcessingFolderControllerTest {
                 .when(folderRepository.existsById(any(UUID.class)))
                 .thenAnswer(invocation -> folders.containsKey(invocation.getArgument(0)));
         lenient().when(userService.getCurrentUsername()).thenReturn("reece");
+        lenient().when(userService.findByUsername("reece")).thenReturn(Optional.of(user));
+        lenient()
+                .when(folderRepository.findByIdAndOwner(any(UUID.class), eq(user)))
+                .thenAnswer(
+                        invocation ->
+                                Optional.ofNullable(folders.get(invocation.getArgument(0)))
+                                        .filter(candidate -> candidate.getOwner() == user));
         lenient().when(policyManagementAuthority.currentUserTeamId()).thenReturn(3L);
         lenient()
                 .when(policyRunner.run(any(), any()))
@@ -155,7 +170,8 @@ class ProcessingFolderControllerTest {
                                         storedFileRepository,
                                         folderRepository,
                                         storageProvider,
-                                        properties),
+                                        properties,
+                                        userService),
                                 diskFolderSource),
                         List.of(
                                 new StorageOutputSink(
@@ -184,7 +200,131 @@ class ProcessingFolderControllerTest {
                         fileStorageService,
                         accessGuard,
                         folderAccessGuard,
+                        new SourceAccessGuard(userService, properties, policyManagementAuthority),
                         properties);
+    }
+
+    @Test
+    void routingTemplatePersistsDestinationsAndRetainsThemAcrossPauseRequests() {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Archive",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "reece",
+                                3L));
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("classification.labels"),
+                                        List.of("invoice")),
+                                destination.id()));
+        var baseline = request(null, "new_version");
+        var created =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        baseline.steps(),
+                                        Map.of("categoryId", "routing"),
+                                        List.of(destination.id()),
+                                        routes))
+                        .getBody();
+        assertThat(created.outputIds()).containsExactly(destination.id());
+        assertThat(created.routingRules()).isEqualTo(routes);
+        assertThat(created.steps().getFirst().operation())
+                .isEqualTo("/api/v1/ai/tools/classify-and-label");
+        assertThat(created.steps().getFirst().parameters()).containsEntry("reclassify", true);
+        var paused =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        created.id(),
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        false,
+                                        created.steps(),
+                                        created.output()))
+                        .getBody();
+        assertThat(paused.enabled()).isFalse();
+        assertThat(paused.outputIds()).isEqualTo(created.outputIds());
+        assertThat(paused.routingRules()).isEqualTo(routes);
+        assertThat(controller.list().getFirst().routingRules()).isEqualTo(routes);
+        Policy stored = policyStore.get(created.id()).orElseThrow();
+        assertThat(stored.outputIds()).containsExactly(destination.id());
+        assertThat(stored.routingRules()).isEqualTo(routes);
+        var cleared =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        created.id(),
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        false,
+                                        created.steps(),
+                                        created.output(),
+                                        List.of(),
+                                        List.of()))
+                        .getBody();
+        assertThat(cleared.outputIds()).isEmpty();
+        assertThat(cleared.routingRules()).isEmpty();
+    }
+
+    @Test
+    void rejectsRoutingToAnotherTeamsDestinationBeforeCreatingTheFolderPair() {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Foreign archive",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "someone-else",
+                                99L));
+        var baseline = request(null, "new_version");
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("classification.labels"),
+                                        List.of("invoice")),
+                                destination.id()));
+        var malicious =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        List.of(),
+                        routes);
+        assertThatThrownBy(() -> controller.save(malicious))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("inaccessible");
+        assertThat(policyStore.all()).isEmpty();
+        assertThat(sourceStore.all()).hasSize(1);
+        var fallback =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        List.of(destination.id()),
+                        List.of());
+        assertThatThrownBy(() -> controller.save(fallback))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("inaccessible");
     }
 
     @Test
@@ -396,12 +536,60 @@ class ProcessingFolderControllerTest {
         assertThat(controller.list()).hasSize(1);
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void rejectsForeignFolderReferencesFromPersistedSources(boolean retry) {
+        var view = controller.save(request(null, "new_version")).getBody();
+        User other = new User();
+        other.setId(99L);
+        Folder foreign = new Folder();
+        foreign.setId(UUID.randomUUID());
+        foreign.setOwner(other);
+        when(folderRepository.findById(foreign.getId())).thenReturn(Optional.of(foreign));
+        Source source =
+                sourceStore
+                        .get(
+                                policyStore
+                                        .get(view.id())
+                                        .orElseThrow()
+                                        .inputs()
+                                        .getFirst()
+                                        .sourceId())
+                        .orElseThrow();
+        sourceStore.save(
+                new Source(
+                        source.id(),
+                        source.name(),
+                        source.type(),
+                        Map.of("folderId", foreign.getId().toString()),
+                        source.enabled(),
+                        source.owner(),
+                        source.teamId()));
+
+        assertThatThrownBy(
+                        () -> {
+                            if (retry) {
+                                controller.retryFile(
+                                        view.id(),
+                                        new ProcessingFolderController.RetryFileRequest(
+                                                "private.pdf"));
+                            } else {
+                                controller.files(view.id());
+                            }
+                        })
+                .isInstanceOfSatisfying(
+                        ResponseStatusException.class,
+                        error -> assertThat(error.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND));
+        verifyNoInteractions(storedFileRepository);
+    }
+
     @Test
     void aStorageFolderListsItsFilesWithTheirLedgerState() {
         var view = controller.save(request(null, "new_version")).getBody();
         StoredFile done = storedFile(11L, "done.pdf");
         StoredFile waiting = storedFile(12L, "waiting.pdf");
-        when(storedFileRepository.findAllByFolderId(FOLDER_ID)).thenReturn(List.of(done, waiting));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER_ID, user))
+                .thenReturn(List.of(done, waiting));
         when(processedLedger.statesFor(eq(view.id()), any()))
                 .thenReturn(
                         Map.of("storage:11", new ClaimState(ProcessedFileStatus.DONE, "g", null)));
@@ -418,7 +606,8 @@ class ProcessingFolderControllerTest {
     void retryRunsOnlyTheNamedFile() {
         var view = controller.save(request(null, "new_version")).getBody();
         StoredFile doc = storedFile(11L, "doc.pdf");
-        when(storedFileRepository.findAllByFolderId(FOLDER_ID)).thenReturn(List.of(doc));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER_ID, user))
+                .thenReturn(List.of(doc));
         when(processedLedger.forgetFailure(view.id(), "storage:11")).thenReturn(true);
 
         controller.retryFile(view.id(), new ProcessingFolderController.RetryFileRequest("doc.pdf"));
@@ -433,7 +622,8 @@ class ProcessingFolderControllerTest {
     void retryRefusesAFileWithNoParkedFailure() {
         var view = controller.save(request(null, "new_version")).getBody();
         StoredFile doc = storedFile(11L, "doc.pdf");
-        when(storedFileRepository.findAllByFolderId(FOLDER_ID)).thenReturn(List.of(doc));
+        when(storedFileRepository.findAllByFolderIdAndOwner(FOLDER_ID, user))
+                .thenReturn(List.of(doc));
         when(processedLedger.forgetFailure(view.id(), "storage:11")).thenReturn(false);
 
         assertThatThrownBy(

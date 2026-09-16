@@ -42,16 +42,18 @@ class FreeTierUsageServiceDbTest {
 
     @Test
     void firstAccrualAnchorsThePeriodAndSpendsTheGrant() {
-        FreeTierUsageService service = service(500);
+        FreeTierUsageService service =
+                new FreeTierUsageService(
+                        periods, counters, signatures, new AccountLinkProperties(), now::get);
 
         service.accrue(BillingCategory.API, 30, null);
 
         FreeTierUsageService.FreeTierBalance balance = service.balance();
         assertThat(balance.periodStart()).isEqualTo(T0);
         assertThat(balance.periodEnd()).isEqualTo(T0.plusMonths(1));
-        assertThat(balance.grantUnits()).isEqualTo(500);
+        assertThat(balance.grantUnits()).isEqualTo(1000);
         assertThat(balance.usedUnits()).isEqualTo(30);
-        assertThat(balance.remainingUnits()).isEqualTo(470);
+        assertThat(balance.remainingUnits()).isEqualTo(970);
     }
 
     @Test
