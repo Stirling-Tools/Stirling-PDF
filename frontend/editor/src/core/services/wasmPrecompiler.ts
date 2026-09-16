@@ -1,7 +1,7 @@
 import pdfiumWasmAssetUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 
-// Vite resolves this asset for dev and prod alike; resolving it against the
-// document yields a fetchable absolute URL that is also safe to pass to workers.
+// Resolved against the document: the raw URL is relative in dev, and workers
+// need an absolute URL too.
 const getWasmUrl = (): string => {
   if (typeof window !== "undefined") {
     return new URL(pdfiumWasmAssetUrl, window.location.href).href;

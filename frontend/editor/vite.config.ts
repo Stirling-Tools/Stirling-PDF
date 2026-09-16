@@ -17,15 +17,11 @@ const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Let the precompression passes saturate more than the default 4 libuv threads.
-// Both passes run the same bounded batches (see COMPRESSION_BATCH_FILES), so the
-// pool has headroom for Vite's own fs work instead of queueing it behind a full
-// batch of zlib jobs. Must be set before zlib first uses the threadpool, so it
-// lives at the top of the config module.
+// Must be set before zlib first uses the threadpool: the precompression passes
+// queue far more jobs than the default 4 threads can keep busy.
 process.env.UV_THREADPOOL_SIZE ??= "64";
 
-// Extensions never precompressed by either pass; the compression plugin's
-// regex and the static-copy walk derive from one list so they cannot drift.
+// One list so the plugin's regex and the walk cannot drift.
 const COMPRESSION_EXCLUDED_EXTENSIONS = [
   ".gz",
   ".br",
@@ -44,30 +40,23 @@ const COMPRESSION_EXCLUDE_REGEX = new RegExp(
 );
 const EXCLUDED_EXTENSION_SET = new Set(COMPRESSION_EXCLUDED_EXTENSIONS);
 
-// Cloudflare caches by file extension (not MIME type) and its default list
-// omits .mjs, so pdf.js's hashed worker assets bypassed the edge cache there.
-// The extension is irrelevant to a `type: "module"` worker, and renaming at
-// emission time lets Rollup substitute the final filename into every
-// `new URL(..., import.meta.url)` reference itself. Worker sub-builds need the
-// same option because they do not inherit the main build's output options.
+// Cloudflare's extension-based cache list omits .mjs, so pdf.js's hashed worker
+// assets bypassed its edge cache. Renaming at emission also lets Rollup rewrite
+// the `new URL(..., import.meta.url)` references itself; worker sub-builds need
+// the same option because they do not inherit the main build's output options.
 const mjsToJsAssetFileNames = (assetInfo: PreRenderedAsset) =>
   assetInfo.names.some((name) => name.endsWith(".mjs"))
     ? "assets/[name]-[hash].js"
     : "assets/[name]-[hash][extname]";
 
-/**
- * Writes .gz and .br siblings for one file, both encoders in flight at once.
- *
- * Only ever reads inside the build output dir. All inputs derive from a walk of
- * dist, but the guard keeps any stray path from escaping it.
- */
+/** Runs both encoders at once and refuses paths outside the build output. */
 async function compressFile(file: string, distDir: string): Promise<void> {
   const resolved = path.resolve(file);
   if (!resolved.startsWith(`${path.resolve(distDir)}${path.sep}`)) return;
 
   const ext = path.extname(resolved).toLowerCase();
   if (EXCLUDED_EXTENSION_SET.has(ext)) return;
-  // Bundle-emitted assets already have siblings from the compression plugin.
+  // Already compressed by the bundler pass.
   try {
     await fs.access(`${resolved}.br`);
     return;
@@ -91,8 +80,7 @@ async function compressFile(file: string, distDir: string): Promise<void> {
   ]);
 }
 
-// Both passes run 16 files (two encoders each) at a time so the zlib queue stays
-// proportional to the threadpool rather than to the size of dist.
+// Keeps the zlib queue bounded by the threadpool instead of by the size of dist.
 const COMPRESSION_BATCH_FILES = 16;
 
 async function compressFiles(files: string[], distDir: string): Promise<void> {
@@ -112,15 +100,10 @@ function compressStaticCopyPlugin(): PluginOption {
     async closeBundle() {
       const distDir = path.resolve(__dirname, "dist");
 
-      // zlib's async API runs on libuv's threadpool, so compressing serially
-      // idles most cores on the build's most CPU-heavy step. The walk must cover
-      // the whole output: the compression plugin's default include list skips
-      // .wasm (the 4.6 MB PDFium binary), and viteStaticCopy output (the PDFium
-      // fallback fonts, tens of megabytes) never reaches either other pass.
-      // HTML, sitemap.xml and robots.txt belong to the prerender hook, which
-      // writes them in its own concurrent closeBundle: compressing them here can
-      // snapshot a half-written page, and compressFile then keeps that stale
-      // sibling when the writer's pass runs.
+      // The plugin's include list skips .wasm and viteStaticCopy output never
+      // reaches it, so the walk has to cover the rest of dist. HTML, sitemap.xml
+      // and robots.txt stay with the prerender hook, which rewrites them in a
+      // concurrent closeBundle.
       const files: string[] = [];
       const walk = async (dir: string) => {
         let entries;
@@ -225,9 +208,8 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
             : " (root-relative URLs, no landing body)"),
       );
 
-      // prerenderOg rewrote dist/index.html, so the compression plugin's
-      // siblings for the original shell are stale from here on. Drop them and
-      // let the pass below recompress the rewritten file.
+      // prerenderOg rewrote index.html, so the bundler's siblings for the
+      // original shell are stale.
       await Promise.all(
         ["index.html.br", "index.html.gz"].map((name) =>
           fs.rm(path.join(distDir, name), { force: true }),
@@ -258,20 +240,16 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         }
         console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
       }
-      // robots.txt may have just been rewritten with the sitemap pointer; it is
-      // tiny, but it is still owned here so the walk never races with it.
+      // Rewritten above when the sitemap points at it.
       const robotsPath = path.join(distDir, "robots.txt");
       try {
         await fs.access(robotsPath);
         lateFiles.push(robotsPath);
       } catch {
-        // no robots.txt in dist - nothing to compress
+        // absent
       }
-      // closeBundle hooks run concurrently in Vite, not in plugin order, so a
-      // sibling plugin cannot reliably compress files written here. index.html is
-      // rewritten, the route pages (e.g. dist/settings/people.html) and
-      // sitemap.xml are written by this hook, so compress them here for Spring's
-      // EncodedResourceResolver.
+      // These are written here, and closeBundle hooks run concurrently, so the
+      // walk in the other plugin cannot compress them reliably.
       const walkHtml = async (dir: string) => {
         let entries;
         try {
@@ -455,9 +433,8 @@ export default defineConfig(async ({ mode, command }) => {
           }),
         ],
       }),
-      // Set ANALYZE=true to emit dist/stats.json (raw data for the visualizer)
-      // alongside the build; rollup-plugin-visualizer is ESM-only so we import
-      // dynamically.
+      // ANALYZE=true emits dist/stats.json; the visualizer is ESM-only, hence
+      // the dynamic import.
       ...(process.env.ANALYZE === "true"
         ? [
             (await import("rollup-plugin-visualizer")).visualizer({
@@ -545,11 +522,10 @@ export default defineConfig(async ({ mode, command }) => {
     },
     build: {
       target: "esnext",
-      // The build already precompresses for real, so the per-chunk gzip
-      // measurement Vite prints is wasted CI time.
+      // The real precompression runs below, so Vite's gzip measurement is
+      // wasted CI time.
       reportCompressedSize: false,
-      // Vite defaults CSS to esbuild; lightningcss (Rust) minifies in one pass
-      // and can drop prefixes for the esnext target.
+      // Minifies better than esbuild for this esnext target.
       cssMinify: "lightningcss" as const,
       rollupOptions: {
         output: {
@@ -557,18 +533,14 @@ export default defineConfig(async ({ mode, command }) => {
           manualChunks(id: string) {
             if (id.includes("material-symbols-icons.json"))
               return "vendor-iconset";
-            // The dynamic-import preload helper is imported by the entry. Left to
-            // Rollup it lands in the first dynamic-importing vendor chunk, and
-            // the entry then statically imports that whole chunk (the EmbedPDF
-            // engine chunk in this build).
+            // Left to Rollup, this lands in the first dynamic-importing vendor
+            // chunk and the entry then statically imports that whole chunk.
             if (id.includes("vite/preload-helper")) return "vendor-preload";
             if (id.includes("node_modules")) {
               if (id.includes("pdfjs-dist")) return "vendor-pdfjs";
-              // Keep the EmbedPDF pieces the startup graph actually uses (the
-              // engine stays out of it because only the lazy viewer imports it,
-              // and the spread enum is used by viewer contexts) in their own
-              // chunks, so the single `vendor-embedpdf` bundle is fetched only
-              // when the viewer opens.
+              // Only the lazily opened viewer needs the engine and the plugins;
+              // the startup graph needs just the pdfium glue and the shared
+              // enums, so they get their own chunks.
               if (id.includes("@embedpdf/engines")) return "vendor-embedpdf";
               if (id.includes("@embedpdf/pdfium")) return "vendor-pdfium";
               if (
@@ -580,14 +552,12 @@ export default defineConfig(async ({ mode, command }) => {
                 return "vendor-embedpdf-core";
               }
               if (id.includes("@embedpdf")) return "vendor-embedpdf";
-              // Leaf UI packages: they import react/emotion but are not imported
-              // by them, so they split without creating a chunk cycle. Keeping
-              // them separate stops icon edits from invalidating all of vendor-ui.
+              // Splitting these out keeps icon changes from invalidating all of
+              // vendor-ui.
               if (id.includes("@mui/icons-material")) return "vendor-mui-icons";
               if (id.includes("@iconify/react")) return "vendor-iconify";
-              // react/react-dom/scheduler/emotion/mui/mantine are mutually
-              // circular, so they must stay in one chunk or module init order
-              // breaks at runtime (TDZ ReferenceError).
+              // These packages are mutually circular; splitting them breaks
+              // module init order at runtime.
               if (
                 id.includes("react") ||
                 id.includes("scheduler") ||

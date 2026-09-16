@@ -34,8 +34,7 @@ if (typeof window !== "undefined") {
     once: true,
     passive: true,
   });
-  // Pointer use means the user is engaged with the app, and the click-to-pick
-  // gap is usually longer than the download on a decent link.
+  // First pointer use buys the click-to-pick gap as a head start.
   window.addEventListener("pointerdown", warmUpEarly, {
     once: true,
     passive: true,
