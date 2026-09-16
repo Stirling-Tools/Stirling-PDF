@@ -8,7 +8,6 @@ import {
   NumberInput,
   Group,
 } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -21,7 +20,7 @@ import { openExternalTab } from "@app/platform/openExternalTab";
 import { getExternalHref } from "@app/utils/externalUrl";
 import { PdfBookmarkObject, PdfActionType } from "@embedpdf/models";
 import { useTranslation } from "react-i18next";
-import BookmarksIcon from "@mui/icons-material/BookmarksRounded";
+import { Icon } from "@app/ui/Icon";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import "@app/components/viewer/BookmarkSidebar.css";
 
@@ -33,6 +32,12 @@ interface BookmarkSidebarProps {
 }
 
 type BookmarkNode = PdfBookmarkObject & { id: string };
+
+interface BookmarkPayload {
+  title: string;
+  pageNumber: number;
+  children: BookmarkPayload[];
+}
 
 type BookmarkCacheStatus = "idle" | "loading" | "success" | "error";
 
@@ -104,7 +109,7 @@ export const BookmarkSidebar = ({
     toggleBookmarkSidebar,
   } = useViewer();
   const { t } = useTranslation();
-  const { handleToolSelectForced } = useToolWorkflow();
+  const { handleToolSelectForced, readerMode } = useToolWorkflow();
   const { selectors, actions: fileActions } = useFileContext();
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -249,11 +254,9 @@ export const BookmarkSidebar = ({
             continue;
           }
           return Array.isArray(result) ? result : [];
-        } catch (error: any) {
+        } catch (error) {
           const message =
-            typeof error?.message === "string"
-              ? error.message.toLowerCase()
-              : "";
+            error instanceof Error ? error.message.toLowerCase() : "";
           const notReady =
             message.includes("document") &&
             message.includes("not") &&
@@ -331,9 +334,24 @@ export const BookmarkSidebar = ({
   // Fallback: open the full Edit Table of Contents tool when inline add is
   // not viable (e.g. the active file is a preview / unmanaged file we
   // cannot consume + replace via FileContext).
+  //
+  // Reading has no tool panel to open it in, and taking the reader to the editor
+  // to add a bookmark is the jump this surface exists to avoid: there the inline
+  // form is the whole offer, and the cases it cannot serve say so instead.
+  const canFallbackToTool = !readerMode;
   const handleFallbackToTool = useCallback(() => {
+    if (readerMode) {
+      setAddBookmarkError(
+        t(
+          "viewer.bookmarks.editorOnly",
+          "This document's bookmarks can only be edited in the editor.",
+        ),
+      );
+      setIsAddingBookmark(false);
+      return;
+    }
     handleToolSelectForced("editTableOfContents");
-  }, [handleToolSelectForced]);
+  }, [handleToolSelectForced, readerMode, t]);
 
   const handleSubmitAddBookmark = useCallback(async () => {
     const title = newBookmarkTitle.trim();
@@ -377,13 +395,7 @@ export const BookmarkSidebar = ({
     try {
       // Convert existing PDF bookmarks (from embedpdf) to the backend's
       // payload shape, then append the new one.
-      const toPayload = (
-        b: PdfBookmarkObject,
-      ): {
-        title: string;
-        pageNumber: number;
-        children: any[];
-      } => ({
+      const toPayload = (b: PdfBookmarkObject): BookmarkPayload => ({
         title: b.title ?? "",
         pageNumber: resolvePageNumber(b) ?? 1,
         children: (b.children ?? []).map(toPayload),
@@ -521,7 +533,7 @@ export const BookmarkSidebar = ({
 
   const handleBookmarkClick = (
     bookmark: PdfBookmarkObject,
-    event: React.MouseEvent,
+    event: React.SyntheticEvent,
   ) => {
     const target = bookmark.target;
     if (target?.type === "action") {
@@ -605,7 +617,7 @@ export const BookmarkSidebar = ({
                 ? (event) => {
                     if (event.key === "Enter" || event.key === " ") {
                       event.preventDefault();
-                      handleBookmarkClick(node, event as any);
+                      handleBookmarkClick(node, event);
                     }
                   }
                 : undefined
@@ -622,12 +634,9 @@ export const BookmarkSidebar = ({
                   toggleNode(node.id);
                 }}
               >
-                <LocalIcon
-                  icon={
-                    isNodeExpanded ? "keyboard-arrow-up" : "keyboard-arrow-down"
-                  }
-                  width="1rem"
-                  height="1rem"
+                <Icon
+                  name={isNodeExpanded ? "chevron-up" : "chevron-down"}
+                  size="1rem"
                 />
               </ActionIcon>
             ) : (
@@ -687,7 +696,7 @@ export const BookmarkSidebar = ({
             aria-label={t("viewer.bookmarks.expandAll", "Expand all bookmarks")}
             title={t("viewer.bookmarks.expandAll", "Expand all bookmarks")}
           >
-            <LocalIcon icon="unfold-more" width="1.1rem" height="1.1rem" />
+            <Icon name="chevrons-up-down" size="1.1rem" />
           </ActionIcon>
         ) : (
           <ActionIcon
@@ -700,7 +709,7 @@ export const BookmarkSidebar = ({
             )}
             title={t("viewer.bookmarks.collapseAll", "Collapse all bookmarks")}
           >
-            <LocalIcon icon="unfold-less" width="1.1rem" height="1.1rem" />
+            <Icon name="chevrons-down-up" size="1.1rem" />
           </ActionIcon>
         )}
       </>
@@ -710,7 +719,7 @@ export const BookmarkSidebar = ({
     <SidebarBase
       className="bookmark-sidebar"
       title={t("viewer.bookmarks.title", "Bookmarks")}
-      icon={<BookmarksIcon />}
+      icon={<Icon name="bookmark" />}
       rightOffset={`${thumbnailVisible ? 15 : 0}rem`}
       visible={visible}
       onClose={toggleBookmarkSidebar}
@@ -758,10 +767,9 @@ export const BookmarkSidebar = ({
       )}
       {showEmptyState && !isAddingBookmark && (
         <Stack align="center" gap="sm" py="lg">
-          <LocalIcon
-            icon="bookmark-add-rounded"
-            width="2rem"
-            height="2rem"
+          <Icon
+            name="bookmark-plus"
+            size="2rem"
             style={{ color: "var(--mantine-color-dimmed)" }}
           />
           <Text size="sm" c="dimmed" ta="center">
@@ -771,7 +779,7 @@ export const BookmarkSidebar = ({
             variant="tertiary"
             size="sm"
             onClick={handleOpenAddBookmark}
-            leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
+            leftSection={<Icon name="plus" size="1rem" />}
           >
             {t("viewer.bookmarks.addBookmark", "Add bookmark")}
           </Button>
@@ -852,9 +860,7 @@ export const BookmarkSidebar = ({
               fullWidth
               justify="start"
               onClick={handleOpenAddBookmark}
-              leftSection={
-                <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-              }
+              leftSection={<Icon name="plus" size="0.9rem" />}
               style={{ marginBottom: "var(--space-xs)" }}
             >
               {t("viewer.bookmarks.addBookmark", "Add bookmark")}
@@ -873,7 +879,7 @@ export const BookmarkSidebar = ({
           </Text>
         </div>
       )}
-      {bookmarkSupport && documentCacheKey && (
+      {bookmarkSupport && documentCacheKey && canFallbackToTool && (
         <Box
           px="sm"
           py="xs"
@@ -893,10 +899,9 @@ export const BookmarkSidebar = ({
             style={{ width: "100%" }}
           >
             <Group gap="xs" justify="center" wrap="nowrap">
-              <LocalIcon
-                icon="bookmark-add-rounded"
-                width="0.95rem"
-                height="0.95rem"
+              <Icon
+                name="bookmark-plus"
+                size="0.95rem"
                 style={{ color: "var(--c-accent-text)" }}
               />
               <Text

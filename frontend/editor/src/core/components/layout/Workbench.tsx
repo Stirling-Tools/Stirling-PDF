@@ -1,6 +1,6 @@
-import { useState, Suspense, lazy } from "react";
+import { useState, useEffect, useRef, Suspense, lazy } from "react";
 import { useTranslation } from "react-i18next";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Icon } from "@app/ui/Icon";
 import { Box, Loader, Center, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
@@ -12,15 +12,17 @@ import {
 } from "@app/contexts/NavigationContext";
 import { isBaseWorkbench } from "@app/types/workbench";
 import { VIEWER_SUPPORTED_EXTENSIONS } from "@app/utils/fileUtils";
-import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useSigningOverlay } from "@app/contexts/SigningOverlayContext";
-import { useCookieConsent } from "@app/hooks/useCookieConsent";
+import { useIsPhone } from "@app/hooks/useIsMobile";
 import styles from "@app/components/layout/Workbench.module.css";
 
 import WorkbenchBar from "@app/components/shared/WorkbenchBar";
+import { useWorkbenchTakeover } from "@app/components/layout/WorkbenchTakeover";
+import WorkbenchFloatingSearch from "@app/components/shared/WorkbenchFloatingSearch";
 import LandingPage from "@app/components/shared/LandingPage";
 import DismissAllErrorsButton from "@app/components/shared/DismissAllErrorsButton";
 import { ChatFAB } from "@app/components/chat/ChatFAB";
+import { NotificationBell } from "@app/components/notifications/NotificationBell";
 
 // Workbench panels are loaded on demand. Viewer pulls in pdfjs-dist and the
 // full @embedpdf plugin set; FileEditor/PageEditor are only needed once a file
@@ -37,11 +39,9 @@ const FileManagerView = lazy(
 
 // No props needed - component uses contexts directly
 export default function Workbench() {
-  const { config } = useAppConfig();
-
-  // The consent banner used to be initialised by the footer; the legal links
-  // now live in Settings → Legal, so the workbench owns the banner lifecycle.
-  useCookieConsent({ analyticsEnabled: config?.enableAnalytics === true });
+  // A flow that owns the canvas outright (desktop onboarding's Downloads sweep).
+  // Null in every other case, which is every case in core.
+  const takeover = useWorkbenchTakeover();
 
   // Use context-based hooks to eliminate all prop drilling
   const { files: activeFiles, fileIds } = useAllFiles();
@@ -51,15 +51,16 @@ export default function Workbench() {
   const {
     previewFile,
     pageEditorFunctions,
-    sidebarsVisible,
     setPreviewFile,
     setPageEditorFunctions,
-    setSidebarsVisible,
     customWorkbenchViews,
+    readerMode,
   } = useToolWorkflow();
 
   const { handleToolSelect } = useToolWorkflow();
   const { overlay: signingOverlay } = useSigningOverlay();
+  // Below this width the rail, and the bell it carries, is gone.
+  const isPhone = useIsPhone();
 
   // Get navigation state - this is the source of truth
   const { selectedTool: selectedToolId } = useNavigationState();
@@ -76,6 +77,36 @@ export default function Workbench() {
   // bar, outside the bar's overflow-clipped wrapper. Scoped to the viewer.
   const [viewerToolbarCollapsed, setViewerToolbarCollapsed] = useState(false);
   const showReopenTab = currentView === "viewer" && viewerToolbarCollapsed;
+
+  // The WorkbenchBar carries file-scoped actions, so it only shows once a file
+  // is open or a custom view supplies content; otherwise the search floats.
+  const activeCustomView = customWorkbenchViews.find(
+    (v) => v.workbenchId === currentView,
+  );
+  const topControlsAvailable = !activeCustomView?.hideTopControls;
+  const hasWorkbenchContent =
+    hasFiles ||
+    fileIds.length > 0 ||
+    !isBaseWorkbench(currentView) ||
+    // The library browses stored files, so it has content of its own with none open.
+    currentView === "myFiles" ||
+    // Shared signing drives the viewer from the sidebar with no file in context.
+    (currentView === "viewer" && !!signingOverlay?.file);
+  // Reading hides the bar; the rail's Reader entry is the way back. A takeover hides
+  // the switcher and search too: both navigate away from a flow that must finish.
+  const showWorkbenchBar =
+    topControlsAvailable && hasWorkbenchContent && !readerMode && !takeover;
+  const showFloatingSearch =
+    topControlsAvailable && !hasWorkbenchContent && !readerMode && !takeover;
+
+  // On the transition, so reading sets the toolbar's start state without locking it.
+  const prevReaderModeRef = useRef(readerMode);
+  useEffect(() => {
+    if (readerMode !== prevReaderModeRef.current) {
+      setViewerToolbarCollapsed(readerMode);
+      prevReaderModeRef.current = readerMode;
+    }
+  }, [readerMode]);
 
   const handlePreviewClose = () => {
     setPreviewFile(null);
@@ -96,6 +127,10 @@ export default function Workbench() {
   };
 
   const renderMainContent = () => {
+    // Ahead of every view check: a takeover replaces the canvas whatever the current
+    // workbench happens to be, so navigation underneath it cannot surface.
+    if (takeover) return takeover;
+
     // Check if we're showing a custom workbench first
     // Custom workbenches may not require files in FileContext (e.g., sign request workbench)
     if (!isBaseWorkbench(currentView)) {
@@ -108,7 +143,7 @@ export default function Workbench() {
       }
     }
 
-    // The "My Files" workbench is available regardless of whether files are
+    // The file-library workbench is available regardless of whether files are
     // currently loaded into the workbench - it lives on top of the IDB store.
     if (currentView === "myFiles") {
       return <FileManagerView />;
@@ -119,8 +154,6 @@ export default function Workbench() {
     if (currentView === "viewer" && signingOverlay?.file) {
       return (
         <Viewer
-          sidebarsVisible={sidebarsVisible}
-          setSidebarsVisible={setSidebarsVisible}
           previewFile={signingOverlay.file}
           signaturePreviews={signingOverlay.signaturePreviews}
           signaturePreviewsReadOnly={signingOverlay.signaturePreviewsReadOnly}
@@ -173,12 +206,7 @@ export default function Workbench() {
 
       case "viewer":
         return (
-          <Viewer
-            sidebarsVisible={sidebarsVisible}
-            setSidebarsVisible={setSidebarsVisible}
-            previewFile={previewFile}
-            onClose={handlePreviewClose}
-          />
+          <Viewer previewFile={previewFile} onClose={handlePreviewClose} />
         );
 
       case "pageEditor":
@@ -231,41 +259,42 @@ export default function Workbench() {
       data-tour="workbench"
       style={{ backgroundColor: "var(--c-bg)", minWidth: 0 }}
     >
-      {/* Workbench Bar — always visible outside My Files (it hosts the
-          global search), even with no files loaded. */}
-      {currentView !== "myFiles" &&
-        !customWorkbenchViews.find((v) => v.workbenchId === currentView)
-          ?.hideTopControls && (
-          <div className={styles.workbenchBarShell}>
-            <div className={styles.workbenchBarWrapper}>
-              <div className={styles.workbenchBarInner}>
-                <WorkbenchBar
-                  currentView={currentView}
-                  setCurrentView={setCurrentView}
-                  hasFiles={hasFiles}
-                  viewerToolbarCollapsed={viewerToolbarCollapsed}
-                  onCollapseViewerToolbar={setViewerToolbarCollapsed}
-                />
-              </div>
-            </div>
-            {/* Reopen tab: a little handle hanging off the bar's bottom-right
-                while the viewer tool row is retracted. */}
-            {showReopenTab && (
-              <Button
-                type="button"
-                variant="quiet"
-                className={styles.workbenchBarReopenTab}
-                onClick={() => setViewerToolbarCollapsed(false)}
-                aria-expanded={false}
-                aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
-                title={t("workbenchBar.showToolbar", "Show toolbar")}
-                leftSection={
-                  <KeyboardArrowDownIcon sx={{ fontSize: "1rem" }} />
-                }
+      {/* Phone only: above that the rail carries the bell, and here no bar does. */}
+      {isPhone && !showWorkbenchBar && (
+        <div style={{ position: "absolute", top: 12, right: 12, zIndex: 20 }}>
+          <NotificationBell />
+        </div>
+      )}
+
+      {showWorkbenchBar && (
+        <div className={styles.workbenchBarShell}>
+          <div className={styles.workbenchBarWrapper}>
+            <div className={styles.workbenchBarInner}>
+              <WorkbenchBar
+                currentView={currentView}
+                setCurrentView={setCurrentView}
+                hasFiles={hasFiles}
+                viewerToolbarCollapsed={viewerToolbarCollapsed}
+                onCollapseViewerToolbar={setViewerToolbarCollapsed}
               />
-            )}
+            </div>
           </div>
-        )}
+          {/* Reopen tab for the retracted viewer tool row. */}
+          {showReopenTab && (
+            <Button
+              type="button"
+              variant="quiet"
+              className={styles.workbenchBarReopenTab}
+              onClick={() => setViewerToolbarCollapsed(false)}
+              aria-expanded={false}
+              aria-label={t("workbenchBar.showToolbar", "Show toolbar")}
+              title={t("workbenchBar.showToolbar", "Show toolbar")}
+              leftSection={<Icon name="chevron-down" size={"1rem"} />}
+            />
+          )}
+        </div>
+      )}
+      {showFloatingSearch && <WorkbenchFloatingSearch />}
 
       {/* Dismiss All Errors Button */}
       <DismissAllErrorsButton />

@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Stack, Text, Group, Divider, useMantineTheme } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 import { useMultipleEndpointsEnabled } from "@app/hooks/useEndpointConfig";
 import {
@@ -20,6 +20,7 @@ import ConvertFromEmailSettings from "@app/components/tools/convert/ConvertFromE
 import ConvertFromCbzSettings from "@app/components/tools/convert/ConvertFromCbzSettings";
 import ConvertToCbzSettings from "@app/components/tools/convert/ConvertToCbzSettings";
 import ConvertToPdfaSettings from "@app/components/tools/convert/ConvertToPdfaSettings";
+import ConvertToPdfUaSettings from "@app/components/tools/convert/ConvertToPdfUaSettings";
 import ConvertToPdfxSettings from "@app/components/tools/convert/ConvertToPdfxSettings";
 import ConvertFromCbrSettings from "@app/components/tools/convert/ConvertFromCbrSettings";
 import ConvertToCbrSettings from "@app/components/tools/convert/ConvertToCbrSettings";
@@ -325,11 +326,10 @@ const ConvertSettings = ({
                   "Select a source format first",
                 )}
               </Text>
-              <KeyboardArrowDownIcon
-                style={{
-                  fontSize: "1rem",
-                  color: "var(--select-placeholder-text)",
-                }}
+              <Icon
+                name="chevron-down"
+                size={"1rem"}
+                style={{ color: "var(--select-placeholder-text)" }}
               />
             </Group>
           </Button>
@@ -448,6 +448,20 @@ const ConvertSettings = ({
           <>
             <Divider />
             <ConvertToPdfaSettings
+              parameters={parameters}
+              onParameterChange={onParameterChange}
+              selectedFiles={selectedFiles}
+              disabled={disabled}
+            />
+          </>
+        )}
+
+      {/* PDF to PDF/UA options */}
+      {parameters.fromExtension === "pdf" &&
+        parameters.toExtension === "pdfua" && (
+          <>
+            <Divider />
+            <ConvertToPdfUaSettings
               parameters={parameters}
               onParameterChange={onParameterChange}
               selectedFiles={selectedFiles}

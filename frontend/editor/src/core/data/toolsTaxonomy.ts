@@ -29,6 +29,7 @@ import { ProprietaryToolId } from "@app/types/proprietaryToolId";
 import { PrototypeToolId } from "@app/types/prototypeToolId";
 
 export enum SubcategoryId {
+  AI = "ai",
   SIGNING = "signing",
   DOCUMENT_SECURITY = "documentSecurity",
   VERIFICATION = "verification",
@@ -71,12 +72,16 @@ export type ToolRegistryEntry = {
   > | null;
   // Whether this tool supports automation (defaults to true)
   supportsAutomate?: boolean;
+  // Keep out of the editor's tool list: a step only a pipeline runs, with no UI to open.
+  hiddenFromToolList?: boolean;
   // Synonyms for search (optional)
   synonyms?: string[];
   // Version status indicator (e.g., "alpha", "beta")
   versionStatus?: "alpha" | "beta";
   // Whether this tool requires premium access
   requiresPremium?: boolean;
+  // Pre-translated override for the generic "unavailable on server" tooltip label
+  unavailableMessage?: string;
 };
 
 export type RegularToolRegistry = Record<RegularToolId, ToolRegistryEntry>;
@@ -90,6 +95,8 @@ export type ProprietaryToolRegistry = Record<
 export type PrototypeToolRegistry = Record<PrototypeToolId, ToolRegistryEntry>;
 
 export const SUBCATEGORY_ORDER: SubcategoryId[] = [
+  // First: AI steps are the ones a user is least likely to know exist.
+  SubcategoryId.AI,
   SubcategoryId.SIGNING,
   SubcategoryId.DOCUMENT_SECURITY,
   SubcategoryId.VERIFICATION,
@@ -104,6 +111,7 @@ export const SUBCATEGORY_ORDER: SubcategoryId[] = [
 ];
 
 export const SUBCATEGORY_COLOR_MAP: Record<SubcategoryId, string> = {
+  [SubcategoryId.AI]: "var(--category-color-automation)", // Pink
   [SubcategoryId.SIGNING]: "var(--category-color-signing)", // Green
   [SubcategoryId.DOCUMENT_SECURITY]: "var(--category-color-security)", // Orange
   [SubcategoryId.VERIFICATION]: "var(--category-color-verification)", // Orange

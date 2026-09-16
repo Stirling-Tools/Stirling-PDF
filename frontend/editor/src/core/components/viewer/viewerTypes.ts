@@ -45,7 +45,7 @@ export interface SignatureAPI {
   deleteAnnotation: (annotationId: string, pageIndex: number) => void;
   updateDrawSettings: (color: string, size: number) => void;
   deactivateTools: () => void;
-  getPageAnnotations: (pageIndex: number) => Promise<any[]>;
+  getPageAnnotations: (pageIndex: number) => Promise<unknown[]>;
   moveAnnotation?: (
     pageIndex: number,
     annotationId: string,
@@ -160,6 +160,8 @@ export interface AnnotationObject {
   backgroundColor?: string;
   textColor?: string;
   opacity?: number;
+  strokeOpacity?: number;
+  fillOpacity?: number;
   strokeWidth?: number;
   borderWidth?: number;
   lineWidth?: number;

@@ -237,7 +237,7 @@ public class TabulaTableParser implements TableParser {
             score -= 0.3f;
         }
 
-        return Math.max(0f, Math.min(1f, score));
+        return Math.clamp(score, 0f, 1f);
     }
 
     private Bounds tableBounds(Table table) {

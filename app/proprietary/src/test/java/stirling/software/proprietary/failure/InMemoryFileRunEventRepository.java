@@ -96,7 +96,9 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
     @Override
     public int reopenIfResolved(String id) {
         FileRunEventEntity entity = rows.get(id);
-        if (entity == null || entity.getStatus() != FileRunEventStatus.RESOLVED) {
+        if (entity == null
+                || (entity.getStatus() != FileRunEventStatus.RESOLVED
+                        && entity.getStatus() != FileRunEventStatus.FILE_REMOVED)) {
             return 0;
         }
         entity.setStatus(FileRunEventStatus.NEW);
@@ -134,7 +136,8 @@ class InMemoryFileRunEventRepository implements FileRunEventRepository {
             Collection<FileRunEventStatus> allowedFrom) {
         int closed = 0;
         for (FileRunEventEntity entity : rows.values()) {
-            if (entity.getOrigin() != FailureOrigin.TOOL
+            // Mirrors the real query: scoped by the absence of a source, not by origin.
+            if (entity.getSourceId() != null
                     || !sameTeam(entity, teamId)
                     || !Objects.equals(entity.getActor(), actor)
                     || entity.getFileId() == null

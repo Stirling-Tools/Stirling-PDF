@@ -5,6 +5,13 @@
 
 import { loadScript } from "@app/utils/scriptLoader";
 import { Z_INDEX_OVER_FILE_MANAGER_MODAL } from "@app/styles/zIndex";
+import { AppConfig } from "@app/types/appConfig";
+
+// The GIS token client lets you reassign `callback` after init (to resolve the
+// per-request promise), but @types/google.accounts only models it on the config.
+type TokenClientWithCallback = google.accounts.oauth2.TokenClient & {
+  callback: (response: google.accounts.oauth2.TokenResponse) => void;
+};
 
 const SCOPES = "https://www.googleapis.com/auth/drive.readonly";
 const SESSION_STORAGE_ID = "googleDrivePickerAccessToken";
@@ -57,9 +64,42 @@ function fileInputToGooglePickerMimeTypes(accept?: string): string | null {
   return mimeTypes.join(",").replace(/\s+/g, "");
 }
 
+const PICKER_ZINDEX_STYLE_ID = "google-picker-zindex";
+
+/**
+ * Raise the picker above the file manager modal.
+ *
+ * The picker renders into elements Google appends to <body>, outside the React
+ * tree, so its stacking has to be raised from the outside. `setZIndex` is not
+ * part of the public PickerBuilder API — it is absent from both Google's
+ * reference and @types/google.picker — so calling it unconditionally throws
+ * `TypeError: setZIndex is not a function` and the picker never opens.
+ * Feature-detect it, and style the injected dialog as the fallback that
+ * actually does the work today.
+ */
+function raisePickerAboveModals(builder: unknown): void {
+  const zIndexAwareBuilder = builder as {
+    setZIndex?: (zIndex: number) => void;
+  };
+  if (typeof zIndexAwareBuilder.setZIndex === "function") {
+    zIndexAwareBuilder.setZIndex(Z_INDEX_OVER_FILE_MANAGER_MODAL);
+  }
+
+  if (document.getElementById(PICKER_ZINDEX_STYLE_ID) !== null) {
+    return;
+  }
+
+  const style = document.createElement("style");
+  style.id = PICKER_ZINDEX_STYLE_ID;
+  // Class names of the dialog and backdrop that the picker appends to <body>.
+  // The backdrop is appended first, so an equal z-index keeps the dialog above it.
+  style.textContent = `.picker-dialog, .picker-dialog-bg { z-index: ${Z_INDEX_OVER_FILE_MANAGER_MODAL} !important; }`;
+  document.head.appendChild(style);
+}
+
 class GoogleDrivePickerService {
   private config: GoogleDriveConfig | null = null;
-  private tokenClient: any = null;
+  private tokenClient: TokenClientWithCallback | null = null;
   private accessToken: string | null = null;
   private gapiLoaded = false;
   private gisLoaded = false;
@@ -119,7 +159,7 @@ class GoogleDrivePickerService {
       client_id: this.config.clientId,
       scope: SCOPES,
       callback: () => {}, // Will be overridden during picker creation
-    });
+    }) as TokenClientWithCallback;
 
     this.gisLoaded = true;
   }
@@ -149,7 +189,9 @@ class GoogleDrivePickerService {
         return;
       }
 
-      this.tokenClient.callback = (response: any) => {
+      this.tokenClient.callback = (
+        response: google.accounts.oauth2.TokenResponse,
+      ) => {
         if (response.error !== undefined) {
           reject(new Error(response.error));
           return;
@@ -201,11 +243,11 @@ class GoogleDrivePickerService {
         .setOAuthToken(this.accessToken)
         .addView(view1)
         .addView(view2)
-        .setCallback((data: any) => this.pickerCallback(data, resolve, reject));
+        .setCallback((data: google.picker.ResponseObject) =>
+          this.pickerCallback(data, resolve, reject),
+        );
 
-      (builder as unknown as { setZIndex(z: number): void }).setZIndex(
-        Z_INDEX_OVER_FILE_MANAGER_MODAL,
-      );
+      raisePickerAboveModals(builder);
 
       if (options.multiple) {
         builder.enableFeature(window.google.picker.Feature.MULTISELECT_ENABLED);
@@ -220,37 +262,39 @@ class GoogleDrivePickerService {
    * Handle picker selection callback
    */
   private async pickerCallback(
-    data: any,
+    data: google.picker.ResponseObject,
     resolve: (files: File[]) => void,
     reject: (error: Error) => void,
   ): Promise<void> {
-    if (data.action === window.google.picker.Action.PICKED) {
+    const action = data[window.google.picker.Response.ACTION];
+    if (action === window.google.picker.Action.PICKED) {
       try {
+        const documents = data[window.google.picker.Response.DOCUMENTS] ?? [];
         const files = await Promise.all(
-          data[window.google.picker.Response.DOCUMENTS].map(
-            async (pickedFile: any) => {
-              const fileId = pickedFile[window.google.picker.Document.ID];
-              const res = await window.gapi.client.drive.files.get({
-                fileId: fileId,
-                alt: "media",
-              });
+          documents.map(async (pickedFile) => {
+            const fileId = pickedFile[window.google.picker.Document.ID];
+            const res = await window.gapi.client.drive.files.get({
+              fileId: fileId,
+              alt: "media",
+            });
 
-              // Convert response body to File object
-              const file = new File(
-                [
-                  new Uint8Array(res.body.length).map((_: any, i: number) =>
-                    res.body.charCodeAt(i),
-                  ),
-                ],
-                pickedFile.name,
-                {
-                  type: pickedFile.mimeType,
-                  lastModified: pickedFile.lastModified,
-                },
-              );
-              return file;
-            },
-          ),
+            // Convert response body to File object
+            const file = new File(
+              [
+                new Uint8Array(res.body.length).map((_, i) =>
+                  res.body.charCodeAt(i),
+                ),
+              ],
+              pickedFile[window.google.picker.Document.NAME] ?? "",
+              {
+                type: pickedFile[window.google.picker.Document.MIME_TYPE],
+                lastModified:
+                  pickedFile[window.google.picker.Document.LAST_EDITED_UTC] ??
+                  Date.now(),
+              },
+            );
+            return file;
+          }),
         );
 
         resolve(files);
@@ -261,7 +305,7 @@ class GoogleDrivePickerService {
             : new Error("Failed to download files"),
         );
       }
-    } else if (data.action === window.google.picker.Action.CANCEL) {
+    } else if (action === window.google.picker.Action.CANCEL) {
       resolve([]); // User cancelled, return empty array
     }
   }
@@ -369,7 +413,7 @@ export function getGoogleDriveConfig(
  * Eliminates duplicated config construction pattern
  */
 export function extractGoogleDriveBackendConfig(
-  appConfig: any,
+  appConfig: AppConfig | null,
 ): BackendGoogleDriveConfig {
   return {
     enabled: appConfig?.googleDriveEnabled,

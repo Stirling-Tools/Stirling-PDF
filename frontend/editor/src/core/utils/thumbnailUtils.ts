@@ -2,6 +2,8 @@ import {
   openRawDocumentSafe,
   closeRawDocument,
   getPdfiumModule,
+  PdfiumOpenError,
+  FPDF_ERR_PASSWORD,
 } from "@app/services/pdfiumService";
 import {
   renderPdfiumPageDataUrl,
@@ -27,9 +29,6 @@ export function calculateScaleFromFileSize(fileSize: number): number {
   if (fileSize < 500 * MB) return 0.4; // Readable quality for large but manageable files
   return 0.3; // Still usable quality, not tiny
 }
-
-/** PDFium error code 4 = password required (encrypted PDF). */
-const PDFIUM_ERR_PASSWORD = 4;
 
 /** Callers still get a placeholder, but log the cause: an empty thumbnail is
  *  indistinguishable from "no raster preview", so an outage hides as a nicety. */
@@ -101,10 +100,7 @@ async function renderPdfThumbnailPdfium(
   try {
     docPtr = await openRawDocumentSafe(data);
   } catch (error) {
-    if (
-      error instanceof Error &&
-      new RegExp(`error ${PDFIUM_ERR_PASSWORD}`).test(error.message)
-    ) {
+    if (error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD) {
       return {
         thumbnail: "",
         pageCount: 1,
@@ -163,10 +159,7 @@ async function renderPdfThumbnailPairPdfium(
   try {
     docPtr = await openRawDocumentSafe(data);
   } catch (error) {
-    if (
-      error instanceof Error &&
-      new RegExp(`error ${PDFIUM_ERR_PASSWORD}`).test(error.message)
-    ) {
+    if (error instanceof PdfiumOpenError && error.code === FPDF_ERR_PASSWORD) {
       const encrypted: PdfiumRenderResult = {
         thumbnail: "",
         pageCount: 1,

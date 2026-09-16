@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Tooltip } from "@mantine/core";
 import ScienceOutlinedIcon from "@mui/icons-material/ScienceOutlined";
@@ -49,6 +50,7 @@ export function PipelineGraphToolbar({
   onViewDefinition,
 }: PipelineGraphToolbarProps) {
   const { t } = useTranslation();
+  const resetPicker = useRef<() => void>(null);
 
   return (
     <div className="portal-pipeline-toolbar">
@@ -59,7 +61,12 @@ export function PipelineGraphToolbar({
         loading={testing}
         // A chain with no steps would hand the file straight back, reading as a silent no-op.
         disabled={stepCount === 0}
-        onChange={(file) => file && onTest(file)}
+        resetRef={resetPicker}
+        onChange={(file) => {
+          if (!file) return;
+          onTest(file);
+          resetPicker.current?.();
+        }}
         leftSection={<ScienceOutlinedIcon style={{ fontSize: "1.125rem" }} />}
       >
         {t("portal.pipelines.builder.testRun")}

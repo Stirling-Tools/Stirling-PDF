@@ -6,12 +6,10 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
 
 import stirling.software.saas.payg.model.LedgerEntryType;
 import stirling.software.saas.payg.wallet.WalletLedgerEntry;
 
-@Repository
 public interface WalletLedgerRepository extends JpaRepository<WalletLedgerEntry, Long> {
 
     /** Most recent entries for the Plan page activity feed. */

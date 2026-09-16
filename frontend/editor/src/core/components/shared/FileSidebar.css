@@ -1,32 +1,21 @@
 /* ========== FILE SIDEBAR ========== */
 
 .file-sidebar {
-  background-color: var(--c-bg);
+  /* One solid panel, with a rule only on the workbench side, so it frames the document. */
+  background-color: var(--c-surface);
+  border-inline-end: 1px solid var(--c-border-subtle);
   display: flex;
   flex-direction: column;
   height: 100%;
   position: relative;
   /* Above the workbench column (also z-10, but later in the DOM, so it would
-     otherwise paint over us). The brand switcher's menu is wider than the
-     collapsed rail and has to spill across that boundary intact. */
+     otherwise paint over us), so the brand switcher's menu spills across that
+     boundary intact. */
   z-index: var(--z-dropdown);
   flex-shrink: 0;
-  /* Slide the rail between collapsed/expanded. The delayed content-fade
-     (sidebar-content-in, 0.18s) is timed against this 0.22s so labels resolve
-     only after the width has settled — no squashed text mid-animation. */
-  transition:
-    width var(--motion-spring),
-    min-width var(--motion-spring),
-    max-width var(--motion-spring);
   /* Gap around the floating boxes. */
   padding: var(--nav-gutter);
   gap: var(--nav-gutter);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .file-sidebar {
-    transition: none;
-  }
 }
 
 .file-sidebar-inner {
@@ -37,27 +26,76 @@
   gap: 0.5rem;
 }
 
-/* ---- Brand header (logo / editor⇄processor switcher) ---- */
-.file-sidebar-brand {
+/* Flattened here; two classes deep to beat .sui-nav-surface without relying on order. */
+.file-sidebar .sui-nav-surface {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+}
+
+/* Transform only, and out of flow while the wing leaves, so the workbench holds
+   its reading width throughout instead of reflowing twice. */
+[data-wings] {
+  position: relative;
+}
+
+[data-wings="leaving"] .workspace-frame {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  z-index: var(--z-dropdown);
+  animation: file-sidebar-leave var(--wings-ms) ease-in both;
+}
+
+[data-wings="returning"] .workspace-frame {
+  animation: file-sidebar-return var(--wings-ms) ease-out both;
+}
+
+@keyframes file-sidebar-leave {
+  to {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes file-sidebar-return {
+  from {
+    transform: translateX(-100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+/* The wing sits on the trailing edge in RTL, so it leaves by that one. */
+[dir="rtl"] [data-wings="leaving"] .workspace-frame {
+  animation-name: tool-panel-leave;
+}
+
+[dir="rtl"] [data-wings="returning"] .workspace-frame {
+  animation-name: tool-panel-return;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-wings] .workspace-frame {
+    animation: none;
+  }
+}
+
+/* ---- Header row ---- */
+.file-sidebar-header {
   display: flex;
   align-items: center;
-  min-height: 40px;
-  padding: 0 0.375rem;
+  min-height: var(--nav-header-h);
+  padding: 0 var(--nav-gutter);
   flex-shrink: 0;
 }
 
 .file-sidebar-collapse-toggle {
   margin-left: auto;
   flex-shrink: 0;
-}
-
-.file-sidebar[data-collapsed="true"] .file-sidebar-brand {
-  flex-direction: column;
-  gap: 0.25rem;
-  padding: 0;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-collapse-toggle {
-  margin-left: 0;
 }
 
 /* ---- Three floating nav-surface boxes (controls / files / footer) ---- */
@@ -77,27 +115,6 @@
 }
 /* The footer is the shared <NavFooter>: it brings its own boxes and padding,
    so this class only positions it in the column. */
-
-/* Collapsed rail: the file tree isn't rendered, so hide its (empty) box and
-   let the boxes stack at the top — controls, then the settings footer right
-   after — instead of the files box stretching to fill. */
-.file-sidebar[data-collapsed="true"] .file-sidebar-controls {
-  padding: 0.25rem;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-files-box {
-  display: none;
-}
-.file-sidebar[data-collapsed="true"] .file-sidebar-inner {
-  flex: 0 0 auto;
-}
-/* Centre each row's icon in the narrow rail (no side padding/margin to shove
-   it off the edge). */
-.file-sidebar[data-collapsed="true"] .file-sidebar-action-row,
-.file-sidebar[data-collapsed="true"] .file-sidebar-cloud-row {
-  justify-content: center;
-  padding-inline: 0;
-  margin: 0;
-}
 
 /* ---- Native file drag-and-drop ---- */
 .file-sidebar[data-file-drag-over] {
@@ -142,19 +159,7 @@
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.file-sidebar-scroll::-webkit-scrollbar {
-  width: 4px;
-}
-.file-sidebar-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-.file-sidebar-scroll::-webkit-scrollbar-thumb {
-  background: rgb(var(--border));
-  border-radius: 2px;
+  overflow: hidden;
 }
 
 /* ---- Action rows (Open from Computer, etc.) ---- */
@@ -241,9 +246,12 @@
   flex-shrink: 0;
 }
 
+/* The colorless brand mark follows currentColor, so the muted tone lives here
+   and tracks the theme: dark grey on light, light grey on dark. */
 .file-sidebar-cloud-icon-gray {
   position: absolute;
   inset: 0;
+  color: var(--c-text-muted);
   transition: opacity 0.2s ease;
   opacity: 1;
 }
@@ -272,10 +280,45 @@
   margin-top: 4px;
 }
 
+/* A refresh in progress, on a row that has no room for a spinner beside its label. */
+.file-sidebar-spin {
+  animation: file-sidebar-refresh-spin 0.9s linear infinite;
+}
+
+@keyframes file-sidebar-refresh-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .file-sidebar-spin {
+    animation-duration: 2s;
+  }
+}
+
+/* Folder navigation fills the box the file list would: in the library it is what the
+   sidebar is for, and a deep tree scrolls within it. */
+.file-sidebar-folders-section {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  margin-top: 4px;
+}
+
 .file-sidebar-file-list {
   flex: 1;
   min-height: 0;
-  overflow-y: scroll;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--c-border-strong) transparent;
 }
 
 /* --- Grouped list (SaaS: Recent + per-category groups). Inert when the
@@ -301,6 +344,47 @@
 }
 .file-sidebar-group-header:hover {
   background: var(--c-hover, var(--c-hover));
+}
+
+.file-sidebar-group-header .mantine-Button-inner {
+  width: 100%;
+  gap: 6px;
+}
+
+.file-sidebar-group-header .mantine-Button-section {
+  margin-inline: 0;
+}
+
+.file-sidebar-group-header .mantine-Button-label {
+  flex: 1;
+  min-width: 0;
+  text-align: start;
+}
+
+.file-sidebar-group-symbol {
+  display: grid;
+  place-items: center;
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+
+.file-sidebar-group-symbol > * {
+  grid-area: 1 / 1;
+}
+
+.file-sidebar-group-symbol[data-has-icon="true"]
+  .file-sidebar-group-disclosure {
+  visibility: hidden;
+}
+
+.file-sidebar-group-header:is(:hover, :focus-visible) .file-sidebar-group-icon {
+  visibility: hidden;
+}
+
+.file-sidebar-group-header:is(:hover, :focus-visible)
+  .file-sidebar-group-disclosure {
+  visibility: visible;
 }
 
 .file-sidebar-group-icon {
@@ -330,7 +414,7 @@
   padding-left: 0;
 }
 .file-sidebar-group-items .file-sidebar-file-item {
-  padding: 5px 10px 5px 1.4rem;
+  padding: 5px 10px 5px 1rem;
   gap: 8px;
   border-radius: 0;
 }
@@ -401,17 +485,20 @@
 }
 
 .file-sidebar-file-list::-webkit-scrollbar {
-  width: 4px;
+  width: 6px;
 }
 .file-sidebar-file-list::-webkit-scrollbar-track {
   background: transparent;
 }
 .file-sidebar-file-list::-webkit-scrollbar-thumb {
-  background: rgb(var(--border));
-  border-radius: 2px;
+  background: var(--c-border-strong);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 .file-sidebar-file-list::-webkit-scrollbar-thumb:hover {
   background: var(--c-text-subtle);
+  background-clip: content-box;
 }
 
 .file-sidebar-section-divider {
@@ -435,6 +522,11 @@
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--c-text);
+  /* A longer translation truncates rather than wrapping the row onto two lines. */
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 /* Slim "Adding files… X/Y" progress row shown during a bulk drop's pre-scan,
@@ -471,12 +563,16 @@
   color: var(--c-text-subtle);
 }
 
-.file-sidebar-section-btn {
+/* Chained to the Mantine class to beat its inline `--ai-size` sizing (36px for
+   `md`): four controls that wide leave no room for the section label. */
+.file-sidebar-section-btn.mantine-ActionIcon-root {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 24px;
   height: 24px;
+  min-width: 24px;
+  min-height: 24px;
   border: none;
   background: transparent;
   border-radius: 4px;
@@ -490,12 +586,12 @@
     opacity 0.12s ease;
 }
 
-.file-sidebar-section-btn:focus-visible {
+.file-sidebar-section-btn.mantine-ActionIcon-root:focus-visible {
   outline: 2px solid var(--c-primary);
   outline-offset: 1px;
 }
 
-.file-sidebar-section-btn:hover {
+.file-sidebar-section-btn.mantine-ActionIcon-root:hover {
   background-color: var(--c-hover);
   color: var(--c-text);
 }
@@ -510,13 +606,18 @@
   pointer-events: auto;
 }
 
+/* Whichever add control comes first takes the gap, so the pair stays together
+   at the end of the header row. */
+.file-sidebar-section-btn-drive,
 .file-sidebar-section-btn-add {
   margin-left: auto;
 }
+.file-sidebar-section-btn-drive + .file-sidebar-section-btn-add {
+  margin-left: 0;
+}
 
-/* ---- Sidebar content fade (for collapsed state) ---- */
-/* Elements are conditionally rendered so use animation (not transition) to fade in from 0.
-   Delay until the width animation is nearly done (0.18s of 0.22s) to avoid squashed-text effect. */
+/* Rows are conditionally rendered, so they fade in with an animation rather than
+   a transition, which has nothing to run from. */
 @keyframes sidebar-content-in {
   from {
     opacity: 0;
@@ -528,10 +629,4 @@
 
 .sidebar-content-fade {
   animation: sidebar-content-in 0.12s ease 0.18s both;
-}
-
-.file-sidebar[data-collapsed="true"] .sidebar-content-fade {
-  opacity: 0;
-  pointer-events: none;
-  animation: none;
 }

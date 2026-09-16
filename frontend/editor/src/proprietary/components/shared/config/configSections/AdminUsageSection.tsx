@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
+import { SettingsEmptyState } from "@app/components/shared/config/SettingsEmptyState";
 import { Stack, Group, Text, Loader, Alert, Card } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
@@ -11,7 +12,6 @@ import UsageAnalyticsChart from "@app/components/shared/config/configSections/us
 import UsageAnalyticsTable from "@app/components/shared/config/configSections/usage/UsageAnalyticsTable";
 import LocalIcon from "@app/components/shared/LocalIcon";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import EnterpriseRequiredBanner from "@app/components/shared/config/EnterpriseRequiredBanner";
 
@@ -229,12 +229,15 @@ const AdminUsageSection: React.FC = () => {
 
   if (!data) {
     return (
-      <Alert color="yellow" title={t("usage.noData", "No data available")}>
+      <SettingsEmptyState
+        icon="monitoring"
+        title={t("usage.noData", "No usage yet")}
+      >
         {t(
           "usage.noDataMessage",
-          "No usage statistics are currently available.",
+          "Endpoint activity appears here once people start running tools.",
         )}
-      </Alert>
+      </SettingsEmptyState>
     );
   }
 
@@ -267,7 +270,6 @@ const AdminUsageSection: React.FC = () => {
 
   return (
     <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
       <EnterpriseRequiredBanner
         show={!hasEnterpriseLicense}
         featureName={t(
@@ -332,9 +334,7 @@ const AdminUsageSection: React.FC = () => {
             <Group>
               <SegmentedControl
                 value={displayMode}
-                onChange={(value) =>
-                  setDisplayMode(value as "top10" | "top20" | "all")
-                }
+                onChange={(value) => setDisplayMode(value)}
                 options={[
                   {
                     value: "top10",
@@ -373,7 +373,7 @@ const AdminUsageSection: React.FC = () => {
             </Text>
             <SegmentedControl
               value={dataType}
-              onChange={(value) => setDataType(value as "all" | "api" | "ui")}
+              onChange={(value) => setDataType(value)}
               options={[
                 {
                   value: "all",

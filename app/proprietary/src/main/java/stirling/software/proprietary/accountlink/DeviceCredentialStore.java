@@ -16,7 +16,10 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Profile("!saas")
-@ConditionalOnProperty(name = "stirling.billing.account-link.enabled", havingValue = "true")
+@ConditionalOnProperty(
+        name = "stirling.billing.account-link.enabled",
+        havingValue = "true",
+        matchIfMissing = true)
 public class DeviceCredentialStore {
 
     private final DeviceCredentialRepository repo;

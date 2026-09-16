@@ -128,7 +128,7 @@ export const suiCssVariablesResolver: CSSVariablesResolver = () => ({
   light: {
     ...suiAccessibleColorSlots,
     // Popover/dropdown background + combobox search input
-    "--mantine-color-white": "var(--c-surface)",
+    "--mantine-color-white": "var(--c-surface-raised)",
     // Option hover background
     "--mantine-color-gray-0": "var(--c-hover)",
     // Dropdown border
