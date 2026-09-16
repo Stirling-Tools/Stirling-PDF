@@ -1,3 +1,4 @@
+import { AccountConnectionNotice } from "@portal/components/account-link/AccountConnectionNotice";
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Banner, Button, InfoTooltip, Skeleton } from "@app/ui";
@@ -86,6 +87,7 @@ export function AccountLinkPanel() {
         )
       }
     >
+      <AccountConnectionNotice />
       <LinkAccountCard link={link} instanceName={currentInstance?.name} />
 
       {linked && (
