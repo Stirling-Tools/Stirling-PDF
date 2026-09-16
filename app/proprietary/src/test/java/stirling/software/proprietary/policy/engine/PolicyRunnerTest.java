@@ -237,6 +237,80 @@ class PolicyRunnerTest {
                                 policy.id(), policy.inputs().getFirst().sourceId()));
     }
 
+    @ParameterizedTest
+    @EnumSource(
+            value = PolicyRunStatus.class,
+            names = {"COMPLETED", "FAILED"})
+    void exceptionalRunsDoNotSuppressBatchProgress(PolicyRunStatus status) throws Exception {
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        AtomicInteger settled = new AtomicInteger();
+        ResolvedInput unit =
+                new ResolvedInput(
+                        PolicyInputs.of(List.of()), null, success -> settled.incrementAndGet());
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any())).thenReturn(List.of(unit, unit, unit));
+        CompletableFuture<PolicyRun> first = new CompletableFuture<>();
+        CompletableFuture<PolicyRun> second = new CompletableFuture<>();
+        CompletableFuture<PolicyRun> third = new CompletableFuture<>();
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
+                .thenReturn(
+                        new PolicyRunHandle("r1", first),
+                        new PolicyRunHandle("r2", second),
+                        new PolicyRunHandle("r3", third));
+        runner.run(policy);
+        PolicyRun run = mock(PolicyRun.class);
+        when(run.getStatus()).thenReturn(status);
+
+        first.completeExceptionally(new IllegalStateException("first run interrupted"));
+        verifyNoInteractions(eventPublisher);
+        second.complete(run);
+        verifyNoInteractions(eventPublisher);
+        third.completeExceptionally(new IllegalStateException("last run interrupted"));
+
+        assertEquals(3, settled.get());
+        verify(eventPublisher)
+                .publishEvent(
+                        new SourceBatchSettledEvent(
+                                policy.id(), policy.inputs().getFirst().sourceId()));
+    }
+
+    @ParameterizedTest
+    @EnumSource(
+            value = PolicyRunStatus.class,
+            names = {"COMPLETED", "FAILED"})
+    void aThrowingSettlementHookDoesNotSuppressOtherBatchProgress(PolicyRunStatus status)
+            throws Exception {
+        InputSpec spec = InputSpec.folder("/in");
+        Policy policy = policy(List.of(spec));
+        ResolvedInput unsettled =
+                new ResolvedInput(
+                        PolicyInputs.of(List.of()),
+                        null,
+                        success -> {
+                            throw new IllegalStateException("ledger unavailable");
+                        });
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of())), unsettled));
+        CompletableFuture<PolicyRun> first = new CompletableFuture<>();
+        CompletableFuture<PolicyRun> second = new CompletableFuture<>();
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PolicyRunHandle("r1", first), new PolicyRunHandle("r2", second));
+        runner.run(policy);
+        PolicyRun run = mock(PolicyRun.class);
+        when(run.getStatus()).thenReturn(status);
+
+        first.complete(run);
+        verifyNoInteractions(eventPublisher);
+        second.complete(run);
+
+        verify(eventPublisher)
+                .publishEvent(
+                        new SourceBatchSettledEvent(
+                                policy.id(), policy.inputs().getFirst().sourceId()));
+    }
+
     @Test
     void reportsFailureToTheCompletionHookWhenTheRunDoesNotComplete() throws Exception {
         InputSpec spec = InputSpec.folder("/in");
@@ -253,6 +327,7 @@ class PolicyRunnerTest {
         completion.completeExceptionally(new RuntimeException("boom"));
 
         assertFalse(outcome.get());
+        verifyNoInteractions(eventPublisher);
     }
 
     @Test

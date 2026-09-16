@@ -284,7 +284,21 @@ public class PolicyRunner {
                             unit.onComplete(),
                             admission);
             runIds.add(handle.runId());
-            completions.add(handle.completion());
+            completions.add(
+                    handle.completion()
+                            .handle(
+                                    (run, error) -> {
+                                        if (error != null) {
+                                            log.warn(
+                                                    "Could not finish run {} in source batch {} for policy {}",
+                                                    handle.runId(),
+                                                    storedSource.id(),
+                                                    policy.id(),
+                                                    error);
+                                            return null;
+                                        }
+                                        return run;
+                                    }));
             docsFed += unit.inputs().primary().size();
         }
         if (!completions.isEmpty()) {
