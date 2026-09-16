@@ -14,6 +14,10 @@ COPY frontend .
 # Generate the material-symbols icon subset (normally done by task prepare:icons).
 RUN node editor/scripts/generate-icons.js
 
+# PDFium fallback fonts live in the Java module and vite copies them by a
+# repo-root-relative path, which resolves under /app here.
+COPY app/core/src/main/resources/static/fonts /app/core/src/main/resources/static/fonts
+
 # Defaults match prior behaviour. Supabase values are client-publishable build args.
 ARG STIRLING_FLAVOR=proprietary
 ARG VITE_BUILD_MODE=production
