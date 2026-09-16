@@ -3526,7 +3526,6 @@ label = "Y 位置"
 
 [crop.error]
 failed = "裁切 PDF 失敗"
-invalidArea = "裁切區域超出 PDF 邊界"
 
 [crop.preview]
 title = "裁切區域選擇"

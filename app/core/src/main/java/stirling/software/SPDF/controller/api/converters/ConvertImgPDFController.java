@@ -103,7 +103,12 @@ public class ConvertImgPDFController {
         String imageFormat = request.getImageFormat();
         String singleOrMultiple = request.getSingleOrMultiple();
         String colorType = request.getColorType();
-        int dpi = request.getDpi();
+        // Spring binds an empty dpi form field to null, which the field default cannot cover
+        Integer requestedDpi = request.getDpi();
+        int dpi =
+                (requestedDpi == null || requestedDpi <= 0)
+                        ? ConvertToImageRequest.DEFAULT_DPI
+                        : requestedDpi;
         String pageNumbers = request.getPageNumbers();
         boolean includeAnnotations = Boolean.TRUE.equals(request.getIncludeAnnotations());
         Path tempFile = null;
@@ -261,7 +266,11 @@ public class ConvertImgPDFController {
             value = "/img/pdf",
             resourceWeight = ResourceWeight.LARGE_WEIGHT)
     @StandardPdfResponse
-    @ToolIO(accepts = ToolFormat.IMAGE, produces = ToolFormat.PDF, arity = ToolArity.MISO)
+    @ToolIO(
+            accepts = ToolFormat.IMAGE,
+            imageIOInput = true,
+            produces = ToolFormat.PDF,
+            arity = ToolArity.MISO)
     @Operation(
             summary = "Convert images to a PDF file",
             description =
@@ -293,7 +302,10 @@ public class ConvertImgPDFController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/cbz/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
-    @ToolIO(accepts = ToolFormat.CBZ, produces = ToolFormat.PDF)
+    @ToolIO(
+            accepts = ToolFormat.CBZ,
+            inputExtensions = {"cbz", "zip"},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert CBZ comic book archive to PDF",
             description = "This endpoint converts a CBZ (ZIP) comic book archive to a PDF file.")
@@ -346,7 +358,10 @@ public class ConvertImgPDFController {
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE,
             value = "/cbr/pdf",
             resourceWeight = ResourceWeight.MEDIUM_WEIGHT)
-    @ToolIO(accepts = ToolFormat.CBR, produces = ToolFormat.PDF)
+    @ToolIO(
+            accepts = ToolFormat.CBR,
+            inputExtensions = {"cbr", "rar"},
+            produces = ToolFormat.PDF)
     @Operation(
             summary = "Convert CBR comic book archive to PDF",
             description = "This endpoint converts a CBR (RAR) comic book archive to a PDF file.")

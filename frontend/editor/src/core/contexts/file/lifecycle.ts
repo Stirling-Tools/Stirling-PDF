@@ -9,6 +9,11 @@ import {
   StirlingFileStub,
   ProcessedFilePage,
 } from "@app/types/fileContext";
+import {
+  forgetFile,
+  noteFileSaved,
+  persistedSourceFields,
+} from "@app/contexts/file/storedFileReconciler";
 
 const DEBUG = process.env.NODE_ENV === "development";
 
@@ -35,6 +40,16 @@ export class FileLifecycleManager {
     }
   };
 
+  private revokeBlobUrl = (url: string): void => {
+    if (!url.startsWith("blob:")) return;
+    try {
+      URL.revokeObjectURL(url);
+    } catch {
+      // Ignore revocation errors.
+    }
+    this.blobUrls.delete(url);
+  };
+
   /**
    * Clean up resources for a specific file (with stateRef access for complete cleanup)
    */
@@ -42,6 +57,7 @@ export class FileLifecycleManager {
     fileId: FileId,
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
+    forgetFile(fileId);
     // Use comprehensive cleanup (same as removeFiles)
     this.cleanupAllResourcesForFile(fileId, stateRef);
 
@@ -120,6 +136,7 @@ export class FileLifecycleManager {
     stateRef?: React.MutableRefObject<FileContextState>,
   ): void => {
     fileIds.forEach((fileId) => {
+      forgetFile(fileId);
       // Clean up all resources for this file
       this.cleanupAllResourcesForFile(fileId, stateRef);
     });
@@ -151,32 +168,14 @@ export class FileLifecycleManager {
       const record = stateRef.current.files.byId[fileId];
       if (record) {
         // Clean up thumbnail blob URLs
-        if (record.thumbnailUrl && record.thumbnailUrl.startsWith("blob:")) {
-          try {
-            URL.revokeObjectURL(record.thumbnailUrl);
-          } catch {
-            // Ignore revocation errors
-          }
-        }
+        if (record.thumbnailUrl) this.revokeBlobUrl(record.thumbnailUrl);
 
-        if (record.blobUrl && record.blobUrl.startsWith("blob:")) {
-          try {
-            URL.revokeObjectURL(record.blobUrl);
-          } catch {
-            // Ignore revocation errors
-          }
-        }
+        if (record.blobUrl) this.revokeBlobUrl(record.blobUrl);
 
         // Clean up processed file thumbnails
         if (record.processedFile?.pages) {
           record.processedFile.pages.forEach((page: ProcessedFilePage) => {
-            if (page.thumbnail && page.thumbnail.startsWith("blob:")) {
-              try {
-                URL.revokeObjectURL(page.thumbnail);
-              } catch {
-                // Ignore revocation errors
-              }
-            }
+            if (page.thumbnail) this.revokeBlobUrl(page.thumbnail);
           });
         }
       }
@@ -211,6 +210,29 @@ export class FileLifecycleManager {
       type: "UPDATE_FILE_RECORD",
       payload: { id: fileId, updates },
     });
+
+    // Fire-and-forget: the dispatch above is what the UI reads, and a storage
+    // hiccup must not stall it. Worst case the link reverts to its stored value.
+    const linkUpdates = persistedSourceFields(updates);
+    if (linkUpdates) {
+      void import("@app/services/fileStorage")
+        .then(({ fileStorage }) =>
+          fileStorage.updateFileMetadata(fileId, linkUpdates),
+        )
+        .catch((error) =>
+          console.error(
+            `[Lifecycle] Failed to persist disk link for ${fileId}:`,
+            error,
+          ),
+        );
+    }
+
+    noteFileSaved(fileId, updates, (patch) =>
+      this.dispatch({
+        type: "UPDATE_FILE_RECORD",
+        payload: { id: fileId, updates: patch },
+      }),
+    );
   };
 
   /**

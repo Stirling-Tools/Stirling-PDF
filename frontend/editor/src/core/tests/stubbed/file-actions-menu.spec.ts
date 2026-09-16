@@ -3,6 +3,9 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
+// Reads the library as cards, so it asks for the grid.
+test.use({ filesViewMode: "grid" });
+
 // Per-file actions live behind a kebab on two surfaces - the file sidebar and
 // the My Files grid. They must offer the same file actions on both.
 
@@ -114,7 +117,10 @@ const cards = (page: Page) => page.locator(".files-page-card:not(.is-folder)");
 /** Upload a file, cross to My Files, and open the card's kebab. */
 async function openCardKebab(page: Page): Promise<void> {
   await uploadFiles(page, SAMPLE);
-  await page.getByTestId("my-files-button").click();
+  await page
+    .getByRole("navigation", { name: /Quick navigation/i })
+    .getByRole("button", { name: /^File library$/i })
+    .click();
   const card = cards(page).filter({ hasText: "sample.pdf" }).first();
   await expect(card).toBeVisible();
   await card.getByRole("button", { name: /File actions/i }).click();

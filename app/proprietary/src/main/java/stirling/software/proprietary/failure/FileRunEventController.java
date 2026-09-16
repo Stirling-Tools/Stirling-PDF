@@ -55,6 +55,8 @@ public class FileRunEventController {
     public FileRunEventsResponse list(
             // Spring's converter 400s on a value outside the enum, so no hand-rolled parse.
             @RequestParam(required = false) FileRunEventStatus status,
+            // The settled rows rather than the open queue; an explicit status wins over it.
+            @RequestParam(defaultValue = "false") boolean closed,
             @RequestParam(required = false) String kindId,
             @RequestParam(required = false) Integer limit) {
         // No role gate: the service scopes the read instead, so a member gets their own failures
@@ -64,7 +66,7 @@ public class FileRunEventController {
         List<FileRunEventView> events =
                 // The kind filter is part of the query, before the limit is applied: filtering an
                 // already-limited page could return nothing while matching rows exist.
-                service.list(status, kindId, cappedLimit).stream()
+                service.list(status, closed, kindId, cappedLimit).stream()
                         .map(event -> FileRunEventView.of(event, service.availableActions(event)))
                         .toList();
         return new FileRunEventsResponse(events);

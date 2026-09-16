@@ -324,8 +324,6 @@ class ConnectRequestServiceTest {
         assertThat(service.claim("nope", CLAIM_SECRET).outcome()).isEqualTo(ClaimOutcome.REJECTED);
     }
 
-    // ---------------------------------------------------------------------------------------
-
     private static ConnectRequest pending() {
         ConnectRequest row = new ConnectRequest();
         row.setRequestId("req");

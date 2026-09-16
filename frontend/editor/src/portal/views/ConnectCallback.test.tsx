@@ -2,10 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, render, waitFor } from "@testing-library/react";
 import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { MantineProvider } from "@mantine/core";
+import { UIProvider, useUI } from "@portal/contexts/UIContext";
+import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 
-/**
- * The callback handles a live session token in a URL fragment, so the behaviour worth pinning is what it does with it: strip it immediately, refuse anything it cannot verify, and keep the two outcomes (SaaS sign-in, server link) independent of each other.
- */
+/** A live session token rides in the fragment: strip it at once, refuse what cannot be verified. */
 const { completeConnect, startConnect, setSession, refresh } = vi.hoisted(
   () => ({
     completeConnect: vi.fn(),
@@ -32,19 +32,38 @@ function landOn(fragment: string) {
   window.history.replaceState(null, "", `/account-link/callback${fragment}`);
 }
 
-/**
- * Route and host together: the route reads the fragment, the portal renders the
- * outcome. Exercising them apart would test the hand-off rather than the flow.
- */
+/** Stands in for the dialog that consumes the outcome. */
+let published: ConnectOutcome[] = [];
+
+function OutcomeSpy() {
+  const { connectOutcome } = useUI();
+  if (
+    connectOutcome &&
+    published[published.length - 1]?.state !== connectOutcome.state
+  ) {
+    published.push(connectOutcome);
+  }
+  return null;
+}
+
+const lastOutcome = () => published[published.length - 1];
+
+/** Route and host together: apart, this would test the hand-off rather than the flow. */
 function renderFlow() {
   return render(
     <MantineProvider>
       <MemoryRouter initialEntries={["/account-link/callback"]}>
-        <ConnectCallbackHost />
-        <Routes>
-          <Route path="/account-link/callback" element={<ConnectCallback />} />
-          <Route path="/processor" element={<div data-testid="portal" />} />
-        </Routes>
+        <UIProvider>
+          <ConnectCallbackHost />
+          <OutcomeSpy />
+          <Routes>
+            <Route
+              path="/account-link/callback"
+              element={<ConnectCallback />}
+            />
+            <Route path="/processor" element={<div data-testid="portal" />} />
+          </Routes>
+        </UIProvider>
       </MemoryRouter>
     </MantineProvider>,
   );
@@ -53,6 +72,7 @@ function renderFlow() {
 describe("account-link callback", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    published = [];
     completeConnect.mockResolvedValue({
       phase: "LINKED",
       authorizeUrl: null,
@@ -67,8 +87,7 @@ describe("account-link callback", () => {
 
     renderFlow();
 
-    // Synchronous, before any await: the fragment must not survive long enough
-    // to be read from the address bar or land in a history entry.
+    // Before any await: the fragment must not reach the address bar or a history entry.
     expect(window.location.hash).toBe("");
     await waitFor(() => expect(completeConnect).toHaveBeenCalled());
   });
@@ -109,8 +128,7 @@ describe("account-link callback", () => {
 
     renderFlow();
 
-    // The two outcomes are independent: a failed sign-in must not strand the
-    // server unlinked.
+    // Independent outcomes: a failed sign-in must not strand the server unlinked.
     await waitFor(() => expect(completeConnect).toHaveBeenCalledWith(NONCE));
   });
 
@@ -131,6 +149,18 @@ describe("account-link callback", () => {
     await waitFor(() => expect(window.location.hash).toBe(""));
     expect(completeConnect).not.toHaveBeenCalled();
     expect(setSession).not.toHaveBeenCalled();
+    await waitFor(() => expect(lastOutcome()?.state).toBe("malformed"));
+    expect(lastOutcome()?.reclaim).toBeUndefined();
+  });
+
+  it("hands the result to the dialog rather than rendering its own", async () => {
+    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
+
+    const { container } = renderFlow();
+
+    await waitFor(() => expect(lastOutcome()?.state).toBe("linked"));
+    expect(lastOutcome()?.sessionRestored).toBe(true);
+    expect(container.querySelector(".portal-connect-callback")).toBeNull();
   });
 
   it("refuses a fragment that is not a link response", async () => {
@@ -160,16 +190,30 @@ describe("account-link callback", () => {
       teamId: null,
     });
 
-    const { getAllByRole } = renderFlow();
+    renderFlow();
 
     await waitFor(() => expect(completeConnect).toHaveBeenCalledTimes(1));
-    // Last button, not the only one: the modal shell contributes a close button.
-    const buttons = getAllByRole("button");
-    act(() => buttons[buttons.length - 1].click());
+    await waitFor(() => expect(lastOutcome()?.state).toBe("retry"));
 
-    // Retries the existing handshake; starting a new one would waste the
-    // approval a human just gave.
+    act(() => lastOutcome()!.reclaim!());
+
+    // Re-claims rather than opening a new handshake, which would spend a leader's approval.
     await waitFor(() => expect(completeConnect).toHaveBeenCalledTimes(2));
     expect(startConnect).not.toHaveBeenCalled();
+  });
+
+  it("gives a spent handshake no re-claim, so the dialog asks for a new one", async () => {
+    landOn(`#type=link&nonce=${NONCE}`);
+    completeConnect.mockResolvedValue({
+      phase: "EXPIRED",
+      authorizeUrl: null,
+      secondsRemaining: null,
+      teamId: null,
+    });
+
+    renderFlow();
+
+    await waitFor(() => expect(lastOutcome()?.state).toBe("expired"));
+    expect(lastOutcome()?.reclaim).toBeUndefined();
   });
 });

@@ -32,3 +32,9 @@ app/core/src/main/java/stirling/software/SPDF/pdf/signature/CreateSignatureBase.
 # inline gitleaks:allow because a trailing comment in a .properties file is part of the
 # value, so the pragma would end up inside the key.
 app/saas/src/main/resources/application-staging.properties:generic-api-key:16
+
+# Startup login test uses an unsigned JWT fixture with a literal "signature" suffix.
+frontend/editor/src/core/tests/stubbed/startup-login.spec.ts:generic-api-key:42
+
+# Storybook mock: a 16-hex-char master key *fingerprint* in a fixture, not a key.
+frontend/editor/src/portal/components/infrastructure/EncryptionPanel.stories.tsx:generic-api-key:33

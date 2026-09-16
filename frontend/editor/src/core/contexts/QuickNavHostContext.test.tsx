@@ -1,10 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { render, act } from "@testing-library/react";
+import { useEffect } from "react";
 import {
   QuickNavHostProvider,
   useQuickNavHost,
-  useRegisterQuickNavHost,
+  useRegisterQuickNavView,
   useSuppressQuickNavRail,
+  type QuickNavIdentity,
 } from "@app/contexts/QuickNavHostContext";
 
 function Probe({ onRead }: { onRead: (value: unknown) => void }) {
@@ -13,16 +15,34 @@ function Probe({ onRead }: { onRead: (value: unknown) => void }) {
     appMounted: host?.appMounted,
     chromeless: host?.chromeless,
     identity: host?.identity,
-    openSettings: Boolean(host?.actions.current?.openSettings),
+    activeTool: host?.activeTool,
+    goToDefaultState: Boolean(host?.actions.current?.goToDefaultState),
   });
   return null;
 }
 
 function App() {
-  useRegisterQuickNavHost(
-    { identity: { displayName: "Ada", profilePictureUrl: null } },
-    { openSettings: () => {} },
-  );
+  const updateAccount = useQuickNavHost()?.updateAccount;
+  useEffect(() => {
+    updateAccount?.({
+      identity: { displayName: "Ada", profilePictureUrl: null },
+    });
+  }, [updateAccount]);
+  useRegisterQuickNavView({}, { goToDefaultState: () => {} });
+  return null;
+}
+
+function AppWithTool({ tool }: { tool: "automate" | null }) {
+  useRegisterQuickNavView({ activeTool: tool }, {});
+  return null;
+}
+
+function AppWithIdentity({ identity }: { identity?: QuickNavIdentity | null }) {
+  const updateAccount = useQuickNavHost()?.updateAccount;
+  useEffect(() => {
+    updateAccount?.({ identity });
+  }, [updateAccount, identity]);
+  useRegisterQuickNavView({}, {});
   return null;
 }
 
@@ -52,7 +72,7 @@ describe("QuickNavHostContext", () => {
       displayName: "Ada",
       profilePictureUrl: null,
     });
-    expect(read().openSettings).toBe(true);
+    expect(read().goToDefaultState).toBe(true);
 
     view.rerender(
       <QuickNavHostProvider>
@@ -68,7 +88,65 @@ describe("QuickNavHostContext", () => {
       </QuickNavHostProvider>,
     );
     expect(after.appMounted).toBe(true);
-    expect(after.openSettings).toBe(false);
+    expect(after.identity).toEqual({
+      displayName: "Ada",
+      profilePictureUrl: null,
+    });
+    expect(after.goToDefaultState).toBe(false);
+  });
+
+  it("keeps the previous identity until the incoming app publishes an answer", () => {
+    const { view } = setup();
+    let latest: Record<string, unknown> = {};
+    const renderIdentity = (identity?: QuickNavIdentity | null) => (
+      <QuickNavHostProvider>
+        <Probe
+          onRead={(value) => (latest = value as Record<string, unknown>)}
+        />
+        <AppWithIdentity identity={identity} />
+      </QuickNavHostProvider>
+    );
+
+    view.rerender(renderIdentity());
+    expect(latest.identity).toEqual({
+      displayName: "Ada",
+      profilePictureUrl: null,
+    });
+
+    const resolved = { displayName: "Grace", profilePictureUrl: "/grace.png" };
+    view.rerender(renderIdentity(resolved));
+    expect(latest.identity).toEqual(resolved);
+
+    view.rerender(renderIdentity());
+    expect(latest.identity).toEqual(resolved);
+
+    view.rerender(renderIdentity(null));
+    expect(latest.identity).toBeNull();
+  });
+
+  it("clears the open tool when the next app registers without one", () => {
+    let latest: Record<string, unknown> = {};
+    const view = render(
+      <QuickNavHostProvider>
+        <Probe
+          onRead={(value) => (latest = value as Record<string, unknown>)}
+        />
+        <AppWithTool tool="automate" />
+      </QuickNavHostProvider>,
+    );
+    expect(latest.activeTool).toBe("automate");
+
+    act(() => {
+      view.rerender(
+        <QuickNavHostProvider>
+          <Probe
+            onRead={(value) => (latest = value as Record<string, unknown>)}
+          />
+          <AppWithTool tool={null} />
+        </QuickNavHostProvider>,
+      );
+    });
+    expect(latest.activeTool).toBe(null);
   });
 
   it("hides the bar while a route with no app chrome is on screen", () => {

@@ -1,8 +1,50 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "@app/hooks/useTranslation";
 import { Banner, Button, Checkbox, Spinner } from "@app/ui";
 import { LocalIcon } from "@app/components/shared/LocalIcon";
 import { Tooltip } from "@app/components/shared/Tooltip";
+import { StepModalHeader } from "@portal/components/shared/StepModalHeader";
+
+/**
+ * This page is step 2 of a flow that started on the instance, so it wears the same chrome: the admin
+ * is being asked for a security decision by what would otherwise look like a different product.
+ *
+ * <p>TODO: re-auth still wears the first link's copy and consent checkbox, which asks the approver
+ * to agree to a binding that already exists.
+ */
+const TOTAL_STEPS = 3;
+
+function ApproveShell({
+  title,
+  stepped,
+  children,
+}: {
+  title: string;
+  /** Re-auth is one step on the instance side, so counting to three here would describe nothing. */
+  stepped: boolean;
+  children: ReactNode;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="saas-connect">
+      <StepModalHeader
+        brand
+        title={title}
+        step={stepped ? 2 : undefined}
+        total={stepped ? TOTAL_STEPS : undefined}
+        stepLabel={
+          stepped
+            ? t("connect.step", "Step {{current}} of {{total}}", {
+                current: 2,
+                total: TOTAL_STEPS,
+              })
+            : undefined
+        }
+      />
+      {children}
+    </div>
+  );
+}
 
 export type ApprovePhase =
   | "loading"
@@ -16,6 +58,10 @@ export interface PendingConnect {
   requestId: string;
   callbackOrigin: string;
   insecureTransport: boolean;
+  /** REAUTH cannot rebind: the team is pinned from the device credential at request time. */
+  mode?: "LINK" | "REAUTH";
+  canApprove: boolean;
+  canDeny: boolean;
 }
 
 export interface ConnectApproveViewProps {
@@ -28,6 +74,8 @@ export interface ConnectApproveViewProps {
   onDecide: (approve: boolean) => void;
   /** Sign out and come back here, keeping the request so it survives the detour. */
   onSwitchAccount: () => void;
+  /** Forget the local intent and return to the app without settling the server request. */
+  onDismiss: () => void;
 }
 
 /** Presentation for the connect approval page. */
@@ -39,28 +87,37 @@ export function ConnectApproveView({
   error,
   onDecide,
   onSwitchAccount,
+  onDismiss,
 }: ConnectApproveViewProps) {
   const { t } = useTranslation();
   // Gates the primary action: anyone can create a request, so the approver reading
   // the address is the only thing between one and a linked team.
   const [acknowledged, setAcknowledged] = useState(false);
+  const stepped = pending?.mode !== "REAUTH";
 
   if (phase === "loading" || phase === "redirecting") {
     return (
-      <div className="saas-connect">
-        <Spinner size="md" />
-        <p className="saas-connect__lead">
-          {phase === "redirecting"
+      <ApproveShell
+        stepped={stepped}
+        title={
+          phase === "redirecting"
             ? t("connect.redirecting", "Returning you to your server.")
-            : t("connect.loading", "Checking this request.")}
-        </p>
-      </div>
+            : t("connect.loading", "Checking this request.")
+        }
+      >
+        <div className="saas-connect__waiting">
+          <Spinner size="md" />
+        </div>
+      </ApproveShell>
     );
   }
 
   if (phase === "notFound") {
     return (
-      <div className="saas-connect">
+      <ApproveShell
+        stepped={stepped}
+        title={t("connect.notFound.title", "Request not valid")}
+      >
         <Banner
           tone="danger"
           title={t("connect.notFound.title", "Request not valid")}
@@ -70,13 +127,16 @@ export function ConnectApproveView({
             "This connection request is not valid. It may have expired, or already been used. Start another one from your server.",
           )}
         </Banner>
-      </div>
+      </ApproveShell>
     );
   }
 
   if (phase === "declined") {
     return (
-      <div className="saas-connect">
+      <ApproveShell
+        stepped={stepped}
+        title={t("connect.declined.title", "Request declined")}
+      >
         <Banner
           tone="warning"
           title={t("connect.declined.title", "Request declined")}
@@ -86,20 +146,25 @@ export function ConnectApproveView({
             "Nothing was connected. You can close this page.",
           )}
         </Banner>
-      </div>
+      </ApproveShell>
     );
   }
 
   return (
-    <div className="saas-connect">
-      <h1 className="saas-connect__title">
-        {t("connect.confirm.title", "Connect this server?")}
-      </h1>
+    <ApproveShell
+      stepped={stepped}
+      title={t("connect.confirm.title", "Connect this server?")}
+    >
       <p className="saas-connect__lead">
-        {t(
-          "connect.confirm.lead",
-          "A Stirling server is asking to connect to your team. Check the address below is yours before you approve.",
-        )}
+        {pending?.canApprove
+          ? t(
+              "connect.confirm.lead",
+              "A Stirling server is asking to connect to your team. Check the address below is yours before you approve.",
+            )
+          : t(
+              "connect.confirm.cannotDecide",
+              "Only a team owner can approve or decline this connection. Use a different account or dismiss this prompt to continue using Stirling.",
+            )}
       </p>
 
       {/* One panel, because the account and the address are two halves of the same
@@ -151,32 +216,42 @@ export function ConnectApproveView({
 
       {error ? <Banner tone="danger">{error}</Banner> : null}
 
-      <Checkbox
-        checked={acknowledged}
-        disabled={busy}
-        onChange={(e) => setAcknowledged(e.currentTarget.checked)}
-        label={t(
-          "connect.confirm.acknowledge",
-          "I recognise this address and want to connect it to my team",
-        )}
-      />
+      {pending?.canApprove ? (
+        <Checkbox
+          checked={acknowledged}
+          disabled={busy}
+          onChange={(e) => setAcknowledged(e.currentTarget.checked)}
+          label={t(
+            "connect.confirm.acknowledge",
+            "I recognise this address and want to connect it to my team",
+          )}
+        />
+      ) : null}
 
       <div className="saas-connect__actions">
-        <Button
-          variant="secondary"
-          disabled={busy}
-          onClick={() => onDecide(false)}
-        >
-          {t("connect.confirm.deny", "Decline")}
-        </Button>
-        <Button
-          variant="primary"
-          disabled={busy || !acknowledged}
-          onClick={() => onDecide(true)}
-        >
-          {t("connect.confirm.approve", "Connect server")}
-        </Button>
+        {pending?.canDeny ? (
+          <Button
+            variant="secondary"
+            disabled={busy}
+            onClick={() => onDecide(false)}
+          >
+            {t("connect.confirm.deny", "Decline")}
+          </Button>
+        ) : (
+          <Button variant="secondary" disabled={busy} onClick={onDismiss}>
+            {t("connect.confirm.dismiss", "Dismiss")}
+          </Button>
+        )}
+        {pending?.canApprove ? (
+          <Button
+            variant="primary"
+            disabled={busy || !acknowledged}
+            onClick={() => onDecide(true)}
+          >
+            {t("connect.confirm.approve", "Connect server")}
+          </Button>
+        ) : null}
       </div>
-    </div>
+    </ApproveShell>
   );
 }

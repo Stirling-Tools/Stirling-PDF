@@ -49,6 +49,24 @@ public class FileEncryptionMasterKey {
     private final SecretKey key;
     private final SecretKey previousKey;
     private final int currentVersion;
+    private final Source source;
+
+    /** Where the master key came from, so the UI can warn about an unbacked-up generated key. */
+    public enum Source {
+        CONFIG("config"),
+        ENVIRONMENT("environment"),
+        GENERATED("generated");
+
+        private final String wireName;
+
+        Source(String wireName) {
+            this.wireName = wireName;
+        }
+
+        public String wireName() {
+            return wireName;
+        }
+    }
 
     public FileEncryptionMasterKey(String configuredKey, boolean clusterEnabled) {
         this(configuredKey, null, CURRENT_VERSION, clusterEnabled);
@@ -66,7 +84,9 @@ public class FileEncryptionMasterKey {
             String previousKeyBase64,
             int currentVersion,
             boolean clusterEnabled) {
-        this.key = resolveKey(configuredKey, clusterEnabled);
+        Resolved resolved = resolveKey(configuredKey, clusterEnabled);
+        this.key = resolved.key();
+        this.source = resolved.source();
         this.previousKey =
                 previousKeyBase64 == null || previousKeyBase64.isBlank()
                         ? null
@@ -90,19 +110,27 @@ public class FileEncryptionMasterKey {
         return currentVersion;
     }
 
+    public Source source() {
+        return source;
+    }
+
     public boolean hasPreviousKey() {
         return previousKey != null;
     }
 
-    private static SecretKey resolveKey(String configuredKey, boolean clusterEnabled) {
+    private record Resolved(SecretKey key, Source source) {}
+
+    private static Resolved resolveKey(String configuredKey, boolean clusterEnabled) {
         String configured = configuredKey;
         String source = "stirling.security.fileEncryptionKey";
+        Source provenance = Source.CONFIG;
         if (configured == null || configured.isBlank()) {
             configured = System.getenv("STIRLING_FILE_ENCRYPTION_KEY");
             source = "STIRLING_FILE_ENCRYPTION_KEY";
+            provenance = Source.ENVIRONMENT;
         }
         if (configured != null && !configured.isBlank()) {
-            return decodeKey(configured, source);
+            return new Resolved(decodeKey(configured, source), provenance);
         }
         if (clusterEnabled) {
             throw new IllegalStateException(
@@ -111,7 +139,7 @@ public class FileEncryptionMasterKey {
                             + " stirling.security.fileEncryptionKey) to the same value on every"
                             + " node.");
         }
-        return loadOrCreateKeyFile();
+        return new Resolved(loadOrCreateKeyFile(), Source.GENERATED);
     }
 
     /**

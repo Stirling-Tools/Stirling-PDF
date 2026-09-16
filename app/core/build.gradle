@@ -306,6 +306,9 @@ tasks.register('copyFrontendAssets', Copy) {
         // Exclude files that conflict with backend static resources
         exclude 'robots.txt'  // Backend already has this
         exclude 'favicon.ico' // Backend already has this
+        // Backend ships its own NotoSans-Regular.ttf here and it is git-tracked;
+        // letting the editor's copy win would dirty the source tree on every build.
+        exclude 'fonts/NotoSans-Regular.ttf'
     }
     into resourcesStaticDir
     duplicatesStrategy = DuplicatesStrategy.INCLUDE  // Let frontend overwrite when needed
@@ -327,8 +330,11 @@ tasks.register('cleanFrontendAssets', Delete) {
     // api-landing.html, mobile-upload.html and mobile-sign.html are real backend source files,
     // not generated artifacts.
     delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html', 'mobile-sign.html'])
-    // Nested prerendered route pages (e.g. settings/people.html)
+    // Nested prerendered route pages (e.g. settings/people.html, processor/sources.html)
     delete new File(resourcesStaticDir, 'settings')
+    delete new File(resourcesStaticDir, 'processor')
+    // Generated SEO sitemap (only emitted when a canonical domain is set at build).
+    delete new File(resourcesStaticDir, 'sitemap.xml')
 }
 
 tasks.register('copyApiLandingPage', Copy) {

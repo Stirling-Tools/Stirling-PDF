@@ -3526,7 +3526,6 @@ label = "Y-positie"
 
 [crop.error]
 failed = "PDF bijsnijden mislukt"
-invalidArea = "Bijsnijgebied valt buiten PDF-randen"
 
 [crop.preview]
 title = "Selectie bijsnijgebied"

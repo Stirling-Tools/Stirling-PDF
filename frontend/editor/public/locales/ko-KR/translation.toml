@@ -3526,7 +3526,6 @@ label = "Y 위치"
 
 [crop.error]
 failed = "PDF 자르기에 실패했습니다"
-invalidArea = "자르기 영역이 PDF 경계를 벗어났습니다"
 
 [crop.preview]
 title = "자르기 영역 선택"

@@ -3526,7 +3526,6 @@ label = "Y posizioa"
 
 [crop.error]
 failed = "Huts egin du PDFa mozteak"
-invalidArea = "Mozketa-area PDFaren mugak baino harago doa"
 
 [crop.preview]
 title = "Mozketa-arearen hautapena"

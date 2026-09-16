@@ -7,7 +7,6 @@ import { useSectionFlags } from "@portal/hooks/useAsync";
 import { useSources } from "@portal/queries/sources";
 import { type SourceView } from "@portal/api/sources";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
-import { KpiStrip } from "@portal/components/sources/KpiStrip";
 import { SourcesTable } from "@portal/components/sources/SourcesTable";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import "@portal/views/Sources.css";
@@ -17,7 +16,7 @@ export function Sources() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const state = useSources();
-  const { data, loading } = state;
+  const { data } = state;
   const { isLoading } = useSectionFlags(state);
 
   // Create/edit live in a modal on this list; `?new=1` (old /sources/new deep
@@ -36,11 +35,6 @@ export function Sources() {
   }, [searchParams, setSearchParams]);
 
   const sources = data?.sources ?? [];
-
-  // The editor is a virtual row that's always present, so "empty" means no
-  // configured sources beyond it. Gates the KPI strip.
-  const configuredCount = sources.filter((s) => s.type !== "editor").length;
-  const showKpis = isLoading || configuredCount > 0;
 
   const openCreate = () => setModal({ open: true, sourceId: null });
   const openSource = (source: SourceView) =>
@@ -68,8 +62,6 @@ export function Sources() {
           </Button>
         </div>
       </header>
-
-      {showKpis && <KpiStrip data={data} loading={loading} />}
 
       {isLoading && (
         <div className="portal-sources__table-skeleton" aria-hidden>

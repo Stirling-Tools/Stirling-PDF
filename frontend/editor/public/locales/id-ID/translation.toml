@@ -3526,7 +3526,6 @@ label = "Posisi Y"
 
 [crop.error]
 failed = "Gagal memangkas PDF"
-invalidArea = "Area pangkas melampaui batas PDF"
 
 [crop.preview]
 title = "Pilihan Area Pangkas"
