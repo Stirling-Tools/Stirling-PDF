@@ -92,6 +92,9 @@ x-stirling-node: &stirling-node
     POLICIES_ALLOWPRIVATES3ENDPOINTS: "true"
 
     # --- Misc features on ---
+    # Off by default in the product, so the cross-node rate-limit scenario has nothing to assert
+    # unless the stack turns it on. Only limited roles have a real quota; admin/user are unlimited.
+    rateLimit: "true"
     METRICS_ENABLED: "true"
     SYSTEM_DEFAULTLOCALE: "en-US"
     SYSTEM_MAXFILESIZE: "100"
@@ -125,7 +128,9 @@ services:
   valkey:
     image: valkey/valkey:8-alpine
     container_name: multinode-valkey
-    command: ["valkey-server", "--save", "", "--appendonly", "no"]
+    # noeviction matches the cluster/betterdb overlays: every backplane key is volatile, so any
+    # eviction policy can drop a live lock or an in-flight job record.
+    command: ["valkey-server", "--save", "", "--appendonly", "no", "--maxmemory-policy", "noeviction"]
     healthcheck:
       test: ["CMD-SHELL", "valkey-cli ping | grep -q PONG"]
       interval: 3s

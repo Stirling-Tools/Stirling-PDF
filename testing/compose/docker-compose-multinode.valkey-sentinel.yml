@@ -34,6 +34,9 @@ services:
       - "6379"
       - --replica-read-only
       - "yes"
+      # Matches the primary: a replica that evicts diverges from it after a failover.
+      - --maxmemory-policy
+      - "noeviction"
     healthcheck:
       test: ["CMD-SHELL", "valkey-cli ping | grep -q PONG"]
       interval: 3s

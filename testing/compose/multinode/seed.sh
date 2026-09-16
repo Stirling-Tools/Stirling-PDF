@@ -8,6 +8,7 @@ ADMIN_USER="${ADMIN_USER:-admin}"
 ADMIN_PASS="${ADMIN_PASS:-stirling}"
 USER_COUNT="${USER_COUNT:-40}"
 USER_PASS="${USER_PASS:-Password123!}"
+RATELIMIT_USER="${RATELIMIT_USER:-ratelimit@stirling.test}"
 PGHOST="${PGHOST:-postgres}"
 PGUSER="${PGUSER:-stirling}"
 PGPASSWORD="${PGPASSWORD:-stirling}"
@@ -111,6 +112,21 @@ if [ -n "$capped" ]; then
 fi
 log "users created: $created (failed: $failed, requested: $USER_COUNT)"
 [ "$failed" -eq 0 ] || fail_note "$failed of $USER_COUNT user creates failed"
+
+# --- rate-limit probe user ---------------------------------------------------
+# Every seeded user above is ADMIN or USER, and both are Integer.MAX_VALUE calls/day, so no quota
+# is ever charged for them. The rate-limiting scenario needs a role with a real limit to assert on.
+rl_code=$(auth -o /tmp/rluser.json -w '%{http_code}' -X POST "$BASE_URL/api/v1/user/admin/saveUser" \
+  --data-urlencode "username=$RATELIMIT_USER" \
+  --data-urlencode "password=$USER_PASS" \
+  --data-urlencode "role=ROLE_EXTRA_LIMITED_API_USER" \
+  --data-urlencode "authType=WEB" \
+  --data-urlencode "forceChange=false")
+case "$rl_code" in
+  200|201) log "rate-limit probe user created: $RATELIMIT_USER (20 web calls/day)";;
+  409)     log "rate-limit probe user already exists: $RATELIMIT_USER";;
+  *)       fail_note "rate-limit probe user create failed HTTP $rl_code: $(cat /tmp/rluser.json)";;
+esac
 
 # --- S3 connection -> the in-cluster Silo 'policy-data' bucket ----------------
 conn_body=$(cat <<JSON

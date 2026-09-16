@@ -24,6 +24,10 @@ SOURCE_PREFIX = "incoming/"
 OUTPUT_PREFIX = "processed/"
 ADMIN_USER = "admin"
 ADMIN_PASS = "stirling"
+# Seeded with ROLE_EXTRA_LIMITED_API_USER; admin and the other seeded users are unlimited.
+RATELIMIT_USER = "ratelimit@stirling.test"
+RATELIMIT_PASS = "Password123!"
+RATELIMIT_QUOTA = 20  # Role.EXTRA_LIMITED_API_USER.webCallsPerDay
 
 
 # --------------------------------------------------------------------------- helpers
@@ -432,36 +436,46 @@ def _backplane_keys():
             if k.startswith("stirling:")]
 
 
-def _post_through_lb(context, count=3):
-    """POST through the LB; returns True if a node reported the X-Rate-Limit-Remaining header."""
-    if not getattr(context, "jwt_token", None):
-        _lb_login(context)
-    limited = False
-    for _ in range(count):
+def _ratelimit_login():
+    """Token for the seeded EXTRA_LIMITED_API_USER (20 web calls/day, unlike the unlimited admin)."""
+    r = requests.post(f"{LB_URL}/api/v1/auth/login",
+                      json={"username": RATELIMIT_USER, "password": RATELIMIT_PASS}, timeout=15)
+    assert r.status_code == 200, (
+        f"login as the rate-limit probe user {RATELIMIT_USER} failed: HTTP {r.status_code}. "
+        "The stack must be seeded (start-multinode-test.sh without --no-seed).")
+    return r.json()["session"]["access_token"]
+
+
+def _post_until_limited(token, budget):
+    """POST through the LB until a 429; returns (requests_made, limited)."""
+    for i in range(1, budget + 1):
         marker = uuid.uuid4().hex[:8]
         r = requests.post(f"{LB_URL}/api/v1/general/rotate-pdf",
-                          headers={"Authorization": f"Bearer {context.jwt_token}"},
+                          headers={"Authorization": f"Bearer {token}"},
                           files={"fileInput": (f"rl-{marker}.pdf", _pdf_bytes(marker),
                                                "application/pdf")},
                           data={"angle": 90}, timeout=60)
-        limited = limited or "X-Rate-Limit-Remaining" in r.headers
-    return limited
+        if r.status_code == 429:
+            return i, True
+    return budget, False
 
 
 @then("the rate-limit counter should be shared across nodes")
 def step_ratelimit_shared(context):
-    # Heartbeat keys are always present, so only a stirling:rl: bucket created by real traffic
-    # proves the counters live in the backplane rather than per node.
-    if not _post_through_lb(context):
-        context.scenario.skip(
-            "rate limiting is not active on this stack (no X-Rate-Limit-Remaining header on a "
-            "POST through the LB), so no stirling:rl: bucket can exist - shared rate limiting is "
-            "unproven here, not proven")
-        return
+    # The probe user's quota is RATELIMIT_QUOTA web calls/day. nginx round-robins with no affinity,
+    # so per-node buckets would take ~quota x node_count requests to trip. Budgeting quota + 4
+    # means a 429 can only arrive on time if both nodes drew from one shared counter.
+    token = _ratelimit_login()
+    budget = RATELIMIT_QUOTA + 4
+    made, limited = _post_until_limited(token, budget)
+    assert limited, (
+        f"{budget} POSTs through the LB never hit 429 although {RATELIMIT_USER} is capped at "
+        f"{RATELIMIT_QUOTA}/day - each node is counting in its own process, so the effective "
+        "limit multiplied by the node count")
     buckets = [k for k in _backplane_keys() if k.startswith("stirling:rl:")]
     assert buckets, (
-        "POSTs through the LB were rate limited but the backplane holds no stirling:rl: key - "
-        "the counters are per node, not shared")
+        f"429 arrived after {made} requests but the backplane holds no stirling:rl: key - the "
+        "counters are not in Valkey")
 
 
 @then("every application node should be registered in the backplane")
