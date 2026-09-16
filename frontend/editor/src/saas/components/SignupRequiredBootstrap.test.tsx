@@ -3,12 +3,38 @@ import { MantineProvider } from "@mantine/core";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import SignupRequiredBootstrap from "@app/components/SignupRequiredBootstrap";
+import { QuickNavRailHost } from "@app/components/shared/quickNav/QuickNavRailHost";
+import type { QuickNavEntry } from "@app/components/shared/quickNav/QuickNavRailBase";
 
 const auth = vi.hoisted(() => ({ isAnonymous: true }));
 vi.mock("@app/auth/UseSession", () => ({ useAuth: () => auth }));
+vi.mock("@app/contexts/QuickNavHostContext", () => ({
+  useQuickNavHost: () => ({
+    appMounted: true,
+    isAnonymous: auth.isAnonymous,
+    portalAccess: false,
+    actions: { current: {} },
+  }),
+}));
+vi.mock("@app/ui/Icon", () => ({ Icon: () => null }));
+vi.mock("@app/components/shared/quickNav/QuickNavRailContainer", () => ({
+  QuickNavRailContainer: ({ groups }: { groups: QuickNavEntry[][] }) => (
+    <>
+      {groups.flat().map((entry) => (
+        <button
+          key={entry.id}
+          disabled={entry.disabled}
+          onClick={entry.onClick}
+        >
+          {entry.label}
+        </button>
+      ))}
+    </>
+  ),
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (_key: string, fallback: string, options?: { count?: number }) =>
+    t: (key: string, fallback = key, options?: { count?: number }) =>
       fallback.replace("{{count}}", String(options?.count ?? "")),
   }),
 }));
@@ -22,11 +48,12 @@ function Destination() {
   );
 }
 
-function renderPrompt() {
+function renderPrompt(withRail = false) {
   return render(
     <MemoryRouter initialEntries={["/editor?tool=compress"]}>
       <MantineProvider>
         <SignupRequiredBootstrap />
+        {withRail && <QuickNavRailHost />}
         <Destination />
       </MantineProvider>
     </MemoryRouter>,
@@ -36,6 +63,27 @@ function renderPrompt() {
 describe("guest signup prompt", () => {
   beforeEach(() => {
     auth.isAnonymous = true;
+  });
+
+  it("opens the Processor signup modal from the enabled guest rail without navigating", async () => {
+    renderPrompt(true);
+    const processor = screen.getByRole("button", { name: "Processor" });
+    expect(processor).toBeEnabled();
+    fireEvent.click(processor);
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(
+      screen.getByText("Unlock Processor with a free account"),
+    ).toBeInTheDocument();
+    expect(screen.getByTestId("destination")).toHaveTextContent(
+      "/editor?tool=compress",
+    );
+  });
+
+  it("keeps Processor disabled for registered users without access", () => {
+    auth.isAnonymous = false;
+    renderPrompt(true);
+    expect(screen.getByRole("button", { name: "Processor" })).toBeDisabled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("explains the five-run limit and preserves the destination when logging in", async () => {
