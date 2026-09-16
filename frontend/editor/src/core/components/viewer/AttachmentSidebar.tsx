@@ -7,7 +7,7 @@ import {
   type ReactElement,
 } from "react";
 import { Text, Loader, Stack } from "@mantine/core";
-import LocalIcon from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useViewer } from "@app/contexts/ViewerContext";
@@ -15,10 +15,6 @@ import { useAllFiles, useFileManagement } from "@app/contexts/FileContext";
 import { createQuickKey, isStirlingFile } from "@app/types/fileContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { PdfAttachmentObject } from "@embedpdf/models";
-import AttachmentIcon from "@mui/icons-material/AttachmentRounded";
-import CollectionsIcon from "@mui/icons-material/CollectionsBookmarkRounded";
-import DownloadIcon from "@mui/icons-material/DownloadRounded";
-import ImportIcon from "@mui/icons-material/LibraryAddRounded";
 import { useTranslation } from "react-i18next";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 import { detectNonPdfFileType, isPdfFile } from "@app/utils/fileUtils";
@@ -45,70 +41,20 @@ export interface PortfolioView {
   activeMemberName: string | null;
 }
 
-// Literal LocalIcon elements per member type. Kept as JSX literals (not dynamic
-// icon strings) so the icon-bundling scanner picks them up. Keyed by the type
-// resolved in memberIconKey below.
+// Keyed by the type resolved in memberIconKey below. Literal names rather than a
+// computed one: that is what lets icon-lint and IconName check them.
 const MEMBER_ICON_STYLE = {
   flexShrink: 0,
   color: "var(--icon-files-color)",
 } as const;
 const MEMBER_ICONS: Record<string, ReactElement> = {
-  pdf: (
-    <LocalIcon
-      icon="picture-as-pdf-rounded"
-      width="1.4rem"
-      height="1.4rem"
-      style={MEMBER_ICON_STYLE}
-    />
-  ),
-  image: (
-    <LocalIcon
-      icon="image-rounded"
-      width="1.4rem"
-      height="1.4rem"
-      style={MEMBER_ICON_STYLE}
-    />
-  ),
-  sheet: (
-    <LocalIcon
-      icon="dataset-rounded"
-      width="1.4rem"
-      height="1.4rem"
-      style={MEMBER_ICON_STYLE}
-    />
-  ),
-  data: (
-    <LocalIcon
-      icon="data-object-rounded"
-      width="1.4rem"
-      height="1.4rem"
-      style={MEMBER_ICON_STYLE}
-    />
-  ),
-  text: (
-    <LocalIcon
-      icon="description-rounded"
-      width="1.4rem"
-      height="1.4rem"
-      style={MEMBER_ICON_STYLE}
-    />
-  ),
-  archive: (
-    <LocalIcon
-      icon="folder-zip-rounded"
-      width="1.4rem"
-      height="1.4rem"
-      style={MEMBER_ICON_STYLE}
-    />
-  ),
-  default: (
-    <LocalIcon
-      icon="draft-rounded"
-      width="1.4rem"
-      height="1.4rem"
-      style={MEMBER_ICON_STYLE}
-    />
-  ),
+  pdf: <Icon name="file-pdf" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  image: <Icon name="image" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  sheet: <Icon name="table" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  data: <Icon name="braces" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  text: <Icon name="file-text" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  archive: <Icon name="package" size="1.4rem" style={MEMBER_ICON_STYLE} />,
+  default: <Icon name="file" size="1.4rem" style={MEMBER_ICON_STYLE} />,
 };
 
 const memberExtension = (attachment: PdfAttachmentObject): string => {
@@ -727,7 +673,7 @@ export const AttachmentSidebar = ({
                       void importMember(attachment);
                     }}
                   >
-                    <ImportIcon sx={{ fontSize: "1.2rem" }} />
+                    <Icon name="import" size={"1.2rem"} />
                   </ActionIcon>
                 )}
                 <ActionIcon
@@ -741,7 +687,7 @@ export const AttachmentSidebar = ({
                   title={t("viewer.attachments.download", "Download")}
                   onClick={(event) => handleDownload(attachment, event)}
                 >
-                  <DownloadIcon sx={{ fontSize: "1.2rem" }} />
+                  <Icon name="download" size={"1.2rem"} />
                 </ActionIcon>
               </>
             )}
@@ -794,7 +740,7 @@ export const AttachmentSidebar = ({
           ? t("viewer.portfolio.title", "Portfolio")
           : t("viewer.attachments.title", "Attachments")
       }
-      icon={isPortfolio ? <CollectionsIcon /> : <AttachmentIcon />}
+      icon={isPortfolio ? <Icon name="library" /> : <Icon name="paperclip" />}
       rightOffset={`${(thumbnailVisible ? 15 : 0) + (bookmarkVisible ? 15 : 0)}rem`}
       visible={visible}
       onClose={toggleAttachmentSidebar}
@@ -853,7 +799,7 @@ export const AttachmentSidebar = ({
               aria-label={t("viewer.attachments.retry", "Retry")}
               onClick={requestReload}
             >
-              <LocalIcon icon="refresh" />
+              <Icon name="refresh-cw" size="1em" />
             </ActionIcon>
           </Stack>
         )}
@@ -878,10 +824,9 @@ export const AttachmentSidebar = ({
 
       {showEmptyState && (
         <Stack align="center" gap="sm" py="lg">
-          <LocalIcon
-            icon="attachment-rounded"
-            width="2rem"
-            height="2rem"
+          <Icon
+            name="paperclip"
+            size="2rem"
             style={{ color: "var(--mantine-color-dimmed)" }}
           />
           <Text size="sm" c="dimmed" ta="center">
@@ -891,7 +836,7 @@ export const AttachmentSidebar = ({
             variant="tertiary"
             size="sm"
             onClick={handleAddAttachment}
-            leftSection={<LocalIcon icon="add" width="1rem" height="1rem" />}
+            leftSection={<Icon name="plus" size="1rem" />}
           >
             {t("viewer.attachments.addAttachment", "Add attachment")}
           </Button>
@@ -915,9 +860,7 @@ export const AttachmentSidebar = ({
             fullWidth
             justify="start"
             onClick={handleAddAttachment}
-            leftSection={
-              <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-            }
+            leftSection={<Icon name="plus" size="0.9rem" />}
             style={{ marginBottom: "var(--space-xs)" }}
           >
             {isPortfolio

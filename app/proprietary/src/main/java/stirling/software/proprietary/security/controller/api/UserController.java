@@ -74,6 +74,7 @@ public class UserController {
     private final UserLicenseSettingsService licenseSettingsService;
     private final LoginAttemptService loginAttemptService;
     private final TeamMembershipService teamMembershipService;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
     private final LoginLandingService loginLandingService;
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
@@ -811,6 +812,7 @@ public class UserController {
     }
 
     @PreAuthorize("hasRole('ADMIN')")
+    @org.springframework.transaction.annotation.Transactional
     @PostMapping("/admin/deleteUser/{username}")
     @Audited(type = AuditEventType.USER_PROFILE_UPDATE, level = AuditLevel.BASIC)
     public ResponseEntity<?> deleteUser(
@@ -826,16 +828,19 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST)
                     .body(Map.of("error", "Cannot delete your own account."));
         }
-        // Invalidate all sessions before deleting the user
-        List<SessionInformation> sessionsInformations =
-                sessionRegistry.getAllSessions(username, false);
-        for (SessionInformation sessionsInformation : sessionsInformations) {
-            sessionRegistry.expireSession(sessionsInformation.getSessionId());
-            sessionRegistry.removeSessionInformation(sessionsInformation.getSessionId());
-        }
         userService.deleteUser(username);
         return ResponseEntity.ok(Map.of("message", "User deleted successfully"));
     }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @PostMapping("/admin/transferOwnership")
+    public ResponseEntity<?> transferOwnership(
+            @RequestBody OwnershipTransfer request, Authentication authentication) {
+        orgOwnerService.transfer(request.userId(), authentication);
+        return ResponseEntity.ok(Map.of("message", "Organization ownership transferred."));
+    }
+
+    public record OwnershipTransfer(Long userId) {}
 
     @PreAuthorize("!hasAuthority('ROLE_DEMO_USER')")
     @PostMapping("/get-api-key")

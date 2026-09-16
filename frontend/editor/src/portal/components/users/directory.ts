@@ -26,7 +26,9 @@ export interface Directory {
  * a newly created one can be found and given its first member.
  */
 export function buildDirectory(members: Member[], teams: Team[]): Directory {
-  const organization = members.filter((m) => m.role === "admin");
+  const organization = members
+    .filter((m) => m.role === "admin")
+    .sort((a, b) => Number(Boolean(b.orgOwner)) - Number(Boolean(a.orgOwner)));
   const guests = members.filter((m) => m.role === "guest");
 
   const byTeam = new Map<number, Member[]>();
