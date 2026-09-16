@@ -1014,6 +1014,13 @@
   gap: 0.4rem;
 }
 
+/* The panel is narrow enough that "Add {{count}} to workspace" wraps to two
+   lines. ActionIcon is square by default, so without this the icons keep their
+   own height and the row stops sharing a baseline. */
+.files-page-details-actions-row .mantine-ActionIcon-root {
+  height: auto;
+}
+
 /* Collapsible "File info" header (size/type/dates). */
 .files-page-details-collapse-toggle {
   display: flex;

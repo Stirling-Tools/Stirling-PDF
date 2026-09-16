@@ -285,13 +285,17 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      // Two entry points share the name; use .first() for strict mode.
-      await expect(
-        page.getByRole("button", { name: /^Save to server$/i }).first(),
-      ).toBeVisible();
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }),
-      ).toHaveCount(2);
+      ).toBeVisible();
+      // The details panel's copy lives behind its overflow menu.
+      await page
+        .locator(".files-page-details-actions-row")
+        .getByRole("button", { name: /^Actions$/i })
+        .click();
+      await expect(
+        page.getByRole("menuitem", { name: /^Save to server$/i }),
+      ).toBeVisible();
     });
 
     test("Save to server hidden when ONLY cloud files selected", async ({
@@ -357,16 +361,21 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      const saveButtons = page.getByRole("button", {
+      const toolbarSave = page.getByRole("button", {
         name: /^Save to server$/i,
       });
-      // Present (toolbar + details panel) and every instance disabled.
-      const count = await saveButtons.count();
-      expect(count).toBeGreaterThan(0);
-      for (let i = 0; i < count; i += 1) {
-        await expect(saveButtons.nth(i)).toBeVisible();
-        await expect(saveButtons.nth(i)).toBeDisabled();
-      }
+      await expect(toolbarSave).toBeVisible();
+      await expect(toolbarSave).toBeDisabled();
+
+      await page
+        .locator(".files-page-details-actions-row")
+        .getByRole("button", { name: /^Actions$/i })
+        .click();
+      const panelSave = page.getByRole("menuitem", {
+        name: /^Save to server$/i,
+      });
+      await expect(panelSave).toBeVisible();
+      await expect(panelSave).toBeDisabled();
     });
 
     test("per-file kebab Save to server is disabled (not hidden) when storage off", async ({
