@@ -26,6 +26,7 @@ import org.springframework.core.io.ByteArrayResource;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
+import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
@@ -118,7 +119,12 @@ class StorageFolderInputSourceTest {
 
         // The run replaces the file's content in place before completion fires.
         file.setUpdatedAt(T2);
-        when(storedFileRepository.findByIdAndOwner(1L, owner)).thenReturn(Optional.of(file));
+        blobContent = "processed-output".getBytes();
+        ((StoredFileBacked) work.getFirst().inputs().primary().getFirst())
+                .recordReplacement(
+                        StorageFileIdentities.gate(file),
+                        StorageFileIdentities.contentHash(storageProvider, file),
+                        file.contentVersionOrZero());
         work.get(0).onComplete().accept(true);
 
         // The next sweep sees the bumped version already settled — no self-feeding loop.

@@ -181,7 +181,7 @@ class ProcessingFolderControllerTest {
                                         processedLedger,
                                         storageProvider,
                                         properties,
-                                        mock(UserService.class)),
+                                        userService),
                                 diskFolderSink),
                         List.of(),
                         sourceStore,

@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -24,6 +25,7 @@ import org.springframework.core.io.ByteArrayResource;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.input.StoredFileBacked;
 import stirling.software.proprietary.policy.ledger.ProcessedLedger;
+import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
 import stirling.software.proprietary.security.model.User;
@@ -42,12 +44,15 @@ class StorageOutputSinkTest {
     @Mock private FileStorageService storage;
     @Mock private UserService users;
     private StorageOutputSink sink;
+    private final ApplicationProperties properties = new ApplicationProperties();
     private final UUID folderId = UUID.randomUUID();
     private final User owner = user(1L, "source-owner");
     private final ByteArrayResource output = new ByteArrayResource(new byte[] {1, 2, 3});
 
     @BeforeEach
     void setUp() {
+        properties.getSecurity().setEnableLogin(true);
+        properties.getStorage().setEnabled(true);
         sink =
                 new StorageOutputSink(
                         files,
@@ -55,8 +60,30 @@ class StorageOutputSinkTest {
                         storage,
                         mock(ProcessedLedger.class),
                         mock(StorageProvider.class),
-                        new ApplicationProperties(),
+                        properties,
                         users);
+    }
+
+    @Test
+    void validateRefusesADestinationFolderTheCallerDoesNotOwn() {
+        when(users.getCurrentUsername()).thenReturn("source-owner");
+        when(users.findByUsername("source-owner")).thenReturn(Optional.of(owner));
+        when(folders.findByIdAndOwner(folderId, owner)).thenReturn(Optional.empty());
+
+        // Saving a destination that every later run would reject leaves the user a policy that
+        // fails forever with nothing to point at.
+        assertThatThrownBy(() -> sink.validate(destination()))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("inaccessible storage folder");
+    }
+
+    @Test
+    void validateAcceptsTheCallersOwnFolder() {
+        when(users.getCurrentUsername()).thenReturn("source-owner");
+        when(users.findByUsername("source-owner")).thenReturn(Optional.of(owner));
+        when(folders.findByIdAndOwner(folderId, owner)).thenReturn(Optional.of(folder(owner)));
+
+        sink.validate(destination());
     }
 
     @Test
@@ -113,16 +140,23 @@ class StorageOutputSinkTest {
     void versionsTheOwnersStoredInputWithoutChangingOwnership() throws Exception {
         when(users.findByUsername("source-owner")).thenReturn(Optional.of(owner));
         StoredFile origin = stored(owner);
+        StoredInput input = new StoredInput();
         when(files.findById(10L)).thenReturn(Optional.of(origin));
-        when(storage.replaceFile(eq(owner), eq(origin), any())).thenReturn(origin);
+        when(storage.replaceFile(
+                        eq(owner), eq(origin), any(), isNull(), isNull(), eq(StoredInput.VERSION)))
+                .thenReturn(origin);
 
         sink.deliver(
-                delivery("source-owner", true),
+                new OutputDelivery("run", null, PolicyInputs.of(List.of(input)), "source-owner"),
                 List.of(output),
                 new OutputSpec("storage", Map.of()));
 
-        verify(storage).replaceFile(eq(owner), eq(origin), any());
+        verify(storage)
+                .replaceFile(
+                        eq(owner), eq(origin), any(), isNull(), isNull(), eq(StoredInput.VERSION));
         assertThat(origin.getOwner()).isSameAs(owner);
+        // Completion must settle at what this run produced, not at whatever the row holds later.
+        assertThat(input.recordedGate).isEqualTo(StorageFileIdentities.gate(origin));
     }
 
     @Test
@@ -176,6 +210,11 @@ class StorageOutputSinkTest {
     }
 
     private static class StoredInput extends ByteArrayResource implements StoredFileBacked {
+        private static final long VERSION = 4L;
+
+        private String recordedGate;
+        private long recordedVersion;
+
         private StoredInput() {
             super(new byte[] {1});
         }
@@ -183,6 +222,17 @@ class StorageOutputSinkTest {
         @Override
         public Long storedFileId() {
             return 10L;
+        }
+
+        @Override
+        public long storedFileVersion() {
+            return VERSION;
+        }
+
+        @Override
+        public void recordReplacement(String gate, String contentHash, long committedVersion) {
+            recordedGate = gate;
+            recordedVersion = committedVersion;
         }
     }
 }

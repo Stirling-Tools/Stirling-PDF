@@ -919,9 +919,9 @@ public class ProcessingFolderController {
         Map<String, Object> options =
                 new HashMap<>(request.output() == null ? Map.of() : request.output());
         if (folder != null) {
-            // Force the output to the caller-owned source folder: the storage sink only checks a
-            // folderId exists, not that the caller owns it, so honouring a request-supplied one
-            // would write output into another tenant's folder. Processing is in place anyway.
+            // Force the output to the caller-owned source folder. Processing is in place, so a
+            // request-supplied folderId has nothing to say here, and pinning it keeps a processing
+            // folder from ever being pointed at somewhere its own contents do not live.
             options.put("folderId", folder.getId().toString());
             return new OutputSpec("storage", options);
         }

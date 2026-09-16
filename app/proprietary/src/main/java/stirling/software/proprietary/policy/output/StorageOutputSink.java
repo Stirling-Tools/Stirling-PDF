@@ -4,13 +4,16 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.springframework.core.io.Resource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.MediaTypeFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -78,15 +81,28 @@ public class StorageOutputSink implements PolicyOutputSink {
             throw new IllegalArgumentException("unknown storage output mode: " + mode);
         }
         UUID folderId = folderIdOf(spec);
-        if (folderId != null && !folderRepository.existsById(folderId)) {
-            throw new IllegalArgumentException("unknown storage folder: " + folderId);
+        if (folderId == null) {
+            return;
+        }
+        // Match what delivery will demand of this folder. Accepting one the caller does not own
+        // would save a policy that then fails on every run with nothing to point the user at.
+        User caller =
+                userService
+                        .findByUsername(userService.getCurrentUsername())
+                        .orElseThrow(
+                                () ->
+                                        new IllegalArgumentException(
+                                                "storage output requires an authenticated owner"));
+        if (folderRepository.findByIdAndOwner(folderId, caller).isEmpty()) {
+            throw new IllegalArgumentException("unknown or inaccessible storage folder");
         }
     }
 
     @Override
     public List<ResultFile> deliver(
             OutputDelivery delivery, List<Resource> outputs, OutputSpec spec) throws IOException {
-        StoredFile origin = originOf(delivery);
+        StoredFileBacked input = storedInputOf(delivery);
+        StoredFile origin = originOf(input, spec);
         UUID folderId = folderIdOf(spec);
         User owner = ownerFor(delivery, origin, folderId);
         List<ResultFile> results = new ArrayList<>();
@@ -102,9 +118,16 @@ public class StorageOutputSink implements PolicyOutputSink {
                 // replaceFile keeps the row in whatever folder the user put it in.
                 stored =
                         fileStorageService.replaceFile(
-                                origin.getOwner(),
+                                owner,
                                 origin,
-                                new ResourceMultipartFile(output, origin.getOriginalFilename()));
+                                new ResourceMultipartFile(output, origin.getOriginalFilename()),
+                                null,
+                                null,
+                                input.storedFileVersion());
+                input.recordReplacement(
+                        StorageFileIdentities.gate(stored),
+                        contentHashOrNull(stored),
+                        stored.contentVersionOrZero());
             } else {
                 stored = storeIntoFolder(delivery, output, i, owner, origin, folderId);
             }
@@ -160,14 +183,43 @@ public class StorageOutputSink implements PolicyOutputSink {
         return storedFileRepository.save(stored);
     }
 
-    /** The stored file the run's primary input came from; null when the input came from disk. */
-    private StoredFile originOf(OutputDelivery delivery) {
+    private StoredFileBacked storedInputOf(OutputDelivery delivery) {
         return delivery.inputs().primary().stream()
                 .filter(StoredFileBacked.class::isInstance)
-                .map(resource -> ((StoredFileBacked) resource).storedFileId())
-                .flatMap(id -> storedFileRepository.findById(id).stream())
+                .map(StoredFileBacked.class::cast)
                 .findFirst()
                 .orElse(null);
+    }
+
+    /**
+     * The stored row the run's primary input came from; null when the input came from disk or when
+     * the row is gone and this mode does not write back to it.
+     *
+     * <p>Replacing in place needs the row: without it the delivery would fall through to storing a
+     * new file, resurrecting the very input the user deleted mid-run. Writing a separate file
+     * resurrects nothing, so a deleted input there costs the run nothing and the output still
+     * lands.
+     */
+    private StoredFile originOf(StoredFileBacked input, OutputSpec spec) {
+        if (input == null) {
+            return null;
+        }
+        Optional<StoredFile> origin = storedFileRepository.findById(input.storedFileId());
+        if (origin.isEmpty() && NEW_VERSION.equals(modeOf(spec))) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT, "The input file was removed during processing");
+        }
+        return origin.orElse(null);
+    }
+
+    private String contentHashOrNull(StoredFile file) {
+        try {
+            return StorageFileIdentities.contentHash(storageProvider, file);
+        } catch (RuntimeException e) {
+            // The replacement already committed; a concurrent upload can remove its blob.
+            log.debug("Could not hash stored output {}", file.getId(), e);
+            return null;
+        }
     }
 
     private User ownerFor(OutputDelivery delivery, StoredFile origin, UUID folderId) {
