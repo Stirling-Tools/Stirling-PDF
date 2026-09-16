@@ -123,7 +123,11 @@ public class InstanceEntitlementInterceptor implements HandlerInterceptor {
                 .write(
                         "{\"error\":\"ACCOUNT_LINK_REQUIRED\",\"reason\":\""
                                 + decision.reason().name()
-                                + "\"}");
+                                + "\""
+                                + (decision.reason() == GateDecision.Reason.GRACE_EXPIRED
+                                        ? ",\"message\":\"Cloud processing is paused because this server's offline allowance expired. Ask an administrator to restore its Stirling Cloud connection.\""
+                                        : "")
+                                + "}");
         return false;
     }
 

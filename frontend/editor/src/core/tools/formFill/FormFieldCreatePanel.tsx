@@ -124,7 +124,7 @@ export function FormFieldCreatePanel({
                 key={type}
                 size="sm"
                 variant={armed ? "primary" : "secondary"}
-                leftSection={FIELD_TYPE_ICON[type]}
+                leftSection={<Icon name={FIELD_TYPE_ICON[type]} size={16} />}
                 onClick={() => setCreationType(armed ? null : type)}
                 data-testid={`form-create-type-${type}`}
               >
@@ -192,7 +192,7 @@ export function FormFieldCreatePanel({
                           display: "flex",
                         }}
                       >
-                        {FIELD_TYPE_ICON[pf.type]}
+                        <Icon name={FIELD_TYPE_ICON[pf.type]} size={16} />
                       </span>
                       <Text size="xs" truncate>
                         {pf.name}

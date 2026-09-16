@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.SchedulingConfigurer;
 import org.springframework.scheduling.config.FixedDelayTask;
@@ -44,6 +45,7 @@ public class UsageSyncService implements SchedulingConfigurer {
     private final AccountLinkClient client;
     private final EntitlementCache entitlementCache;
     private final AccountLinkProperties properties;
+    private final ApplicationEventPublisher events;
 
     public UsageSyncService(
             UsageCounterRepository counters,
@@ -51,13 +53,15 @@ public class UsageSyncService implements SchedulingConfigurer {
             DeviceCredentialStore credentialStore,
             AccountLinkClient client,
             EntitlementCache entitlementCache,
-            AccountLinkProperties properties) {
+            AccountLinkProperties properties,
+            ApplicationEventPublisher events) {
         this.counters = counters;
         this.syncState = syncState;
         this.credentialStore = credentialStore;
         this.client = client;
         this.entitlementCache = entitlementCache;
         this.properties = properties;
+        this.events = events;
     }
 
     /**
@@ -97,6 +101,7 @@ public class UsageSyncService implements SchedulingConfigurer {
             // cache TTL lapses. Force an immediate refresh so the gate reflects the new plan now.
             entitlementCache.invalidate();
             entitlementCache.current();
+            events.publishEvent(new EntitlementRefreshedEvent());
             return;
         }
         InstanceEntitlement latest = null;
@@ -118,7 +123,12 @@ public class UsageSyncService implements SchedulingConfigurer {
             return;
         }
         // Adopt the freshest entitlement the sync returned, saving the cache a redundant fetch.
-        entitlementCache.accept(latest);
+        entitlementCache.accept(cred.get().getDeviceId(), latest);
+        if (latest != null) {
+            // Only when a reply actually arrived. accept() no-ops on null, so announcing a refresh
+            // here would tell listeners the plan had been re-read when every period had failed.
+            events.publishEvent(new EntitlementRefreshedEvent());
+        }
     }
 
     /** Reports one period; returns the fresh entitlement, or null on a transport/server failure. */
