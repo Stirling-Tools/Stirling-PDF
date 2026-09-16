@@ -103,6 +103,11 @@ class CropControllerTest {
             return this;
         }
 
+        CropRequestBuilder withPageNumbers(String pageNumbers) {
+            form.setPageNumbers(pageNumbers);
+            return this;
+        }
+
         CropPdfForm build() {
             return form;
         }
@@ -118,6 +123,32 @@ class CropControllerTest {
 
         MockMultipartFile createPdfWithContent(String filename, String content) throws IOException {
             return createPdf(filename, PDRectangle.LETTER, content);
+        }
+
+        MockMultipartFile createMultiPagePdf(String filename, int pages) throws IOException {
+            Path testPdfPath = tempDir.resolve(filename);
+
+            try (PDDocument doc = new PDDocument()) {
+                for (int i = 0; i < pages; i++) {
+                    PDPage page = new PDPage(PDRectangle.LETTER);
+                    doc.addPage(page);
+                    try (PDPageContentStream contentStream = new PDPageContentStream(doc, page)) {
+                        contentStream.beginText();
+                        contentStream.setFont(HELVETICA, 12);
+                        contentStream.newLineAtOffset(50, 50);
+                        contentStream.showText("Page " + (i + 1));
+                        contentStream.endText();
+                    }
+                }
+
+                doc.save(testPdfPath.toFile());
+            }
+
+            return new MockMultipartFile(
+                    "fileInput",
+                    filename,
+                    MediaType.APPLICATION_PDF_VALUE,
+                    Files.readAllBytes(testPdfPath));
         }
 
         MockMultipartFile createPdfWithSize(String filename, PDRectangle size) throws IOException {
@@ -711,6 +742,88 @@ class CropControllerTest {
             assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             verify(mockDocument, times(1)).close();
             verify(newDocument, times(1)).close();
+        }
+    }
+
+    @Nested
+    @DisplayName("Page Selection")
+    @Tag("integration")
+    class SinglePageCropTests {
+
+        @Test
+        @DisplayName("Only the selected page is cropped; the rest keep their original size")
+        void shouldCropOnlySelectedPage() throws IOException {
+            MockMultipartFile testFile = pdfFactory.createMultiPagePdf("multi.pdf", 3);
+            CropPdfForm request =
+                    new CropRequestBuilder()
+                            .withFile(testFile)
+                            .withCoordinates(50f, 50f, 300f, 400f)
+                            .withPageNumbers("2")
+                            .withRemoveDataOutsideCrop(false)
+                            .withAutoCrop(false)
+                            .build();
+
+            try (PDDocument sourceDoc = Loader.loadPDF(testFile.getBytes());
+                    PDDocument newDoc = new PDDocument()) {
+                when(pdfDocumentFactory.load(request)).thenReturn(sourceDoc);
+                when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
+                        .thenReturn(newDoc);
+
+                ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                    assertThat(result.getNumberOfPages()).isEqualTo(3);
+
+                    assertThat(result.getPage(0).getMediaBox().getWidth())
+                            .isEqualTo(PDRectangle.LETTER.getWidth());
+                    assertThat(result.getPage(0).getMediaBox().getHeight())
+                            .isEqualTo(PDRectangle.LETTER.getHeight());
+
+                    assertThat(result.getPage(1).getMediaBox().getWidth())
+                            .isCloseTo(300f, within(0.01f));
+                    assertThat(result.getPage(1).getMediaBox().getHeight())
+                            .isCloseTo(400f, within(0.01f));
+
+                    assertThat(result.getPage(2).getMediaBox().getWidth())
+                            .isEqualTo(PDRectangle.LETTER.getWidth());
+                    assertThat(result.getPage(2).getMediaBox().getHeight())
+                            .isEqualTo(PDRectangle.LETTER.getHeight());
+                }
+            }
+        }
+
+        @Test
+        @DisplayName("Legacy clients that omit pageNumbers still crop every page")
+        void shouldCropAllPagesWhenPageNumbersOmitted() throws IOException {
+            MockMultipartFile testFile = pdfFactory.createMultiPagePdf("multi.pdf", 3);
+            CropPdfForm request =
+                    new CropRequestBuilder()
+                            .withFile(testFile)
+                            .withCoordinates(50f, 50f, 300f, 400f)
+                            .withRemoveDataOutsideCrop(false)
+                            .withAutoCrop(false)
+                            .build();
+
+            try (PDDocument sourceDoc = Loader.loadPDF(testFile.getBytes());
+                    PDDocument newDoc = new PDDocument()) {
+                when(pdfDocumentFactory.load(request)).thenReturn(sourceDoc);
+                when(pdfDocumentFactory.createNewDocumentBasedOnOldDocument(sourceDoc))
+                        .thenReturn(newDoc);
+
+                ResponseEntity<Resource> response = cropController.cropPdf(request);
+
+                assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+                try (PDDocument result = Loader.loadPDF(drainBody(response))) {
+                    assertThat(result.getNumberOfPages()).isEqualTo(3);
+                    for (int i = 0; i < result.getNumberOfPages(); i++) {
+                        assertThat(result.getPage(i).getMediaBox().getWidth())
+                                .isCloseTo(300f, within(0.01f));
+                        assertThat(result.getPage(i).getMediaBox().getHeight())
+                                .isCloseTo(400f, within(0.01f));
+                    }
+                }
+            }
         }
     }
 }
