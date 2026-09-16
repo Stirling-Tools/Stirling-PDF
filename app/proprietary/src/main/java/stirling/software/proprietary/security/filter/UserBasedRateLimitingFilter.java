@@ -2,8 +2,6 @@ package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
 import java.time.Duration;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
@@ -14,9 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.github.bucket4j.Bandwidth;
-import io.github.bucket4j.Bucket;
-import io.github.bucket4j.ConsumptionProbe;
 import io.github.pixee.security.Newlines;
 
 import jakarta.servlet.FilterChain;
@@ -24,126 +19,112 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
+import lombok.extern.slf4j.Slf4j;
+
+import stirling.software.common.cluster.RateLimitStore;
 import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.util.RegexPatternUtils;
 
+/**
+ * Per-role daily POST quota. Counting goes through {@link RateLimitStore} so a cluster enforces one
+ * quota across every node; on a single node the in-process store behaves as before.
+ *
+ * <p>Refill is greedy (tokens trickle back continuously) rather than all-at-once every 24h, which
+ * is the {@link RateLimitStore} contract shared with every other caller.
+ */
 @Component
 @Profile("!saas")
+@Slf4j
 public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
 
-    private final Map<String, Bucket> apiBuckets = new ConcurrentHashMap<>();
+    private static final Duration DAY = Duration.ofDays(1);
 
-    private final Map<String, Bucket> webBuckets = new ConcurrentHashMap<>();
-
-    @Qualifier("rateLimit")
     private final boolean rateLimit;
+    private final RateLimitStore rateLimitStore;
 
-    public UserBasedRateLimitingFilter(@Qualifier("rateLimit") boolean rateLimit) {
+    public UserBasedRateLimitingFilter(
+            @Qualifier("rateLimit") boolean rateLimit, RateLimitStore rateLimitStore) {
         this.rateLimit = rateLimit;
+        this.rateLimitStore = rateLimitStore;
     }
 
     @Override
     protected void doFilterInternal(
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        if (!rateLimit) {
-            // If rateLimit is not enabled, just pass all requests without rate limiting
+        if (!rateLimit || !"POST".equalsIgnoreCase(request.getMethod())) {
             filterChain.doFilter(request, response);
             return;
         }
-        String method = request.getMethod();
-        if (!"POST".equalsIgnoreCase(method)) {
-            // If the request is not a POST, just pass it through without rate limiting
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Role userRole = resolveRole(authentication);
+        // Permit-all POSTs (login, password reset) carry no role, so there is no quota to charge
+        // them against. Brute-force protection on those paths is LoginAttemptService's job.
+        if (userRole == null) {
+            filterChain.doFilter(request, response);
+            return;
+        }
+        boolean apiCall = request.getHeader("X-API-KEY") != null;
+        int limitPerDay = apiCall ? userRole.getApiCallsPerDay() : userRole.getWebCallsPerDay();
+        // Unlimited roles are most of the traffic; skip the backplane round trip entirely.
+        if (limitPerDay == Integer.MAX_VALUE) {
             filterChain.doFilter(request, response);
             return;
         }
         // Bucket by the resolved user (the auth filter runs first and populates the context, even
         // for X-API-KEY requests), so all of a user's API keys share ONE per-user quota - minting
-        // extra keys can't multiply the daily limit. Fall back to the raw key / IP only when the
-        // request is unauthenticated.
-        String identifier = null;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication != null
-                && authentication.isAuthenticated()
-                && !"anonymousUser".equals(authentication.getName())) {
-            identifier = authentication.getName();
-        }
-        if (identifier == null) {
-            String apiKey = request.getHeader("X-API-KEY");
-            if (apiKey != null && !apiKey.trim().isEmpty()) {
-                identifier = "API_KEY_" + apiKey;
-            } else {
-                identifier = request.getRemoteAddr();
-            }
-        }
-        Role userRole =
-                getRoleFromAuthentication(SecurityContextHolder.getContext().getAuthentication());
-        if (request.getHeader("X-API-KEY") != null) {
-            // It's an API call
-            processRequest(
-                    userRole.getApiCallsPerDay(),
-                    identifier,
-                    apiBuckets,
-                    request,
-                    response,
-                    filterChain);
-        } else {
-            // It's a Web UI call
-            processRequest(
-                    userRole.getWebCallsPerDay(),
-                    identifier,
-                    webBuckets,
-                    request,
-                    response,
-                    filterChain);
-        }
+        // extra keys can't multiply the daily limit.
+        String bucketKey = (apiCall ? "api:" : "web:") + authentication.getName();
+        processRequest(limitPerDay, bucketKey, request, response, filterChain);
     }
 
-    private Role getRoleFromAuthentication(Authentication authentication) {
-        if (authentication != null && authentication.isAuthenticated()) {
-            for (GrantedAuthority authority : authentication.getAuthorities()) {
-                try {
-                    return Role.fromString(authority.getAuthority());
-                } catch (IllegalArgumentException ex) {
-                    // Ignore and continue to next authority.
-                }
+    /** Returns null when the request carries no authenticated principal with a known role. */
+    private Role resolveRole(Authentication authentication) {
+        if (authentication == null
+                || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            return null;
+        }
+        for (GrantedAuthority authority : authentication.getAuthorities()) {
+            try {
+                return Role.fromString(authority.getAuthority());
+            } catch (IllegalArgumentException ex) {
+                // Not a Stirling role (e.g. ROLE_ANONYMOUS, scope authorities); try the next one.
             }
         }
-        throw new IllegalStateException("User does not have a valid role.");
+        return null;
     }
 
     private void processRequest(
             int limitPerDay,
-            String identifier,
-            Map<String, Bucket> buckets,
+            String bucketKey,
             HttpServletRequest request,
             HttpServletResponse response,
             FilterChain filterChain)
             throws IOException, ServletException {
-        Bucket userBucket = buckets.computeIfAbsent(identifier, k -> createUserBucket(limitPerDay));
-        ConsumptionProbe probe = userBucket.tryConsumeAndReturnRemaining(1);
-        if (probe.isConsumed()) {
+        RateLimitStore.RateLimitDecision decision;
+        try {
+            decision = rateLimitStore.tryConsume(bucketKey, limitPerDay, DAY);
+        } catch (RuntimeException ex) {
+            // A quota is not a security control: fail open rather than 500 every POST while the
+            // backplane is unreachable.
+            log.warn("Rate limit store unavailable, allowing request: {}", ex.getMessage());
+            filterChain.doFilter(request, response);
+            return;
+        }
+        if (decision.allowed()) {
             response.setHeader(
                     "X-Rate-Limit-Remaining",
-                    stripNewlines(Newlines.stripAll(Long.toString(probe.getRemainingTokens()))));
+                    stripNewlines(Newlines.stripAll(Long.toString(decision.remainingTokens()))));
             filterChain.doFilter(request, response);
-        } else {
-            long waitForRefill = probe.getNanosToWaitForRefill() / 1_000_000_000;
-            response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-            response.setHeader(
-                    "X-Rate-Limit-Retry-After-Seconds",
-                    Newlines.stripAll(String.valueOf(waitForRefill)));
-            response.getWriter().write("Rate limit exceeded for POST requests.");
+            return;
         }
-    }
-
-    private Bucket createUserBucket(int limitPerDay) {
-        Bandwidth limit =
-                Bandwidth.builder()
-                        .capacity(limitPerDay)
-                        .refillIntervally(limitPerDay, Duration.ofDays(1))
-                        .build();
-        return Bucket.builder().addLimit(limit).build();
+        long waitForRefill = decision.nanosToWaitForRefill() / 1_000_000_000;
+        response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
+        response.setHeader(
+                "X-Rate-Limit-Retry-After-Seconds",
+                Newlines.stripAll(String.valueOf(waitForRefill)));
+        response.getWriter().write("Rate limit exceeded for POST requests.");
     }
 
     private static String stripNewlines(final String s) {
