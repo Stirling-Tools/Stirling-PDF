@@ -155,12 +155,17 @@ public class PaygWalletController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
+        if (AuthenticationUtils.isAnonymous(auth)
+                || "ANONYMOUS".equalsIgnoreCase(user.getAuthenticationType())) {
+            return ResponseEntity.ok(emptySnapshot(0));
+        }
+
         Optional<Long> resolvedTeam = userTeamResolver.teamId(user);
         if (resolvedTeam.isEmpty()) {
             // Authenticated user without a team — shouldn't happen post-migration, but we don't
             // want to 500. Return a free-tier-shaped empty snapshot so the FE renders the gated UI
             // rather than blowing up on a null body.
-            return ResponseEntity.ok(emptySnapshot());
+            return ResponseEntity.ok(emptySnapshot(FREE_TIER_LIMIT_UNITS_FALLBACK));
         }
         Long teamId = resolvedTeam.get();
         boolean isLeader = userTeamResolver.isLeader(user);
@@ -503,7 +508,7 @@ public class PaygWalletController {
         return (int) v;
     }
 
-    private WalletSnapshotResponse emptySnapshot() {
+    private WalletSnapshotResponse emptySnapshot(int allowance) {
         LocalDateTime[] window = currentMonthWindow();
         return new WalletSnapshotResponse(
                 null, // teamId — unknown when the caller has no team membership
@@ -514,9 +519,9 @@ public class PaygWalletController {
                 ISO_DATE.format(window[0].toLocalDate()),
                 ISO_DATE.format(window[1].toLocalDate()),
                 0,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
-                FREE_TIER_LIMIT_UNITS_FALLBACK,
+                allowance,
+                allowance,
+                allowance,
                 UserLicenseSettingsService.DEFAULT_USER_LIMIT,
                 null,
                 null,
