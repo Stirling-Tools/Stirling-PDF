@@ -1,0 +1,103 @@
+/* The rail beside a document being read: icons only, down the right edge, in the
+   slot the tool panel occupies everywhere else. */
+.reader-rail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  flex-shrink: 0;
+  width: var(--nav-rail-w);
+  /* Full height whatever it holds: the rail is the edge of the workspace, not a
+     floating cluster of buttons that grows and shrinks with the document. */
+  align-self: stretch;
+  height: 100%;
+  padding: 0.75rem 0;
+  border-left: 1px solid var(--c-border-subtle);
+  background: var(--c-bg-raised);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.reader-rail__group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+  width: 100%;
+}
+
+.reader-rail__item {
+  display: inline-flex;
+}
+
+.reader-rail__divider {
+  width: 1.25rem;
+  height: 1px;
+  margin: 0.25rem 0;
+  background: var(--c-border-subtle);
+  flex-shrink: 0;
+}
+
+/* A name can never widen or wrap the dropdown: the item and Mantine's label wrapper
+   both give up width (min-width: 0) so the ellipsis on the name actually engages. */
+.reader-rail__doc {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.reader-rail__doc .mantine-Menu-itemLabel {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.reader-rail__doc-name {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The document you are reading, marked down its leading edge. The stripe is
+   inset rather than drawn as a border so the row's own hover fill still reaches
+   the edge of the dropdown. */
+.reader-rail__doc[data-current] {
+  position: relative;
+  background: var(--c-primary-tint);
+  font-weight: 500;
+}
+
+.reader-rail__doc[data-current]::before {
+  content: "";
+  position: absolute;
+  inset-block: 0.25rem;
+  inset-inline-start: 0;
+  width: 2px;
+  border-radius: 1px;
+  background: var(--c-primary);
+}
+
+/* A disabled control keeps its slot but loses its chrome: the filled circle reads
+   as something to press, and a faded glyph alone says "not right now" better. */
+.reader-rail .mantine-ActionIcon-root:disabled,
+.reader-rail .mantine-ActionIcon-root[data-disabled] {
+  background-color: transparent;
+  border-color: transparent;
+  opacity: 0.45;
+}
+
+/* Controls that bring the workbench bar's compact styling with them (the search
+   popover, read-aloud) revert to the rail's own button look here: the bar's muted
+   rest color and hover-to-bright read as faded beside the rail's other buttons,
+   and its 24px clamp shrinks the hit target. */
+.reader-rail .workbench-bar-action-icon,
+.reader-rail .workbench-bar-action-icon:hover {
+  color: var(--ai-color, var(--c-text)) !important;
+}
+
+.reader-rail .workbench-bar-action-icon {
+  width: var(--ai-size) !important;
+  height: var(--ai-size) !important;
+  min-width: var(--ai-size) !important;
+  min-height: var(--ai-size) !important;
+}

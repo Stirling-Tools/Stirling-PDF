@@ -9,9 +9,7 @@ import {
   Tooltip,
   Divider,
 } from "@mantine/core";
-import CheckIcon from "@mui/icons-material/Check";
-import CloseIcon from "@mui/icons-material/Close";
-import InfoIcon from "@mui/icons-material/InfoOutlined";
+import { Icon } from "@app/ui/Icon";
 import SectionBlock from "@app/components/tools/getPdfInfo/shared/SectionBlock";
 import type {
   PdfCompliance,
@@ -194,7 +192,6 @@ const ComplianceRow: React.FC<{
   result: ComplianceCheckResult;
 }> = ({ result }) => {
   const { t } = useTranslation();
-  const Icon = result.isCompliant ? CheckIcon : CloseIcon;
   const color = result.isCompliant ? "teal" : "red";
   const statusText = result.isCompliant
     ? t("getPdfInfo.compliance.passed", "Passed")
@@ -212,7 +209,7 @@ const ComplianceRow: React.FC<{
       <Group justify="space-between" wrap="nowrap">
         <Group gap="sm" wrap="nowrap" style={{ minWidth: 0 }}>
           <ThemeIcon color={color} variant="light" size="lg" radius="xl">
-            <Icon style={{ fontSize: "1.2rem" }} />
+            <Icon name={result.isCompliant ? "check" : "x"} size="1.2rem" />
           </ThemeIcon>
           <Stack gap={2} style={{ minWidth: 0 }}>
             <Text size="sm" fw={600} truncate>
@@ -234,7 +231,9 @@ const ComplianceRow: React.FC<{
           color={color}
           variant="light"
           size="md"
-          leftSection={<Icon style={{ width: 12, height: 12 }} />}
+          leftSection={
+            <Icon name={result.isCompliant ? "check" : "x"} size={12} />
+          }
         >
           {statusText}
         </Badge>
@@ -249,7 +248,7 @@ const EmptyComplianceState: React.FC = () => {
     <Paper p="md" radius="sm" withBorder>
       <Group gap="sm">
         <ThemeIcon color="gray" variant="light" size="lg" radius="xl">
-          <InfoIcon style={{ fontSize: "1.2rem" }} />
+          <Icon name="info" size={"1.2rem"} />
         </ThemeIcon>
         <Stack gap={2}>
           <Text size="sm" fw={500}>

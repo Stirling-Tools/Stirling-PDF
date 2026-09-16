@@ -97,7 +97,9 @@ export function ClassificationDemoChart({
       <svg
         viewBox={`0 0 ${SIZE} ${SIZE}`}
         className={styles.chart}
-        role="img"
+        // "group", not "img": img has presentational children, so the focusable slices
+        // inside it would be nested interactives.
+        role="group"
         aria-label={t(
           "classificationDemo.chart.label",
           "Documents by type: {{summary}}",

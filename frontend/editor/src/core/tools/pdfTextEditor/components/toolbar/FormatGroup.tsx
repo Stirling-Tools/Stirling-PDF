@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import {
   ColorInput,
   Group,
@@ -9,9 +10,6 @@ import {
 } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
-import FormatItalicIcon from "@mui/icons-material/FormatItalic";
-import TuneIcon from "@mui/icons-material/TuneOutlined";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
 import { parseCssColor, toCssHex } from "@app/tools/pdfTextEditor/model/Color";
 import { familyOf } from "@app/tools/pdfTextEditor/util/fontFamily";
 import { FontFamilySelect } from "@app/tools/pdfTextEditor/components/FontFamilySelect";
@@ -136,7 +134,7 @@ export function FormatGroup({ controller }: { controller: Controller }) {
               )}
               data-testid="pdf-editor-colour-advanced"
               style={NO_SHRINK}
-              leftSection={<TuneIcon fontSize="small" />}
+              leftSection={<Icon name="sliders-horizontal" size={20} />}
             />
           </Tooltip>
         </Popover.Target>
@@ -199,7 +197,7 @@ export function FormatGroup({ controller }: { controller: Controller }) {
           aria-label={t("pdfTextEditor.toolbar.italic", "Italic")}
           data-testid="pdf-editor-italic"
           style={NO_SHRINK}
-          leftSection={<FormatItalicIcon fontSize="small" />}
+          leftSection={<Icon name="italic" size={20} />}
         />
       </Tooltip>
       <Menu shadow="md" position="bottom-start" withinPortal>
@@ -217,7 +215,7 @@ export function FormatGroup({ controller }: { controller: Controller }) {
               aria-label={t("pdfTextEditor.toolbar.changeCase", "Change case")}
               data-testid="pdf-editor-change-case"
               style={NO_SHRINK}
-              leftSection={<TextFieldsIcon fontSize="small" />}
+              leftSection={<Icon name="type" size={20} />}
             />
           </Tooltip>
         </Menu.Target>
