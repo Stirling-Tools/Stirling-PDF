@@ -65,7 +65,7 @@ export const useCheckoutSession = (
 
       // Fetch installation ID from backend
       let fetchedInstallationId = installationId;
-      if (!fetchedInstallationId) {
+      if (selectedPlan.requiresSeats && !fetchedInstallationId) {
         fetchedInstallationId = await licenseService.getInstallationId();
         setInstallationId(fetchedInstallationId);
       }
@@ -74,7 +74,9 @@ export const useCheckoutSession = (
       // Only include if it's a valid PRO/ENTERPRISE license (not NORMAL/free tier)
       let existingLicenseKey: string | undefined;
       try {
-        const licenseInfo = await licenseService.getLicenseInfo();
+        const licenseInfo = selectedPlan.requiresSeats
+          ? await licenseService.getLicenseInfo()
+          : null;
         if (
           licenseInfo?.licenseType &&
           licenseInfo.licenseType !== "NORMAL" &&

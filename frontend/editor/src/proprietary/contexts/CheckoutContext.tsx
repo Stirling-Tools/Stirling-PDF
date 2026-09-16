@@ -354,13 +354,15 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
         let totalUsers = 0;
 
         try {
-          const [licenseData, userData] = await Promise.all([
-            licenseService.getLicenseInfo(),
-            userManagementService.getUsers(),
-          ]);
+          if (tier === "enterprise" && !options.minimumSeats) {
+            const [licenseData, userData] = await Promise.all([
+              licenseService.getLicenseInfo(),
+              userManagementService.getUsers(),
+            ]);
 
-          licenseInfo = licenseData;
-          totalUsers = userData.totalUsers || 0;
+            licenseInfo = licenseData;
+            totalUsers = userData.totalUsers || 0;
+          }
         } catch (err) {
           console.warn(
             "Could not fetch license/user info, proceeding with defaults:",

@@ -163,15 +163,15 @@ const StripeCheckout: React.FC<StripeCheckoutProps> = ({
       return;
     }
 
-    // Nobody is asked for an email any more: the checkout is minted as the buyer's Stirling
-    // account and the edge function resolves their address from the team's billing owner. The
-    // licence read stays, because an upgrade carries its old key through as Stripe metadata.
+    // Only installed licence upgrades need the previous key; Team belongs to the cloud account.
     const openOnFirstChoice = async () => {
       const landing = combinedChoose ? "choose" : "plan-selection";
       try {
         if (combinedChoose && sellsCapacity)
           checkoutState.setServerQuantity(blocksForUsers(minimumCapacity));
-        const licenseInfo = await licenseService.getLicenseInfo();
+        const licenseInfo = sellsCapacity
+          ? null
+          : await licenseService.getLicenseInfo();
         if (licenseInfo?.licenseType && licenseInfo.licenseType !== "NORMAL") {
           checkoutState.setCurrentLicenseKey(licenseInfo.licenseKey || null);
         }

@@ -5,6 +5,8 @@ import { expectConsole } from "@app/tests/failOnConsole";
 
 const mocks = vi.hoisted(() => ({
   getPlans: vi.fn(),
+  getLicenseInfo: vi.fn(),
+  getUsers: vi.fn(),
   alert: vi.fn(),
   features: [],
   highlights: [],
@@ -29,12 +31,12 @@ vi.mock("@app/utils/currencyDetection", () => ({
 }));
 vi.mock("@app/components/toast", () => ({ alert: mocks.alert }));
 vi.mock("@app/services/userManagementService", () => ({
-  userManagementService: { getUsers: async () => ({ totalUsers: 6 }) },
+  userManagementService: { getUsers: mocks.getUsers },
 }));
 vi.mock("@app/services/licenseService", () => ({
   default: {
     getPlans: mocks.getPlans,
-    getLicenseInfo: async () => null,
+    getLicenseInfo: mocks.getLicenseInfo,
     groupPlansByTier: (plans: unknown[]) =>
       plans.length ? [{ tier: "server" }] : [],
   },
@@ -75,6 +77,8 @@ it("opens on the first click using asynchronously fetched plans", async () => {
   resolvePlans({ plans: [{ id: "server-monthly" }] });
   expect(await screen.findByRole("dialog")).toBeInTheDocument();
   expect(mocks.alert).not.toHaveBeenCalled();
+  expect(mocks.getLicenseInfo).not.toHaveBeenCalled();
+  expect(mocks.getUsers).not.toHaveBeenCalled();
 });
 
 it("reports failed price loading visibly and allows a retry", async () => {

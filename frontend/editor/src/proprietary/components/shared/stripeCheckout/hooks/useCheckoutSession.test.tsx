@@ -40,19 +40,22 @@ const plan = {
   features: [],
   highlights: [],
   lookupKey: "selfhosted:server:yearly",
+  requiresSeats: false,
 };
 
 function mount(
   createSession: ReturnType<typeof vi.fn>,
   state: CheckoutState = { currentStage: "payment" },
+  selectedPlan = plan,
+  installationId: string | null = "install-abc",
 ) {
   const setState = vi.fn();
   const hook = renderHook(() =>
     useCheckoutSession(
-      plan,
+      selectedPlan,
       state,
       setState,
-      "install-abc",
+      installationId,
       vi.fn(),
       null,
       vi.fn(),
@@ -122,7 +125,10 @@ describe("useCheckoutSession", () => {
     const createSession = vi
       .fn()
       .mockResolvedValue({ clientSecret: "cs", url: null, sessionId: "s" });
-    const { hook } = mount(createSession);
+    const { hook } = mount(createSession, undefined, {
+      ...plan,
+      requiresSeats: true,
+    });
 
     await hook.result.current.createCheckoutSession();
 
@@ -160,4 +166,21 @@ describe("useCheckoutSession", () => {
       expect.objectContaining({ currentStage: "error", error: "Unauthorized" }),
     );
   });
+});
+
+it("creates Team checkout without accessing installation admin endpoints", async () => {
+  const createSession = vi
+    .fn()
+    .mockResolvedValue({ clientSecret: "cs", sessionId: "s" });
+  const { hook } = mount(createSession, undefined, plan, null);
+  await hook.result.current.createCheckoutSession();
+  expect(createSession).toHaveBeenCalledWith(
+    expect.objectContaining({
+      serverQuantity: 3,
+      installationId: undefined,
+      currentLicenseKey: undefined,
+    }),
+  );
+  expect(getInstallationId).not.toHaveBeenCalled();
+  expect(getLicenseInfo).not.toHaveBeenCalled();
 });

@@ -128,6 +128,7 @@ export function Usage({
   ]);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
+  const hasLocalInstance = localUsersInUse !== undefined;
   const [localUsage, setLocalUsage] = useState<LocalUsage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -178,13 +179,14 @@ export function Usage({
     setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
-    fetchLocalUsage()
-      .then((u) => {
-        if (!cancelled) setLocalUsage(u);
-      })
-      .catch(() => {
-        if (!cancelled) setLocalUsage(null);
-      });
+    if (hasLocalInstance)
+      fetchLocalUsage()
+        .then((u) => {
+          if (!cancelled) setLocalUsage(u);
+        })
+        .catch(() => {
+          if (!cancelled) setLocalUsage(null);
+        });
     fetchWallet()
       .then((w) => {
         if (cancelled) return;
@@ -219,7 +221,7 @@ export function Usage({
     return () => {
       cancelled = true;
     };
-  }, [refreshKey, onWalletLoaded, t]);
+  }, [refreshKey, onWalletLoaded, t, hasLocalInstance]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
   useEffect(() => {
@@ -288,7 +290,7 @@ export function Usage({
           // Nudge the local instance to refresh its gate now so billable work
           // unblocks immediately rather than on its next poll. Fire-and-forget;
           // a no-op on SaaS (no local instance to sync).
-          triggerLocalSync().catch(() => {});
+          if (hasLocalInstance) triggerLocalSync().catch(() => {});
           return true;
         }
       } catch {
@@ -301,7 +303,7 @@ export function Usage({
     // shows its "almost there" notice rather than the page silently self-healing.
     setRefreshKey((k) => k + 1);
     return false;
-  }, [onWalletLoaded]);
+  }, [onWalletLoaded, hasLocalInstance]);
 
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
