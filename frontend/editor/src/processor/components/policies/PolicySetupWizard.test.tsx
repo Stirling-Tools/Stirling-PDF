@@ -1,0 +1,439 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { t } from "i18next";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+  waitFor,
+} from "@testing-library/react";
+import { ProcessorTestProviders } from "@processor/test/TestQueryProvider";
+import { PolicySetupWizard } from "@processor/components/policies/PolicySetupWizard";
+import { PolicySetupWizard as SharedPolicySetupWizard } from "@app/components/policies/PolicySetupWizard";
+import {
+  POLICY_CATEGORIES,
+  POLICY_CONFIG,
+  buildWireFromSetup,
+  type CatalogueEntry,
+  type DecoratedPolicy,
+  type PolicySetupResult,
+  type PipelineStep,
+} from "@processor/api/policies";
+
+const render = (ui: Parameters<typeof baseRender>[0]) =>
+  baseRender(ui, { wrapper: ProcessorTestProviders });
+
+// Deterministic i18n: return the fallback when given, else the key. initReactI18next is stubbed
+// because the import graph pulls core/i18n.ts, which registers it as a plugin.
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    // Second arg is a string fallback in some call sites and an interpolation object in others;
+    // only treat a string as the fallback.
+    t: (key: string, fallback?: unknown) =>
+      typeof fallback === "string" ? fallback : key,
+    i18n: { changeLanguage: vi.fn() },
+  }),
+  initReactI18next: { type: "3rdParty", init: vi.fn() },
+}));
+
+const fetchIntegrations = vi.fn();
+vi.mock("@processor/api/integrations", () => ({
+  fetchIntegrations: () => fetchIntegrations(),
+}));
+
+const fetchSources = vi.fn();
+vi.mock("@processor/api/sources", () => ({
+  fetchSources: () => fetchSources(),
+}));
+
+vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
+
+const aiClassificationEnabled = { value: true };
+vi.mock("@app/hooks/useAiClassificationEnabled", () => ({
+  useAiClassificationEnabled: () => aiClassificationEnabled.value,
+}));
+
+const SAVE_CHANGES = "processor.policies.wizard.actions.saveChanges";
+const ENABLE = "processor.policies.wizard.actions.enablePolicy";
+
+const security = POLICY_CATEGORIES.find((c) => c.id === "security")!;
+const routing = POLICY_CATEGORIES.find((c) => c.id === "routing")!;
+const routingConfig = POLICY_CONFIG.routing;
+const securityConfig = POLICY_CONFIG.security;
+const compliance = POLICY_CATEGORIES.find((c) => c.id === "compliance")!;
+const complianceConfig = POLICY_CONFIG.compliance;
+
+function editEntry(steps: PipelineStep[]): CatalogueEntry {
+  const policy: DecoratedPolicy = {
+    category: security,
+    config: securityConfig,
+    state: {
+      configured: true,
+      status: "active",
+      required: true,
+      sources: ["editor"],
+      scopeTypes: [],
+      reviewerEmail: "",
+      fieldValues: {},
+      runOn: "upload",
+      outputMode: "new_version",
+      outputName: "",
+      outputNamePosition: "suffix",
+      maxRetries: 0,
+      retryDelayMinutes: 0,
+      backendId: "pol-1",
+      isDefault: true,
+    },
+    steps,
+    stats: { enforced: 0, dataProcessed: "-", activeFor: "-" },
+    activity: [],
+  };
+  return { category: security, config: securityConfig, policy };
+}
+
+/** Submit the single-page wizard. */
+async function submitWizard(saveLabel: string) {
+  fireEvent.click(await screen.findByRole("button", { name: saveLabel }));
+}
+
+const routingEntry: CatalogueEntry = {
+  category: routing,
+  config: routingConfig,
+  policy: null,
+};
+
+describe("PolicySetupWizard", () => {
+  beforeEach(() => {
+    aiClassificationEnabled.value = true;
+    fetchIntegrations.mockResolvedValue([]);
+    fetchSources.mockResolvedValue({ kpis: [], sources: [] });
+  });
+
+  it("round-trips a saved step's backend params on edit", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry = editEntry([
+      {
+        operation: "/api/v1/security/auto-redact",
+        parameters: { listOfText: "foo\nbar", useRegex: true },
+      },
+    ]);
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(SAVE_CHANGES);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    // Only the saved tool is enabled on edit, and its patterns survive the wire -> UI -> wire trip.
+    expect(result.steps).toEqual([
+      expect.objectContaining({
+        operation: "/api/v1/security/auto-redact",
+        parameters: expect.objectContaining({ listOfText: "foo\nbar" }),
+      }),
+    ]);
+  });
+
+  it("preserves stored sources and unmodelled options on save", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry = editEntry([
+      { operation: "/api/v1/security/auto-redact", parameters: {} },
+    ]);
+    // A customised policy carries a stored source the wizard has no UI for and an editor-authored
+    // blob the codec doesn't model. A wizard save must round-trip both, not silently drop them.
+    entry.policy!.state.sources = ["src-contracts"];
+    entry.policy!.state.extraOptions = { automation: { name: "x" } };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(SAVE_CHANGES);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.sources).toEqual(["src-contracts"]);
+    expect(result.extraOptions).toEqual({ automation: { name: "x" } });
+  });
+
+  it("seeds the preset chain for a new policy (redact + sanitize on, watermark off)", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    const endpoints = result.steps.map((s) => s.operation);
+    expect(endpoints).toEqual([
+      "/api/v1/security/auto-redact",
+      "/api/v1/security/sanitize-pdf",
+    ]);
+    // Redact carries the preset PII patterns as the backend's listOfText.
+    const redact = result.steps[0].parameters as { listOfText?: string };
+    expect(redact.listOfText).toBeTruthy();
+  });
+
+  it("submits configured routing destinations without editor participation", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <SharedPolicySetupWizard
+        entry={routingEntry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        routingConfig={({ onChange }) => (
+          <button
+            onClick={() =>
+              onChange({
+                sourceId: "inbox",
+                trigger: { type: "folder-watch", options: {} },
+                outputIds: ["archive"],
+                routingRules: [
+                  {
+                    condition: {
+                      input: {
+                        source: "document",
+                        field: "classification.labels",
+                      },
+                      operator: "matches-any",
+                      values: ["invoice"],
+                    },
+                    outputId: "finance",
+                  },
+                ],
+              })
+            }
+          >
+            Configure routing
+          </button>
+        )}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Configure routing" }));
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.steps.map((step) => step.operation)).toEqual([
+      "/api/v1/ai/tools/classify-and-label",
+    ]);
+    const wire = buildWireFromSetup(routingEntry, result, t);
+    expect(wire.editor?.allowed).toBe(false);
+    expect(wire.inputs).toEqual([
+      { sourceId: "inbox", trigger: { type: "folder-watch", options: {} } },
+    ]);
+    expect(wire.outputIds).toEqual(["archive"]);
+    expect(wire.routingRules).toEqual([
+      {
+        condition: {
+          input: { source: "document", field: "classification.labels" },
+          operator: "matches-any",
+          values: ["invoice"],
+        },
+        outputId: "finance",
+      },
+    ]);
+  });
+
+  it("allows deterministic routing without AI or a classify step", async () => {
+    aiClassificationEnabled.value = false;
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <SharedPolicySetupWizard
+        entry={routingEntry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        routingConfig={({ onChange }) => (
+          <button
+            onClick={() =>
+              onChange({
+                sourceId: "inbox",
+                trigger: { type: "folder-watch", options: {} },
+                outputIds: ["archive"],
+                routingRules: [
+                  {
+                    condition: {
+                      input: {
+                        source: "document",
+                        field: "document.extension",
+                      },
+                      operator: "matches-any",
+                      values: ["pdf"],
+                    },
+                    outputId: "finance",
+                  },
+                ],
+              })
+            }
+          >
+            Configure deterministic routing
+          </button>
+        )}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Configure deterministic routing" }),
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.steps).toEqual([]);
+    // The deterministic condition reaches the wire unchanged - the backend's
+    // ConditionEvaluator reads any document.* field off DocumentFacts.
+    expect(buildWireFromSetup(routingEntry, result, t).routingRules).toEqual([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: ["pdf"],
+        },
+        outputId: "finance",
+      },
+    ]);
+  });
+
+  it("defaults a new security policy to enforcing on export", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.runOn).toBe("export");
+    expect(result.runsOnEditor).toBe(true);
+  });
+
+  it("locks the wizard for a non-manager", async () => {
+    // Only a manager (admin / team leader) may create or edit; a non-manager sees it read-only.
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: security,
+      config: securityConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        canManagePolicies={false}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.getByRole("switch", {
+        name: "processor.pipelines.enforce.label",
+      }),
+    ).toBeDisabled();
+    expect(await screen.findByRole("button", { name: ENABLE })).toBeDisabled();
+  });
+
+  it.each([
+    { categoryId: "security", required: true },
+    { categoryId: "classification", required: false },
+  ])(
+    "defaults $categoryId to required=$required",
+    async ({ categoryId, required }) => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const entry: CatalogueEntry = {
+        category: POLICY_CATEGORIES.find((c) => c.id === categoryId)!,
+        config: POLICY_CONFIG[categoryId],
+        policy: null,
+      };
+
+      render(
+        <PolicySetupWizard
+          entry={entry}
+          onClose={vi.fn()}
+          onSubmit={onSubmit}
+          onCustomise={vi.fn()}
+        />,
+      );
+      await submitWizard(ENABLE);
+
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+      expect(result.required).toBe(required);
+    },
+  );
+
+  it("seeds the compliance chain so the gate judges the delivered document", async () => {
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    const entry: CatalogueEntry = {
+      category: compliance,
+      config: complianceConfig,
+      policy: null,
+    };
+
+    render(
+      <PolicySetupWizard
+        entry={entry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        onCustomise={vi.fn()}
+      />,
+    );
+    expect(
+      await screen.findByText("Convert to PDF/A for archiving"),
+    ).toBeInTheDocument();
+    // PDF/UA is not offered: conforming needs per-figure alt text nothing in the product can
+    // supply, so a gate pointed at it would fail every run.
+    expect(screen.queryByText(/PDF\/UA/)).toBeNull();
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    // Flatten is absent: it rasterises pages, which would leave the archive without a text layer.
+    expect(result.steps.map((s) => s.operation)).toEqual([
+      "/api/v1/security/sanitize-pdf",
+      "/api/v1/convert/pdf/pdfa",
+      "/api/v1/security/validate-compliance",
+    ]);
+    // Both metadata streams go, but fonts stay - PDF/A needs them embedded.
+    expect(result.steps[0].parameters).toMatchObject({
+      removeMetadata: true,
+      removeXMPMetadata: true,
+      removeFonts: false,
+    });
+    expect(result.steps[1].parameters).toMatchObject({
+      outputFormat: "pdfa-2b",
+    });
+  });
+});

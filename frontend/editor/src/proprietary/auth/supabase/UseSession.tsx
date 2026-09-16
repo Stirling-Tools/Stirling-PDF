@@ -2,7 +2,7 @@
  * Basic Supabase-backed auth provider feeding the unified AuthContext.
  *
  * This is the portable provider used by the shared unified auth (e.g. the
- * portal in Supabase mode). It deliberately does NOT carry the editor saas
+ * processor in Supabase mode). It deliberately does NOT carry the editor saas
  * build's extras (pro status, profile pictures, teams) - those remain in the
  * editor's saas layer. It maps a Supabase session onto the provider-agnostic
  * AuthUser/AuthSession shapes and exposes the same useAuth() contract as the
@@ -142,8 +142,8 @@ export function SupabaseAuthProvider({
     };
   }, []);
 
-  // Enrich with backend truth: grant-based portal access and team leadership come from
-  // /api/v1/auth/me, not Supabase claims. Portal/Processor access is active-team-dependent on the
+  // Enrich with backend truth: grant-based processor access and team leadership come from
+  // /api/v1/auth/me, not Supabase claims. Processor access is active-team-dependent on the
   // backend, and a team switch made elsewhere doesn't change our session object - so besides the
   // initial load we re-validate whenever the tab regains focus, else a user whose access dropped
   // would keep seeing the Processor until a full reload. Best-effort; the isAdminRole fallback
@@ -168,7 +168,7 @@ export function SupabaseAuthProvider({
       })
         .then((res) => {
           // Must throw, not resolve null: swallowing a non-ok leaves
-          // portalAccess undefined and hangs the portal gate on a spinner.
+          // processorAccess undefined and hangs the portal gate on a spinner.
           if (!res.ok) throw new Error(`auth/me responded ${res.status}`);
           return res.json();
         })
@@ -176,7 +176,7 @@ export function SupabaseAuthProvider({
           (
             data: {
               user?: {
-                portalAccess?: boolean;
+                processorAccess?: boolean;
                 teamLead?: boolean;
                 orgOwner?: boolean;
               };
@@ -189,7 +189,7 @@ export function SupabaseAuthProvider({
                     ...prev,
                     user: {
                       ...prev.user,
-                      portalAccess: data.user?.portalAccess,
+                      processorAccess: data.user?.processorAccess,
                       teamLead: data.user?.teamLead,
                       orgOwner: data.user?.orgOwner,
                     },
@@ -199,18 +199,18 @@ export function SupabaseAuthProvider({
           },
         )
         .catch(() => {
-          // Backend unreachable or /me unsupported: resolve portalAccess to the role-based
+          // Backend unreachable or /me unsupported: resolve processorAccess to the role-based
           // fallback so gates awaiting it don't hang on a spinner. This deliberately ignores
           // grant-based access (a non-admin grant-holder is denied while /me is down) - grants
           // can't be known without /me, so we fail safe; a later focus refetch recovers it.
           if (cancelled) return;
           setSession((prev) =>
-            prev && prev.user.portalAccess === undefined
+            prev && prev.user.processorAccess === undefined
               ? {
                   ...prev,
                   user: {
                     ...prev.user,
-                    portalAccess: isAdminRole(prev.user.role),
+                    processorAccess: isAdminRole(prev.user.role),
                   },
                 }
               : prev,
@@ -235,7 +235,7 @@ export function SupabaseAuthProvider({
     displayName: deriveDisplayName(user, translate),
     isAnonymous: user?.is_anonymous === true,
     isAdmin: isAdminRole(user?.role),
-    portalAccess: user?.portalAccess ?? isAdminRole(user?.role),
+    processorAccess: user?.processorAccess ?? isAdminRole(user?.role),
     role: user?.role ?? null,
     loading,
     error,

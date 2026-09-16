@@ -36,8 +36,8 @@ import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
 import stirling.software.proprietary.util.SecretMasker;
 
 /**
- * CRUD for persisted, reusable input connections plus the Sources overview for the admin portal. A
- * source is configured once here and referenced by id from any number of policies; the overview
+ * CRUD for persisted, reusable input connections plus the Sources overview for the admin processor.
+ * A source is configured once here and referenced by id from any number of policies; the overview
  * reports how many reference each one. Editing follows the same team-leader rule as policies, and
  * everything is scoped to the caller's team.
  */
@@ -50,7 +50,7 @@ public class SourceController {
 
     /**
      * Machine-readable marker on the error body when a folder source is rejected for pointing
-     * outside the allowed roots. The admin portal keys off this to offer a link straight to the
+     * outside the allowed roots. The admin processor keys off this to offer a link straight to the
      * Folder Access settings rather than only showing the message.
      */
     public static final String FOLDER_ACCESS_DENIED_CODE = "folderAccessDenied";
@@ -125,7 +125,8 @@ public class SourceController {
         try {
             validateConfig(owned);
         } catch (FolderAccessDeniedException e) {
-            // Surfaced with a machine-readable code by handleFolderAccessDenied so the portal can
+            // Surfaced with a machine-readable code by handleFolderAccessDenied so the processor
+            // can
             // link to the Folder Access settings; don't flatten it into a plain 400 here.
             throw e;
         } catch (IllegalArgumentException e) {
@@ -166,7 +167,7 @@ public class SourceController {
 
     /**
      * A folder source was rejected for pointing outside the allowed roots. Return a 400 carrying
-     * {@link #FOLDER_ACCESS_DENIED_CODE} so the portal can offer a link to the Folder Access
+     * {@link #FOLDER_ACCESS_DENIED_CODE} so the processor can offer a link to the Folder Access
      * settings, while other guard rejections (SaaS mode, the protected config dir) fall through to
      * the global handler as plain 400s the admin can't fix by editing the allowlist.
      */

@@ -182,7 +182,7 @@ test.describe("Super search — user without Processor access", () => {
         username: "bob",
         email: "bob@example.com",
         role: "ROLE_USER",
-        portalAccess: false,
+        processorAccess: false,
       },
     },
     seedJwt: true,
@@ -258,7 +258,7 @@ test.describe("Super search — portal access without admin", () => {
         username: "owner",
         email: "owner@example.com",
         role: "ROLE_USER",
-        portalAccess: true,
+        processorAccess: true,
       },
     },
     seedJwt: true,
@@ -285,10 +285,10 @@ test.describe("Super search — portal access without admin", () => {
     }
 
     const input = await openSearch(page);
-    const portalShips =
+    const processorShips =
       (await page.getByRole("button", { name: "Pages", exact: true }).count()) >
       0;
-    test.skip(!portalShips, "this build ships no portal — no lanes to gate");
+    test.skip(!processorShips, "this build ships no portal — no lanes to gate");
 
     for (const lane of ["Policies", "Pipelines", "Sources"]) {
       await expect(
@@ -317,7 +317,7 @@ test.describe("Super search — admin with Processor access", () => {
         username: "admin",
         email: "admin@example.com",
         role: "ROLE_ADMIN",
-        portalAccess: true,
+        processorAccess: true,
       },
     },
     seedJwt: true,
@@ -345,11 +345,11 @@ test.describe("Super search — admin with Processor access", () => {
     await openSearch(page);
 
     // The Processor lanes only exist in builds that ship the portal (dev,
-    // VITE_INCLUDE_PORTAL) — the CI preview build has none to show.
-    const portalShips =
+    // VITE_INCLUDE_PROCESSOR) — the CI preview build has none to show.
+    const processorShips =
       (await page.getByRole("button", { name: "Pages", exact: true }).count()) >
       0;
-    test.skip(!portalShips, "this build ships no portal — no lanes to gate");
+    test.skip(!processorShips, "this build ships no portal — no lanes to gate");
 
     for (const lane of ["Users", "Policies", "Pipelines", "Sources"]) {
       await expect(
@@ -380,7 +380,7 @@ test.describe("Portal bar — tool results hop into the editor", () => {
         username: "admin",
         email: "admin@example.com",
         role: "ROLE_ADMIN",
-        portalAccess: true,
+        processorAccess: true,
       },
     },
     seedJwt: true,
@@ -401,15 +401,18 @@ test.describe("Portal bar — tool results hop into the editor", () => {
     }
 
     await page.goto("/processor");
-    const input = page.locator("#portal-search-input");
-    // The portal only ships in dev / VITE_INCLUDE_PORTAL builds — on the CI
+    const input = page.locator("#processor-search-input");
+    // The portal only ships in dev / VITE_INCLUDE_PROCESSOR builds — on the CI
     // preview build /processor falls through to the editor and there is no
     // portal bar to hop from.
-    const portalShips = await input
+    const processorShips = await input
       .waitFor({ state: "visible", timeout: 20000 })
       .then(() => true)
       .catch(() => false);
-    test.skip(!portalShips, "this build ships no portal — no bar to hop from");
+    test.skip(
+      !processorShips,
+      "this build ships no portal — no bar to hop from",
+    );
 
     // A full page load would drop this marker — and on bundled deploys it
     // would also 401: document GETs carry no Authorization header, so the

@@ -2,7 +2,7 @@ import {
   SETTINGS_SECTION_REGISTRY as CORE_SETTINGS_SECTION_REGISTRY,
   type SettingsSectionEntry,
 } from "@core/data/settingsSectionRegistry";
-import { HAS_PORTAL } from "@app/routes/hasPortal";
+import { HAS_PROCESSOR } from "@app/routes/hasProcessor";
 
 export type { SettingsSectionEntry };
 
@@ -179,11 +179,11 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
   // --- Workspace (moved off the processor's own nav). Present only where the
   // nav can actually show them: a processor build, and a session that can
   // enter it. ---
-  ...(HAS_PORTAL
+  ...(HAS_PROCESSOR
     ? ([
         {
           key: "users",
-          labelKey: "portal.nav.users",
+          labelKey: "processor.nav.users",
           labelFallback: "Users",
           keywords: [
             "users",
@@ -195,13 +195,13 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
             "processor access",
           ],
           adminArea: true,
-          requiresPortalAccess: true,
+          requiresProcessorAccess: true,
           groupLabelKey: "settings.workspace.title",
           groupLabelFallback: "Workspace",
         },
         {
           key: "billing",
-          labelKey: "portal.nav.usage",
+          labelKey: "processor.nav.usage",
           labelFallback: "Usage & Billing",
           keywords: [
             "billing",
@@ -212,7 +212,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
             "payg",
           ],
           adminArea: true,
-          requiresPortalAccess: true,
+          requiresProcessorAccess: true,
           groupLabelKey: "settings.workspace.title",
           groupLabelFallback: "Workspace",
         },

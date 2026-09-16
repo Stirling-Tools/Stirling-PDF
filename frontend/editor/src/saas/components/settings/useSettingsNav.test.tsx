@@ -4,7 +4,7 @@ import { renderHook } from "@testing-library/react";
 const state = vi.hoisted(() => ({
   owner: true,
   loading: false,
-  portalAccess: false,
+  processorAccess: false,
 }));
 
 vi.mock("@app/auth/UseSession", () => ({
@@ -13,8 +13,11 @@ vi.mock("@app/auth/UseSession", () => ({
 vi.mock("@app/contexts/SaaSTeamContext", () => ({
   useSaaSTeam: () => ({ isTeamLeader: state.owner, loading: state.loading }),
 }));
-vi.mock("@app/hooks/usePortalAccess", () => ({
-  usePortalAccessState: () => ({ granted: state.portalAccess, settled: true }),
+vi.mock("@app/hooks/useProcessorAccess", () => ({
+  useProcessorAccessState: () => ({
+    granted: state.processorAccess,
+    settled: true,
+  }),
 }));
 vi.mock("@app/auth/supabase", () => ({ isUserAnonymous: () => false }));
 vi.mock("@app/components/shared/config/configSections/Overview", () => ({
@@ -23,8 +26,8 @@ vi.mock("@app/components/shared/config/configSections/Overview", () => ({
 vi.mock("@app/components/shared/config/saasConfigNavSections", () => ({
   createSaasConfigNavSections: () => [],
 }));
-vi.mock("@app/components/settings/portalSettingsNav", () => ({
-  buildPortalSettingsSections: () => [
+vi.mock("@app/components/settings/processorSettingsNav", () => ({
+  buildProcessorSettingsSections: () => [
     {
       id: "workspace",
       title: "Workspace",
@@ -48,13 +51,13 @@ describe("Connected instances settings navigation", () => {
   beforeEach(() => {
     state.owner = true;
     state.loading = false;
-    state.portalAccess = false;
+    state.processorAccess = false;
   });
 
   it.each([false, true])(
     "offers management to owners with Processor access = %s",
-    (portalAccess) => {
-      state.portalAccess = portalAccess;
+    (processorAccess) => {
+      state.processorAccess = processorAccess;
       const { result } = renderHook(() => useSettingsNav(vi.fn()));
       expect(
         result.current.sections

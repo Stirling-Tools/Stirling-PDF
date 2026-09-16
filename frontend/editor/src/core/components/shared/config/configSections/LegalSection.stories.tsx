@@ -3,7 +3,7 @@ import LegalSection from "@app/components/shared/config/configSections/LegalSect
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 
 // Reads legal document links and the analytics flag via useAppConfig() (the
-// preview's own provider tree doesn't supply this — that's the portal
+// preview's own provider tree doesn't supply this — that's the processor
 // context), so wrap here. AppConfigProvider uses autoFetch off so stories
 // render a fixed config instead of hitting the API.
 const meta = {

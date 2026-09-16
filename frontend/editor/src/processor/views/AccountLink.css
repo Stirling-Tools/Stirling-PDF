@@ -1,0 +1,68 @@
+.processor-link__card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.processor-link__card-head,
+.processor-link__account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.processor-link__connect {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.processor-link__account-row > button {
+  margin-left: auto;
+}
+
+.processor-link__account-row p {
+  margin: 0;
+  min-width: 0;
+  flex: 1 1 18rem;
+}
+
+.processor-link__section-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processor-link__account {
+  overflow-wrap: anywhere;
+}
+
+.processor-link__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  color: var(--c-text-subtle);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.processor-link__account strong {
+  color: var(--c-text);
+  font-weight: 600;
+}
+
+.processor-link__section-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--c-text);
+}
+
+.processor-link__skeleton {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}

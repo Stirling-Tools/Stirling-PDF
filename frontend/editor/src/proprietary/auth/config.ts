@@ -8,7 +8,7 @@
  * - Editor: injects its `@app/services/apiClient` plus a platform bridge built
  *   from its per-flavor `@app/extensions/*` seams, so desktop/saas behaviour is
  *   unchanged.
- * - Portal: relies on the web defaults below (same-origin transport + no-op
+ * - Processor: relies on the web defaults below (same-origin transport + no-op
  *   platform bridge).
  */
 import type { AxiosInstance } from "axios";

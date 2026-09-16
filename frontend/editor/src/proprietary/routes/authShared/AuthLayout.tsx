@@ -7,7 +7,7 @@ interface AuthLayoutProps {
 }
 
 /**
- * Editor login layout. The card shell lives in shared so the portal renders
+ * Editor login layout. The card shell lives in shared so the processor renders
  * the identical screen; this wires the editor's legal/cookie footer into it.
  */
 export default function AuthLayout({ children }: AuthLayoutProps) {

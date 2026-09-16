@@ -7,7 +7,7 @@
         "../../src/proprietary/*",
         "../../src/core/*"
       ],
-      "@portal/*": ["../../src/portal/*"],
+      "@processor/*": ["../../src/processor/*"],
       "@cloud/*": ["../../src/cloud/*"],
       "@proprietary/*": ["../../src/proprietary/*"],
       "@core/*": ["../../src/core/*"]

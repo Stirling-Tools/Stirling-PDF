@@ -62,7 +62,7 @@ export function ConnectedInstanceRow({
         <div className="account-connection__name">
           <h3>
             {instance.name ??
-              t("portal.accountLink.instances.unnamed", "Unnamed instance")}
+              t("processor.accountLink.instances.unnamed", "Unnamed instance")}
           </h3>
           {onRename && (
             <Button

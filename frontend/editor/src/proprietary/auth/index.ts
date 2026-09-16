@@ -1,5 +1,5 @@
 /**
- * Shared, provider-agnostic auth used by both the editor and the portal.
+ * Shared, provider-agnostic auth used by both the editor and the processor.
  *
  * Hosts configure a backend once at startup:
  * - Spring:   configureSpringAuth({ http, basePath, platform }) then render
@@ -26,9 +26,9 @@ export {
   type RequireAdminProps,
 } from "@app/auth/guards/RequireAdmin";
 export {
-  RequirePortalAccess,
-  type RequirePortalAccessProps,
-} from "@app/auth/guards/RequirePortalAccess";
+  RequireProcessorAccess,
+  type RequireProcessorAccessProps,
+} from "@app/auth/guards/RequireProcessorAccess";
 
 // Spring backend
 export {
@@ -66,7 +66,7 @@ export {
 export type { OAuthProvider } from "@app/auth/spring/oauthTypes";
 
 // Supabase backend is intentionally NOT re-exported here: doing so would pull
-// @supabase/supabase-js into every barrel consumer (e.g. the portal in Spring
+// @supabase/supabase-js into every barrel consumer (e.g. the processor in Spring
 // mode). Supabase-mode hosts import directly from the subpath:
 //   import { configureSupabase } from "@app/auth/supabase/supabaseClient";
 // The unified <AuthProvider mode="supabase"> lazy-loads the provider on demand.

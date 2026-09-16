@@ -27,7 +27,7 @@ vi.mock("@app/contexts/file/fileHooks", () => ({
 
 vi.mock("@app/auth/UseSession", () => ({
   useAuth: vi.fn(() => ({
-    portalAccess: false,
+    processorAccess: false,
     isAdmin: false,
     role: null,
   })),
@@ -276,7 +276,7 @@ describe("useSuperSearch helpers", () => {
       {
         isAdmin: false,
         loginEnabled: true,
-        portalAccessible: true,
+        processorAccessible: true,
       },
       vi.fn(),
     );

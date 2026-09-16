@@ -1,0 +1,116 @@
+.processor-policies__wizard-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.processor-policies__wizard-foot {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+.processor-policies__wizard-banner {
+  margin-top: 0.75rem;
+}
+
+.processor-policies__wizard-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  margin-top: 1rem;
+}
+
+.processor-policies__wizard-desc {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--c-text-subtle);
+}
+
+.processor-policies__wizard-heading {
+  margin: 0.75rem 0 0;
+  font-size: 0.6875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--c-text-subtle);
+  font-weight: 600;
+}
+
+/* "Enforce as policy" — the last choice in the simple wizard, set off from the settings above. */
+.processor-policies__wizard-enforce {
+  margin-top: 0.75rem;
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--c-border-subtle);
+}
+
+.processor-policies__fields {
+  display: flex;
+  flex-direction: column;
+  gap: 0.875rem;
+}
+
+.processor-policies__toggle-row {
+  padding: 0.25rem 0;
+}
+
+.processor-policies__field-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+/* Workflow step — policy capability settings list.
+ * Rows read as the policy's own settings (label + plain description + toggle),
+ * not a chain of distinct tools. Config reveals inline beneath an enabled row. */
+.processor-policies__capabilities {
+  display: flex;
+  flex-direction: column;
+}
+
+.processor-policies__capability {
+  padding: 0.75rem 0.875rem;
+}
+
+.processor-policies__capability + .processor-policies__capability {
+  border-top: 1px solid var(--c-border);
+}
+
+/* An enabled row with config gets a faint tint so the revealed settings read as
+ * belonging to it. */
+.processor-policies__capability[data-on]
+  .processor-policies__capability-config {
+  border-top: 1px dashed var(--c-border);
+  padding-top: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* A capability's revealed settings. Neither FormField nor SettingsRow carries an
+ * outer margin, so without this the controls butt straight into each other. */
+.processor-policies__capability-config,
+.processor-policies__capability-settings {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.processor-policies__link {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--c-accent-text);
+  cursor: pointer;
+}
+
+/* Output filename row */
+.processor-policies__name-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.processor-policies__name-row .sui-input {
+  flex: 1;
+}

@@ -13,9 +13,9 @@ import stirling.software.common.model.ApplicationProperties;
  * Refuses a network source whose host resolves to a loopback, link-local, or private address,
  * unless the operator opts in via {@code policies.allowPrivateNetworkSources} (every host) or names
  * the host in {@code policies.allowedPrivateNetworkHosts} (that host only, for shared infra). The
- * host comes from a portal user, so without this a connection could be aimed at internal services
- * (the cloud metadata address, an admin panel). Mirrors the S3 endpoint guard; enforced both at
- * save time and before every connect.
+ * host comes from a processor user, so without this a connection could be aimed at internal
+ * services (the cloud metadata address, an admin panel). Mirrors the S3 endpoint guard; enforced
+ * both at save time and before every connect.
  */
 @Component
 @RequiredArgsConstructor

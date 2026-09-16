@@ -48,7 +48,7 @@ export const VALID_NAV_KEYS = [
   "payg",
   "account-link",
   // Server administration moved off the processor's own nav (see
-  // portalSettingsSections).
+  // processorSettingsSections).
   "users",
   "billing",
   "audit",

@@ -31,9 +31,9 @@ export function TeamPlanRow({
     const users = serverPlan.usersInUse;
     return (
       <MeterRow
-        name={t("portal.billing.team.rowName", "Users")}
+        name={t("processor.billing.team.rowName", "Users")}
         mid={t(
-          "portal.billing.serverPlan.included",
+          "processor.billing.serverPlan.included",
           "Included with your license",
         )}
         tone="paid"
@@ -45,17 +45,17 @@ export function TeamPlanRow({
         }
         fact={
           unlimited
-            ? t("portal.billing.serverPlan.unlimited", "Unlimited users")
+            ? t("processor.billing.serverPlan.unlimited", "Unlimited users")
             : users == null
               ? t(
-                  "portal.billing.serverPlan.seats",
+                  "processor.billing.serverPlan.seats",
                   "{{seats}} licensed seats",
                   {
                     seats: serverPlan.maxUsers.toLocaleString(),
                   },
                 )
               : t(
-                  "portal.billing.team.fact",
+                  "processor.billing.team.fact",
                   "{{users}} of {{licensed}} users",
                   {
                     users: users.toLocaleString(),
@@ -73,18 +73,18 @@ export function TeamPlanRow({
   const mid = !held
     ? selfHosted
       ? t(
-          "portal.billing.team.midFreeSelfHosted",
+          "processor.billing.team.midFreeSelfHosted",
           "The free tier covers your first users",
         )
-      : t("portal.billing.team.midFree", "The Team plan covers 100 users")
+      : t("processor.billing.team.midFree", "The Team plan covers 100 users")
     : processorActive
-      ? t("portal.billing.team.midIncluded", "Included with your Team base")
-      : t("portal.billing.team.midPrice", "$99/mo per 100 users");
+      ? t("processor.billing.team.midIncluded", "Included with your Team base")
+      : t("processor.billing.team.midPrice", "$99/mo per 100 users");
 
   const door = onAddCapacity
-    ? t("portal.billing.team.addCapacity", "Add capacity")
+    ? t("processor.billing.team.addCapacity", "Add capacity")
     : undefined;
-  const name = t("portal.billing.team.rowName", "Users");
+  const name = t("processor.billing.team.rowName", "Users");
 
   // One number in charge at a time: the server's free allowance until a plan is held, the
   // plan's own limit after.
@@ -100,7 +100,7 @@ export function TeamPlanRow({
         mid={mid}
         showTrack={false}
         tone={held ? "paid" : "free"}
-        fact={t("portal.billing.team.factNoLimit", "{{users}} users", {
+        fact={t("processor.billing.team.factNoLimit", "{{users}} users", {
           users: usersInUse.toLocaleString(),
         })}
         door={door}
@@ -119,10 +119,14 @@ export function TeamPlanRow({
       mid={mid}
       pct={pct}
       tone={tone}
-      fact={t("portal.billing.team.fact", "{{users}} of {{licensed}} users", {
-        users: usersInUse.toLocaleString(),
-        licensed: limit.toLocaleString(),
-      })}
+      fact={t(
+        "processor.billing.team.fact",
+        "{{users}} of {{licensed}} users",
+        {
+          users: usersInUse.toLocaleString(),
+          licensed: limit.toLocaleString(),
+        },
+      )}
       door={door}
       onDoor={onAddCapacity}
     />

@@ -29,9 +29,9 @@ import stirling.software.proprietary.security.model.User;
 @RestController
 @RequestMapping("/api/v1/integrations")
 @RequiredArgsConstructor
-// Portal-exclusive: server-side portal-access boundary, not just isAuthenticated. Per-config
+// Processor-exclusive: server-side processor-access boundary, not just isAuthenticated. Per-config
 // ownership is still enforced in the service layer.
-@PreAuthorize("@resourceAccess.canUsePortal()")
+@PreAuthorize("@resourceAccess.canUseProcessor()")
 @Tag(name = "Integrations", description = "Manage S3/MCP/API integration configurations")
 public class IntegrationConfigController {
 

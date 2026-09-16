@@ -15,7 +15,7 @@ import { useAuth } from "@app/auth/UseSession";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
-import { usePortalAccess } from "@app/hooks/usePortalAccess";
+import { useProcessorAccess } from "@app/hooks/useProcessorAccess";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { fileStorage } from "@app/services/fileStorage";
@@ -40,7 +40,7 @@ import {
 } from "@app/data/settingsContentSearch";
 import {
   PROCESSOR_SEARCH_INDEX,
-  isPortalEntityScopeAccessible,
+  isProcessorEntityScopeAccessible,
   type ProcessorSearchEntry,
 } from "@app/data/processorSearchIndex";
 import { useProcessorEntityGroups } from "@app/data/processorEntitySearch";
@@ -90,7 +90,7 @@ const GROUP_ORDER: SuperSearchGroupId[] = [
 export function isProcessorGateOpen(gates: SuperSearchGates | null): boolean {
   return (
     !!gates &&
-    (gates.portalAccessible === true || gates.isAdmin || !gates.loginEnabled)
+    (gates.processorAccessible === true || gates.isAdmin || !gates.loginEnabled)
   );
 }
 
@@ -100,19 +100,19 @@ export function useSuperSearchGates(): SuperSearchGates | null {
   const { config } = useAppConfig();
   // Through the seam, not authState: on SaaS the editor's Supabase session
   // carries no permission flags, so reading it here hid every processor lane.
-  const portalAccessible = usePortalAccess();
+  const processorAccessible = useProcessorAccess();
   return useMemo(
     () =>
       config
         ? {
             isAdmin: authState.isAdmin ?? config.isAdmin ?? false,
             loginEnabled: config.enableLogin ?? false,
-            portalAccessible,
+            processorAccessible,
             isAnonymous: authState.isAnonymous,
             showSettingsWhenNoLogin: config.showSettingsWhenNoLogin ?? true,
           }
         : null,
-    [authState.isAdmin, authState.isAnonymous, portalAccessible, config],
+    [authState.isAdmin, authState.isAnonymous, processorAccessible, config],
   );
 }
 
@@ -159,7 +159,10 @@ export function useEditorSearchScopes(): SuperSearchScope[] {
                 // A settings-hosted entity is reachable wherever the processor is.
                 (def.settingsKey !== undefined ||
                   visibleViewIds.has(def.viewId)) &&
-                isPortalEntityScopeAccessible(def.id, gates?.isAdmin ?? false),
+                isProcessorEntityScopeAccessible(
+                  def.id,
+                  gates?.isAdmin ?? false,
+                ),
             ).map((def) => ({
               id: def.id,
               label: t(def.labelKey, def.labelFallback),
@@ -329,8 +332,8 @@ export function rankSettingsResults(
     // Account-bound sections mirror the SaaS builder's `!isAnonymous` gate.
     if (s.requiresAccount && (gates ? (gates.isAnonymous ?? false) : true))
       return false;
-    // The processor's own sections mirror its nav builder's portalAccess gate.
-    if (s.requiresPortalAccess && gates?.portalAccessible !== true)
+    // The processor's own sections mirror its nav builder's processorAccess gate.
+    if (s.requiresProcessorAccess && gates?.processorAccessible !== true)
       return false;
     return true;
   });
@@ -632,7 +635,7 @@ export function useSuperSearch(
       if (groupId === "processor") return processorSection;
       if (groupId === "settings")
         return t("superSearch.group.settings", "Settings");
-      return t("portal.nav.editor", "Editor");
+      return t("processor.nav.editor", "Editor");
     };
     return [
       ...assembledGroups.map((group) => ({

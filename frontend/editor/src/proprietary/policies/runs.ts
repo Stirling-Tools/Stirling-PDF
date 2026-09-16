@@ -1,6 +1,6 @@
 /**
  * Derives display data from raw backend `PolicyRunView` records. The backend
- * `GET /api/v1/policies/runs` endpoint returns these; both the portal and
+ * `GET /api/v1/policies/runs` endpoint returns these; both the processor and
  * (eventually) the editor read this same derivation rather than duplicating it.
  */
 

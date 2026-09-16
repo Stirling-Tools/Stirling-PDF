@@ -6,7 +6,7 @@ import { InvoiceRow } from "@app/billing/InvoiceRow";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
-import { ServerLicenseSection } from "@portal/components/billing/ServerLicenseSection";
+import { ServerLicenseSection } from "@processor/components/billing/ServerLicenseSection";
 import { http, HttpResponse } from "msw";
 
 const meta: Meta<typeof BillingScreen> = {

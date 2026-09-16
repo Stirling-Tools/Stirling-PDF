@@ -38,7 +38,7 @@ export function PipelineTemplateCard({
       onSelect={() => onOpen(entry)}
       cta={
         <>
-          {t("portal.pipelines.templates.setUp")}
+          {t("processor.pipelines.templates.setUp")}
           <Icon name="arrow-right" size={"1rem"} />
         </>
       }
@@ -46,8 +46,8 @@ export function PipelineTemplateCard({
         <>
           <Icon name="lock" size={"0.95rem"} />
           {comingSoon
-            ? t("portal.policies.card.comingSoon")
-            : (lockedLabel ?? t("portal.policies.card.requiresAiEngine"))}
+            ? t("processor.policies.card.comingSoon")
+            : (lockedLabel ?? t("processor.policies.card.requiresAiEngine"))}
         </>
       }
     />

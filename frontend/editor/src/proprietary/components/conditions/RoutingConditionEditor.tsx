@@ -36,11 +36,11 @@ export function RoutingConditionEditor({
       value: DOCUMENT_FIELDS[0],
       label: classificationAvailable
         ? t(
-            "portal.pipelines.builder.routing.matchDocumentType",
+            "processor.pipelines.builder.routing.matchDocumentType",
             "Document type (AI classification)",
           )
         : t(
-            "portal.pipelines.builder.routing.matchDocumentTypeDisabled",
+            "processor.pipelines.builder.routing.matchDocumentTypeDisabled",
             "Document type (AI unavailable)",
           ),
       disabled: !classificationAvailable,
@@ -48,24 +48,24 @@ export function RoutingConditionEditor({
     {
       value: DOCUMENT_FIELDS[1],
       label: t(
-        "portal.pipelines.builder.routing.matchExtension",
+        "processor.pipelines.builder.routing.matchExtension",
         "File extension",
       ),
     },
     {
       value: DOCUMENT_FIELDS[2],
       label: t(
-        "portal.pipelines.builder.routing.matchFilename",
+        "processor.pipelines.builder.routing.matchFilename",
         "Exact filename",
       ),
     },
     {
       value: DOCUMENT_FIELDS[3],
-      label: t("portal.pipelines.builder.routing.matchTitle", "PDF title"),
+      label: t("processor.pipelines.builder.routing.matchTitle", "PDF title"),
     },
     {
       value: DOCUMENT_FIELDS[4],
-      label: t("portal.pipelines.builder.routing.matchAuthor", "PDF author"),
+      label: t("processor.pipelines.builder.routing.matchAuthor", "PDF author"),
     },
   ];
 
@@ -82,7 +82,10 @@ export function RoutingConditionEditor({
     <div className="portal-routing__condition">
       <Select
         inputSize="sm"
-        aria-label={t("portal.pipelines.builder.routing.matchBy", "Match by")}
+        aria-label={t(
+          "processor.pipelines.builder.routing.matchBy",
+          "Match by",
+        )}
         value={field}
         onChange={changeField}
         options={options}
@@ -98,17 +101,17 @@ export function RoutingConditionEditor({
         <Input
           inputSize="sm"
           aria-label={t(
-            "portal.pipelines.builder.routing.matchValues",
+            "processor.pipelines.builder.routing.matchValues",
             "Values to match",
           )}
           placeholder={
             field === "document.extension"
               ? t(
-                  "portal.pipelines.builder.routing.extensionPlaceholder",
+                  "processor.pipelines.builder.routing.extensionPlaceholder",
                   "pdf, docx, png",
                 )
               : t(
-                  "portal.pipelines.builder.routing.valuePlaceholder",
+                  "processor.pipelines.builder.routing.valuePlaceholder",
                   "Enter exact values, separated by commas",
                 )
           }

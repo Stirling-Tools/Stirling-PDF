@@ -50,7 +50,7 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
       setSelected(null);
       setRemovedName(
         instance.name ??
-          t("portal.accountLink.instances.unnamed", "Unnamed instance"),
+          t("processor.accountLink.instances.unnamed", "Unnamed instance"),
       );
       void queryClient.invalidateQueries({ queryKey });
     },
@@ -197,7 +197,7 @@ function InstanceList({ userId, teamId }: { userId: string; teamId: number }) {
           {
             name:
               selected?.name ??
-              t("portal.accountLink.instances.unnamed", "Unnamed instance"),
+              t("processor.accountLink.instances.unnamed", "Unnamed instance"),
           },
         )}
         disableBackdropClose={removal.isPending}

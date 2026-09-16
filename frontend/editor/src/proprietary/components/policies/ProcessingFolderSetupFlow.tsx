@@ -29,7 +29,7 @@ import {
   type ProcessingFolderTarget,
 } from "@app/components/policies/processingFolderSetup";
 import { ProcessingFolderWizard } from "@app/components/policies/ProcessingFolderWizard";
-import { PORTAL_BASENAME } from "@app/routes/portalBasename";
+import { PROCESSOR_BASENAME } from "@app/routes/processorBasename";
 import apiClient from "@app/services/apiClient";
 import { assemblePolicies } from "@app/policies/overview";
 import type { WirePolicy } from "@app/policies/types";
@@ -169,7 +169,7 @@ export function ProcessingFolderSetupFlow({
       destinationsError={sources.error}
       onCreateDestination={() => {
         onClose();
-        navigate(`${PORTAL_BASENAME}/sources/new`);
+        navigate(`${PROCESSOR_BASENAME}/sources/new`);
       }}
       folders={folders.folders}
       loading={folders.loading || processing.loading || presets.loading}

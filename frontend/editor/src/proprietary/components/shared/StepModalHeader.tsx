@@ -48,38 +48,38 @@ export function StepModalHeader({
   const showSteps = step != null && total != null && total > 0;
 
   return (
-    <div className={`portal-stepmodal__head ${className ?? ""}`.trim()}>
-      <div className="portal-stepmodal__head-top">
+    <div className={`processor-stepmodal__head ${className ?? ""}`.trim()}>
+      <div className="processor-stepmodal__head-top">
         {brand ? (
-          <div className="portal-stepmodal__brand">
+          <div className="processor-stepmodal__brand">
             {/* `wordmark`, not `wordmark-light-only`: theme.css hides the former in dark mode and
                 has no rule for the latter, so both used to render at once. */}
             <img
               src={wordmarkLight}
               alt="Stirling"
-              className="portal-stepmodal__wordmark wordmark"
+              className="processor-stepmodal__wordmark wordmark"
             />
             <img
               src={wordmarkDark}
               alt=""
               aria-hidden
-              className="portal-stepmodal__wordmark wordmark-dark-only"
+              className="processor-stepmodal__wordmark wordmark-dark-only"
             />
           </div>
         ) : title ? (
-          <div className="portal-stepmodal__ident">
-            <h3 className="portal-stepmodal__flow-title">{title}</h3>
+          <div className="processor-stepmodal__ident">
+            <h3 className="processor-stepmodal__flow-title">{title}</h3>
             {subtitle && (
-              <p className="portal-stepmodal__flow-sub">{subtitle}</p>
+              <p className="processor-stepmodal__flow-sub">{subtitle}</p>
             )}
           </div>
         ) : (
           <span />
         )}
-        <div className="portal-stepmodal__head-right">
+        <div className="processor-stepmodal__head-right">
           {aside}
           {stepLabel && (
-            <span className="portal-stepmodal__step">{stepLabel}</span>
+            <span className="processor-stepmodal__step">{stepLabel}</span>
           )}
           {onClose && (
             <Button
@@ -88,7 +88,7 @@ export function StepModalHeader({
               size="sm"
               shape="circle"
               onClick={onClose}
-              aria-label={closeLabel ?? t("portal.stepModal.close", "Close")}
+              aria-label={closeLabel ?? t("processor.stepModal.close", "Close")}
               leftSection={
                 <svg
                   viewBox="0 0 24 24"
@@ -111,7 +111,7 @@ export function StepModalHeader({
       </div>
 
       {showSteps && (
-        <div className="portal-stepmodal__progress" aria-hidden>
+        <div className="processor-stepmodal__progress" aria-hidden>
           {Array.from({ length: total }, (_, i) => (
             <span key={i} className={i < step ? "is-filled" : ""} />
           ))}
@@ -120,7 +120,7 @@ export function StepModalHeader({
 
       {/* With the wordmark up top the step title carries the heading; without it the flow title
           already did, so repeating it here would say the same thing twice. */}
-      {brand && <div className="portal-stepmodal__title">{title}</div>}
+      {brand && <div className="processor-stepmodal__title">{title}</div>}
     </div>
   );
 }

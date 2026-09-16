@@ -4,7 +4,7 @@ const admin = {
   id: 1,
   username: "admin",
   role: "ROLE_ADMIN",
-  portalAccess: true,
+  processorAccess: true,
 };
 
 test.use({

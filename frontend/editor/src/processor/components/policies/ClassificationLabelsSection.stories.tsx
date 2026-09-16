@@ -1,0 +1,12 @@
+import type { Meta, StoryObj } from "@storybook/react-vite";
+import { ClassificationLabelsSection } from "@processor/components/policies/ClassificationLabelsSection";
+
+const meta: Meta<typeof ClassificationLabelsSection> = {
+  title: "Processor/Policies/ClassificationLabelsSection",
+  component: ClassificationLabelsSection,
+  parameters: { layout: "padded" },
+};
+export default meta;
+type Story = StoryObj<typeof ClassificationLabelsSection>;
+
+export const Default: Story = {};

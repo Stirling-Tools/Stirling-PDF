@@ -22,7 +22,7 @@ export const PROCESSOR_SEARCH_INDEX: ProcessorSearchEntry[] = [];
 
 /** No portal → no entity scopes; trivially accessible. Real logic lives in
  * the proprietary shadow, keyed on the flavor's users capabilities. */
-export function isPortalEntityScopeAccessible(
+export function isProcessorEntityScopeAccessible(
   _scopeId: string,
   _isAdmin: boolean,
 ): boolean {

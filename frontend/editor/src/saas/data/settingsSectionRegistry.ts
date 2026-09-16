@@ -69,7 +69,7 @@ export const SETTINGS_SECTION_REGISTRY: SettingsSectionEntry[] = [
     labelKey: "settings.licensingAnalytics.audit",
     labelFallback: "Audit log",
     keywords: ["audit", "logs", "events", "history"],
-    requiresPortalAccess: true,
+    requiresProcessorAccess: true,
     groupLabelKey: "settings.securityAuth.title",
     groupLabelFallback: "Security & sign-in",
   },

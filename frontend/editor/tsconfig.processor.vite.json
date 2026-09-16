@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "comment": "Path resolution for the processor's vitest project (referenced by vitest.config.ts). Broad include ('src', via the base) so vite-tsconfig-paths rewrites @app/* in every editor/src file the processor tests pull in (e.g. core/ui), not just the processor layer. The processor's own typecheck uses src/processor/tsconfig.json.",
+  "compilerOptions": {
+    "paths": {
+      "@app/*": ["./src/cloud/*", "./src/proprietary/*", "./src/core/*"],
+      "@processor/*": ["./src/processor/*"],
+      "@cloud/*": ["./src/cloud/*"],
+      "@proprietary/*": ["./src/proprietary/*"],
+      "@core/*": ["./src/core/*"]
+    }
+  }
+}

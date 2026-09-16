@@ -9,6 +9,9 @@ name: Frontend a11y regression gate
 # Only changed stories, because a full sweep is ~30 minutes: far too slow to sit
 # in front of every merge. The whole suite is scanned nightly instead
 # (nightly.yml), which catches anything a branch didn't touch.
+#
+# One job per theme, run concurrently: sequential themes in a single job put a
+# wide diff over the timeout, and each theme now gets the full budget.
 on:
   workflow_call:
 
@@ -17,6 +20,12 @@ permissions:
 
 jobs:
   frontend-a11y:
+    name: frontend-a11y (${{ matrix.theme }})
+    strategy:
+      # A red theme must still report; it must not cancel the other one.
+      fail-fast: false
+      matrix:
+        theme: [light, dark]
     runs-on: ubuntu-latest
     timeout-minutes: 25
     steps:
@@ -37,8 +46,8 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - name: Install Task
         uses: go-task/setup-task@a00fbb05ce67b35648be3c78cbc9fd85354c757e # v2.2.0
-      - name: a11y gate (changed stories)
-        run: task frontend:storybook:a11y:changed -- origin/${{ github.base_ref || 'main' }}
+      - name: a11y gate (changed stories, ${{ matrix.theme }})
+        run: task frontend:storybook:a11y:changed A11Y_THEME=${{ matrix.theme }} -- origin/${{ github.base_ref || 'main' }}
       - name: Upload scan reports
         # The reports carry the offending selector and help text for each
         # violation; without them a red run can only be understood by
@@ -46,7 +55,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: a11y-scan-${{ github.run_id }}
+          # Per theme: two matrix jobs cannot share one artifact name.
+          name: a11y-scan-${{ matrix.theme }}-${{ github.run_id }}
           path: frontend/.a11y-scan/
           retention-days: 7
           if-no-files-found: ignore

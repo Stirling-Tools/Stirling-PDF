@@ -24,8 +24,8 @@ vi.mock("@app/auth/UseSession", () => ({
     isAnonymous: false,
   }),
 }));
-vi.mock("@app/hooks/usePortalAccess", () => ({
-  usePortalAccessState: () => access,
+vi.mock("@app/hooks/useProcessorAccess", () => ({
+  useProcessorAccessState: () => access,
 }));
 vi.mock("@app/api/signing", () => ({ fetchSigningSessions: vi.fn() }));
 vi.mock("@app/components/toast", () => ({ alert: vi.fn() }));
@@ -56,7 +56,7 @@ function RailState() {
   const host = useQuickNavHost();
   return (
     <>
-      <output data-testid="access">{String(host?.portalAccess)}</output>
+      <output data-testid="access">{String(host?.processorAccess)}</output>
       <output data-testid="badge">{host?.signingBadge}</output>
     </>
   );

@@ -1,5 +1,5 @@
 /**
- * Pure transforms that turn the Docusaurus docs repo into the portal docs
+ * Pure transforms that turn the Docusaurus docs repo into the processor docs
  * manifest. No I/O and no external deps so `tsx` (the sync CLI) and vitest can
  * both use it. The sync CLI does the fetching; this module does the shaping.
  *
@@ -262,7 +262,7 @@ function resolveDocId(ctx: LinkContext, rawPath: string): string | undefined {
   return undefined;
 }
 
-/** Rewrite a single markdown link target to a portal-usable href. */
+/** Rewrite a single markdown link target to a processor-usable href. */
 function rewriteLinkTarget(ctx: LinkContext, target: string): string {
   const trimmed = target.trim();
   if (/^(https?:|mailto:|tel:|#|doc:)/i.test(trimmed)) return trimmed;
@@ -288,7 +288,7 @@ function rewriteImageSrc(ctx: LinkContext, src: string, root: string): string {
   return `${ctx.rawBase}/${resolved}`;
 }
 
-/** Rewrite markdown links + images (outside code) to portal/absolute targets. */
+/** Rewrite markdown links + images (outside code) to processor/absolute targets. */
 export function rewriteReferences(
   md: string,
   ctx: LinkContext,
@@ -362,7 +362,7 @@ interface ShapedDoc extends DocEntry {
   sectionLabel: string;
 }
 
-/** Turn raw docs + category metadata into the full portal docs manifest. */
+/** Turn raw docs + category metadata into the full processor docs manifest. */
 export function buildManifest(
   rawDocs: RawDoc[],
   categories: CategoryMap,

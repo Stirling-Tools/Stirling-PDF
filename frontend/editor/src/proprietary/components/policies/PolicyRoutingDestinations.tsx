@@ -32,12 +32,12 @@ export function PolicyRoutingDestinations({
   return (
     <div className="portal-policies__wizard-section">
       <h3 className="portal-policies__wizard-heading">
-        {t("portal.pipelines.builder.routing.heading", "Routes")}
+        {t("processor.pipelines.builder.routing.heading", "Routes")}
       </h3>
       {!compact && (
         <p className="portal-policies__wizard-desc">
           {t(
-            "portal.policies.wizard.routing.description",
+            "processor.policies.wizard.routing.description",
             "Each document is classified first, then delivered to the first rule it matches. Anything matching none goes to the destination below.",
           )}
         </p>
@@ -53,14 +53,14 @@ export function PolicyRoutingDestinations({
 
       <h3 className="portal-policies__wizard-heading">
         {t(
-          "portal.pipelines.builder.routing.fallback",
+          "processor.pipelines.builder.routing.fallback",
           "Everything else goes to",
         )}
       </h3>
       <Select
         inputSize="sm"
-        aria-label={t("portal.pipelines.builder.routing.fallback")}
-        placeholder={t("portal.policies.wizard.routing.chooseDestination")}
+        aria-label={t("processor.pipelines.builder.routing.fallback")}
+        placeholder={t("processor.policies.wizard.routing.chooseDestination")}
         value={value.outputIds[0] ?? null}
         invalid={value.outputIds.length !== 1}
         onChange={(id) => onChange({ ...value, outputIds: id ? [id] : [] })}

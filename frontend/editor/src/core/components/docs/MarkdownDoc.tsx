@@ -26,7 +26,7 @@ function urlTransform(url: string): string {
 /**
  * Renders a doc's normalised markdown. Internal cross-doc links carry the
  * `doc:` scheme (see the sync transform) and are intercepted here so they
- * navigate within the portal instead of leaving the app.
+ * navigate within the processor instead of leaving the app.
  */
 
 function CopyButton({ text }: { text: string }) {
@@ -35,7 +35,7 @@ function CopyButton({ text }: { text: string }) {
     <Button
       variant="tertiary"
       size="sm"
-      className="portal-docs__md-copy"
+      className="processor-docs__md-copy"
       onClick={() =>
         void navigator.clipboard.writeText(text).then(() => {
           setCopied(true);
@@ -84,7 +84,7 @@ function buildComponents(
     // Eager, not lazy: lazy-loading inside the docs' own scroll container isn't
     // reliably triggered, and docs pages have only a handful of images.
     img: ({ node: _node, ...props }) => (
-      <img {...props} className="portal-docs__md-img" />
+      <img {...props} className="processor-docs__md-img" />
     ),
     pre: ({ children }) => {
       const code = isValidElement(children)
@@ -93,14 +93,14 @@ function buildComponents(
           ).replace(/\n$/, "")
         : String(children ?? "");
       return (
-        <div className="portal-docs__md-pre">
+        <div className="processor-docs__md-pre">
           <pre>{children}</pre>
           <CopyButton text={code} />
         </div>
       );
     },
     table: ({ children }) => (
-      <div className="portal-docs__md-tablewrap">
+      <div className="processor-docs__md-tablewrap">
         <table>{children}</table>
       </div>
     ),
@@ -118,7 +118,7 @@ export function MarkdownDoc({
   // document order, so ids line up with the TOC's extractHeadings slugs.
   const slug = makeSlugger();
   return (
-    <div className="portal-docs__md">
+    <div className="processor-docs__md">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         urlTransform={urlTransform}

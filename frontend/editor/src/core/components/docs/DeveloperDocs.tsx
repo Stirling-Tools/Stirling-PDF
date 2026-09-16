@@ -55,10 +55,10 @@ export function DeveloperDocs() {
 
   if (nav.length === 0 || !doc) {
     return (
-      <div className="portal-docs portal-docs--empty">
+      <div className="processor-docs processor-docs--empty">
         <EmptyState
-          title={t("portal.docs.nav.empty.title")}
-          description={t("portal.docs.nav.empty.description")}
+          title={t("processor.docs.nav.empty.title")}
+          description={t("processor.docs.nav.empty.description")}
         />
       </div>
     );
@@ -67,26 +67,28 @@ export function DeveloperDocs() {
   const hasToc = headings.length > 0;
 
   return (
-    <div className={"portal-docs" + (hasToc ? " portal-docs--with-toc" : "")}>
+    <div
+      className={"processor-docs" + (hasToc ? " processor-docs--with-toc" : "")}
+    >
       <Button
         variant="tertiary"
-        className="portal-docs__nav-toggle"
+        className="processor-docs__nav-toggle"
         aria-expanded={navOpen}
         onClick={() => setNavOpen((open) => !open)}
         leftSection={<span aria-hidden>☰</span>}
       >
-        {t("portal.docs.browse")}
+        {t("processor.docs.browse")}
       </Button>
 
       {/* Layout column, not a landmark: the <nav> inside already carries its
           own named landmark, and an unlabelled complementary region would be
           indistinguishable to assistive tech. */}
-      <div className={"portal-docs__sidebar" + (navOpen ? " is-open" : "")}>
+      <div className={"processor-docs__sidebar" + (navOpen ? " is-open" : "")}>
         <DocsNav sections={nav} active={activeId ?? ""} onSelect={onSelect} />
       </div>
 
-      <main className="portal-docs__content" ref={contentRef}>
-        <div className="portal-docs__content-inner">
+      <main className="processor-docs__content" ref={contentRef}>
+        <div className="processor-docs__content-inner">
           <DocsSection
             id={doc.id}
             eyebrow={section?.label ?? ""}
@@ -94,9 +96,9 @@ export function DeveloperDocs() {
             lead={doc.description}
           >
             <MarkdownDoc markdown={doc.markdown} onNavigate={onSelect} />
-            <div className="portal-docs__source">
+            <div className="processor-docs__source">
               <a href={doc.editUrl} target="_blank" rel="noopener noreferrer">
-                {t("portal.docs.viewSource")}
+                {t("processor.docs.viewSource")}
               </a>
             </div>
           </DocsSection>
@@ -104,7 +106,7 @@ export function DeveloperDocs() {
       </main>
 
       {hasToc && (
-        <div className="portal-docs__toc-col">
+        <div className="processor-docs__toc-col">
           <DocsToc headings={headings} scrollRef={contentRef} />
         </div>
       )}

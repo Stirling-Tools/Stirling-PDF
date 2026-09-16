@@ -6,7 +6,12 @@ test.use({
   stubOptions: {
     enableLogin: true,
     isAdmin: true,
-    user: { id: 1, username: "admin", role: "ROLE_ADMIN", portalAccess: true },
+    user: {
+      id: 1,
+      username: "admin",
+      role: "ROLE_ADMIN",
+      processorAccess: true,
+    },
   },
 });
 

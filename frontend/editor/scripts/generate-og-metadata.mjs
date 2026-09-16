@@ -373,7 +373,7 @@ const pageTitles = {
   "/files": "Files",
   "/settings": "Settings",
   "/docs": "Documentation",
-  // Processor views per portal/ViewRouter. Its redirect-only paths
+  // Processor views per processor/ViewRouter. Its redirect-only paths
   // (/processor/users and friends, now settings) render nothing to label.
   "/processor": "Processor",
   "/processor/pipelines": "Pipelines",

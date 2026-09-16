@@ -578,7 +578,7 @@ class SupabaseAuthenticationFilterMoreTest {
             bearer("tok");
             filter.doFilter(request, response, chain);
 
-            // A teamless account has no portal access, so a failed provision must surface
+            // A teamless account has no processor access, so a failed provision must surface
             // rather than admit a half-built user.
             assertThat(response.getStatus()).isEqualTo(401);
             assertThat(SecurityContextHolder.getContext().getAuthentication()).isNull();

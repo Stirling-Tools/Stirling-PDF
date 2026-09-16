@@ -24,8 +24,10 @@ export function PolicyPdfaConfig({
   return (
     <div className="portal-policies__capability-settings">
       <FormField
-        label={t("portal.policies.config.pdfa.fields.outputFormat.label")}
-        helperText={t("portal.policies.config.pdfa.fields.outputFormat.help")}
+        label={t("processor.policies.config.pdfa.fields.outputFormat.label")}
+        helperText={t(
+          "processor.policies.config.pdfa.fields.outputFormat.help",
+        )}
       >
         <Select
           value={parameters.outputFormat}

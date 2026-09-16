@@ -1,0 +1,235 @@
+import { classificationCondition } from "@app/data/classificationConditions";
+import { describe, expect, it, vi } from "vitest";
+import {
+  fireEvent,
+  render as baseRender,
+  screen,
+} from "@testing-library/react";
+import { ProcessorTestProviders } from "@processor/test/TestQueryProvider";
+import {
+  RoutingRules,
+  RoutingSection,
+} from "@processor/components/policies/RoutingRules";
+import type { WireRoutingRule } from "@app/policies/types";
+
+vi.mock("react-i18next", () => ({
+  useTranslation: () => ({
+    t: (_key: string, fallback?: string) => fallback ?? _key,
+    i18n: { changeLanguage: vi.fn() },
+  }),
+}));
+
+const DESTINATIONS = [
+  { id: "src-finance", name: "Finance archive" },
+  { id: "src-legal", name: "Legal review" },
+];
+
+// The builder wraps the routes in the opt-in toggle; the wizard renders them bare.
+function setup(
+  rules: WireRoutingRule[],
+  canClassify = true,
+  aiClassificationEnabled = true,
+) {
+  const onChange = vi.fn();
+  baseRender(
+    <RoutingSection
+      rules={rules}
+      onChange={onChange}
+      destinations={DESTINATIONS}
+      canClassify={canClassify}
+      aiClassificationEnabled={aiClassificationEnabled}
+    />,
+    { wrapper: ProcessorTestProviders },
+  );
+  return onChange;
+}
+
+function setupBare(rules: WireRoutingRule[]) {
+  const onChange = vi.fn();
+  baseRender(
+    <RoutingRules
+      rules={rules}
+      onChange={onChange}
+      destinations={DESTINATIONS}
+    />,
+    { wrapper: ProcessorTestProviders },
+  );
+  return onChange;
+}
+
+const rule = (values: string[], outputId: string): WireRoutingRule => ({
+  condition: classificationCondition(values),
+  outputId,
+});
+
+describe("RoutingRules", () => {
+  it("edits classification values without changing the destination or other routes", () => {
+    const first = rule(["invoice"], "src-finance");
+    const second = rule(["contract"], "src-legal");
+    const onChange = setupBare([first, second]);
+
+    fireEvent.click(
+      screen.getAllByRole("textbox", { name: "Document types" })[0],
+    );
+    fireEvent.click(screen.getByRole("option", { name: "Receipt" }));
+
+    expect(onChange).toHaveBeenCalledWith([
+      rule(["invoice", "receipt"], "src-finance"),
+      second,
+    ]);
+  });
+
+  it("edits a destination without changing its condition", () => {
+    const original = rule(["invoice", "receipt"], "src-finance");
+    const onChange = setupBare([original]);
+
+    fireEvent.click(screen.getByRole("textbox", { name: "Destination" }));
+    fireEvent.click(screen.getByRole("option", { name: "Legal review" }));
+
+    expect(onChange).toHaveBeenCalledWith([
+      { ...original, outputId: "src-legal" },
+    ]);
+  });
+
+  it("renders the routes with no toggle when the surface is routing-only", () => {
+    setupBare([rule(["invoice"], "src-finance")]);
+
+    expect(screen.queryByTestId("routing-toggle")).not.toBeInTheDocument();
+    expect(screen.getByText("Add a route")).toBeInTheDocument();
+  });
+
+  it("offers no rule editor until routing is switched on", () => {
+    setup([]);
+
+    expect(screen.queryByText("Routes")).not.toBeInTheDocument();
+    expect(screen.getByTestId("routing-toggle")).toBeInTheDocument();
+  });
+
+  it("starts with a no-AI condition when the pipeline does not classify", () => {
+    const onChange = setup([], false);
+
+    fireEvent.click(screen.getByTestId("routing-toggle"));
+
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: [],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+  });
+
+  it("switches match type and emits the document-field condition the backend evaluates", () => {
+    const onChange = setupBare([rule(["invoice"], "src-finance")]);
+
+    fireEvent.click(screen.getByRole("textbox", { name: "Match by" }));
+    fireEvent.click(screen.getByText("PDF title"));
+
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        condition: {
+          input: { source: "document", field: "document.title" },
+          operator: "matches-any",
+          values: [],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+  });
+
+  it("splits typed values on commas, trimmed, for a document-field route", () => {
+    const onChange = setupBare([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: [],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Values to match" }), {
+      target: { value: "pdf,  DOCX , png" },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: ["pdf", "DOCX", "png"],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+  });
+
+  it("can still be switched off after the classify step is removed", () => {
+    const onChange = setup([rule(["invoice"], "src-finance")], false);
+
+    fireEvent.click(screen.getByTestId("routing-toggle"));
+
+    expect(onChange).toHaveBeenCalledWith([]);
+  });
+
+  it("explains why a saved classification route is disabled when AI is off", () => {
+    setup([rule(["invoice"], "src-finance")], true, false);
+
+    expect(
+      screen.getByText(
+        "AI classification is not enabled. Enable it in Settings, or route on a document property instead.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Document types" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "Match by" })).toHaveValue(
+      "Document type (AI unavailable)",
+    );
+  });
+
+  it("seeds one blank rule when switched on, since an empty list is 'off'", () => {
+    const onChange = setup([]);
+
+    fireEvent.click(screen.getByTestId("routing-toggle"));
+
+    expect(onChange).toHaveBeenCalledWith([
+      // Blank types, so the invalid state prompts the user; the first destination is a head start.
+      { ...rule([], "src-finance") },
+    ]);
+  });
+
+  it("clears every rule when switched off, so nothing routes behind the user's back", () => {
+    const onChange = setup([rule(["invoice"], "src-finance")]);
+
+    fireEvent.click(screen.getByTestId("routing-toggle"));
+
+    expect(onChange).toHaveBeenCalledWith([]);
+  });
+
+  it("appends a rule without disturbing the ones above it", () => {
+    const onChange = setup([rule(["invoice"], "src-finance")]);
+
+    fireEvent.click(screen.getByText("Add a route"));
+
+    expect(onChange).toHaveBeenCalledWith([
+      rule(["invoice"], "src-finance"),
+      rule([], "src-finance"),
+    ]);
+  });
+
+  it("removes the rule whose remove button was pressed", () => {
+    const onChange = setup([
+      rule(["invoice"], "src-finance"),
+      rule(["contract"], "src-legal"),
+    ]);
+
+    fireEvent.click(screen.getAllByRole("button", { name: "Remove rule" })[0]);
+
+    expect(onChange).toHaveBeenCalledWith([rule(["contract"], "src-legal")]);
+  });
+});

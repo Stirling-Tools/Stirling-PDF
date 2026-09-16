@@ -7,7 +7,7 @@ package stirling.software.proprietary.access.model;
 public enum DefaultAccessPolicy {
     // Every authenticated user in the deployment (org) may use the resource.
     ORG_ALL,
-    // Only org admins and team leaders. This is the default for the portal.
+    // Only org admins and team leaders. This is the default for the processor.
     ADMINS_AND_TEAM_LEADS,
     // Nobody but the owner, admins, and explicit grantees.
     EXPLICIT_ONLY

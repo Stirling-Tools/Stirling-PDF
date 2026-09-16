@@ -360,7 +360,7 @@ describe("ProcessingFolderWizard", () => {
       });
       expect(
         screen.getByRole("button", {
-          name: "portal.policies.categories.routing.label",
+          name: "processor.policies.categories.routing.label",
         }),
       ).toHaveAttribute("aria-pressed", "true");
       expect(screen.queryByText("Watch")).toBeNull();
@@ -396,14 +396,14 @@ describe("ProcessingFolderWizard", () => {
       destinations: [{ id: "archive", name: "Archive" }],
     });
     const routing = screen.getByRole("button", {
-      name: "portal.policies.categories.routing.label",
+      name: "processor.policies.categories.routing.label",
     });
     expect(routing).toBeEnabled();
     fireEvent.click(routing);
     expect(button("enable")).toBeDisabled();
     expect(
       screen.getByRole("textbox", {
-        name: "portal.pipelines.builder.routing.fallback",
+        name: "processor.pipelines.builder.routing.fallback",
       }),
     ).toBeVisible();
   });
@@ -835,7 +835,7 @@ describe("ProcessingFolderWizard", () => {
     expect(screen.queryByRole("button", { name: key("review") })).toBeNull();
     fireEvent.click(
       screen.getByRole("button", {
-        name: "portal.policies.categories.classification.label",
+        name: "processor.policies.categories.classification.label",
       }),
     );
     expect(props.resolveTarget).not.toHaveBeenCalled();
@@ -846,7 +846,7 @@ describe("ProcessingFolderWizard", () => {
     fireEvent.click(button("chooseProcessing"));
     expect(
       screen.getByRole("button", {
-        name: "portal.policies.categories.classification.label",
+        name: "processor.policies.categories.classification.label",
       }),
     ).toHaveAttribute("aria-pressed", "true");
     fireEvent.click(button("enable"));
@@ -1101,12 +1101,12 @@ describe("ProcessingFolderWizard", () => {
     ).toHaveLength(POLICY_CATEGORIES.length);
     expect(
       within(chooser).getByRole("button", {
-        name: "portal.policies.categories.ingestion.label",
+        name: "processor.policies.categories.ingestion.label",
       }),
     ).toBeDisabled();
     expect(
       within(chooser).getByRole("button", {
-        name: "portal.policies.categories.retention.label",
+        name: "processor.policies.categories.retention.label",
       }),
     ).toBeDisabled();
   });
@@ -1138,7 +1138,7 @@ describe("ProcessingFolderWizard", () => {
     const chooser = screen.getByRole("group", { name: key("presetsLabel") });
     const first = within(chooser).getAllByRole("button")[0];
     expect(first).toHaveAccessibleName(
-      "portal.policies.categories.compliance.label",
+      "processor.policies.categories.compliance.label",
     );
     expect(first).toHaveAttribute("aria-pressed", "true");
     expect(screen.queryByText("When it runs")).toBeNull();
@@ -1174,7 +1174,7 @@ describe("ProcessingFolderWizard", () => {
     renderWizard({ initialFolder: folder, aiEngineEnabled: false, catalogue });
     expect(
       screen.getByRole("button", {
-        name: "portal.policies.categories.classification.label",
+        name: "processor.policies.categories.classification.label",
       }),
     ).toBeDisabled();
     expect(button("enable")).toBeEnabled();
@@ -1203,7 +1203,7 @@ describe("ProcessingFolderWizard", () => {
     const dialog = screen.getByRole("dialog");
     for (const category of ["security", "classification", "compliance"]) {
       const preset = screen.getByRole("button", {
-        name: `portal.policies.categories.${category}.label`,
+        name: `processor.policies.categories.${category}.label`,
       });
       preset.focus();
       fireEvent.click(preset);

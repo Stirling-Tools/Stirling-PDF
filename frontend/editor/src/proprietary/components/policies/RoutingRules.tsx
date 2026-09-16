@@ -76,13 +76,13 @@ export function RoutingRules({
         leftSection={<AddRoundedIcon style={{ fontSize: "1.125rem" }} />}
         onClick={onCreateDestination}
       >
-        {t("portal.policies.wizard.sources.connect", "Connect a source")}
+        {t("processor.policies.wizard.sources.connect", "Connect a source")}
       </Button>
     ) : (
       <Banner
         tone="info"
         description={t(
-          "portal.policies.wizard.routing.needsDestination",
+          "processor.policies.wizard.routing.needsDestination",
           "Add a destination below first - a rule needs somewhere to send documents to.",
         )}
       />
@@ -98,7 +98,7 @@ export function RoutingRules({
             description={
               classificationUnavailableReason ??
               t(
-                "portal.pipelines.builder.routing.aiUnavailable",
+                "processor.pipelines.builder.routing.aiUnavailable",
                 "Document-type routing is disabled because AI classification is unavailable. Route on a document property instead.",
               )
             }
@@ -117,11 +117,11 @@ export function RoutingRules({
                 <Select
                   inputSize="sm"
                   aria-label={t(
-                    "portal.policies.wizard.routing.destinationAria",
+                    "processor.policies.wizard.routing.destinationAria",
                     "Destination",
                   )}
                   placeholder={t(
-                    "portal.policies.wizard.routing.chooseDestination",
+                    "processor.policies.wizard.routing.chooseDestination",
                     "Choose a destination",
                   )}
                   value={rule.outputId || null}
@@ -138,7 +138,7 @@ export function RoutingRules({
                   accent="danger"
                   size="sm"
                   aria-label={t(
-                    "portal.policies.wizard.routing.remove",
+                    "processor.policies.wizard.routing.remove",
                     "Remove rule",
                   )}
                   onClick={() => onChange(rules.filter((_, i) => i !== index))}
@@ -164,7 +164,7 @@ export function RoutingRules({
           ])
         }
       >
-        {t("portal.pipelines.builder.routing.addRule", "Add a route")}
+        {t("processor.pipelines.builder.routing.addRule", "Add a route")}
       </Button>
     </>
   );
@@ -187,12 +187,12 @@ export function RoutingSection({
   const classificationAvailable = canClassify && aiClassificationEnabled;
   const unavailableReason = !aiClassificationEnabled
     ? t(
-        "portal.pipelines.builder.routing.aiDisabled",
+        "processor.pipelines.builder.routing.aiDisabled",
         "AI classification is not enabled. Enable it in Settings, or route on a document property instead.",
       )
     : !canClassify
       ? t(
-          "portal.pipelines.builder.routing.needsClassify",
+          "processor.pipelines.builder.routing.needsClassify",
           "Add a Classify step to use document-type routing, or match on a document property instead.",
         )
       : undefined;
@@ -216,17 +216,17 @@ export function RoutingSection({
             )
           }
           label={t(
-            "portal.pipelines.builder.routing.toggle",
+            "processor.pipelines.builder.routing.toggle",
             "Send document types to different places",
           )}
           description={
             enabled
               ? t(
-                  "portal.pipelines.builder.routing.toggleOn",
+                  "processor.pipelines.builder.routing.toggleOn",
                   "Documents are routed by the first document condition they match.",
                 )
               : t(
-                  "portal.pipelines.builder.routing.toggleOff",
+                  "processor.pipelines.builder.routing.toggleOff",
                   "Every document goes to the destination below.",
                 )
           }
@@ -237,7 +237,7 @@ export function RoutingSection({
       {enabled && (
         <>
           <h3 className="portal-routing__heading">
-            {t("portal.pipelines.builder.routing.heading", "Routes")}
+            {t("processor.pipelines.builder.routing.heading", "Routes")}
           </h3>
           <RoutingRules
             {...rules}

@@ -32,7 +32,7 @@ export const Interactive: Story = {
   },
 };
 
-/** Blue pill on a light surface (portal hero, light backgrounds). */
+/** Blue pill on a light surface (processor hero, light backgrounds). */
 export const Default: Story = { args: { activeIndex: 1 } };
 
 /** White dots for use over dark photography (auth carousel). */

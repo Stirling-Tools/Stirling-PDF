@@ -1,7 +1,7 @@
 @jwt @auth @apikey
 Feature: API Keys management API
 
-    Tests for the portal API-keys REST API, which lets a user mint, list, and
+    Tests for the processor API-keys REST API, which lets a user mint, list, and
     revoke named personal API keys.
 
     Endpoints (all @EnterpriseEndpoint, JWT/ROLE required):

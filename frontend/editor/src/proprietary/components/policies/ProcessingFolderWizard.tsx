@@ -85,9 +85,10 @@ export function ProcessingFolderWizard({
   const presets = useMemo(() => sortFolderPresets(catalogue), [catalogue]);
 
   function unavailableReason(preset: CatalogueEntry): string | null {
-    if (preset.category.comingSoon) return t("portal.policies.card.comingSoon");
+    if (preset.category.comingSoon)
+      return t("processor.policies.card.comingSoon");
     if (preset.category.requiresAiEngine && !aiEngineEnabled)
-      return t("portal.policies.card.requiresAiEngine");
+      return t("processor.policies.card.requiresAiEngine");
     return null;
   }
 

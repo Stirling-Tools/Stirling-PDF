@@ -32,18 +32,18 @@ class ResourceAccessSecurityTest {
     }
 
     @Test
-    void userPrincipalDelegatesToPortalCheck() {
+    void userPrincipalDelegatesToProcessorCheck() {
         User user = new User();
         user.setId(5L);
         authenticate(user);
-        when(accessService.canAccessPortal(user)).thenReturn(true);
+        when(accessService.canAccessProcessor(user)).thenReturn(true);
 
-        assertThat(security.canUsePortal()).isTrue();
+        assertThat(security.canUseProcessor()).isTrue();
     }
 
     @Test
     void deniedWithoutAuthentication() {
-        assertThat(security.canUsePortal()).isFalse();
+        assertThat(security.canUseProcessor()).isFalse();
     }
 
     @Test
@@ -51,7 +51,7 @@ class ResourceAccessSecurityTest {
         // Mirrors an anonymous SaaS session: principal is not a User and resolves to nothing.
         authenticate("anonymousUser");
 
-        assertThat(security.canUsePortal()).isFalse();
+        assertThat(security.canUseProcessor()).isFalse();
     }
 
     private void authenticate(Object principal) {

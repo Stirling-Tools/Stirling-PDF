@@ -116,7 +116,7 @@ public class ProcurementQuote implements Serializable {
     private String stripeInvoiceUrl;
 
     // Direct PDF link for that first invoice (Stripe invoice_pdf), set at accept alongside the URL;
-    // persisted so the portal's download button works after a reload, not just in the accept
+    // persisted so the processor's download button works after a reload, not just in the accept
     // response.
     @Column(name = "stripe_invoice_pdf", columnDefinition = "text")
     private String stripeInvoicePdf;

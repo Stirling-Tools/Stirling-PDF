@@ -1,9 +1,9 @@
 /**
  * Subscription tier identifier.
  *
- * Defined here rather than in the portal because shared/data/endpoints.ts needs
+ * Defined here rather than in the processor because shared/data/endpoints.ts needs
  * it for tier-availability gating, and the shared layer can't import from the
- * portal. The portal UI keeps its own matching `Tier` in
+ * processor. The processor UI keeps its own matching `Tier` in
  * contexts/TierContext.tsx.
  *
  * The design tokens themselves live in tokens.css as CSS custom properties —

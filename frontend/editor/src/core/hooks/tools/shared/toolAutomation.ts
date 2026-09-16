@@ -4,7 +4,7 @@
  * shape and the backend step contract (endpoint + backend parameters).
  *
  * This is core behaviour shared by every surface that composes or replays tool operations against
- * the backend engine (portal pipelines today; backend-executed automations and AI plans later),
+ * the backend engine (processor pipelines today; backend-executed automations and AI plans later),
  * so the "is this tool usable, and how" decision lives with the tools rather than in any one
  * feature. It builds on each tool's `operationConfig` mappers (`toApiParams` / `fromApiParams`),
  * keeping the frontend<->backend parameter mapping single-sourced in the tools.
