@@ -14,6 +14,7 @@ vi.mock("react-i18next", () => ({
 import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 import type { Wallet } from "@app/billing/types";
+import { formatPeriodDate } from "@app/billing/format";
 
 const off = (over: Partial<Wallet> = {}): Wallet => ({
   ...freeWallet,
@@ -27,6 +28,27 @@ const on = (over: Partial<Wallet> = {}): Wallet => ({
 });
 
 describe("ProcessorPlanRow", () => {
+  it("hides an absent included pool while retaining metered billing", () => {
+    render(
+      <ProcessorPlanRow wallet={on({ freeAllowance: 0, freeRemaining: 0 })} />,
+    );
+    expect(screen.queryByText("Included credits")).not.toBeInTheDocument();
+    expect(screen.queryByText("0 of 0 used")).not.toBeInTheDocument();
+    expect(screen.getByText("Processor")).toBeInTheDocument();
+  });
+
+  it("keeps activation available when there is no included pool", () => {
+    render(
+      <ProcessorPlanRow
+        wallet={off({ freeAllowance: 0, freeRemaining: 0 })}
+        onActivate={() => {}}
+      />,
+    );
+    expect(screen.queryByText("0 of 0 used")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Switch on the Processor" }),
+    ).toBeInTheDocument();
+  });
   it("keeps the included pool visible when the metered limit is zero", () => {
     render(
       <ProcessorPlanRow
@@ -56,7 +78,11 @@ describe("ProcessorPlanRow", () => {
     expect(screen.getByText("Included credits")).toBeInTheDocument();
     expect(screen.getByText("425 of 2,700 used")).toBeInTheDocument();
     expect(
-      screen.getByText(/2,700 included every month.*Renews 2026-10-01/),
+      screen.getByText(
+        (text) =>
+          text.includes("2,700 included every month") &&
+          text.includes(`Renews ${formatPeriodDate("2026-10-01")}`),
+      ),
     ).toBeInTheDocument();
   });
 

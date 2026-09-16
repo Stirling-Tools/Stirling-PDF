@@ -47,6 +47,10 @@ class IncludedAllowanceTest {
                 .isEqualTo(700);
         assertThat(IncludedAllowance.resolve(ext, 1000, now.plusMonths(1)).remaining())
                 .isEqualTo(1000);
+        IncludedAllowance firstCalendarTerm =
+                IncludedAllowance.resolve(ext, 1000, ext.getFreeUnitsPeriodEnd());
+        assertThat(firstCalendarTerm.start()).isEqualTo(LocalDateTime.of(2026, 10, 1, 0, 0));
+        assertThat(firstCalendarTerm.end()).isEqualTo(LocalDateTime.of(2026, 11, 1, 0, 0));
     }
 
     private PaygTeamExtensions current(long granted, long remaining) {

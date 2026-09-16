@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -137,9 +138,7 @@ public class TeamBillingService {
                 extOpt.map(
                         ext ->
                                 IncludedAllowance.resolve(
-                                        ext,
-                                        freeGrant,
-                                        LocalDateTime.now(java.time.ZoneOffset.UTC)));
+                                        ext, freeGrant, LocalDateTime.now(ZoneOffset.UTC)));
 
         BigDecimal perDocMinor = billing.map(SubscriptionBilling::perDocMinor).orElse(null);
         String currency = billing.map(SubscriptionBilling::currency).orElse(null);
@@ -169,7 +168,7 @@ public class TeamBillingService {
                 subscriptionId,
                 window[0],
                 window[1],
-                allowance.map(IncludedAllowance::granted).orElse(freeGrant),
+                allowance.map(IncludedAllowance::granted).orElse(0L),
                 allowance.map(IncludedAllowance::remaining).orElse(0L),
                 perDocMinor,
                 currency,
@@ -188,6 +187,12 @@ public class TeamBillingService {
                 grant = policy.getTeamIncludedUnits();
                 if (grant == null) {
                     grant = pricingPolicyService.getEffectivePolicy(null).getTeamIncludedUnits();
+                }
+                if (grant == null) {
+                    log.warn(
+                            "Team included-credit allowance missing for team {}; using its free-tier allowance",
+                            teamId);
+                    grant = policy.getFreeTierUnits();
                 }
             }
             return grant == null ? 0L : grant;
@@ -281,33 +286,11 @@ public class TeamBillingService {
     }
 
     /**
-     * The team's free balance for the period starting at {@code currentPeriodStart}: a full grant
-     * when the counter is stale, the counter otherwise. Shared with the decrement in {@code
-     * JobChargeService} so displayed and enforced balances cannot diverge.
-     */
-    public static long remainingForPeriod(
-            LocalDateTime stampedPeriodStart,
-            Long storedRemaining,
-            long grant,
-            LocalDateTime currentPeriodStart) {
-        if (isStale(stampedPeriodStart, currentPeriodStart)) {
-            return Math.max(0L, grant);
-        }
-        return storedRemaining == null ? 0L : Math.max(0L, storedRemaining);
-    }
-
-    public static boolean isStale(
-            LocalDateTime stampedPeriodStart, LocalDateTime currentPeriodStart) {
-        return currentPeriodStart != null
-                && (stampedPeriodStart == null || stampedPeriodStart.isBefore(currentPeriodStart));
-    }
-
-    /**
      * Inclusive-start / exclusive-end window for the calendar month — the monthly billing window
      * used when there's no Stripe subscription period to anchor on.
      */
     static LocalDateTime[] calendarMonthWindow() {
-        return calendarMonthWindow(LocalDateTime.now(java.time.ZoneOffset.UTC));
+        return calendarMonthWindow(LocalDateTime.now(ZoneOffset.UTC));
     }
 
     /** Test seam — accepts a clock value so tests don't race the calendar boundary. */

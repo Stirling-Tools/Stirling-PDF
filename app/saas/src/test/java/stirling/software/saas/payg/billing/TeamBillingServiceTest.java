@@ -3,6 +3,7 @@ package stirling.software.saas.payg.billing;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -39,13 +40,26 @@ class TeamBillingServiceTest {
     private TeamBillingService service;
 
     @Test
+    void missingTeamAllowanceFallsBackToFreePolicyButExplicitZeroIsRespected() {
+        PricingPolicy policy = new PricingPolicy();
+        policy.setFreeTierUnits(1000L);
+        when(pricingPolicyService.getEffectivePolicy(TEAM_ID)).thenReturn(policy);
+        when(pricingPolicyService.getEffectivePolicy(null)).thenReturn(policy);
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamCreditsEligible(true);
+        assertThat(service.resolveGrant(TEAM_ID, ext)).isEqualTo(1000L);
+        policy.setTeamIncludedUnits(0L);
+        assertThat(service.resolveGrant(TEAM_ID, ext)).isZero();
+    }
+
+    @Test
     void teamAllowanceComesFromPolicyAndSurvivesProcessorChanges() {
         PaygTeamExtensions ext = new PaygTeamExtensions();
         ext.setTeamId(TEAM_ID);
         ext.setTeamCreditsEligible(true);
         ext.setFreeUnitsGranted(1000L);
         ext.setFreeUnitsRemaining(700L);
-        java.time.LocalDateTime start = TeamBillingService.calendarMonthWindow()[0];
+        LocalDateTime start = TeamBillingService.calendarMonthWindow()[0];
         ext.setFreeUnitsPeriodStart(start);
         ext.setFreeUnitsPeriodEnd(start.plusMonths(1));
         PricingPolicy policy = new PricingPolicy();
@@ -145,5 +159,8 @@ class TeamBillingServiceTest {
 
         assertThat(ctx.subscribed()).isFalse();
         assertThat(ctx.subscriptionId()).isNull();
+        assertThat(ctx.freeGrantUnits()).isZero();
+        assertThat(ctx.freeRemainingUnits()).isZero();
+        assertThat(ctx.includedPeriodEnd()).isNull();
     }
 }

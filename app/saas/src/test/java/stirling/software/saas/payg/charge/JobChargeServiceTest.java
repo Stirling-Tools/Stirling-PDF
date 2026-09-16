@@ -14,6 +14,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,7 +80,7 @@ class JobChargeServiceTest {
     private JobChargeService service;
 
     private static final LocalDateTime PERIOD_START =
-            java.time.YearMonth.now(java.time.ZoneOffset.UTC).atDay(1).atStartOfDay();
+            YearMonth.now(ZoneOffset.UTC).atDay(1).atStartOfDay();
 
     private static final long GRANT = 500L;
 
@@ -126,7 +128,9 @@ class JobChargeServiceTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+                PERIOD_START,
+                PERIOD_START.plusMonths(1));
     }
 
     @AfterEach

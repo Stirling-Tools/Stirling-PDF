@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { formatMinor, formatMoneyMajor } from "@app/billing/format";
+import {
+  formatMinor,
+  formatMoneyMajor,
+  formatPeriodDate,
+} from "@app/billing/format";
 import { MeterRow } from "@app/billing/MeterRow";
 import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import type { Wallet } from "@app/billing/types";
@@ -56,6 +60,7 @@ export function ProcessorPlanRow({
   const rate = wallet.pricePerDocMinor;
 
   const includedCredits = (() => {
+    if (wallet.freeAllowance <= 0) return null;
     const used = Math.min(
       wallet.freeAllowance,
       Math.max(0, wallet.freeAllowance - wallet.freeRemaining + pendingUnits),
@@ -92,7 +97,10 @@ export function ProcessorPlanRow({
             ? t(
                 "portal.billing.processor.includedRenewal",
                 "{{summary}} · Renews {{date}}",
-                { summary: mid, date: wallet.includedPeriodEnd },
+                {
+                  summary: mid,
+                  date: formatPeriodDate(wallet.includedPeriodEnd),
+                },
               )
             : mid
         }
@@ -116,7 +124,27 @@ export function ProcessorPlanRow({
       />
     );
   })();
-  if (!wallet.processor.active) return includedCredits;
+  if (!wallet.processor.active)
+    return (
+      includedCredits ?? (
+        <MeterRow
+          name={name}
+          mid=""
+          fact=""
+          showTrack={false}
+          door={
+            onActivate
+              ? (activateLabel ??
+                t(
+                  "portal.billing.processor.activate",
+                  "Switch on the Processor",
+                ))
+              : undefined
+          }
+          onDoor={onActivate}
+        />
+      )
+    );
 
   const spentMinor = estimatedBillWithPending(wallet, pendingUnits);
   const capped = !wallet.noCap && wallet.capUsd != null;

@@ -3,6 +3,7 @@ package stirling.software.saas.payg.charge;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -243,7 +244,7 @@ public class JobChargeService {
                 IncludedAllowance.resolve(
                         ext,
                         teamBillingService.resolveGrant(ctx.ownerTeamId(), ext),
-                        LocalDateTime.now(java.time.ZoneOffset.UTC));
+                        LocalDateTime.now(ZoneOffset.UTC));
         int freeUsed = (int) Math.min(units, allowance.remaining());
         allowance.store(ext, allowance.remaining() - freeUsed);
         teamExtensionsRepository.save(ext);
@@ -262,7 +263,7 @@ public class JobChargeService {
                 IncludedAllowance.resolve(
                         ext,
                         teamBillingService.resolveGrant(teamId, ext),
-                        LocalDateTime.now(java.time.ZoneOffset.UTC));
+                        LocalDateTime.now(ZoneOffset.UTC));
         boolean sameTerm =
                 chargedPeriod != null
                         ? chargedPeriod.equals(allowance.start())

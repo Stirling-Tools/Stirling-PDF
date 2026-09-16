@@ -38,31 +38,4 @@ public record TeamBillingContext(
         Long capMoneyMinor,
         Long monthlyCapDocUnits,
         LocalDateTime includedPeriodStart,
-        LocalDateTime includedPeriodEnd) {
-
-    public TeamBillingContext(
-            boolean subscribed,
-            String subscriptionId,
-            LocalDateTime periodStart,
-            LocalDateTime periodEnd,
-            long freeGrantUnits,
-            long freeRemainingUnits,
-            BigDecimal perDocMinor,
-            String currency,
-            Long capMoneyMinor,
-            Long monthlyCapDocUnits) {
-        this(
-                subscribed,
-                subscriptionId,
-                periodStart,
-                periodEnd,
-                freeGrantUnits,
-                freeRemainingUnits,
-                perDocMinor,
-                currency,
-                capMoneyMinor,
-                monthlyCapDocUnits,
-                periodStart,
-                periodEnd);
-    }
-}
+        LocalDateTime includedPeriodEnd) {}

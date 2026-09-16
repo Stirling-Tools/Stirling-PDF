@@ -55,7 +55,18 @@ class EntitlementServiceTest {
         stubBilling(
                 42L,
                 new TeamBillingContext(
-                        true, "sub", PERIOD_START, PERIOD_END, 2500, 2200, null, null, 0L, 0L));
+                        true,
+                        "sub",
+                        PERIOD_START,
+                        PERIOD_END,
+                        2500,
+                        2200,
+                        null,
+                        null,
+                        0L,
+                        0L,
+                        PERIOD_START,
+                        PERIOD_END));
         assertThat(service.getSnapshot(42L).state()).isEqualTo(EntitlementState.FULL);
     }
 
@@ -357,7 +368,18 @@ class EntitlementServiceTest {
     /** Unsubscribed team: gated by the one-time grant (size + remaining); no monthly cap. */
     private static TeamBillingContext freeContext(long grant, long remaining) {
         return new TeamBillingContext(
-                false, null, PERIOD_START, PERIOD_END, grant, remaining, null, null, null, null);
+                false,
+                null,
+                PERIOD_START,
+                PERIOD_END,
+                grant,
+                remaining,
+                null,
+                null,
+                null,
+                null,
+                PERIOD_START,
+                PERIOD_END);
     }
 
     /**
@@ -375,7 +397,9 @@ class EntitlementServiceTest {
                 java.math.BigDecimal.valueOf(2),
                 "usd",
                 monthlyCapDocUnits == null ? null : monthlyCapDocUnits * 2,
-                monthlyCapDocUnits);
+                monthlyCapDocUnits,
+                PERIOD_START,
+                PERIOD_END);
     }
 
     private static WalletPolicy walletPolicyThresholds(FeatureSet degradedSet) {
