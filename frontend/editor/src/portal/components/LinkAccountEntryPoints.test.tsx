@@ -3,7 +3,6 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import { MantineProvider } from "@mantine/core";
 import { LinkProvider } from "@app/portal/contexts/LinkContext";
 import { UIProvider, useUI } from "@app/portal/contexts/UIContext";
-import { ConnectAccountRail } from "@app/portal/components/ConnectAccountRail";
 import { LinkAccountFooterItem } from "@app/portal/components/LinkAccountFooterItem";
 const flags = vi.hoisted(() => ({ isAdmin: true, orgOwner: true }));
 vi.mock("@app/auth", () => ({
@@ -18,12 +17,7 @@ vi.mock("react-i18next", () => ({
 let ui: ReturnType<typeof useUI>;
 function Entries() {
   ui = useUI();
-  return (
-    <>
-      <ConnectAccountRail />
-      <LinkAccountFooterItem />
-    </>
-  );
+  return <LinkAccountFooterItem />;
 }
 function show() {
   render(
@@ -41,9 +35,11 @@ beforeEach(() => {
   flags.orgOwner = true;
   sessionStorage.clear();
 });
-it("offers the connection shortcuts to the owner", () => {
+it("offers the sidebar connection action to the owner", () => {
   show();
-  expect(screen.getByRole("button", { name: /^Connect$/ })).toBeVisible();
+  expect(
+    screen.getByRole("button", { name: "Link Stirling account" }),
+  ).toBeVisible();
   fireEvent.click(
     screen.getByRole("button", { name: "Link Stirling account" }),
   );
@@ -55,7 +51,7 @@ it("does not offer owner-only connection actions to other processor users", () =
   expect(screen.queryByRole("button")).toBeNull();
 });
 
-it("hides both connection shortcuts from ordinary admins", () => {
+it("hides the sidebar connection action from ordinary admins", () => {
   flags.orgOwner = false;
   show();
   expect(screen.queryByRole("button")).toBeNull();

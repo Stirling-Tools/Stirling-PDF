@@ -253,3 +253,67 @@ for (const linked of [false, true]) {
     ).toHaveCount(0);
   });
 }
+
+for (const linked of [false, true]) {
+  test(`local navigation has no connection banner with a ${linked ? "linked" : "disconnected"} server`, async ({
+    page,
+  }) => {
+    await page.route("**/api/v1/account-link/status", (route) =>
+      route.fulfill({ json: { linked, name: "Test server" } }),
+    );
+    await page.route("**/v1/editor/deployment*", (route) =>
+      route.fulfill({
+        json: { instances: [], summary: { workspaceUrl: null } },
+      }),
+    );
+    for (const path of ["policies", "policies/runs", "integrations"]) {
+      await page.route(`**/api/v1/${path}`, (route) =>
+        route.fulfill({ json: [] }),
+      );
+    }
+    await page.route("**/api/v1/sources*", (route) =>
+      route.fulfill({ json: { sources: [], kpis: [] } }),
+    );
+    if (linked) {
+      await page.goto("/settings/billing");
+      await expect(
+        page.getByRole("button", { name: "Sign in again", exact: true }),
+      ).toBeVisible();
+      await page
+        .getByRole("button", { name: "Processor", exact: true })
+        .click();
+    } else {
+      await page.goto("/processor");
+    }
+    await expect(
+      page.getByRole("button", { name: "Documents", exact: true }),
+    ).toBeVisible();
+    for (const section of ["Home", "Documents", "Pipelines"]) {
+      await page.getByRole("button", { name: section, exact: true }).click();
+      await expect(
+        page.locator(`.portal-${section.toLowerCase()}`),
+      ).toBeVisible();
+      await expect(page.getByRole("dialog")).toHaveCount(0);
+      await expect(
+        page.getByText("Connect your Stirling account", { exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByText("Renew billing access", { exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Sign in again", exact: true }),
+      ).toHaveCount(0);
+    }
+    if (linked) {
+      await page
+        .getByRole("button", { name: "owner — Account", exact: true })
+        .click();
+      await page
+        .getByRole("button", { name: "Usage & Billing", exact: true })
+        .click();
+      await expect(
+        page.getByRole("button", { name: "Sign in again", exact: true }),
+      ).toHaveCount(1);
+    }
+  });
+}
