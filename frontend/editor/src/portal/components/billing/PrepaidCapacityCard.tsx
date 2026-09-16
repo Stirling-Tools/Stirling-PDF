@@ -42,7 +42,7 @@ export function PrepaidCapacityCard({
           <p className="portal-billing__prepaid-offer-sub">
             {t(
               "portal.billing.prepaid.offer.subtitle",
-              "Prepay a year of PDF processing and get two months free — used before metered billing, outside your spend limit.",
+              "Prepay a year of PDF processing and get two months free - used before metered billing, outside your spend limit.",
             )}
           </p>
         </div>

@@ -59,7 +59,7 @@ export function FreePlanView({
       setMissingTeam(
         t(
           "portal.billing.freePlan.noTeamResolved",
-          "No team is resolved on your wallet yet — refresh and try again.",
+          "No team is resolved on your wallet yet - refresh and try again.",
         ),
       );
       return false;

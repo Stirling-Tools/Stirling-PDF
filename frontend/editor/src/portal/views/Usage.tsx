@@ -45,7 +45,7 @@ export interface UsageProps {
   serverPlanAction?: ReactNode;
   /**
    * Called with the wallet whenever it loads (initial fetch + post-checkout
-   * flip). A flavor-agnostic hook the composition uses for cross-cutting state —
+   * flip). A flavor-agnostic hook the composition uses for cross-cutting state -
    * self-hosted maps it onto the link/tier dimension; SaaS ignores it.
    */
   onWalletLoaded?: (wallet: Wallet) => void;
@@ -66,7 +66,7 @@ export interface UsageProps {
  * page is shown at all is the billing gate's decision, upstream.
  *
  * <p>Wallet comes from {@code GET /api/v1/payg/wallet} (apiClient.saas); a checkout or cancel
- * re-reads it. Only the {@code extras} sections still branch on {@code wallet.status} — the two
+ * re-reads it. Only the {@code extras} sections still branch on {@code wallet.status} - the two
  * products render from their own holdings, which that axis cannot express.
  */
 export function Usage({
@@ -157,7 +157,7 @@ export function Usage({
     "choose" | "payg" | "prepay" | null
   >(null);
   const [adjustingLimit, setAdjustingLimit] = useState(false);
-  // Stripe customer portal — the subscribed header's "Manage Payment" action.
+  // Stripe customer portal - the subscribed header's "Manage Payment" action.
   const portal = useStripePortal(wallet);
   // Guards the post-checkout poll loop from setState after unmount.
   const mounted = useRef(true);
@@ -173,7 +173,7 @@ export function Usage({
     setLoading(true);
     setError(null);
     setSessionExpired(false);
-    // Independent of the wallet load — a local-usage failure must not break the
+    // Independent of the wallet load - a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
     fetchLocalUsage()
       .then((u) => {
@@ -191,7 +191,7 @@ export function Usage({
       .catch((e) => {
         if (cancelled) return;
         if (e instanceof SaasNotLinkedError) {
-          // The attended SaaS session expired — offer a re-sign-in.
+          // The attended SaaS session expired - offer a re-sign-in.
           setSessionExpired(true);
         } else if (e instanceof SaasUnconfiguredError) {
           setError(e.message);
@@ -248,7 +248,7 @@ export function Usage({
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
     // wallet until it flips to subscribed. Drop the server cache before each read
     // so we see the webhook the moment it lands rather than after the ~30s TTL.
-    // ~60s of attempts — longer than the observed webhook + sync-engine latency —
+    // ~60s of attempts - longer than the observed webhook + sync-engine latency -
     // so a slightly slow activation still completes inside the (open) checkout
     // modal instead of falling back to a manual refresh. Resolves true once
     // subscribed so the modal can close itself in.
@@ -267,7 +267,7 @@ export function Usage({
           return true;
         }
       } catch {
-        // Transient read failure — keep polling.
+        // Transient read failure - keep polling.
       }
       await new Promise((r) => setTimeout(r, 2000));
       if (!mounted.current) return false;
@@ -326,7 +326,7 @@ export function Usage({
             >
               {t(
                 "portal.usage.sessionExpired.body",
-                "Your Stirling account session has expired. Sign in again to view billing — your instance stays linked.",
+                "Your Stirling account session has expired. Sign in again to view billing - your instance stays linked.",
               )}
             </Banner>
           )}

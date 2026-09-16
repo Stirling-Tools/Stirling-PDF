@@ -249,7 +249,7 @@ export default function LoginAgreementEditor({
         </Anchor>{" "}
         {t(
           "admin.settings.legal.loginAgreement.defaultLocaleHint",
-          "— used as the fallback when a language has no file.",
+          "(used as the fallback when a language has no file).",
         )}
       </Text>
 

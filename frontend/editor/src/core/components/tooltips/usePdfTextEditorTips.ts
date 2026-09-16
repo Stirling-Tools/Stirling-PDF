@@ -33,7 +33,7 @@ export const usePdfTextEditorTips = (): TooltipContent => {
         title: t("pdfTextEditor.tooltip.alpha.title", "Alpha Viewer"),
         description: t(
           "pdfTextEditor.tooltip.alpha.text",
-          "This alpha viewer is still evolving—certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing.",
+          "This alpha viewer is still evolving - certain fonts, colours, transparency effects, and layout details may shift slightly. Please double-check the generated PDF before sharing.",
         ),
       },
     ],
