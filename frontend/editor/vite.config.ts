@@ -427,6 +427,12 @@ export default defineConfig(async ({ mode, command }) => {
     },
     build: {
       target: "esnext",
+      modulePreload: {
+        // Lazy chunks can import the entry again. An upfront link lets Vite reuse
+        // its preload instead of fetching an already-running module in WebKit.
+        resolveDependencies: (filename, deps, { hostType }) =>
+          hostType === "html" ? [filename, ...deps] : deps,
+      },
       rollupOptions: {
         output: {
           manualChunks(id) {
