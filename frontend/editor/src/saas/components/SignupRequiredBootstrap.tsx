@@ -1,35 +1,17 @@
 import { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Group, List, Modal, Stack, Text } from "@mantine/core";
-import { Button } from "@app/ui/Button";
 import { Icon } from "@app/ui/Icon";
+import OnboardingSlideShell, {
+  ShellHero,
+} from "@app/components/onboarding/OnboardingSlideShell";
+import styles from "@app/components/SignupRequiredBootstrap.module.css";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "@app/auth/UseSession";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 import type { PaygSignupRequiredDetail } from "@app/services/paygErrorInterceptor";
 
-/**
- * Bootstrap that listens for {@code payg:signupRequired} (dispatched by
- * the {@code apiClient} response interceptor when an anonymous user hits
- * a billable endpoint and the server returns {@code 401 SIGNUP_REQUIRED})
- * and opens a Mantine modal explaining the free monthly allowance
- * with a "Sign up free" CTA.
- *
- * <h2>Why an event bus instead of direct render</h2>
- * The {@code apiClient} module is created at app boot, outside the React
- * tree, and can't import JSX. We bridge with a {@code CustomEvent}: the
- * interceptor dispatches, this bootstrap (mounted near the app root)
- * listens and renders, driven by a request-side trigger.
- *
- * <h2>De-duping</h2>
- * If the user fires multiple billable requests in quick succession (e.g.
- * clicking a tool button twice), only one modal opens — the listener
- * ignores the event when the modal is already visible. The modal closes
- * on backdrop click or Escape; we don't gate it on a localStorage flag
- * because this is a deterministic "you need an account" UI, not a one-
- * time onboarding nudge.
- */
+/** Opens one guest signup prompt for a Processor click or server account gate, preserving the return route. */
 export default function SignupRequiredBootstrap() {
   const { t } = useTranslation();
   const { isAnonymous } = useAuth();
@@ -61,83 +43,98 @@ export default function SignupRequiredBootstrap() {
     );
   };
 
+  const title = limitReached
+    ? t("payg.signupRequired.guestLimitTitle", "Keep going with a free account")
+    : t("payg.signupRequired.processorTitle", "Unlock Processor");
+
   return (
-    <Modal
+    <OnboardingSlideShell
       opened={detail !== null && isAnonymous}
       onClose={() => setDetail(null)}
-      withCloseButton
-      centered
-      size="md"
-      radius="lg"
+      ariaLabel={title}
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
-      title={
-        <Text fw={700} size="lg">
-          {limitReached
-            ? t(
-                "payg.signupRequired.guestLimitTitle",
-                "Keep going with a free account",
-              )
-            : t(
-                "payg.signupRequired.processorTitle",
-                "Unlock Processor with a free account",
-              )}
-        </Text>
+      stepIndex={0}
+      stepCount={1}
+      slideKey={limitReached ? "guest-limit" : "guest-processor"}
+      hero={
+        <ShellHero>
+          <Icon name="cpu" size={32} className={styles.heroIcon} />
+        </ShellHero>
       }
-    >
-      <Stack gap="md">
-        <Text>
-          {limitReached
-            ? t(
-                "payg.signupRequired.guestLimitBody",
-                "You've reached your {{count}} free guest tool runs. Log in or create a free account to continue.",
-                { count: detail?.limit },
-              )
-            : t(
-                "payg.signupRequired.processorBody",
-                "AI, automations and API access require an account. Log in or sign up free to get your Processor allowance.",
-              )}
-        </Text>
-        <List spacing="xs">
-          <List.Item>
+      title={<h2 className={styles.title}>{title}</h2>}
+      body={
+        <div className={styles.body}>
+          <p className={styles.intro}>
+            {limitReached
+              ? t(
+                  "payg.signupRequired.guestLimitBody",
+                  "You've used your {{count}} free guest runs. Create an account to keep going.",
+                  { count: detail?.limit },
+                )
+              : t(
+                  "payg.signupRequired.processorBody",
+                  "Start with free monthly Processor credits.",
+                )}
+          </p>
+          <ul className={styles.benefits}>
+            <li>
+              <span className={styles.benefitIcon}>
+                <Icon name="sparkles" size={18} />
+              </span>
+              <span>
+                {t(
+                  "payg.signupRequired.aiPromo",
+                  "Create, edit and ask about PDFs with AI",
+                )}
+              </span>
+            </li>
+            <li>
+              <span className={styles.benefitIcon}>
+                <Icon name="git-branch" size={18} />
+              </span>
+              <span>
+                {t(
+                  "payg.signupRequired.automationPromo",
+                  "Automate repetitive PDF tasks",
+                )}
+              </span>
+            </li>
+            <li>
+              <span className={styles.benefitIcon}>
+                <Icon name="code" size={18} />
+              </span>
+              <span>
+                {t(
+                  "payg.signupRequired.apiPromo",
+                  "Connect your apps and AI assistants",
+                )}
+              </span>
+            </li>
+          </ul>
+          <p className={styles.note}>
             {t(
-              "payg.signupRequired.manualPromo",
-              "Keep using manual PDF tools for free",
+              "payg.signupRequired.reassurance",
+              "Manual tools stay free. No credit card required.",
             )}
-          </List.Item>
-          <List.Item>
-            {t(
-              "payg.signupRequired.aiPromo",
-              "Create, edit and ask questions about PDFs with AI",
-            )}
-          </List.Item>
-          <List.Item>
-            {t(
-              "payg.signupRequired.automationPromo",
-              "Try automations and API access with your free Processor allowance",
-            )}
-          </List.Item>
-        </List>
-        <Text size="sm" c="dimmed">
-          {t(
-            "payg.signupRequired.subtext",
-            "Creating an account is free and takes a few seconds. No credit card required.",
-          )}
-        </Text>
-        <Group justify="flex-end" gap="sm">
-          <Button variant="secondary" onClick={() => setDetail(null)}>
-            {t("payg.signupRequired.cancel", "Not now")}
-          </Button>
-          <Button variant="secondary" onClick={() => authenticate("/login")}>
-            {t("payg.signupRequired.login", "Log in")}
-          </Button>
-          <Button
-            leftSection={<Icon name="user-plus" size={16} />}
-            onClick={() => authenticate("/signup")}
-          >
-            {t("payg.signupRequired.cta", "Sign up free")}
-          </Button>
-        </Group>
-      </Stack>
-    </Modal>
+          </p>
+        </div>
+      }
+      buttons={[
+        {
+          key: "login",
+          label: t("payg.signupRequired.login", "Log in"),
+          action: "login",
+        },
+        {
+          key: "signup",
+          label: t("payg.signupRequired.createAccount", "Create free account"),
+          primary: true,
+          action: "signup",
+        },
+      ]}
+      onAction={(action) =>
+        authenticate(action === "login" ? "/login" : "/signup")
+      }
+    />
   );
 }

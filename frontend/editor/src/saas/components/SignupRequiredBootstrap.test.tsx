@@ -71,9 +71,7 @@ describe("guest signup prompt", () => {
     expect(processor).toBeEnabled();
     fireEvent.click(processor);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(
-      screen.getByText("Unlock Processor with a free account"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Unlock Processor")).toBeInTheDocument();
     expect(screen.getByTestId("destination")).toHaveTextContent(
       "/editor?tool=compress",
     );
@@ -100,7 +98,7 @@ describe("guest signup prompt", () => {
       ),
     );
     expect(
-      await screen.findByText(/reached your 5 free guest tool runs/),
+      await screen.findByText(/used your 5 free guest runs/),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Log in" }));
     expect(screen.getByTestId("destination")).toHaveTextContent(
@@ -119,10 +117,10 @@ describe("guest signup prompt", () => {
         );
     });
     expect(await screen.findAllByRole("dialog")).toHaveLength(1);
-    expect(
-      screen.getByText("Unlock Processor with a free account"),
-    ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Sign up free" }));
+    expect(screen.getByText("Unlock Processor")).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Create free account" }),
+    );
     expect(screen.getByTestId("destination")).toHaveTextContent(
       "/signup?next=%2Feditor%3Ftool%3Dcompress",
     );
