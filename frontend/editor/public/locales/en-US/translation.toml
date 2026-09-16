@@ -36,7 +36,10 @@ editSecret = "Edit this value"
 editYourNewFiles = "Edit your new file(s)"
 exportAndContinue = "Export & Continue"
 false = "False"
+fileChangedOnDisk = "Changed on disk since you edited it"
+fileDiskUnavailable = "Cannot reach the file on disk"
 fileNotSavedToDisk = "Not saved to disk"
+fileOriginalDeleted = "Original deleted - save to keep a copy"
 fileSavedToDisk = "File saved to disk"
 fileSelected = "{{filename}}"
 filesSelected = "{{count}} files"
@@ -1925,7 +1928,7 @@ underline = "Underline"
 width = "Width"
 
 [app]
-description = "The Free Adobe Acrobat alternative (10M+ Downloads)"
+description = "A free, private PDF editor you can run on any infrastructure."
 
 [appBanner]
 dismiss = "Dismiss"
@@ -3409,6 +3412,9 @@ will = "Will"
 work-instruction = "Work instruction"
 work-order = "Work order"
 
+[classificationDemo]
+folderName = "Downloads"
+
 [classificationDemo.buttons]
 done = "Done"
 notNow = "Not now"
@@ -3427,6 +3433,7 @@ cta = "Make Stirling my default"
 title = "Open every PDF in Stirling"
 
 [classificationDemo.followUp]
+background = "This runs in the background. The ring on the left shows progress."
 batchCta = "Process another {{count}}"
 free = "They are all covered by your remaining free allowance."
 partial = "{{count}} of them are covered by your remaining free allowance."
@@ -3460,6 +3467,12 @@ heading = "Your Downloads, sorted"
 summary = "Stirling read {{documents}} and sorted them into {{types}}."
 typeCount_one = "{{count}} type"
 typeCount_other = "{{count}} types"
+
+[classificationDemo.ring]
+done = "{{folder}} classified"
+doneDetail = "{{count}} PDFs sorted by type"
+progress = "{{done}} of {{total}} PDFs ({{percent}}%)"
+running = "Classifying {{folder}}"
 
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
@@ -4088,6 +4101,36 @@ title = "Settings Opened"
 message = "Stirling PDF is now your default PDF editor"
 title = "Default App Set"
 
+[desktopFileLink]
+saveAs = "Save as…"
+useDiskVersion = "Use disk version"
+
+[desktopFileLink.conflict]
+hint = "Keeping your changes overwrites the file on disk when you next save."
+keepMine = "Keep my changes"
+prompt = "This file changed on disk while you had unsaved changes here. Only one version can be kept."
+remaining = "{{count}} more to review"
+title = "File changed on disk"
+useDisk = "Use the disk version"
+
+[desktopFileLink.missing]
+body = "\"{{name}}\" has been deleted or moved on disk, so it has been removed from your files."
+title = "File no longer exists"
+
+[desktopFileLink.openDeleted]
+body_one = "\"{{name}}\" no longer exists on disk. It is still open here - saving will ask you for a new location."
+body_other = "{{count}} files no longer exist on disk. They are still open here - saving each one will ask you for a new location."
+title_one = "File deleted on disk"
+title_other = "Files deleted on disk"
+
+[desktopFileLink.reloaded]
+body = "\"{{name}}\" changed on disk and has been reloaded."
+title = "Updated from disk"
+
+[desktopFileLink.tooLarge]
+body = "\"{{name}}\" changed on disk. It is large enough that reloading it will take a while, so the version here has been left alone."
+title = "File changed on disk"
+
 [desktopUpdate]
 downloading = "Downloading update..."
 installing = "Installing update..."
@@ -4440,7 +4483,6 @@ dropToAdd = "Drop files to add"
 duplicateFailed = "Could not duplicate file"
 expand = "Expand sidebar"
 googleDrive = "Google Drive"
-googleDriveDisabled = "Google Drive is not configured"
 library = "PDF Library"
 myFiles = "File library"
 noFiles = "No files yet"
@@ -4491,7 +4533,6 @@ breadcrumbsOverflow = "Show parent folders"
 bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
-clearSelection = "Clear selection"
 closeDetails = "Close details"
 create = "Create"
 cycleBlocked = "Can't move a folder into one of its own subfolders."
@@ -4608,6 +4649,16 @@ device = "This device only"
 deviceHint = "Removes the local copy. The cloud copy is kept."
 everywhere = "Everywhere"
 everywhereHint = "Deletes the file from this device and the cloud."
+
+[filesPage.diskLink]
+conflict = "Disk changed"
+conflictHint = "The file on disk changed while you had unsaved edits. Your version is shown - saving will overwrite the one on disk."
+orphaned = "Not on disk"
+orphanedHint = "The original at {{path}} is gone. This copy is only here - saving it will ask for a new location."
+unavailable = "Unavailable"
+unavailableHintOffline = "The drive or share this file lives on is not connected. Reconnect it to pick up changes again."
+unavailableHintPermission = "Stirling is not allowed to read this location. Grant access in System Settings to pick up changes again."
+unavailableHintUnknown = "This file cannot be reached right now. The copy here is unchanged."
 
 [filesPage.diskState]
 all = "All"
@@ -4762,9 +4813,6 @@ sweep = "Retry failed files"
 [filesPage.processingSetup]
 back = "Back"
 cancel = "Cancel"
-lead = "Anything added to this folder runs these steps, in place - each file becomes its processed version."
-start = "Start processing"
-title = "Process '{{name}}'"
 
 [filesPage.search]
 clear = "Clear filter"
@@ -6355,7 +6403,7 @@ noKey = "VITE_STRIPE_PUBLISHABLE_KEY is unset. Real iframe mounts here once conf
 title = "Stripe Embedded Checkout (mock mode)"
 
 [payg.confirm]
-body = "Your team can now run automation, AI, and API operations beyond your 500 free PDFs."
+bodyWithAllowance = "Your team can now run automation, AI, and API operations beyond your {{limit}} free PDFs."
 capValue = "{{symbol}}{{amount}} / month"
 noCap = "No cap"
 note = "You can change your cap, cancel, or open the Stripe customer portal any time from this page."
@@ -6382,7 +6430,7 @@ benefit3Body = "call any Stirling endpoint programmatically"
 benefit3Title = "API access"
 button = "Turn on Processor →"
 reassurance = "No minimum · Set a $0 cap to test · Cancel anytime"
-subtitle = "Keep going past your 500 free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
+subtitleWithAllowance = "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control."
 title = "Turn on the Processor plan"
 
 [payg.free.editor]
@@ -6460,7 +6508,7 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-body = "Stirling PDF gives every signed-up account 500 free operations a month, enough to keep most workflows humming without paying a cent. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+bodyMonthlyAllowance = "Stirling PDF gives every signed-up account a free monthly allowance for operations. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
 cancel = "Not now"
 cta = "Sign up free"
 subtext = "Creating an account is free and takes a few seconds. No credit card required."
@@ -6521,7 +6569,7 @@ apiBody = "programmatic access to any Stirling endpoint"
 apiTitle = "API calls"
 automationBody = "chained tools or scheduled runs that don't need clicks"
 automationTitle = "Automation pipelines"
-footnote = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even past 500. The distinction is the type of work, not where you click."
+footnoteUnlimited = "Manual tools (viewing, editing, merging, splitting, watermarking, compressing, manual OCR) are always free, even after your included credits are used. The distinction is the type of work, not where you click."
 title = "What we count toward billing"
 
 [payg.upgrade.promise]
@@ -7282,7 +7330,7 @@ start = "Connect Stirling account"
 step = "Step {{current}} of {{total}}"
 
 [portal.accountLink.connect.benefits]
-creditsDetail = "500 free per month"
+creditsDetailMonthly = "Free monthly allowance"
 creditsLabel = "Credits"
 processorDetail = "Pipelines, policies, sources and audit"
 processorLabel = "Processor"
@@ -9147,42 +9195,6 @@ summary = "Detects and redacts PII, strips active content (JavaScript), and wate
 1 = "Remove JavaScript"
 2 = "Watermark"
 
-[portal.policies.detail]
-enforces = "Steps"
-managerOnly = "Only an admin or team leader can modify this policy"
-onEveryExport = "On every export"
-onEveryUpload = "On every upload"
-outputAsNewFile = "as a new file"
-outputAsNewVersion = "as a new version"
-recentActivity = "Recent activity"
-showLess = "Show less"
-showMore = "Show more"
-sources = "Sources"
-
-[portal.policies.detail.actions]
-clearHistory = "Clear processed history"
-delete = "Delete"
-editSettings = "Edit settings"
-pause = "Pause"
-resume = "Resume"
-
-[portal.policies.detail.clearHistory]
-body = "This pipeline will forget every file it has already processed and reprocess everything currently in its sources on the next run. The files themselves are not changed. This cannot be undone."
-cancel = "Cancel"
-confirm = "Clear history"
-title = "Clear processed history?"
-
-[portal.policies.detail.delete]
-bodyActive = "\"{{name}}\" is active and enforcing on your documents. Deleting it stops that immediately and cannot be undone. Pause it instead if you only want it to stop running."
-bodyPaused = "\"{{name}}\" will be removed for everyone. This cannot be undone."
-cancel = "Cancel"
-confirm = "Delete"
-title = "Delete this pipeline?"
-
-[portal.policies.detail.emptyActivity]
-description = "Documents will appear here once this pipeline runs."
-title = "No activity yet"
-
 [portal.policies.endpoints]
 addWatermark = "Watermark"
 autoRedact = "Redact PII"
@@ -9388,15 +9400,6 @@ label = "Post the document to a webhook"
 [portal.policies.operations.zapierNotify]
 description = "Hands the run's details to your automation."
 label = "Trigger a Zap or Make scenario"
-
-[portal.policies.stats]
-activeFor = "Active"
-dataProcessed = "Data processed"
-docsEnforced = "Docs processed"
-
-[portal.policies.status]
-active = "Active"
-paused = "Paused"
 
 [portal.policies.wizard.actions]
 cancel = "Cancel"
@@ -10102,6 +10105,57 @@ typesFound_one = "{{count}} document type found"
 typesFound_other = "{{count}} document types found"
 working = "Processing ..."
 
+[processingFolders.setup]
+addFolder = "Add folder"
+advancedSteps = "This folder uses a processing setup this wizard cannot edit. Its saved steps have not been changed."
+change = "Change"
+changeLocation = "Change folder location"
+chooseFolder = "Which folder should we process?"
+chooseParent = "Choose where to create the folder"
+chooseProcessing = "Choose processing"
+computer = "On this computer"
+computerDescription = "Click to choose a folder from your computer."
+computerHeading = "Process your own folder"
+createIn = "Create in"
+downloadsAction = "Try processing your downloads folder"
+dropDescription = "or click to choose one from your computer."
+dropError = "Drop a single folder here, or click to choose one."
+dropHeading = "Drop a folder here"
+editFolder = "Edit {{name}}"
+editTitle = "Edit folder processing"
+enable = "Enable processing"
+existingTitle = "Set up folder processing"
+folder = "Folder"
+folderChoice = "Use an existing folder or create one"
+folderName = "Folder name"
+fromComputer = "From computer..."
+invalidName = "Enter a folder name without path separators."
+location = "Folder location"
+namePlaceholder = "e.g. Invoices"
+newFolder = "New folder"
+noFolders = "No folders here."
+noMatchingFolders = "No matching folders."
+openFolder = "Open {{name}}"
+portalOnlyPreset = "Configure this preset in the portal."
+presetInfo = "About {{name}}"
+presetsLabel = "Processing presets"
+processing = "Processing"
+progress = "Setup progress"
+replaceWarning = "\"{{name}}\" already has processing. Saving will replace its current processing settings."
+retry = "Try again"
+review = "Review"
+saveChanges = "Save changes"
+saveFolder = "Save folder"
+searchFolders = "Search folders..."
+searchLocations = "Search locations..."
+selectFolder = "Select a folder"
+server = "Server storage"
+serverAction = "Or add a new folder to your server"
+settings = "Adjust settings"
+title = "Set up folder processing"
+useExisting = "Use existing folder"
+viewLabels = "View classification labels"
+
 [processingFolders.wall]
 done = "Done"
 failed = "Failed"
@@ -10329,6 +10383,19 @@ reader = "Reader"
 
 [read]
 tags = "view,open,display,read,viewer,PDF viewer,PDF reader,open PDF,view PDF,display PDF,preview,browse"
+
+[reader.rail]
+addDocument = "Add file"
+bookmarks = "Bookmarks"
+close = "Close document"
+comment = "Comments"
+label = "Reading tools"
+readAloud = "Read aloud"
+rotateLeft = "Rotate left"
+rotateRight = "Rotate right"
+search = "Find in document"
+switchDocument = "Switch document"
+thumbnails = "Pages"
 
 [redact]
 submit = "Redact"
@@ -11985,8 +12052,6 @@ ZIP = "a ZIP archive"
 [toolPanel]
 alpha = "Alpha"
 backToAllTools = "Back to all tools"
-collapse = "Collapse panel"
-expand = "Expand panel"
 goBack = "Go back"
 pdfTools = "PDF Tools"
 placeholder = "Choose a tool to get started"
@@ -12473,6 +12538,7 @@ bookmarkTitle = "Bookmark title"
 bookmarkTitleRequired = "Bookmark title is required"
 closeSidebar = "Close bookmarks sidebar"
 collapseAll = "Collapse all bookmarks"
+editorOnly = "This document's bookmarks can only be edited in the editor."
 empty = "No bookmarks in this document"
 expandAll = "Expand all bookmarks"
 searchPlaceholder = "Search bookmarks"
