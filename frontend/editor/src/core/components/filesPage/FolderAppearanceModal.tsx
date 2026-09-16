@@ -14,9 +14,8 @@ interface FolderAppearanceModalProps {
 }
 
 /**
- * The colour and icon picker, out of the folder menu and into its own surface.
- * Inline it was taller than everything else in that menu put together, which
- * pushed the actions a reader came for below the fold.
+ * The folder's colour and icon picker on its own surface, the folder menu having
+ * no room for a grid that tall beside the actions a reader came for.
  *
  * There is no cancel: every swatch applies as it is clicked, so the footer
  * dismisses rather than commits.

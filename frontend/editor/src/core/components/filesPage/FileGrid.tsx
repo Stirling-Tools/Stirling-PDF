@@ -141,8 +141,7 @@ interface FileGridProps {
   onActionError?: (message: string) => void;
   /**
    * What acts on the current selection, built by the page that owns the
-   * handlers. List view puts it in the column header, which only exists here;
-   * grid view has no header and keeps its own copy above the listing.
+   * handlers. Rendered in the list's column header, which grid view lacks.
    */
   selectionActions?: React.ReactNode;
 }
@@ -769,9 +768,8 @@ const FolderCard = React.memo(function FolderCard({
 });
 
 /**
- * A working folder's live per-state counts. On a card they sit under the name with
- * room to wrap; in a row they are the status cell, which clips, so the states worth
- * acting on come first and the whole breakdown is repeated in the title.
+ * A working folder's live per-state counts. The row variant clips, so the states
+ * worth acting on come first and the title repeats the whole breakdown.
  */
 function ProcessingFolderStats({
   recordId,

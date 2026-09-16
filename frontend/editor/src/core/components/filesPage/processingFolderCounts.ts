@@ -13,9 +13,8 @@ let timer: ReturnType<typeof setInterval> | null = null;
 let lister: Lister | null = null;
 
 async function read(recordId: string): Promise<void> {
-  // One reading at a time per folder: a second view subscribing, or a tick
-  // arriving while the last one is still out, joins the request in flight
-  // rather than adding to it.
+  // One reading at a time per folder: a second subscriber, or a tick arriving
+  // while the last is still out, joins the request in flight.
   if (!lister || inFlight.has(recordId)) return;
   inFlight.add(recordId);
   try {
@@ -38,16 +37,14 @@ function subscribe(recordId: string, notify: () => void): () => void {
   const forRecord = subscribers.get(recordId) ?? new Set<() => void>();
   forRecord.add(notify);
   subscribers.set(recordId, forRecord);
-  // Only a folder nobody has numbers for pays for a request on subscribe. A row
-  // scrolled back into view, or a second view of the same folder, takes the last
-  // reading and waits for the tick, so scrolling cannot spray requests.
+  // Only a folder with no numbers yet pays for a request on subscribe, so
+  // scrolling rows in and out cannot spray them.
   if (!counts.has(recordId)) void read(recordId);
   timer ??= setInterval(tick, POLL_MS);
   return () => {
     forRecord.delete(notify);
-    // The numbers outlive their last subscriber: a folder scrolled out of the
-    // list and back shows what it last knew instead of blanking, and the
-    // snapshot never flips to null under a component that is still mounted.
+    // The numbers outlive their last subscriber, so the snapshot never flips to
+    // null under a component that is still mounted.
     if (forRecord.size === 0) subscribers.delete(recordId);
     if (subscribers.size === 0 && timer) {
       clearInterval(timer);

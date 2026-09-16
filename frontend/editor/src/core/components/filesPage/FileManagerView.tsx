@@ -1469,8 +1469,8 @@ export default function FileManagerView() {
     actions: isMobile ? libraryActions : null,
   });
 
-  // Built once and handed to whichever surface the current view mode uses, so
-  // the two can never offer a different set of actions.
+  // One instance for whichever surface the view mode uses, so the two cannot
+  // drift apart.
   const bulkActionsMenu =
     selectedFiles.length > 0 ? (
       <FilesToolbarBulkMenu
@@ -1834,9 +1834,8 @@ export default function FileManagerView() {
             </div>
           </div>
 
-          {/* Always rendered, even with nothing to show: this row appears the moment
-              a file is selected, and a row that only sometimes exists would push the
-              listing down under the pointer mid-double-click. */}
+          {/* Always rendered: a row that only exists once something is selected
+              would push the listing down under the pointer mid-double-click. */}
           <div className="files-page-above-table">
             {processingView && (
               <div className="files-page-state-filters">
@@ -1862,8 +1861,6 @@ export default function FileManagerView() {
                 ))}
               </div>
             )}
-            {/* Grid view has no column header to host these, so it keeps them
-                here; list view puts the same menu in its header instead. */}
             {viewMode === "grid" && bulkActionsMenu && (
               <div className="files-page-toolbar-actions files-page-selection-actions">
                 {bulkActionsMenu}

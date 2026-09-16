@@ -983,9 +983,9 @@ test.describe("Files page", () => {
   test.describe("Selection chrome", () => {
     test.use({ autoGoto: false, filesViewMode: null });
 
-    /** Selection actions get their own always-present row: when they used to appear
-     *  inside the toolbar, selecting wrapped it and pushed every row down by a row's
-     *  height, so the second click of a double-click landed on the wrong file. */
+    /** Guards the bug that put selection actions in their own row: a toolbar
+     *  that wraps on selection moves every row down, and the second click of a
+     *  double-click lands on the wrong file. */
     test("selecting files does not move the listing", async ({ page }) => {
       await stubStorageApis(page);
       await seedFiles(page, [
@@ -1013,8 +1013,6 @@ test.describe("Files page", () => {
   test.describe("Library chrome placement", () => {
     test.use({ autoGoto: false });
 
-    /** The path sits on the library's own row; its actions live in the file
-     *  sidebar, and the shared bar above carries only what every view has. */
     test("the path is on the library row and the actions are in the sidebar", async ({
       page,
     }) => {

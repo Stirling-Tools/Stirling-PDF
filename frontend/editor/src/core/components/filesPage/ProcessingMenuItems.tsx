@@ -10,9 +10,8 @@ import TuneIcon from "@mui/icons-material/Tune";
 import { ProcessingFolderState } from "@app/hooks/useProcessingFolders";
 
 /**
- * The processing entries of a folder's action menu, carried by every folder kind including
- * mounts, whose other edit actions are hidden. `continuous` marks a folder whose engine
- * processes arrivals on its own, where an explicit "process now" would have nothing to do.
+ * The processing entries of a folder's action menu, carried by every folder kind
+ * including mounts, whose other edit actions are hidden.
  */
 export function ProcessingMenuItems({
   processing,

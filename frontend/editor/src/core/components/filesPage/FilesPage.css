@@ -8,9 +8,8 @@
   overflow: hidden;
 }
 
-/* The library's own row, carrying the folder path. What the library brings sits
-   here rather than in the shared bar above, which carries only what every view
-   has. */
+/* The library's own row. The shared bar above carries only what every view has,
+   so the folder path sits here instead. */
 .files-page-tabs-row {
   display: flex;
   align-items: center;
@@ -273,25 +272,20 @@
 
 .files-page-list-row {
   display: grid;
-  /* No column is ever dropped, so every one carries the floor its content
-     needs: a timestamp that is denied its width breaks into three lines and
-     triples the row height, and the status track holds two count chips
-     ("1 Failed  12 Ready") side by side without clipping the first. Type
-     floors for "Processing folder" rather than "PDF", which is the widest
-     thing that cell holds. Name floors widest of all because it is what a
-     reader navigates by: it is what stays on screen when the row is wider than
-     the list, so its floor is the whole visible width of a phone-sized row.
+  /* No column is ever dropped, so every track carries a floor: denied its width
+     a value wraps and the row grows, a timestamp into three lines. Type floors
+     for "Processing folder" and status for two chips ("1 Failed  12 Ready"),
+     the widest those cells hold; name floors widest, being what stays on screen
+     when the row is wider than the list.
 
-     Every floor is a length rather than max-content. Rows are sized
-     independently of each other, so a track measuring its own row's text would
-     land a few pixels off its neighbours and the columns would not line up
-     while scrolled. */
+     Floors are lengths, never max-content: each row is its own grid, so a track
+     measuring its own text lands a few pixels off its neighbours and the
+     columns drift apart while scrolled. */
   grid-template-columns:
     2.25rem minmax(17rem, 3fr) minmax(7.5rem, 1fr) minmax(4.5rem, 1fr)
     minmax(9.5rem, 1.5fr) minmax(8rem, 11rem) 2.5rem;
-  /* The sum of those floors. Without it the row stays as wide as the list and
-     the tracks spill out of a box that never grew, leaving the list nothing to
-     scroll. */
+  /* The sum of those floors: a flex item will not grow to its own content, so
+     without this the tracks overflow a box that never grew and nothing scrolls. */
   min-width: 56rem;
   gap: 0.5rem;
   align-items: center;
@@ -323,10 +317,9 @@
   min-height: 3rem;
 }
 
-/* Selecting turns the header into a bar for what acts on the selection: the
-   labels have nothing to sort while a selection is the subject, and the tint
-   says the listing is in a different mode. The select-all box keeps its track
-   so it does not jump. */
+/* Selecting replaces the column labels with what acts on the selection: they
+   have nothing to sort while a selection is the subject. The select-all box
+   keeps its track so it does not jump. */
 .files-page-list-row.is-header.is-selecting {
   grid-template-columns: 2.25rem minmax(0, 1fr);
   background: color-mix(in srgb, var(--c-primary) 10%, var(--c-bg-raised));
@@ -543,9 +536,8 @@
   color: var(--c-text-muted);
 }
 
-/* Pinned to the corner on a card, which is positioned for it. A row is a grid:
-   the badge sits in its cell, and absolute positioning would escape the row
-   entirely - the nearest positioned ancestor is the scrolling area. */
+/* Cards only: a row is a grid whose nearest positioned ancestor is the scrolling
+   area, so the same rule would take the badge out of the row entirely. */
 .files-page-card .files-page-state-badge {
   position: absolute;
   top: 6px;
@@ -590,18 +582,17 @@
   border-left: 1px solid var(--c-border-subtle);
 }
 
-/* The strip between the toolbar and the listing: what the listing is showing
-   (state chips) on the left, what acts on the current selection on the right.
-   Selection actions live here rather than in the toolbar so that selecting
-   files never reflows the toolbar - a shifting toolbar moves every row under
-   it, which breaks double-click-to-open. Matches the toolbar's side padding so
-   the chips line up with the count above them. */
+/* The strip between the toolbar and the listing: state chips on the left, and
+   in grid view the selection's actions on the right, list view having a column
+   header to hold them. They sit here rather than in the toolbar because a
+   toolbar that reflows on selection moves every row under it, which breaks
+   double-click-to-open. Side padding matches the toolbar so the chips line up
+   with the count above them. */
 .files-page-above-table {
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  /* Tall enough for the tallest thing it can hold, so it takes the same space
-     empty as it does full. */
+  /* Same space empty as full, so filling it moves nothing below. */
   min-height: 2.5rem;
   padding: 0 1.25rem;
 }
@@ -672,8 +663,8 @@
   min-width: 0;
 }
 
-/* A state belongs to its own column: inline with the name it grew past the cell and
-   ran under the actions. */
+/* The state has a column of its own: beside the name it outgrows the cell and
+   runs under the actions. */
 .files-page-list-status {
   display: flex;
   align-items: center;
@@ -682,8 +673,6 @@
   overflow: hidden;
 }
 
-/* In a row the counts share one line with the tag beside them, and the row's height
-   is fixed: they never wrap, and the full labels live in the title. */
 .files-page-folder-stat {
   display: inline-flex;
   align-items: center;
@@ -1513,25 +1502,17 @@
   }
 }
 
-/* ── Tablet / narrow desktop (≤900px) ────────────────────────────────
-   As soon as the right-hand details panel disappears (at 800px) and
-   even slightly before, the toolbar gets crowded - the bulk-action
-   strip ("Add to workspace", "Quick view", "Move to…", "Remove") +
-   filter selects + grid/list toggle is too wide to fit. This block
-   collapses bulk-action button labels to icon-only, shrinks the
-   filter selects, and pins the view toggle so it never clips off the
-   right edge. */
+/* Below this width the toolbar holds the count, the filter and sort triggers
+   and the view toggle in the room the details panel used to leave it. What
+   follows tightens their spacing and collapses the controls that can afford to
+   lose their labels. */
 @media (max-width: 1024px) {
   .files-page-toolbar {
-    /* nowrap so the item count sits on the same row as the filter
-       dropdowns and view-toggle instead of stacking on separate
-       lines. Runs to the app's mobile breakpoint: capping it at
-       900px left 901-1024px wrapping to two rows, which is the band the
-       mobile layout actually renders in.
-
-       Scrolls rather than clips. With a selection active the bulk-action
-       strip cannot fit any phone width, and `overflow-x: hidden` put those
-       buttons permanently out of reach behind the edge. */
+    /* nowrap so the count shares a row with the filter and sort triggers and
+       the view toggle. Runs to the app's own mobile breakpoint: stopping at
+       900px left 901-1024px wrapping to two rows, and that band is where the
+       mobile layout renders. Scrolls rather than clips, so nothing the row
+       cannot fit ends up unreachable behind its edge. */
     flex-wrap: nowrap;
     gap: 0.35rem;
     padding: 0.35rem 0.5rem;
@@ -1555,16 +1536,14 @@
     flex-shrink: 0;
   }
 
-  /* Match the toolbar's side padding rather than the desktop 1.25rem. The wider
-     inset cost the state chips a chip's worth of room, which pushed the last
-     one onto a second line. */
+  /* The desktop inset cost the state chips a chip's worth of room and wrapped
+     the last one onto a second line. */
   .files-page-above-table {
     padding: 0 0.5rem;
   }
 
-  /* The gear alone. The label and its caret cost more width here than the two
-     filter controls beside it, and the icon is the same one the menu opens
-     from at every width. */
+  /* The gear alone: its label and caret cost more width here than the two
+     filter controls beside it. */
   .files-page-folder-actions .files-page-toolbar-bulk-trigger {
     padding-left: 0.4rem;
     padding-right: 0.4rem;

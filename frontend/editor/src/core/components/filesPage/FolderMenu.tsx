@@ -32,13 +32,9 @@ interface FolderMenuProps {
   /** Mount roots can be unmounted; a subdirectory below one cannot. */
   canUnmount: boolean;
   editsDisabled: boolean;
-  /** Shown on a disabled entry to say why, e.g. that the server is unreachable. */
   editsDisabledHint?: string;
-  /**
-   * Why folder processing cannot run right now, or null when it can. Gates the
-   * processing entries on their own: a build with no server behind it can still
-   * rename and recolour a folder.
-   */
+  /** Why processing cannot run, or null. Gates the processing entries alone: a
+   *  build with no server behind it can still rename and recolour a folder. */
   processingBlock?: string | null;
   onStartProcessing: () => void;
   onRunProcessing: () => void;
@@ -56,17 +52,15 @@ interface FolderMenuProps {
   onDelete: () => void;
   /** Adds an Open entry above the rest; absent where the folder is already open. */
   onOpen?: () => void;
-  /** The labelled toolbar button, or a row's kebab. */
   variant?: "toolbar" | "kebab";
   /** Lets a row open its own menu from a right-click anywhere on it. */
   triggerRef?: React.Ref<HTMLButtonElement>;
 }
 
 /**
- * Everything that acts on one folder, behind a single trigger. Both the folder
- * you are inside and every folder listed in a row open this same menu, so the
- * two can never offer different things; only the trigger and the Open entry
- * differ between them.
+ * Everything that acts on one folder, behind a single trigger. The folder you
+ * are inside and every folder in a row open this same menu; only the trigger
+ * and the Open entry differ.
  */
 export function FolderMenu({
   folder,
