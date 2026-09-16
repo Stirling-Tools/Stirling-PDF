@@ -1,5 +1,5 @@
 import { test, expect } from "@app/tests/helpers/stub-test-base";
-import type { Page, Route } from "@playwright/test";
+import type { Locator, Page, Route } from "@playwright/test";
 import { DATABASE_CONFIGS } from "@app/services/indexedDBManager";
 
 /** Stubbed coverage for the /files page UI invariants. */
@@ -166,16 +166,33 @@ async function stubStorageApis(
   );
 }
 
+/** Open a menu and return the named item from that menu's own dropdown.
+ *  Dropdowns stay mounted once opened, so a page-wide role query matches every
+ *  menu that has been opened, not the one just clicked. */
+async function openMenuItem(
+  page: Page,
+  trigger: Locator,
+  name: RegExp,
+): Promise<Locator> {
+  await trigger.click();
+  const id = await trigger.getAttribute("aria-controls");
+  const dropdown = id ? page.locator(`#${id}`) : page.locator("body");
+  return dropdown.getByRole("menuitem", { name });
+}
+
 /** Navigate to /files and wait for at least one real (non-skeleton) card.
  *  `.files-page-card` also matches the loading-state skeleton placeholders, and
  *  their parent grid carries `aria-busy="true"` which intercepts pointer events
  *  -- so waiting for any `.files-page-card` races the skeleton→real transition
  *  and causes flaky timeouts on slower CI runners. */
-async function gotoFilesPage(page: Page): Promise<void> {
+async function gotoFilesPage(
+  page: Page,
+  { timeout = 10_000 }: { timeout?: number } = {},
+): Promise<void> {
   await page.goto("/files", { waitUntil: "domcontentloaded" });
   await expect(
     page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
-  ).toBeVisible({ timeout: 10_000 });
+  ).toBeVisible({ timeout });
 }
 
 test.describe("Files page", () => {
@@ -273,18 +290,30 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      // The details panel offers it directly; the selection's copy lives behind
-      // the Actions menu.
+      // Neither copy is a plain button: the selection's lives behind the
+      // Actions menu, the details panel's behind its own overflow menu. Both
+      // dropdowns stay mounted once opened, so each is read through the id its
+      // own trigger controls.
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }),
-      ).toHaveCount(1);
-      await page
-        .locator(
-          ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
-        )
-        .click();
+      ).toHaveCount(0);
       await expect(
-        page.getByRole("menuitem", { name: /^Save to server$/i }),
+        await openMenuItem(
+          page,
+          page.locator(
+            ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
+          ),
+          /^Save to server$/i,
+        ),
+      ).toBeVisible();
+      await expect(
+        await openMenuItem(
+          page,
+          page
+            .locator(".files-page-details-actions-row")
+            .getByRole("button", { name: /^Actions$/i }),
+          /^Save to server$/i,
+        ),
       ).toBeVisible();
     });
 
@@ -351,16 +380,25 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      const saveButtons = page.getByRole("button", {
-        name: /^Save to server$/i,
-      });
-      // Present (toolbar + details panel) and every instance disabled.
-      const count = await saveButtons.count();
-      expect(count).toBeGreaterThan(0);
-      for (let i = 0; i < count; i += 1) {
-        await expect(saveButtons.nth(i)).toBeVisible();
-        await expect(saveButtons.nth(i)).toBeDisabled();
-      }
+      const selectionSave = await openMenuItem(
+        page,
+        page.locator(
+          ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
+        ),
+        /^Save to server$/i,
+      );
+      await expect(selectionSave).toBeVisible();
+      await expect(selectionSave).toBeDisabled();
+
+      const panelSave = await openMenuItem(
+        page,
+        page
+          .locator(".files-page-details-actions-row")
+          .getByRole("button", { name: /^Actions$/i }),
+        /^Save to server$/i,
+      );
+      await expect(panelSave).toBeVisible();
+      await expect(panelSave).toBeDisabled();
     });
 
     test("per-file kebab Save to server is disabled (not hidden) when storage off", async ({
@@ -1198,6 +1236,9 @@ test.describe("Files page", () => {
      * fallback but proves nothing about the windowing.
      */
     test("renders a window of a long list, not all of it", async ({ page }) => {
+      // Seeding 400 records and reading them back is the slowest spec in this
+      // file: on webkit in CI the first card paints well past the default waits.
+      test.setTimeout(120_000);
       const COUNT = 400;
       await stubStorageApis(page);
       await seedFiles(
@@ -1208,14 +1249,17 @@ test.describe("Files page", () => {
           remoteStorageId: null,
         })),
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { timeout: 30_000 });
 
       const cards = page.locator(
         ".files-page-card:not(.files-page-skeleton-card)",
       );
-      const rendered = await cards.count();
-      expect(rendered).toBeGreaterThan(0);
-      expect(rendered).toBeLessThan(COUNT / 2);
+      // Windowing stands down until the scroller is measured, so the first paint
+      // can carry every card; poll for the window it settles into.
+      await expect
+        .poll(async () => cards.count(), { timeout: 10_000 })
+        .toBeLessThan(COUNT / 2);
+      expect(await cards.count()).toBeGreaterThan(0);
 
       // The spacers stand in for the rest, so the scroll height still reflects the
       // whole folder rather than only what is mounted.

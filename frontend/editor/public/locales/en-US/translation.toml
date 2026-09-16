@@ -1268,14 +1268,6 @@ description = "Languages that users can select from (leave empty to enable all l
 label = "Available Languages"
 placeholder = "Select languages"
 
-[admin.settings.general.logoStyle]
-classic = "Classic"
-classicAlt = "Classic logo"
-description = "Set the default logo style for all users on this server. Users can override this setting in their personal preferences."
-label = "Logo Style"
-modern = "Modern"
-modernAlt = "Modern logo"
-
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
 label = "Show Update Notifications"
@@ -7567,6 +7559,7 @@ subNoRate = "Team base plus metered processing"
 
 [portal.billing.identity.team]
 chipFleet = "Fleet control"
+chipIncluded = "{{allowance}} included credits monthly"
 chipSso = "SSO"
 name = "Team"
 sub = "Up to {{users}} users"
@@ -7719,13 +7712,15 @@ low = "Running low"
 
 [portal.billing.processor]
 activate = "Switch on the Processor"
-capTooltip = "Pauses PDF processing at your spend limit."
 factCapped = "{{pct}}% of {{cap}}"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
 included = "Included in your license"
-midFree = "{{rate}} per credit · {{allowance}} free every month"
-midFreeNoRate = "{{allowance}} free every month"
+includedCredits = "Included credits"
+includedRenewal = "{{summary}} · Renews {{date}}"
+meteredCapTooltip = "Pauses metered processing at your spend limit."
+midIncluded = "{{rate}} per credit · {{allowance}} included every month"
+midIncludedNoRate = "{{allowance}} included every month"
 midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
 raiseLimit = "Raise limit"

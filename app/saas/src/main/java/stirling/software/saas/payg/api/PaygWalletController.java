@@ -252,7 +252,13 @@ public class PaygWalletController {
                         prepaidTotal,
                         prepaidExpiresAt,
                         billingMode,
-                        bundleRatePerCreditMinor);
+                        bundleRatePerCreditMinor,
+                        billing.includedPeriodStart() == null
+                                ? null
+                                : billing.includedPeriodStart().toLocalDate().toString(),
+                        billing.includedPeriodEnd() == null
+                                ? null
+                                : billing.includedPeriodEnd().toLocalDate().toString());
         return ResponseEntity.ok(body);
     }
 
@@ -530,6 +536,8 @@ public class PaygWalletController {
                 0L,
                 null,
                 BILLING_MODE_PAYG,
+                null,
+                null,
                 null);
     }
 }
