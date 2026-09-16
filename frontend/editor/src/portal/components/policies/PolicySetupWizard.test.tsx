@@ -47,6 +47,11 @@ vi.mock("@portal/api/sources", () => ({
 
 vi.mock("react-router-dom", () => ({ useNavigate: () => vi.fn() }));
 
+const aiClassificationEnabled = { value: true };
+vi.mock("@app/hooks/useAiClassificationEnabled", () => ({
+  useAiClassificationEnabled: () => aiClassificationEnabled.value,
+}));
+
 const SAVE_CHANGES = "portal.policies.wizard.actions.saveChanges";
 const ENABLE = "portal.policies.wizard.actions.enablePolicy";
 
@@ -98,6 +103,7 @@ const routingEntry: CatalogueEntry = {
 
 describe("PolicySetupWizard", () => {
   beforeEach(() => {
+    aiClassificationEnabled.value = true;
     fetchIntegrations.mockResolvedValue([]);
     fetchSources.mockResolvedValue({ kpis: [], sources: [] });
   });
@@ -249,6 +255,65 @@ describe("PolicySetupWizard", () => {
     ]);
   });
 
+  it("allows deterministic routing without AI or a classify step", async () => {
+    aiClassificationEnabled.value = false;
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <SharedPolicySetupWizard
+        entry={routingEntry}
+        onClose={vi.fn()}
+        onSubmit={onSubmit}
+        routingConfig={({ onChange }) => (
+          <button
+            onClick={() =>
+              onChange({
+                sourceId: "inbox",
+                trigger: { type: "folder-watch", options: {} },
+                outputIds: ["archive"],
+                routingRules: [
+                  {
+                    condition: {
+                      input: {
+                        source: "document",
+                        field: "document.extension",
+                      },
+                      operator: "matches-any",
+                      values: ["pdf"],
+                    },
+                    outputId: "finance",
+                  },
+                ],
+              })
+            }
+          >
+            Configure deterministic routing
+          </button>
+        )}
+      />,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Configure deterministic routing" }),
+    );
+    await submitWizard(ENABLE);
+
+    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+    expect(result.steps).toEqual([]);
+    // The deterministic condition reaches the wire unchanged - the backend's
+    // ConditionEvaluator reads any document.* field off DocumentFacts.
+    expect(buildWireFromSetup(routingEntry, result, t).routingRules).toEqual([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: ["pdf"],
+        },
+        outputId: "finance",
+      },
+    ]);
+  });
+
   it("defaults a new security policy to enforcing on export", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);
     const entry: CatalogueEntry = {
@@ -300,30 +365,34 @@ describe("PolicySetupWizard", () => {
     expect(await screen.findByRole("button", { name: ENABLE })).toBeDisabled();
   });
 
-  it("defaults a new template to a policy (blocking)", async () => {
-    // A template's failure should block the file, so a new one defaults to required, independent of
-    // who is creating it.
-    const onSubmit = vi.fn().mockResolvedValue(undefined);
-    const entry: CatalogueEntry = {
-      category: security,
-      config: securityConfig,
-      policy: null,
-    };
+  it.each([
+    { categoryId: "security", required: true },
+    { categoryId: "classification", required: false },
+  ])(
+    "defaults $categoryId to required=$required",
+    async ({ categoryId, required }) => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const entry: CatalogueEntry = {
+        category: POLICY_CATEGORIES.find((c) => c.id === categoryId)!,
+        config: POLICY_CONFIG[categoryId],
+        policy: null,
+      };
 
-    render(
-      <PolicySetupWizard
-        entry={entry}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-        onCustomise={vi.fn()}
-      />,
-    );
-    await submitWizard(ENABLE);
+      render(
+        <PolicySetupWizard
+          entry={entry}
+          onClose={vi.fn()}
+          onSubmit={onSubmit}
+          onCustomise={vi.fn()}
+        />,
+      );
+      await submitWizard(ENABLE);
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
-    expect(result.required).toBe(true);
-  });
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+      expect(result.required).toBe(required);
+    },
+  );
 
   it("seeds the compliance chain so the gate judges the delivered document", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);

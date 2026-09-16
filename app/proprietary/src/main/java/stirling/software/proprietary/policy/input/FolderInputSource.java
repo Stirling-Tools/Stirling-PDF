@@ -29,6 +29,7 @@ import stirling.software.proprietary.policy.config.FolderAccessGuard;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.model.InputSpec;
 import stirling.software.proprietary.policy.model.PolicyInputs;
+import stirling.software.proprietary.policy.source.Source;
 
 /**
  * Reads input files from a directory; each ready file is its own unit of work, claimed through the
@@ -73,6 +74,13 @@ public class FolderInputSource implements InputSource {
     @Override
     public List<Path> watchTargets(InputSpec spec) {
         return List.of(FolderConfig.from(spec.options()).directory());
+    }
+
+    /** Filesystem permissions follow the installation's {@link FolderAccessGuard}. */
+    @Override
+    public List<ResolvedInput> resolve(Source source, ResolveContext ctx, String policyOwner)
+            throws IOException {
+        return resolve(source.toInputSpec(), ctx);
     }
 
     @Override
@@ -157,14 +165,13 @@ public class FolderInputSource implements InputSource {
                             identity,
                             success -> {
                                 if (config.track()) {
-                                    // Track mode never removes the input. A success settles at
-                                    // the file's CURRENT version: an in-place pipeline replaces
-                                    // the input with its result, and the claimed version would
-                                    // leave the folder re-processing its own output forever.
-                                    ctx.settle(
+                                    completeTracked(
+                                            ctx,
                                             identity,
-                                            success ? currentGate(file, claimedGate) : claimedGate,
-                                            null,
+                                            file,
+                                            claimedGate,
+                                            contentHash,
+                                            config.hashIdentity(),
                                             success);
                                     return;
                                 }
@@ -176,6 +183,45 @@ public class FolderInputSource implements InputSource {
         // seconds of it starting, not after its largest document.
         work.sort(Comparator.comparingLong(FolderInputSource::workSize));
         return work;
+    }
+
+    /**
+     * Settle a tracked file at its post-run version. Track mode never removes the input, so an
+     * in-place pipeline has replaced the file with its own output by now: settling the claimed gate
+     * would leave the folder reprocessing that output forever.
+     *
+     * <p>The content hash is re-read for the same reason. Settling null here would leave the
+     * verification tier blind for the rest of the file's life - every later metadata-only bump (a
+     * touch, an rsync, a backup restore) would then fail the {@code hash.equals(stored)} check
+     * against a null and reprocess an unchanged document, which is exactly what {@code identity:
+     * hash} is chosen to prevent.
+     */
+    private static void completeTracked(
+            ResolveContext ctx,
+            String identity,
+            Path file,
+            String claimedGate,
+            MemoizedContentHash contentHash,
+            boolean hashIdentity,
+            boolean success) {
+        if (!success) {
+            ctx.settle(identity, claimedGate, claimedHash(file, claimedGate, contentHash), success);
+            return;
+        }
+        // Hash before gate: a file changed between the two then reads as an older gate carrying
+        // newer content, so the next sweep reprocesses. The reverse order could skip a real edit.
+        String finalHash = hashIdentity ? currentHash(file) : null;
+        ctx.settle(identity, currentGate(file, claimedGate), finalHash, true);
+    }
+
+    /** The file's content hash as it is now; null when it cannot be read. */
+    private static String currentHash(Path file) {
+        try {
+            return FolderIdentities.contentHash(file);
+        } catch (IOException | UncheckedIOException e) {
+            log.debug("Could not hash {} at settle: {}", file, e.getMessage());
+            return null;
+        }
     }
 
     /** The file's stat gate as it is now; the claimed gate when it cannot be read. */

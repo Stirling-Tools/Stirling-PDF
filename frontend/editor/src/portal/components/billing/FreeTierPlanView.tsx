@@ -148,6 +148,7 @@ export function FreeTierPlanView({
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
       editorsDeployed={editorsDeployed}
+      pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
       onAddCapacity={onLink}
       onActivateProcessor={onLink}
       notices={

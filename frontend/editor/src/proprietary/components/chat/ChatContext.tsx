@@ -426,8 +426,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
     async (descriptor: AiWorkflowResultFile): Promise<File> => {
-      // AI result files live on the backend that ran the workflow (the SaaS
-      // engine on desktop), so fetch from the AI base, not the local backend.
+      // AI result files live on the backend that ran the workflow (the connected
+      // server on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
         `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
         {

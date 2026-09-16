@@ -23,6 +23,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
         status: "active",
         enabled: true,
         backendId: "backend-sec",
+        firstOperation: "/api/v1/misc/compress-pdf",
         runOn: "upload",
         runsOnEditor: true,
         order: 0,
