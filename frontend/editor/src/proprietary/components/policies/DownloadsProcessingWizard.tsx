@@ -27,6 +27,7 @@ import { readClassificationLabelsFromFile } from "@app/services/fileClassificati
 import { useFileHandler } from "@app/hooks/useFileHandler";
 import { useFolders } from "@app/contexts/FolderContext";
 import { canListDirectory } from "@app/services/localFolderContents";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import apiClient from "@app/services/apiClient";
 import "@app/components/policies/DownloadsProcessingWizard.css";
 
@@ -69,14 +70,12 @@ export function DownloadsProcessingWizard({
   const cancelRequested = useRef(false);
   const { addFiles } = useFileHandler();
   const { mountLocalFolder } = useFolders();
+  const block = useServerProcessingBlock();
 
-  // Only offer where it can work: the build must be able to read a file on disk, and Downloads
-  // must exist, be permitted, and hold something. Without canListDirectory the results are
-  // unreadable here (fetchRunOutputFile throws), so the offer would rewrite the server's own
-  // Downloads in place and show the user nothing. Retried because the window can open before
-  // the bundled backend is reachable, with a bounded wait so a genuine "no" stops asking.
+  // Needs a connected server; without canListDirectory fetchRunOutputFile throws, so the offer
+  // would rewrite the server's own Downloads and show nothing. Retried: session may lag the open.
   useEffect(() => {
-    if (!active || !canListDirectory) return;
+    if (!active || block || !canListDirectory) return;
     let cancelled = false;
     let attempts = 0;
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -107,7 +106,7 @@ export function DownloadsProcessingWizard({
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, [active]);
+  }, [active, block]);
 
   /** Closing resets to the question, so the offer can be reopened and re-run. */
   const close = () => {
