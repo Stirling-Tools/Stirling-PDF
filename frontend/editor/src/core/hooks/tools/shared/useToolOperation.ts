@@ -45,6 +45,7 @@ import { createNewStirlingFileStub } from "@app/types/fileContext";
 import { ToolOperation } from "@app/types/file";
 import { ensureBackendReady } from "@app/services/backendReadinessGuard";
 import { trackEditorOperation } from "@app/services/analytics";
+import { notifyToolCompleted } from "@app/services/toolUsageTracker";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
@@ -500,7 +501,6 @@ export const useToolOperation = <TParams>(
             config.operationType,
             successSourceIds.length || validFiles.length,
           );
-
           actions.setFiles(processedFiles);
 
           // Generate thumbnails and download URL concurrently
@@ -541,6 +541,12 @@ export const useToolOperation = <TParams>(
             validFiles,
             selectors,
           );
+
+          // Set by both branches so the usage tracker can move each document's
+          // tool chain from the inputs onto the outputs that replaced them.
+          let producedFileIds: FileId[] = [];
+          // An input that failed stays in the workbench, so it must keep its chain.
+          let consumedInputIds: FileId[] = [];
 
           if (isVersionOp) {
             // Output is a modified version of the input — link it to the input's version chain.
@@ -589,6 +595,7 @@ export const useToolOperation = <TParams>(
             const toConsumeInputIds = successSourceIds.filter((id) =>
               inputFileIds.includes(id),
             );
+            consumedInputIds = toConsumeInputIds;
             console.debug("[useToolOperation] Consuming files (version)", {
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
@@ -602,6 +609,7 @@ export const useToolOperation = <TParams>(
             // Tell the viewer to follow the replacement file — consumeFiles prepends the new file
             // to the list, so activeFileIndex would point to the wrong file without this.
             if (outputFileIds.length === 1) setActiveFileId(outputFileIds[0]);
+            producedFileIds = outputFileIds;
 
             // Notify on desktop when processing completes
             await notifyPdfProcessingComplete(outputFileIds.length);
@@ -664,6 +672,7 @@ export const useToolOperation = <TParams>(
             const toConsumeInputIds = successSourceIds.filter((id) =>
               inputFileIds.includes(id),
             );
+            consumedInputIds = toConsumeInputIds;
             console.debug("[useToolOperation] Consuming files (independent)", {
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
@@ -674,6 +683,7 @@ export const useToolOperation = <TParams>(
               outputStirlingFiles,
               outputStirlingFileStubs,
             );
+            producedFileIds = outputFileIds;
 
             // Notify on desktop when processing completes
             await notifyPdfProcessingComplete(outputFileIds.length);
@@ -710,6 +720,17 @@ export const useToolOperation = <TParams>(
               })),
             });
           }
+
+          // Feeds the recommended-tools ranking and the workflow history. Sent
+          // after the branch so each input document's chain can be carried onto
+          // the outputs that replaced it.
+          notifyToolCompleted({
+            toolId: config.operationType,
+            inputs: inputStirlingFileStubs.filter((stub) =>
+              consumedInputIds.includes(stub.id),
+            ),
+            outputFileIds: producedFileIds,
+          });
         }
       } catch (error) {
         try {
