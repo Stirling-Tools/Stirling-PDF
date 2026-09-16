@@ -28,9 +28,7 @@ const LegalSection: React.FC = () => {
   const cookiePolicy = config?.cookiePolicy ?? footerInfo?.cookiePolicy;
   const impressum = config?.impressum ?? footerInfo?.impressum;
 
-  const { showCookiePreferences } = useCookieConsent({
-    analyticsEnabled: analyticsEnabled === true,
-  });
+  const { showCookiePreferences } = useCookieConsent();
 
   const isValidLink = (link?: string) => link && link.trim().length > 0;
 
