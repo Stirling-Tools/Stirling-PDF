@@ -182,6 +182,10 @@ export function QuickNavRailHost() {
             label: t("processingFolders.setup.title"),
             icon: <Icon name="folder-plus" size={SIZE} />,
             onClick: () => {
+              if (host?.isAnonymous) {
+                requestProcessorSignup();
+                return;
+              }
               const open = host?.actions.current?.createProcessingFolder;
               if (open) open();
               else

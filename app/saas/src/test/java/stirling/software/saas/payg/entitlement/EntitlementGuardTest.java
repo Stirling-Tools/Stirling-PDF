@@ -41,7 +41,6 @@ import stirling.software.saas.payg.model.EntitlementState;
 import stirling.software.saas.payg.model.FeatureGate;
 import stirling.software.saas.payg.model.FeatureSet;
 import stirling.software.saas.security.EnhancedJwtAuthenticationToken;
-import stirling.software.saas.usage.GuestToolUsageService;
 
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -57,7 +56,6 @@ class EntitlementGuardTest {
     private UserRepository userRepository;
     private MeterRegistry meterRegistry;
     private EntitlementGuard guard;
-    private GuestToolUsageService guestUsage;
 
     private final ObjectMapper json = new ObjectMapper();
 
@@ -66,8 +64,7 @@ class EntitlementGuardTest {
         entitlementService = Mockito.mock(EntitlementService.class);
         userRepository = Mockito.mock(UserRepository.class);
         meterRegistry = new SimpleMeterRegistry();
-        guestUsage = Mockito.mock(GuestToolUsageService.class);
-        guard = new EntitlementGuard(entitlementService, userRepository, meterRegistry, guestUsage);
+        guard = new EntitlementGuard(entitlementService, userRepository, meterRegistry);
         SecurityContextHolder.clearContext();
     }
 
@@ -341,7 +338,7 @@ class EntitlementGuardTest {
     }
 
     @Test
-    void anonymousUser_withoutGuestAccount_mustSignIn() throws Exception {
+    void anonymousUser_manualTools_passThrough() throws Exception {
         SecurityContextHolder.getContext()
                 .setAuthentication(
                         new AnonymousAuthenticationToken(
@@ -355,9 +352,9 @@ class EntitlementGuardTest {
 
         boolean proceed = guard.preHandle(req, res, hm);
 
-        assertThat(proceed).isFalse();
-        assertThat(res.getStatus()).isEqualTo(401);
-        Mockito.verifyNoInteractions(entitlementService);
+        assertThat(proceed).isTrue();
+        assertThat(res.getStatus()).isEqualTo(200);
+        Mockito.verifyNoInteractions(entitlementService, userRepository);
     }
 
     // ---------------------------------------------------------------------------------------
@@ -652,56 +649,23 @@ class EntitlementGuardTest {
         assertThat(response.getStatus()).isEqualTo(401);
         assertThat(json.readTree(response.getContentAsString()).get("error").asText())
                 .isEqualTo("SIGNUP_REQUIRED");
-        Mockito.verifyNoInteractions(guestUsage, entitlementService, userRepository);
+        Mockito.verifyNoInteractions(entitlementService, userRepository);
     }
 
     @Test
-    void supabaseGuestLimitReturnsSignupWithoutBilling() throws Exception {
-        UUID id = UUID.randomUUID();
-        SecurityContextHolder.getContext().setAuthentication(guestAuth(id));
-        when(userRepository.findBySupabaseId(id)).thenReturn(Optional.of(userWithTeam(7L, 42L)));
-        when(guestUsage.limit()).thenReturn(5);
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        assertThat(
-                        guard.preHandle(
-                                new MockHttpServletRequest(), response, handlerFor("manualTool")))
-                .isFalse();
-        JsonNode body = json.readTree(response.getContentAsString());
-        assertThat(body.get("reason").asText()).isEqualTo("GUEST_TOOL_LIMIT_REACHED");
-        assertThat(body.get("limit").asInt()).isEqualTo(5);
-        Mockito.verifyNoInteractions(entitlementService);
-    }
-
-    @Test
-    void guestFailureRefundsOnceAcrossAsyncRedispatch() throws Exception {
-        UUID id = UUID.randomUUID();
-        SecurityContextHolder.getContext().setAuthentication(guestAuth(id));
-        when(userRepository.findBySupabaseId(id)).thenReturn(Optional.of(userWithTeam(7L, 42L)));
-        when(guestUsage.reserve(7L)).thenReturn(true);
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        HandlerMethod handler = handlerFor("manualTool");
-        assertThat(guard.preHandle(request, response, handler)).isTrue();
-        assertThat(guard.preHandle(request, response, handler)).isTrue();
-        response.setStatus(500);
-        guard.afterCompletion(request, response, handler, null);
-        guard.afterCompletion(request, response, handler, null);
-        verify(guestUsage).reserve(7L);
-        verify(guestUsage).release(7L);
-    }
-
-    @Test
-    void guestSuccessKeepsItsSlot() throws Exception {
-        UUID id = UUID.randomUUID();
-        SecurityContextHolder.getContext().setAuthentication(guestAuth(id));
-        when(userRepository.findBySupabaseId(id)).thenReturn(Optional.of(userWithTeam(7L, 42L)));
-        when(guestUsage.reserve(7L)).thenReturn(true);
-        MockHttpServletRequest request = new MockHttpServletRequest();
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        HandlerMethod handler = handlerFor("manualTool");
-        assertThat(guard.preHandle(request, response, handler)).isTrue();
-        guard.afterCompletion(request, response, handler, null);
-        verify(guestUsage, never()).release(any());
+    void supabaseGuestManualToolsRemainUnlimitedWithoutDatabaseLookups() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(guestAuth(UUID.randomUUID()));
+        for (int run = 0; run < 10; run++) {
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            assertThat(
+                            guard.preHandle(
+                                    new MockHttpServletRequest(),
+                                    response,
+                                    handlerFor("manualTool")))
+                    .isTrue();
+            assertThat(response.getStatus()).isEqualTo(200);
+        }
+        Mockito.verifyNoInteractions(entitlementService, userRepository);
     }
 
     private static EnhancedJwtAuthenticationToken guestAuth(UUID id) {
@@ -732,7 +696,7 @@ class EntitlementGuardTest {
         assertThat(guard.preHandle(new MockHttpServletRequest(), response, handler)).isFalse();
         assertThat(json.readTree(response.getContentAsString()).get("category").asText())
                 .isEqualTo("API");
-        Mockito.verifyNoInteractions(guestUsage, entitlementService);
+        Mockito.verifyNoInteractions(entitlementService);
     }
 
     @Test
@@ -743,21 +707,7 @@ class EntitlementGuardTest {
         MockHttpServletResponse response = new MockHttpServletResponse();
         assertThat(guard.preHandle(request, response, handlerFor("plainEndpoint"))).isFalse();
         assertThat(response.getStatus()).isEqualTo(401);
-        Mockito.verifyNoInteractions(guestUsage, entitlementService);
-    }
-
-    @Test
-    void guestQuotaFailureDoesNotAdmitUnmeteredWork() throws Exception {
-        UUID id = UUID.randomUUID();
-        SecurityContextHolder.getContext().setAuthentication(guestAuth(id));
-        when(userRepository.findBySupabaseId(id)).thenReturn(Optional.of(userWithTeam(7L, 42L)));
-        when(guestUsage.reserve(7L)).thenThrow(new IllegalStateException("database unavailable"));
-        MockHttpServletResponse response = new MockHttpServletResponse();
-        assertThat(
-                        guard.preHandle(
-                                new MockHttpServletRequest(), response, handlerFor("manualTool")))
-                .isFalse();
-        assertThat(response.getStatus()).isEqualTo(503);
+        Mockito.verifyNoInteractions(entitlementService);
     }
 
     private static EnhancedJwtAuthenticationToken jwtAuth(UUID supabaseId) {

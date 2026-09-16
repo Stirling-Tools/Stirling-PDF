@@ -25,8 +25,7 @@ describe("download entitlement errors", () => {
           [
             JSON.stringify({
               error: "SIGNUP_REQUIRED",
-              reason: "GUEST_TOOL_LIMIT_REACHED",
-              limit: 5,
+              category: "AI",
             }),
           ],
           { type: "application/json" },
@@ -40,9 +39,7 @@ describe("download entitlement errors", () => {
     try {
       handlePaygError("SIGNUP_REQUIRED", error);
       expect(listener.mock.calls[0][0].detail).toEqual({
-        category: null,
-        reason: "GUEST_TOOL_LIMIT_REACHED",
-        limit: 5,
+        category: "AI",
       });
     } finally {
       window.removeEventListener("payg:signupRequired", listener);

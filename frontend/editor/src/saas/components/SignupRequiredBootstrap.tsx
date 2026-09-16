@@ -32,7 +32,6 @@ export default function SignupRequiredBootstrap() {
     if (!isAnonymous) setDetail(null);
   }, [isAnonymous]);
 
-  const limitReached = detail?.reason === "GUEST_TOOL_LIMIT_REACHED";
   const authenticate = (path: "/signup" | "/login") => {
     const next = location.pathname + location.search + location.hash;
     setDetail(null);
@@ -43,12 +42,10 @@ export default function SignupRequiredBootstrap() {
     );
   };
 
-  const title = limitReached
-    ? t("payg.signupRequired.guestLimitTitle", "Keep going with a free account")
-    : t(
-        "payg.signupRequired.processorTitle",
-        "Create an account to unlock the best of Stirling",
-      );
+  const title = t(
+    "payg.signupRequired.processorTitle",
+    "Create an account to unlock the best of Stirling",
+  );
 
   return (
     <OnboardingSlideShell
@@ -58,44 +55,34 @@ export default function SignupRequiredBootstrap() {
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       stepIndex={0}
       stepCount={1}
-      slideKey={limitReached ? "guest-limit" : "guest-processor"}
+      slideKey="guest-signup"
       hero={
         <div className={styles.surfaces}>
           <div className={styles.surface}>
             <ShellHero>
               <Icon name="book-open" size={32} className={styles.heroIcon} />
             </ShellHero>
-            <span>{t("quickNav.reader", "Reader")}</span>
+            <span>{t("payg.signupRequired.readerLabel", "PDF Reader")}</span>
           </div>
           <div className={styles.surface}>
             <ShellHero>
               <Icon name="pencil" size={32} className={styles.heroIcon} />
             </ShellHero>
-            <span>{t("quickNav.editor", "Editor")}</span>
+            <span>{t("payg.signupRequired.editorLabel", "PDF Editor")}</span>
           </div>
           <div className={styles.surface}>
             <ShellHero>
               <Icon name="cpu" size={32} className={styles.heroIcon} />
             </ShellHero>
-            <span>{t("quickNav.processor", "Processor")}</span>
+            <span>
+              {t("payg.signupRequired.processorLabel", "PDF Processor")}
+            </span>
           </div>
         </div>
       }
       title={<h2 className={styles.title}>{title}</h2>}
       body={
         <div className={styles.body}>
-          <p className={styles.intro}>
-            {limitReached
-              ? t(
-                  "payg.signupRequired.guestLimitBody",
-                  "You've used your {{count}} free guest runs. Create an account to keep going.",
-                  { count: detail?.limit },
-                )
-              : t(
-                  "payg.signupRequired.processorBody",
-                  "Start with free monthly Processor credits.",
-                )}
-          </p>
           <ul className={styles.benefits}>
             <li>
               <span className={styles.benefitIcon}>
@@ -104,7 +91,7 @@ export default function SignupRequiredBootstrap() {
               <span>
                 {t(
                   "payg.signupRequired.manualToolsPromo",
-                  "Unlimited free manual tools",
+                  "Unlimited free manual PDF tools",
                 )}
               </span>
             </li>
@@ -142,9 +129,6 @@ export default function SignupRequiredBootstrap() {
               </span>
             </li>
           </ul>
-          <p className={styles.note}>
-            {t("payg.signupRequired.reassurance", "No credit card required.")}
-          </p>
         </div>
       }
       buttons={[

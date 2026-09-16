@@ -45,8 +45,6 @@ export type PaygErrorKind =
 export interface PaygSignupRequiredDetail {
   /** Category that triggered the gate — {@code AI}, {@code AUTOMATION}, or {@code API}. */
   category: string | null;
-  reason?: string;
-  limit?: number;
 }
 
 /** Decodes JSON entitlement errors from file downloads before the session-refresh interceptor. */
@@ -155,18 +153,11 @@ export function handlePaygError(kind: PaygErrorKind, error: unknown): void {
 
   if (kind === "SIGNUP_REQUIRED") {
     const category = extractSignupCategory(error);
-    const data = (
-      error as { response?: { data?: { reason?: unknown; limit?: unknown } } }
-    )?.response?.data;
-    const reason = typeof data?.reason === "string" ? data.reason : undefined;
-    const limit = typeof data?.limit === "number" ? data.limit : undefined;
     try {
       window.dispatchEvent(
         new CustomEvent<PaygSignupRequiredDetail>("payg:signupRequired", {
           detail: {
             category,
-            ...(reason !== undefined && { reason }),
-            ...(limit !== undefined && { limit }),
           },
         }),
       );

@@ -93,7 +93,6 @@ public final class SaasSchemaOwnership {
                     "file_share_accesses",
                     "file_shares",
                     "folders",
-                    "guest_tool_usage",
                     "integration_configs",
                     "invite_tokens",
                     "jwt_signing_keys",

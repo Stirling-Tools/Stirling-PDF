@@ -48,6 +48,7 @@ import { ensureBackendReady } from "@app/services/backendReadinessGuard";
 import { trackEditorOperation } from "@app/services/analytics";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
+import { useToolRunComplete } from "@app/hooks/useToolRunComplete";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
 import {
   buildInputTracking,
@@ -136,6 +137,7 @@ export const useToolOperation = <TParams>(
   const willUseCloud = useWillUseCloud(endpointString);
   const continueResolutions = useResolutionContinuation();
   const notificationsAvailable = useNotificationsAvailable();
+  const onToolRunComplete = useToolRunComplete();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -717,6 +719,7 @@ export const useToolOperation = <TParams>(
               })),
             });
           }
+          onToolRunComplete();
         }
       } catch (error) {
         if (isSignupRequiredError(error)) {
@@ -773,6 +776,7 @@ export const useToolOperation = <TParams>(
       checkCredits,
       continueResolutions,
       notificationsAvailable,
+      onToolRunComplete,
       reportFailure,
       getCompatibleFiles,
     ],

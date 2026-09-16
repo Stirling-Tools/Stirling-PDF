@@ -38,7 +38,6 @@ import stirling.software.proprietary.security.model.User;
 import stirling.software.saas.payg.cap.AiToolRoutes;
 import stirling.software.saas.payg.cap.RequiresFeature;
 import stirling.software.saas.payg.model.FeatureGate;
-import stirling.software.saas.usage.GuestToolUsageService;
 import stirling.software.saas.util.AuthenticationUtils;
 
 import tools.jackson.databind.ObjectMapper;
@@ -61,13 +60,13 @@ import tools.jackson.databind.ObjectMapper;
  * <table>
  *   <tr><th>auth</th><th>required gates</th><th>snapshot enabled?</th><th>outcome</th></tr>
  *   <tr><td>anonymous</td><td>AUTOMATION or AI_SUPPORT</td><td>n/a</td><td>401 SIGNUP_REQUIRED</td></tr>
- *   <tr><td>guest</td><td>OFFSITE_PROCESSING / CLIENT_SIDE</td><td>n/a</td><td>Lifetime tool quota</td></tr>
+ *   <tr><td>guest</td><td>OFFSITE_PROCESSING / CLIENT_SIDE</td><td>n/a</td><td>200</td></tr>
  *   <tr><td>authenticated</td><td>required ⊆ enabled</td><td>yes</td><td>200</td></tr>
  *   <tr><td>authenticated</td><td>required ⊄ enabled</td><td>no</td><td>402 FEATURE_DEGRADED</td></tr>
  * </table>
  *
- * <p>Account billing lookups fail open on transient errors. Guest quota lookups fail closed so a
- * database failure cannot turn the limited guest trial into unrestricted processing.
+ * <p>Account billing lookups fail open on transient errors. Guests may use manual tools without
+ * billing or usage tracking; billable Processor features require an account.
  */
 @Slf4j
 @Component
@@ -79,8 +78,6 @@ public class EntitlementGuard implements HandlerInterceptor {
     private final EntitlementService entitlementService;
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
-    private final GuestToolUsageService guestUsage;
-    private static final String GUEST_RESERVATION = EntitlementGuard.class.getName() + ".guest";
 
     private final Counter passCounter;
     private final Counter deniedDegradedCounter;
@@ -92,12 +89,10 @@ public class EntitlementGuard implements HandlerInterceptor {
     public EntitlementGuard(
             EntitlementService entitlementService,
             UserRepository userRepository,
-            MeterRegistry meterRegistry,
-            GuestToolUsageService guestUsage) {
+            MeterRegistry meterRegistry) {
         this.entitlementService = entitlementService;
         this.userRepository = userRepository;
         this.objectMapper = new ObjectMapper();
-        this.guestUsage = guestUsage;
 
         this.passCounter =
                 Counter.builder("payg.entitlement.guard")
@@ -184,23 +179,6 @@ public class EntitlementGuard implements HandlerInterceptor {
             if (billable) {
                 return write401SignupRequired(response, required);
             }
-            if (request.getAttribute(GUEST_RESERVATION) != null) return true;
-            try {
-                User user = AuthenticationUtils.getCurrentUser(auth, userRepository);
-                if (!guestUsage.reserve(user.getId())) {
-                    return writeGuestLimit(response);
-                }
-                request.setAttribute(GUEST_RESERVATION, user.getId());
-            } catch (SecurityException e) {
-                return write401SignupRequired(response, required);
-            } catch (RuntimeException e) {
-                log.warn("Guest quota unavailable; refusing tool execution", e);
-                writeJson(
-                        response,
-                        HttpStatus.SERVICE_UNAVAILABLE,
-                        Map.of("error", "GUEST_QUOTA_UNAVAILABLE"));
-                return false;
-            }
             passCounter.increment();
             return true;
         }
@@ -260,41 +238,6 @@ public class EntitlementGuard implements HandlerInterceptor {
             return ann.value();
         }
         return DEFAULT_REQUIRED_GATES;
-    }
-
-    @Override
-    public void afterCompletion(
-            HttpServletRequest request,
-            HttpServletResponse response,
-            Object handler,
-            Exception ex) {
-        Object reservation = request.getAttribute(GUEST_RESERVATION);
-        request.removeAttribute(GUEST_RESERVATION);
-        if (reservation instanceof Long userId
-                && (ex != null || response.getStatus() < 200 || response.getStatus() >= 300)) {
-            try {
-                guestUsage.release(userId);
-            } catch (RuntimeException e) {
-                log.warn("Could not return failed guest tool reservation for user {}", userId, e);
-            }
-        }
-    }
-
-    private boolean writeGuestLimit(HttpServletResponse response) {
-        deniedSignupRequiredCounter.increment();
-        writeJson(
-                response,
-                HttpStatus.UNAUTHORIZED,
-                Map.of(
-                        "error",
-                        "SIGNUP_REQUIRED",
-                        "category",
-                        "TOOLS",
-                        "reason",
-                        "GUEST_TOOL_LIMIT_REACHED",
-                        "limit",
-                        guestUsage.limit()));
-        return false;
     }
 
     private static boolean isBillable(FeatureGate[] required) {
