@@ -8,5 +8,10 @@
       "@core/*": ["./src/core/*"]
     }
   },
-  "exclude": ["src/core/**/*.test.ts*", "src/core/**/*.spec.ts*", "src/desktop"]
+  "exclude": [
+    "src/core/**/*.test.ts*",
+    "src/core/**/*.spec.ts*",
+    "src/desktop",
+    "src/cloud"
+  ]
 }
