@@ -171,6 +171,7 @@ describe("auto-run ordered chaining", () => {
       "backend-comp",
       expect.anything(),
       "unlocked",
+      "background",
     );
     expect(getFile).not.toHaveBeenCalledWith("locked");
   });
@@ -198,6 +199,7 @@ describe("auto-run ordered chaining", () => {
       "backend-comp",
       expect.anything(),
       "pdf",
+      "background",
     );
   });
 
@@ -216,6 +218,7 @@ describe("auto-run ordered chaining", () => {
       "backend-comp",
       expect.anything(),
       "pdf",
+      "background",
     );
   });
 
@@ -235,6 +238,7 @@ describe("auto-run ordered chaining", () => {
       "backend-archive",
       expect.anything(),
       "image",
+      "background",
     );
   });
   it("dispatches only matching files from a mixed upload", async () => {
@@ -259,6 +263,7 @@ describe("auto-run ordered chaining", () => {
       "backend-sec",
       expect.anything(),
       "pdf",
+      "background",
     );
     expect(getFile).not.toHaveBeenCalledWith("image");
     expect(getFile).not.toHaveBeenCalledWith("word");
@@ -323,6 +328,7 @@ describe("auto-run ordered chaining", () => {
       "backend-comp",
       expect.anything(),
       "image",
+      "background",
     );
     expect(getRun("run-image")?.fileName).toBe("page.png");
   });
