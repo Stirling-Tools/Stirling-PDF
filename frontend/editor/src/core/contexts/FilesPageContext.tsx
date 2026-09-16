@@ -75,6 +75,22 @@ export interface MoveDialogState {
   initial: FolderId | null;
 }
 
+const VIEW_MODE_STORAGE_KEY = "stirling.filesPageViewMode";
+
+/**
+ * The list is the default: it shows more files per screen and carries the columns the
+ * grid has no room for.
+ */
+function readPersistedViewMode(): FilesPageViewMode {
+  try {
+    const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (stored === "grid" || stored === "list") return stored;
+  } catch {
+    // Private mode, or storage denied: the default stands.
+  }
+  return "list";
+}
+
 interface FilesPageContextValue {
   // Cached files (leaf-only)
   allFiles: StirlingFileStub[];
@@ -266,7 +282,17 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   }, [folders.currentFolderId, clearSelection]);
 
   // View + sort + search + filters ----------------------------------------
-  const [viewMode, setViewMode] = useState<FilesPageViewMode>("grid");
+  const [viewMode, setViewModeState] = useState<FilesPageViewMode>(
+    readPersistedViewMode,
+  );
+  const setViewMode = useCallback((mode: FilesPageViewMode) => {
+    setViewModeState(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {
+      // A browser that refuses storage still gets the choice for this session.
+    }
+  }, []);
   const [sortMode, setSortMode] = useState<FilesPageSortMode>("modified-desc");
   const [search, setSearch] = useState("");
   const [originFilter, setOriginFilter] =

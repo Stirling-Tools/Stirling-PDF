@@ -19,6 +19,53 @@
   user-select: none;
 }
 
+/* Off the trailing edge and back, mirroring the file sidebar. Out of flow while
+   it leaves, so the reader's rail takes the slot without waiting for it. */
+[data-wings="leaving"] .tool-panel {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: 0;
+  z-index: var(--z-dropdown);
+  animation: tool-panel-leave var(--wings-ms) ease-in both;
+}
+
+[data-wings="returning"] .tool-panel {
+  animation: tool-panel-return var(--wings-ms) ease-out both;
+}
+
+/* Mirrored in RTL, where the panel sits on the leading edge. */
+[dir="rtl"] [data-wings="leaving"] .tool-panel {
+  animation-name: file-sidebar-leave;
+}
+
+[dir="rtl"] [data-wings="returning"] .tool-panel {
+  animation-name: file-sidebar-return;
+}
+
+@keyframes tool-panel-leave {
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+}
+
+@keyframes tool-panel-return {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-wings] .tool-panel {
+    animation: none;
+  }
+}
+
 /* While a View Transition runs its snapshots animate the rail's geometry, so
  * the CSS width transition would only re-run layout behind them.
  * withViewTransition marks the document for the transition's duration. */
@@ -34,80 +81,10 @@
   border-inline-start: 1px solid var(--c-border-subtle);
 }
 
-.tool-panel__collapsed-strip {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch;
-  padding-top: 10px;
-  height: 100%;
-  width: 100%;
-  min-height: 0;
-}
-
-.tool-panel__collapsed-top {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  padding: 0 0 10px;
-}
-
-.tool-panel__collapsed-divider {
-  height: 1px;
-  background: var(--c-border-subtle);
-  margin: 0 0.5rem 8px;
-}
-
-.tool-panel__collapsed-tools {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  padding: 0 0 12px;
-  overflow-y: auto;
-  overflow-x: hidden;
-  flex: 1 1 auto;
-  min-height: 0;
-}
-
-.tool-panel__collapsed-tool-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border: 1px solid transparent;
-  border-radius: 0.5rem;
-  background: transparent;
-  color: var(--c-text);
-  cursor: pointer;
-  transition:
-    background 120ms ease-out,
-    border-color 120ms ease-out;
-  padding: 0;
-  flex-shrink: 0;
-}
-
-.tool-panel__collapsed-tool-btn:hover {
-  background: var(--mantine-color-default-hover);
-}
-
-.tool-panel__collapsed-tool-btn[data-selected="true"] {
-  background: var(--mantine-color-default-hover);
-  border-color: var(--mantine-color-default-border);
-}
-
 .tool-panel__expand-btn {
   flex-shrink: 0;
   color: var(--c-text-muted) !important;
   border-color: var(--c-border-subtle) !important;
-}
-
-/* The collapse/expand toggle keeps a stable identity across the collapsed strip
-   and the expanded header, so a view transition translates it between the two
-   (same size) instead of cross-fading/scaling it ("big then small"). */
-.tool-panel__toggle-vt {
-  view-transition-name: sidebar-toggle;
 }
 
 .tool-panel__expand-btn svg {
@@ -117,19 +94,6 @@
 .tool-panel__expand-btn:hover {
   color: var(--c-text) !important;
   border-color: var(--border) !important;
-}
-
-.tool-panel__collapsed-search-btn {
-  flex-shrink: 0;
-  color: var(--c-text-muted) !important;
-}
-
-.tool-panel__collapsed-search-btn svg {
-  color: var(--c-text-muted) !important;
-}
-
-.tool-panel__collapsed-search-btn:hover {
-  color: var(--c-text) !important;
 }
 
 .tool-panel__back-btn {
