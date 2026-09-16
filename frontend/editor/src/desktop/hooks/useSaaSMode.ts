@@ -3,11 +3,12 @@ import { connectionModeService } from "@app/services/connectionModeService";
 
 /**
  * Returns whether the app is currently in SaaS connection mode.
- * Starts optimistically true (most common for desktop) to avoid tools
- * being incorrectly marked unavailable during initial load.
+ * Cloud requests stay disabled until the saved connection mode is known.
  */
 export function useSaaSMode(): boolean {
-  const [isSaaSMode, setIsSaaSMode] = useState(true);
+  const [isSaaSMode, setIsSaaSMode] = useState(
+    () => connectionModeService.getCachedMode() === "saas",
+  );
 
   useEffect(() => {
     void connectionModeService

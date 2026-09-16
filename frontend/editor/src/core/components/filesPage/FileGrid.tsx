@@ -3,24 +3,9 @@ import { useTranslation } from "react-i18next";
 import { Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { Icon } from "@app/ui/Icon";
 import { PolicyBadges as PolicyBadgeRow } from "@app/components/shared/PolicyBadges";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
-import FolderIcon from "@mui/icons-material/Folder";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import DeleteIcon from "@mui/icons-material/Delete";
-import HistoryIcon from "@mui/icons-material/History";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import ReplayIcon from "@mui/icons-material/Replay";
-import TaskAltIcon from "@mui/icons-material/TaskAlt";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import SearchIcon from "@mui/icons-material/Search";
-
 import { FileId } from "@app/types/file";
 import {
   FolderId,
@@ -45,6 +30,9 @@ import {
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
+import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
+import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
+import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
@@ -57,45 +45,6 @@ import { useFileActionIcons } from "@app/hooks/useFileActionIcons";
 import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
-
-/**
- * The origin badge a folder wears, mirroring the one its files would: a server folder
- * is Cloud, a virtual folder is Local (this browser), a mounted folder is On disk.
- */
-function useFolderOriginBadge(folder: FolderRecord): {
-  origin: "cloud" | "local";
-  tooltip: string;
-} {
-  const { t } = useTranslation();
-  switch (folderKind(folder)) {
-    case "virtual":
-      return {
-        origin: "local",
-        tooltip: t(
-          "filesPage.folderOrigin.virtualHint",
-          "A folder that lives only in this browser",
-        ),
-      };
-    case "local":
-      return {
-        // Same mark as a virtual folder: what matters is that it lives on
-        // this device, not which corner of it. The tooltip says which.
-        origin: "local",
-        tooltip: t(
-          "filesPage.folderOrigin.diskHint",
-          "A folder mounted from a directory on your disk",
-        ),
-      };
-    default:
-      return {
-        origin: "cloud",
-        tooltip: t(
-          "filesPage.folderOrigin.serverHint",
-          "A folder stored on the Stirling server",
-        ),
-      };
-  }
-}
 
 export type FilesPageViewMode = "grid" | "list";
 
@@ -445,7 +394,7 @@ function EmptyState({
     return (
       <div className="files-page-empty">
         <span className="files-page-empty-icon">
-          <SearchIcon style={{ fontSize: "2.5rem" }} />
+          <Icon name="search" size={"2.5rem"} />
         </span>
         <div className="files-page-empty-title">
           {t("filesPage.empty.noResults.title", "No matching files")}
@@ -519,7 +468,7 @@ function EmptyState({
   return (
     <div className="files-page-empty">
       <span className="files-page-empty-icon">
-        <FolderIcon style={{ fontSize: "2.5rem" }} />
+        <Icon name="folder" size={"2.5rem"} />
       </span>
       <div className="files-page-empty-title">{t(titleKey, titleFallback)}</div>
       <div className="files-page-empty-hint">{t(hintKey, hintFallback)}</div>
@@ -528,7 +477,7 @@ function EmptyState({
           {showUpload && (
             <Button
               size="md"
-              leftSection={<UploadFileIcon fontSize="small" />}
+              leftSection={<Icon name="file-up" size={20} />}
               onClick={onUpload}
             >
               {t("filesPage.empty.uploadCta", "Upload files")}
@@ -680,7 +629,6 @@ const FolderCard = React.memo(function FolderCard({
     Promise.resolve(removeProcessingFolder(folder)).catch((err) =>
       actions.reportError(err, label),
     );
-  const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
   const editsHidden = kind === "local";
   const offlineHint = t(
@@ -739,11 +687,7 @@ const FolderCard = React.memo(function FolderCard({
           iconGlyph={findFolderIcon(folder.icon)?.glyph}
         />
         <div className="files-page-card-origin">
-          <FileOriginBadge
-            origin={originBadge.origin}
-            tooltip={originBadge.tooltip}
-            compact
-          />
+          <FolderOriginBadge folder={folder} />
         </div>
       </div>
       <div className="files-page-card-body">
@@ -758,11 +702,7 @@ const FolderCard = React.memo(function FolderCard({
         <div className="files-page-card-meta">
           {processing ? (
             <>
-              <span className="files-page-processing-tag">
-                {processing.enabled
-                  ? t("filesPage.processing.active", "Processing folder")
-                  : t("filesPage.processing.paused", "Processing paused")}
-              </span>
+              <FolderProcessingTag enabled={processing.enabled} />
               {fileCount > 0 && (
                 <span>
                   {" · "}
@@ -883,7 +823,7 @@ function FileStateBadge({
   if (state === "done") {
     return (
       <span className="files-page-state-badge is-done">
-        <TaskAltIcon style={{ fontSize: "0.85rem" }} />
+        <Icon name="circle-check-big" size="0.85rem" />
         {t("filesPage.diskState.done", "Ready")}
       </span>
     );
@@ -910,7 +850,7 @@ function FileStateBadge({
             }}
             title={t("filesPage.diskState.retryHint", "Run this file again")}
           >
-            <ReplayIcon style={{ fontSize: "0.8rem" }} />
+            <Icon name="rotate-ccw" size="0.8rem" />
             {t("filesPage.diskState.retry", "Retry")}
           </button>
         )}
@@ -958,7 +898,7 @@ function FileActionsMenu({
 }: FileActionsMenuProps) {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
-  const DownloadIcon = useFileActionIcons().download;
+  const downloadIcon = useFileActionIcons().download;
   const showSaveToServer =
     saveToServerAvailable && file.remoteStorageId == null;
   const showVersionHistory =
@@ -974,12 +914,12 @@ function FileActionsMenu({
           aria-label={t("filesPage.fileMenu", "File actions")}
           data-testid="file-card-actions"
         >
-          <MoreVertIcon fontSize="small" />
+          <Icon name="ellipsis-vertical" size={20} />
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
-          leftSection={<OpenInNewIcon fontSize="small" />}
+          leftSection={<Icon name="external-link" size={20} />}
           onClick={(e) => {
             e.stopPropagation();
             actions.openFile(file);
@@ -989,7 +929,7 @@ function FileActionsMenu({
         </Menu.Item>
         <OpenInNewWindowMenuItem file={file} />
         <Menu.Item
-          leftSection={<DriveFileMoveIcon fontSize="small" />}
+          leftSection={<Icon name="folder-input" size={20} />}
           onClick={(e) => {
             e.stopPropagation();
             actions.requestMoveFile(file.id);
@@ -1004,7 +944,7 @@ function FileActionsMenu({
         )}
         {downloadAvailable && (
           <Menu.Item
-            leftSection={<DownloadIcon fontSize="small" />}
+            leftSection={<Icon name={downloadIcon} size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.downloadFile(file);
@@ -1016,7 +956,7 @@ function FileActionsMenu({
         )}
         {renameAvailable && (
           <Menu.Item
-            leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+            leftSection={<Icon name="file-pen" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.renameFile(file);
@@ -1028,7 +968,7 @@ function FileActionsMenu({
         )}
         {duplicateAvailable && (
           <Menu.Item
-            leftSection={<ContentCopyOutlinedIcon fontSize="small" />}
+            leftSection={<Icon name="copy" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.duplicateFile(file);
@@ -1052,7 +992,7 @@ function FileActionsMenu({
             w={240}
           >
             <Menu.Item
-              leftSection={<CloudUploadIcon fontSize="small" />}
+              leftSection={<Icon name="cloud-upload" size={20} />}
               disabled={Boolean(saveToServerDisabledReason)}
               onClick={(e) => {
                 e.stopPropagation();
@@ -1070,7 +1010,7 @@ function FileActionsMenu({
         )}
         {showVersionHistory && (
           <Menu.Item
-            leftSection={<HistoryIcon fontSize="small" />}
+            leftSection={<Icon name="rotate-ccw-clock" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.versionHistory(file);
@@ -1083,7 +1023,7 @@ function FileActionsMenu({
         <Menu.Divider />
         <Menu.Item
           color="red"
-          leftSection={<DeleteIcon fontSize="small" />}
+          leftSection={<Icon name="trash" size={20} />}
           onClick={(e) => {
             e.stopPropagation();
             actions.removeFile(file.id);
@@ -1237,15 +1177,16 @@ const FileCard = React.memo(function FileCard({
         ) : (
           <div className="files-page-card-thumb-fallback">
             {isPdf ? (
-              <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file-pdf" size={"2rem"} />
             ) : (
-              <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file" size={"2rem"} />
             )}
             <span>{extension || "FILE"}</span>
           </div>
         )}
         <div className="files-page-card-origin">
           <FileOriginBadge origin={getFileOrigin(file)} compact />
+          <DiskLinkBadge file={file} compact />
         </div>
         <FileStateBadge
           state={processingState}
@@ -1538,7 +1479,6 @@ const FolderRow = React.memo(function FolderRow({
     Promise.resolve(removeProcessingFolder(folder)).catch((err) =>
       actions.reportError(err, label),
     );
-  const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
   const editsHidden = kind === "local";
   const offlineHint = t(
@@ -1618,11 +1558,7 @@ const FolderRow = React.memo(function FolderRow({
             </span>
           )}
         </span>
-        <FileOriginBadge
-          origin={originBadge.origin}
-          tooltip={originBadge.tooltip}
-          compact
-        />
+        <FolderOriginBadge folder={folder} />
       </span>
       <span role="gridcell">
         {processing ? (
@@ -1823,7 +1759,7 @@ const FileRow = React.memo(function FileRow({
             }}
           />
         ) : (
-          <PictureAsPdfIcon fontSize="small" />
+          <Icon name="file-pdf" size={20} />
         )}
         <span
           style={{
@@ -1853,6 +1789,7 @@ const FileRow = React.memo(function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
+        <DiskLinkBadge file={file} compact />
         <PolicyBadgeRow policies={badges} />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
@@ -1941,9 +1878,9 @@ const DiskFileCard = React.memo(function DiskFileCard({
         ) : (
           <div className="files-page-card-thumb-fallback">
             {isPdf ? (
-              <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file-pdf" size={"2rem"} />
             ) : (
-              <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file" size={"2rem"} />
             )}
             <span>{extension || "FILE"}</span>
           </div>
@@ -1981,12 +1918,12 @@ const DiskFileCard = React.memo(function DiskFileCard({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onOpen();
@@ -1996,7 +1933,7 @@ const DiskFileCard = React.memo(function DiskFileCard({
             </Menu.Item>
             {hasOriginal && (
               <Menu.Item
-                leftSection={<HistoryIcon fontSize="small" />}
+                leftSection={<Icon name="rotate-ccw-clock" size={20} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   actions.revertFile(entry.name);
@@ -2069,9 +2006,9 @@ const DiskFileRow = React.memo(function DiskFileRow({
             }}
           />
         ) : ext === "PDF" ? (
-          <PictureAsPdfIcon fontSize="small" />
+          <Icon name="file-pdf" size={20} />
         ) : (
-          <InsertDriveFileIcon fontSize="small" />
+          <Icon name="file" size={20} />
         )}
         <span
           style={{
@@ -2112,19 +2049,19 @@ const DiskFileRow = React.memo(function DiskFileRow({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={onOpen}
             >
               {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
             {hasOriginal && (
               <Menu.Item
-                leftSection={<HistoryIcon fontSize="small" />}
+                leftSection={<Icon name="rotate-ccw-clock" size={20} />}
                 onClick={() => actions.revertFile(entry.name)}
               >
                 {t("filesPage.processing.restore", "Restore original")}

@@ -1,11 +1,12 @@
 import { PageEditorFunctions } from "@app/types/pageEditor";
 import { type ToolPanelMode } from "@app/constants/toolPanel";
 import { preferencesService } from "@app/services/preferencesService";
+import { stripBasePath } from "@app/constants/app";
+import { READER_PATH } from "@app/routes/readerRoute";
 
 export interface ToolWorkflowState {
   // UI State
-  sidebarsVisible: boolean;
-  leftPanelView: "toolPicker" | "toolContent" | "hidden";
+  leftPanelView: "toolPicker" | "toolContent";
   readerMode: boolean;
   toolPanelMode: ToolPanelMode;
 
@@ -18,10 +19,9 @@ export interface ToolWorkflowState {
 
 // Actions
 export type ToolWorkflowAction =
-  | { type: "SET_SIDEBARS_VISIBLE"; payload: boolean }
   | {
       type: "SET_LEFT_PANEL_VIEW";
-      payload: "toolPicker" | "toolContent" | "hidden";
+      payload: "toolPicker" | "toolContent";
     }
   | { type: "SET_READER_MODE"; payload: boolean }
   | { type: "SET_TOOL_PANEL_MODE"; payload: ToolPanelMode }
@@ -31,7 +31,6 @@ export type ToolWorkflowAction =
   | { type: "RESET_UI_STATE" };
 
 export const baseState: Omit<ToolWorkflowState, "toolPanelMode"> = {
-  sidebarsVisible: true,
   leftPanelView: "toolPicker",
   readerMode: false,
   previewFile: null,
@@ -39,8 +38,19 @@ export const baseState: Omit<ToolWorkflowState, "toolPanelMode"> = {
   searchQuery: "",
 };
 
+/**
+ * Reading is seeded from the path rather than switched on by an effect after the
+ * first paint, so a reload at the reader's own URL never paints the editor and
+ * then animates it away.
+ */
+function startsInReader(): boolean {
+  if (typeof window === "undefined") return false;
+  return stripBasePath(window.location.pathname).startsWith(READER_PATH);
+}
+
 export const createInitialState = (): ToolWorkflowState => ({
   ...baseState,
+  readerMode: startsInReader(),
   toolPanelMode: preferencesService.getPreference("defaultToolPanelMode"),
 });
 
@@ -49,8 +59,6 @@ export function toolWorkflowReducer(
   action: ToolWorkflowAction,
 ): ToolWorkflowState {
   switch (action.type) {
-    case "SET_SIDEBARS_VISIBLE":
-      return { ...state, sidebarsVisible: action.payload };
     case "SET_LEFT_PANEL_VIEW":
       return { ...state, leftPanelView: action.payload };
     case "SET_READER_MODE":

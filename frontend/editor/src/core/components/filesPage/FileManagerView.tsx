@@ -1,3 +1,4 @@
+import { Icon } from "@app/ui/Icon";
 import React, {
   useCallback,
   useEffect,
@@ -18,14 +19,6 @@ import {
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
-import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import GridViewIcon from "@mui/icons-material/GridView";
-import ViewListIcon from "@mui/icons-material/ViewList";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
@@ -95,6 +88,7 @@ import {
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
+import { getFolderPath } from "@app/utils/folderPath";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -440,27 +434,9 @@ export default function FileManagerView() {
     return sorted;
   }, [filesInCurrentFolder, search, sortMode, originFilter, typeFilter]);
 
-  /**
-   * Resolve a folder id to its breadcrumb path (e.g. "Receipts / 2024 / Q1").
-   * Returns empty string for root / unknown. Used for the search-result
-   * "where does this live?" subtitle.
-   */
   const pathForFolderId = useCallback(
-    (folderId: FolderId | null | undefined): string => {
-      if (folderId == null) return "";
-      const parts: string[] = [];
-      let cursor: FolderId | null = folderId;
-      const seen = new Set<FolderId>();
-      while (cursor !== null) {
-        if (seen.has(cursor)) break;
-        seen.add(cursor);
-        const f = foldersById.get(cursor);
-        if (!f) break;
-        parts.unshift(f.name);
-        cursor = f.parentFolderId;
-      }
-      return parts.join(" / ");
-    },
+    (folderId: FolderId | null | undefined) =>
+      getFolderPath(folderId, foldersById),
     [foldersById],
   );
 
@@ -1455,7 +1431,7 @@ export default function FileManagerView() {
             aria-label={t("filesPage.refresh", "Refresh")}
             onClick={handleRefresh}
           >
-            <RefreshIcon fontSize="small" />
+            <Icon name="refresh-cw" size={20} />
           </ActionIcon>
         </Tooltip>
         {newFolderControl}
@@ -1466,7 +1442,7 @@ export default function FileManagerView() {
             aria-label={t("filesPage.upload", "Upload")}
             onClick={openFilePicker}
           >
-            <UploadFileIcon fontSize="small" />
+            <Icon name="file-up" size={20} />
           </ActionIcon>
         </Tooltip>
       </>
@@ -1724,7 +1700,7 @@ export default function FileManagerView() {
                           "filesPage.search.placeholder",
                           "Filter files…",
                         )}
-                        leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
+                        leftSection={<Icon name="search" size={"1rem"} />}
                         rightSection={
                           search ? (
                             <ActionIcon
@@ -1736,7 +1712,7 @@ export default function FileManagerView() {
                                 "Clear filter",
                               )}
                             >
-                              <CloseIcon sx={{ fontSize: "0.9rem" }} />
+                              <Icon name="x" size={"0.9rem"} />
                             </ActionIcon>
                           ) : null
                         }
@@ -1824,7 +1800,7 @@ export default function FileManagerView() {
                             className="files-page-view-toggle-icon"
                             title={t("filesPage.viewMode.grid", "Grid view")}
                           >
-                            <GridViewIcon fontSize="small" />
+                            <Icon name="layout-grid" size={20} />
                             <span className="files-page-sr-only">
                               {t("filesPage.viewMode.grid", "Grid view")}
                             </span>
@@ -1838,7 +1814,7 @@ export default function FileManagerView() {
                             className="files-page-view-toggle-icon"
                             title={t("filesPage.viewMode.list", "List view")}
                           >
-                            <ViewListIcon fontSize="small" />
+                            <Icon name="list" size={20} />
                             <span className="files-page-sr-only">
                               {t("filesPage.viewMode.list", "List view")}
                             </span>
@@ -1966,7 +1942,7 @@ export default function FileManagerView() {
             {isDraggingExternal && (
               <div className="files-page-drop-overlay" aria-live="polite">
                 <span className="files-page-drop-overlay-icon">
-                  <UploadFileIcon />
+                  <Icon name="file-up" />
                 </span>
                 <span>
                   {t("filesPage.dropOverlay", "Drop files to upload")}
@@ -2267,7 +2243,7 @@ function Breadcrumbs() {
                   "Show parent folders",
                 )}
               >
-                <MoreHorizIcon fontSize="small" />
+                <Icon name="ellipsis" size={20} />
               </ActionIcon>
             </Menu.Target>
             <Menu.Dropdown>
@@ -2281,9 +2257,10 @@ function Breadcrumbs() {
               ))}
             </Menu.Dropdown>
           </Menu>
-          <KeyboardArrowRightIcon
+          <Icon
+            name="chevron-right"
+            size={20}
             className="files-page-breadcrumb-sep"
-            fontSize="small"
             aria-hidden="true"
           />
         </>
@@ -2302,9 +2279,10 @@ function Breadcrumbs() {
               {entry.name}
             </button>
             {!isLast && (
-              <KeyboardArrowRightIcon
+              <Icon
+                name="chevron-right"
+                size={20}
                 className="files-page-breadcrumb-sep"
-                fontSize="small"
                 aria-hidden="true"
               />
             )}

@@ -25,7 +25,11 @@ const DESTINATIONS = [
 ];
 
 // The builder wraps the routes in the opt-in toggle; the wizard renders them bare.
-function setup(rules: WireRoutingRule[], canClassify = true) {
+function setup(
+  rules: WireRoutingRule[],
+  canClassify = true,
+  aiClassificationEnabled = true,
+) {
   const onChange = vi.fn();
   baseRender(
     <RoutingSection
@@ -33,6 +37,7 @@ function setup(rules: WireRoutingRule[], canClassify = true) {
       onChange={onChange}
       destinations={DESTINATIONS}
       canClassify={canClassify}
+      aiClassificationEnabled={aiClassificationEnabled}
     />,
     { wrapper: PortalTestProviders },
   );
@@ -100,17 +105,67 @@ describe("RoutingRules", () => {
     expect(screen.getByTestId("routing-toggle")).toBeInTheDocument();
   });
 
-  it("cannot be switched on until the pipeline classifies", () => {
+  it("starts with a no-AI condition when the pipeline does not classify", () => {
     const onChange = setup([], false);
 
     fireEvent.click(screen.getByTestId("routing-toggle"));
 
-    expect(onChange).not.toHaveBeenCalled();
-    expect(
-      screen.getByText(
-        "Add a Classify step to the pipeline first - routes read the document type it works out.",
-      ),
-    ).toBeInTheDocument();
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: [],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+  });
+
+  it("switches match type and emits the document-field condition the backend evaluates", () => {
+    const onChange = setupBare([rule(["invoice"], "src-finance")]);
+
+    fireEvent.click(screen.getByRole("textbox", { name: "Match by" }));
+    fireEvent.click(screen.getByText("PDF title"));
+
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        condition: {
+          input: { source: "document", field: "document.title" },
+          operator: "matches-any",
+          values: [],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+  });
+
+  it("splits typed values on commas, trimmed, for a document-field route", () => {
+    const onChange = setupBare([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: [],
+        },
+        outputId: "src-finance",
+      },
+    ]);
+
+    fireEvent.change(screen.getByRole("textbox", { name: "Values to match" }), {
+      target: { value: "pdf,  DOCX , png" },
+    });
+
+    expect(onChange).toHaveBeenCalledWith([
+      {
+        condition: {
+          input: { source: "document", field: "document.extension" },
+          operator: "matches-any",
+          values: ["pdf", "DOCX", "png"],
+        },
+        outputId: "src-finance",
+      },
+    ]);
   });
 
   it("can still be switched off after the classify step is removed", () => {
@@ -119,6 +174,22 @@ describe("RoutingRules", () => {
     fireEvent.click(screen.getByTestId("routing-toggle"));
 
     expect(onChange).toHaveBeenCalledWith([]);
+  });
+
+  it("explains why a saved classification route is disabled when AI is off", () => {
+    setup([rule(["invoice"], "src-finance")], true, false);
+
+    expect(
+      screen.getByText(
+        "AI classification is not enabled. Enable it in Settings, or route on a document property instead.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Document types" }),
+    ).toBeDisabled();
+    expect(screen.getByRole("textbox", { name: "Match by" })).toHaveValue(
+      "Document type (AI unavailable)",
+    );
   });
 
   it("seeds one blank rule when switched on, since an empty list is 'off'", () => {

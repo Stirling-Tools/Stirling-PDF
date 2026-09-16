@@ -12,6 +12,7 @@ import { Group } from "@mantine/core";
 import { useSidebarContext } from "@app/contexts/SidebarContext";
 import { useDocumentMeta } from "@app/hooks/useDocumentMeta";
 import { getToolOgImage } from "@app/data/ogImage";
+import urlSeoOverrides from "@app/data/urlSeoOverrides.json";
 import { useBaseUrl } from "@app/hooks/useBaseUrl";
 import { useIsMobile, useIsTouch } from "@app/hooks/useIsMobile";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
@@ -26,29 +27,34 @@ import {
 import { isApplyingRestoredView } from "@app/services/workbenchSession";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useLocation, useNavigate } from "react-router-dom";
-import AppsIcon from "@mui/icons-material/AppsRounded";
-import CreateNewFolderIcon from "@mui/icons-material/CreateNewFolder";
 
+import { Icon } from "@app/ui/Icon";
 import RightSidebar from "@app/components/tools/RightSidebar";
+import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
+import { ReaderSuperSearch } from "@app/components/viewer/readerRail/ReaderSuperSearch";
 import Workbench from "@app/components/layout/Workbench";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import {
   getStartupNavigationAction,
   getDefaultWorkbenchForFileCount,
 } from "@app/utils/homePageNavigation";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { READER_PATH } from "@app/routes/readerRoute";
 import { rememberSettingsOrigin } from "@app/utils/settingsNavigation";
 import { HomePageExtensions } from "@app/components/home/HomePageExtensions";
+import { PolicyAutoRunController } from "@app/components/policies/PolicyAutoRunController";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { QuickNavHostBridge } from "@app/components/shared/quickNav/QuickNavHostBridge";
 import type { QuickNavToolReasons } from "@app/contexts/QuickNavHostContext";
 import {
   getToolDisabledReason,
   getDisabledLabel,
 } from "@app/components/tools/fullscreen/shared";
-import { useOtherAppSwitch } from "@app/hooks/useOtherAppSwitch";
-import { consumeReaderModeRequest } from "@app/utils/pendingReaderMode";
+import {
+  consumeReaderModeFromPreference,
+  consumeReaderModeRequest,
+} from "@app/utils/pendingReaderMode";
 import {
   FilesPageProvider,
   useFilesPage,
@@ -61,18 +67,37 @@ import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import MobileUploadModal from "@app/components/shared/MobileUploadModal";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { useAuth } from "@app/auth/UseSession";
-import RefreshIcon from "@mui/icons-material/Refresh";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
 import { canPickDirectory } from "@app/services/directoryPicker";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { useProcessingFolderCreation } from "@app/hooks/useProcessingFolderCreation";
+import { consumeProcessingFolderCreationRequest } from "@app/utils/pendingProcessingFolderCreation";
 import type { FileSidebarProps } from "@app/components/shared/FileSidebar";
 
 import { Button } from "@app/ui/Button";
 import "@app/components/layout/WorkspaceFrame.css";
 import "@app/pages/HomePage.css";
 
-const SIDEBAR_COLLAPSED_STORAGE_KEY = "stirling.fileSidebarCollapsed";
 const SWIPE_HINT_SEEN_STORAGE_KEY = "stirling.mobileSwipeHintSeen";
+
+/**
+ * The wings' slide is `--wings-ms` (dimensions.css). Read from the document so one
+ * value drives both, with the literal as the fallback for a test environment that
+ * loads no stylesheet, and a frame of headroom so the unmount never clips the
+ * last frame of the animation.
+ */
+const WINGS_FALLBACK_MS = 220;
+const WINGS_HEADROOM_MS = 60;
+
+function wingsDurationMs(): number {
+  if (typeof window === "undefined") return WINGS_FALLBACK_MS;
+  const token = window
+    .getComputedStyle(document.documentElement)
+    .getPropertyValue("--wings-ms")
+    .trim();
+  const parsed = Number.parseFloat(token);
+  if (!Number.isFinite(parsed) || parsed <= 0) return WINGS_FALLBACK_MS;
+  return token.endsWith("ms") ? parsed : parsed * 1000;
+}
 
 function readSwipeHintSeen(): boolean {
   try {
@@ -82,31 +107,11 @@ function readSwipeHintSeen(): boolean {
   }
 }
 
-function readPersistedSidebarCollapsed(): boolean {
-  try {
-    return (
-      window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "true"
-    );
-  } catch {
-    return false;
-  }
-}
-
-function writePersistedSidebarCollapsed(collapsed: boolean): void {
-  try {
-    window.localStorage.setItem(
-      SIDEBAR_COLLAPSED_STORAGE_KEY,
-      String(collapsed),
-    );
-  } catch {
-    // private mode / quota: silently no-op
-  }
-}
-
 type MobileView = "tools" | "workbench";
 
 export default function HomePage() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const policiesEnabled = usePoliciesEnabled();
   const { sidebarRefs } = useSidebarContext();
 
   const { quickAccessRef } = sidebarRefs;
@@ -126,20 +131,21 @@ export default function HomePage() {
 
   const navigate = useNavigate();
   const { config } = useAppConfig();
+  const processingFolderCreation = useProcessingFolderCreation();
   const isMobile = useIsMobile();
   const isTouch = useIsTouch();
   const sliderRef = useRef<HTMLDivElement | null>(null);
   const [activeMobileView, setActiveMobileView] = useState<MobileView>("tools");
   const isProgrammaticScroll = useRef(false);
-  const otherApp = useOtherAppSwitch();
   const location = useLocation();
-  // The user's preference, and the only thing that decides it: reading mode forces
-  // the sidebar shut without writing, so leaving reading restores this.
-  const [fileSidebarCollapsed, setFileSidebarCollapsed] = useState(
-    // Reader mode outlives this page (settings swaps it out and back), and it
-    // collapses the sidebar without persisting that, so it wins on mount too.
-    () => readerMode || readPersistedSidebarCollapsed(),
-  );
+  useEffect(() => {
+    if (
+      processingFolderCreation.open &&
+      consumeProcessingFolderCreationRequest()
+    ) {
+      processingFolderCreation.open();
+    }
+  }, [location.key, processingFolderCreation.open]);
 
   // Settings is its own page; it restores the recorded origin on Back.
   const openSettings = useCallback(() => {
@@ -162,37 +168,24 @@ export default function HomePage() {
 
   const { searchInterfaceActions } = useViewer();
 
-  // Reading hides both search controls, so leave it first. e.code, for non-QWERTY layouts.
-  const focusSearchAfterRestore = useRef(false);
+  // Find in document lives in the rail, not the bar reading hides, so the
+  // shortcut opens it where the reader already is. e.code, for non-QWERTY
+  // layouts. Ctrl+K belongs to ReaderSuperSearch, which floats the global
+  // search over the page rather than leaving reading to reach it.
   useEffect(() => {
     if (!readerMode) return;
     const onKeyDown = (e: KeyboardEvent) => {
       const combo = (e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey;
-      if (!combo) return;
-      if (e.code !== "KeyK" && e.code !== "KeyF") return;
+      if (!combo || e.code !== "KeyF") return;
       // Same carve-out the search itself makes: a dialog owns the keyboard.
       if ((e.target as HTMLElement | null)?.closest?.('[role="dialog"]'))
         return;
       e.preventDefault();
-      setReaderMode(false);
-      if (e.code === "KeyK") {
-        focusSearchAfterRestore.current = true;
-        return;
-      }
-      // Visibility is state, so it can open before the bar it renders in exists.
       searchInterfaceActions.open();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [readerMode, setReaderMode, searchInterfaceActions]);
-
-  useEffect(() => {
-    if (readerMode || !focusSearchAfterRestore.current) return;
-    focusSearchAfterRestore.current = false;
-    requestAnimationFrame(() =>
-      window.dispatchEvent(new Event("superSearch:focus")),
-    );
-  }, [readerMode]);
+  }, [readerMode, searchInterfaceActions]);
 
   // Clean slate: no tool, out of the file library and reading.
   const goToDefaultState = useCallback(() => {
@@ -233,21 +226,66 @@ export default function HomePage() {
     const onFilesPath = location.pathname.startsWith("/files");
     if (inLibrary && !onFilesPath) {
       navigate("/files");
-    } else if (!inLibrary && onFilesPath) {
+    } else if (!inLibrary && onFilesPath && !readerMode) {
+      // Reading also leaves the library, and its own effect names the path it
+      // leaves for. Both navigating puts the editor between the two in history,
+      // so Back out of reading would land somewhere the user never went.
       navigate(EDITOR_BASENAME);
     }
-  }, [navigationState.workbench, location.pathname, navigate]);
+  }, [navigationState.workbench, location.pathname, navigate, readerMode]);
 
-  // Imperative, so the toggle still works while reading. Never persisted: not a preference.
-  const prevReaderModeRef = useRef(readerMode);
+  // Path moved, so the path is the cause. The ref starts null so mount counts too:
+  // that is what makes a reload land back in reading, and what takes you out of it
+  // when the library moves the path to its own.
+  const readerDerivedFromPath = useRef<string | null>(null);
   useEffect(() => {
-    if (readerMode !== prevReaderModeRef.current) {
-      setFileSidebarCollapsed(
-        readerMode ? true : readPersistedSidebarCollapsed(),
-      );
-      prevReaderModeRef.current = readerMode;
+    if (readerDerivedFromPath.current === location.pathname) return;
+    readerDerivedFromPath.current = location.pathname;
+    const onReadPath = location.pathname.startsWith(READER_PATH);
+    if (onReadPath !== readerMode) setReaderMode(onReadPath);
+  }, [location.pathname, readerMode, setReaderMode]);
+
+  // The wings animate off their own edge, so the unmount waits out the leave rather
+  // than happening with it. The rails' stylesheets take them out of flow while it
+  // runs, so what is underneath is already in its reading position and nothing
+  // reflows twice.
+  const [wingsMounted, setWingsMounted] = useState(!readerMode);
+  const [wingsPhase, setWingsPhase] = useState<"leaving" | "returning" | null>(
+    null,
+  );
+  const readingRef = useRef(readerMode);
+  useEffect(() => {
+    if (readingRef.current === readerMode) return;
+    readingRef.current = readerMode;
+    const slide = wingsDurationMs() + WINGS_HEADROOM_MS;
+    if (readerMode) {
+      setWingsPhase("leaving");
+      const gone = window.setTimeout(() => {
+        setWingsPhase(null);
+        setWingsMounted(false);
+      }, slide);
+      return () => window.clearTimeout(gone);
     }
+    setWingsMounted(true);
+    setWingsPhase("returning");
+    const settled = window.setTimeout(() => setWingsPhase(null), slide);
+    return () => window.clearTimeout(settled);
   }, [readerMode]);
+
+  // Reading moved, so the path follows. Pushed, not replaced, so Back leaves it.
+  const wasReadingRef = useRef(readerMode);
+  useEffect(() => {
+    if (readerMode === wasReadingRef.current) return;
+    wasReadingRef.current = readerMode;
+    const onReadPath = location.pathname.startsWith(READER_PATH);
+    if (readerMode && !onReadPath) {
+      navigate(READER_PATH, {
+        replace: consumeReaderModeFromPreference(),
+      });
+    } else if (!readerMode && onReadPath) {
+      navigate(EDITOR_BASENAME);
+    }
+  }, [readerMode, location.pathname, navigate]);
 
   const { setActiveFileIndex } = useViewer();
   const prevFileCountRef = useRef(activeFiles.length);
@@ -316,13 +354,12 @@ export default function HomePage() {
     return reasons;
   }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
 
-  // The collapse is a preference, so it is written as one; every view reads it back.
-  const handleSidebarToggle = useCallback(() => {
-    setFileSidebarCollapsed((c) => {
-      const next = !c;
-      writePersistedSidebarCollapsed(next);
-      return next;
-    });
+  const openFromComputerRef = useRef<(() => void) | null>(null);
+  const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
+    openFromComputerRef.current = open;
+  }, []);
+  const openFromComputer = useCallback(() => {
+    openFromComputerRef.current?.();
   }, []);
 
   const [showSwipeHint, setShowSwipeHint] = useState(
@@ -450,25 +487,45 @@ export default function HomePage() {
 
   const baseUrl = useBaseUrl();
 
-  // Update document meta when tool changes
+  // Update document meta when tool changes. Convert aliases (e.g. /pdf-to-word)
+  // all share the one `convert` tool, so prefer a per-URL SEO override when the
+  // path has one - this keeps the hydrated title/description matching the
+  // keyword-targeted copy that crawlers see in the prerendered HTML.
   const appName = config?.appNameNavbar || "Stirling PDF";
+  // The override copy is English-only (it mirrors the prerendered HTML), so
+  // every other locale keeps its translated tool name and description.
+  const isEnglish = (i18n.resolvedLanguage || i18n.language || "").startsWith(
+    "en",
+  );
+  const seoOverride = isEnglish
+    ? (
+        urlSeoOverrides as Record<
+          string,
+          { title: string; description: string }
+        >
+      )[location.pathname]
+    : undefined;
+  const defaultDescription = t(
+    "app.description",
+    "A free, private PDF editor you can run on any infrastructure.",
+  );
+  const metaTitle = seoOverride
+    ? `${seoOverride.title} - ${appName}`
+    : selectedTool
+      ? `${selectedTool.name} - ${appName}`
+      : appName;
+  const metaDescription =
+    seoOverride?.description || selectedTool?.description || defaultDescription;
   useDocumentMeta({
-    title: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    description:
-      selectedTool?.description ||
-      t(
-        "app.description",
-        "The Free Adobe Acrobat alternative (10M+ Downloads)",
-      ),
-    ogTitle: selectedTool ? `${selectedTool.name} - ${appName}` : appName,
-    ogDescription:
-      selectedTool?.description ||
-      t(
-        "app.description",
-        "The Free Adobe Acrobat alternative (10M+ Downloads)",
-      ),
+    title: metaTitle,
+    description: metaDescription,
+    ogTitle: metaTitle,
+    ogDescription: metaDescription,
     ogImage: getToolOgImage(baseUrl, selectedToolKey),
-    ogUrl: selectedTool ? `${baseUrl}${window.location.pathname}` : baseUrl,
+    ogUrl:
+      seoOverride || selectedTool
+        ? `${baseUrl}${window.location.pathname}`
+        : baseUrl,
   });
 
   // Note: File selection limits are now handled directly by individual tools
@@ -476,8 +533,9 @@ export default function HomePage() {
   return (
     <div className="h-screen overflow-hidden">
       <HomePageExtensions />
+      {processingFolderCreation.dialog}
+      {policiesEnabled && <PolicyAutoRunController />}
       <QuickNavHostBridge
-        portalAccess={Boolean(otherApp)}
         requestNavigation={requestNavigation}
         readerMode={readerMode}
         fileLibrary={navigationState.workbench === "myFiles"}
@@ -486,7 +544,11 @@ export default function HomePage() {
         onSelectTool={handleToolSelect}
         activeTool={selectedToolKey}
         onShowFileLibrary={() => actions.setWorkbench("myFiles")}
+        onCreateProcessingFolder={processingFolderCreation.open}
         toolReasons={quickNavToolReasons}
+        onOpenFromComputer={
+          navigationState.workbench === "myFiles" ? undefined : openFromComputer
+        }
       />
       <FilesPageProvider>
         {isMobile ? (
@@ -596,7 +658,7 @@ export default function HomePage() {
                   }
                 }}
               >
-                <AppsIcon sx={{ fontSize: "1.5rem" }} />
+                <Icon name="layout-grid" size={"1.5rem"} />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.allTools", "Tools")}
                 </span>
@@ -614,11 +676,7 @@ export default function HomePage() {
                     }
                   }}
                 >
-                  <LocalIcon
-                    icon="automation-outline"
-                    width="1.5rem"
-                    height="1.5rem"
-                  />
+                  <Icon name="workflow" size="1.5rem" />
                   <span className="mobile-bottom-button-label">
                     {t("quickAccess.automate", "Automate")}
                   </span>
@@ -630,11 +688,7 @@ export default function HomePage() {
                 aria-label={t("home.mobile.openFiles", "Open files")}
                 onClick={() => navigate("/files")}
               >
-                <LocalIcon
-                  icon="folder-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <Icon name="folder" size="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.files", "Files")}
                 </span>
@@ -645,11 +699,7 @@ export default function HomePage() {
                 aria-label={t("quickAccess.config", "Config")}
                 onClick={openSettings}
               >
-                <LocalIcon
-                  icon="settings-rounded"
-                  width="1.5rem"
-                  height="1.5rem"
-                />
+                <Icon name="settings" size="1.5rem" />
                 <span className="mobile-bottom-button-label">
                   {t("quickAccess.config", "Config")}
                 </span>
@@ -664,19 +714,28 @@ export default function HomePage() {
             h="100%"
             className="flex-nowrap flex"
             bg="var(--c-bg)"
+            data-wings={wingsPhase ?? undefined}
           >
-            <div className="workspace-frame">
-              <MyFilesAwareFileSidebar
-                ref={quickAccessRef}
-                accountHoisted
-                active={navigationState.workbench === "myFiles"}
-                collapsed={fileSidebarCollapsed}
-                onToggleCollapse={handleSidebarToggle}
-                onOpenSettings={openSettings}
-              />
-            </div>
+            {/* Reading leaves the document and nothing beside it, so the wing goes
+                rather than shrinking to a rail. Everywhere else it is fixed open. */}
+            {wingsMounted && (
+              <div className="workspace-frame">
+                <MyFilesAwareFileSidebar
+                  ref={quickAccessRef}
+                  accountHoisted
+                  active={navigationState.workbench === "myFiles"}
+                  onOpenSettings={openSettings}
+                  onRegisterOpenFromComputer={registerOpenFromComputer}
+                />
+              </div>
+            )}
             <Workbench />
-            {!hideToolPanel && <RightSidebar />}
+            {/* The reader's rail takes the slot the tool panel holds otherwise: the
+                panel's controls are the editor's, and reading wants the viewer's.
+                Both render together only while the panel is on its way out. */}
+            {wingsMounted && !hideToolPanel && <RightSidebar />}
+            {readerMode && <ReaderRail />}
+            {readerMode && <ReaderSuperSearch />}
             <FileManager selectedTool={selectedTool} />
           </Group>
         )}
@@ -760,7 +819,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
           onPickGoogleDriveFiles={handleUpload}
           extraActions={[
             {
-              icon: <CreateNewFolderIcon />,
+              icon: <Icon name="folder-plus" />,
               label: t("filesPage.newFolder", "New folder"),
               onClick: createFolderHere,
               disabled: newFolderDisabledReason !== null,
@@ -769,10 +828,9 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
               // The same control the library's other surfaces use, so one row
               // cannot offer less than another: where a folder can go decides
               // its shape.
-              render: ({ collapsed }) => (
+              render: () => (
                 <NewFolderButton
                   trigger="row"
-                  collapsed={collapsed}
                   testId="files-rail-new-folder"
                   label={t("filesPage.newFolder", "New folder")}
                   disabledReason={newFolderDisabledReason}
@@ -786,7 +844,8 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
             },
             {
               icon: (
-                <RefreshIcon
+                <Icon
+                  name="refresh-cw"
                   className={refreshing ? "file-sidebar-spin" : undefined}
                 />
               ),
@@ -799,7 +858,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
             ...(mobileUploadAvailable
               ? [
                   {
-                    icon: <QrCode2Icon />,
+                    icon: <Icon name="qr-code" />,
                     label: t(
                       "filesPage.uploadFromMobile",
                       "Upload from Mobile",
