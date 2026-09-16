@@ -228,8 +228,7 @@ function TextSelectionMenuInner({
   const { provides: selection } = useSelectionCapability();
   const { provides: annotationProvides } = useAnnotation(documentId ?? "");
 
-  const { handleToolSelectForced, setSidebarsVisible, setLeftPanelView } =
-    useToolWorkflow();
+  const { handleToolSelectForced, setLeftPanelView } = useToolWorkflow();
   const {
     setRedactionMode,
     activateRedact,
@@ -307,9 +306,8 @@ function TextSelectionMenuInner({
 
   const openAnnotateUi = useCallback(() => {
     handleToolSelectForced?.("annotate");
-    setSidebarsVisible?.(true);
     setLeftPanelView?.("toolContent");
-  }, [handleToolSelectForced, setSidebarsVisible, setLeftPanelView]);
+  }, [handleToolSelectForced, setLeftPanelView]);
 
   const createMarkupAnnotation = useCallback(
     (
@@ -436,7 +434,6 @@ function TextSelectionMenuInner({
     setRedactionMode?.(true);
     navActions?.setHasUnsavedChanges(true);
     navActions?.setToolAndWorkbench("redact", "viewer");
-    setSidebarsVisible?.(true);
     setLeftPanelView?.("toolContent");
     setPendingRedactActivation(true);
   }, [
@@ -446,7 +443,6 @@ function TextSelectionMenuInner({
     setRedactionConfig,
     setRedactionMode,
     navActions,
-    setSidebarsVisible,
     setLeftPanelView,
   ]);
 

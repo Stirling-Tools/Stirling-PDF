@@ -54,12 +54,10 @@ vi.mock("@app/components/viewer/useActiveDocumentId", () => ({
 }));
 
 const mockHandleToolSelectForced = vi.fn();
-const mockSetSidebarsVisible = vi.fn();
 const mockSetLeftPanelView = vi.fn();
 vi.mock("@app/contexts/ToolWorkflowContext", () => ({
   useToolWorkflow: () => ({
     handleToolSelectForced: mockHandleToolSelectForced,
-    setSidebarsVisible: mockSetSidebarsVisible,
     setLeftPanelView: mockSetLeftPanelView,
   }),
 }));
@@ -212,7 +210,6 @@ describe("TextSelectionMenu", () => {
     );
     expect(mockClearSelection).toHaveBeenCalledWith("doc-1");
     expect(mockHandleToolSelectForced).toHaveBeenCalledWith("annotate");
-    expect(mockSetSidebarsVisible).toHaveBeenCalledWith(true);
     expect(mockSetLeftPanelView).toHaveBeenCalledWith("toolContent");
   });
 
@@ -342,7 +339,6 @@ describe("TextSelectionMenu", () => {
       expect.objectContaining({ mode: "manual" }),
     );
     expect(mockSetToolAndWorkbench).toHaveBeenCalledWith("redact", "viewer");
-    expect(mockSetSidebarsVisible).toHaveBeenCalledWith(true);
     expect(mockSetLeftPanelView).toHaveBeenCalledWith("toolContent");
     expect(mockSetRedactionMode).toHaveBeenCalledWith(true);
     expect(mockActivateRedact).toHaveBeenCalledTimes(1);
