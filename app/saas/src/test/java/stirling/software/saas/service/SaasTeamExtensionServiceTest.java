@@ -270,90 +270,34 @@ class SaasTeamExtensionServiceTest {
     }
 
     @Nested
-    @DisplayName("hasAvailableSeats")
-    class HasAvailableSeats {
-
+    @DisplayName("fleet capacity")
+    class FleetCapacity {
         @Test
-        @DisplayName("no row defaults to true (optimistic)")
-        void noRow_true() {
-            Team team = team();
-            when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.empty());
-
-            assertThat(service.hasAvailableSeats(team)).isTrue();
+        void unavailableSnapshot_blocksAdmissions() {
+            assertThat(service.hasAvailableSeats(team())).isFalse();
+            assertThat(service.canInviteMembers(team())).isFalse();
         }
 
         @Test
-        @DisplayName("standard team cannot exceed purchased capacity")
-        void standardTeam_overCap_false() {
-            Team team = team();
-            SaasTeamExtensions row = ext(team);
-            row.setIsPersonal(false);
-            row.setSeatsUsed(1000);
-            row.setMaxSeats(1);
-            when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.of(row));
-
-            assertThat(service.hasAvailableSeats(team)).isFalse();
+        void cloudRoomDoesNotOverrideFleetExhaustion() {
+            when(repository.fleetHasAvailableSeats(TEAM_ID)).thenReturn(false);
+            assertThat(service.canInviteMembers(team())).isFalse();
         }
 
         @Test
-        @DisplayName("personal team with a free seat returns true")
-        void personalTeam_underCap_true() {
-            Team team = team();
-            SaasTeamExtensions row = ext(team);
-            row.setIsPersonal(true);
-            row.setSeatsUsed(0);
-            row.setMaxSeats(1);
-            when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.of(row));
-
-            assertThat(service.hasAvailableSeats(team)).isTrue();
+        void fleetRoomAllowsStandardTeamInvitations() {
+            when(repository.fleetHasAvailableSeats(TEAM_ID)).thenReturn(true);
+            assertThat(service.hasAvailableSeats(team())).isTrue();
+            assertThat(service.canInviteMembers(team())).isTrue();
         }
 
         @Test
-        @DisplayName("personal team at its seat cap returns false (boundary)")
-        void personalTeam_atCap_false() {
-            Team team = team();
-            SaasTeamExtensions row = ext(team);
-            row.setIsPersonal(true);
-            row.setSeatsUsed(1);
-            row.setMaxSeats(1);
-            when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.of(row));
-
-            assertThat(service.hasAvailableSeats(team)).isFalse();
-        }
-    }
-
-    @Nested
-    @DisplayName("canInviteMembers")
-    class CanInviteMembers {
-
-        @Test
-        @DisplayName("no row defaults to true")
-        void noRow_true() {
-            Team team = team();
-            when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.empty());
-
-            assertThat(service.canInviteMembers(team)).isTrue();
-        }
-
-        @Test
-        @DisplayName("standard team can invite")
-        void standardTeam_true() {
-            Team team = team();
-            SaasTeamExtensions row = ext(team);
-            row.setIsPersonal(false);
-            when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.of(row));
-
-            assertThat(service.canInviteMembers(team)).isTrue();
-        }
-
-        @Test
-        @DisplayName("personal team can never invite")
-        void personalTeam_false() {
+        void personalTeamStillRequiresConversion() {
             Team team = team();
             SaasTeamExtensions row = ext(team);
             row.setIsPersonal(true);
             when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.of(row));
-
+            when(repository.fleetHasAvailableSeats(TEAM_ID)).thenReturn(true);
             assertThat(service.canInviteMembers(team)).isFalse();
         }
     }

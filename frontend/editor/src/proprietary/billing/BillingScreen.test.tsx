@@ -14,6 +14,20 @@ vi.mock("react-i18next", () => ({
 import { BillingScreen } from "@app/billing/BillingScreen";
 import { freeWallet, subscribedWallet } from "@app/billing/walletFixtures";
 
+it("shows shared fleet usage instead of only this deployment's users", () => {
+  render(
+    <BillingScreen
+      wallet={{
+        ...freeWallet,
+        team: { held: true, licensedUsers: 100, usersInUse: 83, fleet: true },
+      }}
+      usersInUse={7}
+    />,
+  );
+  expect(screen.getByText("83 of 100 users")).toBeInTheDocument();
+  expect(screen.queryByText("7 of 100 users")).not.toBeInTheDocument();
+});
+
 /**
  * Units a linked instance has accrued that the cloud has not billed yet are real spend, and every
  * figure on this screen counts them. Two totals disagreeing by an undisclosed amount is the bug

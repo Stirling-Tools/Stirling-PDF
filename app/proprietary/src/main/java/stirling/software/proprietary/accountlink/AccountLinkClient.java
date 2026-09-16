@@ -34,6 +34,39 @@ import tools.jackson.databind.node.ObjectNode;
         matchIfMissing = true)
 public class AccountLinkClient {
 
+    public record FleetSeats(
+            boolean allowed, long usersInUse, int capacity, long unreportedInstances) {}
+
+    /** Reports deployment users; admission is refused when SaaS cannot confirm shared capacity. */
+    public FleetSeats reportSeats(DeviceCredential credential, int users, boolean admit)
+            throws IOException {
+        ObjectNode body = mapper.createObjectNode().put("users", users).put("admit", admit);
+        HttpRequest request =
+                HttpRequest.newBuilder()
+                        .uri(uri("/api/v1/instance/seats"))
+                        .header(HEADER_DEVICE_ID, credential.getDeviceId())
+                        .header(HEADER_DEVICE_SECRET, credential.getDeviceSecret())
+                        .header("Content-Type", "application/json")
+                        .timeout(Duration.ofSeconds(5))
+                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
+                        .build();
+        var response = send(request);
+        if (response.statusCode() / 100 != 2)
+            throw new IOException("Fleet seat service unavailable");
+        var result = mapper.readTree(response.body());
+        if (!result.path("allowed").isBoolean()
+                || !result.path("usersInUse").isIntegralNumber()
+                || !result.path("capacity").isIntegralNumber()
+                || !result.path("unreportedInstances").isIntegralNumber()) {
+            throw new IOException("Invalid fleet seat response");
+        }
+        return new FleetSeats(
+                result.path("allowed").asBoolean(),
+                result.path("usersInUse").asLong(),
+                result.path("capacity").asInt(),
+                result.path("unreportedInstances").asLong());
+    }
+
     static final String HEADER_DEVICE_ID = "X-Device-Id";
     static final String HEADER_DEVICE_SECRET = "X-Device-Secret";
 

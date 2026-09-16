@@ -79,20 +79,11 @@ public class SaasTeamExtensionService {
 
     /** Whether the team has unused seats. See {@link SaasTeamExtensions#hasAvailableSeats()}. */
     public boolean hasAvailableSeats(Team team) {
-        return repository
-                .findByTeamId(team.getId())
-                .map(SaasTeamExtensions::hasAvailableSeats)
-                .orElse(true);
+        return Boolean.TRUE.equals(repository.fleetHasAvailableSeats(team.getId()));
     }
 
-    /**
-     * Whether the team accepts new invitations. See {@link SaasTeamExtensions#canInviteMembers()}.
-     */
     public boolean canInviteMembers(Team team) {
-        return repository
-                .findByTeamId(team.getId())
-                .map(SaasTeamExtensions::canInviteMembers)
-                .orElse(true);
+        return !isPersonal(team) && hasAvailableSeats(team);
     }
 
     /** Atomic seat increment with personal-team cap enforcement. */

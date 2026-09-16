@@ -259,7 +259,9 @@ export function Usage({
   const checkout = useCheckoutOptional();
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
   const usersInUse =
-    localUsersInUse === undefined ? wallet?.team?.usersInUse : localUsersInUse;
+    wallet?.team?.fleet || localUsersInUse === undefined
+      ? wallet?.team?.usersInUse
+      : localUsersInUse;
   const addCapacity = useCallback(() => {
     // No email: the only one this instance holds is its local admin record, which is a Spring
     // username and not an address the buyer owns. The checkout asks for one instead.

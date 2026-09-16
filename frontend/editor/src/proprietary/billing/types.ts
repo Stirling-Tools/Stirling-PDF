@@ -46,6 +46,7 @@ export interface TeamHolding {
   licensedUsers: number | null;
   /** Members occupying capacity right now — the capacity meter's numerator. */
   usersInUse: number;
+  fleet?: boolean;
 }
 
 /** The Processor holding: metered automation beyond the free grant. */

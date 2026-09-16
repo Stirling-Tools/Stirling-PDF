@@ -696,7 +696,8 @@ public class UserLicenseSettingsService {
      * is also SERVER when the promotion comes from a cloud Team plan, and that plan states its
      * capacity in the entitlement, not in {@code premium.maxUsers}.
      */
-    private boolean hasLicenseKeyPaidTier() {
+    /** Whether installed license capacity is independent of the linked Team subscription. */
+    public boolean hasLicenseKeyPaidTier() {
         LicenseKeyChecker checker = licenseKeyChecker.getIfAvailable();
         if (checker == null) {
             return false;

@@ -236,7 +236,7 @@ export function BillingScreen({
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
   const occupiedSeats = serverPlan
     ? serverPlan.usersInUse
-    : usersInUse === undefined
+    : wallet?.team.fleet || usersInUse === undefined
       ? wallet?.team.usersInUse
       : usersInUse;
   const showTeam = Boolean(
@@ -332,7 +332,11 @@ export function BillingScreen({
                   <div className="billing-meters">
                     {(showTeam || serverPlan) && (
                       <TeamPlanRow
-                        usersInUse={usersInUse}
+                        usersInUse={
+                          wallet?.team.fleet
+                            ? wallet.team.usersInUse
+                            : usersInUse
+                        }
                         wallet={wallet}
                         selfHosted={selfHosted}
                         serverPlan={serverPlan}

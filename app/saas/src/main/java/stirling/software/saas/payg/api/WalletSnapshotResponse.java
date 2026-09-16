@@ -153,9 +153,14 @@ public record WalletSnapshotResponse(
      *     rather than meaning capacity is unknown.
      * @param licensedUsers how many users the holding covers; {@code null} when the team has no
      *     user limit.
-     * @param usersInUse team members occupying capacity right now.
+     * @param usersInUse cloud members plus last reported users on active deployments when fleet is
+     *     true.
      */
-    public record TeamHolding(boolean held, Integer licensedUsers, int usersInUse) {}
+    public record TeamHolding(boolean held, Integer licensedUsers, int usersInUse, boolean fleet) {
+        public TeamHolding(boolean held, Integer licensedUsers, int usersInUse) {
+            this(held, licensedUsers, usersInUse, false);
+        }
+    }
 
     /**
      * The Processor holding: metered document automation beyond the free grant.

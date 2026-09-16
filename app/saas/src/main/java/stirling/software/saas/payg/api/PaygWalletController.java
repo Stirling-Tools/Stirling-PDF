@@ -261,13 +261,16 @@ public class PaygWalletController {
      * holds Team exactly when {@link SaasTeamExtensions#licensedUsers()} states one.
      */
     private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId) {
-        int usersInUse = Math.toIntExact(memberRepo.countByTeamId(teamId));
+        Long fleetUsers = teamExtensionsRepository.fleetUsersInUse(teamId);
+        int usersInUse =
+                Math.toIntExact(fleetUsers == null ? memberRepo.countByTeamId(teamId) : fleetUsers);
         Integer licensed =
                 teamExtensionsRepository
                         .findByTeamId(teamId)
                         .map(SaasTeamExtensions::licensedUsers)
                         .orElse(null);
-        return new WalletSnapshotResponse.TeamHolding(licensed != null, licensed, usersInUse);
+        return new WalletSnapshotResponse.TeamHolding(
+                licensed != null, licensed, usersInUse, fleetUsers != null);
     }
 
     /** Per-category size-scaled units + input-file counts for the same window. */
