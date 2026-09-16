@@ -9,7 +9,8 @@ import org.springframework.stereotype.Service;
 import stirling.software.common.service.LicenseServiceInterface;
 
 /**
- * Enforces cloud processing allowance and the shared offline deadline; manual tools remain free.
+ * Enforces cloud processing allowance and the shared offline deadline. Manual tools and direct PDF
+ * tool API calls covered by a Server licence do not consume processing credits.
  */
 @Service
 @Profile("!saas")
@@ -43,6 +44,14 @@ public class InstanceEntitlementGate {
 
     /** Evaluates the gate for a request, resolving live state from the store + cache. */
     public GateDecision evaluate(boolean billable) {
+        return evaluate(billable, false);
+    }
+
+    /**
+     * {@code directToolApi} is true only for direct PDF tool API calls, never Processor runs, AI
+     * tools or internally dispatched automation steps.
+     */
+    public GateDecision evaluate(boolean billable, boolean directToolApi) {
         if (!properties.isEnabled()) {
             return GateDecision.allow(GateDecision.Reason.FLAG_OFF);
         }
@@ -51,6 +60,9 @@ public class InstanceEntitlementGate {
         }
         if (licenseService.isRunningEE()) {
             return GateDecision.allow(GateDecision.Reason.ENTERPRISE_LICENSE);
+        }
+        if (directToolApi && licenseService.hasServerLicense()) {
+            return GateDecision.allow(GateDecision.Reason.SERVER_LICENSE);
         }
         boolean linked = credentialStore.isLinked();
         long freeTierRemaining = linked ? 0L : freeTierUsageService.balance().remainingUnits();
