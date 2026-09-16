@@ -5,7 +5,9 @@ import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -168,10 +170,23 @@ class ReactRoutingControllerTest {
     // --- forwarding routes ---
 
     @Test
-    void forwardRootPaths_servesIndexHtml() throws Exception {
+    void forwardRootPaths_noPrerenderedFile_fallsBackToIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardRootPaths(request);
+        // No prerendered compress.html on the test classpath -> generic shell.
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "compress");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("Stirling PDF"));
+    }
+
+    @Test
+    void forwardRootPaths_unsafeSegment_fallsBackToIndexHtml() throws Exception {
+        controller.init();
+
+        // A dotted segment must never be turned into a file lookup.
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "e.tag");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
@@ -181,10 +196,46 @@ class ReactRoutingControllerTest {
     void forwardNestedPaths_servesIndexHtml() throws Exception {
         controller.init();
 
-        ResponseEntity<String> response = controller.forwardNestedPaths(request);
+        ResponseEntity<String> response =
+                controller.forwardNestedPaths(request, "settings", "people");
 
         assertEquals(HttpStatus.OK, response.getStatusCode());
         assertNotNull(response.getBody());
+    }
+
+    @Test
+    void forwardRootPaths_prerenderedFile_servesItAndCachesIt() throws Exception {
+        controller.init();
+
+        // static/prerender-test.html is a test-resource fixture on the classpath.
+        ResponseEntity<String> response = controller.forwardRootPaths(request, "prerender-test");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        assertTrue(response.getBody().contains("<title>Prerender Test - Stirling PDF</title>"));
+        // context path applied on the way out, then memoised under the route key
+        assertTrue(response.getBody().contains("window.STIRLING_PDF_API_BASE_URL"));
+        assertEquals(Set.of("prerender-test"), prerenderedCache().keySet());
+    }
+
+    @Test
+    void forwardPaths_unknownRoutes_neverGrowTheCache() throws Exception {
+        controller.init();
+
+        for (int i = 0; i < 100; i++) {
+            controller.forwardRootPaths(request, "not-a-route-" + i);
+            controller.forwardNestedPaths(request, "not-a-route-" + i, "child-" + i);
+        }
+
+        // An unrouted path must not be able to allocate a cache entry.
+        assertTrue(prerenderedCache().isEmpty());
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, String> prerenderedCache() throws Exception {
+        Field field = ReactRoutingController.class.getDeclaredField("prerenderedCache");
+        field.setAccessible(true);
+        return (Map<String, String>) field.get(controller);
     }
 
     // --- deep-link SPA fallback (router function) ---
