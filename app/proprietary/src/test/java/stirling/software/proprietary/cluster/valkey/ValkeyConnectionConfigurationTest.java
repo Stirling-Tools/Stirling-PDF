@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.atMost;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
@@ -814,12 +815,28 @@ class ValkeyConnectionConfigurationTest {
         }
 
         @Test
-        @DisplayName("a database index in an ignored url warns but still boots")
-        void databaseInIgnoredUrlOnlyWarns() {
-            ValkeyConnectionConfiguration.guardIgnoredUrl(
-                    withUrl("redis://valkey:6379/2"), ValkeyMode.CLUSTER, false);
+        @DisplayName("a database index in an ignored url refuses to boot")
+        void databaseInIgnoredUrlRefusesToBoot() {
+            // Falling back to database 0 would merge this deployment's keyspace with whatever else
+            // shares the server, so the misconfiguration has to be loud.
+            for (ValkeyMode mode : new ValkeyMode[] {ValkeyMode.CLUSTER, ValkeyMode.SENTINEL}) {
+                IllegalStateException ex =
+                        assertThrows(
+                                IllegalStateException.class,
+                                () ->
+                                        ValkeyConnectionConfiguration.guardIgnoredUrl(
+                                                withUrl("redis://valkey:6379/2"), mode, false));
+                assertTrue(ex.getMessage().contains("standalone mode only"));
+            }
+        }
+
+        @Test
+        @DisplayName("an unparseable database segment is not a database request")
+        void nonNumericDatabaseSegmentStillBoots() {
             ValkeyConnectionConfiguration.guardIgnoredUrl(
                     withUrl("redis://valkey:6379/notadb"), ValkeyMode.SENTINEL, false);
+            ValkeyConnectionConfiguration.guardIgnoredUrl(
+                    withUrl("redis://valkey:6379/0"), ValkeyMode.CLUSTER, false);
         }
 
         @Test
@@ -1139,6 +1156,45 @@ class ValkeyConnectionConfigurationTest {
             assertThrows(
                     IllegalStateException.class,
                     () -> ValkeyConnectionConfiguration.parseUrl("redis://valkey:6379/-1"));
+        }
+    }
+
+    @Nested
+    @DisplayName("eviction policy probe")
+    class EvictionPolicyProbe {
+
+        private RedisConnection connectionReporting(String policy) {
+            RedisConnection conn = mock(RedisConnection.class, RETURNS_DEEP_STUBS);
+            Properties props = new Properties();
+            if (policy != null) {
+                props.setProperty("maxmemory-policy", policy);
+            }
+            when(conn.serverCommands().getConfig("maxmemory-policy")).thenReturn(props);
+            return conn;
+        }
+
+        @Test
+        @DisplayName("an eviction policy is reported, noeviction is not")
+        void warnsOnlyWhenEvictionIsEnabled() {
+            // Behaviour is a log line, so assert the probe's reachability contract instead: it must
+            // read the policy in every case and never throw, whatever the server answers.
+            for (String policy : new String[] {"volatile-lru", "allkeys-lru", "noeviction", null}) {
+                RedisConnection conn = connectionReporting(policy);
+                ValkeyConnectionConfiguration.warnOnEvictionPolicy(conn);
+                verify(conn.serverCommands()).getConfig("maxmemory-policy");
+            }
+        }
+
+        @Test
+        @DisplayName("an ACL-denied CONFIG GET is swallowed, not a boot failure")
+        void aclDeniedConfigDoesNotFailBoot() {
+            // Managed Valkey commonly denies CONFIG; refusing boot over a diagnostic would be worse
+            // than the risk it reports.
+            RedisConnection conn = mock(RedisConnection.class, RETURNS_DEEP_STUBS);
+            when(conn.serverCommands().getConfig("maxmemory-policy"))
+                    .thenThrow(new IllegalStateException("NOPERM ... 'config|get'"));
+
+            ValkeyConnectionConfiguration.warnOnEvictionPolicy(conn);
         }
     }
 }

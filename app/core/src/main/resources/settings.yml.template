@@ -473,11 +473,25 @@ cluster:
     heartbeatIntervalMs: 5000 # How often this node publishes its heartbeat.
 
   # The Valkey/Redis server every Stirling PDF node shares.
+  #
+  # Server requirements, whoever operates it:
+  #   * maxmemory-policy MUST be 'noeviction'. Every key here carries a TTL, so any volatile-*
+  #     or allkeys-* policy makes the node registry and the distributed locks eviction candidates,
+  #     and an evicted lock silently lets two nodes run the same exclusive job. The shortest TTLs
+  #     are the most critical ones (15s heartbeats, 5m locks), so 'volatile-ttl' is the worst
+  #     choice, not the safest. Prefer a write failure (which is logged) over silent eviction.
+  #   * Sizing is small: the working set is roughly (async jobs finished in the last
+  #     stirling.jobResultExpiryMinutes) x (400 bytes + 200 bytes per output file), plus one 240
+  #     byte hash per node. Hundreds of megabytes is generous; this is coordination state, not a
+  #     document cache.
   valkey:
-    mode: "" # 'standalone' | 'sentinel' | 'cluster'. Blank = inferred from whichever block below is filled in.
+    mode: "" # 'standalone' | 'sentinel' | 'cluster'. Blank = inferred from whichever block below is filled in. 'standalone' is a single point of failure for the whole cluster - no node can start while it is down - so production should use sentinel or cluster.
     url: "" # e.g. 'redis://valkey:6379', optionally '/2' to pick a database. STANDALONE ONLY - sentinel and cluster ignore it, so a 'rediss://' url there refuses to boot unless tls.enabled is true.
-    # Two Stirling deployments sharing one Valkey MUST use different database indexes: there is no key
-    # prefix, so on the same index they merge each other's node registries and cross-route job traffic.
+    # Two Stirling deployments MUST NOT share a keyspace: there is no key prefix, so they would merge
+    # each other's node registries and cross-route job traffic. In standalone mode give each one its
+    # own database index via the url. Sentinel and cluster mode have no database selection at all, so
+    # there each deployment needs its own Valkey (or its own sentinel master); asking for a database
+    # index in those modes refuses to boot rather than silently sharing database 0.
     username: "" # Valkey ACL user. Overrides any user in 'url'.
     password: "" # Valkey password. Overrides any password in 'url'. Never logged.
     commandTimeoutMs: 2000 # Per-command timeout, so a slow Valkey cannot stall request threads.

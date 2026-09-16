@@ -4,6 +4,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.Properties;
 
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -147,11 +148,19 @@ public class ValkeyConnectionConfiguration {
         }
         int database = databaseOrZero(uri.getPath());
         if (database != 0) {
-            log.warn(
-                    "cluster.valkey.url selects database {} but mode={} ignores the url - this"
-                            + " deployment will use database 0",
-                    database,
-                    mode);
+            // Refusing to boot, not warning: the database index is the only keyspace isolation
+            // Stirling has, so silently falling back to 0 merges this deployment's node registry
+            // with whatever else shares the server and cross-routes job downloads between them.
+            throw new IllegalStateException(
+                    "cluster.valkey.url selects database "
+                            + database
+                            + " but cluster.valkey.mode="
+                            + mode.name().toLowerCase(java.util.Locale.ROOT)
+                            + " ignores the url, so this deployment would silently use database 0"
+                            + " and share its keyspace with anything else on that server. Database"
+                            + " selection is supported in standalone mode only: give this"
+                            + " deployment its own Valkey (or its own sentinel master), then clear"
+                            + " the database from cluster.valkey.url.");
         }
     }
 
@@ -488,6 +497,7 @@ public class ValkeyConnectionConfiguration {
                     if (clusterMode) {
                         assertClusterServesSlots(conn);
                     }
+                    warnOnEvictionPolicy(conn);
                 } finally {
                     conn.close();
                 }
@@ -525,6 +535,32 @@ public class ValkeyConnectionConfiguration {
         }
         factory.destroy();
         throw new IllegalStateException(unreachableMessage(attempt, target, tls, last), last);
+    }
+
+    /**
+     * Every backplane key carries a TTL, so any eviction policy makes the node registry and the
+     * distributed locks eviction candidates and an evicted lock silently breaks mutual exclusion.
+     * Warn only: {@code CONFIG GET} is commonly ACL-denied on managed Valkey, and a boot failure
+     * over a diagnostic would be worse than the risk it reports.
+     */
+    static void warnOnEvictionPolicy(RedisConnection conn) {
+        String policy;
+        try {
+            Properties config = conn.serverCommands().getConfig("maxmemory-policy");
+            policy = config == null ? null : config.getProperty("maxmemory-policy");
+        } catch (RuntimeException ex) {
+            log.debug("Could not read maxmemory-policy (often ACL-denied): {}", ex.getMessage());
+            return;
+        }
+        if (policy == null || policy.isBlank() || "noeviction".equalsIgnoreCase(policy.trim())) {
+            return;
+        }
+        log.warn(
+                "Valkey maxmemory-policy is '{}', not 'noeviction'. Every backplane key has a TTL,"
+                        + " so under memory pressure this server may evict live node registrations and"
+                        + " distributed locks, letting two nodes run the same exclusive job. Set"
+                        + " maxmemory-policy=noeviction.",
+                policy);
     }
 
     private static String unreachableMessage(
