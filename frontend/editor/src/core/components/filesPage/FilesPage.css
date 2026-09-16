@@ -681,6 +681,24 @@
   min-width: 0;
 }
 
+/* One width whatever the row has to show, so every name in the column starts at
+   the same x and none of them move when a thumbnail resolves. */
+.files-page-list-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.files-page-list-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
 /* The state has a column of its own: beside the name it outgrows the cell and
    runs under the actions. */
 .files-page-list-status {

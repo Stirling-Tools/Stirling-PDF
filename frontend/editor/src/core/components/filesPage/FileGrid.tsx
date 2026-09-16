@@ -1756,22 +1756,21 @@ const FileRow = React.memo(function FileRow({
           minWidth: 0,
         }}
       >
-        {resolvedThumbnail ? (
-          <img
-            src={resolvedThumbnail}
-            alt=""
-            // draggable={false} so row's onDragStart fires, not native image drag.
-            draggable={false}
-            style={{
-              width: "1.5rem",
-              height: "1.5rem",
-              objectFit: "cover",
-              borderRadius: "0.25rem",
-            }}
-          />
-        ) : (
-          <Icon name="file-pdf" size={20} />
-        )}
+        {/* Fixed slot: the fallback and the thumbnail are different sizes, and a
+            thumbnail arrives after first paint, so sizing to the content would
+            leave the names ragged and then shift them as each one landed. */}
+        <span className="files-page-list-thumb">
+          {resolvedThumbnail ? (
+            <img
+              src={resolvedThumbnail}
+              alt=""
+              // draggable={false} so row's onDragStart fires, not native image drag.
+              draggable={false}
+            />
+          ) : (
+            <Icon name="file-pdf" size={20} />
+          )}
+        </span>
         <span
           style={{
             display: "flex",
@@ -2004,23 +2003,15 @@ const DiskFileRow = React.memo(function DiskFileRow({
           minWidth: 0,
         }}
       >
-        {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt=""
-            draggable={false}
-            style={{
-              width: "1.5rem",
-              height: "1.5rem",
-              objectFit: "cover",
-              borderRadius: "0.25rem",
-            }}
-          />
-        ) : ext === "PDF" ? (
-          <Icon name="file-pdf" size={20} />
-        ) : (
-          <Icon name="file" size={20} />
-        )}
+        <span className="files-page-list-thumb">
+          {thumbnail ? (
+            <img src={thumbnail} alt="" draggable={false} />
+          ) : ext === "PDF" ? (
+            <Icon name="file-pdf" size={20} />
+          ) : (
+            <Icon name="file" size={20} />
+          )}
+        </span>
         <span
           style={{
             overflow: "hidden",
