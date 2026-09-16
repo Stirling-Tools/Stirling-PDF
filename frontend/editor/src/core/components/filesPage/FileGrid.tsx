@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
@@ -39,7 +33,12 @@ import {
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
+import { FolderListRow } from "@app/components/filesPage/FolderListRow";
+import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
+import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
+import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
+import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import {
@@ -57,45 +56,6 @@ import {
   useSharedFileActions,
 } from "@app/hooks/useSharedFileActions";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
-
-/**
- * The origin badge a folder wears, mirroring the one its files would: a server folder
- * is Cloud, a virtual folder is Local (this browser), a mounted folder is On disk.
- */
-function useFolderOriginBadge(folder: FolderRecord): {
-  origin: "cloud" | "local";
-  tooltip: string;
-} {
-  const { t } = useTranslation();
-  switch (folderKind(folder)) {
-    case "virtual":
-      return {
-        origin: "local",
-        tooltip: t(
-          "filesPage.folderOrigin.virtualHint",
-          "A folder that lives only in this browser",
-        ),
-      };
-    case "local":
-      return {
-        // Same mark as a virtual folder: what matters is that it lives on
-        // this device, not which corner of it. The tooltip says which.
-        origin: "local",
-        tooltip: t(
-          "filesPage.folderOrigin.diskHint",
-          "A folder mounted from a directory on your disk",
-        ),
-      };
-    default:
-      return {
-        origin: "cloud",
-        tooltip: t(
-          "filesPage.folderOrigin.serverHint",
-          "A folder stored on the Stirling server",
-        ),
-      };
-  }
-}
 
 export type FilesPageViewMode = "grid" | "list";
 
@@ -674,7 +634,6 @@ const FolderCard = React.memo(function FolderCard({
     Promise.resolve(removeProcessingFolder(folder)).catch((err) =>
       actions.reportError(err, label),
     );
-  const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
   const editsHidden = kind === "local";
   const offlineHint = t(
@@ -733,11 +692,7 @@ const FolderCard = React.memo(function FolderCard({
           iconGlyph={findFolderIcon(folder.icon)?.glyph}
         />
         <div className="files-page-card-origin">
-          <FileOriginBadge
-            origin={originBadge.origin}
-            tooltip={originBadge.tooltip}
-            compact
-          />
+          <FolderOriginBadge folder={folder} />
         </div>
       </div>
       <div className="files-page-card-body">
@@ -752,11 +707,7 @@ const FolderCard = React.memo(function FolderCard({
         <div className="files-page-card-meta">
           {processing ? (
             <>
-              <span className="files-page-processing-tag">
-                {processing.enabled
-                  ? t("filesPage.processing.active", "Processing folder")
-                  : t("filesPage.processing.paused", "Processing paused")}
-              </span>
+              <FolderProcessingTag enabled={processing.enabled} />
               {fileCount > 0 && (
                 <span>
                   {" · "}
@@ -886,36 +837,21 @@ const FolderCard = React.memo(function FolderCard({
 });
 
 /**
- * A working folder's live per-state counts on its card. Light polling: a handful of
- * processing folders at most, and the numbers are the card's whole story.
+ * A working folder's live per-state counts, wherever the folder is drawn. `compact`
+ * is the list's shape: the same numbers on one line, in a row that may not change
+ * height.
  */
 function ProcessingFolderStats({
   recordId,
   listFiles,
+  compact = false,
 }: {
   recordId: string;
   listFiles: (recordId: string) => Promise<{ state: string }[]>;
+  compact?: boolean;
 }) {
   const { t } = useTranslation();
-  const [counts, setCounts] = useState<Record<string, number> | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    const tick = async () => {
-      const files = await listFiles(recordId).catch(() => []);
-      if (cancelled) return;
-      const next: Record<string, number> = {};
-      for (const file of files) {
-        next[file.state] = (next[file.state] ?? 0) + 1;
-      }
-      setCounts(next);
-    };
-    void tick();
-    const timer = setInterval(() => void tick(), 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [recordId, listFiles]);
+  const counts = useProcessingFolderCounts(recordId, listFiles);
   if (!counts) return null;
   const parts = (
     [
@@ -927,10 +863,15 @@ function ProcessingFolderStats({
   ).filter(([state]) => (counts[state] ?? 0) > 0);
   if (parts.length === 0) return null;
   return (
-    <div className="files-page-folder-stats">
+    <div
+      className={`files-page-folder-stats${compact ? " is-compact" : ""}`}
+      title={parts
+        .map(([state, label]) => `${counts[state]} ${label}`)
+        .join(" · ")}
+    >
       {parts.map(([state, label]) => (
         <span key={state} className={`files-page-folder-stat is-${state}`}>
-          {counts[state]} {label}
+          {counts[state]} {compact ? "" : label}
         </span>
       ))}
     </div>
@@ -1520,6 +1461,7 @@ const FileCard = React.memo(function FileCard({
         )}
         <div className="files-page-card-origin">
           <FileOriginBadge origin={getFileOrigin(file)} compact />
+          <DiskLinkBadge file={file} compact />
         </div>
         <FileStateBadge
           state={processingState}
@@ -1768,6 +1710,7 @@ const FolderRow = React.memo(function FolderRow({
     disable: disableProcessing,
     remove: removeProcessingFolder,
     sweep: sweepProcessing,
+    listFiles: listProcessingFiles,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
   // Each action surfaces its own failure the way a failed drop does; the
@@ -1788,7 +1731,6 @@ const FolderRow = React.memo(function FolderRow({
     Promise.resolve(removeProcessingFolder(folder)).catch((err) =>
       actions.reportError(err, label),
     );
-  const originBadge = useFolderOriginBadge(folder);
   const editsDisabled = kind === "server" && !serverReachable;
   const editsHidden = kind === "local";
   const offlineHint = t(
@@ -1810,94 +1752,23 @@ const FolderRow = React.memo(function FolderRow({
   });
 
   return (
-    <div
-      role="row"
-      tabIndex={0}
-      draggable
-      onDragStart={(e) => {
-        e.dataTransfer.setData(
-          FILES_PAGE_DRAG_TYPE,
-          serialiseFilesPageDragPayload({
-            kind: "folder",
-            folderId: folder.id,
-          }),
-        );
-        e.dataTransfer.effectAllowed = "move";
-      }}
-      {...dropHandlers}
-      onDoubleClick={onOpen}
-      onContextMenu={(e) => {
-        e.preventDefault();
-        kebabRef.current?.click();
-      }}
-      onKeyDown={(e) => {
-        if (e.key === "Enter") onOpen();
-      }}
-      className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""}`}
-    >
-      <span aria-hidden="true" />
-      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
-          actions menu has to sit inside one. */}
-      <span
-        role="gridcell"
-        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-      >
-        <FolderThumbnail
-          color={folder.color}
-          size="row"
-          iconGlyph={findFolderIcon(folder.icon)?.glyph}
-        />
-        <span
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            minWidth: 0,
-            overflow: "hidden",
-          }}
-        >
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-            {folder.name}
-          </span>
-          {parentPath && (
-            <span
-              className="files-page-card-path"
-              style={{ marginTop: 0 }}
-              title={parentPath}
-            >
-              {t("filesPage.inPath", "in {{path}}", { path: parentPath })}
-            </span>
-          )}
-        </span>
-        <FileOriginBadge
-          origin={originBadge.origin}
-          tooltip={originBadge.tooltip}
-          compact
-        />
-      </span>
-      <span role="gridcell">
-        {processing ? (
-          <span className="files-page-processing-tag">
-            {processing.enabled
-              ? t("filesPage.processing.active", "Processing folder")
-              : t("filesPage.processing.paused", "Processing paused")}
-          </span>
-        ) : kind === "virtual" ? (
-          t("filesPage.folderKind.virtual", "Browser folder")
-        ) : kind === "local" ? (
-          t("filesPage.folderKind.local", "Local folder")
-        ) : (
-          t("filesPage.folder", "Folder")
-        )}
-      </span>
-      <span role="gridcell">
-        {fileCount === 0
-          ? "-"
-          : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
-      </span>
-      <span role="gridcell">
-        {getFileDate({ lastModified: folder.updatedAt })}
-      </span>
-      <span role="gridcell">
+    <FolderListRow
+      folder={folder}
+      fileCount={fileCount}
+      parentPath={parentPath}
+      status={
+        processing ? (
+          <>
+            <FolderProcessingTag enabled={processing.enabled} />
+            <ProcessingFolderStats
+              recordId={processing.id}
+              listFiles={listProcessingFiles}
+              compact
+            />
+          </>
+        ) : undefined
+      }
+      trailing={
         <Menu shadow="md" position="bottom-end" withinPortal>
           <Menu.Target>
             <ActionIcon
@@ -1997,8 +1868,30 @@ const FolderRow = React.memo(function FolderRow({
             )}
           </Menu.Dropdown>
         </Menu>
-      </span>
-    </div>
+      }
+      tabIndex={0}
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData(
+          FILES_PAGE_DRAG_TYPE,
+          serialiseFilesPageDragPayload({
+            kind: "folder",
+            folderId: folder.id,
+          }),
+        );
+        e.dataTransfer.effectAllowed = "move";
+      }}
+      {...dropHandlers}
+      onDoubleClick={onOpen}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        kebabRef.current?.click();
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") onOpen();
+      }}
+      className={isDropTarget ? "is-drop-target" : undefined}
+    />
   );
 });
 
@@ -2161,6 +2054,7 @@ const FileRow = React.memo(function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
+        <DiskLinkBadge file={file} compact />
         <PolicyBadgeRow policies={badges} />
         <FileStateBadge
           state={processingState}

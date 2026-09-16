@@ -143,6 +143,11 @@ interface PageEditorContextValue {
   persistedDocumentSignature: string | null;
   savePersistedDocument: (document: PDFDocument, signature: string) => void;
   clearPersistedDocument: () => void;
+  /** Bumps whenever the bytes behind the open files are replaced under an
+   *  unchanged file id, which is what a disk reload does. Anything laid out
+   *  from those bytes has to start over rather than merge into what replaced
+   *  them. */
+  contentRevision: number;
 }
 
 const PageEditorContext = createContext<PageEditorContextValue | undefined>(
@@ -234,7 +239,23 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       .join(",");
   }, [state.files.ids, state.files.byId]);
 
+  // Bytes can be replaced under an unchanged id and version - reconciling a
+  // record with its source does exactly that - and the laid-out document would
+  // then describe pages that no longer exist. Keyed per id rather than joined:
+  // a join also changes when the file set does, and adding a file would then
+  // read as every open document being replaced.
+  const fileContentKeys = useMemo(() => {
+    const keys = new Map<FileId, string>();
+    for (const id of state.files.ids) {
+      const stub = state.files.byId[id];
+      keys.set(id, `${stub?.size ?? 0}:${stub?.lastModified ?? 0}`);
+    }
+    return keys;
+  }, [state.files.ids, state.files.byId]);
+
   const prevFileContextSignature = useRef<string | null>(null);
+  const prevFileContentKeys = useRef<Map<FileId, string> | null>(null);
+  const [contentRevision, setContentRevision] = useState(0);
   const haveFileIdSetsChanged = (prevIds: FileId[], currentIds: FileId[]) => {
     if (prevIds.length !== currentIds.length) {
       return true;
@@ -251,9 +272,26 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const currentFileIds = state.files.ids;
     const prevFileIds = prevFileContextIdsRef.current;
     const idsChanged = haveFileIdSetsChanged(prevFileIds, currentFileIds);
+    const previousContentKeys = prevFileContentKeys.current;
+    // Only an id carried over from the previous set can have had its bytes
+    // replaced. One that arrived or left is a file-set change, which the merge
+    // below folds in without discarding the edits on everything else.
+    const contentChanged =
+      previousContentKeys !== null &&
+      currentFileIds.some((id) => {
+        const previousKey = previousContentKeys.get(id);
+        return (
+          previousKey !== undefined && previousKey !== fileContentKeys.get(id)
+        );
+      });
+    prevFileContentKeys.current = fileContentKeys;
+    // Clearing the persisted document only invalidates the cache. The live
+    // document is held by the editor and has to be told to start over too.
+    if (contentChanged) setContentRevision((revision) => revision + 1);
 
     if (
       !idsChanged &&
+      !contentChanged &&
       prevFileContextSignature.current === fileContextSignature
     ) {
       return;
@@ -262,20 +300,26 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
     const previousSignature = prevFileContextSignature.current;
     prevFileContextSignature.current = fileContextSignature;
 
-    if (!idsChanged) {
+    if (!idsChanged && !contentChanged) {
       // Signature changed due to metadata/version updates but file set is unchanged.
       return;
     }
 
     console.log(
-      "[PageEditorContext] File signature changed (IDs/versions changed), clearing persisted document:",
+      "[PageEditorContext] Files changed, clearing persisted document:",
       {
+        reason: idsChanged ? "file set" : "content",
         prev: previousSignature?.substring(0, 50),
         current: fileContextSignature.substring(0, 50),
       },
     );
     clearPersistedDocument();
-  }, [fileContextSignature, clearPersistedDocument, state.files.ids]);
+  }, [
+    fileContextSignature,
+    fileContentKeys,
+    clearPersistedDocument,
+    state.files.ids,
+  ]);
 
   // Keep a ref to always read latest state in stable callbacks
   const stateRef = useRef(state);
@@ -513,8 +557,10 @@ export function PageEditorProvider({ children }: PageEditorProviderProps) {
       persistedDocumentSignature,
       savePersistedDocument,
       clearPersistedDocument,
+      contentRevision,
     }),
     [
+      contentRevision,
       currentPages,
       updateCurrentPages,
       reorderedPages,
