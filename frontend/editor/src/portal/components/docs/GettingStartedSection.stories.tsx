@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { docsContentFor } from "@portal/mocks/docs";
 import { GettingStartedSection } from "@portal/components/docs/GettingStartedSection";
-import "@portal/views/DeveloperDocs.css";
+import "@core/components/docs/DeveloperDocs.css";
 
 const { quickstartSamples, quickstartResponse } = docsContentFor("pro");
 

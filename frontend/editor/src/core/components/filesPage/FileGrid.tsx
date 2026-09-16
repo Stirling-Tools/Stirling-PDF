@@ -1,24 +1,11 @@
 import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { Checkbox, Menu, Tooltip } from "@mantine/core";
+import { Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
+import { Icon } from "@app/ui/Icon";
 import { PolicyBadges as PolicyBadgeRow } from "@app/components/shared/PolicyBadges";
 import type { FileItemPolicyRef } from "@app/components/shared/PolicyBadges";
-import FolderIcon from "@mui/icons-material/Folder";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import DeleteIcon from "@mui/icons-material/Delete";
-import HistoryIcon from "@mui/icons-material/History";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-import UploadFileIcon from "@mui/icons-material/UploadFile";
-import SearchIcon from "@mui/icons-material/Search";
-
 import { FileId } from "@app/types/file";
 import {
   FolderId,
@@ -28,6 +15,10 @@ import {
 } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import {
+  useProcessingFolders,
+  type ProcessingFolderState,
+} from "@app/hooks/useProcessingFolders";
 import {
   useVirtualFileRows,
   rowHeightPx,
@@ -42,7 +33,12 @@ import {
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
+import { FolderListRow } from "@app/components/filesPage/FolderListRow";
+import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
+import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
+import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
+import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import {
@@ -54,46 +50,10 @@ import { useFileActionTerminology } from "@app/hooks/useFileActionTerminology";
 import type { FilesPageSortMode } from "@app/contexts/FilesPageContext";
 import { OpenInNewWindowMenuItem } from "@app/components/filesPage/OpenInNewWindowMenuItem";
 
-/**
- * The origin badge a folder wears, mirroring the one its files would: a server folder
- * is Cloud, a virtual folder is Local (this browser), a mounted folder is On disk.
- */
-function useFolderOriginBadge(folder: FolderRecord): {
-  origin: "cloud" | "local";
-  tooltip: string;
-} {
-  const { t } = useTranslation();
-  switch (folderKind(folder)) {
-    case "virtual":
-      return {
-        origin: "local",
-        tooltip: t(
-          "filesPage.folderOrigin.virtualHint",
-          "A folder that lives only in this browser",
-        ),
-      };
-    case "local":
-      return {
-        // Same mark as a virtual folder: what matters is that it lives on
-        // this device, not which corner of it. The tooltip says which.
-        origin: "local",
-        tooltip: t(
-          "filesPage.folderOrigin.diskHint",
-          "A folder mounted from a directory on your disk",
-        ),
-      };
-    default:
-      return {
-        origin: "cloud",
-        tooltip: t(
-          "filesPage.folderOrigin.serverHint",
-          "A folder stored on the Stirling server",
-        ),
-      };
-  }
-}
-
 export type FilesPageViewMode = "grid" | "list";
+
+/** A disk file's place in its working folder's pipeline, when one is attached. */
+export type DiskFileState = "done" | "processing" | "failed" | "waiting";
 
 export interface FilesPageEntry {
   kind: "folder" | "file" | "diskFile";
@@ -103,6 +63,9 @@ export interface FilesPageEntry {
   file?: StirlingFileStub;
   /** A file read straight off a mounted directory (kind "diskFile"). */
   disk?: DiskFileEntry;
+  /** The disk file's processing state; absent on a folder with no pipeline. */
+  diskState?: DiskFileState;
+  hasOriginal?: boolean;
   /** Parent breadcrumb path for search results outside the current folder. */
   parentPath?: string;
 }
@@ -120,6 +83,14 @@ interface FileGridProps {
   /** "Add to workspace". */
   onOpenFile: (file: StirlingFileStub) => void;
   onOpenDiskFile?: (entry: DiskFileEntry) => void;
+  /** Open the processing-setup dialog for a folder (create or edit). */
+  onStartProcessing?: (folder: FolderRecord) => void;
+  /** Retry one failed file, by its name in the open folder. */
+  onRetryFile?: (name: string) => void;
+  /** Restore one file's archived original, by its name in the open folder. */
+  onRevertFile?: (name: string) => void;
+  /** Ask to restore every original in a folder; the confirm dialog lives upstream. */
+  onRequestRevertAll?: (folder: FolderRecord) => void;
   onMoveFiles: (
     fileIds: FileId[],
     targetFolderId: FolderId | null,
@@ -188,6 +159,12 @@ interface FileGridActions {
   openFolder: (id: FolderId) => void;
   openFile: (file: StirlingFileStub) => void;
   openDiskFile: (entry: DiskFileEntry) => void;
+  startProcessing: (folder: FolderRecord) => void;
+  retryFile: (name: string) => void;
+  revertFile: (name: string) => void;
+  requestRevertAll: (folder: FolderRecord) => void;
+  /** Surface a failed folder action's reason the way a failed drop's is. */
+  reportError: (err: unknown, label: string) => void;
   renameFolder: (folder: FolderRecord) => void;
   deleteFolder: (folder: FolderRecord) => void;
   changeFolderAppearance: (
@@ -258,6 +235,11 @@ export function FileGrid(props: FileGridProps & { loading?: boolean }) {
       openFolder: (id) => latest.current.onOpenFolder(id),
       openFile: (file) => latest.current.onOpenFile(file),
       openDiskFile: (entry) => latest.current.onOpenDiskFile?.(entry),
+      startProcessing: (folder) => latest.current.onStartProcessing?.(folder),
+      retryFile: (name) => latest.current.onRetryFile?.(name),
+      revertFile: (name) => latest.current.onRevertFile?.(name),
+      requestRevertAll: (folder) => latest.current.onRequestRevertAll?.(folder),
+      reportError: (err, label) => reportDrop(err, label),
       renameFolder: (folder) => latest.current.onRenameFolder(folder),
       deleteFolder: (folder) => latest.current.onDeleteFolder(folder),
       changeFolderAppearance: (folderId, appearance) =>
@@ -410,7 +392,7 @@ function EmptyState({
     return (
       <div className="files-page-empty">
         <span className="files-page-empty-icon">
-          <SearchIcon style={{ fontSize: "2.5rem" }} />
+          <Icon name="search" size={"2.5rem"} />
         </span>
         <div className="files-page-empty-title">
           {t("filesPage.empty.noResults.title", "No matching files")}
@@ -484,7 +466,7 @@ function EmptyState({
   return (
     <div className="files-page-empty">
       <span className="files-page-empty-icon">
-        <FolderIcon style={{ fontSize: "2.5rem" }} />
+        <Icon name="folder" size={"2.5rem"} />
       </span>
       <div className="files-page-empty-title">{t(titleKey, titleFallback)}</div>
       <div className="files-page-empty-hint">{t(hintKey, hintFallback)}</div>
@@ -493,7 +475,7 @@ function EmptyState({
           {showUpload && (
             <Button
               size="md"
-              leftSection={<UploadFileIcon fontSize="small" />}
+              leftSection={<Icon name="file-up" size={20} />}
               onClick={onUpload}
             >
               {t("filesPage.empty.uploadCta", "Upload files")}
@@ -555,6 +537,8 @@ function GridView({
             <DiskFileCard
               key={`disk-${entry.disk.path}`}
               entry={entry.disk}
+              state={entry.diskState}
+              hasOriginal={entry.hasOriginal}
               actions={actions}
             />
           );
@@ -565,6 +549,7 @@ function GridView({
               key={`file-${entry.file.id}`}
               file={entry.file}
               parentPath={entry.parentPath}
+              processingState={entry.diskState}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
@@ -615,7 +600,33 @@ const FolderCard = React.memo(function FolderCard({
   // Only a server folder can go offline: the other kinds take their name, look and
   // lifetime from elsewhere, so their edit items are hidden rather than disabled.
   const kind = folderKind(folder);
-  const originBadge = useFolderOriginBadge(folder);
+  const {
+    stateFor: processingStateFor,
+    enable: enableProcessing,
+    disable: disableProcessing,
+    remove: removeProcessingFolder,
+    sweep: sweepProcessing,
+    listFiles: listProcessingFiles,
+  } = useProcessingFolders();
+  const processing = processingStateFor(folder);
+  // Each action surfaces its own failure the way a failed drop does; the
+  // backend's reason (invalid pipeline, storage disabled) is the useful part.
+  const resumeProcessing = (label: string) =>
+    Promise.resolve(enableProcessing(folder)).catch((err) =>
+      actions.reportError(err, label),
+    );
+  const stopProcessing = (label: string) =>
+    Promise.resolve(disableProcessing(folder)).catch((err) =>
+      actions.reportError(err, label),
+    );
+  const runProcessing = (label: string) =>
+    Promise.resolve(sweepProcessing(folder)).catch((err) =>
+      actions.reportError(err, label),
+    );
+  const removeProcessing = (label: string) =>
+    Promise.resolve(removeProcessingFolder(folder)).catch((err) =>
+      actions.reportError(err, label),
+    );
   const editsDisabled = kind === "server" && !serverReachable;
   const editsHidden = kind === "local";
   const offlineHint = t(
@@ -674,11 +685,7 @@ const FolderCard = React.memo(function FolderCard({
           iconGlyph={findFolderIcon(folder.icon)?.glyph}
         />
         <div className="files-page-card-origin">
-          <FileOriginBadge
-            origin={originBadge.origin}
-            tooltip={originBadge.tooltip}
-            compact
-          />
+          <FolderOriginBadge folder={folder} />
         </div>
       </div>
       <div className="files-page-card-body">
@@ -691,12 +698,32 @@ const FolderCard = React.memo(function FolderCard({
           </div>
         )}
         <div className="files-page-card-meta">
-          {fileCount === 0
-            ? t("filesPage.folder", "Folder")
-            : t("filesPage.folderItems", "{{count}} items", {
-                count: fileCount,
-              })}
+          {processing ? (
+            <>
+              <FolderProcessingTag enabled={processing.enabled} />
+              {fileCount > 0 && (
+                <span>
+                  {" · "}
+                  {t("filesPage.folderItems", "{{count}} items", {
+                    count: fileCount,
+                  })}
+                </span>
+              )}
+            </>
+          ) : fileCount === 0 ? (
+            t("filesPage.folder", "Folder")
+          ) : (
+            t("filesPage.folderItems", "{{count}} items", {
+              count: fileCount,
+            })
+          )}
         </div>
+        {processing && (
+          <ProcessingFolderStats
+            recordId={processing.id}
+            listFiles={listProcessingFiles}
+          />
+        )}
       </div>
       <div className="files-page-card-actions">
         <Menu shadow="md" position="bottom-end" withinPortal>
@@ -707,34 +734,50 @@ const FolderCard = React.memo(function FolderCard({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.folderMenu", "Folder actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={onOpen}
             >
               {t("filesPage.open", "Open")}
             </Menu.Item>
+            {editsHidden && (
+              <ProcessingMenuItems
+                processing={processing}
+                disabled={false}
+                onRun={() => void runProcessing("process folder now")}
+                onStop={() => void stopProcessing("pause processing folder")}
+                onStart={() => actions.startProcessing(folder)}
+                onResume={() => void resumeProcessing("resume processing")}
+                onRevertAll={
+                  kind === "local"
+                    ? () => actions.requestRevertAll(folder)
+                    : undefined
+                }
+                onEdit={() => actions.startProcessing(folder)}
+                onRemove={() =>
+                  void removeProcessing("remove processing folder")
+                }
+              />
+            )}
             {/* Only a mount root can be removed; a subdirectory is the
                 disk's, and the app never deletes directories. */}
             {editsHidden && folder.parentFolderId === null && (
               <Menu.Item
                 color="red"
-                leftSection={<DeleteIcon fontSize="small" />}
+                leftSection={<Icon name="trash" size={20} />}
                 onClick={() => actions.deleteFolder(folder)}
               >
-                {t(
-                  "filesPage.removeLocalFolder",
-                  "Remove (files stay on disk)",
-                )}
+                {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
               </Menu.Item>
             )}
             {!editsHidden && (
               <>
                 <Menu.Item
-                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+                  leftSection={<Icon name="file-pen" size={20} />}
                   onClick={() => actions.renameFolder(folder)}
                   disabled={editsDisabled}
                   title={editsDisabled ? offlineHint : undefined}
@@ -753,9 +796,24 @@ const FolderCard = React.memo(function FolderCard({
                   disabled={editsDisabled}
                 />
                 <Menu.Divider />
+                <ProcessingMenuItems
+                  processing={processing}
+                  continuous={kind === "virtual"}
+                  disabled={editsDisabled}
+                  disabledHint={offlineHint}
+                  onRun={() => void runProcessing("process folder now")}
+                  onStop={() => void stopProcessing("pause processing folder")}
+                  onStart={() => actions.startProcessing(folder)}
+                  onResume={() => void resumeProcessing("resume processing")}
+                  onEdit={() => actions.startProcessing(folder)}
+                  onRemove={() =>
+                    void removeProcessing("remove processing folder")
+                  }
+                />
+                <Menu.Divider />
                 <Menu.Item
                   color="red"
-                  leftSection={<DeleteIcon fontSize="small" />}
+                  leftSection={<Icon name="trash" size={20} />}
                   onClick={() => actions.deleteFolder(folder)}
                   disabled={editsDisabled}
                   title={editsDisabled ? offlineHint : undefined}
@@ -770,6 +828,233 @@ const FolderCard = React.memo(function FolderCard({
     </div>
   );
 });
+
+/**
+ * A working folder's live per-state counts, wherever the folder is drawn. `compact`
+ * is the list's shape: the same numbers on one line, in a row that may not change
+ * height.
+ */
+function ProcessingFolderStats({
+  recordId,
+  listFiles,
+  compact = false,
+}: {
+  recordId: string;
+  listFiles: (recordId: string) => Promise<{ state: string }[]>;
+  compact?: boolean;
+}) {
+  const { t } = useTranslation();
+  const counts = useProcessingFolderCounts(recordId, listFiles);
+  if (!counts) return null;
+  const parts = (
+    [
+      ["done", t("filesPage.diskState.done", "Ready")],
+      ["processing", t("filesPage.diskState.processing", "Processing")],
+      ["failed", t("filesPage.diskState.failed", "Failed")],
+      ["waiting", t("filesPage.diskState.waiting", "Queued")],
+    ] as const
+  ).filter(([state]) => (counts[state] ?? 0) > 0);
+  if (parts.length === 0) return null;
+  return (
+    <div
+      className={`files-page-folder-stats${compact ? " is-compact" : ""}`}
+      title={parts
+        .map(([state, label]) => `${counts[state]} ${label}`)
+        .join(" · ")}
+    >
+      {parts.map(([state, label]) => (
+        <span key={state} className={`files-page-folder-stat is-${state}`}>
+          {counts[state]} {compact ? "" : label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
+/**
+ * The processing entries of a folder's action menu, carried by every folder kind including
+ * mounts, whose other edit actions are hidden. `continuous` marks a folder whose engine
+ * processes arrivals on its own, where an explicit "process now" would have nothing to do.
+ */
+export function ProcessingMenuItems({
+  processing,
+  continuous = false,
+  disabled,
+  disabledHint,
+  onRun,
+  onStop,
+  onStart,
+  onResume,
+  onRemove,
+  onEdit,
+  onRevertAll,
+}: {
+  processing: ProcessingFolderState | undefined;
+  continuous?: boolean;
+  disabled: boolean;
+  disabledHint?: string;
+  onRun: () => void;
+  onStop: () => void;
+  onStart: () => void;
+  onResume: () => void;
+  onRemove: () => void;
+  /** Open the setup dialog seeded from the existing record; absent hides Edit. */
+  onEdit?: () => void;
+  /** Restore every archived original in the folder; absent hides the entry. */
+  onRevertAll?: () => void;
+}) {
+  const { t } = useTranslation();
+  const heading = (
+    <Menu.Label>{t("filesPage.processing.section", "Processing")}</Menu.Label>
+  );
+  if (!processing) {
+    return (
+      <>
+        {heading}
+        <Menu.Item
+          leftSection={<Icon name="workflow" size={20} />}
+          onClick={onStart}
+          disabled={disabled}
+          title={disabled ? disabledHint : undefined}
+        >
+          {t("filesPage.processing.start", "Process files in this folder...")}
+        </Menu.Item>
+      </>
+    );
+  }
+  if (!processing.enabled) {
+    // Paused, not gone: the pair kept its history, so resuming never re-runs
+    // what was already done. Removing is the destructive option, named as such.
+    return (
+      <>
+        {heading}
+        <Menu.Item
+          leftSection={<Icon name="play" size={20} />}
+          onClick={onResume}
+          disabled={disabled}
+          title={disabled ? disabledHint : undefined}
+        >
+          {t("filesPage.processing.resume", "Resume processing")}
+        </Menu.Item>
+        {onEdit && (
+          <Menu.Item
+            leftSection={<Icon name="sliders-horizontal" size={20} />}
+            onClick={onEdit}
+            disabled={disabled}
+            title={disabled ? disabledHint : undefined}
+          >
+            {t("filesPage.processing.edit", "Edit processing...")}
+          </Menu.Item>
+        )}
+        {onRevertAll && (
+          <Menu.Item
+            leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+            onClick={onRevertAll}
+            disabled={disabled}
+            title={disabled ? disabledHint : undefined}
+          >
+            {t("filesPage.processing.restoreAll", "Restore all originals")}
+          </Menu.Item>
+        )}
+        <Menu.Item
+          color="red"
+          leftSection={<Icon name="workflow" size={20} />}
+          onClick={onRemove}
+          disabled={disabled}
+          title={disabled ? disabledHint : undefined}
+        >
+          {t("filesPage.processing.remove", "Remove processing")}
+        </Menu.Item>
+      </>
+    );
+  }
+  return (
+    <>
+      {heading}
+      {!continuous && (
+        <Menu.Item
+          leftSection={<Icon name="rotate-ccw" size={20} />}
+          onClick={onRun}
+        >
+          {t("filesPage.processing.sweep", "Retry failed files")}
+        </Menu.Item>
+      )}
+      <Menu.Item leftSection={<Icon name="pause" size={20} />} onClick={onStop}>
+        {t("filesPage.processing.stop", "Pause processing")}
+      </Menu.Item>
+      {onEdit && (
+        <Menu.Item
+          leftSection={<Icon name="sliders-horizontal" size={20} />}
+          onClick={onEdit}
+        >
+          {t("filesPage.processing.edit", "Edit processing...")}
+        </Menu.Item>
+      )}
+      {onRevertAll && (
+        <Menu.Item
+          leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+          onClick={onRevertAll}
+        >
+          {t("filesPage.processing.restoreAll", "Restore all originals")}
+        </Menu.Item>
+      )}
+    </>
+  );
+}
+
+/** A file's pipeline state chip; a failed state adds an inline retry. */
+function FileStateBadge({
+  state,
+  onRetry,
+}: {
+  state?: DiskFileState;
+  onRetry?: () => void;
+}) {
+  const { t } = useTranslation();
+  if (!state) return null;
+  if (state === "done") {
+    return (
+      <span className="files-page-state-badge is-done">
+        <Icon name="circle-check-big" size="0.85rem" />
+        {t("filesPage.diskState.done", "Ready")}
+      </span>
+    );
+  }
+  if (state === "processing") {
+    return (
+      <span className="files-page-state-badge">
+        <Loader size="0.7rem" />
+        {t("filesPage.diskState.processing", "Processing")}
+      </span>
+    );
+  }
+  if (state === "failed") {
+    return (
+      <span className="files-page-state-badge is-failed">
+        {t("filesPage.diskState.failed", "Failed")}
+        {onRetry && (
+          <button
+            type="button"
+            className="files-page-state-retry"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRetry();
+            }}
+            title={t("filesPage.diskState.retryHint", "Run this file again")}
+          >
+            <Icon name="rotate-ccw" size="0.8rem" />
+            {t("filesPage.diskState.retry", "Retry")}
+          </button>
+        )}
+      </span>
+    );
+  }
+  return (
+    <span className="files-page-state-badge">
+      {t("filesPage.diskState.waiting", "Queued")}
+    </span>
+  );
+}
 
 /** Stable empty value so badge-less rows keep identical props across renders. */
 const NO_BADGES: FileItemPolicyRef[] = [];
@@ -805,7 +1090,7 @@ function FileActionsMenu({
 }: FileActionsMenuProps) {
   const { t } = useTranslation();
   const terminology = useFileActionTerminology();
-  const DownloadIcon = useFileActionIcons().download;
+  const downloadIcon = useFileActionIcons().download;
   const showSaveToServer =
     saveToServerAvailable && file.remoteStorageId == null;
   const showVersionHistory =
@@ -821,12 +1106,12 @@ function FileActionsMenu({
           aria-label={t("filesPage.fileMenu", "File actions")}
           data-testid="file-card-actions"
         >
-          <MoreVertIcon fontSize="small" />
+          <Icon name="ellipsis-vertical" size={20} />
         </ActionIcon>
       </Menu.Target>
       <Menu.Dropdown>
         <Menu.Item
-          leftSection={<OpenInNewIcon fontSize="small" />}
+          leftSection={<Icon name="external-link" size={20} />}
           onClick={(e) => {
             e.stopPropagation();
             actions.openFile(file);
@@ -836,7 +1121,7 @@ function FileActionsMenu({
         </Menu.Item>
         <OpenInNewWindowMenuItem file={file} />
         <Menu.Item
-          leftSection={<DriveFileMoveIcon fontSize="small" />}
+          leftSection={<Icon name="folder-input" size={20} />}
           onClick={(e) => {
             e.stopPropagation();
             actions.requestMoveFile(file.id);
@@ -851,7 +1136,7 @@ function FileActionsMenu({
         )}
         {downloadAvailable && (
           <Menu.Item
-            leftSection={<DownloadIcon fontSize="small" />}
+            leftSection={<Icon name={downloadIcon} size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.downloadFile(file);
@@ -863,7 +1148,7 @@ function FileActionsMenu({
         )}
         {renameAvailable && (
           <Menu.Item
-            leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
+            leftSection={<Icon name="file-pen" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.renameFile(file);
@@ -875,7 +1160,7 @@ function FileActionsMenu({
         )}
         {duplicateAvailable && (
           <Menu.Item
-            leftSection={<ContentCopyOutlinedIcon fontSize="small" />}
+            leftSection={<Icon name="copy" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.duplicateFile(file);
@@ -899,7 +1184,7 @@ function FileActionsMenu({
             w={240}
           >
             <Menu.Item
-              leftSection={<CloudUploadIcon fontSize="small" />}
+              leftSection={<Icon name="cloud-upload" size={20} />}
               disabled={Boolean(saveToServerDisabledReason)}
               onClick={(e) => {
                 e.stopPropagation();
@@ -917,7 +1202,7 @@ function FileActionsMenu({
         )}
         {showVersionHistory && (
           <Menu.Item
-            leftSection={<HistoryIcon fontSize="small" />}
+            leftSection={<Icon name="rotate-ccw-clock" size={20} />}
             onClick={(e) => {
               e.stopPropagation();
               actions.versionHistory(file);
@@ -930,7 +1215,7 @@ function FileActionsMenu({
         <Menu.Divider />
         <Menu.Item
           color="red"
-          leftSection={<DeleteIcon fontSize="small" />}
+          leftSection={<Icon name="trash" size={20} />}
           onClick={(e) => {
             e.stopPropagation();
             actions.removeFile(file.id);
@@ -962,6 +1247,7 @@ interface FileCardProps {
   /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   badges: FileItemPolicyRef[];
+  processingState?: DiskFileState;
   actions: FileGridActions;
 }
 
@@ -978,6 +1264,7 @@ const FileCard = React.memo(function FileCard({
   versionHistoryAvailable,
   saveToServerDisabledReason,
   badges,
+  processingState,
   actions,
 }: FileCardProps) {
   const { t } = useTranslation();
@@ -1082,16 +1369,21 @@ const FileCard = React.memo(function FileCard({
         ) : (
           <div className="files-page-card-thumb-fallback">
             {isPdf ? (
-              <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file-pdf" size={"2rem"} />
             ) : (
-              <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file" size={"2rem"} />
             )}
             <span>{extension || "FILE"}</span>
           </div>
         )}
         <div className="files-page-card-origin">
           <FileOriginBadge origin={getFileOrigin(file)} compact />
+          <DiskLinkBadge file={file} compact />
         </div>
+        <FileStateBadge
+          state={processingState}
+          onRetry={() => actions.retryFile(file.name)}
+        />
       </div>
       <div className="files-page-card-body">
         <div className="files-page-card-name" title={file.name}>
@@ -1268,6 +1560,8 @@ function ListView({
             <DiskFileRow
               key={`disk-${entry.disk.path}`}
               entry={entry.disk}
+              state={entry.diskState}
+              hasOriginal={entry.hasOriginal}
               actions={actions}
             />
           );
@@ -1278,6 +1572,7 @@ function ListView({
               key={`file-${entry.file.id}`}
               file={entry.file}
               parentPath={entry.parentPath}
+              processingState={entry.diskState}
               isSelected={selectedFileIds.has(entry.file.id)}
               isInWorkspace={
                 activeWorkspaceFileIds?.has(entry.file.id) ?? false
@@ -1326,7 +1621,33 @@ const FolderRow = React.memo(function FolderRow({
   const onOpen = () => actions.openFolder(folder.id);
   // Kinds gate the edit items, as in FolderCard.
   const kind = folderKind(folder);
-  const originBadge = useFolderOriginBadge(folder);
+  const {
+    stateFor: processingStateFor,
+    enable: enableProcessing,
+    disable: disableProcessing,
+    remove: removeProcessingFolder,
+    sweep: sweepProcessing,
+    listFiles: listProcessingFiles,
+  } = useProcessingFolders();
+  const processing = processingStateFor(folder);
+  // Each action surfaces its own failure the way a failed drop does; the
+  // backend's reason (invalid pipeline, storage disabled) is the useful part.
+  const resumeProcessing = (label: string) =>
+    Promise.resolve(enableProcessing(folder)).catch((err) =>
+      actions.reportError(err, label),
+    );
+  const stopProcessing = (label: string) =>
+    Promise.resolve(disableProcessing(folder)).catch((err) =>
+      actions.reportError(err, label),
+    );
+  const runProcessing = (label: string) =>
+    Promise.resolve(sweepProcessing(folder)).catch((err) =>
+      actions.reportError(err, label),
+    );
+  const removeProcessing = (label: string) =>
+    Promise.resolve(removeProcessingFolder(folder)).catch((err) =>
+      actions.reportError(err, label),
+    );
   const editsDisabled = kind === "server" && !serverReachable;
   const editsHidden = kind === "local";
   const offlineHint = t(
@@ -1348,8 +1669,123 @@ const FolderRow = React.memo(function FolderRow({
   });
 
   return (
-    <div
-      role="row"
+    <FolderListRow
+      folder={folder}
+      fileCount={fileCount}
+      parentPath={parentPath}
+      status={
+        processing ? (
+          <>
+            <FolderProcessingTag enabled={processing.enabled} />
+            <ProcessingFolderStats
+              recordId={processing.id}
+              listFiles={listProcessingFiles}
+              compact
+            />
+          </>
+        ) : undefined
+      }
+      trailing={
+        <Menu shadow="md" position="bottom-end" withinPortal>
+          <Menu.Target>
+            <ActionIcon
+              ref={kebabRef}
+              variant="tertiary"
+              size="sm"
+              onClick={(e) => e.stopPropagation()}
+              aria-label={t("filesPage.folderMenu", "Folder actions")}
+            >
+              <Icon name="ellipsis-vertical" size={20} />
+            </ActionIcon>
+          </Menu.Target>
+          <Menu.Dropdown>
+            <Menu.Item
+              leftSection={<Icon name="external-link" size={20} />}
+              onClick={onOpen}
+            >
+              {t("filesPage.open", "Open")}
+            </Menu.Item>
+            {editsHidden && (
+              <ProcessingMenuItems
+                processing={processing}
+                disabled={false}
+                onRun={() => void runProcessing("process folder now")}
+                onStop={() => void stopProcessing("pause processing folder")}
+                onStart={() => actions.startProcessing(folder)}
+                onResume={() => void resumeProcessing("resume processing")}
+                onRevertAll={
+                  kind === "local"
+                    ? () => actions.requestRevertAll(folder)
+                    : undefined
+                }
+                onEdit={() => actions.startProcessing(folder)}
+                onRemove={() =>
+                  void removeProcessing("remove processing folder")
+                }
+              />
+            )}
+            {/* Only a mount root can be removed; a subdirectory is the
+                disk's, and the app never deletes directories. */}
+            {editsHidden && folder.parentFolderId === null && (
+              <Menu.Item
+                color="red"
+                leftSection={<Icon name="trash" size={20} />}
+                onClick={() => actions.deleteFolder(folder)}
+              >
+                {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
+              </Menu.Item>
+            )}
+            {!editsHidden && (
+              <>
+                <Menu.Item
+                  leftSection={<Icon name="file-pen" size={20} />}
+                  onClick={() => actions.renameFolder(folder)}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.rename", "Rename")}
+                </Menu.Item>
+                <Menu.Divider />
+                <Menu.Label>
+                  {t("filesPage.appearance.title", "Appearance")}
+                </Menu.Label>
+                <FolderAppearancePicker
+                  folder={folder}
+                  onChange={(appearance) =>
+                    actions.changeFolderAppearance(folder.id, appearance)
+                  }
+                  disabled={editsDisabled}
+                />
+                <Menu.Divider />
+                <ProcessingMenuItems
+                  processing={processing}
+                  continuous={kind === "virtual"}
+                  disabled={editsDisabled}
+                  disabledHint={offlineHint}
+                  onRun={() => void runProcessing("process folder now")}
+                  onStop={() => void stopProcessing("pause processing folder")}
+                  onStart={() => actions.startProcessing(folder)}
+                  onResume={() => void resumeProcessing("resume processing")}
+                  onEdit={() => actions.startProcessing(folder)}
+                  onRemove={() =>
+                    void removeProcessing("remove processing folder")
+                  }
+                />
+                <Menu.Divider />
+                <Menu.Item
+                  color="red"
+                  leftSection={<Icon name="trash" size={20} />}
+                  onClick={() => actions.deleteFolder(folder)}
+                  disabled={editsDisabled}
+                  title={editsDisabled ? offlineHint : undefined}
+                >
+                  {t("filesPage.deleteFolder", "Delete folder")}
+                </Menu.Item>
+              </>
+            )}
+          </Menu.Dropdown>
+        </Menu>
+      }
       tabIndex={0}
       draggable
       onDragStart={(e) => {
@@ -1371,133 +1807,8 @@ const FolderRow = React.memo(function FolderRow({
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen();
       }}
-      className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""}`}
-    >
-      <span aria-hidden="true" />
-      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
-          actions menu has to sit inside one. */}
-      <span
-        role="gridcell"
-        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
-      >
-        <FolderThumbnail
-          color={folder.color}
-          size="row"
-          iconGlyph={findFolderIcon(folder.icon)?.glyph}
-        />
-        <span
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            minWidth: 0,
-            overflow: "hidden",
-          }}
-        >
-          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
-            {folder.name}
-          </span>
-          {parentPath && (
-            <span
-              className="files-page-card-path"
-              style={{ marginTop: 0 }}
-              title={parentPath}
-            >
-              {t("filesPage.inPath", "in {{path}}", { path: parentPath })}
-            </span>
-          )}
-        </span>
-        <FileOriginBadge
-          origin={originBadge.origin}
-          tooltip={originBadge.tooltip}
-          compact
-        />
-      </span>
-      <span role="gridcell">
-        {kind === "virtual"
-          ? t("filesPage.folderKind.virtual", "Browser folder")
-          : kind === "local"
-            ? t("filesPage.folderKind.local", "Local folder")
-            : t("filesPage.folder", "Folder")}
-      </span>
-      <span role="gridcell">
-        {fileCount === 0
-          ? "-"
-          : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
-      </span>
-      <span role="gridcell">
-        {getFileDate({ lastModified: folder.updatedAt })}
-      </span>
-      <span role="gridcell">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              ref={kebabRef}
-              variant="tertiary"
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.folderMenu", "Folder actions")}
-            >
-              <MoreVertIcon fontSize="small" />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
-              onClick={onOpen}
-            >
-              {t("filesPage.open", "Open")}
-            </Menu.Item>
-            {/* Only a mount root can be removed; a subdirectory is the
-                disk's, and the app never deletes directories. */}
-            {editsHidden && folder.parentFolderId === null && (
-              <Menu.Item
-                color="red"
-                leftSection={<DeleteIcon fontSize="small" />}
-                onClick={() => actions.deleteFolder(folder)}
-              >
-                {t(
-                  "filesPage.removeLocalFolder",
-                  "Remove (files stay on disk)",
-                )}
-              </Menu.Item>
-            )}
-            {!editsHidden && (
-              <>
-                <Menu.Item
-                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-                  onClick={() => actions.renameFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.rename", "Rename")}
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Label>
-                  {t("filesPage.appearance.title", "Appearance")}
-                </Menu.Label>
-                <FolderAppearancePicker
-                  folder={folder}
-                  onChange={(appearance) =>
-                    actions.changeFolderAppearance(folder.id, appearance)
-                  }
-                  disabled={editsDisabled}
-                />
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<DeleteIcon fontSize="small" />}
-                  onClick={() => actions.deleteFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.deleteFolder", "Delete folder")}
-                </Menu.Item>
-              </>
-            )}
-          </Menu.Dropdown>
-        </Menu>
-      </span>
-    </div>
+      className={isDropTarget ? "is-drop-target" : undefined}
+    />
   );
 });
 
@@ -1519,6 +1830,7 @@ interface FileRowProps {
   /** When set, the kebab Save to server is disabled with this tooltip. */
   saveToServerDisabledReason?: string | null;
   badges: FileItemPolicyRef[];
+  processingState?: DiskFileState;
   actions: FileGridActions;
 }
 
@@ -1535,6 +1847,7 @@ const FileRow = React.memo(function FileRow({
   versionHistoryAvailable,
   saveToServerDisabledReason,
   badges,
+  processingState,
   actions,
 }: FileRowProps) {
   const { t } = useTranslation();
@@ -1628,7 +1941,7 @@ const FileRow = React.memo(function FileRow({
             }}
           />
         ) : (
-          <PictureAsPdfIcon fontSize="small" />
+          <Icon name="file-pdf" size={20} />
         )}
         <span
           style={{
@@ -1658,7 +1971,12 @@ const FileRow = React.memo(function FileRow({
           )}
         </span>
         <FileOriginBadge origin={getFileOrigin(file)} compact />
+        <DiskLinkBadge file={file} compact />
         <PolicyBadgeRow policies={badges} />
+        <FileStateBadge
+          state={processingState}
+          onRetry={() => actions.retryFile(file.name)}
+        />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
             <span className="files-page-card-open-dot" />
@@ -1695,12 +2013,21 @@ export { ROOT_FOLDER_ID };
  */
 const DiskFileCard = React.memo(function DiskFileCard({
   entry,
+  state,
+  hasOriginal,
   actions,
 }: {
   entry: DiskFileEntry;
+  state?: DiskFileState;
+  hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
-  const onOpen = () => actions.openDiskFile(entry);
+  // A file mid-processing is locked: its bytes are about to be replaced, so opening
+  // it would show a result that is not there yet.
+  const locked = state === "processing";
+  const onOpen = () => {
+    if (!locked) actions.openDiskFile(entry);
+  };
   const { t } = useTranslation();
   const thumbnail = useDiskThumbnail(entry);
   const extension = entry.name.includes(".")
@@ -1709,14 +2036,21 @@ const DiskFileCard = React.memo(function DiskFileCard({
   const isPdf = extension === "PDF";
   return (
     <div
-      className="files-page-card"
+      className={`files-page-card${locked ? " is-locked" : ""}`}
       role="listitem"
       tabIndex={0}
       onDoubleClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen();
       }}
-      title={entry.path}
+      title={
+        locked
+          ? t(
+              "filesPage.diskState.processingHint",
+              "Processing - available when it finishes",
+            )
+          : entry.path
+      }
     >
       <div className="files-page-card-thumb">
         {thumbnail ? (
@@ -1724,9 +2058,9 @@ const DiskFileCard = React.memo(function DiskFileCard({
         ) : (
           <div className="files-page-card-thumb-fallback">
             {isPdf ? (
-              <PictureAsPdfIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file-pdf" size={"2rem"} />
             ) : (
-              <InsertDriveFileIcon style={{ fontSize: "2rem" }} />
+              <Icon name="file" size={"2rem"} />
             )}
             <span>{extension || "FILE"}</span>
           </div>
@@ -1741,6 +2075,10 @@ const DiskFileCard = React.memo(function DiskFileCard({
             compact
           />
         </div>
+        <FileStateBadge
+          state={state}
+          onRetry={() => actions.retryFile(entry.name)}
+        />
       </div>
       <div className="files-page-card-body">
         <div className="files-page-card-name" title={entry.name}>
@@ -1760,12 +2098,12 @@ const DiskFileCard = React.memo(function DiskFileCard({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={(e) => {
                 e.stopPropagation();
                 onOpen();
@@ -1773,6 +2111,17 @@ const DiskFileCard = React.memo(function DiskFileCard({
             >
               {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
+            {hasOriginal && (
+              <Menu.Item
+                leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  actions.revertFile(entry.name);
+                }}
+              >
+                {t("filesPage.processing.restore", "Restore original")}
+              </Menu.Item>
+            )}
           </Menu.Dropdown>
         </Menu>
       </div>
@@ -1783,12 +2132,21 @@ const DiskFileCard = React.memo(function DiskFileCard({
 /** List-view sibling of {@link DiskFileCard}; same single affordance. */
 const DiskFileRow = React.memo(function DiskFileRow({
   entry,
+  state,
+  hasOriginal,
   actions,
 }: {
   entry: DiskFileEntry;
+  state?: DiskFileState;
+  hasOriginal?: boolean;
   actions: FileGridActions;
 }) {
-  const onOpen = () => actions.openDiskFile(entry);
+  // A file mid-processing is locked: its bytes are about to be replaced, so opening
+  // it would show a result that is not there yet.
+  const locked = state === "processing";
+  const onOpen = () => {
+    if (!locked) actions.openDiskFile(entry);
+  };
   const { t } = useTranslation();
   const thumbnail = useDiskThumbnail(entry);
   const ext = entry.name.includes(".")
@@ -1798,7 +2156,7 @@ const DiskFileRow = React.memo(function DiskFileRow({
     <div
       role="row"
       tabIndex={0}
-      className="files-page-list-row"
+      className={`files-page-list-row${locked ? " is-locked" : ""}`}
       onDoubleClick={onOpen}
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen();
@@ -1828,9 +2186,9 @@ const DiskFileRow = React.memo(function DiskFileRow({
             }}
           />
         ) : ext === "PDF" ? (
-          <PictureAsPdfIcon fontSize="small" />
+          <Icon name="file-pdf" size={20} />
         ) : (
-          <InsertDriveFileIcon fontSize="small" />
+          <Icon name="file" size={20} />
         )}
         <span
           style={{
@@ -1850,6 +2208,10 @@ const DiskFileRow = React.memo(function DiskFileRow({
           )}
           compact
         />
+        <FileStateBadge
+          state={state}
+          onRetry={() => actions.retryFile(entry.name)}
+        />
       </span>
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
@@ -1865,16 +2227,24 @@ const DiskFileRow = React.memo(function DiskFileRow({
               onClick={(e) => e.stopPropagation()}
               aria-label={t("filesPage.fileMenu", "File actions")}
             >
-              <MoreVertIcon fontSize="small" />
+              <Icon name="ellipsis-vertical" size={20} />
             </ActionIcon>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
+              leftSection={<Icon name="external-link" size={20} />}
               onClick={onOpen}
             >
               {t("filesPage.addToWorkspace", "Add to workspace")}
             </Menu.Item>
+            {hasOriginal && (
+              <Menu.Item
+                leftSection={<Icon name="rotate-ccw-clock" size={20} />}
+                onClick={() => actions.revertFile(entry.name)}
+              >
+                {t("filesPage.processing.restore", "Restore original")}
+              </Menu.Item>
+            )}
           </Menu.Dropdown>
         </Menu>
       </span>

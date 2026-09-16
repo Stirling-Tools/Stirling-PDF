@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  type Location,
   Navigate,
   useLocation,
   useNavigate,
@@ -41,12 +42,15 @@ export default function Login() {
   // Where to return to after signing in. Router state first (set when Landing
   // bounces an unauthenticated visitor), then the query, which is what survives
   // a reload of /login. Null means "no specific destination" and the caller
-  // falls back to role-based landing.
+  // falls back to the default landing.
   const resolveReturnPath = (): string | null => {
-    const fromState = (
-      location.state as { from?: { pathname?: string } } | null
-    )?.from?.pathname;
-    if (fromState) return safePath(fromState);
+    const fromState = (location.state as { from?: Partial<Location> } | null)
+      ?.from;
+    if (fromState?.pathname) {
+      return safePath(
+        fromState.pathname + (fromState.search ?? "") + (fromState.hash ?? ""),
+      );
+    }
     const fromQuery = searchParams.get("from");
     if (!fromQuery) return null;
     try {
@@ -216,9 +220,9 @@ export default function Login() {
       navigate(returnPath, { replace: true });
       return;
     }
-    // No explicit destination: land processor users on the processor and
-    // everyone else on the editor. Resolved here rather than by bouncing
-    // through "/" so the app isn't torn down and remounted on the way.
+    // No explicit destination: the editor, unless this account opted in to the
+    // processor. Resolved here rather than by bouncing through "/" so the app
+    // isn't torn down and remounted on the way.
     let active = true;
     void resolveLandingPath().then((path) => {
       if (!active) return;
@@ -391,12 +395,12 @@ export default function Login() {
     title: `${t("login.title", "Sign in")} - Stirling PDF`,
     description: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogTitle: `${t("login.title", "Sign in")} - Stirling PDF`,
     ogDescription: t(
       "app.description",
-      "The Free Adobe Acrobat alternative (10M+ Downloads)",
+      "A free, private PDF editor you can run on any infrastructure.",
     ),
     ogImage: `${baseUrl}/og_images/home.png`,
     ogUrl: `${window.location.origin}${window.location.pathname}`,
