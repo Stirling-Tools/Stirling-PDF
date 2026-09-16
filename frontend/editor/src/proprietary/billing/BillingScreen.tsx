@@ -12,6 +12,10 @@ import type { Wallet } from "@app/billing/types";
 import "@app/billing/billing-screen.css";
 
 export interface BillingScreenProps {
+  /** Host-specific occupied seats; null means unavailable, undefined uses the wallet. */
+  usersInUse?: number | null;
+  /** Host-authorized account actions beside the page title. */
+  headerAction?: ReactNode;
   /**
    * Null while loading, or when the host could not read one. A non-null wallet must be complete:
    * the sections dereference its fields without guards, so a hand-built partial object throws
@@ -51,6 +55,8 @@ export interface BillingScreenProps {
   invoicesSection?: ReactNode;
   /** Null when the backend cannot compute it, which omits the row rather than showing a zero. */
   editorsDeployed?: number | null;
+  /** Overrides wallet analytics when supplied; null omits an unavailable activity count. */
+  pdfsProcessed?: number | null;
   /** The enterprise door. Omitted for a team already on an agreement. */
   onEnterpriseQuote?: () => void;
   /** Host-owned surfaces that are not sections of this card: modals, upsells, detail cards. */
@@ -82,6 +88,8 @@ function cycleDay(
  * <p>A chip exists only where its section does, so an omitted slot removes both.
  */
 export function BillingScreen({
+  usersInUse,
+  headerAction,
   wallet,
   loading = false,
   unavailable,
@@ -98,6 +106,7 @@ export function BillingScreen({
   procurementSection,
   licenseSection,
   editorsDeployed,
+  pdfsProcessed,
   paymentSection,
   invoicesSection,
   onEnterpriseQuote,
@@ -114,6 +123,10 @@ export function BillingScreen({
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active) && !enterpriseProcessor;
   const teamHeld = Boolean(wallet?.team?.held);
+  const processedCount =
+    pdfsProcessed === undefined
+      ? wallet?.docsProcessedThisPeriod
+      : pdfsProcessed;
 
   const chips = useMemo(() => {
     const out: Array<[string, string]> = [];
@@ -226,6 +239,11 @@ export function BillingScreen({
   }, [wallet, paying, teamHeld, serverPlan, t]);
 
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
+  const occupiedSeats = serverPlan
+    ? serverPlan.usersInUse
+    : usersInUse === undefined
+      ? wallet?.team.usersInUse
+      : usersInUse;
   const showTeam = Boolean(
     wallet &&
     (wallet.team.held ||
@@ -243,15 +261,18 @@ export function BillingScreen({
   return (
     <div className="billing-page">
       <header className="billing-page__head">
-        <h1 className="billing-page__title">
-          {t("portal.usage.title", "Usage & Billing")}
-        </h1>
-        <p className="billing-page__subtitle">
-          {t(
-            "portal.usage.subtitle",
-            "Your plan, your usage, and every invoice.",
-          )}
-        </p>
+        <div>
+          <h1 className="billing-page__title">
+            {t("portal.usage.title", "Usage & Billing")}
+          </h1>
+          <p className="billing-page__subtitle">
+            {t(
+              "portal.usage.subtitle",
+              "Your plan, your usage, and every invoice.",
+            )}
+          </p>
+        </div>
+        {headerAction}
       </header>
 
       <div className="billing-page__body">
@@ -316,6 +337,7 @@ export function BillingScreen({
                   <div className="billing-meters">
                     {(showTeam || serverPlan) && (
                       <TeamPlanRow
+                        usersInUse={usersInUse}
                         wallet={wallet}
                         selfHosted={selfHosted}
                         serverPlan={serverPlan}
@@ -379,18 +401,19 @@ export function BillingScreen({
                         </div>
                       )}
 
-                      <KvRow
-                        label={t("portal.billing.cycle.pdfs", "PDFs processed")}
-                        value={wallet.docsProcessedThisPeriod.toLocaleString()}
-                      />
-                      {(serverPlan
-                        ? serverPlan.usersInUse != null
-                        : showTeam) && (
+                      {processedCount != null && (
+                        <KvRow
+                          label={t(
+                            "portal.billing.cycle.pdfs",
+                            "PDFs processed",
+                          )}
+                          value={processedCount.toLocaleString()}
+                        />
+                      )}
+                      {(serverPlan || showTeam) && occupiedSeats != null && (
                         <KvRow
                           label={t("portal.billing.cycle.users", "Users")}
-                          value={(
-                            serverPlan?.usersInUse ?? wallet.team.usersInUse
-                          ).toLocaleString()}
+                          value={occupiedSeats.toLocaleString()}
                         />
                       )}
                       {editorsDeployed != null && (

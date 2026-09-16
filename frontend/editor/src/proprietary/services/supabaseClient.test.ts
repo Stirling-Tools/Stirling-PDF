@@ -2,6 +2,11 @@ import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { allowConsole } from "@app/tests/failOnConsole";
 
+const session = vi.hoisted(() => ({ acceptedToken: null as string | null }));
+vi.mock("@app/portal/auth/portalSaasSession", () => ({
+  getPortalSaasToken: () => Promise.resolve(session.acceptedToken),
+}));
+
 vi.mock("@app/services/apiClient", () => ({ default: {} }));
 vi.mock("@app/utils/protocolDetection", () => ({
   getCheckoutMode: () => "hosted",
@@ -42,11 +47,17 @@ beforeEach(() => {
   vi.resetModules();
   localStorage.clear();
   network.mockReset();
+  session.acceptedToken = null;
   network.mockImplementation(
     async (input) =>
       new Response(
         JSON.stringify(
-          String(input).includes("/auth/v1/user") ? user : { received: true },
+          String(input).includes("/auth/v1/user")
+            ? user
+            : {
+                received: true,
+                url: "https://checkout.stripe.com/test-session",
+              },
         ),
         { status: 200, headers: { "Content-Type": "application/json" } },
       ),
@@ -90,8 +101,13 @@ it("keeps license function requests independent of stored billing credentials", 
   expect((await client!.auth.getSession()).data.session).toBeNull();
   const { default: licenseService } =
     await import("@app/services/licenseService");
-  await licenseService.createCheckoutSession({
-    lookup_key: "selfhosted:server:monthly",
+  const { createServerPlanCheckoutSession } =
+    await import("@app/services/serverPlanCheckout");
+  await createServerPlanCheckoutSession({
+    lookupKey: "selfhosted:enterpriseseat:monthly",
+    serverQuantity: 1,
+    requiresSeats: true,
+    uiMode: "hosted",
   });
   await licenseService.createBillingPortalSession(
     "https://server.example.test/settings/billing",
@@ -113,4 +129,23 @@ it("keeps license function requests independent of stored billing credentials", 
     );
   }
   expect(localStorage.getItem(storageKey)).toBe(persisted);
+});
+
+it("uses only the validated owner session for Team checkout despite callback credentials", async () => {
+  window.history.replaceState({}, "", "/" + fragment);
+  session.acceptedToken = "validated-owner-token";
+  ({ supabase: client } = await import("@app/services/supabaseClient"));
+  const { createServerPlanCheckoutSession } =
+    await import("@app/services/serverPlanCheckout");
+  await createServerPlanCheckoutSession({
+    lookupKey: "selfhosted:server:monthly",
+    serverQuantity: 1,
+    uiMode: "hosted",
+  });
+  expect(network).toHaveBeenCalledOnce();
+  expect(
+    new Headers(network.mock.calls[0][1]?.headers).get("authorization"),
+  ).toBe("Bearer validated-owner-token");
+  expect((await client!.auth.getSession()).data.session).toBeNull();
+  expect(localStorage.getItem(storageKey)).toBeNull();
 });

@@ -10,6 +10,7 @@ import {
 import { useUI } from "@app/portal/contexts/UIContext";
 import { useConnectGate } from "@app/portal/hooks/useConnectGate";
 import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { AccountConnectionNotice } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
 import { FreeTierPlanView } from "@app/portal/components/billing/FreeTierPlanView";
 import { Usage } from "@app/portal/views/Usage";
@@ -27,7 +28,11 @@ export function PortalBillingGate() {
   const { trialSetupRequested } = useUI();
   const { loading, gated, connect } = useConnectGate();
   const isOwner = useAccountLinkOwner();
-  const { serverPlan, loading: licenseLoading } = useServerPlan(isOwner);
+  const {
+    serverPlan,
+    usersInUse,
+    loading: licenseLoading,
+  } = useServerPlan(isOwner);
   const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
   const [searchParams] = useSearchParams();
@@ -66,13 +71,19 @@ export function PortalBillingGate() {
     );
   return (
     <Usage
+      localUsersInUse={usersInUse}
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
       onWalletLoaded={onWalletLoaded}
       renderLicenseSection={(onSaved) => (
         <ServerLicenseSection onSaved={onSaved} />
       )}
-      sessionRecovery={<SaasSessionBanner />}
+      sessionRecovery={
+        <>
+          <SaasSessionBanner />
+          <AccountConnectionNotice />
+        </>
+      }
     />
   );
 }

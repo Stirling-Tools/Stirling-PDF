@@ -6,6 +6,11 @@ export type { LinkedInstanceRow };
 /** Link status for this instance (GET /api/v1/account-link/status). */
 export interface LinkStatus {
   linked: boolean;
+  connection?: {
+    state: "connected" | "offline" | "expired" | "revoked" | "unlinked";
+    lastSuccessAt: string | null;
+    offlineAccessUntil: string | null;
+  } | null;
   /** Matches the cloud instance row; older status responses may omit it. */
   deviceId?: string | null;
   name?: string | null;
@@ -39,8 +44,11 @@ export interface FreeTierBalance {
 const BASE = "/api/v1/account-link";
 
 /** Linked / Not-linked for this instance. */
-export async function fetchStatus(): Promise<LinkStatus> {
-  return apiClient.local.json<LinkStatus>(`${BASE}/status`);
+export async function fetchStatus(force = false): Promise<LinkStatus> {
+  return apiClient.local.json<LinkStatus>(
+    `${BASE}/${force ? "recheck" : "status"}`,
+    { method: force ? "POST" : "GET" },
+  );
 }
 
 /**

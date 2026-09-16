@@ -201,7 +201,12 @@ for (const linked of [false, true]) {
     page,
   }) => {
     await page.route("**/api/v1/account-link/status", (route) =>
-      route.fulfill({ json: { linked, name: "Test server" } }),
+      route.fulfill({
+        json: {
+          linked,
+          name: "Test server",
+        },
+      }),
     );
     const localDocuments = page.waitForRequest(
       "**/api/v1/proprietary/ui-data/documents?*",
@@ -254,12 +259,25 @@ for (const linked of [false, true]) {
   });
 }
 
-for (const linked of [false, true]) {
-  test(`local navigation has no connection banner with a ${linked ? "linked" : "disconnected"} server`, async ({
+for (const connectionState of [
+  "unlinked",
+  "connected",
+  "offline",
+  "expired",
+  "revoked",
+]) {
+  const linked = connectionState !== "unlinked";
+  test(`local navigation has no connection banner with a ${connectionState} server`, async ({
     page,
   }) => {
     await page.route("**/api/v1/account-link/status", (route) =>
-      route.fulfill({ json: { linked, name: "Test server" } }),
+      route.fulfill({
+        json: {
+          linked,
+          name: "Test server",
+          connection: { state: connectionState },
+        },
+      }),
     );
     await page.route("**/v1/editor/deployment*", (route) =>
       route.fulfill({
@@ -302,6 +320,9 @@ for (const linked of [false, true]) {
       ).toHaveCount(0);
       await expect(
         page.getByRole("button", { name: "Sign in again", exact: true }),
+      ).toHaveCount(0);
+      await expect(
+        page.getByRole("button", { name: "Check connection", exact: true }),
       ).toHaveCount(0);
     }
     if (linked) {

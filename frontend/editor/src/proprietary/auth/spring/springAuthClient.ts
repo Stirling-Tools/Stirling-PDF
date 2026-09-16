@@ -14,6 +14,7 @@
 
 import { AxiosError, type AxiosRequestConfig } from "axios";
 import { getSpringAuthConfig } from "@app/auth/config";
+import { JWT_STORAGE_KEY } from "@app/auth/httpClient";
 import { type OAuthProvider } from "@app/auth/spring/oauthTypes";
 import { resetOAuthState } from "@app/auth/spring/oauthStorage";
 import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
@@ -281,7 +282,7 @@ class SpringAuthClient {
   }> {
     try {
       // Get JWT from localStorage
-      let token = localStorage.getItem("stirling_jwt");
+      let token = localStorage.getItem(JWT_STORAGE_KEY);
 
       if (!token) {
         // console.debug('[SpringAuth] getSession: No JWT in localStorage');
@@ -293,13 +294,13 @@ class SpringAuthClient {
         if (tokenExpiry.expiresIn <= this.DESKTOP_SAAS_REFRESH_EARLY_SECONDS) {
           const refreshed = await platform().refreshPlatformSession();
           if (!refreshed) {
-            localStorage.removeItem("stirling_jwt");
+            localStorage.removeItem(JWT_STORAGE_KEY);
             return { data: { session: null }, error: null };
           }
 
-          const refreshedToken = localStorage.getItem("stirling_jwt");
+          const refreshedToken = localStorage.getItem(JWT_STORAGE_KEY);
           if (!refreshedToken) {
-            localStorage.removeItem("stirling_jwt");
+            localStorage.removeItem(JWT_STORAGE_KEY);
             return { data: { session: null }, error: null };
           }
 
@@ -308,7 +309,7 @@ class SpringAuthClient {
         }
 
         if (tokenExpiry.expiresIn <= 0) {
-          localStorage.removeItem("stirling_jwt");
+          localStorage.removeItem(JWT_STORAGE_KEY);
           return { data: { session: null }, error: null };
         }
 
@@ -373,7 +374,7 @@ class SpringAuthClient {
         if (!refreshResult.error && refreshResult.data.session) {
           return refreshResult;
         }
-        localStorage.removeItem("stirling_jwt");
+        localStorage.removeItem(JWT_STORAGE_KEY);
         return { data: { session: null }, error: null };
       }
 
@@ -412,7 +413,7 @@ class SpringAuthClient {
       const token = data.session.access_token;
 
       // Store JWT in localStorage
-      localStorage.setItem("stirling_jwt", token);
+      localStorage.setItem(JWT_STORAGE_KEY, token);
       // console.log('[SpringAuth] JWT stored in localStorage');
 
       // Sync token to platform-specific storage (Tauri store for desktop)
@@ -540,7 +541,7 @@ class SpringAuthClient {
       }
 
       // Clean up local storage
-      localStorage.removeItem("stirling_jwt");
+      localStorage.removeItem(JWT_STORAGE_KEY);
       try {
         // Clear any cached OAuth redirect/session state
         resetOAuthState();
@@ -581,7 +582,7 @@ class SpringAuthClient {
     } catch (error: unknown) {
       console.error("[SpringAuth] signOut error:", error);
       // Still remove token even if backend call fails
-      localStorage.removeItem("stirling_jwt");
+      localStorage.removeItem(JWT_STORAGE_KEY);
       try {
         await platform().clearPlatformAuthAfterSignOut();
       } catch (cleanupError) {
@@ -613,7 +614,7 @@ class SpringAuthClient {
       if (await platform().isDesktopSaaSAuthMode()) {
         const refreshed = await platform().refreshPlatformSession();
         if (!refreshed) {
-          localStorage.removeItem("stirling_jwt");
+          localStorage.removeItem(JWT_STORAGE_KEY);
           return {
             data: { session: null },
             error: { message: "Token refresh failed - please log in again" },
@@ -631,7 +632,7 @@ class SpringAuthClient {
         }
 
         // Calculate adaptive intervals for desktop SaaS mode
-        const token = localStorage.getItem("stirling_jwt");
+        const token = localStorage.getItem(JWT_STORAGE_KEY);
         if (token) {
           this.calculateAdaptiveIntervals(token);
         }
@@ -657,7 +658,7 @@ class SpringAuthClient {
       const token = data.session.access_token;
 
       // Update local storage with new token
-      localStorage.setItem("stirling_jwt", token);
+      localStorage.setItem(JWT_STORAGE_KEY, token);
 
       // Sync token to platform-specific storage (Tauri store for desktop)
       await platform().savePlatformToken(token);
@@ -679,7 +680,7 @@ class SpringAuthClient {
 
       return { data: { session }, error: null };
     } catch (error: unknown) {
-      localStorage.removeItem("stirling_jwt");
+      localStorage.removeItem(JWT_STORAGE_KEY);
 
       // 401/403 means the refresh token is no longer valid - normal expired
       // state, not an error worth surfacing. Other statuses (network, backend

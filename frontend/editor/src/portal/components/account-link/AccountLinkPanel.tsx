@@ -1,3 +1,4 @@
+import { AccountConnectionNotice } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { useCallback, useState } from "react";
 import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessionBanner";
@@ -97,6 +98,7 @@ function OwnerAccountLinkPanel() {
       }
     >
       <SaasSessionBanner />
+      <AccountConnectionNotice />
       <LinkAccountCard link={link} instanceName={currentInstance?.name} />
 
       {linked && (

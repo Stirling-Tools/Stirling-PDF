@@ -151,6 +151,12 @@ public class AccountLinkController {
         return ResponseEntity.ok(service.status());
     }
 
+    /** Refreshes cloud entitlement without changing the linked account. */
+    @PostMapping("/recheck")
+    public ResponseEntity<AccountLinkService.LinkStatus> recheck() {
+        return ResponseEntity.ok(service.recheck());
+    }
+
     @PostMapping("/unlink")
     public ResponseEntity<Void> unlink() {
         service.unlink();

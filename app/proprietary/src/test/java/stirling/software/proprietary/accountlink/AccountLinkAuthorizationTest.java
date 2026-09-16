@@ -84,6 +84,8 @@ class AccountLinkAuthorizationTest {
         controller.connectReauth(null, new MockHttpServletRequest());
         controller.connectComplete(new AccountLinkController.ConnectCompleteRequest("nonce"));
         controller.unlink();
+        controller.recheck();
+        verify(service).recheck();
         verify(connectService).start(any(), any());
         verify(connectService).startReauth(any());
         verify(connectService).complete("nonce");
@@ -137,6 +139,10 @@ class AccountLinkAuthorizationTest {
                         AccessDeniedException.class,
                         AuthenticationCredentialsNotFoundException.class);
         assertThatThrownBy(() -> controller.unlink())
+                .isInstanceOfAny(
+                        AccessDeniedException.class,
+                        AuthenticationCredentialsNotFoundException.class);
+        assertThatThrownBy(() -> controller.recheck())
                 .isInstanceOfAny(
                         AccessDeniedException.class,
                         AuthenticationCredentialsNotFoundException.class);

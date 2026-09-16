@@ -6,6 +6,7 @@ import { AccountLinkProvider } from "@app/portal/contexts/AccountLinkContext";
 import { AccountLinkSessionBoundary } from "@app/portal/components/account-link/AccountLinkSessionBoundary";
 import { ConnectCallbackHost } from "@app/portal/components/account-link/ConnectCallbackHost";
 import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
+import { AccountConnectionRefresh } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { LinkAccountModal } from "@app/portal/components/account-link/LinkAccountModal";
 
 function LinkModalHost() {
@@ -31,6 +32,7 @@ export function PortalSettingsProviders({ children }: { children: ReactNode }) {
         <UIProvider>
           <AccountLinkSessionBoundary>
             <AccountLinkProvider>
+              <AccountConnectionRefresh />
               {children}
               <LinkModalHost />
               <ConnectCallbackHost />

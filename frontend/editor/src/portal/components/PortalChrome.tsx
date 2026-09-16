@@ -1,3 +1,4 @@
+import { AccountConnectionRefresh } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
@@ -34,6 +35,7 @@ export function PortalChrome({ banner }: { banner?: ReactNode } = {}) {
     <AppConfigProvider bootstrapMode="non-blocking">
       {/* The pipeline builder reads the tool registry to list and configure operations. */}
       <ToolRegistryProvider>
+        <AccountConnectionRefresh />
         <AppShell>
           {banner}
           <RoutedContent />

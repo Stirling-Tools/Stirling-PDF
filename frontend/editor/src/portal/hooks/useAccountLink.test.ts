@@ -1,5 +1,5 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
-import { beforeEach, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({
   fetchStatus: vi.fn(),
   isOwner: true,
@@ -66,4 +66,48 @@ it("makes no account-link requests for a non-owner, even when refresh or unlink 
   expect(mocks.fetchStatus).not.toHaveBeenCalled();
   expect(mocks.unlinkInstance).not.toHaveBeenCalled();
   expect(mocks.clearAccountLinkSession).not.toHaveBeenCalled();
+});
+
+afterEach(() => vi.useRealTimers());
+
+it("polls without downgrading a known subscription and stops when ownership changes", async () => {
+  vi.useFakeTimers();
+  const { result, rerender } = renderHook(() => useAccountLink());
+  await act(async () => {
+    await Promise.resolve();
+  });
+  expect(mocks.applyLinkFacts).toHaveBeenCalledOnce();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(60_000);
+  });
+  expect(mocks.fetchStatus).toHaveBeenCalledTimes(2);
+  expect(mocks.applyLinkFacts).toHaveBeenCalledOnce();
+  await act(async () => {
+    await result.current.refresh(true);
+  });
+  expect(mocks.fetchStatus).toHaveBeenLastCalledWith(true);
+  mocks.isOwner = false;
+  rerender();
+  await act(async () => {
+    await vi.advanceTimersByTimeAsync(60_000);
+  });
+  expect(mocks.fetchStatus).toHaveBeenCalledTimes(3);
+  expect(result.current.status).toBeNull();
+});
+
+it("discards a pending status response after ownership is lost", async () => {
+  let resolve!: (value: { linked: boolean }) => void;
+  mocks.fetchStatus.mockReturnValue(
+    new Promise((done) => {
+      resolve = done;
+    }),
+  );
+  const { result, rerender } = renderHook(() => useAccountLink());
+  mocks.isOwner = false;
+  rerender();
+  await act(async () => {
+    resolve({ linked: true });
+  });
+  expect(result.current.status).toBeNull();
+  expect(mocks.applyLinkFacts).not.toHaveBeenCalled();
 });

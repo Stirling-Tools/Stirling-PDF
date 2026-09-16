@@ -47,6 +47,10 @@ vi.mock("@app/portal/auth/accountLinkSession", () => ({
   bindAccountLinkSession: vi.fn(),
   clearAccountLinkSession: vi.fn(),
 }));
+vi.mock("@app/portal/components/account-link/AccountConnectionNotice", () => ({
+  AccountConnectionRefresh: () => null,
+  AccountConnectionNotice: () => null,
+}));
 vi.mock("@app/portal/components/account-link/SaasSessionBanner", () => ({
   SaasSessionBanner: () => null,
 }));
