@@ -94,10 +94,14 @@ const Redact = (props: BaseToolProps) => {
 
     if (mode === "manual" && hasAnyFiles) {
       // Set redaction config and navigate to viewer
-      setRedactionConfig(base.params.parameters);
+      setRedactionConfig({ ...base.params.parameters, mode: "manual" });
       setRedactionMode(true);
       navActions.setWorkbench("viewer");
       hasOpenedViewer.current = true;
+    } else if (mode === "automatic") {
+      // Leave the manual-entry config behind, or the reset effect below reads
+      // it as "still manual" and the viewer stays in redaction mode.
+      setRedactionConfig(null);
     }
   };
 

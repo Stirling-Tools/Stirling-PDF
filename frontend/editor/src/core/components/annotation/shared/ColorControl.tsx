@@ -72,11 +72,7 @@ export function ColorControl({
             disabled={disabled}
             aria-label={label}
           >
-            <ColorSwatch
-              color={localColor}
-              size={18}
-              style={{ cursor: "pointer" }}
-            />
+            <ColorSwatch color={localColor} size={18} />
           </button>
         </Tooltip>
       </Popover.Target>

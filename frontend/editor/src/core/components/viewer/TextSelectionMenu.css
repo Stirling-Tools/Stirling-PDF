@@ -40,16 +40,23 @@
   flex-shrink: 0;
 }
 
-.embedpdf-floating-btn:hover,
-.embedpdf-text-selection-btn:hover {
+.embedpdf-floating-btn:hover:not(:disabled),
+.embedpdf-text-selection-btn:hover:not(:disabled) {
   background-color: rgba(255, 255, 255, 0.12);
   color: var(--c-text-on-primary);
 }
 
-.embedpdf-floating-btn:active,
-.embedpdf-text-selection-btn:active {
+.embedpdf-floating-btn:active:not(:disabled),
+.embedpdf-text-selection-btn:active:not(:disabled) {
   transform: scale(0.92);
   background-color: rgba(255, 255, 255, 0.18);
+}
+
+.embedpdf-floating-btn:disabled,
+.embedpdf-text-selection-btn:disabled,
+.embedpdf-floating-badge-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
 }
 
 .embedpdf-floating-btn:focus-visible,
@@ -61,7 +68,7 @@
   color: var(--c-floating-danger);
 }
 
-.embedpdf-floating-btn-danger:hover {
+.embedpdf-floating-btn-danger:hover:not(:disabled) {
   background-color: color-mix(
     in srgb,
     var(--c-floating-danger) 18%,
@@ -96,13 +103,13 @@
   white-space: nowrap;
 }
 
-.embedpdf-floating-badge-btn:hover {
+.embedpdf-floating-badge-btn:hover:not(:disabled) {
   background: color-mix(in srgb, var(--c-floating-danger) 25%, transparent);
   border-color: color-mix(in srgb, var(--c-floating-danger) 60%, transparent);
   color: var(--c-text-on-primary);
 }
 
-.embedpdf-floating-badge-btn:active {
+.embedpdf-floating-badge-btn:active:not(:disabled) {
   transform: scale(0.95);
 }
 

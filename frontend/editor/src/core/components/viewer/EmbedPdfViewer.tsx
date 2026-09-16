@@ -586,9 +586,21 @@ const EmbedPdfViewerContent = ({
       }
 
       const canUndo = historyApi.canUndo?.() ?? false;
-      if (!hasAnnotationChangesRef.current && canUndo) {
-        hasAnnotationChangesRef.current = true;
+      const wasDirty = hasAnnotationChangesRef.current;
+      hasAnnotationChangesRef.current = canUndo;
+
+      if (canUndo) {
         setHasUnsavedChanges(true);
+        return;
+      }
+
+      // Undoing back to the saved state must disarm the warning, but only when
+      // annotation edits were what armed it: form fill and queued/applied
+      // redactions keep their own claim on the flag.
+      const hasPendingRedactions =
+        (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+      if (wasDirty && !hasPendingRedactions && !redactionsApplied) {
+        setHasUnsavedChanges(false);
       }
     };
 
@@ -598,7 +610,12 @@ const EmbedPdfViewerContent = ({
         unsubscribe();
       }
     };
-  }, [historyApiRef.current, setHasUnsavedChanges]);
+  }, [
+    historyApiRef.current,
+    setHasUnsavedChanges,
+    redactionsApplied,
+    redactionTrackerRef,
+  ]);
 
   // Register checker for unsaved changes (annotations only for now)
   useEffect(() => {

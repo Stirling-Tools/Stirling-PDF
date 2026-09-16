@@ -72,6 +72,7 @@ vi.mock("@app/contexts/RedactionContext", () => ({
     setRedactionConfig: mockSetRedactionConfig,
     redactionApiRef: { current: null },
     isBridgeReady: true,
+    manualRedactColor: "#000000",
   }),
 }));
 
@@ -204,7 +205,7 @@ describe("TextSelectionMenu", () => {
       0,
       expect.objectContaining({
         type: PdfAnnotationSubtype.HIGHLIGHT,
-        color: "#FFCD45",
+        color: "#ffd54f",
         pageIndex: 0,
       }),
     );
@@ -227,7 +228,7 @@ describe("TextSelectionMenu", () => {
       0,
       expect.objectContaining({
         type: PdfAnnotationSubtype.STRIKEOUT,
-        color: "#E44234",
+        color: "#e53935",
         pageIndex: 0,
       }),
     );
@@ -249,7 +250,7 @@ describe("TextSelectionMenu", () => {
       0,
       expect.objectContaining({
         type: PdfAnnotationSubtype.UNDERLINE,
-        color: "#E44234",
+        color: "#ffb300",
         pageIndex: 0,
       }),
     );
@@ -271,7 +272,7 @@ describe("TextSelectionMenu", () => {
       0,
       expect.objectContaining({
         type: PdfAnnotationSubtype.SQUIGGLY,
-        color: "#E44234",
+        color: "#00acc1",
         pageIndex: 0,
       }),
     );
