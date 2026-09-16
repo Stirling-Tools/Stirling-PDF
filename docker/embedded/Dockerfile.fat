@@ -111,6 +111,14 @@ RUN --mount=type=cache,target=/root/.cache/uv \
       | xargs -0 -r strip --strip-unneeded 2>/dev/null || true; \
     apt-get purge -y binutils; apt-get autoremove -y; rm -rf /var/lib/apt/lists/*
 
+# Compile the network guard here (not only in base) so it ships regardless of the pinned base version.
+FROM ubuntu:noble@sha256:561618e2c15bf2397621dd04f96926663a3b5616c189cf7e38db7e82f5c538ea AS office-guard-build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker/base/security/soffice_no_network.c /tmp/soffice_no_network.c
+RUN gcc -shared -fPIC -O2 -Wall -Werror -o /soffice_no_network.so /tmp/soffice_no_network.c -ldl && \
+    test -s /soffice_no_network.so
+
 
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
@@ -120,20 +128,24 @@ ARG VERSION_TAG
 WORKDIR /app
 
 # Application layers
-COPY --link --from=jar-extract --chown=1000:1000 /layers/dependencies/           /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/spring-boot-loader/     /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/snapshot-dependencies/  /app/
-COPY --link --from=jar-extract --chown=1000:1000 /layers/application/            /app/
+COPY --link --from=jar-extract /layers/dependencies/           /app/
+COPY --link --from=jar-extract /layers/spring-boot-loader/     /app/
+COPY --link --from=jar-extract /layers/snapshot-dependencies/  /app/
+COPY --link --from=jar-extract /layers/application/            /app/
 
-COPY --link --from=app-build --chown=1000:1000 \
+COPY --link --from=app-build \
      /app/build/libs/restart-helper.jar /restart-helper.jar
-COPY --link --chown=1000:1000 scripts/ /scripts/
+COPY --link scripts/ /scripts/
 
 # init-without-ocr.sh starts the engine when this directory exists, so other images are unaffected.
-COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/python /opt/stirling-engine/python
-COPY --link --from=engine-build --chown=1000:1000 /opt/stirling-engine/.venv  /opt/stirling-engine/.venv
-COPY --link --chown=1000:1000 engine/.env  /opt/stirling-engine/.env
-COPY --link --chown=1000:1000 engine/src/  /opt/stirling-engine/src/
+COPY --link --from=engine-build /opt/stirling-engine/python /opt/stirling-engine/python
+COPY --link --from=engine-build /opt/stirling-engine/.venv  /opt/stirling-engine/.venv
+COPY --link engine/.env  /opt/stirling-engine/.env
+COPY --link engine/src/  /opt/stirling-engine/src/
+
+# LibreOffice network guard (loaded via LD_PRELOAD for soffice/unoserver only).
+COPY --link --from=office-guard-build \
+     /soffice_no_network.so /usr/local/lib/stirling/soffice_no_network.so
 
 # Baked-in detection model; FormDetectionModelManager seeds it into /configs on startup.
 COPY --link --from=app-build --chown=1000:1000 /preinstalled-models/ /opt/stirling/preinstalled-models/
@@ -150,9 +162,13 @@ RUN set -eux; \
     ln -s /pipeline /app/pipeline; \
     ln -s /storage /app/storage; \
     chown -h stirlingpdfuser:stirlingpdfgroup /app/logs /app/configs /app/customFiles /app/pipeline /app/storage; \
-    chown stirlingpdfuser:stirlingpdfgroup /app; \
     mkdir -p /opt/stirling-engine/data; \
     chown -R stirlingpdfuser:stirlingpdfgroup /opt/stirling-engine/data; \
+    setpriv --reuid=stirlingpdfuser --regid=stirlingpdfgroup --init-groups -- \
+      /opt/stirling-engine/.venv/bin/python -c "import uvicorn"; \
+    # The engine tree is root-owned, so the runtime user cannot write __pycache__; without this
+    # every start recompiles the sources to bytecode in memory.
+    /opt/stirling-engine/.venv/bin/python -m compileall -q /opt/stirling-engine/src; \
     chmod 750 /tmp/stirling-pdf; \
     chmod 750 /tmp/stirling-pdf/heap_dumps; \
     fc-cache -f
