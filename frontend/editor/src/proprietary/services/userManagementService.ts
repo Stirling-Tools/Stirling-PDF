@@ -69,7 +69,13 @@ export interface InviteUsersRequest {
 export interface InviteUsersResponse {
   successCount: number;
   failureCount: number;
+  /** Accounts whose invite email actually reached the mail server. */
+  deliveredCount?: number;
+  /** Addresses whose account exists but whose invite email failed; resend targets. */
+  undelivered?: string[];
   message?: string;
+  /** Set when accounts were created but some invite emails never went out. */
+  warning?: string;
   errors?: string;
   error?: string;
 }
