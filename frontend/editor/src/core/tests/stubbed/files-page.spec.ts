@@ -273,13 +273,19 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      // Two entry points share the name; use .first() for strict mode.
-      await expect(
-        page.getByRole("button", { name: /^Save to server$/i }).first(),
-      ).toBeVisible();
+      // The details panel offers it directly; the selection's copy lives behind
+      // the Actions menu.
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }),
-      ).toHaveCount(2);
+      ).toHaveCount(1);
+      await page
+        .locator(
+          ".files-page-selection-actions .files-page-toolbar-bulk-trigger",
+        )
+        .click();
+      await expect(
+        page.getByRole("menuitem", { name: /^Save to server$/i }),
+      ).toBeVisible();
     });
 
     test("Save to server hidden when ONLY cloud files selected", async ({
@@ -997,7 +1003,9 @@ test.describe("Files page", () => {
       const before = await topOf();
       await rows.nth(0).click();
       await rows.nth(1).click({ modifiers: ["ControlOrMeta"] });
-      await expect(page.getByText(/2 selected/i)).toBeVisible();
+      await expect(page.locator(".files-page-list-selection-count")).toHaveText(
+        /2 selected/i,
+      );
       expect(await topOf()).toBeCloseTo(before, 0);
     });
   });
