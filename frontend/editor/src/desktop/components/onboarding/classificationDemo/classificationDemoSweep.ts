@@ -128,6 +128,7 @@ export interface ClassificationDemoDeps {
         labels: string[];
         confidence: HeuristicConfidence;
       };
+      skipMetadataHydration?: boolean;
     },
   ) => Promise<StirlingFile[]>;
   onProgress: (progress: ClassificationDemoProgress) => void;
@@ -243,6 +244,10 @@ async function classifyAndAdd(
       skipWorkspaceDispatch: true,
       selectFiles: false,
       skipUploadTracking: true,
+      // The heuristic has already parsed this PDF once; a thumbnail parse would double
+      // the work and keep every File in memory for the rest of the session. The library
+      // draws thumbnails lazily from storage when the user gets there.
+      skipMetadataHydration: true,
       presetClassification: {
         labels: verdict.labels,
         confidence: verdict.confidence,
@@ -291,12 +296,21 @@ export async function runClassificationDemoSweep(
 
   report("processing", total);
   const sweptPaths: string[] = [];
-  for (const entry of batch) {
+  const read = (index: number): Promise<File | null> =>
+    index < batch.length
+      ? readDiskFile(batch[index]).catch(() => null)
+      : Promise.resolve(null);
+  // The disk read is a webview-to-Rust round trip and the classification is pdf.js in a
+  // worker, so the next document's read overlaps this one's parse instead of waiting.
+  let pending = read(0);
+  for (let index = 0; index < batch.length; index += 1) {
     if (deps.isCancelled?.()) break;
+    const entry = batch[index];
     // Recorded before the attempt, so a document that cannot be read is retired rather
     // than offered again by every follow-up batch for the rest of the flow.
     sweptPaths.push(entry.path);
-    const file = await readDiskFile(entry).catch(() => null);
+    const file = await pending;
+    pending = read(index + 1);
     if (file) {
       const labels = await classifyAndAdd(file, deps);
       if (labels) {
@@ -306,6 +320,9 @@ export async function runClassificationDemoSweep(
       }
     }
     report("processing", total);
+    // A macrotask, not a microtask: gives the main thread a turn between documents so
+    // the app stays responsive while this runs behind it.
+    await new Promise((resolve) => setTimeout(resolve));
   }
 
   // One call for the batch rather than per document, matching how the upload path meters

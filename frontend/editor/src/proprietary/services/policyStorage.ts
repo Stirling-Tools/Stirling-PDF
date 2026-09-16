@@ -8,6 +8,7 @@
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { defaultRunOn } from "@app/policies/runOn";
 import type { PoliciesByKey, PolicyState } from "@app/types/policies";
+import { isToolEndpoint } from "@app/hooks/tools/shared/toolApiMapping";
 
 const STORAGE_KEY = "stirling-policies-state";
 
@@ -91,6 +92,16 @@ export function loadPolicies(): PoliciesByKey {
   // stored: a tile's defaults would mark them built-in and put them on the editor uninvited.
   for (const [key, state] of Object.entries(parsed)) {
     if (!out[key] && state) out[key] = state as PolicyState;
+  }
+  // Cached endpoints can come from a different frontend version.
+  for (const state of Object.values(out)) {
+    const operation = state.firstOperation;
+    if (
+      operation !== undefined &&
+      (typeof operation !== "string" || !isToolEndpoint(operation))
+    ) {
+      state.firstOperation = null;
+    }
   }
   return out;
 }

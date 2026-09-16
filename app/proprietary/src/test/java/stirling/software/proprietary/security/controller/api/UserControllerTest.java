@@ -80,6 +80,8 @@ class UserControllerTest {
                         licenseSettingsService,
                         loginAttemptService,
                         teamMembershipService,
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.service.OrgOwnerService.class),
                         loginLandingService);
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build();
     }
