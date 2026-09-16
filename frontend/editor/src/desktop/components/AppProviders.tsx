@@ -8,6 +8,7 @@ import { SaveShortcutListener } from "@app/components/SaveShortcutListener";
 import { DiskConflictHost } from "@app/components/shared/DiskConflictHost";
 import { DesktopOnboardingModal } from "@app/components/DesktopOnboardingModal";
 import { DesktopSaasOnboardingBootstrap } from "@app/components/DesktopSaasOnboardingBootstrap";
+import { ClassificationBackgroundRunner } from "@app/components/onboarding/classificationDemo/ClassificationBackgroundRunner";
 import UsageLimitModalHost from "@app/components/UsageLimitModalHost";
 import { SignInModal } from "@app/components/SignInModal";
 import { OPEN_SIGN_IN_EVENT } from "@app/constants/signInEvents";
@@ -369,6 +370,7 @@ export function AppProviders({ children }: { children: ReactNode }) {
           {/* SaaS product onboarding (cloud flow, minus the desktop-download slide),
               shown once after a SaaS sign-in. Mirrors saas's OnboardingBootstrap. */}
           <DesktopSaasOnboardingBootstrap connectionMode={connectionMode} />
+          <ClassificationBackgroundRunner />
           {/* Always-mounted host for the PAYG usage-limit modals (free-limit /
               spend-cap). Resolves to the cloud implementation via @app; listens
               for both the imperative open events (direct-call 402s) and the
