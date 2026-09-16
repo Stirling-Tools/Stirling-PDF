@@ -1746,7 +1746,9 @@ export default function FileManagerView() {
                           size="sm"
                           variant="secondary"
                           disabled={Boolean(processingBlock)}
-                          onClick={() => setProcessingSetupFolder(currentFolder)}
+                          onClick={() =>
+                            setProcessingSetupFolder(currentFolder)
+                          }
                           aria-label={t(
                             "filesPage.processing.edit",
                             "Edit processing...",
