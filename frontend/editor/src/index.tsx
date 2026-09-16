@@ -34,6 +34,12 @@ if (typeof window !== "undefined") {
     once: true,
     passive: true,
   });
+  // Pointer use means the user is engaged with the app, and the click-to-pick
+  // gap is usually longer than the download on a decent link.
+  window.addEventListener("pointerdown", warmUpEarly, {
+    once: true,
+    passive: true,
+  });
   window.addEventListener("focusin", (event) => {
     const target = event.target as Element | null;
     if (target?.matches?.('input[type="file"]')) warmUpEarly();
