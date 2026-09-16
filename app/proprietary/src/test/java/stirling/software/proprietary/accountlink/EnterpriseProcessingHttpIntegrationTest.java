@@ -86,7 +86,7 @@ import stirling.software.proprietary.service.ua.PdfUaValidationService;
         })
 class EnterpriseProcessingHttpIntegrationTest {
 
-    private static final long SPENT_GRANT = 500;
+    private static final long SPENT_GRANT = new AccountLinkProperties().getFreeTierUnits();
     private static final int PAGES = 26;
     private static final long PDF_UNITS = 2;
     private static final String BOUNDARY = "enterprise-processing-test";

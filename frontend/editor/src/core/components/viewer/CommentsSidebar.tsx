@@ -304,7 +304,7 @@ export function CommentsSidebar({
   } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
-  const { handleToolSelectForced } = useToolWorkflow();
+  const { handleToolSelectForced, readerMode } = useToolWorkflow();
   const { actions: navActions } = useNavigationActions();
   const {
     activateAnnotationToolRef,
@@ -716,17 +716,22 @@ export function CommentsSidebar({
   const commentsHeaderActions =
     totalCount > 0 ? (
       <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
-        <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
-          <ActionIcon
-            variant="tertiary"
-            accent="neutral"
-            size="sm"
-            aria-label={t("viewer.comments.addComment", "Add comment")}
-            onClick={handleAddComment}
-          >
-            <Icon name="plus" size="1.25rem" />
-          </ActionIcon>
-        </Tooltip>
+        {/* Placing a comment arms the annotate tool, which only exists in the
+            editor: offering it here would take the reader there mid-sentence.
+            Reading shows the comments that are there and leaves it at that. */}
+        {!readerMode && (
+          <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
+            <ActionIcon
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
+              aria-label={t("viewer.comments.addComment", "Add comment")}
+              onClick={handleAddComment}
+            >
+              <Icon name="plus" size="1.25rem" />
+            </ActionIcon>
+          </Tooltip>
+        )}
         <Menu position="bottom-end" withArrow>
           <Menu.Target>
             <Tooltip label={t("viewer.comments.moreActions", "More actions")}>
@@ -798,7 +803,7 @@ export function CommentsSidebar({
                   "Click a page to place… (cancel)",
                 )}
               </Button>
-            ) : (
+            ) : readerMode ? null : (
               <Button
                 variant="tertiary"
                 size="sm"
@@ -827,7 +832,7 @@ export function CommentsSidebar({
                   "Click a page to place… (cancel)",
                 )}
               </Button>
-            ) : (
+            ) : readerMode ? null : (
               <Button
                 variant="tertiary"
                 size="sm"

@@ -34,7 +34,7 @@ export default function ViewerAnnotationControls({
   disabled = false,
 }: ViewerAnnotationControlsProps) {
   const { t } = useTranslation();
-  const { setLeftPanelView, setSidebarsVisible } = useToolWorkflow();
+  const { setLeftPanelView } = useToolWorkflow();
 
   // Viewer context for PDF controls - safely handle when not available
   const viewerContext = React.useContext(ViewerContext);
@@ -147,7 +147,6 @@ export default function ViewerAnnotationControls({
 
         navActions.setToolAndWorkbench("redact", "viewer");
 
-        setSidebarsVisible(true);
         setLeftPanelView("toolContent");
 
         setRedactionMode(true);
