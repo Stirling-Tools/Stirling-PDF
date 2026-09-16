@@ -1,32 +1,32 @@
 {
-  "recordedAt": "2026-09-16T20:30:38.069Z",
+  "recordedAt": "2026-09-16T21:30:42.322Z",
   "lighthouseVersion": "13.4.1",
-  "chrome": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/146.0.0.0 Safari/537.36",
+  "chrome": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/146.0.0.0 Safari/537.36",
   "runs": 3,
   "routes": {
     "home": {
       "path": "/",
       "budget": {
-        "totalBytes": 6673652,
-        "scriptBytes": 1440518,
-        "requests": 69,
-        "scriptRequests": 44
+        "totalBytes": 6652614,
+        "scriptBytes": 1428256,
+        "requests": 62,
+        "scriptRequests": 39
       },
       "scores": {
-        "accessibility": 0.98,
+        "accessibility": 0.97,
         "agentic-browsing": 0.67,
         "best-practices": 0.96,
-        "performance": 0.7,
+        "performance": 0.71,
         "seo": 1
       },
       "timings": {
-        "fcp": 1452.9870999999998,
-        "lcp": 6139.4806499999995,
-        "tbt": 0,
-        "cls": 0,
-        "speedIndex": 1452.9870999999998,
-        "bootupTime": 152.79500000000138,
-        "domSize": 59
+        "fcp": 1434.7605,
+        "lcp": 6067.521,
+        "tbt": 10,
+        "cls": 0.001728,
+        "speedIndex": 1434.7605,
+        "bootupTime": 255.62199999999817,
+        "domSize": 44
       }
     },
     "mobile-scanner": {
@@ -41,16 +41,16 @@
         "accessibility": 0.97,
         "agentic-browsing": 0.67,
         "best-practices": 1,
-        "performance": 0.7,
+        "performance": 0.71,
         "seo": 0.63
       },
       "timings": {
-        "fcp": 1475.71375,
-        "lcp": 5613.4565,
-        "tbt": 0,
+        "fcp": 1462.4616250000001,
+        "lcp": 5556.9987,
+        "tbt": 10,
         "cls": 0,
-        "speedIndex": 1475.71375,
-        "bootupTime": 1940.9109999999987,
+        "speedIndex": 1462.4616250000001,
+        "bootupTime": 2539.144000000411,
         "domSize": 20
       }
     }

@@ -51,14 +51,25 @@ before the login screen paints, and that is where weight regressions land.
 It does **not** cover chunks that only load once a user is signed in.
 
 `/mobile-scanner` is the counterweight: it uses no backend, so it renders
-fully, and at 15.5 MB it is by far the heaviest route in the build.
+fully, and at 15.5 MB it is by far the heaviest route in the build. It is also
+the more trustworthy of the two numbers: it came back byte-for-byte identical
+between a Windows and a Linux build, 15,889,416 both times.
+
+`/` has a timing-sensitive tail. Whether the login screen's own lazy chunks
+(Login, AuthProvider, EmailPasswordForm and friends, about 21 KiB over 7
+requests) land inside the audit window depends on how fast the machine is. CI
+has been consistent about it - three runs, zero spread - and the baseline is
+recorded from CI, so this does not flap today. If `/` ever fails with roughly
++21 KiB and +7 requests and nothing in the diff explains it, that tail is the
+first thing to suspect: the bytes stay inside the 2% tolerance but +7 requests
+does not.
 
 ## The gate went red. Now what?
 
 The failure names the route and the metric, e.g.
 
 ```
-Cold entry: JavaScript 1406.8 KiB → 1550.2 KiB, +143.4 KiB (+10.2%) - over the 2% / 10.0 KiB tolerance
+Cold entry: JavaScript 1394.8 KiB → 1538.2 KiB, +143.4 KiB (+10.3%) - over the 2% / 10.0 KiB tolerance
 ```
 
 1. Download the artifact and open `<route>.html`. The network waterfall shows
