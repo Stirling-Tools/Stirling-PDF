@@ -6,7 +6,7 @@ import { connectionModeService } from "@app/services/connectionModeService";
  * only once the connection mode has been CONFIRMED to be "saas".
  *
  * Use this to gate mounting components that fire a network call on mount against
- * Stirling Cloud specifically — the cloud team context. useSaaSMode()
+ * Stirling Cloud specifically - the cloud team context. useSaaSMode()
  * starts optimistically true (right for tool-availability UX, where a flash of
  * "unavailable" is worse than a flash of "available"), but for a network-
  * triggering gate that optimism leaks a request: the gated surface mounts on

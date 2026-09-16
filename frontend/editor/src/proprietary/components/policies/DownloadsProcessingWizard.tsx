@@ -77,8 +77,8 @@ export function DownloadsProcessingWizard({
   // seeds no such policy, and every imported file would sit without a verdict.
   const willClassify = runsOnEditorUpload(policies[CLASSIFICATION_POLICY_KEY]);
 
-  // Needs a connected server running the classification policy, and a build that can read the
-  // disk. No retry: the filesystem answer is final, and the policy half re-runs on load.
+  // Needs a connected server, the classification policy, and a build that can read the disk.
+  // canListDirectory is a build constant, so only block and willClassify can settle later.
   useEffect(() => {
     if (!active || block || !willClassify || !canListDirectory) return;
     let cancelled = false;

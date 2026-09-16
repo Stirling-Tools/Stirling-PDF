@@ -34,12 +34,18 @@ export function useConnectedServer(): boolean {
   );
 
   useEffect(() => {
-    void connectionModeService
-      .getCurrentMode()
-      .then((mode) => setIsServer(isServerMode(mode)));
-    return connectionModeService.subscribeToModeChanges((config) =>
-      setIsServer(isServerMode(config.mode)),
-    );
+    let current = true;
+    void connectionModeService.getCurrentMode().then((mode) => {
+      if (current) setIsServer(isServerMode(mode));
+    });
+    const unsubscribe = connectionModeService.subscribeToModeChanges((config) => {
+      current = false;
+      setIsServer(isServerMode(config.mode));
+    });
+    return () => {
+      current = false;
+      unsubscribe();
+    };
   }, []);
 
   return isAuthenticated && isServer;
