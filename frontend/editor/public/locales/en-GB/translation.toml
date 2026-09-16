@@ -4027,7 +4027,7 @@ offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disa
 open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
-refresh = "Refresh from server"
+refresh = "Refresh"
 remove = "Delete"
 removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Remove this version"
@@ -4039,7 +4039,6 @@ save = "Save"
 saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
 selectAll = "Select all"
-selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
 selectedCount = "{{count}} selected"
 selectFile = "Select file {{name}}"
 shareDisabledHint = "File sharing isn't enabled on this server. Ask your admin to enable it."
@@ -4076,6 +4075,7 @@ useColour = "Use colour {{c}}"
 modified = "Modified"
 name = "Name"
 size = "Size"
+status = "Status"
 type = "Type"
 
 [filesPage.deleteScope]
@@ -4246,13 +4246,6 @@ server = "Server error during folder sync."
 
 [filesPage.tabName]
 local = "Local"
-recent = "Recent"
-shared = "Shared with me"
-sharedByMe = "Shared by me"
-
-[filesPage.tabs]
-all = "All"
-ariaLabel = "File views"
 recent = "Recent"
 shared = "Shared with me"
 sharedByMe = "Shared by me"
