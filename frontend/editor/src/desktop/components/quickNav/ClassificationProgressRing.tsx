@@ -2,8 +2,8 @@
  *  proportion to the folder done, the percentage inside, and a tick that takes it away. */
 
 import { useEffect, useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import CheckRoundedIcon from "@mui/icons-material/CheckRounded";
 import { Tooltip } from "@app/components/shared/Tooltip";
 import "@app/components/shared/quickNav/QuickNavRail.css";
 import styles from "@app/components/quickNav/ClassificationProgressRing.module.css";
@@ -115,7 +115,7 @@ export function ClassificationProgressRing({
         </svg>
         <span className={styles.centre} aria-hidden="true">
           {done ? (
-            <CheckRoundedIcon className={styles.tick} />
+            <Icon name="check" className={styles.tick} />
           ) : (
             <span className={styles.percent}>{percent}%</span>
           )}
