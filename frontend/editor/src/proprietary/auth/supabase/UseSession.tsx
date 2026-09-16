@@ -175,7 +175,11 @@ export function SupabaseAuthProvider({
         .then(
           (
             data: {
-              user?: { processorAccess?: boolean; teamLead?: boolean };
+              user?: {
+                processorAccess?: boolean;
+                teamLead?: boolean;
+                orgOwner?: boolean;
+              };
             } | null,
           ) => {
             if (cancelled || !data?.user) return;
@@ -187,6 +191,7 @@ export function SupabaseAuthProvider({
                       ...prev.user,
                       processorAccess: data.user?.processorAccess,
                       teamLead: data.user?.teamLead,
+                      orgOwner: data.user?.orgOwner,
                     },
                   }
                 : prev,

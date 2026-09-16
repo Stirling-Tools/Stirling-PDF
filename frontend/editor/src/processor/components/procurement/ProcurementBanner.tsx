@@ -3,19 +3,21 @@ import { DealStatusHero } from "@processor/components/procurement/DealStatusHero
 import type { ProcurementController } from "@processor/components/procurement/useProcurement";
 
 /**
- * The deal-status hero, wired to a shared ProcurementController. Rendered as the Home hero card's
- * footer once a deal is underway; assumes an active deal (controller.data present).
+ * The deal-status hero and the dialogs must share the same controller instance.
  */
 export function ControlledDealStatusHero({
   controller,
+  readOnly = false,
 }: {
   controller: ProcurementController;
+  readOnly?: boolean;
 }) {
   const { openSettings } = useUI();
   if (!controller.data) return null;
   return (
     <DealStatusHero
       snapshot={controller.data}
+      readOnly={readOnly}
       busy={controller.busy}
       canSchedule={controller.isLinked}
       onExpand={() =>

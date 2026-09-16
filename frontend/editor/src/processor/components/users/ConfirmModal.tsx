@@ -34,7 +34,12 @@ export function ConfirmModal({
       title={title}
       footer={
         <div className="processor-users__modal-footer">
-          <Button variant="tertiary" size="sm" onClick={onCancel}>
+          <Button
+            variant="tertiary"
+            size="sm"
+            disabled={busy}
+            onClick={onCancel}
+          >
             {t("common.cancel", "Cancel")}
           </Button>
           <Button

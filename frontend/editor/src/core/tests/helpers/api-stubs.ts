@@ -120,6 +120,8 @@ export interface MockAppApiOptions {
   enableLogin?: boolean;
   /** Override `isAdmin` in app-config. Default `false`. */
   isAdmin?: boolean;
+  /** Null leaves the server analytics choice unconfigured. */
+  enableAnalytics?: boolean | null;
   /** Override the logged-in user returned by `/auth/me`. */
   user?: {
     id?: number;
@@ -152,6 +154,7 @@ export async function mockAppApis(
   const {
     enableLogin = false,
     isAdmin = false,
+    enableAnalytics = false,
     user = {
       id: 1,
       username: "testuser",
@@ -175,6 +178,7 @@ export async function mockAppApis(
       json: {
         enableLogin,
         isAdmin,
+        enableAnalytics,
         languages,
         defaultLocale,
       },

@@ -8,6 +8,8 @@ import { ProcessorChrome } from "@processor/components/ProcessorChrome";
 import { useFreeTierExhaustedPrompt } from "@processor/hooks/useFreeTierExhaustedPrompt";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import { StartupPrompts } from "@app/components/startup/StartupPrompts";
+import { ServerExperienceProvider } from "@app/contexts/ServerExperienceContext";
 import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 
 /** The one and only account-link modal, whichever step it is on. */
@@ -46,7 +48,10 @@ export function ProcessorProviders() {
             <AppConfigProvider>
               <LicenseProvider>
                 <CheckoutProvider>
-                  <ProcessorChrome />
+                  <ServerExperienceProvider>
+                    <StartupPrompts />
+                    <ProcessorChrome />
+                  </ServerExperienceProvider>
                   <LinkModalHost />
                   <ConnectCallbackHost />
                 </CheckoutProvider>

@@ -125,8 +125,7 @@ public class JobChargeService {
                         stepLimit,
                         ctx.runId());
 
-        List<Path> paths = inputs.stream().map(JobInput::path).toList();
-        JoinOrOpenResult result = jobService.joinOrOpen(jobCtx, paths);
+        JoinOrOpenResult result = jobService.joinOrOpen(jobCtx, lineagePaths(ctx, inputs));
 
         if (result.disposition() == JoinOrOpenResult.Disposition.JOINED) {
             return new ChargeOutcome(result.job().getId(), 0, ChargeOutcome.Disposition.JOINED);
@@ -338,6 +337,21 @@ public class JobChargeService {
         entry.setDocCount(docCount);
         entry.setDocumentFingerprint(documentFingerprint);
         ledgerRepository.save(entry);
+    }
+
+    private static List<Path> lineagePaths(ChargeContext ctx, List<JobInput> inputs) {
+        if (ctx.runId() != null) {
+            // PolicyExecutor sends primary documents as fileInput, with assets in named fields.
+            List<Path> primaryPaths =
+                    inputs.stream()
+                            .filter(input -> "fileInput".equals(input.multipart().getName()))
+                            .map(JobInput::path)
+                            .toList();
+            if (!primaryPaths.isEmpty()) {
+                return primaryPaths;
+            }
+        }
+        return inputs.stream().map(JobInput::path).toList();
     }
 
     private int computeUnits(List<JobInput> inputs, PricingPolicy policy) {

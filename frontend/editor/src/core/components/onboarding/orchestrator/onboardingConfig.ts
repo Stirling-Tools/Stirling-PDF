@@ -79,12 +79,6 @@ export const DEFAULT_RUNTIME_STATE: OnboardingRuntimeState = {
 
 export const ONBOARDING_STEPS: OnboardingStep[] = [
   {
-    id: "first-login",
-    type: "modal-slide",
-    slideId: "first-login",
-    condition: (ctx) => ctx.requiresPasswordChange,
-  },
-  {
     id: "welcome",
     type: "modal-slide",
     slideId: "welcome",
@@ -123,12 +117,6 @@ export const ONBOARDING_STEPS: OnboardingStep[] = [
     slideId: "server-license",
     condition: (ctx) =>
       ctx.effectiveIsAdmin && ctx.licenseNotice.requiresLicense,
-  },
-  {
-    id: "mfa-setup",
-    type: "modal-slide",
-    slideId: "mfa-setup",
-    condition: (ctx) => ctx.requiresMfaSetup,
   },
 ];
 

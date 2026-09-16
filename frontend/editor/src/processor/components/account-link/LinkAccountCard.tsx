@@ -1,58 +1,135 @@
+import { useState } from "react";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { Banner, Button, Card, StatusBadge } from "@app/ui";
+import { Banner, Button, InfoTooltip, Modal, Skeleton } from "@app/ui";
+import "@app/components/settings/AccountConnectionLayout.css";
 import type { UseAccountLink } from "@processor/hooks/useAccountLink";
 import { useUI } from "@processor/contexts/UIContext";
+import { useLinkedAccountEmail } from "@processor/hooks/useLinkedAccountEmail";
 
 interface Props {
   link: UseAccountLink;
+  instanceName?: string | null;
 }
 
-/**
- * Status + actions for THIS instance's account link. The "Link" button opens
- * the single top-level login modal (UIContext.openLinkModal) — never a nested
- * modal. The processor posts the returned JWT to the local backend, which stores
- * the device secret server-side; the secret is never received or rendered here.
- */
-export function LinkAccountCard({ link }: Props) {
+/** Uses the existing top-level connection flow; device credentials stay on the server. */
+export function LinkAccountCard({ link, instanceName }: Props) {
   const { t } = useTranslation();
   const { openLinkModal } = useUI();
+  const email = useLinkedAccountEmail();
   const linking = link.phase === "linking";
   const linked = link.status?.linked ?? false;
+  const [confirmDisconnect, setConfirmDisconnect] = useState(false);
+
+  if (link.statusError) {
+    return (
+      <section className="account-connection__team">
+        <Banner
+          tone="danger"
+          title={t(
+            "processor.accountLink.card.statusError",
+            "Couldn’t check the account connection",
+          )}
+          action={
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => void link.refresh()}
+            >
+              {t("settings.connectedInstances.retry", "Try again")}
+            </Button>
+          }
+        >
+          {link.statusError}
+        </Banner>
+      </section>
+    );
+  }
+  if (!link.status) {
+    return (
+      <section
+        className="account-connection__team"
+        role="status"
+        aria-label={t(
+          "processor.accountLink.card.loading",
+          "Checking account connection",
+        )}
+      >
+        <Skeleton height="8rem" />
+      </section>
+    );
+  }
 
   return (
-    <Card padding="loose" className="processor-link__card">
+    <section className="account-connection__team processor-link__card">
       <div className="processor-link__card-head">
         <div>
-          <span className="processor-link__eyebrow">
-            {t("processor.accountLink.card.eyebrow", "Account link")}
+          <span className="account-connection__eyebrow">
+            {t("processor.accountLink.card.eyebrow", "This instance")}
           </span>
-          <h2 className="processor-link__title">
-            {t(
-              "processor.accountLink.card.title",
-              "Link this org to its Stirling account",
+          <div className="processor-link__section-head">
+            <h2>
+              {instanceName ??
+                link.status?.name ??
+                t("processor.accountLink.card.title", "Stirling Cloud")}
+            </h2>
+            {linked && (
+              <InfoTooltip
+                label={t(
+                  "processor.accountLink.card.billingNote",
+                  "This server shares your team’s processing allowance in Stirling Cloud.",
+                )}
+              />
             )}
-          </h2>
+          </div>
         </div>
-        <StatusBadge tone={linked ? "success" : "neutral"} size="sm">
-          {linked
-            ? t("processor.accountLink.card.linked", "Linked")
-            : t("processor.accountLink.card.notLinked", "Not linked")}
-        </StatusBadge>
+        {!linked && (
+          <span className="processor-link__status">
+            <Icon name="unlink" size={20} />
+            {t("processor.accountLink.card.notLinked", "Not connected")}
+          </span>
+        )}
       </div>
 
-      {!link.loginConfigured && (
+      {(email || linked) && (
+        <div className="processor-link__account-row">
+          {email && (
+            <p className="processor-link__account">
+              {t(
+                "processor.accountLink.card.signedInAs",
+                "Signed in to Stirling Cloud as",
+              )}{" "}
+              <strong>{email}</strong>
+            </p>
+          )}
+          {linked && (
+            <Button
+              variant="quiet"
+              accent="neutral"
+              leftSection={<Icon name="unlink" size={20} />}
+              loading={linking}
+              onClick={() => setConfirmDisconnect(true)}
+            >
+              {t(
+                "processor.accountLink.card.unlink",
+                "Disconnect this instance",
+              )}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {!link.loginConfigured && !linked && (
         <Banner
           tone="neutral"
           title={t(
             "processor.accountLink.card.loginNotConfigured.title",
-            "SaaS login not configured",
+            "Account connection unavailable",
           )}
         >
-          {t("processor.accountLink.card.loginNotConfigured.before", "Set")}{" "}
-          <code>VITE_SUPABASE_URL</code>{" "}
           {t(
-            "processor.accountLink.card.loginNotConfigured.after",
-            "to enable account linking against the hosted Stirling account. In dev you can simulate sign-in from the link dialog.",
+            "processor.accountLink.card.loginNotConfigured.description",
+            "Ask your server administrator to enable the connection to Stirling Cloud.",
           )}
         </Banner>
       )}
@@ -60,51 +137,70 @@ export function LinkAccountCard({ link }: Props) {
       {link.error && (
         <Banner
           tone="danger"
-          title={t("processor.accountLink.card.error.title", "Couldn't link")}
+          title={t(
+            "processor.accountLink.card.error.title",
+            "Couldn’t update the connection",
+          )}
         >
           {link.error}
         </Banner>
       )}
 
-      {linked ? (
-        <div className="processor-link__actions">
-          <span className="processor-link__muted">
-            {link.status?.name
-              ? t(
-                  "processor.accountLink.card.linkedAs",
-                  "Linked as {{name}}.",
-                  {
-                    name: link.status.name,
-                  },
-                )
-              : t(
-                  "processor.accountLink.card.linkedGeneric",
-                  "This instance is linked.",
-                )}{" "}
+      {!linked && (
+        <div className="processor-link__connect">
+          <p>
             {t(
-              "processor.accountLink.card.billingNote",
-              "Unattended processing bills against your org wallet.",
+              "processor.accountLink.card.connectDescription",
+              "Connect this server to use your team’s processing allowance in Stirling Cloud.",
             )}
-          </span>
-          <Button
-            variant="secondary"
-            accent="danger"
-            loading={linking}
-            onClick={link.unlink}
-          >
-            {t("processor.accountLink.card.unlink", "Unlink")}
-          </Button>
-        </div>
-      ) : (
-        <div className="processor-link__actions">
+          </p>
           <Button loading={linking} onClick={() => openLinkModal()}>
             {t(
               "processor.accountLink.card.linkButton",
-              "Link your Stirling account",
+              "Connect your Stirling account",
             )}
           </Button>
         </div>
       )}
-    </Card>
+      <Modal
+        open={confirmDisconnect}
+        onClose={() => setConfirmDisconnect(false)}
+        width="sm"
+        title={t(
+          "processor.accountLink.card.disconnectTitle",
+          "Disconnect this instance?",
+        )}
+        footer={
+          <div className="account-connection__actions">
+            <Button
+              variant="secondary"
+              onClick={() => setConfirmDisconnect(false)}
+              data-autofocus
+            >
+              {t("common.cancel", "Cancel")}
+            </Button>
+            <Button
+              accent="danger"
+              onClick={() => {
+                setConfirmDisconnect(false);
+                void link.unlink();
+              }}
+            >
+              {t(
+                "processor.accountLink.card.unlink",
+                "Disconnect this instance",
+              )}
+            </Button>
+          </div>
+        }
+      >
+        <p>
+          {t(
+            "processor.accountLink.card.disconnectBody",
+            "This server will stop using your team’s processing allowance in Stirling Cloud. Your local files stay on this server. To connect again, follow the original connection steps.",
+          )}
+        </p>
+      </Modal>
+    </section>
   );
 }

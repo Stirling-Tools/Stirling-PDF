@@ -1,11 +1,4 @@
-import { useEffect } from "react";
-import {
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Home } from "@processor/views/Home";
 import { Documents } from "@processor/views/Documents";
 import { Review } from "@processor/views/Review";
@@ -15,7 +8,6 @@ import { Sources } from "@processor/views/Sources";
 import { Integrations } from "@processor/views/Integrations";
 import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
 import { DOCS_PATH } from "@app/routes/docsRoute";
-import { useUI } from "@processor/contexts/UIContext";
 
 /** Keeps the query and hash a moved tab's deep links carry (?tab=, #doc-id). */
 function MovedTo({ to }: { to: string }) {
@@ -28,21 +20,6 @@ function MovedTo({ to }: { to: string }) {
 // logical VIEW_PATHS, and home is the index route. Redirects use toProcessorPath
 // so they resolve to the processor, not the editor root.
 const rel = (viewPath: string) => viewPath.replace(/^\//, "");
-
-/**
- * Procurement is not a surface of its own: the deal lives on Home, so this raises
- * the trial-setup step and bounces there. Raised imperatively rather than by
- * rendering <Navigate>, so the signal is set before the navigation, not racing it.
- */
-function ProcurementRedirect() {
-  const { requestTrialSetup } = useUI();
-  const navigate = useNavigate();
-  useEffect(() => {
-    requestTrialSetup();
-    navigate(toProcessorPath(VIEW_PATHS.home), { replace: true });
-  }, [requestTrialSetup, navigate]);
-  return null;
-}
 
 /** Redirect the retired Policies path to the unified Pipelines page, carrying any query string. */
 function PoliciesRedirect() {
@@ -104,8 +81,6 @@ export function ViewRouter() {
         element={<MovedTo to="/settings/billing" />}
       />
       <Route path={rel(VIEW_PATHS.docs)} element={<MovedTo to={DOCS_PATH} />} />
-      {/* A bare path, not a VIEW_PATHS entry: nothing should list it as a view. */}
-      <Route path="procurement" element={<ProcurementRedirect />} />
       {/* Account-link is a settings section now. */}
       <Route
         path="account-link"

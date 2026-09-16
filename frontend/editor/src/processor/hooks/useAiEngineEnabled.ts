@@ -1,28 +1,18 @@
-// AI-engine flag from the backend's public app-config. Gates Classification
-// setup: the card always shows but can't be enabled until the engine is on.
-// `loading` lets callers hold the decision rather than flash a locked card.
-
-import { useQuery } from "@tanstack/react-query";
-import { apiClient } from "@processor/api/http";
-import { qk } from "@processor/queries/keys";
-
-interface AppConfigShape {
-  aiEngineEnabled?: boolean;
-}
+import { useAppConfig } from "@app/contexts/AppConfigContext";
 
 export interface AiEngineState {
   enabled: boolean;
+  classificationEnabled: boolean;
   loading: boolean;
 }
 
 export function useAiEngineEnabled(): AiEngineState {
-  const query = useQuery({
-    queryKey: qk.appConfig(),
-    queryFn: () =>
-      apiClient.local.json<AppConfigShape>("/api/v1/config/app-config"),
-  });
+  const { config, loading } = useAppConfig();
   return {
-    enabled: Boolean(query.data?.aiEngineEnabled),
-    loading: query.isPending,
+    enabled: Boolean(config?.aiEngineEnabled),
+    classificationEnabled: Boolean(
+      config?.aiEngineEnabled && config.aiFeatures?.classify,
+    ),
+    loading,
   };
 }

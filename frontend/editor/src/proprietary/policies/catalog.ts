@@ -36,11 +36,6 @@ export interface PolicyCategory {
   desc: string;
   providesClassification?: boolean;
   comingSoon?: boolean;
-  /**
-   * The category binds its own source and destinations (routing's Watch and routes). A surface that
-   * supplies the folder itself, and has no destination UI, cannot host one.
-   */
-  bindsOwnSource?: boolean;
   requiresAiEngine?: boolean;
 }
 
@@ -56,6 +51,7 @@ export interface PolicyState {
   /** The saved destinations and per-document routes; the routing category edits these. */
   outputIds?: string[];
   routingRules?: WireRoutingRule[];
+  trigger?: WireTriggerConfig | null;
   configured: boolean;
   status: PolicyStatus;
   /** A policy rather than an ordinary pipeline (see `Policy.required`). */
@@ -188,7 +184,6 @@ export const POLICY_CATEGORIES: PolicyCategory[] = [
     label: "processor.policies.categories.routing.label",
     tone: "green",
     desc: "processor.policies.categories.routing.desc",
-    bindsOwnSource: true,
   },
   {
     id: "retention",

@@ -12,9 +12,20 @@ import type {
   NotificationActionSlot,
 } from "@app/services/notifications";
 
-// @app/ui Button is a Mantine wrapper, so it needs the provider in the tree.
+vi.mock("@mantine/hooks", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@mantine/hooks")>()),
+  useReducedMotion: () => true,
+}));
+
+// Reduced motion also stops transition timers, which env="test" alone still schedules.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, {
+    wrapper: ({ children }) => (
+      <MantineProvider env="test" theme={{ respectReducedMotion: true }}>
+        {children}
+      </MantineProvider>
+    ),
+  });
 
 // The bell's own two jobs: what counts as read, and how a row behaves around an action.
 

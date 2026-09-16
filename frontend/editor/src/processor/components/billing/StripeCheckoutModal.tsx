@@ -23,6 +23,8 @@ import { PrepayModalHeader } from "@processor/components/billing/PrepayModalHead
 interface Props {
   open: boolean;
   onClose: () => void;
+  /** Return from the spend limit to the host's payment choices. */
+  onBack?: () => void;
   /** Caller's resolved team id. The edge function needs it to scope checkout. */
   teamId: number;
   /** "usd" | "eur" | "gbp" — the SaaS PAYG offering's supported set. */
@@ -226,6 +228,7 @@ function SpendLimitPicker({
 export function StripeCheckoutModal({
   open,
   onClose,
+  onBack,
   teamId,
   currency,
   pricePerDocMinor,
@@ -452,7 +455,11 @@ export function StripeCheckoutModal({
               </Banner>
             )}
             <div className="processor-billing__checkout-cap-actions">
-              <Button variant="quiet" onClick={onClose} disabled={capBusy}>
+              <Button
+                variant="quiet"
+                onClick={onBack ?? onClose}
+                disabled={capBusy}
+              >
                 {t("processor.billing.checkout.cap.back", "Back")}
               </Button>
               <Button

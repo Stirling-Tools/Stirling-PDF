@@ -1,8 +1,8 @@
-import { ServerLicenseSection } from "@processor/components/billing/ServerLicenseSection";
 import { useServerPlan } from "@processor/hooks/useServerPlan";
 import { ManageBillingButton } from "@app/components/shared/ManageBillingButton";
-import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useCallback, useEffect, useRef } from "react";
+import { useSearchParams } from "react-router-dom";
+import { ServerLicenseSection } from "@processor/components/billing/ServerLicenseSection";
 import {
   useApplyLinkFacts,
   useLinkOptional,
@@ -11,7 +11,6 @@ import { useUI } from "@processor/contexts/UIContext";
 import { useConnectGate } from "@processor/hooks/useConnectGate";
 import { useProcessorAdmin } from "@processor/hooks/useProcessorAdmin";
 import { FreeTierPlanView } from "@processor/components/billing/FreeTierPlanView";
-import { toProcessorPath } from "@processor/contexts/ViewContext";
 import { Usage } from "@processor/views/Usage";
 import type { Wallet } from "@processor/api/billing";
 
@@ -24,23 +23,30 @@ import type { Wallet } from "@processor/api/billing";
  */
 export function ProcessorBillingGate() {
   const applyLinkFacts = useApplyLinkFacts();
-  const { openLinkModal } = useUI();
-  const { loading } = useConnectGate();
+  const { openLinkModal, trialSetupRequested } = useUI();
+  const { loading, gated, connect } = useConnectGate();
   const isAdmin = useProcessorAdmin();
   const { serverPlan, loading: licenseLoading } = useServerPlan(isAdmin);
   const serverPlanAction = serverPlan ? <ManageBillingButton /> : undefined;
   const link = useLinkOptional();
-  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const prompted = useRef(false);
+  const procurementRequested =
+    trialSetupRequested || searchParams.get("procurement") === "start";
+
+  useEffect(() => {
+    if (!procurementRequested || link?.isLinked) prompted.current = false;
+    else if (isAdmin && !loading && gated && !prompted.current) {
+      prompted.current = true;
+      connect();
+    }
+  }, [procurementRequested, link?.isLinked, isAdmin, loading, gated, connect]);
 
   const onWalletLoaded = useCallback(
     (w: Wallet) => applyLinkFacts(true, w.status === "subscribed"),
     [applyLinkFacts],
   );
   const onReauth = useCallback(() => openLinkModal("reauth"), [openLinkModal]);
-  // The processor owns a separate UIProvider, so its entry route must raise the trial request.
-  const onEnterpriseQuote = useCallback(() => {
-    navigate(toProcessorPath("/procurement"));
-  }, [navigate]);
 
   // Administrators only: the figures are instance-wide and the endpoints ADMIN-gated. The nav
   // hides the entry to match, so this is the backstop for a typed URL.
@@ -62,12 +68,11 @@ export function ProcessorBillingGate() {
     <Usage
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
+      onWalletLoaded={onWalletLoaded}
+      onReauth={onReauth}
       renderLicenseSection={(onSaved) => (
         <ServerLicenseSection onSaved={onSaved} />
       )}
-      onWalletLoaded={onWalletLoaded}
-      onReauth={onReauth}
-      onEnterpriseQuote={onEnterpriseQuote}
     />
   );
 }

@@ -4,21 +4,15 @@
  */
 import React from "react";
 import type { FormFieldType } from "@app/tools/formFill/types";
-import TextFieldsIcon from "@mui/icons-material/TextFields";
-import CheckBoxIcon from "@mui/icons-material/CheckBox";
-import ArrowDropDownCircleIcon from "@mui/icons-material/ArrowDropDownCircle";
-import RadioButtonCheckedIcon from "@mui/icons-material/RadioButtonChecked";
-import ListIcon from "@mui/icons-material/List";
-import DrawIcon from "@mui/icons-material/Draw";
-
+import { Icon } from "@app/ui/Icon";
 export const FIELD_TYPE_ICON: Record<FormFieldType, React.ReactNode> = {
-  text: <TextFieldsIcon sx={{ fontSize: "inherit" }} />,
-  checkbox: <CheckBoxIcon sx={{ fontSize: "inherit" }} />,
-  combobox: <ArrowDropDownCircleIcon sx={{ fontSize: "inherit" }} />,
-  listbox: <ListIcon sx={{ fontSize: "inherit" }} />,
-  radio: <RadioButtonCheckedIcon sx={{ fontSize: "inherit" }} />,
-  button: <DrawIcon sx={{ fontSize: "inherit" }} />,
-  signature: <DrawIcon sx={{ fontSize: "inherit" }} />,
+  text: <Icon name="type" size={"inherit"} />,
+  checkbox: <Icon name="square-check" size={"inherit"} />,
+  combobox: <Icon name="circle-chevron-down" size={"inherit"} />,
+  listbox: <Icon name="list" size={"inherit"} />,
+  radio: <Icon name="radio-checked" size={"inherit"} />,
+  button: <Icon name="pen-tool" size={"inherit"} />,
+  signature: <Icon name="pen-tool" size={"inherit"} />,
 };
 
 export const FIELD_TYPE_COLOR: Record<FormFieldType, string> = {

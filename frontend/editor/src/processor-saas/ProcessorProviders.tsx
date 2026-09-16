@@ -2,6 +2,8 @@ import { TierProvider } from "@processor/contexts/TierContext";
 import { UIProvider } from "@processor/contexts/UIContext";
 import { ProcessorChrome } from "@processor/components/ProcessorChrome";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
+import { StartupPrompts } from "@app/components/startup/StartupPrompts";
+import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 
 /**
@@ -19,11 +21,14 @@ export function ProcessorProviders() {
   return (
     <TierProvider>
       <UIProvider>
-        <LicenseProvider>
-          <CheckoutProvider>
-            <ProcessorChrome />
-          </CheckoutProvider>
-        </LicenseProvider>
+        <AppConfigProvider>
+          <LicenseProvider>
+            <CheckoutProvider>
+              <StartupPrompts />
+              <ProcessorChrome />
+            </CheckoutProvider>
+          </LicenseProvider>
+        </AppConfigProvider>
       </UIProvider>
     </TierProvider>
   );

@@ -7,20 +7,14 @@ import { Banner, Button, CardRail, EmptyState, Skeleton } from "@app/ui";
 import { errorMessage } from "@processor/api/http";
 import { useSectionFlags } from "@processor/hooks/useAsync";
 import { usePipelines } from "@processor/queries/pipelines";
-import {
-  usePoliciesOverview,
-  usePolicyRuns,
-} from "@processor/queries/policies";
+import { usePoliciesOverview } from "@processor/queries/policies";
 import {
   fetchPipeline,
-  savePipeline,
   type PipelineView,
   type Policy,
 } from "@processor/api/pipelines";
 import {
   buildWireFromSetup,
-  clearProcessedHistory,
-  deletePolicy,
   parseSimplePolicy,
   savePolicy,
   type CatalogueEntry,
@@ -31,7 +25,6 @@ import { VIEW_PATHS, toProcessorPath } from "@processor/contexts/ViewContext";
 import { PipelinesIcon } from "@processor/components/icons";
 import { PipelinesTable } from "@processor/components/pipelines/PipelinesTable";
 import { PipelineTemplateCard } from "@processor/components/pipelines/PipelineTemplateCard";
-import { PolicyDetailPanel } from "@processor/components/policies/PolicyDetailPanel";
 import { PolicySetupWizard } from "@processor/components/policies/PolicySetupWizard";
 import { useAiEngineEnabled } from "@processor/hooks/useAiEngineEnabled";
 import { useCanManagePolicies } from "@processor/queries/policyPermissions";
@@ -53,8 +46,6 @@ export function Pipelines() {
   const { isLoading: listLoading } = useSectionFlags(listState);
 
   const catalogueState = usePoliciesOverview();
-  // Shares the cache entry the catalogue already fills, so opening a row costs no fetch.
-  const runsState = usePolicyRuns();
   const { data: catalogueData } = catalogueState;
 
   const { enabled: aiEngineEnabled, loading: aiEngineLoading } =
@@ -66,9 +57,7 @@ export function Pipelines() {
     refetch: retryPermissions,
   } = useCanManagePolicies();
 
-  const [detail, setDetail] = useState<CatalogueEntry | null>(null);
   const [wizard, setWizard] = useState<CatalogueEntry | null>(null);
-  const [busy, setBusy] = useState(false);
   const [pageError, setPageError] = useState<string | null>(null);
 
   const listPath = toProcessorPath(VIEW_PATHS.pipelines);
@@ -120,15 +109,14 @@ export function Pipelines() {
     [aiEngineEnabled],
   );
 
-  // A list row routes by representability: a policy that still fits its template opens the simple
-  // detail panel (edit/pause/delete there); anything else opens the full builder. The full record is
-  // fetched on click so parseSimplePolicy - the single authority - decides on real data.
+  // Fetch the full record before choosing the wizard: the overview cannot tell whether the
+  // pipeline has settings that only the full builder can preserve.
   const openListRow = async (view: PipelineView) => {
     setPageError(null);
     try {
       const policy = await fetchPipeline(view.id);
-      const entry = parseSimplePolicy(policy, runsState.data ?? []);
-      if (entry) setDetail(entry);
+      const entry = parseSimplePolicy(policy, []);
+      if (entry) setWizard(entry);
       else navigate(`${listPath}/${view.id}`);
     } catch (e) {
       setPageError(errorMessage(e));
@@ -144,8 +132,7 @@ export function Pipelines() {
       (e) => e.category.id === setupId,
     );
     if (entry && !entry.category.comingSoon) {
-      if (entry.policy) setDetail(entry);
-      else setWizard(entry);
+      setWizard(entry);
     }
     const next = new URLSearchParams(searchParams);
     next.delete("setup");
@@ -182,7 +169,6 @@ export function Pipelines() {
       const enabled = entry.policy?.state.status !== "paused";
       await savePolicy(buildWireFromSetup(entry, result, t, enabled));
       setWizard(null);
-      setDetail(null);
       refetch();
     } catch (e) {
       setPageError(errorMessage(e));
@@ -197,51 +183,6 @@ export function Pipelines() {
     const target = draft.id ? `${listPath}/${draft.id}` : `${listPath}/new`;
     setWizard(null);
     navigate(target, { state: { draft } });
-  }
-
-  async function runLifecycle(action: () => Promise<unknown>) {
-    if (busy) return;
-    setPageError(null);
-    setBusy(true);
-    try {
-      await action();
-      setDetail(null);
-      refetch();
-    } catch (e) {
-      setPageError(errorMessage(e));
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  function handleTogglePause() {
-    const id = detail?.policy?.state.backendId;
-    const paused = detail?.policy?.state.status === "paused";
-    if (!id) return;
-    void runLifecycle(async () => {
-      // Re-save the stored record with only `enabled` flipped. Rebuilding it from the decoded view
-      // (as the wizard save does) drops first-class fields that view doesn't carry - the icon, a
-      // custom name, owner - so a pause would silently rewrite them.
-      const current = await fetchPipeline(id);
-      await savePipeline({ ...current, enabled: paused });
-    });
-  }
-
-  function handleDelete() {
-    const id = detail?.policy?.state.backendId;
-    if (id) void runLifecycle(() => deletePolicy(id));
-  }
-
-  function handleClearHistory() {
-    const id = detail?.policy?.state.backendId;
-    if (id) void runLifecycle(() => clearProcessedHistory(id));
-  }
-
-  function handleEdit() {
-    if (detail) {
-      setWizard(detail);
-      setDetail(null);
-    }
   }
 
   return (
@@ -337,18 +278,6 @@ export function Pipelines() {
           </CardRail>
         </section>
       )}
-
-      <PolicyDetailPanel
-        policy={detail?.policy ?? null}
-        busy={busy}
-        canManagePolicies={canManagePolicies}
-        permissionsLoading={permissionsLoading}
-        onClose={() => setDetail(null)}
-        onEdit={handleEdit}
-        onTogglePause={handleTogglePause}
-        onDelete={handleDelete}
-        onClearHistory={handleClearHistory}
-      />
 
       <PolicySetupWizard
         entry={wizard}

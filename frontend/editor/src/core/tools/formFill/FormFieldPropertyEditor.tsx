@@ -16,10 +16,7 @@ import {
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { useTranslation } from "react-i18next";
-import AddIcon from "@mui/icons-material/Add";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlineRounded";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-
+import { Icon } from "@app/ui/Icon";
 /** A switch's help has to wrap the control: Mantine does not surface a tooltip from its label. */
 function SwitchWithHelp({
   help,
@@ -168,7 +165,7 @@ export function FormFieldPropertyEditor({
           variant="light"
           p="xs"
           radius="sm"
-          icon={<InfoOutlinedIcon sx={{ fontSize: 16 }} />}
+          icon={<Icon name="info" size={16} />}
         >
           <Text size="xs">
             {t(
@@ -284,14 +281,14 @@ export function FormFieldPropertyEditor({
                 aria-label={t("formFill.editor.removeOption", "Remove option")}
                 onClick={() => removeOption(i)}
               >
-                <DeleteOutlineIcon sx={{ fontSize: 16 }} />
+                <Icon name="trash" size={16} />
               </ActionIcon>
             </Group>
           ))}
           <Button
             size="sm"
             variant="tertiary"
-            leftSection={<AddIcon sx={{ fontSize: 14 }} />}
+            leftSection={<Icon name="plus" size={14} />}
             onClick={addOption}
           >
             {t("formFill.editor.addOption", "Add option")}

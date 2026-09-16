@@ -99,7 +99,7 @@ public class PaygWalletController {
      * membership — shouldn't happen post-migration). Teams always get the live {@code
      * pricing_policy.free_tier_units} grant via {@link TeamBillingService}.
      */
-    private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 500;
+    private static final int FREE_TIER_LIMIT_UNITS_FALLBACK = 1000;
 
     private static final DateTimeFormatter ISO_DATE = DateTimeFormatter.ISO_LOCAL_DATE;
 

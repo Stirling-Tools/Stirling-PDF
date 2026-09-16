@@ -63,6 +63,9 @@
   --motion-spring: 0.22s cubic-bezier(0.32, 0.72, 0, 1);
   --fullscreen-anim-duration-in: 0.28s;
   --fullscreen-anim-duration-out: 0.22s;
+  /* The wings' slide on and off reading. HomePage waits this out before it
+     unmounts them, so the two stylesheets and the timer cannot drift. */
+  --wings-ms: 220ms;
 
   /* ── Z-index ladder ── */
   --z-dropdown: 25;

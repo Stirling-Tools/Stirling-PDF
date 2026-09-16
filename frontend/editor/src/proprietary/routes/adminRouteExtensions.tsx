@@ -11,6 +11,14 @@ const ProcessorApp = HAS_PROCESSOR
     })
   : null;
 
+const ProcurementRedirect = HAS_PROCESSOR
+  ? lazy(async () => {
+      const m =
+        await import("@processor/components/procurement/ProcurementRedirect");
+      return { default: m.ProcurementRedirect };
+    })
+  : null;
+
 /**
  * Return leg of the account-link handshake, which Stirling redirects to with the admin's session in the URL fragment.
  */
@@ -23,8 +31,13 @@ const ConnectCallback = HAS_PROCESSOR
 
 /** The processor mounts as an admin-only route-set at PROCESSOR_BASENAME (/processor/*). */
 export function getAdminRouteExtensions(): ReactElement[] {
-  if (!ProcessorApp || !ConnectCallback) return [];
+  if (!ProcessorApp || !ConnectCallback || !ProcurementRedirect) return [];
   return [
+    <Route
+      key="procurement"
+      path="/procurement"
+      element={<ProcurementRedirect />}
+    />,
     <Route
       key="processor"
       path={`${PROCESSOR_BASENAME}/*`}

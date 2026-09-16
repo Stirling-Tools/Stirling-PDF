@@ -69,6 +69,7 @@ public class AuthController {
     private final AiUserDataService aiUserDataService;
     private final ResourceAccessService resourceAccessService;
     private final TeamLeadLookup teamLeadLookup;
+    private final stirling.software.proprietary.service.OrgOwnerService orgOwnerService;
     private final LoginLandingService loginLandingService;
 
     /**
@@ -639,6 +640,7 @@ public class AuthController {
         userMap.put("enabled", user.isEnabled());
         userMap.put("processorAccess", resourceAccessService.canAccessProcessor(user));
         userMap.put("teamLead", teamLeadLookup.isAnyTeamLeader(user));
+        userMap.put("orgOwner", orgOwnerService.isOwner(user.getId()));
         userMap.put("loginLandingView", loginLandingService.getLandingView(user).value());
         // Expose the caller's team so non-admin team owners can scope their own team's resources.
         if (user.getTeam() != null) {

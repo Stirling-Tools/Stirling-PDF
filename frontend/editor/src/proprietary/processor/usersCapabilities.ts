@@ -6,6 +6,7 @@ import type { UsersCapabilities } from "@processor/api/usersCapabilities";
  */
 export const usersCapabilities: UsersCapabilities = {
   orgGroup: true,
+  transferOwnership: true,
   changeRole: true,
   adminRole: true,
   createTeam: true,

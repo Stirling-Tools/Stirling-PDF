@@ -47,6 +47,7 @@ interface UsersDirectoryProps {
   onUnlock: (member: Member) => void;
   onDisableMfa: (member: Member) => void;
   onRemove: (member: Member) => void;
+  onTransferOwnership?: (member: Member) => void;
   // Team actions (the team-header kebab).
   onRenameTeam: (team: TeamGroup) => void;
   onDeleteTeam: (team: TeamGroup) => void;
@@ -79,6 +80,7 @@ export function UsersDirectory({
   onUnlock,
   onDisableMfa,
   onRemove,
+  onTransferOwnership,
   onRenameTeam,
   onDeleteTeam,
   showApprover = false,
@@ -97,18 +99,17 @@ export function UsersDirectory({
 
   const roleOptions = useMemo(
     () => [
-      // No SaaS user is ever ROLE_ADMIN, so the Org Owner option is dropped there.
       ...(capabilities.adminRole
         ? [
             {
               value: "admin" as RoleId,
-              label: t("users.role.orgOwner", "Org Owner"),
+              label: t("users.role.admin", "Admin"),
             },
           ]
         : []),
       {
         value: "team_owner" as RoleId,
-        label: t("users.role.teamOwner", "Team Owner"),
+        label: t("users.role.teamOwner", "Team Lead"),
       },
       { value: "member" as RoleId, label: t("users.role.member", "Member") },
       ...(showGuests
@@ -119,6 +120,21 @@ export function UsersDirectory({
   );
 
   const columns = useMemo<DataTableColumn<Member>[]>(() => {
+    const isOwner = (m: Member) =>
+      capabilities.adminRole ? m.orgOwner === true : m.teamLead === true;
+    const canTransferTo = (m: Member) =>
+      capabilities.transferOwnership &&
+      Boolean(onTransferOwnership) &&
+      members.some((u) => u.isSelf && isOwner(u)) &&
+      !m.isSelf &&
+      m.status === "active" &&
+      !m.isFirstLogin &&
+      !m.locked &&
+      m.role !== "guest" &&
+      (capabilities.adminRole ||
+        teams.some(
+          (team) => team.id === m.teamId && team.isPersonal === false,
+        ));
     function rowKebab(m: Member): CellAction {
       const removeLabel =
         capabilities.removeScope === "team"
@@ -128,7 +144,7 @@ export function UsersDirectory({
       if (capabilities.resetPassword) {
         items.push({
           label: t("users.action.resetPw", "Reset password"),
-          disabled: m.isSelf,
+          disabled: m.isSelf || m.orgOwner,
           onClick: () => onResetPassword(m),
         });
       }
@@ -144,7 +160,7 @@ export function UsersDirectory({
             m.status === "suspended"
               ? t("users.action.reinstate", "Reinstate")
               : t("users.action.suspend", "Suspend"),
-          disabled: m.isSelf,
+          disabled: m.isSelf || m.orgOwner,
           onClick: () => onToggleEnabled(m),
         });
       }
@@ -157,7 +173,7 @@ export function UsersDirectory({
       if (capabilities.resetMfa && m.mfaEnabled) {
         items.push({
           label: t("users.action.disableMfa", "Reset MFA"),
-          disabled: m.isSelf,
+          disabled: m.isSelf || m.orgOwner,
           onClick: () => onDisableMfa(m),
         });
       }
@@ -165,7 +181,7 @@ export function UsersDirectory({
         items.push({
           label: removeLabel,
           tone: "danger",
-          disabled: m.isSelf,
+          disabled: m.isSelf || m.orgOwner,
           onClick: () => onRemove(m),
           dividerBefore: items.length > 0,
         });
@@ -256,24 +272,49 @@ export function UsersDirectory({
       }),
     ];
 
-    if (capabilities.changeRole) {
-      cols.push(
-        column.select({
-          key: "role",
-          header: t("users.columns.role", "Role"),
-          get: (m) => ({
-            value: m.role,
-            options: roleOptions,
-            ariaLabel: t("users.roleFor", "Role for {{name}}", {
-              name: m.name,
-            }),
-            disabled: m.isSelf,
+    cols.push(
+      column.select({
+        key: "role",
+        header: t("users.columns.role", "Role"),
+        get: (m) => ({
+          value: isOwner(m) ? "org_owner" : m.role,
+          options: [
+            ...(isOwner(m) || canTransferTo(m)
+              ? [
+                  {
+                    value: "org_owner",
+                    label: t("users.role.orgOwner", "Org Owner"),
+                  },
+                ]
+              : []),
+            ...(capabilities.adminRole
+              ? roleOptions
+              : [
+                  {
+                    value: "member",
+                    label: t("users.role.member", "Member"),
+                  },
+                ]),
+          ],
+          ariaLabel: t("users.roleFor", "Role for {{name}}", {
+            name: m.name,
           }),
-          onChange: (m, value) => onChangeRole(m, (value ?? m.role) as RoleId),
+          readOnly:
+            m.isSelf ||
+            isOwner(m) ||
+            (!capabilities.changeRole && !canTransferTo(m)),
         }),
-      );
-    }
-
+        onChange: (m, value) => {
+          // Ownership uses its atomic transfer endpoint, never the ordinary role mutation.
+          if (value === "org_owner") {
+            if (canTransferTo(m)) onTransferOwnership?.(m);
+            return;
+          }
+          if (capabilities.changeRole)
+            onChangeRole(m, (value ?? m.role) as RoleId);
+        },
+      }),
+    );
     // A reader gets no kebab at all rather than an empty menu.
     cols.push(
       column.actions({
@@ -289,6 +330,8 @@ export function UsersDirectory({
     t,
     capabilities,
     roleOptions,
+    members,
+    teams,
     showApprover,
     onChangeRole,
     onGrantProcessor,
@@ -299,6 +342,7 @@ export function UsersDirectory({
     onUnlock,
     onDisableMfa,
     onRemove,
+    onTransferOwnership,
   ]);
 
   const groups = useMemo<DataTableGroup<Member>[]>(() => {
@@ -328,6 +372,7 @@ export function UsersDirectory({
         : [];
       if (teamKebabHasItems(team)) {
         const items: CellMenuItem[] = [];
+
         if (capabilities.manageGrants) {
           items.push(
             processorTeamIds.has(team.id)
@@ -380,7 +425,7 @@ export function UsersDirectory({
       gs.push({
         key: "org",
         title: t("users.group.org", "Organization"),
-        meta: t("users.group.owners", "{{count}} owner", {
+        meta: t("users.group.administrators", "{{count}} administrators", {
           count: dir.organization.length,
         }),
         rows: dir.organization,

@@ -7,6 +7,8 @@ interface ImportMetaEnv {
   readonly VITE_SUPABASE_PUBLISHABLE_DEFAULT_KEY: string;
   /** Hosted SaaS Java backend base URL — attended processor→SaaS reads (wallet, invoices, …) via apiClient.saas with the admin's JWT. */
   readonly VITE_SAAS_API_URL: string;
+  /** Hosted web app base URL, including its deployment path. */
+  readonly VITE_SAAS_FRONTEND_URL: string;
   /** Stripe publishable key (pk_live_… / pk_test_…) used by embedded Checkout. */
   readonly VITE_STRIPE_PUBLISHABLE_KEY: string;
   /** URL of the editor app (app switcher + non-admin redirect). See editor/.env.proprietary. */

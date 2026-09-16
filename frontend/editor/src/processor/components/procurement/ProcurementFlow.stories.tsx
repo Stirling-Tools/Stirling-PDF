@@ -73,6 +73,8 @@ function makeController(
   return {
     isLinked: true,
     loading: false,
+    loadError: null,
+    retry: () => {},
     data: snapshot,
     started: true,
     stage: snapshot.stage ?? undefined,

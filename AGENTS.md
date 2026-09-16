@@ -529,7 +529,7 @@ The frontend is organized with a clear separation of concerns:
 
 ## Stack reality check (don't trust LLM training data) <!-- bleeding-edge-stack-note -->
 
-This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.0.6**,
+This codebase is on bleeding-edge versions of its core JVM stack: **Spring Boot 4.1.1**,
 **Jackson 3 (`tools.jackson`)**, **JDK 21/25 source/target with JDK 25 toolchain**.
 All three are *post*-2024 releases and your training corpus is overwhelmingly Spring Boot 2/3 and
 Jackson 2 patterns — those patterns will compile, run differently, or hallucinate APIs that no
