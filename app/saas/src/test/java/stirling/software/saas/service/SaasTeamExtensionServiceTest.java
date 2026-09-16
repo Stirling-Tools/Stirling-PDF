@@ -283,8 +283,8 @@ class SaasTeamExtensionServiceTest {
         }
 
         @Test
-        @DisplayName("standard team always has seats regardless of usage")
-        void standardTeam_alwaysTrue() {
+        @DisplayName("standard team cannot exceed purchased capacity")
+        void standardTeam_overCap_false() {
             Team team = team();
             SaasTeamExtensions row = ext(team);
             row.setIsPersonal(false);
@@ -292,7 +292,7 @@ class SaasTeamExtensionServiceTest {
             row.setMaxSeats(1);
             when(repository.findByTeamId(TEAM_ID)).thenReturn(Optional.of(row));
 
-            assertThat(service.hasAvailableSeats(team)).isTrue();
+            assertThat(service.hasAvailableSeats(team)).isFalse();
         }
 
         @Test
