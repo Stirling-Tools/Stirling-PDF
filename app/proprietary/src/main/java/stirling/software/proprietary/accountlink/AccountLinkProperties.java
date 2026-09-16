@@ -38,7 +38,7 @@ public class AccountLinkProperties {
      * Units granted each month while unlinked. Matches the SaaS default policy, so linking raises
      * the allowance rather than introducing one. 0 means billable work needs a link.
      */
-    private long freeTierUnits = 500;
+    private long freeTierUnits = 1000;
 
     /** Phase 2 usage metering + daily sync. */
     private final Metering metering = new Metering();
