@@ -63,6 +63,7 @@ class VectorDbOutputSinkTest {
                         "run",
                         "policy",
                         PolicyInputs.of(List.of(original)),
+                        null,
                         "source:documents/document");
         sink.deliver(delivery, List.of(corpus("hash-before", 0)), output);
         sink.deliver(delivery, List.of(corpus("hash-after", 0)), output);
@@ -92,6 +93,7 @@ class VectorDbOutputSinkTest {
                                 List.of(
                                         new org.springframework.core.io.FileSystemResource(
                                                 "/tmp/upload-one"))),
+                        null,
                         "user:alice/document");
         var retry =
                 new OutputDelivery(
@@ -101,11 +103,13 @@ class VectorDbOutputSinkTest {
                                 List.of(
                                         new org.springframework.core.io.FileSystemResource(
                                                 "/tmp/upload-two"))),
+                        null,
                         "user:alice/document");
         sink.deliver(first, List.of(corpus("first-content", 0)), output);
         sink.deliver(retry, List.of(corpus("changed-content", 0)), output);
         sink.deliver(
-                new OutputDelivery("run-3", "policy", retry.inputs(), "user:bob/document"),
+                new OutputDelivery(
+                        "run-3", "policy", retry.inputs(), null, "user:bob/document"),
                 List.of(corpus("changed-content", 0)),
                 output);
         ArgumentCaptor<String> ids = ArgumentCaptor.forClass(String.class);
