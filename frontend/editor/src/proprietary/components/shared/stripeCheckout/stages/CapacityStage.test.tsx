@@ -7,23 +7,23 @@ import { CapacityStage } from "@app/components/shared/stripeCheckout/stages/Capa
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (_key: string, fallback: string) => fallback }),
 }));
-it("blocks purchasing less than the existing allowance even when usage is lower", () => {
+it("allows a reduction at renewal even when current usage exceeds the future allowance", () => {
   render(
     <MantineProvider>
       <CapacityStage
         selectedPlan={null}
         serverQuantity={1}
         setServerQuantity={() => {}}
-        currentUsers={40}
+        currentUsers={240}
         currentLimit={300}
         onContinue={() => {}}
       />
     </MantineProvider>,
   );
-  expect(screen.getByRole("button", { name: "100" })).toBeDisabled();
+  expect(screen.getByRole("button", { name: "100" })).toBeEnabled();
   expect(
     screen.getByRole("button", { name: "Review change in Stripe" }),
-  ).toBeDisabled();
+  ).toBeEnabled();
 });
 
 it("shows the new recurring total without inventing the adjustment charge", () => {
