@@ -838,24 +838,32 @@ function FileStateBadge({
     );
   }
   if (state === "failed") {
+    const failed = t("filesPage.diskState.failed", "Failed");
+    if (!onRetry) {
+      return <span className="files-page-state-badge is-failed">{failed}</span>;
+    }
+    const retryHint = t("filesPage.diskState.retryHint", "Run this file again");
     return (
-      <span className="files-page-state-badge is-failed">
-        {t("filesPage.diskState.failed", "Failed")}
-        {onRetry && (
-          <button
-            type="button"
-            className="files-page-state-retry"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRetry();
-            }}
-            title={t("filesPage.diskState.retryHint", "Run this file again")}
-          >
-            <Icon name="rotate-ccw" size="0.8rem" />
-            {t("filesPage.diskState.retry", "Retry")}
-          </button>
-        )}
-      </span>
+      <button
+        type="button"
+        className="files-page-state-badge is-failed files-page-state-retry"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRetry();
+        }}
+        title={retryHint}
+        aria-label={`${failed}: ${retryHint}`}
+      >
+        {/* Both labels share one grid cell, so the chip is as wide as the wider
+            of them and swapping on hover moves nothing around it. */}
+        <span className="files-page-state-retry-rest" aria-hidden="true">
+          {failed}
+        </span>
+        <span className="files-page-state-retry-hover" aria-hidden="true">
+          <Icon name="rotate-ccw" size="0.8rem" />
+          {t("filesPage.diskState.retry", "Retry")}
+        </span>
+      </button>
     );
   }
   return (

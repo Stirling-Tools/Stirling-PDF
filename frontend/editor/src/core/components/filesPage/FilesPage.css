@@ -631,19 +631,37 @@
 }
 
 /* Retry on a failed file's badge; must stay clickable inside an inert card. */
+/* The failed chip is the retry control: hovering it swaps its label for the
+   action. Both labels occupy one grid cell so the chip keeps the width of the
+   wider of them and the row's other cells never shift. */
 .files-page-state-retry {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  margin-left: 0.3rem;
-  padding: 0;
+  display: inline-grid;
   font: inherit;
-  color: inherit;
-  background: none;
-  border: none;
-  text-decoration: underline;
   cursor: pointer;
   pointer-events: auto;
+}
+
+.files-page-state-retry-rest,
+.files-page-state-retry-hover {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.files-page-state-retry-hover {
+  visibility: hidden;
+}
+
+.files-page-state-retry:hover .files-page-state-retry-rest,
+.files-page-state-retry:focus-visible .files-page-state-retry-rest {
+  visibility: hidden;
+}
+
+.files-page-state-retry:hover .files-page-state-retry-hover,
+.files-page-state-retry:focus-visible .files-page-state-retry-hover {
+  visibility: visible;
 }
 
 /* A working folder's per-state counts, one dotted chip per non-zero state. */
