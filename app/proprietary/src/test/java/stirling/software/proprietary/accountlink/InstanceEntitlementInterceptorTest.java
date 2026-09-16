@@ -408,7 +408,8 @@ class InstanceEntitlementInterceptorTest {
                                         period,
                                         period.plusMonths(1),
                                         null,
-                                        20)));
+                                        20,
+                                        0L)));
 
         InstanceEntitlementInterceptor interceptor = interceptor();
         for (int step = 0; step < 3; step++) {

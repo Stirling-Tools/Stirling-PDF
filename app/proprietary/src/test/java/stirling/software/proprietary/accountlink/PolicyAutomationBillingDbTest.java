@@ -199,7 +199,8 @@ class PolicyAutomationBillingDbTest {
                                         PERIOD,
                                         PERIOD.plusMonths(1),
                                         null,
-                                        stepLimit)));
+                                        stepLimit,
+                                        0L)));
         List<Resource> inputs =
                 IntStream.range(0, inputCount)
                         .mapToObj(

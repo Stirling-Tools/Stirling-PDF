@@ -112,7 +112,9 @@ class PaygWalletControllerTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+                start,
+                start.plusMonths(1));
     }
 
     /**
@@ -133,7 +135,9 @@ class PaygWalletControllerTest {
                 BigDecimal.valueOf(2),
                 "usd",
                 capMoneyMinor,
-                monthlyCapDocUnits);
+                monthlyCapDocUnits,
+                start,
+                start.plusMonths(1));
     }
 
     private void stubEmptyLedgerReads(long teamId) {
