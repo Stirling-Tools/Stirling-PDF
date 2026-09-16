@@ -42,8 +42,6 @@ type Story = StoryObj<typeof meta>;
 /** CSV preview: parsed into a scrollable table. */
 export const Csv: Story = {
   args: {
-    sidebarsVisible: true,
-    setSidebarsVisible: () => {},
     file: makeFile(
       "invoice.csv",
       "text/csv",
@@ -55,8 +53,6 @@ export const Csv: Story = {
 /** JSON preview: syntax-highlighted / pretty-printed. */
 export const Json: Story = {
   args: {
-    sidebarsVisible: true,
-    setSidebarsVisible: () => {},
     file: makeFile(
       "config.json",
       "application/json",
@@ -68,8 +64,6 @@ export const Json: Story = {
 /** Unsupported file type: falls back to the "Preview not available" state. */
 export const Unsupported: Story = {
   args: {
-    sidebarsVisible: true,
-    setSidebarsVisible: () => {},
     file: makeFile("archive.zip", "application/zip", "binary-ish-content"),
   },
 };
