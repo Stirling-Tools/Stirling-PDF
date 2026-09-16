@@ -58,6 +58,7 @@ export function orderedRewritingPolicies(policies: PoliciesByKey): string[] {
         s.enabled &&
         Boolean(s.backendId) &&
         s.runsOnEditor &&
+        !s.externalOutput &&
         (s.runOn ?? "upload") === "upload" &&
         policyDeliversOutputFiles(id),
     )

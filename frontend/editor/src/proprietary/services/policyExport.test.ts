@@ -25,6 +25,7 @@ vi.mock("@app/services/policyApi", () => ({
 vi.mock("@app/components/policies/policyRunStore", () => ({
   recordRunStart: vi.fn(),
   isDispatched: () => false,
+  markDispatched: vi.fn(),
   getPolicyRunOutcomes: () => ({}),
 }));
 // Run the queued task inline: the queue's own behaviour is not under test here.
@@ -38,6 +39,10 @@ vi.mock("@app/components/toast", () => ({
 }));
 vi.mock("@app/i18n", () => ({ default: { t: (key: string) => key } }));
 
+const dispatchPolicyFile = vi.hoisted(() =>
+  vi.fn(() => new Promise<void>(() => {})),
+);
+vi.mock("@app/services/policyDispatch", () => ({ dispatchPolicyFile }));
 const { enforceExportPolicies } = await import("@app/services/policyExport");
 
 /** An active export-time policy as the local store holds it. */
@@ -170,6 +175,26 @@ describe("export-time policy selection", () => {
     await expect(enforceExportPolicies([input], ["file-1"])).resolves.toEqual([
       input,
     ]);
+  });
+
+  it("returns the exact original immediately while an external export submission is pending", async () => {
+    loadPolicies.mockReturnValue({
+      ingestion: exportPolicy({ runsOnEditor: true, externalOutput: true }),
+    });
+    const file = pdf();
+    const files = [file];
+    const result = await enforceExportPolicies(files, ["file-1"]);
+    expect(result).toBe(files);
+    expect(result[0]).toBe(file);
+    expect(dispatchPolicyFile).toHaveBeenCalledWith(
+      "ingestion",
+      "backend-1",
+      file,
+      "file-1",
+      false,
+      true,
+    );
+    expect(runStoredPolicy).not.toHaveBeenCalled();
   });
 
   it("enforces an editor pipeline set to run on export", async () => {

@@ -192,18 +192,19 @@ public class PolicyController {
             summary = "Get pipeline run status",
             description = "Returns the current status, step cursor, and output files of a run.")
     public ResponseEntity<PolicyRunView> status(@PathVariable String runId) {
+        if (!ownedByCurrentUser(runId)) {
+            return ResponseEntity.notFound().build();
+        }
         PolicyRun run = runRegistry.get(runId);
         if (run != null) {
             return ResponseEntity.ok(PolicyRunView.of(run));
         }
         // Not local: read the run's shared projection so any node can serve its status.
-        if (ownedByCurrentUser(runId)) {
-            Optional<JobStoreEntry> entry = jobStore.get(runId);
-            if (entry.isPresent()
-                    && entry.get().resultMeta() != null
-                    && entry.get().resultMeta().containsKey("policyId")) {
-                return ResponseEntity.ok(PolicyRunView.ofEntry(entry.get()));
-            }
+        Optional<JobStoreEntry> entry = jobStore.get(runId);
+        if (entry.isPresent()
+                && entry.get().resultMeta() != null
+                && entry.get().resultMeta().containsKey("policyId")) {
+            return ResponseEntity.ok(PolicyRunView.ofEntry(entry.get()));
         }
         return ResponseEntity.notFound().build();
     }
@@ -351,25 +352,20 @@ public class PolicyController {
      * nothing to check.
      */
     private void requireAccessibleOutput(Policy policy) {
-        // An editor policy hands its results back to the workspace the file came from. A stored
-        // destination would send the run to a folder or bucket instead, leaving the editor's copy
-        // untouched - and the editor's import would then have nothing to collect.
-        if (policy.editor().allowed() && !policy.outputIds().isEmpty()) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "An editor policy delivers back to the editor and can't also have a"
-                            + " destination");
-        }
         // A routing rule's destination is checked on exactly the same terms as a plain output: it
         // must resolve, be accessible, and not be the editor.
         Stream.concat(
                         policy.outputIds().stream(),
                         policy.routingRules().stream().map(RoutingRule::outputId))
                 .distinct()
-                .forEach(outputId -> requireAccessibleDestination(outputId, policy.steps()));
+                .forEach(
+                        outputId ->
+                                requireAccessibleDestination(
+                                        outputId, policy.steps(), policy.editor().allowed()));
     }
 
-    private void requireAccessibleDestination(String outputId, List<PipelineStep> steps) {
+    private void requireAccessibleDestination(
+            String outputId, List<PipelineStep> steps, boolean editorPolicy) {
         Source destination =
                 sourceStore
                         .get(outputId)
@@ -380,6 +376,10 @@ public class PolicyController {
                                                 HttpStatus.BAD_REQUEST,
                                                 "Unknown or inaccessible output source: "
                                                         + outputId));
+        if (editorPolicy && !destination.enabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "The output destination is disabled");
+        }
         if (EditorSource.TYPE.equals(destination.type())) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
@@ -649,6 +649,12 @@ public class PolicyController {
                                 () ->
                                         new ResponseStatusException(
                                                 HttpStatus.NOT_FOUND, "No policy: " + policyId));
+        requireAccessibleOutput(policy);
+        try {
+            policyValidator.validateEditorOutput(policy);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
         stampPolicyAudit(policy.toDefinition());
         PolicyInputs inputs = toInputs(files);
         String runId =

@@ -899,6 +899,44 @@ describe("PipelineBuilder", () => {
     expect(body.outputIds).toEqual([]);
   });
 
+  it("saves a separate destination for an editor copy", async () => {
+    HTMLElement.prototype.scrollIntoView = vi.fn();
+    fetchSources.mockResolvedValue({
+      kpis: [],
+      sources: [SOURCE, EDITOR_SOURCE],
+    });
+    renderBuilder("/processor/pipelines/new");
+    fireEvent.change(
+      await screen.findByLabelText("portal.pipelines.composer.name"),
+      { target: { value: "Copy to archive" } },
+    );
+    await addTool("Compress");
+    await pickInputSource("Editor");
+    await openOutput();
+    fireEvent.click(
+      await screen.findByRole("textbox", {
+        name: "portal.policies.wizard.locations.delivery",
+      }),
+    );
+    fireEvent.click(
+      await screen.findByText("portal.policies.wizard.locations.keepOriginal"),
+    );
+    expect(
+      screen.getByRole("button", {
+        name: "portal.pipelines.composer.create",
+      }),
+    ).toBeDisabled();
+    fireEvent.click(await screen.findByText("pick output"));
+    fireEvent.click(screen.getByText("portal.pipelines.composer.create"));
+    await waitFor(() => expect(savePipeline).toHaveBeenCalledTimes(1));
+    expect(savePipeline.mock.calls[0][0]).toMatchObject({
+      editor: { allowed: true, runOn: "upload" },
+      required: false,
+      inputs: [],
+      outputIds: ["src-in"],
+    });
+  });
+
   it("carries a saved pipeline's routes through an unrelated edit", async () => {
     fetchSources.mockResolvedValue({
       kpis: [],

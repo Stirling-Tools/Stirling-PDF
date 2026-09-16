@@ -52,7 +52,7 @@ export function RagIngestStepConfig({
           tone="info"
           description={t(
             "portal.pipelines.builder.ragIngest.editorPdfOnly",
-            "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination.",
+            "Only PDFs can return to the editor. To export chunks or Markdown, choose Keep originals and send to a destination under Output.",
           )}
         />
       )}
