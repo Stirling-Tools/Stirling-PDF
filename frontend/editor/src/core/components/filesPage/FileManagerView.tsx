@@ -9,14 +9,12 @@ import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Drawer,
-  Group,
   Menu,
   MultiSelect,
   Select,
   TextInput,
   Tooltip,
 } from "@mantine/core";
-import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
@@ -25,17 +23,13 @@ import SearchIcon from "@mui/icons-material/Search";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
 import GridViewIcon from "@mui/icons-material/GridView";
 import ViewListIcon from "@mui/icons-material/ViewList";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import KeyboardArrowRightIcon from "@mui/icons-material/KeyboardArrowRight";
 import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
+import { FolderMenu } from "@app/components/filesPage/FolderMenu";
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import { useFileLibraryWorkbenchBarButtons } from "@app/components/filesPage/useFileLibraryWorkbenchBarButtons";
@@ -76,15 +70,6 @@ import {
   FilesPageEntry,
   type DiskFileState,
 } from "@app/components/filesPage/FileGrid";
-import AutoModeIcon from "@mui/icons-material/AutoMode";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
-import ReplayIcon from "@mui/icons-material/Replay";
-import TuneIcon from "@mui/icons-material/Tune";
-import HistoryIcon from "@mui/icons-material/History";
-import PaletteIcon from "@mui/icons-material/Palette";
-import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
@@ -1503,6 +1488,30 @@ export default function FileManagerView() {
     actions: isMobile ? libraryActions : null,
   });
 
+  // Built once and handed to whichever surface the current view mode uses, so
+  // the two can never offer a different set of actions.
+  const bulkActionsMenu =
+    selectedFiles.length > 0 ? (
+      <FilesToolbarBulkMenu
+        selectedCount={selectedFiles.length}
+        onAddToWorkspace={() => handleAddToWorkspace(selectedFiles)}
+        onSaveToServer={
+          localOnlySelectedStubs.length > 0
+            ? () => setSaveToServerTarget(localOnlySelectedStubs)
+            : undefined
+        }
+        saveToServerDisabledReason={saveToServerDisabledReason ?? undefined}
+        onShowDetails={
+          selectedFiles.length === 1 && isCompactDetailsViewport
+            ? () => setMobileDetailsOpen(true)
+            : undefined
+        }
+        onMove={() => promptMoveFiles(selectedFiles)}
+        onRemove={() => handleRemoveFiles(selectedFiles)}
+        onClearSelection={() => clearSelection()}
+      />
+    ) : null;
+
   return (
     <div className="files-page" ref={dropZoneRef}>
       <input
@@ -1562,282 +1571,71 @@ export default function FileManagerView() {
               loading={loading}
               totalCount={totalCount}
               selectedCount={selectedFiles.length}
-              selectionOnly={mobileSelection}
             />
             {currentFolder && !mobileSelection && (
               <div className="files-page-folder-actions">
-                {!currentProcessing ? (
-                  <Tooltip
-                    label={t(
-                      "filesPage.processing.start",
-                      "Process files in this folder...",
-                    )}
-                    withinPortal
-                  >
-                    <ActionIcon
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setProcessingSetupFolder(currentFolder)}
-                      aria-label={t(
-                        "filesPage.processing.start",
-                        "Process files in this folder...",
-                      )}
-                    >
-                      <AutoModeIcon fontSize="small" />
-                    </ActionIcon>
-                  </Tooltip>
-                ) : (
-                  <>
-                    {currentProcessing.enabled ? (
-                      <>
-                        {folderKind(currentFolder) !== "virtual" &&
-                          stateCounts.failed > 0 && (
-                            <Tooltip
-                              label={t(
-                                "filesPage.processing.sweep",
-                                "Retry failed files",
-                              )}
-                              withinPortal
-                            >
-                              <ActionIcon
-                                size="sm"
-                                variant="secondary"
-                                onClick={() =>
-                                  runFolderAction(
-                                    processingApi.sweep,
-                                    "process folder now",
-                                  )
-                                }
-                                aria-label={t(
-                                  "filesPage.processing.sweep",
-                                  "Retry failed files",
-                                )}
-                              >
-                                <ReplayIcon fontSize="small" />
-                              </ActionIcon>
-                            </Tooltip>
-                          )}
-                        <Tooltip
-                          label={t(
-                            "filesPage.processing.stop",
-                            "Pause processing",
-                          )}
-                          withinPortal
-                        >
-                          <ActionIcon
-                            size="sm"
-                            variant="secondary"
-                            onClick={() =>
-                              runFolderAction(
-                                processingApi.disable,
-                                "pause processing folder",
+                <FolderMenu
+                  folder={currentFolder}
+                  processing={currentProcessing}
+                  continuous={folderKind(currentFolder) === "virtual"}
+                  isMount={folderKind(currentFolder) === "local"}
+                  canUnmount={currentFolder.parentFolderId === null}
+                  editsDisabled={headerEditsDisabled}
+                  editsDisabledHint={t(
+                    "filesPage.offlineNoFolderEdits",
+                    "Offline - folder changes are disabled.",
+                  )}
+                  onStartProcessing={() =>
+                    setProcessingSetupFolder(currentFolder)
+                  }
+                  onRunProcessing={() =>
+                    runFolderAction(processingApi.sweep, "process folder now")
+                  }
+                  onStopProcessing={() =>
+                    runFolderAction(
+                      processingApi.disable,
+                      "pause processing folder",
+                    )
+                  }
+                  onResumeProcessing={() =>
+                    runFolderAction(processingApi.enable, "resume processing")
+                  }
+                  onRemoveProcessing={() =>
+                    runFolderAction(
+                      processingApi.remove,
+                      "remove processing folder",
+                    )
+                  }
+                  onEditProcessing={() =>
+                    setProcessingSetupFolder(currentFolder)
+                  }
+                  onRevertAll={
+                    folderKind(currentFolder) === "local"
+                      ? () => setRevertAllTarget(currentFolder)
+                      : undefined
+                  }
+                  onRename={() => openRenameFolderDialog(currentFolder)}
+                  onChangeAppearance={(appearance) => {
+                    setFolderAppearance(currentFolder.id, appearance).catch(
+                      (err) =>
+                        folders.setError(
+                          err instanceof Error
+                            ? t(
+                                "filesPage.error.folderAppearanceFailedDetail",
+                                {
+                                  message: err.message,
+                                  defaultValue: `Could not update folder appearance: ${err.message}`,
+                                },
                               )
-                            }
-                            aria-label={t(
-                              "filesPage.processing.stop",
-                              "Pause processing",
-                            )}
-                          >
-                            <PauseIcon fontSize="small" />
-                          </ActionIcon>
-                        </Tooltip>
-                      </>
-                    ) : (
-                      <Tooltip
-                        label={t(
-                          "filesPage.processing.resume",
-                          "Resume processing",
-                        )}
-                        withinPortal
-                      >
-                        <ActionIcon
-                          size="sm"
-                          variant="secondary"
-                          onClick={() =>
-                            runFolderAction(
-                              processingApi.enable,
-                              "resume processing",
-                            )
-                          }
-                          aria-label={t(
-                            "filesPage.processing.resume",
-                            "Resume processing",
-                          )}
-                        >
-                          <PlayArrowIcon fontSize="small" />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                    <Tooltip
-                      label={t(
-                        "filesPage.processing.edit",
-                        "Edit processing...",
-                      )}
-                      withinPortal
-                    >
-                      <ActionIcon
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setProcessingSetupFolder(currentFolder)}
-                        aria-label={t(
-                          "filesPage.processing.edit",
-                          "Edit processing...",
-                        )}
-                      >
-                        <TuneIcon fontSize="small" />
-                      </ActionIcon>
-                    </Tooltip>
-                    {folderKind(currentFolder) === "local" && (
-                      <Tooltip
-                        label={t(
-                          "filesPage.processing.restoreAll",
-                          "Restore all originals",
-                        )}
-                        withinPortal
-                      >
-                        <ActionIcon
-                          size="sm"
-                          variant="secondary"
-                          onClick={() => setRevertAllTarget(currentFolder)}
-                          aria-label={t(
-                            "filesPage.processing.restoreAll",
-                            "Restore all originals",
-                          )}
-                        >
-                          <HistoryIcon fontSize="small" />
-                        </ActionIcon>
-                      </Tooltip>
-                    )}
-                    <Tooltip
-                      label={t(
-                        "filesPage.processing.remove",
-                        "Remove processing",
-                      )}
-                      withinPortal
-                    >
-                      <ActionIcon
-                        size="sm"
-                        variant="secondary"
-                        onClick={() =>
-                          runFolderAction(
-                            processingApi.remove,
-                            "remove processing folder",
-                          )
-                        }
-                        aria-label={t(
-                          "filesPage.processing.remove",
-                          "Remove processing",
-                        )}
-                      >
-                        <AutoModeIcon fontSize="small" />
-                      </ActionIcon>
-                    </Tooltip>
-                  </>
-                )}
-                {folderKind(currentFolder) === "local" ? (
-                  currentFolder.parentFolderId === null && (
-                    <Tooltip
-                      label={t(
-                        "filesPage.removeLocalFolder",
-                        "Unmount from Stirling",
-                      )}
-                      withinPortal
-                    >
-                      <ActionIcon
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => promptDeleteFolder(currentFolder)}
-                        aria-label={t(
-                          "filesPage.removeLocalFolder",
-                          "Unmount from Stirling",
-                        )}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </ActionIcon>
-                    </Tooltip>
-                  )
-                ) : (
-                  <>
-                    <Tooltip
-                      label={t("filesPage.rename", "Rename")}
-                      withinPortal
-                    >
-                      <ActionIcon
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => openRenameFolderDialog(currentFolder)}
-                        disabled={headerEditsDisabled}
-                        aria-label={t("filesPage.rename", "Rename")}
-                      >
-                        <DriveFileRenameOutlineIcon fontSize="small" />
-                      </ActionIcon>
-                    </Tooltip>
-                    <Menu shadow="md" position="bottom-start" withinPortal>
-                      <Menu.Target>
-                        <Tooltip
-                          label={t("filesPage.appearance.title", "Appearance")}
-                          withinPortal
-                        >
-                          <ActionIcon
-                            size="sm"
-                            variant="secondary"
-                            disabled={headerEditsDisabled}
-                            aria-label={t(
-                              "filesPage.appearance.title",
-                              "Appearance",
-                            )}
-                          >
-                            <PaletteIcon fontSize="small" />
-                          </ActionIcon>
-                        </Tooltip>
-                      </Menu.Target>
-                      <Menu.Dropdown>
-                        <FolderAppearancePicker
-                          folder={currentFolder}
-                          onChange={(appearance) => {
-                            setFolderAppearance(
-                              currentFolder.id,
-                              appearance,
-                            ).catch((err) =>
-                              folders.setError(
-                                err instanceof Error
-                                  ? t(
-                                      "filesPage.error.folderAppearanceFailedDetail",
-                                      {
-                                        message: err.message,
-                                        defaultValue: `Could not update folder appearance: ${err.message}`,
-                                      },
-                                    )
-                                  : t(
-                                      "filesPage.error.folderAppearanceFailed",
-                                      "Could not update folder appearance.",
-                                    ),
+                            : t(
+                                "filesPage.error.folderAppearanceFailed",
+                                "Could not update folder appearance.",
                               ),
-                            );
-                          }}
-                          disabled={headerEditsDisabled}
-                        />
-                      </Menu.Dropdown>
-                    </Menu>
-                    <Tooltip
-                      label={t("filesPage.deleteFolder", "Delete folder")}
-                      withinPortal
-                    >
-                      <ActionIcon
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => promptDeleteFolder(currentFolder)}
-                        disabled={headerEditsDisabled}
-                        aria-label={t(
-                          "filesPage.deleteFolder",
-                          "Delete folder",
-                        )}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </ActionIcon>
-                    </Tooltip>
-                  </>
-                )}
+                        ),
+                    );
+                  }}
+                  onDelete={() => promptDeleteFolder(currentFolder)}
+                />
               </div>
             )}
             <div className="files-page-toolbar-actions">
@@ -2082,160 +1880,11 @@ export default function FileManagerView() {
                 ))}
               </div>
             )}
-            {selectedFiles.length > 0 && (
+            {/* Grid view has no column header to host these, so it keeps them
+                here; list view puts the same menu in its header instead. */}
+            {viewMode === "grid" && bulkActionsMenu && (
               <div className="files-page-toolbar-actions files-page-selection-actions">
-                {mobileSelection ? (
-                  <FilesToolbarBulkMenu
-                    selectedCount={selectedFiles.length}
-                    onAddToWorkspace={() => handleAddToWorkspace(selectedFiles)}
-                    onSaveToServer={
-                      localOnlySelectedStubs.length > 0
-                        ? () => setSaveToServerTarget(localOnlySelectedStubs)
-                        : undefined
-                    }
-                    saveToServerDisabledReason={
-                      saveToServerDisabledReason ?? undefined
-                    }
-                    onShowDetails={
-                      selectedFiles.length === 1
-                        ? () => setMobileDetailsOpen(true)
-                        : undefined
-                    }
-                    onMove={() => promptMoveFiles(selectedFiles)}
-                    onRemove={() => handleRemoveFiles(selectedFiles)}
-                  />
-                ) : (
-                  (() => {
-                    // Bulk-action labels; CSS collapses to icon-only below 900px.
-                    const addLabel =
-                      selectedFiles.length === 1
-                        ? t("filesPage.addToWorkspace", "Add to workspace")
-                        : t(
-                            "filesPage.addToWorkspaceCount",
-                            "Add {{count}} to workspace",
-                            { count: selectedFiles.length },
-                          );
-                    const moveLabel = t("filesPage.moveTo", "Move to…");
-                    const removeLabel = t("filesPage.remove", "Remove");
-                    return (
-                      // wrap="nowrap" keeps the row single-line.
-                      <Group gap="xs" wrap="nowrap">
-                        <Tooltip label={addLabel} withinPortal>
-                          <Button
-                            size="sm"
-                            leftSection={<OpenInNewIcon fontSize="small" />}
-                            onClick={() => handleAddToWorkspace(selectedFiles)}
-                            aria-label={addLabel}
-                            data-testid="add-to-workspace"
-                          >
-                            {addLabel}
-                          </Button>
-                        </Tooltip>
-                        {/* Save to server; shown whenever local-only files are
-                          selected. When storage is off it stays visible but
-                          disabled, tooltip pointing at the admin. */}
-                        {localOnlySelectedStubs.length > 0 && (
-                          <Tooltip
-                            label={
-                              saveToServerDisabledReason ??
-                              t("filesPage.saveToServer", "Save to server")
-                            }
-                            withinPortal
-                            multiline={Boolean(saveToServerDisabledReason)}
-                            w={saveToServerDisabledReason ? 240 : undefined}
-                          >
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              leftSection={<CloudUploadIcon fontSize="small" />}
-                              disabled={Boolean(saveToServerDisabledReason)}
-                              onClick={() =>
-                                setSaveToServerTarget(localOnlySelectedStubs)
-                              }
-                              style={{
-                                // Keep the tooltip hoverable while disabled.
-                                pointerEvents: saveToServerDisabledReason
-                                  ? "auto"
-                                  : undefined,
-                              }}
-                              aria-label={t(
-                                "filesPage.saveToServer",
-                                "Save to server",
-                              )}
-                            >
-                              {t("filesPage.saveToServer", "Save to server")}
-                            </Button>
-                          </Tooltip>
-                        )}
-                        {/* Show details button on compact viewports. */}
-                        {selectedFiles.length === 1 &&
-                          isCompactDetailsViewport && (
-                            <Tooltip
-                              label={t("filesPage.showDetails", "Show details")}
-                              withinPortal
-                            >
-                              <Button
-                                size="sm"
-                                variant="secondary"
-                                leftSection={
-                                  <InfoOutlinedIcon fontSize="small" />
-                                }
-                                onClick={() => setMobileDetailsOpen(true)}
-                                aria-label={t(
-                                  "filesPage.showDetails",
-                                  "Show details",
-                                )}
-                              >
-                                {t("filesPage.showDetails", "Show details")}
-                              </Button>
-                            </Tooltip>
-                          )}
-                        <Tooltip label={moveLabel} withinPortal>
-                          <Button
-                            size="sm"
-                            variant="secondary"
-                            leftSection={<DriveFileMoveIcon fontSize="small" />}
-                            onClick={() => promptMoveFiles(selectedFiles)}
-                            aria-label={moveLabel}
-                          >
-                            {moveLabel}
-                          </Button>
-                        </Tooltip>
-                        <Tooltip label={removeLabel} withinPortal>
-                          <Button
-                            size="sm"
-                            accent="danger"
-                            variant="secondary"
-                            leftSection={<DeleteIcon fontSize="small" />}
-                            onClick={() => handleRemoveFiles(selectedFiles)}
-                            aria-label={removeLabel}
-                          >
-                            {removeLabel}
-                          </Button>
-                        </Tooltip>
-                        <Tooltip
-                          label={t(
-                            "filesPage.clearSelection",
-                            "Clear selection",
-                          )}
-                          withinPortal
-                        >
-                          <ActionIcon
-                            variant="tertiary"
-                            size="md"
-                            onClick={() => clearSelection()}
-                            aria-label={t(
-                              "filesPage.clearSelection",
-                              "Clear selection",
-                            )}
-                          >
-                            &times;
-                          </ActionIcon>
-                        </Tooltip>
-                      </Group>
-                    );
-                  })()
-                )}
+                {bulkActionsMenu}
               </div>
             )}
           </div>
@@ -2255,6 +1904,9 @@ export default function FileManagerView() {
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
               viewMode={viewMode}
+              selectionActions={
+                viewMode === "list" ? bulkActionsMenu : undefined
+              }
               sortMode={sortMode}
               onChangeSortMode={setSortMode}
               onSelectFile={handleSelectFile}

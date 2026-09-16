@@ -4,6 +4,7 @@ import CloudUploadIcon from "@mui/icons-material/CloudUpload";
 import DeleteIcon from "@mui/icons-material/Delete";
 import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import CloseIcon from "@mui/icons-material/Close";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 
@@ -19,13 +20,13 @@ interface FilesToolbarBulkMenuProps {
   onShowDetails?: () => void;
   onMove: () => void;
   onRemove: () => void;
+  onClearSelection: () => void;
 }
 
 /**
- * Bulk actions behind one trigger. The full strip is five buttons wide, which
- * no phone can hold alongside the count and the clear control, so rather than
- * letting the row scroll them off the edge they collapse into a menu where
- * every action keeps its label.
+ * Everything that acts on the current selection, behind one trigger. A strip of
+ * five buttons only fits the widest viewports, and shrinking it to icons costs
+ * every label; one menu reads the same at any width.
  */
 export function FilesToolbarBulkMenu({
   selectedCount,
@@ -35,6 +36,7 @@ export function FilesToolbarBulkMenu({
   onShowDetails,
   onMove,
   onRemove,
+  onClearSelection,
 }: FilesToolbarBulkMenuProps) {
   const { t } = useTranslation();
 
@@ -87,6 +89,12 @@ export function FilesToolbarBulkMenu({
           onClick={onMove}
         >
           {t("filesPage.moveTo", "Move to…")}
+        </Menu.Item>
+        <Menu.Item
+          leftSection={<CloseIcon sx={{ fontSize: "1.1rem" }} />}
+          onClick={onClearSelection}
+        >
+          {t("filesPage.clearSelection", "Clear selection")}
         </Menu.Item>
         <Menu.Divider />
         <Menu.Item

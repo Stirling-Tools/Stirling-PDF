@@ -14,11 +14,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import HistoryIcon from "@mui/icons-material/History";
 import OpenInNewIcon from "@mui/icons-material/OpenInNew";
 import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
-import AutoModeIcon from "@mui/icons-material/AutoMode";
-import PlayArrowIcon from "@mui/icons-material/PlayArrow";
-import PauseIcon from "@mui/icons-material/Pause";
 import ReplayIcon from "@mui/icons-material/Replay";
-import TuneIcon from "@mui/icons-material/Tune";
 import TaskAltIcon from "@mui/icons-material/TaskAlt";
 import ContentCopyOutlinedIcon from "@mui/icons-material/ContentCopyOutlined";
 import CloudUploadIcon from "@mui/icons-material/CloudUpload";
@@ -34,10 +30,7 @@ import {
 } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import {
-  useProcessingFolders,
-  type ProcessingFolderState,
-} from "@app/hooks/useProcessingFolders";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import {
   useVirtualFileRows,
   rowHeightPx,
@@ -55,7 +48,7 @@ import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
 import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
-import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
+import { FolderMenu } from "@app/components/filesPage/FolderMenu";
 import {
   useLazyThumbnail,
   useDiskThumbnail,
@@ -196,6 +189,12 @@ interface FileGridProps {
    * so no item needs a context subscription that memoization would then fight.
    */
   onActionError?: (message: string) => void;
+  /**
+   * What acts on the current selection, built by the page that owns the
+   * handlers. List view puts it in the column header, which only exists here;
+   * grid view has no header and keeps its own copy above the listing.
+   */
+  selectionActions?: React.ReactNode;
 }
 
 /**
@@ -789,270 +788,85 @@ const FolderCard = React.memo(function FolderCard({
         )}
       </div>
       <div className="files-page-card-actions">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              ref={kebabRef}
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.folderMenu", "Folder actions")}
-            >
-              <MoreVertIcon fontSize="small" />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
-              onClick={onOpen}
-            >
-              {t("filesPage.open", "Open")}
-            </Menu.Item>
-            {editsHidden && (
-              <ProcessingMenuItems
-                processing={processing}
-                disabled={false}
-                onRun={() => void runProcessing("process folder now")}
-                onStop={() => void stopProcessing("pause processing folder")}
-                onStart={() => actions.startProcessing(folder)}
-                onResume={() => void resumeProcessing("resume processing")}
-                onRevertAll={
-                  kind === "local"
-                    ? () => actions.requestRevertAll(folder)
-                    : undefined
-                }
-                onEdit={() => actions.startProcessing(folder)}
-                onRemove={() =>
-                  void removeProcessing("remove processing folder")
-                }
-              />
-            )}
-            {/* Only a mount root can be removed; a subdirectory is the
-                disk's, and the app never deletes directories. */}
-            {editsHidden && folder.parentFolderId === null && (
-              <Menu.Item
-                color="red"
-                leftSection={<DeleteIcon fontSize="small" />}
-                onClick={() => actions.deleteFolder(folder)}
-              >
-                {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
-              </Menu.Item>
-            )}
-            {!editsHidden && (
-              <>
-                <Menu.Item
-                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-                  onClick={() => actions.renameFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.rename", "Rename")}
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Label>
-                  {t("filesPage.appearance.title", "Appearance")}
-                </Menu.Label>
-                <FolderAppearancePicker
-                  folder={folder}
-                  onChange={(appearance) =>
-                    actions.changeFolderAppearance(folder.id, appearance)
-                  }
-                  disabled={editsDisabled}
-                />
-                <Menu.Divider />
-                <ProcessingMenuItems
-                  processing={processing}
-                  continuous={kind === "virtual"}
-                  disabled={editsDisabled}
-                  disabledHint={offlineHint}
-                  onRun={() => void runProcessing("process folder now")}
-                  onStop={() => void stopProcessing("pause processing folder")}
-                  onStart={() => actions.startProcessing(folder)}
-                  onResume={() => void resumeProcessing("resume processing")}
-                  onEdit={() => actions.startProcessing(folder)}
-                  onRemove={() =>
-                    void removeProcessing("remove processing folder")
-                  }
-                />
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<DeleteIcon fontSize="small" />}
-                  onClick={() => actions.deleteFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.deleteFolder", "Delete folder")}
-                </Menu.Item>
-              </>
-            )}
-          </Menu.Dropdown>
-        </Menu>
+        <FolderMenu
+          folder={folder}
+          processing={processing}
+          continuous={kind === "virtual"}
+          isMount={editsHidden}
+          canUnmount={folder.parentFolderId === null}
+          editsDisabled={editsDisabled}
+          editsDisabledHint={offlineHint}
+          variant="kebab"
+          triggerRef={kebabRef}
+          onOpen={onOpen}
+          onStartProcessing={() => actions.startProcessing(folder)}
+          onRunProcessing={() => void runProcessing("process folder now")}
+          onStopProcessing={() =>
+            void stopProcessing("pause processing folder")
+          }
+          onResumeProcessing={() => void resumeProcessing("resume processing")}
+          onRemoveProcessing={() =>
+            void removeProcessing("remove processing folder")
+          }
+          onEditProcessing={() => actions.startProcessing(folder)}
+          onRevertAll={
+            kind === "local"
+              ? () => actions.requestRevertAll(folder)
+              : undefined
+          }
+          onRename={() => actions.renameFolder(folder)}
+          onChangeAppearance={(appearance) =>
+            actions.changeFolderAppearance(folder.id, appearance)
+          }
+          onDelete={() => actions.deleteFolder(folder)}
+        />
       </div>
     </div>
   );
 });
 
-/** A working folder's live per-state counts, spelled out under the folder's name. */
+/**
+ * A working folder's live per-state counts. On a card they sit under the name with
+ * room to wrap; in a row they are the status cell, which clips, so the states worth
+ * acting on come first and the whole breakdown is repeated in the title.
+ */
 function ProcessingFolderStats({
   recordId,
   listFiles,
+  variant = "card",
 }: {
   recordId: string;
   listFiles: (recordId: string) => Promise<{ state: string }[]>;
+  variant?: "card" | "row";
 }) {
   const { t } = useTranslation();
   const counts = useProcessingFolderCounts(recordId, listFiles);
   if (!counts) return null;
-  const parts = (
-    [
-      ["done", t("filesPage.diskState.done", "Ready")],
-      ["processing", t("filesPage.diskState.processing", "Processing")],
-      ["failed", t("filesPage.diskState.failed", "Failed")],
-      ["waiting", t("filesPage.diskState.waiting", "Queued")],
-    ] as const
-  ).filter(([state]) => (counts[state] ?? 0) > 0);
+  const labels = {
+    done: t("filesPage.diskState.done", "Ready"),
+    processing: t("filesPage.diskState.processing", "Processing"),
+    failed: t("filesPage.diskState.failed", "Failed"),
+    waiting: t("filesPage.diskState.waiting", "Queued"),
+  } as const;
+  const order =
+    variant === "row"
+      ? (["failed", "done", "processing", "waiting"] as const)
+      : (["done", "processing", "failed", "waiting"] as const);
+  const parts = order.filter((state) => (counts[state] ?? 0) > 0);
   if (parts.length === 0) return null;
   return (
     <div
-      className="files-page-folder-stats"
+      className={`files-page-folder-stats${variant === "row" ? " is-row" : ""}`}
       title={parts
-        .map(([state, label]) => `${counts[state]} ${label}`)
+        .map((state) => `${counts[state]} ${labels[state]}`)
         .join(" · ")}
     >
-      {parts.map(([state, label]) => (
+      {parts.map((state) => (
         <span key={state} className={`files-page-folder-stat is-${state}`}>
-          {counts[state]} {label}
+          {counts[state]} {labels[state]}
         </span>
       ))}
     </div>
-  );
-}
-
-/**
- * The processing entries of a folder's action menu, carried by every folder kind including
- * mounts, whose other edit actions are hidden. `continuous` marks a folder whose engine
- * processes arrivals on its own, where an explicit "process now" would have nothing to do.
- */
-export function ProcessingMenuItems({
-  processing,
-  continuous = false,
-  disabled,
-  disabledHint,
-  onRun,
-  onStop,
-  onStart,
-  onResume,
-  onRemove,
-  onEdit,
-  onRevertAll,
-}: {
-  processing: ProcessingFolderState | undefined;
-  continuous?: boolean;
-  disabled: boolean;
-  disabledHint?: string;
-  onRun: () => void;
-  onStop: () => void;
-  onStart: () => void;
-  onResume: () => void;
-  onRemove: () => void;
-  /** Open the setup dialog seeded from the existing record; absent hides Edit. */
-  onEdit?: () => void;
-  /** Restore every archived original in the folder; absent hides the entry. */
-  onRevertAll?: () => void;
-}) {
-  const { t } = useTranslation();
-  const heading = (
-    <Menu.Label>{t("filesPage.processing.section", "Processing")}</Menu.Label>
-  );
-  if (!processing) {
-    return (
-      <>
-        {heading}
-        <Menu.Item
-          leftSection={<AutoModeIcon fontSize="small" />}
-          onClick={onStart}
-          disabled={disabled}
-          title={disabled ? disabledHint : undefined}
-        >
-          {t("filesPage.processing.start", "Process files in this folder...")}
-        </Menu.Item>
-      </>
-    );
-  }
-  if (!processing.enabled) {
-    // Paused, not gone: the pair kept its history, so resuming never re-runs
-    // what was already done. Removing is the destructive option, named as such.
-    return (
-      <>
-        {heading}
-        <Menu.Item
-          leftSection={<PlayArrowIcon fontSize="small" />}
-          onClick={onResume}
-          disabled={disabled}
-          title={disabled ? disabledHint : undefined}
-        >
-          {t("filesPage.processing.resume", "Resume processing")}
-        </Menu.Item>
-        {onEdit && (
-          <Menu.Item
-            leftSection={<TuneIcon fontSize="small" />}
-            onClick={onEdit}
-            disabled={disabled}
-            title={disabled ? disabledHint : undefined}
-          >
-            {t("filesPage.processing.edit", "Edit processing...")}
-          </Menu.Item>
-        )}
-        {onRevertAll && (
-          <Menu.Item
-            leftSection={<HistoryIcon fontSize="small" />}
-            onClick={onRevertAll}
-            disabled={disabled}
-            title={disabled ? disabledHint : undefined}
-          >
-            {t("filesPage.processing.restoreAll", "Restore all originals")}
-          </Menu.Item>
-        )}
-        <Menu.Item
-          color="red"
-          leftSection={<AutoModeIcon fontSize="small" />}
-          onClick={onRemove}
-          disabled={disabled}
-          title={disabled ? disabledHint : undefined}
-        >
-          {t("filesPage.processing.remove", "Remove processing")}
-        </Menu.Item>
-      </>
-    );
-  }
-  return (
-    <>
-      {heading}
-      {!continuous && (
-        <Menu.Item
-          leftSection={<ReplayIcon fontSize="small" />}
-          onClick={onRun}
-        >
-          {t("filesPage.processing.sweep", "Retry failed files")}
-        </Menu.Item>
-      )}
-      <Menu.Item leftSection={<PauseIcon fontSize="small" />} onClick={onStop}>
-        {t("filesPage.processing.stop", "Pause processing")}
-      </Menu.Item>
-      {onEdit && (
-        <Menu.Item leftSection={<TuneIcon fontSize="small" />} onClick={onEdit}>
-          {t("filesPage.processing.edit", "Edit processing...")}
-        </Menu.Item>
-      )}
-      {onRevertAll && (
-        <Menu.Item
-          leftSection={<HistoryIcon fontSize="small" />}
-          onClick={onRevertAll}
-        >
-          {t("filesPage.processing.restoreAll", "Restore all originals")}
-        </Menu.Item>
-      )}
-    </>
   );
 }
 
@@ -1108,30 +922,6 @@ function FileStateBadge({
       {t("filesPage.diskState.waiting", "Queued")}
     </span>
   );
-}
-
-/**
- * A processing folder's state as one pill: the worst thing happening inside it, which
- * is what a row has space to say. Nothing to report while every file is done.
- */
-function FolderStatePill({
-  recordId,
-  listFiles,
-}: {
-  recordId: string;
-  listFiles: (recordId: string) => Promise<{ state: string }[]>;
-}) {
-  const counts = useProcessingFolderCounts(recordId, listFiles);
-  if (!counts) return null;
-  const state: DiskFileState | undefined =
-    (counts.failed ?? 0) > 0
-      ? "failed"
-      : (counts.processing ?? 0) > 0
-        ? "processing"
-        : (counts.waiting ?? 0) > 0
-          ? "waiting"
-          : undefined;
-  return <FileStateBadge state={state} />;
 }
 
 /** Stable empty value so badge-less rows keep identical props across renders. */
@@ -1502,6 +1292,7 @@ function ListView({
   selectedFileIds,
   activeWorkspaceFileIds,
   onSetSelection,
+  selectionActions,
   onSaveToServer,
   onVersionHistory,
   onDownloadFile,
@@ -1537,6 +1328,7 @@ function ListView({
     visibleFileIds.every((id) => selectedFileIds.has(id));
   const someSelected =
     !allSelected && visibleFileIds.some((id) => selectedFileIds.has(id));
+  const selecting = Boolean(selectionActions) && selectedFileIds.size > 0;
 
   const sortIndicator = (asc: FilesPageSortMode, desc: FilesPageSortMode) => {
     if (sortMode === asc) return " ↑";
@@ -1570,7 +1362,10 @@ function ListView({
     <div className="files-page-list" role="grid" ref={setContainer}>
       {/* Each direct child is a columnheader: a role="row" may only own cells, so
           the sort controls and the select-all box have to sit inside one. */}
-      <div className="files-page-list-row is-header" role="row">
+      <div
+        className={`files-page-list-row is-header${selecting ? " is-selecting" : ""}`}
+        role="row"
+      >
         {onSetSelection && visibleFileIds.length > 0 ? (
           <span role="columnheader">
             <Checkbox
@@ -1591,29 +1386,44 @@ function ListView({
         ) : (
           <span aria-hidden="true" />
         )}
-        <span role="columnheader">
-          <span {...headerProps("name-asc", "name-desc")}>
-            {t("filesPage.column.name", "Name")}
-            {sortIndicator("name-asc", "name-desc")}
+        {selecting ? (
+          <span role="columnheader" className="files-page-list-selection-bar">
+            <span className="files-page-list-selection-count">
+              {t("filesPage.selectedCount", "{{count}} selected", {
+                count: selectedFileIds.size,
+              })}
+            </span>
+            {selectionActions}
           </span>
-        </span>
-        <span role="columnheader">
-          {t("filesPage.column.status", "Status")}
-        </span>
-        <span role="columnheader">{t("filesPage.column.type", "Type")}</span>
-        <span role="columnheader">
-          <span {...headerProps("size-asc", "size-desc")}>
-            {t("filesPage.column.size", "Size")}
-            {sortIndicator("size-asc", "size-desc")}
-          </span>
-        </span>
-        <span role="columnheader">
-          <span {...headerProps("modified-asc", "modified-desc")}>
-            {t("filesPage.column.modified", "Modified")}
-            {sortIndicator("modified-asc", "modified-desc")}
-          </span>
-        </span>
-        <span aria-hidden="true" />
+        ) : (
+          <>
+            <span role="columnheader">
+              <span {...headerProps("name-asc", "name-desc")}>
+                {t("filesPage.column.name", "Name")}
+                {sortIndicator("name-asc", "name-desc")}
+              </span>
+            </span>
+            <span role="columnheader">
+              {t("filesPage.column.type", "Type")}
+            </span>
+            <span role="columnheader">
+              <span {...headerProps("size-asc", "size-desc")}>
+                {t("filesPage.column.size", "Size")}
+                {sortIndicator("size-asc", "size-desc")}
+              </span>
+            </span>
+            <span role="columnheader">
+              <span {...headerProps("modified-asc", "modified-desc")}>
+                {t("filesPage.column.modified", "Modified")}
+                {sortIndicator("modified-asc", "modified-desc")}
+              </span>
+            </span>
+            <span role="columnheader">
+              {t("filesPage.column.status", "Status")}
+            </span>
+            <span aria-hidden="true" />
+          </>
+        )}
       </div>
       {padTop > 0 && (
         <div
@@ -1814,14 +1624,6 @@ const FolderRow = React.memo(function FolderRow({
           compact
         />
       </span>
-      <span role="gridcell" className="files-page-list-status">
-        {processing && (
-          <FolderStatePill
-            recordId={processing.id}
-            listFiles={listProcessingFiles}
-          />
-        )}
-      </span>
       <span role="gridcell">
         {processing ? (
           <span className="files-page-processing-tag">
@@ -1845,106 +1647,48 @@ const FolderRow = React.memo(function FolderRow({
       <span role="gridcell">
         {getFileDate({ lastModified: folder.updatedAt })}
       </span>
+      <span role="gridcell" className="files-page-list-status">
+        {processing && (
+          <ProcessingFolderStats
+            recordId={processing.id}
+            listFiles={listProcessingFiles}
+            variant="row"
+          />
+        )}
+      </span>
       <span role="gridcell">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              ref={kebabRef}
-              variant="tertiary"
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.folderMenu", "Folder actions")}
-            >
-              <MoreVertIcon fontSize="small" />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<OpenInNewIcon fontSize="small" />}
-              onClick={onOpen}
-            >
-              {t("filesPage.open", "Open")}
-            </Menu.Item>
-            {editsHidden && (
-              <ProcessingMenuItems
-                processing={processing}
-                disabled={false}
-                onRun={() => void runProcessing("process folder now")}
-                onStop={() => void stopProcessing("pause processing folder")}
-                onStart={() => actions.startProcessing(folder)}
-                onResume={() => void resumeProcessing("resume processing")}
-                onRevertAll={
-                  kind === "local"
-                    ? () => actions.requestRevertAll(folder)
-                    : undefined
-                }
-                onEdit={() => actions.startProcessing(folder)}
-                onRemove={() =>
-                  void removeProcessing("remove processing folder")
-                }
-              />
-            )}
-            {/* Only a mount root can be removed; a subdirectory is the
-                disk's, and the app never deletes directories. */}
-            {editsHidden && folder.parentFolderId === null && (
-              <Menu.Item
-                color="red"
-                leftSection={<DeleteIcon fontSize="small" />}
-                onClick={() => actions.deleteFolder(folder)}
-              >
-                {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
-              </Menu.Item>
-            )}
-            {!editsHidden && (
-              <>
-                <Menu.Item
-                  leftSection={<DriveFileRenameOutlineIcon fontSize="small" />}
-                  onClick={() => actions.renameFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.rename", "Rename")}
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Label>
-                  {t("filesPage.appearance.title", "Appearance")}
-                </Menu.Label>
-                <FolderAppearancePicker
-                  folder={folder}
-                  onChange={(appearance) =>
-                    actions.changeFolderAppearance(folder.id, appearance)
-                  }
-                  disabled={editsDisabled}
-                />
-                <Menu.Divider />
-                <ProcessingMenuItems
-                  processing={processing}
-                  continuous={kind === "virtual"}
-                  disabled={editsDisabled}
-                  disabledHint={offlineHint}
-                  onRun={() => void runProcessing("process folder now")}
-                  onStop={() => void stopProcessing("pause processing folder")}
-                  onStart={() => actions.startProcessing(folder)}
-                  onResume={() => void resumeProcessing("resume processing")}
-                  onEdit={() => actions.startProcessing(folder)}
-                  onRemove={() =>
-                    void removeProcessing("remove processing folder")
-                  }
-                />
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<DeleteIcon fontSize="small" />}
-                  onClick={() => actions.deleteFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.deleteFolder", "Delete folder")}
-                </Menu.Item>
-              </>
-            )}
-          </Menu.Dropdown>
-        </Menu>
+        <FolderMenu
+          folder={folder}
+          processing={processing}
+          continuous={kind === "virtual"}
+          isMount={editsHidden}
+          canUnmount={folder.parentFolderId === null}
+          editsDisabled={editsDisabled}
+          editsDisabledHint={offlineHint}
+          variant="kebab"
+          triggerRef={kebabRef}
+          onOpen={onOpen}
+          onStartProcessing={() => actions.startProcessing(folder)}
+          onRunProcessing={() => void runProcessing("process folder now")}
+          onStopProcessing={() =>
+            void stopProcessing("pause processing folder")
+          }
+          onResumeProcessing={() => void resumeProcessing("resume processing")}
+          onRemoveProcessing={() =>
+            void removeProcessing("remove processing folder")
+          }
+          onEditProcessing={() => actions.startProcessing(folder)}
+          onRevertAll={
+            kind === "local"
+              ? () => actions.requestRevertAll(folder)
+              : undefined
+          }
+          onRename={() => actions.renameFolder(folder)}
+          onChangeAppearance={(appearance) =>
+            actions.changeFolderAppearance(folder.id, appearance)
+          }
+          onDelete={() => actions.deleteFolder(folder)}
+        />
       </span>
     </div>
   );
@@ -2117,15 +1861,15 @@ const FileRow = React.memo(function FileRow({
           </span>
         )}
       </span>
+      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
+      <span role="gridcell">{fileSize}</span>
+      <span role="gridcell">{fileDate}</span>
       <span role="gridcell" className="files-page-list-status">
         <FileStateBadge
           state={processingState}
           onRetry={() => actions.retryFile(file.name)}
         />
       </span>
-      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
-      <span role="gridcell">{fileSize}</span>
-      <span role="gridcell">{fileDate}</span>
       <span role="gridcell">
         <FileActionsMenu
           file={file}
@@ -2348,16 +2092,16 @@ const DiskFileRow = React.memo(function DiskFileRow({
           compact
         />
       </span>
+      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
+      <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
+      <span role="gridcell">
+        {getFileDate({ lastModified: entry.lastModified })}
+      </span>
       <span role="gridcell" className="files-page-list-status">
         <FileStateBadge
           state={state}
           onRetry={() => actions.retryFile(entry.name)}
         />
-      </span>
-      <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
-      <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
-      <span role="gridcell">
-        {getFileDate({ lastModified: entry.lastModified })}
       </span>
       <span role="gridcell">
         <Menu shadow="md" position="bottom-end" withinPortal>

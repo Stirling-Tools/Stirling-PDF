@@ -135,41 +135,31 @@
   margin-left: auto;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  /* Allow this container to shrink below its intrinsic content width so
-     the bulk-action group + filter selects + view toggle can compete for
-     space without bursting out of the toolbar (which previously bled
-     under the right-hand details panel at wider viewports). */
+  /* Allow this container to shrink below its intrinsic content width so it
+     wraps inside the toolbar rather than bursting out of it (it would bleed
+     under the right-hand details panel). */
   min-width: 0;
 }
 
-/* Bulk-action buttons (Add to workspace, Quick view, Move to, Remove)
-   are ICON-ONLY at every viewport. Even at 1280px when both side panels
-   are visible, the main area is only ~616px wide - the labelled versions
-   of these 4 buttons plus the 2 filter selects + view toggle simply
-   don't fit. Each button has a Tooltip + aria-label, so the icon alone
-   is accessible. */
-.files-page-toolbar-actions .mantine-Button-root {
-  padding-left: 0.55rem;
-  padding-right: 0.55rem;
+/* The filter, search and sort controls are text: shrinking them renders
+   "All sources" as "All s". They keep their declared width and the group
+   above wraps to a second line when the toolbar runs out of room. */
+.files-page-toolbar-actions > .mantine-Select-root,
+.files-page-toolbar-actions > .mantine-MultiSelect-root,
+.files-page-toolbar-actions > .mantine-TextInput-root {
   flex-shrink: 0;
 }
-.files-page-toolbar-actions .mantine-Button-section[data-position="left"] {
-  margin-right: 0;
-}
-.files-page-toolbar-actions .mantine-Button-label {
-  display: none;
-}
-/* Exception: the bulk-actions trigger IS its label. Collapsed to an icon it
-   would read as a bare chevron with nothing to say what it opens. */
-.files-page-toolbar-actions
-  .files-page-toolbar-bulk-trigger
-  .mantine-Button-label {
-  display: inline;
-}
-.files-page-toolbar-actions .files-page-toolbar-bulk-trigger {
+
+/* The menu triggers in the toolbar - selection actions, folder settings. Tighter
+   on the chevron side than the label side so the caret sits against the edge
+   rather than floating in its own margin. */
+.files-page-toolbar-bulk-trigger {
   padding-left: 0.75rem;
   padding-right: 0.5rem;
+  flex-shrink: 0;
 }
 /* Pin the view toggle: never let it clip off the right. flex-shrink:0
    keeps its width fixed; the rest of the row shrinks around it. */
@@ -274,16 +264,35 @@
   flex-direction: column;
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.6rem;
-  overflow: hidden;
+  /* Scrolls sideways once the rows hit their floors - see the narrow step
+     below. Still clips vertically, so rows stay inside the rounded corners. */
+  overflow-x: auto;
+  overflow-y: hidden;
   background: var(--c-surface);
 }
 
 .files-page-list-row {
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 3fr) minmax(
-      0,
-      8rem
-    ) 1fr 1fr 1fr 2.5rem;
+  /* No column is ever dropped, so every one carries the floor its content
+     needs: a timestamp that is denied its width breaks into three lines and
+     triples the row height, and the status track holds two count chips
+     ("1 Failed  12 Ready") side by side without clipping the first. Type
+     floors for "Processing folder" rather than "PDF", which is the widest
+     thing that cell holds. Name floors widest of all because it is what a
+     reader navigates by, and it is what stays on screen when the row is wider
+     than the list.
+
+     Every floor is a length rather than max-content. Rows are sized
+     independently of each other, so a track measuring its own row's text would
+     land a few pixels off its neighbours and the columns would not line up
+     while scrolled. */
+  grid-template-columns:
+    2.25rem minmax(14rem, 3fr) minmax(7.5rem, 1fr) minmax(4.5rem, 1fr)
+    minmax(9.5rem, 1.5fr) minmax(8rem, 11rem) 2.5rem;
+  /* The sum of those floors. Without it the row stays as wide as the list and
+     the tracks spill out of a box that never grew, leaving the list nothing to
+     scroll. */
+  min-width: 53rem;
   gap: 0.5rem;
   align-items: center;
   /* Same offscreen skip as .files-page-card. */
@@ -308,6 +317,35 @@
   letter-spacing: 0.05em;
   cursor: default;
   user-select: none;
+  /* Tall enough for the selection bar's button, so swapping the column labels
+     for it leaves the rows below where they were. A header that grows on the
+     first click moves the row under the pointer mid-double-click. */
+  min-height: 3rem;
+}
+
+/* Selecting turns the header into a bar for what acts on the selection: the
+   labels have nothing to sort while a selection is the subject, and the tint
+   says the listing is in a different mode. The select-all box keeps its track
+   so it does not jump. */
+.files-page-list-row.is-header.is-selecting {
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  background: color-mix(in srgb, var(--c-primary) 10%, var(--c-bg-raised));
+  color: var(--c-text);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.files-page-list-selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.files-page-list-selection-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .files-page-list-row.is-header [data-sortable="true"] {
@@ -470,6 +508,9 @@
 .files-page-processing-tag {
   display: inline-flex;
   align-items: center;
+  /* Wrapping would make this row taller than the rest, and the list is
+     virtualised on a single row height. */
+  white-space: nowrap;
   gap: 0.3rem;
   padding: 0.05rem 0.4rem;
   border-radius: var(--radius-sm, 4px);
@@ -554,13 +595,6 @@
   border-left: 1px solid var(--c-border-subtle);
 }
 
-/* Icons alone: the row already reads as chrome, and a box each made five of them
-   look like a toolbar bolted on. */
-.files-page-folder-actions .sui-ai {
-  border-color: transparent;
-  background: transparent;
-}
-
 /* The strip between the toolbar and the listing: what the listing is showing
    (state chips) on the left, what acts on the current selection on the right.
    Selection actions live here rather than in the toolbar so that selecting
@@ -632,6 +666,15 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-top: 0.3rem;
+}
+
+/* The row's height is fixed, so the breakdown stays on the one line the status
+   cell gives it and clips rather than wrapping. */
+.files-page-folder-stats.is-row {
+  margin-top: 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 /* A state belongs to its own column: inline with the name it grew past the cell and
@@ -1555,15 +1598,6 @@
   .files-page-grid {
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
-  }
-  /* List view at tiny widths becomes cramped - drop the status, type, size and
-     modified columns and let name + actions take the room. The hidden range has to
-     leave exactly three cells, or the survivors wrap past the three tracks below. */
-  .files-page-list-row {
-    grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
-  }
-  .files-page-list-row > :nth-child(n + 3):nth-child(-n + 6) {
-    display: none;
   }
 }
 
