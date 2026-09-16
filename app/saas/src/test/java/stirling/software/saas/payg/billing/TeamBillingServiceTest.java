@@ -38,6 +38,32 @@ class TeamBillingServiceTest {
     private StripeSubscriptionDao subscriptionDao;
     private TeamBillingService service;
 
+    @Test
+    void teamAllowanceComesFromPolicyAndSurvivesProcessorChanges() {
+        PaygTeamExtensions ext = new PaygTeamExtensions();
+        ext.setTeamId(TEAM_ID);
+        ext.setTeamCreditsEligible(true);
+        ext.setFreeUnitsGranted(1000L);
+        ext.setFreeUnitsRemaining(700L);
+        java.time.LocalDateTime start = TeamBillingService.calendarMonthWindow()[0];
+        ext.setFreeUnitsPeriodStart(start);
+        ext.setFreeUnitsPeriodEnd(start.plusMonths(1));
+        PricingPolicy policy = new PricingPolicy();
+        policy.setFreeTierUnits(1000L);
+        policy.setTeamIncludedUnits(2700L);
+        when(extensionsRepository.findById(TEAM_ID)).thenReturn(Optional.of(ext));
+        when(pricingPolicyService.getEffectivePolicy(TEAM_ID)).thenReturn(policy);
+        TeamBillingContext first = service.forTeam(TEAM_ID);
+        assertThat(first.freeGrantUnits()).isEqualTo(2700);
+        assertThat(first.freeRemainingUnits()).isEqualTo(2400);
+        ext.setPaygSubscriptionId("sub_processor");
+        service.invalidate(TEAM_ID);
+        TeamBillingContext second = service.forTeam(TEAM_ID);
+        assertThat(second.freeRemainingUnits()).isEqualTo(2400);
+        assertThat(second.includedPeriodStart()).isEqualTo(first.includedPeriodStart());
+        assertThat(second.includedPeriodEnd()).isEqualTo(start.plusMonths(1));
+    }
+
     @BeforeEach
     void setUp() {
         extensionsRepository = Mockito.mock(PaygTeamExtensionsRepository.class);

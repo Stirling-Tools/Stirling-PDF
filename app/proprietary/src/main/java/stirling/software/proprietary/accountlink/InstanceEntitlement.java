@@ -34,7 +34,34 @@ public record InstanceEntitlement(
         LocalDateTime periodStart,
         LocalDateTime periodEnd,
         Integer licensedUsers,
-        int automationStepLimit) {
+        int automationStepLimit,
+        long prepaidRemainingUnits) {
+
+    /** Older callers have no prepaid balance in their snapshot. */
+    public InstanceEntitlement(
+            boolean subscribed,
+            long freeRemainingUnits,
+            long periodSpendUnits,
+            Long periodCapUnits,
+            EntitlementState state,
+            UnitCalcPolicy unitCalcPolicy,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd,
+            Integer licensedUsers,
+            int automationStepLimit) {
+        this(
+                subscribed,
+                freeRemainingUnits,
+                periodSpendUnits,
+                periodCapUnits,
+                state,
+                unitCalcPolicy,
+                periodStart,
+                periodEnd,
+                licensedUsers,
+                automationStepLimit,
+                0);
+    }
 
     public InstanceEntitlement {
         automationStepLimit = BillingStepLimit.resolve(automationStepLimit);

@@ -68,7 +68,9 @@ class InstanceControllerTest {
                 pricingPolicyService,
                 usageIngestService,
                 linkedInstanceRepository,
-                teamExtensionsRepository);
+                teamExtensionsRepository,
+                org.mockito.Mockito.mock(
+                        stirling.software.saas.payg.bundle.PrepaidBundleService.class));
     }
 
     private static PricingPolicy policy() {

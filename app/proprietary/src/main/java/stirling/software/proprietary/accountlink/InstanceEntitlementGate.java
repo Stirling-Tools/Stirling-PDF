@@ -182,6 +182,11 @@ public class InstanceEntitlementGate {
         if (e.state() == EntitlementState.OVER_LIMIT || e.state() == EntitlementState.REVOKED) {
             return false;
         }
+        long pendingAfterIncluded = Math.max(0, pendingUnsyncedUnits - e.freeRemainingUnits());
+        if (e.freeRemainingUnits() > Math.max(0, pendingUnsyncedUnits)
+                || e.prepaidRemainingUnits() > pendingAfterIncluded) {
+            return true;
+        }
         if (e.subscribed()) {
             if (e.periodCapUnits() == null) {
                 return true; // uncapped subscription
@@ -189,7 +194,7 @@ public class InstanceEntitlementGate {
             // Project the cap the way the grant is projected: synced paid spend plus the paid part
             // of local usage not yet synced (free grant is consumed first, so only the excess
             // bills) — stops at the cap in real time instead of overshooting until the next sync.
-            long pendingPaid = Math.max(0, pendingUnsyncedUnits - e.freeRemainingUnits());
+            long pendingPaid = Math.max(0, pendingAfterIncluded - e.prepaidRemainingUnits());
             return e.periodSpendUnits() + pendingPaid < e.periodCapUnits();
         }
         // Unsubscribed: free pool must cover SaaS-charged usage (in freeRemainingUnits) plus local

@@ -79,14 +79,19 @@ public class PaygTeamExtensions implements Serializable {
     @Column(name = "free_units_remaining", nullable = false)
     private Long freeUnitsRemaining = 0L;
 
-    /**
-     * The billing period {@link #freeUnitsRemaining} was last reset for, always a {@code
-     * TeamBillingContext.periodStart}. {@code null} or older than the current period start means
-     * the counter is stale and reads as a full grant. Written only by the app, which owns the
-     * period rule.
-     */
+    /** Inclusive UTC start of the included-credit term, independent of Processor billing. */
     @Column(name = "free_units_period_start")
     private LocalDateTime freeUnitsPeriodStart;
+
+    @Column(name = "free_units_period_end")
+    private LocalDateTime freeUnitsPeriodEnd;
+
+    @Column(name = "free_units_granted")
+    private Long freeUnitsGranted;
+
+    /** Projected by the Team subscription webhook; seat quantity does not multiply credits. */
+    @Column(name = "team_credits_eligible", insertable = false, updatable = false)
+    private Boolean teamCreditsEligible = false;
 
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)

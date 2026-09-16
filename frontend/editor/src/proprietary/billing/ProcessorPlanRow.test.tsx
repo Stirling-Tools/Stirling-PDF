@@ -27,6 +27,39 @@ const on = (over: Partial<Wallet> = {}): Wallet => ({
 });
 
 describe("ProcessorPlanRow", () => {
+  it("keeps the included pool visible when the metered limit is zero", () => {
+    render(
+      <ProcessorPlanRow
+        wallet={on({
+          capUsd: 0,
+          noCap: false,
+          estimatedBillMinor: 0,
+          freeAllowance: 2500,
+          freeRemaining: 2200,
+        })}
+      />,
+    );
+    expect(screen.getByText("100% of $0")).toBeInTheDocument();
+    expect(screen.getByText("300 of 2,500 used")).toBeInTheDocument();
+  });
+  it("shows the actual Team allowance and its independent renewal while metering is on", () => {
+    render(
+      <ProcessorPlanRow
+        wallet={on({
+          freeAllowance: 2700,
+          freeRemaining: 2300,
+          includedPeriodEnd: "2026-10-01",
+        })}
+        pendingUnits={25}
+      />,
+    );
+    expect(screen.getByText("Included credits")).toBeInTheDocument();
+    expect(screen.getByText("425 of 2,700 used")).toBeInTheDocument();
+    expect(
+      screen.getByText(/2,700 included every month.*Renews 2026-10-01/),
+    ).toBeInTheDocument();
+  });
+
   it("sells while off: the grant drains towards the activation door", () => {
     render(
       <ProcessorPlanRow
@@ -91,7 +124,7 @@ describe("ProcessorPlanRow", () => {
     );
 
     expect(screen.getByText("no limit")).toBeInTheDocument();
-    expect(container.querySelector(".billing-meter__fill")).toBeNull();
+    expect(container.querySelectorAll(".billing-meter__fill")).toHaveLength(1);
   });
 
   it("lets a prepaid team's door be relabelled without changing the row", () => {
