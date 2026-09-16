@@ -22,9 +22,9 @@ import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 /**
- * Polls durable storage-folder bindings, so uploads and moves are discovered across restarts and
- * backend instances. The processed-file ledger arbitrates claims; each folder drains its current
- * batch before another is submitted.
+ * Polls durable storage-folder bindings, so uploads and moves are discovered without an open
+ * client. Each folder drains its current batch before another is submitted. Coordination between
+ * backend instances depends on the processed-file ledger and its recovery behaviour.
  */
 @Service
 @RequiredArgsConstructor

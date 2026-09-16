@@ -2,7 +2,6 @@ package stirling.software.proprietary.policy.input;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.UncheckedIOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -109,8 +108,9 @@ public class StorageFolderInputSource implements InputSource {
                 if (!ctx.claim(identity, gate, () -> ownedContentHash(file, folderId, owner))) {
                     continue;
                 }
-            } catch (UncheckedIOException e) {
-                // A missing or unreadable blob must not strand the other files already claimed.
+            } catch (RuntimeException e) {
+                // Files or their folder can disappear after listing. A failed ownership check or
+                // blob read must not discard the other files already claimed for this sweep.
                 log.warn("Could not claim stored input {}: {}", identity, e.getMessage());
                 continue;
             }

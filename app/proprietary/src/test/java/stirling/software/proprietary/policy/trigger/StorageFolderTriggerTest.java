@@ -269,6 +269,29 @@ class StorageFolderTriggerTest {
     }
 
     @Test
+    void deletingAFileDuringDiscoveryDoesNotBlockTheFolder() throws IOException {
+        Policy policy = processingFolder("p1", false);
+        upload(1);
+        upload(2);
+        upload(3);
+        when(blobs.load("blob-1"))
+                .thenAnswer(
+                        inv -> {
+                            stored.remove(2L);
+                            return new ByteArrayResource("first".getBytes());
+                        });
+
+        trigger.sweep();
+
+        assertEquals(List.of("storage:1", "storage:3"), processed);
+        assertTrue(runner.quiesced(policy.id()));
+        upload(4);
+        trigger.sweep();
+        assertEquals(List.of("storage:1", "storage:3", "storage:4"), processed);
+        assertTrue(runner.quiesced(policy.id()));
+    }
+
+    @Test
     void oneBrokenFolderDoesNotPreventOtherFoldersFromRunning() {
         Policy broken = processingFolder("p1", false);
         Source source = sources.get(broken.inputs().getFirst().sourceId()).orElseThrow();
