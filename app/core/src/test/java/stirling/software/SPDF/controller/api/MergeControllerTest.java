@@ -323,7 +323,6 @@ class MergeControllerTest {
 
     @Test
     void isImageFile_returnsFalseForPdf() throws Exception {
-        // mockFile1 is document1.pdf with application/pdf content type.
         assertFalse(invokeIsImageFile(mockFile1));
     }
 

@@ -3,11 +3,16 @@ package stirling.software.SPDF.controller.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
+
+import javax.imageio.ImageIO;
 
 import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -99,6 +104,18 @@ class MergeControllerMoreTest {
                 name,
                 MediaType.APPLICATION_PDF_VALUE,
                 buildPdf(pages, title, modMillis));
+    }
+
+    private static MockMultipartFile png(String name) throws IOException {
+        BufferedImage image = new BufferedImage(120, 80, BufferedImage.TYPE_INT_RGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(Color.ORANGE);
+        graphics.fillRect(0, 0, image.getWidth(), image.getHeight());
+        graphics.dispose();
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ImageIO.write(image, "png", baos);
+        return new MockMultipartFile(
+                "fileInput", name, MediaType.IMAGE_PNG_VALUE, baos.toByteArray());
     }
 
     private static MergePdfsRequest request(
@@ -359,6 +376,33 @@ class MergeControllerMoreTest {
                 assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
             } catch (Exception expected) {
                 assertThat(expected).isInstanceOf(Exception.class);
+            }
+        }
+    }
+
+    @Nested
+    @DisplayName("Image inputs")
+    class ImageInputs {
+
+        @Test
+        @DisplayName("merges a PNG with a PDF, converting the image to a page")
+        void mergesImageWithPdf() throws Exception {
+            MockMultipartFile[] files = {png("scan.png"), pdf("doc.pdf", 2)};
+            ResponseEntity<Resource> response =
+                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+            try (PDDocument result = readResponse(response)) {
+                assertThat(result.getNumberOfPages()).isEqualTo(3);
+            }
+        }
+
+        @Test
+        @DisplayName("merges two images into a two-page PDF")
+        void mergesTwoImages() throws Exception {
+            MockMultipartFile[] files = {png("a.png"), png("b.png")};
+            ResponseEntity<Resource> response =
+                    mergeController.mergePdfs(request(files, "orderProvided", false, false), null);
+            try (PDDocument result = readResponse(response)) {
+                assertThat(result.getNumberOfPages()).isEqualTo(2);
             }
         }
     }

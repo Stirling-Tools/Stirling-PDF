@@ -281,8 +281,8 @@ public class MergeController {
                 MultipartFile multipartFile = files[index];
                 File tempFile;
                 if (isImageFile(multipartFile)) {
-                    // Convert images to a single-page PDF so JPDFium can merge them; fall back to
-                    // the raw upload if conversion fails so pre-validate can flag it.
+                    // Convert images to PDF so JPDFium can merge them; fall back to the raw
+                    // upload if conversion fails so pre-validate can flag it.
                     try {
                         tempFile = convertImageToPdf(multipartFile);
                     } catch (Exception e) {
@@ -417,7 +417,12 @@ public class MergeController {
                         "color",
                         pdfDocumentFactory);
         File pdfFile = tempFileManager.createTempFile(".pdf");
-        Files.write(pdfFile.toPath(), pdfBytes);
+        try {
+            Files.write(pdfFile.toPath(), pdfBytes);
+        } catch (IOException e) {
+            tempFileManager.deleteTempFile(pdfFile);
+            throw e;
+        }
         return pdfFile;
     }
 
