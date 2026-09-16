@@ -279,20 +279,20 @@
      ("1 Failed  12 Ready") side by side without clipping the first. Type
      floors for "Processing folder" rather than "PDF", which is the widest
      thing that cell holds. Name floors widest of all because it is what a
-     reader navigates by, and it is what stays on screen when the row is wider
-     than the list.
+     reader navigates by: it is what stays on screen when the row is wider than
+     the list, so its floor is the whole visible width of a phone-sized row.
 
      Every floor is a length rather than max-content. Rows are sized
      independently of each other, so a track measuring its own row's text would
      land a few pixels off its neighbours and the columns would not line up
      while scrolled. */
   grid-template-columns:
-    2.25rem minmax(14rem, 3fr) minmax(7.5rem, 1fr) minmax(4.5rem, 1fr)
+    2.25rem minmax(17rem, 3fr) minmax(7.5rem, 1fr) minmax(4.5rem, 1fr)
     minmax(9.5rem, 1.5fr) minmax(8rem, 11rem) 2.5rem;
   /* The sum of those floors. Without it the row stays as wide as the list and
      the tracks spill out of a box that never grew, leaving the list nothing to
      scroll. */
-  min-width: 53rem;
+  min-width: 56rem;
   gap: 0.5rem;
   align-items: center;
   /* Same offscreen skip as .files-page-card. */
@@ -1553,6 +1553,34 @@
      they are the whole control, so they never shrink. */
   .files-page-toolbar-icon-btn {
     flex-shrink: 0;
+  }
+
+  /* Match the toolbar's side padding rather than the desktop 1.25rem. The wider
+     inset cost the state chips a chip's worth of room, which pushed the last
+     one onto a second line. */
+  .files-page-above-table {
+    padding: 0 0.5rem;
+  }
+
+  /* The gear alone. The label and its caret cost more width here than the two
+     filter controls beside it, and the icon is the same one the menu opens
+     from at every width. */
+  .files-page-folder-actions .files-page-toolbar-bulk-trigger {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+  .files-page-folder-actions
+    .files-page-toolbar-bulk-trigger
+    .mantine-Button-label,
+  .files-page-folder-actions
+    .files-page-toolbar-bulk-trigger
+    .mantine-Button-section[data-position="right"] {
+    display: none;
+  }
+  .files-page-folder-actions
+    .files-page-toolbar-bulk-trigger
+    .mantine-Button-section[data-position="left"] {
+    margin-right: 0;
   }
   .files-page-toolbar-actions {
     flex-wrap: nowrap;
