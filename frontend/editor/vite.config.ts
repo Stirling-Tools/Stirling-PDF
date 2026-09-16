@@ -118,7 +118,7 @@ function compressStaticCopyPlugin(): PluginOption {
 
       await walk(distDir);
 
-      const POOL = 8;
+      const POOL = 16;
       for (let i = 0; i < files.length; i += POOL) {
         await Promise.all(
           files.slice(i, i + POOL).map((f) => compressFile(f, distDir)),
@@ -429,12 +429,6 @@ export default defineConfig(async ({ mode, command }) => {
         : []),
       viteStaticCopy({
         targets: [
-          {
-            // node_modules is hoisted to the workspace root (frontend/), so
-            // these paths walk up one level from editor/.
-            src: "../node_modules/@embedpdf/pdfium/dist/pdfium.wasm",
-            dest: "pdfium",
-          },
           {
             // Copy jscanify vendor files to dist
             src: "public/vendor/jscanify/*",
