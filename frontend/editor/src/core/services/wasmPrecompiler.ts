@@ -1,16 +1,8 @@
-import { BASE_PATH } from "@app/constants/app";
 import pdfiumWasmAssetUrl from "@embedpdf/pdfium/pdfium.wasm?url";
 
+// Vite resolves this asset for dev and prod alike; resolving it against the
+// document yields a fetchable absolute URL that is also safe to pass to workers.
 const getWasmUrl = (): string => {
-  // In dev, Vite serves the statically-copied asset from the dev server root.
-  if (import.meta.env.DEV) {
-    const origin = typeof window !== "undefined" ? window.location.origin : "";
-    return `${origin}${BASE_PATH}/pdfium/pdfium.wasm`;
-  }
-
-  // Vite has already produced a base-aware asset URL (absolute under a relative
-  // base, root-relative under an absolute base). Resolve it against the document
-  // to get a fetchable absolute URL that is also safe to pass to Web Workers.
   if (typeof window !== "undefined") {
     return new URL(pdfiumWasmAssetUrl, window.location.href).href;
   }
