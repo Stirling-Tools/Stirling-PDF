@@ -119,9 +119,9 @@ final class PolicySweep implements ResolveContext {
     }
 
     /**
-     * Summarise the sweep from state already in hand (no extra ledger reads): the prefetched rows
-     * were loaded before claiming, and successful claims flipped their entries to PROCESSING, so
-     * what remains DONE or ERROR is exactly what this sweep skipped.
+     * Summarise from prefetched ledger state updated with successful claims, without extra reads.
+     * Files deferred by the BATCH cap can have no ledger state: they count toward filesListed but
+     * none of the status totals, so those totals need not account for every listed file.
      */
     synchronized SweepOutcome outcome(List<String> runIds) {
         int alreadyProcessed = 0;

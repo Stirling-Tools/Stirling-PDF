@@ -18,6 +18,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.dao.DataAccessResourceFailureException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
@@ -36,6 +37,7 @@ import stirling.software.proprietary.policy.source.InProcessSourceDocCounter;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
+import stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.Folder;
@@ -51,7 +53,7 @@ import stirling.software.proprietary.storage.repository.StoredFileRepository;
 class StorageFolderTriggerTest {
     private final InProcessPolicyStore policies = new InProcessPolicyStore();
     private final InProcessSourceStore sources = new InProcessSourceStore();
-    private final InProcessProcessedLedger ledger = new InProcessProcessedLedger();
+    private final InProcessProcessedLedger ledger = spy(new InProcessProcessedLedger());
     private final PolicyEngine engine = mock(PolicyEngine.class);
     private final StoredFileRepository files = mock(StoredFileRepository.class);
     private final FolderRepository folders = mock(FolderRepository.class);
@@ -93,7 +95,8 @@ class StorageFolderTriggerTest {
                         new InProcessSourceDocCounter(),
                         ledger,
                         properties,
-                        mock(PolicyAccessGuard.class));
+                        mock(PolicyAccessGuard.class),
+                        mock(DatabaseLicenseGuard.class));
         trigger = new StorageFolderTrigger(policies, sources, runner, properties);
         when(engine.runPolicy(any(), any(), any(), any(), any(), any()))
                 .thenAnswer(
@@ -266,6 +269,30 @@ class StorageFolderTriggerTest {
         doReturn(new ByteArrayResource("repaired".getBytes())).when(blobs).load("blob-2");
         trigger.sweep();
         assertEquals(List.of("storage:1", "storage:3", "storage:2"), processed);
+    }
+
+    @Test
+    void aLedgerFailureStopsDiscoveryWithoutStrandingEarlierClaims() {
+        Policy policy = processingFolder("p1", false);
+        upload(1);
+        upload(2);
+        upload(3);
+        doThrow(new DataAccessResourceFailureException("ledger unavailable"))
+                .doCallRealMethod()
+                .when(ledger)
+                .claim(eq(policy.id()), eq("storage:2"), anyString(), any(), any());
+
+        trigger.sweep();
+
+        assertEquals(List.of("storage:1"), processed);
+        assertTrue(runner.quiesced(policy.id()));
+        verify(ledger, never()).claim(eq(policy.id()), eq("storage:3"), anyString(), any(), any());
+
+        trigger.sweep();
+        trigger.sweep();
+
+        assertEquals(List.of("storage:1", "storage:2", "storage:3"), processed);
+        assertTrue(runner.quiesced(policy.id()));
     }
 
     @Test
