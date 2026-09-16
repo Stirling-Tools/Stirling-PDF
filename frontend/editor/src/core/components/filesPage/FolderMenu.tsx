@@ -34,6 +34,12 @@ interface FolderMenuProps {
   editsDisabled: boolean;
   /** Shown on a disabled entry to say why, e.g. that the server is unreachable. */
   editsDisabledHint?: string;
+  /**
+   * Why folder processing cannot run right now, or null when it can. Gates the
+   * processing entries on their own: a build with no server behind it can still
+   * rename and recolour a folder.
+   */
+  processingBlock?: string | null;
   onStartProcessing: () => void;
   onRunProcessing: () => void;
   onStopProcessing: () => void;
@@ -70,6 +76,7 @@ export function FolderMenu({
   canUnmount,
   editsDisabled,
   editsDisabledHint,
+  processingBlock,
   onStartProcessing,
   onRunProcessing,
   onStopProcessing,
@@ -157,8 +164,8 @@ export function FolderMenu({
           <ProcessingMenuItems
             processing={processing}
             continuous={continuous}
-            disabled={editsDisabled}
-            disabledHint={editsDisabledHint}
+            disabled={editsDisabled || Boolean(processingBlock)}
+            disabledHint={processingBlock ?? editsDisabledHint}
             onRun={onRunProcessing}
             onStop={onStopProcessing}
             onStart={onStartProcessing}

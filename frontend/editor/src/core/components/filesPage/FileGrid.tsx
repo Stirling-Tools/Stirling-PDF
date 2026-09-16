@@ -15,6 +15,7 @@ import {
 } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import {
   useVirtualFileRows,
@@ -630,6 +631,7 @@ const FolderCard = React.memo(function FolderCard({
       actions.reportError(err, label),
     );
   const editsDisabled = kind === "server" && !serverReachable;
+  const processingBlock = useServerProcessingBlock();
   const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -736,6 +738,7 @@ const FolderCard = React.memo(function FolderCard({
           canUnmount={folder.parentFolderId === null}
           editsDisabled={editsDisabled}
           editsDisabledHint={offlineHint}
+          processingBlock={processingBlock}
           variant="kebab"
           triggerRef={kebabRef}
           onOpen={onOpen}
@@ -1480,6 +1483,7 @@ const FolderRow = React.memo(function FolderRow({
       actions.reportError(err, label),
     );
   const editsDisabled = kind === "server" && !serverReachable;
+  const processingBlock = useServerProcessingBlock();
   const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -1601,6 +1605,7 @@ const FolderRow = React.memo(function FolderRow({
           canUnmount={folder.parentFolderId === null}
           editsDisabled={editsDisabled}
           editsDisabledHint={offlineHint}
+          processingBlock={processingBlock}
           variant="kebab"
           triggerRef={kebabRef}
           onOpen={onOpen}

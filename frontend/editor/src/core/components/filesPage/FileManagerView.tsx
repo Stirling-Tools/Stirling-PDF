@@ -65,6 +65,7 @@ import {
 } from "@app/components/filesPage/FileGrid";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -1336,6 +1337,10 @@ export default function FileManagerView() {
   // disabled item's caption.
   const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
 
+  // Why folder processing has no server to run on, or null. The controls that open
+  // the setup dialog carry it as their disabled reason.
+  const processingBlock = useServerProcessingBlock();
+
   const { addLocalFolder } = useNewFolderFlow();
 
   // null = New folder actionable; string = disabled tooltip reason.
@@ -1557,6 +1562,7 @@ export default function FileManagerView() {
                   isMount={folderKind(currentFolder) === "local"}
                   canUnmount={currentFolder.parentFolderId === null}
                   editsDisabled={headerEditsDisabled}
+                  processingBlock={processingBlock}
                   editsDisabledHint={t(
                     "filesPage.offlineNoFolderEdits",
                     "Offline - folder changes are disabled.",
@@ -1998,7 +2004,7 @@ export default function FileManagerView() {
         }}
       />
       <FolderProcessingSetup
-        folder={processingSetupFolder}
+        folder={processingBlock ? null : processingSetupFolder}
         onClose={() => setProcessingSetupFolder(null)}
       />
 
