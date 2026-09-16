@@ -16,6 +16,7 @@ import type {
 } from "@app/services/heuristic/types";
 import { LABEL_FAMILIES } from "@app/data/classificationLabels";
 import { accentColor, accentCycleColor } from "@app/utils/accentColors";
+import { LARGE_PDF_PARSE_LIMIT } from "@app/utils/thumbnailUtils";
 
 /** Names this run in the billing audit trail, so onboarding's sweep is distinguishable
  *  from classification on upload. */
@@ -27,6 +28,11 @@ const CLASSIFY_STEP = "/api/v1/ai/tools/classify-and-label";
 
 /** How many PDFs one sweep covers. The rest of the folder waits for a follow-up batch. */
 export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
+
+/** Wall-clock allowance per document. Ordinary PDFs classify in well under this; one
+ *  that yields nothing inside it is retired as unreadable rather than holding the
+ *  sweep, which is what a broken file or a dead pdf.js worker used to do. */
+export const HEURISTIC_BUDGET_MS = 1000;
 
 /** Roll-up id used for a document the heuristic could not place. */
 export const UNCLASSIFIED_GROUP_ID = "other";
@@ -231,7 +237,9 @@ async function classifyAndAdd(
 ): Promise<string[] | null> {
   let verdict: HeuristicResult;
   try {
-    verdict = await classifyFileHeuristically(file);
+    verdict = await classifyFileHeuristically(file, {
+      budgetMs: HEURISTIC_BUDGET_MS,
+    });
   } catch {
     return null;
   }
@@ -297,7 +305,7 @@ export async function runClassificationDemoSweep(
   report("processing", total);
   const sweptPaths: string[] = [];
   const read = (index: number): Promise<File | null> =>
-    index < batch.length
+    index < batch.length && batch[index].sizeBytes < LARGE_PDF_PARSE_LIMIT
       ? readDiskFile(batch[index]).catch(() => null)
       : Promise.resolve(null);
   // The disk read is a webview-to-Rust round trip and the classification is pdf.js in a
@@ -311,7 +319,9 @@ export async function runClassificationDemoSweep(
     sweptPaths.push(entry.path);
     const file = await pending;
     pending = read(index + 1);
-    if (file) {
+    // Past the parse limit the thumbnail path refuses too; the bytes would only be
+    // copied across the IPC bridge to be dropped.
+    if (file && entry.sizeBytes < LARGE_PDF_PARSE_LIMIT) {
       const labels = await classifyAndAdd(file, deps);
       if (labels) {
         processed += 1;
