@@ -24,14 +24,20 @@ import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 applyDevWorktreeLabel();
 
 if (typeof window !== "undefined") {
-  const scheduleCompilation = () =>
-    requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
-
-  if (document.readyState === "complete") {
-    scheduleCompilation();
-  } else {
-    window.addEventListener("load", scheduleCompilation);
-  }
+  const warmUp = () => startEagerWasmCompilation();
+  const warmUpTimer = setTimeout(warmUp, 10000);
+  const warmUpEarly = () => {
+    clearTimeout(warmUpTimer);
+    warmUp();
+  };
+  window.addEventListener("dragenter", warmUpEarly, {
+    once: true,
+    passive: true,
+  });
+  window.addEventListener("focusin", (event) => {
+    const target = event.target as Element | null;
+    if (target?.matches?.('input[type="file"]')) warmUpEarly();
+  });
 }
 
 const container = document.getElementById("root");
