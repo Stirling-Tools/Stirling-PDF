@@ -17,9 +17,11 @@ const gzipPromise = promisify(gzip);
 const brotliPromise = promisify(brotliCompress);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-// Let the two precompression passes saturate more than the default 4 libuv
-// threads. Must be set before zlib first uses the threadpool, so it lives at
-// the top of the config module.
+// Let the precompression passes saturate more than the default 4 libuv threads.
+// Both passes run the same bounded batches (see COMPRESSION_BATCH_FILES), so the
+// pool has headroom for Vite's own fs work instead of queueing it behind a full
+// batch of zlib jobs. Must be set before zlib first uses the threadpool, so it
+// lives at the top of the config module.
 process.env.UV_THREADPOOL_SIZE ??= "64";
 
 // Extensions never precompressed by either pass; the compression plugin's
@@ -89,6 +91,20 @@ async function compressFile(file: string, distDir: string): Promise<void> {
   ]);
 }
 
+// Both passes run 16 files (two encoders each) at a time so the zlib queue stays
+// proportional to the threadpool rather than to the size of dist.
+const COMPRESSION_BATCH_FILES = 16;
+
+async function compressFiles(files: string[], distDir: string): Promise<void> {
+  for (let i = 0; i < files.length; i += COMPRESSION_BATCH_FILES) {
+    await Promise.all(
+      files
+        .slice(i, i + COMPRESSION_BATCH_FILES)
+        .map((f) => compressFile(f, distDir)),
+    );
+  }
+}
+
 function compressStaticCopyPlugin(): PluginOption {
   return {
     name: "compress-static-copy",
@@ -118,12 +134,7 @@ function compressStaticCopyPlugin(): PluginOption {
 
       await walk(distDir);
 
-      const POOL = 16;
-      for (let i = 0; i < files.length; i += POOL) {
-        await Promise.all(
-          files.slice(i, i + POOL).map((f) => compressFile(f, distDir)),
-        );
-      }
+      await compressFiles(files, distDir);
     },
   };
 }
@@ -205,11 +216,24 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
             : " (root-relative URLs, no landing body)"),
       );
 
+      // prerenderOg rewrote dist/index.html, so the compression plugin's
+      // siblings for the original shell are stale from here on. Drop them and
+      // let the pass below recompress the rewritten file.
+      await Promise.all(
+        ["index.html.br", "index.html.gz"].map((name) =>
+          fs.rm(path.join(distDir, name), { force: true }),
+        ),
+      );
+
+      const lateFiles: string[] = [path.join(distDir, "index.html")];
+
       // Sitemaps are an indexing instruction, so they need the canonical origin,
       // not just any absolute one. Self-hosted and preview builds skip it.
       const sitemap = buildSitemap(manifest, { canonicalBase });
       if (sitemap) {
-        await fs.writeFile(path.join(distDir, "sitemap.xml"), sitemap);
+        const sitemapPath = path.join(distDir, "sitemap.xml");
+        await fs.writeFile(sitemapPath, sitemap);
+        lateFiles.push(sitemapPath);
         // Point robots.txt at the sitemap (best-effort; robots.txt may be absent).
         const robotsPath = path.join(distDir, "robots.txt");
         try {
@@ -226,11 +250,10 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
         console.log(`[prerender-og] wrote sitemap.xml (base=${canonicalBase})`);
       }
       // closeBundle hooks run concurrently in Vite, not in plugin order, so a
-      // sibling plugin cannot reliably compress files written here. index.html
-      // is already handled by the main compression plugin; the prerendered
-      // nested routes (e.g. dist/settings/people.html) are not, so walk the
-      // tree and compress them here for Spring's EncodedResourceResolver.
-      const htmlFiles: string[] = [];
+      // sibling plugin cannot reliably compress files written here. The
+      // rewritten index.html, the prerendered route pages (e.g.
+      // dist/settings/people.html) and sitemap.xml are all written by this hook,
+      // so compress them here for Spring's EncodedResourceResolver.
       const walkHtml = async (dir: string) => {
         let entries;
         try {
@@ -242,11 +265,11 @@ function prerenderOgPlugin(isSaas: boolean): PluginOption {
           const p = path.join(dir, entry.name);
           if (entry.isDirectory()) await walkHtml(p);
           else if (entry.name.endsWith(".html") && entry.name !== "index.html")
-            htmlFiles.push(p);
+            lateFiles.push(p);
         }
       };
       await walkHtml(distDir);
-      await Promise.all(htmlFiles.map((f) => compressFile(f, distDir)));
+      await compressFiles(lateFiles, distDir);
     },
   };
 }
@@ -414,8 +437,9 @@ export default defineConfig(async ({ mode, command }) => {
           }),
         ],
       }),
-      // Set ANALYZE=true to emit dist/stats.html (treemap) alongside the
-      // build; rollup-plugin-visualizer is ESM-only so we import dynamically.
+      // Set ANALYZE=true to emit dist/stats.json (raw data for the visualizer)
+      // alongside the build; rollup-plugin-visualizer is ESM-only so we import
+      // dynamically.
       ...(process.env.ANALYZE === "true"
         ? [
             (await import("rollup-plugin-visualizer")).visualizer({
