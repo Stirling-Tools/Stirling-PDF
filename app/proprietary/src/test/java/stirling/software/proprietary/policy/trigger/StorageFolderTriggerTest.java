@@ -6,7 +6,6 @@ import static org.mockito.Mockito.*;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,9 +13,12 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.dao.DataAccessResourceFailureException;
 
@@ -25,6 +27,8 @@ import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.engine.PolicyEngine;
 import stirling.software.proprietary.policy.engine.PolicyRunHandle;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SourceBatchSettledEvent;
+import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.input.StorageFolderInputSource;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
@@ -57,6 +61,7 @@ class StorageFolderTriggerTest {
     private final InProcessSourceStore sources = new InProcessSourceStore();
     private final InProcessProcessedLedger ledger = spy(new InProcessProcessedLedger());
     private final PolicyEngine engine = mock(PolicyEngine.class);
+    private final ApplicationEventPublisher events = mock(ApplicationEventPublisher.class);
     private final StoredFileRepository files = mock(StoredFileRepository.class);
     private final FolderRepository folders = mock(FolderRepository.class);
     private final StorageProvider blobs = mock(StorageProvider.class);
@@ -66,8 +71,8 @@ class StorageFolderTriggerTest {
     private final Folder folder = new Folder();
     private final Map<Long, StoredFile> stored = new LinkedHashMap<>();
     private final List<String> processed = new CopyOnWriteArrayList<>();
-    private final List<Runnable> completions = new ArrayList<>();
-    private boolean holdCompletions;
+    private final List<Runnable> completions = new CopyOnWriteArrayList<>();
+    private volatile boolean holdCompletions;
     private PolicyRunner runner;
     private StorageFolderTrigger trigger;
 
@@ -98,8 +103,16 @@ class StorageFolderTriggerTest {
                         ledger,
                         properties,
                         mock(PolicyAccessGuard.class),
-                        mock(DatabaseLicenseGuard.class));
+                        mock(DatabaseLicenseGuard.class),
+                        events);
         trigger = new StorageFolderTrigger(policies, sources, runner, properties);
+        doAnswer(
+                        invocation -> {
+                            trigger.onBatchSettled(invocation.getArgument(0));
+                            return null;
+                        })
+                .when(events)
+                .publishEvent(any(SourceBatchSettledEvent.class));
         when(engine.runPolicy(any(), any(), any(), any(), any(), any()))
                 .thenAnswer(
                         inv -> {
@@ -435,11 +448,9 @@ class StorageFolderTriggerTest {
     @Test
     void anArrivalRunsWithoutWaitingForTheNextPoll() throws Exception {
         // A long poll interval leaves the arrival as the only thing that can start this run.
-        properties.getPolicies().setStorageFolderSweepSeconds(3600);
         processingFolder("p1", false);
-        trigger.start();
         try {
-            awaitProcessed(0);
+            startAfterEmptySweep();
             upload(1);
             clearInvocations(ledger);
 
@@ -453,11 +464,10 @@ class StorageFolderTriggerTest {
 
     @Test
     void aBurstOfArrivalsCostsOneSweep() throws Exception {
-        properties.getPolicies().setStorageFolderSweepSeconds(3600);
         processingFolder("p1", false);
-        trigger.start();
         try {
-            awaitProcessed(0);
+            startAfterEmptySweep();
+            holdCompletions = true;
             upload(1);
             upload(2);
             upload(3);
@@ -473,6 +483,114 @@ class StorageFolderTriggerTest {
         } finally {
             trigger.stop();
         }
+    }
+
+    @Test
+    void aBacklogContinuesWhenEachBatchSettlesWithoutWaitingForThePoll() throws Exception {
+        processingFolder("p1", false);
+        try {
+            startAfterEmptySweep();
+            clearInvocations(files);
+            holdCompletions = true;
+            for (long id = 1; id <= 205; id++) upload(id);
+
+            trigger.onArrival(new StorageFolderArrivalEvent(folder.getId()));
+            awaitCompletions(100);
+            assertEquals(100, processed.size());
+            List<Runnable> first = List.copyOf(completions);
+            completions.clear();
+            first.subList(0, 99).forEach(Runnable::run);
+            verifyNoInteractions(events);
+
+            first.getLast().run();
+            awaitCompletions(100);
+            assertEquals(200, processed.size());
+            finishBatch();
+            awaitCompletions(5);
+            assertEquals(205, processed.size());
+            finishBatch();
+
+            verify(files, timeout(5000).times(4)).findAllByFolderIdAndOwner(folder.getId(), owner);
+            verify(events, times(3)).publishEvent(any(SourceBatchSettledEvent.class));
+            assertEquals(205, processed.stream().distinct().count());
+        } finally {
+            trigger.stop();
+        }
+    }
+
+    @Test
+    void anArrivalDuringAManualRunContinuesAfterThatRunSettles() throws Exception {
+        Policy policy = processingFolder("p1", false);
+        trigger = spy(trigger);
+        try {
+            startAfterEmptySweep();
+            holdCompletions = true;
+            upload(1);
+            runner.run(policy, SweepKind.USER);
+            upload(2);
+
+            trigger.onArrival(new StorageFolderArrivalEvent(folder.getId()));
+            verify(trigger, timeout(5000)).sweep(folder.getId());
+            assertEquals(List.of("storage:1"), processed);
+
+            finishBatch();
+            awaitCompletions(1);
+            assertEquals(List.of("storage:1", "storage:2"), processed);
+        } finally {
+            trigger.stop();
+        }
+    }
+
+    @Test
+    void pausingBeforeCompletionPreventsTheNextBatch() throws Exception {
+        Policy policy = processingFolder("p1", false);
+        trigger = spy(trigger);
+        try {
+            startAfterEmptySweep();
+            holdCompletions = true;
+            for (long id = 1; id <= 101; id++) upload(id);
+            trigger.onArrival(new StorageFolderArrivalEvent(folder.getId()));
+            awaitCompletions(100);
+            policies.save(policy.withEnabled(false));
+
+            finishBatch();
+
+            verify(events).publishEvent(any(SourceBatchSettledEvent.class));
+            verify(trigger, after(750).times(1)).sweep(folder.getId());
+            assertEquals(100, processed.size());
+        } finally {
+            trigger.stop();
+        }
+    }
+
+    private void startAfterEmptySweep() throws InterruptedException {
+        properties.getPolicies().setStorageFolderSweepSeconds(3600);
+        CountDownLatch startup = new CountDownLatch(1);
+        doAnswer(
+                        invocation -> {
+                            Object result = invocation.callRealMethod();
+                            startup.countDown();
+                            return result;
+                        })
+                .when(ledger)
+                .deleteUnseen(eq("p1"), anyLong());
+        trigger.start();
+        assertTrue(
+                startup.await(5, TimeUnit.SECONDS), "Startup must finish listing before uploads");
+    }
+
+    private void awaitCompletions(int expected) throws InterruptedException {
+        long deadline = System.currentTimeMillis() + 5_000;
+        while (completions.size() < expected && System.currentTimeMillis() < deadline) {
+            Thread.sleep(10);
+        }
+        assertEquals(expected, completions.size());
+    }
+
+    private void finishBatch() {
+        List<Runnable> batch = List.copyOf(completions);
+        completions.clear();
+        batch.forEach(Runnable::run);
     }
 
     /** Waits for the arrival flush, which runs on the trigger's own scheduler thread. */

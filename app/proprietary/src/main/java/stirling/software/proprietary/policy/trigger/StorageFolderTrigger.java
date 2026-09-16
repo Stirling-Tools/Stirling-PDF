@@ -12,6 +12,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.event.TransactionPhase;
 import org.springframework.transaction.event.TransactionalEventListener;
@@ -21,10 +22,12 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.policy.engine.PolicyRunner;
+import stirling.software.proprietary.policy.engine.SourceBatchSettledEvent;
 import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyBinding;
 import stirling.software.proprietary.policy.model.TriggerConfig;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceStore;
 import stirling.software.proprietary.policy.store.PolicyStore;
 import stirling.software.proprietary.storage.event.StorageFolderArrivalEvent;
@@ -33,8 +36,9 @@ import stirling.software.proprietary.storage.event.StorageFolderArrivalEvent;
  * Runs storage-folder bindings when files arrive. A placement event sweeps just the folder it names
  * so an upload is processed promptly; the periodic poll re-sweeps everything as the safety net for
  * arrivals this instance never saw — another node's placement, or one that landed while it was
- * down. Each folder drains its current batch before another is submitted. Coordination between
- * backend instances depends on the processed-file ledger and its recovery behaviour.
+ * down. Settled batches prompt another sweep, so a folder drains without waiting for the poll. Each
+ * folder drains its current batch before another is submitted. Coordination between backend
+ * instances depends on the processed-file ledger and its recovery behaviour.
  */
 @Service
 @RequiredArgsConstructor
@@ -100,10 +104,36 @@ public class StorageFolderTrigger implements PolicyTrigger {
      */
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT, fallbackExecution = true)
     public void onArrival(StorageFolderArrivalEvent event) {
-        if (event.folderId() == null) {
+        requestSweep(event.folderId());
+    }
+
+    /** Recheck the live binding before continuing a batch: it may have been paused or removed. */
+    @EventListener
+    public void onBatchSettled(SourceBatchSettledEvent event) {
+        Policy policy = policyStore.get(event.policyId()).orElse(null);
+        if (policy == null
+                || !policy.enabled()
+                || PolicyBinding.matching(List.of(policy), type()).stream()
+                        .noneMatch(
+                                binding -> event.sourceId().equals(binding.input().sourceId()))) {
             return;
         }
-        pendingArrivals.add(event.folderId());
+        Source source = sourceStore.get(event.sourceId()).orElse(null);
+        if (source == null || !source.enabled() || !"storage-folder".equals(source.type())) {
+            return;
+        }
+        try {
+            requestSweep(UUID.fromString(String.valueOf(source.options().get("folderId"))));
+        } catch (IllegalArgumentException e) {
+            log.warn("Could not continue processing folder {}: {}", policy.id(), e.getMessage());
+        }
+    }
+
+    private void requestSweep(UUID folderId) {
+        if (folderId == null) {
+            return;
+        }
+        pendingArrivals.add(folderId);
         scheduleFlush();
     }
 
