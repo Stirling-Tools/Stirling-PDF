@@ -175,24 +175,33 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
         </Group>
         <Group justify="space-between" align="baseline">
           <Text fw={600}>
-            {t("payment.capacityStage.dueToday", "Due today")}
+            {currentLimit != null
+              ? t("payment.capacityStage.newPlanTotal", "New plan total")
+              : t("payment.capacityStage.dueToday", "Due today")}
           </Text>
           <Text size="xl" fw={700}>
             {formatPrice(total, currency)}
           </Text>
         </Group>
         <Text size="xs" c="dimmed">
-          {t(
-            "payment.capacityStage.renewalNote",
-            "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing.",
-            { total: formatPrice(total, currency, 0), period },
-          )}
+          {currentLimit != null
+            ? t(
+                "payment.capacityStage.adjustmentNote",
+                "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available.",
+              )
+            : t(
+                "payment.capacityStage.renewalNote",
+                "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing.",
+                { total: formatPrice(total, currency, 0), period },
+              )}
         </Text>
       </Stack>
 
       <Stack gap="sm">
         <Button onClick={onContinue} disabled={belowMinimumCapacity} fullWidth>
-          {t("payment.capacityStage.continue", "Continue to payment")}
+          {currentLimit != null
+            ? t("payment.capacityStage.reviewChange", "Review change in Stripe")
+            : t("payment.capacityStage.continue", "Continue to payment")}
         </Button>
 
         {offerEnterprise && onContactSales && (
