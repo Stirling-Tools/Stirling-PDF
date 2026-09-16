@@ -19,10 +19,8 @@ import {
   localPassFor,
   type LocalPass,
 } from "@app/components/policies/policyLocalPass";
-import {
-  policyRequiresAiEngine,
-  runsOnEditorUpload,
-} from "@app/data/classificationPolicy";
+import { policyRequiresAiEngine } from "@app/data/classificationPolicy";
+import { editorTriggerOf } from "@app/policies/runOn";
 import type { StirlingFileStub } from "@app/types/fileContext";
 
 /** Files processed per idle pass, so a large upload drains over several ticks instead of janking. */
@@ -55,7 +53,7 @@ export function usePolicyLocalPasses(): void {
   const passes = useMemo<ActivePass[]>(() => {
     const out: ActivePass[] = [];
     for (const [policyKey, s] of Object.entries(policies)) {
-      if (!runsOnEditorUpload(s)) continue;
+      if (editorTriggerOf(s) !== "upload") continue;
       const pass = localPassFor(policyKey);
       if (!pass) continue;
       out.push({

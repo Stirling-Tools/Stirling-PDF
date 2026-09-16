@@ -14,22 +14,11 @@
  */
 
 import type { ClassificationConfidence } from "@app/types/fileContext";
-import type { PoliciesByKey, PolicyState } from "@app/types/policies";
+import type { PoliciesByKey } from "@app/types/policies";
+import { editorTriggerOf } from "@app/policies/runOn";
 
 /** Key of the built-in Classification policy. */
 export const CLASSIFICATION_POLICY_KEY = "classification";
-
-/** Whether this policy runs over a file the editor takes in. The local-pass engine decides from
- *  exactly this, so a surface importing files must ask the same question or it promises nothing. */
-export function runsOnEditorUpload(state: PolicyState | undefined): boolean {
-  return Boolean(
-    state?.configured &&
-    state.enabled &&
-    state.backendId &&
-    state.runsOnEditor &&
-    (state.runOn ?? "upload") === "upload",
-  );
-}
 
 export function isClassificationPolicy(policyKey: string): boolean {
   return policyKey === CLASSIFICATION_POLICY_KEY;
@@ -66,12 +55,7 @@ export function orderedRewritingPolicies(policies: PoliciesByKey): string[] {
   return Object.entries(policies)
     .filter(
       ([id, s]) =>
-        s.configured &&
-        s.enabled &&
-        Boolean(s.backendId) &&
-        s.runsOnEditor &&
-        (s.runOn ?? "upload") === "upload" &&
-        policyDeliversOutputFiles(id),
+        editorTriggerOf(s) === "upload" && policyDeliversOutputFiles(id),
     )
     .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
     .map(([id]) => id);

@@ -20,10 +20,8 @@ import {
 } from "@app/services/localFolderContents";
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import { usePolicies } from "@app/hooks/usePolicies";
-import {
-  CLASSIFICATION_POLICY_KEY,
-  runsOnEditorUpload,
-} from "@app/data/classificationPolicy";
+import { CLASSIFICATION_POLICY_KEY } from "@app/data/classificationPolicy";
+import { editorTriggerOf } from "@app/policies/runOn";
 import type { FileId, StirlingFileStub } from "@app/types/fileContext";
 import apiClient from "@app/services/apiClient";
 import "@app/components/policies/DownloadsProcessingWizard.css";
@@ -75,7 +73,8 @@ export function DownloadsProcessingWizard({
   const block = useServerProcessingBlock();
   // Importing achieves nothing unless the server classifies: a core-flavour self-hosted build
   // seeds no such policy, and every imported file would sit without a verdict.
-  const willClassify = runsOnEditorUpload(policies[CLASSIFICATION_POLICY_KEY]);
+  const willClassify =
+    editorTriggerOf(policies[CLASSIFICATION_POLICY_KEY]) === "upload";
 
   // Needs a connected server, the classification policy, and a build that can read the disk.
   // canListDirectory is a build constant, so only block and willClassify can settle later.
