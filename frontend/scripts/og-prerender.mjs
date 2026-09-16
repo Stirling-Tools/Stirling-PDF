@@ -236,9 +236,8 @@ export function injectOg(html, entry, opts = {}) {
   );
 }
 
-// Scoped styling for the prerendered body content so the pre-hydration paint
-// (what crawlers see and the first visible paint for users) looks intentional.
-// It lives inside #root and is wiped when React mounts.
+// Scoped styling so the crawlable content reads as a real page for the non-JS
+// clients that render it. Never painted in a JS browser (it sits in <noscript>).
 const SEO_STYLE =
   "<style>.spdf-seo{max-width:760px;margin:0 auto;padding:56px 24px;" +
   "font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#1a1a1a}" +
@@ -252,11 +251,10 @@ const SEO_STYLE =
   ".spdf-seo p{color:#b8b8b8}.spdf-seo nav a{color:#6ea8fe}}</style>";
 
 /**
- * Build the crawlable body content injected into #root: an H1, the page
- * description, and a hub of real <a href> links to every tool. React (createRoot)
- * replaces it on mount, so it only ever shows on a full page load - i.e. to
- * crawlers and as the first paint (which also helps LCP). Links are relative so
- * they resolve against <base href> under any deploy (root, /app, context path).
+ * Build the crawlable body content: an H1, the page description, and a hub of
+ * real <a href> links to every tool, for the crawlers that never run JS. Links
+ * are relative so they resolve against <base href> under any deploy (root, /app,
+ * context path).
  * @param {{title:string,description:string}} entry
  * @param {{navLinks?:{path:string,label:string}[], heading?:string|null}} opts
  */
@@ -285,15 +283,18 @@ export function buildBodyContent(
   );
 }
 
-const ROOT_RE = /<div id="root">\s*<\/div>/;
+const NOSCRIPT_RE = /<noscript>[\s\S]*?<\/noscript>/i;
 
-/** Inject crawlable content into the (otherwise empty) React mount point. */
+/**
+ * Inject crawlable content into <noscript>. It must not go in #root: React wipes
+ * that on mount, so every cold load would flash a plain link list before the app.
+ */
 export function injectBody(html, content) {
   return replaceOrThrow(
     html,
-    ROOT_RE,
-    () => `<div id="root">${content}</div>`,
-    'empty <div id="root">',
+    NOSCRIPT_RE,
+    () => `<noscript>${content}</noscript>`,
+    "<noscript> block",
   );
 }
 
@@ -323,9 +324,9 @@ function cleanSegments(routePath) {
  * sub-path already folded in by the caller, because only the caller knows
  * whether a given origin serves the app at the sub-path or at its own root.
  *
- * `injectLanding` bakes the crawlable landing body (see buildBodyContent). It is
- * only worth the pre-hydration flash on a crawlable public deploy, so callers
- * enable it only when a deploy origin is known.
+ * `injectLanding` bakes the crawlable landing body (see buildBodyContent), which
+ * only earns its bytes on a crawlable public deploy, so callers enable it only
+ * when a deploy origin is known.
  * @returns {Promise<number>}
  */
 export async function prerenderOg({
@@ -382,7 +383,7 @@ export async function prerenderOg({
       noindex: !!entry.noindex,
       isHome: false,
     });
-    // App/auth pages (noindex) stay the bare shell - no crawlable landing copy.
+    // App/auth pages (noindex) keep the stock noscript - no crawlable landing copy.
     if (injectLanding && !entry.noindex)
       html = injectBody(html, buildBodyContent(entry, { navLinks }));
     const nested = segments.length > 1;

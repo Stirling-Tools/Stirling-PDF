@@ -29,7 +29,10 @@ const TEMPLATE = `<!doctype html>
     />
     <script type="module" src="/assets/index-abc.js"></script>
   </head>
-  <body><div id="root"></div></body>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
 </html>`;
 
 describe("getToolOgImage (client resolver)", () => {
@@ -337,12 +340,14 @@ describe("buildBodyContent + injectBody (crawlable landing content)", () => {
     expect(body).toContain("x &quot;y&quot;");
   });
 
-  it("injectBody fills the empty React mount point", () => {
+  it("injectBody fills <noscript> and leaves the React mount point empty", () => {
     const out = injectBody(
-      '<body><div id="root"></div><script></script></body>',
+      '<body><noscript>Enable JS</noscript><div id="root"></div></body>',
       "<h1>hi</h1>",
     );
-    expect(out).toContain('<div id="root"><h1>hi</h1></div>');
+    expect(out).toContain("<noscript><h1>hi</h1></noscript>");
+    // The flash regression: content in #root is painted, then wiped on mount.
+    expect(out).toContain('<div id="root"></div>');
   });
 
   it("prerenderOg injects landing content on indexable pages but not noindex ones", async () => {
@@ -383,17 +388,21 @@ describe("buildBodyContent + injectBody (crawlable landing content)", () => {
     });
 
     const compress = await fs.readFile(path.join(dir, "compress.html"), "utf8");
-    expect(compress).toContain('<div id="root"><div class="spdf-seo">');
+    expect(compress).toContain('<noscript><div class="spdf-seo">');
     expect(compress).toContain("<h1>Compress</h1>");
+    // Never in #root: React wipes it, so a cold load would flash the link list.
+    expect(compress).toContain('<div id="root"></div>');
 
     const settings = await fs.readFile(
       path.join(dir, "settings", "people.html"),
       "utf8",
     );
-    expect(settings).toContain('<div id="root"></div>'); // noindex: bare shell
+    expect(settings).not.toContain("spdf-seo"); // noindex: stock shell
+    expect(settings).toContain('<div id="root"></div>');
 
     const home = await fs.readFile(path.join(dir, "index.html"), "utf8");
     expect(home).toContain("spdf-seo");
+    expect(home).toContain('<div id="root"></div>');
 
     await fs.rm(dir, { recursive: true, force: true });
   });
@@ -732,10 +741,10 @@ describe("prerender refuses a drifted HTML shell", () => {
     ).toThrow(/title/);
   });
 
-  it("throws when the React mount point is gone", () => {
+  it("throws when the <noscript> block is gone", () => {
     expect(() =>
-      injectBody("<body><main></main></body>", "<h1>x</h1>"),
-    ).toThrow(/root/);
+      injectBody('<body><div id="root"></div></body>', "<h1>x</h1>"),
+    ).toThrow(/noscript/);
   });
 
   it("prerenders the shipped editor/index.html, not just the test fixture", async () => {
@@ -778,7 +787,8 @@ describe("prerender refuses a drifted HTML shell", () => {
     expect(html).toContain(
       '<link rel="canonical" href="https://stirling.com/compress" />',
     );
-    expect(html).toContain('<div id="root"><div class="spdf-seo">');
+    expect(html).toContain('<noscript><div class="spdf-seo">');
+    expect(html).toContain('<div id="root"></div>');
 
     await fs.rm(dir, { recursive: true, force: true });
   });
