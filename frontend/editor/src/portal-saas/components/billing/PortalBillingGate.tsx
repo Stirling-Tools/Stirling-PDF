@@ -1,6 +1,4 @@
 import { withBasePath } from "@app/constants/app";
-import { useNavigate } from "react-router-dom";
-import { toPortalPath } from "@portal/contexts/ViewContext";
 import { Usage } from "@portal/views/Usage";
 
 /**
@@ -13,10 +11,8 @@ import { Usage } from "@portal/views/Usage";
  * without this a "Session expired" notice would dead-end until a manual reload.
  */
 export function PortalBillingGate() {
-  const navigate = useNavigate();
   return (
     <Usage
-      onEnterpriseQuote={() => navigate(toPortalPath("/procurement"))}
       onReauth={() => {
         window.location.href = withBasePath("/login");
       }}

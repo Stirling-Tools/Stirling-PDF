@@ -24,6 +24,8 @@ export const useFileHandler = () => {
           labels: string[];
           confidence: StirlingFileStub["classificationConfidence"];
         };
+        /** Bytes and stub only, no thumbnail parse (see AddFileOptions). */
+        skipMetadataHydration?: boolean;
       } = {},
     ): Promise<StirlingFile[]> => {
       // Merge default options with passed options - passed options take precedence
