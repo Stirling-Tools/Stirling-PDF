@@ -177,7 +177,7 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
           <Text fw={600}>
             {currentLimit != null
               ? t("payment.capacityStage.newPlanTotal", "New plan total")
-              : t("payment.capacityStage.dueToday", "Due today")}
+              : t("payment.capacityStage.estimatedTotal", "Estimated total")}
           </Text>
           <Text size="xl" fw={700}>
             {formatPrice(total, currency)}
@@ -197,6 +197,12 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
         </Text>
       </Stack>
 
+      <Text size="xs" c="dimmed">
+        {t(
+          "payment.capacityStage.currencyAtCheckout",
+          "Stripe confirms the final amount and payment currency at checkout.",
+        )}
+      </Text>
       <Stack gap="sm">
         <Button onClick={onContinue} disabled={belowMinimumCapacity} fullWidth>
           {currentLimit != null

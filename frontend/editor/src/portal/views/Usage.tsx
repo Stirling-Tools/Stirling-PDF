@@ -267,9 +267,10 @@ export function Usage({
       combinedChoose: true,
       currentLimit: heldLimit,
       minimumSeats: usersInUse ?? undefined,
+      currency: wallet?.currency ?? undefined,
       onSuccess: () => setRefreshKey((k) => k + 1),
     });
-  }, [checkout, heldLimit, usersInUse]);
+  }, [checkout, heldLimit, usersInUse, wallet?.currency]);
 
   const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the

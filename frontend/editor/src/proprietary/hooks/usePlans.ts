@@ -15,7 +15,7 @@ export interface UsePlansReturn {
   refetch: () => Promise<void>;
 }
 
-export const usePlans = (currency: string = "gbp"): UsePlansReturn => {
+export const usePlans = (currency: string = "usd"): UsePlansReturn => {
   const planFeatures = usePlanFeatures();
   const planHighlights = usePlanHighlights();
   const [plans, setPlans] = useState<PlanTier[]>([]);

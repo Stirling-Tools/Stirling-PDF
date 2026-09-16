@@ -40,7 +40,7 @@ import {
 
 export interface CheckoutOptions {
   minimumSeats?: number; // Override calculated seats for enterprise
-  currency?: string; // Optional currency override (auto-detected from locale)
+  currency?: string; // Explicit display currency; checkout localization is handled by Stripe
   onSuccess?: (sessionId: string) => void; // Callback after successful payment
   onError?: (error: string) => void; // Callback on error
   /** Put the period and capacity choices on one page rather than walking them separately. */
@@ -73,7 +73,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
   children,
   defaultCurrency,
 }) => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const { refetchLicense } = useLicense();
   const planFeatures = usePlanFeatures();
   const planHighlights = usePlanHighlights();
@@ -83,8 +83,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
     useState<PlanTierGroup | null>(null);
   const [minimumSeats, setMinimumSeats] = useState<number>(1);
   const [currentCurrency, setCurrentCurrency] = useState(() => {
-    // Use provided default or auto-detect from locale
-    return defaultCurrency || getPreferredCurrency(i18n.language);
+    return defaultCurrency || getPreferredCurrency();
   });
   const [currentOptions, setCurrentOptions] = useState<CheckoutOptions>({});
   const [hostedCheckoutSuccess, setHostedCheckoutSuccess] = useState<{

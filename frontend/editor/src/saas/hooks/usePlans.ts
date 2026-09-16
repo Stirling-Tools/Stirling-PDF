@@ -51,7 +51,7 @@ export interface PlansData {
   activeSince?: string;
 }
 
-export const usePlans = (currency: string = "gbp") => {
+export const usePlans = (currency: string = "usd") => {
   const { t } = useTranslation();
   const { isPro, refreshProStatus } = useAuth();
   const [loading, setLoading] = useState(false);
@@ -171,7 +171,7 @@ export const usePlans = (currency: string = "gbp") => {
           : 8,
         currency: dynamicPrices.get("pro")
           ? getCurrencySymbol(dynamicPrices.get("pro")!.currency)
-          : getCurrencySymbol(currency),
+          : getCurrencySymbol("usd"),
         period: t("plan.period.month", "/month"),
         popular: true,
         highlights: [
@@ -247,7 +247,7 @@ export const usePlans = (currency: string = "gbp") => {
       const price = priceObj ? priceObj.unit_amount / 100 : fallbackPrice;
       const currencySymbol = priceObj
         ? getCurrencySymbol(priceObj.currency)
-        : getCurrencySymbol(currency);
+        : getCurrencySymbol("usd");
       return { price, currencySymbol };
     };
 
