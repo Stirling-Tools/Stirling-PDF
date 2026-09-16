@@ -1,9 +1,11 @@
-import { useEffect, useState, useMemo } from "react";
-import { Modal, Stack, Text } from "@mantine/core";
+import { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { Group, List, Modal, Stack, Text } from "@mantine/core";
 import { Button } from "@app/ui/Button";
-import PersonAddIcon from "@mui/icons-material/PersonAdd";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
-import { withBasePath } from "@app/constants/app";
+import { useAuth } from "@app/auth/UseSession";
+import { isSafePostLoginRedirect } from "@app/services/postLoginRedirect";
 import { Z_INDEX_OVER_FULLSCREEN_SURFACE } from "@app/styles/zIndex";
 import type { PaygSignupRequiredDetail } from "@app/services/paygErrorInterceptor";
 
@@ -30,52 +32,39 @@ import type { PaygSignupRequiredDetail } from "@app/services/paygErrorIntercepto
  */
 export default function SignupRequiredBootstrap() {
   const { t } = useTranslation();
-  const [opened, setOpened] = useState(false);
-  const [category, setCategory] = useState<string | null>(null);
+  const { isAnonymous } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [detail, setDetail] = useState<PaygSignupRequiredDetail | null>(null);
 
   useEffect(() => {
     const handler = (ev: Event) => {
-      const detail = (ev as CustomEvent<PaygSignupRequiredDetail>).detail;
-      // De-dupe: if the modal is already open, the existing copy wins.
-      // The user is already being prompted; piling another open call on
-      // top would just flicker the same content.
-      setOpened((wasOpen) => {
-        if (!wasOpen) {
-          setCategory(detail?.category ?? null);
-        }
-        return true;
-      });
+      const incoming = (ev as CustomEvent<PaygSignupRequiredDetail>).detail;
+      setDetail((current) => current ?? incoming ?? { category: null });
     };
     window.addEventListener("payg:signupRequired", handler);
     return () => window.removeEventListener("payg:signupRequired", handler);
   }, []);
 
-  // Map the server's gate categories to user-facing nouns. The server
-  // returns the FeatureGate name (AI, AUTOMATION, API); the user has
-  // no idea what those are in raw form, so we pretty-print here. The
-  // fallback "this feature" keeps the modal sensible if the BE adds
-  // a category we don't know about.
-  const categoryNoun = useMemo(() => {
-    switch ((category ?? "").toUpperCase()) {
-      case "AI":
-        return t("payg.signupRequired.category.ai", "AI features");
-      case "AUTOMATION":
-        return t("payg.signupRequired.category.automation", "automations");
-      case "API":
-        return t("payg.signupRequired.category.api", "this tool");
-      default:
-        return t("payg.signupRequired.category.default", "this feature");
-    }
-  }, [category, t]);
+  useEffect(() => {
+    if (!isAnonymous) setDetail(null);
+  }, [isAnonymous]);
 
-  const handleSignUp = () => {
-    window.location.href = withBasePath("/signup");
+  const limitReached = detail?.reason === "GUEST_TOOL_LIMIT_REACHED";
+  const authenticate = (path: "/signup" | "/login") => {
+    const next = location.pathname + location.search + location.hash;
+    setDetail(null);
+    navigate(
+      isSafePostLoginRedirect(next)
+        ? `${path}?next=${encodeURIComponent(next)}`
+        : path,
+    );
   };
 
   return (
     <Modal
-      opened={opened}
-      onClose={() => setOpened(false)}
+      opened={detail !== null && isAnonymous}
+      onClose={() => setDetail(null)}
       withCloseButton
       centered
       size="md"
@@ -83,42 +72,71 @@ export default function SignupRequiredBootstrap() {
       zIndex={Z_INDEX_OVER_FULLSCREEN_SURFACE}
       title={
         <Text fw={700} size="lg">
-          {t("payg.signupRequired.title", "Sign up to use {{category}}", {
-            category: categoryNoun,
-          })}
+          {limitReached
+            ? t(
+                "payg.signupRequired.guestLimitTitle",
+                "Keep going with a free account",
+              )
+            : t(
+                "payg.signupRequired.processorTitle",
+                "Unlock Processor with a free account",
+              )}
         </Text>
       }
     >
       <Stack gap="md">
         <Text>
-          {t(
-            "payg.signupRequired.bodyMonthlyAllowance",
-            "Stirling PDF gives every signed-up account a free monthly allowance for operations. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing.",
-          )}
+          {limitReached
+            ? t(
+                "payg.signupRequired.guestLimitBody",
+                "You've reached your {{count}} free guest tool runs. Log in or create a free account to continue.",
+                { count: detail?.limit },
+              )
+            : t(
+                "payg.signupRequired.processorBody",
+                "AI, automations and API access require an account. Log in or sign up free to get your Processor allowance.",
+              )}
         </Text>
+        <List spacing="xs">
+          <List.Item>
+            {t(
+              "payg.signupRequired.manualPromo",
+              "Keep using manual PDF tools for free",
+            )}
+          </List.Item>
+          <List.Item>
+            {t(
+              "payg.signupRequired.aiPromo",
+              "Create, edit and ask questions about PDFs with AI",
+            )}
+          </List.Item>
+          <List.Item>
+            {t(
+              "payg.signupRequired.automationPromo",
+              "Try automations and API access with your free Processor allowance",
+            )}
+          </List.Item>
+        </List>
         <Text size="sm" c="dimmed">
           {t(
             "payg.signupRequired.subtext",
             "Creating an account is free and takes a few seconds. No credit card required.",
           )}
         </Text>
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-end",
-            gap: "0.5rem",
-          }}
-        >
-          <Button variant="secondary" onClick={() => setOpened(false)}>
+        <Group justify="flex-end" gap="sm">
+          <Button variant="secondary" onClick={() => setDetail(null)}>
             {t("payg.signupRequired.cancel", "Not now")}
           </Button>
+          <Button variant="secondary" onClick={() => authenticate("/login")}>
+            {t("payg.signupRequired.login", "Log in")}
+          </Button>
           <Button
-            leftSection={<PersonAddIcon style={{ fontSize: 16 }} />}
-            onClick={handleSignUp}
+            leftSection={<Icon name="user-plus" size={16} />}
+            onClick={() => authenticate("/signup")}
           >
             {t("payg.signupRequired.cta", "Sign up free")}
           </Button>
-        </div>
+        </Group>
       </Stack>
     </Modal>
   );

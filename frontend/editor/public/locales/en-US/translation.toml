@@ -6507,17 +6507,17 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-bodyMonthlyAllowance = "Stirling PDF gives every signed-up account a free monthly allowance for operations. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
+aiPromo = "Create, edit and ask questions about PDFs with AI"
+automationPromo = "Try automations and API access with your free Processor allowance"
 cancel = "Not now"
 cta = "Sign up free"
+guestLimitBody = "You've reached your {{count}} free guest tool runs. Log in or create a free account to continue."
+guestLimitTitle = "Keep going with a free account"
+login = "Log in"
+manualPromo = "Keep using manual PDF tools for free"
+processorBody = "AI, automations and API access require an account. Log in or sign up free to get your Processor allowance."
+processorTitle = "Unlock Processor with a free account"
 subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"

@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useWallet } from "@app/hooks/useWallet";
+import { useAuth } from "@app/auth/UseSession";
 import {
   readCachedCredits,
   writeCachedCredits,
@@ -30,8 +31,11 @@ function toCredits(
  * the live value, and the whole point is that the row stops moving.
  */
 export function useFreeCreditsSummary(): NavFooterCredits | null {
-  const { wallet } = useWallet();
-  const [seed] = useState(readCachedCredits);
+  const { isAnonymous, loading } = useAuth();
+  const { wallet } = useWallet(!loading && !isAnonymous);
+  const [seed] = useState(() =>
+    !loading && !isAnonymous ? readCachedCredits() : null,
+  );
 
   const live = wallet
     ? toCredits(wallet.status, wallet.freeRemaining, wallet.freeAllowance)
@@ -40,9 +44,11 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   // useWallet reuses the snapshot reference when nothing changed, so keying on
   // it writes only on a real change, not on every render.
   useEffect(() => {
-    if (live !== undefined) writeCachedCredits(live);
+    if (isAnonymous) writeCachedCredits(null);
+    else if (live !== undefined) writeCachedCredits(live);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wallet]);
+  }, [wallet, isAnonymous]);
 
+  if (loading || isAnonymous) return null;
   return (live !== undefined ? live : seed) ?? null;
 }

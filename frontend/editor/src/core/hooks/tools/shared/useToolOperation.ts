@@ -18,6 +18,7 @@ import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 import {
   extractErrorMessage,
   handle422Error,
+  isSignupRequiredError,
 } from "@app/utils/toolErrorHandler";
 import {
   StirlingFile,
@@ -319,6 +320,7 @@ export const useToolOperation = <TParams>(
         assertFilesNotBlocked(policyIds);
         let processedFiles: File[];
         let successSourceIds: FileId[] = [];
+        let unprocessedSourceIds: FileId[] = [];
 
         // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
         const filesForAPI = extractFiles(validFiles);
@@ -346,6 +348,7 @@ export const useToolOperation = <TParams>(
             );
             processedFiles = result.outputFiles;
             successSourceIds = result.successSourceIds;
+            unprocessedSourceIds = result.unprocessedSourceIds;
             // Reported here, not in the catch: this loop only throws when EVERY input failed,
             // so a batch that lost one file to a bad PDF reaches the success path.
             for (const failed of result.failedInputs) {
@@ -467,7 +470,7 @@ export const useToolOperation = <TParams>(
           }
           // Mark errors on inputs that didn't succeed
           for (const id of allInputIds) {
-            if (!okSet.has(id)) {
+            if (!okSet.has(id) && !unprocessedSourceIds.includes(id)) {
               try {
                 fileActions.markFileError(id);
               } catch (_e) {
@@ -483,7 +486,11 @@ export const useToolOperation = <TParams>(
           // If backend told us which sources failed, prefer that mapping
           successSourceIds = validFiles
             .map((f) => f.fileId)
-            .filter((id) => !externalErrorFileIds.includes(id));
+            .filter(
+              (id) =>
+                !externalErrorFileIds.includes(id) &&
+                !unprocessedSourceIds.includes(id),
+            );
           // Also mark failed IDs immediately
           try {
             for (const badId of externalErrorFileIds) {
@@ -712,6 +719,10 @@ export const useToolOperation = <TParams>(
           }
         }
       } catch (error) {
+        if (isSignupRequiredError(error)) {
+          actions.setStatus("");
+          return;
+        }
         try {
           const handled = await handle422Error(error, (id) =>
             fileActions.markFileError(id as FileId),
