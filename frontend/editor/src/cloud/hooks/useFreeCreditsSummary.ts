@@ -24,17 +24,15 @@ function toCredits(
  * Cloud builds read the free grant off the live wallet — the same snapshot the
  * Plan page's free meter renders, so the sidebar and Plan can't disagree.
  *
- * Seeded from the last figures this browser saw, so the row is right at first
- * paint and stays put while the wallet refetches underneath. Only a browser
- * that has never loaded a wallet has nothing to show, and that one time the row
- * animates in. The seed is read once, at first render: later reads would fight
- * the live value, and the whole point is that the row stops moving.
+ * Cached figures are read once and shown only after authentication resolves.
+ * Live wallet data takes precedence. Guest sessions discard the seed as well
+ * as the stored cache so signup cannot revive a previous account's figures.
  */
 export function useFreeCreditsSummary(): NavFooterCredits | null {
   const { isAnonymous, loading } = useAuth();
   const { wallet } = useWallet(!loading && !isAnonymous);
-  const [seed] = useState(() =>
-    !loading && !isAnonymous ? readCachedCredits() : null,
+  const [seed, setSeed] = useState(() =>
+    isAnonymous ? null : readCachedCredits(),
   );
 
   const live = wallet
@@ -44,8 +42,10 @@ export function useFreeCreditsSummary(): NavFooterCredits | null {
   // useWallet reuses the snapshot reference when nothing changed, so keying on
   // it writes only on a real change, not on every render.
   useEffect(() => {
-    if (isAnonymous) writeCachedCredits(null);
-    else if (live !== undefined) writeCachedCredits(live);
+    if (isAnonymous) {
+      setSeed(null);
+      writeCachedCredits(null);
+    } else if (live !== undefined) writeCachedCredits(live);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [wallet, isAnonymous]);
 

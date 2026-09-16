@@ -41,4 +41,47 @@ describe("guest credit display", () => {
     expect(result.current).toBeNull();
     expect(wallet).toHaveBeenLastCalledWith(true);
   });
+
+  it("restores cached credits when loading resolves to a registered user", () => {
+    state.isAnonymous = false;
+    state.loading = true;
+    const { result, rerender } = renderHook(useFreeCreditsSummary);
+    expect(result.current).toBeNull();
+
+    state.loading = false;
+    rerender();
+    expect(result.current).toEqual({ remaining: 1000, total: 1000 });
+    expect(wallet).toHaveBeenLastCalledWith(true);
+  });
+
+  it("discards the loading seed when auth resolves to a guest, including after signup", () => {
+    state.isAnonymous = false;
+    state.loading = true;
+    const { result, rerender } = renderHook(useFreeCreditsSummary);
+
+    state.loading = false;
+    state.isAnonymous = true;
+    rerender();
+    expect(result.current).toBeNull();
+    expect(cacheWrite).toHaveBeenCalledWith(null);
+
+    state.isAnonymous = false;
+    rerender();
+    expect(result.current).toBeNull();
+    expect(wallet).toHaveBeenLastCalledWith(true);
+  });
+
+  it("does not revive a registered user's cached credits after a guest session", () => {
+    state.isAnonymous = false;
+    const { result, rerender } = renderHook(useFreeCreditsSummary);
+    expect(result.current).toEqual({ remaining: 1000, total: 1000 });
+
+    state.isAnonymous = true;
+    rerender();
+    expect(result.current).toBeNull();
+
+    state.isAnonymous = false;
+    rerender();
+    expect(result.current).toBeNull();
+  });
 });
