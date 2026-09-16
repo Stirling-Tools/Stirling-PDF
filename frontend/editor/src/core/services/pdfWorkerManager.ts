@@ -12,6 +12,7 @@ type PdfjsModule = typeof import("pdfjs-dist/legacy/build/pdf.mjs");
 class PDFWorkerManager {
   private static instance: PDFWorkerManager;
   private activeDocuments = new Set<PDFDocumentProxy>();
+  private destroyingDocuments = new WeakSet<PDFDocumentProxy>();
   private workerCount = 0;
   private maxWorkers = 10; // Limit concurrent workers
   private isInitialized = false;
@@ -73,12 +74,13 @@ class PDFWorkerManager {
       disableStream?: boolean;
       stopAtErrors?: boolean;
       verbosity?: number;
+      signal?: { cancelled: boolean };
     } = {},
   ): Promise<PDFDocumentProxy> {
     const pdfjs = await this.loadPdfjs();
     // Wait if we've hit the worker limit
     if (this.activeDocuments.size >= this.maxWorkers) {
-      await this.waitForAvailableWorker();
+      await this.waitForAvailableWorker(options.signal);
     }
 
     // Normalize input data to PDF.js format
@@ -125,7 +127,7 @@ class PDFWorkerManager {
       // If document creation fails, make sure to clean up the loading task
       if (loadingTask) {
         try {
-          await loadingTask.destroy();
+          void loadingTask.destroy();
         } catch {
           // Ignore errors
         }
@@ -140,14 +142,16 @@ class PDFWorkerManager {
    * before creating the next document.
    */
   async destroyDocument(pdf: PDFDocumentProxy): Promise<void> {
-    if (!this.activeDocuments.has(pdf)) {
+    if (!this.activeDocuments.has(pdf) || this.destroyingDocuments.has(pdf)) {
       return;
     }
+    this.destroyingDocuments.add(pdf);
     try {
       await pdf.destroy();
     } catch {
-      // Still remove from tracking even if destroy failed
+      // Still remove from tracking if destroy fails.
     } finally {
+      this.destroyingDocuments.delete(pdf);
       this.activeDocuments.delete(pdf);
       this.workerCount = Math.max(0, this.workerCount - 1);
     }
@@ -158,24 +162,29 @@ class PDFWorkerManager {
    */
   async destroyAllDocuments(): Promise<void> {
     const documentsToDestroy = Array.from(this.activeDocuments);
-    await Promise.allSettled(
+    await Promise.all(
       documentsToDestroy.map((pdf) => this.destroyDocument(pdf)),
     );
-
-    this.activeDocuments.clear();
-    this.workerCount = 0;
   }
 
   /**
    * Wait for a worker to become available
    */
-  private async waitForAvailableWorker(): Promise<void> {
-    return new Promise((resolve) => {
+  private async waitForAvailableWorker(signal?: {
+    cancelled: boolean;
+  }): Promise<void> {
+    return new Promise((resolve, reject) => {
+      let timer: ReturnType<typeof setTimeout> | null = null;
       const checkAvailability = () => {
+        if (signal?.cancelled) {
+          if (timer !== null) clearTimeout(timer);
+          reject(new Error("CANCELLED"));
+          return;
+        }
         if (this.activeDocuments.size < this.maxWorkers) {
           resolve();
         } else {
-          setTimeout(checkAvailability, 100);
+          timer = setTimeout(checkAvailability, 100);
         }
       };
       checkAvailability();

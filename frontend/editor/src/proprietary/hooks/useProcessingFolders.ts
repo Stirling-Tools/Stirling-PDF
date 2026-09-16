@@ -19,28 +19,46 @@ import {
   deliverSweepResults,
 } from "@app/services/processingRunDelivery";
 import { folderKind, type FolderRecord } from "@app/types/folder";
+import { directoryKey } from "@app/services/localFolderStorage";
+import { extractErrorMessage } from "@app/utils/toolErrorHandler";
 // The core stub declares the contract this shadows; import it from @core
 // explicitly, since @app/hooks/useProcessingFolders resolves back to this file.
 import type {
   MountedFileState,
-  ProcessingRecordSummary,
+  ProcessingRecordSummary as CoreProcessingRecordSummary,
   ProcessingFolderState,
-  ProcessingFoldersApi,
+  ProcessingFoldersApi as CoreProcessingFoldersApi,
   ProcessingRunInfo,
 } from "@core/hooks/useProcessingFolders";
 
 // Consumers import the contract's types from @app, which resolves here — re-export them.
 export type {
   MountedFileState,
-  ProcessingRecordSummary,
   ProcessingFolderState,
-  ProcessingFoldersApi,
   ProcessingRunInfo,
 } from "@core/hooks/useProcessingFolders";
+
+import type { WireRoutingRule } from "@app/policies/types";
+
+/** Processing configuration retained when copying or reopening a template. */
+export interface ProcessingRecordSummary extends CoreProcessingRecordSummary {
+  categoryId?: string;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
+}
+
+export interface ProcessingFoldersApi extends Omit<
+  CoreProcessingFoldersApi,
+  "recordFor"
+> {
+  recordFor: (folder: FolderRecord) => ProcessingRecordSummary | undefined;
+}
 
 /** One shared list for every consumer: the files page calls this once per folder row, so
  *  per-instance state would mean a request per row and stale siblings after a mutation. */
 let folders: ProcessingFolder[] = [];
+let loaded = false;
+let loadError: string | null = null;
 let inFlight: Promise<void> | null = null;
 const listeners = new Set<() => void>();
 
@@ -61,23 +79,20 @@ function load(force = false): Promise<void> {
   const request = fetchProcessingFolders()
     .then((next) => {
       folders = next;
+      loadError = null;
     })
-    .catch(() => {
+    .catch((error: unknown) => {
       // Storage or login off, or unauthenticated: the files page works without these.
       folders = [];
+      loadError = extractErrorMessage(error);
     })
     .finally(() => {
+      loaded = true;
       if (inFlight === request) inFlight = null;
       listeners.forEach((listener) => listener());
     });
   inFlight = request;
   return request;
-}
-
-/** A directory as a comparison key: one side may carry a trailing separator the other
- *  lost to trimming. */
-function directoryKey(directory: string): string {
-  return directory.trim().replace(/[/\\]+$/, "");
 }
 
 /**
@@ -87,6 +102,8 @@ function directoryKey(directory: string): string {
  */
 export function useProcessingFolders(): ProcessingFoldersApi {
   const current = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
+  const loading = !loaded;
+  const error = loadError;
   const { addFiles } = useFileHandler();
 
   useEffect(() => {
@@ -121,6 +138,12 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       return {
         id: record.id,
         enabled: record.enabled,
+        categoryId:
+          typeof record.output.categoryId === "string"
+            ? record.output.categoryId
+            : undefined,
+        outputIds: record.outputIds,
+        routingRules: record.routingRules,
         steps: record.steps.map((step) => ({
           operation: step.operation,
           parameters: step.parameters ?? {},
@@ -305,6 +328,8 @@ export function useProcessingFolders(): ProcessingFoldersApi {
 
   return useMemo(
     () => ({
+      loading,
+      loadError: error,
       stateFor,
       recordFor: recordSummaryFor,
       enabledFolderIds,
@@ -320,6 +345,8 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       sweep,
     }),
     [
+      loading,
+      error,
       stateFor,
       recordSummaryFor,
       enabledFolderIds,

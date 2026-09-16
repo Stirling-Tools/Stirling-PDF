@@ -3,6 +3,9 @@ import type { Page } from "@playwright/test";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 
+// Reads the library as cards, so it asks for the grid.
+test.use({ filesViewMode: "grid" });
+
 // Per-file actions live behind a kebab on two surfaces - the file sidebar and
 // the My Files grid. They must offer the same file actions on both.
 

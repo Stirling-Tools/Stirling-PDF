@@ -1,4 +1,8 @@
 import apiClient from "@app/services/apiClient";
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
 import { fileStorage } from "@app/services/fileStorage";
 import {
   buildHistoryBundle,
@@ -22,6 +26,7 @@ export async function uploadHistoryChain(
   originalFileId: FileId,
   existingRemoteId?: number,
 ): Promise<{ remoteId: number; updatedAt: number; chain: StirlingFileStub[] }> {
+  assertFilesNotBlocked([originalFileId]);
   const chain = await fileStorage.getHistoryChainStubs(originalFileId);
   if (chain.length === 0) {
     throw new Error("No history chain found.");
@@ -50,6 +55,7 @@ export async function uploadHistoryChain(
   formData.append("file", finalFile, finalFile.name);
   formData.append("historyBundle", bundleFile, bundleFile.name);
   formData.append("auditLog", auditLog, auditLog.name);
+  assertFilesNotBlocked(chain.flatMap(policySourceIds));
 
   if (existingRemoteId) {
     const response = await apiClient.put(
@@ -74,6 +80,7 @@ export async function uploadHistoryChains(
   originalFileIds: FileId[],
   existingRemoteId?: number,
 ): Promise<{ remoteId: number; updatedAt: number; chain: StirlingFileStub[] }> {
+  assertFilesNotBlocked(originalFileIds);
   const uniqueRoots = Array.from(new Set(originalFileIds));
   const chainMap = new Map<FileId, StirlingFileStub[]>();
   const combinedChain: StirlingFileStub[] = [];
@@ -127,6 +134,7 @@ export async function uploadHistoryChains(
   formData.append("file", shareFile, shareFile.name);
   formData.append("historyBundle", bundleFile, bundleFile.name);
   formData.append("auditLog", auditLog, auditLog.name);
+  assertFilesNotBlocked(combinedChain.flatMap(policySourceIds));
 
   if (existingRemoteId) {
     const response = await apiClient.put(

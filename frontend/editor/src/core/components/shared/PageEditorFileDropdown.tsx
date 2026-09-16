@@ -1,9 +1,6 @@
 import React from "react";
 import { Menu, Loader, Group, Text, Checkbox } from "@mantine/core";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
-import AddIcon from "@mui/icons-material/Add";
+import { Icon } from "@app/ui/Icon";
 import FitText from "@app/components/shared/FitText";
 import { getFileColorWithOpacity } from "@app/components/pageEditor/fileColors";
 import { useFilesModalContext } from "@app/contexts/FilesModalContext";
@@ -125,7 +122,7 @@ const FileMenuItem: React.FC<FileMenuItemProps> = ({
               color: "var(--mantine-color-dimmed)",
             }}
           >
-            <DragIndicatorIcon fontSize="small" />
+            <Icon name="grip-vertical" size={20} />
           </div>
           <Checkbox
             checked={file.isSelected}
@@ -187,16 +184,12 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
           {switchingTo === "pageEditor" ? (
             <Loader size="xs" />
           ) : (
-            <LocalIcon
-              icon="dashboard-customize-rounded"
-              width="1.4rem"
-              height="1.4rem"
-            />
+            <Icon name="layout-dashboard" size="1.4rem" />
           )}
           <span className="ph-no-capture">
             {selectedCount}/{totalCount} files selected
           </span>
-          <KeyboardArrowDownIcon fontSize="small" />
+          <Icon name="chevron-down" size={20} />
         </div>
       </Menu.Target>
       <Menu.Dropdown
@@ -249,8 +242,9 @@ export const PageEditorFileDropdown: React.FC<PageEditorFileDropdownProps> = ({
           }}
         >
           <Group gap="xs" style={{ width: "100%" }}>
-            <AddIcon
-              fontSize="small"
+            <Icon
+              name="plus"
+              size={20}
               style={{ color: "var(--mantine-color-text)" }}
             />
             <Text
