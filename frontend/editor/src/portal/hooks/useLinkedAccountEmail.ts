@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import { ensurePortalSessionClient } from "@app/portal/auth/sessionClient";
 import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 
 /**
@@ -13,7 +13,7 @@ export function useLinkedAccountEmail(): string | null {
   useEffect(() => {
     let cancelled = false;
     let sessionChanged = false;
-    const supabase = ensureSaasSupabase();
+    const supabase = ensurePortalSessionClient();
     if (!supabase) {
       setEmail(null);
       return;

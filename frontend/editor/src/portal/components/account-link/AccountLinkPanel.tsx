@@ -5,6 +5,7 @@ import { Icon } from "@app/ui/Icon";
 import { AccountConnectionLayout } from "@app/components/settings/AccountConnectionLayout";
 import { useAsync } from "@app/portal/hooks/useAsync";
 import { useAccountLinkContext } from "@app/portal/contexts/AccountLinkContext";
+import { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 import { HttpError } from "@app/portal/api/http";
 import { usePortalSaasSession } from "@app/portal/hooks/usePortalSaasSession";
 import {
@@ -118,6 +119,13 @@ export function AccountLinkPanel() {
                 <Skeleton key={i} height="3rem" />
               ))}
             </div>
+          ) : instancesState.error instanceof SaasSessionRequiredError ? (
+            <p>
+              {t(
+                "portal.accountLink.panel.sessionRequired",
+                "Connected instances will appear after you renew billing access.",
+              )}
+            </p>
           ) : instancesState.error ? (
             <Banner
               tone="danger"

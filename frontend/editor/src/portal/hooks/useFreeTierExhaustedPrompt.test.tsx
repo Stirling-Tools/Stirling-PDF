@@ -7,15 +7,20 @@ import { render } from "@testing-library/react";
  * grant spent — and it is raised from the real reporter here rather than a hand-fired event, so the
  * sentinel shape stays part of what this pins down.
  */
-const { openLinkModal } = vi.hoisted(() => ({ openLinkModal: vi.fn() }));
+const { openLinkModal, flags } = vi.hoisted(() => ({
+  openLinkModal: vi.fn(),
+  flags: { isAdmin: true, isLinked: false },
+}));
+vi.mock("@app/auth", () => ({ useAuth: () => flags }));
+vi.mock("@app/portal/contexts/LinkContext", () => ({ useLink: () => flags }));
 
-vi.mock("@portal/contexts/UIContext", () => ({
+vi.mock("@app/portal/contexts/UIContext", () => ({
   useUI: () => ({ openLinkModal }),
 }));
 
-import { HttpError } from "@portal/api/http";
-import { reportAccountLinkBlock } from "@portal/services/accountLinkBlock";
-import { useFreeTierExhaustedPrompt } from "@portal/hooks/useFreeTierExhaustedPrompt";
+import { HttpError } from "@app/portal/api/http";
+import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
+import { useFreeTierExhaustedPrompt } from "@app/portal/hooks/useFreeTierExhaustedPrompt";
 
 function Probe() {
   useFreeTierExhaustedPrompt();
@@ -29,7 +34,11 @@ const blocked = (reason: string) =>
   });
 
 describe("the account-link prompt", () => {
-  beforeEach(() => openLinkModal.mockReset());
+  beforeEach(() => {
+    openLinkModal.mockReset();
+    flags.isAdmin = true;
+    flags.isLinked = false;
+  });
 
   it("stays quiet on mount while the instance is unlinked", () => {
     render(<Probe />);
@@ -42,6 +51,14 @@ describe("the account-link prompt", () => {
     expect(openLinkModal).toHaveBeenCalledWith("exhausted");
   });
 
+  it("does not reopen for later responses from the same exhausted batch", () => {
+    const view = render(<Probe />);
+    reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    view.rerender(<Probe />);
+    reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+    expect(openLinkModal).toHaveBeenCalledOnce();
+  });
+
   it("leaves a linked team's own billing problems to their own surface", () => {
     render(<Probe />);
     reportAccountLinkBlock(blocked("OVER_LIMIT"));
@@ -49,6 +66,17 @@ describe("the account-link prompt", () => {
     reportAccountLinkBlock(blocked("GRACE_EXPIRED"));
     expect(openLinkModal).not.toHaveBeenCalled();
   });
+
+  it.each(["non-owner", "already linked"])(
+    "does not offer initial linking to %s",
+    (state) => {
+      flags.isAdmin = state !== "non-owner";
+      flags.isLinked = state === "already linked";
+      render(<Probe />);
+      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
+      expect(openLinkModal).not.toHaveBeenCalled();
+    },
+  );
 
   it("ignores an unrelated failure", () => {
     render(<Probe />);

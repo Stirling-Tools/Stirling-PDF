@@ -1,8 +1,9 @@
 import { useState } from "react";
+import { useAuth } from "@app/auth";
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui";
-import { useConnectGate } from "@portal/hooks/useConnectGate";
-import "@portal/components/ConnectAccountRail.css";
+import { useConnectGate } from "@app/portal/hooks/useConnectGate";
+import "@app/portal/components/ConnectAccountRail.css";
 
 const DISMISSED_KEY = "portal::connect-rail-dismissed";
 
@@ -16,11 +17,12 @@ function readDismissed(): boolean {
 
 /** Session-scoped dismissal, so the ask comes back until it is answered rather than for good. */
 export function ConnectAccountRail() {
+  const { isAdmin } = useAuth();
   const { t } = useTranslation();
   const { gated, loading, connect } = useConnectGate();
   const [dismissed, setDismissed] = useState(readDismissed);
 
-  if (loading || !gated || dismissed) return null;
+  if (!isAdmin || loading || !gated || dismissed) return null;
 
   const dismiss = () => {
     try {

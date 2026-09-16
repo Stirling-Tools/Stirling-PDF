@@ -1,6 +1,8 @@
 import { isAuthError, isAuthSessionMissingError } from "@supabase/supabase-js";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import {
+  getPortalSessionClient,
+  ensurePortalSessionClient,
+} from "@app/portal/auth/sessionClient";
 
 let refreshPromise: Promise<string | null> | null = null;
 let generation = 0;
@@ -80,12 +82,12 @@ export function isTerminalSaasAuthError(error: unknown): boolean {
 
 /** SDK getSession renews expired tokens; transient auth failures remain retryable errors. */
 export async function getPortalSaasToken(): Promise<string | null> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) return null;
   const started = generation;
   const { data, error } = await supabase.auth.getSession();
-  if (!getSupabaseClient() || started !== generation) return null;
+  if (!getPortalSessionClient() || started !== generation) return null;
   if (error && !isTerminalSaasAuthError(error)) throw error;
   return error ? null : (data.session?.access_token ?? null);
 }
@@ -100,10 +102,10 @@ export function refreshPortalSaasToken(
     const current = await getPortalSaasToken();
     if (started !== generation) return null;
     if (!current || current !== rejectedToken) return current;
-    const supabase = getSupabaseClient();
+    const supabase = getPortalSessionClient();
     if (!supabase) return null;
     const { data, error } = await supabase.auth.refreshSession();
-    if (!getSupabaseClient() || started !== generation) return null;
+    if (!getPortalSessionClient() || started !== generation) return null;
     if (error && !isTerminalSaasAuthError(error)) throw error;
     return error ? null : (data.session?.access_token ?? null);
   })();

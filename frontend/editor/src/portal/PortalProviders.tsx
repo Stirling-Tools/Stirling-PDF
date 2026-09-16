@@ -10,6 +10,8 @@ import { SaasSessionBanner } from "@app/portal/components/account-link/SaasSessi
 import { useFreeTierExhaustedPrompt } from "@app/portal/hooks/useFreeTierExhaustedPrompt";
 import { LicenseProvider } from "@app/contexts/LicenseContext";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
+import { StartupPrompts } from "@app/components/startup/StartupPrompts";
+import { ServerExperienceProvider } from "@app/contexts/ServerExperienceContext";
 import { CheckoutProvider } from "@app/contexts/CheckoutContext";
 
 /** The one and only account-link modal, whichever step it is on. */
@@ -49,7 +51,10 @@ export function PortalProviders() {
               <AppConfigProvider>
                 <LicenseProvider>
                   <CheckoutProvider>
-                    <PortalChrome banner={<SaasSessionBanner />} />
+                    <ServerExperienceProvider>
+                      <StartupPrompts />
+                      <PortalChrome banner={<SaasSessionBanner />} />
+                    </ServerExperienceProvider>
                     <LinkModalHost />
                     <ConnectCallbackHost />
                   </CheckoutProvider>

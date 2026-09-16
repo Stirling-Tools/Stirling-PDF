@@ -7,7 +7,7 @@ Lucide icon geometry used in this project. Two places rely on this notice:
    the lucide-static package at build time and is not checked in; it disappears
    if that package is removed.
 
-2. Two icons in src/core/icons/svg/stirling/ that reuse lucide geometry so they
+2. The icons in src/core/icons/svg/stirling/ that reuse lucide geometry so they
    sit in the same visual family. These are checked in and do NOT disappear
    with the package:
 
@@ -29,8 +29,12 @@ Lucide icon geometry used in this project. Two places rely on this notice:
                      the corner fold   M14 2v5a1 1 0 0 0 1 1h5
                      (from lucide "file"; the PDF letterforms are ours)
 
-Neither source icon appears in the Feather-derived list below, so only the ISC
-terms apply to them. Keep this file for as long as either of those svgs, or the
+     polyline.svg    the zigzag        m19 9-5 5-4-4-3 3
+                     (from lucide "chart-line" with its axis dropped and the
+                     zigzag scaled about its centre to fill the box)
+
+None of the source icons appears in the Feather-derived list below, so only
+the ISC terms apply to them. Keep this file for as long as either of those svgs, or the
 icons.ts maps, remains. task frontend:lint:icons fails if it goes missing.
 
 The verbatim upstream notice follows.

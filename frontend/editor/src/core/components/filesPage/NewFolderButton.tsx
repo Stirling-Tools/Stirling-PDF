@@ -12,19 +12,22 @@ export interface NewFolderButtonProps {
   size?: "sm" | "md";
   /** "icon" matches the workbench bar's controls; "row" the file sidebar's. */
   trigger?: "labelled" | "icon" | "row";
-  /** Row trigger only: the sidebar is a rail, so the label goes. */
-  collapsed?: boolean;
   /** Row trigger only, for the tests and callers that look the row up. */
   testId?: string;
   /** Set when a folder cannot be created here at all; also the tooltip. */
   disabledReason?: string | null;
   /** Set when only the server destination is unavailable; also its tooltip. */
   serverDisabledReason?: string | null;
-  /** A subfolder inherits its parent's kind, so inside one there is no choice. */
+  /** A subfolder inherits its parent's kind unless the host offers a type switch. */
   currentFolderId: FolderId | null;
+  /** Keeps the type menu available inside folders; the caller validates the chosen parent. */
+  allowKindSelection?: boolean;
   /** Whether this build can put a directory on screen to be mounted. */
   canAddLocalFolder: boolean;
+  localFolderLabel?: string;
   onAddLocalFolder: () => void;
+  /** False when the selected action transfers focus into an inline form. */
+  returnFocus?: boolean;
   onOpenDialog: (parentId?: FolderId | null, kind?: FolderKind) => void;
 }
 
@@ -37,23 +40,23 @@ export function NewFolderButton({
   label,
   size = "sm",
   trigger = "labelled",
-  collapsed = false,
   testId,
   disabledReason,
   serverDisabledReason,
   currentFolderId,
+  allowKindSelection = false,
   canAddLocalFolder,
+  localFolderLabel,
   onAddLocalFolder,
+  returnFocus = true,
   onOpenDialog,
 }: NewFolderButtonProps): ReactNode {
   const { t } = useTranslation();
   const iconOnly = trigger === "icon";
   const asRow = trigger === "row";
 
-  /** The sidebar's own action-row markup, so the row reads as one of its own.
-   *  `nativeTitle` for the menu shape, which Menu.Target's clone leaves no room to
-   *  wrap in a Tooltip. */
-  const row = (onClick?: () => void, nativeTitle = false) => (
+  /** The sidebar's own action-row markup, so the row reads as one of its own. */
+  const row = (onClick?: () => void) => (
     <div
       className={`file-sidebar-action-row${disabledReason ? " disabled" : ""}`}
       data-testid={testId}
@@ -61,7 +64,6 @@ export function NewFolderButton({
       tabIndex={disabledReason ? -1 : 0}
       aria-disabled={Boolean(disabledReason)}
       aria-label={label}
-      title={nativeTitle && collapsed ? label : undefined}
       onClick={disabledReason ? undefined : onClick}
       // Not onClick: in the menu shape the click handler belongs to Menu.Target,
       // which binds the pointer only. A div has no native Enter/Space either way.
@@ -76,11 +78,9 @@ export function NewFolderButton({
       <span className="file-sidebar-action-icon">
         <Icon name="folder-plus" />
       </span>
-      {!collapsed && (
-        <span className="file-sidebar-action-label sidebar-content-fade">
-          {label}
-        </span>
-      )}
+      <span className="file-sidebar-action-label sidebar-content-fade">
+        {label}
+      </span>
     </div>
   );
 
@@ -123,22 +123,11 @@ export function NewFolderButton({
     );
   }
 
-  // Inside a folder the kind is inherited, and on the web the server is the only
-  // place a folder can go.
-  if (currentFolderId !== null || !canAddLocalFolder) {
+  if ((!allowKindSelection && currentFolderId !== null) || !canAddLocalFolder) {
     const open = () =>
       currentFolderId !== null ? onOpenDialog() : onOpenDialog(null, "server");
     if (asRow) {
-      return (
-        <Tooltip
-          label={label}
-          position="right"
-          withinPortal
-          disabled={!collapsed}
-        >
-          {row(open)}
-        </Tooltip>
-      );
+      return row(open);
     }
     if (iconOnly) {
       return (
@@ -171,10 +160,15 @@ export function NewFolderButton({
   }
 
   return (
-    <Menu shadow="md" position="bottom-end" withinPortal>
+    <Menu
+      shadow="md"
+      position="bottom-end"
+      withinPortal
+      returnFocus={returnFocus}
+    >
       <Menu.Target>
         {asRow ? (
-          row(undefined, true)
+          row()
         ) : iconOnly ? (
           <Tooltip label={label} withinPortal>
             <ActionIcon variant="tertiary" size="sm" aria-label={label}>
@@ -203,13 +197,14 @@ export function NewFolderButton({
           }
           onClick={onAddLocalFolder}
         >
-          {t("filesPage.newFolderMenu.addExisting", "Add local folder")}
+          {localFolderLabel ??
+            t("filesPage.newFolderMenu.addExisting", "Add local folder")}
         </Menu.Item>
         <Menu.Item
           className="files-page-new-folder-option"
           leftSection={<Icon name="cloud" size={20} />}
           disabled={Boolean(serverDisabledReason)}
-          onClick={() => onOpenDialog(null, "server")}
+          onClick={() => onOpenDialog(currentFolderId, "server")}
         >
           {t("filesPage.newFolderMenu.server", "New folder on the server")}
           {/* The reason is the caption: a disabled item with no explanation

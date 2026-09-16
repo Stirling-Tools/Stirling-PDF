@@ -11,8 +11,8 @@ export function SaasSessionBanner() {
   const { isAdmin } = useAuth();
   const { required } = usePortalSaasSession();
   const { isLinked } = useLink();
-  const { openLinkModal } = useUI();
-  if (!required || !isLinked || !isAdmin) return null;
+  const { openLinkModal, linkModalOpen } = useUI();
+  if (!required || !isLinked || !isAdmin || linkModalOpen) return null;
   return (
     <Banner
       tone="warning"

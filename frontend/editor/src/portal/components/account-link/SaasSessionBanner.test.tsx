@@ -70,3 +70,13 @@ it("removes the renewal prompt when the SDK restores access", () => {
   act(() => window.dispatchEvent(new Event("stirling-saas-session-restored")));
   expect(screen.queryByRole("button", { name: "Sign in again" })).toBeNull();
 });
+
+it("keeps one recovery prompt and restores it after the dialog is dismissed", () => {
+  show();
+  fireEvent.click(screen.getByRole("button", { name: "Sign in again" }));
+  expect(screen.queryByText("Renew billing access")).toBeNull();
+  act(() => ui.closeLinkModal());
+  expect(screen.getAllByRole("button", { name: "Sign in again" })).toHaveLength(
+    1,
+  );
+});

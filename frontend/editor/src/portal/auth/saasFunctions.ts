@@ -1,6 +1,8 @@
 import { FunctionsHttpError } from "@supabase/supabase-js";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import {
+  getPortalSessionClient,
+  ensurePortalSessionClient,
+} from "@app/portal/auth/sessionClient";
 import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
 
 /** Attended edge calls share auth recovery; only explicitly read-only operations may be replayed. */
@@ -9,8 +11,8 @@ export async function invokeSaasFunction<T>(
   options: { body?: Record<string, unknown>; method?: "GET" | "POST" } = {},
   readOnly = false,
 ) {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) throw new Error("SaaS authentication is not configured");
   return withPortalSaasSession(
     (token) =>

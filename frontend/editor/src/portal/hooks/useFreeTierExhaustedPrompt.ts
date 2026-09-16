@@ -1,6 +1,8 @@
-import { useEffect } from "react";
-import { useUI } from "@portal/contexts/UIContext";
-import { FREE_TIER_EXHAUSTED_EVENT } from "@portal/services/accountLinkBlock";
+import { useAuth } from "@app/auth";
+import { useLink } from "@app/portal/contexts/LinkContext";
+import { useEffect, useRef } from "react";
+import { useUI } from "@app/portal/contexts/UIContext";
+import { FREE_TIER_EXHAUSTED_EVENT } from "@app/portal/services/accountLinkBlock";
 
 /**
  * Opens the account-link dialog on the "allowance spent" pitch when the instance reports a spent
@@ -10,12 +12,19 @@ import { FREE_TIER_EXHAUSTED_EVENT } from "@portal/services/accountLinkBlock";
  * no React context to reach: same shape as the cloud build's usage-limit modals.
  */
 export function useFreeTierExhaustedPrompt(): void {
+  const prompted = useRef(false);
+  const { isAdmin } = useAuth();
+  const { isLinked } = useLink();
   const { openLinkModal } = useUI();
 
   useEffect(() => {
-    const onExhausted = () => openLinkModal("exhausted");
+    const onExhausted = () => {
+      if (!isAdmin || isLinked || prompted.current) return;
+      prompted.current = true;
+      openLinkModal("exhausted");
+    };
     window.addEventListener(FREE_TIER_EXHAUSTED_EVENT, onExhausted);
     return () =>
       window.removeEventListener(FREE_TIER_EXHAUSTED_EVENT, onExhausted);
-  }, [openLinkModal]);
+  }, [isAdmin, isLinked, openLinkModal]);
 }

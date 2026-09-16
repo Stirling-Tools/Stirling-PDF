@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -84,6 +85,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
   const [sidebarCollapsed, setSidebarCollapsed] =
     useState(readSidebarCollapsed);
   const [assistantOpen, setAssistantOpen] = useState(false);
+  const linkModalActive = useRef(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<LinkModalMode>("link");
@@ -120,6 +122,9 @@ export function UIProvider({ children }: { children: ReactNode }) {
       linkModalOpen,
       linkModalMode,
       openLinkModal: (mode: LinkModalMode = "link") => {
+        // Background failures must not replace a handoff or callback already in progress.
+        if (linkModalActive.current) return;
+        linkModalActive.current = true;
         setMobileNavOpen(false);
         setLinkModalMode(mode);
         setConnectOutcome(null);
@@ -133,6 +138,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       clearTrialSetupRequest: () => setTrialSetupRequested(false),
       connectOutcome,
       publishConnectOutcome: (outcome: ConnectOutcome) => {
+        linkModalActive.current = true;
         setMobileNavOpen(false);
         setConnectOutcome(outcome);
         setLinkModalMode(outcome.mode ?? "link");
@@ -140,6 +146,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       },
       clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
+        linkModalActive.current = false;
         connectOutcome?.cancel?.();
         clearPendingConnect();
         setLinkModalOpen(false);

@@ -1,6 +1,8 @@
 import type { Stripe } from "@stripe/stripe-js";
-import { getSupabaseClient } from "@app/auth/supabase/supabaseClient";
-import { ensureSaasSupabase } from "@app/portal/auth/saasSupabase";
+import {
+  getPortalSessionClient,
+  ensurePortalSessionClient,
+} from "@app/portal/auth/sessionClient";
 import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
 import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
 
@@ -69,8 +71,8 @@ async function invoke<T>(
   name: string,
   body: Record<string, unknown>,
 ): Promise<T> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
@@ -95,8 +97,8 @@ async function rpc<T>(
   args: Record<string, unknown>,
   readOnly = false,
 ): Promise<T> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
@@ -473,8 +475,8 @@ export async function cancelBundleQuote(req: {
  * GET route (streams application/pdf). Returns a Blob the caller can object-URL for download.
  */
 export async function fetchBundleQuotePdf(quoteId: number): Promise<Blob> {
-  ensureSaasSupabase();
-  const supabase = getSupabaseClient();
+  ensurePortalSessionClient();
+  const supabase = getPortalSessionClient();
   if (!supabase) {
     throw new StripeFunctionError(
       "SaaS Supabase not configured — set VITE_SUPABASE_URL.",
