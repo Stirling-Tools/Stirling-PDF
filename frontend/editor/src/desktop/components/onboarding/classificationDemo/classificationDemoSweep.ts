@@ -66,6 +66,8 @@ export interface ClassificationDemoProgress {
   processed: number;
   /** Documents this sweep will cover; 0 until the folder has been read. */
   total: number;
+  /** While gathering: files in the folder looked at so far, of how many. */
+  listing?: { checked: number; total: number };
   /** Running tally, biggest group first — drives the ticker under the logo. */
   groups: ClassificationDemoGroupCount[];
 }
@@ -287,8 +289,18 @@ export async function runClassificationDemoSweep(
   const metered: { pages: number; bytes: number }[] = [];
   let processed = 0;
 
-  const report = (phase: ClassificationDemoPhase, total: number) =>
-    deps.onProgress({ phase, processed, total, groups: tally(counts) });
+  const report = (
+    phase: ClassificationDemoPhase,
+    total: number,
+    listing?: ClassificationDemoProgress["listing"],
+  ) =>
+    deps.onProgress({
+      phase,
+      processed,
+      total,
+      listing,
+      groups: tally(counts),
+    });
 
   report("reading", 0);
   // Reads and mounts are gated on the directory being mounted, so this comes first —
@@ -296,7 +308,10 @@ export async function runClassificationDemoSweep(
   await deps.mountFolder(directory, "Downloads");
 
   report("gathering", 0);
-  const listing = await listDirectory(directory);
+  const listing = await listDirectory(directory, {
+    onProgress: (checked, count) =>
+      report("gathering", 0, { checked, total: count }),
+  });
   const allPdfs = pickRecentPdfs(listing?.files ?? [], Number.MAX_SAFE_INTEGER);
   const eligible = allPdfs.filter((file) => !exclude.has(file.path));
   const batch = eligible.slice(0, limit);

@@ -198,6 +198,32 @@ describe("runClassificationDemoSweep", () => {
     expect(outcome.remaining).toBe(1);
   });
 
+  test("reports how far the folder listing has got, so the view has something true to say", async () => {
+    listDirectory.mockImplementation(
+      async (
+        _dir: string,
+        options?: { onProgress?: (c: number, t: number) => void },
+      ) => {
+        options?.onProgress?.(32, 70);
+        options?.onProgress?.(64, 70);
+        return { files: [entry("a.pdf", 1)], directories: [] };
+      },
+    );
+    const d = deps();
+    await runClassificationDemoSweep("/downloads", d);
+
+    expect(d.onProgress).toHaveBeenCalledWith(
+      expect.objectContaining({
+        phase: "gathering",
+        total: 0,
+        listing: { checked: 32, total: 70 },
+      }),
+    );
+    expect(d.onProgress).toHaveBeenCalledWith(
+      expect.objectContaining({ listing: { checked: 64, total: 70 } }),
+    );
+  });
+
   test("gives each document a time budget, so a file that never answers is skipped", async () => {
     const d = deps();
     await runClassificationDemoSweep("/downloads", d);
