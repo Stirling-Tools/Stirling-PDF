@@ -1,6 +1,5 @@
 import { AccountConnectionRefresh } from "@app/portal/components/account-link/AccountConnectionNotice";
 import { useLocation } from "react-router-dom";
-import type { ReactNode } from "react";
 import { AppConfigProvider } from "@app/contexts/AppConfigContext";
 import { ToolRegistryProvider } from "@app/contexts/ToolRegistryProvider";
 import { ErrorBoundary } from "@app/portal/components/ErrorBoundary";
@@ -28,7 +27,7 @@ function RoutedContent() {
  * overlays (e.g. the self-hosted account-link modal) are mounted by
  * PortalProviders, not here.
  */
-export function PortalChrome({ banner }: { banner?: ReactNode } = {}) {
+export function PortalChrome() {
   return (
     // One app-config instance for every portal consumer (the search gates, the
     // sidebar) so they can't fetch twice or disagree.
@@ -37,7 +36,6 @@ export function PortalChrome({ banner }: { banner?: ReactNode } = {}) {
       <ToolRegistryProvider>
         <AccountConnectionRefresh />
         <AppShell>
-          {banner}
           <RoutedContent />
         </AppShell>
       </ToolRegistryProvider>

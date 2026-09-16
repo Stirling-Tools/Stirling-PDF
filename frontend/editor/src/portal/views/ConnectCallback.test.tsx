@@ -55,7 +55,7 @@ vi.mock("@app/portal/components/account-link/SaasSessionBanner", () => ({
   SaasSessionBanner: () => null,
 }));
 vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
-  LinkAccountModal: () => null,
+  LinkAccountModalHost: () => null,
 }));
 
 import ConnectCallback from "@app/portal/views/ConnectCallback";
@@ -244,11 +244,21 @@ describe("account-link callback", () => {
     await waitFor(() => expect(refresh).toHaveBeenCalled());
   });
 
-  it("validates the handshake before installing the browser session", async () => {
+  it("waits for server acceptance before installing the browser session", async () => {
+    let accept!: (value: { phase: string }) => void;
+    completeConnect.mockReturnValueOnce(
+      new Promise((resolve) => {
+        accept = resolve;
+      }),
+    );
     landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
 
     renderFlow();
 
+    await waitFor(() => expect(lastOutcome()?.state).toBe("working"));
+    expect(completeConnect).toHaveBeenCalledWith(NONCE);
+    expect(setSession).not.toHaveBeenCalled();
+    await act(async () => accept({ phase: "LINKED" }));
     await waitFor(() =>
       expect(setSession).toHaveBeenCalledWith({
         access_token: "at",
@@ -262,22 +272,14 @@ describe("account-link callback", () => {
     expect(routeState).toBeNull();
   });
 
-  it("finishes the link even when the session hand-off fails", async () => {
-    landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
-    setSession.mockRejectedValue(new Error("nope"));
-
-    renderFlow();
-
-    // Independent outcomes: a failed sign-in must not strand the server unlinked.
-    await waitFor(() => expect(completeConnect).toHaveBeenCalledWith(NONCE));
-  });
-
   it("links without a session when the fragment carries no tokens", async () => {
     landOn(`#type=link&nonce=${NONCE}`);
 
     renderFlow();
 
-    await waitFor(() => expect(completeConnect).toHaveBeenCalledWith(NONCE));
+    await waitFor(() => expect(lastOutcome()?.state).toBe("linked"));
+    expect(completeConnect).toHaveBeenCalledWith(NONCE);
+    expect(lastOutcome()?.sessionRestored).toBe(false);
     expect(setSession).not.toHaveBeenCalled();
   });
 
@@ -365,7 +367,13 @@ describe("account-link callback", () => {
       landOn(`#type=link&nonce=${NONCE}&access_token=at&refresh_token=rt`);
       completeConnect.mockResolvedValue({ phase });
       renderFlow();
-      await waitFor(() => expect(completeConnect).toHaveBeenCalled());
+      const outcome =
+        phase === "REJECTED"
+          ? "rejected"
+          : phase === "EXPIRED"
+            ? "expired"
+            : "retry";
+      await waitFor(() => expect(lastOutcome()?.state).toBe(outcome));
       expect(setSession).not.toHaveBeenCalled();
     },
   );
@@ -415,7 +423,7 @@ describe("account-link callback", () => {
     });
     renderFlow();
     await waitFor(() => expect(setSession).toHaveBeenCalledOnce());
-    await waitFor(() => expect(lastOutcome()?.state).not.toBe("working"));
+    await waitFor(() => expect(lastOutcome()?.state).toBe("rejected"));
     expect(completeConnect).toHaveBeenCalledOnce();
     expect(lastOutcome()?.sessionRestored).toBe(false);
     expect(lastOutcome()?.reclaim).toBeUndefined();

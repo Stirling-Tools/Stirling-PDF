@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { UIProvider, type LinkModalMode } from "@app/portal/contexts/UIContext";
+import {
+  UIProvider,
+  useUI,
+  type LinkModalMode,
+} from "@app/portal/contexts/UIContext";
 import { PortalTestProviders } from "@app/portal/test/TestQueryProvider";
 
 /** The step machine: what drives each step, and what must not skip or repeat one. */
@@ -28,9 +32,33 @@ vi.mock("@app/portal/auth/saasSupabase", () => ({
   }),
 }));
 
-import { LinkAccountModal } from "@app/portal/components/account-link/LinkAccountModal";
+import {
+  LinkAccountModal,
+  LinkAccountModalHost,
+} from "@app/portal/components/account-link/LinkAccountModal";
 import type { ConnectOutcome } from "@app/portal/components/account-link/ConnectCallbackView";
 import { freeWallet } from "@app/portal/components/billing/walletFixtures";
+
+const ownership = vi.hoisted(() => ({ isAdmin: true, orgOwner: true }));
+vi.mock("@app/auth", () => ({
+  useAuth: () => ({
+    ...ownership,
+    user: { orgOwner: ownership.orgOwner },
+    loading: false,
+  }),
+}));
+
+function HostedModal() {
+  const { openLinkModal } = useUI();
+  return (
+    <>
+      <button onClick={() => openLinkModal("reauth")}>
+        Open billing renewal
+      </button>
+      <LinkAccountModalHost />
+    </>
+  );
+}
 
 const AUTHORIZE = "http://localhost:5174/link?request=req-1";
 const deployment = vi.hoisted(() => ({ basePath: "" }));
@@ -79,6 +107,8 @@ describe("LinkAccountModal", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    ownership.isAdmin = true;
+    ownership.orgOwner = true;
     sessionStorage.clear();
     localStorage.setItem("stirling.portalSaasOwner", "owner");
     deployment.basePath = "";
@@ -107,6 +137,29 @@ describe("LinkAccountModal", () => {
       },
     });
   });
+
+  it.each([
+    { isAdmin: true, orgOwner: false },
+    { isAdmin: false, orgOwner: true },
+  ])(
+    "does not mount a requested renewal for $isAdmin admin / $orgOwner owner",
+    (auth) => {
+      Object.assign(ownership, auth);
+      render(
+        <PortalTestProviders>
+          <MemoryRouter>
+            <UIProvider>
+              <HostedModal />
+            </UIProvider>
+          </MemoryRouter>
+        </PortalTestProviders>,
+      );
+      click("Open billing renewal");
+      expect(screen.queryByRole("dialog")).toBeNull();
+      expect(startReauth).not.toHaveBeenCalled();
+      expect(startConnect).not.toHaveBeenCalled();
+    },
+  );
 
   it.each([
     { state: "expired" as const, sessionRestored: false },
@@ -187,13 +240,18 @@ describe("LinkAccountModal", () => {
     expect(assign).not.toHaveBeenCalled();
   });
 
-  it("offers no sign-in form, because a sign-in started here cannot complete", () => {
-    const { container } = renderModal();
+  it("keeps credential fields out of the portaled connection dialog", async () => {
+    renderModal();
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeVisible();
+    expect(
+      dialog.querySelector('input[type="password"], input[type="email"]'),
+    ).toBeNull();
     click(CONNECT);
-
-    // A sign-in started on this origin cannot complete, so nothing here may collect credentials.
-    expect(container.querySelector("input[type=password]")).toBeNull();
-    expect(container.querySelector("input[type=email]")).toBeNull();
+    await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+    expect(
+      dialog.querySelector('input[type="password"], input[type="email"]'),
+    ).toBeNull();
   });
 
   it("hands over on the first click, showing the ghost while it goes", async () => {
@@ -337,20 +395,42 @@ describe("LinkAccountModal", () => {
       expect(filledSteps()).toBe(1);
     });
 
-    /**
-     * Not the close path itself (the host unmounts, so a fresh mount is clean by construction) but
-     * the property behind it: hoist the flag into UIContext and the trap returns, failing here.
-     */
-    it("keeps the in-flight flag local, so a fresh mount cannot inherit one", async () => {
-      const first = renderModal();
-      click(CONNECT);
-      await waitFor(() => expect(screen.getByText(GHOST)).toBeTruthy());
+    it("dismisses a pending renewal and opens a fresh attempt through the real host", async () => {
+      let finish!: (value: unknown) => void;
+      startReauth.mockReturnValueOnce(
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+      );
+      render(
+        <PortalTestProviders>
+          <MemoryRouter>
+            <UIProvider>
+              <HostedModal />
+            </UIProvider>
+          </MemoryRouter>
+        </PortalTestProviders>,
+      );
+      click("Open billing renewal");
+      click(/Sign in again/);
+      expect(screen.getByText(GHOST)).toBeVisible();
+      act(() =>
+        within(screen.getByRole("dialog"))
+          .getAllByRole("button", { name: "Close" })[0]
+          .click(),
+      );
+      await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+      await act(async () =>
+        finish({ phase: "PENDING", authorizeUrl: AUTHORIZE }),
+      );
+      expect(assign).not.toHaveBeenCalled();
+      expect(sessionStorage.getItem("stirling.portalConnect")).toBeNull();
 
-      first.unmount();
-      renderModal();
-
-      expect(screen.getByText(BENEFITS)).toBeTruthy();
+      click("Open billing renewal");
       expect(screen.queryByText(GHOST)).toBeNull();
+      click(/Sign in again/);
+      await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
+      expect(startReauth).toHaveBeenCalledTimes(2);
     });
   });
 

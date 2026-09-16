@@ -35,7 +35,7 @@ import { useCheckoutOptional } from "@app/contexts/CheckoutContext";
 import { SubscribedPlanView } from "@app/portal/components/billing/SubscribedPlanView";
 import {
   HttpError,
-  SaasNotLinkedError,
+  SaasSessionRequiredError,
   SaasUnconfiguredError,
 } from "@app/portal/api/http";
 import "@app/portal/views/Usage.css";
@@ -193,7 +193,7 @@ export function Usage({
       })
       .catch((e) => {
         if (cancelled) return;
-        if (e instanceof SaasNotLinkedError) {
+        if (e instanceof SaasSessionRequiredError) {
           // The attended SaaS session expired — offer a re-sign-in.
           setSessionExpired(true);
         } else if (e instanceof SaasUnconfiguredError) {

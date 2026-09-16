@@ -10,7 +10,8 @@ import {
   type ConnectOutcome,
 } from "@app/portal/components/account-link/ConnectCallbackView";
 import { useConnectHandoff } from "@app/portal/hooks/useConnectHandoff";
-import type { LinkModalMode } from "@app/portal/contexts/UIContext";
+import { useUI, type LinkModalMode } from "@app/portal/contexts/UIContext";
+import { useAccountLinkOwner } from "@app/portal/hooks/useAccountLinkOwner";
 import "@app/portal/views/ConnectCallback.css";
 
 /**
@@ -28,6 +29,22 @@ interface Props {
   mode?: LinkModalMode;
   /** Published by the callback route; present means the admin is returning from Stirling. */
   outcome?: ConnectOutcome | null;
+}
+
+/** Unmounting on close discards an interrupted handoff before the next attempt. */
+export function LinkAccountModalHost() {
+  const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
+    useUI();
+  const isOwner = useAccountLinkOwner();
+  if (!isOwner || !linkModalOpen) return null;
+  return (
+    <LinkAccountModal
+      open
+      mode={linkModalMode}
+      onClose={closeLinkModal}
+      outcome={connectOutcome}
+    />
+  );
 }
 
 /**
@@ -64,7 +81,10 @@ export function LinkAccountModal({
         stepLabel: t(
           "portal.accountLink.connect.step",
           "Step {{current}} of {{total}}",
-          { current, total: STEP_ORDER.length },
+          {
+            current,
+            total: STEP_ORDER.length,
+          },
         ),
       };
 

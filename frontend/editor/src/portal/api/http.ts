@@ -43,10 +43,7 @@
  */
 import { withPortalSaasSession } from "@app/portal/auth/portalSaasSession";
 import { reportAccountLinkBlock } from "@app/portal/services/accountLinkBlock";
-export {
-  SaasSessionRequiredError,
-  SaasSessionRequiredError as SaasNotLinkedError,
-} from "@app/portal/auth/portalSaasSession";
+export { SaasSessionRequiredError } from "@app/portal/auth/portalSaasSession";
 import { resolveDemoResponse } from "@app/portal/api/demoData";
 import { saasApiBase } from "@app/portal/api/saasApiBase";
 import {

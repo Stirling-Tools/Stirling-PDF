@@ -42,7 +42,7 @@ vi.mock("@app/contexts/CheckoutContext", () => ({
   CheckoutProvider: ({ children }: { children: ReactNode }) => children,
 }));
 vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
-  LinkAccountModal: () => null,
+  LinkAccountModalHost: () => null,
 }));
 vi.mock("@app/portal/components/account-link/ConnectCallbackHost", () => ({
   ConnectCallbackHost: () => null,

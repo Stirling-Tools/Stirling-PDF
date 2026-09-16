@@ -314,6 +314,7 @@ class ConnectServiceTest {
 
     @Test
     void complete_withoutAnOpenHandshakeRejectsEvenWhenTheInstanceIsLinked() {
+        when(credentialStore.get()).thenReturn(Optional.of(credential(7L)));
         assertThat(service.complete(NONCE).phase()).isEqualTo(Phase.REJECTED);
         verifyNoInteractions(credentialStore, client);
     }

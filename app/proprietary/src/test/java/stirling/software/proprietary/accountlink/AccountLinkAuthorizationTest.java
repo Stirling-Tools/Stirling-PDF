@@ -94,8 +94,9 @@ class AccountLinkAuthorizationTest {
 
     @ParameterizedTest
     @EnumSource(value = Role.class, mode = EnumSource.Mode.EXCLUDE, names = "ADMIN")
-    void everyNonOwnerRoleIsDenied(Role role) {
+    void nonAdminRolesAreDeniedEvenIfMarkedAsOwner(Role role) {
         authenticate(role);
+        when(ownerService.isCurrentUser(any())).thenReturn(true);
         assertDenied();
     }
 

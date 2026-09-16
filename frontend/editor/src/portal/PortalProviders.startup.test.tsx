@@ -49,7 +49,7 @@ vi.mock("@portal/contexts/UIContext", () => ({
   useUI: () => ({ linkModalOpen: false }),
 }));
 vi.mock("@portal/components/account-link/LinkAccountModal", () => ({
-  LinkAccountModal: () => null,
+  LinkAccountModalHost: () => null,
 }));
 vi.mock("@portal/components/account-link/ConnectCallbackHost", () => ({
   ConnectCallbackHost: () => null,

@@ -14,7 +14,7 @@ vi.mock("@app/portal/auth/saasSupabase", () => ({
   isSaasSupabaseConfigured: true,
 }));
 vi.mock("@app/portal/components/account-link/LinkAccountModal", () => ({
-  LinkAccountModal: () => null,
+  LinkAccountModalHost: () => null,
 }));
 
 vi.mock(

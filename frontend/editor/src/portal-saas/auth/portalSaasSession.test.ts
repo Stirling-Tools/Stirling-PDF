@@ -47,7 +47,7 @@ import {
 } from "@app/portal/billing/stripe";
 import { invokeSaasFunction } from "@app/portal/auth/saasFunctions";
 import { fetchWallet } from "@app/portal/api/billing";
-import { apiClient, SaasNotLinkedError } from "@app/portal/api/http";
+import { apiClient, SaasSessionRequiredError } from "@app/portal/api/http";
 
 describe("SaaS billing session", () => {
   beforeEach(() => {
@@ -108,7 +108,7 @@ describe("SaaS billing session", () => {
         method: "PATCH",
         body: { capUsd: 100 },
       }),
-    ).rejects.toBeInstanceOf(SaasNotLinkedError);
+    ).rejects.toBeInstanceOf(SaasSessionRequiredError);
     expect(fetchMock).toHaveBeenCalledOnce();
     expect(refreshSession).not.toHaveBeenCalled();
     expect(login.redirect).toHaveBeenCalled();
@@ -125,7 +125,9 @@ describe("SaaS billing session", () => {
   it("does not borrow an account-link session when the SaaS user signs out", async () => {
     getSession.mockResolvedValue({ data: { session: null } });
     expect(await getPortalSaasToken()).toBeNull();
-    await expect(fetchWallet()).rejects.toBeInstanceOf(SaasNotLinkedError);
+    await expect(fetchWallet()).rejects.toBeInstanceOf(
+      SaasSessionRequiredError,
+    );
     expect(fetchMock).not.toHaveBeenCalled();
     expect(login.redirect).toHaveBeenCalled();
     expect(ensureLinkClient).not.toHaveBeenCalled();

@@ -422,7 +422,8 @@ describe("Usage — link-free wallet renderer", () => {
         <Usage sessionRecovery={<span>Renew billing access</span>} />,
       );
     });
-    expect(fetchWallet).toHaveBeenCalledTimes(2);
+    expect(screen.getAllByText("Renew billing access")).toHaveLength(1);
+    expect(screen.getByText(/Your plan and usage will appear/)).toBeVisible();
     expect(screen.queryByText("Session expired")).not.toBeInTheDocument();
   });
 
@@ -451,7 +452,8 @@ describe("Usage — link-free wallet renderer", () => {
     await waitFor(() =>
       expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),
     );
-    expect(screen.queryByText("Session expired")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Your plan and usage will appear/)).toBeNull();
+    expect(screen.getByText("This cycle")).toBeVisible();
     expect(fetchWallet).toHaveBeenCalledTimes(3);
   });
 
@@ -472,7 +474,8 @@ describe("Usage — link-free wallet renderer", () => {
     await waitFor(() =>
       expect(onWalletLoaded).toHaveBeenCalledWith(walletOf("free")),
     );
-    expect(screen.queryByText("Session expired")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Your plan and usage will appear/)).toBeNull();
+    expect(screen.getByText("This cycle")).toBeVisible();
     expect(fetchWallet).toHaveBeenCalledTimes(3);
   });
 });

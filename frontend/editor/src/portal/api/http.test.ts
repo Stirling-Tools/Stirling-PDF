@@ -25,7 +25,7 @@ vi.mock("@app/portal/auth/saasSupabase", () => ({
 import {
   apiClient,
   HttpError,
-  SaasNotLinkedError,
+  SaasSessionRequiredError,
   SaasUnconfiguredError,
 } from "@app/portal/api/http";
 import { resetPortalSaasSessionState } from "@app/portal/auth/portalSaasSession";
@@ -67,9 +67,24 @@ describe("apiClient.saas", () => {
       fetchMock
         .mockResolvedValueOnce(new Response(null, { status: 401 }))
         .mockResolvedValueOnce(ok({ valid: true }));
-      await apiClient.saas[format]("/read", {
+      const result = await apiClient.saas[format]("/read", {
         headers: { Authorization: "stale-override" },
       });
+      if (format === "json") expect(result).toEqual({ valid: true });
+      else if (format === "text") expect(result).toBe('{"valid":true}');
+      else {
+        expect(result).toBeInstanceOf(Blob);
+        const text = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(String(reader.result));
+          reader.onerror = () => reject(reader.error);
+          reader.readAsText(result as Blob);
+        });
+        expect(text).toBe('{"valid":true}');
+      }
+      expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe(
+        "Bearer expired",
+      );
       expect(refreshSession).toHaveBeenCalledTimes(1);
       expect(fetchMock).toHaveBeenCalledTimes(2);
       expect(fetchMock.mock.calls[1][1].headers.Authorization).toBe(
@@ -89,7 +104,7 @@ describe("apiClient.saas", () => {
         method: "POST",
         body: { quantity: 3 },
       }),
-    ).rejects.toBeInstanceOf(SaasNotLinkedError);
+    ).rejects.toBeInstanceOf(SaasSessionRequiredError);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(refreshSession).not.toHaveBeenCalled();
   });
@@ -101,12 +116,12 @@ describe("apiClient.saas", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("throws SaasNotLinkedError when there is no SaaS session", async () => {
+  it("throws SaasSessionRequiredError when there is no SaaS session", async () => {
     vi.stubEnv("VITE_SAAS_API_URL", "https://saas.test.local");
     getSession.mockResolvedValue({ data: { session: null } });
     await expect(
       apiClient.saas.json("/api/v1/payg/wallet"),
-    ).rejects.toBeInstanceOf(SaasNotLinkedError);
+    ).rejects.toBeInstanceOf(SaasSessionRequiredError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

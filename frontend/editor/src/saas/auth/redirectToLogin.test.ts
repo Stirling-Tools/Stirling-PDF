@@ -10,6 +10,7 @@ beforeEach(() => {
   vi.stubGlobal("location", {
     pathname: "/app/settings/billing",
     search: "?source=trial",
+    hash: "#access_token=private-access&refresh_token=private-refresh",
     get href() {
       return href;
     },
