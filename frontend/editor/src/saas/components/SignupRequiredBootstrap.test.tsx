@@ -71,7 +71,9 @@ describe("guest signup prompt", () => {
     expect(processor).toBeEnabled();
     fireEvent.click(processor);
     expect(await screen.findByRole("dialog")).toBeInTheDocument();
-    expect(screen.getByText("Unlock Processor")).toBeInTheDocument();
+    expect(
+      screen.getByText("Create an account to unlock the best of Stirling"),
+    ).toBeInTheDocument();
     expect(screen.getByTestId("destination")).toHaveTextContent(
       "/editor?tool=compress",
     );
@@ -117,7 +119,9 @@ describe("guest signup prompt", () => {
         );
     });
     expect(await screen.findAllByRole("dialog")).toHaveLength(1);
-    expect(screen.getByText("Unlock Processor")).toBeInTheDocument();
+    expect(
+      screen.getByText("Create an account to unlock the best of Stirling"),
+    ).toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Create free account" }),
     );

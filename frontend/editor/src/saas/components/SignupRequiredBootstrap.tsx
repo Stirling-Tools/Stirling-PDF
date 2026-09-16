@@ -45,7 +45,10 @@ export default function SignupRequiredBootstrap() {
 
   const title = limitReached
     ? t("payg.signupRequired.guestLimitTitle", "Keep going with a free account")
-    : t("payg.signupRequired.processorTitle", "Unlock Processor");
+    : t(
+        "payg.signupRequired.processorTitle",
+        "Create an account to unlock the best of Stirling",
+      );
 
   return (
     <OnboardingSlideShell
@@ -57,9 +60,26 @@ export default function SignupRequiredBootstrap() {
       stepCount={1}
       slideKey={limitReached ? "guest-limit" : "guest-processor"}
       hero={
-        <ShellHero>
-          <Icon name="cpu" size={32} className={styles.heroIcon} />
-        </ShellHero>
+        <div className={styles.surfaces}>
+          <div className={styles.surface}>
+            <ShellHero>
+              <Icon name="book-open" size={32} className={styles.heroIcon} />
+            </ShellHero>
+            <span>{t("quickNav.reader", "Reader")}</span>
+          </div>
+          <div className={styles.surface}>
+            <ShellHero>
+              <Icon name="pencil" size={32} className={styles.heroIcon} />
+            </ShellHero>
+            <span>{t("quickNav.editor", "Editor")}</span>
+          </div>
+          <div className={styles.surface}>
+            <ShellHero>
+              <Icon name="cpu" size={32} className={styles.heroIcon} />
+            </ShellHero>
+            <span>{t("quickNav.processor", "Processor")}</span>
+          </div>
+        </div>
       }
       title={<h2 className={styles.title}>{title}</h2>}
       body={
@@ -77,6 +97,17 @@ export default function SignupRequiredBootstrap() {
                 )}
           </p>
           <ul className={styles.benefits}>
+            <li>
+              <span className={styles.benefitIcon}>
+                <Icon name="file-text" size={18} />
+              </span>
+              <span>
+                {t(
+                  "payg.signupRequired.manualToolsPromo",
+                  "Unlimited free manual tools",
+                )}
+              </span>
+            </li>
             <li>
               <span className={styles.benefitIcon}>
                 <Icon name="sparkles" size={18} />
@@ -112,10 +143,7 @@ export default function SignupRequiredBootstrap() {
             </li>
           </ul>
           <p className={styles.note}>
-            {t(
-              "payg.signupRequired.reassurance",
-              "Manual tools stay free. No credit card required.",
-            )}
+            {t("payg.signupRequired.reassurance", "No credit card required.")}
           </p>
         </div>
       }

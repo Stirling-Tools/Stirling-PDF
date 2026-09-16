@@ -6514,9 +6514,10 @@ createAccount = "Create free account"
 guestLimitBody = "You've used your {{count}} free guest runs. Create an account to keep going."
 guestLimitTitle = "Keep going with a free account"
 login = "Log in"
+manualToolsPromo = "Unlimited free manual tools"
 processorBody = "Start with free monthly Processor credits."
-processorTitle = "Unlock Processor"
-reassurance = "Manual tools stay free. No credit card required."
+processorTitle = "Create an account to unlock the best of Stirling"
+reassurance = "No credit card required."
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
