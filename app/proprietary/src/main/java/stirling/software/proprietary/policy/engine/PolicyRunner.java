@@ -257,7 +257,7 @@ public class PolicyRunner {
         }
         List<ResolvedInput> work;
         try {
-            work = source.resolve(spec, context);
+            work = source.resolve(storedSource, context, policy.owner());
         } catch (IOException | RuntimeException e) {
             log.warn(
                     "Failed to resolve source '{}' for policy {}: {}",

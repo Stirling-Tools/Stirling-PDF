@@ -34,7 +34,7 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.service.UserServiceInterface;
 import stirling.software.proprietary.policy.config.PolicyAccessGuard;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
-import stirling.software.proprietary.policy.input.InputSource;
+import stirling.software.proprietary.policy.input.FolderInputSource;
 import stirling.software.proprietary.policy.input.ResolveContext;
 import stirling.software.proprietary.policy.input.ResolvedInput;
 import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
@@ -67,7 +67,7 @@ class PolicyRunnerTest {
     private stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard
             databaseLicenseGuard;
 
-    @Mock private InputSource folderSource;
+    @Mock private FolderInputSource folderSource;
     @Mock private ProcessedLedger processedLedger;
 
     private final SourceStore sourceStore = new InProcessSourceStore();
@@ -75,7 +75,8 @@ class PolicyRunnerTest {
     private PolicyRunner runner;
 
     @BeforeEach
-    void setUp() {
+    void setUp() throws IOException {
+        lenient().when(folderSource.resolve(any(Source.class), any(), any())).thenCallRealMethod();
         runner =
                 new PolicyRunner(
                         policyEngine,

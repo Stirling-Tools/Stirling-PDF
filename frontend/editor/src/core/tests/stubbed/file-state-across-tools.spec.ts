@@ -2,6 +2,9 @@ import { test, expect } from "@app/tests/helpers/stub-test-base";
 import { uploadFiles } from "@app/tests/helpers/ui-helpers";
 import path from "path";
 
+// Reads the library as cards, so it asks for the grid.
+test.use({ filesViewMode: "grid" });
+
 const FIXTURES_DIR = path.join(import.meta.dirname, "../test-fixtures");
 const SAMPLE_PDF = path.join(FIXTURES_DIR, "sample.pdf");
 

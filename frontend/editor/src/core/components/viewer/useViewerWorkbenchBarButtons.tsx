@@ -306,7 +306,7 @@ export function useViewerWorkbenchBarButtons(
       },
       {
         id: "viewer-toggle-sidebar",
-        icon: <Icon name="list" size="1rem" />,
+        icon: <Icon name="rows-2" size="1rem" />,
         tooltip: sidebarLabel,
         ariaLabel: sidebarLabel,
         section: "top" as const,
