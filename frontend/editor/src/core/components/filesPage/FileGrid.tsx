@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
@@ -44,6 +38,7 @@ import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingT
 import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
 import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
+import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import {
@@ -835,36 +830,21 @@ const FolderCard = React.memo(function FolderCard({
 });
 
 /**
- * A working folder's live per-state counts on its card. Light polling: a handful of
- * processing folders at most, and the numbers are the card's whole story.
+ * A working folder's live per-state counts, wherever the folder is drawn. `compact`
+ * is the list's shape: the same numbers on one line, in a row that may not change
+ * height.
  */
 function ProcessingFolderStats({
   recordId,
   listFiles,
+  compact = false,
 }: {
   recordId: string;
   listFiles: (recordId: string) => Promise<{ state: string }[]>;
+  compact?: boolean;
 }) {
   const { t } = useTranslation();
-  const [counts, setCounts] = useState<Record<string, number> | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    const tick = async () => {
-      const files = await listFiles(recordId).catch(() => []);
-      if (cancelled) return;
-      const next: Record<string, number> = {};
-      for (const file of files) {
-        next[file.state] = (next[file.state] ?? 0) + 1;
-      }
-      setCounts(next);
-    };
-    void tick();
-    const timer = setInterval(() => void tick(), 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [recordId, listFiles]);
+  const counts = useProcessingFolderCounts(recordId, listFiles);
   if (!counts) return null;
   const parts = (
     [
@@ -876,10 +856,15 @@ function ProcessingFolderStats({
   ).filter(([state]) => (counts[state] ?? 0) > 0);
   if (parts.length === 0) return null;
   return (
-    <div className="files-page-folder-stats">
+    <div
+      className={`files-page-folder-stats${compact ? " is-compact" : ""}`}
+      title={parts
+        .map(([state, label]) => `${counts[state]} ${label}`)
+        .join(" · ")}
+    >
       {parts.map(([state, label]) => (
         <span key={state} className={`files-page-folder-stat is-${state}`}>
-          {counts[state]} {label}
+          {counts[state]} {compact ? "" : label}
         </span>
       ))}
     </div>
@@ -1642,6 +1627,7 @@ const FolderRow = React.memo(function FolderRow({
     disable: disableProcessing,
     remove: removeProcessingFolder,
     sweep: sweepProcessing,
+    listFiles: listProcessingFiles,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
   // Each action surfaces its own failure the way a failed drop does; the
@@ -1689,7 +1675,14 @@ const FolderRow = React.memo(function FolderRow({
       parentPath={parentPath}
       status={
         processing ? (
-          <FolderProcessingTag enabled={processing.enabled} />
+          <>
+            <FolderProcessingTag enabled={processing.enabled} />
+            <ProcessingFolderStats
+              recordId={processing.id}
+              listFiles={listProcessingFiles}
+              compact
+            />
+          </>
         ) : undefined
       }
       trailing={

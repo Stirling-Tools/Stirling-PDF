@@ -1954,7 +1954,7 @@ export default function FileManagerView() {
                 <>
                   {selectedFiles.length > 0 &&
                     (() => {
-                      // Bulk-action labels; CSS collapses to icon-only below 900px.
+                      // Icon-only, as the folder-level strip is; the label is the tooltip.
                       const addLabel =
                         selectedFiles.length === 1
                           ? t("filesPage.addToWorkspace", "Add to workspace")
@@ -1969,19 +1969,17 @@ export default function FileManagerView() {
                         // wrap="nowrap" keeps the row single-line.
                         <Group gap="xs" wrap="nowrap">
                           <Tooltip label={addLabel} withinPortal>
-                            <Button
+                            <ActionIcon
                               size="sm"
-                              leftSection={
-                                <Icon name="external-link" size={20} />
-                              }
+                              variant="secondary"
                               onClick={() =>
                                 handleAddToWorkspace(selectedFiles)
                               }
                               aria-label={addLabel}
                               data-testid="add-to-workspace"
                             >
-                              {addLabel}
-                            </Button>
+                              <Icon name="external-link" size={20} />
+                            </ActionIcon>
                           </Tooltip>
                           {/* Save to server; shown whenever local-only files are
                           selected. When storage is off it stays visible but
@@ -1996,12 +1994,9 @@ export default function FileManagerView() {
                               multiline={Boolean(saveToServerDisabledReason)}
                               w={saveToServerDisabledReason ? 240 : undefined}
                             >
-                              <Button
+                              <ActionIcon
                                 size="sm"
                                 variant="secondary"
-                                leftSection={
-                                  <Icon name="cloud-upload" size={20} />
-                                }
                                 disabled={Boolean(saveToServerDisabledReason)}
                                 onClick={() =>
                                   setSaveToServerTarget(localOnlySelectedStubs)
@@ -2017,8 +2012,8 @@ export default function FileManagerView() {
                                   "Save to server",
                                 )}
                               >
-                                {t("filesPage.saveToServer", "Save to server")}
-                              </Button>
+                                <Icon name="cloud-upload" size={20} />
+                              </ActionIcon>
                             </Tooltip>
                           )}
                           {/* Show details button on compact viewports. */}
@@ -2031,62 +2026,38 @@ export default function FileManagerView() {
                                 )}
                                 withinPortal
                               >
-                                <Button
+                                <ActionIcon
                                   size="sm"
                                   variant="secondary"
-                                  leftSection={<Icon name="info" size={20} />}
                                   onClick={() => setMobileDetailsOpen(true)}
                                   aria-label={t(
                                     "filesPage.showDetails",
                                     "Show details",
                                   )}
                                 >
-                                  {t("filesPage.showDetails", "Show details")}
-                                </Button>
+                                  <Icon name="info" size={20} />
+                                </ActionIcon>
                               </Tooltip>
                             )}
                           <Tooltip label={moveLabel} withinPortal>
-                            <Button
+                            <ActionIcon
                               size="sm"
                               variant="secondary"
-                              leftSection={
-                                <Icon name="folder-input" size={20} />
-                              }
                               onClick={() => promptMoveFiles(selectedFiles)}
                               aria-label={moveLabel}
                             >
-                              {moveLabel}
-                            </Button>
+                              <Icon name="folder-input" size={20} />
+                            </ActionIcon>
                           </Tooltip>
                           <Tooltip label={removeLabel} withinPortal>
-                            <Button
+                            <ActionIcon
                               size="sm"
                               accent="danger"
                               variant="secondary"
-                              leftSection={<Icon name="trash" size={20} />}
                               onClick={() => handleRemoveFiles(selectedFiles)}
                               aria-label={removeLabel}
                             >
-                              {removeLabel}
-                            </Button>
-                          </Tooltip>
-                          <Tooltip
-                            label={t(
-                              "filesPage.clearSelection",
-                              "Clear selection",
-                            )}
-                            withinPortal
-                          >
-                            <ActionIcon
-                              variant="tertiary"
-                              size="md"
-                              onClick={() => clearSelection()}
-                              aria-label={t(
-                                "filesPage.clearSelection",
-                                "Clear selection",
-                              )}
-                            >
-                              &times;
+                              <Icon name="trash" size={20} />
                             </ActionIcon>
                           </Tooltip>
                         </Group>
