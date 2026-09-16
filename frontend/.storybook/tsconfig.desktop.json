@@ -1,0 +1,19 @@
+{
+  // The desktop half of the Storybook typecheck: main.ts resolves importers under
+  // src/desktop through the desktop cascade, so their stories are checked under it
+  // too. Stories only - the config files are checked once, by tsconfig.json;
+  // declarations.d.ts rides along for the asset module types both share.
+  "extends": "../editor/tsconfig.desktop.vite.json",
+  // vite/client supplies import.meta.env and the asset module types; tsconfig.json
+  // gets them through preview.tsx, which this project deliberately leaves out.
+  "compilerOptions": { "noEmit": true, "types": ["vite/client"] },
+  "exclude": [],
+  "include": [
+    "./declarations.d.ts",
+    "../editor/src/global.d.ts",
+    "../editor/src/core/icons/legacyIcons.d.ts",
+    "../editor/src/core/icons/usedIcons.d.ts",
+    "../editor/src/desktop/**/*.stories.ts",
+    "../editor/src/desktop/**/*.stories.tsx"
+  ]
+}

@@ -4,18 +4,29 @@
   // stories are checked under that resolution (@app/* = proprietary -> core).
   // The per-layer typecheck projects also cover story files, but each resolves
   // @app/* its own way - not the way the single Storybook build renders them.
+  // Desktop stories bundle through the desktop cascade instead (main.ts lists
+  // both projects), so tsconfig.desktop.json checks them the same way. Layers
+  // are listed one by one: tsc's include globs have no brace alternation.
   "extends": "../editor/tsconfig.proprietary.vite.json",
   // main.ts loads the icon Vite plugins from editor/scripts by their real .mts paths.
   "compilerOptions": { "allowImportingTsExtensions": true, "noEmit": true },
-  // Desktop stories resolve @app/* through the desktop cascade in main.ts, not the
-  // proprietary one this project extends; typecheck:desktop already covers them.
-  "exclude": ["../editor/src/desktop/**/*.stories.tsx"],
+  "exclude": [],
   "include": [
     "./**/*",
     "../editor/src/global.d.ts",
     "../editor/src/core/icons/legacyIcons.d.ts",
     "../editor/src/core/icons/usedIcons.d.ts",
-    "../editor/src/**/*.stories.ts",
-    "../editor/src/**/*.stories.tsx"
+    "../editor/src/core/**/*.stories.ts",
+    "../editor/src/core/**/*.stories.tsx",
+    "../editor/src/proprietary/**/*.stories.ts",
+    "../editor/src/proprietary/**/*.stories.tsx",
+    "../editor/src/cloud/**/*.stories.ts",
+    "../editor/src/cloud/**/*.stories.tsx",
+    "../editor/src/saas/**/*.stories.ts",
+    "../editor/src/saas/**/*.stories.tsx",
+    "../editor/src/portal/**/*.stories.ts",
+    "../editor/src/portal/**/*.stories.tsx",
+    "../editor/src/prototypes/**/*.stories.ts",
+    "../editor/src/prototypes/**/*.stories.tsx"
   ]
 }

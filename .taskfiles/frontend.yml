@@ -496,6 +496,8 @@ tasks:
     cmds:
       - task: typecheck:_run
         vars: { PROJECT: .storybook/tsconfig.json }
+      - task: typecheck:_run
+        vars: { PROJECT: .storybook/tsconfig.desktop.json }
 
   typecheck:all:
     desc: "Typecheck all build variants"
