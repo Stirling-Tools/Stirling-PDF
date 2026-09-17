@@ -340,7 +340,11 @@ async function postFiles(
       ),
     };
   } catch (error) {
-    return { ok: false, reason: "serverMessage", message: messageOf(error) };
+    return {
+      ok: false,
+      reason: "serverMessage",
+      message: await serverMessageOf(error),
+    };
   }
 }
 
@@ -452,13 +456,43 @@ function prunedBelow(value: unknown, depth: number): unknown {
   return kept;
 }
 
-/** What the server said, or null when it said nothing usable. Never carries the password. */
-function messageOf(error: unknown): string | null {
-  const response = (error as { response?: { data?: unknown } })?.response?.data;
-  if (typeof response === "string" && response.trim() !== "") return response;
+/**
+ * What the server said, or null when it said nothing usable. Never carries the password.
+ *
+ * These calls ask for a blob, so an error's Problem Details body arrives as one too and has to be
+ * read before it can be understood. Without that the reader was shown the transport's own words,
+ * which for a document nothing can repair said only "Request failed with status code 500".
+ */
+async function serverMessageOf(error: unknown): Promise<string | null> {
+  const body = (error as { response?: { data?: unknown } })?.response?.data;
+
+  const text = body instanceof Blob ? await textOf(body) : body;
+  if (typeof text === "string" && text.trim() !== "") {
+    return detailOf(text) ?? text;
+  }
 
   const message = (error as { message?: unknown })?.message;
   return typeof message === "string" && message.trim() !== "" ? message : null;
+}
+
+/** Via FileReader, which jsdom implements and `Blob.text` it does not. Null rather than throwing. */
+function textOf(blob: Blob): Promise<string | null> {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => resolve(null);
+    reader.readAsText(blob);
+  });
+}
+
+/** The `detail` of a Problem Details body, or null when the text is not one. */
+function detailOf(text: string): string | null {
+  try {
+    const detail = (JSON.parse(text) as { detail?: unknown }).detail;
+    return typeof detail === "string" && detail.trim() !== "" ? detail : null;
+  } catch {
+    return null;
+  }
 }
 
 async function writeRecords(records: StoredRetryRecord[]): Promise<void> {

@@ -712,6 +712,12 @@ public class ExceptionUtils {
         return new ComplianceNotMetException(message, ErrorCode.COMPLIANCE_NOT_MET.getCode());
     }
 
+    /** Raised once every available repair tool has tried the document and declined it. */
+    public static PdfUnrepairableException createPdfUnrepairableException() {
+        return new PdfUnrepairableException(
+                getMessage(ErrorCode.PDF_UNREPAIRABLE), ErrorCode.PDF_UNREPAIRABLE.getCode());
+    }
+
     /**
      * A step refused its input on type alone, before running.
      *
@@ -1255,6 +1261,13 @@ public class ExceptionUtils {
         // profile and failing rules.
         COMPLIANCE_NOT_MET("E074", "error.complianceNotMet", "{0}"),
 
+        // Every repair strategy declined it. Distinct from PDF_CORRUPTED, which says a document
+        // is damaged: this says the damage has already survived the tools that fix damage.
+        PDF_UNREPAIRABLE(
+                "E076",
+                "error.pdfUnrepairable",
+                "This document is damaged in a way the repair tools cannot fix."),
+
         // Raised before a step runs, by whoever knows both what the step accepts and what it was
         // handed. Distinct from PDF_NOT_PDF, which speaks only for steps that want a PDF.
         STEP_INPUT_TYPE_REJECTED(
@@ -1326,6 +1339,13 @@ public class ExceptionUtils {
     /** Exception thrown when a document fails a compliance standard it was checked against. */
     public static class ComplianceNotMetException extends BaseAppException {
         public ComplianceNotMetException(String message, String errorCode) {
+            super(message, null, errorCode);
+        }
+    }
+
+    /** Exception thrown when every repair strategy has declined a damaged document. */
+    public static class PdfUnrepairableException extends BaseAppException {
+        public PdfUnrepairableException(String message, String errorCode) {
             super(message, null, errorCode);
         }
     }

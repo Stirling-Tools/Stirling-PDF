@@ -420,6 +420,31 @@ describe("unlockLocalDocument", () => {
     expect(post).not.toHaveBeenCalled();
   });
 
+  it("reads the reason out of a blob body, rather than showing the transport's words", async () => {
+    // These calls ask for a blob, so an error's Problem Details body arrives as one. Left unread,
+    // a document nothing can repair reported "Request failed with status code 500".
+    getStirlingFiles.mockResolvedValue([new File(["%PDF-1.7"], "broken.pdf")]);
+    post.mockRejectedValue({
+      response: {
+        data: new Blob([
+          JSON.stringify({
+            detail:
+              "This document is damaged in a way the repair tools cannot fix.",
+            errorCode: "E076",
+          }),
+        ]),
+      },
+      message: "Request failed with status code 500",
+    });
+
+    const result = await repairDocuments(["f-1"]);
+
+    expect(result.ok).toBe(false);
+    expect(result.message).toBe(
+      "This document is damaged in a way the repair tools cannot fix.",
+    );
+  });
+
   it("returns the server's own message when the password is wrong", async () => {
     getStirlingFiles.mockResolvedValue([new File(["%PDF-1.7"], "locked.pdf")]);
     post.mockRejectedValue({
