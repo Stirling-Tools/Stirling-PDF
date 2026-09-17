@@ -212,7 +212,7 @@ class PaygBillingParityTest {
 
         // Self-hosted: the run id is the meter's dedup key, so the sub-steps collapse.
         InstanceEntitlementGate gate = mock(InstanceEntitlementGate.class);
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         EntitlementCache cache = mock(EntitlementCache.class);
         UsageMeterService meter = mock(UsageMeterService.class);
@@ -308,7 +308,7 @@ class PaygBillingParityTest {
 
     private void assertSelfHosted(Op op) throws Exception {
         InstanceEntitlementGate gate = mock(InstanceEntitlementGate.class);
-        when(gate.evaluate(anyBoolean()))
+        when(gate.evaluate(anyBoolean(), anyBoolean()))
                 .thenReturn(GateDecision.allow(GateDecision.Reason.ENTITLED));
         EntitlementCache cache = mock(EntitlementCache.class);
         UsageMeterService meter = mock(UsageMeterService.class);

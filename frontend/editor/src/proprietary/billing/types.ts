@@ -70,6 +70,9 @@ export interface Wallet {
   /** ISO yyyy-mm-dd. Stripe period when subscribed; calendar month when free. */
   billingPeriodStart: string;
   billingPeriodEnd: string;
+  /** Independent monthly included-credit term; absent on older servers. */
+  includedPeriodStart?: string | null;
+  includedPeriodEnd?: string | null;
   /** Free grant used this period (free teams) or documents processed this period (subscribed). */
   billableUsed: number;
   /** Document ceiling for the window; null when subscribed-uncapped. */

@@ -17,6 +17,7 @@ export function TeamPlanRow({
   selfHosted = false,
   serverPlan,
   onAddCapacity,
+  usersInUse: occupiedSeats,
 }: {
   wallet: Wallet | null;
   serverPlan?: ServerPlan;
@@ -24,6 +25,8 @@ export function TeamPlanRow({
   selfHosted?: boolean;
   /** Leader-only: the door that sells Team capacity. Omit for members. */
   onAddCapacity?: () => void;
+  /** Undefined uses cloud membership; null hides an unavailable local count. */
+  usersInUse?: number | null;
 }) {
   const { t } = useTranslation();
   if (serverPlan) {
@@ -67,7 +70,9 @@ export function TeamPlanRow({
     );
   }
   if (!wallet) return null;
-  const { held, licensedUsers, usersInUse } = wallet.team;
+  const { held, licensedUsers } = wallet.team;
+  const usersInUse =
+    occupiedSeats === undefined ? wallet.team.usersInUse : occupiedSeats;
   const processorActive = Boolean(wallet.processor?.active);
 
   const mid = !held
@@ -91,6 +96,26 @@ export function TeamPlanRow({
   const limit = held
     ? licensedUsers
     : (licensedUsers ?? wallet.freeUserAllowance ?? null);
+
+  if (usersInUse == null) {
+    return (
+      <MeterRow
+        name={name}
+        mid={mid}
+        showTrack={false}
+        tone={held ? "paid" : "free"}
+        fact={
+          limit != null
+            ? t("portal.billing.serverPlan.seats", "{{seats}} licensed seats", {
+                seats: limit.toLocaleString(),
+              })
+            : "—"
+        }
+        door={door}
+        onDoor={onAddCapacity}
+      />
+    );
+  }
 
   // A non-positive limit is an absent one, not a full meter: nothing to divide by either way.
   if (limit == null || limit <= 0) {
