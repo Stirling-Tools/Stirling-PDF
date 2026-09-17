@@ -422,6 +422,10 @@ class CompressPdfParams(ApiModel):
 
 
 class CreatePortfolioParams(ApiModel):
+    """
+    This endpoint bundles one or more files into an Adobe PDF Portfolio (a PDF with a /Collection dictionary) behind a cover page. Input:ANY Output:PDF Type:MISO
+    """
+
     cover_title: str = Field("PDF Portfolio", description="Title shown on the portfolio cover page.")
     files: list[bytes] = Field(..., description="The files to bundle into the PDF Portfolio.")
 
@@ -593,7 +597,7 @@ class ExtractAttachmentsParams(ApiModel):
 
 class ExtractImageScansParams(ApiModel):
     """
-    This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size. Input:PDF Output:IMAGE Type:SIMO
+    This endpoint extracts image scans from a given file based on certain parameters. Users can specify angle threshold, tolerance, minimum area, minimum contour area, and border size. Input:PDF/IMAGE Output:IMAGE Type:SIMO
     """
 
     angle_threshold: int = Field(5, description="The angle threshold for the image scan extraction")
@@ -641,7 +645,9 @@ class FlattenParams(ApiModel):
 
 
 class FlattenPortfolioParams(ApiModel):
-    pass
+    """
+    This endpoint removes the /Collection wrapper from a PDF Portfolio so it opens as a standard PDF, keeping the bundled files as attachments. Input:PDF Output:PDF Type:SISO
+    """
 
 
 class HtmlToPdfParams(ApiModel):
