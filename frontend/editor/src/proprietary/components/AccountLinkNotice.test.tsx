@@ -106,13 +106,9 @@ describe("editor shared account-link modal", () => {
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
     expect(alert).not.toHaveBeenCalled();
   });
-  it.each([
-    ["upload", "after upload"],
-    ["export", "before download"],
-    ["manual", "when you ran it"],
-  ] as const)(
+  it.each(["upload", "export", "manual"] as const)(
     "explains the %s failure and opens that pipeline's settings",
-    async (trigger, description) => {
+    async (trigger) => {
       mount("/editor");
       await act(async () =>
         reportFreeTierExhausted("background", {
@@ -122,11 +118,9 @@ describe("editor shared account-link modal", () => {
           trigger,
         }),
       );
-      expect(
-        screen.getByText(
-          `Pipeline “Quarterly rotation” could not process “report.pdf” ${description} because this server is out of credits.`,
-        ),
-      ).toBeTruthy();
+      expect(screen.queryByText(/report\.pdf/)).toBeNull();
+      fireEvent.click(screen.getByText("Active pipelines"));
+      await screen.findByRole("button", { name: "Open pipeline settings" });
       fireEvent.click(
         screen.getByRole("button", { name: "Open pipeline settings" }),
       );
@@ -148,9 +142,7 @@ describe("editor shared account-link modal", () => {
       }),
     );
     expect(
-      screen.getByText(
-        /Pipeline “Quarterly rotation” could not process “report.pdf” after upload/,
-      ),
+      screen.getByText(/Pipeline “Quarterly rotation” stopped after upload/),
     ).toBeTruthy();
     expect(
       screen.getByRole("dialog", { name: "Ask your server administrator" }),

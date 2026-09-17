@@ -162,8 +162,9 @@ describe("desktop self-hosted account-link triggers", () => {
         },
       }),
     );
+    fireEvent.click(screen.getByText("Active pipelines"));
     fireEvent.click(
-      screen.getByRole("button", { name: "Open pipeline settings" }),
+      await screen.findByRole("button", { name: "Open pipeline settings" }),
     );
     expect(openExternal).toHaveBeenCalledWith(
       "https://server.example/stirling/processor/pipelines/rotate-id",

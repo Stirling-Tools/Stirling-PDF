@@ -7402,14 +7402,13 @@ revokedBody = "Stirling Cloud rejected this account connection. Reconnect the ac
 revokedTitle = "Account connection revoked"
 
 [portal.accountLink.failure]
-automatic = "Pipeline “{{pipeline}}” could not process “{{file}}” during an automatic run because this server is out of credits."
-export = "Pipeline “{{pipeline}}” could not process “{{file}}” before download because this server is out of credits."
-file = "your file"
+automatic = "Pipeline “{{pipeline}}” stopped during an automatic run because this server is out of credits."
+export = "Pipeline “{{pipeline}}” stopped before download because this server is out of credits."
 manage = "Open pipeline settings"
-manual = "Pipeline “{{pipeline}}” could not process “{{file}}” when you ran it because this server is out of credits."
+manual = "Pipeline “{{pipeline}}” stopped when you ran it because this server is out of credits."
 openFailed = "Open the Processor on your connected server to manage this pipeline."
 pipeline = "Pipeline"
-upload = "Pipeline “{{pipeline}}” could not process “{{file}}” after upload because this server is out of credits."
+upload = "Pipeline “{{pipeline}}” stopped after upload because this server is out of credits."
 
 [portal.accountLink.gate]
 retry = "Try again"
@@ -7454,6 +7453,20 @@ sub = "Manage this server’s connection to your Stirling Cloud account."
 forbidden = "Only the team owner can manage connected instances."
 generic = "Your connections could not be checked. Try again."
 title = "Couldn’t load connected instances"
+
+[portal.accountLink.pipelines]
+editorExport = "Editor · before download"
+editorUpload = "Editor · on upload"
+empty = "No active pipelines."
+loadFailed = "Could not load pipelines. Open pipeline settings to try again."
+loading = "Loading pipelines…"
+manual = "Manual runs"
+paused = "Paused"
+required = "Required policy · manage in pipeline settings"
+saveFailed = "Could not change this pipeline. Open pipeline settings to review it."
+title = "Active pipelines"
+triggered = "Triggered this prompt"
+viewAll = "View all pipelines"
 
 [portal.accountLink.rail]
 adminCta = "How to get more credits"
