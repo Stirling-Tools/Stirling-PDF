@@ -4,18 +4,14 @@ import HomePage from "@app/pages/HomePage";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { stripBasePath } from "@app/constants/app";
 import { DOCS_PATH, HAS_DOCS } from "@app/routes/docsRoute";
+import { StartupPrompts } from "@app/components/startup/StartupPrompts";
 
 // Their own chunks: the settings tree (admin sections, account, licence flows)
 // and the docs manifest are both large, and most sessions open neither.
 const SettingsPage = lazy(() => import("@app/pages/SettingsPage"));
 const DocsPage = lazy(() => import("@app/components/docs/DocsPage"));
 
-/**
- * What the editor's route-set renders: the workbench, or one of the pages that
- * sit beside it. A switch rather than sibling routes so all of them inherit the
- * one auth/backend gate the host route already applies.
- */
-export function AppRoot() {
+function AppContent() {
   const { pathname } = useLocation();
   const path = stripBasePath(pathname);
 
@@ -36,4 +32,14 @@ export function AppRoot() {
   }
 
   return <HomePage />;
+}
+
+/** The editor's authenticated or login-disabled routes, including catch-all entries. */
+export function AppRoot() {
+  return (
+    <>
+      <StartupPrompts />
+      <AppContent />
+    </>
+  );
 }

@@ -106,15 +106,9 @@ public class SaasTeamExtensions implements Serializable {
         return Boolean.TRUE.equals(isPersonal);
     }
 
-    /**
-     * Whether this team has unused seats. Personal teams are bound by {@code max_seats}; standard
-     * teams are unlimited, because cloud capacity is not enforced yet.
-     */
+    /** Whether this team has unused seats. Membership acceptance also claims a seat atomically. */
     public boolean hasAvailableSeats() {
-        if (isPersonal()) {
-            return seatsUsed != null && maxSeats != null && seatsUsed < maxSeats;
-        }
-        return true;
+        return seatsUsed != null && maxSeats != null && seatsUsed < maxSeats;
     }
 
     /**
@@ -123,7 +117,7 @@ public class SaasTeamExtensions implements Serializable {
      * refused — see {@code SaasTeamService.inviteUserToTeam}.
      */
     public boolean canInviteMembers() {
-        return !isPersonal();
+        return !isPersonal() && hasAvailableSeats();
     }
 
     /**

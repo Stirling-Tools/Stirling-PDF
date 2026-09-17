@@ -3,6 +3,7 @@
  * The backend composes the source + policy pair behind the route.
  */
 
+import type { WireRoutingRule } from "@app/policies/types";
 import apiClient from "@app/services/apiClient";
 import { readDiskFile } from "@app/services/localFolderContents";
 
@@ -25,6 +26,8 @@ export interface ProcessingFolder {
   enabled: boolean;
   steps: ProcessingFolderStep[];
   output: Record<string, unknown>;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
 }
 
 /** Exactly one of `folderId` (app storage) or `directory` (server-disk path) says where a
@@ -36,6 +39,8 @@ export interface SaveProcessingFolderRequest {
   enabled?: boolean;
   steps: ProcessingFolderStep[];
   output?: Record<string, unknown>;
+  outputIds?: string[];
+  routingRules?: WireRoutingRule[];
 }
 
 /** Every processing folder the current user owns. */
@@ -94,21 +99,6 @@ export function classificationDefaults(
     steps: [{ operation: CLASSIFY_OPERATION, parameters: {}, assets: {} }],
     output: { mode: "new_version" },
   };
-}
-
-export interface DownloadsSuggestion {
-  directory: string;
-  available: boolean;
-  pdfCount: number;
-  limit: number;
-}
-
-/** The server's Downloads path and PDF count — the browser cannot see machine paths. */
-export async function fetchDownloadsSuggestion(): Promise<DownloadsSuggestion> {
-  const res = await apiClient.get<DownloadsSuggestion>(
-    "/api/v1/processing-folders/downloads-suggestion",
-  );
-  return res.data;
 }
 
 /** One file a run produced. Downloadable by id from the general files endpoint. */

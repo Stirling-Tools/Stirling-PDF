@@ -13,6 +13,6 @@ import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
  */
 public interface AutomationRunBiller {
 
-    /** Charge one run over {@code inputs} (page/byte facts of the original input files). */
-    void recordAutomationRun(List<FileSize> inputs);
+    /** Charge one run over the original inputs; a missing source retains Processor billing. */
+    void recordAutomationRun(List<FileSize> inputs, AutomationRunSource source);
 }

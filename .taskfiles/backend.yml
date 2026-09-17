@@ -299,3 +299,11 @@ tasks:
         platforms: [windows]
       - cmd: ./gradlew clean
         platforms: [linux, darwin]
+
+  reset:
+    desc: "Reset the local backend database and saved settings"
+    cmds:
+      - cmd: rm -f app/core/configs/stirling-pdf-DB-*.db app/core/configs/settings.yml app/core/configs/custom_settings.yml app/core/configs/backup/db/backup_*.sql app/core/configs/db/backup/backup_*.sql
+        platforms: [linux, darwin]
+      - cmd: powershell rm -Force -ErrorAction SilentlyContinue app/core/configs/stirling-pdf-DB-*.db, app/core/configs/settings.yml, app/core/configs/custom_settings.yml, app/core/configs/backup/db/backup_*.sql, app/core/configs/db/backup/backup_*.sql
+        platforms: [windows]

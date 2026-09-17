@@ -1,9 +1,6 @@
 import { MultiSelect, Popover, Select, Stack, TextInput } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import CloseIcon from "@mui/icons-material/Close";
-import SearchIcon from "@mui/icons-material/Search";
-import TuneIcon from "@mui/icons-material/Tune";
-
+import { Icon } from "@app/ui/Icon";
 import { ActionIcon } from "@app/ui/ActionIcon";
 import { Button } from "@app/ui/Button";
 import { Tooltip } from "@app/components/shared/Tooltip";
@@ -72,7 +69,7 @@ export function FilesToolbarFilterMenu({
               aria-label={label}
               className="files-page-toolbar-icon-btn"
             >
-              <TuneIcon sx={{ fontSize: "1.1rem" }} />
+              <Icon name="sliders-horizontal" size={"1.1rem"} />
             </ActionIcon>
           </Tooltip>
         </div>
@@ -84,7 +81,7 @@ export function FilesToolbarFilterMenu({
             value={search}
             onChange={(e) => onSearchChange(e.currentTarget.value)}
             placeholder={t("filesPage.search.placeholder", "Filter files…")}
-            leftSection={<SearchIcon sx={{ fontSize: "1rem" }} />}
+            leftSection={<Icon name="search" size={"1rem"} />}
             rightSection={
               search ? (
                 <ActionIcon
@@ -93,7 +90,7 @@ export function FilesToolbarFilterMenu({
                   onClick={() => onSearchChange("")}
                   aria-label={t("filesPage.search.clear", "Clear filter")}
                 >
-                  <CloseIcon sx={{ fontSize: "0.9rem" }} />
+                  <Icon name="x" size={"0.9rem"} />
                 </ActionIcon>
               ) : null
             }
