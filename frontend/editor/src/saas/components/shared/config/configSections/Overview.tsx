@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   Alert,
   Divider,
@@ -60,6 +60,8 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
   const [profileUploading, setProfileUploading] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [cropperFile, setCropperFile] = useState<File | null>(null);
+  // Without this, re-picking the same file after Cancel fires no change event.
+  const resetPicker = useRef<() => void>(null);
   const [cropperOpen, setCropperOpen] = useState(false);
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -72,6 +74,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
   const profilePath = user ? `${user.id}/avatar` : null;
 
   const handleProfileUpload = async (file: File | null) => {
+    resetPicker.current?.();
     if (!file || !user || !profilePath) {
       return;
     }
@@ -462,6 +465,7 @@ const Overview: React.FC<OverviewProps> = ({ onLogoutClick }) => {
               <Group gap="sm">
                 <FilePicker
                   onChange={handleProfileUpload}
+                  resetRef={resetPicker}
                   accept="image/png,image/jpeg,image/webp"
                   disabled={!user || profileUploading}
                   loading={profileUploading}

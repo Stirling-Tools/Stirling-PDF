@@ -45,6 +45,7 @@ import AccountCards from "@core/components/shared/config/configSections/preferen
 import AdminAuditSection from "@app/components/shared/config/configSections/AdminAuditSection";
 import AdminUsageSection from "@app/components/shared/config/configSections/AdminUsageSection";
 import ApiKeys from "@app/components/shared/config/configSections/ApiKeys";
+import ProfilePictureCard from "@app/components/shared/config/ProfilePictureCard";
 
 /**
  * Self-hosted settings, grouped by who reaches for them and what they do there:
@@ -82,7 +83,15 @@ export const useConfigNavSections = (
             ...item,
             component: (
               <PreferencesSection
-                accountSlot={loginEnabled ? <AccountCards /> : undefined}
+                accountSlot={
+                  loginEnabled ? (
+                    <AccountCards
+                      renderProfilePicture={(displayName) => (
+                        <ProfilePictureCard displayName={displayName} />
+                      )}
+                    />
+                  ) : undefined
+                }
               />
             ),
           }

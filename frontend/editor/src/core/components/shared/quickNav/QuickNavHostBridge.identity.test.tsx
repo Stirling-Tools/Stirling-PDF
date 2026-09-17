@@ -67,6 +67,10 @@ function setup(enableLogin = false) {
 }
 
 describe("quick-nav identity during view switches", () => {
+  // The Avatar wrapper carries the accessible name, so the picture is decorative.
+  const pictureOf = () =>
+    document.querySelector<HTMLImageElement>("img.sui-avatar__img");
+
   beforeEach(() => {
     auth.displayName = "Ada";
     auth.loading = false;
@@ -77,11 +81,11 @@ describe("quick-nav identity during view switches", () => {
 
   it("keeps the name and avatar through unmount, session loading and picture loading", () => {
     const switchView = setup();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(pictureOf()).toHaveAttribute("src", "/ada.png");
 
     switchView(null);
     expect(screen.getByRole("button", { name: /Ada/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(pictureOf()).toHaveAttribute("src", "/ada.png");
 
     auth.displayName = null;
     auth.loading = true;
@@ -89,26 +93,26 @@ describe("quick-nav identity during view switches", () => {
     picture.loading = true;
     switchView("processor");
     expect(screen.getByRole("button", { name: /Ada/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(pictureOf()).toHaveAttribute("src", "/ada.png");
 
     auth.displayName = "Grace";
     auth.loading = false;
     switchView("processor");
     expect(screen.getByRole("button", { name: /Ada/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(pictureOf()).toHaveAttribute("src", "/ada.png");
 
     picture.url = "/grace.png";
     picture.loading = false;
     switchView("processor");
     expect(screen.getByRole("button", { name: /Grace/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/grace.png");
+    expect(pictureOf()).toHaveAttribute("src", "/grace.png");
 
     auth.displayName = null;
     picture.url = null;
     auth.loading = true;
     switchView("editor");
     expect(screen.getByRole("button", { name: /Grace/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/grace.png");
+    expect(pictureOf()).toHaveAttribute("src", "/grace.png");
 
     auth.loading = false;
     switchView("editor");
@@ -131,7 +135,7 @@ describe("quick-nav identity during view switches", () => {
     picture.url = null;
     switchView("processor");
     expect(screen.getByRole("button", { name: /Ada/ })).toBeInTheDocument();
-    expect(screen.getByRole("img")).toHaveAttribute("src", "/ada.png");
+    expect(pictureOf()).toHaveAttribute("src", "/ada.png");
 
     await act(async () => resolveAccount({ username: "Grace" }));
     expect(screen.getByRole("button", { name: /Grace/ })).toBeInTheDocument();
