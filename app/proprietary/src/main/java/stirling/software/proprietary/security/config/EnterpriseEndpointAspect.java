@@ -14,7 +14,8 @@ import stirling.software.common.service.LicenseServiceInterface;
  *
  * <p>Asks per request for the same reason as {@link PremiumEndpointAspect}: the {@code runningEE}
  * bean is a value copied once at startup, so a snapshot keeps refusing a licence entered after boot
- * until someone restarts.
+ * until someone restarts. It cuts both ways - a lapsed or revoked licence, or one the weekly
+ * recheck cannot confirm, now closes the gate on the next request rather than at the next restart.
  */
 @Aspect
 @Component

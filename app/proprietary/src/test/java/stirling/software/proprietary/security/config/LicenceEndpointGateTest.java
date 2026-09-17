@@ -122,9 +122,8 @@ class LicenceEndpointGateTest {
     }
 
     /**
-     * The live check is a read of the tier {@link LicenseKeyChecker} stored the last time the key
-     * changed. Keygen is contacted on that refresh, never on the request path, so no gate pays for
-     * a verification per request.
+     * No gate re-verifies the key with Keygen while serving a request; the live read only revisits
+     * linked Team entitlement, and only while no installed key is present.
      */
     @Nested
     class LiveLookup {
