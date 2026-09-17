@@ -101,7 +101,8 @@ users=$(docker exec multinode-postgres psql -U stirling -d stirling -tAc "select
 teams=$(docker exec multinode-postgres psql -U stirling -d stirling -tAc "select count(*) from teams" 2>/dev/null | tr -d '[:space:]')
 conns=$(docker exec multinode-postgres psql -U stirling -d stirling -tAc "select count(*) from integration_configs" 2>/dev/null | tr -d '[:space:]')
 echo "  users=$users teams=$teams integration_configs=$conns"
-[ "${users:-0}" -ge 40 ] && ok "$users users present" || bad "only ${users:-0} users (did the seed run?)"
+# Not USER_COUNT: the licence caps seats, so the seed stops short of its target.
+[ "${users:-0}" -ge 10 ] && ok "$users users present" || bad "only ${users:-0} users (did the seed run?)"
 [ "${conns:-0}" -ge 1 ]  && ok "$conns S3/integration connection(s) present" || bad "no integration connections"
 
 echo "== 5. Cross-node encrypted-secret read (shared credential key) =="

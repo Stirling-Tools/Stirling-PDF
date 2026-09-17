@@ -48,7 +48,7 @@ x-stirling-node: &stirling-node
     SYSTEM_DATASOURCE_NAME: "stirling"
     SYSTEM_DATASOURCE_USERNAME: "stirling"
     SYSTEM_DATASOURCE_PASSWORD: "stirling"
-    # User.settings has no @Lob annotation - with one, Postgres treats it as a large object and every login 500s ("Large Objects may not be used in auto-commit mode"); see multinode/README.md.
+    # User.settings has no @Lob annotation - with one, Postgres treats it as a large object and every login 500s ("Large Objects may not be used in auto-commit mode").
 
     # --- Shared object storage (persistent user uploads + share/store feature) ---
     STORAGE_ENABLED: "true"
@@ -75,7 +75,7 @@ x-stirling-node: &stirling-node
     CLUSTER_VALKEY_POOL_MAXIDLE: "16"
     CLUSTER_VALKEY_POOL_MINIDLE: "0"
     CLUSTER_VALKEY_POOL_MAXWAITMILLIS: "2000"
-    # SPRING_DATA_REDIS_REPOSITORIES_ENABLED is not needed: DataRedisRepositoriesAutoConfiguration is excluded (see application.properties, multinode/README.md).
+    # SPRING_DATA_REDIS_REPOSITORIES_ENABLED is not needed: DataRedisRepositoriesAutoConfiguration is excluded (see application.properties).
 
     # --- Shared credential-encryption key (REQUIRED in cluster mode) ---
     # AES-256 key that encrypts stored integration/S3 secrets - must match on every node or secrets encrypted on one can't decrypt on another; boot fails if unset with cluster.enabled=true (test-only value; JWT keys persist separately in the shared DB).
