@@ -21,6 +21,7 @@ const ALLOWED_PATH_PREFIXES = [
   "/api/v1/filter/",
   "/api/v1/integration/",
   "/api/v1/ai/tools/classify-and-label",
+  "/api/v1/docparse/rag-ingest",
   // Admitted on its own rather than the whole form namespace: this is the only /form/ endpoint
   // that takes a document and returns one, so it is the only one a pipeline can chain.
   "/api/v1/form/form-detection/detect",
