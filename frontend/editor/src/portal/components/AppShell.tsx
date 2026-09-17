@@ -105,8 +105,10 @@ export function AppShell({ children }: { children: ReactNode }) {
             <NotificationBell />
           </div>
         )}
-        <ConnectAccountRail />
-        <main className="portal-shell__view">{children}</main>
+        <main className="portal-shell__view">
+          <ConnectAccountRail />
+          {children}
+        </main>
       </div>
     </div>
   );
