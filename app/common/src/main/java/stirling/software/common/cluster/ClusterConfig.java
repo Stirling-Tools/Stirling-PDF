@@ -1,6 +1,5 @@
 package stirling.software.common.cluster;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.PostConstruct;
@@ -9,7 +8,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
-import stirling.software.common.util.GeneralUtils;
 
 /** Validates cluster config consistency. All guards are skipped when cluster.enabled=false. */
 @Slf4j
@@ -21,45 +19,10 @@ public class ClusterConfig {
                     + " cluster.valkey.url to be set (e.g."
                     + " redis://valkey:6379).";
 
-    private static final String SHARED_SECRET_MESSAGE_SUFFIX =
-            " is not a shared UUID. Set it to the same value on every node (env"
-                    + " AUTOMATICALLYGENERATED_KEY and AUTOMATICALLYGENERATED_UUID), or each node"
-                    + " mints its own at first boot: workflow metadata encrypted on one node cannot"
-                    + " be decrypted on another and licence seat signatures do not verify across"
-                    + " nodes.";
-
     private final ApplicationProperties applicationProperties;
-    private final String automaticallyGeneratedKey;
-    private final String automaticallyGeneratedUuid;
 
-    // Read from config, not from ApplicationProperties: InitialSetup overwrites the bound values
-    // with per-node UUIDs in its own @PostConstruct, which would defeat the check below.
-    public ClusterConfig(
-            ApplicationProperties applicationProperties,
-            @Value("${AutomaticallyGenerated.key:}") String automaticallyGeneratedKey,
-            @Value("${AutomaticallyGenerated.UUID:}") String automaticallyGeneratedUuid) {
+    public ClusterConfig(ApplicationProperties applicationProperties) {
         this.applicationProperties = applicationProperties;
-        this.automaticallyGeneratedKey = automaticallyGeneratedKey;
-        this.automaticallyGeneratedUuid = automaticallyGeneratedUuid;
-    }
-
-    /**
-     * Warns only. A single-node install with cluster.enabled=true works fine on per-node keys, and
-     * on a fresh boot InitialSetup has not minted them yet, so this must never refuse to start.
-     */
-    static void warnOnUnsharedCryptoMaterial(boolean clusterEnabled, String key, String uuid) {
-        if (!clusterEnabled) {
-            return;
-        }
-        warnUnlessSharedUuid("AutomaticallyGenerated.key", key);
-        warnUnlessSharedUuid("AutomaticallyGenerated.UUID", uuid);
-    }
-
-    // InitialSetup replaces any non-UUID value, so only a valid UUID survives startup unchanged.
-    private static void warnUnlessSharedUuid(String property, String value) {
-        if (!GeneralUtils.isValidUUID(value)) {
-            log.warn("{}{}", property, SHARED_SECRET_MESSAGE_SUFFIX);
-        }
     }
 
     @PostConstruct
@@ -68,7 +31,6 @@ public class ClusterConfig {
         if (!cluster.isEnabled()) {
             return;
         }
-        warnOnUnsharedCryptoMaterial(true, automaticallyGeneratedKey, automaticallyGeneratedUuid);
         String backplane = cluster.getBackplane();
         if ("valkey".equalsIgnoreCase(backplane)) {
             // getValkey() re-seeds a null block, so an absent 'valkey:' reads as a missing url.
@@ -125,9 +87,7 @@ public class ClusterConfig {
             throw new IllegalStateException(
                     "cluster.valkey.sentinel.nodes is set but the resolved mode is "
                             + mode
-                            + ", so the sentinel list is ignored and the client would connect to"
-                            + " cluster.valkey.url instead. Set cluster.valkey.sentinel.master (the"
-                            + " monitored primary name, e.g. mymaster) or"
+                            + ", so it is ignored. Set cluster.valkey.sentinel.master or"
                             + " cluster.valkey.mode=sentinel.");
         }
         if (!valkey.getNodes().isEmpty()

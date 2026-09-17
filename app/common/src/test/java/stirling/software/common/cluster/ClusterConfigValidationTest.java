@@ -1,6 +1,5 @@
 package stirling.software.common.cluster;
 
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -8,17 +7,11 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.lang.reflect.Method;
 import java.util.List;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.AutoConfigurations;
-import org.springframework.boot.autoconfigure.context.PropertyPlaceholderAutoConfiguration;
-import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -26,20 +19,10 @@ import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.ApplicationProperties.Cluster;
 import stirling.software.common.model.ApplicationProperties.Cluster.Valkey;
 
-import ch.qos.logback.classic.Level;
-import ch.qos.logback.classic.Logger;
-import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.core.read.ListAppender;
-
 class ClusterConfigValidationTest {
 
-    /** Stand-ins for the shared AutomaticallyGenerated values every node must be given. */
-    private static final String SHARED_KEY = "11111111-1111-1111-1111-111111111111";
-
-    private static final String SHARED_UUID = "22222222-2222-2222-2222-222222222222";
-
     private static ClusterConfig config(ApplicationProperties props) {
-        return new ClusterConfig(props, SHARED_KEY, SHARED_UUID);
+        return new ClusterConfig(props);
     }
 
     @Test
@@ -372,121 +355,8 @@ class ClusterConfigValidationTest {
     }
 
     /** AutomaticallyGenerated.key/.UUID feed metadata encryption and licence seat HMACs. */
-    @Nested
-    @DisplayName("shared AutomaticallyGenerated key/UUID warning")
-    class SharedCryptoMaterial {
-
-        private ApplicationProperties props;
-        private Logger clusterLogger;
-        private ListAppender<ILoggingEvent> appender;
-
-        @BeforeEach
-        void attachLogCapture() {
-            clusterLogger = (Logger) LoggerFactory.getLogger(ClusterConfig.class);
-            appender = new ListAppender<>();
-            appender.start();
-            clusterLogger.addAppender(appender);
-        }
-
-        @AfterEach
-        void detachLogCapture() {
-            clusterLogger.detachAppender(appender);
-            appender.stop();
-        }
-
-        @Test
-        @DisplayName("an unset key warns and names the env var to set, but still boots")
-        void missingKeyWarns() {
-            enabled("inprocess");
-            assertDoesNotThrow(() -> invokeValidate(new ClusterConfig(props, "", SHARED_UUID)));
-            assertWarned("AutomaticallyGenerated.key", "AUTOMATICALLYGENERATED_KEY");
-        }
-
-        @Test
-        @DisplayName("an unset UUID warns even when the key is set")
-        void missingUuidWarns() {
-            enabled("inprocess");
-            assertDoesNotThrow(() -> invokeValidate(new ClusterConfig(props, SHARED_KEY, null)));
-            assertWarned("AutomaticallyGenerated.UUID");
-        }
-
-        @Test
-        @DisplayName("the settings.yml.template placeholder warns: InitialSetup replaces it")
-        void nonUuidPlaceholderWarns() {
-            enabled("inprocess");
-            assertDoesNotThrow(
-                    () -> invokeValidate(new ClusterConfig(props, "example", "example")));
-            assertWarned("AutomaticallyGenerated.key");
-        }
-
-        @Test
-        @DisplayName("two explicit UUIDs warn about nothing")
-        void explicitSharedValuesStaySilent() {
-            enabled("valkey");
-            props.getCluster().getValkey().setUrl("redis://valkey:6379");
-            assertDoesNotThrow(() -> invokeValidate(config(props)));
-            assertThat(warnings()).noneMatch(line -> line.contains("AutomaticallyGenerated"));
-        }
-
-        @Test
-        @DisplayName("cluster.enabled=false never looks at the shared values")
-        void disabledClusterSkipsCheck() {
-            enabled("valkey");
-            props.getCluster().setEnabled(false);
-            assertDoesNotThrow(() -> invokeValidate(new ClusterConfig(props, "", "")));
-            assertThat(warnings()).isEmpty();
-        }
-
-        private void enabled(String backplane) {
-            props = new ApplicationProperties();
-            props.getCluster().setEnabled(true);
-            props.getCluster().setBackplane(backplane);
-        }
-
-        private List<String> warnings() {
-            return appender.list.stream()
-                    .filter(event -> event.getLevel() == Level.WARN)
-                    .map(ILoggingEvent::getFormattedMessage)
-                    .toList();
-        }
-
-        private void assertWarned(String... expectedSubstrings) {
-            List<String> warnings = warnings();
-            for (String expected : expectedSubstrings) {
-                assertTrue(
-                        warnings.stream().anyMatch(line -> line.contains(expected)),
-                        "a WARN must contain '" + expected + "'; got: " + warnings);
-            }
-        }
-    }
 
     /** A missing shared key must never refuse the context, however the app is wired. */
-    @Nested
-    @DisplayName("boot with unshared key/UUID")
-    class SharedCryptoMaterialBoot {
-
-        private final ApplicationContextRunner runner =
-                new ApplicationContextRunner()
-                        .withConfiguration(
-                                AutoConfigurations.of(PropertyPlaceholderAutoConfiguration.class))
-                        .withUserConfiguration(TestAppPropertiesConfig.class, ClusterConfig.class)
-                        .withPropertyValues("cluster.enabled=true", "cluster.backplane=inprocess");
-
-        @Test
-        @DisplayName("boot succeeds when the shared values are missing")
-        void bootSucceedsWhenSharedValuesMissing() {
-            runner.run(context -> assertThat(context).hasNotFailed());
-        }
-
-        @Test
-        @DisplayName("boot succeeds once both values are configured")
-        void bootSucceedsWhenSharedValuesConfigured() {
-            runner.withPropertyValues(
-                            "AutomaticallyGenerated.key=" + SHARED_KEY,
-                            "AutomaticallyGenerated.UUID=" + SHARED_UUID)
-                    .run(context -> assertThat(context).hasNotFailed());
-        }
-    }
 
     /** Defaults-only bean: the production class loads YAML in {@code @PostConstruct}. */
     @Configuration

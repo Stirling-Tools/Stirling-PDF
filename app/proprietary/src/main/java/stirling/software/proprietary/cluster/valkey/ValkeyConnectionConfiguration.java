@@ -153,13 +153,10 @@ public class ValkeyConnectionConfiguration {
             throw new IllegalStateException(
                     "cluster.valkey.url selects database "
                             + database
-                            + " but cluster.valkey.mode="
+                            + " but mode="
                             + mode.name().toLowerCase(java.util.Locale.ROOT)
-                            + " ignores the url, so this deployment would silently use database 0"
-                            + " and share its keyspace with anything else on that server. Database"
-                            + " selection is supported in standalone mode only: give this"
-                            + " deployment its own Valkey (or its own sentinel master), then clear"
-                            + " the database from cluster.valkey.url.");
+                            + " ignores the url and would use database 0. Database selection works"
+                            + " in standalone mode only.");
         }
     }
 
@@ -553,10 +550,8 @@ public class ValkeyConnectionConfiguration {
             return;
         }
         log.warn(
-                "Valkey maxmemory-policy is '{}', not 'noeviction'. Every backplane key has a TTL,"
-                        + " so under memory pressure this server may evict live node registrations and"
-                        + " distributed locks, letting two nodes run the same exclusive job. Set"
-                        + " maxmemory-policy=noeviction.",
+                "Valkey maxmemory-policy is '{}'; set it to noeviction or memory pressure can evict"
+                        + " live locks and node registrations.",
                 policy);
     }
 
@@ -608,11 +603,9 @@ public class ValkeyConnectionConfiguration {
         String command = refusedCommand(reply);
         return "Valkey ACL refused a command for "
                 + where
-                + ". The credentials were accepted; this ACL user is missing a command or key"
-                + " permission"
-                + (command == null ? "" : " - grant '+" + command + "'")
-                + ". The backplane needs the boot probe (EXISTS) and read/write access to the"
-                + " 'stirling:*' keyspace.";
+                + ". Credentials were accepted; grant"
+                + (command == null ? "" : " '+" + command + "' plus")
+                + " EXISTS and read/write on 'stirling:*'.";
     }
 
     /** NOPERM only - a permitted-command/key problem, distinct from bad credentials. */
