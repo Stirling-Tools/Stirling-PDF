@@ -135,9 +135,6 @@ class SupabaseAuthenticationFilterTest {
         Jwt jwt = jwtFor(supabaseId, "alice@example.com", false, "google");
         when(jwtDecoder.decode("token")).thenReturn(jwt);
 
-        SupabaseUser supabaseUser = supabaseUserMatching(supabaseId, "alice@example.com", false);
-        when(supabaseUserService.getUser(supabaseId)).thenReturn(supabaseUser);
-
         User existing = newUser("alice@example.com");
         existing.setSupabaseId(supabaseId);
         existing.setAuthenticationType(AuthenticationType.OAUTH2);
@@ -157,6 +154,8 @@ class SupabaseAuthenticationFilterTest {
         assertThat(auth.getSupabaseId()).isEqualTo(supabaseId.toString());
         assertThat(auth.getEmail()).isEqualTo("alice@example.com");
         verify(userService, never()).saveUser(any());
+        // An already-linked, non-anonymous account reads nothing from auth.users.
+        verify(supabaseUserService, never()).getUser(any());
     }
 
     @Test
