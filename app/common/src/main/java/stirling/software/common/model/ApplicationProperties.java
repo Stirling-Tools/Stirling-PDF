@@ -230,6 +230,12 @@ public class ApplicationProperties {
         private long scheduleSweepSeconds = 60;
 
         /**
+         * Seconds between safety-net sweeps of server processing folders; minimum one second.
+         * Placement sweeps the folder itself, so this only catches what this instance never saw.
+         */
+        private long storageFolderSweepSeconds = 60;
+
+        /**
          * How often (seconds) the folder-watch trigger reconciles its watch registrations and
          * re-runs every folder-watch policy as a safety net for filesystem events that were missed
          * (NFS, bind mounts, inotify-queue overflow). The default bounds how long a file can sit
