@@ -4626,7 +4626,7 @@ viewVersionHistory = "Version journey ({{count}})"
 [filesPage.appearance]
 colour = "Color"
 done = "Done"
-edit = "Appearance…"
+edit = "Appearance..."
 icon = "Icon"
 title = "Appearance"
 useColour = "Use color {{c}}"
