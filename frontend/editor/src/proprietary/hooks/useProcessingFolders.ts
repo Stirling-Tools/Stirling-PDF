@@ -138,7 +138,6 @@ export function useProcessingFolders(): ProcessingFoldersApi {
       return {
         id: record.id,
         enabled: record.enabled,
-        output: record.output,
         categoryId:
           typeof record.output.categoryId === "string"
             ? record.output.categoryId

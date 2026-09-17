@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -217,10 +218,11 @@ class ProcessingFolderControllerTest {
                                 true,
                                 "reece",
                                 3L));
+        var baseline = request(null, "new_version");
+        // Stubbed on the request's own steps: the sink has to see them, not an empty list.
         doThrow(new IllegalArgumentException("requires a final RAG preparation step"))
                 .when(diskFolderSink)
-                .validatePipeline(any(), any());
-        var baseline = request(null, "new_version");
+                .validatePipeline(any(), eq(baseline.steps()));
         var unsupported =
                 new ProcessingFolderController.SaveProcessingFolderRequest(
                         null,
@@ -234,6 +236,73 @@ class ProcessingFolderControllerTest {
         assertThatThrownBy(() -> controller.save(unsupported))
                 .isInstanceOf(ResponseStatusException.class)
                 .hasMessageContaining("RAG preparation step");
+        assertThat(policyStore.all()).isEmpty();
+    }
+
+    @Test
+    void aRoutedDestinationIsNotHeldToWhatTheFoldersOwnPipelineDelivers() {
+        Source routed =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Invoices",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                true,
+                                "reece",
+                                3L));
+        var routes =
+                List.of(
+                        new RoutingRule(
+                                new Condition.MatchesAny(
+                                        new ConditionInput.DocumentField("document.extension"),
+                                        List.of("pdf")),
+                                routed.id()));
+        var baseline = request(null, "new_version");
+        var created =
+                controller
+                        .save(
+                                new ProcessingFolderController.SaveProcessingFolderRequest(
+                                        null,
+                                        FOLDER_ID.toString(),
+                                        null,
+                                        true,
+                                        baseline.steps(),
+                                        Map.of("categoryId", "routing"),
+                                        List.of(),
+                                        routes))
+                        .getBody();
+        assertThat(created.routingRules()).isEqualTo(routes);
+        // Only the folder's own output reaches the sink's pipeline check.
+        verify(diskFolderSink, never()).validatePipeline(any(), any());
+    }
+
+    @Test
+    void aDisabledDestinationIsRefusedWhileThereIsStillACallerToTellAboutIt() {
+        Source destination =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Paused corpus",
+                                "folder",
+                                Map.of("directory", tempDir.toString()),
+                                false,
+                                "reece",
+                                3L));
+        var baseline = request(null, "new_version");
+        var paused =
+                new ProcessingFolderController.SaveProcessingFolderRequest(
+                        null,
+                        FOLDER_ID.toString(),
+                        null,
+                        true,
+                        baseline.steps(),
+                        Map.of(),
+                        List.of(destination.id()),
+                        List.of());
+        assertThatThrownBy(() -> controller.save(paused))
+                .isInstanceOf(ResponseStatusException.class)
+                .hasMessageContaining("disabled");
         assertThat(policyStore.all()).isEmpty();
     }
 

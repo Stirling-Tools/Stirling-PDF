@@ -237,9 +237,16 @@ public class ProcessingFolderController {
                         ? request.routingRules()
                         : existing == null ? List.of() : existing.routingRules();
         List<PipelineStep> steps = request.steps() == null ? List.of() : request.steps();
-        Stream.concat(outputIds.stream(), routingRules.stream().map(RoutingRule::outputId))
+        // Only the folder's own destination receives the pipeline's output, so only its sink gets
+        // to vet the steps; a routed document arrives on its own, as PolicyValidator assumes.
+        outputIds.stream()
                 .distinct()
                 .forEach(outputId -> requireAccessibleDestination(outputId, steps));
+        routingRules.stream()
+                .map(RoutingRule::outputId)
+                .distinct()
+                .filter(outputId -> !outputIds.contains(outputId))
+                .forEach(this::requireAccessibleDestination);
         String name = onDisk ? diskFolderName(request.directory()) : folder.getName();
 
         // Held for rollback: the source is written before the policy validates, and a rejected
@@ -895,7 +902,33 @@ public class ProcessingFolderController {
         return fileName == null ? path.toString() : fileName.toString();
     }
 
+    /** A routing destination takes documents the rules divert, never the folder's own output. */
+    private void requireAccessibleDestination(String outputId) {
+        Source destination = accessibleDestination(outputId);
+        // Validate on the request thread: connection checks need the caller's authentication.
+        try {
+            policyValidator.validateOutput(destination.toOutputSpec());
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
     private void requireAccessibleDestination(String outputId, List<PipelineStep> steps) {
+        Source destination = accessibleDestination(outputId);
+        // Dispatch resolves the destination again on a worker thread with no caller to report to.
+        if (!destination.enabled()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST, "The output destination is disabled: " + outputId);
+        }
+        // Validate on the request thread: connection checks need the caller's authentication.
+        try {
+            policyValidator.validateOutput(destination.toOutputSpec(), steps);
+        } catch (IllegalArgumentException e) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    private Source accessibleDestination(String outputId) {
         Source destination =
                 sourceStore
                         .get(outputId)
@@ -910,12 +943,7 @@ public class ProcessingFolderController {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
         }
-        // Validate on the request thread: connection checks need the caller's authentication.
-        try {
-            policyValidator.validateOutput(destination.toOutputSpec(), steps);
-        } catch (IllegalArgumentException e) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
-        }
+        return destination;
     }
 
     /** Corpus exports preserve originals; ordinary PDF processing replaces them. */

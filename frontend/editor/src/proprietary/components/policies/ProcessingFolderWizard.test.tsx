@@ -26,8 +26,30 @@ const classification = vi.hoisted(() => ({ available: true }));
 vi.mock("@app/hooks/useAiClassificationEnabled", () => ({
   useAiClassificationEnabled: () => classification.available,
 }));
+// The output panel is covered by its own tests; here it stands in for the wiring and the gate.
+const setupConfigValid = vi.hoisted(() => ({ value: true }));
+vi.mock("@app/components/policies/FolderPolicySetupConfig", async () => {
+  const { useEffect } = await vi.importActual<typeof import("react")>("react");
+  return {
+    FolderPolicySetupConfig: ({
+      folderName,
+      onValidityChange,
+    }: {
+      folderName: string;
+      onValidityChange: (valid: boolean) => void;
+    }) => {
+      useEffect(
+        () => onValidityChange(setupConfigValid.value),
+        [onValidityChange],
+      );
+      return <p>{`output panel for ${folderName}`}</p>;
+    },
+  };
+});
+
 beforeEach(() => {
   classification.available = true;
+  setupConfigValid.value = true;
 });
 
 vi.mock("@app/services/directoryDrop", () => ({
@@ -1225,5 +1247,23 @@ describe("ProcessingFolderWizard", () => {
         }),
       ),
     );
+  });
+
+  it("mounts the output panel for every preset but Routing, and lets it block saving", () => {
+    setupConfigValid.value = false;
+    renderWizard({
+      initialFolder: folder,
+      destinations: [{ id: "archive", name: "Archive" }],
+    });
+    expect(screen.getByText(`output panel for ${folder.name}`)).toBeVisible();
+    expect(button("enable")).toBeDisabled();
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "portal.policies.categories.routing.label",
+      }),
+    );
+    expect(
+      screen.queryByText(`output panel for ${folder.name}`),
+    ).not.toBeInTheDocument();
   });
 });
