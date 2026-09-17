@@ -19,6 +19,7 @@ function LinkModalHost() {
   const {
     linkModalOpen,
     linkModalMode,
+    linkModalFailureContext,
     closeLinkModal,
     connectOutcome,
     openLinkModal,
@@ -45,6 +46,7 @@ function LinkModalHost() {
     <LinkAccountModal
       open
       mode={linkModalMode}
+      failureContext={linkModalFailureContext}
       onClose={closeLinkModal}
       outcome={connectOutcome}
     />

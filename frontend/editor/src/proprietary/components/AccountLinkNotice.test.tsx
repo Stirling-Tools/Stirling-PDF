@@ -91,6 +91,10 @@ describe("editor shared account-link modal", () => {
     expect(
       screen.getByText("Add more users with a paid Team plan"),
     ).toBeTruthy();
+    expect(screen.queryByText("Active pipelines")).toBeNull();
+    expect(get.mock.calls.every(([url]) => !url.includes("/policies"))).toBe(
+      true,
+    );
     fireEvent.click(
       screen.getByRole("button", { name: "Link account for more credits" }),
     );

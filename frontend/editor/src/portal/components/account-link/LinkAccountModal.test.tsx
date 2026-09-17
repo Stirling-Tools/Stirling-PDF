@@ -51,6 +51,10 @@ vi.mock("@portal/auth/saasSupabase", () => ({
 import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
 import { freeWallet } from "@portal/components/billing/walletFixtures";
+import {
+  clearAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
 
 const AUTHORIZE = "http://localhost:5174/link?request=req-1";
 const deployment = vi.hoisted(() => ({ basePath: "" }));
@@ -94,6 +98,21 @@ function filledSteps(): number {
 
 describe("LinkAccountModal", () => {
   let assign: ReturnType<typeof vi.fn>;
+
+  it("omits pipeline controls for a banner prompt even after a pipeline failure", () => {
+    clearAccountLinkBlock();
+    reportFreeTierExhausted("background", {
+      pipelineId: "rotate",
+      trigger: "upload",
+    });
+    renderModal("exhausted");
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(screen.queryByText("Active pipelines")).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Open pipeline settings" }),
+    ).toBeNull();
+    clearAccountLinkBlock();
+  });
 
   it("returns keyboard focus to the trigger when the dialog unmounts", () => {
     const trigger = document.createElement("button");

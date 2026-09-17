@@ -6,12 +6,14 @@ export function EditorLinkModal({
   open,
   onClose,
   summary,
+  failureContext,
 }: ExhaustedAccountLinkModalProps) {
   return (
     <LinkAccountModal
       open={open}
       onClose={onClose}
       summary={summary}
+      failureContext={failureContext}
       mode="exhausted"
     />
   );

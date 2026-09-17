@@ -9,10 +9,12 @@ import { CreditPromptPipelines } from "@app/components/account-link/CreditPrompt
 import { ConnectBenefitsSlide } from "@app/components/account-link/ConnectBenefitsSlide";
 import {
   acknowledgeAccountLinkPrompt,
-  useAccountLinkBlock,
+  type AccountLinkBlockContext,
 } from "@app/services/accountLinkBlock";
 
 export interface ExhaustedAccountLinkModalProps {
+  /** Only the operation that opened this instance may supply pipeline controls. */
+  failureContext?: AccountLinkBlockContext;
   open: boolean;
   onClose: () => void;
   onStart?: () => void;
@@ -53,11 +55,11 @@ export function ExhaustedAccountLinkModal({
   onManagePipeline,
   summary,
   children,
+  failureContext: context,
 }: ExhaustedAccountLinkModalProps) {
   const { t } = useTranslation();
   const { isAdmin, loading } = useAuth();
   const clipboard = useClipboard();
-  const { context } = useAccountLinkBlock();
   const dismiss = () => {
     acknowledgeAccountLinkPrompt();
     onClose();
@@ -163,7 +165,7 @@ export function ExhaustedAccountLinkModal({
       ) : (
         <p className="portal-connect__lede">{adminMessage}</p>
       )}
-      {isAdmin && (
+      {isAdmin && context?.pipelineId && (
         <CreditPromptPipelines
           affectedPipelineId={context?.pipelineId}
           onManagePipeline={

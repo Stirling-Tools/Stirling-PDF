@@ -45,6 +45,17 @@ describe("credit prompt session", () => {
     expect(result.current.promptPending).toBe(false);
     act(requestAccountLinkPrompt);
     expect(result.current.promptPending).toBe(true);
+    expect(result.current.context).toBeUndefined();
+  });
+
+  it("does not attach a later pipeline failure to a prompt opened by a direct feature", () => {
+    const { result } = renderHook(useAccountLinkBlock);
+    act(() => {
+      reportFreeTierExhausted();
+      reportFreeTierExhausted("background", cause);
+    });
+    expect(result.current.promptPending).toBe(true);
+    expect(result.current.context).toBeUndefined();
   });
 
   it("honours persisted session suppression and rearms for a fresh tab session", () => {

@@ -30,7 +30,7 @@ export function AccountLinkNotice({
 }: Props = {}) {
   const { isAdmin, loading } = useAuth();
   const { pathname } = useLocation();
-  const { exhausted, promptPending } = useAccountLinkBlock();
+  const { exhausted, promptPending, context } = useAccountLinkBlock();
   const [open, setOpen] = useState(false);
   const hasLinkDialog =
     !onShowOptions &&
@@ -79,6 +79,7 @@ export function AccountLinkNotice({
   return (
     <EditorLinkModal
       open
+      failureContext={context}
       onClose={() => setOpen(false)}
       onStart={onShowOptions}
       onManagePipeline={onManagePipeline}

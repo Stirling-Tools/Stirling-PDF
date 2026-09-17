@@ -9,7 +9,10 @@ vi.mock("@portal/contexts/UIContext", () => ({
 
 import { HttpError } from "@portal/api/http";
 import { reportAccountLinkBlock } from "@portal/services/accountLinkBlock";
-import { clearAccountLinkBlock } from "@app/services/accountLinkBlock";
+import {
+  clearAccountLinkBlock,
+  reportFreeTierExhausted,
+} from "@app/services/accountLinkBlock";
 import { useFreeTierExhaustedPrompt } from "@portal/hooks/useFreeTierExhaustedPrompt";
 
 function Probe({ enabled = true }: { enabled?: boolean }) {
@@ -42,7 +45,10 @@ describe("the account-link prompt", () => {
     });
     expect(openLinkModal).not.toHaveBeenCalled();
     view.rerender(<Probe />);
-    expect(openLinkModal).toHaveBeenCalledExactlyOnceWith("exhausted");
+    expect(openLinkModal).toHaveBeenCalledExactlyOnceWith(
+      "exhausted",
+      undefined,
+    );
   });
 
   it("opens on the allowance pitch when the grant is reported spent", () => {
@@ -50,7 +56,14 @@ describe("the account-link prompt", () => {
     act(() => {
       reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
     });
-    expect(openLinkModal).toHaveBeenCalledWith("exhausted");
+    expect(openLinkModal).toHaveBeenCalledWith("exhausted", undefined);
+  });
+
+  it("passes the triggering pipeline to the automatic modal", () => {
+    render(<Probe />);
+    const cause = { pipelineId: "rotate", trigger: "upload" as const };
+    act(() => reportFreeTierExhausted("background", cause));
+    expect(openLinkModal).toHaveBeenCalledWith("exhausted", cause);
   });
 
   it("leaves a linked team's own billing problems to their own surface", () => {
@@ -95,7 +108,10 @@ describe("the account-link prompt", () => {
     act(() => {
       reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"), "background");
     });
-    expect(openLinkModal).toHaveBeenCalledExactlyOnceWith("exhausted");
+    expect(openLinkModal).toHaveBeenCalledExactlyOnceWith(
+      "exhausted",
+      undefined,
+    );
     act(() => {
       reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
     });

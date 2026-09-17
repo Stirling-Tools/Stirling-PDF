@@ -17,6 +17,7 @@ import {
 } from "@portal/components/account-link/ConnectCallbackView";
 import { useConnectHandoff } from "@portal/hooks/useConnectHandoff";
 import type { LinkModalMode } from "@portal/contexts/UIContext";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
 import "@portal/views/ConnectCallback.css";
 
 /**
@@ -28,6 +29,7 @@ const STEP_ORDER = ["ask", "handoff", "outcome"] as const;
 type StepId = (typeof STEP_ORDER)[number];
 
 interface Props {
+  failureContext?: AccountLinkBlockContext;
   open: boolean;
   onClose: () => void;
   /** "reauth" only re-establishes the browser session, so it stays one step with no pitch. */
@@ -48,6 +50,7 @@ export function LinkAccountModal({
   mode = "link",
   outcome = null,
   summary,
+  failureContext,
 }: Props) {
   const navigate = useNavigate();
   // This dialog unmounts on close, so retain its trigger before FocusTrap moves focus.
@@ -102,6 +105,7 @@ export function LinkAccountModal({
   if (exhausted && step === "ask") {
     return (
       <ExhaustedAccountLinkModal
+        failureContext={failureContext}
         open={open}
         onClose={onClose}
         onStart={handoff.begin}

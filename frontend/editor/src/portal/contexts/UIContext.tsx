@@ -8,6 +8,7 @@ import {
 import { navigateToSettings } from "@app/utils/settingsNavigation";
 import type { NavKey } from "@app/components/shared/config/types";
 import type { ConnectOutcome } from "@portal/components/account-link/ConnectCallbackView";
+import type { AccountLinkBlockContext } from "@app/services/accountLinkBlock";
 
 /**
  * Why the dialog is open. All three run the same handshake; the mode only chooses the pitch.
@@ -40,7 +41,11 @@ interface UIContextValue {
   /** The account-link login modal. A single top-level instance. */
   linkModalOpen: boolean;
   linkModalMode: LinkModalMode;
-  openLinkModal: (mode?: LinkModalMode) => void;
+  linkModalFailureContext?: AccountLinkBlockContext;
+  openLinkModal: (
+    mode?: LinkModalMode,
+    failureContext?: AccountLinkBlockContext,
+  ) => void;
   closeLinkModal: () => void;
   /**
    * A one-shot signal like {@link UIContextValue.trialSetupRequested}: the callback route and the
@@ -84,6 +89,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
     useState(readSidebarCollapsed);
   const [assistantOpen, setAssistantOpen] = useState(false);
   const [linkModalOpen, setLinkModalOpen] = useState(false);
+  const [linkModalFailureContext, setLinkModalFailureContext] =
+    useState<AccountLinkBlockContext>();
   const [trialSetupRequested, setTrialSetupRequested] = useState(false);
   const [linkModalMode, setLinkModalMode] = useState<LinkModalMode>("link");
   const [connectOutcome, setConnectOutcome] = useState<ConnectOutcome | null>(
@@ -118,7 +125,12 @@ export function UIProvider({ children }: { children: ReactNode }) {
 
       linkModalOpen,
       linkModalMode,
-      openLinkModal: (mode: LinkModalMode = "link") => {
+      linkModalFailureContext,
+      openLinkModal: (
+        mode: LinkModalMode = "link",
+        failureContext?: AccountLinkBlockContext,
+      ) => {
+        setLinkModalFailureContext(failureContext);
         setMobileNavOpen(false);
         setLinkModalMode(mode);
         setLinkModalOpen(true);
@@ -138,6 +150,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       },
       clearConnectOutcome: () => setConnectOutcome(null),
       closeLinkModal: () => {
+        setLinkModalFailureContext(undefined);
         setLinkModalOpen(false);
         setLinkModalMode("link");
         // A reopen from a CTA is a fresh flow, not a handshake already dismissed.
@@ -150,6 +163,7 @@ export function UIProvider({ children }: { children: ReactNode }) {
       assistantOpen,
       linkModalOpen,
       linkModalMode,
+      linkModalFailureContext,
       trialSetupRequested,
       connectOutcome,
     ],

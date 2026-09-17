@@ -88,7 +88,7 @@ export function acknowledgeAccountLinkPrompt(): void {
 
 /** Explicit CTA clicks can reopen the dialog after automatic prompts have been dismissed. */
 export function requestAccountLinkPrompt(): void {
-  publish({ ...state, promptPending: true });
+  publish({ ...state, promptPending: true, context: undefined });
 }
 
 /** Records a failed operation and preserves the first cause while its exhaustion notice is active. */
@@ -98,7 +98,7 @@ export function reportFreeTierExhausted(
 ): void {
   const promptShown = shownThisSession();
   const promptPending = state.promptPending || !promptShown;
-  const cause = state.context ?? context;
+  const cause = state.exhausted ? state.context : context;
   if (
     state.exhausted &&
     state.promptPending === promptPending &&

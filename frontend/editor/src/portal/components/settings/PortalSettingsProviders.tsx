@@ -8,8 +8,13 @@ import { AccountLinkProvider } from "@portal/contexts/AccountLinkContext";
 import { LinkAccountModal } from "@portal/components/account-link/LinkAccountModal";
 
 function LinkModalHost() {
-  const { linkModalOpen, linkModalMode, closeLinkModal, connectOutcome } =
-    useUI();
+  const {
+    linkModalOpen,
+    linkModalMode,
+    linkModalFailureContext,
+    closeLinkModal,
+    connectOutcome,
+  } = useUI();
   const { pathname } = useLocation();
   useFreeTierExhaustedPrompt(
     pathname === "/settings/billing" || pathname === "/settings/account-link",
@@ -19,6 +24,7 @@ function LinkModalHost() {
     <LinkAccountModal
       open
       mode={linkModalMode}
+      failureContext={linkModalFailureContext}
       onClose={closeLinkModal}
       outcome={connectOutcome}
     />
