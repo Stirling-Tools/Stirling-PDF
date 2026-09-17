@@ -7,6 +7,7 @@ import type {
 import { fileStorage } from "@app/services/fileStorage";
 import {
   clearRetryPayload,
+  kindClaims,
   stashMatchesKind,
   type RetryFailure,
   type RetryOutcome,
@@ -19,6 +20,7 @@ import {
   type PolicyRerunOutcome,
   type PolicyRetryTarget,
 } from "@app/services/notificationPolicyRetry";
+import { reportKnownFailure } from "@app/services/failureReporting";
 import { reportNotificationResolved } from "@app/services/notifications";
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
@@ -57,6 +59,8 @@ export interface ProduceOutcome {
   ok: boolean;
   reason?: RetryFailure;
   message?: string | null;
+  /** The server's code for a refusal, so a verdict that outlives this row can replace it. */
+  errorCode?: string | null;
   produced?: ProducedDocument[];
 }
 
@@ -232,6 +236,31 @@ export function rerunOutcome(
   };
 }
 
+/**
+ * Replace the row when a refusal says something its kind does not. A repair the tools declined
+ * makes the document unrepairable, not merely damaged, and leaving the row as it was would keep
+ * offering the fix that has just been refused. Nothing is lost: the new row explains itself, and
+ * a code the row's own kind already claims changes nothing and is left alone.
+ */
+async function supersede(
+  context: NotificationActionContext,
+  outcome: ProduceOutcome,
+): Promise<void> {
+  const errorCode = outcome.errorCode;
+  if (!errorCode || kindClaims(context.notification.kindId, errorCode)) return;
+
+  const toolId = toolOf(
+    context.retryPayload ?? ({ operation: "" } as RetryPayload),
+  );
+  await reportKnownFailure({
+    operation: toolId ?? context.notification.kindId,
+    errorCode,
+    detail: outcome.message ?? null,
+    fileIds: context.notification.fileId ? [context.notification.fileId] : [],
+  });
+  await reportNotificationResolved(context.notification.id);
+}
+
 /** Storage too, or a file merely closed in the sidebar gets a copy rather than a version. */
 async function parentStubFor(
   fileStore: ContextType<typeof FileStoreContext>,
@@ -282,7 +311,10 @@ export function resolutionSpec(
       }
 
       const outcome = await resolution.produce(target, context, password);
-      if (!outcome.ok) return retryFailure(t, outcome);
+      if (!outcome.ok) {
+        await supersede(context, outcome);
+        return retryFailure(t, outcome);
+      }
       const produced = outcome.produced ?? [];
 
       if (target.kind === "policy") {

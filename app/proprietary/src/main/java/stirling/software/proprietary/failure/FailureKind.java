@@ -78,6 +78,22 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
+     * Damage the repair tools have already declined. Separate from {@link #INPUT_CORRUPTED} so the
+     * row stops offering a fix that has been tried and refused: the same press would spend again on
+     * the same answer.
+     */
+    INPUT_UNREPAIRABLE(
+            FailureStage.INPUT,
+            FailureSeverity.ERROR,
+            FailureRemedy.PERMANENT,
+            FailureScope.FILE,
+            errorCodes("E076"),
+            fallback("This document is damaged beyond what the repair tools can fix."),
+            global(VIEW_FILE, OWNER, SECONDARY),
+            global(VIEW_IN_PROCESSOR, TEAM_REVIEWER, OVERFLOW),
+            global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
+
+    /**
      * The format checks a tool runs before it reads anything: a PDF tool handed a .docx, a comic
      * reader handed something that is not the archive it names.
      */

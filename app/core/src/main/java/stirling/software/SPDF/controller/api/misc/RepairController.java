@@ -109,12 +109,20 @@ public class RepairController {
                 qpdfCommand.add(tempInputFile.getPath().toString());
                 qpdfCommand.add(tempOutputFile.getPath().toString());
 
-                ProcessExecutorResult qpdfResult =
-                        ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
-                                .runCommandWithOutputHandling(qpdfCommand);
+                try {
+                    ProcessExecutorResult qpdfResult =
+                            ProcessExecutor.getInstance(ProcessExecutor.Processes.QPDF)
+                                    .runCommandWithOutputHandling(qpdfCommand);
 
-                // qpdf exits 3 for warnings it recovered from, which is a repaired file.
-                repairSuccess = qpdfResult.getRc() == 0 || qpdfResult.getRc() == 3;
+                    // qpdf exits 3 for warnings it recovered from, which is a repaired file.
+                    repairSuccess = qpdfResult.getRc() == 0 || qpdfResult.getRc() == 3;
+                } catch (Exception e) {
+                    // Caught like Ghostscript's above: a non-zero exit throws rather than
+                    // returning, so letting it out ended the request with qpdf's stderr, which
+                    // names temp paths and explains nothing. This is the last tool, so the only
+                    // thing left to report is that none of them could fix it.
+                    log.warn("QPDF repair failed: ", e);
+                }
             }
 
             // Use PDFBox as last resort if no external tools are available
