@@ -32,6 +32,35 @@ class InstanceEntitlementGateTest {
     @Mock private LocalUsageService localUsageService;
     @Mock private FreeTierUsageService freeTierUsageService;
 
+    @Test
+    void includedAndPrepaidCreditsRemainUsableAtZeroMeteredCap() {
+        InstanceEntitlement e =
+                new InstanceEntitlement(
+                        true, 20, 0, 0L, EntitlementState.OK, null, null, null, null, 0, 10);
+        assertTrue(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 19, 0)
+                        .allowed());
+        assertTrue(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 29, 0)
+                        .allowed());
+        assertFalse(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 30, 0)
+                        .allowed());
+    }
+
+    @Test
+    void prepaidCreditsDoNotRequireProcessorSubscription() {
+        InstanceEntitlement e =
+                new InstanceEntitlement(
+                        false, 0, 0, null, EntitlementState.OK, null, null, null, null, 0, 10);
+        assertTrue(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 9, 0)
+                        .allowed());
+        assertFalse(
+                InstanceEntitlementGate.decide(true, true, true, Optional.of(e), false, 10, 0)
+                        .allowed());
+    }
+
     private static FreeTierUsageService.FreeTierBalance grant(long remaining) {
         LocalDateTime start = LocalDateTime.of(2026, 9, 1, 0, 0);
         return new FreeTierUsageService.FreeTierBalance(

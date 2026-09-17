@@ -1268,14 +1268,6 @@ description = "Languages that users can select from (leave empty to enable all l
 label = "Available Languages"
 placeholder = "Select languages"
 
-[admin.settings.general.logoStyle]
-classic = "Classic"
-classicAlt = "Classic logo"
-description = "Set the default logo style for all users on this server. Users can override this setting in their personal preferences."
-label = "Logo Style"
-modern = "Modern"
-modernAlt = "Modern logo"
-
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
 label = "Show Update Notifications"
@@ -4533,6 +4525,7 @@ breadcrumbsOverflow = "Show parent folders"
 bulkActions = "Actions"
 cancel = "Cancel"
 classification = "Classification"
+clearSelection = "Clear selection"
 closeDetails = "Close details"
 create = "Create"
 cycleBlocked = "Can't move a folder into one of its own subfolders."
@@ -4572,6 +4565,7 @@ folder = "Folder"
 folderItems_one = "{{count}} item"
 folderItems_other = "{{count}} items"
 folderMenu = "Folder actions"
+folderSettings = "Folder settings"
 inPath = "in {{path}}"
 inWorkspace = "Open"
 inWorkspaceAria = "Already in workspace"
@@ -4594,7 +4588,7 @@ offlineNoFolderEdits = "Server folder sync unavailable - folder changes are disa
 open = "Open"
 openVersionInWorkspace = "Open in workspace"
 originFilter = "Filter by source"
-refresh = "Refresh from server"
+refresh = "Refresh"
 remove = "Delete"
 removeLocalFolder = "Unmount from Stirling"
 removeVersion = "Remove this version"
@@ -4605,7 +4599,6 @@ save = "Save"
 saveToServer = "Save to server"
 saveToServerDisabledHint = "Saving to the server isn't enabled on this server. Ask your admin to enable it."
 selectAll = "Select all"
-selectAllHint = "Click to select all. Tip: hold Ctrl (or Cmd) to add files one at a time, Shift to select a range."
 selectedCount = "{{count}} selected"
 selectFile = "Select file {{name}}"
 serverFolderNeedsConnection = "Sign in to Stirling Cloud or connect a self-hosted server to use server folders."
@@ -4632,6 +4625,8 @@ viewVersionHistory = "Version journey ({{count}})"
 
 [filesPage.appearance]
 colour = "Color"
+done = "Done"
+edit = "Appearance..."
 icon = "Icon"
 title = "Appearance"
 useColour = "Use color {{c}}"
@@ -4640,6 +4635,7 @@ useColour = "Use color {{c}}"
 modified = "Modified"
 name = "Name"
 size = "Size"
+status = "Status"
 type = "Type"
 
 [filesPage.deleteScope]
@@ -4836,13 +4832,6 @@ server = "Server error during folder sync."
 
 [filesPage.tabName]
 local = "Local"
-
-[filesPage.tabs]
-all = "All"
-ariaLabel = "File views"
-recent = "Recent"
-shared = "Shared with me"
-sharedByMe = "Shared by me"
 
 [filesPage.treeMenu]
 actions = "Folder actions for {{name}}"
@@ -6508,17 +6497,16 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-bodyMonthlyAllowance = "Stirling PDF gives every signed-up account a free monthly allowance for operations. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+aiPromo = "Create, edit and ask about PDFs with AI"
+apiPromo = "Connect your apps and AI assistants"
+automationPromo = "Automate repetitive PDF tasks"
+createAccount = "Create free account"
+editorLabel = "PDF Editor"
+login = "Log in"
+manualToolsPromo = "Unlimited free manual PDF tools"
+processorLabel = "PDF Processor"
+processorTitle = "Create an account to unlock the best of Stirling"
+readerLabel = "PDF Reader"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
@@ -7580,6 +7568,7 @@ subNoRate = "Team base plus metered processing"
 
 [portal.billing.identity.team]
 chipFleet = "Fleet control"
+chipIncluded = "{{allowance}} included credits monthly"
 chipSso = "SSO"
 name = "Team"
 sub = "Up to {{users}} users"
@@ -7732,13 +7721,15 @@ low = "Running low"
 
 [portal.billing.processor]
 activate = "Switch on the Processor"
-capTooltip = "Pauses PDF processing at your spend limit."
 factCapped = "{{pct}}% of {{cap}}"
 factFree = "{{used}} of {{allowance}} used"
 factNoCap = "no limit"
 included = "Included in your license"
-midFree = "{{rate}} per credit · {{allowance}} free every month"
-midFreeNoRate = "{{allowance}} free every month"
+includedCredits = "Included credits"
+includedRenewal = "{{summary}} · Renews {{date}}"
+meteredCapTooltip = "Pauses metered processing at your spend limit."
+midIncluded = "{{rate}} per credit · {{allowance}} included every month"
+midIncludedNoRate = "{{allowance}} included every month"
 midMetered = "{{spend}} metered this cycle"
 midMeteredUnknown = "Metered this cycle"
 raiseLimit = "Raise limit"

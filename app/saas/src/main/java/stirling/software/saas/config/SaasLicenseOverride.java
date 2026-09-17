@@ -21,6 +21,11 @@ public class SaasLicenseOverride implements LicenseServiceInterface {
     }
 
     @Override
+    public boolean hasServerLicense() {
+        return false;
+    }
+
+    @Override
     public boolean isRunningEE() {
         return true;
     }
