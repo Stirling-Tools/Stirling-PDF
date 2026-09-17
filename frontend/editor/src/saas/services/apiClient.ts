@@ -3,6 +3,7 @@ import { supabase } from "@app/auth/supabase";
 import { handleHttpError } from "@app/services/httpErrorHandler";
 import {
   classifyPaygError,
+  normalizePaygError,
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
 import { stripBasePath, withBasePath } from "@app/constants/app";
@@ -115,9 +116,9 @@ function refreshSessionOnce(): ReturnType<typeof supabase.auth.refreshSession> {
 }
 
 // Hard-redirect to /login, carrying where the user was so the login screen can
-// return them there instead of falling through to the role-based landing (which
-// sends processor users to the processor - the "refresh /editor bounces me to
-// the processor" bug). Router-relative, matching what Login reads via `?next=`.
+// return them there instead of falling through to the default landing (which
+// sends opted-in users to the processor - the "refresh /editor bounces me to the
+// processor" bug). Router-relative, matching what Login reads via `?next=`.
 function redirectToLogin(): void {
   const loginPath = withBasePath("/login");
   // Already on the login page: another redirect would just loop.
@@ -159,6 +160,7 @@ apiClient.interceptors.response.use(
     //   - The handleHttpError() generic toast at the bottom won't fire.
     // The error itself is still propagated to the caller so any
     // component-level catch can react if needed.
+    await normalizePaygError(error);
     const paygKind = classifyPaygError(error);
     if (paygKind !== null) {
       handlePaygError(paygKind, error);

@@ -18,8 +18,12 @@ import java.util.List;
  * @param teamId the caller's primary team_id. Needed by the frontend so it can pass it to the
  *     Supabase edge functions that create Stripe Checkout / portal sessions — those run outside
  *     Spring Security and have no other way to resolve the caller's team.
- * @param status {@code "free"} when the team has no Stripe subscription; {@code "subscribed"} once
- *     a card is on file and the engine bills meter events.
+ * @param status the old single billing axis. Superseded by {@code team} and {@code processor},
+ *     which say which products the team holds independently; kept until the frontend stops reading
+ *     it. {@code "free"} when the team has no Stripe subscription; {@code "subscribed"} once a card
+ *     is on file and the engine bills meter events.
+ * @param team the Team (user capacity) holding — see {@link TeamHolding}.
+ * @param processor the Processor (metered automation) holding — see {@link ProcessorHolding}.
  * @param role the current caller's role within their team — {@code "leader"} or {@code "member"}.
  *     Controls which UI variant the frontend renders.
  * @param billingPeriodStart inclusive ISO date (yyyy-MM-dd) for the current cycle — the Stripe
@@ -33,6 +37,8 @@ import java.util.List;
  *     for capped subscribed teams; {@code null} when subscribed with no cap (uncapped).
  * @param freeAllowance the team's free document grant size per period (the "N" in "X of N free").
  *     Resets each period. Applies to billable categories only.
+ * @param freeUserAllowance users the team may have with no Team plan; the denominator the capacity
+ *     row shows until one is bought.
  * @param freeRemaining free documents still available to the team this period ({@code
  *     payg_team_extensions.free_units_remaining}). 0 = this period's grant is exhausted.
  * @param pricePerDocMinor paid per-document rate in minor units of {@code currency} (may be
@@ -64,6 +70,8 @@ import java.util.List;
 public record WalletSnapshotResponse(
         Long teamId,
         String status,
+        TeamHolding team,
+        ProcessorHolding processor,
         String role,
         String billingPeriodStart,
         String billingPeriodEnd,
@@ -71,6 +79,9 @@ public record WalletSnapshotResponse(
         Integer billableLimit,
         int freeAllowance,
         int freeRemaining,
+        // Sent so both editions read one server-enforced number rather than restating it; the
+        // admin-only endpoint that also carries it is not callable by a cloud team lead.
+        int freeUserAllowance,
         BigDecimal pricePerDocMinor,
         String currency,
         Long estimatedBillMinor,
@@ -89,7 +100,9 @@ public record WalletSnapshotResponse(
         long prepaidUnitsTotal,
         String prepaidExpiresAt,
         String billingMode,
-        BigDecimal bundleRatePerCreditMinor) {
+        BigDecimal bundleRatePerCreditMinor,
+        String includedPeriodStart,
+        String includedPeriodEnd) {
 
     // Prepaid usage bundles, aggregated across the team's in-term pools (drawn ahead of the meter,
     // outside the spend cap):
@@ -130,4 +143,28 @@ public record WalletSnapshotResponse(
      * @param docUnits absolute document count of the entry
      */
     public record ActivityRow(long id, String kind, String label, String ts, int docUnits) {}
+
+    /**
+     * The Team holding: paid user capacity.
+     *
+     * <p>Reported separately from {@link ProcessorHolding} because the two products are orthogonal
+     * — a team may hold either, both, or neither — and a single {@code free | subscribed} axis
+     * cannot say which. A caller decides what to offer from {@code held}, not from {@code status}.
+     *
+     * @param held the team pays for user capacity. False means no Team plan, so a caller offers it,
+     *     rather than meaning capacity is unknown.
+     * @param licensedUsers how many users the holding covers; {@code null} when the team has no
+     *     user limit.
+     * @param usersInUse team members occupying capacity right now.
+     */
+    public record TeamHolding(boolean held, Integer licensedUsers, int usersInUse) {}
+
+    /**
+     * The Processor holding: metered document automation beyond the free grant.
+     *
+     * @param active the team has a live metered subscription. This is the fact the old {@code
+     *     status == "subscribed"} actually carried; the rate, spend, cap and grant figures for it
+     *     stay on the enclosing record.
+     */
+    public record ProcessorHolding(boolean active) {}
 }

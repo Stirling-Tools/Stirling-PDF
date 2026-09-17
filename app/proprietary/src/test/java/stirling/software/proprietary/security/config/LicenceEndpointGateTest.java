@@ -1,6 +1,5 @@
 package stirling.software.proprietary.security.config;
 
-import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -31,8 +30,11 @@ import stirling.software.proprietary.service.UserLicenseSettingsService;
 
 /**
  * The licence gates read the live licence rather than the boolean captured at startup, so
- * activating a key opens them without a restart. The startup value stays a floor the live check can
- * only widen, which keeps profiles that grant premium without a key (saas) working.
+ * activating a key opens them without a restart.
+ *
+ * <p>Covers the ground {@code PremiumEndpointAspectTest} and {@code EnterpriseEndpointFilterTest}
+ * leave: the Enterprise-only gate, what the actuator filter must still let past while unlicensed,
+ * and the cost of asking per request.
  */
 class LicenceEndpointGateTest {
 
@@ -50,57 +52,12 @@ class LicenceEndpointGateTest {
     }
 
     @Nested
-    class Premium {
-
-        @Test
-        @DisplayName("a licence activated after startup opens the gate without a restart")
-        void liveLicenceOpensTheGate() throws Throwable {
-            PremiumEndpointAspect aspect = new PremiumEndpointAspect(false, licence(true, false));
-
-            assertEquals("proceeded", aspect.checkPremiumAccess(proceedingJoinPoint()));
-        }
-
-        @Test
-        @DisplayName("no licence at startup and none activated stays forbidden")
-        void unlicensedStaysForbidden() throws Throwable {
-            PremiumEndpointAspect aspect = new PremiumEndpointAspect(false, licence(false, false));
-            ProceedingJoinPoint joinPoint = proceedingJoinPoint();
-
-            ResponseStatusException thrown =
-                    assertThrows(
-                            ResponseStatusException.class,
-                            () -> aspect.checkPremiumAccess(joinPoint));
-            assertEquals(HttpStatus.FORBIDDEN, thrown.getStatusCode());
-        }
-
-        @Test
-        @DisplayName("a profile granting premium without a key keeps access")
-        void startupGrantSurvivesAnUnlicensedLiveCheck() throws Throwable {
-            PremiumEndpointAspect aspect = new PremiumEndpointAspect(true, licence(false, false));
-
-            assertEquals("proceeded", aspect.checkPremiumAccess(proceedingJoinPoint()));
-        }
-
-        @Test
-        @DisplayName("builds with no licence service fall back to the startup value")
-        void noLicenceServiceFallsBackToStartup() throws Throwable {
-            PremiumEndpointAspect granted = new PremiumEndpointAspect(true, null);
-            PremiumEndpointAspect denied = new PremiumEndpointAspect(false, null);
-            ProceedingJoinPoint joinPoint = proceedingJoinPoint();
-
-            assertEquals("proceeded", granted.checkPremiumAccess(proceedingJoinPoint()));
-            assertThrows(ResponseStatusException.class, () -> denied.checkPremiumAccess(joinPoint));
-        }
-    }
-
-    @Nested
     class Enterprise {
 
         @Test
         @DisplayName("a licence activated after startup opens the gate without a restart")
         void liveLicenceOpensTheGate() throws Throwable {
-            EnterpriseEndpointAspect aspect =
-                    new EnterpriseEndpointAspect(false, licence(true, true));
+            EnterpriseEndpointAspect aspect = new EnterpriseEndpointAspect(licence(true, true));
 
             assertEquals("proceeded", aspect.checkEnterpriseAccess(proceedingJoinPoint()));
         }
@@ -108,8 +65,7 @@ class LicenceEndpointGateTest {
         @Test
         @DisplayName("a Server licence does not open an Enterprise-only endpoint")
         void serverLicenceIsNotEnterprise() throws Throwable {
-            EnterpriseEndpointAspect aspect =
-                    new EnterpriseEndpointAspect(false, licence(true, false));
+            EnterpriseEndpointAspect aspect = new EnterpriseEndpointAspect(licence(true, false));
             ProceedingJoinPoint joinPoint = proceedingJoinPoint();
 
             ResponseStatusException thrown =
@@ -120,43 +76,29 @@ class LicenceEndpointGateTest {
         }
 
         @Test
-        @DisplayName("a profile granting enterprise without a key keeps access")
-        void startupGrantSurvivesAnUnlicensedLiveCheck() throws Throwable {
-            EnterpriseEndpointAspect aspect =
-                    new EnterpriseEndpointAspect(true, licence(false, false));
+        @DisplayName("a lapsed licence closes the gate without a restart")
+        void lapsedLicenceClosesTheGate() throws Throwable {
+            LicenseServiceInterface service = mock(LicenseServiceInterface.class);
+            when(service.isRunningEE()).thenReturn(true, false);
+            EnterpriseEndpointAspect aspect = new EnterpriseEndpointAspect(service);
+            ProceedingJoinPoint blocked = proceedingJoinPoint();
 
             assertEquals("proceeded", aspect.checkEnterpriseAccess(proceedingJoinPoint()));
+            assertThrows(
+                    ResponseStatusException.class, () -> aspect.checkEnterpriseAccess(blocked));
         }
     }
 
     @Nested
     class ActuatorFilter {
 
-        private static MockHttpServletResponse filter(
-                boolean startupGrant, LicenseServiceInterface service, String uri)
+        private static MockHttpServletResponse filter(LicenseServiceInterface service, String uri)
                 throws Exception {
             MockHttpServletRequest request = new MockHttpServletRequest("GET", uri);
-            request.setRequestURI(uri);
             MockHttpServletResponse response = new MockHttpServletResponse();
-            new EnterpriseEndpointFilter(startupGrant, service)
+            new EnterpriseEndpointFilter(service)
                     .doFilter(request, response, new MockFilterChain());
             return response;
-        }
-
-        @Test
-        @DisplayName("a licence activated after startup unblocks metrics without a restart")
-        void liveLicenceUnblocksMetrics() throws Exception {
-            assertEquals(
-                    HttpStatus.OK.value(),
-                    filter(false, licence(true, false), "/actuator/prometheus").getStatus());
-        }
-
-        @Test
-        @DisplayName("metrics stay hidden while unlicensed")
-        void unlicensedHidesMetrics() throws Exception {
-            assertEquals(
-                    HttpStatus.NOT_FOUND.value(),
-                    filter(false, licence(false, false), "/actuator/prometheus").getStatus());
         }
 
         @Test
@@ -166,19 +108,16 @@ class LicenceEndpointGateTest {
 
             assertEquals(
                     HttpStatus.OK.value(),
-                    filter(false, service, "/api/v1/general/merge-pdfs").getStatus());
+                    filter(service, "/api/v1/general/merge-pdfs").getStatus());
             verify(service, never()).isRunningProOrHigher();
         }
 
         @Test
         @DisplayName("health checks stay reachable while unlicensed")
-        void healthChecksAlwaysPass() {
-            assertDoesNotThrow(
-                    () ->
-                            assertEquals(
-                                    HttpStatus.OK.value(),
-                                    filter(false, licence(false, false), "/actuator/health")
-                                            .getStatus()));
+        void healthChecksAlwaysPass() throws Exception {
+            assertEquals(
+                    HttpStatus.OK.value(),
+                    filter(licence(false, false), "/actuator/health").getStatus());
         }
     }
 
@@ -209,14 +148,12 @@ class LicenceEndpointGateTest {
             DynamicLicenseService service = new DynamicLicenseService(checkerFor(verifier));
             MockHttpServletRequest request =
                     new MockHttpServletRequest("GET", "/actuator/prometheus");
-            request.setRequestURI("/actuator/prometheus");
             clearInvocations(verifier);
 
-            new EnterpriseEndpointFilter(false, service)
+            new EnterpriseEndpointFilter(service)
                     .doFilter(request, new MockHttpServletResponse(), new MockFilterChain());
-            new PremiumEndpointAspect(false, service).checkPremiumAccess(proceedingJoinPoint());
-            new EnterpriseEndpointAspect(false, service)
-                    .checkEnterpriseAccess(proceedingJoinPoint());
+            new PremiumEndpointAspect(service).checkPremiumAccess(proceedingJoinPoint());
+            new EnterpriseEndpointAspect(service).checkEnterpriseAccess(proceedingJoinPoint());
 
             verify(verifier, never()).verifyLicense(anyString());
         }
@@ -228,7 +165,7 @@ class LicenceEndpointGateTest {
             when(verifier.verifyLicense(anyString())).thenReturn(License.NORMAL);
             LicenseKeyChecker checker = checkerFor(verifier);
             PremiumEndpointAspect aspect =
-                    new PremiumEndpointAspect(false, new DynamicLicenseService(checker));
+                    new PremiumEndpointAspect(new DynamicLicenseService(checker));
             ProceedingJoinPoint blocked = proceedingJoinPoint();
 
             assertThrows(ResponseStatusException.class, () -> aspect.checkPremiumAccess(blocked));

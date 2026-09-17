@@ -4,7 +4,7 @@
  *
  * Core ships no processor, so there is nothing for "/" to route between and the
  * editor simply owns the root. Builds that DO ship a processor override this
- * (see the proprietary copy): there "/" is a role-based router and the editor
+ * (see the proprietary copy): there "/" is a landing router and the editor
  * moves to its own URL.
  */
 export const EDITOR_BASENAME = "/";

@@ -13,11 +13,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import DeleteIcon from "@mui/icons-material/Delete";
-import CheckIcon from "@mui/icons-material/CheckRounded";
-import MoreHorizIcon from "@mui/icons-material/MoreHoriz";
-import EditIcon from "@mui/icons-material/Edit";
-import VisibilityIcon from "@mui/icons-material/Visibility";
+import { Icon, type IconName } from "@app/ui/Icon";
 import { useAnnotation } from "@embedpdf/plugin-annotation/react";
 import {
   getSidebarAnnotationsWithRepliesGroupedByPage,
@@ -34,7 +30,6 @@ import { useCommentAuthor } from "@app/contexts/CommentAuthorContext";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useToolWorkflow } from "@app/contexts/ToolWorkflowContext";
 import { useAnnotation as useAnnotationContext } from "@app/contexts/AnnotationContext";
-import LocalIcon from "@app/components/shared/LocalIcon";
 import { compareEntriesByVisualOrder } from "@app/components/viewer/commentsSidebarOrder";
 import { SidebarBase } from "@app/components/viewer/SidebarBase";
 
@@ -146,44 +141,44 @@ function isReplyAuthoredByCurrentUser(
   return resolvedStored === resolvedMine;
 }
 
-// Map toolId → LocalIcon icon name (matches AnnotationPanel icon definitions)
-const TOOL_ICON_MAP: Record<string, string> = {
-  highlight: "highlight",
-  underline: "format-underlined",
-  strikeout: "strikethrough-s",
-  squiggly: "show-chart",
-  ink: "edit",
+// Map toolId → registry icon name (matches AnnotationPanel icon definitions)
+const TOOL_ICON_MAP: Record<string, IconName> = {
+  highlight: "highlighter",
+  underline: "underline",
+  strikeout: "strikethrough",
+  squiggly: "polyline",
+  ink: "pencil",
   inkHighlighter: "brush",
-  square: "crop-square-outline",
-  circle: "radio-button-unchecked",
-  line: "show-chart",
-  lineArrow: "show-chart",
-  polyline: "show-chart",
-  polygon: "change-history",
-  text: "text-fields",
-  note: "sticky-note-2",
-  stamp: "add-photo-alternate",
-  textComment: "comment",
-  insertText: "add-comment",
-  replaceText: "find-replace",
+  square: "square",
+  circle: "circle",
+  line: "polyline",
+  lineArrow: "polyline",
+  polyline: "polyline",
+  polygon: "triangle",
+  text: "type",
+  note: "sticky-note",
+  stamp: "image-plus",
+  textComment: "message-square",
+  insertText: "message-square-plus",
+  replaceText: "replace",
 };
 
 // Type-based fallback icon when no toolId is present
-function getIconByType(type: number | undefined): string {
-  if (type === 1) return "comment";
-  if (type === 3) return "sticky-note-2";
-  if (type === 4 || type === 8) return "show-chart";
-  if (type === 5) return "crop-square-outline";
-  if (type === 6) return "radio-button-unchecked";
-  if (type === 7 || type === 8) return "change-history";
-  if (type === 9) return "highlight";
-  if (type === 10) return "format-underlined";
-  if (type === 11) return "show-chart";
-  if (type === 12) return "strikethrough-s";
-  if (type === 13) return "add-photo-alternate";
-  if (type === 14) return "add-comment";
-  if (type === 15) return "edit";
-  return "comment";
+function getIconByType(type: number | undefined): IconName {
+  if (type === 1) return "message-square";
+  if (type === 3) return "sticky-note";
+  if (type === 4 || type === 8) return "polyline";
+  if (type === 5) return "square";
+  if (type === 6) return "circle";
+  if (type === 7 || type === 8) return "triangle";
+  if (type === 9) return "highlighter";
+  if (type === 10) return "underline";
+  if (type === 11) return "polyline";
+  if (type === 12) return "strikethrough";
+  if (type === 13) return "image-plus";
+  if (type === 14) return "message-square-plus";
+  if (type === 15) return "pencil";
+  return "message-square";
 }
 function isCommentAnnotation(ann: PdfAnnotationObject): boolean {
   const customData = getStirlingAnnotationMetadata(ann).customData;
@@ -284,10 +279,9 @@ function AnnotationTypeIcon({ ann }: { ann: PdfAnnotationObject }) {
   const toolId = getAnnotationToolId(ann);
   const iconName = TOOL_ICON_MAP[toolId] ?? getIconByType(ann?.type);
   return (
-    <LocalIcon
-      icon={iconName}
-      width="1.25rem"
-      height="1.25rem"
+    <Icon
+      name={iconName}
+      size="1.25rem"
       style={{ flexShrink: 0, color: "var(--c-accent-text)" }}
     />
   );
@@ -309,7 +303,7 @@ export function CommentsSidebar({
   } = useViewer() ?? {};
   const scrollViewportRef = useRef<HTMLDivElement | null>(null);
   const { state, provides } = useAnnotation(documentId);
-  const { handleToolSelectForced } = useToolWorkflow();
+  const { handleToolSelectForced, readerMode } = useToolWorkflow();
   const {
     activateAnnotationToolRef,
     activeAnnotationToolId,
@@ -714,17 +708,22 @@ export function CommentsSidebar({
   const commentsHeaderActions =
     totalCount > 0 ? (
       <Group gap={2} wrap="nowrap" style={{ flexShrink: 0 }}>
-        <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
-          <ActionIcon
-            variant="tertiary"
-            accent="neutral"
-            size="sm"
-            aria-label={t("viewer.comments.addComment", "Add comment")}
-            onClick={handleAddComment}
-          >
-            <LocalIcon icon="add" width="1.25rem" height="1.25rem" />
-          </ActionIcon>
-        </Tooltip>
+        {/* Placing a comment arms the annotate tool, which only exists in the
+            editor: offering it here would take the reader there mid-sentence.
+            Reading shows the comments that are there and leaves it at that. */}
+        {!readerMode && (
+          <Tooltip label={t("viewer.comments.addComment", "Add comment")}>
+            <ActionIcon
+              variant="tertiary"
+              accent="neutral"
+              size="sm"
+              aria-label={t("viewer.comments.addComment", "Add comment")}
+              onClick={handleAddComment}
+            >
+              <Icon name="plus" size="1.25rem" />
+            </ActionIcon>
+          </Tooltip>
+        )}
         <Menu position="bottom-end" withArrow>
           <Menu.Target>
             <Tooltip label={t("viewer.comments.moreActions", "More actions")}>
@@ -734,13 +733,13 @@ export function CommentsSidebar({
                 size="sm"
                 aria-label={t("viewer.comments.moreActions", "More actions")}
               >
-                <MoreHorizIcon style={{ fontSize: 20 }} />
+                <Icon name="ellipsis" size={20} />
               </ActionIcon>
             </Tooltip>
           </Menu.Target>
           <Menu.Dropdown>
             <Menu.Item
-              leftSection={<DeleteIcon style={{ fontSize: 18 }} />}
+              leftSection={<Icon name="trash" size={18} />}
               color="red"
               onClick={() => setClearAllModalOpen(true)}
             >
@@ -756,7 +755,7 @@ export function CommentsSidebar({
       <SidebarBase
         className="comments-sidebar"
         title={t("viewer.comments.title", "Comments")}
-        icon={<LocalIcon icon="comment" width="1.1rem" height="1.1rem" />}
+        icon={<Icon name="message-square" size="1.1rem" />}
         rightOffset={rightOffset}
         visible={visible}
         onClose={toggleCommentsSidebar}
@@ -772,10 +771,9 @@ export function CommentsSidebar({
       >
         {totalCount === 0 ? (
           <Stack align="center" gap="sm" py="lg">
-            <LocalIcon
-              icon="comment"
-              width="2rem"
-              height="2rem"
+            <Icon
+              name="message-square"
+              size="2rem"
               style={{ color: "var(--mantine-color-dimmed)" }}
             />
             <Text size="sm" c="dimmed" ta="center">
@@ -790,27 +788,19 @@ export function CommentsSidebar({
                 accent="warning"
                 size="sm"
                 onClick={handleCancelPlacingComment}
-                leftSection={
-                  <LocalIcon
-                    icon="touch-app-rounded"
-                    width="1rem"
-                    height="1rem"
-                  />
-                }
+                leftSection={<Icon name="pointer" size="1rem" />}
               >
                 {t(
                   "viewer.comments.placingHint",
                   "Click a page to place… (cancel)",
                 )}
               </Button>
-            ) : (
+            ) : readerMode ? null : (
               <Button
                 variant="tertiary"
                 size="sm"
                 onClick={handleAddComment}
-                leftSection={
-                  <LocalIcon icon="add" width="1rem" height="1rem" />
-                }
+                leftSection={<Icon name="plus" size="1rem" />}
               >
                 {t("viewer.comments.addComment", "Add comment")}
               </Button>
@@ -826,13 +816,7 @@ export function CommentsSidebar({
                 fullWidth
                 justify="start"
                 onClick={handleCancelPlacingComment}
-                leftSection={
-                  <LocalIcon
-                    icon="touch-app-rounded"
-                    width="0.9rem"
-                    height="0.9rem"
-                  />
-                }
+                leftSection={<Icon name="pointer" size="0.9rem" />}
                 style={{ paddingInline: 6 }}
               >
                 {t(
@@ -840,16 +824,14 @@ export function CommentsSidebar({
                   "Click a page to place… (cancel)",
                 )}
               </Button>
-            ) : (
+            ) : readerMode ? null : (
               <Button
                 variant="tertiary"
                 size="sm"
                 fullWidth
                 justify="start"
                 onClick={handleAddComment}
-                leftSection={
-                  <LocalIcon icon="add" width="0.9rem" height="0.9rem" />
-                }
+                leftSection={<Icon name="plus" size="0.9rem" />}
                 style={{
                   paddingInline: 6,
                   marginBottom: "var(--space-xs)",
@@ -970,7 +952,7 @@ export function CommentsSidebar({
                                       handleLocateAnnotation(pageIndex, ann)
                                     }
                                   >
-                                    <VisibilityIcon style={{ fontSize: 16 }} />
+                                    <Icon name="eye" size={16} />
                                   </ActionIcon>
                                 </Tooltip>
                                 <Menu position="bottom-end" withArrow>
@@ -990,16 +972,14 @@ export function CommentsSidebar({
                                           "More actions",
                                         )}
                                       >
-                                        <MoreHorizIcon
-                                          style={{ fontSize: 20 }}
-                                        />
+                                        <Icon name="ellipsis" size={20} />
                                       </ActionIcon>
                                     </Tooltip>
                                   </Menu.Target>
                                   <Menu.Dropdown>
                                     <Menu.Item
                                       leftSection={
-                                        <EditIcon style={{ fontSize: 18 }} />
+                                        <Icon name="pencil" size={18} />
                                       }
                                       onClick={() => setEditingMainKey(key)}
                                     >
@@ -1007,7 +987,7 @@ export function CommentsSidebar({
                                     </Menu.Item>
                                     <Menu.Item
                                       leftSection={
-                                        <DeleteIcon style={{ fontSize: 18 }} />
+                                        <Icon name="trash" size={18} />
                                       }
                                       color="red"
                                       onClick={() =>
@@ -1070,7 +1050,7 @@ export function CommentsSidebar({
                                       }}
                                       disabled={!(draft ?? "").trim()}
                                     >
-                                      <CheckIcon style={{ fontSize: 18 }} />
+                                      <Icon name="check" size={18} />
                                     </ActionIcon>
                                   </Tooltip>
                                 </Group>
@@ -1226,10 +1206,9 @@ export function CommentsSidebar({
                                                         !replyBody.trim()
                                                       }
                                                     >
-                                                      <CheckIcon
-                                                        style={{
-                                                          fontSize: 18,
-                                                        }}
+                                                      <Icon
+                                                        name="check"
+                                                        size={18}
                                                       />
                                                     </ActionIcon>
                                                   </Tooltip>
@@ -1299,7 +1278,7 @@ export function CommentsSidebar({
                                       }
                                       disabled={!replyDraft.trim()}
                                     >
-                                      <CheckIcon style={{ fontSize: 20 }} />
+                                      <Icon name="check" size={20} />
                                     </ActionIcon>
                                   </Tooltip>
                                 </Group>

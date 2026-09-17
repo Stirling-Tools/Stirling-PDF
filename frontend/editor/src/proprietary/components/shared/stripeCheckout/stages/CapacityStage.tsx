@@ -24,6 +24,12 @@ interface CapacityStageProps {
   setServerQuantity: (quantity: number) => void;
   /** Users already on this installation, so capacity cannot be set below what is in use. */
   currentUsers?: number;
+  /**
+   * Users the current plan already covers, when there is one. Its presence switches this from
+   * "upgrade to Team" to "add capacity": the buyer is choosing a new total, so the line item states
+   * what is being ADDED rather than what is covered, which is the number they are deciding about.
+   */
+  currentLimit?: number | null;
   onContinue: () => void;
   onContactSales?: () => void;
 }
@@ -40,6 +46,7 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   serverQuantity,
   setServerQuantity,
   currentUsers = 0,
+  currentLimit = null,
   onContinue,
   onContactSales,
 }) => {
@@ -51,12 +58,11 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   const covered = usersForBlocks(serverQuantity);
   const total = blockPrice * serverQuantity;
 
-  // Never sell less capacity than is already in use; reducing capacity happens at renewal rather
-  // than by stranding accounts that already exist. The stage is entered pre-seeded to this minimum.
-  const minBlocks = blocksForUsers(currentUsers);
+  // Adding capacity cannot reduce the purchased allowance or strand existing users.
+  const minBlocks = blocksForUsers(Math.max(currentUsers, currentLimit ?? 0));
   const minUsers = usersForBlocks(minBlocks);
   const maxUsers = usersForBlocks(SELF_SERVE_MAX_BLOCKS);
-  const belowCurrentUsage = serverQuantity < minBlocks;
+  const belowMinimumCapacity = serverQuantity < minBlocks;
   const offerEnterprise = shouldOfferEnterprise(serverQuantity);
 
   const presets = USER_PRESETS.filter((users) => users <= maxUsers);
@@ -74,11 +80,17 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
   return (
     <Stack gap="lg" style={{ padding: "1.5rem 2rem" }}>
       <Text size="sm" c="dimmed">
-        {t(
-          "payment.capacityStage.subheading",
-          "Covers everyone you invite, in blocks of {{users}} users.",
-          { users: USERS_PER_BLOCK },
-        )}
+        {currentLimit != null
+          ? t(
+              "payment.capacityStage.subheadingAdd",
+              "Your plan covers {{current}} users today. Choose the new total.",
+              { current: currentLimit },
+            )
+          : t(
+              "payment.capacityStage.subheading",
+              "Covers everyone you invite, in blocks of {{users}} users.",
+              { users: USERS_PER_BLOCK },
+            )}
       </Text>
 
       <Group gap="sm" wrap="wrap" align="center">
@@ -126,7 +138,7 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
         />
       )}
 
-      {belowCurrentUsage && (
+      {belowMinimumCapacity && (
         <Alert color="yellow" variant="light">
           {t(
             "payment.capacityStage.minimumForCurrentUsers",
@@ -152,31 +164,44 @@ export const CapacityStage: React.FC<CapacityStageProps> = ({
             )}
           </Text>
           <Text size="sm" fw={500}>
-            {t("payment.capacityStage.userTotal", "{{users}} users", {
-              users: covered,
-            })}
+            {currentLimit != null
+              ? t("payment.capacityStage.userDelta", "+{{users}} users", {
+                  users: Math.max(0, covered - currentLimit),
+                })
+              : t("payment.capacityStage.userTotal", "{{users}} users", {
+                  users: covered,
+                })}
           </Text>
         </Group>
         <Group justify="space-between" align="baseline">
           <Text fw={600}>
-            {t("payment.capacityStage.dueToday", "Due today")}
+            {currentLimit != null
+              ? t("payment.capacityStage.newPlanTotal", "New plan total")
+              : t("payment.capacityStage.dueToday", "Due today")}
           </Text>
           <Text size="xl" fw={700}>
             {formatPrice(total, currency)}
           </Text>
         </Group>
         <Text size="xs" c="dimmed">
-          {t(
-            "payment.capacityStage.renewalNote",
-            "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing.",
-            { total: formatPrice(total, currency, 0), period },
-          )}
+          {currentLimit != null
+            ? t(
+                "payment.capacityStage.adjustmentNote",
+                "Stripe will show the exact charge, any prorations and your next billing date before you confirm. Your saved payment method will be used if available.",
+              )
+            : t(
+                "payment.capacityStage.renewalNote",
+                "Renews at {{total}}{{period}}. Cancel any time in Usage & Billing.",
+                { total: formatPrice(total, currency, 0), period },
+              )}
         </Text>
       </Stack>
 
       <Stack gap="sm">
-        <Button onClick={onContinue} disabled={belowCurrentUsage} fullWidth>
-          {t("payment.capacityStage.continue", "Continue to payment")}
+        <Button onClick={onContinue} disabled={belowMinimumCapacity} fullWidth>
+          {currentLimit != null
+            ? t("payment.capacityStage.reviewChange", "Review change in Stripe")
+            : t("payment.capacityStage.continue", "Continue to payment")}
         </Button>
 
         {offerEnterprise && onContactSales && (

@@ -61,19 +61,40 @@ test.describe("PDF text editor - workbench file selection", () => {
   }) => {
     test.setTimeout(180_000);
     await openEditorWithTwoFiles(page);
-    const opened = (
-      await page.getByTestId("pdf-editor-filename").innerText()
-    ).trim();
+    const textOf = () =>
+      page.evaluate(() =>
+        (
+          window as unknown as {
+            __editor_store: {
+              getState: () => {
+                pages: Array<{ runs: Array<{ text: string }> }>;
+              };
+            };
+          }
+        ).__editor_store
+          .getState()
+          .pages.flatMap((p) => p.runs)
+          .map((r) => r.text)
+          .join(" ")
+          .slice(0, 120),
+      );
+    const opened = await textOf();
+    expect(
+      opened.length,
+      "the fixture must have readable text",
+    ).toBeGreaterThan(0);
 
     // Mounting Active Files trims the selection to its last entry to honour the
     // tool's one-file limit; the editor must not follow that onto another file.
     await activeFilesTab(page).click();
-    await page.waitForTimeout(2000);
+    await expect
+      .poll(async () => await textOf(), { timeout: 30_000 })
+      .not.toBe("");
 
-    await expect(
-      page.getByTestId("pdf-editor-filename"),
+    expect(
+      await textOf(),
       "the editor swapped the open document out from under the user",
-    ).toHaveText(opened);
+    ).toBe(opened);
   });
 
   test("the editor lists the workbench files and opens the one picked", async ({
@@ -94,6 +115,7 @@ test.describe("PDF text editor - workbench file selection", () => {
     const other =
       opened === "sample.pdf" ? "paragraph-sample.pdf" : "sample.pdf";
 
+    await page.getByTestId("pdf-editor-file-switcher").click();
     await page
       .getByTestId("pdf-editor-file-switch")
       .filter({ hasText: new RegExp(`^${other}$`) })
@@ -108,6 +130,7 @@ test.describe("PDF text editor - workbench file selection", () => {
       timeout: 60_000,
     });
     // The picked entry is the one marked current.
+    await page.getByTestId("pdf-editor-file-switcher").click();
     await expect(
       page.locator(
         '[data-testid="pdf-editor-file-switch"][data-current="true"]',

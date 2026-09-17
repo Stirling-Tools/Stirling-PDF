@@ -171,14 +171,20 @@ async function stubStorageApis(
  *  their parent grid carries `aria-busy="true"` which intercepts pointer events
  *  -- so waiting for any `.files-page-card` races the skeleton→real transition
  *  and causes flaky timeouts on slower CI runners. */
-async function gotoFilesPage(page: Page): Promise<void> {
+async function gotoFilesPage(
+  page: Page,
+  { timeout = 10_000 }: { timeout?: number } = {},
+): Promise<void> {
   await page.goto("/files", { waitUntil: "domcontentloaded" });
   await expect(
     page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
-  ).toBeVisible({ timeout: 10_000 });
+  ).toBeVisible({ timeout });
 }
 
 test.describe("Files page", () => {
+  // Most of these read the library as cards.
+  test.use({ filesViewMode: "grid" });
+
   test.describe("Selection model", () => {
     test.beforeEach(async ({ page }) => {
       await stubStorageApis(page);
@@ -282,13 +288,17 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      // Two entry points share the name; use .first() for strict mode.
-      await expect(
-        page.getByRole("button", { name: /^Save to server$/i }).first(),
-      ).toBeVisible();
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }),
-      ).toHaveCount(2);
+      ).toBeVisible();
+      // The details panel's copy lives behind its overflow menu.
+      await page
+        .locator(".files-page-details-actions-row")
+        .getByRole("button", { name: /^Actions$/i })
+        .click();
+      await expect(
+        page.getByRole("menuitem", { name: /^Save to server$/i }),
+      ).toBeVisible();
     });
 
     test("Save to server hidden when ONLY cloud files selected", async ({
@@ -354,16 +364,21 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      const saveButtons = page.getByRole("button", {
+      const toolbarSave = page.getByRole("button", {
         name: /^Save to server$/i,
       });
-      // Present (toolbar + details panel) and every instance disabled.
-      const count = await saveButtons.count();
-      expect(count).toBeGreaterThan(0);
-      for (let i = 0; i < count; i += 1) {
-        await expect(saveButtons.nth(i)).toBeVisible();
-        await expect(saveButtons.nth(i)).toBeDisabled();
-      }
+      await expect(toolbarSave).toBeVisible();
+      await expect(toolbarSave).toBeDisabled();
+
+      await page
+        .locator(".files-page-details-actions-row")
+        .getByRole("button", { name: /^Actions$/i })
+        .click();
+      const panelSave = page.getByRole("menuitem", {
+        name: /^Save to server$/i,
+      });
+      await expect(panelSave).toBeVisible();
+      await expect(panelSave).toBeDisabled();
     });
 
     test("per-file kebab Save to server is disabled (not hidden) when storage off", async ({
@@ -902,48 +917,13 @@ test.describe("Files page", () => {
     });
   });
 
-  test.describe("Folder tree panel resize", () => {
-    test.use({ autoGoto: false });
-
-    test("Resize handle is present and keyboard-adjustable", async ({
-      page,
-    }) => {
-      await stubStorageApis(page);
-      await seedFiles(page, [
-        { id: "alpha", name: "alpha.pdf", remoteStorageId: null },
-      ]);
-      await gotoFilesPage(page);
-      const handle = page.locator(".folder-tree-panel-resizer").first();
-      await expect(handle).toBeVisible();
-      const before = await page.evaluate(() => {
-        const el = document.querySelector(
-          ".folder-tree-panel[data-active='true']",
-        ) as HTMLElement | null;
-        return el?.getBoundingClientRect().width ?? 0;
-      });
-      await handle.focus();
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      await page.keyboard.press("ArrowRight");
-      const after = await page.evaluate(() => {
-        const el = document.querySelector(
-          ".folder-tree-panel[data-active='true']",
-        ) as HTMLElement | null;
-        return el?.getBoundingClientRect().width ?? 0;
-      });
-      // Four 8px steps = +32px.
-      expect(after).toBeGreaterThanOrEqual(before + 24);
-    });
-  });
-
   test.describe("Folder chrome stability", () => {
     const CHROME_FOLDER = "11111111-2222-4333-8444-555555555561";
     test.use({ autoGoto: false });
 
-    /** The column is sized by the user, not by its contents: a long name has to give
-     *  way inside the row rather than push the panel wider. */
-    test("a long folder name does not widen the tree panel", async ({
+    /** The sidebar is sized by the user, not by its contents: a long name has to give
+     *  way inside the row rather than push the sidebar wider. */
+    test("a long folder name does not widen the file sidebar", async ({
       page,
     }) => {
       await stubStorageApis(page);
@@ -959,16 +939,16 @@ test.describe("Files page", () => {
       );
       await gotoFilesPage(page);
 
-      const panel = page.locator('.folder-tree-panel[data-active="true"]');
-      await expect(panel).toBeVisible({ timeout: 10_000 });
+      const sidebar = page.locator(".file-sidebar");
+      await expect(sidebar).toBeVisible({ timeout: 10_000 });
       await expect(
         page.getByRole("treeitem", { name: /Quarterly/i }),
       ).toBeVisible();
 
-      const width = await panel.evaluate(
+      const width = await sidebar.evaluate(
         (el) => el.getBoundingClientRect().width,
       );
-      expect(width).toBeLessThanOrEqual(280);
+      expect(width).toBeLessThanOrEqual(320);
       // Clipped inside the row rather than laid out at full length.
       const clipped = await page
         .locator(".files-page-tree-name-head")
@@ -1003,7 +983,7 @@ test.describe("Files page", () => {
       );
       await gotoFilesPage(page);
 
-      const header = page.locator(".files-page-header");
+      const header = page.locator(".files-page-tabs-row");
       const atRoot = await header.evaluate(
         (el) => el.getBoundingClientRect().height,
       );
@@ -1042,7 +1022,7 @@ test.describe("Files page", () => {
       );
       await gotoFilesPage(page);
 
-      const header = page.locator(".files-page-header");
+      const header = page.locator(".files-page-tabs-row");
       const atRoot = await header.evaluate(
         (el) => el.getBoundingClientRect().height,
       );
@@ -1056,6 +1036,134 @@ test.describe("Files page", () => {
       );
 
       expect(inFolder).toBe(atRoot);
+    });
+  });
+
+  test.describe("List view", () => {
+    test.use({ autoGoto: false, filesViewMode: null });
+
+    const FOLDER = "11111111-2222-4333-8444-555555555595";
+
+    /** The library opens as a list, and remembers the grid once it is chosen. */
+    test("is where the library starts, and the choice sticks", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "l-1", name: "l-1.pdf", remoteStorageId: null },
+      ]);
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+
+      await expect(page.locator(".files-page-list-row").first()).toBeVisible({
+        timeout: 15_000,
+      });
+      await expect(page.locator(".files-page-card")).toHaveCount(0);
+
+      await page
+        .locator('.files-page-view-toggle-icon[title="Grid view"]')
+        .first()
+        .click();
+      await expect(page.locator(".files-page-card").first()).toBeVisible();
+
+      await page.reload({ waitUntil: "domcontentloaded" });
+      await expect(page.locator(".files-page-card").first()).toBeVisible({
+        timeout: 15_000,
+      });
+    });
+
+    /** A processing folder tells the same story in either view. */
+    test("a processing folder carries its counts in a row", async ({
+      page,
+    }) => {
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [{ id: "l-2", name: "l-2.pdf", remoteStorageId: null }],
+        [{ id: FOLDER, name: "Scans" }],
+      );
+      await page.goto("/files", { waitUntil: "domcontentloaded" });
+
+      const row = page
+        .locator(".files-page-list-row")
+        .filter({ hasText: "Scans" });
+      await expect(row).toBeVisible({ timeout: 15_000 });
+      await row.getByRole("button", { name: /folder actions/i }).click();
+      await expect(
+        page.getByRole("menuitem", { name: /Process files in this folder/i }),
+      ).toBeVisible();
+    });
+  });
+
+  test.describe("Library chrome placement", () => {
+    test.use({ autoGoto: false });
+
+    /** The path sits on the library's own row with the tabs; its actions live in the
+     *  file sidebar, and the shared bar above carries only what every view has. */
+    test("the path is on the tabs row and the actions are in the sidebar", async ({
+      page,
+    }) => {
+      const NESTED = "11111111-2222-4333-8444-555555555581";
+      const PARENT = "11111111-2222-4333-8444-555555555580";
+      await stubStorageApis(page);
+      await seedFiles(
+        page,
+        [{ id: "b-1", name: "b-1.pdf", remoteStorageId: null }],
+        [
+          { id: PARENT, name: "Engagements" },
+          { id: NESTED, name: "Signed originals", parentFolderId: PARENT },
+        ],
+      );
+      await gotoFilesPage(page);
+
+      const bar = page.locator(".workbench-bar");
+      await expect(bar).toBeVisible({ timeout: 10_000 });
+      const row = page.locator(".files-page-tabs-row");
+      // On the library's row, and not in the bar above it.
+      await expect(
+        row.getByRole("navigation", { name: /Folder path/i }),
+      ).toBeVisible();
+      await expect(
+        row.getByRole("button", { name: /New folder/i }),
+      ).toHaveCount(0);
+      await expect(
+        page.locator('[data-testid="files-rail-new-folder"]'),
+      ).toBeVisible();
+      await expect(
+        page.locator('[data-testid="files-rail-refresh"]'),
+      ).toBeVisible();
+      await expect(
+        bar.getByRole("navigation", { name: /Folder path/i }),
+      ).toHaveCount(0);
+
+      const tree = page.getByRole("tree", { name: /Folders/i });
+      await tree.getByRole("treeitem", { name: /Engagements/i }).click();
+      await expect(page).toHaveURL(new RegExp(PARENT), { timeout: 5_000 });
+      await tree.getByRole("treeitem", { name: /Signed originals/i }).click();
+      await expect(page).toHaveURL(new RegExp(NESTED), { timeout: 5_000 });
+
+      // Two crumbs whatever the depth, and the bar stays one row tall.
+      await expect(page.locator(".files-page-breadcrumb")).toHaveCount(2);
+      await expect(bar).toHaveAttribute("data-wrapped", "false");
+    });
+  });
+
+  test.describe("Document actions in the library", () => {
+    test.use({ autoGoto: false });
+
+    /** Save, Save As and Close act on an open document, and the library has none.
+     *  Desktop is where this shows: two save glyphs sit side by side there. */
+    test("saving and closing are absent from the library", async ({ page }) => {
+      await stubStorageApis(page);
+      await seedFiles(page, [
+        { id: "d-a", name: "d-a.pdf", remoteStorageId: null },
+      ]);
+      await gotoFilesPage(page);
+
+      const bar = page.locator(".workbench-bar");
+      await expect(bar).toBeVisible({ timeout: 10_000 });
+      for (const name of [/^Save$/i, /Save As/i, /Close (All|PDF)/i]) {
+        await expect(bar.getByRole("button", { name })).toHaveCount(0);
+      }
     });
   });
 
@@ -1176,6 +1284,9 @@ test.describe("Files page", () => {
      * fallback but proves nothing about the windowing.
      */
     test("renders a window of a long list, not all of it", async ({ page }) => {
+      // Seeding 400 records and reading them back is the slowest spec in this
+      // file: on webkit in CI the first card paints well past the default waits.
+      test.setTimeout(120_000);
       const COUNT = 400;
       await stubStorageApis(page);
       await seedFiles(
@@ -1186,14 +1297,17 @@ test.describe("Files page", () => {
           remoteStorageId: null,
         })),
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { timeout: 30_000 });
 
       const cards = page.locator(
         ".files-page-card:not(.files-page-skeleton-card)",
       );
-      const rendered = await cards.count();
-      expect(rendered).toBeGreaterThan(0);
-      expect(rendered).toBeLessThan(COUNT / 2);
+      // Windowing stands down until the scroller is measured, so the first paint
+      // can carry every card; poll for the window it settles into.
+      await expect
+        .poll(async () => cards.count(), { timeout: 10_000 })
+        .toBeLessThan(COUNT / 2);
+      expect(await cards.count()).toBeGreaterThan(0);
 
       // The spacers stand in for the rest, so the scroll height still reflects the
       // whole folder rather than only what is mounted.

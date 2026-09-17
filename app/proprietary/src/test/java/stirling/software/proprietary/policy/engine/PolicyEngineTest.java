@@ -14,13 +14,16 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,9 +36,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.slf4j.MDC;
+import org.springframework.core.env.StandardEnvironment;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -43,6 +49,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpClientErrorException;
 
+import stirling.software.common.configuration.RuntimePathConfig;
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.common.model.job.ResultFile;
 import stirling.software.common.service.FileStorage;
@@ -53,13 +60,20 @@ import stirling.software.common.service.JobQueue;
 import stirling.software.common.service.ResourceMonitor;
 import stirling.software.common.service.TaskManager;
 import stirling.software.common.service.ToolMetadataService;
+import stirling.software.common.util.FileReadinessChecker;
+import stirling.software.common.util.JobContext;
 import stirling.software.common.util.TempFileManager;
 import stirling.software.common.util.TempFileRegistry;
 import stirling.software.proprietary.failure.PolicyFailureRecorder;
 import stirling.software.proprietary.policy.asset.InProcessPolicyAssetStore;
 import stirling.software.proprietary.policy.asset.PolicyAssetResolver;
+import stirling.software.proprietary.policy.config.FolderAccessGuard;
+import stirling.software.proprietary.policy.config.PolicyAccessGuard;
+import stirling.software.proprietary.policy.input.FolderInputSource;
+import stirling.software.proprietary.policy.ledger.InProcessProcessedLedger;
 import stirling.software.proprietary.policy.model.OutputSpec;
 import stirling.software.proprietary.policy.model.PipelineDefinition;
+import stirling.software.proprietary.policy.model.PipelineInput;
 import stirling.software.proprietary.policy.model.PipelineStep;
 import stirling.software.proprietary.policy.model.Policy;
 import stirling.software.proprietary.policy.model.PolicyInputs;
@@ -70,7 +84,9 @@ import stirling.software.proprietary.policy.output.OutputDelivery;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.output.PolicyOutputSink;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
+import stirling.software.proprietary.policy.source.InProcessSourceDocCounter;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
 
 import tools.jackson.databind.json.JsonMapper;
 
@@ -97,6 +113,7 @@ class PolicyEngineTest {
 
     @TempDir Path tempDir;
 
+    private final InProcessSourceStore sourceStore = new InProcessSourceStore();
     private final RecordingSink recordingSink = new RecordingSink();
     private PolicyRunRegistry registry;
     private PolicyEngine engine;
@@ -115,7 +132,7 @@ class PolicyEngineTest {
                         JsonMapper.builder().build());
         registry = new PolicyRunRegistry(new ApplicationProperties());
         InlineOutputSink sink = new InlineOutputSink(fileStorage);
-        PolicyOutputResolver outputResolver = new PolicyOutputResolver(new InProcessSourceStore());
+        PolicyOutputResolver outputResolver = new PolicyOutputResolver(sourceStore);
         engine =
                 new PolicyEngine(
                         executor,
@@ -133,10 +150,183 @@ class PolicyEngineTest {
         // Identity scoping: the run id is the generated UUID unchanged. Lenient because the
         // resume/cancel tests do not submit a run.
         lenient()
-                .when(jobOwnershipService.createScopedJobKey(anyString()))
+                .when(jobOwnershipService.createScopedJobKey(anyString(), any()))
                 .thenAnswer(inv -> inv.getArgument(0));
         // Default to running immediately; the queueing test overrides this.
         lenient().when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(false);
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+        "editor,bob,bob",
+        "source,bob,carol",
+        "source,,carol",
+        "generator,bob,alice",
+        "generator,,alice"
+    })
+    void separatesDocumentOwnershipFromBillingAndTheTriggeringUser(
+            String inputKind, String actor, String expectedOwner) throws Exception {
+        Source source =
+                "source".equals(inputKind)
+                        ? new Source("input", "Input", "folder", Map.of(), true, "carol", null)
+                        : null;
+        PolicyInputs inputs =
+                PolicyInputs.of(
+                        "generator".equals(inputKind)
+                                ? List.of()
+                                : List.of(pdf("original", "input.pdf")));
+        String[] storedOwner = {null};
+        String[] billedUser = {null};
+        when(jobOwnershipService.createScopedJobKey(anyString(), any()))
+                .thenAnswer(
+                        invocation -> invocation.getArgument(1) + ":" + invocation.getArgument(0));
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        invocation -> {
+                            billedUser[0] = MDC.get("auditPrincipal");
+                            return ResponseEntity.ok(pdf("processed", "output.pdf"));
+                        });
+        when(fileStorage.storeInputStream(any(), anyString()))
+                .thenAnswer(
+                        invocation -> {
+                            storedOwner[0] = JobContext.getOwner();
+                            InputStream input = invocation.getArgument(0);
+                            assertEquals(
+                                    "processed",
+                                    new String(
+                                            input.readAllBytes(),
+                                            java.nio.charset.StandardCharsets.UTF_8));
+                            return new StoredFile("output", 9);
+                        });
+        if (actor != null) {
+            MDC.put("auditPrincipal", actor);
+        }
+        PolicyRun run;
+        try {
+            run =
+                    engine.runPolicy(
+                                    policyOwnedBy("alice"),
+                                    inputs,
+                                    PolicyProgressListener.NOOP,
+                                    source,
+                                    "document")
+                            .completion()
+                            .get(10, TimeUnit.SECONDS);
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+        assertEquals(PolicyRunStatus.COMPLETED, run.getStatus());
+        assertTrue(run.getRunId().startsWith(expectedOwner + ":"));
+        assertEquals(expectedOwner, storedOwner[0]);
+        assertEquals("alice", billedUser[0]);
+        assertEquals(actor, run.getTriggeringUser());
+        verify(taskManager).setMultipleFileResults(eq(run.getRunId()), eq(run.getOutputs()));
+    }
+
+    @ParameterizedTest
+    @CsvSource({"track,false", "track,true", "consume,false", "consume,true"})
+    void unavailableOutputFailsEveryClaimWithoutConsumingFiles(String mode, boolean disabled)
+            throws Exception {
+        Path input = Files.createDirectory(tempDir.resolve("input"));
+        Files.writeString(input.resolve("first.pdf"), "first original");
+        Files.writeString(input.resolve("second.pdf"), "second original");
+        Source source =
+                sourceStore.save(
+                        new Source(
+                                null,
+                                "Input",
+                                "folder",
+                                Map.of("directory", input.toString(), "mode", mode),
+                                true,
+                                "source-owner",
+                                null));
+        String outputId =
+                disabled
+                        ? sourceStore
+                                .save(
+                                        new Source(
+                                                null,
+                                                "Output",
+                                                "folder",
+                                                Map.of(
+                                                        "directory",
+                                                        tempDir.resolve("out").toString()),
+                                                false,
+                                                "owner",
+                                                null))
+                                .id()
+                        : "missing";
+        Policy policy =
+                new Policy(
+                                "p1",
+                                "Process",
+                                "owner",
+                                true,
+                                List.of(new PipelineInput(source.id(), null)),
+                                List.of(new PipelineStep(ROTATE, Map.of())),
+                                OutputSpec.inline())
+                        .withOutputIds(List.of(outputId));
+        ApplicationProperties properties = new ApplicationProperties();
+        properties.getPolicies().setAllowedFolderRoots(List.of(tempDir.toString()));
+        FileReadinessChecker readiness = mock(FileReadinessChecker.class);
+        when(readiness.isReady(any())).thenReturn(true);
+        FolderInputSource folder =
+                new FolderInputSource(
+                        readiness,
+                        new FolderAccessGuard(
+                                properties,
+                                new RuntimePathConfig(properties),
+                                new StandardEnvironment(),
+                                sourceStore));
+        InProcessProcessedLedger ledger = new InProcessProcessedLedger();
+        PolicyRunner runner =
+                new PolicyRunner(
+                        engine,
+                        List.of(folder),
+                        sourceStore,
+                        new InProcessSourceDocCounter(),
+                        ledger,
+                        properties,
+                        mock(PolicyAccessGuard.class),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class));
+
+        SweepOutcome outcome = runner.run(policy);
+
+        assertEquals(2, outcome.runIds().size());
+        for (String id : outcome.runIds()) {
+            assertEquals(PolicyRunStatus.FAILED, engine.getRun(id).getStatus());
+            assertEquals(source.id(), engine.getRun(id).getSourceId());
+            verify(taskManager).setError(eq(id), anyString());
+            verify(failureRecorder)
+                    .recordRunFailure(
+                            eq(id),
+                            any(),
+                            eq(source.id()),
+                            anyString(),
+                            isNull(),
+                            anyString(),
+                            any(Throwable.class));
+        }
+        verify(jobOwnershipService, times(2)).createScopedJobKey(anyString(), eq("source-owner"));
+        assertFalse(ledger.anyInFlight(policy.id()));
+        assertTrue(runner.quiesced(policy.id()));
+        assertEquals("first original", Files.readString(input.resolve("first.pdf")));
+        assertEquals("second original", Files.readString(input.resolve("second.pdf")));
+        assertTrue(runner.run(policy).runIds().isEmpty());
+        verifyNoInteractions(internalApiClient, fileStorage);
+    }
+
+    @Test
+    void suppliedInputsStillRejectUnavailableDestinationsBeforeCreatingARun() {
+        Policy policy = policyOwnedBy("owner").withOutputIds(List.of("missing"));
+        assertThrows(
+                IllegalArgumentException.class,
+                () ->
+                        engine.runPolicy(
+                                policy, PolicyInputs.of(List.of()), PolicyProgressListener.NOOP));
+        verifyNoInteractions(taskManager, failureRecorder, internalApiClient);
     }
 
     @Test
@@ -243,7 +433,14 @@ class PolicyEngineTest {
                         policyOwnedBy("owner"),
                         PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
                         PolicyProgressListener.NOOP,
-                        "src-s3-invoices",
+                        new Source(
+                                "src-s3-invoices",
+                                "Input",
+                                "folder",
+                                Map.of(),
+                                true,
+                                "carol",
+                                null),
                         "file-hash-1");
         handle.completion().get(10, TimeUnit.SECONDS);
 
@@ -310,7 +507,14 @@ class PolicyEngineTest {
                         policyOwnedBy("alice"),
                         PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
                         PolicyProgressListener.NOOP,
-                        "src-watched-folder",
+                        new Source(
+                                "src-watched-folder",
+                                "Input",
+                                "folder",
+                                Map.of(),
+                                true,
+                                "carol",
+                                null),
                         "file-hash-1")
                 .completion()
                 .get(10, TimeUnit.SECONDS);
@@ -532,6 +736,54 @@ class PolicyEngineTest {
     }
 
     @Test
+    void runPolicyBillsTheTriggeringUserWhenThePolicyIsUnowned() throws Exception {
+        // Regression: an unowned policy (the seeded Classification policy) must bill the triggering
+        // user, not a null principal that reverts its tool sub-steps to the team-less
+        // INTERNAL_API_USER and draws a usage-limit 402.
+        when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
+        when(toolMetadataService.shouldUnpackZipResponse(anyString())).thenReturn(false);
+        int[] counter = {0};
+        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
+                .thenAnswer(
+                        inv ->
+                                new StoredFile(
+                                        "file-" + ++counter[0],
+                                        ((InputStream) inv.getArgument(0)).readAllBytes().length));
+
+        String[] principalAtDispatch = {"<none>"};
+        when(internalApiClient.post(eq(ROTATE), any()))
+                .thenAnswer(
+                        inv -> {
+                            principalAtDispatch[0] = MDC.get("auditPrincipal");
+                            return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
+                        });
+
+        Policy unowned =
+                new Policy(
+                        "p1",
+                        "rotate",
+                        null, // unowned, like the seeded Classification policy
+                        true,
+                        List.of(),
+                        List.of(new PipelineStep(ROTATE, Map.of())),
+                        OutputSpec.inline());
+
+        MDC.put("auditPrincipal", "bob"); // the user whose upload triggered the run
+        try {
+            engine.runPolicy(
+                            unowned,
+                            PolicyInputs.of(List.of(pdf("input", "input.pdf"))),
+                            PolicyProgressListener.NOOP)
+                    .completion()
+                    .get(10, TimeUnit.SECONDS);
+        } finally {
+            MDC.remove("auditPrincipal");
+        }
+
+        assertEquals("bob", principalAtDispatch[0]);
+    }
+
+    @Test
     void adHocRunDispatchesToolCallsAsTheSubmittingUser() throws Exception {
         // Ad-hoc runs (no stored policy) bill whoever kicked them off; the principal is captured on
         // the request thread (here simulated via MDC) and re-established on the worker thread.
@@ -639,8 +891,8 @@ class PolicyEngineTest {
                                     "test never released the tool call");
                             return ResponseEntity.ok(pdf("rotated", "rotated.pdf"));
                         });
-        when(fileStorage.storeInputStream(any(InputStream.class), anyString()))
-                .thenReturn(new StoredFile("file-1", 7L));
+        // No storage stub on purpose: a cancelled run must not deliver, so nothing may
+        // reach file storage - if delivery regresses, the missing stub fails this loudly.
 
         PolicyRunHandle handle =
                 engine.submit(

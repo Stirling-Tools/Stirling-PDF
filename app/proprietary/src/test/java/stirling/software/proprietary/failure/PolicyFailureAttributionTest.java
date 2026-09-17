@@ -50,6 +50,7 @@ import stirling.software.proprietary.policy.output.InlineOutputSink;
 import stirling.software.proprietary.policy.output.PolicyOutputResolver;
 import stirling.software.proprietary.policy.progress.PolicyProgressListener;
 import stirling.software.proprietary.policy.source.InProcessSourceStore;
+import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.store.PolicyStore;
 
 import tools.jackson.databind.json.JsonMapper;
@@ -130,7 +131,7 @@ class PolicyFailureAttributionTest {
                         new PolicyAssetResolver(new InProcessPolicyAssetStore()));
 
         lenient()
-                .when(jobOwnershipService.createScopedJobKey(anyString()))
+                .when(jobOwnershipService.createScopedJobKey(anyString(), any()))
                 .thenAnswer(invocation -> invocation.getArgument(0));
         lenient().when(resourceMonitor.shouldQueueJob(anyInt())).thenReturn(false);
         lenient().when(toolMetadataService.isMultiInput(anyString())).thenReturn(false);
@@ -166,7 +167,11 @@ class PolicyFailureAttributionTest {
                             sharedPolicy(),
                             PolicyInputs.of(List.of(pdf())),
                             PolicyProgressListener.NOOP,
-                            sourceId,
+                            sourceId == null
+                                    ? null
+                                    : new Source(
+                                            sourceId, "Input", "folder", Map.of(), true, "carol",
+                                            TEAM),
                             fileIdentity)
                     .completion()
                     .get(10, TimeUnit.SECONDS);
@@ -188,7 +193,7 @@ class PolicyFailureAttributionTest {
     private FileRunEvent asMember(String reader) {
         lenient().when(userService.getCurrentUsername()).thenReturn(reader);
         lenient().when(authority.canEditPolicies()).thenReturn(false);
-        List<FileRunEvent> visible = service.list(null, null, 10);
+        List<FileRunEvent> visible = service.list(null, false, null, 10);
         return visible.isEmpty() ? null : visible.getFirst();
     }
 
@@ -196,7 +201,7 @@ class PolicyFailureAttributionTest {
     private FileRunEvent asReviewer(String reader) {
         lenient().when(userService.getCurrentUsername()).thenReturn(reader);
         lenient().when(authority.canEditPolicies()).thenReturn(true);
-        return service.list(null, null, 10).getFirst();
+        return service.list(null, false, null, 10).getFirst();
     }
 
     @Nested

@@ -27,7 +27,6 @@ import { type Team } from "@app/services/teamService";
 import { Z_INDEX_OVER_CONFIG_MODAL } from "@app/styles/zIndex";
 import InviteMembersModal from "@app/components/shared/InviteMembersModal";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import LoginRequiredBanner from "@app/components/shared/config/LoginRequiredBanner";
 import { useNavigate } from "react-router-dom";
 import UpdateSeatsButton from "@app/components/shared/UpdateSeatsButton";
 import { useLicense } from "@app/contexts/LicenseContext";
@@ -402,16 +401,14 @@ User: ${user.username}`)
 
   return (
     <Stack gap="lg">
-      <LoginRequiredBanner show={!loginEnabled} />
-      <div>
-        <Text fw={600} size="lg">
-          {t("workspace.people.title")}
-        </Text>
+      {loginEnabled && users.some((user) => user.orgOwner) && (
         <Text size="sm" c="dimmed">
-          {t("workspace.people.description")}
+          {t(
+            "workspace.people.ownerLocked",
+            "Transfer organization ownership in Settings → Workspace → Users before changing the owner’s role or account.",
+          )}
         </Text>
-      </div>
-
+      )}
       {/* License Information - Compact */}
       {licenseInfo && (
         <Group gap="md" style={{ fontSize: "0.875rem" }}>
@@ -658,7 +655,9 @@ User: ${user.username}`)
                       label: { overflow: "visible" },
                     }}
                   >
-                    {getRoleLabel(getUserRoleId(user))}
+                    {user.orgOwner
+                      ? t("users.role.orgOwner", "Org Owner")
+                      : getRoleLabel(getUserRoleId(user))}
                   </Badge>
                 </Table.Td>
                 <Table.Td>
@@ -750,7 +749,7 @@ User: ${user.username}`)
                                 />
                               }
                               onClick={() => openEditModal(user)}
-                              disabled={!loginEnabled}
+                              disabled={!loginEnabled || user.orgOwner}
                             >
                               {t(
                                 "workspace.people.editRole",
@@ -768,7 +767,7 @@ User: ${user.username}`)
                                 />
                               }
                               onClick={() => openChangePasswordModal(user)}
-                              disabled={!loginEnabled}
+                              disabled={!loginEnabled || user.orgOwner}
                             >
                               {t(
                                 "workspace.people.changePassword.action",
@@ -794,7 +793,7 @@ User: ${user.username}`)
                                 )
                               }
                               onClick={() => handleToggleEnabled(user)}
-                              disabled={!loginEnabled}
+                              disabled={!loginEnabled || user.orgOwner}
                             >
                               {user.enabled
                                 ? t("workspace.people.disable")
@@ -854,7 +853,7 @@ User: ${user.username}`)
                                   />
                                 }
                                 onClick={() => handleDeleteUser(user)}
-                                disabled={!loginEnabled}
+                                disabled={!loginEnabled || user.orgOwner}
                               >
                                 {t("workspace.people.deleteUser")}
                               </Menu.Item>

@@ -12,16 +12,18 @@ import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVeri
  * admins update the license key, the changes are immediately reflected in the UI, config endpoints
  * and the premium/enterprise endpoint gates without requiring a restart.
  *
- * <p>Hazard: this is not the only reader of the license. Everything below still resolves it once at
- * startup from the {@code runningProOrHigher} / {@code runningEE} beans, so a license change
+ * <p>Linked Team entitlement is evaluated on access, including unlink and revocation; installed
+ * licences retain their own validation lifecycle.
+ *
+ * <p>Hazard: this is not the only reader of the licence. The following still resolve it once at
+ * startup from the {@code runningProOrHigher} / {@code runningEE} beans, so a licence change
  * reaches them only on restart.
  *
  * <ul>
- *   <li>Structures built at boot: the datasource selection in DatabaseConfig, the security filter
- *       chain in SecurityConfiguration, the {@code enterprise} endpoint group EndpointConfiguration
- *       disables in its constructor, and ClusterLicenseGate.
+ *   <li>Structures built at boot: the security filter chain in SecurityConfiguration and
+ *       ClusterLicenseGate.
  *   <li>Request-time checks against the frozen flag: AuditService (which events it records),
- *       AuditCleanupService (retention cap), DatabaseNotificationService and PdfMetadataService.
+ *       AuditCleanupService (retention cap) and DatabaseNotificationService.
  * </ul>
  *
  * <p>TODO(#7848): AuditService keeps dropping every event outside PDF_PROCESS and FILE_OPERATION
@@ -40,13 +42,18 @@ public class DynamicLicenseService implements LicenseServiceInterface {
      * @return Current license: NORMAL, SERVER, or ENTERPRISE
      */
     public License getCurrentLicense() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult();
+        return licenseKeyChecker.premiumTier();
     }
 
     @Override
     public boolean isRunningProOrHigher() {
         License license = getCurrentLicense();
         return license == License.SERVER || license == License.ENTERPRISE;
+    }
+
+    @Override
+    public boolean hasServerLicense() {
+        return licenseKeyChecker.getLicenseKeyResult() == License.SERVER;
     }
 
     @Override

@@ -6,6 +6,8 @@ import { connectionModeService } from "@app/services/connectionModeService";
 export interface SelfHostedAuthState {
   isSelfHosted: boolean;
   isAuthenticated: boolean;
+  /** False only once both desktop checks have resolved. */
+  loading: boolean;
 }
 
 /**
@@ -16,32 +18,58 @@ export interface SelfHostedAuthState {
  */
 export function useSelfHostedAuth(): SelfHostedAuthState {
   const { refetch } = useAppConfig();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isSelfHosted, setIsSelfHosted] = useState(false);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const [isSelfHosted, setIsSelfHosted] = useState<boolean | null>(null);
   const wasSelfHosted = useRef(false);
 
   useEffect(() => {
-    void connectionModeService
-      .getCurrentMode()
-      .then((mode) => setIsSelfHosted(mode === "selfhosted"));
-    return connectionModeService.subscribeToModeChanges((cfg) =>
-      setIsSelfHosted(cfg.mode === "selfhosted"),
-    );
+    let current = true;
+    void connectionModeService.getCurrentMode().then((mode) => {
+      if (current) setIsSelfHosted(mode === "selfhosted");
+    });
+    const unsubscribe = connectionModeService.subscribeToModeChanges((cfg) => {
+      current = false;
+      setIsSelfHosted(cfg.mode === "selfhosted");
+    });
+    return () => {
+      current = false;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
-    void authService.isAuthenticated().then(setIsAuthenticated);
-    return authService.subscribeToAuth((status) =>
-      setIsAuthenticated(status === "authenticated"),
-    );
+    let current = true;
+    let subscribed = false;
+    const unsubscribe = authService.subscribeToAuth((status) => {
+      // The immediate notification can precede restoration from the keyring.
+      if (!subscribed) return;
+      current = false;
+      setIsAuthenticated(
+        status === "refreshing" || status === "oauth_pending"
+          ? null
+          : status === "authenticated",
+      );
+    });
+    subscribed = true;
+    void authService.isAuthenticated().then((authenticated) => {
+      if (current) setIsAuthenticated(authenticated);
+    });
+    return () => {
+      current = false;
+      unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
     if (isSelfHosted && !wasSelfHosted.current) {
       void refetch();
     }
-    wasSelfHosted.current = isSelfHosted;
+    wasSelfHosted.current = isSelfHosted === true;
   }, [isSelfHosted, refetch]);
 
-  return { isSelfHosted, isAuthenticated };
+  return {
+    isSelfHosted: isSelfHosted === true,
+    isAuthenticated: isAuthenticated === true,
+    loading: isSelfHosted === null || isAuthenticated === null,
+  };
 }

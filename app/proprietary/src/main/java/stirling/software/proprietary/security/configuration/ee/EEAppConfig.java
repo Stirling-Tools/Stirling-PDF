@@ -4,6 +4,7 @@ import static stirling.software.proprietary.security.configuration.ee.KeygenLice
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -27,27 +28,33 @@ public class EEAppConfig {
         migrateEnterpriseSettingsToPremium(this.applicationProperties);
     }
 
+    /** Team entitlement is stored in the configured database. */
     @Profile("security & !saas")
     @Bean(name = "runningProOrHigher")
+    @DependsOn("entityManagerFactory")
     public boolean runningProOrHigher() {
-        License license = licenseKeyChecker.getPremiumLicenseEnabledResult();
+        License license = licenseKeyChecker.premiumTier();
         return license == License.SERVER || license == License.ENTERPRISE;
     }
 
     @Profile("security & !saas")
     @Bean(name = "license")
+    @DependsOn("entityManagerFactory")
     public String licenseType() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult().name();
+        return licenseKeyChecker.premiumTier().name();
     }
 
+    /** Never promoted: Enterprise is contracted, so this stays what the licence key itself says. */
     @Profile("security & !saas")
     @Bean(name = "runningEE")
+    @DependsOn("entityManagerFactory")
     public boolean runningEnterprise() {
-        return licenseKeyChecker.getPremiumLicenseEnabledResult() == License.ENTERPRISE;
+        return licenseKeyChecker.premiumTier() == License.ENTERPRISE;
     }
 
     @Profile("security & !saas")
     @Bean(name = "SSOAutoLogin")
+    @DependsOn("runningProOrHigher")
     public boolean ssoAutoLogin() {
         boolean enabled = applicationProperties.getPremium().getProFeatures().isSsoAutoLogin();
         if (enabled) {

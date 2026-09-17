@@ -1,6 +1,5 @@
 package stirling.software.proprietary.accountlink;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -11,16 +10,16 @@ import org.springframework.stereotype.Service;
 import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.proprietary.billing.BillingCategory;
+import stirling.software.proprietary.billing.BillingStepLimit;
 
 /**
- * Accrues metered usage into the durable per-(period, category) {@link UsageCounter}; the daily
- * sync later reports the cumulative totals to SaaS.
+ * Accrues a linked team's metered usage into the durable per-(period, category) {@link
+ * UsageCounter}; the daily sync later reports the cumulative totals to SaaS. The cloud ledger only
+ * — an unlinked instance meters its own grant through {@link FreeTierUsageService}.
  *
- * <p>Workflow-window dedup: an identical input set re-submitted within {@code metering.workflow-
- * window} is treated as chaining and not re-charged; the same inputs run again after the window are
- * billed afresh — matching the cloud's open-job lineage window so the same op costs the same on the
- * instance and in the cloud. Fileless ops pass a null signature and always accrue. {@link #accrue}
- * is best-effort: callers need not handle persistence errors.
+ * <p>A run/document key groups successful sub-steps until the configured step limit or workflow
+ * window is reached. Standalone calls have no key and always accrue. Persistence failures are
+ * logged and never affect the completed operation's response.
  */
 @Slf4j
 @Service
@@ -31,67 +30,50 @@ import stirling.software.proprietary.billing.BillingCategory;
 public class UsageMeterService {
 
     private final UsageCounterRepository repo;
-    private final MeteredInputSignatureRepository signatureRepo;
-    private final Duration workflowWindow;
+    private final MeteredInputWindow inputWindow;
 
     public UsageMeterService(
             UsageCounterRepository repo,
             MeteredInputSignatureRepository signatureRepo,
             AccountLinkProperties properties) {
         this.repo = repo;
-        this.signatureRepo = signatureRepo;
-        this.workflowWindow = properties.getMetering().getWorkflowWindow();
+        this.inputWindow =
+                new MeteredInputWindow(signatureRepo, properties.getMetering().getWorkflowWindow());
     }
 
     /**
-     * Adds {@code units} to the {@code (periodStart, category)} counter (creating the row on first
-     * use), unless {@code opSignature} was already metered this period. No-ops for non-billable
-     * categories, non-positive units, or a missing period.
+     * Records successful work using the default step limit. A null key always charges; a
+     * run/document key groups steps within that limit and the workflow window.
      */
     public void accrue(
-            LocalDateTime periodStart, BillingCategory category, long units, String opSignature) {
+            LocalDateTime periodStart, BillingCategory category, long units, String dedupKey) {
+        accrue(periodStart, category, units, dedupKey, BillingStepLimit.resolve(null));
+    }
+
+    /**
+     * Records one successful step. Charges its current input units on the first step, after {@code
+     * stepLimit} successful steps, or after the workflow window expires. Each key counts
+     * independently; a null key always charges. Missing periods, non-billable categories and
+     * non-positive units are ignored. Callers must not report failed steps.
+     */
+    public void accrue(
+            LocalDateTime periodStart,
+            BillingCategory category,
+            long units,
+            String dedupKey,
+            int stepLimit) {
         if (periodStart == null
                 || category == null
                 || category == BillingCategory.BYPASSED
                 || units <= 0) {
             return;
         }
-        if (opSignature != null && !shouldCharge(periodStart, opSignature)) {
-            return; // identical inputs seen within the workflow window — chaining, already billed
+        if (dedupKey != null
+                && !inputWindow.shouldCharge(
+                        periodStart, dedupKey, BillingStepLimit.resolve(stepLimit))) {
+            return;
         }
         incrementOrInsert(periodStart, category.name(), units);
-    }
-
-    /**
-     * True when this input set should be charged: unseen this period, or last seen outside the
-     * workflow window. Records a first sighting (an atomic insert-as-claim under concurrency) and
-     * slides the window on a repeat. Fails toward charging so a store hiccup never drops a charge.
-     */
-    private boolean shouldCharge(LocalDateTime periodStart, String opSignature) {
-        LocalDateTime now = LocalDateTime.now();
-        MeteredInputSignature seen =
-                signatureRepo.findByPeriodStartAndSignature(periodStart, opSignature).orElse(null);
-        if (seen == null) {
-            try {
-                signatureRepo.saveAndFlush(
-                        new MeteredInputSignature(periodStart, opSignature, now));
-                return true; // first sighting this period
-            } catch (DataIntegrityViolationException raced) {
-                return false; // a concurrent op just claimed it — within window → chaining
-            } catch (RuntimeException e) {
-                log.debug("Signature claim failed for {}: {}", periodStart, e.getMessage());
-                return true;
-            }
-        }
-        LocalDateTime last = seen.getLastMeteredAt() != null ? seen.getLastMeteredAt() : now;
-        boolean withinWindow = last.isAfter(now.minus(workflowWindow));
-        try {
-            seen.touch(now);
-            signatureRepo.save(seen);
-        } catch (RuntimeException e) {
-            log.debug("Signature touch failed for {}: {}", periodStart, e.getMessage());
-        }
-        return !withinWindow;
     }
 
     private void incrementOrInsert(LocalDateTime periodStart, String category, long units) {

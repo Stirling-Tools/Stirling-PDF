@@ -6,6 +6,7 @@
  */
 
 import apiClient from "@app/services/apiClient";
+import { uploadableFile } from "@app/utils/uploadableFile";
 import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";
 import type {
   BackendPolicy,
@@ -37,7 +38,7 @@ export async function runStoredPolicy(
   fileId?: string,
 ): Promise<string> {
   const form = new FormData();
-  for (const file of files) form.append("fileInput", file);
+  for (const file of files) form.append("fileInput", uploadableFile(file));
   if (fileId) form.append("fileId", fileId);
   // Don't set Content-Type: the HTTP client must generate multipart/form-data
   // WITH its boundary from the FormData body. A manual boundary-less header makes

@@ -2,8 +2,8 @@ package stirling.software.proprietary.security.filter;
 
 import java.io.IOException;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -16,21 +16,12 @@ import jakarta.servlet.http.HttpServletResponse;
 import stirling.software.common.service.LicenseServiceInterface;
 
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE + 20)
 public class EnterpriseEndpointFilter extends OncePerRequestFilter {
-    private final boolean runningProOrHigher;
-
     private final LicenseServiceInterface licenseService;
 
-    public EnterpriseEndpointFilter(
-            @Qualifier("runningProOrHigher") boolean runningProOrHigher,
-            @Autowired(required = false) LicenseServiceInterface licenseService) {
-        this.runningProOrHigher = runningProOrHigher;
+    public EnterpriseEndpointFilter(LicenseServiceInterface licenseService) {
         this.licenseService = licenseService;
-    }
-
-    private boolean isProOrHigher() {
-        return runningProOrHigher
-                || (licenseService != null && licenseService.isRunningProOrHigher());
     }
 
     @Override
@@ -38,7 +29,7 @@ public class EnterpriseEndpointFilter extends OncePerRequestFilter {
             HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
 
-        if (isPrometheusEndpointRequest(request) && !isProOrHigher()) {
+        if (isPrometheusEndpointRequest(request) && !licenseService.isRunningProOrHigher()) {
             // Allow only health checks to pass through for non-pro users
             String uri = request.getRequestURI();
 
