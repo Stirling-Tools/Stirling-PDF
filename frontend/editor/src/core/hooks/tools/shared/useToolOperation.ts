@@ -554,7 +554,7 @@ export const useToolOperation = <TParams>(
           // Set by both branches so the usage tracker can move each document's
           // tool chain from the inputs onto the outputs that replaced them.
           let producedFileIds: FileId[] = [];
-          // An input that failed stays in the workbench, so it must keep its chain.
+          // Inputs left in the workbench - failed, or never attempted - keep their chain.
           let consumedInputIds: FileId[] = [];
 
           if (isVersionOp) {
