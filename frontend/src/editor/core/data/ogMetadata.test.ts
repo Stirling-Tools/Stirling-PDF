@@ -816,7 +816,10 @@ describe("shipped OG manifests", () => {
     const manifest = await load("og-metadata.saas.json");
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), "og-public-contract-"));
     try {
-      await fs.writeFile(path.join(dir, "index.html"), TEMPLATE);
+      await fs.writeFile(
+        path.join(dir, "index.html"),
+        TEMPLATE.replace('type="module"', "type=module"),
+      );
       await prerenderOg({
         distDir: dir,
         manifest,
@@ -853,7 +856,11 @@ describe("shipped OG manifests", () => {
       }
       const notFound = await fs.readFile(path.join(dir, "404.html"), "utf8");
       expect(notFound).toContain("noindex, follow");
-      expect(notFound).not.toContain('type="module"');
+      expect(
+        new DOMParser()
+          .parseFromString(notFound, "text/html")
+          .querySelector('script[type="module"]'),
+      ).toBeNull();
       expect(notFound).not.toContain('rel="canonical"');
       const shell = await fs.readFile(path.join(dir, "app-shell.html"), "utf8");
       expect(shell).toContain('<base href="/app/"');
