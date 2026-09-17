@@ -432,6 +432,43 @@ class PolicyRunnerTest {
     }
 
     @Test
+    void aMigratedWatchedFolderSweepsItsOwnerlessSourceUnderLogin() throws Exception {
+        // Conversion runs at boot with no acting user, so its folders are stamped with no owner.
+        // They are server config over disk directories, so nobody's documents are stranded.
+        ApplicationProperties loginOn = new ApplicationProperties();
+        loginOn.getSecurity().setEnableLogin(true);
+        PolicyRunner enforced =
+                new PolicyRunner(
+                        policyEngine,
+                        List.of(folderSource),
+                        sourceStore,
+                        docCounter,
+                        processedLedger,
+                        loginOn,
+                        guardOver(loginOn, noUsers()),
+                        org.mockito.Mockito.mock(
+                                stirling.software.proprietary.security.configuration.ee
+                                        .DatabaseLicenseGuard.class));
+        InputSpec spec = InputSpec.folder("/in");
+        Source source =
+                sourceStore.save(
+                        new Source(null, "Input", spec.type(), spec.options(), true, null, null));
+        Policy migrated =
+                policyReferencing(List.of(source.id()))
+                        .withOwner(null)
+                        .withOrigin(Policy.ORIGIN_MIGRATED);
+        when(folderSource.supports(spec)).thenReturn(true);
+        when(folderSource.resolve(eq(spec), any()))
+                .thenReturn(List.of(ResolvedInput.of(PolicyInputs.of(List.of()))));
+        when(policyEngine.runPolicy(any(), any(), any(), any(), any(), any()))
+                .thenReturn(new PolicyRunHandle("r", new CompletableFuture<>()));
+
+        SweepOutcome outcome = enforced.run(migrated);
+
+        assertEquals(List.of("r"), outcome.runIds());
+    }
+
+    @Test
     void anOwnerlessProcessingFolderIsNotSweptUnderLogin() {
         // Created while login was disabled, so stamped with no owner; enabling login strands it
         // where no user can list, pause, revert, or delete it. Sweeping it anyway would keep
