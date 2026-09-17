@@ -24,8 +24,6 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -51,7 +49,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     public static final String PUB_KEY_SUFFIX = ".pub";
 
     private final ApplicationProperties.Security.Jwt jwtProperties;
-    private final Cache verifyingKeyCache;
     private final JwtSigningKeyRepository keyRepository;
     private final boolean clusterEnabled;
 
@@ -62,11 +59,9 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
     public KeyPersistenceService(
             ApplicationProperties applicationProperties,
-            CacheManager cacheManager,
             JwtSigningKeyRepository keyRepository,
             @Value("${cluster.enabled:false}") boolean clusterEnabled) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
-        this.verifyingKeyCache = cacheManager.getCache("verifyingKeys");
         this.keyRepository = keyRepository;
         this.clusterEnabled = clusterEnabled;
     }
@@ -110,7 +105,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             }
             JwtVerificationKey adopted =
                     new JwtVerificationKey(newest.getKeyId(), newest.getVerifyingKey());
-            verifyingKeyCache.put(newest.getKeyId(), adopted);
             activeKey = adopted;
             log.info(
                     "Adopted newest JWT signing key {} from the shared DB as active",
@@ -128,10 +122,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
             generateAndStoreKeypair();
             return;
         }
-        for (JwtSigningKeyEntity key : keys) {
-            verifyingKeyCache.put(
-                    key.getKeyId(), new JwtVerificationKey(key.getKeyId(), key.getVerifyingKey()));
-        }
+        for (JwtSigningKeyEntity key : keys) {}
         activeKey =
                 new JwtVerificationKey(
                         keys.getFirst().getKeyId(), keys.getFirst().getVerifyingKey());
@@ -151,7 +142,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
 
             keyPairCache.put(keyId, keyPair);
             JwtVerificationKey verificationKey = new JwtVerificationKey(keyId, verifyingKey);
-            verifyingKeyCache.put(keyId, verificationKey);
             activeKey = verificationKey;
             log.info("Generated and stored new JWT keypair: {}", keyId);
             return verificationKey;
@@ -190,7 +180,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
                             decodePublicKey(entity.getVerifyingKey()),
                             decodePrivateKey(entity.getSigningKey()));
             keyPairCache.put(keyId, keyPair);
-            verifyingKeyCache.put(keyId, new JwtVerificationKey(keyId, entity.getVerifyingKey()));
             return Optional.of(keyPair);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
             log.error("Failed to decode keypair for keyId: {}", keyId, e);
@@ -211,7 +200,6 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     @Override
     public void removeKey(String keyId) {
         keyRepository.deleteById(keyId);
-        verifyingKeyCache.evict(keyId);
         keyPairCache.remove(keyId);
     }
 

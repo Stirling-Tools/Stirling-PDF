@@ -3,6 +3,7 @@ package stirling.software.proprietary.security.configuration.ee;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Lazy;
@@ -37,6 +38,16 @@ public class LicenseKeyChecker {
 
     /** The licence key's own tier, before any Team-plan promotion. Same volatile contract. */
     private volatile License licenseKeyResult = License.NORMAL;
+
+    /**
+     * premiumTier() is asked several times per page load and each miss costs a DB read, so the
+     * resolved tier is memoised briefly. Deliberately short: a link, unlink or key change is picked
+     * up within this window without any of the callers having to invalidate anything.
+     */
+    private static final long TIER_MEMO_NANOS = Duration.ofSeconds(5).toNanos();
+
+    /** nanoTime of the last successful promotion; 0 means "never resolved", so never memoised. */
+    private volatile long tierResolvedAtNanos = 0L;
 
     public LicenseKeyChecker(
             KeygenLicenseVerifier licenseService,
@@ -111,6 +122,7 @@ public class LicenseKeyChecker {
     private void applyTeamPlanPromotion() {
         if (licenseKeyResult != License.NORMAL) {
             premiumEnabledResult = licenseKeyResult;
+            tierResolvedAtNanos = System.nanoTime();
             return;
         }
         Integer users;
@@ -126,6 +138,7 @@ public class LicenseKeyChecker {
             log.info("Linked cloud team holds a Team plan for {} users; running as Server.", users);
         }
         premiumEnabledResult = entitled ? License.SERVER : License.NORMAL;
+        tierResolvedAtNanos = System.nanoTime();
     }
 
     /** Throws when entitlement cannot be read; null means no purchased Team capacity. */
@@ -180,8 +193,16 @@ public class LicenseKeyChecker {
 
     /** Resolves the effective tier after the datasource is available. */
     public License premiumTier() {
-        applyTeamPlanPromotion();
+        if (!isTierMemoFresh()) {
+            applyTeamPlanPromotion();
+        }
         return premiumEnabledResult;
+    }
+
+    // A failed promotion never stamps, so an unreadable entitlement is retried, not frozen.
+    private boolean isTierMemoFresh() {
+        long resolvedAt = tierResolvedAtNanos;
+        return resolvedAt != 0L && System.nanoTime() - resolvedAt < TIER_MEMO_NANOS;
     }
 
     public License getPremiumLicenseEnabledResult() {
