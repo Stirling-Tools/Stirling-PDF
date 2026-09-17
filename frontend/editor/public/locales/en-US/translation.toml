@@ -8161,6 +8161,14 @@ baseUrlPlaceholder = "https://your-org.webhook.office.com/webhookb2/..."
 description = "Post a message to a Teams channel when a policy runs."
 label = "Microsoft Teams"
 
+[portal.connections.types.vectordb]
+baseUrlPlaceholder = "https://your-database-host"
+description = "Index document chunks using Weaviate or Pinecone server-side embedding. Use the Weaviate server URL or Pinecone index host. Private endpoints require the operator to enable policies.allowPrivateApiEndpoints."
+label = "RAG database"
+pinecone = "Pinecone"
+vendor = "Database"
+weaviate = "Weaviate"
+
 [portal.connections.types.webhook]
 baseUrlPlaceholder = "https://example.com/hooks/documents"
 description = "Post each document, or just the details, to a URL you choose."
@@ -8957,6 +8965,7 @@ label = "Change icon"
 [portal.pipelines.builder.ragIngest]
 chunkSize = "Chunk size"
 chunkSizeHint = "Characters per chunk. Smaller chunks retrieve more precisely; larger ones keep more context together."
+destinationNeedsChunks = "This RAG database destination needs a final RAG step that exports chunks only."
 editorPdfOnly = "Editor policies return PDFs only. To export chunks or Markdown, choose a saved input source and a file destination."
 exportChunks = "Export chunks as JSONL"
 exportChunksHint = "One chunk per line with its page span, ready to load into another system."
@@ -8974,6 +8983,7 @@ nothingToDo = "Turn on at least one of indexing or an export, or this step has n
 overlap = "Overlap"
 overlapHint = "Characters repeated between neighbouring chunks, so a sentence split across two is still findable."
 overlapTooBig = "Overlap must be smaller than the chunk size ({{chunkSize}})."
+prepareDestination = "Prepare chunks for this destination"
 unavailable = "RAG preparation needs an enabled, reachable AI engine, including when the destination database generates embeddings."
 
 [portal.pipelines.builder.routing]
@@ -9874,6 +9884,7 @@ backToSource = "Back to source setup"
 backToTypes = "All source types"
 cancel = "Cancel"
 chooseHint = "Choose where documents come from. Greyed-out connectors are on the way."
+chooseOutputHint = "Choose where processed documents go. Greyed-out connectors are on the way."
 comingSoon = "Coming soon"
 comingSoonHeading = "Coming soon"
 create = "Create source"
@@ -10028,6 +10039,17 @@ label = "SharePoint"
 
 [portal.sources.types.unknown]
 label = "Source"
+
+[portal.sources.types.vectordb]
+collection = "Collection / index name"
+collectionHint = "Use an existing collection or index configured for server-side embedding."
+connection = "Database connection"
+description = "An output destination for prepared document chunks. The database generates embeddings; originals stay in your input source when track mode is selected."
+label = "RAG database"
+namespace = "Namespace / tenant"
+namespaceHint = "Optional Pinecone namespace or Weaviate tenant. Leave empty for the default namespace or a single-tenant collection."
+textField = "Text field"
+textFieldHint = "The field the database embeds, matching the collection schema or Pinecone field map."
 
 [portal.sources.types.webhook]
 createNote = "A delivery URL and signing secret are generated when you create this webhook. Senders POST documents to that URL and the referencing policies run on arrival."

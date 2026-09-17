@@ -367,10 +367,10 @@ public class PolicyController {
                         policy.outputIds().stream(),
                         policy.routingRules().stream().map(RoutingRule::outputId))
                 .distinct()
-                .forEach(this::requireAccessibleDestination);
+                .forEach(outputId -> requireAccessibleDestination(outputId, policy.steps()));
     }
 
-    private void requireAccessibleDestination(String outputId) {
+    private void requireAccessibleDestination(String outputId, List<PipelineStep> steps) {
         Source destination =
                 sourceStore
                         .get(outputId)
@@ -386,7 +386,7 @@ public class PolicyController {
                     HttpStatus.BAD_REQUEST, "The editor can't be used as an output destination");
         }
         try {
-            policyValidator.validateOutput(destination.toOutputSpec());
+            policyValidator.validateOutput(destination.toOutputSpec(), steps);
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
         }
@@ -734,7 +734,7 @@ public class PolicyController {
             policyValidator.validateSteps(definition.steps());
             // Every destination is checked; an ad-hoc run with no destinations validates nothing.
             for (OutputSpec output : definition.outputs()) {
-                policyValidator.validateOutput(output);
+                policyValidator.validateOutput(output, definition.steps());
             }
         } catch (IllegalArgumentException e) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, e.getMessage());
