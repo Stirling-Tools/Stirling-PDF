@@ -130,6 +130,7 @@ class InviteLinkControllerMoreTest {
         @Test
         @DisplayName("rejects assigning the INTERNAL_API_USER role")
         void rejectsInternalApiRole() throws Exception {
+            when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(5);
             mockMvc.perform(
                             post("/api/v1/invite/generate")
                                     .principal(adminPrincipal)

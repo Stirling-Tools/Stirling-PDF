@@ -5,6 +5,15 @@
 import axios from "axios";
 import { normalizeAxiosErrorData } from "@app/services/errorUtils";
 
+/** Signup gates are handled by the account modal and must not be reported as damaged files. */
+export function isSignupRequiredError(error: unknown): boolean {
+  if (!error || typeof error !== "object") return false;
+  const response = (
+    error as { response?: { status?: number; data?: { error?: string } } }
+  ).response;
+  return response?.status === 401 && response.data?.error === "SIGNUP_REQUIRED";
+}
+
 /**
  * Default error extractor that follows the standard pattern.
  *
