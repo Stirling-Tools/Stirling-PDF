@@ -103,18 +103,16 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("extractHeuristicDoc with a budget", () => {
-  test("a document that never opens falls back to its name", async () => {
+  test("a document that never opens is not classified", async () => {
     createDocument.mockReturnValue(never());
     const result = extractHeuristicDoc(pdf(), "Invoice 2026.pdf", {
       budgetMs: 1000,
     });
+    const settled = vi.fn();
+    void result.catch(settled);
     await vi.advanceTimersByTimeAsync(OPEN_TIMEOUT_MS + 1);
-    const extracted = await result;
 
-    // The name rules still place it; dropping the file would lose a real signal.
-    expect(extracted.fileName).toBe("Invoice 2026.pdf");
-    expect(extracted.pageCount).toBe(0);
-    expect(extracted.firstZone).toBe("");
+    expect(settled).toHaveBeenCalledWith(expect.any(Error));
   });
 
   test("a slow open does not eat the reading budget", async () => {
@@ -127,16 +125,17 @@ describe("extractHeuristicDoc with a budget", () => {
     expect((await result).firstZone).toBe("Invoice total due");
   });
 
-  test("falls back to the name when page 1's stream never answers", async () => {
+  test("is not classified when page 1's stream never answers", async () => {
     createDocument.mockResolvedValue(doc([page([], "hang")]));
     const result = extractHeuristicDoc(pdf(), "Bank statement.pdf", {
       budgetMs: 1000,
     });
+    const settled = vi.fn();
+    void result.catch(settled);
     await vi.advanceTimersByTimeAsync(1001);
-    const extracted = await result;
 
-    expect(extracted.fileName).toBe("Bank statement.pdf");
-    expect(extracted.allZone).toBe("");
+    expect(settled).toHaveBeenCalledWith(expect.any(Error));
+    // Skipping the file must not also leak its worker.
     expect(destroyDocument).toHaveBeenCalledTimes(1);
   });
 

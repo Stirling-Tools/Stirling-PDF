@@ -1,10 +1,7 @@
 // pdf.js extraction feeding the engine: page-1 text, a first-5 + last-2 page
 // window, Info-dict metadata, and a large-font page-1 "title" zone.
 
-import {
-  pdfWorkerManager,
-  PdfOpenTimeout,
-} from "@app/services/pdfWorkerManager";
+import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
 import type {
   PDFDocumentProxy,
   TextItem,
@@ -20,11 +17,11 @@ export interface ExtractOptions {
   /** Wall-clock budget for reading text, counted from the moment the document is
    *  open, so pdf.js worker start-up and the parse of the file's structure are not
    *  charged to it and the first file of a run is not penalised. Pages that do not
-   *  fit are dropped and the engine classifies what was read. Opening is bounded
+   *  fit are dropped and the engine classifies what was read; a document that yields
+   *  no text at all before the budget runs out throws, so the caller skips it rather
+   *  than filing a verdict on a file nothing was read from. Opening is bounded
    *  separately by {@link OPEN_TIMEOUT_MS}, so the worst case for one file is that
-   *  plus this. Running out of time is not a failure: what remains is the file name,
-   *  which is a rule input in its own right, so the result degrades to a name-only
-   *  document rather than throwing. */
+   *  plus this. */
   budgetMs?: number;
 }
 
@@ -52,19 +49,6 @@ function within<T>(
   ]).finally(() => clearTimeout(timer));
 }
 
-/** What the engine gets when a document never opened, or opened too late to read: the
- *  name rules still apply, and a name is often the strongest signal a scanned file has. */
-function nameOnlyDoc(fileName: string): HeuristicDoc {
-  return {
-    fileName,
-    pageCount: 0,
-    meta: {},
-    titleZone: "",
-    firstZone: "",
-    allZone: "",
-  };
-}
-
 /** One rebuilt text line: baseline y (bottom-origin), its largest font size, and the text. */
 interface Line {
   text: string;
@@ -72,8 +56,8 @@ interface Line {
   y: number;
 }
 
-/** Build the engine's input document from a PDF blob. Throws if the PDF can't be read;
- *  a `budgetMs` that runs out degrades to {@link nameOnlyDoc} instead. */
+/** Build the engine's input document from a PDF blob. Throws if the PDF can't be read,
+ *  which under a `budgetMs` includes one that never opens or yields no text in time. */
 export async function extractHeuristicDoc(
   file: Blob,
   fileName: string,
@@ -85,17 +69,11 @@ export async function extractHeuristicDoc(
   const arrayBuffer = await file.arrayBuffer();
   // The manager owns the loading task, so it is the only thing that can free one whose
   // worker died without ever settling its promise.
-  const pdfDoc = await pdfWorkerManager
-    .createDocument(arrayBuffer, {
-      disableAutoFetch: true,
-      disableStream: true,
-      openTimeoutMs: bounded ? OPEN_TIMEOUT_MS : undefined,
-    })
-    .catch((error: unknown) => {
-      if (error instanceof PdfOpenTimeout) return null;
-      throw error;
-    });
-  if (pdfDoc === null) return nameOnlyDoc(fileName);
+  const pdfDoc = await pdfWorkerManager.createDocument(arrayBuffer, {
+    disableAutoFetch: true,
+    disableStream: true,
+    openTimeoutMs: bounded ? OPEN_TIMEOUT_MS : undefined,
+  });
   const deadline = Date.now() + budgetMs;
   const remaining = () => deadline - Date.now();
   try {
@@ -127,6 +105,11 @@ export async function extractHeuristicDoc(
       const text =
         pageNo === 1 ? firstZone : await pageText(pdfDoc, pageNo, remaining);
       if (text.length > 0) parts.push(text);
+    }
+    if (parts.length === 0 && remaining() <= 0) {
+      throw new Error(
+        `Text extraction for ${fileName} produced nothing within ${budgetMs}ms`,
+      );
     }
     const meta = await metadata(pdfDoc, remaining);
     return {
