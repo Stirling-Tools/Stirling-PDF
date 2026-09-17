@@ -10,6 +10,7 @@ import React, {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -72,6 +73,22 @@ export interface MoveDialogState {
   fileIds?: FileId[];
   folderId?: FolderId;
   initial: FolderId | null;
+}
+
+const VIEW_MODE_STORAGE_KEY = "stirling.filesPageViewMode";
+
+/**
+ * The list is the default: it shows more files per screen and carries the columns the
+ * grid has no room for.
+ */
+function readPersistedViewMode(): FilesPageViewMode {
+  try {
+    const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (stored === "grid" || stored === "list") return stored;
+  } catch {
+    // Private mode, or storage denied: the default stands.
+  }
+  return "list";
 }
 
 interface FilesPageContextValue {
@@ -156,6 +173,7 @@ const FilesPageContext = createContext<FilesPageContextValue | null>(null);
 
 export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const indexedDB = useIndexedDB();
   const indexedDBRevision = useIndexedDBRevision();
   const folders = useFolders();
@@ -264,7 +282,17 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
   }, [folders.currentFolderId, clearSelection]);
 
   // View + sort + search + filters ----------------------------------------
-  const [viewMode, setViewMode] = useState<FilesPageViewMode>("grid");
+  const [viewMode, setViewModeState] = useState<FilesPageViewMode>(
+    readPersistedViewMode,
+  );
+  const setViewMode = useCallback((mode: FilesPageViewMode) => {
+    setViewModeState(mode);
+    try {
+      localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
+    } catch {
+      // A browser that refuses storage still gets the choice for this session.
+    }
+  }, []);
   const [sortMode, setSortMode] = useState<FilesPageSortMode>("modified-desc");
   const [search, setSearch] = useState("");
   const [originFilter, setOriginFilter] =
@@ -298,11 +326,12 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
     async (name: string) => {
       if (folderNameDialog.mode === "new") {
         // Chosen before the dialog opened, and only used at the root.
-        await folders.createFolder(
+        const created = await folders.createFolder(
           name,
           folderNameDialog.parentId ?? folders.currentFolderId,
           folderNameDialog.kind,
         );
+        navigate(`/files/${created.id}`);
       } else if (
         folderNameDialog.mode === "rename" &&
         folderNameDialog.folder
@@ -310,7 +339,7 @@ export function FilesPageProvider({ children }: { children: React.ReactNode }) {
         await folders.renameFolder(folderNameDialog.folder.id, name);
       }
     },
-    [folderNameDialog, folders],
+    [folderNameDialog, folders, navigate],
   );
 
   // Dialog: move ------------------------------------------------------------

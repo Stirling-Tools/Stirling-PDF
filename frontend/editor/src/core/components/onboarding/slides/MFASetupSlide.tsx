@@ -113,6 +113,7 @@ function MFASetupContent({ onMfaSetupComplete }: MFASetupSlideProps) {
         setSubmitting(true);
         setMfaError("");
         await accountService.enableMfa(mfaSetupCode.trim());
+        setupCompleteRef.current = true;
         setSetupComplete(true);
         onMfaSetupComplete?.();
       } catch (err) {
