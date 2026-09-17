@@ -418,9 +418,8 @@ public class TaskManager {
 
                     // Remove the job result
                     jobResults.remove(entry.getKey());
-                    // On the scheduled sweep a distributed backplane TTLs the shared row on the
-                    // same expiry, so skip the round trip. A forced sweep drops files early, so
-                    // the row must go with them or peers sticky-410 to files this node just freed.
+                    // A distributed backplane TTLs the shared row on the same expiry. A forced
+                    // sweep drops files early, so there the row must go with them.
                     if (jobStore != null
                             && (force
                                     || clusterBackplane == null

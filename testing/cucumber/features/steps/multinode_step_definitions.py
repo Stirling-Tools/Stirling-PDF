@@ -462,9 +462,8 @@ def _post_until_limited(token, budget):
 
 @then("the rate-limit counter should be shared across nodes")
 def step_ratelimit_shared(context):
-    # The probe user's quota is RATELIMIT_QUOTA web calls/day. nginx round-robins with no affinity,
-    # so per-node buckets would take ~quota x node_count requests to trip. Budgeting quota + 4
-    # means a 429 can only arrive on time if both nodes drew from one shared counter.
+    # nginx round-robins with no affinity, so per-node buckets would need ~quota x nodes requests
+    # to trip. Budgeting quota + 4 means a 429 in time proves one shared counter.
     token = _ratelimit_login()
     budget = RATELIMIT_QUOTA + 4
     made, limited = _post_until_limited(token, budget)

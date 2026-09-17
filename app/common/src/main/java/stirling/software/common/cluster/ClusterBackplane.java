@@ -13,10 +13,8 @@ public interface ClusterBackplane {
     String localNodeId();
 
     /**
-     * Whether this JVM owns expiry of the <em>shared</em> job row. Distributed backplanes expire it
-     * by TTL, so they override this to {@code false} and the local sweep skips the redundant
-     * delete. It does NOT disable the sweep itself: reclaiming this node's heap and result files is
-     * always local work, and no TTL elsewhere can do it.
+     * Whether this JVM owns expiry of the <em>shared</em> job row. Does not disable the local
+     * sweep: only that frees this node's heap and result files.
      */
     default boolean shouldRunLocalCleanup() {
         return true;

@@ -26,11 +26,8 @@ import stirling.software.common.model.enumeration.Role;
 import stirling.software.common.util.RegexPatternUtils;
 
 /**
- * Per-role daily POST quota. Counting goes through {@link RateLimitStore} so a cluster enforces one
- * quota across every node; on a single node the in-process store behaves as before.
- *
- * <p>Refill is greedy (tokens trickle back continuously) rather than all-at-once every 24h, which
- * is the {@link RateLimitStore} contract shared with every other caller.
+ * Per-role daily POST quota, counted through {@link RateLimitStore} so a cluster enforces one quota
+ * across every node. Refill is greedy, per that contract, not all-at-once every 24h.
  */
 @Component
 @Profile("!saas")

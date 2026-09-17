@@ -286,9 +286,8 @@ class TaskManagerTest {
 
     @Test
     void testCleanupOldJobs_ReclaimsLocallyButSkipsSharedDeleteWhenBackplaneOwnsExpiry() {
-        // A distributed backplane TTLs the shared row, so the delete round trip is redundant - but
-        // only this sweep frees the node's jobResults heap and result files, so it must still run.
-        // Regression guard: skipping the whole sweep leaked both on every Valkey-backplane node.
+        // The backplane TTLs the shared row, so that delete is redundant, but skipping the whole
+        // sweep leaked this node's jobResults heap and every result file.
         when(clusterBackplane.shouldRunLocalCleanup()).thenReturn(false);
 
         // Seed an old completed job that would normally be removed.

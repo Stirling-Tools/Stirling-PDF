@@ -148,9 +148,8 @@ public class ValkeyConnectionConfiguration {
         }
         int database = databaseOrZero(uri.getPath());
         if (database != 0) {
-            // Refusing to boot, not warning: the database index is the only keyspace isolation
-            // Stirling has, so silently falling back to 0 merges this deployment's node registry
-            // with whatever else shares the server and cross-routes job downloads between them.
+            // The database index is the only keyspace isolation there is, so falling back to 0
+            // would merge this deployment's node registry with whatever else shares the server.
             throw new IllegalStateException(
                     "cluster.valkey.url selects database "
                             + database
@@ -538,10 +537,8 @@ public class ValkeyConnectionConfiguration {
     }
 
     /**
-     * Every backplane key carries a TTL, so any eviction policy makes the node registry and the
-     * distributed locks eviction candidates and an evicted lock silently breaks mutual exclusion.
-     * Warn only: {@code CONFIG GET} is commonly ACL-denied on managed Valkey, and a boot failure
-     * over a diagnostic would be worse than the risk it reports.
+     * Every backplane key has a TTL, so an evicted lock silently breaks mutual exclusion. Warn
+     * only: {@code CONFIG GET} is commonly ACL-denied on managed Valkey.
      */
     static void warnOnEvictionPolicy(RedisConnection conn) {
         String policy;

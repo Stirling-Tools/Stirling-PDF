@@ -114,8 +114,7 @@ log "users created: $created (failed: $failed, requested: $USER_COUNT)"
 [ "$failed" -eq 0 ] || fail_note "$failed of $USER_COUNT user creates failed"
 
 # --- rate-limit probe user ---------------------------------------------------
-# Every seeded user above is ADMIN or USER, and both are Integer.MAX_VALUE calls/day, so no quota
-# is ever charged for them. The rate-limiting scenario needs a role with a real limit to assert on.
+# Every user above is ADMIN or USER, both unlimited, so nothing else has a quota to assert on.
 rl_code=$(auth -o /tmp/rluser.json -w '%{http_code}' -X POST "$BASE_URL/api/v1/user/admin/saveUser" \
   --data-urlencode "username=$RATELIMIT_USER" \
   --data-urlencode "password=$USER_PASS" \
