@@ -105,6 +105,19 @@ class InviteLinkControllerTest {
     }
 
     @Test
+    void keylessTeamCountsPendingInvitesAgainstCapacity() throws Exception {
+        applicationProperties.getPremium().setEnabled(false);
+        when(userService.getTotalUsersCount()).thenReturn(299L);
+        when(inviteTokenRepository.countActiveInvites(any(LocalDateTime.class))).thenReturn(1L);
+        when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(300);
+
+        mockMvc.perform(post("/api/v1/invite/generate").principal(adminPrincipal))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value(startsWith("License limit reached (300/300")));
+        verify(inviteTokenRepository, never()).save(any());
+    }
+
+    @Test
     void generateInviteLinkAllowedOnServerLicense() throws Exception {
         // SERVER license has raw maxUsers=0, but calculateMaxAllowedUsers() returns
         // Integer.MAX_VALUE
@@ -129,6 +142,7 @@ class InviteLinkControllerTest {
 
     @Test
     void generateInviteLinkBuildsFrontendUrl() throws Exception {
+        when(userLicenseSettingsService.calculateMaxAllowedUsers()).thenReturn(5);
         Team defaultTeam = new Team();
         defaultTeam.setId(5L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);

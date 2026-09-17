@@ -65,15 +65,11 @@ class ServerCertificateServiceTest {
     }
 
     private void grantProLicense() {
-        lenient()
-                .when(licenseKeyChecker.getPremiumLicenseEnabledResult())
-                .thenReturn(License.SERVER);
+        lenient().when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
     }
 
     private void denyLicense() {
-        lenient()
-                .when(licenseKeyChecker.getPremiumLicenseEnabledResult())
-                .thenReturn(License.NORMAL);
+        lenient().when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
     }
 
     // -------------------------------------------------------------------------
@@ -91,7 +87,7 @@ class ServerCertificateServiceTest {
         @Test
         @DisplayName("true when feature flag on and license is ENTERPRISE")
         void enabledWithEnterpriseLicense() {
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
             assertThat(service.isEnabled()).isTrue();
         }
 
