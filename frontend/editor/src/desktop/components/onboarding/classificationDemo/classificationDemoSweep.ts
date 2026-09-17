@@ -31,8 +31,10 @@ export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
 
 /** Text-reading allowance per document, counted once it is open, so a cold pdf.js
  *  worker on the first file is not charged. Ordinary PDFs finish in a fraction of it;
- *  one that yields nothing inside it is retired as unreadable rather than holding the
- *  sweep, which is what a broken file or a dead worker used to do. */
+ *  one that yields nothing inside it is classified on its name alone rather than
+ *  holding the sweep, which is what a broken file or a dead worker used to do. Opening
+ *  carries its own headroom on top, so the worst case for one document is
+ *  OPEN_TIMEOUT_MS plus this, not this alone. */
 export const HEURISTIC_BUDGET_MS = 1000;
 
 /** Roll-up id used for a document the heuristic could not place. */
@@ -320,6 +322,9 @@ export async function runClassificationDemoSweep(
 
   report("processing", total);
   const sweptPaths: string[] = [];
+  // Past the parse limit the thumbnail path refuses too, so the bytes would only be
+  // copied across the IPC bridge to be dropped: never read at all, which leaves `file`
+  // null below and retires the entry unclassified.
   const read = (index: number): Promise<File | null> =>
     index < batch.length && batch[index].sizeBytes < LARGE_PDF_PARSE_LIMIT
       ? readDiskFile(batch[index]).catch(() => null)
@@ -335,9 +340,7 @@ export async function runClassificationDemoSweep(
     sweptPaths.push(entry.path);
     const file = await pending;
     pending = read(index + 1);
-    // Past the parse limit the thumbnail path refuses too; the bytes would only be
-    // copied across the IPC bridge to be dropped.
-    if (file && entry.sizeBytes < LARGE_PDF_PARSE_LIMIT) {
+    if (file) {
       const labels = await classifyAndAdd(file, deps);
       if (labels) {
         processed += 1;

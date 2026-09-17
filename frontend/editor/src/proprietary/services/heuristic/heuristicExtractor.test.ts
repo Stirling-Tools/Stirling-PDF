@@ -2,20 +2,48 @@ import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 
 // The extractor sits between a pdf.js worker and the engine. A worker can stall or
 // die without ever answering, and a page can carry millions of text operators the
-// engine would trim anyway; these pin that neither holds a caller past its budget.
+// engine would trim anyway; these pin that neither holds a caller past its budget,
+// and that running out of time costs a document its text, not its classification.
 
 const createDocument = vi.fn();
 const destroyDocument = vi.fn();
-vi.mock("@app/services/pdfWorkerManager", () => ({
-  pdfWorkerManager: {
-    createDocument: (...args: unknown[]) => createDocument(...args),
-    destroyDocument: (...args: unknown[]) => destroyDocument(...args),
-  },
-}));
+vi.mock("@app/services/pdfWorkerManager", () => {
+  class PdfOpenTimeout extends Error {
+    constructor(timeoutMs: number) {
+      super(`PDF did not open within ${timeoutMs}ms`);
+      this.name = "PdfOpenTimeout";
+    }
+  }
+  return {
+    PdfOpenTimeout,
+    pdfWorkerManager: {
+      // Mirrors the real manager's open bound, which is the half of the contract the
+      // extractor leans on; the manager's own test covers freeing the loading task.
+      createDocument: (
+        data: unknown,
+        options: { openTimeoutMs?: number } = {},
+      ) => {
+        const opening = createDocument(data, options);
+        const { openTimeoutMs } = options;
+        return openTimeoutMs === undefined
+          ? opening
+          : Promise.race([
+              opening,
+              new Promise((_, reject) =>
+                setTimeout(
+                  () => reject(new PdfOpenTimeout(openTimeoutMs)),
+                  openTimeoutMs,
+                ),
+              ),
+            ]);
+      },
+      destroyDocument: (...args: unknown[]) => destroyDocument(...args),
+    },
+  };
+});
 
 import {
   extractHeuristicDoc,
-  HeuristicExtractionTimeout,
   OPEN_TIMEOUT_MS,
 } from "@app/services/heuristic/heuristicExtractor";
 
@@ -75,17 +103,18 @@ beforeEach(() => {
 afterEach(() => vi.useRealTimers());
 
 describe("extractHeuristicDoc with a budget", () => {
-  test("a document that never opens fails once the open headroom is spent", async () => {
+  test("a document that never opens falls back to its name", async () => {
     createDocument.mockReturnValue(never());
-    const result = extractHeuristicDoc(pdf(), "a.pdf", { budgetMs: 1000 });
-    const settled = vi.fn();
-    void result.catch(settled);
-    await vi.advanceTimersByTimeAsync(OPEN_TIMEOUT_MS - 1);
-    expect(settled).not.toHaveBeenCalled();
-    await vi.advanceTimersByTimeAsync(2);
-    expect(settled).toHaveBeenCalledWith(
-      expect.any(HeuristicExtractionTimeout),
-    );
+    const result = extractHeuristicDoc(pdf(), "Invoice 2026.pdf", {
+      budgetMs: 1000,
+    });
+    await vi.advanceTimersByTimeAsync(OPEN_TIMEOUT_MS + 1);
+    const extracted = await result;
+
+    // The name rules still place it; dropping the file would lose a real signal.
+    expect(extracted.fileName).toBe("Invoice 2026.pdf");
+    expect(extracted.pageCount).toBe(0);
+    expect(extracted.firstZone).toBe("");
   });
 
   test("a slow open does not eat the reading budget", async () => {
@@ -98,28 +127,24 @@ describe("extractHeuristicDoc with a budget", () => {
     expect((await result).firstZone).toBe("Invoice total due");
   });
 
-  test("a document that opens late is destroyed, not leaked", async () => {
-    let open!: (d: unknown) => void;
-    createDocument.mockReturnValue(new Promise((r) => (open = r)));
-    const result = extractHeuristicDoc(pdf(), "a.pdf", { budgetMs: 100 });
-    void result.catch(() => {});
-    await vi.advanceTimersByTimeAsync(OPEN_TIMEOUT_MS + 1);
-    const late = doc([]);
-    open(late);
-    await vi.advanceTimersByTimeAsync(0);
-    expect(destroyDocument).toHaveBeenCalledWith(late);
+  test("falls back to the name when page 1's stream never answers", async () => {
+    createDocument.mockResolvedValue(doc([page([], "hang")]));
+    const result = extractHeuristicDoc(pdf(), "Bank statement.pdf", {
+      budgetMs: 1000,
+    });
+    await vi.advanceTimersByTimeAsync(1001);
+    const extracted = await result;
+
+    expect(extracted.fileName).toBe("Bank statement.pdf");
+    expect(extracted.allZone).toBe("");
+    expect(destroyDocument).toHaveBeenCalledTimes(1);
   });
 
-  test("fails when page 1's text stream never answers and nothing was read", async () => {
-    createDocument.mockResolvedValue(doc([page([], "hang")]));
-    const result = extractHeuristicDoc(pdf(), "a.pdf", { budgetMs: 1000 });
-    const settled = vi.fn();
-    void result.catch(settled);
-    await vi.advanceTimersByTimeAsync(1001);
-    expect(settled).toHaveBeenCalledWith(
-      expect.any(HeuristicExtractionTimeout),
-    );
-    expect(destroyDocument).toHaveBeenCalledTimes(1);
+  test("a document that cannot be read at all still throws", async () => {
+    createDocument.mockRejectedValue(new Error("InvalidPDFException"));
+    await expect(
+      extractHeuristicDoc(pdf(), "a.pdf", { budgetMs: 1000 }),
+    ).rejects.toThrow("InvalidPDFException");
   });
 
   test("keeps what was read when a later page runs out of budget", async () => {
@@ -143,7 +168,7 @@ describe("extractHeuristicDoc with a budget", () => {
     expect(endless.cancel).toHaveBeenCalled();
   });
 
-  test("no budget means no deadline", async () => {
+  test("no budget means no deadline, opening included", async () => {
     let release!: () => void;
     const gate = new Promise<void>((resolve) => (release = resolve));
     createDocument.mockResolvedValue(
@@ -153,5 +178,9 @@ describe("extractHeuristicDoc with a budget", () => {
     await vi.advanceTimersByTimeAsync(60_000);
     release();
     expect((await result).firstZone).toBe("late text");
+    expect(createDocument).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ openTimeoutMs: undefined }),
+    );
   });
 });

@@ -1,7 +1,10 @@
 // pdf.js extraction feeding the engine: page-1 text, a first-5 + last-2 page
 // window, Info-dict metadata, and a large-font page-1 "title" zone.
 
-import { pdfWorkerManager } from "@app/services/pdfWorkerManager";
+import {
+  pdfWorkerManager,
+  PdfOpenTimeout,
+} from "@app/services/pdfWorkerManager";
 import type {
   PDFDocumentProxy,
   TextItem,
@@ -17,9 +20,11 @@ export interface ExtractOptions {
   /** Wall-clock budget for reading text, counted from the moment the document is
    *  open, so pdf.js worker start-up and the parse of the file's structure are not
    *  charged to it and the first file of a run is not penalised. Pages that do not
-   *  fit are dropped and the engine classifies what was read; a file that yields
-   *  nothing at all inside it fails with {@link HeuristicExtractionTimeout}. Opening
-   *  itself is bounded by {@link OPEN_TIMEOUT_MS} whenever a budget is set. */
+   *  fit are dropped and the engine classifies what was read. Opening is bounded
+   *  separately by {@link OPEN_TIMEOUT_MS}, so the worst case for one file is that
+   *  plus this. Running out of time is not a failure: what remains is the file name,
+   *  which is a rule input in its own right, so the result degrades to a name-only
+   *  document rather than throwing. */
   budgetMs?: number;
 }
 
@@ -27,17 +32,6 @@ export interface ExtractOptions {
  *  a damaged cross-reference table to be rebuilt, and still a bound on a worker that
  *  will never answer. */
 export const OPEN_TIMEOUT_MS = 10_000;
-
-/** The file produced no text inside its budget: broken, hostile, or a worker that
- *  died mid-parse and will never answer. */
-export class HeuristicExtractionTimeout extends Error {
-  constructor(fileName: string, budgetMs: number) {
-    super(
-      `Text extraction for ${fileName} produced nothing within ${budgetMs}ms`,
-    );
-    this.name = "HeuristicExtractionTimeout";
-  }
-}
 
 const TIMED_OUT = Symbol("timed-out");
 
@@ -49,12 +43,26 @@ function within<T>(
 ): Promise<T | typeof TIMED_OUT> {
   if (!Number.isFinite(ms)) return promise;
   if (ms <= 0) return Promise.resolve(TIMED_OUT);
+  let timer: ReturnType<typeof setTimeout>;
   return Promise.race([
     promise,
-    new Promise<typeof TIMED_OUT>((resolve) =>
-      setTimeout(() => resolve(TIMED_OUT), ms),
-    ),
-  ]);
+    new Promise<typeof TIMED_OUT>((resolve) => {
+      timer = setTimeout(() => resolve(TIMED_OUT), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
+/** What the engine gets when a document never opened, or opened too late to read: the
+ *  name rules still apply, and a name is often the strongest signal a scanned file has. */
+function nameOnlyDoc(fileName: string): HeuristicDoc {
+  return {
+    fileName,
+    pageCount: 0,
+    meta: {},
+    titleZone: "",
+    firstZone: "",
+    allZone: "",
+  };
 }
 
 /** One rebuilt text line: baseline y (bottom-origin), its largest font size, and the text. */
@@ -64,7 +72,8 @@ interface Line {
   y: number;
 }
 
-/** Build the engine's input document from a PDF blob. Throws if the PDF can't be read. */
+/** Build the engine's input document from a PDF blob. Throws if the PDF can't be read;
+ *  a `budgetMs` that runs out degrades to {@link nameOnlyDoc} instead. */
 export async function extractHeuristicDoc(
   file: Blob,
   fileName: string,
@@ -74,22 +83,19 @@ export async function extractHeuristicDoc(
   const bounded = Number.isFinite(budgetMs);
 
   const arrayBuffer = await file.arrayBuffer();
-  const opening = pdfWorkerManager.createDocument(arrayBuffer, {
-    disableAutoFetch: true,
-    disableStream: true,
-  });
-  const opened = await within(
-    opening,
-    bounded ? OPEN_TIMEOUT_MS : Number.POSITIVE_INFINITY,
-  );
-  if (opened === TIMED_OUT) {
-    // Arrives after we stopped waiting: nothing else would free its worker.
-    void opening
-      .then((pdf) => pdfWorkerManager.destroyDocument(pdf))
-      .catch(() => {});
-    throw new HeuristicExtractionTimeout(fileName, OPEN_TIMEOUT_MS);
-  }
-  const pdfDoc = opened;
+  // The manager owns the loading task, so it is the only thing that can free one whose
+  // worker died without ever settling its promise.
+  const pdfDoc = await pdfWorkerManager
+    .createDocument(arrayBuffer, {
+      disableAutoFetch: true,
+      disableStream: true,
+      openTimeoutMs: bounded ? OPEN_TIMEOUT_MS : undefined,
+    })
+    .catch((error: unknown) => {
+      if (error instanceof PdfOpenTimeout) return null;
+      throw error;
+    });
+  if (pdfDoc === null) return nameOnlyDoc(fileName);
   const deadline = Date.now() + budgetMs;
   const remaining = () => deadline - Date.now();
   try {
@@ -98,6 +104,9 @@ export async function extractHeuristicDoc(
     let titleZone = "";
     if (pageCount >= 1) {
       // Page 1 feeds three zones (first, title, window); pump its items once.
+      // Items stop at PAGE_CHAR_CAP, which bounds the title zone too: pdf.js streams in
+      // content-stream order, not visual order, so on a page past the cap a header
+      // painted after the body is not in `items` and cannot be picked as the title.
       const page1 = await within(pdfDoc.getPage(1), remaining());
       if (page1 !== TIMED_OUT) {
         try {
@@ -118,9 +127,6 @@ export async function extractHeuristicDoc(
       const text =
         pageNo === 1 ? firstZone : await pageText(pdfDoc, pageNo, remaining);
       if (text.length > 0) parts.push(text);
-    }
-    if (parts.length === 0 && remaining() <= 0) {
-      throw new HeuristicExtractionTimeout(fileName, budgetMs);
     }
     const meta = await metadata(pdfDoc, remaining);
     return {

@@ -136,11 +136,9 @@ export function ProcessingCounts({
   const { t } = useTranslation();
   const status = useSweepStatus(progress);
   if (progress.total === 0 && progress.phase !== "finished") {
-    return (
-      <p className={styles.counts} aria-live="polite">
-        {status}
-      </p>
-    );
+    // Not a live region: the rotation is reassurance that something is happening, and
+    // announcing a new line every STATUS_ROTATE_MS would talk over the whole phase.
+    return <p className={styles.counts}>{status}</p>;
   }
   return (
     <p className={styles.counts}>
