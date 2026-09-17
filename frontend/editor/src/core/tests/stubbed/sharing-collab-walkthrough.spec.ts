@@ -230,9 +230,10 @@ const GRID_FILES: SeedFile[] = [
 
 async function gotoGrid(page: Page): Promise<void> {
   await page.goto("/files", { waitUntil: "domcontentloaded" });
+  // Generous: the skeleton to real-card swap can outlast 10s on a loaded runner.
   await expect(
     page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
-  ).toBeVisible({ timeout: 10_000 });
+  ).toBeVisible({ timeout: 20_000 });
   await settle(page);
 }
 
@@ -376,7 +377,12 @@ test.describe("Sharing collaboration walkthrough", () => {
       await gotoGrid(page);
       await card(page, "my-report.pdf").click();
       await expect(page.locator(".files-page-details")).toBeVisible();
-      await page.getByRole("button", { name: /Manage sharing/i }).click();
+      // The details panel keeps sharing behind its overflow menu.
+      await page
+        .locator(".files-page-details-actions-row")
+        .getByRole("button", { name: /^Actions$/i })
+        .click();
+      await page.getByRole("menuitem", { name: /Manage sharing/i }).click();
       await expect(
         page.getByRole("dialog", { name: /Manage Sharing/i }),
       ).toBeVisible();
