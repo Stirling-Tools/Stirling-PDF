@@ -1,98 +1,53 @@
 # Failure kind fixtures
 
-Input files that provoke each failure kind, plus a manual script for the kinds no file can cause.
+Files that make a policy run fail, for checking a failure shows the right title rather than
+"Unrecognised issue". Regenerate with `python3 testing/failure-fixtures/generate.py`.
 
-Regenerate with `python3 testing/failure-fixtures/generate.py`. Files land in `files/`, named
-`<code>-<kind>-<what it is>`.
+## Drag these into a normal policy
 
-## What to expect
+Redact, compress, rotate: anything whose first step takes a PDF.
 
-Upload the file to the tool named below and the notification should show the **title** in the last
-column, not "Unrecognised issue". That is the whole point of the change: every one of these used to
-read as unrecognised.
+| File | Expected title |
+| --- | --- |
+| `E001-damaged-no-header.pdf` | Damaged document |
+| `E001-damaged-garbage-body.pdf` | Damaged document |
+| `E032-empty.pdf` | Empty file |
 
-| File | Send it to | Expected title |
-| --- | --- | --- |
-| `E006-wrong-type-not-a-pdf.pdf` | any PDF tool, e.g. Compress | Wrong file type |
-| `E014-wrong-type-not-a-cbr.cbr` | CBR conversion | Wrong file type |
-| `E018-wrong-type-not-a-cbz.cbz` | CBZ conversion | Wrong file type |
-| `E061-wrong-type-not-html.html` | HTML to PDF | Wrong file type |
-| `E010-unreadable-broken-rar.cbr` | CBR conversion | Unreadable file |
-| `E015-unreadable-broken-zip.cbz` | CBZ conversion | Unreadable file |
-| `E021-unreadable-broken-eml.eml` | EML to PDF | Unreadable file |
-| `E034-unreadable-broken-image.png` | Image to PDF | Unreadable file |
-| `E005-empty-pdf-no-pages.pdf` | any PDF tool | Empty file |
-| `E016-empty-cbz-no-images.cbz` | CBZ conversion | Empty file |
-| `E020-empty-eml.eml` | EML to PDF | Empty file |
-| `E032-empty-file.pdf` | any PDF tool | Empty file |
-| `E001-corrupted-truncated.pdf` | any PDF tool | Damaged document, offers Repair |
-| `E002-corrupted-truncated-sibling.pdf` | Merge, with the file above | Damaged document, offers Repair |
+Three files, three rows, two kinds. **That is the ceiling for a PDF-only policy**, and the reason
+is worth knowing before wondering where the variety went.
 
-### What actually classifies them
+## Why only two kinds
 
-On a **policy run** the engine checks a step's accepted types before calling it, so anything whose
-extension the step does not take is refused there and never reaches a reader. That refusal now
-carries `E075`, which is why the four wrong-type files and the CBR/CBZ/EML/PNG unreadable ones all
-report **Wrong file type** rather than the kind their own reader would have named.
+Every PDF that fails to open is reported as damaged. The corruption check matches on the text of
+PDFBox's message, and its patterns cover almost anything it gives up on, so "not a PDF at all",
+"truncated", and "structurally broken" all arrive as the same code. Only failures raised *outside*
+loading can say anything else: empty is checked before the parser runs, and page count after.
 
-To exercise `INPUT_UNREADABLE` you have to reach the reader, which means running the matching tool
-directly: send the broken CBZ to CBZ conversion, not through a PDF-only policy.
+So a broken PDF gives you one of two answers, and no fixture can change that.
 
-`E032` and the two corrupted PDFs reach the tool either way, since `.pdf` passes the extension
-check. Note that `E006` rarely reports as wrong type in practice: a text file named `.pdf` passes
-the extension check and PDFBox then calls it corrupted, so it lands on **Damaged document**.
+Two further traps, both of which produced files that looked useful and did nothing:
 
-## No file can cause these
+- **PDFBox 3 repairs structural damage.** A PDF truncated mid-object keeps a valid header, gets its
+  xref rebuilt, and processes normally. It will come back with a version bump and classification
+  labels, not a failure. Only bytes with no findable header fail.
+- **The failure depends on the step, not the file.** Redact will happily redact a zero-page
+  document. Only content extraction and the comic converters count pages.
 
-### INPUT_UNAVAILABLE (file unavailable)
+## needs-specific-step/
 
-**E030, the document is gone.** Call a tool endpoint directly with a file id that was never
-stored:
+`E005-zero-pages.pdf` is a valid PDF holding no pages. It fails only on a step that counts them:
+extract content, PDF to CBZ, PDF to CBR. In a redact or compress policy it succeeds, which is why
+it is not in the main folder.
 
-```bash
-curl -s -X POST localhost:8080/api/v1/misc/repair \
-  -H "X-API-KEY: $KEY" -F "fileId=00000000-0000-0000-0000-000000000000" | jq .errorCode
-```
+## Not covered here
 
-**E033, the upload has no name.** Same call with an empty filename on the part:
+Kinds that need something a file cannot carry:
 
-```bash
-curl -s -X POST localhost:8080/api/v1/misc/repair \
-  -H "X-API-KEY: $KEY" -F "fileInput=@files/E001-corrupted-truncated.pdf;filename=" | jq .errorCode
-```
+- **File unavailable** — call a tool endpoint with a file id that was never stored.
+- **Software not installed** — run OCR, WebP or PDF-to-video on the ultra-lite image.
+- **Page could not be rendered** — needs a real PDF whose content Ghostscript refuses to draw;
+  a deliberately broken one is rejected as damaged first.
 
-Expect the notification to offer **no View file and no Retry**, only Dismiss. That is deliberate:
-both would open a tool on the document that is missing.
-
-### TOOL_NOT_INSTALLED (software not installed)
-
-These need a deployment without the binary, which is what the ultra-lite image is:
-
-```bash
-task docker:build:ultra-lite && task docker:up:ultra-lite
-```
-
-Then in that instance:
-
-- **E042** run OCR on any PDF
-- **E062** convert a PDF to WebP
-- **E063** convert a PDF to video
-
-Expect one incident for the whole server rather than one per document, addressed to whoever
-triages rather than to the file's owner, with no Retry offered.
-
-**E080** (the JVM has no MD5) is not reachable on any supported JVM. It is claimed so the code
-cannot land on Unrecognised if that ever changes.
-
-### STEP_CANNOT_RENDER_PAGE (page could not be rendered)
-
-**E054** needs a PDF carrying content Ghostscript refuses to draw, which is hard to synthesise:
-a deliberately broken file is usually rejected earlier as damaged. The practical route is a
-real-world PDF that already reproduces it. Compress it and look for `page drawing error` in the
-Ghostscript output.
-
-### INPUT_EMPTY, the one missing file
-
-**E012** (a CBR holding no images) needs a real RAR writer, and neither `rar` nor `unrar` is
-installed here. `E016` covers the same kind through the CBZ path, so the kind is exercised either
-way.
+Archive, EML and image fixtures used to live here. They are gone: a PDF-only policy skips a file
+whose type its first step does not accept, so they never ran, and their own converters are not
+what anyone points a policy at.
