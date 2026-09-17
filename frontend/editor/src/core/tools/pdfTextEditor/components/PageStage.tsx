@@ -20,6 +20,7 @@ import { PageView } from "@app/tools/pdfTextEditor/components/PageView";
 import { EditTextCommand } from "@app/tools/pdfTextEditor/commands/EditTextCommand";
 import { ReflowWrapCommand } from "@app/tools/pdfTextEditor/commands/ReflowWrapCommand";
 import { InsertTextCommand } from "@app/tools/pdfTextEditor/commands/InsertTextCommand";
+import { preloadFallbackFontBytesForText } from "@app/tools/pdfTextEditor/util/fallbackFont";
 import { MoveTextRunCommand } from "@app/tools/pdfTextEditor/commands/MoveTextRunCommand";
 import { SetImageTransformCommand } from "@app/tools/pdfTextEditor/commands/SetImageTransformCommand";
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
@@ -284,13 +285,14 @@ export function PageStage() {
                     onSelectImage={(imageId) =>
                       store.selection.selectImage(imageId)
                     }
-                    onEditRun={(pageIndex, runId, nextText) => {
+                    onEditRun={async (pageIndex, runId, nextText) => {
                       // contentEditable can fire several input events per
                       // keystroke burst.
                       const current = store.document
                         ?.page(pageIndex)
                         .findRun(runId);
                       if (current && current.text === nextText) return;
+                      await preloadFallbackFontBytesForText(nextText);
                       store.dispatch(
                         new EditTextCommand({ pageIndex, runId, nextText }),
                       );
@@ -305,8 +307,9 @@ export function PageStage() {
                         new ReflowWrapCommand({ pageIndex, runId, maxWidthPt }),
                       );
                     }}
-                    onPageClick={(pageIndex, pageX, pageY) => {
+                    onPageClick={async (pageIndex, pageX, pageY) => {
                       if (state.mode !== "addText") return;
+                      await preloadFallbackFontBytesForText("New text");
                       const cmd = new InsertTextCommand({
                         pageIndex,
                         x: pageX,

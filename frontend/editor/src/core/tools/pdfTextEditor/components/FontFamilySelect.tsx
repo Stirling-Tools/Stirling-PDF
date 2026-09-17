@@ -11,6 +11,8 @@ import {
   loadedLocalFonts,
   subscribeLocalFonts,
 } from "@app/tools/pdfTextEditor/util/localFonts";
+import { preloadFallbackFontBytes } from "@app/tools/pdfTextEditor/util/fallbackFont";
+import { ensureDeviceFontReady } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
 
 export interface FontFamilyOption {
   value: string;
@@ -71,6 +73,7 @@ export function FontFamilySelect({
     setNotice(null);
     try {
       const fonts = await listLocalFonts();
+      if (fonts) void preloadFallbackFontBytes();
       // deviceFamilies recomputes off the store, so only the empty outcomes
       // need reporting here.
       if (!fonts) setNotice("unavailable");
@@ -140,7 +143,14 @@ export function FontFamilySelect({
         data={data}
         value={selected}
         onChange={(next) => {
-          if (next) onChange(next);
+          if (!next) return;
+          if (deviceFamilies.includes(next)) {
+            void ensureDeviceFontReady(next).then((ready) => {
+              if (ready) onChange(next);
+            });
+            return;
+          }
+          onChange(next);
         }}
         disabled={disabled}
         placeholder={

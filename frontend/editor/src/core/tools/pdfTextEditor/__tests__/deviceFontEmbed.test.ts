@@ -320,6 +320,28 @@ describe("loadLocalFontBytes", () => {
       Uint8Array,
     );
   });
+
+  for (const family of ["David", "Arial"]) {
+    it(`loads Hebrew fallback bytes for ${family}`, async () => {
+      setQuery(
+        vi
+          .fn<QueryStub>()
+          .mockResolvedValue([face(family, "Regular", FAKE_FONT_BYTES)]),
+      );
+
+      await expect(ensureDeviceFontReady(family)).resolves.toBe(true);
+      expect(isDeviceFontReady(family)).toBe(true);
+    });
+
+    it(`reports a failed Hebrew fallback load for ${family}`, async () => {
+      setQuery(
+        vi.fn<QueryStub>().mockResolvedValue([face(family, "Regular", null)]),
+      );
+
+      await expect(ensureDeviceFontReady(family)).resolves.toBe(false);
+      expect(isDeviceFontReady(family)).toBe(false);
+    });
+  }
 });
 
 describe("loadDeviceFontInto", () => {
@@ -450,4 +472,20 @@ describe("emitDeviceFontTextObject", () => {
     expect(emit(harness, "Comic Sans MS")).toBe(0);
     expect(emit(harness, "Segoe UI", "")).toBe(0);
   });
+
+  for (const family of ["David", "Arial"]) {
+    it(`embeds Hebrew text with ${family} as a CID TrueType font`, async () => {
+      await warm(family);
+      const harness = fakeHarness({
+        loadFont: (_doc, _data, _size, type, cid) => {
+          expect(type).toBe(2);
+          expect(cid).toBe(true);
+          return 901;
+        },
+      });
+
+      expect(emit(harness, family, "שלום")).toBeGreaterThan(0);
+      expect(deviceFontEmitCount(harness.doc, family)).toBe(1);
+    });
+  }
 });
