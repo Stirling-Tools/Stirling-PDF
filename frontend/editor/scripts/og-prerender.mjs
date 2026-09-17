@@ -149,15 +149,24 @@ export async function prerenderOg({
       { ogBase, noindex: true },
     );
     await fs.writeFile(path.join(distDir, "app-shell.html"), privateShell);
-    const notFoundTemplate = template
-      .replace(BASE_HREF_RE, `<base href="${baseHref}" />`)
-      .replace(/<script\b[^>]*type="module"[^>]*>[\s\S]*?<\/script>/g, "")
-      .replace(
-        '<div id="root"></div>',
-        '<main class="public-page-copy"><h1>Page not found</h1><p>This page does not exist.</p><a href="' +
-          escapeHtml(baseHref) +
-          '">Browse PDF tools</a></main>',
-      );
+    const { JSDOM } = await import("jsdom");
+    const notFoundPage = new JSDOM(template);
+    const document = notFoundPage.window.document;
+    document.body.setAttribute("data-public-page", "");
+    document.querySelector("base")?.setAttribute("href", baseHref);
+    document
+      .querySelectorAll(
+        'script[type="module"], link[rel="modulepreload"], #stirling-page-config',
+      )
+      .forEach((node) => node.remove());
+    const main = document.createElement("main");
+    main.className = "public-page-copy";
+    main.innerHTML =
+      "<h1>Page not found</h1><p>This page does not exist.</p><a>Browse PDF tools</a>";
+    main.querySelector("a").setAttribute("href", baseHref);
+    document.getElementById("root").replaceWith(main);
+    const notFoundTemplate = notFoundPage.serialize();
+    notFoundPage.window.close();
     await fs.writeFile(
       path.join(distDir, "404.html"),
       injectOg(
