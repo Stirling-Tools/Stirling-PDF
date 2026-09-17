@@ -64,23 +64,22 @@ describe("apiClient.saas", () => {
       refreshSession.mockResolvedValue({
         data: { session: { access_token: "renewed" } },
       });
+      const response = ok({ valid: true });
+      const blob = new Blob(['{"valid":true}'], {
+        type: "application/json",
+      });
+      const readBlob = vi.spyOn(response, "blob").mockResolvedValue(blob);
       fetchMock
         .mockResolvedValueOnce(new Response(null, { status: 401 }))
-        .mockResolvedValueOnce(ok({ valid: true }));
+        .mockResolvedValueOnce(response);
       const result = await apiClient.saas[format]("/read", {
         headers: { Authorization: "stale-override" },
       });
       if (format === "json") expect(result).toEqual({ valid: true });
       else if (format === "text") expect(result).toBe('{"valid":true}');
       else {
-        expect(result).toBeInstanceOf(Blob);
-        const text = await new Promise<string>((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(String(reader.result));
-          reader.onerror = () => reject(reader.error);
-          reader.readAsText(result as Blob);
-        });
-        expect(text).toBe('{"valid":true}');
+        expect(readBlob).toHaveBeenCalledOnce();
+        expect(result).toBe(blob);
       }
       expect(fetchMock.mock.calls[0][1].headers.Authorization).toBe(
         "Bearer expired",
