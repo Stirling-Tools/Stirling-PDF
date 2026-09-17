@@ -705,7 +705,6 @@ export default function HomePage() {
                 </span>
               </Button>
             </div>
-            <FileManager selectedTool={selectedTool} />
           </div>
         ) : (
           <Group
@@ -736,9 +735,9 @@ export default function HomePage() {
             {wingsMounted && !hideToolPanel && <RightSidebar />}
             {readerMode && <ReaderRail />}
             {readerMode && <ReaderSuperSearch />}
-            <FileManager selectedTool={selectedTool} />
           </Group>
         )}
+        <FileManager selectedTool={selectedTool} />
       </FilesPageProvider>
     </div>
   );

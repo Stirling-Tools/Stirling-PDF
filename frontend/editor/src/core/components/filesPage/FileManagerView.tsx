@@ -8,22 +8,12 @@ import React, {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
-import {
-  Drawer,
-  Menu,
-  MultiSelect,
-  Select,
-  TextInput,
-  Tooltip,
-} from "@mantine/core";
+import { Drawer, Menu, Tooltip } from "@mantine/core";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { useMediaQuery } from "@mantine/hooks";
 import { FilesToolbarBulkMenu } from "@app/components/filesPage/FilesToolbarBulkMenu";
 import { FilesToolbarCount } from "@app/components/filesPage/FilesToolbarCount";
-import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FolderMenu } from "@app/components/filesPage/FolderMenu";
-import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
 import { NewFolderButton } from "@app/components/filesPage/NewFolderButton";
 import { useFileLibraryWorkbenchBarButtons } from "@app/components/filesPage/useFileLibraryWorkbenchBarButtons";
 
@@ -40,13 +30,11 @@ import {
   useNavigationGuard,
 } from "@app/contexts/NavigationContext";
 import { useViewer } from "@app/contexts/ViewerContext";
-import {
-  FILES_PAGE_VIEW_MODES,
-  FilesPageOriginFilter,
-  FilesPageSortMode,
-  useFilesPage,
-} from "@app/contexts/FilesPageContext";
-import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import { useFilesPage } from "@app/contexts/FilesPageContext";
+import { useLibraryFiles } from "@app/components/filesPage/useLibraryFiles";
+import { useFolderFileStates } from "@app/components/filesPage/useFolderFileStates";
+import { useDiskFolder } from "@app/components/filesPage/useDiskFolder";
+import { LibraryToolbar } from "@app/components/filesPage/LibraryToolbar";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -72,24 +60,18 @@ import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
 import BulkUploadToServerModal from "@app/components/shared/BulkUploadToServerModal";
 import { useAppConfig } from "@app/contexts/AppConfigContext";
 import { canPickDirectory } from "@app/services/directoryPicker";
-import {
-  diskFolderId,
-  isDiskFolderId,
-  pickFolderColor,
-} from "@app/types/folder";
+import { isDiskFolderId } from "@app/types/folder";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
 import { writeIntoMount } from "@app/services/mountWrites";
 import {
-  canListDirectory,
-  listDirectory,
   readDiskFile,
   type DiskFileEntry,
 } from "@app/services/localFolderContents";
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
-import { getFolderPath } from "@app/utils/folderPath";
+import { libraryEntries } from "@app/components/filesPage/libraryEntries";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -264,183 +246,6 @@ export default function FileManagerView() {
 
   // ─── visible items (current folder + sort + search) ─────────────────────
 
-  /** currentFolderId + all descendants. Includes `null` when at root. */
-  const subtreeFolderIds = useMemo(() => {
-    const set = new Set<FolderId | null>();
-    set.add(currentFolderId);
-    const childMap = new Map<FolderId | null, FolderId[]>();
-    for (const f of folders.folders) {
-      const list = childMap.get(f.parentFolderId) ?? [];
-      list.push(f.id);
-      childMap.set(f.parentFolderId, list);
-    }
-    // Iterative DFS to avoid stack overflow on deep chains.
-    const stack: (FolderId | null)[] = [currentFolderId];
-    while (stack.length > 0) {
-      const cur = stack.pop()!;
-      for (const childId of childMap.get(cur) ?? []) {
-        if (set.has(childId)) continue;
-        set.add(childId);
-        stack.push(childId);
-      }
-    }
-    return set;
-  }, [folders.folders, currentFolderId]);
-
-  const visibleFolders = useMemo(() => {
-    // Folders only appear in cloud-rooted tabs.
-    if (
-      currentTab === "recent" ||
-      currentTab === "shared" ||
-      currentTab === "sharedByMe"
-    ) {
-      return [];
-    }
-    const lc = search.toLowerCase();
-    const matched = folders.folders.filter((f) => {
-      // The Cloud tab is the server's view: browser folders and mounts aren't on it.
-      if (currentTab === "cloud" && folderKind(f) !== "server") return false;
-      // A folder answers to the source filter the way its files would: a server
-      // folder is cloud, a browser folder and a mount are both local.
-      if (originFilter !== "all") {
-        const folderOrigin = folderKind(f) === "server" ? "cloud" : "local";
-        if (folderOrigin !== originFilter) return false;
-      }
-      if (search) {
-        // Subtree-wide name match; exclude the current folder itself.
-        return (
-          f.id !== currentFolderId &&
-          subtreeFolderIds.has(f.parentFolderId) &&
-          f.name.toLowerCase().includes(lc)
-        );
-      }
-      // Direct children only.
-      return f.parentFolderId === currentFolderId;
-    });
-    return matched.sort((a, b) =>
-      a.name.localeCompare(b.name, undefined, { sensitivity: "base" }),
-    );
-  }, [
-    folders.folders,
-    currentFolderId,
-    search,
-    currentTab,
-    subtreeFolderIds,
-    originFilter,
-  ]);
-
-  // Files in current folder, pre-filter. Drives the type-filter dropdown.
-  const filesInCurrentFolder = useMemo(() => {
-    // Tab overrides folder navigation for Local/Recent/Shared.
-    switch (currentTab) {
-      case "cloud":
-        // Cloud bucket; search widens to subtree, else direct-folder match.
-        return allFiles.filter((f) => {
-          if (f.remoteStorageId == null) return false;
-          if (search) return subtreeFolderIds.has(f.folderId ?? null);
-          return (f.folderId ?? null) === (currentFolderId ?? null);
-        });
-      case "recent": {
-        // Last 50 modified across local + cloud, folder context ignored.
-        const sorted = [...allFiles].sort(
-          (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
-        );
-        return sorted.slice(0, 50);
-      }
-      case "shared":
-        return allFiles.filter((f) => f.remoteOwnedByCurrentUser === false);
-      case "sharedByMe":
-        // Files I own that I've shared in any way - either with a public link
-        // or with a specific user. (Previously split across two visually
-        // identical tabs; merged here so the same idea lives in one place.)
-        return allFiles.filter(
-          (f) =>
-            f.remoteOwnedByCurrentUser !== false &&
-            (f.remoteHasShareLinks === true || f.remoteHasUserShares === true),
-        );
-      case "all":
-      default:
-        // Search widens to the subtree.
-        // Files with a dangling folderId (folder deleted, or stale local IDB
-        // row) fall back to root so they aren't permanently invisible.
-        return allFiles.filter((f) => {
-          const rawFolder = f.folderId ?? null;
-          const effectiveFolder =
-            rawFolder !== null && !foldersById.has(rawFolder)
-              ? null
-              : rawFolder;
-          if (search) return subtreeFolderIds.has(effectiveFolder);
-          return effectiveFolder === (currentFolderId ?? null);
-        });
-    }
-  }, [
-    allFiles,
-    currentFolderId,
-    currentTab,
-    search,
-    subtreeFolderIds,
-    foldersById,
-  ]);
-
-  const availableTypes = useMemo(() => {
-    const set = new Set<string>();
-    for (const f of filesInCurrentFolder) {
-      const ext = (f.name.split(".").pop() ?? "").toUpperCase();
-      if (ext) set.add(ext);
-    }
-    return Array.from(set).sort();
-  }, [filesInCurrentFolder]);
-
-  // Drop any active type filters that no longer appear in this folder
-  // (e.g. when the user navigates between folders).
-  useEffect(() => {
-    if (typeFilter.length === 0) return;
-    const stillValid = typeFilter.filter((t) => availableTypes.includes(t));
-    if (stillValid.length !== typeFilter.length) {
-      setTypeFilter(stillValid);
-    }
-  }, [availableTypes, typeFilter, setTypeFilter]);
-
-  const visibleFiles = useMemo(() => {
-    const filtered = filesInCurrentFolder
-      .filter((f) =>
-        search ? f.name.toLowerCase().includes(search.toLowerCase()) : true,
-      )
-      .filter((f) =>
-        originFilter === "all" ? true : getFileOrigin(f) === originFilter,
-      )
-      .filter((f) => {
-        if (typeFilter.length === 0) return true;
-        const ext = (f.name.split(".").pop() ?? "").toUpperCase();
-        return typeFilter.includes(ext);
-      });
-    const sorted = [...filtered];
-    sorted.sort((a, b) => {
-      switch (sortMode) {
-        case "name-asc":
-          return a.name.localeCompare(b.name);
-        case "name-desc":
-          return b.name.localeCompare(a.name);
-        case "modified-asc":
-          return (a.lastModified ?? 0) - (b.lastModified ?? 0);
-        case "size-desc":
-          return (b.size ?? 0) - (a.size ?? 0);
-        case "size-asc":
-          return (a.size ?? 0) - (b.size ?? 0);
-        case "modified-desc":
-        default:
-          return (b.lastModified ?? 0) - (a.lastModified ?? 0);
-      }
-    });
-    return sorted;
-  }, [filesInCurrentFolder, search, sortMode, originFilter, typeFilter]);
-
-  const pathForFolderId = useCallback(
-    (folderId: FolderId | null | undefined) =>
-      getFolderPath(folderId, foldersById),
-    [foldersById],
-  );
-
   const currentFolder = currentFolderId
     ? folders.foldersById.get(currentFolderId)
     : undefined;
@@ -453,87 +258,25 @@ export default function FileManagerView() {
     folderKind(currentFolder) === "server" &&
     !folders.serverReachable,
   );
-  const { setError: setFolderError, registerDiskSubfolders } = folders;
-  const [diskEntries, setDiskEntries] = useState<DiskFileEntry[]>([]);
-  const [diskLoading, setDiskLoading] = useState(false);
-  // Bumped when this view writes into the directory, so the listing re-reads.
   const { diskRevision, bumpDiskRevision } = filesPage;
-  useEffect(() => {
-    if (!currentLocalDirectory || !canListDirectory) {
-      // Same array when it is already empty: a refresh outside a mount re-runs this
-      // and a fresh one would re-render every reader of the listing for nothing.
-      setDiskEntries((prev) => (prev.length > 0 ? [] : prev));
-      // Leaving a mount mid-listing cancels the in-flight reset, so clear the
-      // flag here or the skeleton covers every folder for the rest of the session.
-      setDiskLoading(false);
-      return;
-    }
-    let cancelled = false;
-    // The directory is the disk's and anything can write to it, so poll while open and let
-    // outside changes appear on their own; only a changed listing re-renders.
-    const load = async (background: boolean) => {
-      if (!background) setDiskLoading(true);
-      try {
-        const listed = await listDirectory(currentLocalDirectory);
-        if (cancelled) return;
-        const files = listed?.files ?? [];
-        setDiskEntries((prev) =>
-          listingSignature(prev) === listingSignature(files) ? prev : files,
-        );
-        if (currentFolderId !== null) {
-          registerDiskSubfolders(
-            currentFolderId,
-            (listed?.directories ?? []).map((dir) => ({
-              id: diskFolderId(dir.path),
-              kind: "local" as const,
-              name: dir.name,
-              parentFolderId: currentFolderId,
-              directory: dir.path,
-              color: pickFolderColor(dir.name),
-              createdAt: 0,
-              updatedAt: 0,
-            })),
-          );
-        }
-      } catch (err) {
-        console.warn("[FileManagerView] disk listing failed", err);
-        // Background ticks stay quiet: a transient lock (a sync client holding
-        // the directory) would otherwise pop an error banner every few seconds.
-        if (!cancelled && !background) {
-          setDiskEntries([]);
-          setFolderError(
-            err instanceof Error
-              ? t("filesPage.error.readFolderFailedDetail", {
-                  message: err.message,
-                  defaultValue: `Could not read the folder: ${err.message}`,
-                })
-              : t(
-                  "filesPage.error.readFolderFailed",
-                  "Could not read the folder.",
-                ),
-          );
-        }
-      } finally {
-        if (!cancelled && !background) setDiskLoading(false);
-      }
-    };
-    void load(false);
-    const timer = setInterval(() => void load(true), 4000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-    // The stable setter, not the context: its identity changes on every folder
-    // mutation, including the setError above, so a failing listing would re-trigger.
-  }, [
+  const { diskEntries, diskLoading } = useDiskFolder(
     currentLocalDirectory,
     currentFolderId,
-    registerDiskSubfolders,
-    setFolderError,
     diskRevision,
-    t,
-  ]);
+    folders.setError,
+  );
 
+  const { visibleFolders, visibleFiles, availableTypes } = useLibraryFiles({
+    allFiles,
+    currentFolderId,
+    currentTab,
+    search,
+    sortMode,
+    originFilter,
+    typeFilter,
+    setTypeFilter,
+    diskEntries: currentLocalDirectory ? diskEntries : undefined,
+  });
   const openDiskFile = useCallback(
     async (entry: DiskFileEntry) => {
       try {
@@ -570,47 +313,13 @@ export default function FileManagerView() {
   const outputDirectory = currentLocalDirectory
     ? currentProcessing?.outputDirectory
     : undefined;
-  // Per-file state from the backend's ledger: processing in place leaves no output folder to
-  // infer it from. Polled while the folder is open so badges follow the sweep live.
-  const [fileStates, setFileStates] = useState<Map<string, DiskFileState>>(
-    new Map(),
-  );
-  // Files whose pre-processing original is archived and can be restored.
-  const [revertables, setRevertables] = useState<ReadonlySet<string>>(
-    new Set(),
-  );
   const processingRecordId = currentProcessing?.id;
-  // The state layer applies inside any working folder: a mount's directory listing or a
-  // server folder's stored files, both joined to the same ledger behind listFiles.
   const processingView = Boolean(
     processingRecordId && (outputDirectory || !currentLocalDirectory),
   );
-  const { listFiles, retryFile, revertFile } = processingApi;
-  useEffect(() => {
-    if (!processingView || !processingRecordId) {
-      // Keep the empty value when it is already empty: a fresh Map/Set is never Object.is equal,
-      // so setting one unconditionally re-renders, on every render of a folder with no processing.
-      setFileStates((prev) => (prev.size === 0 ? prev : new Map()));
-      setRevertables((prev) => (prev.size === 0 ? prev : new Set()));
-      return;
-    }
-    let cancelled = false;
-    const tick = async () => {
-      const files = await listFiles(processingRecordId).catch(() => []);
-      if (!cancelled) {
-        setFileStates(new Map(files.map((f) => [f.name, f.state])));
-        setRevertables(
-          new Set(files.filter((f) => f.hasOriginal).map((f) => f.name)),
-        );
-      }
-    };
-    void tick();
-    const timer = setInterval(() => void tick(), 3000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [processingView, processingRecordId, listFiles]);
+  const { retryFile, revertFile } = processingApi;
+  const { fileStates, setFileStates, revertables, setRevertables } =
+    useFolderFileStates(processingRecordId, processingView);
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
@@ -756,96 +465,59 @@ export default function FileManagerView() {
     [currentFolder, folders, t],
   );
 
-  const entries = useMemo<FilesPageEntry[]>(() => {
-    // When searching, items may come from anywhere in the subtree, so we
-    // expose a "parentPath" subtitle whenever the item's parent differs from
-    // currentFolderId. When no search is active, every item is in the
-    // current folder by definition and the subtitle is suppressed.
-    const inSearch = search.length > 0;
-    // Inside a mount the listing is the directory; storage rows don't apply.
-    if (currentLocalDirectory) {
-      const needle = search.toLowerCase();
-      const compare: Record<
-        string,
-        (a: DiskFileEntry, b: DiskFileEntry) => number
-      > = {
-        "name-asc": (a, b) => a.name.localeCompare(b.name),
-        "name-desc": (a, b) => b.name.localeCompare(a.name),
-        "size-asc": (a, b) => a.sizeBytes - b.sizeBytes,
-        "size-desc": (a, b) => b.sizeBytes - a.sizeBytes,
-        "modified-asc": (a, b) => a.lastModified - b.lastModified,
-        "modified-desc": (a, b) => b.lastModified - a.lastModified,
-      };
-      const toDiskEntries = (list: DiskFileEntry[]) =>
-        list
-          .filter((disk) => !needle || disk.name.toLowerCase().includes(needle))
-          .sort(compare[filesPage.sortMode] ?? compare["modified-desc"]!)
-          .map<FilesPageEntry>((disk) => ({
-            kind: "diskFile",
-            disk,
-            diskState: outputDirectory ? diskStateFor(disk.name) : undefined,
-            hasOriginal: outputDirectory
-              ? revertables.has(disk.name)
-              : undefined,
-          }))
-          .filter(
-            (entry) =>
-              diskStateFilter === "all" ||
-              entry.diskState === undefined ||
-              entry.diskState === diskStateFilter,
-          );
-      return [
-        ...visibleFolders.map<FilesPageEntry>((folder) => ({
-          kind: "folder",
-          folder,
-          folderFileCount: 0,
-        })),
-        ...toDiskEntries(diskEntries),
-      ];
-    }
-    return [
-      ...visibleFolders.map<FilesPageEntry>((folder) => ({
-        kind: "folder",
-        folder,
-        folderFileCount: filesPage.fileCountsByFolder.get(folder.id) ?? 0,
-        parentPath:
-          inSearch && folder.parentFolderId !== currentFolderId
-            ? pathForFolderId(folder.parentFolderId) || undefined
-            : undefined,
-      })),
-      ...visibleFiles
-        .map<FilesPageEntry>((file) => ({
-          kind: "file",
-          file,
-          diskState: processingView ? diskStateFor(file.name) : undefined,
-          parentPath:
-            inSearch && (file.folderId ?? null) !== (currentFolderId ?? null)
-              ? pathForFolderId(file.folderId ?? null) || undefined
-              : undefined,
-        }))
+  const entries = useMemo<FilesPageEntry[]>(
+    () =>
+      libraryEntries({
+        visibleFolders,
+        visibleFiles,
+        currentFolderId,
+        foldersById,
+        fileCountsByFolder: filesPage.fileCountsByFolder,
+        search,
+        sortMode,
+        originFilter,
+        typeFilter,
+        diskEntries: currentLocalDirectory ? diskEntries : undefined,
+      })
+        .map((entry) => {
+          const name = entry.disk?.name ?? entry.file?.name;
+          const stateVisible = entry.disk
+            ? Boolean(outputDirectory)
+            : processingView;
+          return {
+            ...entry,
+            diskState: name && stateVisible ? diskStateFor(name) : undefined,
+            hasOriginal:
+              entry.disk && outputDirectory
+                ? revertables.has(entry.disk.name)
+                : undefined,
+          };
+        })
         .filter(
           (entry) =>
             diskStateFilter === "all" ||
             entry.diskState === undefined ||
             entry.diskState === diskStateFilter,
         ),
-    ];
-  }, [
-    visibleFolders,
-    visibleFiles,
-    filesPage.fileCountsByFolder,
-    search,
-    currentFolderId,
-    currentLocalDirectory,
-    diskEntries,
-    outputDirectory,
-    processingView,
-    diskStateFor,
-    revertables,
-    diskStateFilter,
-    filesPage.sortMode,
-    pathForFolderId,
-  ]);
+    [
+      visibleFolders,
+      visibleFiles,
+      currentFolderId,
+      foldersById,
+      filesPage.fileCountsByFolder,
+      search,
+      sortMode,
+      originFilter,
+      typeFilter,
+      currentLocalDirectory,
+      diskEntries,
+      outputDirectory,
+      processingView,
+      diskStateFor,
+      revertables,
+      diskStateFilter,
+    ],
+  );
 
   // ─── selection ──────────────────────────────────────────────────────────
   const lastClickedFileRef = useRef<FileId | null>(null);
@@ -1623,211 +1295,19 @@ export default function FileManagerView() {
             <div className="files-page-toolbar-actions">
               {!mobileSelection && (
                 <>
-                  {isMobile ? (
-                    /* Side by side these need ~480px and were truncating to
-                   stubs like "All sour"; collapsed they read in full. */
-                    <>
-                      <FilesToolbarFilterMenu
-                        originFilter={originFilter}
-                        onOriginChange={setOriginFilter}
-                        availableTypes={availableTypes}
-                        typeFilter={typeFilter}
-                        onTypeChange={setTypeFilter}
-                        search={search}
-                        onSearchChange={setSearch}
-                      />
-                      <FilesToolbarSortMenu
-                        value={sortMode}
-                        onChange={setSortMode}
-                      />
-                    </>
-                  ) : (
-                    <>
-                      <Select
-                        size="xs"
-                        value={originFilter}
-                        onChange={(value) =>
-                          value &&
-                          setOriginFilter(value as FilesPageOriginFilter)
-                        }
-                        data={[
-                          {
-                            value: "all",
-                            label: t("filesPage.origin.all", "All sources"),
-                          },
-                          {
-                            value: "local",
-                            label: t("filesPage.origin.local", "Local"),
-                          },
-                          {
-                            value: "cloud",
-                            label: t("filesPage.origin.cloud", "Cloud"),
-                          },
-                          {
-                            value: "shared-with-me",
-                            label: t("filesPage.origin.shared", "Shared"),
-                          },
-                        ]}
-                        style={{ width: 140 }}
-                        aria-label={t(
-                          "filesPage.originFilter",
-                          "Filter by source",
-                        )}
-                      />
-                      {availableTypes.length > 1 && (
-                        <MultiSelect
-                          size="xs"
-                          value={typeFilter}
-                          onChange={setTypeFilter}
-                          data={availableTypes.map((ext) => ({
-                            value: ext,
-                            label: ext,
-                          }))}
-                          placeholder={
-                            typeFilter.length === 0
-                              ? t("filesPage.typeFilter.allTypes", "All types")
-                              : undefined
-                          }
-                          clearable
-                          hidePickedOptions
-                          searchable={false}
-                          style={{ width: 160 }}
-                          aria-label={t(
-                            "filesPage.typeFilter.label",
-                            "Filter by type",
-                          )}
-                        />
-                      )}
-                      <TextInput
-                        size="xs"
-                        value={search}
-                        onChange={(e) => setSearch(e.currentTarget.value)}
-                        placeholder={t(
-                          "filesPage.search.placeholder",
-                          "Filter files…",
-                        )}
-                        leftSection={<Icon name="search" size={"1rem"} />}
-                        rightSection={
-                          search ? (
-                            <ActionIcon
-                              variant="tertiary"
-                              size="sm"
-                              onClick={() => setSearch("")}
-                              aria-label={t(
-                                "filesPage.search.clear",
-                                "Clear filter",
-                              )}
-                            >
-                              <Icon name="x" size={"0.9rem"} />
-                            </ActionIcon>
-                          ) : null
-                        }
-                        aria-label={t(
-                          "filesPage.search.label",
-                          "Filter files by name",
-                        )}
-                        style={{ width: 180 }}
-                      />
-                      <Select
-                        size="xs"
-                        value={sortMode}
-                        onChange={(value) =>
-                          value && setSortMode(value as FilesPageSortMode)
-                        }
-                        data={[
-                          {
-                            value: "modified-desc",
-                            label: t(
-                              "filesPage.sort.modifiedDesc",
-                              "Recent first",
-                            ),
-                          },
-                          {
-                            value: "modified-asc",
-                            label: t(
-                              "filesPage.sort.modifiedAsc",
-                              "Oldest first",
-                            ),
-                          },
-                          {
-                            value: "name-asc",
-                            label: t("filesPage.sort.nameAsc", "Name A→Z"),
-                          },
-                          {
-                            value: "name-desc",
-                            label: t("filesPage.sort.nameDesc", "Name Z→A"),
-                          },
-                          {
-                            value: "size-desc",
-                            label: t(
-                              "filesPage.sort.sizeDesc",
-                              "Largest first",
-                            ),
-                          },
-                          {
-                            value: "size-asc",
-                            label: t(
-                              "filesPage.sort.sizeAsc",
-                              "Smallest first",
-                            ),
-                          },
-                        ]}
-                        style={{ width: 160 }}
-                      />
-                    </>
-                  )}
-                  <span
-                    className="files-page-toolbar-divider"
-                    aria-hidden="true"
-                  />
-                  <SegmentedControl
-                    size="sm"
-                    value={viewMode}
-                    onChange={(v) => {
-                      // Mantine only emits values declared in `data[].value`, but
-                      // narrow defensively so a future third option can't silently
-                      // bypass the FilesPageViewMode contract. Derived from the
-                      // `as const` tuple so adding a mode anywhere in the code
-                      // base automatically widens the guard here.
-                      if (
-                        !(FILES_PAGE_VIEW_MODES as readonly string[]).includes(
-                          v,
-                        )
-                      )
-                        return;
-                      setViewMode(v);
-                    }}
-                    aria-label={t("filesPage.viewMode.label", "View mode")}
-                    options={[
-                      {
-                        value: "grid",
-                        label: (
-                          <span
-                            className="files-page-view-toggle-icon"
-                            title={t("filesPage.viewMode.grid", "Grid view")}
-                          >
-                            <Icon name="layout-grid" size={20} />
-                            <span className="files-page-sr-only">
-                              {t("filesPage.viewMode.grid", "Grid view")}
-                            </span>
-                          </span>
-                        ),
-                      },
-                      {
-                        value: "list",
-                        label: (
-                          <span
-                            className="files-page-view-toggle-icon"
-                            title={t("filesPage.viewMode.list", "List view")}
-                          >
-                            <Icon name="list" size={20} />
-                            <span className="files-page-sr-only">
-                              {t("filesPage.viewMode.list", "List view")}
-                            </span>
-                          </span>
-                        ),
-                      },
-                    ]}
+                  <LibraryToolbar
+                    isMobile={isMobile}
+                    availableTypes={availableTypes}
+                    originFilter={originFilter}
+                    setOriginFilter={setOriginFilter}
+                    typeFilter={typeFilter}
+                    setTypeFilter={setTypeFilter}
+                    search={search}
+                    setSearch={setSearch}
+                    sortMode={sortMode}
+                    setSortMode={setSortMode}
+                    viewMode={viewMode}
+                    setViewMode={setViewMode}
                   />
                 </>
               )}
@@ -2153,13 +1633,6 @@ export default function FileManagerView() {
  * A cheap identity for a directory listing, so a background re-read only re-renders the
  * grid when something actually changed on disk.
  */
-function listingSignature(
-  files: { path: string; sizeBytes: number; lastModified: number }[],
-): string {
-  return files
-    .map((file) => `${file.path}|${file.sizeBytes}|${file.lastModified}`)
-    .join("\n");
-}
 
 function Breadcrumbs() {
   const { t } = useTranslation();

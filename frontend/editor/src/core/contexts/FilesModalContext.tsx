@@ -35,8 +35,13 @@ interface FilesModalContextType {
   }) => void;
   closeFilesModal: () => void;
   maxSelectable: number | null;
-  onFileUpload: (files: File[]) => void;
-  onRecentFileSelect: (stirlingFileStubs: StirlingFileStub[]) => void;
+  onFileUpload: (files: File[]) => Promise<void>;
+  onRecentFileSelect: (
+    stirlingFileStubs: StirlingFileStub[],
+    uploads?: File[],
+  ) => Promise<void>;
+  /** Reads local, server and shared inputs without opening them or changing the workspace. */
+  loadFiles: (stubs: StirlingFileStub[]) => Promise<File[]>;
   onModalClose?: () => void;
   setOnModalClose: (callback: () => void) => void;
 }
@@ -281,7 +286,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
     ],
   );
 
-  const handleRecentFileSelect = useCallback(
+  const loadFiles = useCallback(
     async (stirlingFileStubs: StirlingFileStub[]) => {
       const serverOnlyStubs = stirlingFileStubs.filter(
         (stub) => stub.remoteStorageId && stub.id.startsWith("server-"),
@@ -294,55 +299,63 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           !serverOnlyStubs.includes(stub) && !sharedLinkStubs.includes(stub),
       );
 
-      if (customHandler) {
-        try {
-          const loadedFiles: File[] = [];
-          for (const stub of localStubs) {
-            const stirlingFile = await fileStorage.getStirlingFile(stub.id);
-            if (stirlingFile) {
-              loadedFiles.push(stirlingFile);
-            }
-          }
-          for (const stub of serverOnlyStubs) {
-            if (!stub.remoteStorageId) continue;
-            const { blob, filename, contentType } = await downloadServerFile(
-              stub.remoteStorageId,
-            );
-            const latestFiles = await extractLatestFilesFromBundle(
-              blob,
-              filename,
-              contentType,
-            );
-            loadedFiles.push(...latestFiles);
-          }
-          for (const stub of sharedLinkStubs) {
-            if (!stub.remoteShareToken) continue;
-            const { blob, filename, contentType } = await downloadShareLinkFile(
-              stub.remoteShareToken,
-            );
-            const latestFiles = await extractLatestFilesFromBundle(
-              blob,
-              filename,
-              contentType,
-            );
-            loadedFiles.push(...latestFiles);
-          }
+      const loadedFiles: File[] = [];
+      for (const stub of localStubs) {
+        const stirlingFile = await fileStorage.getStirlingFile(stub.id);
+        if (!stirlingFile)
+          throw new Error(`${stub.name} is no longer available.`);
+        loadedFiles.push(stirlingFile);
+      }
+      for (const stub of serverOnlyStubs) {
+        if (!stub.remoteStorageId) continue;
+        const { blob, filename, contentType } = await downloadServerFile(
+          stub.remoteStorageId,
+        );
+        const latestFiles = await extractLatestFilesFromBundle(
+          blob,
+          filename,
+          contentType,
+        );
+        loadedFiles.push(...latestFiles);
+      }
+      for (const stub of sharedLinkStubs) {
+        if (!stub.remoteShareToken) continue;
+        const { blob, filename, contentType } = await downloadShareLinkFile(
+          stub.remoteShareToken,
+        );
+        const latestFiles = await extractLatestFilesFromBundle(
+          blob,
+          filename,
+          contentType,
+        );
+        loadedFiles.push(...latestFiles);
+      }
 
-          if (loadedFiles.length > 0) {
-            customHandler(loadedFiles, insertAfterPage);
-          }
-        } catch (error) {
-          console.error("Failed to load files for custom handler:", error);
-          alert({
-            alertType: "error",
-            title: "Unable to download one or more server files.",
-            expandable: false,
-            durationMs: 3500,
-          });
-        }
+      return loadedFiles;
+    },
+    [downloadServerFile, downloadShareLinkFile, extractLatestFilesFromBundle],
+  );
+
+  const handleRecentFileSelect = useCallback(
+    async (stirlingFileStubs: StirlingFileStub[], uploads: File[] = []) => {
+      const serverOnlyStubs = stirlingFileStubs.filter(
+        (stub) => stub.remoteStorageId && stub.id.startsWith("server-"),
+      );
+      const sharedLinkStubs = stirlingFileStubs.filter(
+        (stub) => stub.remoteShareToken,
+      );
+      const localStubs = stirlingFileStubs.filter(
+        (stub) =>
+          !serverOnlyStubs.includes(stub) && !sharedLinkStubs.includes(stub),
+      );
+
+      if (customHandler) {
+        const loadedFiles = await loadFiles(stirlingFileStubs);
+        await customHandler([...loadedFiles, ...uploads], insertAfterPage);
         closeFilesModal();
         return;
       }
+      if (uploads.length > 0) await addFiles(uploads);
 
       const selectedFromServer: FileId[] = [];
       try {
@@ -390,6 +403,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
           expandable: false,
           durationMs: 3500,
         });
+        throw error;
       }
 
       if (actions.addStirlingFileStubs) {
@@ -398,11 +412,19 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
         // Compare that depend on multi-file selection don't lose existing
         // selections when the user picks an additional file from the modal.
         const requestedIds = localStubs.map((s) => s.id);
+        const uploadedIds = uploads
+          .map((file) => fileCtx.findFileId(file))
+          .filter((id): id is FileId => Boolean(id));
         const currentSelected = fileCtx.selectors
           .getSelectedStirlingFileStubs()
           .map((s) => s.id);
         const nextSelection = Array.from(
-          new Set([...currentSelected, ...requestedIds, ...selectedFromServer]),
+          new Set([
+            ...currentSelected,
+            ...requestedIds,
+            ...uploadedIds,
+            ...selectedFromServer,
+          ]),
         );
         actions.setSelectedFiles(nextSelection);
       } else {
@@ -411,7 +433,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Stay in multi-tool; otherwise single file → viewer, multiple → active files
       if (!isMultiTool) {
-        const totalAdded = stirlingFileStubs.length;
+        const totalAdded = stirlingFileStubs.length + uploads.length;
         navActions.setWorkbench(totalAdded === 1 ? "viewer" : "fileEditor");
       }
 
@@ -419,6 +441,8 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
     },
     [
       actions.addStirlingFileStubs,
+      addFiles,
+      loadFiles,
       actions,
       closeFilesModal,
       customHandler,
@@ -444,6 +468,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       closeFilesModal,
       onFileUpload: handleFileUpload,
       onRecentFileSelect: handleRecentFileSelect,
+      loadFiles,
       onModalClose,
       setOnModalClose: setModalCloseCallback,
       maxSelectable,
@@ -454,6 +479,7 @@ export const FilesModalProvider: React.FC<{ children: React.ReactNode }> = ({
       closeFilesModal,
       handleFileUpload,
       handleRecentFileSelect,
+      loadFiles,
       onModalClose,
       setModalCloseCallback,
       maxSelectable,

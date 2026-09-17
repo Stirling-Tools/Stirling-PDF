@@ -26,13 +26,15 @@ import { FileDetailsActions } from "@app/components/filesPage/FileDetailsActions
 import "@app/components/filesPage/FilesPage.css";
 
 interface FileDetailsPanelProps {
+  /** Picker hosts choose a version without exposing workspace or library mutations. */
+  onPickVersion?: (file: StirlingFileStub) => void;
   selectedFileIds: FileId[];
   fileMap: Map<FileId, StirlingFileStub>;
   currentFolder: FolderRecord | null;
   onClose: () => void;
-  onAddToWorkspace: (fileIds: FileId[]) => void;
-  onMove: (fileIds: FileId[]) => void;
-  onRemove: (fileIds: FileId[]) => void;
+  onAddToWorkspace?: (fileIds: FileId[]) => void;
+  onMove?: (fileIds: FileId[]) => void;
+  onRemove?: (fileIds: FileId[]) => void;
   /** Save to server; only shown when at least one selected file is local-only. */
   onSaveToServer?: (files: StirlingFileStub[]) => void;
   /** When set, Save to server renders disabled with this tooltip (storage off). */
@@ -44,6 +46,7 @@ interface FileDetailsPanelProps {
 }
 
 export function FileDetailsPanel({
+  onPickVersion,
   selectedFileIds,
   fileMap,
   currentFolder,
@@ -371,6 +374,7 @@ export function FileDetailsPanel({
                   </Button>
                   {versionsOpen && (
                     <VersionTimeline
+                      onPickVersion={onPickVersion}
                       chain={versionChain}
                       currentId={single.id}
                       onAddToWorkspace={onAddToWorkspace}
@@ -395,23 +399,25 @@ export function FileDetailsPanel({
         )}
       </div>
 
-      <FileDetailsActions
-        selectedFileIds={selectedFileIds}
-        single={single}
-        fileCount={files.length}
-        localOnlyFiles={localOnlyFiles}
-        sharingEnabled={sharingEnabled}
-        downloading={downloading}
-        onDownload={handleDownload}
-        onAddToWorkspace={onAddToWorkspace}
-        onMove={onMove}
-        onRemove={onRemove}
-        onSaveToServer={onSaveToServer}
-        saveToServerDisabledReason={saveToServerDisabledReason}
-        onShare={() => setShareModalOpen(true)}
-      />
+      {onAddToWorkspace && onMove && onRemove && (
+        <FileDetailsActions
+          selectedFileIds={selectedFileIds}
+          single={single}
+          fileCount={files.length}
+          localOnlyFiles={localOnlyFiles}
+          sharingEnabled={sharingEnabled}
+          downloading={downloading}
+          onDownload={handleDownload}
+          onAddToWorkspace={onAddToWorkspace}
+          onMove={onMove}
+          onRemove={onRemove}
+          onSaveToServer={onSaveToServer}
+          saveToServerDisabledReason={saveToServerDisabledReason}
+          onShare={() => setShareModalOpen(true)}
+        />
+      )}
       {/* Single panel-level mount; gated on sharingEnabled. */}
-      {single && sharingEnabled && (
+      {single && sharingEnabled && !onPickVersion && (
         <ShareManagementModal
           opened={shareModalOpen}
           onClose={() => setShareModalOpen(false)}
