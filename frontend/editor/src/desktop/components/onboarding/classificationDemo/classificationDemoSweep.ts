@@ -29,12 +29,8 @@ const CLASSIFY_STEP = "/api/v1/ai/tools/classify-and-label";
 /** How many PDFs one sweep covers. The rest of the folder waits for a follow-up batch. */
 export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
 
-/** Text-reading allowance per document, counted once it is open, so a cold pdf.js
- *  worker on the first file is not charged. Ordinary PDFs finish in a fraction of it;
- *  one that yields nothing inside it is classified on its name alone rather than
- *  holding the sweep, which is what a broken file or a dead worker used to do. Opening
- *  carries its own headroom on top, so the worst case for one document is
- *  OPEN_TIMEOUT_MS plus this, not this alone. */
+/** Text-reading allowance per document, counted once it is open, so a cold pdf.js worker
+ *  is not charged. Opening has its own headroom, so a document's worst case is both. */
 export const HEURISTIC_BUDGET_MS = 1000;
 
 /** Roll-up id used for a document the heuristic could not place. */

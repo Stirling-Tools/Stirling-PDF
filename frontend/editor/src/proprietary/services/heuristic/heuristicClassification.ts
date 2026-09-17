@@ -10,8 +10,8 @@ import {
 } from "@app/services/heuristic/heuristicExtractor";
 import type { HeuristicResult } from "@app/services/heuristic/types";
 
-/** Classify a file in the browser. Throws if extraction fails (unreadable / non-PDF);
- *  a `budgetMs` that runs out yields a name-only verdict rather than throwing. */
+/** Classify a file in the browser. Throws if extraction fails: unreadable, non-PDF, or a
+ *  `budgetMs` that runs out before any text is read. */
 export async function classifyFileHeuristically(
   file: File,
   opts?: { explain?: boolean } & ExtractOptions,
