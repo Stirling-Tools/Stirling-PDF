@@ -15,6 +15,7 @@ import ReactDOM from "react-dom/client";
 import { ColorSchemeScript } from "@mantine/core";
 import { BrowserRouter } from "react-router-dom";
 import App from "@editor/App";
+import { PublicPageMetadata } from "@editor/components/PublicPageMetadata";
 import "@editor/i18n"; // Initialize i18next
 import { BASE_PATH } from "@editor/constants/app";
 import { applyDevWorktreeLabel } from "@editor/utils/applyDevWorktreeLabel";
@@ -31,6 +32,7 @@ root.render(
   <React.StrictMode>
     <ColorSchemeScript />
     <BrowserRouter basename={BASE_PATH}>
+      <PublicPageMetadata />
       <App />
     </BrowserRouter>
   </React.StrictMode>,

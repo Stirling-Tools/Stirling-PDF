@@ -3,7 +3,7 @@
 .app-frame {
   display: flex;
   height: 100vh;
-  height: 100dvh; /* track mobile browser chrome */
+  height: var(--app-viewport-height, 100dvh);
   overflow: hidden;
   background-color: var(--c-bg);
 }

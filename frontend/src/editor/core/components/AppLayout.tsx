@@ -23,7 +23,7 @@ export function AppLayout({ children }: AppLayoutProps) {
       `}</style>
       <div
         style={{
-          height: "var(--titlebar-body-h, 100dvh)",
+          height: "var(--app-viewport-height, var(--titlebar-body-h, 100dvh))",
           display: "flex",
           flexDirection: "column",
         }}

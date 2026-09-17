@@ -114,6 +114,7 @@ export function useAutoAnonymousAuth() {
     if (loading) return;
     if (session) return;
     if (state.isAutoAuthenticating) return;
+    if (state.autoAuthError) return;
 
     const shouldAuth = shouldAutoAuthenticate();
     if (state.shouldTriggerAutoAuth !== shouldAuth) {
@@ -128,6 +129,7 @@ export function useAutoAnonymousAuth() {
     loading,
     session,
     state.isAutoAuthenticating,
+    state.autoAuthError,
     state.shouldTriggerAutoAuth,
     shouldAutoAuthenticate,
     triggerAnonymousAuth,
