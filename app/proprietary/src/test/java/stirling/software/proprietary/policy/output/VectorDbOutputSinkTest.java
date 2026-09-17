@@ -108,8 +108,7 @@ class VectorDbOutputSinkTest {
         sink.deliver(first, List.of(corpus("first-content", 0)), output);
         sink.deliver(retry, List.of(corpus("changed-content", 0)), output);
         sink.deliver(
-                new OutputDelivery(
-                        "run-3", "policy", retry.inputs(), null, "user:bob/document"),
+                new OutputDelivery("run-3", "policy", retry.inputs(), null, "user:bob/document"),
                 List.of(corpus("changed-content", 0)),
                 output);
         ArgumentCaptor<String> ids = ArgumentCaptor.forClass(String.class);
