@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Generate one input file per failure kind that an input file can actually cause.
+"""Generate input files that genuinely fail, with the tool each one needs.
 
-Each file is named for the error code it provokes and the kind that claims it, so a manual pass
-can work straight down the directory listing. Run from anywhere:
+Two things decide whether a fixture works, and the first set of these got both wrong:
 
-    python3 testing/failure-fixtures/generate.py
+PDFBox 3 repairs structural damage. A PDF truncated mid-object still has a valid header, so its
+xref is rebuilt and the file processes normally. Only bytes it cannot find a header in fail.
 
-Codes with no file to make (a missing document, a missing binary on the server) are listed in
-README.md instead, with the steps to reach them.
+The failure depends on the step, not the file. Redact will happily redact a zero-page document;
+only content extraction and the comic converters count pages. So each file below names the tool
+that raises its code, and the policy under test has to start with that tool.
 """
 
 import pathlib
@@ -15,9 +16,13 @@ import zipfile
 
 OUT = pathlib.Path(__file__).parent / "files"
 
-# A minimal PDF whose page tree is empty. Written by hand because every library refuses to
-# produce one: zero pages is exactly the thing they validate against.
-NO_PAGES_PDF = b"""%PDF-1.4
+# Deterministic filler, so regenerating does not churn the files. Not random: a fixture that
+# differs run to run cannot be compared against a previous failure.
+FILLER = bytes((i * 7 + 13) % 256 for i in range(2048))
+
+# Valid, loadable, and holds no pages. PDFBox reads it without complaint, which is the point:
+# the failure has to come from a step that asks for pages, not from the parser.
+ZERO_PAGE_PDF = b"""%PDF-1.4
 1 0 obj
 << /Type /Catalog /Pages 2 0 R >>
 endobj
@@ -36,24 +41,10 @@ startxref
 %%EOF
 """
 
-# A one-page PDF, truncated mid-object: the header still says PDF, so it is read and then fails.
-TRUNCATED_PDF = b"""%PDF-1.4
-1 0 obj
-<< /Type /Catalog /Pages 2 0 R >>
-endobj
-2 0 obj
-<< /Type /Pages /Kids [3 0 R] /Count 1 >>
-endobj
-3 0 obj
-<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Conte"""
 
-PNG_MAGIC = b"\x89PNG\r\n\x1a\n"
-
-
-def write(name: str, data: bytes) -> None:
-    path = OUT / name
-    path.write_bytes(data)
-    print(f"  {name:<46} {len(data):>7} bytes")
+def write(name: str, data: bytes, note: str) -> None:
+    (OUT / name).write_bytes(data)
+    print(f"  {name:<44} {len(data):>6}B  {note}")
 
 
 def zip_of(entries: dict[str, bytes]) -> bytes:
@@ -71,32 +62,37 @@ def main() -> None:
     for stale in OUT.iterdir():
         stale.unlink()
 
-    print("INPUT_WRONG_TYPE: the file is not the format the step requires")
-    write("E006-wrong-type-not-a-pdf.pdf", b"This is plain text wearing a .pdf extension.\n")
-    write("E014-wrong-type-not-a-cbr.cbr", b"This is plain text wearing a .cbr extension.\n")
-    write("E018-wrong-type-not-a-cbz.cbz", b"This is plain text wearing a .cbz extension.\n")
-    write("E061-wrong-type-not-html.html", TRUNCATED_PDF[:40])
+    print("Works with any PDF step (redact, compress, rotate):")
+    # No %PDF header anywhere, so there is nothing for PDFBox to rebuild from. This is the one
+    # corruption shape confirmed to fail rather than be repaired.
+    write(
+        "E001-damaged-no-header.pdf",
+        b"Not a PDF. No header, nothing to rebuild from.\n" + FILLER,
+        "Damaged document",
+    )
+    # Header present, then bytes holding no object PDFBox can recover.
+    write(
+        "E001-damaged-garbage-body.pdf",
+        b"%PDF-1.7\n" + FILLER,
+        "Damaged document",
+    )
+    write("E032-empty.pdf", b"", "Empty file")
 
-    print("\nINPUT_UNREADABLE: the right format, and still unopenable")
-    # Real RAR magic, then nothing a reader can follow.
-    write("E010-unreadable-broken-rar.cbr", b"Rar!\x1a\x07\x01\x00" + b"\x00" * 64)
-    # Real ZIP magic, then a truncated local file header.
-    write("E015-unreadable-broken-zip.cbz", b"PK\x03\x04\x14\x00\x00\x00\x08\x00" + b"\xff" * 32)
-    write("E021-unreadable-broken-eml.eml", b"Not: a header\r\nnor a body, and no blank line either")
-    write("E034-unreadable-broken-image.png", PNG_MAGIC + b"\x00" * 24)
+    print("\nNeeds a step that counts pages (extract content, PDF to CBZ, PDF to CBR):")
+    write("E005-zero-pages.pdf", ZERO_PAGE_PDF, "Empty file")
 
-    print("\nINPUT_EMPTY: opens fine, holds nothing to work on")
-    write("E005-empty-pdf-no-pages.pdf", NO_PAGES_PDF)
-    write("E016-empty-cbz-no-images.cbz", zip_of({"readme.txt": b"no images in here"}))
-    write("E020-empty-eml.eml", b"")
-    write("E032-empty-file.pdf", b"")
+    print("\nNeeds a compliance or PDF/A step, which refuse an empty input by type:")
+    write("E006-empty-for-compliance.pdf", b"", "Wrong file type")
 
-    print("\nINPUT_CORRUPTED: already shipped, included so the set is complete")
-    write("E001-corrupted-truncated.pdf", TRUNCATED_PDF)
-    write("E002-corrupted-truncated-sibling.pdf", TRUNCATED_PDF.replace(b"612", b"595"))
+    print("\nNeeds its own converter, and is skipped by a PDF-only policy:")
+    write("E015-broken-zip.cbz", b"PK\x03\x04\x14\x00\x00\x00\x08\x00" + FILLER[:64], "Unreadable file")
+    write("E016-cbz-no-images.cbz", zip_of({"readme.txt": b"no images"}), "Empty file")
+    write("E018-not-a-cbz.cbz", b"plain text wearing a .cbz extension\n", "Wrong file type")
+    write("E021-broken-eml.eml", b"Not: a header\r\nnor a body, and no blank line", "Unreadable file")
+    write("E020-empty.eml", b"", "Empty file")
+    write("E034-broken-image.png", b"\x89PNG\r\n\x1a\x08" + FILLER[:64], "Unreadable file")
 
-    print(f"\nWrote {len(list(OUT.iterdir()))} files to {OUT}")
-    print("E012 (CBR with no images) needs a real RAR writer; see README.md.")
+    print(f"\n{len(list(OUT.iterdir()))} files in {OUT}")
 
 
 if __name__ == "__main__":

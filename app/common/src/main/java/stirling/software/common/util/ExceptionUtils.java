@@ -1066,16 +1066,20 @@ public class ExceptionUtils {
     public static IOException handlePdfException(IOException e, String context) {
         requireNonNull(e, "exception");
 
-        if (PdfErrorUtils.isCorruptedPdfError(e)) {
-            return createPdfCorruptedException(context, e);
+        // Most specific first. Corruption is the catch-all: its patterns cover almost anything
+        // PDFBox gives up on, so testing it earlier claimed every encrypted document that failed
+        // to decrypt and reported it as damaged, which sends the reader to the repair tool for a
+        // file that is not broken.
+        if (isPasswordError(e)) {
+            return createPdfPasswordException(e);
         }
 
         if (isEncryptionError(e)) {
             return createPdfEncryptionException(e);
         }
 
-        if (isPasswordError(e)) {
-            return createPdfPasswordException(e);
+        if (PdfErrorUtils.isCorruptedPdfError(e)) {
+            return createPdfCorruptedException(context, e);
         }
 
         return e; // Return original exception if no specific handling needed
