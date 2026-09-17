@@ -79,6 +79,7 @@ pub fn resolve_dropped_file_paths(files: Vec<DroppedFile>) -> Vec<Option<String>
 #[cfg(target_os = "macos")]
 fn dragged_paths() -> Vec<std::path::PathBuf> {
     use objc2_app_kit::{NSPasteboard, NSPasteboardNameDrag, NSPasteboardTypeFileURL};
+    use objc2_foundation::NSURL;
     let pasteboard = NSPasteboard::pasteboardWithName(unsafe { NSPasteboardNameDrag });
     let Some(items) = pasteboard.pasteboardItems() else {
         return Vec::new();
@@ -87,10 +88,14 @@ fn dragged_paths() -> Vec<std::path::PathBuf> {
         .iter()
         .filter_map(|item| {
             let value = item.stringForType(unsafe { NSPasteboardTypeFileURL })?;
-            url::Url::parse(&value.to_string())
-                .ok()?
-                .to_file_path()
-                .ok()
+            let url = NSURL::URLWithString(&value)?;
+            // The drag pasteboard hands back file *reference* URLs
+            // (file:///.file/id=...); filePathURL resolves them to the concrete
+            // filesystem path that name/size/mtime matching needs.
+            let resolved = url.filePathURL().unwrap_or(url);
+            resolved
+                .path()
+                .map(|path| std::path::PathBuf::from(path.to_string()))
         })
         .collect()
 }
@@ -104,6 +109,41 @@ fn dragged_paths() -> Vec<std::path::PathBuf> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn resolves_a_file_reference_url_to_its_real_path() {
+        use objc2_foundation::{NSString, NSURL};
+        let directory = std::env::temp_dir().join(format!("stirling-refurl-{}", std::process::id()));
+        std::fs::create_dir_all(&directory).unwrap();
+        let path = directory.join("report.pdf");
+        std::fs::write(&path, b"pdf").unwrap();
+
+        // Build the file *reference* URL string the drag pasteboard hands over.
+        let file_url = NSURL::fileURLWithPath(&NSString::from_str(path.to_str().unwrap()));
+        let reference = file_url
+            .fileReferenceURL()
+            .expect("an existing file has a reference URL");
+        let reference_string = reference
+            .absoluteString()
+            .expect("a reference URL has an absolute string");
+        assert!(
+            reference_string.to_string().contains("/.file/"),
+            "expected a file reference URL, got {}",
+            reference_string.to_string()
+        );
+
+        // Resolve it exactly as dragged_paths does.
+        let url = NSURL::URLWithString(&reference_string).unwrap();
+        let resolved = url.filePathURL().unwrap_or(url);
+        let resolved_path = std::path::PathBuf::from(resolved.path().unwrap().to_string());
+
+        assert_eq!(
+            std::fs::canonicalize(&resolved_path).unwrap(),
+            std::fs::canonicalize(&path).unwrap()
+        );
+        std::fs::remove_dir_all(&directory).unwrap();
+    }
 
     #[test]
     fn links_only_a_unique_matching_file() {
