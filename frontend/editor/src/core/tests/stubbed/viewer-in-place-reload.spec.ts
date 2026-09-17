@@ -2,6 +2,25 @@ import fs from "node:fs";
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
+interface SwapSamplerState {
+  swapMs: number;
+  swapAt: number;
+  abs: number[];
+  samples: number[];
+  pageTops: number[];
+  visible: boolean[];
+  hidden: boolean[];
+  liveCounts: number[];
+  stop: boolean;
+}
+
+declare global {
+  interface Window {
+    __swapSampler?: SwapSamplerState;
+    __revokedObjectUrls?: string[];
+  }
+}
+
 const FIXTURES = path.join(import.meta.dirname, "../test-fixtures");
 const MULTIPAGE_PDF = path.join(FIXTURES, "annotations_out_of_order.pdf");
 const SAMPLE_PDF = path.join(FIXTURES, "sample.pdf");
@@ -82,9 +101,8 @@ function viewerWrapperSurvived(page: import("@playwright/test").Page) {
   );
 }
 
-// Samples the viewer scroller from the frame the outgoing pages are replaced,
-// tracking how many new pages are mounted, so the position of the first
-// rendered frame can be asserted.
+// Samples the scroller from the frame the outgoing pages are replaced, tracking
+// mounted pages so the first rendered frame's position can be asserted.
 async function startSwapSampler(page: import("@playwright/test").Page) {
   await page.evaluate(() => {
     const outgoing = document.querySelector<HTMLElement>(
@@ -111,17 +129,18 @@ async function startSwapSampler(page: import("@playwright/test").Page) {
       }
       return null;
     };
-    const state = {
+    const state: SwapSamplerState = {
       swapMs: -1,
       swapAt: -1,
-      abs: [] as number[],
-      samples: [] as number[],
-      pageTops: [] as number[],
-      visible: [] as boolean[],
-      hidden: [] as boolean[],
+      abs: [],
+      samples: [],
+      pageTops: [],
+      visible: [],
+      hidden: [],
+      liveCounts: [],
       stop: false,
     };
-    (window as unknown as Record<string, unknown>).__swapSampler = state;
+    window.__swapSampler = state;
     let t0 = 0;
     const tick = () => {
       if (state.stop) return;
@@ -150,9 +169,7 @@ async function startSwapSampler(page: import("@playwright/test").Page) {
           ? Math.round(scrolledPage.getBoundingClientRect().top)
           : Number.NaN,
       );
-      (
-        (state as unknown as Record<string, unknown[]>).liveCounts as number[]
-      ).push(live.length);
+      state.liveCounts.push(live.length);
       // Only frames the user can actually see count as flash.
       state.samples.push(Math.round(scroller.scrollTop));
       state.visible.push(viewerVisible);
@@ -182,21 +199,7 @@ function sampleVisibleFramesOffTarget(
 
 async function readSwapSampler(page: import("@playwright/test").Page) {
   return page.evaluate(() => {
-    const state = (
-      window as unknown as Record<
-        string,
-        {
-          abs: number[];
-          samples: number[];
-          pageTops: number[];
-          visible: boolean[];
-          hidden: boolean[];
-          swapMs: number;
-          swapAt: number;
-          stop: boolean;
-        }
-      >
-    ).__swapSampler;
+    const state = window.__swapSampler;
     if (!state) return null;
     state.stop = true;
     return state;
@@ -237,13 +240,11 @@ test("saving annotations keeps the live document mounted", async ({ page }) => {
       el.setAttribute("data-reload-page-probe", "1");
     }
   });
-  // A skipped swap keeps the mounted document and the blob URL LocalEmbedPDF
-  // published to consumers such as PrintAPIBridge; other hooks may still
-  // replace their own URLs, so only that viewer's revocations matter.
+  // Other hooks may replace their own URLs; only LocalEmbedPDF's revocations
+  // matter, because its published URL feeds PrintAPIBridge.
   await page.evaluate(() => {
     const revoked: string[] = [];
-    (window as unknown as Record<string, unknown>).__revokedObjectUrls =
-      revoked;
+    window.__revokedObjectUrls = revoked;
     const original = URL.revokeObjectURL.bind(URL);
     URL.revokeObjectURL = (url: string) => {
       revoked.push(`${url}\n${new Error("revoke").stack ?? ""}`);
@@ -269,14 +270,13 @@ test("saving annotations keeps the live document mounted", async ({ page }) => {
     ),
   ).toBe(true);
   const viewerRevokedBlobUrls = await page.evaluate(() =>
-    (
-      (window as unknown as Record<string, string[]>).__revokedObjectUrls ?? []
-    ).filter((entry) => entry.includes("LocalEmbedPDF")),
+    (window.__revokedObjectUrls ?? []).filter((entry) =>
+      entry.includes("LocalEmbedPDF"),
+    ),
   );
   expect(viewerRevokedBlobUrls).toEqual([]);
-  // No frame of the save may show the scroller at the top of the document.
-  // ...and the reading position and user-set zoom carry over. The within-page
-  // offset has to hold too: snapping to the page top reads as a jump.
+  // The within-page offset must hold across the save: snapping to the page top
+  // reads as a jump.
   await expect
     .poll(async () => pageInput.inputValue(), { timeout: 10_000 })
     .toBe("2");
@@ -454,10 +454,6 @@ test("a tool output reload shows the saved position in its first frame", async (
   await page.waitForTimeout(400);
   await page.mouse.wheel(0, 260);
   await page.waitForTimeout(500);
-  const pageTopBefore = await page
-    .locator('[data-page-index="1"]')
-    .first()
-    .evaluate((el) => Math.round(el.getBoundingClientRect().top));
 
   // Same bytes back, so the captured offset is exactly reproducible.
   await page.route("**/api/v1/misc/compress-pdf", async (route) => {
@@ -485,6 +481,12 @@ test("a tool output reload shows the saved position in its first frame", async (
     .click();
   await page.waitForTimeout(1_200);
 
+  // Read the baseline once the panel has settled; the tool page can otherwise
+  // contribute its own preview pages to the sample stream.
+  const pageTopBefore = await page
+    .locator('[data-page-index="1"]')
+    .first()
+    .evaluate((el) => Math.round(el.getBoundingClientRect().top));
   await startSwapSampler(page);
   await page
     .getByRole("button", { name: "Compress", exact: true })
@@ -500,8 +502,7 @@ test("a tool output reload shows the saved position in its first frame", async (
   const samples = swap?.samples ?? [];
   const pageTops = swap?.pageTops ?? [];
   const hidden = swap?.hidden ?? [];
-  const liveCounts =
-    (swap as unknown as Record<string, number[]> | null)?.liveCounts ?? [];
+  const liveCounts = swap?.liveCounts ?? [];
   if (samples.length === 0) {
     // React reused the mounted page nodes across the swap, so nothing could
     // have jumped; the page must still sit where it was.
@@ -519,14 +520,8 @@ test("a tool output reload shows the saved position in its first frame", async (
     return;
   }
 
-  // The replacement is hidden while it settles on its own scale, so the first
-  // frame the user can actually see must already show the page where it was,
-  // and every later visible frame must hold it. The page-relative top is the
-  // visible position; the raw scroll offset moves with layout spacing.
-  const scrolledPageTopBefore = pageTops.find(
-    (top, index) => liveCounts[index] > 0 && Number.isFinite(top),
-  );
-  expect(scrolledPageTopBefore).toBeDefined();
+  // The replacement is hidden while it settles, so the first visible frame must
+  // already show the page where it was and every later one must hold it.
   const firstVisibleRendered = samples.findIndex(
     (_, index) => liveCounts[index] > 0 && hidden[index] !== true,
   );
@@ -536,7 +531,7 @@ test("a tool output reload shows the saved position in its first frame", async (
     liveCounts,
     hidden,
     firstVisibleRendered,
-    scrolledPageTopBefore as number,
+    pageTopBefore,
   );
   expect(offTarget).toEqual([]);
 

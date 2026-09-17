@@ -1,7 +1,5 @@
 import { useEffect, useRef } from "react";
 import { useDocumentManagerCapability } from "@embedpdf/plugin-document-manager/react";
-import { useZoomCapability, ZoomMode } from "@embedpdf/plugin-zoom/react";
-import { useSpreadCapability, SpreadMode } from "@embedpdf/plugin-spread/react";
 
 interface PendingDocument {
   buffer: ArrayBuffer;
@@ -14,23 +12,15 @@ interface DocumentSwapBridgeProps {
   onFailed: (error: unknown) => void;
 }
 
-/**
- * Opens replacement bytes as a background document and activates them only
- * once they are ready, so the mounted document keeps rendering through the
- * swap instead of blanking while the new one loads.
- *
- * Order matters: activate the replacement before closing the outgoing
- * document, otherwise the document manager promotes whatever is left. A
- * superseded open is closed without ever being activated.
- */
+/** Activates replacement bytes once loaded, so the mounted document keeps
+ *  rendering through the swap; activate before closing, or the manager
+ *  promotes whatever is left. A superseded open is closed without being shown. */
 export function DocumentSwapBridge({
   pending,
   onSwapped,
   onFailed,
 }: DocumentSwapBridgeProps) {
   const { provides: documentManager } = useDocumentManagerCapability();
-  const { provides: zoomCapability } = useZoomCapability();
-  const { provides: spreadCapability } = useSpreadCapability();
   const generationRef = useRef(0);
 
   useEffect(() => {
@@ -39,26 +29,11 @@ export function DocumentSwapBridge({
     let cancelled = false;
     const previousId = documentManager.getActiveDocumentId();
 
-    const currentSpreadMode =
-      previousId && spreadCapability
-        ? spreadCapability.forDocument(previousId).getSpreadMode()
-        : spreadCapability?.getSpreadMode();
-    const currentZoomState =
-      previousId && zoomCapability
-        ? zoomCapability.forDocument(previousId).getState()
-        : zoomCapability?.getState();
-    const currentScale = currentZoomState?.currentZoomLevel;
-    const currentZoomLevel = currentZoomState?.zoomLevel;
-
     void documentManager
       .openDocumentBuffer({
         buffer: pending.buffer,
         name: pending.name,
         autoActivate: false,
-        scale:
-          typeof currentScale === "number" && currentScale > 0
-            ? currentScale
-            : undefined,
       })
       .toPromise()
       .then(async (response) => {
@@ -84,38 +59,6 @@ export function DocumentSwapBridge({
         }
 
         try {
-          if (
-            currentSpreadMode &&
-            currentSpreadMode !== SpreadMode.None &&
-            spreadCapability
-          ) {
-            try {
-              spreadCapability
-                .forDocument(response.documentId)
-                .setSpreadMode(currentSpreadMode);
-            } catch {
-              // Ignore if spread restore is unsupported or fails to apply.
-            }
-          }
-
-          const targetZoom =
-            currentZoomLevel === ZoomMode.FitWidth ||
-            currentZoomLevel === ZoomMode.FitPage
-              ? currentZoomLevel
-              : typeof currentScale === "number" && currentScale > 0
-                ? currentScale
-                : currentZoomLevel;
-
-          if (targetZoom !== undefined && zoomCapability) {
-            try {
-              zoomCapability
-                .forDocument(response.documentId)
-                .requestZoom(targetZoom);
-            } catch {
-              // Ignore if zoom restore is unsupported or fails to apply.
-            }
-          }
-
           documentManager.setActiveDocument(response.documentId);
           onSwapped();
           if (previousId && previousId !== response.documentId) {
@@ -145,14 +88,7 @@ export function DocumentSwapBridge({
     return () => {
       cancelled = true;
     };
-  }, [
-    documentManager,
-    zoomCapability,
-    spreadCapability,
-    pending,
-    onSwapped,
-    onFailed,
-  ]);
+  }, [documentManager, pending, onSwapped, onFailed]);
 
   return null;
 }

@@ -2,6 +2,18 @@ import fs from "node:fs";
 import path from "path";
 import { test, expect } from "@app/tests/helpers/stub-test-base";
 
+interface SteadyZoomSamplerState {
+  stop: boolean;
+  widths: number[];
+  indicators: string[];
+}
+
+declare global {
+  interface Window {
+    __steadySampler?: SteadyZoomSamplerState;
+  }
+}
+
 const FIXTURES = path.join(import.meta.dirname, "../test-fixtures");
 const MULTIPAGE_PDF = path.join(FIXTURES, "annotations_out_of_order.pdf");
 const ROTATED_TEXT_PDF = path.join(FIXTURES, "rotated-text-sample.pdf");
@@ -206,6 +218,84 @@ test("dual page view survives a save and a tool output", async ({ page }) => {
   await expect
     .poll(async () => pageInput.inputValue(), { timeout: 15_000 })
     .toBe("1");
+});
+
+test("a tool output keeps the page width and zoom readout steady", async ({
+  page,
+}) => {
+  test.setTimeout(300_000);
+  await loadFixture(page, MULTIPAGE_PDF, 3);
+  const widthBefore = await page
+    .locator('[data-page-index="0"]')
+    .first()
+    .evaluate((el) => Math.round(el.getBoundingClientRect().width));
+
+  await mockCompress(page, MULTIPAGE_PDF);
+  await openCompressPanel(page);
+  await page.evaluate(() => {
+    const state: SteadyZoomSamplerState = {
+      stop: false,
+      widths: [],
+      indicators: [],
+    };
+    window.__steadySampler = state;
+    const tick = () => {
+      if (state.stop) return;
+      const pageEl = document.querySelector<HTMLElement>(
+        '[data-page-index="0"]',
+      );
+      if (pageEl)
+        state.widths.push(Math.round(pageEl.getBoundingClientRect().width));
+      const indicator = Array.from(
+        document.querySelectorAll<HTMLElement>("span,div,input"),
+      ).find((el) =>
+        /^\d+%$/.test(
+          (el.textContent ?? el.getAttribute("value") ?? "").trim(),
+        ),
+      );
+      if (indicator) {
+        state.indicators.push(
+          (
+            indicator.textContent ??
+            indicator.getAttribute("value") ??
+            ""
+          ).trim(),
+        );
+      }
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+
+  await applyCompress(page);
+  await page.waitForTimeout(4_000);
+
+  const sampled = await page.evaluate(() => {
+    const state = window.__steadySampler;
+    if (!state) return { widths: [], indicators: [] };
+    state.stop = true;
+    return { widths: state.widths, indicators: state.indicators };
+  });
+
+  // The swap resolves the carried zoom while the scroller is hidden, so no
+  // frame may render a different page width and the readout must not move.
+  const widths = sampled.widths.filter((width) => width > 0);
+  expect(widths.length).toBeGreaterThan(0);
+  expect(Math.max(...widths) - Math.min(...widths)).toBeLessThanOrEqual(4);
+  expect(new Set(sampled.indicators).size).toBeLessThanOrEqual(1);
+  await expect
+    .poll(
+      async () =>
+        Math.abs(
+          widthBefore -
+            (await page
+              .locator('[data-page-index="0"]')
+              .first()
+              .evaluate((el) => Math.round(el.getBoundingClientRect().width))),
+        ) <= 4,
+      { timeout: 10_000 },
+    )
+    .toBe(true);
 });
 
 test("a manual zoom survives a save and a tool output", async ({ page }) => {

@@ -157,11 +157,7 @@ interface LocalEmbedPDFProps {
   onSignaturePreviewsChange?: (previews: SignaturePreview[]) => void;
   /** Imperative handle for reading/clearing/deleting signature previews. */
   signatureOverlayApiRef?: React.RefObject<SignatureOverlayAPI | null>;
-  /**
-   * Veto for a byte swap whose visual state the mounted document already
-   * shows: skipping it keeps a save from reopening the document and resetting
-   * the view. Must be referentially stable; it is consulted per content key.
-   */
+  /** Veto for a swap the mounted document already shows; must be stable. */
   shouldSkipBytes?: (stableKey: string) => boolean;
   /** Fires from the layout pass that mounts a page, before it paints. */
   onPageLayout?: () => void;
@@ -355,9 +351,8 @@ export function LocalEmbedPDF({
     return "document.pdf";
   }, [fileStableKey, fileName, url]);
 
-  // The first document is opened through the plugin registry; every later
-  // replacement is opened as a background document and activated once ready,
-  // so the mounted document never blanks while new bytes load.
+  // The first document goes through the registry; replacements open in the
+  // background and activate once ready, so the viewer never blanks.
   const [initialDocument, setInitialDocument] = useState<{
     buffer: ArrayBuffer;
     name: string;
@@ -401,16 +396,13 @@ export function LocalEmbedPDF({
     () => setDeletedAnnotationMenu(null),
     [],
   );
-  // Owns the blob URL currently published to state and to consumers such as
-  // PrintAPIBridge: a skipped swap must leave it revocable only by its
-  // replacement, never by the effect run that decided to skip.
+  // The published blob URL is revoked by its replacement or on unmount, never
+  // by the effect run that decided to skip a swap.
   const publishedObjectUrlRef = useRef<string | null>(null);
   const revokeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Read the bytes on the main thread so the worker receives a buffer instead of
-  // failing to fetch partitioned blob URLs. Bytes and object URL land together so
-  // the plugin registry rebuilds once per replacement; the previous pair is kept
-  // until the new bytes are in hand, so the swap does not blank the viewer.
+  // Reads bytes on the main thread for the worker, and lands bytes plus URL in
+  // one commit so the registry rebuilds once per replacement.
   useEffect(() => {
     if (fileStableKey && shouldSkipBytes?.(fileStableKey)) {
       // The live document already shows this save; swapping the bytes would
@@ -473,9 +465,8 @@ export function LocalEmbedPDF({
     }
     return () => {
       cancelled = true;
-      // Only a URL that never reached state is revoked here; the published one
-      // belongs to the mounted viewer and is revoked by its replacement or on
-      // real unmount (below).
+      // Revokes only URLs that never reached state; the published one is
+      // replaced or revoked on real unmount below.
       if (objectUrl && publishedObjectUrlRef.current !== objectUrl) {
         URL.revokeObjectURL(objectUrl);
       }
@@ -527,10 +518,8 @@ export function LocalEmbedPDF({
     annotationAnchorsByIdRef.current.clear();
   }, [fileStableKey]);
 
-  // The registry is built from the source the viewer first opened. Later
-  // bytes arrive through DocumentSwapBridge, so nothing here may depend on the
-  // file name or URL of a replacement: a new plugins identity would rebuild
-  // the registry and destroy the background document mid-swap.
+  // The registry is built from the viewer's first source; later bytes arrive
+  // through DocumentSwapBridge, so no replacement may change that identity.
   const urlDocumentSource = file ? null : pdfUrl;
   const urlPluginsSource = useMemo(() => {
     if (file || !urlDocumentSource) return null;

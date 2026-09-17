@@ -9,11 +9,7 @@ interface AnnotationMenuEventsProps {
   onDeleted: (anchor: AnnotationMenuAnchor) => void;
 }
 
-/**
- * Keeps the selection menu in step with annotation edits made anywhere else:
- * a committed update opens the menu for the annotation that changed, and a
- * delete leaves an undo menu at the anchor the selection menu last reported.
- */
+/** Opens the menu for a committed edit, or an undo menu for a committed delete. */
 export function AnnotationMenuEvents({
   getAnchor,
   onDeleted,

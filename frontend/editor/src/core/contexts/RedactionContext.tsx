@@ -167,8 +167,7 @@ export const RedactionProvider: React.FC<{ children: ReactNode }> = ({
     }));
   }, []);
 
-  // Keep navigation guard aware of pending or applied redactions. The flag is
-  // cleared only when redaction armed it, so entering manual mode cannot drop a
+  // Cleared only when redaction armed the flag, so manual mode cannot drop a
   // dirty state owned by annotations, comments or form fill.
   const redactionDirtyRef = useRef(false);
   useEffect(() => {

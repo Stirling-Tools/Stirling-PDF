@@ -83,9 +83,8 @@ test("dismissing the undo menu leaves the selection menu closed", async ({
   await menu.getByRole("button", { name: "Delete" }).click();
   await expect(deletedMenu).toBeVisible({ timeout: 10_000 });
 
-  // Clicking the page away from the menu dismisses the undo menu without
-  // reopening the selection menu, so a dismissed delete reads as a plain
-  // delete.
+  // Clicking away dismisses the undo menu without reopening the selection
+  // menu, so a dismissed delete reads as a plain delete.
   const box = await firstPage.boundingBox();
   if (!box) throw new Error("Sample page has no bounding box");
   await page.mouse.click(box.x + 16, box.y + box.height - 16);

@@ -108,10 +108,8 @@ test("switching to the reader leaves an active pan mode alone", async ({
     .poll(() => grabCursorCount(page), { timeout: 10_000 })
     .toBeGreaterThan(0);
 
-  // Changing tools runs the viewer effect that deactivates redaction. Pan is a
-  // manual interaction mode, so that must not cancel it (#7678). The manual
-  // redaction panel deliberately re-claims the mode while it is open, so this
-  // is asserted on a switch that does not touch redaction.
+  // Pan is a manual interaction mode and must survive a tool switch (#7678);
+  // asserted on a switch that does not touch redaction.
   await page
     .getByRole("navigation", { name: "Quick navigation" })
     .getByRole("button", { name: "Reader" })

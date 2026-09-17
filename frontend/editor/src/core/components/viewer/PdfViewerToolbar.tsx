@@ -38,6 +38,8 @@ export function PdfViewerToolbar({
     scrollActions,
     zoomActions,
     spreadActions,
+    zoomRestorePendingRef,
+    zoomRestoreSettledTick,
     registerImmediateZoomUpdate,
     registerImmediateScrollUpdate,
     registerImmediateSpreadUpdate,
@@ -71,14 +73,25 @@ export function PdfViewerToolbar({
     };
   }, [registerImmediateScrollUpdate, scrollState.currentPage]);
 
-  // Register for immediate zoom updates and sync with actual zoom state
+  // A carried zoom's fit pass is intermediate, so the readout holds until its
+  // settled tick re-syncs from the live state.
   useEffect(() => {
-    const unregister = registerImmediateZoomUpdate(setDisplayZoomPercent);
-    setDisplayZoomPercent(zoomState.zoomPercent || 100);
+    const unregister = registerImmediateZoomUpdate((percent) => {
+      if (zoomRestorePendingRef.current) return;
+      setDisplayZoomPercent(percent);
+    });
+    if (!zoomRestorePendingRef.current) {
+      setDisplayZoomPercent(zoomState.zoomPercent || 100);
+    }
     return () => {
       unregister?.();
     };
-  }, [registerImmediateZoomUpdate, zoomState.zoomPercent]);
+  }, [
+    registerImmediateZoomUpdate,
+    zoomState.zoomPercent,
+    zoomRestorePendingRef,
+    zoomRestoreSettledTick,
+  ]);
 
   useEffect(() => {
     const unregister = registerImmediateSpreadUpdate((_mode, isDual) => {

@@ -6,12 +6,8 @@ const SAMPLE_PDF = path.join(
   "../test-fixtures/sample.pdf",
 );
 
-/**
- * The floating PDF menus use native buttons with a shared stylesheet instead of
- * ActionIcon, so the disabled state is the stylesheet's responsibility. A
- * disabled control must not read as interactive: no pointer cursor, no hover
- * fill, and children inheriting the same cursor.
- */
+/** The floating menus use native buttons and one stylesheet, so a disabled
+ *  control must not read as interactive: no pointer cursor, no hover fill. */
 test("disabled floating buttons do not look interactive", async ({ page }) => {
   test.setTimeout(120_000);
   await page.goto("/editor");

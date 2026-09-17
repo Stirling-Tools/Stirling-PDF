@@ -12,10 +12,7 @@ interface AnnotationDeletedMenuProps {
   onDismiss: () => void;
 }
 
-/**
- * Undo affordance for a just-deleted annotation, rendered where its selection
- * menu sat so the delete stays recoverable without leaving the page.
- */
+/** Undo affordance for a just-deleted annotation, shown where its menu sat. */
 export function AnnotationDeletedMenu({
   anchor,
   onDismiss,

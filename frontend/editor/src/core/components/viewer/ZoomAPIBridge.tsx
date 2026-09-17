@@ -24,6 +24,7 @@ import {
 export function ZoomAPIBridge() {
   const activeDocumentId = useActiveDocumentId();
   const documentReady = useDocumentReady();
+  const lastAutoZoomedRootIdRef = useRef<string | null>(null);
 
   // Don't render the inner component until we have a valid document ID and document is ready
   if (!activeDocumentId || !documentReady) {
@@ -31,15 +32,21 @@ export function ZoomAPIBridge() {
   }
 
   return (
-    <ZoomAPIBridgeInner key={activeDocumentId} documentId={activeDocumentId} />
+    <ZoomAPIBridgeInner
+      key={activeDocumentId}
+      documentId={activeDocumentId}
+      lastAutoZoomedRootIdRef={lastAutoZoomedRootIdRef}
+    />
   );
 }
 
-// Tracks the document root for which auto-zoom was performed, surviving
-// ZoomAPIBridgeInner remounts across version increments or in-place swaps.
-let lastAutoZoomedRootId: string | null = null;
-
-function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
+function ZoomAPIBridgeInner({
+  documentId,
+  lastAutoZoomedRootIdRef,
+}: {
+  documentId: string;
+  lastAutoZoomedRootIdRef: React.MutableRefObject<string | null>;
+}) {
   const { provides: zoom, state: zoomState } = useZoom(documentId);
   const liveZoomState = zoom?.getState() ?? zoomState;
   const { provides: spread, spreadMode } = useSpread(documentId);
@@ -56,7 +63,7 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
   const activeFileRootId = activeStub?.originalFileId || activeStub?.id;
 
   const hasSetInitialZoom = useRef(
-    !!activeFileRootId && activeFileRootId === lastAutoZoomedRootId,
+    !!activeFileRootId && activeFileRootId === lastAutoZoomedRootIdRef.current,
   );
   const lastSpreadMode = useRef(spreadMode ?? SpreadMode.None);
   const lastAppliedZoom = useRef<number | null>(null);
@@ -125,14 +132,14 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
   useEffect(() => {
     if (!activeFileRootId) {
       hasSetInitialZoom.current = false;
-      lastAutoZoomedRootId = null;
+      lastAutoZoomedRootIdRef.current = null;
       lastAppliedZoom.current = null;
       return;
     }
 
     // Only reset zoom when opening a genuinely different document, not on version increments
-    if (activeFileRootId !== lastAutoZoomedRootId) {
-      lastAutoZoomedRootId = activeFileRootId;
+    if (activeFileRootId !== lastAutoZoomedRootIdRef.current) {
+      lastAutoZoomedRootIdRef.current = activeFileRootId;
       scheduleAutoZoom();
     }
   }, [activeFileRootId, scheduleAutoZoom]);
