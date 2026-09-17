@@ -224,7 +224,7 @@ describe("runClassificationDemoSweep", () => {
     );
   });
 
-  test("gives each document a time budget, so a file that never answers is skipped", async () => {
+  test("gives each document a time budget, so one cannot hold the sweep", async () => {
     const d = deps();
     await runClassificationDemoSweep("/downloads", d);
     expect(classifyFileHeuristically).toHaveBeenCalledWith(expect.any(File), {
