@@ -116,11 +116,12 @@ public class RepairController {
 
                     // qpdf exits 3 for warnings it recovered from, which is a repaired file.
                     repairSuccess = qpdfResult.getRc() == 0 || qpdfResult.getRc() == 3;
-                } catch (Exception e) {
-                    // Caught like Ghostscript's above: a non-zero exit throws rather than
-                    // returning, so letting it out ended the request with qpdf's stderr, which
-                    // names temp paths and explains nothing. This is the last tool, so the only
-                    // thing left to report is that none of them could fix it.
+                } catch (IOException | RuntimeException e) {
+                    // A non-zero exit throws rather than returning, so letting it out ended the
+                    // request with qpdf's stderr, which names temp paths and explains nothing.
+                    // This is the last tool, so the only thing left to report is that none of them
+                    // could fix it. InterruptedException is deliberately not caught: a cancelled
+                    // job is not a document that cannot be repaired.
                     log.warn("QPDF repair failed: ", e);
                 }
             }
