@@ -40,6 +40,7 @@ export async function runPolicyOnFile(
   // Chained (downstream) dispatch — jumps the dispatch queue so a file mid-chain
   // finishes its flow before new files start (see acquireDispatchSlot).
   priority = false,
+  externalOutput = false,
 ): Promise<void> {
   // A freshly-uploaded file's bytes are written to IndexedDB asynchronously, so
   // its stub can appear in the file list a beat before getStirlingFile resolves
@@ -72,6 +73,27 @@ export async function runPolicyOnFile(
     markDispatched(policyKey, fileId);
     return;
   }
+  await dispatchPolicyFile(
+    policyKey,
+    backendId,
+    file,
+    fileId,
+    priority,
+    externalOutput,
+    fileName,
+  );
+}
+
+/** Submit a copy; external delivery records activity without importing results into the editor. */
+export async function dispatchPolicyFile(
+  policyKey: string,
+  backendId: string,
+  file: File,
+  fileId?: string,
+  priority = false,
+  externalOutput = false,
+  fileName = file.name,
+): Promise<void> {
   // Bounded upload window — see MAX_CONCURRENT_DISPATCHES. Only the POST is
   // gated; the IDB wait above never holds a slot.
   const target = resolvePolicyRunTarget();
@@ -85,8 +107,9 @@ export async function runPolicyOnFile(
     recordRunStart({
       runId,
       policyKey,
-      fileId,
+      fileId: fileId ?? "",
       fileName,
+      externalOutput,
       fileSize: file.size,
       target,
       status: "PENDING",
@@ -100,10 +123,11 @@ export async function runPolicyOnFile(
     recordRunStart({
       runId: `dispatch-failed:${generateId()}`,
       policyKey,
-      fileId,
+      fileId: fileId ?? "",
       fileName,
       fileSize: file.size,
       target,
+      externalOutput,
       status: "FAILED",
       outputs: [],
       error: extractErrorMessage(err),
