@@ -66,17 +66,12 @@ function resolveDroppedPaths(files: File[]): Promise<(string | null)[]> {
   ).catch(() => []);
 }
 
-function isFileDrag(event: DragEvent): boolean {
-  return Array.from(event.dataTransfer?.types ?? []).includes("Files");
-}
-
-/** Captures drop provenance before UI handlers run. Cleanup removes the app-wide listeners. */
+/** Captures drop provenance before UI handlers run. Cleanup removes the app-wide listener. */
 export function captureDroppedFilePaths(): () => void {
   const onDrop = (event: DragEvent) => {
     const files = Array.from(event.dataTransfer?.files ?? []);
     if (files.length === 0) return;
-    // resolveDroppedPaths falls back to the mid-drag snapshot below, so capturing
-    // here still works even though addFiles may wait on ZIP extraction or another import.
+    // Read the drag pasteboard now; addFiles may wait on ZIP extraction or another import.
     const paths = resolveDroppedPaths(files);
     files.forEach((file, index) => {
       pendingFilePathMappings.set(
@@ -85,28 +80,8 @@ export function captureDroppedFilePaths(): () => void {
       );
     });
   };
-
-  // macOS: the drag pasteboard is empty by the time the drop's async command runs,
-  // so snapshot it while the drag is still live. WebView2 resolves the File
-  // directly and needs none of this. One snapshot is in flight at a time.
-  const usesPasteboard = !fileDropBridge()?.postMessageWithAdditionalObjects;
-  let snapshotPending = false;
-  const onDragOver = (event: DragEvent) => {
-    if (!usesPasteboard || snapshotPending || !isFileDrag(event)) return;
-    snapshotPending = true;
-    void invoke("snapshot_dragged_file_paths")
-      .catch(() => {})
-      .finally(() => {
-        snapshotPending = false;
-      });
-  };
-
   document.addEventListener("drop", onDrop, true);
-  document.addEventListener("dragover", onDragOver, true);
-  return () => {
-    document.removeEventListener("drop", onDrop, true);
-    document.removeEventListener("dragover", onDragOver, true);
-  };
+  return () => document.removeEventListener("drop", onDrop, true);
 }
 
 /** Returns the original path for this File only; generated files have no disk source. */

@@ -51,99 +51,154 @@ fn matching_paths(files: &[DroppedFile], paths: Vec<std::path::PathBuf>) -> Vec<
         .collect()
 }
 
-/// Caches the live drag pasteboard mid-drag so the drop can resolve against it.
-/// Called from dragover, the only point the macOS pasteboard is reliably populated.
-#[tauri::command]
-pub fn snapshot_dragged_file_paths() {
-    let paths = dragged_paths();
-    if !paths.is_empty() {
-        *snapshot() = paths;
-    }
-}
-
-/// Resolves DOM files against the macOS drag pasteboard, never the general clipboard,
-/// falling back to the mid-drag snapshot once the drop has cleared the live one.
-/// Unknown or ambiguous files remain unlinked rather than acquiring an unsafe save target.
+/// Resolves the webview's DOM files against the real paths captured from the last
+/// OS drop. Unknown or ambiguous files stay unlinked rather than taking an unsafe
+/// save target.
 #[tauri::command]
 pub fn resolve_dropped_file_paths(files: Vec<DroppedFile>) -> Vec<Option<String>> {
-    let live = dragged_paths();
-    let paths = if live.is_empty() {
-        std::mem::take(&mut *snapshot())
-    } else {
-        snapshot().clear();
-        live
-    };
-    matching_paths(&files, paths)
+    matching_paths(&files, snapshot().clone())
 }
 
+/// Starts capturing OS file-drop paths for this webview so resolve_dropped_file_paths
+/// can hand them to the matching DOM files. No-op off macOS (Windows resolves the
+/// DOM File directly through WebView2's AdditionalObjects bridge).
 #[cfg(target_os = "macos")]
-fn dragged_paths() -> Vec<std::path::PathBuf> {
-    use objc2_app_kit::{NSPasteboard, NSPasteboardNameDrag, NSPasteboardTypeFileURL};
-    use objc2_foundation::NSURL;
-    let pasteboard = NSPasteboard::pasteboardWithName(unsafe { NSPasteboardNameDrag });
-    let Some(items) = pasteboard.pasteboardItems() else {
-        return Vec::new();
-    };
-    items
-        .iter()
-        .filter_map(|item| {
-            let value = item.stringForType(unsafe { NSPasteboardTypeFileURL })?;
-            let url = NSURL::URLWithString(&value)?;
-            // The drag pasteboard hands back file *reference* URLs
-            // (file:///.file/id=...); filePathURL resolves them to the concrete
-            // filesystem path that name/size/mtime matching needs.
-            let resolved = url.filePathURL().unwrap_or(url);
-            resolved
-                .path()
-                .map(|path| std::path::PathBuf::from(path.to_string()))
-        })
-        .collect()
+pub fn install_drag_path_capture(webview: *mut std::ffi::c_void) {
+    macos_capture::install(webview);
 }
 
 #[cfg(not(target_os = "macos"))]
-fn dragged_paths() -> Vec<std::path::PathBuf> {
-    // WebView2 resolves the DOM File through its AdditionalObjects bridge.
-    Vec::new()
+pub fn install_drag_path_capture(_webview: *mut std::ffi::c_void) {}
+
+/// Frontend startup calls this so the capture is installed on the live WKWebView
+/// (webview creation lifecycle hooks proved unreliable). Idempotent; no-op off macOS.
+#[cfg(target_os = "macos")]
+#[tauri::command]
+pub fn install_drag_capture(webview: tauri::WebviewWindow) {
+    if let Err(error) = webview.with_webview(|platform| install_drag_path_capture(platform.inner()))
+    {
+        log::warn!("Could not install drag-path capture: {error}");
+    }
+}
+
+#[cfg(not(target_os = "macos"))]
+#[tauri::command]
+pub fn install_drag_capture() {}
+
+// Tauri keeps dragDropEnabled=false so the webview's own HTML5 drag-and-drop
+// (in-page reordering, the drop zones) keeps working; that also means wry never
+// reports the dropped paths to us. wry's WryWebView still overrides
+// performDragOperation: and reads those paths off the dragging pasteboard before
+// forwarding the drop on to WebKit, so we swizzle that method to record the same
+// paths and then call straight through.
+#[cfg(target_os = "macos")]
+mod macos_capture {
+    use super::snapshot;
+    use objc2::runtime::{AnyObject, Bool, Imp, ProtocolObject, Sel};
+    use objc2::sel;
+    use objc2_app_kit::NSDraggingInfo;
+    use objc2_foundation::{NSArray, NSString};
+    use std::ffi::c_void;
+    use std::path::PathBuf;
+    use std::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+
+    static ORIGINAL: AtomicPtr<c_void> = AtomicPtr::new(std::ptr::null_mut());
+
+    // NSFilenamesPboardType is the legacy pasteboard type, but it is what wry reads
+    // and it yields plain path strings; NSPasteboardTypeFileURL can hand back an
+    // unresolvable file-reference URL for the same drop.
+    #[allow(deprecated)]
+    fn dragged_filenames(info: &ProtocolObject<dyn NSDraggingInfo>) -> Vec<PathBuf> {
+        use objc2_app_kit::NSFilenamesPboardType;
+        let pasteboard = info.draggingPasteboard();
+        let filenames_type = unsafe { NSFilenamesPboardType };
+        let types = NSArray::arrayWithObject(filenames_type);
+        if pasteboard.availableTypeFromArray(&types).is_none() {
+            return Vec::new();
+        }
+        let Some(list) = pasteboard.propertyListForType(filenames_type) else {
+            return Vec::new();
+        };
+        let Ok(list) = list.downcast::<NSArray>() else {
+            return Vec::new();
+        };
+        (0..list.count())
+            .filter_map(|index| {
+                list.objectAtIndex(index)
+                    .downcast::<NSString>()
+                    .ok()
+                    .map(|name| PathBuf::from(name.to_string()))
+            })
+            .collect()
+    }
+
+    unsafe extern "C-unwind" fn perform_drag_operation(
+        this: *mut AnyObject,
+        cmd: Sel,
+        sender: *mut AnyObject,
+    ) -> Bool {
+        if let Some(info) = (sender as *const ProtocolObject<dyn NSDraggingInfo>).as_ref() {
+            let paths = dragged_filenames(info);
+            if !paths.is_empty() {
+                *snapshot() = paths;
+            }
+        }
+        // Set before the swizzle is installed, so it is never null when reached.
+        let original: unsafe extern "C-unwind" fn(*mut AnyObject, Sel, *mut AnyObject) -> Bool =
+            std::mem::transmute(ORIGINAL.load(Ordering::Acquire));
+        original(this, cmd, sender)
+    }
+
+    pub fn install(webview: *mut c_void) {
+        static INSTALLED: AtomicBool = AtomicBool::new(false);
+        if INSTALLED.load(Ordering::SeqCst) {
+            return;
+        }
+        let Some(object) = (unsafe { (webview as *const AnyObject).as_ref() }) else {
+            return;
+        };
+        // The instance's runtime class is a dynamic NSKVONotifying_* subclass
+        // (AppKit installs a KVO observer on the webview). performDragOperation:
+        // is defined on wry's own WryWebView class, so walk up to it and swizzle
+        // there; the KVO subclass inherits the replaced implementation.
+        let mut class = object.class();
+        while class.name().to_string_lossy().contains("NSKVONotifying")
+            || !class.name().to_string_lossy().contains("WryWebView")
+        {
+            let Some(parent) = class.superclass() else {
+                return;
+            };
+            class = parent;
+        }
+        let selector = sel!(performDragOperation:);
+        let Some(method) = class.instance_method(selector) else {
+            return;
+        };
+        // wry's WryWebView overrides performDragOperation:; if a future wry stops
+        // doing so this reads as WKWebView's inherited method and we skip it,
+        // rather than swizzling every WKWebView in the process.
+        let inherited = class
+            .superclass()
+            .and_then(|parent| parent.instance_method(selector))
+            .is_some_and(|parent_method| std::ptr::eq(parent_method, method));
+        if inherited {
+            return;
+        }
+        ORIGINAL.store(method.implementation() as *mut c_void, Ordering::Release);
+        let replacement: Imp = unsafe {
+            std::mem::transmute(
+                perform_drag_operation
+                    as unsafe extern "C-unwind" fn(*mut AnyObject, Sel, *mut AnyObject) -> Bool,
+            )
+        };
+        unsafe { method.set_implementation(replacement) };
+        INSTALLED.store(true, Ordering::SeqCst);
+    }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[cfg(target_os = "macos")]
-    #[test]
-    fn resolves_a_file_reference_url_to_its_real_path() {
-        use objc2_foundation::{NSString, NSURL};
-        let directory = std::env::temp_dir().join(format!("stirling-refurl-{}", std::process::id()));
-        std::fs::create_dir_all(&directory).unwrap();
-        let path = directory.join("report.pdf");
-        std::fs::write(&path, b"pdf").unwrap();
-
-        // Build the file *reference* URL string the drag pasteboard hands over.
-        let file_url = NSURL::fileURLWithPath(&NSString::from_str(path.to_str().unwrap()));
-        let reference = file_url
-            .fileReferenceURL()
-            .expect("an existing file has a reference URL");
-        let reference_string = reference
-            .absoluteString()
-            .expect("a reference URL has an absolute string");
-        assert!(
-            reference_string.to_string().contains("/.file/"),
-            "expected a file reference URL, got {}",
-            reference_string.to_string()
-        );
-
-        // Resolve it exactly as dragged_paths does.
-        let url = NSURL::URLWithString(&reference_string).unwrap();
-        let resolved = url.filePathURL().unwrap_or(url);
-        let resolved_path = std::path::PathBuf::from(resolved.path().unwrap().to_string());
-
-        assert_eq!(
-            std::fs::canonicalize(&resolved_path).unwrap(),
-            std::fs::canonicalize(&path).unwrap()
-        );
-        std::fs::remove_dir_all(&directory).unwrap();
-    }
 
     #[test]
     fn links_only_a_unique_matching_file() {

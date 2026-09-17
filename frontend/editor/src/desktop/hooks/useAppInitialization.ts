@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { useOpenedFile } from "@app/hooks/useOpenedFile";
 import { fileOpenService } from "@app/services/fileOpenService";
 import { useFileManagement } from "@app/contexts/file/fileHooks";
@@ -13,6 +14,11 @@ import { captureDroppedFilePaths } from "@app/services/fileImportPaths";
  */
 export function useAppInitialization(): void {
   useEffect(captureDroppedFilePaths, []);
+  // macOS captures dropped paths via a native swizzle installed against the live
+  // webview; no-op on other platforms.
+  useEffect(() => {
+    void invoke("install_drag_capture").catch(() => {});
+  }, []);
 
   // Get file management actions
   const { addFiles } = useFileManagement();
