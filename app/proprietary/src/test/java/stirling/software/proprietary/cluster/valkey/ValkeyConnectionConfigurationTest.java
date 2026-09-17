@@ -1174,27 +1174,19 @@ class ValkeyConnectionConfigurationTest {
         }
 
         @Test
-        @DisplayName("an eviction policy is reported, noeviction is not")
-        void warnsOnlyWhenEvictionIsEnabled() {
-            // Behaviour is a log line, so assert the probe's reachability contract instead: it must
-            // read the policy in every case and never throw, whatever the server answers.
+        @DisplayName("the probe never fails boot, whatever the server answers")
+        void probeNeverPropagates() {
+            // The only contract worth pinning: this is a diagnostic, so no answer - a missing key,
+            // or an ACL-denied CONFIG, which managed Valkey commonly gives - may refuse the
+            // context.
             for (String policy : new String[] {"volatile-lru", "allkeys-lru", "noeviction", null}) {
-                RedisConnection conn = connectionReporting(policy);
-                ValkeyConnectionConfiguration.warnOnEvictionPolicy(conn);
-                verify(conn.serverCommands()).getConfig("maxmemory-policy");
+                ValkeyConnectionConfiguration.warnOnEvictionPolicy(connectionReporting(policy));
             }
-        }
-
-        @Test
-        @DisplayName("an ACL-denied CONFIG GET is swallowed, not a boot failure")
-        void aclDeniedConfigDoesNotFailBoot() {
-            // Managed Valkey commonly denies CONFIG; refusing boot over a diagnostic would be worse
-            // than the risk it reports.
-            RedisConnection conn = mock(RedisConnection.class, RETURNS_DEEP_STUBS);
-            when(conn.serverCommands().getConfig("maxmemory-policy"))
+            RedisConnection denied = mock(RedisConnection.class, RETURNS_DEEP_STUBS);
+            when(denied.serverCommands().getConfig("maxmemory-policy"))
                     .thenThrow(new IllegalStateException("NOPERM ... 'config|get'"));
 
-            ValkeyConnectionConfiguration.warnOnEvictionPolicy(conn);
+            ValkeyConnectionConfiguration.warnOnEvictionPolicy(denied);
         }
     }
 }

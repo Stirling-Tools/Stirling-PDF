@@ -12,8 +12,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.github.pixee.security.Newlines;
-
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,7 +21,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.cluster.RateLimitStore;
 import stirling.software.common.model.enumeration.Role;
-import stirling.software.common.util.RegexPatternUtils;
 
 /**
  * Per-role daily POST quota, counted through {@link RateLimitStore} so a cluster enforces one quota
@@ -110,21 +107,13 @@ public class UserBasedRateLimitingFilter extends OncePerRequestFilter {
             return;
         }
         if (decision.allowed()) {
-            response.setHeader(
-                    "X-Rate-Limit-Remaining",
-                    stripNewlines(Newlines.stripAll(Long.toString(decision.remainingTokens()))));
+            response.setHeader("X-Rate-Limit-Remaining", Long.toString(decision.remainingTokens()));
             filterChain.doFilter(request, response);
             return;
         }
         long waitForRefill = decision.nanosToWaitForRefill() / 1_000_000_000;
         response.setStatus(HttpStatus.TOO_MANY_REQUESTS.value());
-        response.setHeader(
-                "X-Rate-Limit-Retry-After-Seconds",
-                Newlines.stripAll(String.valueOf(waitForRefill)));
+        response.setHeader("X-Rate-Limit-Retry-After-Seconds", Long.toString(waitForRefill));
         response.getWriter().write("Rate limit exceeded for POST requests.");
-    }
-
-    private static String stripNewlines(final String s) {
-        return RegexPatternUtils.getInstance().getNewlineCharsPattern().matcher(s).replaceAll("");
     }
 }
