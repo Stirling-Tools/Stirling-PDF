@@ -507,7 +507,9 @@ public class PaygChargeInterceptor implements AsyncHandlerInterceptor {
         if (auth == null || !auth.isAuthenticated()) {
             return null;
         }
-        if (auth instanceof ApiKeyAuthenticationToken && auth.getPrincipal() instanceof User u) {
+        // SupabaseAuthenticationFilter already resolved this User onto the token; reuse it rather
+        // than paying another lookup. Guests carry a raw Jwt, hence the lookup below.
+        if (auth.getPrincipal() instanceof User u) {
             return u;
         }
         try {

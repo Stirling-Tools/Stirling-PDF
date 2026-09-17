@@ -250,9 +250,10 @@ public class EntitlementGuard implements HandlerInterceptor {
     }
 
     private Long resolveTeamId(Authentication auth) {
-        if (auth instanceof ApiKeyAuthenticationToken
-                && auth.getPrincipal() instanceof User apiUser) {
-            return apiUser.getTeam() == null ? null : apiUser.getTeam().getId();
+        // SupabaseAuthenticationFilter already resolved this User onto the token; team is EAGER so
+        // it is loaded on the detached instance. Guests carry a raw Jwt, hence the lookup below.
+        if (auth != null && auth.getPrincipal() instanceof User principalUser) {
+            return principalUser.getTeam() == null ? null : principalUser.getTeam().getId();
         }
         String supabaseId = AuthenticationUtils.extractSupabaseId(auth);
         if (supabaseId == null) {
