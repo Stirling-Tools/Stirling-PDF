@@ -230,9 +230,8 @@ public class ApplicationProperties {
         private long scheduleSweepSeconds = 60;
 
         /**
-         * Seconds between safety-net sweeps of server processing folders; minimum one second. A
-         * file placed in a folder is swept on the placement itself, so this only has to catch what
-         * this instance never saw: another node's placement, or one made while it was down.
+         * Seconds between safety-net sweeps of server processing folders; minimum one second.
+         * Placement sweeps the folder itself, so this only catches what this instance never saw.
          */
         private long storageFolderSweepSeconds = 60;
 

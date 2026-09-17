@@ -36,8 +36,8 @@ import stirling.software.proprietary.storage.event.StorageFolderArrivalEvent;
 /**
  * Runs storage-folder bindings when files arrive. A placement event sweeps just the folder it names
  * so an upload is processed promptly; the periodic poll re-sweeps everything as the safety net for
- * arrivals this instance never saw — another node's placement, or one that landed while it was
- * down. Settled batches prompt another sweep, so a folder drains without waiting for the poll. Each
+ * arrivals this instance never saw: another node's placement, or one that landed while it was down.
+ * Settled batches prompt another sweep, so a folder drains without waiting for the poll. Each
  * folder drains its current batch before another is submitted. Coordination between backend
  * instances depends on the processed-file ledger and its recovery behaviour.
  */
@@ -97,7 +97,7 @@ public class StorageFolderTrigger implements PolicyTrigger {
     /**
      * After commit, so the sweep that follows can see the placement it was told about. Handing the
      * work to the scheduler keeps the request thread off the folder listing, and puts arrival
-     * sweeps on the same single thread as the poll — two sweeps of one folder can never overlap.
+     * sweeps on the same single thread as the poll, so two sweeps of one folder cannot overlap.
      *
      * <p>{@code fallbackExecution} covers a publisher running outside a transaction, where this
      * would otherwise drop the event without a trace. A sweep is idempotent, so a redundant one
@@ -234,7 +234,6 @@ public class StorageFolderTrigger implements PolicyTrigger {
         return String.valueOf(source.options().get("folderId"));
     }
 
-    /** A null target matches every folder; otherwise the source must watch exactly that one. */
     private static boolean watches(Source source, UUID onlyFolderId) {
         return onlyFolderId == null || onlyFolderId.toString().equals(folderIdText(source));
     }
