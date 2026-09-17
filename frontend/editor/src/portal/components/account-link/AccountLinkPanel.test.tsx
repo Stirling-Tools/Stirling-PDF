@@ -24,6 +24,7 @@ vi.mock("@portal/hooks/useLinkedAccountEmail", () => ({
   useLinkedAccountEmail: () => state.email,
 }));
 vi.mock("@portal/contexts/AccountLinkContext", () => ({
+  useAccountLinkOptional: () => null,
   useAccountLinkContext: () => ({
     loginConfigured: true,
     status: state.status,

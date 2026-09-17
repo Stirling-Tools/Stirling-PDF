@@ -90,8 +90,9 @@ vi.mock("@portal/api/billing", () => ({
   fetchWallet: () => fetchWallet(),
   refreshWalletCache: () => refreshWalletCache(),
 }));
+const fetchLocalUsage = vi.fn().mockResolvedValue(null);
 vi.mock("@portal/api/link", () => ({
-  fetchLocalUsage: () => Promise.resolve(null),
+  fetchLocalUsage: () => fetchLocalUsage(),
   triggerLocalSync: () => Promise.resolve(),
 }));
 vi.mock("@portal/hooks/useStripePortal", () => ({
@@ -367,4 +368,19 @@ describe("Usage — link-free wallet renderer", () => {
       screen.queryByRole("button", { name: "Plan" }),
     ).not.toBeInTheDocument();
   });
+});
+
+it("does not request instance-local usage on SaaS", async () => {
+  fetchWallet.mockResolvedValue(freeWallet);
+  fetchLocalUsage.mockClear();
+  renderUsage(<Usage />);
+  await waitFor(() => expect(screen.getByText("Free")).toBeInTheDocument());
+  expect(fetchLocalUsage).not.toHaveBeenCalled();
+});
+
+it("requests pending usage for a self-hosted instance", async () => {
+  fetchWallet.mockResolvedValue(freeWallet);
+  fetchLocalUsage.mockClear();
+  renderUsage(<Usage localUsersInUse={null} />);
+  await waitFor(() => expect(fetchLocalUsage).toHaveBeenCalled());
 });
