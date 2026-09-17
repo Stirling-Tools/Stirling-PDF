@@ -8,7 +8,7 @@ import { useSigningBadgeState } from "@app/hooks/signing/useSigningBadgeCount";
 /** Publishes resolved account fields from the mounted view into the root cache. */
 export function useSyncQuickNavAccount(): void {
   const updateAccount = useQuickNavHost()?.updateAccount;
-  const { user, loading: authLoading } = useAuth();
+  const { user, isAnonymous, loading: authLoading } = useAuth();
   const {
     displayName,
     profilePictureUrl,
@@ -22,6 +22,7 @@ export function useSyncQuickNavAccount(): void {
     if (authLoading) return;
     updateAccount?.({
       accountId,
+      isAnonymous: Boolean(isAnonymous),
       identity: identityLoading
         ? undefined
         : { displayName, profilePictureUrl },
@@ -31,6 +32,7 @@ export function useSyncQuickNavAccount(): void {
   }, [
     updateAccount,
     accountId,
+    isAnonymous,
     authLoading,
     identityLoading,
     displayName,

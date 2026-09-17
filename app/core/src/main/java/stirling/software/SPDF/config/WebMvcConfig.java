@@ -85,7 +85,6 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/safari-pinned-tab.svg",
                         "/icons/**",
                         "/modern-logo/**",
-                        "/classic-logo/**",
                         "/3rdPartyLicenses.json",
                         "/pdfjs/**",
                         "/pdfjs-legacy/**",
@@ -96,8 +95,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         "/vendor/**",
                         "/samples/**",
                         "/og_images/**",
-                        "/Login/**",
-                        "/manifest-classic.json")
+                        "/Login/**")
                 .addResourceLocations(
                         staticPath,
                         "classpath:/static/",
@@ -124,9 +122,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
                         staticPath + "icons/",
                         "classpath:/static/icons/",
                         staticPath + "modern-logo/",
-                        "classpath:/static/modern-logo/",
-                        staticPath + "classic-logo/",
-                        "classpath:/static/classic-logo/")
+                        "classpath:/static/modern-logo/")
                 .setCacheControl(
                         CacheControl.maxAge(Duration.ofDays(1))
                                 .cachePublic()
