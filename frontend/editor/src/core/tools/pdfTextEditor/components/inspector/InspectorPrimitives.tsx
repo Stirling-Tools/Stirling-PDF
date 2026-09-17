@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { Box, Group, NumberInput, Stack, Text, Tooltip } from "@mantine/core";
-import HelpIcon from "@mui/icons-material/HelpOutlineOutlined";
-
+import { Icon } from "@app/ui/Icon";
 /** Shared layout atoms for the editor's properties inspector. */
 
 /** Uppercase section heading, optionally with a trailing control. */
@@ -85,10 +84,10 @@ export function Field({
 export function HintIcon({ label }: { label: string }) {
   return (
     <Tooltip label={label} multiline w={220} withArrow position="left">
-      <HelpIcon
-        fontSize="inherit"
+      <Icon
+        name="circle-question-mark"
+        size="1em"
         style={{
-          fontSize: 13,
           cursor: "help",
           color: "var(--mantine-color-dimmed)",
           flexShrink: 0,

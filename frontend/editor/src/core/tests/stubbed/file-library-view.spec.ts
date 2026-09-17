@@ -37,7 +37,7 @@ test.describe("The file library behaves like the other views", () => {
     await railButton(page, /^Reader$/i).click();
     await expect(page).not.toHaveURL(/\/files/);
     await expect(railButton(page, /^Reader$/i)).toHaveAttribute(
-      "aria-pressed",
+      "aria-current",
       "true",
     );
   });

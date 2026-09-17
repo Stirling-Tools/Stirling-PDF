@@ -4,14 +4,16 @@
  * what gets exported. Core export handlers reach this via the `@app/*` alias
  * (the open-source build ships a no-op stub).
  *
- * Export is never hard-blocked: on failure the original file is exported and a
- * warning toast is shown. For "new version" policies, the run is also recorded
+ * Required-policy failures cancel the export; ordinary pipeline failures warn.
+ * For "new version" policies, the run is also recorded
  * so the mounted import effect versions the in-editor file, not just the
  * download. Each policy selects files using its first step's accepted inputs.
  */
 
 import { loadPolicies } from "@app/services/policyStorage";
+import { assertFilesNotBlocked } from "@app/services/policyFileGuard";
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
+import { editorTriggerOf } from "@app/policies/runOn";
 import { policyAcceptsFile } from "@app/services/policyInput";
 import { splitFileName } from "@app/utils/fileUtils";
 import {
@@ -46,6 +48,7 @@ interface ExportPolicy extends Pick<PolicyState, "firstOperation"> {
   backendId: string;
   label: string;
   outputMode: "new_file" | "new_version";
+  required: boolean;
   /** The policy's accent as a CSS colour, for the toast glow. */
   accent: string;
 }
@@ -64,14 +67,7 @@ function activeExportPolicies(): ExportPolicy[] {
   );
   return (
     Object.entries(loadPolicies())
-      .filter(
-        ([, s]) =>
-          s.configured &&
-          s.enabled &&
-          s.backendId &&
-          s.runsOnEditor &&
-          s.runOn === "export",
-      )
+      .filter(([, s]) => editorTriggerOf(s) === "export")
       // Same team-wide run order the upload path uses: enforcement is not commutative (a watermark
       // then a flatten is not a flatten then a watermark), so both paths must agree on the sequence.
       .sort(([, a], [, b]) => (a.order ?? 0) - (b.order ?? 0))
@@ -82,6 +78,7 @@ function activeExportPolicies(): ExportPolicy[] {
         // A builder pipeline has no built-in category, so it labels by its own name.
         label: labels.get(id) ?? s.name ?? "Policy",
         outputMode: s.outputMode === "new_file" ? "new_file" : "new_version",
+        required: s.required === true,
         accent: `var(--color-${ROW_ACCENT[id] ?? "blue"})`,
       }))
   );
@@ -141,7 +138,7 @@ function enforcedFilesSummary(names: string[]): string {
 
 /**
  * Enforce compatible active export policies just before export, returning
- * the files in order (enforced, or the original on failure). `fileIds[i]` is the
+ * the files in order; required failures throw before export. `fileIds[i]` is the
  * workspace id of `files[i]` when known — used to version the in-editor file for
  * "new version" policies. Incompatible files pass through untouched, and a single toast
  * (glowing in the policy's accent while it runs) fades a few seconds after the
@@ -152,6 +149,7 @@ export async function enforceExportPolicies(
   fileIds?: (string | undefined)[],
   trigger: EnforcementTrigger = "export",
 ): Promise<File[]> {
+  assertFilesNotBlocked(fileIds);
   const active = activeExportPolicies();
   if (!active.length || files.length === 0) return files;
 
@@ -174,7 +172,8 @@ export async function enforceExportPolicies(
   // Serialise through the enforcement queue: one policy run in flight at a time
   // (the backend rejects concurrent runs under load), and the user can see
   // what's pending. Export, print and convert all share this queue.
-  return runQueued({ label: names, trigger }, async () => {
+  const enforced = await runQueued({ label: names, trigger }, async () => {
+    assertFilesNotBlocked(fileIds);
     // An earlier queued job may have just enforced these same files and marked
     // them dispatched, so re-check at run time before doing (or announcing) work.
     if (!targets.some(hasCompatiblePolicy)) return files;
@@ -202,22 +201,32 @@ export async function enforceExportPolicies(
 
     const out = [...files];
     let failures = 0;
+    let requiredFailure = false;
     let done = 0;
     for (const i of pending) {
       const file = files[i];
       const fileId = fileIds?.[i];
       const toRun = pendingFor(fileId);
+      let runningPolicy: ExportPolicy | undefined;
       try {
         let current = file;
+        let optionalFailure = false;
         // The last "new version" policy's output is what versions the editor
         // file (recording every policy would double-consume the same input).
         let versionRun: (PolicyRunResult & { policyKey: string }) | undefined;
         for (const policy of toRun) {
           if (!policyAcceptsFile(policy, current)) continue;
-          const result = await runToCompletion(policy.backendId, current);
-          current = result.file;
-          if (policy.outputMode === "new_version" && fileId) {
-            versionRun = { ...result, policyKey: policy.policyKey };
+          runningPolicy = policy;
+          try {
+            const result = await runToCompletion(policy.backendId, current);
+            current = result.file;
+            if (policy.outputMode === "new_version" && fileId) {
+              versionRun = { ...result, policyKey: policy.policyKey };
+            }
+          } catch (error) {
+            if (policy.required) throw error;
+            // An optional failure must not skip a required policy later in the chain.
+            optionalFailure = true;
           }
         }
         const [base, inputExtension] = splitFileName(file.name);
@@ -247,8 +256,10 @@ export async function enforceExportPolicies(
             startedAt: Date.now(),
           });
         }
+        if (optionalFailure) failures += 1;
       } catch {
-        failures += 1; // leave out[i] as the original — never hard-block.
+        failures += 1;
+        if (runningPolicy?.required) requiredFailure = true;
       }
     }
 
@@ -258,10 +269,12 @@ export async function enforceExportPolicies(
         ? {
             alertType: "warning",
             title: i18n.t("policies.enforcement.failureTitle"),
-            body: i18n.t("policies.enforcement.failureBody", {
-              failures,
-              total,
-            }),
+            body: requiredFailure
+              ? i18n.t("policy.exportBlocked")
+              : i18n.t("policies.enforcement.failureBody", {
+                  failures,
+                  total,
+                }),
             isPersistentPopup: false,
             glowColor: undefined,
           }
@@ -275,6 +288,9 @@ export async function enforceExportPolicies(
     );
     // update() doesn't reschedule auto-dismiss, so fade the result out explicitly.
     window.setTimeout(() => dismissToast(toastId), TOAST_LINGER_MS);
+    if (requiredFailure) throw new Error(i18n.t("policy.exportBlocked"));
     return out;
   });
+  assertFilesNotBlocked(fileIds);
+  return enforced;
 }

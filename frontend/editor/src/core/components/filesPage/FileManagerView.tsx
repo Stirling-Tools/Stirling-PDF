@@ -67,6 +67,7 @@ import {
 import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -90,6 +91,7 @@ import {
 import { useIsMobile } from "@app/hooks/useIsMobile";
 import { MoveToFolderDialog } from "@app/components/filesPage/MoveToFolderDialog";
 import { FolderNameDialog } from "@app/components/filesPage/FolderNameDialog";
+import { getFolderPath } from "@app/utils/folderPath";
 import { DeleteFolderDialog } from "@app/components/filesPage/DeleteFolderDialog";
 import { DeleteFilesDialog } from "@app/components/filesPage/DeleteFilesDialog";
 import { VersionHistoryModal } from "@app/components/filesPage/VersionHistoryModal";
@@ -435,27 +437,9 @@ export default function FileManagerView() {
     return sorted;
   }, [filesInCurrentFolder, search, sortMode, originFilter, typeFilter]);
 
-  /**
-   * Resolve a folder id to its breadcrumb path (e.g. "Receipts / 2024 / Q1").
-   * Returns empty string for root / unknown. Used for the search-result
-   * "where does this live?" subtitle.
-   */
   const pathForFolderId = useCallback(
-    (folderId: FolderId | null | undefined): string => {
-      if (folderId == null) return "";
-      const parts: string[] = [];
-      let cursor: FolderId | null = folderId;
-      const seen = new Set<FolderId>();
-      while (cursor !== null) {
-        if (seen.has(cursor)) break;
-        seen.add(cursor);
-        const f = foldersById.get(cursor);
-        if (!f) break;
-        parts.unshift(f.name);
-        cursor = f.parentFolderId;
-      }
-      return parts.join(" / ");
-    },
+    (folderId: FolderId | null | undefined) =>
+      getFolderPath(folderId, foldersById),
     [foldersById],
   );
 
@@ -1355,6 +1339,10 @@ export default function FileManagerView() {
   // disabled item's caption.
   const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
 
+  // Why folder processing has no server to run on, or null. The controls that open
+  // the setup dialog carry it as their disabled reason.
+  const processingBlock = useServerProcessingBlock();
+
   const { addLocalFolder } = useNewFolderFlow();
 
   // null = New folder actionable; string = disabled tooltip reason.
@@ -1636,23 +1624,31 @@ export default function FileManagerView() {
               <div className="files-page-folder-actions">
                 {!currentProcessing ? (
                   <Tooltip
-                    label={t(
-                      "filesPage.processing.start",
-                      "Process files in this folder...",
-                    )}
-                    withinPortal
-                  >
-                    <ActionIcon
-                      size="sm"
-                      variant="secondary"
-                      onClick={() => setProcessingSetupFolder(currentFolder)}
-                      aria-label={t(
+                    label={
+                      processingBlock ??
+                      t(
                         "filesPage.processing.start",
                         "Process files in this folder...",
-                      )}
-                    >
-                      <Icon name="workflow" size={20} />
-                    </ActionIcon>
+                      )
+                    }
+                    withinPortal
+                  >
+                    {/* Mantine drops hover events on a disabled control, so the
+                        tooltip needs a live element to hang off. */}
+                    <span style={{ display: "inline-flex" }}>
+                      <ActionIcon
+                        size="sm"
+                        variant="secondary"
+                        disabled={Boolean(processingBlock)}
+                        onClick={() => setProcessingSetupFolder(currentFolder)}
+                        aria-label={t(
+                          "filesPage.processing.start",
+                          "Process files in this folder...",
+                        )}
+                      >
+                        <Icon name="workflow" size={20} />
+                      </ActionIcon>
+                    </span>
                   </Tooltip>
                 ) : (
                   <>
@@ -1737,23 +1733,30 @@ export default function FileManagerView() {
                       </Tooltip>
                     )}
                     <Tooltip
-                      label={t(
-                        "filesPage.processing.edit",
-                        "Edit processing...",
-                      )}
+                      label={
+                        processingBlock ??
+                        t("filesPage.processing.edit", "Edit processing...")
+                      }
                       withinPortal
                     >
-                      <ActionIcon
-                        size="sm"
-                        variant="secondary"
-                        onClick={() => setProcessingSetupFolder(currentFolder)}
-                        aria-label={t(
-                          "filesPage.processing.edit",
-                          "Edit processing...",
-                        )}
-                      >
-                        <Icon name="sliders-horizontal" size={20} />
-                      </ActionIcon>
+                      {/* Mantine drops hover events on a disabled control, so the
+                          tooltip needs a live element to hang off. */}
+                      <span style={{ display: "inline-flex" }}>
+                        <ActionIcon
+                          size="sm"
+                          variant="secondary"
+                          disabled={Boolean(processingBlock)}
+                          onClick={() =>
+                            setProcessingSetupFolder(currentFolder)
+                          }
+                          aria-label={t(
+                            "filesPage.processing.edit",
+                            "Edit processing...",
+                          )}
+                        >
+                          <Icon name="sliders-horizontal" size={20} />
+                        </ActionIcon>
+                      </span>
                     </Tooltip>
                     {folderKind(currentFolder) === "local" && (
                       <Tooltip
@@ -1971,7 +1974,7 @@ export default function FileManagerView() {
                 <>
                   {selectedFiles.length > 0 &&
                     (() => {
-                      // Bulk-action labels; CSS collapses to icon-only below 900px.
+                      // Icon-only, as the folder-level strip is; the label is the tooltip.
                       const addLabel =
                         selectedFiles.length === 1
                           ? t("filesPage.addToWorkspace", "Add to workspace")
@@ -1986,19 +1989,17 @@ export default function FileManagerView() {
                         // wrap="nowrap" keeps the row single-line.
                         <Group gap="xs" wrap="nowrap">
                           <Tooltip label={addLabel} withinPortal>
-                            <Button
+                            <ActionIcon
                               size="sm"
-                              leftSection={
-                                <Icon name="external-link" size={20} />
-                              }
+                              variant="secondary"
                               onClick={() =>
                                 handleAddToWorkspace(selectedFiles)
                               }
                               aria-label={addLabel}
                               data-testid="add-to-workspace"
                             >
-                              {addLabel}
-                            </Button>
+                              <Icon name="external-link" size={20} />
+                            </ActionIcon>
                           </Tooltip>
                           {/* Save to server; shown whenever local-only files are
                           selected. When storage is off it stays visible but
@@ -2013,12 +2014,9 @@ export default function FileManagerView() {
                               multiline={Boolean(saveToServerDisabledReason)}
                               w={saveToServerDisabledReason ? 240 : undefined}
                             >
-                              <Button
+                              <ActionIcon
                                 size="sm"
                                 variant="secondary"
-                                leftSection={
-                                  <Icon name="cloud-upload" size={20} />
-                                }
                                 disabled={Boolean(saveToServerDisabledReason)}
                                 onClick={() =>
                                   setSaveToServerTarget(localOnlySelectedStubs)
@@ -2034,8 +2032,8 @@ export default function FileManagerView() {
                                   "Save to server",
                                 )}
                               >
-                                {t("filesPage.saveToServer", "Save to server")}
-                              </Button>
+                                <Icon name="cloud-upload" size={20} />
+                              </ActionIcon>
                             </Tooltip>
                           )}
                           {/* Show details button on compact viewports. */}
@@ -2048,62 +2046,38 @@ export default function FileManagerView() {
                                 )}
                                 withinPortal
                               >
-                                <Button
+                                <ActionIcon
                                   size="sm"
                                   variant="secondary"
-                                  leftSection={<Icon name="info" size={20} />}
                                   onClick={() => setMobileDetailsOpen(true)}
                                   aria-label={t(
                                     "filesPage.showDetails",
                                     "Show details",
                                   )}
                                 >
-                                  {t("filesPage.showDetails", "Show details")}
-                                </Button>
+                                  <Icon name="info" size={20} />
+                                </ActionIcon>
                               </Tooltip>
                             )}
                           <Tooltip label={moveLabel} withinPortal>
-                            <Button
+                            <ActionIcon
                               size="sm"
                               variant="secondary"
-                              leftSection={
-                                <Icon name="folder-input" size={20} />
-                              }
                               onClick={() => promptMoveFiles(selectedFiles)}
                               aria-label={moveLabel}
                             >
-                              {moveLabel}
-                            </Button>
+                              <Icon name="folder-input" size={20} />
+                            </ActionIcon>
                           </Tooltip>
                           <Tooltip label={removeLabel} withinPortal>
-                            <Button
+                            <ActionIcon
                               size="sm"
                               accent="danger"
                               variant="secondary"
-                              leftSection={<Icon name="trash" size={20} />}
                               onClick={() => handleRemoveFiles(selectedFiles)}
                               aria-label={removeLabel}
                             >
-                              {removeLabel}
-                            </Button>
-                          </Tooltip>
-                          <Tooltip
-                            label={t(
-                              "filesPage.clearSelection",
-                              "Clear selection",
-                            )}
-                            withinPortal
-                          >
-                            <ActionIcon
-                              variant="tertiary"
-                              size="md"
-                              onClick={() => clearSelection()}
-                              aria-label={t(
-                                "filesPage.clearSelection",
-                                "Clear selection",
-                              )}
-                            >
-                              &times;
+                              <Icon name="trash" size={20} />
                             </ActionIcon>
                           </Tooltip>
                         </Group>
@@ -2480,7 +2454,7 @@ export default function FileManagerView() {
         }}
       />
       <FolderProcessingSetup
-        folder={processingSetupFolder}
+        folder={processingBlock ? null : processingSetupFolder}
         onClose={() => setProcessingSetupFolder(null)}
       />
 

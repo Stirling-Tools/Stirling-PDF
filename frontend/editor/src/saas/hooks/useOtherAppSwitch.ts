@@ -3,16 +3,20 @@ import { useAppSwitch } from "@app/components/shared/AppSwitchProvider";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { saveEditorReturnPath } from "@app/services/workbenchSession";
 import { type NavFooterAppLink } from "@app/components/shared/navFooter/NavFooter";
+import { useAuth } from "@app/auth/UseSession";
+import { requestProcessorSignup } from "@app/services/processorSignup";
 
 /**
  * SaaS: the editor's Supabase context never fetches /me, so processor access
- * comes from the backend via {@link usePortalAccess} — the same signal the
+ * comes from the backend via {@link usePortalAccess} - the same signal the
  * processor's own gate uses.
  */
 export function useOtherAppSwitch(): NavFooterAppLink | null {
   const portalAccess = usePortalAccess();
+  const { isAnonymous } = useAuth();
   const { switchToApp } = useAppSwitch();
   const { actions } = useNavigationActions();
+  if (isAnonymous) return { app: "processor", onOpen: requestProcessorSignup };
   if (!portalAccess) return null;
   return {
     app: "processor",
