@@ -8448,7 +8448,7 @@ title = "Unreadable file"
 
 [portal.failures.kind.inputUnrepairable]
 description = "Your file is damaged beyond what the repair tools can fix."
-title = "Could not be repaired"
+title = "File could not be repaired"
 
 [portal.failures.kind.inputWrongType]
 description = "Your file is not a format this step can open, so the run could not read it."
