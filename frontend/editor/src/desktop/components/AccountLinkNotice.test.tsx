@@ -99,6 +99,7 @@ async function exhaust(source: "foreground" | "background" = "foreground") {
 
 describe("desktop self-hosted account-link triggers", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     clearAccountLinkBlock();
     vi.clearAllMocks();
     listeners.clear();
@@ -131,12 +132,43 @@ describe("desktop self-hosted account-link triggers", () => {
     },
   );
 
-  it("keeps background exhaustion silent", async () => {
+  it("opens the first prompt for background exhaustion", async () => {
     await mount();
     await exhaust("background");
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getByRole("dialog")).toBeTruthy();
     expect(alert).not.toHaveBeenCalled();
     expect(openExternal).not.toHaveBeenCalled();
+  });
+  it("opens the failed pipeline on the connected server while preserving its deployment subpath", async () => {
+    await mount();
+    await act(async () =>
+      handleHttpError({
+        isAxiosError: true,
+        config: {
+          accountLinkBlockSource: "background",
+          accountLinkBlockContext: {
+            pipelineId: "rotate-id",
+            pipelineName: "Quarterly rotation",
+            fileName: "report.pdf",
+            trigger: "upload",
+          },
+        },
+        response: {
+          status: 402,
+          data: {
+            error: "ACCOUNT_LINK_REQUIRED",
+            reason: "FREE_TIER_EXHAUSTED",
+          },
+        },
+      }),
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Open pipeline settings" }),
+    );
+    expect(openExternal).toHaveBeenCalledWith(
+      "https://server.example/stirling/processor/pipelines/rotate-id",
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
   });
 
   it("does not reopen a dismissed modal for repeated exhaustion", async () => {
@@ -185,12 +217,8 @@ describe("desktop self-hosted account-link triggers", () => {
     expect(alert).not.toHaveBeenCalled();
     expect(screen.queryByRole("dialog")).toBeNull();
     await exhaust();
-    fireEvent.click(
-      screen.getByRole("button", { name: "Link account for more credits" }),
-    );
-    expect(openExternal).toHaveBeenLastCalledWith(
-      "https://other.example/settings/billing",
-    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(openExternal).not.toHaveBeenCalled();
     act(() => listeners.forEach((listener) => listener(config("saas"))));
     act(() => listeners.forEach((listener) => listener(config())));
     expect(screen.queryByRole("dialog")).toBeNull();

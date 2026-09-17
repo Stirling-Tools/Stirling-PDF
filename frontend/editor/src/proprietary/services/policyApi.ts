@@ -9,6 +9,7 @@ import apiClient from "@app/services/apiClient";
 import { uploadableFile } from "@app/utils/uploadableFile";
 import { getPolicyOutputBaseUrl } from "@app/services/policyOutputBaseUrl";
 import type { AccountLinkBlockSource } from "@app/services/accountLinkBlock";
+import { policyCreditContext } from "@app/services/policyCreditContext";
 import type {
   BackendPolicy,
   PolicyExecutionTarget,
@@ -51,6 +52,11 @@ export async function runStoredPolicy(
     {
       suppressErrorToast: true,
       accountLinkBlockSource,
+      accountLinkBlockContext: policyCreditContext(
+        id,
+        files[0]?.name,
+        accountLinkBlockSource,
+      ),
     },
   );
   return res.data.jobId;

@@ -49,6 +49,7 @@ function renderHost(path = "/settings/billing") {
 describe("settings link status", () => {
   beforeEach(() => {
     fetchStatus.mockReset();
+    sessionStorage.clear();
     clearAccountLinkBlock();
   });
 
@@ -97,11 +98,16 @@ describe("settings link status", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
-  it("does not open a billing modal for background policy exhaustion", async () => {
+  it("opens a billing modal once for background policy exhaustion", async () => {
     fetchStatus.mockResolvedValue({ linked: false });
     renderHost();
     await screen.findByText("unlinked");
 
+    act(() => reportFreeTierExhausted("background"));
+    expect(
+      screen.getByRole("dialog", { name: "exhausted" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Not now" }));
     act(() => reportFreeTierExhausted("background"));
     expect(screen.queryByRole("dialog")).toBeNull();
   });

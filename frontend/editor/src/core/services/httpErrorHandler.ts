@@ -91,6 +91,7 @@ export async function handleHttpError(error: unknown): Promise<boolean> {
       reportAccountLinkBlock(
         { status: 402, body },
         axiosError.config?.accountLinkBlockSource ?? "foreground",
+        axiosError.config?.accountLinkBlockContext,
       )
     )
       return true;

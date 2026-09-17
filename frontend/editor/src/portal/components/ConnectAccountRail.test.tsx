@@ -35,6 +35,7 @@ vi.mock("react-i18next", () => ({
 
 describe("exhausted Processor rail", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     clearAccountLinkBlock();
     mocks.isAdmin = true;
     mocks.linked = false;

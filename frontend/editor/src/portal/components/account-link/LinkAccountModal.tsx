@@ -1,5 +1,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import { PORTAL_BASENAME } from "@app/routes/portalBasename";
 import { useAuth } from "@app/auth";
 import { useClipboard } from "@mantine/hooks";
 import { Button } from "@app/ui";
@@ -47,6 +49,7 @@ export function LinkAccountModal({
   outcome = null,
   summary,
 }: Props) {
+  const navigate = useNavigate();
   // This dialog unmounts on close, so retain its trigger before FocusTrap moves focus.
   const trigger = useRef(document.activeElement);
   useEffect(
@@ -102,6 +105,11 @@ export function LinkAccountModal({
         open={open}
         onClose={onClose}
         onStart={handoff.begin}
+        onManagePipeline={(id) =>
+          navigate(
+            `${PORTAL_BASENAME}/pipelines${id ? `/${encodeURIComponent(id)}` : ""}`,
+          )
+        }
       >
         <ConnectAskStep
           reauth={false}

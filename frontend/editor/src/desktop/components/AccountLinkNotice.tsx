@@ -126,6 +126,21 @@ export function AccountLinkNotice() {
     <SelfHostedAccountLinkNotice
       key={target}
       onShowOptions={showOptions}
+      onManagePipeline={(id) => {
+        const url = new URL(
+          `../processor/pipelines${id ? `/${encodeURIComponent(id)}` : ""}`,
+          target,
+        );
+        void openExternal(url.href).catch(() => {
+          alert({
+            alertType: "error",
+            title: t(
+              "portal.accountLink.failure.openFailed",
+              "Open the Processor on your connected server to manage this pipeline.",
+            ),
+          });
+        });
+      }}
       balance={balance}
     />
   ) : null;

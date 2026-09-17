@@ -26,7 +26,11 @@ vi.mock("@portal/auth/saasSupabase", () => ({
 }));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({
-    t: (key: string, fallback?: string) => fallback ?? key,
+    t: (key: string, fallback?: string, values?: Record<string, string>) =>
+      (fallback ?? key).replace(
+        /{{(\w+)}}/g,
+        (match, name: string) => values?.[name] ?? match,
+      ),
   }),
 }));
 vi.mock("@app/ui", async () => ({
@@ -57,6 +61,7 @@ function mount(path: string) {
 
 describe("editor shared account-link modal", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     clearAccountLinkBlock();
     vi.clearAllMocks();
     auth.isAdmin = true;
@@ -92,14 +97,67 @@ describe("editor shared account-link modal", () => {
     expect(begin).toHaveBeenCalledOnce();
     expect(screen.getByRole("status").textContent).toBe("/editor");
   });
-  it("keeps repeated automatic policy failures silent", async () => {
+  it("opens once for automatic policy failures", async () => {
     mount("/editor");
     await act(async () => {
       reportFreeTierExhausted("background");
       reportFreeTierExhausted("background");
     });
-    expect(screen.queryByRole("dialog")).toBeNull();
+    expect(screen.getAllByRole("dialog")).toHaveLength(1);
     expect(alert).not.toHaveBeenCalled();
+  });
+  it.each([
+    ["upload", "after upload"],
+    ["export", "before download"],
+    ["manual", "when you ran it"],
+  ] as const)(
+    "explains the %s failure and opens that pipeline's settings",
+    async (trigger, description) => {
+      mount("/editor");
+      await act(async () =>
+        reportFreeTierExhausted("background", {
+          pipelineId: "rotate-id",
+          pipelineName: "Quarterly rotation",
+          fileName: "report.pdf",
+          trigger,
+        }),
+      );
+      expect(
+        screen.getByText(
+          `Pipeline “Quarterly rotation” could not process “report.pdf” ${description} because this server is out of credits.`,
+        ),
+      ).toBeTruthy();
+      fireEvent.click(
+        screen.getByRole("button", { name: "Open pipeline settings" }),
+      );
+      expect(screen.getByRole("status").textContent).toBe(
+        "/processor/pipelines/rotate-id",
+      );
+      expect(screen.queryByRole("dialog")).toBeNull();
+    },
+  );
+  it("gives members the failed pipeline details without an administrator settings action", async () => {
+    auth.isAdmin = false;
+    mount("/editor");
+    await act(async () =>
+      reportFreeTierExhausted("background", {
+        pipelineId: "rotate-id",
+        pipelineName: "Quarterly rotation",
+        fileName: "report.pdf",
+        trigger: "upload",
+      }),
+    );
+    expect(
+      screen.getByText(
+        /Pipeline “Quarterly rotation” could not process “report.pdf” after upload/,
+      ),
+    ).toBeTruthy();
+    expect(
+      screen.getByRole("dialog", { name: "Ask your server administrator" }),
+    ).toBeTruthy();
+    expect(
+      screen.queryByRole("button", { name: "Open pipeline settings" }),
+    ).toBeNull();
   });
   it("does not replace a dismissed modal with a toast or reopen it on subsequent failures", async () => {
     const view = mount("/editor");

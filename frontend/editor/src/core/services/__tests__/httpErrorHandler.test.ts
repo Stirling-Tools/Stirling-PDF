@@ -70,6 +70,7 @@ describe("handleHttpError - suppressErrorToast", () => {
 
 describe("local free allowance failures", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     clearAccountLinkBlock();
     vi.clearAllMocks();
   });
@@ -96,7 +97,7 @@ describe("local free allowance failures", () => {
     expect(alert).not.toHaveBeenCalled();
   });
 
-  it("records background exhaustion without requesting a modal", async () => {
+  it("requests the first modal for background exhaustion", async () => {
     const probe = renderHook(() => useAccountLinkBlock());
     const error = {
       ...axiosError({ accountLinkBlockSource: "background" }, 402),
@@ -109,7 +110,7 @@ describe("local free allowance failures", () => {
       await handleHttpError(error);
     });
     expect(probe.result.current.exhausted).toBe(true);
-    expect(probe.result.current.promptPending).toBe(false);
+    expect(probe.result.current.promptPending).toBe(true);
     expect(alert).not.toHaveBeenCalled();
   });
 

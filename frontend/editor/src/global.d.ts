@@ -52,8 +52,9 @@ declare global {
 declare module "axios" {
   export interface AxiosRequestConfig<_D = unknown> {
     suppressErrorToast?: boolean;
-    /** Background automation records exhaustion without interrupting the current user action. */
+    /** Identifies automatic work for the first credit-failure prompt. */
     accountLinkBlockSource?: "foreground" | "background";
+    accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
     skipAuthRedirect?: boolean;
     skipBackendReadyCheck?: boolean;
   }

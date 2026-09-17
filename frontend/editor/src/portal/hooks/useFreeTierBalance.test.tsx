@@ -28,6 +28,7 @@ const balance = (remainingUnits: number) => ({
 
 describe("local allowance refresh", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     clearAccountLinkBlock();
     mocks.isAdmin = true;
     mocks.gated = true;
@@ -61,7 +62,7 @@ describe("local allowance refresh", () => {
       expect(probe.result.current.ledger.data?.remainingUnits).toBe(0),
     );
     expect(probe.result.current.block.exhausted).toBe(true);
-    expect(probe.result.current.block.promptPending).toBe(false);
+    expect(probe.result.current.block.promptPending).toBe(true);
     mocks.fetchFreeTier.mockResolvedValue(balance(500));
     await act(async () => {
       await probe.result.current.ledger.refetch();

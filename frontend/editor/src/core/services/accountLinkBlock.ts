@@ -10,9 +10,35 @@ export type AccountLinkBlockReason =
   | "GRACE_EXPIRED";
 export type AccountLinkBlockSource = "foreground" | "background";
 
-const EMPTY = { exhausted: false, promptPending: false, promptShown: false };
+export interface AccountLinkBlockContext {
+  pipelineId?: string;
+  pipelineName?: string;
+  fileName?: string;
+  trigger: "upload" | "export" | "manual" | "automatic";
+}
+
+const PROMPT_SESSION_KEY = "stirling:credit-prompt-shown";
+let shownInMemory = false;
+let storageWriteFailed = false;
+const EMPTY = {
+  exhausted: false,
+  promptPending: false,
+  promptShown: false,
+  context: undefined as AccountLinkBlockContext | undefined,
+};
 let state = EMPTY;
 const listeners = new Set<() => void>();
+
+function shownThisSession(): boolean {
+  try {
+    return (
+      window.sessionStorage.getItem(PROMPT_SESSION_KEY) === "true" ||
+      (storageWriteFailed && shownInMemory)
+    );
+  } catch {
+    return shownInMemory;
+  }
+}
 
 function publish(next: typeof state): void {
   state = next;
@@ -26,7 +52,7 @@ function subscribe(listener: () => void): () => void {
   };
 }
 
-/** Exhaustion survives route changes; only a foreground failure requests a dialog. */
+/** The first failed operation requests a dialog; route changes retain its cause. */
 export function useAccountLinkBlock() {
   return useSyncExternalStore(
     subscribe,
@@ -35,13 +61,28 @@ export function useAccountLinkBlock() {
   );
 }
 
-/** Call after a successful link or an authoritative balance refresh restores local credits. */
+/** Clears recovered exhaustion without rearming the automatic prompt in this tab session. */
 export function clearAccountLinkBlock(): void {
-  if (state !== EMPTY) publish(EMPTY);
+  const promptShown = shownThisSession();
+  if (
+    state.exhausted ||
+    state.promptPending ||
+    state.context ||
+    state.promptShown !== promptShown
+  ) {
+    publish({ ...EMPTY, promptShown });
+  }
 }
 
-/** Coalesces concurrent failures and keeps dismissed prompts quiet until credits are restored. */
+/** Coalesces failures across navigation and reloads; blocked storage falls back to this app lifetime. */
 export function acknowledgeAccountLinkPrompt(): void {
+  shownInMemory = true;
+  try {
+    window.sessionStorage.setItem(PROMPT_SESSION_KEY, "true");
+  } catch {
+    // Restricted webviews can deny storage; the in-memory suppression still applies.
+    storageWriteFailed = true;
+  }
   publish({ ...state, promptPending: false, promptShown: true });
 }
 
@@ -50,14 +91,21 @@ export function requestAccountLinkPrompt(): void {
   publish({ ...state, promptPending: true });
 }
 
-/** Records an authoritative exhaustion signal. Background jobs never interrupt foreground work. */
+/** Records a failed operation and preserves the first cause while its exhaustion notice is active. */
 export function reportFreeTierExhausted(
   source: AccountLinkBlockSource = "foreground",
+  context?: AccountLinkBlockContext,
 ): void {
-  const promptPending =
-    state.promptPending || (source === "foreground" && !state.promptShown);
-  if (state.exhausted && state.promptPending === promptPending) return;
-  publish({ ...state, exhausted: true, promptPending });
+  const promptShown = shownThisSession();
+  const promptPending = state.promptPending || !promptShown;
+  const cause = state.context ?? context;
+  if (
+    state.exhausted &&
+    state.promptPending === promptPending &&
+    state.context === cause
+  )
+    return;
+  publish({ exhausted: true, promptPending, promptShown, context: cause });
   if (typeof window !== "undefined") {
     window.dispatchEvent(
       new CustomEvent(FREE_TIER_EXHAUSTED_EVENT, { detail: { source } }),
@@ -98,8 +146,9 @@ export function classifyAccountLinkBlock(
 export function reportAccountLinkBlock(
   error: unknown,
   source: AccountLinkBlockSource = "foreground",
+  context?: AccountLinkBlockContext,
 ): boolean {
   if (classifyAccountLinkBlock(error) !== "FREE_TIER_EXHAUSTED") return false;
-  reportFreeTierExhausted(source);
+  reportFreeTierExhausted(source, context);
   return true;
 }

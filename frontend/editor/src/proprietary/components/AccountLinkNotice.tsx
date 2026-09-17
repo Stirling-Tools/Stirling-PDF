@@ -17,12 +17,17 @@ import {
 interface Props {
   /** Hosts without a Processor route open the connected server's billing page externally. */
   onShowOptions?: () => void;
+  onManagePipeline?: (pipelineId?: string) => void;
   /** Native hosts fetch the connected server's ledger through their own HTTP client. */
   balance?: FreeTierBalance;
 }
 
-/** Only explicit foreground failures open the shared linking modal; automatic policies retain their own failure feedback. */
-export function AccountLinkNotice({ onShowOptions, balance }: Props = {}) {
+/** File failures share one explanatory linking prompt per tab session. */
+export function AccountLinkNotice({
+  onShowOptions,
+  onManagePipeline,
+  balance,
+}: Props = {}) {
   const { isAdmin, loading } = useAuth();
   const { pathname } = useLocation();
   const { exhausted, promptPending } = useAccountLinkBlock();
@@ -74,9 +79,9 @@ export function AccountLinkNotice({ onShowOptions, balance }: Props = {}) {
   return (
     <EditorLinkModal
       open
-
       onClose={() => setOpen(false)}
       onStart={onShowOptions}
+      onManagePipeline={onManagePipeline}
       summary={
         <FreeTierBalanceSummary
           balance={

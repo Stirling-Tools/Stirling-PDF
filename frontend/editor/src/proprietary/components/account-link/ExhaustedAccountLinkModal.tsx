@@ -6,11 +6,17 @@ import { Button } from "@app/ui";
 import { FlowModal } from "@app/components/shared/FlowModal";
 import { StepModalHeader } from "@app/components/shared/StepModalHeader";
 import { ConnectBenefitsSlide } from "@app/components/account-link/ConnectBenefitsSlide";
+import {
+  acknowledgeAccountLinkPrompt,
+  useAccountLinkBlock,
+} from "@app/services/accountLinkBlock";
 
 export interface ExhaustedAccountLinkModalProps {
   open: boolean;
   onClose: () => void;
   onStart?: () => void;
+  /** Hosts open the affected pipeline in their own routing environment. */
+  onManagePipeline?: (pipelineId?: string) => void;
   /** The host reads the ledger; unavailable figures are omitted. */
   summary?: ReactNode;
   /** Web hosts supply content with connection configuration and handoff errors. */
@@ -24,14 +30,17 @@ export function ExhaustedAccountLinkContent({
   summary?: ReactNode;
 }) {
   const { t } = useTranslation();
+  const { context } = useAccountLinkBlock();
   return (
     <>
-      <p className="portal-connect__lede">
-        {t(
-          "portal.accountLink.connect.exhaustedLede",
-          "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance.",
-        )}
-      </p>
+      {!context && (
+        <p className="portal-connect__lede">
+          {t(
+            "portal.accountLink.connect.exhaustedLede",
+            "This server has used its free credits for the month. Link a new or existing Stirling account to access your team’s monthly allowance.",
+          )}
+        </p>
+      )}
       {summary}
       <ConnectBenefitsSlide />
     </>
@@ -43,12 +52,50 @@ export function ExhaustedAccountLinkModal({
   open,
   onClose,
   onStart,
+  onManagePipeline,
   summary,
   children,
 }: ExhaustedAccountLinkModalProps) {
   const { t } = useTranslation();
   const { isAdmin, loading } = useAuth();
   const clipboard = useClipboard();
+  const { context } = useAccountLinkBlock();
+  const dismiss = () => {
+    acknowledgeAccountLinkPrompt();
+    onClose();
+  };
+  const details = {
+    pipeline:
+      context?.pipelineName ||
+      t("portal.accountLink.failure.pipeline", "Pipeline"),
+    file:
+      context?.fileName || t("portal.accountLink.failure.file", "your file"),
+  };
+  const causes = context
+    ? {
+        upload: t(
+          "portal.accountLink.failure.upload",
+          "Pipeline “{{pipeline}}” could not process “{{file}}” after upload because this server is out of credits.",
+          details,
+        ),
+        export: t(
+          "portal.accountLink.failure.export",
+          "Pipeline “{{pipeline}}” could not process “{{file}}” before download because this server is out of credits.",
+          details,
+        ),
+        manual: t(
+          "portal.accountLink.failure.manual",
+          "Pipeline “{{pipeline}}” could not process “{{file}}” when you ran it because this server is out of credits.",
+          details,
+        ),
+        automatic: t(
+          "portal.accountLink.failure.automatic",
+          "Pipeline “{{pipeline}}” could not process “{{file}}” during an automatic run because this server is out of credits.",
+          details,
+        ),
+      }
+    : null;
+  const cause = context && causes ? causes[context.trigger] : "";
   const title = isAdmin
     ? t(
         "portal.accountLink.modal.exhaustedTitle",
@@ -65,12 +112,12 @@ export function ExhaustedAccountLinkModal({
   return (
     <FlowModal
       open={open}
-      onClose={onClose}
+      onClose={dismiss}
       label={title}
       footer={
         isAdmin ? (
           <>
-            <Button variant="quiet" accent="neutral" onClick={onClose}>
+            <Button variant="quiet" accent="neutral" onClick={dismiss}>
               {t("portal.accountLink.connect.notNow", "Not now")}
             </Button>
             <Button
@@ -86,12 +133,16 @@ export function ExhaustedAccountLinkModal({
           </>
         ) : (
           <>
-            <Button variant="quiet" accent="neutral" onClick={onClose}>
+            <Button variant="quiet" accent="neutral" onClick={dismiss}>
               {t("portal.accountLink.connect.close", "Close")}
             </Button>
             <Button
               variant="secondary"
-              onClick={() => clipboard.copy(adminMessage)}
+              onClick={() =>
+                clipboard.copy(
+                  [cause, adminMessage].filter(Boolean).join("\n\n"),
+                )
+              }
             >
               {clipboard.copied
                 ? t("portal.accountLink.connect.copied", "Copied")
@@ -108,8 +159,21 @@ export function ExhaustedAccountLinkModal({
         brand
         title={title}
         closeLabel={t("portal.accountLink.connect.close", "Close")}
-        onClose={onClose}
+        onClose={dismiss}
       />
+      {cause && <p className="portal-connect__lede">{cause}</p>}
+      {context && isAdmin && onManagePipeline && (
+        <Button
+          variant="quiet"
+          accent="neutral"
+          onClick={() => {
+            dismiss();
+            onManagePipeline(context.pipelineId);
+          }}
+        >
+          {t("portal.accountLink.failure.manage", "Open pipeline settings")}
+        </Button>
+      )}
       {isAdmin ? (
         (children ?? <ExhaustedAccountLinkContent summary={summary} />)
       ) : (

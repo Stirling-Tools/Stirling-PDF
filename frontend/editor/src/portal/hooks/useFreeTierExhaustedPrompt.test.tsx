@@ -25,6 +25,7 @@ const blocked = (reason: string) =>
 
 describe("the account-link prompt", () => {
   beforeEach(() => {
+    sessionStorage.clear();
     clearAccountLinkBlock();
     openLinkModal.mockReset();
   });
@@ -89,19 +90,19 @@ describe("the account-link prompt", () => {
     expect(openLinkModal).toHaveBeenCalledTimes(1);
   });
 
-  it("keeps background failures quiet but prompts for a later foreground action", () => {
+  it("prompts once for background failures and suppresses subsequent foreground failures", () => {
     render(<Probe />);
     act(() => {
       reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"), "background");
     });
-    expect(openLinkModal).not.toHaveBeenCalled();
+    expect(openLinkModal).toHaveBeenCalledExactlyOnceWith("exhausted");
     act(() => {
       reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
     });
-    expect(openLinkModal).toHaveBeenCalledWith("exhausted");
+    expect(openLinkModal).toHaveBeenCalledTimes(1);
   });
 
-  it("allows a new prompt after credits have been restored", () => {
+  it("keeps the session suppression after credits recover", () => {
     render(<Probe />);
     act(() => {
       reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
@@ -112,6 +113,6 @@ describe("the account-link prompt", () => {
     act(() => {
       reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
     });
-    expect(openLinkModal).toHaveBeenCalledTimes(2);
+    expect(openLinkModal).toHaveBeenCalledTimes(1);
   });
 });

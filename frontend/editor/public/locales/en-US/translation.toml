@@ -7401,6 +7401,16 @@ retry = "Check connection"
 revokedBody = "Stirling Cloud rejected this account connection. Reconnect the account in Settings to restore eligible cloud-backed features."
 revokedTitle = "Account connection revoked"
 
+[portal.accountLink.failure]
+automatic = "Pipeline “{{pipeline}}” could not process “{{file}}” during an automatic run because this server is out of credits."
+export = "Pipeline “{{pipeline}}” could not process “{{file}}” before download because this server is out of credits."
+file = "your file"
+manage = "Open pipeline settings"
+manual = "Pipeline “{{pipeline}}” could not process “{{file}}” when you ran it because this server is out of credits."
+openFailed = "Open the Processor on your connected server to manage this pipeline."
+pipeline = "Pipeline"
+upload = "Pipeline “{{pipeline}}” could not process “{{file}}” after upload because this server is out of credits."
+
 [portal.accountLink.gate]
 retry = "Try again"
 

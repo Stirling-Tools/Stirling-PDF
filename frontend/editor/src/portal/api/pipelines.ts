@@ -220,7 +220,10 @@ export interface TriggerOutcome {
 export async function triggerPipeline(id: string): Promise<TriggerOutcome> {
   return apiClient.local.json<TriggerOutcome>(
     `/api/v1/policies/${encodeURIComponent(id)}/trigger`,
-    { method: "POST" },
+    {
+      method: "POST",
+      accountLinkBlockContext: { pipelineId: id, trigger: "manual" },
+    },
   );
 }
 
@@ -270,6 +273,12 @@ export async function runPipelineTest(
   const res = await apiClient.local.multipart<{ jobId: string }>(
     "/api/v1/policies/run",
     form,
+    {
+      pipelineId: policyId,
+      pipelineName: definition.name,
+      fileName: file.name,
+      trigger: "manual",
+    },
   );
   return { runId: res.jobId };
 }

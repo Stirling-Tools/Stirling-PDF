@@ -47,6 +47,7 @@ import {
   policyDeliversOutputFiles,
 } from "@app/data/classificationPolicy";
 import { runPolicyOnFile } from "@app/services/policyDispatch";
+import { policyCreditContext } from "@app/services/policyCreditContext";
 import { policyAcceptsFile } from "@app/services/policyInput";
 import { splitFileName } from "@app/utils/fileUtils";
 import type { StirlingFile, StirlingFileStub } from "@app/types/fileContext";
@@ -238,7 +239,10 @@ export function usePolicyAutoRun(): void {
       if (code === "FREE_TIER_EXHAUSTED") {
         if (!firedLimitModal.current.has(view.runId)) {
           firedLimitModal.current.add(view.runId);
-          reportFreeTierExhausted("background");
+          reportFreeTierExhausted(
+            "background",
+            policyCreditContext(view.policyId, finished?.fileName),
+          );
         }
         return;
       }
