@@ -1268,14 +1268,6 @@ description = "Languages that users can select from (leave empty to enable all l
 label = "Available Languages"
 placeholder = "Select languages"
 
-[admin.settings.general.logoStyle]
-classic = "Classic"
-classicAlt = "Classic logo"
-description = "Set the default logo style for all users on this server. Users can override this setting in their personal preferences."
-label = "Logo Style"
-modern = "Modern"
-modernAlt = "Modern logo"
-
 [admin.settings.general.showUpdate]
 description = "Display notifications when a new version is available"
 label = "Show Update Notifications"
@@ -6510,17 +6502,16 @@ leader = "Team owner"
 member = "Member"
 
 [payg.signupRequired]
-bodyMonthlyAllowance = "Stirling PDF gives every signed-up account a free monthly allowance for operations. You're currently using Stirling as a guest, which doesn't include billable tools like AI, automations, or hosted processing."
-cancel = "Not now"
-cta = "Sign up free"
-subtext = "Creating an account is free and takes a few seconds. No credit card required."
-title = "Sign up to use {{category}}"
-
-[payg.signupRequired.category]
-ai = "AI features"
-api = "this tool"
-automation = "automations"
-default = "this feature"
+aiPromo = "Create, edit and ask about PDFs with AI"
+apiPromo = "Connect your apps and AI assistants"
+automationPromo = "Automate repetitive PDF tasks"
+createAccount = "Create free account"
+editorLabel = "PDF Editor"
+login = "Log in"
+manualToolsPromo = "Unlimited free manual PDF tools"
+processorLabel = "PDF Processor"
+processorTitle = "Create an account to unlock the best of Stirling"
+readerLabel = "PDF Reader"
 
 [payg.spendCapMeter]
 barAria = "Spend against cap"
