@@ -6,7 +6,10 @@ import {
   PdfAnnotationSubtype,
   type PdfAnnotationObject,
 } from "@embedpdf/models";
-import type { AnnotationObject } from "@app/components/viewer/viewerTypes";
+import type {
+  AnnotationMenuAnchor,
+  AnnotationObject,
+} from "@app/components/viewer/viewerTypes";
 import { useActiveDocumentId } from "@app/components/viewer/useActiveDocumentId";
 import { useViewer } from "@app/contexts/ViewerContext";
 import { useAnnotationMenuHandlers } from "@app/components/viewer/useAnnotationMenuHandlers";
@@ -29,6 +32,8 @@ export interface AnnotationSelectionMenuProps {
     ref?: (node: HTMLDivElement | null) => void;
     style?: React.CSSProperties;
   };
+  /** Reports where the menu sits so a delete can leave an undo affordance there. */
+  onAnchor?: (anchor: AnnotationMenuAnchor | null) => void;
 }
 
 export function AnnotationSelectionMenu(props: AnnotationSelectionMenuProps) {
@@ -44,6 +49,7 @@ function AnnotationSelectionMenuInner({
   context,
   selected,
   menuWrapperProps,
+  onAnchor,
 }: AnnotationSelectionMenuProps & { documentId: string }) {
   const annotation = context?.annotation;
   const pageIndex = context?.pageIndex;
@@ -148,10 +154,27 @@ function AnnotationSelectionMenuInner({
     [menuWrapperProps],
   );
 
+  // The anchor follows the wrapper so a delete from any path can keep an undo
+  // menu where the annotation was.
+  const updateAnchor = useCallback(
+    (position: { top: number; left: number }) => {
+      const id = (annotation?.object as AnnotationObject | undefined)?.id;
+      if (!onAnchor || !id || pageIndex === undefined) return;
+      onAnchor({
+        annotationId: id,
+        pageIndex,
+        top: position.top,
+        left: position.left,
+      });
+    },
+    [annotation, onAnchor, pageIndex],
+  );
+
   // Track menu position via MutationObserver (handles drag repositioning)
   useEffect(() => {
     if (!selected || !annotation || !wrapperRef.current) {
       setMenuPosition(null);
+      onAnchor?.(null);
       return;
     }
 
@@ -162,10 +185,12 @@ function AnnotationSelectionMenuInner({
         return;
       }
       const rect = wrapper.getBoundingClientRect();
-      setMenuPosition({
+      const position = {
         top: rect.bottom + 8,
         left: rect.left + rect.width / 2,
-      });
+      };
+      setMenuPosition(position);
+      updateAnchor(position);
     };
 
     updatePosition();
@@ -183,7 +208,7 @@ function AnnotationSelectionMenuInner({
       window.removeEventListener("scroll", updatePosition, true);
       window.removeEventListener("resize", updatePosition);
     };
-  }, [selected]);
+  }, [selected, updateAnchor]);
 
   if (!selected || !annotation) return null;
 

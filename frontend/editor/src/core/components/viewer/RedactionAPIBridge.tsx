@@ -42,9 +42,7 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
   // Ensure EmbedPDF exits redaction mode whenever we are not in redact tool mode
   useEffect(() => {
     if (selectedTool !== "redact") {
-      if (redactionProvides?.isRedactActive?.()) {
-        redactionProvides.endRedact();
-      }
+      leaveRedactionMode(redactionProvides);
     }
   }, [selectedTool, isRedactionModeActive, redactionProvides]);
 
@@ -53,9 +51,8 @@ function RedactionAPIBridgeInner({ documentId }: { documentId: string }) {
     setBridgeReady(true);
     return () => {
       setBridgeReady(false);
-      if (redactionProvides?.isRedactActive?.()) {
-        redactionProvides.endRedact();
-      }
+      // The scope can belong to a document that a swap already closed.
+      leaveRedactionMode(redactionProvides);
     };
   }, [setBridgeReady, redactionProvides]);
 

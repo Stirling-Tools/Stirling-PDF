@@ -317,6 +317,7 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
     const newState = {
       currentZoom: currentZoomLevel,
       zoomPercent: Math.round(currentZoomLevel * 100),
+      level: zoomLevel,
     };
 
     triggerImmediateZoomUpdate(newState.zoomPercent);
@@ -325,7 +326,12 @@ function ZoomAPIBridgeInner({ documentId }: { documentId: string }) {
       state: newState,
       api: currentZoom,
     });
-  }, [zoomStateCurrentZoomLevel, registerBridge, triggerImmediateZoomUpdate]);
+  }, [
+    zoomStateCurrentZoomLevel,
+    zoomLevel,
+    registerBridge,
+    triggerImmediateZoomUpdate,
+  ]);
 
   return null;
 }

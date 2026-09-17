@@ -130,6 +130,10 @@ export interface ScrollState {
 export interface ZoomState {
   currentZoom: number;
   zoomPercent: number;
+  /** Active level as the plugin reports it: a mode while fit/auto manages the
+   *  zoom, a number once the user set one. An in-place reload restores the
+   *  number and leaves the modes to the zoom preference. */
+  level?: ZoomLevel;
 }
 
 export interface PanState {
