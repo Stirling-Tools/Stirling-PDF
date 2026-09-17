@@ -59,6 +59,7 @@ class InstanceControllerTest {
     @Mock private InstanceUsageIngestService usageIngestService;
     @Mock private LinkedInstanceRepository linkedInstanceRepository;
     @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
+    @Mock private FleetSeatService fleetSeats;
 
     private InstanceController controller() {
         return new InstanceController(
@@ -68,7 +69,8 @@ class InstanceControllerTest {
                 pricingPolicyService,
                 usageIngestService,
                 linkedInstanceRepository,
-                teamExtensionsRepository);
+                teamExtensionsRepository,
+                fleetSeats);
     }
 
     private static PricingPolicy policy() {
@@ -333,5 +335,44 @@ class InstanceControllerTest {
                 start,
                 start.plusMonths(1),
                 false);
+    }
+
+    @Test
+    void seatOnlySyncUsesAuthenticatedDeploymentWithoutBillingUsage() {
+        when(billingService.forTeam(42L)).thenReturn(freeBilling(500L));
+        when(entitlementService.getSnapshot(42L))
+                .thenReturn(snapshot(EntitlementState.FULL, 0L, null));
+        when(pricingPolicyService.getEffectivePolicy(42L)).thenReturn(policy());
+        when(fleetSeats.allowance(42L, 1L)).thenReturn(17);
+        var response =
+                controller()
+                        .sync(
+                                new LinkedInstanceAuthenticationToken(1L, 42L),
+                                new InstanceController.UsageSyncRequest(0, null, null, 7));
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getBody().fleetUserLimit()).isEqualTo(17);
+        verify(fleetSeats).report(42L, 1L, 7);
+        verifyNoInteractions(usageIngestService);
+    }
+
+    @Test
+    void negativeSeatsAndPartialUsageAreRejected() {
+        var token = new LinkedInstanceAuthenticationToken(1L, 42L);
+        assertThat(
+                        controller()
+                                .sync(
+                                        token,
+                                        new InstanceController.UsageSyncRequest(0, null, null, -1))
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        assertThat(
+                        controller()
+                                .sync(
+                                        token,
+                                        new InstanceController.UsageSyncRequest(
+                                                0, LocalDateTime.now(), null, 7))
+                                .getStatusCode())
+                .isEqualTo(HttpStatus.BAD_REQUEST);
+        verifyNoInteractions(fleetSeats, usageIngestService);
     }
 }

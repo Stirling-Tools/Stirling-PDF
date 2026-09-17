@@ -34,7 +34,34 @@ public record InstanceEntitlement(
         LocalDateTime periodStart,
         LocalDateTime periodEnd,
         Integer licensedUsers,
-        int automationStepLimit) {
+        int automationStepLimit,
+        Integer fleetUserLimit) {
+
+    /** Older responses do not constrain the deployment by a fleet allowance. */
+    public InstanceEntitlement(
+            boolean subscribed,
+            long freeRemainingUnits,
+            long periodSpendUnits,
+            Long periodCapUnits,
+            EntitlementState state,
+            UnitCalcPolicy unitCalcPolicy,
+            LocalDateTime periodStart,
+            LocalDateTime periodEnd,
+            Integer licensedUsers,
+            int automationStepLimit) {
+        this(
+                subscribed,
+                freeRemainingUnits,
+                periodSpendUnits,
+                periodCapUnits,
+                state,
+                unitCalcPolicy,
+                periodStart,
+                periodEnd,
+                licensedUsers,
+                automationStepLimit,
+                null);
+    }
 
     public InstanceEntitlement {
         automationStepLimit = BillingStepLimit.resolve(automationStepLimit);

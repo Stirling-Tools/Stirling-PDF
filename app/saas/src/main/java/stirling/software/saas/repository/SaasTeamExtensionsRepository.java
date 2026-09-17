@@ -16,17 +16,24 @@ public interface SaasTeamExtensionsRepository extends JpaRepository<SaasTeamExte
     /**
      * Atomic seat claim for every team type. Returns 1 on success, 0 when capacity is exhausted.
      */
-    @Query(value = "SELECT public.fleet_claim_cloud_seat(:teamId)", nativeQuery = true)
+    @Modifying
+    @Query(
+            value =
+                    "UPDATE stirling_pdf.saas_team_extensions e SET seats_used = seats_used + 1 "
+                            + "WHERE team_id = :teamId AND seats_used + (SELECT COALESCE(SUM(i.seat_count), 0) "
+                            + "FROM stirling_pdf.linked_instance i WHERE i.team_id = e.team_id AND i.revoked_at IS NULL) < max_seats",
+            nativeQuery = true)
     int incrementSeatsUsed(@Param("teamId") Long teamId);
 
     @Query(
-            value = "SELECT users_in_use FROM public.fleet_seat_snapshot(:teamId)",
+            value =
+                    "SELECT e.seats_used + (SELECT COALESCE(SUM(i.seat_count), 0) FROM stirling_pdf.linked_instance i WHERE i.team_id=e.team_id AND i.revoked_at IS NULL) FROM stirling_pdf.saas_team_extensions e WHERE e.team_id=:teamId",
             nativeQuery = true)
     Long fleetUsersInUse(@Param("teamId") Long teamId);
 
     @Query(
             value =
-                    "SELECT users_in_use < capacity AND unreported_instances=0 FROM public.fleet_seat_snapshot(:teamId)",
+                    "SELECT e.seats_used + (SELECT COALESCE(SUM(i.seat_count), 0) FROM stirling_pdf.linked_instance i WHERE i.team_id=e.team_id AND i.revoked_at IS NULL) < e.max_seats FROM stirling_pdf.saas_team_extensions e WHERE e.team_id=:teamId",
             nativeQuery = true)
     Boolean fleetHasAvailableSeats(@Param("teamId") Long teamId);
 

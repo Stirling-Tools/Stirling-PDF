@@ -45,7 +45,6 @@ import stirling.software.common.util.RegexPatternUtils;
 import stirling.software.proprietary.access.model.PrincipalType;
 import stirling.software.proprietary.access.model.ResourceType;
 import stirling.software.proprietary.access.repository.ResourceGrantRepository;
-import stirling.software.proprietary.accountlink.FleetSeatSyncService;
 import stirling.software.proprietary.integration.model.IntegrationConfig;
 import stirling.software.proprietary.integration.repository.IntegrationConfigRepository;
 import stirling.software.proprietary.model.Team;
@@ -109,7 +108,6 @@ public class UserService implements UserServiceInterface {
     // uses for LicenseKeyChecker. Absent outside the security profile, in which case there is no
     // licence to enforce.
     private final ObjectProvider<UserLicenseSettingsService> licenseSettingsService;
-    private final ObjectProvider<FleetSeatSyncService> fleetSeats;
 
     @Transactional
     public void processSSOPostLogin(
@@ -643,8 +641,7 @@ public class UserService implements UserServiceInterface {
         if (settings == null) {
             return;
         }
-        // Refresh entitlement before locking; the serialized fleet claim has its own five-second
-        // timeout.
+        // Entitlement refresh may use the network; do it before taking the admission lock.
         int max = settings.calculateMaxAllowedUsers();
 
         // Serialise admission. The lock is held until saveUserCore's transaction commits, by which
@@ -654,8 +651,6 @@ public class UserService implements UserServiceInterface {
 
         long current = getTotalUsersCount();
         if (current + 1 <= max) {
-            var fleet = fleetSeats == null ? null : fleetSeats.getIfAvailable();
-            if (fleet != null) fleet.claim(current);
             return;
         }
         log.warn(

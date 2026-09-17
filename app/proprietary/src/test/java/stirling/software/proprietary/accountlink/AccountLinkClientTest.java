@@ -319,36 +319,16 @@ class AccountLinkClientTest {
     }
 
     @Test
-    void fleetAdmissionUsesDeviceIdentityAndABoundedRequest() throws Exception {
-        var credential = new DeviceCredential();
-        credential.setDeviceId("device-one");
-        credential.setDeviceSecret("test-secret");
-        var reply =
-                response(
-                        200,
-                        "{\"allowed\":false,\"usersInUse\":100,\"capacity\":100,\"unreportedInstances\":0}");
+    void dailySeatHeartbeatParsesLocalAllowance() throws Exception {
+        var reply = response(200, "{\"state\":\"OK\",\"licensedUsers\":100,\"fleetUserLimit\":17}");
         when(httpClient.send(any(), any(HttpResponse.BodyHandler.class))).thenReturn(reply);
-        var result = client.reportSeats(credential, 7, true);
-        assertEquals(false, result.allowed());
+        var result = client.reportUsage("dev-1", "sec-1", 0, null, 0, 0, 0, 7);
+        assertNotNull(result);
+        assertEquals(100, result.licensedUsers());
+        assertEquals(17, result.fleetUserLimit());
         var request = ArgumentCaptor.forClass(HttpRequest.class);
         org.mockito.Mockito.verify(httpClient)
                 .send(request.capture(), any(HttpResponse.BodyHandler.class));
-        assertEquals("/api/v1/instance/seats", request.getValue().uri().getPath());
-        assertEquals(
-                "device-one", request.getValue().headers().firstValue("X-Device-Id").orElseThrow());
-        assertEquals(java.time.Duration.ofSeconds(5), request.getValue().timeout().orElseThrow());
-    }
-
-    @Test
-    void unavailableOrMalformedFleetResponseCannotAdmitUsers() throws Exception {
-        var credential = new DeviceCredential();
-        credential.setDeviceId("device-one");
-        credential.setDeviceSecret("test-secret");
-        var unavailable = response(404, "{}");
-        var malformed = response(200, "{}");
-        when(httpClient.send(any(), any(HttpResponse.BodyHandler.class)))
-                .thenReturn(unavailable, malformed);
-        assertThrows(java.io.IOException.class, () -> client.reportSeats(credential, 7, true));
-        assertThrows(java.io.IOException.class, () -> client.reportSeats(credential, 7, true));
+        assertEquals("/api/v1/instance/sync", request.getValue().uri().getPath());
     }
 }

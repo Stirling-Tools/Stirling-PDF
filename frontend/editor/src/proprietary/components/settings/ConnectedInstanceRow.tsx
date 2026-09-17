@@ -104,7 +104,7 @@ export function ConnectedInstanceRow({
             {instance.seatCount == null
               ? t(
                   "settings.connectedInstances.seatsUnknown",
-                  "User count not reported. Update or unlink this deployment before adding users to the fleet.",
+                  "Waiting for this deployment to report its user count in the daily sync.",
                 )
               : t(
                   "settings.connectedInstances.seatsReported",

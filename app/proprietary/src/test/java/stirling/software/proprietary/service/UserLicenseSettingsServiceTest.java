@@ -542,4 +542,65 @@ class UserLicenseSettingsServiceTest {
 
         assertEquals(false, result, "SAML should be blocked when LicenseKeyChecker is unavailable");
     }
+
+    @Test
+    void fleetAllowanceSurvivesOfflineRestartExpiresAndRecovers() {
+        EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+        when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        when(cache.linkedDeviceId()).thenReturn("device");
+        mockSettings.setLinkedTeamDeviceId("device");
+        mockSettings.setLinkedTeamUsers(300);
+        mockSettings.setLinkedFleetUserLimit(17);
+        when(cache.current()).thenReturn(Optional.empty());
+        assertEquals(17, service.calculateMaxAllowedUsers());
+        when(cache.isGraceExpired()).thenReturn(true);
+        assertEquals(80, service.calculateMaxAllowedUsers());
+        assertEquals(17, mockSettings.getLinkedFleetUserLimit());
+        when(cache.isGraceExpired()).thenReturn(false);
+        when(cache.current())
+                .thenReturn(
+                        Optional.of(
+                                new stirling.software.proprietary.accountlink.InstanceEntitlement(
+                                        true,
+                                        0,
+                                        0,
+                                        null,
+                                        stirling.software.proprietary.accountlink.EntitlementState
+                                                .OK,
+                                        null,
+                                        null,
+                                        null,
+                                        300,
+                                        10,
+                                        23)));
+        assertEquals(23, service.calculateMaxAllowedUsers());
+        assertEquals(300, mockSettings.getLinkedTeamUsers());
+    }
+
+    @Test
+    void revokedOrReplacedIdentityClearsFleetAllowance() {
+        EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+        when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        when(cache.linkedDeviceId()).thenReturn("device");
+        mockSettings.setLinkedTeamDeviceId("device");
+        mockSettings.setLinkedTeamUsers(300);
+        mockSettings.setLinkedFleetUserLimit(17);
+        when(cache.current())
+                .thenReturn(
+                        Optional.of(
+                                new stirling.software.proprietary.accountlink.InstanceEntitlement(
+                                        false,
+                                        0,
+                                        0,
+                                        null,
+                                        stirling.software.proprietary.accountlink.EntitlementState
+                                                .REVOKED)));
+        assertEquals(80, service.calculateMaxAllowedUsers());
+        assertEquals(null, mockSettings.getLinkedFleetUserLimit());
+        mockSettings.setLinkedFleetUserLimit(17);
+        when(cache.linkedDeviceId()).thenReturn("other-device");
+        when(cache.current()).thenReturn(Optional.empty());
+        assertEquals(80, service.calculateMaxAllowedUsers());
+        assertEquals(null, mockSettings.getLinkedFleetUserLimit());
+    }
 }

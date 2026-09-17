@@ -34,39 +34,6 @@ import tools.jackson.databind.node.ObjectNode;
         matchIfMissing = true)
 public class AccountLinkClient {
 
-    public record FleetSeats(
-            boolean allowed, long usersInUse, int capacity, long unreportedInstances) {}
-
-    /** Reports deployment users; admission is refused when SaaS cannot confirm shared capacity. */
-    public FleetSeats reportSeats(DeviceCredential credential, int users, boolean admit)
-            throws IOException {
-        ObjectNode body = mapper.createObjectNode().put("users", users).put("admit", admit);
-        HttpRequest request =
-                HttpRequest.newBuilder()
-                        .uri(uri("/api/v1/instance/seats"))
-                        .header(HEADER_DEVICE_ID, credential.getDeviceId())
-                        .header(HEADER_DEVICE_SECRET, credential.getDeviceSecret())
-                        .header("Content-Type", "application/json")
-                        .timeout(Duration.ofSeconds(5))
-                        .POST(HttpRequest.BodyPublishers.ofString(mapper.writeValueAsString(body)))
-                        .build();
-        var response = send(request);
-        if (response.statusCode() / 100 != 2)
-            throw new IOException("Fleet seat service unavailable");
-        var result = mapper.readTree(response.body());
-        if (!result.path("allowed").isBoolean()
-                || !result.path("usersInUse").isIntegralNumber()
-                || !result.path("capacity").isIntegralNumber()
-                || !result.path("unreportedInstances").isIntegralNumber()) {
-            throw new IOException("Invalid fleet seat response");
-        }
-        return new FleetSeats(
-                result.path("allowed").asBoolean(),
-                result.path("usersInUse").asLong(),
-                result.path("capacity").asInt(),
-                result.path("unreportedInstances").asLong());
-    }
-
     static final String HEADER_DEVICE_ID = "X-Device-Id";
     static final String HEADER_DEVICE_SECRET = "X-Device-Secret";
 
@@ -329,16 +296,40 @@ public class AccountLinkClient {
             long apiUnits,
             long aiUnits,
             long automationUnits) {
+        return reportUsage(
+                deviceId,
+                deviceSecret,
+                syncSeq,
+                periodStart,
+                apiUnits,
+                aiUnits,
+                automationUnits,
+                null);
+    }
+
+    /** A null period sends only deployment seats, without changing usage counters. */
+    public InstanceEntitlement reportUsage(
+            String deviceId,
+            String deviceSecret,
+            long syncSeq,
+            LocalDateTime periodStart,
+            long apiUnits,
+            long aiUnits,
+            long automationUnits,
+            Integer seatCount) {
         HttpResponse<String> response;
         try {
             ObjectNode root = mapper.createObjectNode();
             root.put("syncSeq", syncSeq);
             // Explicit ISO-8601 string so it round-trips regardless of the mapper's time config.
-            root.put("periodStart", periodStart.toString());
-            ObjectNode units = root.putObject("cumulativeUnits");
-            units.put("api", apiUnits);
-            units.put("ai", aiUnits);
-            units.put("automation", automationUnits);
+            if (seatCount != null) root.put("seatCount", seatCount);
+            if (periodStart != null) {
+                root.put("periodStart", periodStart.toString());
+                ObjectNode units = root.putObject("cumulativeUnits");
+                units.put("api", apiUnits);
+                units.put("ai", aiUnits);
+                units.put("automation", automationUnits);
+            }
             String body = mapper.writeValueAsString(root);
             HttpRequest request =
                     HttpRequest.newBuilder()
@@ -391,7 +382,10 @@ public class AccountLinkClient {
                 parseDateTime(root, "periodStart"),
                 parseDateTime(root, "periodEnd"),
                 licensedUsers,
-                root.path("automationStepLimit").asInt(0));
+                root.path("automationStepLimit").asInt(0),
+                root.hasNonNull("fleetUserLimit")
+                        ? Math.max(0, root.get("fleetUserLimit").asInt())
+                        : null);
     }
 
     /** Parses the nested unit-calc policy; null if absent or any knob is invalid (e.g. zero). */
