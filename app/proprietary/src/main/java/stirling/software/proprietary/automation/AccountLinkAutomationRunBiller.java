@@ -19,14 +19,15 @@ import stirling.software.proprietary.billing.DocumentUnitCalculator.FileSize;
 import stirling.software.proprietary.billing.UnitCalcPolicy;
 
 /**
- * Charges a client-side Automate run on a linked self-hosted instance: computes the input set's
+ * Charges a client-side automation run on a linked self-hosted instance: computes the input set's
  * doc-units with the instance's synced {@link UnitCalcPolicy} and accrues them as {@link
  * BillingCategory#AUTOMATION}, exactly as the {@code InstanceEntitlementInterceptor} meters a
  * policy's tool sub-steps. Metering is instance-scoped, so no per-user context is needed.
  *
- * <p>Metering itself is optional (the {@link UsageMeterService} bean is absent when {@code
- * metering.enabled=false}); a null signature is passed so each run is its own charge (the
- * standalone semantic - no workflow-window dedup).
+ * <p>A Server license includes Automate runs; Processor runs still consume credits. Metering itself
+ * is optional (the {@link UsageMeterService} bean is absent when {@code metering.enabled=false}); a
+ * null signature is passed so each run is its own charge (the standalone semantic - no
+ * workflow-window dedup).
  */
 @Slf4j
 @Component
@@ -48,8 +49,10 @@ public class AccountLinkAutomationRunBiller implements AutomationRunBiller {
     }
 
     @Override
-    public void recordAutomationRun(List<FileSize> inputs) {
-        if (inputs.isEmpty() || licenseService.isRunningEE()) {
+    public void recordAutomationRun(List<FileSize> inputs, AutomationRunSource source) {
+        if (inputs.isEmpty()
+                || licenseService.isRunningEE()
+                || (source == AutomationRunSource.AUTOMATE && licenseService.hasServerLicense())) {
             return;
         }
         UsageMeterService meter = meterProvider.getIfAvailable();

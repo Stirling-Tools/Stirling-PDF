@@ -171,11 +171,14 @@ async function stubStorageApis(
  *  their parent grid carries `aria-busy="true"` which intercepts pointer events
  *  -- so waiting for any `.files-page-card` races the skeleton→real transition
  *  and causes flaky timeouts on slower CI runners. */
-async function gotoFilesPage(page: Page): Promise<void> {
+async function gotoFilesPage(
+  page: Page,
+  { timeout = 10_000 }: { timeout?: number } = {},
+): Promise<void> {
   await page.goto("/files", { waitUntil: "domcontentloaded" });
   await expect(
     page.locator(".files-page-card:not(.files-page-skeleton-card)").first(),
-  ).toBeVisible({ timeout: 10_000 });
+  ).toBeVisible({ timeout });
 }
 
 test.describe("Files page", () => {
@@ -285,13 +288,17 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      // Two entry points share the name; use .first() for strict mode.
-      await expect(
-        page.getByRole("button", { name: /^Save to server$/i }).first(),
-      ).toBeVisible();
       await expect(
         page.getByRole("button", { name: /^Save to server$/i }),
-      ).toHaveCount(2);
+      ).toBeVisible();
+      // The details panel's copy lives behind its overflow menu.
+      await page
+        .locator(".files-page-details-actions-row")
+        .getByRole("button", { name: /^Actions$/i })
+        .click();
+      await expect(
+        page.getByRole("menuitem", { name: /^Save to server$/i }),
+      ).toBeVisible();
     });
 
     test("Save to server hidden when ONLY cloud files selected", async ({
@@ -357,16 +364,21 @@ test.describe("Files page", () => {
         .locator(".files-page-card:not(.is-folder)")
         .filter({ hasText: "local-a.pdf" })
         .click();
-      const saveButtons = page.getByRole("button", {
+      const toolbarSave = page.getByRole("button", {
         name: /^Save to server$/i,
       });
-      // Present (toolbar + details panel) and every instance disabled.
-      const count = await saveButtons.count();
-      expect(count).toBeGreaterThan(0);
-      for (let i = 0; i < count; i += 1) {
-        await expect(saveButtons.nth(i)).toBeVisible();
-        await expect(saveButtons.nth(i)).toBeDisabled();
-      }
+      await expect(toolbarSave).toBeVisible();
+      await expect(toolbarSave).toBeDisabled();
+
+      await page
+        .locator(".files-page-details-actions-row")
+        .getByRole("button", { name: /^Actions$/i })
+        .click();
+      const panelSave = page.getByRole("menuitem", {
+        name: /^Save to server$/i,
+      });
+      await expect(panelSave).toBeVisible();
+      await expect(panelSave).toBeDisabled();
     });
 
     test("per-file kebab Save to server is disabled (not hidden) when storage off", async ({
@@ -1272,6 +1284,9 @@ test.describe("Files page", () => {
      * fallback but proves nothing about the windowing.
      */
     test("renders a window of a long list, not all of it", async ({ page }) => {
+      // Seeding 400 records and reading them back is the slowest spec in this
+      // file: on webkit in CI the first card paints well past the default waits.
+      test.setTimeout(120_000);
       const COUNT = 400;
       await stubStorageApis(page);
       await seedFiles(
@@ -1282,14 +1297,17 @@ test.describe("Files page", () => {
           remoteStorageId: null,
         })),
       );
-      await gotoFilesPage(page);
+      await gotoFilesPage(page, { timeout: 30_000 });
 
       const cards = page.locator(
         ".files-page-card:not(.files-page-skeleton-card)",
       );
-      const rendered = await cards.count();
-      expect(rendered).toBeGreaterThan(0);
-      expect(rendered).toBeLessThan(COUNT / 2);
+      // Windowing stands down until the scroller is measured, so the first paint
+      // can carry every card; poll for the window it settles into.
+      await expect
+        .poll(async () => cards.count(), { timeout: 10_000 })
+        .toBeLessThan(COUNT / 2);
+      expect(await cards.count()).toBeGreaterThan(0);
 
       // The spacers stand in for the rest, so the scroll height still reflects the
       // whole folder rather than only what is mounted.
