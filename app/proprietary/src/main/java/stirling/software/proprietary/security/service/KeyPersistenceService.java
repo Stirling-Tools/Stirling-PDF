@@ -18,12 +18,12 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -34,6 +34,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import stirling.software.common.configuration.InstallationPathConfig;
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.security.configuration.CacheConfig;
 import stirling.software.proprietary.security.model.JwtSigningKeyEntity;
 import stirling.software.proprietary.security.model.JwtVerificationKey;
 import stirling.software.proprietary.security.repository.JwtSigningKeyRepository;
@@ -52,16 +53,20 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     private final JwtSigningKeyRepository keyRepository;
     private final boolean clusterEnabled;
 
-    // kid -> KeyPair; safe to cache since key material is immutable.
-    private final Map<String, KeyPair> keyPairCache = new ConcurrentHashMap<>();
+    // kid -> KeyPair. Immutable once minted, so this is bounded for exposure, not for staleness:
+    // an unbounded map kept every historic key's decrypted private half for the life of the
+    // process.
+    private final Cache keyPairCache;
 
     private volatile JwtVerificationKey activeKey;
 
     public KeyPersistenceService(
             ApplicationProperties applicationProperties,
+            CacheManager cacheManager,
             JwtSigningKeyRepository keyRepository,
             @Value("${cluster.enabled:false}") boolean clusterEnabled) {
         this.jwtProperties = applicationProperties.getSecurity().getJwt();
+        this.keyPairCache = cacheManager.getCache(CacheConfig.SIGNING_KEYS_CACHE);
         this.keyRepository = keyRepository;
         this.clusterEnabled = clusterEnabled;
     }
@@ -164,7 +169,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
         if (!isKeystoreEnabled() || keyId == null) {
             return Optional.empty();
         }
-        KeyPair cached = keyPairCache.get(keyId);
+        KeyPair cached = keyPairCache.get(keyId, KeyPair.class);
         if (cached != null) {
             return Optional.of(cached);
         }
@@ -200,7 +205,7 @@ public class KeyPersistenceService implements KeyPersistenceServiceInterface {
     @Override
     public void removeKey(String keyId) {
         keyRepository.deleteById(keyId);
-        keyPairCache.remove(keyId);
+        keyPairCache.evict(keyId);
     }
 
     @Override
