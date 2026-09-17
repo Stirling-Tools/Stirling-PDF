@@ -76,6 +76,12 @@ public class TeamSecurityExpressions {
         if (authentication == null || !authentication.isAuthenticated()) {
             return null;
         }
+        // Both the JWT and API-key filters attach the resolved User to the token, so prefer it over
+        // another lookup. Guests carry a raw Jwt and fall through to the supabase-id path.
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof User user) {
+            return user;
+        }
         if (authentication instanceof EnhancedJwtAuthenticationToken jwt) {
             try {
                 UUID supabaseId = UUID.fromString(jwt.getSupabaseId());
@@ -83,11 +89,6 @@ public class TeamSecurityExpressions {
             } catch (IllegalArgumentException e) {
                 return null;
             }
-        }
-        // API-key path: the principal is the User entity itself.
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof User user) {
-            return user;
         }
         // Username fallback.
         if (principal instanceof String username) {
