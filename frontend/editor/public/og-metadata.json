@@ -73,22 +73,66 @@
     "split": {
       "image": "/og_images/split.png",
       "title": "Split PDF - Stirling PDF",
-      "description": "Split PDFs into multiple documents"
+      "description": "Split PDFs into multiple documents",
+      "content": {
+        "paragraphs": [
+          "Divide a PDF into smaller documents using the splitting options shown in the workspace. This is useful when only part of a document needs to be shared."
+        ],
+        "steps": [
+          "Add the PDF you want to split.",
+          "Choose the split method and page ranges or other options offered by the tool.",
+          "Run Split and review each output document before saving it."
+        ],
+        "limitations": "Check page ranges against the document's actual page positions, which may differ from printed page numbers."
+      }
     },
     "merge": {
       "image": "/og_images/mergePdfs.png",
       "title": "Merge PDF - Stirling PDF",
-      "description": "Merge multiple PDFs into a single document"
+      "description": "Merge multiple PDFs into a single document",
+      "content": {
+        "paragraphs": [
+          "Combine multiple PDF documents into one file. The order you choose determines the order of the documents in the merged result."
+        ],
+        "steps": [
+          "Add the PDF files you want to combine.",
+          "Arrange the files in the desired order and review the available settings.",
+          "Run Merge, check the page sequence and save the combined PDF."
+        ],
+        "limitations": "Check bookmarks, page numbering and forms in the merged output. Keep the original documents, particularly when working with digitally signed files."
+      }
     },
     "convert": {
       "image": "/og_images/convert.png",
       "title": "PDF Converter - Stirling PDF",
-      "description": "Convert files to and from PDF format"
+      "description": "Convert files to and from PDF format",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "ocr": {
       "image": "/og_images/ocr.png",
       "title": "OCR PDF - Stirling PDF",
-      "description": "Extract text from scanned PDFs using Optical Character Recognition"
+      "description": "Extract text from scanned PDFs using Optical Character Recognition",
+      "content": {
+        "paragraphs": [
+          "Use optical character recognition to recognize text in scanned PDF pages. Recognition depends on scan quality, language selection and page orientation."
+        ],
+        "steps": [
+          "Add the scanned PDF.",
+          "Choose the language and OCR settings available on your deployment.",
+          "Run OCR and check the recognized text against the scan."
+        ],
+        "limitations": "OCR can misread handwriting, low-resolution scans and complex layouts. Verify names, numbers and other important text manually. Available languages depend on the deployment."
+      }
     },
     "addImage": {
       "image": "/og_images/add-image.png",
@@ -173,7 +217,18 @@
     "redact": {
       "image": "/og_images/redact.png",
       "title": "Redact PDF - Stirling PDF",
-      "description": "Permanently remove sensitive information from PDF documents"
+      "description": "Permanently remove sensitive information from PDF documents",
+      "content": {
+        "paragraphs": [
+          "Remove selected sensitive content from a PDF using redaction. Redaction is different from placing a visible shape over content that may still be extractable."
+        ],
+        "steps": [
+          "Open the PDF and choose the content to redact.",
+          "Review your selections and apply redaction using the tool's controls.",
+          "Save a separate result and check that the intended information cannot be read, searched or copied."
+        ],
+        "limitations": "Review the entire output, including other pages and document metadata. Selecting a redaction area alone does not finish the operation; apply the redactions and verify the saved file."
+      }
     },
     "flatten": {
       "image": "/og_images/flatten.png",
@@ -193,7 +248,18 @@
     "compress": {
       "image": "/og_images/compress.png",
       "title": "Compress PDF - Stirling PDF",
-      "description": "Compress PDFs to reduce their file size."
+      "description": "Compress PDFs to reduce their file size.",
+      "content": {
+        "paragraphs": [
+          "Reduce a PDF's file size before sharing it or storing it. Compression results depend on the images, fonts and other content already in the document."
+        ],
+        "steps": [
+          "Add the PDF you want to compress.",
+          "Choose the compression settings available in the workspace and run Compress.",
+          "Compare the output size and readability with the original, then save the result."
+        ],
+        "limitations": "A PDF that is already optimized may not become smaller. Stronger compression can reduce image quality; check small text and diagrams before sharing the output."
+      }
     },
     "classify": {
       "image": "/og_images/home.png",
@@ -293,7 +359,18 @@
     "read": {
       "image": "/og_images/read.png",
       "title": "PDF Viewer - Stirling PDF",
-      "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration."
+      "description": "View and annotate PDFs. Highlight text, draw, or insert comments for review and collaboration.",
+      "content": {
+        "paragraphs": [
+          "Open a PDF to read its pages and use the viewing or annotation controls available in the workspace."
+        ],
+        "steps": [
+          "Open the PDF you want to read.",
+          "Navigate the document and use the available zoom, search and annotation controls.",
+          "If you make changes, save the result and check it before sharing."
+        ],
+        "limitations": "Scanned pages may need OCR before their text can be searched. Password-protected files may require the document password."
+      }
     },
     "automate": {
       "image": "/og_images/automate.png",
@@ -681,97 +758,306 @@
     "/pdf-to-word": {
       "image": "/og_images/convert.png",
       "title": "PDF to Word Converter - Stirling PDF",
-      "description": "Convert PDF files into editable Microsoft Word (DOCX) documents. Free, fast, and private - no signup or email required."
+      "description": "Convert PDF files into editable Microsoft Word (DOCX) documents.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-xlsx": {
       "image": "/og_images/convert.png",
       "title": "PDF to Excel Converter - Stirling PDF",
-      "description": "Convert PDF tables into editable Microsoft Excel (XLSX) spreadsheets. Free, fast, and private."
+      "description": "Convert PDF tables into editable Microsoft Excel (XLSX) spreadsheets.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-csv": {
       "image": "/og_images/convert.png",
       "title": "PDF to CSV Converter - Stirling PDF",
-      "description": "Extract tables from PDF files into CSV data. Free, fast, and private - no signup required."
+      "description": "Extract tables from PDF files into CSV data.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-img": {
       "image": "/og_images/convert.png",
       "title": "PDF to Image Converter - Stirling PDF",
-      "description": "Convert PDF pages into high-quality JPG or PNG images. Free and private, right in your browser."
+      "description": "Convert PDF pages into high-quality JPG or PNG images.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-presentation": {
       "image": "/og_images/convert.png",
       "title": "PDF to PowerPoint Converter - Stirling PDF",
-      "description": "Convert PDF files into editable PowerPoint (PPTX) presentations. Free, fast, and private."
+      "description": "Convert PDF files into editable PowerPoint (PPTX) presentations.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-text": {
       "image": "/og_images/convert.png",
       "title": "PDF to Text Converter - Stirling PDF",
-      "description": "Extract plain text from PDF documents. Free, fast, and private - no signup or email required."
+      "description": "Extract plain text from PDF documents.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-markdown": {
       "image": "/og_images/convert.png",
       "title": "PDF to Markdown Converter - Stirling PDF",
-      "description": "Convert PDF documents into clean Markdown text. Free and private, right in your browser."
+      "description": "Convert PDF documents into clean Markdown text.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-html": {
       "image": "/og_images/convert.png",
       "title": "PDF to HTML Converter - Stirling PDF",
-      "description": "Convert PDF documents into HTML web pages. Free and private, right in your browser."
+      "description": "Convert PDF documents into HTML web pages.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-xml": {
       "image": "/og_images/convert.png",
       "title": "PDF to XML Converter - Stirling PDF",
-      "description": "Convert PDF documents into structured XML. Free, fast, and private."
+      "description": "Convert PDF documents into structured XML.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-pdfa": {
       "image": "/og_images/convert.png",
       "title": "PDF to PDF/A Converter - Stirling PDF",
-      "description": "Convert PDFs to the PDF/A archival standard for long-term preservation. Free and private."
+      "description": "Convert PDFs to the PDF/A archival standard for long-term preservation.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/img-to-pdf": {
       "image": "/og_images/convert.png",
       "title": "Image to PDF Converter - Stirling PDF",
-      "description": "Convert JPG, PNG, and other images into a single PDF document. Free, fast, and private."
+      "description": "Convert JPG, PNG, and other images into a single PDF document.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/html-to-pdf": {
       "image": "/og_images/convert.png",
       "title": "HTML to PDF Converter - Stirling PDF",
-      "description": "Convert HTML files and web pages into PDF documents. Free, fast, and private."
+      "description": "Convert HTML files and web pages into PDF documents.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/markdown-to-pdf": {
       "image": "/og_images/convert.png",
       "title": "Markdown to PDF Converter - Stirling PDF",
-      "description": "Convert Markdown files into polished PDF documents. Free and private, right in your browser."
+      "description": "Convert Markdown files into polished PDF documents.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/eml-to-pdf": {
       "image": "/og_images/convert.png",
       "title": "Email (EML) to PDF Converter - Stirling PDF",
-      "description": "Convert email (EML) files into PDF documents. Free, fast, and private - no signup required."
+      "description": "Convert email (EML) files into PDF documents.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/file-to-pdf": {
       "image": "/og_images/convert.png",
       "title": "File to PDF Converter - Stirling PDF",
-      "description": "Convert Word, Excel, PowerPoint, and more into PDF documents. Free, fast, and private."
+      "description": "Convert Word, Excel, PowerPoint, and more into PDF documents.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/cbr-to-pdf": {
       "image": "/og_images/convert.png",
       "title": "CBR to PDF Converter - Stirling PDF",
-      "description": "Convert CBR comic book archives into PDF documents. Free and private, right in your browser."
+      "description": "Convert CBR comic book archives into PDF documents.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-cbr": {
       "image": "/og_images/convert.png",
       "title": "PDF to CBR Converter - Stirling PDF",
-      "description": "Convert PDF documents into CBR comic book archives. Free and private."
+      "description": "Convert PDF documents into CBR comic book archives.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/cbz-to-pdf": {
       "image": "/og_images/convert.png",
       "title": "CBZ to PDF Converter - Stirling PDF",
-      "description": "Convert CBZ comic book archives into PDF documents. Free and private."
+      "description": "Convert CBZ comic book archives into PDF documents.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     },
     "/pdf-to-cbz": {
       "image": "/og_images/convert.png",
       "title": "PDF to CBZ Converter - Stirling PDF",
-      "description": "Convert PDF documents into CBZ comic book archives. Free and private."
+      "description": "Convert PDF documents into CBZ comic book archives.",
+      "content": {
+        "paragraphs": [
+          "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+        ],
+        "steps": [
+          "Choose the conversion direction and add a supported file.",
+          "Review the output format and available settings.",
+          "Run the conversion and check the layout and content of the result."
+        ],
+        "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+      }
     }
   },
   "byPath": {

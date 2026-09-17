@@ -15,6 +15,7 @@
     />
     <link rel="apple-touch-icon" href="modern-logo/logo192.png" />
     <link rel="manifest" href="manifest.json" />
+    <link rel="stylesheet" href="src/core/styles/publicPage.css" />
 
     <title>Stirling PDF - 30M+ Downloads</title>
 
@@ -47,7 +48,14 @@
     </script>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <noscript>
+      <style>
+        body[data-public-page] > #root {
+          display: none;
+        }
+      </style>
+      <p>You need to enable JavaScript to use the interactive PDF workspace.</p>
+    </noscript>
     <div id="root"></div>
     <script type="module" src="src/index.tsx"></script>
   </body>

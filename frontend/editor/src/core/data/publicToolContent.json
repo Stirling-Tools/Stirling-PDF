@@ -1,0 +1,90 @@
+{
+  "compress": {
+    "paragraphs": [
+      "Reduce a PDF's file size before sharing it or storing it. Compression results depend on the images, fonts and other content already in the document."
+    ],
+    "steps": [
+      "Add the PDF you want to compress.",
+      "Choose the compression settings available in the workspace and run Compress.",
+      "Compare the output size and readability with the original, then save the result."
+    ],
+    "limitations": "A PDF that is already optimized may not become smaller. Stronger compression can reduce image quality; check small text and diagrams before sharing the output."
+  },
+  "merge": {
+    "paragraphs": [
+      "Combine multiple PDF documents into one file. The order you choose determines the order of the documents in the merged result."
+    ],
+    "steps": [
+      "Add the PDF files you want to combine.",
+      "Arrange the files in the desired order and review the available settings.",
+      "Run Merge, check the page sequence and save the combined PDF."
+    ],
+    "limitations": "Check bookmarks, page numbering and forms in the merged output. Keep the original documents, particularly when working with digitally signed files."
+  },
+  "split": {
+    "paragraphs": [
+      "Divide a PDF into smaller documents using the splitting options shown in the workspace. This is useful when only part of a document needs to be shared."
+    ],
+    "steps": [
+      "Add the PDF you want to split.",
+      "Choose the split method and page ranges or other options offered by the tool.",
+      "Run Split and review each output document before saving it."
+    ],
+    "limitations": "Check page ranges against the document's actual page positions, which may differ from printed page numbers."
+  },
+  "redact": {
+    "paragraphs": [
+      "Remove selected sensitive content from a PDF using redaction. Redaction is different from placing a visible shape over content that may still be extractable."
+    ],
+    "steps": [
+      "Open the PDF and choose the content to redact.",
+      "Review your selections and apply redaction using the tool's controls.",
+      "Save a separate result and check that the intended information cannot be read, searched or copied."
+    ],
+    "limitations": "Review the entire output, including other pages and document metadata. Selecting a redaction area alone does not finish the operation; apply the redactions and verify the saved file."
+  },
+  "ocr": {
+    "paragraphs": [
+      "Use optical character recognition to recognize text in scanned PDF pages. Recognition depends on scan quality, language selection and page orientation."
+    ],
+    "steps": [
+      "Add the scanned PDF.",
+      "Choose the language and OCR settings available on your deployment.",
+      "Run OCR and check the recognized text against the scan."
+    ],
+    "limitations": "OCR can misread handwriting, low-resolution scans and complex layouts. Verify names, numbers and other important text manually. Available languages depend on the deployment."
+  },
+  "read": {
+    "paragraphs": [
+      "Open a PDF to read its pages and use the viewing or annotation controls available in the workspace."
+    ],
+    "steps": [
+      "Open the PDF you want to read.",
+      "Navigate the document and use the available zoom, search and annotation controls.",
+      "If you make changes, save the result and check it before sharing."
+    ],
+    "limitations": "Scanned pages may need OCR before their text can be searched. Password-protected files may require the document password."
+  },
+  "convert": {
+    "paragraphs": [
+      "Convert documents using the input and output formats offered by the conversion tool. Review the selected format before starting."
+    ],
+    "steps": [
+      "Choose the conversion direction and add a supported file.",
+      "Review the output format and available settings.",
+      "Run the conversion and check the layout and content of the result."
+    ],
+    "limitations": "Conversion can change fonts, tables and page layout. Available formats depend on your deployment and its installed processing tools. Scanned PDFs may need OCR for editable text."
+  },
+  "/editor": {
+    "paragraphs": [
+      "Open a PDF in the workspace to choose editing, annotation and document-processing tools. Keep an original copy so you can compare your changes."
+    ],
+    "steps": [
+      "Open your document in the PDF workspace.",
+      "Choose a tool and apply the changes you need.",
+      "Review the document and save the result."
+    ],
+    "limitations": "Individual tools have different format and processing requirements. Modifying a digitally signed document can affect its signature validity."
+  }
+}

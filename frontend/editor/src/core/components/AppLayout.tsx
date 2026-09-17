@@ -21,7 +21,11 @@ export function AppLayout({ children }: AppLayoutProps) {
         }
       `}</style>
       <div
-        style={{ height: "100dvh", display: "flex", flexDirection: "column" }}
+        style={{
+          height: "var(--app-viewport-height, 100dvh)",
+          display: "flex",
+          flexDirection: "column",
+        }}
       >
         {banner}
         <div style={{ flex: 1, minHeight: 0, height: 0 }}>{children}</div>
