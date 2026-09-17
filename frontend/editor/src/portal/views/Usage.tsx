@@ -41,6 +41,8 @@ import "@portal/views/Usage.css";
 import "@portal/components/billing/billing.css";
 
 export interface UsageProps {
+  /** Local occupied seats for self-hosted; undefined keeps the SaaS membership count. */
+  localUsersInUse?: number | null;
   serverPlan?: ServerPlan;
   serverPlanAction?: ReactNode;
   /**
@@ -70,6 +72,7 @@ export interface UsageProps {
  * products render from their own holdings, which that axis cannot express.
  */
 export function Usage({
+  localUsersInUse,
   serverPlan,
   serverPlanAction,
   onWalletLoaded,
@@ -125,6 +128,7 @@ export function Usage({
   ]);
   // Locally-accrued usage SaaS hasn't billed yet; added to the synced figure so
   // "current usage" reflects work since the last daily sync. Best-effort.
+  const hasLocalInstance = localUsersInUse !== undefined;
   const [localUsage, setLocalUsage] = useState<LocalUsage | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -175,13 +179,14 @@ export function Usage({
     setSessionExpired(false);
     // Independent of the wallet load — a local-usage failure must not break the
     // page; it just means no unsynced delta is shown.
-    fetchLocalUsage()
-      .then((u) => {
-        if (!cancelled) setLocalUsage(u);
-      })
-      .catch(() => {
-        if (!cancelled) setLocalUsage(null);
-      });
+    if (hasLocalInstance)
+      fetchLocalUsage()
+        .then((u) => {
+          if (!cancelled) setLocalUsage(u);
+        })
+        .catch(() => {
+          if (!cancelled) setLocalUsage(null);
+        });
     fetchWallet()
       .then((w) => {
         if (cancelled) return;
@@ -216,9 +221,30 @@ export function Usage({
     return () => {
       cancelled = true;
     };
-  }, [refreshKey, onWalletLoaded, t]);
+  }, [refreshKey, onWalletLoaded, t, hasLocalInstance]);
 
   const refresh = useCallback(() => setRefreshKey((k) => k + 1), []);
+  useEffect(() => {
+    const refreshVisible = () => {
+      if (document.visibilityState === "visible") refresh();
+    };
+    window.addEventListener("focus", refreshVisible);
+    const interval = window.setInterval(refreshVisible, 30_000);
+    return () => {
+      window.removeEventListener("focus", refreshVisible);
+      window.clearInterval(interval);
+    };
+  }, [refresh]);
+  useEffect(() => {
+    const onBillingUpdated = () => {
+      void refreshWalletCache()
+        .catch(() => {})
+        .finally(refresh);
+    };
+    window.addEventListener("stirling:billing-updated", onBillingUpdated);
+    return () =>
+      window.removeEventListener("stirling:billing-updated", onBillingUpdated);
+  }, [refresh]);
   const refreshAfterLicense = useCallback(() => {
     void refreshWalletCache()
       .catch(() => {})
@@ -232,14 +258,15 @@ export function Usage({
   // Optional on purpose: a build that mounts no provider must lose the door, not the page.
   const checkout = useCheckoutOptional();
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
-  const usersInUse = wallet?.team?.usersInUse;
+  const usersInUse =
+    localUsersInUse === undefined ? wallet?.team?.usersInUse : localUsersInUse;
   const addCapacity = useCallback(() => {
     // No email: the only one this instance holds is its local admin record, which is a Spring
     // username and not an address the buyer owns. The checkout asks for one instead.
     void checkout?.openCheckout("server", {
       combinedChoose: true,
       currentLimit: heldLimit,
-      minimumSeats: usersInUse,
+      minimumSeats: usersInUse ?? undefined,
       onSuccess: () => setRefreshKey((k) => k + 1),
     });
   }, [checkout, heldLimit, usersInUse]);
@@ -263,7 +290,7 @@ export function Usage({
           // Nudge the local instance to refresh its gate now so billable work
           // unblocks immediately rather than on its next poll. Fire-and-forget;
           // a no-op on SaaS (no local instance to sync).
-          triggerLocalSync().catch(() => {});
+          if (hasLocalInstance) triggerLocalSync().catch(() => {});
           return true;
         }
       } catch {
@@ -276,13 +303,26 @@ export function Usage({
     // shows its "almost there" notice rather than the page silently self-healing.
     setRefreshKey((k) => k + 1);
     return false;
-  }, [onWalletLoaded]);
+  }, [onWalletLoaded, hasLocalInstance]);
 
   const enterpriseProcessor = serverPlan?.licenseType === "ENTERPRISE";
   const paying = Boolean(wallet?.processor?.active || wallet?.team?.held);
 
   return (
     <BillingScreen
+      usersInUse={localUsersInUse}
+      headerAction={
+        paying && wallet?.role === "leader" ? (
+          <Button
+            fat
+            variant="secondary"
+            onClick={portal.open}
+            disabled={portal.opening}
+          >
+            {t("payment.manageSubscription", "Manage subscription")}
+          </Button>
+        ) : undefined
+      }
       wallet={wallet}
       serverPlan={serverPlan}
       serverPlanAction={serverPlanAction}
@@ -354,6 +394,7 @@ export function Usage({
         </>
       }
       editorsDeployed={editorsDeployed}
+      pdfsProcessed={fleetStats?.pdfsProcessed ?? null}
       licenseSection={renderLicenseSection?.(refreshAfterLicense)}
       onAddCapacity={
         checkout && wallet?.role === "leader" ? addCapacity : undefined
@@ -404,7 +445,7 @@ export function Usage({
           <PaymentSection
             pendingUnits={localUsage?.totalUnsyncedUnits ?? 0}
             wallet={wallet}
-            onManage={portal.open}
+            onManage={wallet.role === "leader" ? portal.open : undefined}
             managing={portal.opening}
           />
         ) : undefined

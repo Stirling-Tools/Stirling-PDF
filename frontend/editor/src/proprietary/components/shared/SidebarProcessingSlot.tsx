@@ -1,13 +1,12 @@
-import { type SidebarProcessingSlotProps } from "@core/components/shared/SidebarProcessingSlot";
-export { type SidebarProcessingSlotProps };
-
 import { DownloadsProcessingWizard } from "@app/components/policies/DownloadsProcessingWizard";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
 
 /**
- * The sentence-length Downloads offer is hidden when the sidebar is collapsed.
+ * The Downloads offer, one more way of getting files in. Hidden without a server that can
+ * run it, and hidden again by the wizard when that server has no readable Downloads directory.
  */
-export function SidebarProcessingSlot({
-  collapsed,
-}: SidebarProcessingSlotProps) {
-  return collapsed ? null : <DownloadsProcessingWizard />;
+export function SidebarProcessingSlot() {
+  const blocked = useServerProcessingBlock();
+  if (blocked) return null;
+  return <DownloadsProcessingWizard />;
 }

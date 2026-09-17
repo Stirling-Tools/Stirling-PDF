@@ -12,7 +12,6 @@ import { useSettingsDirty } from "@app/hooks/useSettingsDirty";
 import { SettingsStickyFooter } from "@app/components/shared/config/SettingsStickyFooter";
 import apiClient from "@app/services/apiClient";
 import { useLoginRequired } from "@app/hooks/useLoginRequired";
-import { usePreferences } from "@app/contexts/PreferencesContext";
 import { useUnsavedChanges } from "@app/contexts/UnsavedChangesContext";
 import { qk } from "@app/query/keys";
 import { toUnderscoreLanguages } from "@app/i18n";
@@ -65,7 +64,6 @@ export default function AdminSystemSection() {
     closeRestartModal,
     restartServer,
   } = useRestartServer();
-  const { updatePreference } = usePreferences();
   const { markClean } = useUnsavedChanges();
   // The folder-access entry box: page state so Discard clears it with the draft.
   const [newRoot, setNewRoot] = useState("");
@@ -172,7 +170,6 @@ export default function AdminSystemSection() {
       const deltaSettings: Record<string, unknown> = {
         "ui.appNameNavbar": settings.ui?.appNameNavbar,
         "ui.languages": settings.ui?.languages,
-        "ui.logoStyle": settings.ui?.logoStyle,
         "ui.hideDisabledTools.googleDrive":
           settings.ui?.hideDisabledTools?.googleDrive,
         "ui.hideDisabledTools.mobileQRScanner":
@@ -327,14 +324,6 @@ export default function AdminSystemSection() {
     loading,
   );
 
-  // Sync local preference with server setting on initial load
-  useEffect(() => {
-    if (loading || !loginEnabled || !general.ui?.logoStyle) return;
-
-    // This ensures localStorage always reflects the server's authoritative value
-    updatePreference("logoVariant", general.ui.logoStyle);
-  }, [loading, loginEnabled, general.ui?.logoStyle, updatePreference]);
-
   // Handle hash navigation for deep linking to specific fields
   useEffect(() => {
     if (location.hash && !loading) {
@@ -385,11 +374,6 @@ export default function AdminSystemSection() {
     // system.frontendUrl the System card just wrote.
     for (const section of SECTION_NAMES) {
       queryClient.invalidateQueries({ queryKey: qk.adminSection(section) });
-    }
-
-    // Update local preference after successful save so the app reflects the saved logo style
-    if (general.ui?.logoStyle) {
-      updatePreference("logoVariant", general.ui.logoStyle);
     }
 
     markSaved();

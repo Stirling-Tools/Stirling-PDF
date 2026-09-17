@@ -258,11 +258,11 @@ public class SaasTeamService {
                     team.getName(),
                     inviter.getUsername());
             saasTeamExtensionService.setPersonal(team, false);
-            // Still the unlimited sentinel, which is what a standard team is until it buys: nothing
-            // enforces capacity for one. Writing the free allowance here instead would state a
-            // ceiling nothing honours, and SaasTeamController's availableSeats would go negative as
-            // the team grew past it. The sentinel goes when enforcement arrives.
-            saasTeamExtensionService.setSeats(team, Integer.MAX_VALUE, Integer.MAX_VALUE);
+            int capacity =
+                    Math.max(
+                            UserLicenseSettingsService.DEFAULT_USER_LIMIT,
+                            saasTeamExtensionService.getMaxSeats(team));
+            saasTeamExtensionService.setSeats(team, capacity, capacity);
         }
 
         // Validate: team can invite (not personal, has available seats)

@@ -42,6 +42,10 @@ export interface OnboardingSlideShellProps {
   /** "close" dismisses; "forward" advances, for a flow with no way out. Both call
    *  {@link onClose}; forward is drawn even when `allowDismiss` is false. */
   headerControl?: "close" | "forward";
+  /** Standalone prompts supply their own dialog name instead of "Onboarding". */
+  ariaLabel?: string;
+  /** Prompts opened over a fullscreen editor must sit above that surface. */
+  zIndex?: number;
 }
 
 /**
@@ -82,6 +86,8 @@ export default function OnboardingSlideShell({
   onClose,
   allowDismiss = true,
   headerControl = "close",
+  ariaLabel,
+  zIndex = Z_INDEX_ONBOARDING_CARD,
 }: OnboardingSlideShellProps) {
   const { t } = useTranslation();
   const showProgress = stepCount > 1;
@@ -119,7 +125,7 @@ export default function OnboardingSlideShell({
       centered
       size="lg"
       radius={20}
-      zIndex={Z_INDEX_ONBOARDING_CARD}
+      zIndex={zIndex}
       styles={{
         body: { padding: 0, maxHeight: "90vh", overflow: "hidden" },
         content: {
@@ -133,7 +139,7 @@ export default function OnboardingSlideShell({
       <Modal.Overlay />
       <Modal.Content
         radius={20}
-        aria-label={t("onboarding.dialogLabel", "Onboarding")}
+        aria-label={ariaLabel ?? t("onboarding.dialogLabel", "Onboarding")}
       >
         <Modal.Body>
           <div className={styles.card}>
