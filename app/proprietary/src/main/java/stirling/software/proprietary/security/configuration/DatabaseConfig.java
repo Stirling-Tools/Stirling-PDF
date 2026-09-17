@@ -5,6 +5,7 @@ import java.util.Locale;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
@@ -13,6 +14,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.Profile;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+
+import com.zaxxer.hikari.HikariDataSource;
 
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
@@ -65,6 +68,28 @@ public class DatabaseConfig {
 
     private final ApplicationProperties.Datasource datasource;
 
+    // Declaring the DataSource bean makes Boot's Hikari auto-config back off, so these have to be
+    // bound by hand or spring.datasource.hikari.* is silently inert. Defaults match Hikari's own.
+    @Value("${spring.datasource.hikari.maximum-pool-size:10}")
+    private int maximumPoolSize;
+
+    // -1 leaves Hikari's default, where minimumIdle tracks maximumPoolSize.
+    @Value("${spring.datasource.hikari.minimum-idle:-1}")
+    private int minimumIdle;
+
+    @Value("${spring.datasource.hikari.idle-timeout:600000}")
+    private long idleTimeout;
+
+    @Value("${spring.datasource.hikari.max-lifetime:1800000}")
+    private long maxLifetime;
+
+    // 0 disables keepalive, as Hikari does out of the box.
+    @Value("${spring.datasource.hikari.keepalive-time:0}")
+    private long keepaliveTime;
+
+    @Value("${spring.datasource.hikari.connection-timeout:30000}")
+    private long connectionTimeout;
+
     /** Opens the configured database; entitlement checks must read this same database. */
     public DatabaseConfig(ApplicationProperties.Datasource datasource) {
         DATASOURCE_DEFAULT_URL =
@@ -84,10 +109,36 @@ public class DatabaseConfig {
         DataSourceBuilder<?> dataSourceBuilder = DataSourceBuilder.create();
 
         if (!datasource.isEnableCustomDatabase()) {
-            return useDefaultDataSource(dataSourceBuilder);
+            return applyPoolSettings(useDefaultDataSource(dataSourceBuilder));
         }
 
-        return useCustomDataSource(dataSourceBuilder);
+        return applyPoolSettings(useCustomDataSource(dataSourceBuilder));
+    }
+
+    /**
+     * Binds {@code spring.datasource.hikari.*} onto the pool. A remote database makes the defaults
+     * of 10 connections and no keepalive a real constraint, and today there is no way to change
+     * them. No-ops when the properties were never injected, e.g. under direct construction.
+     */
+    private DataSource applyPoolSettings(DataSource dataSource) {
+        if (!(dataSource instanceof HikariDataSource hikari) || maximumPoolSize <= 0) {
+            return dataSource;
+        }
+        hikari.setMaximumPoolSize(maximumPoolSize);
+        if (minimumIdle >= 0) {
+            hikari.setMinimumIdle(minimumIdle);
+        }
+        hikari.setIdleTimeout(idleTimeout);
+        hikari.setMaxLifetime(maxLifetime);
+        hikari.setKeepaliveTime(keepaliveTime);
+        hikari.setConnectionTimeout(connectionTimeout);
+        log.info(
+                "Connection pool: max {}, min idle {}, keepalive {}ms, max lifetime {}ms",
+                hikari.getMaximumPoolSize(),
+                hikari.getMinimumIdle(),
+                keepaliveTime,
+                maxLifetime);
+        return dataSource;
     }
 
     private DataSource useDefaultDataSource(DataSourceBuilder<?> dataSourceBuilder) {
