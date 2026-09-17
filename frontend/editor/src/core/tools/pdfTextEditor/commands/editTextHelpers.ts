@@ -19,6 +19,8 @@ import { getActiveCharcodeStrategy } from "@app/tools/pdfTextEditor/charcode/Cha
 import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/util/fallbackFont";
 import { emitDeviceFontTextObject } from "@app/tools/pdfTextEditor/util/deviceFontEmbed";
 import { nearestStandardFont } from "@app/tools/pdfTextEditor/util/fontFamily";
+import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { analyzeTextDirection } from "@app/tools/pdfTextEditor/util/textDirection";
 
 // Remove a PAGE-level object and FREE its PDFium allocation.
 // `FPDFPage_RemoveObject` only detaches the object.
@@ -240,7 +242,7 @@ export function removeMemberPtrs(
   return allOk;
 }
 
-interface CreatedTextOptions {
+export interface CreatedTextOptions {
   doc: EditorDocument;
   page: Page;
   text: string;
@@ -269,6 +271,12 @@ interface CreatedTextOptions {
   // so callers that must map pointers back onto the source string cannot guess
   // it - and reading it back costs a full page text extraction per line.
   outTexts?: string[];
+  /** Logical UTF-16 offset for text passed by a recursive word emit. */
+  logicalOffset?: number;
+  /** Logical start offset for each returned pointer, parallel to outTexts. */
+  outLogicalIndices?: number[];
+  /** Complex text must use resolved charcodes or a selected fallback font. */
+  allowRawSetText?: boolean;
 }
 
 interface CreateTextObjModule {
@@ -673,6 +681,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   const family = opts.fallbackFamily ?? "Helvetica";
   const m2 = m as unknown as CreateTextObjModule;
   const canReuse = opts.originalFontPtr !== 0 && !!m2.FPDFPageObj_CreateTextObj;
+  const direction = analyzeTextDirection(opts.text);
 
   // Words are laid out horizontally from (opts.x, opts.y).
   const withRotation = (ptrs: number[]): number[] => {
@@ -686,6 +695,28 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // re-apply the source run's ink state - new objects default to a flat fill.
     applyInkState(m, ptrs, opts);
     return ptrs;
+  };
+
+  const logicalOffset = opts.logicalOffset ?? 0;
+  const reorderObjectsForLogicalExtraction = (
+    ptrs: number[],
+    logicalStarts: number[],
+  ): void => {
+    if (ptrs.length < 2 || ptrs.length !== logicalStarts.length) return;
+    const logicalOrder = ptrs
+      .map((ptr, index) => ({ ptr, start: logicalStarts[index] }))
+      .sort((a, b) => a.start - b.start);
+    // PDFium does not reorder separate text objects during extraction. Their
+    // matrices stay visual, while page-list order stays logical for reopen.
+    for (const { ptr } of logicalOrder) {
+      try {
+        const removed = m.FPDFPage_RemoveObject(opts.page.pagePtr, ptr);
+        if (removed === false) continue;
+        m.FPDFPage_InsertObject(opts.page.pagePtr, ptr);
+      } catch {
+        // Display and the in-memory mapping remain valid if detach is absent.
+      }
+    }
   };
 
   // Emit ONE word at (x, y) and return its pointer (0 on failure).
@@ -770,6 +801,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     // Reuse path: resolve real font charcodes so the embedded subset font
     // renders the chars; falls back to SetText internally.
     const strategyUsed = writeViaCharcodesOrSetText(ptr, text);
+    if (strategyUsed === "unusable") {
+      removeAndDestroyObject(m, opts.page.pagePtr, ptr);
+      return emitBase14();
+    }
     applyFillAndPos(m, opts.page, ptr, opts.fill, x, opts.y);
     // A whole-word SetCharcodes write via the BACKEND resolver used known-good
     // (font, charcode) pairs PDFBox validated, so the glyph is real.
@@ -847,8 +882,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   function writeViaCharcodesOrSetText(
     ptr: number,
     text: string,
-  ): string | null {
+  ): string | null | "unusable" {
     const strategy = getActiveCharcodeStrategy();
+    const allowRawSetText =
+      opts.allowRawSetText !== false && direction.kind === "ltr";
     // The content-stream resolver is an untrusted sequential-CID GUESS.
     if (
       strategy === "content-stream" &&
@@ -864,6 +901,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         note: "content-stream active but ungated (not subset+single-cp) - using SetText",
         outcome: "partial-coverage-fallback",
       });
+      if (!allowRawSetText) return "unusable";
       setTextOn(m, ptr, text);
       return null;
     }
@@ -880,6 +918,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
           : "originalFontPtr is 0",
         outcome: "no-font",
       });
+      if (!allowRawSetText) return "unusable";
       setTextOn(m, ptr, text);
       return null;
     }
@@ -908,6 +947,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         note: "active strategy is 'helvetica' (no resolver)",
         outcome: "no-strategy",
       });
+      if (!allowRawSetText) return "unusable";
       setTextOn(m, ptr, text);
       return null;
     }
@@ -952,8 +992,42 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         outcome: "partial-coverage-fallback",
       });
     }
+    if (!allowRawSetText) return "unusable";
     setTextOn(m, ptr, text);
     return null;
+  }
+
+  if (direction.kind !== "ltr") {
+    const ptrs: number[] = [];
+    const logicalStarts: number[] = [];
+    const logicalTexts: string[] = [];
+    let cursor = opts.x;
+    for (const glyph of direction.visualGlyphs) {
+      const ptr = emitWord(glyph.logicalText, cursor);
+      if (ptr) {
+        ptrs.push(ptr);
+        logicalStarts.push(logicalOffset + glyph.logicalStart);
+        logicalTexts.push(glyph.logicalText);
+      }
+      const measured = ptr ? measureObjRightEdgePt(m, ptr) - cursor : 0;
+      const metric = measureAdvancePt(glyph.renderedText, family, size);
+      const advance = measured >= metric * 0.35 ? measured : metric;
+      if (ptr && glyph.renderedText !== glyph.logicalText && advance > 0) {
+        const axis = cursor + advance / 2;
+        // Keep the logical code point in the PDF and mirror only its glyph;
+        // extraction after save/reopen must not expose the visual substitute.
+        transformObject(m, ptr, -1, 0, 0, 1, 2 * axis, 0);
+      }
+      cursor += Math.max(0, advance) + (opts.charSpacingPt ?? 0);
+    }
+    const ordered = orderEmittedTextPieces(ptrs, logicalTexts, logicalStarts);
+    opts.outTexts?.push(...ordered.map((part) => part.text));
+    opts.outLogicalIndices?.push(...ordered.map((part) => part.logicalStart));
+    reorderObjectsForLogicalExtraction(
+      ordered.map((part) => part.ptr),
+      ordered.map((part) => part.logicalStart),
+    );
+    return withRotation(ordered.map((part) => part.ptr));
   }
 
   // Per-char emit branch for the BACKEND strategy.
@@ -971,9 +1045,14 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       docPtr: opts.doc.docPtr,
     };
     // Probe per char first.
-    const perChar: Array<{ ch: string; font: number; charcodes: number[] }> =
-      [];
+    const perChar: Array<{
+      ch: string;
+      font: number;
+      charcodes: number[];
+      logicalStart: number;
+    }> = [];
     let allOk = true;
+    let logicalStart = 0;
     for (const ch of opts.text) {
       // Prefer the run's OWN font when it renders this char: it is the
       // authoritative font for the run's text.
@@ -1031,7 +1110,9 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         ch,
         font: charFont,
         charcodes: resolved.result.charcodes,
+        logicalStart,
       });
+      logicalStart += ch.length;
     }
     if (allOk && perChar.length === [...opts.text].length) {
       // Per-char emit: one text object per char, each with its OWN font.
@@ -1091,6 +1172,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         });
         ptrs.push(ptr);
         opts.outTexts?.push(pc.ch);
+        opts.outLogicalIndices?.push(logicalOffset + pc.logicalStart);
         // Mark this ptr as verified - it was created via the per-char branch
         // with a known-good pair from the backend resolver cache.
         perCharBranchPtrs.add(ptr);
@@ -1103,6 +1185,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
         removeAndDestroyObject(m, opts.page.pagePtr, p);
       }
       if (opts.outTexts) opts.outTexts.length = 0;
+      if (opts.outLogicalIndices) opts.outLogicalIndices.length = 0;
     }
     // fall through to the normal path if per-char attempt didn't work
   }
@@ -1117,11 +1200,13 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   ) {
     const ptrs: number[] = [];
     let cursor = opts.x;
+    let logicalStart = 0;
     for (const ch of opts.text) {
       const ptr = emitWord(ch, cursor);
       if (ptr) {
         ptrs.push(ptr);
         opts.outTexts?.push(ch);
+        opts.outLogicalIndices?.push(logicalOffset + logicalStart);
       }
       // Advance by the char's true advance width: the on-page advance of the
       // same char+font when it is still measurable, else canvas font metrics.
@@ -1131,6 +1216,7 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
       cursor +=
         (advEm != null ? advEm * size : measureAdvancePt(ch, family, size)) +
         spacingPt;
+      logicalStart += ch.length;
     }
     return withRotation(ptrs);
   }
@@ -1138,7 +1224,10 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
   // Fast path: no whitespace at all → one text object holds the whole word.
   if (!hasAnyWhitespace) {
     const ptr = emitWord(opts.text, opts.x);
-    if (ptr) opts.outTexts?.push(opts.text);
+    if (ptr) {
+      opts.outTexts?.push(opts.text);
+      opts.outLogicalIndices?.push(logicalOffset);
+    }
     return withRotation(ptr ? [ptr] : []);
   }
 
@@ -1153,35 +1242,47 @@ export function emitTextLine(opts: CreatedTextOptions): number[] {
     opts.x +
     (chunks.leadingGapPt ?? 0) +
     spacing * (chunks.leadingGapChars ?? 0);
+  let chunkOffset = chunks.leadingGapChars ?? 0;
   for (const chunk of chunks) {
     if (chunk.text.length > 0) {
       // Recurse per word.
       const chunkTexts: string[] = [];
+      const chunkLogicalIndices: number[] = [];
       const wordPtrs = emitTextLine({
         ...opts,
         text: chunk.text,
         x: cursor,
         rotation: undefined,
         outTexts: opts.outTexts ? chunkTexts : undefined,
+        logicalOffset: logicalOffset + chunkOffset,
+        outLogicalIndices: opts.outLogicalIndices
+          ? chunkLogicalIndices
+          : undefined,
+        allowRawSetText: opts.allowRawSetText,
       });
-      if (wordPtrs.length === 0) continue;
-      if (opts.outTexts) opts.outTexts.push(...chunkTexts);
-      let rightEdge = 0;
-      for (const p of wordPtrs)
-        rightEdge = Math.max(rightEdge, measureObjRightEdgePt(m, p));
-      // Only trust the measured edge when it advanced by a believable amount:
-      // a face PDFium can't measure reports a near-zero ink box and would put
-      // the next word on top of this one.
-      const metric = measureAdvancePt(chunk.text, family, size);
-      const advanced = rightEdge > cursor ? rightEdge - cursor : 0;
-      cursor += advanced >= metric * 0.35 ? advanced : metric;
-      ptrs.push(...wordPtrs);
+      if (wordPtrs.length > 0) {
+        if (opts.outTexts) opts.outTexts.push(...chunkTexts);
+        if (opts.outLogicalIndices) {
+          opts.outLogicalIndices.push(...chunkLogicalIndices);
+        }
+        let rightEdge = 0;
+        for (const p of wordPtrs)
+          rightEdge = Math.max(rightEdge, measureObjRightEdgePt(m, p));
+        // Only trust the measured edge when it advanced by a believable amount:
+        // a face PDFium can't measure reports a near-zero ink box and would put
+        // the next word on top of this one.
+        const metric = measureAdvancePt(chunk.text, family, size);
+        const advanced = rightEdge > cursor ? rightEdge - cursor : 0;
+        cursor += advanced >= metric * 0.35 ? advanced : metric;
+        ptrs.push(...wordPtrs);
+      }
     }
     // Word gaps stretch with the run's letter-spacing too: the source layout
     // applies Tc after the glyph preceding the gap AND after each space.
     cursor +=
       chunk.gapAfterPt +
       (chunk.gapCharCount > 0 ? spacing * (chunk.gapCharCount + 1) : 0);
+    chunkOffset += chunk.text.length + chunk.gapCharCount;
   }
   return withRotation(ptrs);
 }
@@ -1430,8 +1531,62 @@ export interface EmittedLine {
   /** Text of each ptr, parallel to `ptrs`. Callers must not re-derive this:
    * emitTextLine emits per word OR per character, and guessing drops ptrs. */
   texts: string[];
+  /** Logical UTF-16 start for each ptr, parallel to ptrs/texts. */
+  logicalIndices: number[];
   x: number;
   y: number;
+}
+
+export interface EmittedTextPiece {
+  ptr: number;
+  text: string;
+  logicalStart: number;
+}
+
+/** Pair emitted objects with their logical text and keep the model order. */
+export function orderEmittedTextPieces(
+  ptrs: number[],
+  texts: string[],
+  logicalStarts: number[],
+): EmittedTextPiece[] {
+  if (ptrs.length !== texts.length || ptrs.length !== logicalStarts.length) {
+    return [];
+  }
+  return ptrs
+    .map((ptr, index) => ({
+      ptr,
+      text: texts[index],
+      logicalStart: logicalStarts[index],
+    }))
+    .sort((a, b) => a.logicalStart - b.logicalStart);
+}
+
+/** Read one text object's horizontal bounds for logical pointer bookkeeping. */
+export function textObjectBoundsPt(
+  m: WrappedPdfiumModule,
+  ptr: number,
+  fallbackX: number,
+): { x: number; right: number } {
+  const l = m.pdfium.wasmExports.malloc(4);
+  const b = m.pdfium.wasmExports.malloc(4);
+  const r = m.pdfium.wasmExports.malloc(4);
+  const t = m.pdfium.wasmExports.malloc(4);
+  try {
+    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) {
+      return { x: fallbackX, right: fallbackX };
+    }
+    return {
+      x: m.pdfium.getValue(l, "float"),
+      right: m.pdfium.getValue(r, "float"),
+    };
+  } catch {
+    return { x: fallbackX, right: fallbackX };
+  } finally {
+    m.pdfium.wasmExports.free(l);
+    m.pdfium.wasmExports.free(b);
+    m.pdfium.wasmExports.free(r);
+    m.pdfium.wasmExports.free(t);
+  }
 }
 
 // THE one place a whole run is re-emitted line by line. Rotation, ink state and
@@ -1454,12 +1609,21 @@ export function emitRunLines(opts: {
     const origin = opts.origins[i];
     if (!origin) continue;
     if (text.length === 0) {
-      out.push({ ptrs: [], text: "", texts: [], x: origin.x, y: origin.y });
+      out.push({
+        ptrs: [],
+        text: "",
+        texts: [],
+        logicalIndices: [],
+        x: origin.x,
+        y: origin.y,
+      });
       continue;
     }
     const texts: string[] = [];
+    const logicalIndices: number[] = [];
     const ptrs = emitTextLine({
       outTexts: texts,
+      outLogicalIndices: logicalIndices,
       doc: opts.doc,
       page: opts.page,
       text,
@@ -1475,7 +1639,14 @@ export function emitRunLines(opts: {
       // Keep the run's rotation on re-emit (no-op for upright text).
       rotation: rot,
     });
-    out.push({ ptrs, text, texts, x: origin.x, y: origin.y });
+    out.push({
+      ptrs,
+      text,
+      texts,
+      logicalIndices,
+      x: origin.x,
+      y: origin.y,
+    });
   }
   return out;
 }

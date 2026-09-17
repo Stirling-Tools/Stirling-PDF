@@ -38,6 +38,7 @@ import type {
   TextRun,
 } from "@app/tools/pdfTextEditor/model/TextRun";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { isSimpleLtrText } from "@app/tools/pdfTextEditor/util/textDirection";
 
 interface RevertLine {
   text: string;
@@ -211,7 +212,9 @@ export class EditTextCommand implements Command {
       this.prevText !== null &&
       this.prevText.length > 0 &&
       run.paragraphLineSlots.length >= 1 &&
-      !isRotated
+      !isRotated &&
+      isSimpleLtrText(this.prevText) &&
+      isSimpleLtrText(this.nextText)
     ) {
       const prevLines = this.prevText.split(/\r?\n/);
       const nextLines = this.nextText.split(/\r?\n/);
@@ -409,6 +412,7 @@ export class EditTextCommand implements Command {
     const perLineEmits: Array<{
       ptrs: number[];
       texts: string[];
+      logicalIndices: number[];
       text: string;
       x: number;
       y: number;
@@ -429,6 +433,7 @@ export class EditTextCommand implements Command {
         perLineEmits.push({
           ptrs: [],
           texts: [],
+          logicalIndices: [],
           text: "",
           x: line.x,
           y: line.y,
@@ -441,6 +446,7 @@ export class EditTextCommand implements Command {
         perLineEmits.push({
           ptrs: [],
           texts: [],
+          logicalIndices: [],
           text: line.text,
           x: line.x,
           y: line.y,
@@ -454,6 +460,7 @@ export class EditTextCommand implements Command {
       perLineEmits.push({
         ptrs: line.ptrs,
         texts: line.texts,
+        logicalIndices: line.logicalIndices,
         text: line.text,
         x: line.x,
         y: line.y,
@@ -507,8 +514,27 @@ export class EditTextCommand implements Command {
         originalFontPtr === 0 ? fallbackFontIdFor(fallbackFamily) : run.fontId,
       );
     } else {
-      // Single-line emit.
       run.paragraphLineSlots = [];
+      const emit = perLineEmits[0];
+      if (emit?.ptrs.length > 0) {
+        const slot = buildSlotForLine(
+          m,
+          emit.ptrs,
+          emit.text,
+          emit.y,
+          emit.x,
+          run,
+          originalFontPtr === 0
+            ? fallbackFontIdFor(fallbackFamily)
+            : run.fontId,
+          emit.texts,
+          emit.logicalIndices,
+        );
+        run.mergedFromPtrs = slot.mergedFromPtrs;
+        run.mergedFromTexts = slot.mergedFromTexts;
+        run.mergedFromBounds = slot.mergedFromBounds;
+        run.mergedFromCharStarts = slot.mergedFromCharStarts;
+      }
     }
     // Don't reset paragraphLeafPtrs here - we just set them above to the
     // freshly-emitted chunks so the next overlay edit can remove them.
@@ -933,8 +959,10 @@ export class EditTextCommand implements Command {
         // neighbouring column.
         const lineX = slots[i]?.matrixE ?? leftX;
         const emittedTexts: string[] = [];
+        const emittedLogicalIndices: number[] = [];
         const ptrs = emitTextLine({
           outTexts: emittedTexts,
+          outLogicalIndices: emittedLogicalIndices,
           doc,
           page,
           text,
@@ -964,6 +992,7 @@ export class EditTextCommand implements Command {
           run,
           reuseFontPtr ? run.fontId : fallbackFontIdFor(fallbackFamily),
           emittedTexts,
+          emittedLogicalIndices,
         );
       }
       slot.startChar = cursor;
@@ -1074,6 +1103,7 @@ export class EditTextCommand implements Command {
         newMemberFs.push(y);
       } else {
         const emittedTexts: string[] = [];
+        const emittedLogicalIndices: number[] = [];
         const ptrs = emitTextLine({
           doc,
           page,
@@ -1087,6 +1117,7 @@ export class EditTextCommand implements Command {
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
           outTexts: emittedTexts,
+          outLogicalIndices: emittedLogicalIndices,
         });
         this.lineEdit.createdPtrs.push(...ptrs);
         newLeaf.push(...ptrs);
@@ -1101,6 +1132,7 @@ export class EditTextCommand implements Command {
           run,
           fallbackFontIdFor(fallbackFamily),
           emittedTexts,
+          emittedLogicalIndices,
         );
       }
       slot.startChar = cursor;
@@ -1305,6 +1337,7 @@ function buildSlotsFromOverlayEmit(
   perLineEmits: Array<{
     ptrs: number[];
     texts: string[];
+    logicalIndices: number[];
     text: string;
     x: number;
     y: number;
@@ -1341,20 +1374,25 @@ function buildSlotsFromOverlayEmit(
     const mergedFromPtrs: number[] = [];
     const mergedFromBounds: Array<{ x: number; right: number }> = [];
     const mergedFromCharStarts: number[] = [];
-    if (emit.texts.length === emit.ptrs.length) {
+    if (
+      emit.texts.length === emit.ptrs.length &&
+      emit.logicalIndices.length === emit.ptrs.length
+    ) {
       // The emitter told us what each ptr carries. Never re-derive it: it emits
       // per word OR per character, and the word guess below silently dropped
       // every ptr past the word count, leaving those glyphs painted forever.
-      let at = 0;
-      for (let i = 0; i < emit.ptrs.length; i++) {
-        const piece = emit.texts[i];
-        const found = text.indexOf(piece, at);
-        const start = found >= 0 ? found : at;
-        mergedFromPtrs.push(emit.ptrs[i]);
-        mergedFromTexts.push(piece);
-        mergedFromBounds.push(boundsFromPtr(m, emit.ptrs[i], run.matrix.e));
-        mergedFromCharStarts.push(start);
-        at = start + piece.length;
+      const emitted = emit.ptrs
+        .map((ptr, i) => ({
+          ptr,
+          piece: emit.texts[i],
+          start: emit.logicalIndices[i],
+        }))
+        .sort((a, b) => a.start - b.start);
+      for (const piece of emitted) {
+        mergedFromPtrs.push(piece.ptr);
+        mergedFromTexts.push(piece.piece);
+        mergedFromBounds.push(boundsFromPtr(m, piece.ptr, emit.x));
+        mergedFromCharStarts.push(piece.start);
       }
     } else if (emit.ptrs.length === 1) {
       mergedFromPtrs.push(emit.ptrs[0]);
@@ -1391,7 +1429,7 @@ function buildSlotsFromOverlayEmit(
       startChar,
       endChar,
       baselineY: emit.y,
-      matrixE: run.matrix.e,
+      matrixE: emit.x,
       containerPtr: 0,
       fontId,
       fontSize: run.fontSize,
@@ -1561,11 +1599,47 @@ function buildSlotForLine(
   run: TextRun,
   fontId: string,
   emitted?: string[],
+  logicalIndices?: number[],
 ): ParagraphLineSlot {
   const mergedFromPtrs: number[] = [];
   const mergedFromTexts: string[] = [];
   const mergedFromBounds: Array<{ x: number; right: number }> = [];
   const mergedFromCharStarts: number[] = [];
+  if (
+    emitted &&
+    logicalIndices &&
+    emitted.length === ptrs.length &&
+    logicalIndices.length === ptrs.length
+  ) {
+    const ordered = ptrs
+      .map((ptr, index) => ({
+        ptr,
+        text: emitted[index],
+        start: logicalIndices[index],
+      }))
+      .sort((a, b) => a.start - b.start);
+    for (const piece of ordered) {
+      const b = boundsFromPtr(m, piece.ptr, leftX);
+      mergedFromPtrs.push(piece.ptr);
+      mergedFromTexts.push(piece.text);
+      mergedFromBounds.push({ x: b.x, right: b.right });
+      mergedFromCharStarts.push(piece.start);
+    }
+    return {
+      startChar: 0,
+      endChar: text.length,
+      baselineY,
+      matrixE: leftX,
+      containerPtr: 0,
+      fontId,
+      fontSize: run.fontSize,
+      fontSubset: false,
+      mergedFromPtrs,
+      mergedFromTexts,
+      mergedFromBounds,
+      mergedFromCharStarts,
+    };
+  }
   const words = sliceLineAcrossPtrs(ptrs, text, emitted);
   for (let i = 0; i < ptrs.length; i++) {
     const w = words[i];

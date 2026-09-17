@@ -1,12 +1,15 @@
 import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
-import { writeUtf16 } from "@app/services/pdfiumService";
+import {
+  emitTextLine,
+  orderEmittedTextPieces,
+  textObjectBoundsPt,
+} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import {
   fallbackFamilyFor,
   fallbackFontIdFor,
 } from "@app/tools/pdfTextEditor/util/fontCapability";
-import { sanitizeForBase14 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 
 // Clone a text run at a fixed offset (default 12pt right + 12pt down) so the
 // user can quickly stamp the same text elsewhere on the page.
@@ -17,13 +20,13 @@ export class DuplicateRunCommand implements Command {
   private readonly pageIndex: number;
   private readonly runId: string;
   private createdRunId: string | null;
-  private createdObjPtr: number;
+  private createdObjPtrs: number[];
 
   constructor(opts: { pageIndex: number; runId: string }) {
     this.pageIndex = opts.pageIndex;
     this.runId = opts.runId;
     this.createdRunId = null;
-    this.createdObjPtr = 0;
+    this.createdObjPtrs = [];
   }
 
   get insertedRunId(): string | null {
@@ -34,41 +37,30 @@ export class DuplicateRunCommand implements Command {
     const page = doc.page(this.pageIndex);
     const src = page.findRun(this.runId);
     if (!src) return;
-    const m = doc.module;
     const fallback = fallbackFamilyFor(src.fontId);
-    const newPtr = m.FPDFPageObj_NewTextObj(
-      doc.docPtr,
-      fallback,
-      Math.max(4, src.fontSize),
-    );
-    if (!newPtr) return;
-    // Base-14 (WinAnsi) can't render >U+00FF; sanitize so non-Latin code
-    // points are dropped rather than persisted as U+00FF ydieresis tofu.
-    const textPtr = writeUtf16(
-      m,
-      sanitizeForBase14(src.text.replace(/\r?\n/g, " ")),
-    );
-    try {
-      m.FPDFText_SetText(newPtr, textPtr);
-    } finally {
-      m.pdfium.wasmExports.free(textPtr);
-    }
-    m.FPDFPageObj_SetFillColor(
-      newPtr,
-      src.fill.r,
-      src.fill.g,
-      src.fill.b,
-      src.fill.a,
-    );
     const newX = src.matrix.e + OFFSET;
     const newY = src.matrix.f - OFFSET;
-    m.FPDFPageObj_Transform(newPtr, 1, 0, 0, 1, newX, newY);
-    m.FPDFPage_InsertObject(page.pagePtr, newPtr);
-    const id = `p${page.index}-dup-${page.runs.length}-${newPtr}`;
+    const emittedTexts: string[] = [];
+    const emittedLogicalIndices: number[] = [];
+    const ptrs = emitTextLine({
+      doc,
+      page,
+      text: src.text.replace(/\r?\n/g, " "),
+      x: newX,
+      y: newY,
+      fontSize: Math.max(4, src.fontSize),
+      fill: src.fill,
+      originalFontPtr: 0,
+      fallbackFamily: fallback,
+      outTexts: emittedTexts,
+      outLogicalIndices: emittedLogicalIndices,
+    });
+    if (ptrs.length === 0) return;
+    const id = `p${page.index}-dup-${page.runs.length}-${ptrs[0]}`;
     const clone = new TextRun({
       id,
       pageIndex: page.index,
-      pdfiumObjPtr: newPtr,
+      pdfiumObjPtr: ptrs[0],
       bounds: {
         x: newX,
         y: newY,
@@ -82,17 +74,34 @@ export class DuplicateRunCommand implements Command {
       fill: { ...src.fill },
       fontSubset: false,
     });
+    const pieces = orderEmittedTextPieces(
+      ptrs,
+      emittedTexts,
+      emittedLogicalIndices,
+    );
+    clone.mergedFromPtrs = pieces.map((piece) => piece.ptr);
+    clone.mergedFromTexts = pieces.map((piece) => piece.text);
+    clone.mergedFromBounds = pieces.map((piece) =>
+      textObjectBoundsPt(doc.module, piece.ptr, newX),
+    );
+    clone.mergedFromCharStarts = pieces.map((piece) => piece.logicalStart);
+    clone.paragraphMemberPtrs = [ptrs[0]];
+    clone.paragraphMemberFs = [newY];
+    clone.paragraphLeafPtrs = [...ptrs];
+    clone.paragraphLeafContainers = ptrs.map(() => 0);
     page.setRuns([...page.runs, clone]);
     page.markDirty();
     page.markNeedsGenerate();
     this.createdRunId = id;
-    this.createdObjPtr = newPtr;
+    this.createdObjPtrs = ptrs;
   }
 
   revert(doc: EditorDocument): void {
-    if (!this.createdObjPtr || !this.createdRunId) return;
+    if (this.createdObjPtrs.length === 0 || !this.createdRunId) return;
     const page = doc.page(this.pageIndex);
-    doc.module.FPDFPage_RemoveObject(page.pagePtr, this.createdObjPtr);
+    for (const ptr of this.createdObjPtrs) {
+      doc.module.FPDFPage_RemoveObject(page.pagePtr, ptr);
+    }
     page.setRuns(page.runs.filter((r) => r.id !== this.createdRunId));
     page.markDirty();
     page.markNeedsGenerate();

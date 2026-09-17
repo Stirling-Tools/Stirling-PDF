@@ -54,6 +54,25 @@ function runsBetween(text: string, before: string, after: string): number {
 }
 
 describe("LineGrouper inter-run space synthesis", () => {
+  it("restores logical order for persisted visual glyph objects", () => {
+    const visual = "123 )גבא( םולש";
+    const page = new Page({ index: 0, pagePtr: 1, width: 600, height: 800 });
+    page.setRuns(
+      [...visual].map((text, index) =>
+        mkRun({ x: 72 + index * 7, width: 7, f: 500, fs: 12, text }),
+      ),
+    );
+    page.loaded = true;
+
+    const groups = LineGrouper.apply(page);
+
+    expect(groups).toHaveLength(1);
+    expect(groups[0].representative.text).toBe("שלום (אבג) 123");
+    expect(groups[0].representative.mergedFromTexts.join("")).toBe(
+      "שלום (אבג) 123",
+    );
+  });
+
   it("emits one space for normal 10pt word gaps", () => {
     const text = joinLine(
       lineOf(

@@ -2,13 +2,13 @@ import type { Command } from "@app/tools/pdfTextEditor/commands/Command";
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
 import { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import { BLACK } from "@app/tools/pdfTextEditor/model/Color";
-import { writeUtf16 } from "@app/services/pdfiumService";
 import {
   counterPageRotation,
+  emitTextLine,
+  orderEmittedTextPieces,
   rotateObjectAbout,
-  sanitizeForBase14,
+  textObjectBoundsPt,
 } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
-import { emitFallbackTextObject } from "@app/tools/pdfTextEditor/util/fallbackFont";
 
 const DEFAULT_FAMILY = "Helvetica";
 const DEFAULT_SIZE = 12;
@@ -22,7 +22,7 @@ export class InsertTextCommand implements Command {
   private readonly y: number;
   private readonly text: string;
   private createdRunId: string | null;
-  private createdObjPtr: number;
+  private createdObjPtrs: number[];
 
   constructor(opts: {
     pageIndex: number;
@@ -35,7 +35,7 @@ export class InsertTextCommand implements Command {
     this.y = opts.y;
     this.text = opts.text ?? "Text";
     this.createdRunId = null;
-    this.createdObjPtr = 0;
+    this.createdObjPtrs = [];
   }
 
   /** Returns the id of the run this command created, after apply. */
@@ -46,43 +46,31 @@ export class InsertTextCommand implements Command {
   apply(doc: EditorDocument): void {
     const page = doc.page(this.pageIndex);
     const m = doc.module;
-
-    // Base-14 (WinAnsi) can't render >U+00FF.
-    const sanitized = sanitizeForBase14(this.text);
-    let objPtr = 0;
-    if ([...this.text].length > [...sanitized].length) {
-      objPtr = emitFallbackTextObject(
-        doc,
-        page,
-        this.text,
-        DEFAULT_SIZE,
-        BLACK,
-        this.x,
-        this.y,
-      );
-    }
-    if (!objPtr) {
-      objPtr = m.FPDFPageObj_NewTextObj(
-        doc.docPtr,
-        DEFAULT_FAMILY,
-        DEFAULT_SIZE,
-      );
-      if (!objPtr) return;
-      const textPtr = writeUtf16(m, sanitized);
-      try {
-        m.FPDFText_SetText(objPtr, textPtr);
-      } finally {
-        m.pdfium.wasmExports.free(textPtr);
-      }
-      m.FPDFPageObj_SetFillColor(objPtr, BLACK.r, BLACK.g, BLACK.b, BLACK.a);
-      m.FPDFPageObj_Transform(objPtr, 1, 0, 0, 1, this.x, this.y);
-      m.FPDFPage_InsertObject(page.pagePtr, objPtr);
-    }
+    const emittedTexts: string[] = [];
+    const emittedLogicalIndices: number[] = [];
+    const ptrs = emitTextLine({
+      doc,
+      page,
+      text: this.text,
+      x: this.x,
+      y: this.y,
+      fontSize: DEFAULT_SIZE,
+      fill: BLACK,
+      originalFontPtr: 0,
+      fallbackFamily: DEFAULT_FAMILY,
+      outTexts: emittedTexts,
+      outLogicalIndices: emittedLogicalIndices,
+    });
+    if (ptrs.length === 0) return;
 
     // On a /Rotate page, counter-rotate the new object about its anchor so it
     // reads upright in the displayed orientation rather than landing sideways.
     const rot = counterPageRotation(page.display.rotate);
-    if (rot) rotateObjectAbout(m, objPtr, this.x, this.y, rot.cos, rot.sin);
+    if (rot) {
+      for (const ptr of ptrs) {
+        rotateObjectAbout(m, ptr, this.x, this.y, rot.cos, rot.sin);
+      }
+    }
     const matrix = rot
       ? {
           a: rot.cos,
@@ -94,11 +82,11 @@ export class InsertTextCommand implements Command {
         }
       : { a: 1, b: 0, c: 0, d: 1, e: this.x, f: this.y };
 
-    const runId = `p${page.index}-new-${page.runs.length}-${objPtr}`;
+    const runId = `p${page.index}-new-${page.runs.length}-${ptrs[0]}`;
     const run = new TextRun({
       id: runId,
       pageIndex: page.index,
-      pdfiumObjPtr: objPtr,
+      pdfiumObjPtr: ptrs[0],
       bounds: {
         x: this.x,
         y: this.y,
@@ -112,18 +100,35 @@ export class InsertTextCommand implements Command {
       fill: { ...BLACK },
       fontSubset: false,
     });
+    const pieces = orderEmittedTextPieces(
+      ptrs,
+      emittedTexts,
+      emittedLogicalIndices,
+    );
+    run.mergedFromPtrs = pieces.map((piece) => piece.ptr);
+    run.mergedFromTexts = pieces.map((piece) => piece.text);
+    run.mergedFromBounds = pieces.map((piece) =>
+      textObjectBoundsPt(m, piece.ptr, this.x),
+    );
+    run.mergedFromCharStarts = pieces.map((piece) => piece.logicalStart);
+    run.paragraphMemberPtrs = [ptrs[0]];
+    run.paragraphMemberFs = [this.y];
+    run.paragraphLeafPtrs = [...ptrs];
+    run.paragraphLeafContainers = ptrs.map(() => 0);
     page.setRuns([...page.runs, run]);
     page.markDirty();
     page.markNeedsGenerate();
 
     this.createdRunId = runId;
-    this.createdObjPtr = objPtr;
+    this.createdObjPtrs = ptrs;
   }
 
   revert(doc: EditorDocument): void {
-    if (!this.createdObjPtr) return;
+    if (this.createdObjPtrs.length === 0) return;
     const page = doc.page(this.pageIndex);
-    doc.module.FPDFPage_RemoveObject(page.pagePtr, this.createdObjPtr);
+    for (const ptr of this.createdObjPtrs) {
+      doc.module.FPDFPage_RemoveObject(page.pagePtr, ptr);
+    }
     if (this.createdRunId) {
       page.setRuns(page.runs.filter((r) => r.id !== this.createdRunId));
     }

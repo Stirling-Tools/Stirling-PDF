@@ -41,6 +41,7 @@ import {
   measureMaxLineWidth,
   resetTextMetricsCache,
 } from "@app/tools/pdfTextEditor/util/textMetrics";
+import { baseDirectionForText } from "@app/tools/pdfTextEditor/util/textDirection";
 import "@app/tools/pdfTextEditor/components/TextRunOverlay.css";
 
 const RENDER_MODE_INVISIBLE = 3;
@@ -757,6 +758,7 @@ export function TextRunOverlay({
       className={`pdf-editor-run${pristine ? " is-pristine" : ""}`}
       contentEditable={!run.locked}
       suppressContentEditableWarning
+      dir={baseDirectionForText(run.text)}
       spellCheck={spellcheck.enabled && focused}
       lang={spellcheckLang ?? undefined}
       data-locked={run.locked ? "true" : undefined}

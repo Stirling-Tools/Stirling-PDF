@@ -2,7 +2,12 @@ import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocume
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
 import { writeUtf16 } from "@app/services/pdfiumService";
-import { collectMemberPtrs } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import {
+  charcodesResolveFully,
+  collectMemberPtrs,
+  sanitizeForBase14,
+} from "@app/tools/pdfTextEditor/commands/editTextHelpers";
+import { isSimpleLtrText } from "@app/tools/pdfTextEditor/util/textDirection";
 import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 
 // Narrowest base-14 glyph ("i") is ~0.22em, so ink well under ~0.15em per
@@ -24,7 +29,29 @@ export class PdfiumTextWriter {
   static commitRunText(doc: EditorDocument, page: Page, run: TextRun): boolean {
     if (!run.pdfiumObjPtr) return false;
     if (run.text.length === 0) return false;
+    if (!isSimpleLtrText(run.text)) return false;
     const m = doc.module;
+    let font = 0;
+    try {
+      font =
+        (
+          m as unknown as {
+            FPDFTextObj_GetFont?: (obj: number) => number;
+          }
+        ).FPDFTextObj_GetFont?.(run.pdfiumObjPtr) ?? 0;
+    } catch {
+      return false;
+    }
+    if (run.fontId.startsWith("base14:")) {
+      if ([...sanitizeForBase14(run.text)].length !== [...run.text].length) {
+        return false;
+      }
+    } else if (
+      !font ||
+      !charcodesResolveFully(m, font, run.text, page.pagePtr, doc.docPtr)
+    ) {
+      return false;
+    }
     const ptr = writeUtf16(m, run.text);
     try {
       m.FPDFText_SetText(run.pdfiumObjPtr, ptr);

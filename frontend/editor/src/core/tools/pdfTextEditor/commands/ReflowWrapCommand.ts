@@ -8,6 +8,7 @@ import type { WrappedPdfiumModule } from "@embedpdf/pdfium";
 import { readUtf16 } from "@app/services/pdfiumService";
 import { rotationFromMatrix } from "@app/tools/pdfTextEditor/commands/editTextHelpers";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { isSimpleLtrText } from "@app/tools/pdfTextEditor/util/textDirection";
 
 /** Reflow a text run's EXISTING glyph objects to fit within `maxWidthPt`. */
 
@@ -68,6 +69,9 @@ export class ReflowWrapCommand implements Command {
     const run = page.findRun(this.runId);
     if (!run) return;
     if (this.maxWidthPt <= 0) return;
+    // The geometry reader orders leaves visually; applying that order back to
+    // run.text would replace the logical RTL model with its visual spelling.
+    if (!isSimpleLtrText(run.text)) return;
     // Reflow math is axis-aligned (advance +x, step -y); a rotated run reads
     // along a rotated axis, so skip rather than scatter glyphs.
     if (rotationFromMatrix(run.matrix)) return;

@@ -17,19 +17,21 @@ import {
 } from "@app/tools/pdfTextEditor/util/fontCapability";
 import { writeUtf16 } from "@app/services/pdfiumService";
 import { transformObject } from "@app/tools/pdfTextEditor/util/objectTransform";
+import { isSimpleLtrText } from "@app/tools/pdfTextEditor/util/textDirection";
 
 /** Set the text of an EXISTING PDFium text object, preserving its font. */
 export function setObjText(
   m: import("@embedpdf/pdfium").WrappedPdfiumModule,
   ptr: number,
   text: string,
-): void {
-  if (!ptr) return;
+): boolean {
+  if (!ptr || !isSimpleLtrText(text)) return false;
   const buf = writeUtf16(m, text);
   try {
     m.FPDFText_SetText(ptr, buf);
+    return true;
   } catch {
-    /* best-effort */
+    return false;
   } finally {
     m.pdfium.wasmExports.free(buf);
   }
@@ -71,6 +73,7 @@ function buildSlotMerged(
   text: string,
   leftX: number,
   emitted?: string[],
+  logicalIndices?: number[],
 ): {
   ptrs: number[];
   texts: string[];
@@ -82,7 +85,27 @@ function buildSlotMerged(
   const bounds: Array<{ x: number; right: number }> = [];
   const charStarts: number[] = [];
   const words: Array<{ text: string; start: number }> = [];
-  if (emitted && emitted.length === ptrs.length) {
+  if (
+    emitted &&
+    emitted.length === ptrs.length &&
+    logicalIndices?.length === ptrs.length
+  ) {
+    const emittedParts = ptrs
+      .map((ptr, index) => ({
+        ptr,
+        text: emitted[index],
+        start: logicalIndices[index],
+      }))
+      .sort((a, b) => a.start - b.start);
+    for (const part of emittedParts) {
+      outPtrs.push(part.ptr);
+      texts.push(part.text);
+      const b = objBoundsLR(m, part.ptr, leftX);
+      bounds.push({ x: b.x, right: b.right });
+      charStarts.push(part.start);
+    }
+    return { ptrs: outPtrs, texts, bounds, charStarts };
+  } else if (emitted && emitted.length === ptrs.length) {
     let at = 0;
     for (const piece of emitted) {
       const found = text.indexOf(piece, at);
@@ -275,6 +298,7 @@ export function planPartialEdit(
   prevText: string,
   nextText: string,
 ): PartialEditPlan | null {
+  if (!isSimpleLtrText(prevText) || !isSimpleLtrText(nextText)) return null;
   if (run.mergedFromPtrs.length === 0) return null;
   if (run.mergedFromTexts.length !== run.mergedFromPtrs.length) return null;
   if (run.mergedFromBounds.length !== run.mergedFromPtrs.length) return null;
@@ -1159,6 +1183,7 @@ export function planParagraphEdit(
   prevText: string,
   nextText: string,
 ): ParagraphEditPlan | null {
+  if (!isSimpleLtrText(prevText) || !isSimpleLtrText(nextText)) return null;
   const slots = run.paragraphLineSlots;
   if (slots.length < 2) return null;
   if (prevText === nextText) return null;
@@ -1313,8 +1338,10 @@ export function applyParagraphEditPlan(
       const fallbackFamily = fallbackFamilyFor(run.fontId);
       if (lineText.length > 0) {
         const emittedTexts: string[] = [];
+        const emittedLogicalIndices: number[] = [];
         const ptrs = emitTextLine({
           outTexts: emittedTexts,
+          outLogicalIndices: emittedLogicalIndices,
           doc,
           page,
           text: lineText,
@@ -1328,7 +1355,14 @@ export function applyParagraphEditPlan(
           charSpacingPt: run.charSpacingPt,
           fallbackFamily,
         });
-        const built = buildSlotMerged(m, ptrs, lineText, leftX, emittedTexts);
+        const built = buildSlotMerged(
+          m,
+          ptrs,
+          lineText,
+          leftX,
+          emittedTexts,
+          emittedLogicalIndices,
+        );
         slot.mergedFromPtrs = built.ptrs;
         slot.mergedFromTexts = built.texts;
         slot.mergedFromBounds = built.bounds;

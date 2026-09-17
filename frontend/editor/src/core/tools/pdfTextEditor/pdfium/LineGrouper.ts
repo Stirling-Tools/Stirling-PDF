@@ -1,5 +1,9 @@
 import type { Page } from "@app/tools/pdfTextEditor/model/Page";
 import type { TextRun } from "@app/tools/pdfTextEditor/model/TextRun";
+import {
+  analyzeTextDirection,
+  logicalOrderFromVisualText,
+} from "@app/tools/pdfTextEditor/util/textDirection";
 
 /** Cluster adjacent text runs on a page into "line groups". */
 export interface LineGroupInfo {
@@ -65,6 +69,20 @@ function isDecorativeOverlap(members: TextRun[]): boolean {
 const BULLET_GLYPHS = /^[\s]*[•·∙▪●○◦‣⁃・‧°]+[\s]*$/;
 function isBulletLead(run: TextRun): boolean {
   return BULLET_GLYPHS.test(run.text) && run.bounds.width <= run.fontSize;
+}
+
+function logicalMembersFromVisualGlyphs(members: TextRun[]): TextRun[] {
+  if (
+    members.length < 2 ||
+    !members.every((member) => [...member.text].length === 1)
+  ) {
+    return members;
+  }
+  const visualText = members.map((member) => member.text).join("");
+  if (analyzeTextDirection(visualText).kind === "ltr") return members;
+  const order = logicalOrderFromVisualText(visualText);
+  if (order.length !== members.length) return members;
+  return order.map((index) => members[index]).filter(Boolean);
 }
 
 // Sort one container's runs top-to-bottom / left-to-right and merge
@@ -165,8 +183,10 @@ export class LineGrouper {
       }
       // Snapshot per-member texts and bounds BEFORE we mutate the
       // representative.
-      const memberTexts = group.members.map((m) => m.text);
-      const memberBounds = group.members.map((m) => ({
+      const visualMembers = group.members;
+      const logicalMembers = logicalMembersFromVisualGlyphs(visualMembers);
+      const memberTexts = logicalMembers.map((m) => m.text);
+      const memberBounds = logicalMembers.map((m) => ({
         x: m.bounds.x,
         right: m.bounds.x + m.bounds.width,
       }));
@@ -199,9 +219,10 @@ export class LineGrouper {
         cumulativeLen += memberTexts[i].length;
       }
       const joined = parts.join("");
-      const last = group.members[group.members.length - 1];
-      const left = group.representative.bounds.x;
-      const right = last.bounds.x + last.bounds.width;
+      const left = Math.min(...visualMembers.map((m) => m.bounds.x));
+      const right = Math.max(
+        ...visualMembers.map((m) => m.bounds.x + m.bounds.width),
+      );
       group.representative.text = joined;
       group.representative.bounds = {
         ...group.representative.bounds,
@@ -213,7 +234,7 @@ export class LineGrouper {
       group.representative.mergedFromTexts = memberTexts;
       group.representative.mergedFromBounds = memberBounds;
       group.representative.mergedFromCharStarts = memberCharStarts;
-      group.representative.mergedFromPtrs = group.members.map(
+      group.representative.mergedFromPtrs = logicalMembers.map(
         (m) => m.pdfiumObjPtr,
       );
     }
