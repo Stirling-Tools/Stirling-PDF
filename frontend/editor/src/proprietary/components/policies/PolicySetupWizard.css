@@ -93,8 +93,10 @@
   flex-wrap: wrap;
 }
 
+/* Accent as text takes the deeper step: --c-accent-fg is --c-primary, which
+   reads 3.67:1 on a light modal surface. */
 .portal-policies__setup-link {
-  color: var(--c-accent-fg, var(--c-primary));
+  color: var(--c-accent-text);
   font-size: 0.8125rem;
 }
 
