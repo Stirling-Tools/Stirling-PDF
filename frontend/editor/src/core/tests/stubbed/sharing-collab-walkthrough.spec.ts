@@ -64,6 +64,19 @@ async function seedFiles(page: Page, files: SeedFile[]): Promise<void> {
           });
           fStore.createIndex("name", "name", { unique: false });
         }
+        // Seeding at the app's own version means the app never upgrades, so every
+        // store it reads has to exist here or the files page errors on mount.
+        if (!db.objectStoreNames.contains("virtual_folders")) {
+          const vStore = db.createObjectStore("virtual_folders", {
+            keyPath: "id",
+          });
+          vStore.createIndex("parentFolderId", "parentFolderId", {
+            unique: false,
+          });
+        }
+        if (!db.objectStoreNames.contains("local_folders")) {
+          db.createObjectStore("local_folders", { keyPath: "id" });
+        }
       };
       open.onsuccess = () => {
         const db = open.result;
@@ -243,6 +256,8 @@ test.describe("Sharing collaboration walkthrough", () => {
     autoGoto: false,
     viewport: { width: 1600, height: 900 },
     seedJwt: true,
+    // The library now opens as a list; these shots are all of the card grid.
+    filesViewMode: "grid",
   });
 
   for (const theme of ["light", "dark"] as const) {
