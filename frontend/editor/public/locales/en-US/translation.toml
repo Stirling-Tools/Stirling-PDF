@@ -9151,7 +9151,8 @@ desc = "Strip hidden data, convert to PDF/A for archiving, and validate every do
 label = "Compliance"
 
 [portal.policies.categories.ingestion]
-desc = "Classify documents, extract structured data, enforce naming conventions, and normalize pages."
+desc = "Read documents, prepare searchable chunks, and deliver them to a knowledge base or export destination."
+description = "Read documents, prepare searchable chunks, and deliver them to a knowledge base or export destination."
 label = "Ingestion"
 
 [portal.policies.categories.retention]
@@ -9185,13 +9186,13 @@ summary = "Strips hidden data, converts to the PDF/A archival format, and valida
 2 = "Validate compliance"
 
 [portal.policies.config.ingestion]
-summary = "Classifies documents, extracts structured data, enforces naming, and normalizes pages."
+description = "Choose the documents to process, make their text searchable, and send chunks to a database or export them."
 
 [portal.policies.config.ingestion.rules]
-0 = "Classify"
-1 = "Extract"
-2 = "Name"
-3 = "Normalize"
+0 = "Read text"
+1 = "Chunk"
+2 = "Index"
+3 = "Keep the original"
 
 [portal.policies.config.pdfa.fields.outputFormat]
 help = "PDF/A-2b suits most archives. PDF/A-1b is the strictest and most widely accepted; PDF/A-3b additionally allows attachments."
@@ -9516,11 +9517,43 @@ noTools = "Enable at least one action."
 saveFailed = "Couldn't save the pipeline. Please try again."
 
 [portal.policies.wizard.locations]
+aiSettings = "Open AI settings"
+builtin = "Stirling knowledge base"
+builtinHelp = "Indexes searchable chunks in Stirling and returns the processed PDF to the destination below. An embedding provider must be configured in AI settings."
+checking = "Checking ingestion availability…"
+chooseOutput = "Choose an enabled output destination before saving."
+chooseSource = "Choose where documents come from"
+chunkSettings = "Chunk settings"
+connectInput = "Connect input source"
+consumed = "Check this source's processing mode: consume deletes originals after a successful run. Choose Track in Edit input source to keep them."
 delivery = "Delivery"
+desktopExternal = "Manage this database connection in the web app’s Processor, or change the output type to return results to this folder."
+destination = "Destination"
+editInput = "Edit input source"
+editor = "Files opened in the editor"
+editorDestination = "Editor workspace"
 editorOutput = "Processed PDFs return to the editor workspace."
+engineUnavailable = "The AI engine is disabled or unreachable. Enable it to prepare chunks, or turn off knowledge search to run OCR only."
+export = "Export chunks without a database"
+exportHelp = "Saves the processed PDF and chunks (JSONL) to the destination below. The AI engine prepares the chunks; no database or embedding provider is needed."
+external = "Connected RAG database"
+externalHelp = "Sends chunks to the selected database, which generates embeddings. The run returns an indexing receipt."
+folder = "Input: {{name}}. Originals are retained when delivering to a RAG database."
+folderOutput = "Processed files are saved in this folder. Corpus exports keep the original PDF."
+indexingUnavailable = "The built-in knowledge base needs an embedding provider. Configure one in AI settings, connect a RAG database, or export chunks without a database."
+input = "Documents to process"
+invalidChunks = "Choose a chunk size from 64 to 32768 and an overlap from 0 to 4096 smaller than the chunk size. Use basic or automatic parsing."
 keepOriginal = "Keep originals and send to a destination"
 keepOriginalHelp = "A copy runs in the background. Your editor files stay unchanged; results are saved to the destination below."
+noDatabase = "No RAG database destination is set up. Connect a source below, then choose or create its database connection and collection."
+output = "Output"
+outputType = "Output type"
+recheck = "Check again"
+retained = "This source does not delete inputs after processing. Choose a separate destination to keep the original files unchanged."
 returnToEditor = "Return results to editor"
+returnToFolder = "Return results to this folder"
+savedDatabase = "Saved RAG database"
+source = "Input source"
 
 [portal.policies.wizard.routing]
 chooseDestination = "Choose a destination"
