@@ -209,6 +209,7 @@ venv.bak/
 
 # Env files (secrets / local overrides). Subproject .gitignore files whitelist any committed defaults.
 .env*
+!/.env
 
 # VS Code
 /.vscode/**/*
