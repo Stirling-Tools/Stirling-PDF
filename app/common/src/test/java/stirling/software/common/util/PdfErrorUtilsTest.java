@@ -40,9 +40,8 @@ class PdfErrorUtilsTest {
                 "Given final block not properly padded"
             })
     void isCorruptedPdfError_decryptionFailures_returnsFalse(String message) {
-        // A document that will not decrypt is not structurally damaged. These are matched by
-        // ExceptionUtils#isEncryptionError; claiming them here too let whichever test ran first
-        // decide the kind, and corruption ran first.
+        // Matched by ExceptionUtils#isEncryptionError instead. Claiming them here too let
+        // whichever check ran first decide the kind, and corruption ran first.
         assertFalse(PdfErrorUtils.isCorruptedPdfError(new IOException(message)));
     }
 

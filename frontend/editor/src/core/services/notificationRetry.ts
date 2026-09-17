@@ -470,12 +470,8 @@ function prunedBelow(value: unknown, depth: number): unknown {
 }
 
 /**
- * What the server said and why, or nulls when it said nothing usable. Never carries the
- * password.
- *
- * These calls ask for a blob, so an error's Problem Details body arrives as one too and has to be
- * read before it can be understood. Without that the reader was shown the transport's own words,
- * which for a document nothing can repair said only "Request failed with status code 500".
+ * What the server said and why, or nulls when it said nothing usable. Never carries the password.
+ * These calls ask for a blob, so an error body arrives as one and has to be read to be understood.
  */
 async function serverFailureOf(
   error: unknown,
@@ -507,8 +503,7 @@ function textOf(blob: Blob): Promise<string | null> {
 
 /**
  * What a JSON error body says, or null when the text is not one. Two shapes reach here: Problem
- * Details from a handler, and `{"error": ...}` from a job that failed, whose text leads with
- * "Job failed:" and the exception's own class name.
+ * Details from a handler, and `{"error": ...}` from a job that failed.
  */
 function detailOf(text: string): string | null {
   try {

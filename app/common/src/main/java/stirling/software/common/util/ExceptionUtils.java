@@ -721,10 +721,8 @@ public class ExceptionUtils {
     /**
      * A step refused its input on type alone, before running.
      *
-     * @param operation the step that refused it, as the run records it
-     * @param accepted the types the step takes, for a message that says what would have worked
-     * @param actual the extension handed to it, not the filename: this message is persisted on the
-     *     failure record, which holds no document names
+     * @param actual the extension, never the filename: this message is persisted on a failure
+     *     record, which holds no document names
      */
     public static StepInputTypeException createStepInputTypeException(
             String operation, List<String> accepted, String actual) {
@@ -1072,10 +1070,8 @@ public class ExceptionUtils {
     public static IOException handlePdfException(IOException e, String context) {
         requireNonNull(e, "exception");
 
-        // Most specific first. Corruption is the catch-all: its patterns cover almost anything
-        // PDFBox gives up on, so testing it earlier claimed every encrypted document that failed
-        // to decrypt and reported it as damaged, which sends the reader to the repair tool for a
-        // file that is not broken.
+        // Most specific first: corruption's patterns cover almost anything PDFBox gives up on,
+        // so testing it earlier reported every document that would not decrypt as damaged.
         if (isPasswordError(e)) {
             return createPdfPasswordException(e);
         }
@@ -1422,9 +1418,8 @@ public class ExceptionUtils {
     }
 
     /**
-     * Exception thrown when a submitted file fails a validation a caller could correct, such as
-     * arriving empty. Coded, so the same refusal is recognisable to a failure record rather than
-     * reaching the generic handler that attaches no code.
+     * A submitted file that fails a validation its caller could correct, such as arriving empty.
+     * Coded, so the refusal reaches a failure record rather than the handler that attaches none.
      */
     public static class FileValidationException extends BaseValidationException {
         public FileValidationException(String message, String errorCode) {

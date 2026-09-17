@@ -65,9 +65,8 @@ function isBlobLike(value: unknown): value is { text: () => Promise<string> } {
 }
 
 /**
- * Report a failure whose code and wording are already known, for a client that learned something
- * new about a document it had already reported: a repair the tools refused says more than the
- * damage that prompted it. Folds onto the matching incident by the server's own dedup.
+ * Report a failure whose code and wording are already known, for a client that has learned
+ * something new about a document it already reported. Folds on by the server's own dedup.
  */
 export async function reportKnownFailure(report: {
   operation: string;

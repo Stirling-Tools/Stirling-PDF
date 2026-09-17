@@ -100,10 +100,8 @@ public class RepairController {
             if (!repairSuccess && isQpdfEnabled()) {
                 List<String> qpdfCommand = new ArrayList<>();
                 qpdfCommand.add("qpdf");
-                // No --replace-input: it edits the input in place and then takes no output path,
-                // so passing one made every fallback die on "unknown argument" before qpdf read a
-                // byte. This is the fallback for what Ghostscript cannot parse, so it failing
-                // silently left the hardest documents with nothing to try.
+                // No --replace-input: it edits the input in place and takes no output path, so
+                // passing one made every fallback die before qpdf read a byte.
                 qpdfCommand.add("--qdf"); // Linearizes and normalizes PDF structure
                 qpdfCommand.add("--object-streams=disable"); // Can help with some corruptions
                 qpdfCommand.add(tempInputFile.getPath().toString());
@@ -117,11 +115,8 @@ public class RepairController {
                     // qpdf exits 3 for warnings it recovered from, which is a repaired file.
                     repairSuccess = qpdfResult.getRc() == 0 || qpdfResult.getRc() == 3;
                 } catch (IOException | RuntimeException e) {
-                    // A non-zero exit throws rather than returning, so letting it out ended the
-                    // request with qpdf's stderr, which names temp paths and explains nothing.
-                    // This is the last tool, so the only thing left to report is that none of them
-                    // could fix it. InterruptedException is deliberately not caught: a cancelled
-                    // job is not a document that cannot be repaired.
+                    // A non-zero exit throws rather than returning, and its stderr names temp
+                    // paths. An interrupt is left to propagate: a cancelled job is not a refusal.
                     log.warn("QPDF repair failed: ", e);
                 }
             }

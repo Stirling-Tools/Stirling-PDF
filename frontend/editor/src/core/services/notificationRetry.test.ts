@@ -421,8 +421,8 @@ describe("unlockLocalDocument", () => {
   });
 
   it("reads the reason out of a blob body, rather than showing the transport's words", async () => {
-    // These calls ask for a blob, so an error's Problem Details body arrives as one. Left unread,
-    // a document nothing can repair reported "Request failed with status code 500".
+    // An error body arrives as a blob here too. Left unread, a document nothing can repair
+    // reported only "Request failed with status code 500".
     getStirlingFiles.mockResolvedValue([new File(["%PDF-1.7"], "broken.pdf")]);
     post.mockRejectedValue({
       response: {

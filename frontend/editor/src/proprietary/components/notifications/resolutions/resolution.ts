@@ -237,10 +237,8 @@ export function rerunOutcome(
 }
 
 /**
- * Replace the row when a refusal says something its kind does not. A repair the tools declined
- * makes the document unrepairable, not merely damaged, and leaving the row as it was would keep
- * offering the fix that has just been refused. Nothing is lost: the new row explains itself, and
- * a code the row's own kind already claims changes nothing and is left alone.
+ * Replace the row when a refusal says something its kind does not, so a fix that has just been
+ * declined is not offered again. A code the kind already claims changes nothing and is left.
  */
 async function supersede(
   context: NotificationActionContext,

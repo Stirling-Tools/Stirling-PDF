@@ -34,9 +34,8 @@ public class PdfErrorUtils {
     private static boolean isCorruptedPdfError(String message) {
         if (message == null) return false;
 
-        // Structural damage only. A failed decryption is not corruption, and listing its messages
-        // here as well as in ExceptionUtils#isEncryptionError let whichever ran first decide:
-        // every encrypted document that would not open was reported as damaged.
+        // Structural damage only: a failed decryption is matched by isEncryptionError, and
+        // listing it here too let whichever check ran first decide the kind.
         return message.contains("Missing root object specification")
                 || message.contains("Header doesn't contain versioninfo")
                 || message.contains("Expected trailer")

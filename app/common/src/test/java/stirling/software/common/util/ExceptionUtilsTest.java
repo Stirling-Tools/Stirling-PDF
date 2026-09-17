@@ -236,9 +236,8 @@ class ExceptionUtilsTest {
 
         @Test
         void aFailedDecryptionIsEncryptionRatherThanCorruption() {
-            // PDFBox's own wording, unmocked: these messages were listed as corruption indicators
-            // as well as encryption ones, and corruption was tested first, so an encrypted file
-            // that would not open was reported as damaged and its reader sent to the repair tool.
+            // Unmocked, in PDFBox's own wording: these were listed as corruption indicators too,
+            // and corruption was tested first, so an undecryptable file read as damaged.
             for (String message :
                     new String[] {
                         "BadPaddingException",

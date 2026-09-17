@@ -78,9 +78,8 @@ public enum FailureKind {
             global(DISMISS, ANYONE_WHO_SEES, OVERFLOW)),
 
     /**
-     * Damage the repair tools have already declined. Separate from {@link #INPUT_CORRUPTED} so the
-     * row stops offering a fix that has been tried and refused: the same press would spend again on
-     * the same answer.
+     * Damage the repair tools have already declined, so the row stops offering a fix that has been
+     * tried and refused.
      */
     INPUT_UNREPAIRABLE(
             FailureStage.INPUT,
