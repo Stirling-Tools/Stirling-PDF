@@ -48,6 +48,14 @@ function dropFiles(files: File[]) {
   document.dispatchEvent(event);
 }
 
+function dragOverFiles() {
+  const event = new Event("dragover", { bubbles: true });
+  Object.defineProperty(event, "dataTransfer", {
+    value: { types: ["Files"], files: [] },
+  });
+  document.dispatchEvent(event);
+}
+
 async function importFiles(files: File[]) {
   const state = {
     files: { ids: [], byId: {} },
@@ -79,6 +87,7 @@ beforeEach(() => {
   storeStirlingFile.mockResolvedValue(undefined);
   invoke.mockImplementation(async (command: string) => {
     if (command === "resolve_dropped_file_paths") return [PATH];
+    if (command === "snapshot_dragged_file_paths") return undefined;
     if (command === "file_disk_state")
       return { availability: "present", size: BYTES.length, modifiedMs: 5000 };
     throw new Error(`Unexpected command: ${command}`);
@@ -116,6 +125,13 @@ describe("desktop imports retain a save target on the initial stored record", ()
         diskSyncedModifiedMs: 5000,
       }),
     ]);
+  });
+
+  it("snapshots the drag pasteboard during dragover", async () => {
+    dragOverFiles();
+    await vi.waitFor(() =>
+      expect(invoke).toHaveBeenCalledWith("snapshot_dragged_file_paths"),
+    );
   });
 
   it("persists the resolved path of a dropped file", async () => {

@@ -1,4 +1,17 @@
 use serde::Deserialize;
+use std::sync::Mutex;
+
+// The macOS drag pasteboard only holds the dragged file URLs while the drag
+// session is live. The drop's resolve command is async IPC, so it runs a run
+// loop turn after the session has ended and the pasteboard reads empty; the
+// snapshot, taken from JS during dragover, is what the drop then matches against.
+static DRAG_SNAPSHOT: Mutex<Vec<std::path::PathBuf>> = Mutex::new(Vec::new());
+
+fn snapshot() -> std::sync::MutexGuard<'static, Vec<std::path::PathBuf>> {
+    DRAG_SNAPSHOT
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+}
 
 #[derive(Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -38,11 +51,29 @@ fn matching_paths(files: &[DroppedFile], paths: Vec<std::path::PathBuf>) -> Vec<
         .collect()
 }
 
-/// Resolves DOM files against the current macOS drag pasteboard, never the general clipboard.
+/// Caches the live drag pasteboard mid-drag so the drop can resolve against it.
+/// Called from dragover, the only point the macOS pasteboard is reliably populated.
+#[tauri::command]
+pub fn snapshot_dragged_file_paths() {
+    let paths = dragged_paths();
+    if !paths.is_empty() {
+        *snapshot() = paths;
+    }
+}
+
+/// Resolves DOM files against the macOS drag pasteboard, never the general clipboard,
+/// falling back to the mid-drag snapshot once the drop has cleared the live one.
 /// Unknown or ambiguous files remain unlinked rather than acquiring an unsafe save target.
 #[tauri::command]
 pub fn resolve_dropped_file_paths(files: Vec<DroppedFile>) -> Vec<Option<String>> {
-    matching_paths(&files, dragged_paths())
+    let live = dragged_paths();
+    let paths = if live.is_empty() {
+        std::mem::take(&mut *snapshot())
+    } else {
+        snapshot().clear();
+        live
+    };
+    matching_paths(&files, paths)
 }
 
 #[cfg(target_os = "macos")]

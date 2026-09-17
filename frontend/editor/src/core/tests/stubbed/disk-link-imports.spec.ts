@@ -117,6 +117,8 @@ test("a Finder-open event stores the link during import", async ({ page }) => {
 });
 
 test("an HTML file drop imports the native path", async ({ page }) => {
+  // dragover snapshots the pasteboard while the drag is live; the drop then
+  // resolves against it, since the live pasteboard is empty by drop time.
   await page.locator(".file-sidebar").evaluate(
     (node, { bytes, mtime }) => {
       const dataTransfer = new DataTransfer();
@@ -126,8 +128,9 @@ test("an HTML file drop imports the native path", async ({ page }) => {
           lastModified: mtime,
         }),
       );
+      Reflect.set(window, "__dropTransfer", dataTransfer);
       node.dispatchEvent(
-        new DragEvent("drop", {
+        new DragEvent("dragover", {
           bubbles: true,
           cancelable: true,
           dataTransfer,
@@ -136,5 +139,19 @@ test("an HTML file drop imports the native path", async ({ page }) => {
     },
     { bytes: BYTES, mtime: MTIME },
   );
+  await expect
+    .poll(() =>
+      page.evaluate(() => (Reflect.get(window, "__dragSnapshot") ?? []).length),
+    )
+    .toBe(1);
+  await page.locator(".file-sidebar").evaluate((node) => {
+    node.dispatchEvent(
+      new DragEvent("drop", {
+        bubbles: true,
+        cancelable: true,
+        dataTransfer: Reflect.get(window, "__dropTransfer"),
+      }),
+    );
+  });
   await expectLinked(page);
 });

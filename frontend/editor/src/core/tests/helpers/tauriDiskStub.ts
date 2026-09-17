@@ -78,8 +78,17 @@ export async function installTauri(page: Page) {
             throw new Error(
               "Unexpected Save As: the imported file must keep its disk path",
             );
-          case "resolve_dropped_file_paths":
-            return w.__droppedPaths ?? [];
+          case "snapshot_dragged_file_paths":
+            // dragover reads the live pasteboard while the drag session holds it.
+            w.__dragSnapshot = w.__droppedPaths ?? [];
+            return null;
+          case "resolve_dropped_file_paths": {
+            // Models macOS: the drop's live pasteboard read comes back empty, so
+            // resolution falls to the mid-drag snapshot.
+            const snapshot = w.__dragSnapshot ?? [];
+            w.__dragSnapshot = [];
+            return snapshot;
+          }
           case "plugin:fs|write_file": {
             const path = decodeURIComponent(options.headers.path);
             w.__writtenPaths = [...(w.__writtenPaths ?? []), path];
