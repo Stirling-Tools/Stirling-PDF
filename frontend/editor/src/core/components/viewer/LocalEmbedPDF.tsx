@@ -7,9 +7,8 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { createPluginRegistration } from "@embedpdf/core";
+import { createPluginRegistration, type PluginRegistry } from "@embedpdf/core";
 import type { InitialDocumentOptions } from "@embedpdf/plugin-document-manager";
-import type { PluginRegistry } from "@embedpdf/core";
 import { EmbedPDF, useDocumentState } from "@embedpdf/core/react";
 import { usePdfiumEngine } from "@embedpdf/engines/react";
 import { PrivateContent } from "@app/components/shared/PrivateContent";
@@ -168,6 +167,8 @@ interface LocalEmbedPDFProps {
   onPageLayout?: () => void;
   /** Fires when the swap bridge activates a replacement document. */
   onDocumentSwapped?: () => void;
+  /** Fires when the swap bridge fails to open or activate a replacement document. */
+  onDocumentSwapFailed?: (error: unknown) => void;
   /** True while a view restore is in flight; gates the per-page layout hook. */
   restorePending?: boolean;
 }
@@ -266,6 +267,7 @@ export function LocalEmbedPDF({
   shouldSkipBytes,
   onPageLayout,
   onDocumentSwapped,
+  onDocumentSwapFailed,
   restorePending = false,
 }: LocalEmbedPDFProps) {
   const { t } = useTranslation();
@@ -497,15 +499,26 @@ export function LocalEmbedPDF({
     };
   }, []);
 
+  const [swapAnnouncement, setSwapAnnouncement] = useState<string | null>(null);
+
   const handleDocumentSwapped = useCallback(() => {
     onDocumentSwapped?.();
     setPendingDocument(null);
-  }, [onDocumentSwapped]);
-  const handleDocumentSwapFailed = useCallback((error: unknown) => {
-    // The outgoing document stays active; the replacement never landed.
-    console.warn("[LocalEmbedPDF] Replacement document failed to open:", error);
-    setPendingDocument(null);
-  }, []);
+    setSwapAnnouncement(t("viewer.documentUpdated", "Document updated"));
+    setTimeout(() => setSwapAnnouncement(null), 3000);
+  }, [onDocumentSwapped, t]);
+  const handleDocumentSwapFailed = useCallback(
+    (error: unknown) => {
+      // The outgoing document stays active; the replacement never landed.
+      console.warn(
+        "[LocalEmbedPDF] Replacement document failed to open:",
+        error,
+      );
+      onDocumentSwapFailed?.(error);
+      setPendingDocument(null);
+    },
+    [onDocumentSwapFailed],
+  );
 
   useEffect(() => {
     // A replacement document has no relation to the deleted annotation.
@@ -737,6 +750,7 @@ export function LocalEmbedPDF({
   return (
     <PrivateContent>
       <div
+        aria-busy={pendingDocument !== null}
         style={{
           height: "100%",
           width: "100%",
@@ -746,6 +760,9 @@ export function LocalEmbedPDF({
           minWidth: 0,
         }}
       >
+        <span className="sr-only" aria-live="polite" aria-atomic="true">
+          {swapAnnouncement}
+        </span>
         <EmbedPDF
           engine={engine}
           plugins={plugins}
@@ -758,7 +775,7 @@ export function LocalEmbedPDF({
             if (!annotationApi) return;
 
             if (enableAnnotations) {
-              // LooseAnnotationTool bypasses strict Partial<T> defaults typing from the library —
+              // LooseAnnotationTool bypasses strict Partial<T> defaults typing from the library:
               // EmbedPDF accepts extra runtime properties (borderWidth, textColor, finishOnDoubleClick,
               // etc.) that aren't reflected in the TypeScript model types.
               type LooseAnnotationTool = {

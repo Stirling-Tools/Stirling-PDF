@@ -52,7 +52,7 @@ export function PdfViewerToolbar({
     scrollState.currentPage || currentPage,
   );
   const [displayZoomPercent, setDisplayZoomPercent] = useState(
-    zoomState.zoomPercent || 140,
+    () => zoomState.zoomPercent || 100,
   );
   const [isDualPageActive, setIsDualPageActive] = useState(
     spreadState.isDualPage,
@@ -74,7 +74,7 @@ export function PdfViewerToolbar({
   // Register for immediate zoom updates and sync with actual zoom state
   useEffect(() => {
     const unregister = registerImmediateZoomUpdate(setDisplayZoomPercent);
-    setDisplayZoomPercent(zoomState.zoomPercent || 140);
+    setDisplayZoomPercent(zoomState.zoomPercent || 100);
     return () => {
       unregister?.();
     };

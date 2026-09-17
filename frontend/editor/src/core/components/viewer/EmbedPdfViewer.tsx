@@ -320,21 +320,24 @@ const EmbedPdfViewerContent = ({
       `[data-page-index="${page - 1}"]`,
     );
     const scroller = findScrollableAncestor(element);
-    let offsetPx: number | null = null;
-    let offsetFraction: number | null = null;
-    if (element && scroller) {
-      const scrollerTop = scroller.getBoundingClientRect().top;
-      const pageTopInContent =
-        element.getBoundingClientRect().top - scrollerTop + scroller.scrollTop;
-      offsetPx = scroller.scrollTop - pageTopInContent;
-      offsetFraction =
-        element.clientHeight > 0 ? offsetPx / element.clientHeight : 0;
+    if (!element || !scroller) {
+      pendingScrollPositionRef.current = null;
+      swapTargetRef.current = null;
+      swapLayoutRef.current = null;
+      documentSwappedRef.current = false;
+      return;
     }
+    const scrollerTop = scroller.getBoundingClientRect().top;
+    const pageTopInContent =
+      element.getBoundingClientRect().top - scrollerTop + scroller.scrollTop;
+    const offsetPx = scroller.scrollTop - pageTopInContent;
+    const offsetFraction =
+      element.clientHeight > 0 ? offsetPx / element.clientHeight : 0;
     pendingScrollPositionRef.current = {
       page,
       offsetPx,
       offsetFraction,
-      pageHeight: element?.clientHeight ?? null,
+      pageHeight: element.clientHeight,
       element,
       scroller,
       expectSwap,
@@ -353,6 +356,7 @@ const EmbedPdfViewerContent = ({
         pending.offsetPx === null ||
         pending.offsetFraction === null
       ) {
+        clearPendingScrollRestore();
         return false;
       }
       const pageEl = document.querySelector<HTMLElement>(
@@ -532,13 +536,11 @@ const EmbedPdfViewerContent = ({
     selectedTool === "addText" ||
     selectedTool === "addImage" ||
     selectedTool === "annotate";
-  const isSignatureMode = isInAnnotationTool;
   const isManualRedactMode = selectedTool === "redact";
 
-  // Enable annotations when annotation tool is selected OR when annotations are visible
-  // (so users can interact with existing comment annotations in reader/viewer mode)
-  const shouldEnableAnnotations =
-    selectedTool === "annotate" || isSignatureMode || isAnnotationsVisible;
+  // Live layer visibility is controlled via showBakedAnnotations CSS; unmounting
+  // AnnotationPlugin on visibility toggle destroys in-memory annotations.
+  const shouldEnableAnnotations = true;
 
   // Enable redaction only when redaction tool is selected
   const shouldEnableRedaction = selectedTool === "redact";
@@ -891,6 +893,8 @@ const EmbedPdfViewerContent = ({
     if (!documentBytesReplaced(previous, current)) return;
 
     hasAnnotationChangesRef.current = false;
+    historyRevisionRef.current = 0;
+    savedHistoryRevisionRef.current = 0;
     setHasUnsavedChanges(false);
     setRedactionsApplied(false);
   }, [
@@ -910,6 +914,17 @@ const EmbedPdfViewerContent = ({
     }
 
     const updateHasChanges = () => {
+      const canUndo = historyApi.canUndo?.() ?? false;
+      if (!canUndo && savedHistoryRevisionRef.current === 0) {
+        historyRevisionRef.current = 0;
+        hasAnnotationChangesRef.current = false;
+        const hasPendingRedactions =
+          (redactionTrackerRef.current?.getPendingCount() ?? 0) > 0;
+        if (!hasPendingRedactions && !redactionsApplied) {
+          setHasUnsavedChanges(false);
+        }
+        return;
+      }
       historyRevisionRef.current += 1;
       if (suppressHistoryDirtyRef.current) return;
       // A revision equal to the save point means the annotations match the
@@ -1286,8 +1301,6 @@ const EmbedPdfViewerContent = ({
       // Clear flags
       hasAnnotationChangesRef.current = false;
       setRedactionsApplied(false);
-
-      console.log("[Viewer] Applied redactions saved, pending marks discarded");
     } catch (error) {
       console.error("Failed to save applied redactions:", error);
     }
@@ -1320,6 +1333,8 @@ const EmbedPdfViewerContent = ({
           }
         }
         hasAnnotationChangesRef.current = false;
+        historyRevisionRef.current = 0;
+        savedHistoryRevisionRef.current = 0;
       },
     });
     return () => unregisterNavigationWarningHandlers();
@@ -1334,17 +1349,12 @@ const EmbedPdfViewerContent = ({
   // Veto the byte swap for a key whose visual state is already on screen.
   const shouldSkipBytes = useCallback((stableKey: string) => {
     const skipKey = skipReloadContentKeyRef.current;
-    return !!skipKey && skipKey === stableKey;
-  }, []);
-
-  // Clear the skip key once the active content key has moved past it, so the
-  // next real byte change reloads normally.
-  useEffect(() => {
-    const skipKey = skipReloadContentKeyRef.current;
-    if (skipKey && skipKey !== currentFileId) {
+    if (skipKey && skipKey === stableKey) {
       skipReloadContentKeyRef.current = null;
+      return true;
     }
-  }, [currentFileId]);
+    return false;
+  }, []);
 
   // Carry the reading position across an in-place reload. A new record in the
   // same version chain rebinds the document under the surviving mount, so the
@@ -1352,14 +1362,17 @@ const EmbedPdfViewerContent = ({
   const previousDocumentRef = useRef<{
     root: string | null;
     content: string | null;
+    encrypted: boolean;
   } | null>(null);
   useLayoutEffect(() => {
     const root = currentFileRootId ?? null;
     const content = currentFileId;
+    const encrypted = isCurrentFileEncrypted;
     const previous = previousDocumentRef.current;
-    previousDocumentRef.current = { root, content };
+    previousDocumentRef.current = { root, content, encrypted };
 
     if (!previous || !root || !content) return;
+    if (previous.encrypted || encrypted) return;
     if (previous.root !== root || previous.content === content) return;
 
     const page = getScrollState().currentPage || lastKnownScrollPageRef.current;
@@ -1373,7 +1386,12 @@ const EmbedPdfViewerContent = ({
     pendingRotationRestoreRef.current = getRotationState().rotation ?? 0;
     rotationRestoreAttemptsRef.current = 0;
 
-    const level = getZoomState().level;
+    const zoom = getZoomState();
+    // Automatic re-evaluates against the unmounted shell; preserve the numeric scale.
+    const level =
+      zoom.level === ZoomMode.Automatic && typeof zoom.currentZoom === "number"
+        ? zoom.currentZoom
+        : (zoom.level ?? zoom.currentZoom);
     if (level !== undefined && level !== null) {
       pendingZoomRestoreRef.current = level;
       zoomRestoreAttemptsRef.current = 0;
@@ -1385,6 +1403,7 @@ const EmbedPdfViewerContent = ({
   }, [
     currentFileRootId,
     currentFileId,
+    isCurrentFileEncrypted,
     getScrollState,
     getRotationState,
     getZoomState,
@@ -1493,9 +1512,36 @@ const EmbedPdfViewerContent = ({
       // The incoming document is still hidden, so a carried mode or level can
       // land before anything is shown.
       try {
-        zoomActions.requestZoom(zoomToRestore);
+        const current = getZoomState();
+        const alreadyApplied =
+          current.level === zoomToRestore &&
+          (typeof zoomToRestore !== "number" ||
+            Math.abs((current.currentZoom ?? 0) - zoomToRestore) < 0.001);
+        if (!alreadyApplied) {
+          zoomActions.requestZoom(zoomToRestore);
+        }
       } catch {
-        // No viewport metrics yet; the retry effect applies it below.
+        // Handled by retry effect
+      }
+    }
+    const spreadToRestore = pendingSpreadRestoreRef.current;
+    if (spreadToRestore !== null) {
+      try {
+        if (spreadActions.getSpreadMode() !== spreadToRestore) {
+          spreadActions.setSpreadMode(spreadToRestore);
+        }
+      } catch {
+        // Handled by retry effect
+      }
+    }
+    const rotationToRestore = pendingRotationRestoreRef.current;
+    if (rotationToRestore !== null && rotationToRestore !== 0) {
+      try {
+        if (rotationActions.getRotation() !== rotationToRestore) {
+          rotationActions.setRotation(rotationToRestore);
+        }
+      } catch {
+        // Handled by retry effect
       }
     }
     if (pendingScrollRestoreRef.current === null) return;
@@ -1504,7 +1550,11 @@ const EmbedPdfViewerContent = ({
     applyPendingScrollPosition({
       useFraction: pendingZoomRestoreRef.current !== null,
     });
-  }, [applyPendingScrollPosition, zoomActions]);
+  }, [applyPendingScrollPosition, zoomActions, spreadActions, rotationActions]);
+
+  const handleDocumentSwapFailed = useCallback(() => {
+    clearPendingScrollRestore();
+  }, [clearPendingScrollRestore]);
   useLayoutEffect(() => {
     if (!restorePending) return;
     if (pendingScrollRestoreRef.current === null) return;
@@ -1526,7 +1576,7 @@ const EmbedPdfViewerContent = ({
     applyPendingScrollPosition({
       useFraction: pendingZoomRestoreRef.current !== null,
     });
-  }, [applyPendingScrollPosition, zoomActions]);
+  }, [applyPendingScrollPosition]);
 
   // Never leave the viewer hidden or holding a scroll if this unmounts mid-swap.
   useEffect(() => clearPendingScrollRestore, [clearPendingScrollRestore]);
@@ -1571,7 +1621,7 @@ const EmbedPdfViewerContent = ({
               scrollRestoreAttemptsRef.current = 0;
             }
           }
-        }, 50);
+        }, 100);
       } else if (scrollRestoreAttemptsRef.current < maxAttempts) {
         // PDF not ready yet, retry
         scrollRestoreAttemptsRef.current++;
@@ -1583,13 +1633,13 @@ const EmbedPdfViewerContent = ({
       }
     };
 
-    // Start attempting after initial delay
-    const timer = setTimeout(attemptScroll, 150);
+    // Start attempting after initial delay to let PDF start loading
+    const timer = setTimeout(attemptScroll, 200);
     return () => clearTimeout(timer);
-  }, [scrollState.totalPages, scrollActions, getScrollState]);
+  }, [restoreTick, scrollState.totalPages, scrollActions, getScrollState]);
 
   // Restore rotation after file replacement or tool switch
-  // Uses polling with retries to ensure the rotation succeeds
+  // Uses polling with retries to ensure rotation is applied
   useEffect(() => {
     if (pendingRotationRestoreRef.current === null) return;
 
@@ -1598,20 +1648,28 @@ const EmbedPdfViewerContent = ({
     const attemptInterval = 100; // ms between attempts
 
     const attemptRotation = () => {
-      const currentState = getScrollState();
+      if (
+        pendingScrollPositionRef.current?.expectSwap &&
+        !documentSwappedRef.current
+      ) {
+        return;
+      }
+      if (getScrollState().totalPages > 0) {
+        // Check if rotation already matches
+        const currentRotation = rotationActions.getRotation();
+        if (currentRotation === rotationToRestore) {
+          pendingRotationRestoreRef.current = null;
+          rotationRestoreAttemptsRef.current = 0;
+          return;
+        }
 
-      // Only attempt if PDF is loaded (totalPages > 0)
-      if (currentState.totalPages > 0) {
+        // Apply rotation
         rotationActions.setRotation(rotationToRestore);
 
-        // Check if rotation succeeded after a brief delay
+        // Verify rotation succeeded after a brief delay
         setTimeout(() => {
-          const currentRotation = rotationActions.getRotation();
-          if (
-            currentRotation === rotationToRestore ||
-            rotationRestoreAttemptsRef.current >= maxAttempts
-          ) {
-            // Success or max attempts reached - clear pending
+          const afterRotation = rotationActions.getRotation();
+          if (afterRotation === rotationToRestore) {
             pendingRotationRestoreRef.current = null;
             rotationRestoreAttemptsRef.current = 0;
           } else {
@@ -1653,6 +1711,12 @@ const EmbedPdfViewerContent = ({
     const attemptInterval = 100;
 
     const attemptSpread = () => {
+      if (
+        pendingScrollPositionRef.current?.expectSwap &&
+        !documentSwappedRef.current
+      ) {
+        return;
+      }
       if (getScrollState().totalPages > 0) {
         pendingSpreadRestoreRef.current = null;
         if (spreadActions.getSpreadMode() !== modeToRestore) {
@@ -1692,6 +1756,12 @@ const EmbedPdfViewerContent = ({
     const attemptInterval = 100;
 
     const attemptZoom = () => {
+      if (
+        pendingScrollPositionRef.current?.expectSwap &&
+        !documentSwappedRef.current
+      ) {
+        return;
+      }
       if (getScrollState().totalPages > 0) {
         pendingZoomRestoreRef.current = null;
         zoomRestoreAttemptsRef.current = 0;
@@ -1904,6 +1974,7 @@ const EmbedPdfViewerContent = ({
               shouldSkipBytes={shouldSkipBytes}
               onPageLayout={handleViewerPageLayout}
               onDocumentSwapped={handleDocumentSwapped}
+              onDocumentSwapFailed={handleDocumentSwapFailed}
               restorePending={restorePending}
               pdfRenderMode={pdfRenderMode}
               file={effectiveFile.file}

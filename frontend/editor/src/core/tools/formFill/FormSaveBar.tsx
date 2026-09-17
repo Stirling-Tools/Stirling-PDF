@@ -42,10 +42,24 @@ export function FormSaveBar({
   const [applying, setApplying] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
-  // Reset dismissed state when file changes
-  const [prevFile, setPrevFile] = useState<File | Blob | null>(null);
-  if (file !== prevFile) {
-    setPrevFile(file);
+  // Reset dismissed state only when a genuinely different document is opened
+  const fileRootKey =
+    file &&
+    typeof file === "object" &&
+    "originalFileId" in file &&
+    typeof file.originalFileId === "string"
+      ? file.originalFileId
+      : file &&
+          typeof file === "object" &&
+          "fileId" in file &&
+          typeof file.fileId === "string"
+        ? file.fileId
+        : file instanceof File
+          ? `${file.name}-${file.size}`
+          : file;
+  const [prevFileRootKey, setPrevFileRootKey] = useState<unknown>(fileRootKey);
+  if (fileRootKey !== prevFileRootKey) {
+    setPrevFileRootKey(fileRootKey);
     setDismissed(false);
   }
 
