@@ -11,7 +11,7 @@ import {
  */
 export const useCheckoutState = (planGroup: PlanTierGroup) => {
   const [state, setState] = useState<CheckoutState>({
-    currentStage: "email",
+    currentStage: "plan-selection",
     loading: false,
   });
   const [stageHistory, setStageHistory] = useState<CheckoutStage[]>([]);
@@ -39,7 +39,7 @@ export const useCheckoutState = (planGroup: PlanTierGroup) => {
 
   const resetState = useCallback(() => {
     setState({
-      currentStage: "email",
+      currentStage: "plan-selection",
       loading: false,
       clientSecret: undefined,
       sessionId: undefined,
