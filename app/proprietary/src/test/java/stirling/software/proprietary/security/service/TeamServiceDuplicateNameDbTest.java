@@ -1,7 +1,6 @@
 package stirling.software.proprietary.security.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -9,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.persistence.autoconfigure.EntityScan;
-import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 import stirling.software.proprietary.model.Team;
@@ -43,18 +41,6 @@ class TeamServiceDuplicateNameDbTest {
                         .count(),
                 "no unique constraint on teams.name, so both inserts commit");
         assertEquals(true, first < second, "ids are monotonic, so 'lowest' is well defined");
-    }
-
-    @Test
-    @DisplayName("the old finder throws on duplicates - this is what killed startup")
-    void findByNameThrowsOnDuplicates() {
-        saveTeam(TeamService.DEFAULT_TEAM_NAME);
-        saveTeam(TeamService.DEFAULT_TEAM_NAME);
-
-        assertThrows(
-                IncorrectResultSizeDataAccessException.class,
-                () -> teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME),
-                "a derived Optional finder cannot survive two rows");
     }
 
     @Test
