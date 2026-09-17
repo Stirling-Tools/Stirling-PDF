@@ -627,7 +627,8 @@ public class ApplicationProperties {
          * Stable per-node label for CLIENT SETNAME: {@code cluster.node.id}, else hostname, else
          * {@link #resolvedNodeId()}. The first two survive a restart; the UUID fallback does not.
          */
-        public synchronized String resolvedNodeName() {
+        // No lock unlike resolvedNodeId: a hostname race recomputes the same value, not a new id.
+        public String resolvedNodeName() {
             if (node != null && node.getId() != null && !node.getId().isBlank()) {
                 return node.getId();
             }
