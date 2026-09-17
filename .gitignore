@@ -45,6 +45,9 @@ exampleYmlFiles/stirling/
 /testing/cucumber/report.html
 /testing/cucumber/.parallel/
 /testing/.failed_tests
+# Runtime artifacts of the multi-node test scripts
+/testing/compose/multinode/.active-topology
+/testing/compose/multinode/regression-report/
 /.test-state/
 SwaggerDoc.json
 

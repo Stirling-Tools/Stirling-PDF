@@ -59,6 +59,7 @@ import stirling.software.proprietary.policy.source.SourceAccessGuard;
 import stirling.software.proprietary.policy.store.InProcessPolicyStore;
 import stirling.software.proprietary.policy.trigger.PolicyTrigger;
 import stirling.software.proprietary.policy.trigger.PolicyTriggerManager;
+import stirling.software.proprietary.policy.trigger.StorageFolderTrigger;
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.service.UserService;
 import stirling.software.proprietary.storage.model.Folder;
@@ -164,7 +165,10 @@ class ProcessingFolderControllerTest {
         lenient().when(diskFolderSink.supports(any())).thenReturn(true);
         PolicyValidator validator =
                 new PolicyValidator(
-                        List.of(folderWatchTrigger),
+                        List.of(
+                                folderWatchTrigger,
+                                new StorageFolderTrigger(
+                                        policyStore, sourceStore, policyRunner, properties)),
                         List.of(
                                 new StorageFolderInputSource(
                                         storedFileRepository,
@@ -477,10 +481,11 @@ class ProcessingFolderControllerTest {
     }
 
     @Test
-    void aStorageFolderStaysManualUntilTheArrivalTriggerExists() {
+    void aStorageFolderAutomaticallyProcessesArrivals() {
         var view = controller.save(request(null, "new_version")).getBody();
 
-        assertThat(policyStore.get(view.id()).orElseThrow().inputs().get(0).trigger()).isNull();
+        assertThat(policyStore.get(view.id()).orElseThrow().inputs().get(0).trigger().type())
+                .isEqualTo("storage-folder-watch");
     }
 
     @Test
