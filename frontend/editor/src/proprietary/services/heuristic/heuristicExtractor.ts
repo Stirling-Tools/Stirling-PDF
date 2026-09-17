@@ -14,11 +14,19 @@ const PAGE_CHAR_CAP = 8000;
 const TITLE_CAP = 400;
 
 export interface ExtractOptions {
-  /** Wall-clock budget for the whole extraction, the document open included. Pages
-   *  that do not fit are dropped and the engine classifies what was read; a file that
-   *  yields nothing at all inside it fails with {@link HeuristicExtractionTimeout}. */
+  /** Wall-clock budget for reading text, counted from the moment the document is
+   *  open, so pdf.js worker start-up and the parse of the file's structure are not
+   *  charged to it and the first file of a run is not penalised. Pages that do not
+   *  fit are dropped and the engine classifies what was read; a file that yields
+   *  nothing at all inside it fails with {@link HeuristicExtractionTimeout}. Opening
+   *  itself is bounded by {@link OPEN_TIMEOUT_MS} whenever a budget is set. */
   budgetMs?: number;
 }
+
+/** Headroom for opening a document when a budget is set: enough for a cold worker and
+ *  a damaged cross-reference table to be rebuilt, and still a bound on a worker that
+ *  will never answer. */
+export const OPEN_TIMEOUT_MS = 10_000;
 
 /** The file produced no text inside its budget: broken, hostile, or a worker that
  *  died mid-parse and will never answer. */
@@ -63,23 +71,27 @@ export async function extractHeuristicDoc(
   options: ExtractOptions = {},
 ): Promise<HeuristicDoc> {
   const budgetMs = options.budgetMs ?? Number.POSITIVE_INFINITY;
-  const deadline = Date.now() + budgetMs;
-  const remaining = () => deadline - Date.now();
+  const bounded = Number.isFinite(budgetMs);
 
   const arrayBuffer = await file.arrayBuffer();
   const opening = pdfWorkerManager.createDocument(arrayBuffer, {
     disableAutoFetch: true,
     disableStream: true,
   });
-  const opened = await within(opening, remaining());
+  const opened = await within(
+    opening,
+    bounded ? OPEN_TIMEOUT_MS : Number.POSITIVE_INFINITY,
+  );
   if (opened === TIMED_OUT) {
     // Arrives after we stopped waiting: nothing else would free its worker.
     void opening
       .then((pdf) => pdfWorkerManager.destroyDocument(pdf))
       .catch(() => {});
-    throw new HeuristicExtractionTimeout(fileName, budgetMs);
+    throw new HeuristicExtractionTimeout(fileName, OPEN_TIMEOUT_MS);
   }
   const pdfDoc = opened;
+  const deadline = Date.now() + budgetMs;
+  const remaining = () => deadline - Date.now();
   try {
     const pageCount = pdfDoc.numPages;
     let firstZone = "";

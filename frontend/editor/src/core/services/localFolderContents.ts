@@ -20,15 +20,15 @@ export interface DiskListing {
 
 export const canListDirectory = false;
 
-/**
- * The regular files and subdirectories directly inside `directory` — one level, never
- * recursive; a subdirectory is listed only when entered.
- */
 /** Progress of a listing: `checked` of `total` regular files have been stat-ed. */
 export interface ListDirectoryOptions {
   onProgress?: (checked: number, total: number) => void;
 }
 
+/**
+ * The regular files and subdirectories directly inside `directory` — one level, never
+ * recursive; a subdirectory is listed only when entered.
+ */
 export async function listDirectory(
   _directory: string,
   _options?: ListDirectoryOptions,

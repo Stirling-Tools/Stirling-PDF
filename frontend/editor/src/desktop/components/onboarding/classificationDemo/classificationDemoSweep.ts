@@ -29,9 +29,10 @@ const CLASSIFY_STEP = "/api/v1/ai/tools/classify-and-label";
 /** How many PDFs one sweep covers. The rest of the folder waits for a follow-up batch. */
 export const CLASSIFICATION_DEMO_BATCH_SIZE = 50;
 
-/** Wall-clock allowance per document. Ordinary PDFs classify in well under this; one
- *  that yields nothing inside it is retired as unreadable rather than holding the
- *  sweep, which is what a broken file or a dead pdf.js worker used to do. */
+/** Text-reading allowance per document, counted once it is open, so a cold pdf.js
+ *  worker on the first file is not charged. Ordinary PDFs finish in a fraction of it;
+ *  one that yields nothing inside it is retired as unreadable rather than holding the
+ *  sweep, which is what a broken file or a dead worker used to do. */
 export const HEURISTIC_BUDGET_MS = 1000;
 
 /** Roll-up id used for a document the heuristic could not place. */
