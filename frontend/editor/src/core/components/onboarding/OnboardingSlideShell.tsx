@@ -162,6 +162,9 @@ export default function OnboardingSlideShell({
                     variant="tertiary"
                     accent="neutral"
                     size="md"
+                    // The only way out of a slide with allowDismiss={false}, so the
+                    // desktop E2E harness needs a hook the label's locale cannot move.
+                    data-testid="onboarding-header-control"
                     aria-label={
                       headerControl === "forward"
                         ? t("onboarding.buttons.continue", "Continue")

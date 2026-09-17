@@ -19,79 +19,173 @@ export async function waitForAppMount(timeout = 60_000) {
   );
 }
 
+/** The onboarding shell's header control: the only exit from its slides. */
+const ONBOARDING_CONTROL = '[data-testid="onboarding-header-control"]';
+
+/**
+ * Everything that ends a modal, looked up inside that modal. `[aria-label]`
+ * values are translated, so the two hooks a locale cannot move lead.
+ */
+const MODAL_DISMISS_CONTROLS = [
+  ONBOARDING_CONTROL,
+  ".mantine-Modal-close",
+  '[aria-label="Close"]',
+].join(", ");
+
+/**
+ * Counts the overlays that are actually painted.
+ *
+ * A modal kept in the DOM by `keepMounted` leaves a hidden overlay behind, and
+ * counting that reads as a UI no amount of dismissing can unblock.
+ */
 function countOverlays() {
   return browser.execute(
-    () => document.querySelectorAll(".mantine-Modal-overlay").length,
+    () =>
+      [...document.querySelectorAll(".mantine-Modal-overlay")].filter(
+        (overlay) => overlay.getClientRects().length > 0,
+      ).length,
   );
 }
 
 /**
- * A fresh profile greets you with the "Welcome to Stirling V2" modal and then
- * the sign-in modal, each behind an overlay that swallows clicks. Close them in
- * a loop rather than assuming a fixed number: the chain is version-dependent,
- * and a spec that hard-codes two dismissals breaks the moment a third appears.
+ * Reads the dialog in front: its accessible name, its text, and the names of
+ * the controls on it. Null when no dialog is on screen.
+ */
+function readTopModal() {
+  return browser.execute(() => {
+    const dialogs = [
+      ...document.querySelectorAll(".mantine-Modal-content"),
+    ].filter((dialog) => dialog.getClientRects().length > 0);
+    // Stacked modals portal in render order, so the last one is the front.
+    const top = dialogs[dialogs.length - 1];
+    if (!top) return null;
+
+    const name = (control) =>
+      control.getAttribute("data-testid") ||
+      control.getAttribute("aria-label") ||
+      (control.textContent || "").replace(/\s+/g, " ").trim() ||
+      "unnamed";
+
+    return {
+      label: top.getAttribute("aria-label") || "dialog",
+      text: (top.textContent || "").replace(/\s+/g, " ").trim().slice(0, 120),
+      controls: [...top.querySelectorAll("button, [role=button]")].map(name),
+    };
+  });
+}
+
+/**
+ * One line naming the dialog. Includes its text because a flow reuses the same
+ * dialog for every slide, so the text is the only thing that says which slide
+ * is on screen - and therefore the only way to tell "it advanced" from
+ * "nothing happened".
+ */
+function describe(modal) {
+  if (!modal) return "no dialog";
+  return `The "${modal.label}" dialog ("${modal.text}")`;
+}
+
+/**
+ * Walks the flow a fresh profile opens with: the welcome slide, the sign-in
+ * slide behind it, and whatever the app offers after those.
+ *
+ * Escape is not a way out. Both onboarding slides render `closeOnEscape={false}`
+ * and a forward control in place of a close button, so the only thing that ends
+ * a slide is that control - which is why this drives the flow rather than
+ * pressing Escape at it and hoping.
  *
  * The `?bypassOnboarding=true` route is deliberately not used - it also
  * suppresses the sign-in modal, and dismissing what a real first-run user sees
  * is closer to the thing we want to know still works.
  */
-export async function dismissStartupModals(maxModals = 6) {
-  let blocked = null;
-  let overlays = await countOverlays();
+export async function dismissStartupModals(timeout = 60_000) {
+  const deadline = Date.now() + timeout;
 
-  for (let attempt = 0; attempt < maxModals && overlays > 0; attempt += 1) {
-    blocked = await closeTopModal();
-    await browser.pause(1_000);
-
-    const remaining = await countOverlays();
-    // Clicking achieved nothing, so stop pressing the same button: Escape is
-    // the only other way out of a Mantine modal.
-    if (remaining >= overlays) await browser.keys(["Escape"]);
-    overlays = remaining;
+  // The card only mounts once the app knows whether anyone is signed in, so
+  // waiting for it here is what stops it arriving mid-spec instead.
+  if ((await countOverlays()) === 0) {
+    await $(`.mantine-Modal-content ${ONBOARDING_CONTROL}`)
+      .waitForDisplayed({ timeout: 15_000 })
+      .catch(() => {});
   }
 
-  if (overlays === 0) return;
+  while ((await countOverlays()) > 0) {
+    const modal = await readTopModal();
+    // An overlay with nothing behind it is one mid-fade; let it finish rather
+    // than pressing Escape into the app underneath.
+    if (!modal) {
+      await browser.waitUntil(async () => (await countOverlays()) === 0, {
+        timeout: 5_000,
+        interval: 250,
+        timeoutMsg: "An overlay stayed up with no dialog behind it.",
+      });
+      break;
+    }
 
-  try {
-    await browser.waitUntil(async () => (await countOverlays()) === 0, {
-      timeout: 15_000,
-      interval: 500,
-    });
-  } catch {
-    throw new Error(
-      `A modal overlay is still blocking the UI after ${maxModals} dismissals` +
-        `${blocked ? ` - its close button is covered by ${blocked}` : ""}.`,
-    );
+    const blocking = describe(modal);
+    if (Date.now() > deadline) {
+      throw new Error(
+        `Startup modals kept arriving for ${timeout}ms. ${blocking} is still up.`,
+      );
+    }
+
+    const covered = await closeTopModal();
+    try {
+      // Each dismissal either advances the flow or ends it, so wait for the
+      // screen to change rather than pausing a fixed beat and guessing.
+      await browser.waitUntil(
+        async () =>
+          (await countOverlays()) === 0 ||
+          describe(await readTopModal()) !== blocking,
+        { timeout: 10_000, interval: 250 },
+      );
+    } catch {
+      throw new Error(
+        `${blocking} did not respond to its own dismiss control` +
+          `${covered ? `, which is covered by ${covered}` : ""}. ` +
+          `Controls on it: ${modal.controls.join(", ") || "none"}.`,
+      );
+    }
   }
+
+  // Declining sign-in drops the app into local mode, which remounts the
+  // providers and briefly empties #root.
+  await waitForAppMount();
+}
+
+/** The modal in front, or null. Stacked modals portal in render order. */
+async function topModalElement() {
+  const contents = await $$(".mantine-Modal-content");
+  for (let i = contents.length - 1; i >= 0; i -= 1) {
+    if (await contents[i].isDisplayed()) return contents[i];
+  }
+  return null;
 }
 
 /**
- * Dismisses the frontmost modal. Returns what stopped its close button being
- * clicked, or null when nothing did.
+ * Ends the modal in front. Returns what stopped its control being clicked, or
+ * null when nothing did.
  *
- * A close button is only clicked when it is on screen and nothing sits over it.
- * Existence is not enough: a buried modal's button still matches the selector,
- * and clicking it raises "element click intercepted", closes nothing, and hides
- * the Escape path that both desktop startup modals actually rely on - they
- * render `withCloseButton={false}` and close on Escape.
+ * Scoped to that one modal: a buried modal's control still matches the selector,
+ * and clicking it raises "element click intercepted", ends nothing, and hides
+ * whatever the real blocker was. The sign-in modal in particular draws no
+ * control at all, so a search across the whole page would press the card behind
+ * it and report that as unresponsive.
  */
 async function closeTopModal() {
   let blocked = null;
-  const closers = await $$('.mantine-Modal-content [aria-label="Close"]');
+  const top = await topModalElement();
 
-  // Stacked modals portal in render order, so the last button belongs to the
-  // modal in front; the ones before it are under its full-viewport wrapper.
-  for (let i = closers.length - 1; i >= 0; i -= 1) {
-    const close = closers[i];
+  for (const control of top ? await top.$$(MODAL_DISMISS_CONTROLS) : []) {
     try {
-      if (!(await close.isDisplayed())) continue;
+      if (!(await control.isDisplayed())) continue;
 
-      const obstruction = await obstructionOf(close);
+      const obstruction = await obstructionOf(control);
       if (obstruction) {
         blocked ??= obstruction;
         continue;
       }
-      await close.click();
+      await control.click();
       return null;
     } catch (error) {
       if (!/intercepted|stale element/i.test(String(error))) throw error;
@@ -99,6 +193,8 @@ async function closeTopModal() {
     }
   }
 
+  // No control to press: a modal that draws none still closes on Escape, unless
+  // it opted out - and then the caller's next poll reports it by name.
   await browser.keys(["Escape"]);
   return blocked;
 }
@@ -218,6 +314,13 @@ export async function clickFirstClickable(
  * still exercises the real upload path.
  */
 export async function uploadFile(path) {
+  // Declining sign-in remounts the providers, and unhiding an input that is not
+  // back yet is a silent no-op that resurfaces as "element not interactable".
+  await $('[data-testid="file-input"]').waitForExist({
+    timeout: 30_000,
+    timeoutMsg: "The app never rendered its file input.",
+  });
+
   await browser.execute(() => {
     const input = document.querySelector('[data-testid="file-input"]');
     if (!input) return;
