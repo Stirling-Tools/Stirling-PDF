@@ -10,29 +10,29 @@ import org.springframework.context.annotation.Configuration;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
 
-import stirling.software.common.model.ApplicationProperties;
-
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
-    private final ApplicationProperties applicationProperties;
-
-    public CacheConfig(ApplicationProperties applicationProperties) {
-        this.applicationProperties = applicationProperties;
-    }
-
     /** Short-TTL cache of recent audit rows, shared by every audit-derived portal view. */
     private static final String PORTAL_AUDIT_EVENTS_CACHE = "portalAuditEvents";
 
+    /**
+     * Caches are in-JVM, so a second node never sees an eviction here. Anything
+     * authorisation-shaped needs a TTL short enough to bound that divergence, and explicit eviction
+     * on every write.
+     *
+     * <p>The fallback below is deliberately strict: an unregistered cache name silently inherits
+     * it, so it must never be long enough to keep a revoked user or role alive. Register a named
+     * cache with its own spec rather than widening this.
+     */
     @Bean
     public CacheManager cacheManager() {
-        int keyRetentionDays = applicationProperties.getSecurity().getJwt().getKeyRetentionDays();
         CaffeineCacheManager cacheManager = new CaffeineCacheManager();
         cacheManager.setCaffeine(
                 Caffeine.newBuilder()
-                        .maximumSize(1000) // Make configurable?
-                        .expireAfterWrite(Duration.ofDays(keyRetentionDays))
+                        .maximumSize(1000)
+                        .expireAfterWrite(Duration.ofSeconds(30))
                         .recordStats());
         // 30s TTL keeps audit views near-live without re-scanning the DB; one entry per scope.
         cacheManager.registerCustomCache(

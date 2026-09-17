@@ -23,8 +23,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.cache.CacheManager;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.JwtSigningKeyEntity;
@@ -42,7 +40,6 @@ class KeyPersistenceServiceInterfaceTest {
 
     private KeyPersistenceService keyPersistenceService;
     private KeyPair testKeyPair;
-    private CacheManager cacheManager;
 
     @BeforeEach
     void setUp() throws NoSuchAlgorithmException {
@@ -50,15 +47,13 @@ class KeyPersistenceServiceInterfaceTest {
         keyPairGenerator.initialize(2048);
         testKeyPair = keyPairGenerator.generateKeyPair();
 
-        cacheManager = new ConcurrentMapCacheManager("verifyingKeys");
-
         lenient().when(applicationProperties.getSecurity()).thenReturn(security);
         lenient().when(security.getJwt()).thenReturn(jwtConfig);
         lenient().when(jwtConfig.isEnableKeystore()).thenReturn(true);
         lenient().when(keyRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
         // clusterEnabled=true so the convergence-reload path is exercised.
         keyPersistenceService =
-                new KeyPersistenceService(applicationProperties, cacheManager, keyRepository, true);
+                new KeyPersistenceService(applicationProperties, keyRepository, true);
     }
 
     private JwtSigningKeyEntity entityFrom(String keyId) {
@@ -155,8 +150,7 @@ class KeyPersistenceServiceInterfaceTest {
     @Test
     void reloadDoesNothingOffCluster() {
         KeyPersistenceService singleNode =
-                new KeyPersistenceService(
-                        applicationProperties, cacheManager, keyRepository, false);
+                new KeyPersistenceService(applicationProperties, keyRepository, false);
 
         singleNode.reloadActiveKeyFromDb();
 
