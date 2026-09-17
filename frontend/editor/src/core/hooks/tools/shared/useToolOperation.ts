@@ -1,9 +1,14 @@
 import { useCallback, useRef, useEffect, useContext } from "react";
 import apiClient from "@app/services/apiClient";
+import {
+  assertFilesNotBlocked,
+  policySourceIds,
+} from "@app/services/policyFileGuard";
 import { useTranslation } from "react-i18next";
 import { useFileContext } from "@app/contexts/FileContext";
 import { useNavigationActions } from "@app/contexts/NavigationContext";
 import { ViewerContext } from "@app/contexts/ViewerContext";
+import { toolAcceptsFile } from "@app/utils/toolIOCompat";
 import { useToolState } from "@app/hooks/tools/shared/useToolState";
 import {
   useToolApiCalls,
@@ -13,6 +18,7 @@ import { useToolResources } from "@app/hooks/tools/shared/useToolResources";
 import {
   extractErrorMessage,
   handle422Error,
+  isSignupRequiredError,
 } from "@app/utils/toolErrorHandler";
 import {
   StirlingFile,
@@ -21,8 +27,15 @@ import {
   StirlingFileStub,
 } from "@app/types/fileContext";
 import { FILE_EVENTS } from "@app/services/errorUtils";
-import { reportToolFailure } from "@app/services/failureReporting";
+import {
+  errorCodeOf,
+  reportToolFailure,
+  wasCancelled,
+} from "@app/services/failureReporting";
+import { stashRetryPayload } from "@app/services/notificationRetry";
 import { refreshNotificationsNow } from "@app/hooks/useNotifications";
+import { useResolutionContinuation } from "@app/hooks/tools/shared/useResolutionContinuation";
+import { useNotificationsAvailable } from "@app/components/notifications/useNotificationsAvailable";
 import { zipFileService } from "@app/services/zipFileService";
 import { getFilenameWithoutExtension } from "@app/utils/fileUtils";
 import {
@@ -35,6 +48,7 @@ import { ensureBackendReady } from "@app/services/backendReadinessGuard";
 import { trackEditorOperation } from "@app/services/analytics";
 import { useWillUseCloud } from "@app/hooks/useWillUseCloud";
 import { useCreditCheck } from "@app/hooks/useCreditCheck";
+import { useToolRunComplete } from "@app/hooks/useToolRunComplete";
 import { notifyPdfProcessingComplete } from "@app/services/desktopNotificationService";
 import {
   buildInputTracking,
@@ -121,6 +135,9 @@ export const useToolOperation = <TParams>(
 
   const { checkCredits } = useCreditCheck(config.operationType, endpointString);
   const willUseCloud = useWillUseCloud(endpointString);
+  const continueResolutions = useResolutionContinuation();
+  const notificationsAvailable = useNotificationsAvailable();
+  const onToolRunComplete = useToolRunComplete();
 
   // Track last operation for undo functionality
   const lastOperationRef = useRef<{
@@ -129,16 +146,117 @@ export const useToolOperation = <TParams>(
     outputFileIds: FileId[];
   } | null>(null);
 
+  /**
+   * Record a failure and keep what a retry needs. Shared with the batch's per-input failures:
+   * one bad file in twenty is still a failure the user has to be told about.
+   */
+  const reportFailure = useCallback(
+    (
+      error: unknown,
+      fileIds: FileId[],
+      runtimeEndpoint: string | undefined,
+      params: TParams,
+    ) => {
+      if (fileIds.length === 0 || wasCancelled(error)) return;
+
+      void reportToolFailure({
+        operation: config.operationType,
+        error,
+        fileIds,
+      }).then(refreshNotificationsNow);
+
+      // Skipped where nothing could use it: a custom processor's request cannot be replayed
+      // generically, and a build with no bell has nothing to read the stash.
+      if (
+        !runtimeEndpoint ||
+        config.toolType === ToolType.custom ||
+        !notificationsAvailable
+      ) {
+        return;
+      }
+      // The request body, not TParams: buildFormData posts what toApiParams returns, and the two
+      // shapes are free to disagree. A tool with no mapper stashes its UI shape and says so, so
+      // the row keeps its plain retry without anything re-running those parameters unattended.
+      const apiParams = config.toApiParams?.(params);
+      void errorCodeOf(error).then((errorCode) =>
+        stashRetryPayload({
+          operation: config.operationType,
+          endpoint: runtimeEndpoint,
+          params: (apiParams ?? params) as Record<string, unknown>,
+          paramsMapped: apiParams !== undefined,
+          fileIds,
+          multiFile: config.toolType === ToolType.multiFile,
+          errorCode,
+          recordedAt: Date.now(),
+        }),
+      );
+    },
+    [config, notificationsAvailable],
+  );
+
+  const getCompatibleFiles = useCallback(
+    (params: TParams, selectedFiles: StirlingFile[]) => {
+      const endpoint =
+        typeof config.endpoint === "function"
+          ? config.endpoint(params)
+          : config.endpoint;
+      return selectedFiles.filter((file) =>
+        toolAcceptsFile(
+          endpoint ?? undefined,
+          selectors.getStirlingFileStub(file.fileId) ?? file,
+        ),
+      );
+    },
+    [config.endpoint, selectors],
+  );
+
+  const eligibleFilesRef = useRef<StirlingFile[]>([]);
+  const getEligibleFiles = useCallback(
+    (params: TParams, selectedFiles: StirlingFile[]) => {
+      const eligibleFiles = getCompatibleFiles(params, selectedFiles).filter(
+        (file) => file.size > 0,
+      );
+      const previous = eligibleFilesRef.current;
+      if (
+        eligibleFiles.length === previous.length &&
+        eligibleFiles.every((file, index) => file === previous[index])
+      ) {
+        return previous;
+      }
+      eligibleFilesRef.current = eligibleFiles;
+      return eligibleFiles;
+    },
+    [getCompatibleFiles],
+  );
+
   const executeOperation = useCallback(
     async (params: TParams, selectedFiles: StirlingFile[]): Promise<void> => {
+      const policyIds = selectedFiles.flatMap((file) => {
+        const stub = selectors.getStirlingFileStub(file.fileId);
+        return stub ? policySourceIds(stub) : [file.fileId];
+      });
+      try {
+        assertFilesNotBlocked(policyIds);
+      } catch (error) {
+        actions.setError(extractErrorMessage(error));
+        return;
+      }
       // Validation
       if (selectedFiles.length === 0) {
         actions.setError(t("noFileSelected", "No file loaded"));
         return;
       }
 
+      const runtimeEndpoint: string | undefined = config.endpoint
+        ? typeof config.endpoint === "function"
+          ? (config.endpoint(params) ?? undefined)
+          : config.endpoint
+        : undefined;
+
+      const compatibleFiles = getCompatibleFiles(params, selectedFiles);
+
       // Handle zero-byte inputs explicitly: mark as error and continue with others
-      const zeroByteFiles = selectedFiles.filter((file) => file.size === 0);
+      const zeroByteFiles = compatibleFiles.filter((file) => file.size === 0);
       if (zeroByteFiles.length > 0) {
         try {
           for (const f of zeroByteFiles) {
@@ -148,42 +266,13 @@ export const useToolOperation = <TParams>(
           console.log("markFileError", e);
         }
       }
-      const validFiles: StirlingFile[] = selectedFiles.filter(
+      const validFiles: StirlingFile[] = compatibleFiles.filter(
         (file) => file.size > 0,
       );
       if (validFiles.length === 0) {
         actions.setError(t("noValidFiles", "No valid files to process"));
         return;
       }
-
-      // Block encrypted files from being sent to backend tools
-      const encryptedFiles = validFiles.filter((f) => {
-        const stub = selectors.getStirlingFileStub(f.fileId);
-        return stub?.processedFile?.isEncrypted === true;
-      });
-      if (encryptedFiles.length > 0) {
-        for (const ef of encryptedFiles) {
-          fileActions.openEncryptedUnlockPrompt(ef.fileId);
-        }
-        actions.setError(
-          t(
-            "encryptedFilesBlocked",
-            "{{count}} files are password-protected. Unlock them first.",
-            {
-              count: encryptedFiles.length,
-            },
-          ),
-        );
-        return;
-      }
-
-      // Resolve the runtime endpoint from params (static string or function result).
-      // Custom processors may omit endpoint entirely — result is undefined in that case.
-      const runtimeEndpoint: string | undefined = config.endpoint
-        ? typeof config.endpoint === "function"
-          ? (config.endpoint(params) ?? undefined)
-          : config.endpoint
-        : undefined;
 
       // Credit check — no-op in core builds, real check in desktop/SaaS versions.
       // Pass runtime endpoint so the check can determine if this routes locally (no credits needed).
@@ -230,8 +319,10 @@ export const useToolOperation = <TParams>(
       window.addEventListener(FILE_EVENTS.markError, errorListener);
 
       try {
+        assertFilesNotBlocked(policyIds);
         let processedFiles: File[];
         let successSourceIds: FileId[] = [];
+        let unprocessedSourceIds: FileId[] = [];
 
         // Use original files directly (no PDF metadata injection - history stored in IndexedDB)
         const filesForAPI = extractFiles(validFiles);
@@ -259,9 +350,21 @@ export const useToolOperation = <TParams>(
             );
             processedFiles = result.outputFiles;
             successSourceIds = result.successSourceIds;
+            unprocessedSourceIds = result.unprocessedSourceIds;
+            // Reported here, not in the catch: this loop only throws when EVERY input failed,
+            // so a batch that lost one file to a bad PDF reaches the success path.
+            for (const failed of result.failedInputs) {
+              reportFailure(
+                failed.error,
+                [failed.fileId],
+                runtimeEndpoint,
+                params,
+              );
+            }
             console.debug("[useToolOperation] Multi-file results", {
               outputFiles: processedFiles.length,
               successSources: result.successSourceIds.length,
+              failedInputs: result.failedInputs.length,
             });
             break;
           }
@@ -369,7 +472,7 @@ export const useToolOperation = <TParams>(
           }
           // Mark errors on inputs that didn't succeed
           for (const id of allInputIds) {
-            if (!okSet.has(id)) {
+            if (!okSet.has(id) && !unprocessedSourceIds.includes(id)) {
               try {
                 fileActions.markFileError(id);
               } catch (_e) {
@@ -385,7 +488,11 @@ export const useToolOperation = <TParams>(
           // If backend told us which sources failed, prefer that mapping
           successSourceIds = validFiles
             .map((f) => f.fileId)
-            .filter((id) => !externalErrorFileIds.includes(id));
+            .filter(
+              (id) =>
+                !externalErrorFileIds.includes(id) &&
+                !unprocessedSourceIds.includes(id),
+            );
           // Also mark failed IDs immediately
           try {
             for (const badId of externalErrorFileIds) {
@@ -397,6 +504,7 @@ export const useToolOperation = <TParams>(
         }
 
         if (processedFiles.length > 0) {
+          assertFilesNotBlocked(policyIds);
           trackEditorOperation(
             config.operationType,
             successSourceIds.length || validFiles.length,
@@ -413,6 +521,7 @@ export const useToolOperation = <TParams>(
           actions.setGeneratingThumbnails(false);
 
           actions.setThumbnails(thumbnails);
+          assertFilesNotBlocked(policyIds);
 
           // Determine whether outputs are new versions of their inputs or independent artifacts.
           // A version operation produces exactly one output per successful input, all in the same
@@ -493,6 +602,7 @@ export const useToolOperation = <TParams>(
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
             });
+            assertFilesNotBlocked(policyIds);
             const outputFileIds = await consumeFiles(
               toConsumeInputIds,
               outputStirlingFiles,
@@ -531,6 +641,17 @@ export const useToolOperation = <TParams>(
               })),
               outputFileIds,
             };
+
+            // Outputs pair with the inputs that produced them, index for index, in this branch.
+            continueResolutions({
+              operation: config.operationType,
+              inputFileIds: validFiles.map((file) => file.fileId),
+              outputs: processedFiles.map((file, index) => ({
+                file,
+                fileId: outputFileIds[index] ?? null,
+                sourceFileId: successSourceIds[index] ?? null,
+              })),
+            });
           } else {
             // Outputs are independent artifacts (format conversion, merge, split).
             // Create fresh root stubs with no parent chain, then swap out only the inputs
@@ -556,6 +677,7 @@ export const useToolOperation = <TParams>(
               inputCount: inputFileIds.length,
               toConsume: toConsumeInputIds.length,
             });
+            assertFilesNotBlocked(policyIds);
             const outputFileIds = await consumeFiles(
               toConsumeInputIds,
               outputStirlingFiles,
@@ -585,9 +707,25 @@ export const useToolOperation = <TParams>(
               })),
               outputFileIds,
             };
+
+            // No per-output provenance here, so only a one-in one-out run can be paired.
+            continueResolutions({
+              operation: config.operationType,
+              inputFileIds: validFiles.map((file) => file.fileId),
+              outputs: processedFiles.map((file, index) => ({
+                file,
+                fileId: outputFileIds[index] ?? null,
+                sourceFileId: null,
+              })),
+            });
           }
+          onToolRunComplete();
         }
       } catch (error) {
+        if (isSignupRequiredError(error)) {
+          actions.setStatus("");
+          return;
+        }
         try {
           const handled = await handle422Error(error, (id) =>
             fileActions.markFileError(id as FileId),
@@ -602,14 +740,13 @@ export const useToolOperation = <TParams>(
           void _e;
         }
 
-        // Report it so a leader sees the failure too, then carry on with the user's
-        // own error handling. Fire-and-forget: the reporter swallows its own errors.
-        // Chained, not fired alongside: the re-read must happen after the row exists.
-        void reportToolFailure({
-          operation: config.operationType,
+        // The whole run failed, so every input is a casualty.
+        reportFailure(
           error,
-          fileIds: validFiles.map((file) => file.fileId),
-        }).then(refreshNotificationsNow);
+          validFiles.map((file) => file.fileId),
+          runtimeEndpoint,
+          params,
+        );
 
         const errorMessage =
           config.getErrorMessage?.(error) || extractErrorMessage(error);
@@ -625,6 +762,8 @@ export const useToolOperation = <TParams>(
       t,
       config,
       actions,
+      selectors,
+      fileActions,
       addFiles,
       consumeFiles,
       navActions,
@@ -635,6 +774,11 @@ export const useToolOperation = <TParams>(
       extractZipFiles,
       willUseCloud,
       checkCredits,
+      continueResolutions,
+      notificationsAvailable,
+      onToolRunComplete,
+      reportFailure,
+      getCompatibleFiles,
     ],
   );
 
@@ -742,6 +886,7 @@ export const useToolOperation = <TParams>(
     willUseCloud,
 
     // Actions
+    getEligibleFiles,
     executeOperation,
     resetResults,
     clearError: actions.clearError,

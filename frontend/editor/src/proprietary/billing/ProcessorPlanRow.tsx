@@ -1,0 +1,207 @@
+import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
+import {
+  formatMinor,
+  formatMoneyMajor,
+  formatPeriodDate,
+} from "@app/billing/format";
+import { MeterRow } from "@app/billing/MeterRow";
+import { estimatedBillWithPending } from "@app/billing/pendingUsage";
+import type { Wallet } from "@app/billing/types";
+
+/**
+ * The Processor product, as a row: the free grant draining towards activation while off, spend
+ * against the limit while on.
+ *
+ * <p>Money arrives in two scales. The estimate is minor units and the limit is major, so the
+ * comparison converts once here rather than leaving a factor of a hundred to a caller. An unknown
+ * rate reports as unknown, never as zero.
+ */
+export function ProcessorPlanRow({
+  wallet,
+  included = false,
+  pendingUnits = 0,
+  onActivate,
+  activateLabel,
+  onGovern,
+  governLabel,
+}: {
+  wallet: Wallet | null;
+  /** A validated local Enterprise licence includes processing independently of the wallet. */
+  included?: boolean;
+  /**
+   * Units accrued locally that the cloud has not billed yet. Subtracted rather than shown beside
+   * the total, because the entitlement gate blocks against this same pending delta: reporting more
+   * remaining than the gate will honour is what makes a wall arrive early.
+   */
+  pendingUnits?: number;
+  /** Leader-only, while off: the activation door. Omit for members. */
+  onActivate?: () => void;
+  /** Overrides activation with the host's quote or invoice resume label. */
+  activateLabel?: ReactNode;
+  /** Leader-only, while on: the spend-limit door. Omit for members. */
+  onGovern?: () => void;
+  /** Overrides the governing door's label, e.g. "Top up" for a prepaid team. */
+  governLabel?: ReactNode;
+}) {
+  const { t } = useTranslation();
+  const name = t("portal.billing.processor.rowName", "Processor");
+  if (included)
+    return (
+      <MeterRow
+        name={name}
+        mid={t("portal.billing.processor.included", "Included in your license")}
+        fact=""
+        tone="paid"
+        showTrack={false}
+      />
+    );
+  if (!wallet) return null;
+  const rate = wallet.pricePerDocMinor;
+
+  const includedCredits = (() => {
+    if (wallet.freeAllowance <= 0) return null;
+    const used = Math.min(
+      wallet.freeAllowance,
+      Math.max(0, wallet.freeAllowance - wallet.freeRemaining + pendingUnits),
+    );
+    const pct =
+      wallet.freeAllowance > 0 ? (used / wallet.freeAllowance) * 100 : 0;
+    const mid =
+      rate != null
+        ? t(
+            "portal.billing.processor.midIncluded",
+            "{{rate}} per credit · {{allowance}} included every month",
+            {
+              rate: formatMinor(rate, wallet.currency),
+              allowance: wallet.freeAllowance.toLocaleString(),
+            },
+          )
+        : t(
+            "portal.billing.processor.midIncludedNoRate",
+            "{{allowance}} included every month",
+            {
+              allowance: wallet.freeAllowance.toLocaleString(),
+            },
+          );
+
+    return (
+      <MeterRow
+        name={
+          wallet.processor.active
+            ? t("portal.billing.processor.includedCredits", "Included credits")
+            : name
+        }
+        mid={
+          wallet.includedPeriodEnd
+            ? t(
+                "portal.billing.processor.includedRenewal",
+                "{{summary}} · Renews {{date}}",
+                {
+                  summary: mid,
+                  date: formatPeriodDate(wallet.includedPeriodEnd),
+                },
+              )
+            : mid
+        }
+        pct={pct}
+        tone="free"
+        fact={t(
+          "portal.billing.processor.factFree",
+          "{{used}} of {{allowance}} used",
+          {
+            used: used.toLocaleString(),
+            allowance: wallet.freeAllowance.toLocaleString(),
+          },
+        )}
+        door={
+          !wallet.processor.active && onActivate
+            ? (activateLabel ??
+              t("portal.billing.processor.activate", "Switch on the Processor"))
+            : undefined
+        }
+        onDoor={!wallet.processor.active ? onActivate : undefined}
+      />
+    );
+  })();
+  if (!wallet.processor.active)
+    return (
+      includedCredits ?? (
+        <MeterRow
+          name={name}
+          mid=""
+          fact=""
+          showTrack={false}
+          door={
+            onActivate
+              ? (activateLabel ??
+                t(
+                  "portal.billing.processor.activate",
+                  "Switch on the Processor",
+                ))
+              : undefined
+          }
+          onDoor={onActivate}
+        />
+      )
+    );
+
+  const spentMinor = estimatedBillWithPending(wallet, pendingUnits);
+  const capped = !wallet.noCap && wallet.capUsd != null;
+  // One conversion, in one place: the estimate is minor units, the limit is major.
+  const spentMajor = spentMinor != null ? spentMinor / 100 : null;
+  const pct =
+    capped && spentMajor != null
+      ? wallet.capUsd === 0
+        ? 100
+        : (spentMajor / (wallet.capUsd as number)) * 100
+      : 0;
+
+  const mid =
+    spentMinor != null
+      ? t(
+          "portal.billing.processor.midMetered",
+          "{{spend}} metered this cycle",
+          {
+            spend: formatMinor(spentMinor, wallet.currency),
+          },
+        )
+      : t("portal.billing.processor.midMeteredUnknown", "Metered this cycle");
+
+  const fact = capped
+    ? t("portal.billing.processor.factCapped", "{{pct}}% of {{cap}}", {
+        pct: Math.round(pct).toLocaleString(),
+        cap: formatMoneyMajor(wallet.capUsd as number, wallet.currency),
+      })
+    : t("portal.billing.processor.factNoCap", "no limit");
+
+  const door =
+    governLabel ??
+    (onGovern
+      ? t("portal.billing.processor.raiseLimit", "Raise limit")
+      : undefined);
+
+  return (
+    <>
+      {includedCredits}
+      <MeterRow
+        name={name}
+        mid={mid}
+        pct={pct}
+        tone={capped && pct >= 90 ? "warn" : "paid"}
+        showTrack={capped}
+        fact={fact}
+        door={onGovern ? door : undefined}
+        onDoor={onGovern}
+        midTitle={
+          capped
+            ? t(
+                "portal.billing.processor.meteredCapTooltip",
+                "Pauses metered processing at your spend limit.",
+              )
+            : undefined
+        }
+      />
+    </>
+  );
+}

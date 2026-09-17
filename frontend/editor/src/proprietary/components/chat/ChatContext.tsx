@@ -402,7 +402,7 @@ const initialState: ChatState = {
 };
 
 export function ChatProvider({ children }: { children: ReactNode }) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const [state, dispatch] = useReducer(chatReducer, initialState);
   const { files: activeFiles, fileStubs: activeFileStubs } = useAllFiles();
   const { actions: fileActions } = useFileActions();
@@ -422,8 +422,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
   // Download a File from the Stirling files endpoint.
   const downloadFile = useCallback(
     async (descriptor: AiWorkflowResultFile): Promise<File> => {
-      // AI result files live on the backend that ran the workflow (the SaaS
-      // engine on desktop), so fetch from the AI base, not the local backend.
+      // AI result files live on the backend that ran the workflow (the connected
+      // server on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
         `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
         { responseType: "blob" },
@@ -552,6 +552,8 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       try {
         const formData = new FormData();
         formData.append("userMessage", content);
+        // The engine replies in this language instead of guessing.
+        if (i18n.language) formData.append("locale", i18n.language);
         sourceFiles.forEach((file, i) => {
           formData.append(`fileInputs[${i}].fileInput`, file);
         });

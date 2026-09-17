@@ -1,6 +1,5 @@
 import apiClient from "@app/services/apiClient";
 import { supabase, isSupabaseConfigured } from "@app/services/supabaseClient";
-import { getCheckoutMode } from "@app/utils/protocolDetection";
 import type {
   PlanFeaturesMap,
   PlanHighlightsMap,
@@ -34,23 +33,6 @@ export interface PlanTierGroup {
 
 export interface PlansResponse {
   plans: PlanTier[];
-}
-
-export interface CheckoutSessionRequest {
-  lookup_key: string; // Stripe lookup key (e.g., 'selfhosted:server:monthly')
-  installation_id?: string; // Installation ID from backend (MAC-based fingerprint)
-  current_license_key?: string; // Current license key for upgrades
-  requires_seats?: boolean; // Whether to add adjustable seat pricing
-  seat_count?: number; // Initial number of seats for enterprise plans (user can adjust in Stripe UI)
-  email?: string; // Customer email for checkout pre-fill
-  successUrl?: string;
-  cancelUrl?: string;
-}
-
-export interface CheckoutSessionResponse {
-  clientSecret: string;
-  sessionId: string;
-  url?: string; // URL for hosted checkout (when not using HTTPS)
 }
 
 export interface BillingPortalResponse {
@@ -186,7 +168,7 @@ const licenseService = {
         {
           id: "selfhosted:server:monthly",
           lookupKey: "selfhosted:server:monthly",
-          name: "Server - Monthly",
+          name: "Team - Monthly",
           price: getPriceInfo("selfhosted:server:monthly"),
           currency: currencySymbol,
           period: "/month",
@@ -197,7 +179,7 @@ const licenseService = {
         {
           id: "selfhosted:server:yearly",
           lookupKey: "selfhosted:server:yearly",
-          name: "Server - Yearly",
+          name: "Team - Yearly",
           price: getPriceInfo("selfhosted:server:yearly"),
           currency: currencySymbol,
           period: "/year",
@@ -297,7 +279,7 @@ const licenseService = {
     if (serverMonthly || serverYearly) {
       groups.push({
         tier: "server",
-        name: "Server",
+        name: "Team",
         monthly: serverMonthly || null,
         yearly: serverYearly || null,
         features: (serverMonthly || serverYearly)!.features,
@@ -326,52 +308,6 @@ const licenseService = {
     }
 
     return groups;
-  },
-
-  /**
-   * Create a Stripe checkout session for upgrading
-   */
-  async createCheckoutSession(
-    request: CheckoutSessionRequest,
-  ): Promise<CheckoutSessionResponse> {
-    // Check if Supabase is configured
-    if (!isSupabaseConfigured || !supabase) {
-      throw new Error("Supabase is not configured. Checkout is not available.");
-    }
-
-    // Detect if HTTPS is available to determine checkout mode
-    const checkoutMode = getCheckoutMode();
-    const baseUrl = window.location.origin;
-    const settingsUrl = `${baseUrl}/settings/adminPlan`;
-
-    const { data, error } = await supabase.functions.invoke("create-checkout", {
-      body: {
-        self_hosted: true,
-        lookup_key: request.lookup_key,
-        installation_id: request.installation_id,
-        current_license_key: request.current_license_key,
-        requires_seats: request.requires_seats,
-        seat_count: request.seat_count || 1,
-        email: request.email,
-        callback_base_url: baseUrl,
-        ui_mode: checkoutMode,
-        // For hosted checkout, provide success/cancel URLs
-        success_url:
-          checkoutMode === "hosted"
-            ? `${settingsUrl}?session_id={CHECKOUT_SESSION_ID}&payment_status=success`
-            : undefined,
-        cancel_url:
-          checkoutMode === "hosted"
-            ? `${settingsUrl}?payment_status=canceled`
-            : undefined,
-      },
-    });
-
-    if (error) {
-      throw new Error(`Failed to create checkout session: ${error.message}`);
-    }
-
-    return data as CheckoutSessionResponse;
   },
 
   /**

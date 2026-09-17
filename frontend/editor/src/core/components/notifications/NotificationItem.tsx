@@ -3,11 +3,15 @@ import type { TFunction } from "i18next";
 import { useTranslation } from "react-i18next";
 import { Menu, Tooltip } from "@mantine/core";
 import { ActionIcon, Button } from "@app/ui";
-import LocalIcon from "@app/components/shared/LocalIcon";
-import { isResolvableHere } from "@app/hooks/useNotifications";
+import { Icon } from "@app/ui/Icon";
+import {
+  isResolvableHere,
+  refreshNotificationsNow,
+} from "@app/hooks/useNotifications";
 import type { NotificationDocumentState } from "@app/hooks/useNotifications";
 import type {
   ClientActionRegistry,
+  ClientActionSpec,
   NotificationActionContext,
 } from "@app/components/notifications/notificationActions";
 import { promoteActions } from "@app/components/notifications/notificationActionSlots";
@@ -15,6 +19,15 @@ import type {
   AppNotification,
   NotificationActionOffer,
 } from "@app/services/notifications";
+
+/** An action that asked for a password, with everything running it needs. */
+export interface PasswordPrompt {
+  offer: NotificationActionOffer;
+  spec: ClientActionSpec;
+  context: NotificationActionContext;
+  /** The row's title, so the prompt can say which failure it is unlocking for. */
+  rowTitle: string;
+}
 
 /** The kind's own sentence, sharing the portal's copy. */
 function summaryKeyOf(titleKey: string): string {
@@ -59,6 +72,8 @@ interface NotificationItemProps {
   documentState: NotificationDocumentState;
   registry: ClientActionRegistry;
   onDismissPanel: () => void;
+  /** Hand a password-collecting action to the panel, which owns the prompt. */
+  onRequestPassword: (prompt: PasswordPrompt) => void;
 }
 
 /** Its own component because the last attempt's message and the copy state are per-row. */
@@ -68,6 +83,7 @@ export function NotificationItem({
   documentState,
   registry,
   onDismissPanel,
+  onRequestPassword,
 }: NotificationItemProps) {
   const { t } = useTranslation();
   const [message, setMessage] = useState<string | null>(null);
@@ -78,6 +94,7 @@ export function NotificationItem({
   const context: NotificationActionContext = {
     notification,
     hasLocalFile: documentState.hasLocalFile,
+    retryPayload: documentState.retryPayload,
   };
 
   const { primary, secondary, overflow, withheldReasonKey } = promoteActions(
@@ -101,6 +118,11 @@ export function NotificationItem({
 
     const spec = registry[offer.id];
     if (!spec) return;
+    // The panel owns the prompt, and runs the action from there.
+    if (spec.needsPassword) {
+      onRequestPassword({ offer, spec, context, rowTitle: title });
+      return;
+    }
 
     setBusy(offer.id);
     const outcome = await spec.run(context);
@@ -116,6 +138,10 @@ export function NotificationItem({
       return;
     }
 
+    // A resolution closes its row server-side, and the panel reads that list on a 30s poll, so
+    // without this the row a reader just fixed sits there until a poll happens to land. Re-read
+    // rather than patched here, as the password path does: the server decides what closed.
+    refreshNotificationsNow();
     if (spec.closesPanel) onDismissPanel();
   };
 
@@ -191,7 +217,7 @@ export function NotificationItem({
                     className="notification-bell__more"
                     aria-label={`${t("notifications.action.more", "More options")}: ${title}`}
                   >
-                    <LocalIcon icon="more-horiz" width={14} height={14} />
+                    <Icon name="ellipsis" size={14} />
                   </ActionIcon>
                 </Tooltip>
               </Menu.Target>

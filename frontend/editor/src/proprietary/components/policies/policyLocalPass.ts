@@ -7,7 +7,7 @@
 
 import type { FileId } from "@app/types/file";
 import type { StirlingFileStub } from "@app/types/fileContext";
-import { CLASSIFICATION_CATEGORY_ID } from "@app/data/classificationPolicy";
+import { CLASSIFICATION_POLICY_KEY } from "@app/data/classificationPolicy";
 import { classificationLocalPass } from "@app/components/policies/classificationLocalPass";
 
 export interface LocalPassResult {
@@ -15,6 +15,8 @@ export interface LocalPassResult {
   stubUpdates: Partial<StirlingFileStub>;
   /** Whether the policy's server run should still be dispatched after this pass. */
   needsServerRun: boolean;
+  /** Charge this local pass as the billable run. */
+  meter?: () => void;
 }
 
 export interface LocalPass {
@@ -27,8 +29,28 @@ export interface LocalPass {
   run(fileId: FileId, stub: StirlingFileStub): Promise<LocalPassResult | null>;
 }
 
+/**
+ * A file id proven safe to dispatch. {@link runPolicyOnFile} accepts nothing else, so a
+ * new dispatch site cannot reach the AI without going through {@link dispatchableFileId}.
+ */
+export type DispatchableFileId = FileId & {
+  readonly __policyDispatchable: unique symbol;
+};
+
+/**
+ * The file's id, or null when a policy may not touch it. A locked classification came from
+ * outside the policy system — the classification demo's sweep — and must never be recomputed or
+ * escalated to the AI.
+ */
+export function dispatchableFileId(
+  stub: StirlingFileStub,
+): DispatchableFileId | null {
+  if (stub.classificationLocked === true) return null;
+  return stub.id as DispatchableFileId;
+}
+
 /** The local fast path a policy declares, if any. The default (most policies) is none. */
-export function localPassFor(categoryId: string): LocalPass | undefined {
-  if (categoryId === CLASSIFICATION_CATEGORY_ID) return classificationLocalPass;
+export function localPassFor(policyKey: string): LocalPass | undefined {
+  if (policyKey === CLASSIFICATION_POLICY_KEY) return classificationLocalPass;
   return undefined;
 }

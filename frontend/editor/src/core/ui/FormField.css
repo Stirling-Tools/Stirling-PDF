@@ -19,29 +19,7 @@
   color: var(--color-section-label);
 }
 
-/* An (i) affordance beside the label: the explanation lives in its tooltip
-   rather than as permanent subtext under the control. */
-.sui-field__info {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--c-text-subtle);
-  cursor: pointer;
-  line-height: 0;
-}
-
-.sui-field__info:hover {
-  color: var(--c-text);
-}
-
-.sui-field__info:focus-visible {
-  outline: 2px solid var(--c-primary);
-  outline-offset: 2px;
-  border-radius: 999px;
-}
+/* The label's (i) affordance is the shared InfoTooltip primitive (@app/ui/InfoTooltip). */
 
 .sui-field__required {
   /* The base red is a fill colour; as text on the form background it only

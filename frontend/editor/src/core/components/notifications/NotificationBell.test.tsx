@@ -12,9 +12,20 @@ import type {
   NotificationActionSlot,
 } from "@app/services/notifications";
 
-// @app/ui Button is a Mantine wrapper, so it needs the provider in the tree.
+vi.mock("@mantine/hooks", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@mantine/hooks")>()),
+  useReducedMotion: () => true,
+}));
+
+// Reduced motion also stops transition timers, which env="test" alone still schedules.
 const render = (ui: Parameters<typeof baseRender>[0]) =>
-  baseRender(ui, { wrapper: MantineProvider });
+  baseRender(ui, {
+    wrapper: ({ children }) => (
+      <MantineProvider env="test" theme={{ respectReducedMotion: true }}>
+        {children}
+      </MantineProvider>
+    ),
+  });
 
 // The bell's own two jobs: what counts as read, and how a row behaves around an action.
 
@@ -33,20 +44,23 @@ vi.mock("@app/services/notifications", () => ({
 // IndexedDB, which jsdom has none of. Answered here so availability is a fact of the test.
 const h = vi.hoisted(() => ({
   hasLocalFile: true,
+  retryPayload: { operation: "removePassword" } as unknown,
   // This build has the notifications API, except in the one test about the build that does not.
   notificationsAvailable: true,
   specs: {} as Record<
     string,
     {
       available: (context: unknown) => boolean;
-      run: (context: unknown) => unknown;
+      run: (context: unknown, password?: string) => unknown;
+      needsPassword?: boolean;
       closesPanel?: boolean;
     }
   >,
 }));
 
-vi.mock("@app/services/localFilePresence", () => ({
+vi.mock("@app/services/notificationRetry", () => ({
   hasLocalFile: () => Promise.resolve(h.hasLocalFile),
+  loadRetryPayload: () => Promise.resolve(h.retryPayload),
 }));
 
 vi.mock("@app/components/notifications/useNotificationsAvailable", () => ({
@@ -146,6 +160,7 @@ describe("NotificationBell", () => {
     window.localStorage.clear();
     fetchNotifications.mockReset().mockResolvedValue([]);
     h.hasLocalFile = true;
+    h.retryPayload = { operation: "removePassword" };
     h.notificationsAvailable = true;
     h.specs = {};
   });
@@ -374,6 +389,28 @@ describe("NotificationBell", () => {
     expect(screen.getByText("Unrecognised failure")).toBeTruthy();
   });
 
+  it("re-reads the list once an action has run, rather than waiting for the next poll", async () => {
+    // A resolution closes its row server-side. The panel polls every 30s, so without a re-read
+    // the row a reader just fixed stays on screen, and reopening the panel does not shift it.
+    const run = vi.fn();
+    h.specs = { REPAIR: { available: () => true, run } };
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Damaged document", { actions: [offer("REPAIR")] }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // Repaired: the server no longer reports it.
+    fetchNotifications.mockResolvedValue([]);
+    fireEvent.click(
+      screen.getByRole("button", { name: "REPAIR: Damaged document" }),
+    );
+
+    await waitFor(() =>
+      expect(screen.queryByText("Damaged document")).toBeNull(),
+    );
+  });
+
   it("closes the panel on its way to a destination behind it", async () => {
     const run = vi.fn();
     h.specs = { VIEW_FILE: { available: () => true, run, closesPanel: true } };
@@ -543,16 +580,57 @@ describe("NotificationBell", () => {
     ).toBeTruthy();
   });
 
-  it("shows a failed action in the row instead of leaving the user guessing", async () => {
+  it("asks for the password in the unlock modal before it retries", async () => {
+    const run = vi.fn().mockResolvedValue({ ok: true });
     h.specs = {
-      VIEW_FILE: {
+      DECRYPT: {
         available: () => true,
-        run: () => Promise.resolve({ ok: false, message: "Could not open" }),
+        run,
+        needsPassword: true,
+        closesPanel: true,
       },
     };
     fetchNotifications.mockResolvedValue([
       notification("a", "Password-protected document", {
-        actions: [offer("VIEW_FILE")],
+        actions: [offer("DECRYPT", "RESOLUTION")],
+      }),
+    ]);
+    render(<NotificationBell />);
+    await openPanel();
+
+    // The click opens the app's unlock modal rather than running anything.
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "DECRYPT: Password-protected document",
+      }),
+    );
+    expect(run).not.toHaveBeenCalled();
+
+    const field = await screen.findByLabelText("PDF password");
+    fireEvent.change(field, { target: { value: "hunter2" } });
+    // The modal's confirm carries the action's own wording, not a generic "unlock".
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT" }));
+
+    await waitFor(() => expect(run).toHaveBeenCalledTimes(1));
+    expect(run.mock.calls[0][1]).toBe("hunter2");
+    // Resolved server-side, so the list is re-read and the panel gets out of the way.
+    await waitFor(() => expect(fetchNotifications).toHaveBeenCalledTimes(2));
+    await waitFor(() =>
+      expect(screen.queryByText("Password-protected document")).toBeNull(),
+    );
+  });
+
+  it("shows a failed unlock in the modal instead of leaving the user guessing", async () => {
+    h.specs = {
+      DECRYPT: {
+        available: () => true,
+        run: () => Promise.resolve({ ok: false, message: "Wrong password" }),
+        needsPassword: true,
+      },
+    };
+    fetchNotifications.mockResolvedValue([
+      notification("a", "Password-protected document", {
+        actions: [offer("DECRYPT", "RESOLUTION")],
       }),
     ]);
     render(<NotificationBell />);
@@ -560,16 +638,19 @@ describe("NotificationBell", () => {
 
     fireEvent.click(
       screen.getByRole("button", {
-        name: "VIEW_FILE: Password-protected document",
+        name: "DECRYPT: Password-protected document",
       }),
     );
+    const field = await screen.findByLabelText("PDF password");
+    fireEvent.change(field, { target: { value: "nope" } });
+    fireEvent.click(screen.getByRole("button", { name: "DECRYPT" }));
 
     expect(await screen.findByRole("alert")).toHaveProperty(
       "textContent",
-      "Could not open",
+      "Wrong password",
     );
-    // Still on screen, so the row remains actionable.
-    expect(screen.getByText("Password-protected document")).toBeTruthy();
+    // The prompt stays up, so the next attempt is one keystroke rather than a re-open.
+    expect(screen.getByLabelText("PDF password")).toBeTruthy();
   });
 
   it("reads the kind's own words rather than the raw failure", async () => {

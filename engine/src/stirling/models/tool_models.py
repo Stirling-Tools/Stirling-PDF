@@ -421,6 +421,11 @@ class CompressPdfParams(ApiModel):
     )
 
 
+class CreatePortfolioParams(ApiModel):
+    cover_title: str = Field("PDF Portfolio", description="Title shown on the portfolio cover page.")
+    files: list[bytes] = Field(..., description="The files to bundle into the PDF Portfolio.")
+
+
 class CropParams(ApiModel):
     """
     This operation takes an input PDF file and crops it according to the given coordinates. Input:PDF Output:PDF Type:SISO
@@ -635,6 +640,10 @@ class FlattenParams(ApiModel):
     )
 
 
+class FlattenPortfolioParams(ApiModel):
+    pass
+
+
 class HtmlToPdfParams(ApiModel):
     """
     This endpoint takes an HTML or ZIP file input and converts it to a PDF format. Input:HTML/ZIP Output:PDF Type:SISO
@@ -672,6 +681,7 @@ class FitOption(StrEnum):
 
     fill_page = "fillPage"
     fit_document_to_image = "fitDocumentToImage"
+    fit_document_to_page = "fitDocumentToPage"
     maintain_aspect_ratio = "maintainAspectRatio"
 
 
@@ -1833,11 +1843,13 @@ class Model(
         | AutoRotatePdfParams
         | AutoSplitPdfParams
         | CompressPdfParams
+        | CreatePortfolioParams
         | DeleteAttachmentParams
         | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
+        | FlattenPortfolioParams
         | OcrPdfParams
         | RemoveBlanksParams
         | RenameAttachmentParams
@@ -1910,11 +1922,13 @@ class Model(
         | AutoRotatePdfParams
         | AutoSplitPdfParams
         | CompressPdfParams
+        | CreatePortfolioParams
         | DeleteAttachmentParams
         | ExtractAttachmentsParams
         | ExtractImageScansParams
         | ExtractImagesParams
         | FlattenParams
+        | FlattenPortfolioParams
         | OcrPdfParams
         | RemoveBlanksParams
         | RenameAttachmentParams
@@ -1988,11 +2002,13 @@ type ParamToolModel = (
     | AutoRotatePdfParams
     | AutoSplitPdfParams
     | CompressPdfParams
+    | CreatePortfolioParams
     | DeleteAttachmentParams
     | ExtractAttachmentsParams
     | ExtractImageScansParams
     | ExtractImagesParams
     | FlattenParams
+    | FlattenPortfolioParams
     | OcrPdfParams
     | RemoveBlanksParams
     | RenameAttachmentParams
@@ -2067,11 +2083,13 @@ class ToolEndpoint(StrEnum):
     AUTO_ROTATE_PDF = "/api/v1/misc/auto-rotate-pdf"
     AUTO_SPLIT_PDF = "/api/v1/misc/auto-split-pdf"
     COMPRESS_PDF = "/api/v1/misc/compress-pdf"
+    CREATE_PORTFOLIO = "/api/v1/misc/create-portfolio"
     DELETE_ATTACHMENT = "/api/v1/misc/delete-attachment"
     EXTRACT_ATTACHMENTS = "/api/v1/misc/extract-attachments"
     EXTRACT_IMAGE_SCANS = "/api/v1/misc/extract-image-scans"
     EXTRACT_IMAGES = "/api/v1/misc/extract-images"
     FLATTEN = "/api/v1/misc/flatten"
+    FLATTEN_PORTFOLIO = "/api/v1/misc/flatten-portfolio"
     OCR_PDF = "/api/v1/misc/ocr-pdf"
     REMOVE_BLANKS = "/api/v1/misc/remove-blanks"
     RENAME_ATTACHMENT = "/api/v1/misc/rename-attachment"
@@ -2144,11 +2162,13 @@ OPERATIONS: dict[ToolEndpoint, ParamToolModelType] = {
     ToolEndpoint.AUTO_ROTATE_PDF: AutoRotatePdfParams,
     ToolEndpoint.AUTO_SPLIT_PDF: AutoSplitPdfParams,
     ToolEndpoint.COMPRESS_PDF: CompressPdfParams,
+    ToolEndpoint.CREATE_PORTFOLIO: CreatePortfolioParams,
     ToolEndpoint.DELETE_ATTACHMENT: DeleteAttachmentParams,
     ToolEndpoint.EXTRACT_ATTACHMENTS: ExtractAttachmentsParams,
     ToolEndpoint.EXTRACT_IMAGE_SCANS: ExtractImageScansParams,
     ToolEndpoint.EXTRACT_IMAGES: ExtractImagesParams,
     ToolEndpoint.FLATTEN: FlattenParams,
+    ToolEndpoint.FLATTEN_PORTFOLIO: FlattenPortfolioParams,
     ToolEndpoint.OCR_PDF: OcrPdfParams,
     ToolEndpoint.REMOVE_BLANKS: RemoveBlanksParams,
     ToolEndpoint.RENAME_ATTACHMENT: RenameAttachmentParams,

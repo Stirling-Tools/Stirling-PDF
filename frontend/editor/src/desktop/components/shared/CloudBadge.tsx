@@ -1,5 +1,5 @@
 import { Badge, Tooltip } from "@mantine/core";
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
+import { Icon } from "@app/ui/Icon";
 import { useTranslation } from "react-i18next";
 
 interface CloudBadgeProps {
@@ -25,7 +25,7 @@ export function CloudBadge({ className }: CloudBadgeProps) {
     >
       <Badge
         className={className}
-        leftSection={<CloudOutlinedIcon sx={{ fontSize: 12 }} />}
+        leftSection={<Icon name="cloud" size={12} />}
         variant="light"
         color="blue"
         size="xs"

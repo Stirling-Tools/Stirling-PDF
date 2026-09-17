@@ -21,6 +21,9 @@ import org.mockito.quality.Strictness;
 import org.springframework.beans.factory.ObjectProvider;
 
 import stirling.software.common.model.ApplicationProperties;
+import stirling.software.proprietary.accountlink.EntitlementCache;
+import stirling.software.proprietary.accountlink.EntitlementState;
+import stirling.software.proprietary.accountlink.InstanceEntitlement;
 import stirling.software.proprietary.model.UserLicenseSettings;
 import stirling.software.proprietary.security.configuration.ee.KeygenLicenseVerifier.License;
 import stirling.software.proprietary.security.configuration.ee.LicenseKeyChecker;
@@ -40,6 +43,7 @@ class UserLicenseSettingsServiceMoreTest {
     @Mock private UserService userService;
     @Mock private LicenseKeyChecker licenseKeyChecker;
     @Mock private ObjectProvider<LicenseKeyChecker> licenseKeyCheckerProvider;
+    @Mock private ObjectProvider<EntitlementCache> entitlementCacheProvider;
 
     private ApplicationProperties applicationProperties;
     private UserLicenseSettingsService service;
@@ -53,14 +57,16 @@ class UserLicenseSettingsServiceMoreTest {
         when(settingsRepository.save(any(UserLicenseSettings.class)))
                 .thenAnswer(inv -> inv.getArgument(0));
         when(licenseKeyCheckerProvider.getIfAvailable()).thenReturn(licenseKeyChecker);
-        when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
+        when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
         service =
                 new UserLicenseSettingsService(
                         settingsRepository,
                         userService,
                         applicationProperties,
-                        licenseKeyCheckerProvider);
+                        licenseKeyCheckerProvider,
+                        entitlementCacheProvider);
     }
 
     // Saves a freshly initialized + locked settings row with a valid signature.
@@ -77,6 +83,225 @@ class UserLicenseSettingsServiceMoreTest {
         when(userService.getTotalUsersCount()).thenReturn((long) count);
         service.validateSettingsIntegrity();
         return s;
+    }
+
+    /**
+     * A valid licence answers first; SaaS answers when there is none. Team is moving to being sold
+     * with no licence at all, so in the end state only Enterprise holds one and it should outrank
+     * SaaS -- it is contracted and must work offline. These pin that order and the fallbacks
+     * beneath it.
+     */
+    @Nested
+    class LinkedTeamAllowance {
+
+        private void cacheReturns(InstanceEntitlement entitlement) {
+            EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
+            when(cache.current()).thenReturn(Optional.ofNullable(entitlement));
+            when(cache.linkedDeviceId()).thenReturn("device-1");
+            when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        }
+
+        private InstanceEntitlement withAllowance(Integer licensedUsers) {
+            return new InstanceEntitlement(
+                    true, 0, 0, null, EntitlementState.OK, null, null, null, licensedUsers);
+        }
+
+        @Test
+        @DisplayName("no licence: SaaS states the allowance")
+        void saasAnswersWithoutALicence() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(300));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(300);
+        }
+
+        /**
+         * The precedence decision. A legacy unlimited Server licence keeps what it granted rather
+         * than being silently reduced to the subscription's number; a customer worse off under it
+         * removes the licence.
+         */
+        @Test
+        @DisplayName("a valid licence outranks the SaaS allowance")
+        void licenceOutranksSaas() {
+            lockedSettings(7);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
+            cacheReturns(withAllowance(100));
+
+            // A SERVER licence with licenseMaxUsers = 0 is unlimited; it is not lowered to 100.
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(Integer.MAX_VALUE);
+        }
+
+        @Test
+        @DisplayName("not linked: the grandfathered limit answers")
+        void unlinkedFallsBackToGrandfathered() {
+            lockedSettings(7);
+            when(entitlementCacheProvider.getIfAvailable()).thenReturn(null);
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        @Test
+        @DisplayName("linked but SaaS has never answered: the grandfathered limit answers")
+        void neverFetchedFallsBackToGrandfathered() {
+            lockedSettings(7);
+            cacheReturns(null);
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        /**
+         * Null is also what an older SaaS sends and what "no user limit" looks like, and the two
+         * are indistinguishable — so it must fall through rather than cap the instance.
+         */
+        @Test
+        @DisplayName("SaaS states no limit: the grandfathered limit answers")
+        void noLimitFallsBackToGrandfathered() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(null));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        /**
+         * users.team_id points at the personal team until an invitation is accepted, so a solo
+         * cloud account's own team size must not become the instance's ceiling.
+         */
+        @Test
+        @DisplayName("a SaaS allowance below the grandfathered limit does not lower it")
+        void lowerAllowanceDoesNotShrinkTheInstance() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(1));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        /**
+         * The failure that looks like success. Buying Team promotes the effective tier to SERVER,
+         * and a SERVER licence with no {@code premium.maxUsers} means unlimited users -- so
+         * branching on the effective tier hands a customer who paid for 100 users no cap at all.
+         * The branch must read the licence key's own tier.
+         */
+        @Test
+        @DisplayName("a Team plan grants the users it bought, not unlimited")
+        void teamPlanIsNotAnUnlimitedLicence() {
+            lockedSettings(7);
+            // What buying Team does: SERVER effective, NORMAL from the key, maxUsers never set.
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
+            cacheReturns(withAllowance(100));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(100);
+        }
+
+        /**
+         * The other half of the same trap: the stored figure is what {@code licenseMaxUsers == 0}
+         * is read against, so a promoted tier must not be allowed to stamp it.
+         */
+        @Test
+        @DisplayName("a Team plan leaves licenseMaxUsers alone")
+        void teamPlanDoesNotStampLicenseMaxUsers() {
+            applicationProperties.getPremium().setMaxUsers(15);
+            UserLicenseSettings s = new UserLicenseSettings();
+            s.setIntegritySalt("salt");
+            s.setLicenseMaxUsers(0);
+            when(settingsRepository.findSettings()).thenReturn(Optional.of(s));
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
+
+            service.updateLicenseMaxUsers();
+
+            assertThat(s.getLicenseMaxUsers()).isZero();
+        }
+
+        @Test
+        @DisplayName("the stored allowance answers when SaaS has not been reached this boot")
+        void storedAllowanceSurvivesABootWithNoAnswer() {
+            UserLicenseSettings s = lockedSettings(7);
+            s.setLinkedTeamUsers(300);
+            s.setLinkedTeamDeviceId("device-1");
+            cacheReturns(null);
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(300);
+        }
+
+        @Test
+        @DisplayName("refresh records the purchased allowance on the licence row")
+        void refreshRecordsTheAllowance() {
+            UserLicenseSettings s = lockedSettings(7);
+            cacheReturns(withAllowance(200));
+
+            assertThat(service.refreshLinkedTeamUsers()).isEqualTo(200);
+            assertThat(s.getLinkedTeamUsers()).isEqualTo(200);
+        }
+
+        /** A cancelled plan comes back as no allowance, and the stored figure has to follow. */
+        @Test
+        @DisplayName("refresh clears the allowance when SaaS says there is none")
+        void refreshClearsALapsedAllowance() {
+            UserLicenseSettings s = lockedSettings(7);
+            s.setLinkedTeamUsers(200);
+            cacheReturns(withAllowance(null));
+
+            assertThat(service.refreshLinkedTeamUsers()).isNull();
+            assertThat(s.getLinkedTeamUsers()).isNull();
+        }
+
+        @Test
+        @DisplayName("refresh keeps the stored allowance when SaaS says nothing")
+        void refreshKeepsTheAllowanceWhenUnanswered() {
+            UserLicenseSettings s = lockedSettings(7);
+            s.setLinkedTeamUsers(200);
+            s.setLinkedTeamDeviceId("device-1");
+            cacheReturns(null);
+
+            assertThat(service.refreshLinkedTeamUsers()).isEqualTo(200);
+            assertThat(s.getLinkedTeamUsers()).isEqualTo(200);
+        }
+
+        @Test
+        void unlinkClearsPersistedAllowance() {
+            UserLicenseSettings settings = lockedSettings(7);
+            settings.setLinkedTeamUsers(200);
+            settings.setLinkedTeamDeviceId("device-1");
+            assertThat(service.refreshLinkedTeamUsers()).isNull();
+            assertThat(settings.getLinkedTeamUsers()).isNull();
+            assertThat(settings.getLinkedTeamDeviceId()).isNull();
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(7);
+        }
+
+        @Test
+        void anotherLinkCannotInheritOfflineAllowance() {
+            UserLicenseSettings settings = lockedSettings(7);
+            settings.setLinkedTeamUsers(200);
+            settings.setLinkedTeamDeviceId("old-device");
+            cacheReturns(null);
+            assertThat(service.refreshLinkedTeamUsers()).isNull();
+            assertThat(settings.getLinkedTeamUsers()).isNull();
+        }
+
+        @Test
+        @DisplayName("a SaaS allowance above the grandfathered limit raises it")
+        void higherAllowanceRaisesTheCeiling() {
+            lockedSettings(7);
+            cacheReturns(withAllowance(100));
+
+            assertThat(service.calculateMaxAllowedUsers()).isEqualTo(100);
+        }
+
+        /**
+         * The grandfathered count is re-floored at the default on every read, so the floor holds
+         * even for an instance that never had more than the free allowance.
+         */
+        @Test
+        @DisplayName("a SaaS allowance below the default never drops the instance under it")
+        void neverBelowTheDefault() {
+            lockedSettings(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+            cacheReturns(withAllowance(1));
+
+            assertThat(service.calculateMaxAllowedUsers())
+                    .isEqualTo(UserLicenseSettingsService.DEFAULT_USER_LIMIT);
+        }
     }
 
     @Nested
@@ -187,7 +412,8 @@ class UserLicenseSettingsServiceMoreTest {
             s.setIntegritySalt("salt");
             s.setLicenseMaxUsers(0);
             when(settingsRepository.findSettings()).thenReturn(Optional.of(s));
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.NORMAL);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.NORMAL);
+            when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.NORMAL);
 
             service.updateLicenseMaxUsers();
 
@@ -202,7 +428,8 @@ class UserLicenseSettingsServiceMoreTest {
             s.setIntegritySalt("salt");
             s.setLicenseMaxUsers(0);
             when(settingsRepository.findSettings()).thenReturn(Optional.of(s));
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.ENTERPRISE);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.ENTERPRISE);
+            when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.ENTERPRISE);
 
             service.updateLicenseMaxUsers();
 
@@ -217,7 +444,8 @@ class UserLicenseSettingsServiceMoreTest {
             s.setIntegritySalt("salt");
             s.setLicenseMaxUsers(8);
             when(settingsRepository.findSettings()).thenReturn(Optional.of(s));
-            when(licenseKeyChecker.getPremiumLicenseEnabledResult()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.premiumTier()).thenReturn(License.SERVER);
+            when(licenseKeyChecker.getLicenseKeyResult()).thenReturn(License.SERVER);
 
             service.updateLicenseMaxUsers();
 

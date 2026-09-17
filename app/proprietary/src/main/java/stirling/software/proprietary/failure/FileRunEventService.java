@@ -118,12 +118,13 @@ public class FileRunEventService {
      * The events the caller may read, newest first: the team's for a leader, their own for everyone
      * else. Empty when their team cannot be resolved.
      */
-    public List<FileRunEvent> list(FileRunEventStatus status, String kindId, int limit) {
+    public List<FileRunEvent> list(
+            FileRunEventStatus status, boolean closed, String kindId, int limit) {
         ReadScope scope = readScope();
         if (!scope.permitted()) {
             return List.of();
         }
-        return store.list(scope.teamId(), status, kindId, scope.actor(), limit);
+        return store.list(scope.teamId(), status, closed, kindId, scope.actor(), limit);
     }
 
     /**
@@ -274,11 +275,8 @@ public class FileRunEventService {
     }
 
     /**
-     * An opaque, stable discriminator for the calling viewer, for a client scoping per-browser read
-     * state. Hashed rather than the username itself: a client only needs to tell one viewer from
-     * another, and the value ends up in that browser's own storage.
-     *
-     * <p>{@code "anonymous"} with login disabled, where the one operator is every viewer.
+     * Opaque and stable per viewer, for a client scoping its own read state. Hashed because the
+     * value ends up in that browser's storage; {@code "anonymous"} with login disabled.
      */
     public String viewerKey() {
         String actor = currentActor();
@@ -293,8 +291,7 @@ public class FileRunEventService {
                             .digest(value.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest, 0, 8);
         } catch (NoSuchAlgorithmException e) {
-            // Every JVM ships SHA-256; a constant here would silently merge two viewers' read
-            // state, so the caller gets no key and the client falls back to showing everything.
+            // Empty rather than a constant, which would merge two viewers' read state.
             log.warn("SHA-256 unavailable, so notifications cannot be scoped to a viewer", e);
             return "";
         }

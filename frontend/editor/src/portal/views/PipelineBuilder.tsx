@@ -1,5 +1,7 @@
+import { requiresClassification } from "@app/data/classificationConditions";
+import { isConditionComplete } from "@app/conditions/validation";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import AddRoundedIcon from "@mui/icons-material/AddRounded";
@@ -66,16 +68,21 @@ import {
 } from "@portal/api/pipelineAssets";
 import { clearProcessedHistory } from "@portal/api/policies";
 import { DestinationPicker } from "@portal/components/pipelines/DestinationPicker";
+import { RoutingSection } from "@portal/components/policies/RoutingRules";
+import type { WireRoutingRule } from "@app/policies/types";
 import { availableOutputModes } from "@portal/components/pipelines/outputModes";
 import { type SourceView } from "@portal/api/sources";
 import { useSources } from "@portal/queries/sources";
+import { useCanManagePolicies } from "@portal/queries/policyPermissions";
 import { SourceModal } from "@portal/components/sources/SourceModal";
 import { EDITOR_SOURCE_TYPE } from "@portal/components/sources/sourceTypes";
 import { useAsync } from "@portal/hooks/useAsync";
+import { useAiEngineEnabled } from "@portal/hooks/useAiEngineEnabled";
 import { useQueryClient } from "@tanstack/react-query";
 import { qk } from "@portal/queries/keys";
 import { VIEW_PATHS, toPortalPath } from "@portal/contexts/ViewContext";
 import { humanizeOperation } from "@portal/components/pipelines/pipelineOperations";
+import { canonicalPipelineIconKey } from "@portal/components/pipelines/pipelineIcon";
 import { PipelineCreateHeader } from "@portal/components/pipelines/PipelineCreateHeader";
 import { PipelineEditHeader } from "@portal/components/pipelines/PipelineEditHeader";
 import { PipelineGraphToolbar } from "@portal/components/pipelines/PipelineGraphToolbar";
@@ -172,6 +179,23 @@ function buildTriggerFor(input: WorkingInput): TriggerConfig | null {
   return { type: input.triggerType, options: {} };
 }
 
+/**
+ * Routing reads the verdict this step writes, so a rule is only offered once the pipeline has one.
+ * Mirrors ClassificationStepPlanner.CLASSIFY_ENDPOINT.
+ */
+const CLASSIFY_OPERATION = "/api/v1/ai/tools/classify-and-label";
+
+function isClassifyStep(step: WorkingToolStep): boolean {
+  return step.operation === CLASSIFY_OPERATION;
+}
+
+function isClassifyTool(tool: ExecutableTool): boolean {
+  return (
+    tool.endpoint === CLASSIFY_OPERATION ||
+    tool.endpoints?.includes(CLASSIFY_OPERATION) === true
+  );
+}
+
 /** Whether a source can be written to, i.e. offered as a pipeline destination. */
 function isWritableSource(source: SourceView): boolean {
   return (availableOutputModes() as string[]).includes(source.type);
@@ -198,6 +222,16 @@ export function PipelineBuilder() {
     ]);
   const { id } = useParams();
   const isEdit = Boolean(id);
+  const location = useLocation();
+  // A Customise hand-off from the simple policy wizard: the in-progress settings as a full pipeline
+  // record, seeded here instead of fetched. When editing an existing policy the id-based fetch still
+  // runs in the background so run/pause/delete act on the last-saved version.
+  const handoff = location.state as { draft?: Policy } | null;
+  const seedDraft = handoff?.draft ?? null;
+  const {
+    classificationEnabled: aiClassificationEnabled,
+    loading: aiAvailabilityLoading,
+  } = useAiEngineEnabled();
   const { allTools } = useToolRegistry();
   const executableTools = useMemo(
     () => getExecutableTools(allTools),
@@ -220,6 +254,8 @@ export function PipelineBuilder() {
     [id],
   );
   const sourcesState = useSources();
+  const { canManage: canManagePolicies, isLoading: permissionsLoading } =
+    useCanManagePolicies();
   const triggersState = useAsync<TriggerInfo[]>(
     async () => await fetchTriggers(),
     [],
@@ -267,6 +303,20 @@ export function PipelineBuilder() {
   const [testRun, setTestRun] = useState<PolicyRunView | null>(null);
   const [testing, setTesting] = useState(false);
   const [outputIds, setOutputIds] = useState<string[]>([]);
+  const [routingRules, setRoutingRules] = useState<WireRoutingRule[]>([]);
+  // A policy (blocking on failure) vs an ordinary pipeline (see Policy.required). Only meaningful for
+  // an editor-sourced pipeline, so the toggle is shown only then and reset off otherwise (see save).
+  const [required, setRequired] = useState(false);
+  // First-class row icon (see Policy.icon), chosen from the picker in the header. Empty falls back to
+  // the template category glyph in the list; a custom pipeline defaults to none until picked.
+  const [icon, setIcon] = useState("");
+  // The policy metadata bag carried on output.options (runOn, sources, output naming, scope,
+  // reviewer, fieldValues...). Seeded on load and written back untouched, so a customised policy
+  // never loses its simple-only settings even though the builder has no UI for them.
+  const [outputOptions, setOutputOptions] = useState<Record<string, unknown>>(
+    {},
+  );
+  const [outputType, setOutputType] = useState("inline");
   /**
    * Whether the user has asked for each end of the chain yet, distinguishing "not offered" from
    * "offered and still owed a choice" - the two states an empty sourceId cannot tell apart. Only a
@@ -335,11 +385,13 @@ export function PipelineBuilder() {
     };
   }, []);
 
-  // Seed the form once: immediately for a new pipeline, or after the policy loads for an edit.
+  // Seed the form once: immediately for a new pipeline or a Customise hand-off, or after the policy
+  // loads for an edit. A hand-off draft wins over the fetched record (it carries the unsaved wizard
+  // edits), so an edit reached via Customise need not wait for the fetch.
   useEffect(() => {
     if (seeded) return;
-    if (isEdit && !policyState.data) return;
-    const policy = policyState.data ?? undefined;
+    if (isEdit && !seedDraft && !policyState.data) return;
+    const policy = seedDraft ?? policyState.data ?? undefined;
     // An editor pipeline is recognised by the editor source id, which arrives with the sources
     // fetch. If the policy loads first, seeding now would latch a blank input and re-save the
     // pipeline off the editor (editor.allowed:false), so wait for that fetch to settle.
@@ -348,6 +400,19 @@ export function PipelineBuilder() {
     }
     setName(policy?.name ?? "");
     setEnabled(policy?.enabled ?? true);
+    setRequired(policy?.required ?? false);
+    // Seed the icon from the first-class field; a template hand-off has none yet, so fall back to its
+    // category id. Normalise either to a canonical pickable key - the picker matches its own
+    // vocabulary, not the category-id aliases, so an unnormalised categoryId shows as the default.
+    const seedCategoryId = policy?.output?.options?.categoryId;
+    setIcon(
+      canonicalPipelineIconKey(
+        policy?.icon ??
+          (typeof seedCategoryId === "string" ? seedCategoryId : ""),
+      ),
+    );
+    setOutputOptions(policy?.output?.options ?? {});
+    setOutputType(policy?.output?.type ?? "inline");
     // The one input row is always present: blank for a new pipeline (or a legacy policy saved
     // without inputs), the stored input for an edit. A legacy multi-input policy shows only its
     // first input; saving persists just that one (the backend rejects more anyway).
@@ -375,9 +440,11 @@ export function PipelineBuilder() {
       (policy?.steps ?? []).map((step) => deserializeToolStep(step, allTools)),
     );
     setOutputIds(seedsEditor ? [] : (policy?.outputIds ?? []));
+    setRoutingRules(seedsEditor ? [] : (policy?.routingRules ?? []));
     setSeeded(true);
   }, [
     isEdit,
+    seedDraft,
     policyState.data,
     allTools,
     seeded,
@@ -675,15 +742,32 @@ export function PipelineBuilder() {
   );
   const snapshot = JSON.stringify({
     name: name.trim(),
+    icon,
+    required,
     input,
     steps: stepSnapshot,
+    outputType,
+    outputOptions,
     outputIds: [...outputIds].sort(),
+    routingRules,
   });
   const baseline = useRef<string | null>(null);
   useEffect(() => {
     if (seeded && baseline.current === null) baseline.current = snapshot;
   }, [seeded, snapshot]);
   const dirty = baseline.current !== null && baseline.current !== snapshot;
+
+  const stepsSignature = JSON.stringify(stepSnapshot);
+  const testedStepsSignature = useRef<string | null>(null);
+  useEffect(() => {
+    if (
+      testedStepsSignature.current !== null &&
+      testedStepsSignature.current !== stepsSignature
+    ) {
+      testedStepsSignature.current = null;
+      setTestRun(null);
+    }
+  }, [stepsSignature]);
 
   // Each validity condition is defined exactly once here, then consumed both by the graph (which
   // flags each end) and by the blocker list below.
@@ -696,18 +780,52 @@ export function PipelineBuilder() {
   const inputValid = sourceChosen && scheduleValid;
   // Nor a destination: an editor pipeline's results land back in the workspace the file came from.
   const outputValid = isEditorInput || outputIds.length === 1;
+  const classifies = steps.some(isClassifyStep);
+  // Mirrors PolicyValidator.validateRoutingRules: a rule with nothing to match on, or nowhere to
+  // send, would be rejected on save - so it is named here rather than surfaced as a server error.
+  const routingValid = routingRules.every(
+    (rule) => isConditionComplete(rule.condition) && rule.outputId !== "",
+  );
+  // Rules outliving the step that feeds them: the classify step was removed after they were set.
+  // Every document would fall through to the fallback, so this is named rather than left to run.
+  const routingHasVerdict = routingRules.every(
+    (rule) => !requiresClassification(rule.condition) || classifies,
+  );
 
   // The single source of truth for "can this be committed": every reason it can't be, in the order
   // they appear down the form, so a disabled Create / Save button can say exactly what is still owed.
   const blockers: string[] = [];
   if (name.trim() === "")
     blockers.push(t("portal.pipelines.builder.blocker.name"));
+  // An editor pipeline has the editor as its chosen source and needs no destination, so sourceChosen
+  // is already true and outputValid already passes for it - these checks simply never fire.
   if (!sourceChosen)
     blockers.push(t("portal.pipelines.builder.blocker.source"));
   else if (!scheduleValid)
     blockers.push(t("portal.pipelines.builder.blocker.schedule"));
   if (!outputValid)
     blockers.push(t("portal.pipelines.builder.blocker.destination"));
+  if (!routingValid)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.routing",
+        "Give every route document types and a destination",
+      ),
+    );
+  if (!routingHasVerdict)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.routingNeedsClassify",
+        "Add a Classify step, or turn off routing by document type",
+      ),
+    );
+  if (classifies && !aiAvailabilityLoading && !aiClassificationEnabled)
+    blockers.push(
+      t(
+        "portal.pipelines.builder.blocker.aiClassification",
+        "Enable AI classification in Settings, or remove the Classify step",
+      ),
+    );
   if (hasUnconfiguredSteps)
     blockers.push(
       t("portal.pipelines.builder.blocker.setup", {
@@ -803,22 +921,27 @@ export function PipelineBuilder() {
     setError(null);
     try {
       const policy: Policy = {
-        id: policyState.data?.id ?? undefined,
+        id: policyState.data?.id ?? seedDraft?.id ?? undefined,
         name: name.trim(),
         enabled: enabledOverride ?? enabled,
+        // Blocking is only meaningful for an editor pipeline; a source-backed one is never a policy,
+        // so don't persist a stale flag if the source was switched away from the editor.
+        required: isEditorInput && required,
+        icon,
         // The editor is virtual - there is no stored Source to pull from, and nothing server-side
         // sweeps it - so it is never a wire input; its participation is recorded on `editor` below.
         inputs: isEditorInput
           ? []
           : [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
         steps: await serializeStepsForSave(),
-        // Destinations are the referenced saved sources; the inline output is preserved as-is
-        // or defaults to inline.
-        output: policyState.data?.output ?? { type: "inline", options: {} },
+        // The output carries the policy metadata bag (categoryId, scope, naming...), edited in the
+        // dev section and preserved verbatim otherwise, so a customised policy never loses it.
+        output: { type: outputType, options: outputOptions },
         editor: { allowed: isEditorInput, runOn },
         // An editor pipeline delivers back into the workspace. A stored destination would send the
         // run to a folder or bucket instead, leaving the editor's copy untouched.
         outputIds: isEditorInput ? [] : outputIds,
+        routingRules: isEditorInput ? [] : routingRules,
       };
       await savePipeline(policy);
       await invalidatePipelines();
@@ -912,6 +1035,7 @@ export function PipelineBuilder() {
     if (testing) return;
     setTesting(true);
     setTestRun(null);
+    testedStepsSignature.current = stepsSignature;
     setRunResult(null);
     try {
       const { steps: testSteps, assets } = buildTestSteps();
@@ -1059,7 +1183,7 @@ export function PipelineBuilder() {
     }
   }
 
-  if (isEdit && !seeded) {
+  if (aiAvailabilityLoading || (isEdit && !seeded)) {
     return (
       <div className="portal-builder__loading">
         <Spinner />
@@ -1123,8 +1247,9 @@ export function PipelineBuilder() {
   // the cursor itself is whatever the run currently is.
   function stepRunState(index: number): GraphStepContent["runState"] {
     if (!testRun) return undefined;
-    if (index < testRun.currentStep) return "done";
-    if (index > testRun.currentStep) return undefined;
+    const activeIndex = testRun.currentStep - 1;
+    if (index < activeIndex) return "done";
+    if (index > activeIndex) return undefined;
     if (testRun.status === "FAILED") return "failed";
     if (testRun.status === "COMPLETED") return "done";
     return "running";
@@ -1146,6 +1271,7 @@ export function PipelineBuilder() {
       inputs: [{ sourceId: input.sourceId, trigger: buildTriggerFor(input) }],
       steps: steps.map((step) => serializeToolStep(step, allTools)),
       outputIds,
+      routingRules,
     },
     null,
     2,
@@ -1161,7 +1287,10 @@ export function PipelineBuilder() {
               : testRun.status === "COMPLETED"
                 ? ("completed" as const)
                 : ("running" as const),
-          completedSteps: testRun.currentStep,
+          completedSteps:
+            testRun.status === "FAILED"
+              ? Math.max(0, testRun.currentStep - 1)
+              : testRun.currentStep,
           stepCount: testRun.stepCount,
           error: testRun.error,
           outputs: testRun.outputs ?? [],
@@ -1240,13 +1369,31 @@ export function PipelineBuilder() {
 
     if (selected === "output") {
       return (
-        <DestinationPicker
-          sources={writableSources}
-          value={outputIds}
-          onChange={setOutputIds}
-          onCreateNew={() => createSourceFor("output")}
-          onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
-        />
+        <>
+          <RoutingSection
+            rules={routingRules}
+            onChange={setRoutingRules}
+            destinations={writableSources}
+            onCreateDestination={() => createSourceFor("output")}
+            canClassify={classifies}
+            aiClassificationEnabled={aiClassificationEnabled}
+          />
+          <DestinationPicker
+            label={
+              routingRules.length > 0
+                ? t(
+                    "portal.pipelines.builder.routing.fallback",
+                    "Everything else goes to",
+                  )
+                : undefined
+            }
+            sources={writableSources}
+            value={outputIds}
+            onChange={setOutputIds}
+            onCreateNew={() => createSourceFor("output")}
+            onEdit={(sourceId) => setSourceModal({ open: true, sourceId })}
+          />
+        </>
       );
     }
 
@@ -1271,6 +1418,13 @@ export function PipelineBuilder() {
         <PipelineEditHeader
           name={name}
           onNameChange={setName}
+          icon={icon}
+          onIconChange={setIcon}
+          required={required}
+          onRequiredChange={setRequired}
+          runsOnEditor={isEditorInput}
+          canManagePolicies={canManagePolicies}
+          permissionsLoading={permissionsLoading}
           enabled={enabled}
           onTogglePause={handleTogglePause}
           togglingEnabled={togglingEnabled}
@@ -1289,6 +1443,13 @@ export function PipelineBuilder() {
         <PipelineCreateHeader
           name={name}
           onNameChange={setName}
+          icon={icon}
+          onIconChange={setIcon}
+          required={required}
+          onRequiredChange={setRequired}
+          runsOnEditor={isEditorInput}
+          canManagePolicies={canManagePolicies}
+          permissionsLoading={permissionsLoading}
           canSave={canSave}
           blockers={blockers}
           saving={submitting}
@@ -1364,6 +1525,14 @@ export function PipelineBuilder() {
                       label:
                         chosenDestination?.name ??
                         t("portal.pipelines.builder.chooseDestination"),
+                      // With routing on, the destination on the node is only the fallback, so the
+                      // node says how many routes come first rather than implying one endpoint.
+                      detail:
+                        routingRules.length > 0
+                          ? t("portal.pipelines.builder.routing.nodeSummary", {
+                              count: routingRules.length,
+                            })
+                          : undefined,
                       warning: outputValid
                         ? undefined
                         : t("portal.pipelines.builder.needsDestination"),
@@ -1433,6 +1602,14 @@ export function PipelineBuilder() {
           operations={STEP_OPERATIONS}
           onPickOperation={addOperationStep}
           precedingOutput={precedingOutput}
+          unavailableReason={(tool) =>
+            isClassifyTool(tool) && !aiClassificationEnabled
+              ? t(
+                  "portal.pipelines.builder.routing.aiToolDisabled",
+                  "Unavailable until AI classification is enabled in Settings",
+                )
+              : undefined
+          }
           onClose={() => setPickerAt(null)}
         />
       </Modal>

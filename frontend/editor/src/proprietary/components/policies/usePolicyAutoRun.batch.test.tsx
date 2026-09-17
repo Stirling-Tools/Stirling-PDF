@@ -80,7 +80,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       classification: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-classification",
         runOn: "upload",
         order: 0,
@@ -90,8 +90,9 @@ vi.mock("@app/hooks/usePolicies", () => ({
       security: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-security",
+        firstOperation: "/api/v1/misc/compress-pdf",
         runOn: securityRunOn.value,
         order: 1,
         outputMode: "new_version",
@@ -125,8 +126,8 @@ vi.mock("@app/services/fileClassification", () => ({
 vi.mock("@app/services/heuristic/heuristicClassification", () => ({
   classifyFileHeuristically: (file: File) => mocks.classify(file),
 }));
-vi.mock("@app/services/classificationMeter", () => ({
-  meterClassificationRun: (payload: unknown) => mocks.meter(payload),
+vi.mock("@app/services/automationMeter", () => ({
+  meterAutomationRun: (payload: unknown) => mocks.meter(payload),
 }));
 
 import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
@@ -295,9 +296,9 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     await runUntilSettled(FILE_COUNT * 2);
 
     const classification = latestRuns.filter(
-      (r) => r.categoryId === "classification",
+      (r) => r.policyKey === "classification",
     );
-    const security = latestRuns.filter((r) => r.categoryId === "security");
+    const security = latestRuns.filter((r) => r.policyKey === "security");
 
     expect(classification).toHaveLength(FILE_COUNT);
     expect(security).toHaveLength(FILE_COUNT);
@@ -348,7 +349,7 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
       await vi.waitFor(
         () => {
           const security = latestRuns.filter(
-            (r) => r.categoryId === "security" && r.imported,
+            (r) => r.policyKey === "security" && r.imported,
           );
           expect(security).toHaveLength(FILE_COUNT);
         },
@@ -374,7 +375,7 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
       await vi.waitFor(
         () => {
           const classification = latestRuns.filter(
-            (r) => r.categoryId === "classification" && r.imported,
+            (r) => r.policyKey === "classification" && r.imported,
           );
           expect(classification).toHaveLength(FILE_COUNT);
         },
@@ -383,7 +384,7 @@ describe("policy auto-run — 61-file batch through a Security → Classificatio
     });
 
     // The export policy did not run on upload; nothing versioned in place.
-    expect(latestRuns.filter((r) => r.categoryId === "security")).toHaveLength(
+    expect(latestRuns.filter((r) => r.policyKey === "security")).toHaveLength(
       0,
     );
     expect(mocks.consumeSilentCalls).toBe(0);

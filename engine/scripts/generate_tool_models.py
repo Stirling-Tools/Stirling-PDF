@@ -139,6 +139,7 @@ class ToolDiscovery:
         "/api/v1/security/get-info-on-pdf",
         "/api/v1/security/verify-pdf",
         "/api/v1/security/validate-signature",
+        "/api/v1/security/validate-compliance",
         "/api/v1/misc/list-attachments",
         "/api/v1/misc/show-javascript",
         "/api/v1/misc/decompress-pdf",

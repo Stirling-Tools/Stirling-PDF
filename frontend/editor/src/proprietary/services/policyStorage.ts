@@ -7,17 +7,33 @@
 
 import { loadPolicyCatalog } from "@app/services/policyCatalog";
 import { defaultRunOn } from "@app/policies/runOn";
-import type { PoliciesByCategory, PolicyState } from "@app/types/policies";
+import type { PoliciesByKey, PolicyState } from "@app/types/policies";
+import { isToolEndpoint } from "@app/hooks/tools/shared/toolApiMapping";
 
 const STORAGE_KEY = "stirling-policies-state";
+
+/**
+ * The stored policies as written, before parsing or reconciling against the catalogue. A cheap
+ * identity for callers that cache a derivation of {@link loadPolicies} and need to know whether
+ * it is still current.
+ */
+export function rawStoredPolicies(): string | null {
+  try {
+    return typeof localStorage !== "undefined"
+      ? localStorage.getItem(STORAGE_KEY)
+      : null;
+  } catch {
+    return null;
+  }
+}
 export const POLICIES_CHANGE_EVENT = "stirling:policies-changed";
 
-function defaultState(categoryId: string): PolicyState {
+function defaultState(policyKey: string): PolicyState {
   // Unconfigured by default. The backend is the source of truth for what's
   // actually configured + active; this is just the empty local-cache shape.
   return {
     configured: false,
-    status: "default",
+    enabled: false,
     sources: ["editor"],
     runsOnEditor: true,
     scopeTypes: [],
@@ -28,7 +44,7 @@ function defaultState(categoryId: string): PolicyState {
     outputMode: "new_version",
     // No rename by default — the output keeps the input's filename.
     outputName: "",
-    runOn: defaultRunOn(categoryId),
+    runOn: defaultRunOn(policyKey),
     // Every catalog category is a shipped, built-in policy → default (not
     // deletable).
     isDefault: true,
@@ -40,20 +56,20 @@ function defaultState(categoryId: string): PolicyState {
 const STALE_REVIEWER_EMAIL = "matt@stirlingpdf.com";
 
 /** Read the full policy state, seeding + healing any missing categories. */
-export function loadPolicies(): PoliciesByCategory {
-  let parsed: Partial<PoliciesByCategory> = {};
+export function loadPolicies(): PoliciesByKey {
+  let parsed: Partial<PoliciesByKey> = {};
   try {
     const raw =
       typeof localStorage !== "undefined"
         ? localStorage.getItem(STORAGE_KEY)
         : null;
-    if (raw) parsed = JSON.parse(raw) as Partial<PoliciesByCategory>;
+    if (raw) parsed = JSON.parse(raw) as Partial<PoliciesByKey>;
   } catch {
     // Corrupt/unavailable storage — fall back to seed.
   }
   // Always reconcile against the current category list so a newly-added
   // category gets a default rather than being undefined.
-  const out: PoliciesByCategory = {};
+  const out: PoliciesByKey = {};
   loadPolicyCatalog().categories.forEach((cat, index) => {
     const stored = parsed[cat.id];
     const merged = { ...defaultState(cat.id), ...(stored ?? {}) };
@@ -77,10 +93,20 @@ export function loadPolicies(): PoliciesByCategory {
   for (const [key, state] of Object.entries(parsed)) {
     if (!out[key] && state) out[key] = state as PolicyState;
   }
+  // Cached endpoints can come from a different frontend version.
+  for (const state of Object.values(out)) {
+    const operation = state.firstOperation;
+    if (
+      operation !== undefined &&
+      (typeof operation !== "string" || !isToolEndpoint(operation))
+    ) {
+      state.firstOperation = null;
+    }
+  }
   return out;
 }
 
-function persist(state: PoliciesByCategory): void {
+function persist(state: PoliciesByKey): void {
   try {
     if (typeof localStorage !== "undefined") {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
@@ -95,38 +121,20 @@ function persist(state: PoliciesByCategory): void {
 
 /** Merge a partial update into one category's state and persist. */
 export function updatePolicy(
-  categoryId: string,
+  policyKey: string,
   patch: Partial<PolicyState>,
-): PoliciesByCategory {
+): PoliciesByKey {
   const current = loadPolicies();
-  const next: PoliciesByCategory = {
+  const next: PoliciesByKey = {
     ...current,
     // Fall back to defaults so a not-yet-seeded category id still yields a
     // complete PolicyState rather than a partial.
-    [categoryId]: {
-      ...defaultState(categoryId),
-      ...current[categoryId],
+    [policyKey]: {
+      ...defaultState(policyKey),
+      ...current[policyKey],
       ...patch,
     },
   };
-  persist(next);
-  return next;
-}
-
-/**
- * Persist a new execution order. Assigns `order` 0..n-1 to the given categories in
- * the sequence provided, so after any reorder every listed policy has an explicit,
- * contiguous order (no reliance on the catalog-index default). Categories omitted
- * from the list keep their current order.
- */
-export function reorderPolicies(
-  orderedCategoryIds: string[],
-): PoliciesByCategory {
-  const current = loadPolicies();
-  const next: PoliciesByCategory = { ...current };
-  orderedCategoryIds.forEach((id, index) => {
-    if (next[id]) next[id] = { ...next[id], order: index };
-  });
   persist(next);
   return next;
 }
@@ -137,10 +145,10 @@ export function reorderPolicies(
  * entry keeps a dead backendId that the auto-run still tries to dispatch. Built-in categories are
  * never forgotten - they reseed on the next read anyway.
  */
-export function forgetPolicies(ids: string[]): PoliciesByCategory {
+export function forgetPolicies(ids: string[]): PoliciesByKey {
   const current = loadPolicies();
   const catalogIds = new Set(loadPolicyCatalog().categories.map((c) => c.id));
-  const next: PoliciesByCategory = { ...current };
+  const next: PoliciesByKey = { ...current };
   let removed = false;
   for (const id of ids) {
     if (catalogIds.has(id) || !(id in next)) continue;
@@ -149,18 +157,6 @@ export function forgetPolicies(ids: string[]): PoliciesByCategory {
   }
   if (removed) persist(next);
   return next;
-}
-
-/** Reset a category to its unconfigured default (the "Delete policy" action). */
-export function resetPolicy(categoryId: string): PoliciesByCategory {
-  return updatePolicy(categoryId, {
-    ...defaultState(categoryId),
-    configured: false,
-    status: "default",
-    // Drop the backing-folder + backend links (the caller deletes those).
-    folderId: undefined,
-    backendId: undefined,
-  });
 }
 
 /** Subscribe to policy-state changes (same-tab). Returns an unsubscribe fn. */

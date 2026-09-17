@@ -38,7 +38,7 @@ vi.mock("@app/hooks/usePolicies", () => ({
       security: {
         configured: true,
         runsOnEditor: true,
-        status: "active",
+        enabled: true,
         backendId: "backend-1",
         runOn: "upload",
         outputMode: "new_version",
@@ -70,6 +70,7 @@ import { usePolicyAutoRun } from "@app/components/policies/usePolicyAutoRun";
 import {
   recordRunStart,
   getRun,
+  updateRun,
   resetPolicyRuns,
 } from "@app/components/policies/policyRunStore";
 
@@ -77,7 +78,7 @@ import {
 function recordCompletedRun() {
   recordRunStart({
     runId: "run-1",
-    categoryId: "security",
+    policyKey: "security",
     fileId: "file-1",
     fileName: "doc.pdf",
     fileSize: 1234,
@@ -118,6 +119,20 @@ beforeEach(() => {
 });
 
 describe("auto-run import: new-version output delivery", () => {
+  it("preserves a converted output's extension for subsequent policies", async () => {
+    recordCompletedRun();
+    updateRun("run-1", {
+      outputs: [{ fileId: "out-file-1", fileName: "doc_converted.png" }],
+    });
+    mocks.downloadPolicyOutput.mockResolvedValue(new Blob(["image"]));
+
+    await runImport();
+
+    const file = mocks.addFiles.mock.calls[0][0][0] as File;
+    expect(file.name).toBe("doc.png");
+    expect(file.type).not.toBe("application/pdf");
+  });
+
   it("versions the input in storage when it's recovered after a reload (no second file)", async () => {
     // Reload case: the workspace is empty, but the input still persists in IndexedDB.
     mocks.fileStubs = [];
