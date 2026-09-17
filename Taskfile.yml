@@ -2,6 +2,8 @@ version: '3'
 
 output: prefixed
 
+dotenv: ['.env.local']
+
 vars:
   FIND_FREE_PORT_PS: powershell -NoProfile -File scripts/find-free-port.ps1
   FIND_FREE_PORT_SH: bash scripts/find-free-port.sh
