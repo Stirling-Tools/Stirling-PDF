@@ -14,6 +14,9 @@ import {
 import fs from "node:fs";
 import path from "node:path";
 
+// Reads the library as cards, so it asks for the grid.
+test.use({ filesViewMode: "grid" });
+
 /** Capture harness, not a regression test: fakes Tauri IPC over an in-memory disk.
  *  Needs `vite --mode desktop` (for desktopFileLinkingSupported) and SHOT_DIR set. */
 

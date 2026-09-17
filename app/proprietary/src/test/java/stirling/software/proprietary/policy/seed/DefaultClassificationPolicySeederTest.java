@@ -52,7 +52,7 @@ class DefaultClassificationPolicySeederTest {
     }
 
     @Test
-    void seedsAnEnabledClassificationPolicyWhenTheTeamHasNone() {
+    void seedsAnEnabledClassificationPipelineWhenTheTeamHasNone() {
         when(policyStore.findByTeam(7L)).thenReturn(List.of());
 
         seeder().onTeamCreated(new TeamCreatedEvent(7L, "Acme"));
@@ -61,8 +61,7 @@ class DefaultClassificationPolicySeederTest {
         verify(policyStore).save(saved.capture());
         Policy policy = saved.getValue();
         assertThat(policy.enabled()).isTrue();
-        // Org-mandated: the seeded classification policy is a Policy, not an opt-in Pipeline.
-        assertThat(policy.required()).isTrue();
+        assertThat(policy.required()).isFalse();
         assertThat(policy.teamId()).isEqualTo(7L);
         assertThat(policy.output().type()).isEqualTo("inline");
         assertThat(policy.output().options().get("categoryId")).isEqualTo("classification");

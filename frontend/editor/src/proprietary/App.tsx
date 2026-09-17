@@ -5,14 +5,20 @@ import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
-import Landing from "@app/routes/Landing";
-import Login from "@app/routes/Login";
-import AuthCallback from "@app/routes/AuthCallback";
-import InviteAccept from "@app/routes/InviteAccept";
-import ShareLinkPage from "@app/routes/ShareLinkPage";
-import ParticipantView from "@app/components/workflow/ParticipantView";
-import Onboarding from "@app/components/onboarding/Onboarding";
-import WatchedFoldersRegistration from "@app/components/watchedFolders/WatchedFoldersRegistration";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
+
+const Landing = lazy(() => import("@app/routes/Landing"));
+const Login = lazy(() => import("@app/routes/Login"));
+const AuthCallback = lazy(() => import("@app/routes/AuthCallback"));
+const InviteAccept = lazy(() => import("@app/routes/InviteAccept"));
+const ShareLinkPage = lazy(() => import("@app/routes/ShareLinkPage"));
+const ParticipantView = lazy(
+  () => import("@app/components/workflow/ParticipantView"),
+);
+const Onboarding = lazy(() => import("@app/components/onboarding/Onboarding"));
+const WatchedFoldersRegistration = lazy(
+  () => import("@app/components/watchedFolders/WatchedFoldersRegistration"),
+);
 
 const MobileScannerPage = lazy(() => import("@app/pages/MobileScannerPage"));
 const MobileSignPage = lazy(() => import("@app/pages/MobileSignPage"));
@@ -49,6 +55,7 @@ function ParticipantViewPage() {
 }
 
 export default function App() {
+  const connectedServer = useConnectedServer();
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
@@ -121,7 +128,9 @@ export default function App() {
                       <Route path="/*" element={<Landing />} />
                     </Routes>
                     <Onboarding />
-                    {WATCHED_FOLDERS_ENABLED && <WatchedFoldersRegistration />}
+                    {WATCHED_FOLDERS_ENABLED && connectedServer && (
+                      <WatchedFoldersRegistration />
+                    )}
                   </AppLayout>
                 </AppProviders>
               </RootGate>

@@ -19,6 +19,7 @@ import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -32,6 +33,7 @@ import stirling.software.saas.accountlink.InstanceController.EntitlementResponse
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.billing.TeamBillingContext;
 import stirling.software.saas.payg.billing.TeamBillingService;
+import stirling.software.saas.payg.bundle.PrepaidBundleService;
 import stirling.software.saas.payg.entitlement.EntitlementService;
 import stirling.software.saas.payg.entitlement.EntitlementSnapshot;
 import stirling.software.saas.payg.instance.InstanceUsageIngestService;
@@ -68,7 +70,8 @@ class InstanceControllerTest {
                 pricingPolicyService,
                 usageIngestService,
                 linkedInstanceRepository,
-                teamExtensionsRepository);
+                teamExtensionsRepository,
+                Mockito.mock(PrepaidBundleService.class));
     }
 
     private static PricingPolicy policy() {
@@ -291,7 +294,9 @@ class InstanceControllerTest {
                 null,
                 null,
                 null,
-                null);
+                null,
+                start,
+                start.plusMonths(1));
     }
 
     private static TeamBillingContext subscribedBilling(String subId, long freeRemaining) {
@@ -306,7 +311,9 @@ class InstanceControllerTest {
                 BigDecimal.valueOf(2),
                 "usd",
                 2500L,
-                1250L);
+                1250L,
+                start,
+                start.plusMonths(1));
     }
 
     private static EntitlementSnapshot snapshot(EntitlementState state, long spend, Long cap) {

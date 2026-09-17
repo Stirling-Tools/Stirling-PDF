@@ -29,6 +29,7 @@ import stirling.software.proprietary.policy.source.EditorSource;
 import stirling.software.proprietary.policy.source.Source;
 import stirling.software.proprietary.policy.source.SourceDocCounter;
 import stirling.software.proprietary.policy.source.SourceStore;
+import stirling.software.proprietary.security.configuration.ee.DatabaseLicenseGuard;
 
 /**
  * Turns a policy's referenced sources into runs: each {@code sourceId} is resolved live to its
@@ -48,6 +49,7 @@ public class PolicyRunner {
     private final ProcessedLedger processedLedger;
     private final ApplicationProperties applicationProperties;
     private final PolicyAccessGuard policyAccessGuard;
+    private final DatabaseLicenseGuard databaseLicenseGuard;
 
     /**
      * One admission gate per sweep: every run is visible immediately, but only this many execute at
@@ -103,6 +105,9 @@ public class PolicyRunner {
      */
     private SweepOutcome run(
             Policy policy, List<PipelineInput> inputs, SweepKind sweep, String target) {
+        if (databaseLicenseGuard.requiresActivation()) {
+            return new SweepOutcome(List.of(), 0, 0, 0, 0, 0);
+        }
         if (policyAccessGuard.isOrphaned(policy)) {
             // Reachable by nobody, so nobody could stop it: running would replace files in place
             // in a folder no user can list, pause, revert, or delete.
@@ -144,7 +149,12 @@ public class PolicyRunner {
                 context.vetoCleanup();
                 continue;
             }
-            runIds.addAll(pullAndRun(policy, sourceId, source.toInputSpec(), context, admission));
+            if (policyAccessGuard.isOrphaned(source)) {
+                log.warn("Source {} has no reachable owner; not sweeping it", sourceId);
+                context.vetoCleanup();
+                continue;
+            }
+            runIds.addAll(pullAndRun(policy, source, context, admission));
         }
         boolean fullPolicy = inputs.size() == policy.inputs().size();
         if (fullPolicy && context.cleanupAllowed()) {
@@ -173,6 +183,7 @@ public class PolicyRunner {
             PolicyInputs inputs,
             PolicyProgressListener listener,
             String documentReference) {
+        requireDatabaseAccess();
         PolicyRunHandle handle =
                 policyEngine.runPolicy(policy, inputs, listener, null, documentReference);
         docCounter.record(EditorSource.counterKey(policy.teamId()), inputs.primary().size());
@@ -182,7 +193,15 @@ public class PolicyRunner {
     /** Run an ad-hoc pipeline with no stored policy (AI/Automate one-offs). */
     public PolicyRunHandle runAdHoc(
             PipelineDefinition definition, PolicyInputs inputs, PolicyProgressListener listener) {
+        requireDatabaseAccess();
         return policyEngine.submit(definition, inputs, listener);
+    }
+
+    private void requireDatabaseAccess() {
+        if (databaseLicenseGuard.requiresActivation()) {
+            throw new IllegalStateException(
+                    "Link a paid Team account or install a Server licence before processing");
+        }
     }
 
     /** Whether nothing of the policy is running or mid-settle — safe to move its files. */
@@ -222,11 +241,8 @@ public class PolicyRunner {
      * this sweep's ledger cleanup.
      */
     private List<String> pullAndRun(
-            Policy policy,
-            String sourceId,
-            InputSpec spec,
-            PolicySweep context,
-            Semaphore admission) {
+            Policy policy, Source storedSource, PolicySweep context, Semaphore admission) {
+        InputSpec spec = storedSource.toInputSpec();
         InputSource source = sourceFor(spec);
         if (source == null) {
             log.warn(
@@ -241,7 +257,7 @@ public class PolicyRunner {
         }
         List<ResolvedInput> work;
         try {
-            work = source.resolve(spec, context);
+            work = source.resolve(storedSource, context, policy.owner());
         } catch (IOException | RuntimeException e) {
             log.warn(
                     "Failed to resolve source '{}' for policy {}: {}",
@@ -257,31 +273,32 @@ public class PolicyRunner {
             runIds.add(
                     startRun(
                             policy,
-                            sourceId,
+                            storedSource,
                             unit.fileIdentity(),
                             unit.inputs(),
                             unit.onComplete(),
                             admission));
             docsFed += unit.inputs().primary().size();
         }
-        docCounter.record(sourceId, docsFed);
+        docCounter.record(storedSource.id(), docsFed);
         return runIds;
     }
 
     private String startRun(
             Policy policy,
-            String sourceId,
+            Source source,
             String fileIdentity,
             PolicyInputs inputs,
             Consumer<Boolean> onComplete,
             Semaphore admission) {
         log.info("Running policy {} ({})", policy.id(), policy.name());
+        requireDatabaseAccess();
         PolicyRunHandle handle =
                 policyEngine.runPolicy(
                         policy,
                         inputs,
                         PolicyProgressListener.NOOP,
-                        sourceId,
+                        source,
                         fileIdentity,
                         admission);
         handle.completion()

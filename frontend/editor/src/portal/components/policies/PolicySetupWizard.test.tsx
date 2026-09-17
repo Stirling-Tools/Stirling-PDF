@@ -365,30 +365,34 @@ describe("PolicySetupWizard", () => {
     expect(await screen.findByRole("button", { name: ENABLE })).toBeDisabled();
   });
 
-  it("defaults a new template to a policy (blocking)", async () => {
-    // A template's failure should block the file, so a new one defaults to required, independent of
-    // who is creating it.
-    const onSubmit = vi.fn().mockResolvedValue(undefined);
-    const entry: CatalogueEntry = {
-      category: security,
-      config: securityConfig,
-      policy: null,
-    };
+  it.each([
+    { categoryId: "security", required: true },
+    { categoryId: "classification", required: false },
+  ])(
+    "defaults $categoryId to required=$required",
+    async ({ categoryId, required }) => {
+      const onSubmit = vi.fn().mockResolvedValue(undefined);
+      const entry: CatalogueEntry = {
+        category: POLICY_CATEGORIES.find((c) => c.id === categoryId)!,
+        config: POLICY_CONFIG[categoryId],
+        policy: null,
+      };
 
-    render(
-      <PolicySetupWizard
-        entry={entry}
-        onClose={vi.fn()}
-        onSubmit={onSubmit}
-        onCustomise={vi.fn()}
-      />,
-    );
-    await submitWizard(ENABLE);
+      render(
+        <PolicySetupWizard
+          entry={entry}
+          onClose={vi.fn()}
+          onSubmit={onSubmit}
+          onCustomise={vi.fn()}
+        />,
+      );
+      await submitWizard(ENABLE);
 
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
-    expect(result.required).toBe(true);
-  });
+      await waitFor(() => expect(onSubmit).toHaveBeenCalled());
+      const result = onSubmit.mock.calls[0][1] as PolicySetupResult;
+      expect(result.required).toBe(required);
+    },
+  );
 
   it("seeds the compliance chain so the gate judges the delivered document", async () => {
     const onSubmit = vi.fn().mockResolvedValue(undefined);

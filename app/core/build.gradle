@@ -208,12 +208,8 @@ def generatedFrontendPaths = [
     'site.webmanifest.br',
     'browserconfig.xml.gz',
     'browserconfig.xml.br',
-    'manifest-classic.json',
-    'manifest-classic.json.gz',
-    'manifest-classic.json.br',
     'locales',
     'Login',
-    'classic-logo',
     'modern-logo',
     'og_images',
     'samples',
@@ -330,8 +326,11 @@ tasks.register('cleanFrontendAssets', Delete) {
     // api-landing.html, mobile-upload.html and mobile-sign.html are real backend source files,
     // not generated artifacts.
     delete fileTree(dir: resourcesStaticDir, includes: ['*.html'], excludes: ['api-landing.html', 'mobile-upload.html', 'mobile-sign.html'])
-    // Nested prerendered route pages (e.g. settings/people.html)
+    // Nested prerendered route pages (e.g. settings/people.html, processor/sources.html)
     delete new File(resourcesStaticDir, 'settings')
+    delete new File(resourcesStaticDir, 'processor')
+    // Generated SEO sitemap (only emitted when a canonical domain is set at build).
+    delete new File(resourcesStaticDir, 'sitemap.xml')
 }
 
 tasks.register('copyApiLandingPage', Copy) {

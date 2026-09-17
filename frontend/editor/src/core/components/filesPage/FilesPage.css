@@ -280,7 +280,9 @@
 
 .files-page-list-row {
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 3fr) 1fr 1fr 1fr 2.5rem;
+  grid-template-columns:
+    2.25rem minmax(0, 3fr) minmax(3.5rem, 1fr) minmax(4.5rem, 1fr)
+    minmax(max-content, 1.5fr) 2.5rem;
   gap: 0.5rem;
   align-items: center;
   /* Same offscreen skip as .files-page-card. */
@@ -437,29 +439,24 @@
   letter-spacing: -0.005em;
 }
 
+/* Values wrap as whole units onto their own lines rather than breaking
+   mid-value ("239.26 / KB") around a stranded separator. */
 .files-page-card-meta {
   font-size: 0.76rem;
   color: var(--c-text-subtle);
   display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.4rem;
+  row-gap: 0.05rem;
 }
 
-/* Narrow cards: let the values wrap as whole units onto their own lines rather
-   than breaking mid-value ("239.26 / KB") around a stranded separator. */
-@media (max-width: 64rem) {
-  .files-page-card-meta {
-    flex-wrap: wrap;
-    align-items: baseline;
-    column-gap: 0.4rem;
-    row-gap: 0.05rem;
-  }
-  .files-page-card-meta > span {
-    white-space: nowrap;
-  }
-  .files-page-card-meta-sep {
-    display: none;
-  }
+.files-page-card-meta > span {
+  white-space: nowrap;
+}
+
+.files-page-card-meta-sep {
+  display: none;
 }
 
 /* Marks a folder that runs a pipeline over anything added to it. Replaces the
@@ -472,7 +469,7 @@
   border-radius: var(--radius-sm, 4px);
   font-size: 0.72rem;
   font-weight: 600;
-  color: var(--c-success-text, var(--c-primary));
+  color: var(--c-text);
   background: color-mix(
     in srgb,
     var(--c-success, var(--c-primary)) 14%,
@@ -601,6 +598,17 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-top: 0.3rem;
+}
+
+/* In a row the counts share one line with the tag beside them, and the row's height
+   is fixed: they never wrap, and the full labels live in the title. */
+.files-page-folder-stats.is-compact {
+  display: inline-flex;
+  flex-wrap: nowrap;
+  gap: 0.3rem;
+  margin-top: 0;
+  margin-left: 0.4rem;
+  vertical-align: middle;
 }
 
 .files-page-folder-stat {
@@ -998,6 +1006,19 @@
   padding: 0.6rem 1.1rem;
   border-top: 1px solid var(--c-border-subtle);
   background: var(--c-bg-raised);
+}
+
+.files-page-details-actions-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+/* The panel is narrow enough that "Add {{count}} to workspace" wraps to two
+   lines. ActionIcon is square by default, so without this the icons keep their
+   own height and the row stops sharing a baseline. */
+.files-page-details-actions-row .mantine-ActionIcon-root {
+  height: auto;
 }
 
 /* Collapsible "File info" header (size/type/dates). */
@@ -1522,7 +1543,10 @@
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
   }
-  /* List view at tiny widths becomes cramped - drop the size + type + modified
+}
+
+@media (max-width: 560px) {
+  /* List view at narrow widths becomes cramped - drop the size + type + modified
      columns and let name + actions take the room. */
   .files-page-list-row {
     grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
