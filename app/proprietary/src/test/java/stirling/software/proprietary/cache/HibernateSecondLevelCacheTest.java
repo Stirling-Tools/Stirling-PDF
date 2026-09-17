@@ -213,6 +213,27 @@ class HibernateSecondLevelCacheTest {
         long hitsAfter = statistics.getSecondLevelCacheHitCount();
         assertThat(hitsAfter).isGreaterThan(hitsBefore);
 
+        // The team side of the mapping gets the same treatment: read in a fresh transaction,
+        // re-read for an L2 hit, then prove explicit eviction drops it.
+        txTemplate.executeWithoutResult(
+                status -> {
+                    Team loaded = teamRepository.findById(teamIdRef.get()).orElseThrow();
+                    assertThat(loaded.getName()).isEqualTo("Cache Team");
+                });
+
+        long teamHitsBefore = statistics.getSecondLevelCacheHitCount();
+
+        txTemplate.executeWithoutResult(
+                status -> {
+                    Team loaded = teamRepository.findById(teamIdRef.get()).orElseThrow();
+                    assertThat(loaded.getName()).isEqualTo("Cache Team");
+                });
+
+        assertThat(statistics.getSecondLevelCacheHitCount()).isGreaterThan(teamHitsBefore);
+
+        entityManagerFactory.getCache().evict(Team.class, teamIdRef.get());
+        assertThat(entityManagerFactory.getCache().contains(Team.class, teamIdRef.get())).isFalse();
+
         // Explicit eviction test
         entityManagerFactory.getCache().evict(User.class, userIdRef.get());
 
