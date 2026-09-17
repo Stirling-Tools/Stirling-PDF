@@ -602,8 +602,6 @@ class SupabaseAuthenticationFilterMoreTest {
             UUID supabaseId = UUID.randomUUID();
             when(jwtDecoder.decode("tok"))
                     .thenReturn(fullJwt(supabaseId, "real@example.com", false, "email"));
-            when(supabaseUserService.getUser(supabaseId))
-                    .thenReturn(supabaseUser(supabaseId, "real@example.com", false));
 
             User local = existingWebUser(supabaseId);
             when(userService.findBySupabaseId(supabaseId)).thenReturn(Optional.of(local));
@@ -615,6 +613,7 @@ class SupabaseAuthenticationFilterMoreTest {
             // requests would mint duplicate teams. Provisioning belongs to signup alone.
             verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
             verify(saasTeamService, never()).saveUserWithPersonalTeam(any(User.class));
+            verify(supabaseUserService, never()).getUser(any());
             assertThat(local.getTeam()).isNull();
         }
 
@@ -624,8 +623,6 @@ class SupabaseAuthenticationFilterMoreTest {
             UUID supabaseId = UUID.randomUUID();
             when(jwtDecoder.decode("tok"))
                     .thenReturn(fullJwt(supabaseId, "real@example.com", false, "email"));
-            when(supabaseUserService.getUser(supabaseId))
-                    .thenReturn(supabaseUser(supabaseId, "real@example.com", false));
 
             User local = existingWebUser(supabaseId);
             Team existing = new Team();
@@ -636,6 +633,7 @@ class SupabaseAuthenticationFilterMoreTest {
             filter.doFilter(request, response, chain);
 
             verify(saasTeamService, never()).ensurePersonalTeam(any(User.class));
+            verify(supabaseUserService, never()).getUser(any());
             assertThat(local.getTeam()).isSameAs(existing);
         }
 
