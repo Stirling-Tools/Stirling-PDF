@@ -814,10 +814,13 @@ class ProcessingFolderControllerTest {
 
     @Test
     void cancelStopsTheFoldersRuns() {
+        // Stubbed before the save: creating sweeps on a background thread, and stubbing a mock
+        // that thread is calling binds the answer to whatever it invoked instead.
+        when(policyRunner.cancelRuns(anyString())).thenReturn(3);
         var view = controller.save(request(null, "new_version")).getBody();
-        when(policyRunner.cancelRuns(view.id())).thenReturn(3);
 
         assertThat(controller.cancelRuns(view.id()).cancelled()).isEqualTo(3);
+        verify(policyRunner).cancelRuns(view.id());
     }
 
     /** A stored file double with just what the listing reads. */
