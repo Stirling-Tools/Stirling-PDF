@@ -849,7 +849,7 @@ const MyFilesSidebarOverrides = forwardRef<HTMLDivElement, FileSidebarProps>(
                   className={refreshing ? "file-sidebar-spin" : undefined}
                 />
               ),
-              label: t("filesPage.refresh", "Refresh from server"),
+              label: t("filesPage.refresh", "Refresh"),
               onClick: () => void refreshLibrary(),
               disabled: refreshing || signInRequired !== null,
               disabledTooltip: signInRequired ?? undefined,
