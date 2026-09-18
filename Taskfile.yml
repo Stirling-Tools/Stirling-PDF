@@ -348,4 +348,5 @@ tasks:
       - task: backend:clean
       - task: frontend:clean
       - task: engine:clean
+      - task: desktop:clean
       - task: pre-commit:clean
