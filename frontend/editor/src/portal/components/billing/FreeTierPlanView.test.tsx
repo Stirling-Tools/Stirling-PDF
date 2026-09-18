@@ -1,9 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactNode } from "react";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MantineProvider } from "@mantine/core";
 import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
 import type { ServerPlan } from "@app/billing/serverPlan";
+import { qk } from "@portal/queries/keys";
 
 /**
  * The unlinked usage page renders the shared billing screen from the instance's own ledger and
@@ -107,6 +110,28 @@ describe("FreeTierPlanView", () => {
 
     await screen.findByText("120 of 500 used");
     expect(fetchFreeTier).toHaveBeenCalledTimes(1);
+  });
+
+  it("keeps cached usage visible when a background refetch fails", async () => {
+    fetchFreeTier.mockResolvedValue(BALANCE);
+    const client = new QueryClient();
+    render(
+      <QueryClientProvider client={client}>
+        <MantineProvider>
+          <MemoryRouter>
+            <FreeTierPlanView />
+          </MemoryRouter>
+        </MantineProvider>
+      </QueryClientProvider>,
+    );
+    await screen.findByText("120 of 500 used");
+    fetchFreeTier.mockRejectedValue(new HttpError(500, "Server Error", null));
+    await act(async () => {
+      await client.refetchQueries({ queryKey: qk.freeTier() });
+    });
+    expect(client.getQueryState(qk.freeTier())?.status).toBe("error");
+    expect(screen.getByText("120 of 500 used")).toBeInTheDocument();
+    expect(screen.queryByText("Couldn't load credit usage")).toBeNull();
   });
 
   it("shows the users this server may have when the admin endpoint answers", async () => {

@@ -46,7 +46,8 @@ export function AccountLinkNotice() {
     const update = (config: ConnectionConfig) => {
       if (!active) return;
       const next = billingUrl(config);
-      if (previous !== undefined && previous !== next) clearAccountLinkBlock();
+      if (previous === next) return;
+      if (previous !== undefined) clearAccountLinkBlock();
       previous = next;
       setBalance(undefined);
       setTarget(next);
@@ -93,7 +94,6 @@ export function AccountLinkNotice() {
           if (balance.data.remainingUnits > 0) clearAccountLinkBlock();
         }
       } catch {
-        if (active) setBalance(undefined);
         // An unavailable balance is not evidence that the server's allowance recovered.
       } finally {
         refreshing = false;

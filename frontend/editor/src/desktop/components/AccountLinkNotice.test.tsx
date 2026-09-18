@@ -279,4 +279,29 @@ describe("desktop self-hosted account-link triggers", () => {
     await exhaust();
     expect(screen.getByRole("dialog")).toBeTruthy();
   });
+
+  it("retains the balance when the same server config is emitted again", async () => {
+    await mount();
+    await exhaust();
+    expect(screen.getByRole("progressbar")).toBeTruthy();
+    get.mockClear();
+    await act(async () => {
+      listeners.forEach((listener) => listener(config()));
+    });
+    expect(screen.getByRole("progressbar")).toBeTruthy();
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    expect(get).not.toHaveBeenCalled();
+  });
+
+  it("retains the last balance when a recovery refetch fails", async () => {
+    await mount();
+    await exhaust();
+    expect(screen.getByRole("progressbar")).toBeTruthy();
+    get.mockRejectedValue(new Error("Offline"));
+    await act(async () => {
+      window.dispatchEvent(new Event("focus"));
+    });
+    expect(screen.getByRole("progressbar")).toBeTruthy();
+    expect(screen.getByRole("dialog")).toBeTruthy();
+  });
 });

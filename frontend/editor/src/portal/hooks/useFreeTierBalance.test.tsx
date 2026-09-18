@@ -84,6 +84,24 @@ describe("local allowance refresh", () => {
     act(() => reportFreeTierExhausted());
     await waitFor(() => expect(probe.result.current.ledger.isError).toBe(true));
     expect(probe.result.current.block.exhausted).toBe(true);
-    expect(probe.result.current.ledger.data).toBeUndefined();
+    expect(probe.result.current.ledger.data).toEqual(balance(500));
+  });
+
+  it("retains an exhausted balance and reset date after a failed refetch", async () => {
+    mocks.fetchFreeTier.mockResolvedValue(balance(0));
+    const probe = renderHook(() => useFreeTierBalance(), {
+      wrapper: TestQueryProvider,
+    });
+    await waitFor(() => expect(probe.result.current.data).toEqual(balance(0)));
+    mocks.fetchFreeTier.mockRejectedValue(new Error("offline"));
+    await act(async () => {
+      await probe.result.current.refetch();
+    });
+    await waitFor(() => expect(probe.result.current.isError).toBe(true));
+    expect(probe.result.current.data).toEqual(balance(0));
+
+    mocks.isAdmin = false;
+    probe.rerender();
+    expect(probe.result.current.data).toBeUndefined();
   });
 });

@@ -52,6 +52,6 @@ export function useFreeTierBalance() {
 
   return {
     ...query,
-    data: enabled && query.isSuccess ? query.data : undefined,
+    data: enabled ? query.data : undefined,
   };
 }

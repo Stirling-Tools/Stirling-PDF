@@ -101,12 +101,13 @@ export function FreeTierPlanView({
   });
   let load: Load = { state: "loading" };
   if (!isAdmin) load = { state: "forbidden" };
+  else if (query.data) load = { state: "ready", balance: query.data };
   else if (query.isError) {
     const denied =
       query.error instanceof HttpError &&
       (query.error.status === 401 || query.error.status === 403);
     load = { state: denied ? "forbidden" : "failed" };
-  } else if (query.data) load = { state: "ready", balance: query.data };
+  }
   const [seats, setSeats] = useState<Seats | null>(null);
   const { data: fleetStats } = useFleetStats();
   const editorsDeployed = fleetStats?.editorsDeployed ?? null;
