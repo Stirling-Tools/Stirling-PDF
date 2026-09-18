@@ -35,7 +35,6 @@ export interface TauriHttpRequestConfig {
   skipAuthRedirect?: boolean;
   // Axios compatibility properties (ignored by Tauri HTTP)
   suppressErrorToast?: boolean;
-  accountLinkBlockSource?: "foreground" | "background";
   accountLinkBlockContext?: import("@app/services/accountLinkBlock").AccountLinkBlockContext;
   cancelToken?: any;
   signal?: AbortSignal;

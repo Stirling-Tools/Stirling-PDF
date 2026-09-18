@@ -140,7 +140,7 @@ async function unwrap<T>(
     // The instance's entitlement gate answers a spent free grant here, and the prompt it raises is
     // the actionable surface. Reported for every domain rather than only the local one because the
     // classifier keys on a sentinel only the local backend sends, so a SaaS 402 cannot reach it.
-    reportAccountLinkBlock(error, "foreground", context);
+    reportAccountLinkBlock(error, context);
     throw error;
   }
   // 204 / empty-body responses have nothing to parse.

@@ -62,7 +62,7 @@ describe("the account-link prompt", () => {
   it("passes the triggering pipeline to the automatic modal", () => {
     render(<Probe />);
     const cause = { pipelineId: "rotate", trigger: "upload" as const };
-    act(() => reportFreeTierExhausted("background", cause));
+    act(() => reportFreeTierExhausted(cause));
     expect(openLinkModal).toHaveBeenCalledWith("exhausted", cause);
   });
 
@@ -97,21 +97,6 @@ describe("the account-link prompt", () => {
     });
     first.unmount();
     render(<Probe />);
-    act(() => {
-      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
-    });
-    expect(openLinkModal).toHaveBeenCalledTimes(1);
-  });
-
-  it("prompts once for background failures and suppresses subsequent foreground failures", () => {
-    render(<Probe />);
-    act(() => {
-      reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"), "background");
-    });
-    expect(openLinkModal).toHaveBeenCalledExactlyOnceWith(
-      "exhausted",
-      undefined,
-    );
     act(() => {
       reportAccountLinkBlock(blocked("FREE_TIER_EXHAUSTED"));
     });

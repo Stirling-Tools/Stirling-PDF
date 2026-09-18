@@ -101,7 +101,7 @@ describe("LinkAccountModal", () => {
 
   it("omits pipeline controls for a banner prompt even after a pipeline failure", () => {
     clearAccountLinkBlock();
-    reportFreeTierExhausted("background", {
+    reportFreeTierExhausted({
       pipelineId: "rotate",
       trigger: "upload",
     });
@@ -340,9 +340,6 @@ describe("LinkAccountModal", () => {
     expect(filledSteps()).toBe(0);
     click("Link account for more credits");
     await waitFor(() => expect(assign).toHaveBeenCalledWith(AUTHORIZE));
-    expect(sessionStorage.getItem("stirling.accountLinkReturnPath")).toBe(
-      "/processor/pipelines",
-    );
   });
 
   it("offers members an administrator message rather than a handshake", () => {

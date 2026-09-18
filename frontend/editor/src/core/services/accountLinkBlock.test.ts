@@ -4,14 +4,12 @@ import {
   acknowledgeAccountLinkPrompt,
   clearAccountLinkBlock,
   reportFreeTierExhausted,
-  requestAccountLinkPrompt,
   useAccountLinkBlock,
 } from "@app/services/accountLinkBlock";
 
 const cause = {
   pipelineId: "rotate",
   pipelineName: "Rotate",
-  fileName: "report.pdf",
   trigger: "upload" as const,
 };
 
@@ -21,38 +19,35 @@ describe("credit prompt session", () => {
     clearAccountLinkBlock();
   });
 
-  it("keeps the first failed file as the cause of a concurrent background burst", () => {
+  it("keeps the first failed pipeline as the cause of concurrent failures", () => {
     const { result } = renderHook(useAccountLinkBlock);
     act(() => {
-      reportFreeTierExhausted("background", cause);
-      reportFreeTierExhausted("background", {
+      reportFreeTierExhausted(cause);
+      reportFreeTierExhausted({
         ...cause,
-        fileName: "other.pdf",
+        pipelineId: "other-pipeline",
       });
     });
     expect(result.current.promptPending).toBe(true);
     expect(result.current.context).toEqual(cause);
   });
 
-  it("suppresses further automatic prompts after recovery but allows explicit reopening", () => {
+  it("suppresses further automatic prompts after recovery", () => {
     const { result } = renderHook(useAccountLinkBlock);
     act(() => {
-      reportFreeTierExhausted("background", cause);
+      reportFreeTierExhausted(cause);
       acknowledgeAccountLinkPrompt();
       clearAccountLinkBlock();
-      reportFreeTierExhausted("foreground", cause);
+      reportFreeTierExhausted(cause);
     });
     expect(result.current.promptPending).toBe(false);
-    act(requestAccountLinkPrompt);
-    expect(result.current.promptPending).toBe(true);
-    expect(result.current.context).toBeUndefined();
   });
 
   it("does not attach a later pipeline failure to a prompt opened by a direct feature", () => {
     const { result } = renderHook(useAccountLinkBlock);
     act(() => {
       reportFreeTierExhausted();
-      reportFreeTierExhausted("background", cause);
+      reportFreeTierExhausted(cause);
     });
     expect(result.current.promptPending).toBe(true);
     expect(result.current.context).toBeUndefined();
@@ -62,12 +57,12 @@ describe("credit prompt session", () => {
     sessionStorage.setItem("stirling:credit-prompt-shown", "true");
     clearAccountLinkBlock();
     const { result } = renderHook(useAccountLinkBlock);
-    act(() => reportFreeTierExhausted("background", cause));
+    act(() => reportFreeTierExhausted(cause));
     expect(result.current.promptPending).toBe(false);
     act(() => {
       sessionStorage.clear();
       clearAccountLinkBlock();
-      reportFreeTierExhausted("background", cause);
+      reportFreeTierExhausted(cause);
     });
     expect(result.current.promptPending).toBe(true);
   });
@@ -75,7 +70,7 @@ describe("credit prompt session", () => {
   it("retains suppression when session storage becomes unavailable", () => {
     const { result } = renderHook(useAccountLinkBlock);
     act(() => {
-      reportFreeTierExhausted("background", cause);
+      reportFreeTierExhausted(cause);
       acknowledgeAccountLinkPrompt();
     });
     const read = vi
@@ -86,7 +81,7 @@ describe("credit prompt session", () => {
     try {
       act(() => {
         clearAccountLinkBlock();
-        reportFreeTierExhausted("background", cause);
+        reportFreeTierExhausted(cause);
       });
       expect(result.current.promptPending).toBe(false);
     } finally {
@@ -102,10 +97,10 @@ describe("credit prompt session", () => {
       });
     try {
       act(() => {
-        reportFreeTierExhausted("background", cause);
+        reportFreeTierExhausted(cause);
         acknowledgeAccountLinkPrompt();
         clearAccountLinkBlock();
-        reportFreeTierExhausted("background", cause);
+        reportFreeTierExhausted(cause);
       });
       expect(result.current.promptPending).toBe(false);
     } finally {

@@ -57,7 +57,7 @@ describe("local allowance refresh", () => {
       expect(probe.result.current.ledger.data?.remainingUnits).toBe(500),
     );
     mocks.fetchFreeTier.mockResolvedValue(balance(0));
-    act(() => reportFreeTierExhausted("background"));
+    act(() => reportFreeTierExhausted());
     await waitFor(() =>
       expect(probe.result.current.ledger.data?.remainingUnits).toBe(0),
     );
@@ -81,7 +81,7 @@ describe("local allowance refresh", () => {
       expect(probe.result.current.ledger.data?.remainingUnits).toBe(500),
     );
     mocks.fetchFreeTier.mockRejectedValue(new Error("offline"));
-    act(() => reportFreeTierExhausted("background"));
+    act(() => reportFreeTierExhausted());
     await waitFor(() => expect(probe.result.current.ledger.isError).toBe(true));
     expect(probe.result.current.block.exhausted).toBe(true);
     expect(probe.result.current.ledger.data).toBeUndefined();

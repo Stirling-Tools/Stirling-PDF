@@ -38,18 +38,14 @@ export function ConnectAskStep({
             "Your Stirling session expired. Signing in again keeps usage and billing visible. This server stays connected either way.",
           )}
         </p>
+      ) : exhausted ? (
+        <ExhaustedAccountLinkContent
+          summary={
+            summary === undefined ? <FreeTierExhaustedSummary /> : summary
+          }
+        />
       ) : (
-        <>
-          {exhausted ? (
-            <ExhaustedAccountLinkContent
-              summary={
-                summary === undefined ? <FreeTierExhaustedSummary /> : summary
-              }
-            />
-          ) : (
-            <ConnectBenefitsSlide />
-          )}
-        </>
+        <ConnectBenefitsSlide />
       )}
 
       {!isSaasSupabaseConfigured && (

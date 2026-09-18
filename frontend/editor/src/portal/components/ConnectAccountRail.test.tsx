@@ -55,7 +55,7 @@ describe("exhausted Processor rail", () => {
   });
   it("keeps the bespoke rail actionable after a background failure", () => {
     const view = mount();
-    act(() => reportFreeTierExhausted("background"));
+    act(() => reportFreeTierExhausted());
     expect(
       view.container.querySelector(".portal-connect-rail"),
     ).toBeInTheDocument();
@@ -74,7 +74,7 @@ describe("exhausted Processor rail", () => {
   });
   it("directs members to an administrator", () => {
     mocks.isAdmin = false;
-    reportFreeTierExhausted("background");
+    reportFreeTierExhausted();
     mount();
     expect(
       screen.getByText(/Ask your server administrator/),
@@ -85,7 +85,7 @@ describe("exhausted Processor rail", () => {
   });
   it("removes the notice after linking", () => {
     mocks.linked = true;
-    reportFreeTierExhausted("background");
+    reportFreeTierExhausted();
     mount();
     expect(screen.queryByRole("status")).toBeNull();
   });

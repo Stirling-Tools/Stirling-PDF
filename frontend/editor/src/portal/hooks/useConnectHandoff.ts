@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { stripBasePath, withBasePath } from "@app/constants/app";
-import { rememberAccountLinkReturn } from "@portal/services/accountLinkReturn";
+import { withBasePath } from "@app/constants/app";
 import { startConnect, startReauth } from "@portal/api/link";
 
 interface ConnectHandoff {
@@ -43,9 +42,6 @@ export function useConnectHandoff(reauth: boolean): ConnectHandoff {
               callbackUrl,
             );
         if (status.authorizeUrl) {
-          rememberAccountLinkReturn(
-            stripBasePath(window.location.pathname) + window.location.search,
-          );
           window.location.assign(status.authorizeUrl);
           return;
         }

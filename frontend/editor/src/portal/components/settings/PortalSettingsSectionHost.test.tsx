@@ -79,12 +79,12 @@ describe("settings link status", () => {
       renderHost(path);
       await screen.findByText("unlinked");
 
-      act(() => reportFreeTierExhausted("foreground"));
+      act(() => reportFreeTierExhausted());
       expect(
         screen.getByRole("dialog", { name: "exhausted" }),
       ).toBeInTheDocument();
       fireEvent.click(screen.getByRole("button", { name: "Not now" }));
-      act(() => reportFreeTierExhausted("foreground"));
+      act(() => reportFreeTierExhausted());
       expect(screen.queryByRole("dialog")).toBeNull();
     },
   );
@@ -94,7 +94,7 @@ describe("settings link status", () => {
     renderHost("/editor");
     await screen.findByText("unlinked");
 
-    act(() => reportFreeTierExhausted("foreground"));
+    act(() => reportFreeTierExhausted());
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 
@@ -103,12 +103,12 @@ describe("settings link status", () => {
     renderHost();
     await screen.findByText("unlinked");
 
-    act(() => reportFreeTierExhausted("background"));
+    act(() => reportFreeTierExhausted());
     expect(
       screen.getByRole("dialog", { name: "exhausted" }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Not now" }));
-    act(() => reportFreeTierExhausted("background"));
+    act(() => reportFreeTierExhausted());
     expect(screen.queryByRole("dialog")).toBeNull();
   });
 });

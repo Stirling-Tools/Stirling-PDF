@@ -97,10 +97,10 @@ describe("local free allowance failures", () => {
     expect(alert).not.toHaveBeenCalled();
   });
 
-  it("requests the first modal for background exhaustion", async () => {
+  it("requests the first modal for a JSON exhaustion response", async () => {
     const probe = renderHook(() => useAccountLinkBlock());
     const error = {
-      ...axiosError({ accountLinkBlockSource: "background" }, 402),
+      ...axiosError({}, 402),
       response: {
         status: 402,
         data: { error: "ACCOUNT_LINK_REQUIRED", reason: "FREE_TIER_EXHAUSTED" },

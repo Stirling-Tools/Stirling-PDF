@@ -27,26 +27,24 @@ vi.mock("@app/services/policyCatalog", () => ({
 
 describe("credit failure pipeline context", () => {
   it("identifies upload and export pipelines by saved name", () => {
-    expect(policyCreditContext("rotate-id", "report.pdf")).toEqual({
+    expect(policyCreditContext("rotate-id")).toEqual({
       pipelineId: "rotate-id",
       pipelineName: "Quarterly rotation",
-      fileName: "report.pdf",
+
       trigger: "upload",
     });
-    expect(policyCreditContext("watermark-id", "report.pdf").trigger).toBe(
-      "export",
-    );
+    expect(policyCreditContext("watermark-id").trigger).toBe("export");
   });
   it("identifies an explicit retry independently of the configured automatic trigger", () => {
-    expect(
-      policyCreditContext("rotate-id", "report.pdf", "foreground").trigger,
-    ).toBe("manual");
+    expect(policyCreditContext("rotate-id", "foreground").trigger).toBe(
+      "manual",
+    );
   });
   it("keeps an uncached pipeline navigable without displaying its internal id as a name", () => {
     expect(policyCreditContext("unknown")).toEqual({
       pipelineId: "unknown",
       pipelineName: undefined,
-      fileName: undefined,
+
       trigger: "automatic",
     });
   });

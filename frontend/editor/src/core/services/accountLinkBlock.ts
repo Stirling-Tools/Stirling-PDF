@@ -13,7 +13,6 @@ export type AccountLinkBlockSource = "foreground" | "background";
 export interface AccountLinkBlockContext {
   pipelineId?: string;
   pipelineName?: string;
-  fileName?: string;
   trigger: "upload" | "export" | "manual" | "automatic";
 }
 
@@ -23,7 +22,6 @@ let storageWriteFailed = false;
 const EMPTY = {
   exhausted: false,
   promptPending: false,
-  promptShown: false,
   context: undefined as AccountLinkBlockContext | undefined,
 };
 let state = EMPTY;
@@ -63,15 +61,7 @@ export function useAccountLinkBlock() {
 
 /** Clears recovered exhaustion without rearming the automatic prompt in this tab session. */
 export function clearAccountLinkBlock(): void {
-  const promptShown = shownThisSession();
-  if (
-    state.exhausted ||
-    state.promptPending ||
-    state.context ||
-    state.promptShown !== promptShown
-  ) {
-    publish({ ...EMPTY, promptShown });
-  }
+  if (state !== EMPTY) publish(EMPTY);
 }
 
 /** Coalesces failures across navigation and reloads; blocked storage falls back to this app lifetime. */
@@ -83,21 +73,14 @@ export function acknowledgeAccountLinkPrompt(): void {
     // Restricted webviews can deny storage; the in-memory suppression still applies.
     storageWriteFailed = true;
   }
-  publish({ ...state, promptPending: false, promptShown: true });
-}
-
-/** Explicit CTA clicks can reopen the dialog after automatic prompts have been dismissed. */
-export function requestAccountLinkPrompt(): void {
-  publish({ ...state, promptPending: true, context: undefined });
+  publish({ ...state, promptPending: false });
 }
 
 /** Records a failed operation and preserves the first cause while its exhaustion notice is active. */
 export function reportFreeTierExhausted(
-  source: AccountLinkBlockSource = "foreground",
   context?: AccountLinkBlockContext,
 ): void {
-  const promptShown = shownThisSession();
-  const promptPending = state.promptPending || !promptShown;
+  const promptPending = state.promptPending || !shownThisSession();
   const cause = state.exhausted ? state.context : context;
   if (
     state.exhausted &&
@@ -105,11 +88,9 @@ export function reportFreeTierExhausted(
     state.context === cause
   )
     return;
-  publish({ exhausted: true, promptPending, promptShown, context: cause });
+  publish({ exhausted: true, promptPending, context: cause });
   if (typeof window !== "undefined") {
-    window.dispatchEvent(
-      new CustomEvent(FREE_TIER_EXHAUSTED_EVENT, { detail: { source } }),
-    );
+    window.dispatchEvent(new Event(FREE_TIER_EXHAUSTED_EVENT));
   }
 }
 
@@ -145,10 +126,9 @@ export function classifyAccountLinkBlock(
 /** Returns whether this is a spent local allowance, so callers can suppress generic errors. */
 export function reportAccountLinkBlock(
   error: unknown,
-  source: AccountLinkBlockSource = "foreground",
   context?: AccountLinkBlockContext,
 ): boolean {
   if (classifyAccountLinkBlock(error) !== "FREE_TIER_EXHAUSTED") return false;
-  reportFreeTierExhausted(source, context);
+  reportFreeTierExhausted(context);
   return true;
 }

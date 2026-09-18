@@ -430,9 +430,7 @@ export function ChatProvider({ children }: { children: ReactNode }) {
       // server on desktop), so fetch from the AI base, not the local backend.
       const response = await apiClient.get<Blob>(
         `${getAiBaseUrl()}/api/v1/general/files/${descriptor.fileId}`,
-        {
-          responseType: "blob",
-        },
+        { responseType: "blob" },
       );
       return new File([response.data], descriptor.fileName, {
         type: descriptor.contentType ?? response.data.type,

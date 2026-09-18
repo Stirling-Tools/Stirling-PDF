@@ -119,10 +119,7 @@ async function runToCompletion(
     }
     if (view.status === "FAILED" || view.status === "CANCELLED") {
       if (view.errorCode === "FREE_TIER_EXHAUSTED") {
-        reportFreeTierExhausted(
-          "background",
-          policyCreditContext(backendId, file.name),
-        );
+        reportFreeTierExhausted(policyCreditContext(backendId));
       }
       throw new Error(view.error || `policy run ${view.status.toLowerCase()}`);
     }

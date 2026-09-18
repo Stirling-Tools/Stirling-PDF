@@ -276,7 +276,6 @@ export async function runPipelineTest(
     {
       pipelineId: policyId,
       pipelineName: definition.name,
-      fileName: file.name,
       trigger: "manual",
     },
   );

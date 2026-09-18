@@ -239,10 +239,7 @@ export function usePolicyAutoRun(): void {
       if (code === "FREE_TIER_EXHAUSTED") {
         if (!firedLimitModal.current.has(view.runId)) {
           firedLimitModal.current.add(view.runId);
-          reportFreeTierExhausted(
-            "background",
-            policyCreditContext(view.policyId, finished?.fileName),
-          );
+          reportFreeTierExhausted(policyCreditContext(view.policyId));
         }
         return;
       }

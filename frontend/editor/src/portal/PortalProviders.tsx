@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
 import { TierProvider } from "@portal/contexts/TierContext";
 import { LinkProvider } from "@portal/contexts/LinkContext";
 import { UIProvider, useUI } from "@portal/contexts/UIContext";
@@ -22,19 +20,7 @@ function LinkModalHost() {
     linkModalFailureContext,
     closeLinkModal,
     connectOutcome,
-    openLinkModal,
   } = useUI();
-  const location = useLocation();
-  const navigate = useNavigate();
-  useEffect(() => {
-    if (location.state?.accountLinkPrompt !== "exhausted") return;
-    const { accountLinkPrompt: _prompt, ...state } = location.state;
-    openLinkModal("exhausted");
-    navigate(`${location.pathname}${location.search}`, {
-      replace: true,
-      state,
-    });
-  }, [location, navigate, openLinkModal]);
   // Being unlinked prompts nothing: the free tier is the whole product. The only unprompted ask is
   // the server reporting the month's grant spent.
   useFreeTierExhaustedPrompt();

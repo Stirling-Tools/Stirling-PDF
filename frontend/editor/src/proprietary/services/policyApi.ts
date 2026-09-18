@@ -38,7 +38,7 @@ export async function runStoredPolicy(
   id: string,
   files: File[],
   fileId?: string,
-  accountLinkBlockSource: AccountLinkBlockSource = "foreground",
+  source: AccountLinkBlockSource = "foreground",
 ): Promise<string> {
   const form = new FormData();
   for (const file of files) form.append("fileInput", uploadableFile(file));
@@ -51,12 +51,7 @@ export async function runStoredPolicy(
     form,
     {
       suppressErrorToast: true,
-      accountLinkBlockSource,
-      accountLinkBlockContext: policyCreditContext(
-        id,
-        files[0]?.name,
-        accountLinkBlockSource,
-      ),
+      accountLinkBlockContext: policyCreditContext(id, source),
     },
   );
   return res.data.jobId;

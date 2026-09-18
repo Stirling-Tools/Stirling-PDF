@@ -79,12 +79,12 @@ async function mount(path = "/editor") {
   return view;
 }
 
-async function exhaust(source: "foreground" | "background" = "foreground") {
+async function exhaust() {
   await act(async () => {
     expect(
       await handleHttpError({
         isAxiosError: true,
-        config: { accountLinkBlockSource: source },
+        config: {},
         response: {
           status: 402,
           data: {
@@ -132,24 +132,15 @@ describe("desktop self-hosted account-link triggers", () => {
     },
   );
 
-  it("opens the first prompt for background exhaustion", async () => {
-    await mount();
-    await exhaust("background");
-    expect(screen.getByRole("dialog")).toBeTruthy();
-    expect(alert).not.toHaveBeenCalled();
-    expect(openExternal).not.toHaveBeenCalled();
-  });
   it("opens the failed pipeline on the connected server while preserving its deployment subpath", async () => {
     await mount();
     await act(async () =>
       handleHttpError({
         isAxiosError: true,
         config: {
-          accountLinkBlockSource: "background",
           accountLinkBlockContext: {
             pipelineId: "rotate-id",
             pipelineName: "Quarterly rotation",
-            fileName: "report.pdf",
             trigger: "upload",
           },
         },
@@ -209,7 +200,7 @@ describe("desktop self-hosted account-link triggers", () => {
 
   it("clears exhaustion when switching servers or leaving self-hosted mode", async () => {
     await mount();
-    await exhaust("background");
+    await exhaust();
     act(() =>
       listeners.forEach((listener) =>
         listener(config("selfhosted", "https://other.example")),

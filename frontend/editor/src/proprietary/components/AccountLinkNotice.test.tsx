@@ -104,8 +104,8 @@ describe("editor shared account-link modal", () => {
   it("opens once for automatic policy failures", async () => {
     mount("/editor");
     await act(async () => {
-      reportFreeTierExhausted("background");
-      reportFreeTierExhausted("background");
+      reportFreeTierExhausted();
+      reportFreeTierExhausted();
     });
     expect(screen.getAllByRole("dialog")).toHaveLength(1);
     expect(alert).not.toHaveBeenCalled();
@@ -115,10 +115,10 @@ describe("editor shared account-link modal", () => {
     async (trigger) => {
       mount("/editor");
       await act(async () =>
-        reportFreeTierExhausted("background", {
+        reportFreeTierExhausted({
           pipelineId: "rotate-id",
           pipelineName: "Quarterly rotation",
-          fileName: "report.pdf",
+
           trigger,
         }),
       );
@@ -138,10 +138,10 @@ describe("editor shared account-link modal", () => {
     auth.isAdmin = false;
     mount("/editor");
     await act(async () =>
-      reportFreeTierExhausted("background", {
+      reportFreeTierExhausted({
         pipelineId: "rotate-id",
         pipelineName: "Quarterly rotation",
-        fileName: "report.pdf",
+
         trigger: "upload",
       }),
     );
@@ -161,7 +161,7 @@ describe("editor shared account-link modal", () => {
     fireEvent.click(screen.getByRole("button", { name: "Not now" }));
     await act(async () => {
       reportFreeTierExhausted();
-      reportFreeTierExhausted("background");
+      reportFreeTierExhausted();
     });
     view.unmount();
     mount("/editor");

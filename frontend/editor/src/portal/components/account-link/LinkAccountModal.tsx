@@ -87,7 +87,7 @@ export function LinkAccountModal({
 
   // Re-auth is one step, so it carries no count and no progress bar.
   const stepChrome =
-    reauth || !isAdmin || (exhausted && step === "ask")
+    reauth || !isAdmin
       ? {}
       : {
           step: current,
@@ -153,15 +153,10 @@ export function LinkAccountModal({
       return t("portal.accountLink.modal.reauthTitle", "Sign in again");
     }
     if (step === "ask") {
-      return exhausted
-        ? t(
-            "portal.accountLink.modal.exhaustedTitle",
-            "Keep your workflows running",
-          )
-        : t(
-            "portal.accountLink.modal.linkTitle",
-            "Connect your Stirling account",
-          );
+      return t(
+        "portal.accountLink.modal.linkTitle",
+        "Connect your Stirling account",
+      );
     }
     if (step === "handoff") {
       return t("portal.accountLink.connect.handoff.title", "Connecting");
@@ -181,7 +176,6 @@ export function LinkAccountModal({
         return (
           <ConnectAskStep
             reauth={reauth}
-            exhausted={exhausted}
             error={handoff.error}
             summary={summary}
           />
@@ -239,12 +233,7 @@ export function LinkAccountModal({
         : t("portal.accountLink.connect.notNow", "Not now");
       const start = reauth
         ? t("portal.accountLink.modal.continueReauth", "Sign in again")
-        : exhausted
-          ? t(
-              "portal.accountLink.rail.exhaustedCta",
-              "Link account for more credits",
-            )
-          : t("portal.accountLink.connect.start", "Connect Stirling account");
+        : t("portal.accountLink.connect.start", "Connect Stirling account");
       return (
         <>
           <Button variant="quiet" accent="neutral" onClick={onClose}>
