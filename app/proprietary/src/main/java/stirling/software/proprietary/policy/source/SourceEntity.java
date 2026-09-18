@@ -2,6 +2,10 @@ package stirling.software.proprietary.policy.source;
 
 import java.io.Serializable;
 
+import org.hibernate.annotations.Cache;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+
+import jakarta.persistence.Cacheable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -22,6 +26,8 @@ import stirling.software.proprietary.integration.crypto.LegacyDecryptStringConve
  */
 @Entity
 @Table(name = "policy_sources")
+@Cacheable
+@Cache(usage = CacheConcurrencyStrategy.READ_WRITE, region = "policy-sources")
 @NoArgsConstructor
 @Getter
 @Setter
