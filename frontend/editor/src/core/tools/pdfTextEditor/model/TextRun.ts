@@ -106,6 +106,9 @@ export class TextRun {
   // Session-only lock: when true the run is skipped by all hit-tests (mouse,
   // marquee, Ctrl+A) and edit gestures are no-ops.
   locked: boolean;
+  // Human-readable reason shown in the overlay title and the inspector. Set by
+  // read-time classification (RTL, undecodable) or by a manual lock.
+  lockReason: string | null;
 
   constructor(
     init: TextRunSnapshot & {
@@ -148,6 +151,7 @@ export class TextRun {
     this.paragraphSoftStarts = [];
     this.coverRectPtr = 0;
     this.locked = init.locked ?? false;
+    this.lockReason = init.lockReason ?? null;
   }
 
   // Captured pen positions are only valid for the text AND face they were
@@ -188,6 +192,7 @@ export class TextRun {
       paragraphBaselines: this.lineBaselines(),
       paragraphLineLefts: this.lineLefts(),
       locked: this.locked || undefined,
+      lockReason: this.lockReason ?? undefined,
     };
   }
 

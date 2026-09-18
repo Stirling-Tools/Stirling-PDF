@@ -12,9 +12,13 @@ function mkDoc(opts: {
   throwOnSig?: boolean;
   secHandlerRev?: number;
   throwOnEncrypt?: boolean;
+  openedBytes?: Uint8Array;
+  pageCount?: number;
 }): EditorDocument {
   return {
     docPtr: 1,
+    openedBytes: opts.openedBytes ?? new Uint8Array([1, 2, 3]),
+    pageCount: opts.pageCount ?? 1,
     loadedPages: () => [{ pagePtr: 10 }],
     module: {
       FPDF_GetSignatureCount: () => {
@@ -31,6 +35,22 @@ function mkDoc(opts: {
 }
 
 describe("detectSaveRisks", () => {
+  it("surfaces the oversized byte-drop as a save risk", () => {
+    const r = detectSaveRisks(
+      mkDoc({ openedBytes: new Uint8Array(0), pageCount: 80 }),
+    );
+    expect(r.bytesDropped).toBe(true);
+    expect(hasSaveRisks(r)).toBe(true);
+    expect(describeSaveRisks(r).join(" ")).toContain("64 MB");
+  });
+
+  it("does not flag a document with no pages", () => {
+    const r = detectSaveRisks(
+      mkDoc({ openedBytes: new Uint8Array(0), pageCount: 0 }),
+    );
+    expect(r.bytesDropped).toBe(false);
+  });
+
   it("reports no risk for a plain document", () => {
     const r = detectSaveRisks(mkDoc({}));
     expect(r).toEqual({
@@ -38,6 +58,7 @@ describe("detectSaveRisks", () => {
       xfaForm: false,
       encrypted: false,
       droppedChars: [],
+      bytesDropped: false,
     });
     expect(hasSaveRisks(r)).toBe(false);
   });

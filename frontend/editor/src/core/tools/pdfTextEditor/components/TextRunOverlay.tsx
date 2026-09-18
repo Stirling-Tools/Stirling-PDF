@@ -775,10 +775,11 @@ function TextRunOverlayImpl({
       data-locked={run.locked ? "true" : undefined}
       title={
         run.locked
-          ? t(
+          ? (run.lockReason ??
+            t(
               "pdfTextEditor.run.lockedTitle",
               "Locked - use the Unlock button to edit",
-            )
+            ))
           : undefined
       }
       onKeyDown={(e) => {

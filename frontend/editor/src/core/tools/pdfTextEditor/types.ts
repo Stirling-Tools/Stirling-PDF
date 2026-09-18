@@ -81,6 +81,8 @@ export interface TextRunSnapshot {
   // Editor-only metadata: when true the run cannot be selected or edited via
   // mouse/keyboard.
   locked?: boolean;
+  /** Why the run is locked (auto-classified at read time, or manual). */
+  lockReason?: string;
 }
 
 export interface ImageObjectSnapshot {

@@ -9,6 +9,7 @@ export class SetLockCommand implements Command {
   private readonly imageId: string | null;
   private readonly nextLocked: boolean;
   private prevLocked: boolean | null;
+  private prevLockReason: string | null = null;
 
   constructor(opts: {
     pageIndex: number;
@@ -28,8 +29,14 @@ export class SetLockCommand implements Command {
     if (this.runId) {
       const run = page.runs.find((r) => r.id === this.runId);
       if (!run) return;
-      if (this.prevLocked === null) this.prevLocked = run.locked;
+      if (this.prevLocked === null) {
+        this.prevLocked = run.locked;
+        this.prevLockReason = run.lockReason;
+      }
       run.locked = this.nextLocked;
+      // A manual lock has no specific reason; a manual unlock clears the
+      // auto-classification reason so the title reverts to the generic hint.
+      if (!this.nextLocked) run.lockReason = null;
       // Refresh the overlay snapshot so contentEditable/hit-test reflect
       // the new lock state; lock is session-only, never dirties the page.
       page.bumpRevision();
@@ -49,7 +56,10 @@ export class SetLockCommand implements Command {
     const page = doc.page(this.pageIndex);
     if (this.runId) {
       const run = page.runs.find((r) => r.id === this.runId);
-      if (run) run.locked = this.prevLocked;
+      if (run) {
+        run.locked = this.prevLocked;
+        run.lockReason = this.prevLockReason;
+      }
       page.bumpRevision();
       return;
     }

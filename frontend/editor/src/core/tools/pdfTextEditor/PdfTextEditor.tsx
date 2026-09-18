@@ -353,6 +353,26 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         ? text.replace(/\r\n?/g, "\n").trim()
         : text.replace(/\r\n?/g, "\n");
       if (!normalised) return;
+      // A selected run IS the anchor for a global paste: focus is outside the
+      // overlay (its own onPaste handles that case), so the selection stands in
+      // for the caret. Falls back to the page centre when nothing is selected.
+      const selectedIds = new Set(store.selection.value.runIds);
+      if (selectedIds.size > 0) {
+        for (const p of store.getState().pages) {
+          const run = p.runs.find((r) => selectedIds.has(r.id));
+          if (!run) continue;
+          const lineHeight = run.fontSize > 0 ? run.fontSize * 1.2 : 14;
+          const cmd = new InsertTextCommand({
+            pageIndex: p.pageIndex,
+            x: run.bounds.x,
+            y: run.bounds.y - lineHeight,
+            text: normalised,
+          });
+          store.dispatch(cmd);
+          if (cmd.insertedRunId) store.selection.selectOne(cmd.insertedRunId);
+          return;
+        }
+      }
       // One DOM query for all pages, then one rect read pass. The old loop
       // queried per loaded page and forced layout once per page.
       const stage = document.querySelector<HTMLElement>(

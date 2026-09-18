@@ -9,6 +9,9 @@ export interface SaveRisks {
   encrypted: boolean;
   /** Distinct visible chars this session's edits couldn't render and dropped. */
   droppedChars: string[];
+  // True when the opened file exceeded the retained-bytes cap, so save-time
+  // repairs (shading preservation) are skipped and the save is a plain rewrite.
+  bytesDropped: boolean;
 }
 
 /** Inspect the open document for content a full rewrite would damage. */
@@ -41,12 +44,19 @@ export function detectSaveRisks(doc: EditorDocument): SaveRisks {
     xfaForm,
     encrypted,
     droppedChars: getDroppedBase14Chars(),
+    // opendBytes is emptied only by the size cap; a freshly created or empty
+    // document has no pages to repair either, so require pages to exist.
+    bytesDropped: doc.openedBytes.length === 0 && doc.pageCount > 0,
   };
 }
 
 export function hasSaveRisks(r: SaveRisks): boolean {
   return (
-    r.signatures > 0 || r.xfaForm || r.encrypted || r.droppedChars.length > 0
+    r.signatures > 0 ||
+    r.xfaForm ||
+    r.encrypted ||
+    r.droppedChars.length > 0 ||
+    r.bytesDropped
   );
 }
 
@@ -67,6 +77,12 @@ export function describeSaveRisks(r: SaveRisks): string[] {
   if (r.encrypted) {
     out.push(
       "This PDF is encrypted; the saved copy will NOT be encrypted (password and access restrictions are removed).",
+    );
+  }
+  if (r.bytesDropped) {
+    out.push(
+      "This file is larger than 64 MB, so save-time repairs are skipped; " +
+        "the document is still saved as a full rewrite.",
     );
   }
   if (r.droppedChars.length > 0) {
