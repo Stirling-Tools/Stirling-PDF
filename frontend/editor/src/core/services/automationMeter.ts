@@ -7,6 +7,8 @@ export interface AutomationMeterInput {
 }
 
 export interface AutomationMeterPayload {
+  /** Only the existing Automate tool is included in a self-hosted Server licence. */
+  source?: "AUTOMATE" | "PROCESSOR";
   automationName?: string;
   operations?: string[];
   inputs: AutomationMeterInput[];

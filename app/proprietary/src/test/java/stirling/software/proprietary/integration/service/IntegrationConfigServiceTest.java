@@ -196,6 +196,37 @@ class IntegrationConfigServiceTest {
     }
 
     @Test
+    void deleteRefusedOnLockedConfigForNonAdmin() {
+        IntegrationConfig cfg = config(9L);
+        cfg.setLocked(true);
+        when(repository.findById(9L)).thenReturn(Optional.of(cfg));
+        when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
+        when(ownership.isAdmin(any())).thenReturn(false);
+
+        assertThatThrownBy(() -> service.delete(9L, user(7)))
+                .isInstanceOf(ResponseStatusException.class)
+                .satisfies(
+                        e ->
+                                assertThat(((ResponseStatusException) e).getStatusCode())
+                                        .isEqualTo(HttpStatus.FORBIDDEN));
+        verify(repository, org.mockito.Mockito.never()).delete(any(IntegrationConfig.class));
+    }
+
+    @Test
+    void deleteAllowedOnLockedConfigForAdmin() {
+        IntegrationConfig cfg = config(9L);
+        cfg.setLocked(true);
+        when(repository.findById(9L)).thenReturn(Optional.of(cfg));
+        when(ownership.canManage(any(), eq(cfg), any())).thenReturn(true);
+        when(ownership.isAdmin(any())).thenReturn(true);
+        when(usageCheck.usagesOf(9L)).thenReturn(List.of());
+
+        service.delete(9L, user(7));
+
+        verify(repository).delete(cfg);
+    }
+
+    @Test
     void createDelegatesOwnershipAndSanitizesConfig() {
         when(secretMasker.sanitize(any())).thenReturn(Map.of("bucket", "b"));
         when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
