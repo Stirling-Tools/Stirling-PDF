@@ -48,7 +48,8 @@ jobs:
       - name: Build frontend (production bundle for vite preview)
         env:
           VITE_BUILD_FOR_PREVIEW: "1"
-        run: task frontend:build
+          VITE_INCLUDE_PORTAL: "true"
+        run: task frontend:build:proprietary
       - name: Run stubbed E2E tests (${{ matrix.browser }})
         env:
           # The official Playwright image expects its browser runtime under
