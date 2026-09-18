@@ -9,6 +9,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -23,7 +24,10 @@ import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.extern.slf4j.Slf4j;
 
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
+
 import stirling.software.saas.accountlink.InstanceAiGatewayService.EngineReply;
+import stirling.software.saas.accountlink.InstanceAiGatewayService.StreamedReply;
 
 /**
  * The AI engine, as a linked self-hosted server sees it.
@@ -55,7 +59,7 @@ public class InstanceAiController {
 
     @GetMapping("/**")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
-    public ResponseEntity<String> get(
+    public ResponseEntity<?> get(
             HttpServletRequest request,
             Authentication auth,
             @RequestHeader(value = "X-User-Id", required = false) String instanceUserId)
@@ -65,7 +69,7 @@ public class InstanceAiController {
 
     @PostMapping("/**")
     @PreAuthorize("hasRole('LINKED_INSTANCE')")
-    public ResponseEntity<String> post(
+    public ResponseEntity<?> post(
             HttpServletRequest request,
             Authentication auth,
             @RequestHeader(value = "X-User-Id", required = false) String instanceUserId,
@@ -74,7 +78,17 @@ public class InstanceAiController {
         return proxy("POST", request, auth, instanceUserId, body);
     }
 
-    private ResponseEntity<String> proxy(
+    @DeleteMapping("/**")
+    @PreAuthorize("hasRole('LINKED_INSTANCE')")
+    public ResponseEntity<?> delete(
+            HttpServletRequest request,
+            Authentication auth,
+            @RequestHeader(value = "X-User-Id", required = false) String instanceUserId)
+            throws IOException, InterruptedException {
+        return proxy("DELETE", request, auth, instanceUserId, null);
+    }
+
+    private ResponseEntity<?> proxy(
             String method,
             HttpServletRequest request,
             Authentication auth,
@@ -87,6 +101,9 @@ public class InstanceAiController {
         }
 
         String enginePath = enginePathOf(request);
+        if (InstanceAiGatewayService.isStreaming(enginePath)) {
+            return streamed(method, enginePath, body, token, instanceUserId);
+        }
         EngineReply reply =
                 gateway.forward(method, enginePath, body, token.getInstanceId(), instanceUserId);
 
@@ -97,6 +114,36 @@ public class InstanceAiController {
         return ResponseEntity.status(reply.status())
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(reply.body());
+    }
+
+    /**
+     * Copies the engine's response through as it arrives. Billing happens up front here rather
+     * than after the body: the status is known before the first frame, and holding the charge
+     * until the stream closes would lose it whenever a client disconnects mid-run.
+     */
+    private ResponseEntity<?> streamed(
+            String method,
+            String enginePath,
+            String body,
+            LinkedInstanceAuthenticationToken token,
+            String instanceUserId)
+            throws IOException, InterruptedException {
+        StreamedReply reply =
+                gateway.forwardStreaming(
+                        method, enginePath, body, token.getInstanceId(), instanceUserId);
+        if (reply.status() < 400) {
+            usageService.recordCall(token.getTeamId(), token.getInstanceId(), enginePath);
+        }
+        StreamingResponseBody stream =
+                out -> {
+                    try (var in = reply.body()) {
+                        in.transferTo(out);
+                        out.flush();
+                    }
+                };
+        return ResponseEntity.status(reply.status())
+                .contentType(MediaType.APPLICATION_NDJSON)
+                .body(stream);
     }
 
     /** Strips this controller's own prefix, leaving the engine path the instance asked for. */

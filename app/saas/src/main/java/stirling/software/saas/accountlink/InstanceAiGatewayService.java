@@ -52,23 +52,42 @@ public class InstanceAiGatewayService {
                     "/api/v1/pdf/edit",
                     "/api/v1/pdf/questions",
                     "/api/v1/documents",
+                    // Safe despite deleting by owner: the owner is the namespace this gateway
+                    // derives from the credential, so an instance can only purge its own. Without
+                    // it a user's documents would outlive their logout on Stirling's side.
+                    "/api/v1/documents/by-owner",
                     "/api/v1/documents/classify",
                     "/api/v1/ai/math-auditor-agent/examine",
                     "/api/v1/ai/math-auditor-agent/deliberate",
                     "/api/v1/ai/pdf-comment-agent/generate");
 
+    /** Paths whose response is streamed rather than buffered, so progress arrives as it happens. */
+    private static final Set<String> STREAMING_PATHS = Set.of("/api/v1/orchestrator");
+
+    /**
+     * Paths whose work is measured in minutes: ingesting a whole document, and an orchestrator run
+     * that reasons over one. The default timeout is sized for a single question, so without this
+     * the gateway would cut off exactly the calls the instance allows the longest for.
+     */
+    private static final Set<String> LONG_RUNNING_PATHS =
+            Set.of("/api/v1/documents", "/api/v1/orchestrator");
+
     private final HttpClient httpClient;
     private final String engineBaseUrl;
     private final String engineSharedSecret;
     private final int timeoutSeconds;
+    private final int longRunningTimeoutSeconds;
 
     @Autowired
     public InstanceAiGatewayService(
             @Value("${stirling.cloud-ai.engine-url:http://localhost:5001}") String engineBaseUrl,
-            @Value("${stirling.cloud-ai.timeout-seconds:120}") int timeoutSeconds) {
+            @Value("${stirling.cloud-ai.timeout-seconds:120}") int timeoutSeconds,
+            @Value("${stirling.cloud-ai.long-running-timeout-seconds:1800}")
+                    int longRunningTimeoutSeconds) {
         this(
                 engineBaseUrl,
                 timeoutSeconds,
+                longRunningTimeoutSeconds,
                 System.getenv("STIRLING_ENGINE_SHARED_SECRET"),
                 HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build());
     }
@@ -77,10 +96,12 @@ public class InstanceAiGatewayService {
     InstanceAiGatewayService(
             String engineBaseUrl,
             int timeoutSeconds,
+            int longRunningTimeoutSeconds,
             String engineSharedSecret,
             HttpClient httpClient) {
         this.engineBaseUrl = engineBaseUrl == null ? "" : engineBaseUrl.strip().replaceAll("/+$", "");
         this.timeoutSeconds = timeoutSeconds;
+        this.longRunningTimeoutSeconds = longRunningTimeoutSeconds;
         this.engineSharedSecret = engineSharedSecret;
         this.httpClient = httpClient;
     }
@@ -103,29 +124,10 @@ public class InstanceAiGatewayService {
     public EngineReply forward(
             String method, String path, String body, Long instanceId, String instanceUserId)
             throws IOException, InterruptedException {
-        if (!isAllowedPath(path)) {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND, "Not an AI engine route this gateway forwards: " + path);
-        }
-
-        HttpRequest.Builder builder =
-                HttpRequest.newBuilder()
-                        .uri(URI.create(engineBaseUrl + path))
-                        .timeout(Duration.ofSeconds(timeoutSeconds))
-                        .header("Accept", "application/json")
-                        .header("X-User-Id", namespacedOwner(instanceId, instanceUserId));
-        if (engineSharedSecret != null && !engineSharedSecret.isBlank()) {
-            builder.header("X-Engine-Auth", engineSharedSecret);
-        }
-        if ("POST".equals(method)) {
-            builder.header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body == null ? "{}" : body));
-        } else {
-            builder.GET();
-        }
-
         HttpResponse<String> response =
-                httpClient.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+                httpClient.send(
+                        buildRequest(method, path, body, instanceId, instanceUserId),
+                        HttpResponse.BodyHandlers.ofString());
         log.debug(
                 "Cloud AI gateway forwarded {} {} for instance {} -> {}",
                 method,
@@ -135,5 +137,58 @@ public class InstanceAiGatewayService {
         return new EngineReply(response.statusCode(), response.body());
     }
 
+    private HttpRequest buildRequest(
+            String method, String path, String body, Long instanceId, String instanceUserId) {
+        if (!isAllowedPath(path)) {
+            throw new ResponseStatusException(
+                    HttpStatus.NOT_FOUND, "Not an AI engine route this gateway forwards: " + path);
+        }
+        HttpRequest.Builder builder =
+                HttpRequest.newBuilder()
+                        .uri(URI.create(engineBaseUrl + path))
+                        .timeout(Duration.ofSeconds(timeoutFor(path)))
+                        .header("Accept", "application/json")
+                        .header("X-User-Id", namespacedOwner(instanceId, instanceUserId));
+        if (engineSharedSecret != null && !engineSharedSecret.isBlank()) {
+            builder.header("X-Engine-Auth", engineSharedSecret);
+        }
+        if ("POST".equals(method)) {
+            builder.header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body == null ? "{}" : body));
+        } else if ("DELETE".equals(method)) {
+            // The logout-time RAG purge is a DELETE; without this it would 405 at the gateway and
+            // the documents would quietly stay.
+            builder.DELETE();
+        } else {
+            builder.GET();
+        }
+
+        return builder.build();
+    }
+
+    public static boolean isStreaming(String path) {
+        return STREAMING_PATHS.contains(path);
+    }
+
+    private int timeoutFor(String path) {
+        return LONG_RUNNING_PATHS.contains(path) ? longRunningTimeoutSeconds : timeoutSeconds;
+    }
+
+    /**
+     * Same call, streamed rather than buffered. The orchestrator emits NDJSON progress frames for
+     * the length of a run; buffering them would hand the instance every frame at the end, which is
+     * the same as having no progress at all.
+     */
+    public StreamedReply forwardStreaming(
+            String method, String path, String body, Long instanceId, String instanceUserId)
+            throws IOException, InterruptedException {
+        HttpRequest request = buildRequest(method, path, body, instanceId, instanceUserId);
+        HttpResponse<java.io.InputStream> response =
+                httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
+        return new StreamedReply(response.statusCode(), response.body());
+    }
+
     public record EngineReply(int status, String body) {}
+
+    public record StreamedReply(int status, java.io.InputStream body) {}
 }

@@ -30,7 +30,9 @@ class InstanceAiGatewayServiceTest {
     @SuppressWarnings("unchecked")
     void setUp() throws Exception {
         httpClient = mock(HttpClient.class);
-        gateway = new InstanceAiGatewayService("http://cloud-engine:5001/", 30, "cloud-secret", httpClient);
+        gateway =
+                new InstanceAiGatewayService(
+                        "http://cloud-engine:5001/", 30, 600, "cloud-secret", httpClient);
         HttpResponse<String> ok = mock(HttpResponse.class);
         when(ok.statusCode()).thenReturn(200);
         when(ok.body()).thenReturn("{\"status\":\"ok\"}");
@@ -92,8 +94,6 @@ class InstanceAiGatewayServiceTest {
             strings = {
                 // Would let an instance repoint the models Stirling Cloud runs for everyone.
                 "/api/v1/config",
-                // Would let an instance delete another tenant's corpus.
-                "/api/v1/documents/by-owner",
                 "/api/v1/documents/by-id/abc",
                 // Not an engine route at all.
                 "/api/v1/admin/settings",
@@ -122,5 +122,31 @@ class InstanceAiGatewayServiceTest {
     void documentIngestIsTheOnlyUploadPath() {
         assertThat(InstanceAiGatewayService.isDocumentUpload("/api/v1/documents")).isTrue();
         assertThat(InstanceAiGatewayService.isDocumentUpload("/api/v1/orchestrator")).isFalse();
+}
+
+    @Test
+    void theLogoutPurgeIsForwardedAsADelete() throws Exception {
+        gateway.forward("DELETE", "/api/v1/documents/by-owner", null, 7L, "alice");
+
+        HttpRequest request = sent.getValue();
+        assertThat(request.method()).isEqualTo("DELETE");
+        // Safe only because the owner is this gateway's namespace, not one the instance supplied.
+        assertThat(request.headers().firstValue("X-User-Id")).contains("instance:7:alice");
+    }
+
+    @Test
+    void longRunningPathsGetTheLongerTimeout() throws Exception {
+        gateway.forward("POST", "/api/v1/orchestrator", "{}", 7L, "alice");
+        assertThat(sent.getValue().timeout()).contains(java.time.Duration.ofSeconds(600));
+
+        gateway.forward("POST", "/api/v1/pdf/questions", "{}", 7L, "alice");
+        assertThat(sent.getValue().timeout()).contains(java.time.Duration.ofSeconds(30));
+    }
+
+    @Test
+    void onlyTheOrchestratorStreams() {
+        // Its NDJSON progress frames are the only response worth not buffering.
+        assertThat(InstanceAiGatewayService.isStreaming("/api/v1/orchestrator")).isTrue();
+        assertThat(InstanceAiGatewayService.isStreaming("/api/v1/pdf/questions")).isFalse();
     }
 }

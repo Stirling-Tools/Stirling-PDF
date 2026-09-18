@@ -96,6 +96,7 @@ class CloudAiEndToEndTest {
                 new InstanceAiGatewayService(
                         "http://127.0.0.1:" + engine.getAddress().getPort(),
                         10,
+                        30,
                         ENGINE_SECRET,
                         HttpClient.newHttpClient());
         InstanceAiController controller = new InstanceAiController(gateway, usageService);
@@ -121,14 +122,17 @@ class CloudAiEndToEndTest {
                         LinkedInstanceAuthenticationToken auth =
                                 new LinkedInstanceAuthenticationToken(42L, 99L);
                         String userId = exchange.getRequestHeaders().getFirst("X-User-Id");
-                        ResponseEntity<String> reply =
-                                "GET".equals(exchange.getRequestMethod())
-                                        ? controller.get(request, auth, userId)
-                                        : controller.post(request, auth, userId, "{}");
+                        ResponseEntity<?> reply =
+                                switch (exchange.getRequestMethod()) {
+                                    case "GET" -> controller.get(request, auth, userId);
+                                    case "DELETE" -> controller.delete(request, auth, userId);
+                                    default -> controller.post(request, auth, userId, "{}");
+                                };
+                        Object payload = reply.getBody();
                         respond(
                                 exchange,
                                 reply.getStatusCode().value(),
-                                reply.getBody() == null ? "" : reply.getBody());
+                                payload instanceof String text ? text : "");
                     } catch (ResponseStatusException e) {
                         respond(exchange, e.getStatusCode().value(), "{\"detail\":\"refused\"}");
                     } catch (Exception e) {
@@ -287,4 +291,18 @@ class CloudAiEndToEndTest {
         assertThat(InstanceAiGatewayService.isAllowedPath("/api/v1/config")).isFalse();
         assertThat(Map.of()).isEmpty();
     }
+
+    @Test
+    void theLogoutPurgeReachesTheCloudEngineInsteadOfFourOhFouring() throws Exception {
+        linkedInstanceClient().delete("/api/v1/documents/by-owner", "alice");
+
+        assertThat(cloudFailure.get()).isNull();
+        assertThat(engineCalls).hasSize(1);
+        EngineCall call = engineCalls.get(0);
+        assertThat(call.method()).isEqualTo("DELETE");
+        assertThat(call.path()).isEqualTo("/api/v1/documents/by-owner");
+        // Scoped to this instance's namespace, so it cannot purge another tenant.
+        assertThat(call.userId()).isEqualTo("instance:42:alice");
+    }
 }
+

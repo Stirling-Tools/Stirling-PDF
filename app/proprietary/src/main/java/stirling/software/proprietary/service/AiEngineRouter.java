@@ -6,7 +6,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -27,6 +26,10 @@ import stirling.software.proprietary.accountlink.DeviceCredentialStore;
  * sends the account-link device credential to Stirling Cloud's instance AI gateway instead, and the
  * customer runs no engine at all.
  *
+ * <p>Deliberately not profile-scoped: {@code AiEngineClient} is unprofiled and serves Stirling
+ * Cloud's own AI endpoints too, so a router missing under the saas profile would stop that context
+ * starting. On saas the mode is never CLOUD, so it always resolves to the engine in the cluster.
+ *
  * <p>The device credential store is optional: account linking can be compiled in but switched off,
  * and a desktop bundle registers none of it. Cloud mode without a credential is a configuration
  * error the admin has to see, so it fails loudly rather than quietly falling back to a local URL
@@ -34,7 +37,6 @@ import stirling.software.proprietary.accountlink.DeviceCredentialStore;
  */
 @Slf4j
 @Service
-@Profile("!saas")
 public class AiEngineRouter {
 
     /**
