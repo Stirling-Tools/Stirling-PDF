@@ -353,12 +353,26 @@ export default function HomePage() {
   }, [toolRegistry, toolAvailability, config?.premiumEnabled, t]);
 
   const openFromComputerRef = useRef<(() => void) | null>(null);
+  // Reading unmounts the sidebar that owns the picker, so a request made there
+  // is held until the sidebar is back to answer it.
+  const openFromComputerPending = useRef(false);
   const registerOpenFromComputer = useCallback((open: (() => void) | null) => {
     openFromComputerRef.current = open;
+    if (open && openFromComputerPending.current) {
+      openFromComputerPending.current = false;
+      open();
+    }
   }, []);
   const openFromComputer = useCallback(() => {
-    openFromComputerRef.current?.();
-  }, []);
+    if (openFromComputerRef.current) {
+      openFromComputerRef.current();
+      return;
+    }
+    // Opening a document from disk shows it, and reading is a view of one
+    // document, so the picker lands you on what you opened either way.
+    openFromComputerPending.current = true;
+    setReaderMode(false);
+  }, [setReaderMode]);
 
   const [showSwipeHint, setShowSwipeHint] = useState(
     () => !readSwipeHintSeen(),

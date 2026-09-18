@@ -3466,6 +3466,14 @@ doneDetail = "{{count}} PDFs sorted by type"
 progress = "{{done}} of {{total}} PDFs ({{percent}}%)"
 running = "Classifying {{folder}}"
 
+[classificationDemo.status]
+checked = "Checked {{checked}} of {{total}} files..."
+checking = "Checking each file's name and date..."
+connecting = "Connecting your Downloads folder..."
+library = "Adding it to your file library..."
+listing = "Listing the files in Downloads..."
+picking = "Looking for the {{count}} most recent PDFs..."
+
 [cloudBadge]
 tooltip = "This operation will use your cloud credits"
 
@@ -7240,7 +7248,8 @@ badgeRan = "{{name}} policy ran on this file"
 badgeRunning = "{{name}} running..."
 blockingAction = "{{action}} blocked while enforcing policy, please wait..."
 dismiss = "Dismiss overlay"
-enforcingTitle = "Enforcing policy..."
+enforcingPipelineTitle = "Enforcing pipeline..."
+enforcingPolicyTitle = "Enforcing policy..."
 exportBlocked = "A required policy failed. The export was cancelled. Try exporting again."
 recoveryBody = "We couldn't apply a required policy to these files. Try again, or close the affected files to continue working."
 recoveryClose_one = "Close file"
@@ -8378,9 +8387,37 @@ title = "Compliance standard not met"
 description = "Your file is damaged, so the run could not read it."
 title = "Damaged document"
 
+[portal.failures.kind.inputEmpty]
+description = "Your file has no content in it, so there was nothing for the run to work on."
+title = "Empty file"
+
 [portal.failures.kind.inputPasswordProtected]
 description = "Your file is password protected, so the run could not read it."
 title = "Password-protected document"
+
+[portal.failures.kind.inputUnavailable]
+description = "The file behind this run could not be reached, so it was never processed."
+title = "File unavailable"
+
+[portal.failures.kind.inputUnreadable]
+description = "Your file could not be opened, so the run could not read it."
+title = "Unreadable file"
+
+[portal.failures.kind.inputUnrepairable]
+description = "Your file is damaged beyond what the repair tools can fix."
+title = "File could not be repaired"
+
+[portal.failures.kind.inputWrongType]
+description = "Your file is not a format this step can open, so the run could not read it."
+title = "Wrong file type"
+
+[portal.failures.kind.stepCannotRenderPage]
+description = "A page in your file could not be drawn, so the run could not finish."
+title = "Page could not be rendered"
+
+[portal.failures.kind.toolNotInstalled]
+description = "This server is missing software the step needs, so the run could not start it."
+title = "Software not installed"
 
 [portal.failures.kind.unknown]
 description = "Something went wrong that Stirling does not recognise yet."
@@ -9052,6 +9089,7 @@ editor-upload = "Every upload"
 folder-watch = "Folder watch"
 manual = "Manual"
 schedule = "Scheduled"
+storage-folder-watch = "New files in storage folder"
 
 [portal.pipelines.type]
 pipeline = "Pipeline"

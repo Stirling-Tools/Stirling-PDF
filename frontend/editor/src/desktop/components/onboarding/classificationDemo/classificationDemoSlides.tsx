@@ -1,15 +1,18 @@
 /** Bodies and hero art for the classification demo's slides; the card chrome around them
  *  belongs to {@link OnboardingSlideShell}. */
 
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import FolderOpenRoundedIcon from "@mui/icons-material/FolderOpenRounded";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { ShellHero } from "@app/components/onboarding/OnboardingSlideShell";
 import { BrandMark } from "@app/components/shared/BrandMark";
 import {
+  CLASSIFICATION_DEMO_BATCH_SIZE,
   groupColour,
   type ClassificationDemoGroupCount,
   type ClassificationDemoPhase,
+  type ClassificationDemoProgress,
 } from "@app/components/onboarding/classificationDemo/classificationDemoSweep";
 import styles from "@app/components/onboarding/classificationDemo/classificationDemo.module.css";
 
@@ -68,6 +71,87 @@ export function useProcessingLabel(
         },
       );
   }
+}
+
+/** How long each pre-count status line stays before the next. */
+const STATUS_ROTATE_MS = 1200;
+
+/** What the sweep is doing before it has a count to show. Each line names work the
+ *  phase really does: mounting is one record written so the folder appears in the
+ *  library; gathering is one stat per file, which is where the live figure comes from. */
+function useSweepStatus(progress: ClassificationDemoProgress): string {
+  const { t } = useTranslation();
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const timer = window.setInterval(
+      () => setTick((n) => n + 1),
+      STATUS_ROTATE_MS,
+    );
+    return () => window.clearInterval(timer);
+  }, []);
+
+  const lines: string[] =
+    progress.phase === "reading"
+      ? [
+          t(
+            "classificationDemo.status.connecting",
+            "Connecting your Downloads folder...",
+          ),
+          t(
+            "classificationDemo.status.library",
+            "Adding it to your file library...",
+          ),
+        ]
+      : [
+          t(
+            "classificationDemo.status.listing",
+            "Listing the files in Downloads...",
+          ),
+          progress.listing && progress.listing.checked > 0
+            ? t(
+                "classificationDemo.status.checked",
+                "Checked {{checked}} of {{total}} files...",
+                progress.listing,
+              )
+            : t(
+                "classificationDemo.status.checking",
+                "Checking each file's name and date...",
+              ),
+          t(
+            "classificationDemo.status.picking",
+            "Looking for the {{count}} most recent PDFs...",
+            { count: CLASSIFICATION_DEMO_BATCH_SIZE },
+          ),
+        ];
+  return lines[tick % lines.length];
+}
+
+/** The line under the hero: the running count once the batch is known, and until then
+ *  what the sweep is doing instead of a count of nothing. */
+export function ProcessingCounts({
+  progress,
+}: {
+  progress: ClassificationDemoProgress;
+}) {
+  const { t } = useTranslation();
+  const status = useSweepStatus(progress);
+  if (progress.total === 0 && progress.phase !== "finished") {
+    // Not a live region: the rotation is reassurance that something is happening, and
+    // announcing a new line every STATUS_ROTATE_MS would talk over the whole phase.
+    return <p className={styles.counts}>{status}</p>;
+  }
+  return (
+    <p className={styles.counts}>
+      <span className={styles.countsNumber}>{progress.processed}</span>
+      {t(
+        "classificationDemo.processing.counts",
+        "of {{total}} PDFs processed",
+        {
+          total: progress.total,
+        },
+      )}
+    </p>
+  );
 }
 
 /** Running tally of what the sweep has found. Colours mirror the Files sidebar's rule,

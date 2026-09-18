@@ -130,7 +130,7 @@ class InviteLinkControllerTest {
         Team defaultTeam = new Team();
         defaultTeam.setId(1L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(defaultTeam));
 
         mockMvc.perform(
@@ -146,7 +146,7 @@ class InviteLinkControllerTest {
         Team defaultTeam = new Team();
         defaultTeam.setId(5L);
         defaultTeam.setName(TeamService.DEFAULT_TEAM_NAME);
-        when(teamRepository.findByName(TeamService.DEFAULT_TEAM_NAME))
+        when(teamRepository.findFirstByNameOrderByIdAsc(TeamService.DEFAULT_TEAM_NAME))
                 .thenReturn(Optional.of(defaultTeam));
         when(userService.usernameExistsIgnoreCase("new@example.com")).thenReturn(false);
         when(inviteTokenRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
