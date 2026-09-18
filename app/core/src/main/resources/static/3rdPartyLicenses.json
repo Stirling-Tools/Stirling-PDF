@@ -1275,6 +1275,13 @@
             "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
         },
         {
+            "moduleName": "org.apache.commons:commons-pool2",
+            "moduleUrl": "https://commons.apache.org/proper/commons-pool/",
+            "moduleVersion": "2.13.1",
+            "moduleLicense": "Apache-2.0",
+            "moduleLicenseUrl": "https://www.apache.org/licenses/LICENSE-2.0.txt"
+        },
+        {
             "moduleName": "org.apache.commons:commons-text",
             "moduleUrl": "https://commons.apache.org/proper/commons-text",
             "moduleVersion": "1.10.0",
