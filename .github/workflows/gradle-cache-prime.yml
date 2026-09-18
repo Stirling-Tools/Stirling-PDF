@@ -75,6 +75,10 @@ jobs:
           token: ${{ steps.setup-bot.outputs.token || github.token }}
           key: ${{ needs.hash_pr.outputs.files_hash }}
           allow-shared-restore: true
+          path: |
+            .cache/gradle-java${{ env.JAVA_VERSION }}/caches
+            .cache/gradle-java${{ env.JAVA_VERSION }}/wrapper
+          strict: true
 
       - name: Set up JDK ${{ env.JAVA_VERSION }}
         uses: ./.github/actions/java
