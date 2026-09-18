@@ -83,6 +83,7 @@ class UserLicenseSettingsServiceTest {
     void offlineExpirySuspendsTeamAllowanceWithoutDestroyingItAndReconnectRestoresIt() {
         EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
         when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
+        when(cache.fleetUserLimit()).thenReturn(null);
         when(cache.linkedDeviceId()).thenReturn("device");
         mockSettings.setLinkedTeamDeviceId("device");
         mockSettings.setLinkedTeamUsers(300);
@@ -550,12 +551,12 @@ class UserLicenseSettingsServiceTest {
         when(cache.linkedDeviceId()).thenReturn("device");
         mockSettings.setLinkedTeamDeviceId("device");
         mockSettings.setLinkedTeamUsers(300);
-        mockSettings.setLinkedFleetUserLimit(17);
+        when(cache.fleetUserLimit()).thenReturn(17);
         when(cache.current()).thenReturn(Optional.empty());
         assertEquals(17, service.calculateMaxAllowedUsers());
         when(cache.isGraceExpired()).thenReturn(true);
         assertEquals(80, service.calculateMaxAllowedUsers());
-        assertEquals(17, mockSettings.getLinkedFleetUserLimit());
+        assertEquals(17, cache.fleetUserLimit());
         when(cache.isGraceExpired()).thenReturn(false);
         when(cache.current())
                 .thenReturn(
@@ -573,6 +574,7 @@ class UserLicenseSettingsServiceTest {
                                         300,
                                         10,
                                         23)));
+        when(cache.fleetUserLimit()).thenReturn(23);
         assertEquals(23, service.calculateMaxAllowedUsers());
         assertEquals(300, mockSettings.getLinkedTeamUsers());
     }
@@ -584,7 +586,7 @@ class UserLicenseSettingsServiceTest {
         when(cache.linkedDeviceId()).thenReturn("device");
         mockSettings.setLinkedTeamDeviceId("device");
         mockSettings.setLinkedTeamUsers(300);
-        mockSettings.setLinkedFleetUserLimit(17);
+        when(cache.fleetUserLimit()).thenReturn(17);
         when(cache.current())
                 .thenReturn(
                         Optional.of(
@@ -595,12 +597,13 @@ class UserLicenseSettingsServiceTest {
                                         null,
                                         stirling.software.proprietary.accountlink.EntitlementState
                                                 .REVOKED)));
+        when(cache.fleetUserLimit()).thenReturn(null);
         assertEquals(80, service.calculateMaxAllowedUsers());
-        assertEquals(null, mockSettings.getLinkedFleetUserLimit());
-        mockSettings.setLinkedFleetUserLimit(17);
+
+        when(cache.fleetUserLimit()).thenReturn(17);
         when(cache.linkedDeviceId()).thenReturn("other-device");
         when(cache.current()).thenReturn(Optional.empty());
+        when(cache.fleetUserLimit()).thenReturn(null);
         assertEquals(80, service.calculateMaxAllowedUsers());
-        assertEquals(null, mockSettings.getLinkedFleetUserLimit());
     }
 }

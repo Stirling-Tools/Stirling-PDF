@@ -96,10 +96,10 @@ public class UsageSyncService implements SchedulingConfigurer {
 
     /**
      * Reports every period with unsynced usage and refreshes the cached entitlement from the reply.
-     * Single daily caller (non-reentrant {@code fixedDelay}), so no internal locking. No-op when
-     * unlinked; otherwise also reports seats when no credits are pending.
+     * Serializes link, manual and scheduled calls to preserve report sequence ordering. Also
+     * reports seats when no credits are pending; no-op when unlinked.
      */
-    public void syncNow() {
+    public synchronized void syncNow() {
         Optional<DeviceCredential> cred = credentialStore.get();
         if (cred.isEmpty()) {
             return; // not linked

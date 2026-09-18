@@ -2,6 +2,7 @@ package stirling.software.saas.accountlink;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
@@ -29,7 +30,7 @@ public class FleetSeatService {
                 != 1) throw new IllegalStateException("Linked instance is no longer active");
     }
 
-    /** Local total allowed after subtracting cloud users and other deployments' last reports. */
+    /** For an authenticated active deployment, excludes the required cloud owner from usage. */
     @Transactional(readOnly = true)
     public Integer allowance(Long teamId, Long instanceId) {
         return teams.findByTeamId(teamId)
@@ -40,8 +41,43 @@ public class FleetSeatService {
                                     Math.max(
                                             0L,
                                             (long) team.getMaxSeats()
-                                                    - team.getSeatsUsed()
+                                                    - Math.max(0, team.getSeatsUsed() - 1)
                                                     - others);
+                        })
+                .orElse(null);
+    }
+
+    /** Seat sources for the owning team's billing view; null counts have never been reported. */
+    public record DeploymentSeats(
+            String deviceId, String name, Integer users, OffsetDateTime reportedAt) {}
+
+    /** The single required cloud owner is exempt only while the team has an active deployment. */
+    public record Breakdown(
+            int cloudUsers, int excludedOwners, List<DeploymentSeats> deployments) {}
+
+    /** Returns the team's active seat sources, or null when its capacity record is unavailable. */
+    @Transactional(readOnly = true)
+    public Breakdown breakdown(Long teamId) {
+        var deployments =
+                instances.findByTeamIdOrderByCreatedAtDesc(teamId).stream()
+                        .filter(instance -> instance.getRevokedAt() == null)
+                        .map(
+                                instance ->
+                                        new DeploymentSeats(
+                                                instance.getDeviceId(),
+                                                instance.getName(),
+                                                instance.getSeatCount(),
+                                                instance.getSeatsReportedAt()))
+                        .toList();
+        return teams.findByTeamId(teamId)
+                .map(
+                        team -> {
+                            int excluded =
+                                    deployments.isEmpty() ? 0 : Math.min(1, team.getSeatsUsed());
+                            return new Breakdown(
+                                    Math.max(0, team.getSeatsUsed() - excluded),
+                                    excluded,
+                                    deployments);
                         })
                 .orElse(null);
     }

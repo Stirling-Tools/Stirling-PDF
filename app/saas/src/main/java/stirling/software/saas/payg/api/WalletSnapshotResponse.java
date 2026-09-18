@@ -155,10 +155,19 @@ public record WalletSnapshotResponse(
      *     rather than meaning capacity is unknown.
      * @param licensedUsers how many users the holding covers; {@code null} when the team has no
      *     user limit.
-     * @param usersInUse cloud members plus last reported users on active deployments when fleet is
-     *     true.
+     * @param usersInUse counted cloud members plus deployment reports; linked teams exclude one
+     *     required cloud owner.
      */
-    public record TeamHolding(boolean held, Integer licensedUsers, int usersInUse, boolean fleet) {
+    public record TeamHolding(
+            boolean held,
+            Integer licensedUsers,
+            int usersInUse,
+            boolean fleet,
+            stirling.software.saas.accountlink.FleetSeatService.Breakdown breakdown) {
+        public TeamHolding(boolean held, Integer licensedUsers, int usersInUse, boolean fleet) {
+            this(held, licensedUsers, usersInUse, fleet, null);
+        }
+
         public TeamHolding(boolean held, Integer licensedUsers, int usersInUse) {
             this(held, licensedUsers, usersInUse, false);
         }

@@ -7,6 +7,7 @@ import { KvRow } from "@app/billing/KvRow";
 import { TeamPlanRow } from "@app/billing/TeamPlanRow";
 import { ProcessorPlanRow } from "@app/billing/ProcessorPlanRow";
 import { estimatedBillWithPending } from "@app/billing/pendingUsage";
+import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import type { ServerPlan } from "@app/billing/serverPlan";
 import type { Wallet } from "@app/billing/types";
 import "@app/billing/billing-screen.css";
@@ -14,6 +15,10 @@ import "@app/billing/billing-screen.css";
 export interface BillingScreenProps {
   /** Host-specific occupied seats; null means unavailable, undefined uses the wallet. */
   usersInUse?: number | null;
+  /** Standalone server allowance; linked fleets display the full Team capacity. */
+  userLimit?: number | null;
+  /** Identifies the deployment whose live roster overrides its last fleet report. */
+  deviceId?: string | null;
   /** Host-authorized account actions beside the page title. */
   headerAction?: ReactNode;
   /**
@@ -87,6 +92,8 @@ function cycleDay(
  */
 export function BillingScreen({
   usersInUse,
+  userLimit,
+  deviceId,
   headerAction,
   wallet,
   loading = false,
@@ -213,7 +220,9 @@ export function BillingScreen({
           t(
             "portal.billing.identity.team.chipIncluded",
             "{{allowance}} included credits monthly",
-            { allowance: wallet.freeAllowance.toLocaleString() },
+            {
+              allowance: wallet.freeAllowance.toLocaleString(),
+            },
           ),
         ],
       };
@@ -241,9 +250,11 @@ export function BillingScreen({
   const creditUnits = (wallet?.spendUnitsThisPeriod ?? 0) + pendingUnits;
   const occupiedSeats = serverPlan
     ? serverPlan.usersInUse
-    : wallet?.team.fleet || usersInUse === undefined
-      ? wallet?.team.usersInUse
-      : usersInUse;
+    : wallet?.team.fleet
+      ? fleetUsersInUse(wallet.team, deviceId, usersInUse)
+      : usersInUse === undefined
+        ? wallet?.team.usersInUse
+        : usersInUse;
   const showTeam = Boolean(
     wallet &&
     (wallet.team.held ||
@@ -337,11 +348,9 @@ export function BillingScreen({
                   <div className="billing-meters">
                     {(showTeam || serverPlan) && (
                       <TeamPlanRow
-                        usersInUse={
-                          wallet?.team.fleet
-                            ? wallet.team.usersInUse
-                            : usersInUse
-                        }
+                        usersInUse={usersInUse}
+                        userLimit={userLimit}
+                        deviceId={deviceId}
                         wallet={wallet}
                         selfHosted={selfHosted}
                         serverPlan={serverPlan}

@@ -329,7 +329,7 @@ public class UserLicenseSettingsService {
         if (!hasLicenseKeyPaidTier()) {
             Integer fromSaas = linkedTeamAllowance();
             EntitlementCache cache = entitlementCache.getIfAvailable();
-            Integer fleetLimit = getOrCreateSettings().getLinkedFleetUserLimit();
+            Integer fleetLimit = cache == null ? null : cache.fleetUserLimit();
             if (fleetLimit != null
                     && cache != null
                     && !cache.isGraceExpired()
@@ -421,7 +421,6 @@ public class UserLicenseSettingsService {
         if (!Objects.equals(deviceId, settings.getLinkedTeamDeviceId())
                 || (deviceId == null && settings.getLinkedTeamUsers() != null)) {
             settings.setLinkedTeamUsers(null);
-            settings.setLinkedFleetUserLimit(null);
             settings.setLinkedTeamDeviceId(deviceId);
             settingsRepository.save(settings);
         }
@@ -432,10 +431,7 @@ public class UserLicenseSettingsService {
             return settings.getLinkedTeamUsers();
         }
         Integer purchased = answer.get().licensedUsers();
-        Integer fleetLimit = answer.get().fleetUserLimit();
-        if (!Objects.equals(settings.getLinkedTeamUsers(), purchased)
-                || !Objects.equals(settings.getLinkedFleetUserLimit(), fleetLimit)) {
-            settings.setLinkedFleetUserLimit(fleetLimit);
+        if (!Objects.equals(settings.getLinkedTeamUsers(), purchased)) {
             settings.setLinkedTeamUsers(purchased);
             settingsRepository.save(settings);
             log.info("Linked team user allowance is now {}", purchased);

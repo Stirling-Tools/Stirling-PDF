@@ -36,6 +36,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
+import stirling.software.saas.accountlink.FleetSeatService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.PaygWalletController.UpdateCapRequest;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.MemberRow;
@@ -76,6 +77,7 @@ class PaygWalletControllerTest {
     @Mock private UserRepository userRepository;
     @Mock private PrepaidBundleService prepaidBundleService;
     @Mock private SaasTeamExtensionsRepository teamExtensionsRepository;
+    @Mock private FleetSeatService fleetSeats;
 
     private PaygWalletController controller;
 
@@ -93,7 +95,8 @@ class PaygWalletControllerTest {
                         userRepository,
                         prepaidBundleService,
                         new UserTeamResolver(memberRepo),
-                        teamExtensionsRepository);
+                        teamExtensionsRepository,
+                        fleetSeats);
     }
 
     /**

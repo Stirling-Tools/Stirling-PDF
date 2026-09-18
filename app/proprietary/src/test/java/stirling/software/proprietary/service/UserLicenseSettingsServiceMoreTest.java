@@ -97,6 +97,7 @@ class UserLicenseSettingsServiceMoreTest {
         private void cacheReturns(InstanceEntitlement entitlement) {
             EntitlementCache cache = org.mockito.Mockito.mock(EntitlementCache.class);
             when(cache.current()).thenReturn(Optional.ofNullable(entitlement));
+            when(cache.fleetUserLimit()).thenReturn(null);
             when(cache.linkedDeviceId()).thenReturn("device-1");
             when(entitlementCacheProvider.getIfAvailable()).thenReturn(cache);
         }

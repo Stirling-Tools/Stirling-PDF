@@ -1,4 +1,5 @@
 import type { ServerPlan } from "@app/billing/serverPlan";
+import { fleetUsersInUse } from "@app/billing/fleetSeats";
 import {
   useCallback,
   useEffect,
@@ -25,6 +26,7 @@ import {
   type LocalUsage,
 } from "@portal/api/link";
 import { useStripePortal } from "@portal/hooks/useStripePortal";
+import { useAccountLinkOptional } from "@portal/contexts/AccountLinkContext";
 import { useBundleFlowState } from "@portal/hooks/useBundleFlowState";
 import { FreePlanView } from "@portal/components/billing/FreePlanView";
 import { PaymentSection } from "@portal/components/billing/PaymentSection";
@@ -43,6 +45,7 @@ import "@portal/components/billing/billing.css";
 export interface UsageProps {
   /** Local occupied seats for self-hosted; undefined keeps the SaaS membership count. */
   localUsersInUse?: number | null;
+  localUserLimit?: number | null;
   serverPlan?: ServerPlan;
   serverPlanAction?: ReactNode;
   /**
@@ -73,6 +76,7 @@ export interface UsageProps {
  */
 export function Usage({
   localUsersInUse,
+  localUserLimit,
   serverPlan,
   serverPlanAction,
   onWalletLoaded,
@@ -80,6 +84,7 @@ export function Usage({
   renderLicenseSection,
 }: UsageProps = {}) {
   const { t } = useTranslation();
+  const accountLink = useAccountLinkOptional();
   const [wallet, setWallet] = useState<Wallet | null>(null);
   const procurement = useProcurement();
   const { trialSetupRequested, clearTrialSetupRequest } = useUI();
@@ -258,8 +263,13 @@ export function Usage({
   // Optional on purpose: a build that mounts no provider must lose the door, not the page.
   const checkout = useCheckoutOptional();
   const heldLimit = wallet?.team?.held ? wallet.team.licensedUsers : null;
-  const usersInUse =
-    wallet?.team?.fleet || localUsersInUse === undefined
+  const usersInUse = wallet?.team?.fleet
+    ? fleetUsersInUse(
+        wallet.team,
+        accountLink?.status?.deviceId,
+        localUsersInUse,
+      )
+    : localUsersInUse === undefined
       ? wallet?.team?.usersInUse
       : localUsersInUse;
   const addCapacity = useCallback(() => {
@@ -313,6 +323,8 @@ export function Usage({
   return (
     <BillingScreen
       usersInUse={localUsersInUse}
+      userLimit={localUserLimit}
+      deviceId={accountLink?.status?.deviceId}
       headerAction={
         paying && wallet?.role === "leader" ? (
           <Button

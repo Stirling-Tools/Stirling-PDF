@@ -37,6 +37,7 @@ import stirling.software.proprietary.security.database.repository.UserRepository
 import stirling.software.proprietary.security.model.User;
 import stirling.software.proprietary.security.repository.TeamMembershipRepository;
 import stirling.software.proprietary.service.UserLicenseSettingsService;
+import stirling.software.saas.accountlink.FleetSeatService;
 import stirling.software.saas.model.SaasTeamExtensions;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.ActivityRow;
 import stirling.software.saas.payg.api.WalletSnapshotResponse.CategoryBreakdown;
@@ -114,6 +115,7 @@ public class PaygWalletController {
     private final PrepaidBundleService prepaidBundleService;
     private final UserTeamResolver userTeamResolver;
     private final SaasTeamExtensionsRepository teamExtensionsRepository;
+    private final FleetSeatService fleetSeats;
 
     public PaygWalletController(
             EntitlementService entitlementService,
@@ -126,7 +128,9 @@ public class PaygWalletController {
             UserRepository userRepository,
             PrepaidBundleService prepaidBundleService,
             UserTeamResolver userTeamResolver,
-            SaasTeamExtensionsRepository teamExtensionsRepository) {
+            SaasTeamExtensionsRepository teamExtensionsRepository,
+            FleetSeatService fleetSeats) {
+        this.fleetSeats = fleetSeats;
         this.entitlementService = Objects.requireNonNull(entitlementService, "entitlementService");
         this.billingService = Objects.requireNonNull(billingService, "billingService");
         this.memberRepo = Objects.requireNonNull(memberRepo, "memberRepo");
@@ -179,7 +183,7 @@ public class PaygWalletController {
         String status = billing.subscribed() ? STATUS_SUBSCRIBED : STATUS_FREE;
         WalletSnapshotResponse.ProcessorHolding processor =
                 new WalletSnapshotResponse.ProcessorHolding(billing.subscribed());
-        WalletSnapshotResponse.TeamHolding team = teamHolding(teamId);
+        WalletSnapshotResponse.TeamHolding team = teamHolding(teamId, isLeader);
 
         boolean noCap = billing.subscribed() && billing.capMoneyMinor() == null;
         Integer capMajor =
@@ -271,7 +275,7 @@ public class PaygWalletController {
      * The team's user-capacity holding. The cap is written from the Team subscription, so a team
      * holds Team exactly when {@link SaasTeamExtensions#licensedUsers()} states one.
      */
-    private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId) {
+    private WalletSnapshotResponse.TeamHolding teamHolding(Long teamId, boolean isLeader) {
         Long fleetUsers = teamExtensionsRepository.fleetUsersInUse(teamId);
         int usersInUse =
                 Math.toIntExact(fleetUsers == null ? memberRepo.countByTeamId(teamId) : fleetUsers);
@@ -281,7 +285,11 @@ public class PaygWalletController {
                         .map(SaasTeamExtensions::licensedUsers)
                         .orElse(null);
         return new WalletSnapshotResponse.TeamHolding(
-                licensed != null, licensed, usersInUse, fleetUsers != null);
+                licensed != null,
+                licensed,
+                usersInUse,
+                fleetUsers != null,
+                isLeader ? fleetSeats.breakdown(teamId) : null);
     }
 
     /** Per-category size-scaled units + input-file counts for the same window. */

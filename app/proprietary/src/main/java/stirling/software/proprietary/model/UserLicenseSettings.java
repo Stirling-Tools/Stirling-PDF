@@ -61,9 +61,6 @@ public class UserLicenseSettings implements Serializable {
     @Column(name = "linked_team_users")
     private Integer linkedTeamUsers;
 
-    @Column(name = "linked_fleet_user_limit")
-    private Integer linkedFleetUserLimit;
-
     @Column(name = "linked_team_device_id")
     private String linkedTeamDeviceId;
 
