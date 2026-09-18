@@ -153,7 +153,10 @@ public class PolicyRunner {
                 context.vetoCleanup();
                 continue;
             }
-            if (policyAccessGuard.isOrphaned(source)) {
+            // A migrated watched folder is server config with no human owner by design, and it
+            // reads and writes disk folders, so an unowned source strands nobody's documents.
+            if (!Policy.ORIGIN_MIGRATED.equals(policy.origin())
+                    && policyAccessGuard.isOrphaned(source)) {
                 log.warn("Source {} has no reachable owner; not sweeping it", sourceId);
                 context.vetoCleanup();
                 continue;

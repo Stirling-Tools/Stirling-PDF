@@ -80,7 +80,8 @@ public class PolicyOverviewService {
                 sources,
                 steps,
                 outputSummary(policy, sourceNames),
-                policy.owner());
+                policy.owner(),
+                policy.origin());
     }
 
     /**
