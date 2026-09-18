@@ -1,9 +1,7 @@
-// Client-side classification entry point: load rules, extract the PDF, classify.
+// Client-side classification entry point: extract the PDF, then classify it.
 
-import {
-  ensureRulesLoaded,
-  classifyHeuristic,
-} from "@app/services/heuristic/heuristicEngine";
+import i18n from "i18next";
+import { classifyHeuristic } from "@app/services/heuristic/heuristicEngine";
 import {
   extractHeuristicDoc,
   type ExtractOptions,
@@ -16,9 +14,11 @@ export async function classifyFileHeuristically(
   file: File,
   opts?: { explain?: boolean } & ExtractOptions,
 ): Promise<HeuristicResult> {
-  await ensureRulesLoaded();
   const doc = await extractHeuristicDoc(file, file.name, {
     budgetMs: opts?.budgetMs,
   });
-  return classifyHeuristic(doc, opts);
+  return classifyHeuristic(doc, {
+    explain: opts?.explain,
+    localeHint: i18n.language ?? undefined,
+  });
 }

@@ -1,0 +1,215 @@
+{
+  "version": 2,
+  "language": "th",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "ใบแจ้งหนี้", "weight": 24, "where": "title" },
+        { "text": "ภาษีมูลค่าเพิ่ม", "weight": 8 }
+      ]
+    },
+    {
+      "id": "receipt",
+      "phrases": [{ "text": "ใบเสร็จรับเงิน", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "credit-note",
+      "phrases": [{ "text": "ใบลดหนี้", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "purchase-order",
+      "phrases": [{ "text": "ใบสั่งซื้อ", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "packing-slip",
+      "phrases": [{ "text": "ใบเสร็จรับเงิน", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "payslip",
+      "phrases": [{ "text": "เช็คเงินค่าจ้าง", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "expense-report",
+      "phrases": [{ "text": "ค่าใช้จ่าย", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "งบการเงิน", "weight": 20, "where": "title" },
+        { "text": "งบดุล", "weight": 12 }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "สัญญา", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "lease-agreement",
+      "phrases": [{ "text": "สัญญาเช่า", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "terms-and-conditions",
+      "phrases": [
+        { "text": "ข้อกำหนดในการให้บริการ", "weight": 22, "where": "title" }
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [
+        { "text": "นโยบายความเป็นส่วนตัว", "weight": 24, "where": "title" },
+        { "text": "ระเบียบการคุ้มครองข้อมูลทั่วไป", "weight": 10 }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "พินัยกรรม", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "resume",
+      "phrases": [{ "text": "เรซูเม", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "จดหมายแนะนำตัว", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "สิทธิบัตร", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "ใบสั่งยา", "weight": 20, "where": "title" },
+        { "text": "เภสัชกรรม", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [{ "text": "เวชระเบียน", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "การให้วัคซีน", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "แบบสอบถาม", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "เอกสารข้อมูลความปลอดภัย", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "ข่าวประชาสัมพันธ์", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "แผนธุรกิจ", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "สมุดปกขาว", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "ticket",
+      "phrases": [{ "text": "ตั๋ว", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "การตรวจลงตรา", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "รายการอาหาร", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "สูตรอาหาร", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "จดหมาย", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "สัญญาอนุญาต", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "อสังหาริมทรัพย์", "weight": 8 }]
+    },
+    {
+      "id": "subscription-confirmation",
+      "phrases": [{ "text": "แบบจำลองธุรกิจบอกรับเป็นสมาชิก", "weight": 10 }]
+    },
+    {
+      "id": "donation-receipt",
+      "phrases": [{ "text": "การบริจาค", "weight": 10 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "อีเมล", "weight": 8 }]
+    },
+    {
+      "id": "book-ebook",
+      "phrases": [{ "text": "สารบัญ", "weight": 6 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "นิตยสาร", "weight": 10 }]
+    },
+    {
+      "id": "course-syllabus",
+      "phrases": [{ "text": "ประมวลรายวิชา", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "lesson-plan",
+      "phrases": [{ "text": "แผนการสอน", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "การสรรหาบุคลากร", "weight": 8 }]
+    },
+    {
+      "id": "lab-report",
+      "phrases": [{ "text": "ห้องปฏิบัติการทางการแพทย์", "weight": 12 }]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "การประกันภัย", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "safety-procedure",
+      "phrases": [{ "text": "อาชีวอนามัยและความปลอดภัย", "weight": 10 }]
+    },
+    {
+      "id": "technical-specification",
+      "phrases": [{ "text": "ข้อกำหนดทางเทคนิค", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "api-documentation",
+      "phrases": [{ "text": "ส่วนต่อประสานโปรแกรมประยุกต์", "weight": 8 }]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "งบประมาณ", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "การลงทุน", "weight": 8 }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "การบ้าน", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "toc": [{ "pattern": "สารบัญ" }],
+    "references": [{ "pattern": "บรรณานุกรม" }],
+    "signature": [{ "pattern": "ลายมือชื่อ" }]
+  }
+}

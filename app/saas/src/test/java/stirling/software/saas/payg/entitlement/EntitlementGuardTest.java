@@ -338,7 +338,7 @@ class EntitlementGuardTest {
     }
 
     @Test
-    void anonymousUser_manualTool_passesThroughUnbilled() throws Exception {
+    void anonymousUser_manualTools_passThrough() throws Exception {
         SecurityContextHolder.getContext()
                 .setAuthentication(
                         new AnonymousAuthenticationToken(
@@ -354,7 +354,7 @@ class EntitlementGuardTest {
 
         assertThat(proceed).isTrue();
         assertThat(res.getStatus()).isEqualTo(200);
-        Mockito.verifyNoInteractions(entitlementService);
+        Mockito.verifyNoInteractions(entitlementService, userRepository);
     }
 
     // ---------------------------------------------------------------------------------------
@@ -638,6 +638,76 @@ class EntitlementGuardTest {
         t.setId(teamId);
         u.setTeam(t);
         return u;
+    }
+
+    @Test
+    void supabaseGuestCannotUseProcessorEvenWithExistingTeam() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(guestAuth(UUID.randomUUID()));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertThat(guard.preHandle(new MockHttpServletRequest(), response, handlerFor("aiOnly")))
+                .isFalse();
+        assertThat(response.getStatus()).isEqualTo(401);
+        assertThat(json.readTree(response.getContentAsString()).get("error").asText())
+                .isEqualTo("SIGNUP_REQUIRED");
+        Mockito.verifyNoInteractions(entitlementService, userRepository);
+    }
+
+    @Test
+    void supabaseGuestManualToolsRemainUnlimitedWithoutDatabaseLookups() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(guestAuth(UUID.randomUUID()));
+        for (int run = 0; run < 10; run++) {
+            MockHttpServletResponse response = new MockHttpServletResponse();
+            assertThat(
+                            guard.preHandle(
+                                    new MockHttpServletRequest(),
+                                    response,
+                                    handlerFor("manualTool")))
+                    .isTrue();
+            assertThat(response.getStatus()).isEqualTo(200);
+        }
+        Mockito.verifyNoInteractions(entitlementService, userRepository);
+    }
+
+    private static EnhancedJwtAuthenticationToken guestAuth(UUID id) {
+        Jwt jwt =
+                new Jwt(
+                        "token",
+                        Instant.now(),
+                        Instant.now().plusSeconds(3600),
+                        Map.of("alg", "RS256"),
+                        Map.of("sub", id.toString(), "is_anonymous", true));
+        return new EnhancedJwtAuthenticationToken(
+                jwt,
+                List.of(new SimpleGrantedAuthority("ROLE_LIMITED_API_USER")),
+                "anon_" + id,
+                id.toString());
+    }
+
+    @Test
+    void guestCannotMintLegacyApiKey() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(guestAuth(UUID.randomUUID()));
+        Class<stirling.software.proprietary.security.controller.api.UserController> type =
+                stirling.software.proprietary.security.controller.api.UserController.class;
+        HandlerMethod handler =
+                new HandlerMethod(
+                        Mockito.mock(type),
+                        type.getMethod("updateApiKey", java.security.Principal.class));
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertThat(guard.preHandle(new MockHttpServletRequest(), response, handler)).isFalse();
+        assertThat(json.readTree(response.getContentAsString()).get("category").asText())
+                .isEqualTo("API");
+        Mockito.verifyNoInteractions(entitlementService);
+    }
+
+    @Test
+    void guestCannotBypassProcessorGateWithAutomationHeader() throws Exception {
+        SecurityContextHolder.getContext().setAuthentication(guestAuth(UUID.randomUUID()));
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.addHeader("X-Stirling-Automation", "true");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        assertThat(guard.preHandle(request, response, handlerFor("plainEndpoint"))).isFalse();
+        assertThat(response.getStatus()).isEqualTo(401);
+        Mockito.verifyNoInteractions(entitlementService);
     }
 
     private static EnhancedJwtAuthenticationToken jwtAuth(UUID supabaseId) {
