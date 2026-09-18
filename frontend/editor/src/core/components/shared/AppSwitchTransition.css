@@ -1,0 +1,294 @@
+/* Editor <-> Processor app switch.
+
+   The two apps are route-sets of one SPA, so switching between them can be an
+   animation instead of a page load. The brand lockup is pinned in place for the
+   whole swap (both shells draw it at the same coordinates), so the chrome reads
+   as STAYING while the workspace underneath it changes - see the per-style
+   opt-out in appSwitchStyle.ts.
+
+   HOW A STYLE IS DEFINED
+   Each style names two keyframe sets through --zone-depart / --zone-arrive. The
+   wiring below plays the departure on the way out and the arrival on the way in,
+   and going BACK rewinds the whole thing: the arrival un-arrives, then the
+   departure un-departs. Reusing the forward keyframes with `reverse` (which also
+   reverses the easing) plus the swapped durations is what makes the return read
+   as an undo rather than a second, differently-shaped animation.
+
+   Durations are mirrored by the constants in AppSwitchProvider.tsx. */
+
+:root {
+  /* The two halves of the outbound move; mirrored by the constants in
+     AppSwitchProvider.tsx. */
+  --app-switch-depart: 0.22s;
+  --app-switch-arrive: 0.32s;
+  --app-switch-accelerate: cubic-bezier(0.4, 0, 1, 1);
+  --app-switch-decelerate: cubic-bezier(0, 0, 0.2, 1);
+  /* How far the app travels along the switch axis. */
+  --app-switch-shift: 3rem;
+}
+
+/* Zero layout footprint at rest - the wrapper only becomes a box mid-switch. */
+.app-zone {
+  display: contents;
+  --zone-depart: axis-depart;
+  --zone-arrive: axis-arrive;
+}
+
+.app-zone[data-phase="exit"],
+.app-zone[data-phase="enter"] {
+  display: block;
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none; /* nothing is clickable on its way out or in */
+  will-change: transform, opacity;
+}
+
+/* ── Wiring, shared by every style ─────────────────────────────────────────
+   Which half is playing and how long it runs. Going back swaps them, because
+   it rewinds: the (longer) arrival is undone first. */
+.app-zone[data-dir="forward"][data-phase="exit"],
+.app-zone[data-dir="back"][data-phase="enter"],
+.app-switch-ground[data-dir="forward"][data-phase="exit"],
+.app-switch-ground[data-dir="back"][data-phase="enter"] {
+  --half-duration: var(--app-switch-depart);
+  --half-ease: var(--app-switch-accelerate);
+}
+.app-zone[data-dir="forward"][data-phase="enter"],
+.app-zone[data-dir="back"][data-phase="exit"],
+.app-switch-ground[data-dir="forward"][data-phase="enter"],
+.app-switch-ground[data-dir="back"][data-phase="exit"] {
+  --half-duration: var(--app-switch-arrive);
+  --half-ease: var(--app-switch-decelerate);
+}
+
+.app-zone[data-phase="exit"] {
+  animation: var(--zone-depart) var(--half-duration) var(--half-ease) both;
+}
+.app-zone[data-phase="enter"] {
+  animation: var(--zone-arrive) var(--half-duration) var(--half-ease) both;
+}
+/* Back is the rewind: same keyframes, opposite order, played backwards. */
+.app-zone[data-dir="back"][data-phase="exit"] {
+  animation-name: var(--zone-arrive);
+  animation-direction: reverse;
+}
+.app-zone[data-dir="back"][data-phase="enter"] {
+  animation-name: var(--zone-depart);
+  animation-direction: reverse;
+}
+
+/* ── axis: a shared horizontal axis (default) ──────────────────────────── */
+@keyframes axis-depart {
+  from {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    opacity: 0;
+    transform: translate3d(calc(-1 * var(--app-switch-shift)), 0, 0)
+      scale(0.985);
+  }
+}
+@keyframes axis-arrive {
+  from {
+    opacity: 0;
+    transform: translate3d(var(--app-switch-shift), 0, 0) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* ── depth: the app recedes, the next one comes forward ────────────────── */
+.app-zone[data-style="depth"] {
+  --zone-depart: depth-depart;
+  --zone-arrive: depth-arrive;
+}
+@keyframes depth-depart {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9);
+    filter: blur(4px);
+  }
+}
+@keyframes depth-arrive {
+  from {
+    opacity: 0;
+    transform: scale(1.08);
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+}
+
+/* ── dissolve: no movement, one blurs out as the other blurs in ────────── */
+.app-zone[data-style="dissolve"] {
+  --zone-depart: dissolve-depart;
+  --zone-arrive: dissolve-arrive;
+}
+@keyframes dissolve-depart {
+  from {
+    opacity: 1;
+    filter: blur(0);
+  }
+  to {
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+@keyframes dissolve-arrive {
+  from {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* ── panels: the rails leave through the nearest edge, the middle blurs ── */
+.app-zone[data-style="panels"] {
+  --zone-depart: panels-depart;
+  --zone-arrive: panels-arrive;
+}
+/* The rails hold their ground until late so the slide reads before the fade. */
+@keyframes panels-depart {
+  0% {
+    opacity: 1;
+    filter: blur(0);
+  }
+  55% {
+    opacity: 1;
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(8px);
+  }
+}
+@keyframes panels-arrive {
+  0% {
+    opacity: 0;
+    filter: blur(8px);
+  }
+  45% {
+    opacity: 1;
+    filter: blur(5px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+/* Each rail leaves through whichever edge it is docked against. The processor
+   has no right-hand panel, so there it is the left rail alone. */
+.app-zone[data-style="panels"] :is(.file-sidebar, .portal-sidebar) {
+  --panel-edge: -100%;
+}
+.app-zone[data-style="panels"] .tool-panel {
+  --panel-edge: 100%;
+}
+/* Leaving plays it forwards, arriving plays it backwards - the rail returns
+   along the path it left by, in both directions. */
+.app-zone[data-style="panels"][data-phase="exit"]
+  :is(.file-sidebar, .portal-sidebar, .tool-panel) {
+  animation: panels-edge var(--half-duration) var(--half-ease) both;
+}
+.app-zone[data-style="panels"][data-phase="enter"]
+  :is(.file-sidebar, .portal-sidebar, .tool-panel) {
+  animation: panels-edge var(--half-duration) var(--half-ease) reverse both;
+}
+@keyframes panels-edge {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--panel-edge));
+  }
+}
+
+/* ── wipe: a curtain sweeps across, hiding the swap entirely ───────────── */
+.app-zone[data-style="wipe"] {
+  /* The curtain does the work; the app just holds still underneath it. */
+  --zone-depart: wipe-hold;
+  --zone-arrive: wipe-hold;
+}
+@keyframes wipe-hold {
+  from,
+  to {
+    opacity: 1;
+  }
+}
+
+/* ── The ground the swap happens over ───────────────────────────────────
+   Painted in the shell colour both apps use for their rail, so the moment
+   between unmount and mount is app chrome rather than a white flash. */
+.app-switch-ground {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background: var(--c-bg);
+  pointer-events: none;
+  animation: fadeIn var(--motion-fast) both;
+}
+
+/* For `wipe` the same layer becomes the curtain, so it moves above the app and
+   sweeps in from the leaving edge, then back out towards the arriving one. */
+.app-switch-ground[data-style="wipe"] {
+  z-index: 3;
+  transform-origin: right center;
+  animation: wipe-cover var(--half-duration) var(--half-ease) both;
+}
+.app-switch-ground[data-style="wipe"][data-phase="enter"] {
+  transform-origin: left center;
+  animation-direction: reverse;
+}
+.app-switch-ground[data-style="wipe"][data-dir="back"] {
+  transform-origin: left center;
+}
+.app-switch-ground[data-style="wipe"][data-dir="back"][data-phase="enter"] {
+  transform-origin: right center;
+}
+@keyframes wipe-cover {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* The one thing that does not move: a patch of rail carrying a stand-in for the
+   brand lockup. Sized and placed from the live rail (see the provider), so it
+   lands exactly on top of the real lockup in both apps. Sits above the sliding
+   zone, so the outgoing rail slides out from under it. Styles that take the
+   chrome away (panels, wipe) skip it - see APP_SWITCH_PINS_BRAND. */
+.app-switch-brand {
+  position: fixed;
+  inset-block-start: 0;
+  inset-inline-start: 0;
+  z-index: 2;
+  background: var(--c-bg);
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-zone[data-phase="exit"],
+  .app-zone[data-phase="enter"],
+  .app-zone[data-phase] :is(.file-sidebar, .portal-sidebar, .tool-panel),
+  .app-switch-ground {
+    animation: none;
+  }
+}

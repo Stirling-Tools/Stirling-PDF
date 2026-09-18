@@ -2,15 +2,13 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 
 const mocks = vi.hoisted(() => ({
-  navigate: vi.fn(),
+  switchToApp: vi.fn(),
   requestNavigation: vi.fn(),
   portalAccess: true,
 }));
 
-// The hook reads window.location for the return path (not useLocation), because
-// the editor's raw history.pushState leaves react-router's location stale.
-vi.mock("react-router-dom", () => ({
-  useNavigate: () => mocks.navigate,
+vi.mock("@app/components/shared/AppSwitchProvider", () => ({
+  useAppSwitch: () => ({ switchToApp: mocks.switchToApp }),
 }));
 vi.mock("@app/auth/context", () => ({
   useAuth: () => ({ portalAccess: mocks.portalAccess }),
@@ -42,17 +40,17 @@ describe("useOtherAppSwitch", () => {
     const { result } = renderHook(() => useOtherAppSwitch());
     result.current?.onOpen();
 
-    expect(mocks.navigate).not.toHaveBeenCalled();
+    expect(mocks.switchToApp).not.toHaveBeenCalled();
     expect(mocks.requestNavigation).toHaveBeenCalledTimes(1);
   });
 
-  it("records where to return to, then navigates to the processor", () => {
+  it("records where to return to, then plays the switch to the processor", () => {
     window.history.pushState({}, "", "/compress?mode=fast");
     const { result } = renderHook(() => useOtherAppSwitch());
     result.current?.onOpen();
     mocks.requestNavigation.mock.calls[0][0]();
 
     expect(takeEditorReturnPath()).toBe("/compress?mode=fast");
-    expect(mocks.navigate).toHaveBeenCalledWith("/processor");
+    expect(mocks.switchToApp).toHaveBeenCalledWith("processor");
   });
 });
