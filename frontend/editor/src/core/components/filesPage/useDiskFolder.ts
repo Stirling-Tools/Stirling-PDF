@@ -12,7 +12,7 @@ import {
   type DiskFileEntry,
 } from "@app/services/localFolderContents";
 
-/** Reads an open mount and cancels obsolete listings when navigation changes. */
+/** Reads mounted directories and ignores obsolete replies after navigation. */
 export function useDiskFolder(
   currentLocalDirectory: string | undefined,
   currentFolderId: FolderId | null,
@@ -56,7 +56,7 @@ export function useDiskFolder(
           );
         }
       } catch (err) {
-        console.warn("[FileManagerView] disk listing failed", err);
+        console.warn("[useDiskFolder] disk listing failed", err);
         if (!cancelled && !background) {
           setDiskEntries([]);
           setFolderError(

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Badge, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
@@ -23,6 +23,7 @@ import {
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
 import { FileDetailsActions } from "@app/components/filesPage/FileDetailsActions";
+import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import "@app/components/filesPage/FilesPage.css";
 
 interface FileDetailsPanelProps {
@@ -267,7 +268,9 @@ export function FileDetailsPanel({
                   value={
                     currentFolder
                       ? currentFolder.name
-                      : t("filesPage.allFiles", "All files")
+                      : !single.folderId && getFileOrigin(single) === "local"
+                        ? t("filesPage.recentFiles", "Recents")
+                        : t("filesPage.allFiles", "Stirling library")
                   }
                 />
               </div>
@@ -336,7 +339,7 @@ export function FileDetailsPanel({
               (compactVersions && onOpenVersionHistory ? (
                 <Button
                   leftSection={<Icon name="rotate-ccw-clock" size={20} />}
-                  variant="secondary"
+                  variant="tertiary"
                   onClick={onOpenVersionHistory}
                 >
                   {t(

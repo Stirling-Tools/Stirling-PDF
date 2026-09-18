@@ -1152,7 +1152,7 @@ test.describe("Files page", () => {
      * A breadcrumb is a plain jump to an ancestor. Everything the selection change
      * drives - the listing, the folder filters, the path write - has to survive it.
      */
-    test("clicking a breadcrumb returns to the root without throwing", async ({
+    test("clicking the active library tab returns to the root without throwing", async ({
       page,
     }) => {
       await page.goto("/files", { waitUntil: "domcontentloaded" });
@@ -1160,7 +1160,13 @@ test.describe("Files page", () => {
 
       const crumbs = page.getByRole("navigation", { name: /Folder path/i });
       await expect(crumbs).toBeVisible({ timeout: 5_000 });
-      await crumbs.getByRole("button", { name: /All files/i }).click();
+      await expect(
+        crumbs.getByRole("button", { name: /Stirling library/i }),
+      ).toHaveCount(0);
+      await page
+        .getByRole("navigation", { name: "File sources" })
+        .getByRole("button", { name: "Stirling library", exact: true })
+        .click();
 
       await expect(page).toHaveURL(/\/files\/?$/, { timeout: 5_000 });
       await expect(page.getByText(/Something went wrong/i)).toHaveCount(0);

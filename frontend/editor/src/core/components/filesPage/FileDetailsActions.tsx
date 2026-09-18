@@ -28,10 +28,6 @@ export interface FileDetailsActionsProps {
 const ICON_SIZE = 20;
 const MENU_ICON_SIZE = "1.1rem";
 
-/**
- * The details panel's action row: one primary CTA, download, and everything
- * else behind an overflow menu.
- */
 export function FileDetailsActions({
   selectedFileIds,
   single,
@@ -65,6 +61,7 @@ export function FileDetailsActions({
     <div className="files-page-details-actions">
       <div className="files-page-details-actions-row">
         <Button
+          fat
           style={{ flex: 1 }}
           leftSection={<Icon name="external-link" size={ICON_SIZE} />}
           onClick={() => onAddToWorkspace(selectedFileIds)}
@@ -73,7 +70,7 @@ export function FileDetailsActions({
         </Button>
         <Tooltip label={downloadLabel} withinPortal>
           <ActionIcon
-            variant="secondary"
+            variant="tertiary"
             loading={downloading}
             onClick={onDownload}
             aria-label={downloadLabel}
@@ -84,7 +81,7 @@ export function FileDetailsActions({
         <Menu shadow="md" width={230} position="top-end" withinPortal>
           <Menu.Target>
             <ActionIcon
-              variant="secondary"
+              variant="tertiary"
               aria-label={t("filesPage.bulkActions", "Actions")}
             >
               <Icon name="ellipsis-vertical" size={ICON_SIZE} />

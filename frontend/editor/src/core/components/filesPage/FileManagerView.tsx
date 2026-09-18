@@ -24,7 +24,6 @@ import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
-import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import {
   useNavigationActions,
   useNavigationGuard,
@@ -35,11 +34,12 @@ import { useLibraryFiles } from "@app/components/filesPage/useLibraryFiles";
 import { useFolderFileStates } from "@app/components/filesPage/useFolderFileStates";
 import { useDiskFolder } from "@app/components/filesPage/useDiskFolder";
 import { LibraryToolbar } from "@app/components/filesPage/LibraryToolbar";
+import { LibraryTabs } from "@app/components/filesPage/LibraryTabs";
+import { useLibraryScrollPosition } from "@app/components/filesPage/useLibraryScrollPosition";
 
 import { FileId } from "@app/types/file";
 import { StirlingFileStub } from "@app/types/fileContext";
 import {
-  FolderBreadcrumbEntry,
   FolderId,
   FolderRecord,
   ROOT_FOLDER_ID,
@@ -63,7 +63,7 @@ import { canPickDirectory } from "@app/services/directoryPicker";
 import { isDiskFolderId } from "@app/types/folder";
 import { useNewFolderFlow } from "@app/hooks/useNewFolderFlow";
 import { useLibraryRefresh } from "@app/hooks/useLibraryRefresh";
-import { writeIntoMount } from "@app/services/mountWrites";
+import { useLibraryUpload } from "@app/components/filesPage/useLibraryUpload";
 import {
   readDiskFile,
   type DiskFileEntry,
@@ -93,13 +93,13 @@ export default function FileManagerView() {
   const navigate = useNavigate();
   const location = useLocation();
   const openFolder = useOpenFolder();
+  const folderDropHandlers = useFolderDropHandlers();
 
-  // Hide Shared tab when storageSharingEnabled is false.
   const { sharingEnabled } = useSharingEnabled();
 
   // ≤800px hosts the details panel in a button-triggered Drawer.
   const isCompactDetailsViewport = useMediaQuery("(max-width: 800px)") ?? false;
-  // Phones get a full-screen drawer; tablets get a smaller one.
+
   const useFullScreenDrawer = useMediaQuery("(max-width: 640px)") ?? false;
   const [mobileDetailsOpen, setMobileDetailsOpen] = useState(false);
   // Save-to-server modal target. Bulk button uses local-only selection;
@@ -107,7 +107,7 @@ export default function FileManagerView() {
   const [saveToServerTarget, setSaveToServerTarget] = useState<
     StirlingFileStub[] | null
   >(null);
-  // Version-history modal target (opened from the card kebab).
+
   const [versionHistoryFile, setVersionHistoryFile] =
     useState<StirlingFileStub | null>(null);
   const folders = useFolders();
@@ -120,18 +120,12 @@ export default function FileManagerView() {
   const { addFiles } = useFileHandler();
   const { config: appConfig } = useAppConfig();
   const isMobile = useIsMobile();
-  // Guests (anonymous sessions) have no server-side storage, so every cloud
-  // action is account-only. Rather than let the click fire a guaranteed 401
-  // (which surfaced as an error toast), we disable the control and explain why
-  // on hover - the same affordance the storage-disabled / wrong-tab gates use.
+  // Guests cannot use server storage; explain the disabled control before a request fails.
   const { isAnonymous } = useAuth();
   const signInRequiredReason = isAnonymous
     ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
     : null;
-  // Server storage gate; mirrors ConfigController's storageEnabled
-  // (enableLogin && storage.isEnabled). When off, Save-to-server stays
-  // visible but disabled with an explanatory tooltip (discoverability beats
-  // hiding - mirrors the New folder / Manage sharing gates in this view).
+  // Match the backend storage gate: login and storage must both be enabled.
   const uploadEnabled = appConfig?.storageEnabled === true;
   const saveToServerDisabledReason: string | null =
     signInRequiredReason ??
@@ -188,7 +182,6 @@ export default function FileManagerView() {
     setFolderAppearance,
   } = filesPage;
 
-  // Resolve queued delete ids into stubs for the DeleteFilesDialog.
   const deleteDialogFiles = useMemo(
     () =>
       deleteDialogFileIds
@@ -202,8 +195,7 @@ export default function FileManagerView() {
   const foldersById = folders.foldersById;
   const currentFolderId = folders.currentFolderId;
 
-  // The path selects the folder - see useOpenFolder - and this applies it, on arrival,
-  // on a deep link, and on back/forward alike. Re-runs as the folder map fills in.
+  // Apply deep links and history navigation after the folder map loads.
   useEffect(() => {
     const match = location.pathname.match(/^\/files\/([^/]+)/);
     const param = match?.[1] ?? null;
@@ -220,9 +212,7 @@ export default function FileManagerView() {
       setCurrentFolderId(param as FolderId);
       return;
     }
-    // Not known yet is not the same as not real: folders load asynchronously, and a
-    // mount's subdirectories arrive with the listing that finds them. Falling back to
-    // the root waits until the map can no longer turn up the folder named here.
+    // Wait for folder loading and mount discovery before rejecting an unknown folder ID.
     if (!folders.loading) {
       setCurrentFolderId(ROOT_FOLDER_ID);
     }
@@ -234,7 +224,6 @@ export default function FileManagerView() {
     folders.loading,
   ]);
 
-  // Bounce off any share-related tab when sharing isn't enabled.
   useEffect(() => {
     if (
       !sharingEnabled &&
@@ -243,8 +232,6 @@ export default function FileManagerView() {
       setCurrentTab("all");
     }
   }, [sharingEnabled, currentTab, setCurrentTab]);
-
-  // ─── visible items (current folder + sort + search) ─────────────────────
 
   const currentFolder = currentFolderId
     ? folders.foldersById.get(currentFolderId)
@@ -258,7 +245,7 @@ export default function FileManagerView() {
     folderKind(currentFolder) === "server" &&
     !folders.serverReachable,
   );
-  const { diskRevision, bumpDiskRevision } = filesPage;
+  const { diskRevision } = filesPage;
   const { diskEntries, diskLoading } = useDiskFolder(
     currentLocalDirectory,
     currentFolderId,
@@ -274,7 +261,6 @@ export default function FileManagerView() {
     sortMode,
     originFilter,
     typeFilter,
-    setTypeFilter,
     diskEntries: currentLocalDirectory ? diskEntries : undefined,
   });
   const openDiskFile = useCallback(
@@ -304,8 +290,6 @@ export default function FileManagerView() {
     [addFiles, navActions, navigate, folders, t],
   );
 
-  // A working folder lists its real contents; each file wears its pipeline state and a state
-  // filter narrows the listing. Files the pipeline never claims carry no state at all.
   const processingApi = useProcessingFolders();
   const currentProcessing = currentFolder
     ? processingApi.stateFor(currentFolder)
@@ -323,7 +307,7 @@ export default function FileManagerView() {
 
   const [processingSetupFolder, setProcessingSetupFolder] =
     useState<FolderRecord | null>(null);
-  // Restores wait on a confirmation, since they also pause the folder.
+  // Restoring originals also pauses the folder, so it requires confirmation.
   const [revertConfirmName, setRevertConfirmName] = useState<string | null>(
     null,
   );
@@ -338,7 +322,7 @@ export default function FileManagerView() {
     (name: string): DiskFileState | undefined => fileStates.get(name),
     [fileStates],
   );
-  // Counts for the filter chips, from the same states the badges wear.
+
   const stateCounts = useMemo(() => {
     const counts: Record<DiskFileState, number> = {
       done: 0,
@@ -354,7 +338,6 @@ export default function FileManagerView() {
       if (!processingRecordId) return;
       void retryFile(processingRecordId, name)
         .then(() =>
-          // Show the retry took, ahead of the next poll.
           setFileStates((prev) => {
             const next = new Map(prev);
             next.set(name, "processing");
@@ -383,7 +366,6 @@ export default function FileManagerView() {
       if (!processingRecordId) return;
       void revertFile(processingRecordId, name)
         .then(() => {
-          // Reflect the restore ahead of the next poll.
           setFileStates((prev) => {
             const next = new Map(prev);
             next.set(name, "waiting");
@@ -442,8 +424,7 @@ export default function FileManagerView() {
     },
     [processingApi, folders, t],
   );
-  // The open folder's own actions: everything its card kebab offers from the
-  // listing outside must be reachable from inside the folder too.
+
   const runFolderAction = useCallback(
     (action: (folder: FolderRecord) => Promise<void>, label: string) => {
       if (!currentFolder) return;
@@ -519,7 +500,6 @@ export default function FileManagerView() {
     ],
   );
 
-  // ─── selection ──────────────────────────────────────────────────────────
   const lastClickedFileRef = useRef<FileId | null>(null);
   const handleSelectFile = useCallback(
     (fileId: FileId, shift: boolean, ctrl: boolean) => {
@@ -538,21 +518,12 @@ export default function FileManagerView() {
             return next;
           }
         }
-        // Once the user has 2+ files selected they're explicitly in
-        // multi-select mode (they checked a box, or shift-range'd, or
-        // ctrl-clicked) - in that mode plain clicks toggle add/remove
-        // instead of collapsing the whole selection back to one file.
-        // This is the Google Drive pattern: the "selection mode" sticks
-        // until the user explicitly exits via the X clear button or by
-        // clicking the empty background of the grid.
+        // In multi-select mode, plain clicks toggle membership until selection is cleared.
         const inMultiSelectMode = prev.size >= 2;
         if (ctrl || inMultiSelectMode) {
           if (next.has(fileId)) next.delete(fileId);
           else next.add(fileId);
         } else {
-          // 0 or 1 selected: plain click replaces (Finder/Explorer
-          // behaviour). Clicking the already-only-selected file
-          // deselects it, so single-file selection still toggles.
           const isSoleSelection = prev.size === 1 && prev.has(fileId);
           next.clear();
           if (!isSoleSelection) next.add(fileId);
@@ -564,11 +535,8 @@ export default function FileManagerView() {
     [visibleFiles, setSelectedFileIds],
   );
 
-  // Background click on the content area clears the selection.
   const handleContentBackgroundClick = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
-      // Only react when the click target is the scroll container itself
-      // (not a card, row, or drop overlay).
       if (e.target === e.currentTarget) {
         clearSelection();
       }
@@ -576,60 +544,10 @@ export default function FileManagerView() {
     [clearSelection],
   );
 
-  // ─── upload (drag-from-desktop or button) ───────────────────────────────
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDraggingExternal, setIsDraggingExternal] = useState(false);
 
-  const handleNativeUpload = useCallback(
-    async (files: File[]) => {
-      if (files.length === 0) return;
-      // skipWorkspaceDispatch: the user is in the file manager, not opening
-      // files for work. Persist to IDB so the file appears in the grid (via
-      // FilesPageContext's independent IDB scan) but DON'T pollute workspace
-      // state - otherwise the file pops up the next time the user navigates
-      // to /viewer or /tools, which reads as "auto-opened" and surprised
-      // people every time. The grid will repaint via refresh() below.
-      // Files uploaded while standing in a folder belong in that folder.
-      const target =
-        currentTab === "all" || currentTab === "cloud" ? currentFolderId : null;
-      const targetFolder = target ? folders.foldersById.get(target) : undefined;
-      if (targetFolder && folderKind(targetFolder) === "local") {
-        const { failedCount } = await writeIntoMount(
-          targetFolder.directory,
-          files.map((file) => ({ name: file.name, bytes: async () => file })),
-        );
-        if (failedCount > 0) {
-          folders.setError(
-            t("filesPage.moveIntoMountFailed", {
-              count: failedCount,
-              defaultValue:
-                "{{count}} file(s) could not be written into the folder.",
-            }),
-          );
-        }
-        bumpDiskRevision();
-        return;
-      }
-      // Everywhere else membership is set with the stub rather than by a move that
-      // could fail after. For a server folder it stays local until the save lands.
-      const added = await addFiles(files, {
-        selectFiles: false,
-        skipWorkspaceDispatch: true,
-        ...(target ? { folderId: target as string } : {}),
-      });
-      const fileIds = added.map((f) => f.fileId);
-      if (
-        target !== null &&
-        fileIds.length > 0 &&
-        targetFolder &&
-        folderKind(targetFolder) === "server"
-      ) {
-        await moveFilesTo(fileIds, target);
-      }
-      await refresh();
-    },
-    [addFiles, currentFolderId, currentTab, folders, moveFilesTo, refresh, t],
-  );
+  const handleNativeUpload = useLibraryUpload();
 
   const onFileInputChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -641,7 +559,6 @@ export default function FileManagerView() {
     [handleNativeUpload],
   );
 
-  // ─── add to workspace ───────────────────────────────────────────────────
   const openFilesInWorkbench = useCallback(
     async (fileIds: FileId[]) => {
       const stubs = fileIds
@@ -652,9 +569,7 @@ export default function FileManagerView() {
       const proceed = async () => {
         clearFilesPageReturnRoute();
 
-        // Already in the workspace: nothing to fetch or add, so just go to it. Sending
-        // it through materialize and add again has no reason to succeed - the bytes
-        // are already spoken for.
+        // Open workspace files directly; their bytes need no further materialization.
         const alreadyOpen = stubs.filter((stub) =>
           activeWorkspaceFileIdSet.has(stub.id as string),
         );
@@ -668,8 +583,7 @@ export default function FileManagerView() {
           updateStub: fileActions.updateStirlingFileStub,
         });
         if (materialized.length !== toOpen.length) {
-          // At least one server download failed; refresh so the grid
-          // reflects any successful ingests and the user can retry.
+          // Refresh successful imports even when another file fails.
           await refresh();
           return;
         }
@@ -680,7 +594,6 @@ export default function FileManagerView() {
           });
         }
 
-        // Every file the user asked for, whether it arrived now or was already there.
         const opened = [...alreadyOpen, ...materialized];
         if (opened.length === 1) {
           setActiveFileId(opened[0].id);
@@ -715,7 +628,6 @@ export default function FileManagerView() {
 
   const handleOpenFile = useCallback(
     (file: StirlingFileStub) => {
-      // Double-click commits to workspace.
       void handleAddToWorkspace([file.id]);
     },
     [handleAddToWorkspace],
@@ -729,8 +641,13 @@ export default function FileManagerView() {
     [openFolder, clearSelection],
   );
 
-  // ─── full-page drag-and-drop for OS uploads ─────────────────────────────
   const dropZoneRef = useRef<HTMLDivElement>(null);
+  const onScrollCapture = useLibraryScrollPosition(
+    dropZoneRef,
+    `${currentTab}:${currentFolderId}:${viewMode}`,
+    loading || diskLoading,
+    entries.length,
+  );
   useEffect(() => {
     const node = dropZoneRef.current;
     if (!node) return;
@@ -789,14 +706,12 @@ export default function FileManagerView() {
     };
   }, [handleNativeUpload]);
 
-  // ─── close / exit ───────────────────────────────────────────────────────
   const handleClose = useCallback(() => {
     // Drop the return-route hint so the workbench doesn't show a stale back.
     clearFilesPageReturnRoute();
     navigate(EDITOR_BASENAME);
   }, [navigate]);
 
-  // ─── keyboard shortcuts ─────────────────────────────────────────────────
   // Focus the super-search input (stable id), used by the "/" shortcut.
   const focusSearch = useCallback(() => {
     (
@@ -812,14 +727,12 @@ export default function FileManagerView() {
           active.tagName === "TEXTAREA" ||
           active.isContentEditable);
 
-      // Cmd/Ctrl + A - select every visible file in the current folder.
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a" && !inInput) {
         e.preventDefault();
         setSelectedFileIds(new Set(visibleFiles.map((f) => f.id)));
         return;
       }
 
-      // Delete / Backspace - remove selected files.
       if (
         (e.key === "Delete" || e.key === "Backspace") &&
         !inInput &&
@@ -842,7 +755,6 @@ export default function FileManagerView() {
         return;
       }
 
-      // "/" focuses the search field.
       if (e.key === "/" && !inInput) {
         e.preventDefault();
         focusSearch();
@@ -875,7 +787,7 @@ export default function FileManagerView() {
       for (const overlay of overlays) {
         if ((overlay as HTMLElement).offsetWidth > 0) return;
       }
-      // Esc-once cancels selection before closing the workbench.
+
       if (selectedFileIds.size > 0) {
         clearSelection();
         return;
@@ -886,7 +798,6 @@ export default function FileManagerView() {
     return () => window.removeEventListener("keydown", onKey);
   }, [handleClose, selectedFileIds, clearSelection]);
 
-  // ─── remove via context wrapper (clears selection state too) ────────────
   const handleRemoveFiles = useCallback(
     async (fileIds: FileId[]) => {
       await removeFiles(fileIds);
@@ -894,7 +805,6 @@ export default function FileManagerView() {
     [removeFiles],
   );
 
-  // ─── per-file kebab: download / rename / duplicate ───────────────────────
   // Same actions the file sidebar's kebab offers, so both surfaces match.
 
   /** Cloud-only rows hold no bytes; pull them local before acting on them. */
@@ -980,7 +890,6 @@ export default function FileManagerView() {
     [renameTarget, localCopyOf, fileActions, refresh, t],
   );
 
-  // ─── derived UI bits ────────────────────────────────────────────────────
   const currentFolderRecord = currentFolderId
     ? (foldersById.get(currentFolderId) ?? null)
     : null;
@@ -993,7 +902,6 @@ export default function FileManagerView() {
   // full toolbar - five bulk buttons plus filters cannot fit the width.
   const mobileSelection = isMobile && selectedFiles.length > 0;
 
-  // Local-only subset of selection; drives Save-to-server visibility.
   const localOnlySelectedStubs = useMemo(
     () =>
       selectedFiles
@@ -1005,61 +913,17 @@ export default function FileManagerView() {
     [selectedFiles, fileMap],
   );
 
-  // Per-destination availability for the New-folder menu; the reason renders as the
-  // disabled item's caption.
-  const serverFolderDisabledReason = useServerFolderBlock() ?? undefined;
-
-  // Why folder processing has no server to run on, or null. The controls that open
-  // the setup dialog carry it as their disabled reason.
   const processingBlock = useServerProcessingBlock();
 
-  const { addLocalFolder } = useNewFolderFlow();
+  const {
+    addLocalFolder,
+    createFolderHereBlockedReason: newFolderDisabledReason,
+    serverFolderBlock: serverFolderDisabledReason,
+  } = useNewFolderFlow();
 
-  // null = New folder actionable; string = disabled tooltip reason.
   const { refreshing, refresh: handleRefresh } = useLibraryRefresh();
 
-  const newFolderDisabledReason: string | null = useMemo(() => {
-    // Only All/Cloud render folders, so creating one elsewhere would look inert.
-    if (
-      currentTab === "recent" ||
-      currentTab === "shared" ||
-      currentTab === "sharedByMe"
-    ) {
-      return t(
-        "filesPage.newFolderTabUnavailable",
-        "Switch to All or Cloud to create folders.",
-      );
-    }
-    // A subfolder inherits kind server, so the blockers gate the button rather
-    // than letting the dialog open and fail at submit.
-    if (
-      currentFolder &&
-      folderKind(currentFolder) === "server" &&
-      serverFolderDisabledReason
-    ) {
-      return serverFolderDisabledReason;
-    }
-    // The web root creates on the server or not at all.
-    if (
-      folders.currentFolderId === null &&
-      !canPickDirectory &&
-      serverFolderDisabledReason
-    ) {
-      return serverFolderDisabledReason;
-    }
-    return null;
-  }, [
-    currentTab,
-    currentLocalDirectory,
-    currentFolder,
-    folders.currentFolderId,
-    serverFolderDisabledReason,
-    t,
-  ]);
-
-  // Stable identities, here and for the controls built below: the bar re-registers
-  // whenever what it was given changes, so a value rebuilt per render turns that into
-  // an endless register -> render -> register loop.
+  // The workbench bar re-registers changed values; stable identities prevent a render loop.
   const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
 
   const newFolderControl = useMemo(
@@ -1084,14 +948,6 @@ export default function FileManagerView() {
       openNewFolderDialog,
     ],
   );
-  // Reads the trail from context, so it takes no props to change. Only the
-  // folder-rooted tabs have a trail to show: the rest list files by predicate.
-  const path = useMemo(
-    () =>
-      currentTab === "all" || currentTab === "cloud" ? <Breadcrumbs /> : null,
-    [currentTab],
-  );
-
   const libraryActions = useMemo(
     () => (
       <>
@@ -1134,15 +990,12 @@ export default function FileManagerView() {
     ],
   );
 
-  // The file sidebar carries these on desktop. Mobile has no sidebar to put them
-  // in, so there they go in the bar - the only chrome its layout shows.
+  // Mobile has no sidebar, so its library actions live in the workbench bar.
   useFileLibraryWorkbenchBarButtons({
-    path: isMobile ? path : null,
+    path: null,
     actions: isMobile ? libraryActions : null,
   });
 
-  // One instance for whichever surface the view mode uses, so the two cannot
-  // drift apart.
   const bulkActionsMenu =
     selectedFiles.length > 0 ? (
       <FilesToolbarBulkMenu
@@ -1166,7 +1019,11 @@ export default function FileManagerView() {
     ) : null;
 
   return (
-    <div className="files-page" ref={dropZoneRef}>
+    <div
+      className="files-page"
+      ref={dropZoneRef}
+      onScrollCapture={onScrollCapture}
+    >
       <input
         ref={fileInputRef}
         type="file"
@@ -1204,20 +1061,16 @@ export default function FileManagerView() {
         </div>
       )}
 
-      {/* No offline banner: when the folder API is unreachable the user
-          still sees their cached local files (the IDB read survives), and
-          folder-mutation controls are individually disabled with their own
-          tooltips. Banner removed per UX feedback. */}
-
       <div className="files-page-body">
         <main className="files-page-main">
-          {/* The folder trail gets its own row above the toolbar. On mobile the
-              shared bar above carries it instead, so this row stays empty. */}
-          <div className="files-page-tabs-row">
-            {!isMobile && path && (
-              <div className="files-page-tabs-path">{path}</div>
-            )}
-          </div>
+          <LibraryTabs
+            currentTab={currentTab}
+            sharingEnabled={sharingEnabled}
+            onChange={setCurrentTab}
+            onOpenRoot={() => openFolder(ROOT_FOLDER_ID)}
+            rootDropHandlers={folderDropHandlers(ROOT_FOLDER_ID)}
+            breadcrumbs={<Breadcrumbs />}
+          />
 
           <div className="files-page-toolbar">
             <FilesToolbarCount
@@ -1225,6 +1078,11 @@ export default function FileManagerView() {
               totalCount={totalCount}
               selectedCount={selectedFiles.length}
             />
+            {bulkActionsMenu && (
+              <div className="files-page-selection-actions">
+                {bulkActionsMenu}
+              </div>
+            )}
             {currentFolder && !mobileSelection && (
               <div className="files-page-folder-actions">
                 <FolderMenu
@@ -1314,10 +1172,8 @@ export default function FileManagerView() {
             </div>
           </div>
 
-          {/* Always rendered: a row that only exists once something is selected
-              would push the listing down under the pointer mid-double-click. */}
-          <div className="files-page-above-table">
-            {processingView && (
+          {processingView && (
+            <div className="files-page-above-table">
               <div className="files-page-state-filters">
                 {(
                   ["all", "done", "processing", "failed", "waiting"] as const
@@ -1340,13 +1196,8 @@ export default function FileManagerView() {
                   </button>
                 ))}
               </div>
-            )}
-            {viewMode === "grid" && bulkActionsMenu && (
-              <div className="files-page-toolbar-actions files-page-selection-actions">
-                {bulkActionsMenu}
-              </div>
-            )}
-          </div>
+            </div>
+          )}
 
           <div
             className="files-page-content"
@@ -1363,9 +1214,6 @@ export default function FileManagerView() {
               selectedFileIds={selectedFileIds}
               activeWorkspaceFileIds={activeWorkspaceFileIdSet}
               viewMode={viewMode}
-              selectionActions={
-                viewMode === "list" ? bulkActionsMenu : undefined
-              }
               sortMode={sortMode}
               onChangeSortMode={setSortMode}
               onSelectFile={handleSelectFile}
@@ -1404,10 +1252,7 @@ export default function FileManagerView() {
               onRenameFile={setRenameTarget}
               onDuplicateFile={handleDuplicateFile}
               saveToServerDisabledReason={saveToServerDisabledReason}
-              // Center-of-grid CTAs when the empty state shows - same
-              // handlers the corner header buttons use so behaviour
-              // (disabled tooltips, native file picker, dialog) is
-              // identical regardless of where the user clicks from.
+
               onEmptyUpload={() => fileInputRef.current?.click()}
               emptyNewFolderControl={
                 <NewFolderButton
@@ -1431,11 +1276,6 @@ export default function FileManagerView() {
                   {t("filesPage.dropOverlay", "Drop files to upload")}
                 </span>
                 <span className="files-page-drop-overlay-sub">
-                  {/* Behavior contract: per handleNativeUpload above, files
-                      dropped inside a folder on the All/Cloud views are
-                      placed into it — a mount takes them onto the disk
-                      itself. Other tabs land drops in Local, so the copy
-                      must match. */}
                   {(currentTab === "all" || currentTab === "cloud") &&
                   currentFolderId !== null
                     ? t(
@@ -1444,7 +1284,7 @@ export default function FileManagerView() {
                       )
                     : t(
                         "filesPage.dropOverlaySub",
-                        "Files land in Local. Organise them into folders any time.",
+                        "Files appear in Recents. Organize them into folders any time.",
                       )}
                 </span>
               </div>
@@ -1452,7 +1292,6 @@ export default function FileManagerView() {
           </div>
         </main>
 
-        {/* Inline aside on desktop. */}
         {selectedFiles.length > 0 && !isCompactDetailsViewport && (
           <FileDetailsPanel
             selectedFileIds={selectedFiles}
@@ -1485,7 +1324,6 @@ export default function FileManagerView() {
         onClose={() => setProcessingSetupFolder(null)}
       />
 
-      {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (
         <Drawer
           opened={mobileDetailsOpen && selectedFiles.length === 1}
@@ -1522,10 +1360,17 @@ export default function FileManagerView() {
 
       <MoveToFolderDialog
         opened={moveDialog.open}
+        addToLibrary={moveDialog.intent === "addToLibrary"}
         onClose={closeMoveDialog}
         // Files can go anywhere, but a folder moves only within its own kind and
         // never into a mount - a directory's subfolders are the filesystem's.
         folders={folders.folders.filter((candidate) => {
+          if (
+            moveDialog.intent === "addToLibrary" &&
+            folderKind(candidate) === "server"
+          ) {
+            return serverFolderDisabledReason === null;
+          }
           if (!moveDialog.folderId) return true;
           if (folderKind(candidate) === "local") return false;
           const moving = folders.foldersById.get(moveDialog.folderId);
@@ -1540,9 +1385,9 @@ export default function FileManagerView() {
             await moveFolderTo(moveDialog.folderId, target);
           }
         }}
-        // Inline-create folder; gated on serverReachable.
+
         onCreateFolder={
-          folders.serverReachable
+          serverFolderDisabledReason === null
             ? (name, parentFolderId) =>
                 folders.createFolder(name, parentFolderId)
             : undefined
@@ -1593,7 +1438,6 @@ export default function FileManagerView() {
         }}
       />
 
-      {/* Cloud-aware delete; offers local/cloud/both when a file lives in both. */}
       <DeleteFilesDialog
         opened={deleteDialogOpen}
         files={deleteDialogFiles}
@@ -1601,7 +1445,6 @@ export default function FileManagerView() {
         onConfirm={confirmRemoveFiles}
       />
 
-      {/* Rename (opened from the card kebab). */}
       <RenameFileDialog
         opened={Boolean(renameTarget)}
         fileName={renameTarget?.name ?? ""}
@@ -1609,7 +1452,6 @@ export default function FileManagerView() {
         onSubmit={handleConfirmRename}
       />
 
-      {/* Version journey in a modal (opened from the card kebab). */}
       <VersionHistoryModal
         opened={Boolean(versionHistoryFile)}
         onClose={() => setVersionHistoryFile(null)}
@@ -1629,17 +1471,10 @@ export default function FileManagerView() {
   );
 }
 
-/**
- * A cheap identity for a directory listing, so a background re-read only re-renders the
- * grid when something actually changed on disk.
- */
-
-function Breadcrumbs() {
+function useFolderDropHandlers() {
   const { t } = useTranslation();
   const folders = useFolders();
   const filesPage = useFilesPage();
-  const openFolder = useOpenFolder();
-  const trail = folders.breadcrumbs;
 
   const reportFailure = (err: unknown, detailKey: string, plainKey: string) => {
     folders.setError(
@@ -1652,8 +1487,7 @@ function Breadcrumbs() {
     );
   };
 
-  /** A crumb is a drop target for the folder it names. */
-  const dropHandlers = (target: FolderBreadcrumbEntry) => ({
+  return (folderId: FolderId | null) => ({
     onDragOver: (e: React.DragEvent) => {
       if (e.dataTransfer.types.includes(FILES_PAGE_DRAG_TYPE)) {
         e.preventDefault();
@@ -1665,9 +1499,7 @@ function Breadcrumbs() {
       const payload = parseFilesPageDragPayload(e.dataTransfer);
       if (!payload) return;
       if (payload.kind === "files") {
-        // Through moveFilesTo so the revision bumps and the grid refreshes, and a
-        // rejection reaches the banner rather than only the console.
-        void filesPage.moveFilesTo(payload.fileIds, target.id).catch((err) => {
+        void filesPage.moveFilesTo(payload.fileIds, folderId).catch((err) => {
           console.error("[breadcrumb] drop failed", err);
           reportFailure(
             err,
@@ -1676,26 +1508,31 @@ function Breadcrumbs() {
           );
         });
       } else if (payload.kind === "folder") {
-        // Through moveFolderTo so the client-side cycle guard fires before the
-        // server call: dropping an ancestor on a descendant crumb has its own
-        // message, not the generic banner.
-        void filesPage
-          .moveFolderTo(payload.folderId, target.id)
-          .catch((err) => {
-            console.error("[breadcrumb] folder drop failed", err);
-            reportFailure(
-              err,
-              "filesPage.error.moveFolderFailedDetail",
-              "filesPage.error.moveFolderFailed",
-            );
-          });
+        // Use the shared move action so ancestor drops report the cycle guard's reason.
+        void filesPage.moveFolderTo(payload.folderId, folderId).catch((err) => {
+          console.error("[breadcrumb] folder drop failed", err);
+          reportFailure(
+            err,
+            "filesPage.error.moveFolderFailedDetail",
+            "filesPage.error.moveFolderFailed",
+          );
+        });
       }
     },
   });
+}
 
-  // Two crumbs at most. Everything above them, the root included, moves into the
-  // overflow menu: a deep trail otherwise grows the bar it sits in, and the folder
-  // you are actually in is the one that scrolls out of sight.
+function Breadcrumbs() {
+  const { t } = useTranslation();
+  const folders = useFolders();
+  const openFolder = useOpenFolder();
+  const dropHandlers = useFolderDropHandlers();
+  const trail = folders.breadcrumbs.filter(
+    (entry) => entry.id !== ROOT_FOLDER_ID,
+  );
+  if (trail.length === 0) return null;
+
+  // Collapse ancestors so the current folder stays visible in deep paths.
   const VISIBLE = 2;
   const split = Math.max(0, trail.length - VISIBLE);
   const hidden = trail.slice(0, split);
@@ -1706,6 +1543,12 @@ function Breadcrumbs() {
       className="files-page-breadcrumbs"
       aria-label={t("filesPage.breadcrumbs", "Folder path")}
     >
+      <Icon
+        name="chevron-right"
+        size={20}
+        className="files-page-breadcrumb-sep"
+        aria-hidden="true"
+      />
       {hidden.length > 0 && (
         <>
           <Menu shadow="md" position="bottom-start" withinPortal>
@@ -1750,7 +1593,7 @@ function Breadcrumbs() {
               className={`files-page-breadcrumb${isLast ? " is-current" : ""}`}
               title={entry.name}
               onClick={() => openFolder(entry.id)}
-              {...dropHandlers(entry)}
+              {...dropHandlers(entry.id)}
             >
               {entry.name}
             </button>

@@ -112,7 +112,8 @@ export function FolderMenu({
             <Button
               ref={triggerRef}
               size="sm"
-              variant="secondary"
+              variant="tertiary"
+              shape="pill"
               className="files-page-toolbar-bulk-trigger"
               leftSection={<SettingsIcon sx={{ fontSize: "1.1rem" }} />}
               rightSection={<ExpandMoreIcon sx={{ fontSize: "1.1rem" }} />}

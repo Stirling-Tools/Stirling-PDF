@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import { useFolders } from "@app/contexts/FolderContext";
 import type {
   FilesPageOriginFilter,
@@ -8,7 +8,10 @@ import type {
 import type { StirlingFileStub } from "@app/types/fileContext";
 import { FolderId, folderKind } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
-import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
+import {
+  getFileOrigin,
+  isUnfiledLocalFile,
+} from "@app/components/filesPage/fileOrigin";
 
 export interface LibraryFilters {
   currentFolderId: FolderId | null;
@@ -17,7 +20,6 @@ export interface LibraryFilters {
   sortMode: FilesPageSortMode;
   originFilter: FilesPageOriginFilter;
   typeFilter: string[];
-  setTypeFilter: (value: string[]) => void;
 }
 
 /** Shares folder scoping, filtering and ordering without owning navigation or selection. */
@@ -29,14 +31,15 @@ export function useLibraryFiles({
   sortMode,
   originFilter,
   typeFilter,
-  setTypeFilter,
   diskEntries,
+  stagedFiles,
 }: LibraryFilters & {
   allFiles: StirlingFileStub[];
   diskEntries?: DiskFileEntry[];
+  /** Uncommitted imports follow All/Recent filters without belonging to a stored folder. */
+  stagedFiles?: StirlingFileStub[];
 }) {
   const { folders: folderRecords, foldersById } = useFolders();
-  /** currentFolderId + all descendants. Includes `null` when at root. */
   const subtreeFolderIds = useMemo(() => {
     const set = new Set<FolderId | null>();
     set.add(currentFolderId);
@@ -96,18 +99,22 @@ export function useLibraryFiles({
   const filesInCurrentFolder = useMemo(() => {
     switch (currentTab) {
       case "cloud":
+      case "all":
         return allFiles.filter((f) => {
-          if (f.remoteStorageId == null) return false;
-          if (search) return subtreeFolderIds.has(f.folderId ?? null);
-          return (f.folderId ?? null) === (currentFolderId ?? null);
+          if (currentTab === "cloud" && f.remoteStorageId == null) return false;
+          const folder = f.folderId ? foldersById.get(f.folderId) : undefined;
+          if (isUnfiledLocalFile(f, foldersById)) return false;
+          const effectiveFolder =
+            folder &&
+            ((currentTab !== "cloud" && originFilter !== "cloud") ||
+              folderKind(folder) === "server")
+              ? folder.id
+              : null;
+          if (search) return subtreeFolderIds.has(effectiveFolder);
+          return effectiveFolder === currentFolderId;
         });
-      case "recent": {
-        const sorted = [...allFiles].sort(
-          (a, b) => (b.lastModified ?? 0) - (a.lastModified ?? 0),
-        );
-        // Searching Recent must still find older files anywhere in the library.
-        return search ? sorted : sorted.slice(0, 50);
-      }
+      case "recent":
+        return allFiles;
       case "shared":
         return allFiles.filter((f) => f.remoteOwnedByCurrentUser === false);
       case "sharedByMe":
@@ -116,45 +123,40 @@ export function useLibraryFiles({
             f.remoteOwnedByCurrentUser !== false &&
             (f.remoteHasShareLinks === true || f.remoteHasUserShares === true),
         );
-      case "all":
-      default:
-        return allFiles.filter((f) => {
-          const rawFolder = f.folderId ?? null;
-          const effectiveFolder =
-            rawFolder !== null && !foldersById.has(rawFolder)
-              ? null
-              : rawFolder;
-          if (search) return subtreeFolderIds.has(effectiveFolder);
-          return effectiveFolder === (currentFolderId ?? null);
-        });
     }
   }, [
     allFiles,
     currentFolderId,
     currentTab,
+    originFilter,
     search,
     subtreeFolderIds,
     foldersById,
   ]);
 
+  const stagedInScope =
+    currentTab === "all" || currentTab === "recent" ? stagedFiles : undefined;
+  const filesInScope = useMemo(
+    () =>
+      stagedInScope
+        ? [...stagedInScope, ...filesInCurrentFolder]
+        : filesInCurrentFolder,
+    [stagedInScope, filesInCurrentFolder],
+  );
+
   const availableTypes = useMemo(() => {
-    const set = new Set<string>();
-    for (const f of diskEntries ?? filesInCurrentFolder) {
+    const set = new Set(typeFilter);
+    for (const f of diskEntries
+      ? [...diskEntries, ...(stagedInScope ?? [])]
+      : filesInScope) {
       const ext = (f.name.split(".").pop() ?? "").toUpperCase();
       if (ext) set.add(ext);
     }
     return Array.from(set).sort();
-  }, [filesInCurrentFolder, diskEntries]);
-  useEffect(() => {
-    if (typeFilter.length === 0) return;
-    const stillValid = typeFilter.filter((t) => availableTypes.includes(t));
-    if (stillValid.length !== typeFilter.length) {
-      setTypeFilter(stillValid);
-    }
-  }, [availableTypes, typeFilter, setTypeFilter]);
+  }, [filesInScope, diskEntries, stagedInScope, typeFilter]);
 
   const visibleFiles = useMemo(() => {
-    const filtered = filesInCurrentFolder
+    const filtered = filesInScope
       .filter((f) =>
         search ? f.name.toLowerCase().includes(search.toLowerCase()) : true,
       )
@@ -166,8 +168,7 @@ export function useLibraryFiles({
         const ext = (f.name.split(".").pop() ?? "").toUpperCase();
         return typeFilter.includes(ext);
       });
-    const sorted = [...filtered];
-    sorted.sort((a, b) => {
+    return filtered.sort((a, b) => {
       switch (sortMode) {
         case "name-asc":
           return a.name.localeCompare(b.name);
@@ -184,8 +185,7 @@ export function useLibraryFiles({
           return (b.lastModified ?? 0) - (a.lastModified ?? 0);
       }
     });
-    return sorted;
-  }, [filesInCurrentFolder, search, sortMode, originFilter, typeFilter]);
+  }, [filesInScope, search, sortMode, originFilter, typeFilter]);
 
   return { visibleFolders, visibleFiles, availableTypes };
 }

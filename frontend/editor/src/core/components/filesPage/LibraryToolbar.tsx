@@ -1,10 +1,10 @@
-import { MultiSelect, Select, TextInput } from "@mantine/core";
+import { MultiSelect, Select } from "@mantine/core";
 import { useTranslation } from "react-i18next";
-import { ActionIcon } from "@app/ui/ActionIcon";
 import { Icon } from "@app/ui/Icon";
 import { SegmentedControl } from "@app/ui/SegmentedControl";
 import { FilesToolbarFilterMenu } from "@app/components/filesPage/FilesToolbarFilterMenu";
 import { FilesToolbarSortMenu } from "@app/components/filesPage/FilesToolbarSortMenu";
+import { FilenameSearch } from "@app/components/filesPage/FilenameSearch";
 import {
   FILES_PAGE_VIEW_MODES,
   type FilesPageOriginFilter,
@@ -15,15 +15,17 @@ import type { LibraryFilters } from "@app/components/filesPage/useLibraryFiles";
 
 type Props = Pick<
   LibraryFilters,
-  "search" | "sortMode" | "originFilter" | "typeFilter" | "setTypeFilter"
+  "search" | "sortMode" | "originFilter" | "typeFilter"
 > & {
   isMobile: boolean;
   availableTypes: string[];
   setSearch: (value: string) => void;
   setSortMode: (value: FilesPageSortMode) => void;
   setOriginFilter: (value: FilesPageOriginFilter) => void;
+  setTypeFilter: (value: string[]) => void;
   viewMode: FilesPageViewMode;
   setViewMode: (value: FilesPageViewMode) => void;
+  dropdownZIndex?: number;
 };
 
 /** Controlled toolbar shared by the library page and its file picker. */
@@ -40,29 +42,24 @@ export function LibraryToolbar({
   setSortMode,
   viewMode,
   setViewMode,
+  dropdownZIndex,
 }: Props) {
   const { t } = useTranslation();
   return (
     <>
-      {" "}
       {isMobile ? (
-        /* Side by side these need ~480px and were truncating to
-                   stubs like "All sour"; collapsed they read in full. */
-        <>
-          <FilesToolbarFilterMenu
-            originFilter={originFilter}
-            onOriginChange={setOriginFilter}
-            availableTypes={availableTypes}
-            typeFilter={typeFilter}
-            onTypeChange={setTypeFilter}
-            search={search}
-            onSearchChange={setSearch}
-          />
-          <FilesToolbarSortMenu value={sortMode} onChange={setSortMode} />
-        </>
+        <FilesToolbarFilterMenu
+          zIndex={dropdownZIndex}
+          originFilter={originFilter}
+          onOriginChange={setOriginFilter}
+          availableTypes={availableTypes}
+          typeFilter={typeFilter}
+          onTypeChange={setTypeFilter}
+        />
       ) : (
         <>
           <Select
+            comboboxProps={{ zIndex: dropdownZIndex }}
             size="xs"
             value={originFilter}
             onChange={(value) =>
@@ -89,8 +86,9 @@ export function LibraryToolbar({
             style={{ width: 140 }}
             aria-label={t("filesPage.originFilter", "Filter by source")}
           />
-          {availableTypes.length > 1 && (
+          {(availableTypes.length > 1 || typeFilter.length > 0) && (
             <MultiSelect
+              comboboxProps={{ zIndex: dropdownZIndex }}
               size="xs"
               value={typeFilter}
               onChange={setTypeFilter}
@@ -110,73 +108,23 @@ export function LibraryToolbar({
               aria-label={t("filesPage.typeFilter.label", "Filter by type")}
             />
           )}
-          <TextInput
-            size="xs"
-            value={search}
-            onChange={(e) => setSearch(e.currentTarget.value)}
-            placeholder={t("filesPage.search.placeholder", "Filter files…")}
-            leftSection={<Icon name="search" size={"1rem"} />}
-            rightSection={
-              search ? (
-                <ActionIcon
-                  variant="tertiary"
-                  size="sm"
-                  onClick={() => setSearch("")}
-                  aria-label={t("filesPage.search.clear", "Clear filter")}
-                >
-                  <Icon name="x" size={"0.9rem"} />
-                </ActionIcon>
-              ) : null
-            }
-            aria-label={t("filesPage.search.label", "Filter files by name")}
-            style={{ width: 180 }}
-          />
-          <Select
-            size="xs"
-            value={sortMode}
-            onChange={(value) =>
-              value && setSortMode(value as FilesPageSortMode)
-            }
-            data={[
-              {
-                value: "modified-desc",
-                label: t("filesPage.sort.modifiedDesc", "Recent first"),
-              },
-              {
-                value: "modified-asc",
-                label: t("filesPage.sort.modifiedAsc", "Oldest first"),
-              },
-              {
-                value: "name-asc",
-                label: t("filesPage.sort.nameAsc", "Name A→Z"),
-              },
-              {
-                value: "name-desc",
-                label: t("filesPage.sort.nameDesc", "Name Z→A"),
-              },
-              {
-                value: "size-desc",
-                label: t("filesPage.sort.sizeDesc", "Largest first"),
-              },
-              {
-                value: "size-asc",
-                label: t("filesPage.sort.sizeAsc", "Smallest first"),
-              },
-            ]}
-            style={{ width: 160 }}
-          />
         </>
       )}
+      <FilenameSearch
+        value={search}
+        onChange={setSearch}
+        zIndex={dropdownZIndex}
+      />
+      <FilesToolbarSortMenu
+        value={sortMode}
+        onChange={setSortMode}
+        zIndex={dropdownZIndex}
+      />
       <span className="files-page-toolbar-divider" aria-hidden="true" />
       <SegmentedControl
         size="sm"
         value={viewMode}
         onChange={(v) => {
-          // Mantine only emits values declared in `data[].value`, but
-          // narrow defensively so a future third option can't silently
-          // bypass the FilesPageViewMode contract. Derived from the
-          // `as const` tuple so adding a mode anywhere in the code
-          // base automatically widens the guard here.
           if (!(FILES_PAGE_VIEW_MODES as readonly string[]).includes(v)) return;
           setViewMode(v as FilesPageViewMode);
         }}

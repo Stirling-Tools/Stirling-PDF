@@ -18,6 +18,8 @@ interface MoveToFolderDialogProps {
   opened: boolean;
   onClose: () => void;
   folders: FolderRecord[];
+  /** Adding unfiled copies requires a folder; moving to the root would leave them in Recents. */
+  addToLibrary?: boolean;
   /** Folder being moved; excludes its descendants from destinations. */
   disabledFolderId?: FolderId | null;
   initialFolderId?: FolderId | null;
@@ -33,6 +35,7 @@ export function MoveToFolderDialog({
   opened,
   onClose,
   folders,
+  addToLibrary = false,
   disabledFolderId,
   initialFolderId = ROOT_FOLDER_ID,
   onConfirm,
@@ -42,12 +45,10 @@ export function MoveToFolderDialog({
   const [target, setTarget] = useState<FolderId | null>(initialFolderId);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Inline create-folder state; revealed by the toggle.
   const [creatingFolder, setCreatingFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Reset when reopening with a new initial.
   React.useEffect(() => {
     if (opened) {
       setTarget(initialFolderId);
@@ -59,7 +60,6 @@ export function MoveToFolderDialog({
     }
   }, [opened, initialFolderId]);
 
-  /** Single-pass build of parent index, depths, and blocked descendants. */
   const { depthById, blocked, treeOrder } = useMemo(() => {
     const byParent = new Map<FolderId | null, FolderRecord[]>();
     for (const folder of folders) {
@@ -107,7 +107,11 @@ export function MoveToFolderDialog({
     <Modal
       opened={opened}
       onClose={onClose}
-      title={t("filesPage.moveDialog.title", "Move to folder")}
+      title={
+        addToLibrary
+          ? t("filesPage.addToLibrary", "Add to Stirling library")
+          : t("filesPage.moveDialog.title", "Move to folder")
+      }
       centered
       size="md"
       keepMounted
@@ -115,10 +119,15 @@ export function MoveToFolderDialog({
     >
       <Stack gap="xs">
         <Text size="sm" c="dimmed">
-          {t(
-            "filesPage.moveDialog.hint",
-            "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left.",
-          )}
+          {addToLibrary
+            ? t(
+                "filesPage.addToLibraryHint",
+                "Choose or create a folder. Server folders upload a copy of your files.",
+              )
+            : t(
+                "filesPage.moveDialog.hint",
+                "Pick a destination folder. Tip: you can also drag and drop files onto folders in the tree on the left.",
+              )}
         </Text>
         <div
           style={{
@@ -129,7 +138,7 @@ export function MoveToFolderDialog({
           }}
         >
           <FolderPick
-            label={t("filesPage.allFiles", "All files")}
+            label={t("filesPage.allFiles", "Stirling library")}
             isActive={target === ROOT_FOLDER_ID}
             disabled={false}
             depth={0}
@@ -148,7 +157,6 @@ export function MoveToFolderDialog({
             />
           ))}
         </div>
-        {/* Inline Create new folder; new folder becomes the move target. */}
         {onCreateFolder &&
           (() => {
             const trimmedName = newFolderName.trim();
@@ -159,7 +167,6 @@ export function MoveToFolderDialog({
               try {
                 const created = await onCreateFolder(
                   trimmedName,
-                  // ROOT becomes null parent.
                   target === ROOT_FOLDER_ID ? null : target,
                 );
                 setTarget(created.id);
@@ -216,7 +223,6 @@ export function MoveToFolderDialog({
                 >
                   {t("filesPage.moveDialog.newFolderCreate", "Create")}
                 </Button>
-                {/* X collapses the inline create row only. */}
                 <Tooltip
                   label={t("filesPage.moveDialog.newFolderCancel", "Discard")}
                   withinPortal
@@ -270,6 +276,11 @@ export function MoveToFolderDialog({
           </Button>
           <Button
             loading={submitting}
+            disabled={
+              creating ||
+              (addToLibrary && target === ROOT_FOLDER_ID) ||
+              (target !== null && blocked.has(target))
+            }
             onClick={async () => {
               setSubmitting(true);
               setError(null);
@@ -290,7 +301,9 @@ export function MoveToFolderDialog({
               }
             }}
           >
-            {t("filesPage.moveDialog.confirm", "Move here")}
+            {addToLibrary
+              ? t("filesPage.addToLibraryConfirm", "Add here")
+              : t("filesPage.moveDialog.confirm", "Move here")}
           </Button>
         </Group>
       </Stack>

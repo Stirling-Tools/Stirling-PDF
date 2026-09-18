@@ -151,15 +151,9 @@ function BulkAddProgressRow() {
  * in every view.
  */
 function FolderTreeSection() {
-  const { t } = useTranslation();
   const filesPage = useFilesPage();
   return (
     <div className="file-sidebar-folders-section sidebar-content-fade">
-      <div className="file-sidebar-section-header">
-        <span className="file-sidebar-section-label">
-          {t("filesPage.tree", "Folders")}
-        </span>
-      </div>
       <FolderTreeSidebar
         fileCounts={filesPage.fileCountsByFolder}
         onRequestNewFolder={filesPage.openNewFolderDialog}
@@ -951,6 +945,60 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
       );
     };
 
+    const sidebarActions: NonNullable<FileSidebarProps["extraActions"]> = [
+      ...(currentWorkbench === "myFiles"
+        ? [
+            {
+              icon: <Icon name="plus" />,
+              label: t("fileSidebar.addFiles", "Add files"),
+              onClick: () => nativeFileInputRef.current?.click(),
+              testId: "pdf-library-add-files",
+            },
+            ...(isGoogleDriveEnabled
+              ? [
+                  {
+                    icon: <Icon name="googledrive" />,
+                    label: t(
+                      "fileSidebar.googleDrive",
+                      "Open from Google Drive",
+                    ),
+                    onClick: () => void handleGoogleDriveClick(),
+                    testId: "google-drive-button",
+                  },
+                ]
+              : []),
+          ]
+        : []),
+      ...(extraActions ?? []),
+    ];
+
+    const importActions = (
+      <>
+        {isGoogleDriveEnabled && (
+          <ActionIcon
+            variant="quiet"
+            className="file-sidebar-section-btn file-sidebar-section-btn-drive"
+            onClick={handleGoogleDriveClick}
+            title={t("fileSidebar.googleDrive", "Open from Google Drive")}
+            aria-label={t("fileSidebar.googleDrive", "Open from Google Drive")}
+            data-testid="google-drive-button"
+          >
+            <Icon name="googledrive" size={16} />
+          </ActionIcon>
+        )}
+        <ActionIcon
+          variant="quiet"
+          className="file-sidebar-section-btn file-sidebar-section-btn-add"
+          data-testid="pdf-library-add-files"
+          onClick={() => nativeFileInputRef.current?.click()}
+          title={t("fileSidebar.addFiles", "Add files")}
+          aria-label={t("fileSidebar.addFiles", "Add files")}
+        >
+          <Icon name="plus" size={"1rem"} />
+        </ActionIcon>
+      </>
+    );
+
     return (
       <div
         ref={ref}
@@ -991,13 +1039,11 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
             data-testid="file-input"
           />
 
-          {/* Open from computer lives in quick navigation; what is left here is
-              the library's own actions, so the box goes when it has none. */}
           <NavSurface
             className="file-sidebar-controls"
-            hidden={!extraActions?.length}
+            hidden={sidebarActions.length === 0}
           >
-            {extraActions?.map((action) => (
+            {sidebarActions.map((action) => (
               <React.Fragment key={action.label}>
                 {action.render ? (
                   action.render()
@@ -1083,34 +1129,7 @@ const FileSidebar = forwardRef<HTMLDivElement, FileSidebarProps>(
                     >
                       <Icon name="maximize-2" size={"1rem"} />
                     </ActionIcon>
-                    {isGoogleDriveEnabled && (
-                      <ActionIcon
-                        variant="quiet"
-                        className="file-sidebar-section-btn file-sidebar-section-btn-drive"
-                        onClick={handleGoogleDriveClick}
-                        title={t(
-                          "fileSidebar.googleDrive",
-                          "Open from Google Drive",
-                        )}
-                        aria-label={t(
-                          "fileSidebar.googleDrive",
-                          "Open from Google Drive",
-                        )}
-                        data-testid="google-drive-button"
-                      >
-                        <Icon name="googledrive" size={16} />
-                      </ActionIcon>
-                    )}
-                    <ActionIcon
-                      variant="quiet"
-                      className="file-sidebar-section-btn file-sidebar-section-btn-add"
-                      data-testid="pdf-library-add-files"
-                      onClick={() => nativeFileInputRef.current?.click()}
-                      title={t("fileSidebar.addFiles", "Add files")}
-                      aria-label={t("fileSidebar.addFiles", "Add files")}
-                    >
-                      <Icon name="plus" size={"1rem"} />
-                    </ActionIcon>
+                    {importActions}
                   </div>
 
                   <BulkAddProgressRow />

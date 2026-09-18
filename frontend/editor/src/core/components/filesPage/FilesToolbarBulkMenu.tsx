@@ -45,7 +45,8 @@ export function FilesToolbarBulkMenu({
       <Menu.Target>
         <Button
           size="sm"
-          variant="secondary"
+          variant="tertiary"
+          shape="pill"
           className="files-page-toolbar-bulk-trigger"
           rightSection={<Icon name="chevron-down" size={"1.1rem"} />}
           aria-label={t("filesPage.bulkActions", "Actions")}
