@@ -48,6 +48,8 @@ export interface CheckoutOptions {
   /** Users the current plan covers. Its presence is what makes this "add capacity", not a first
    * upgrade, so the capacity step states the delta. */
   currentLimit?: number | null;
+  /** Present only for a self-hosted server above its actual allowance. */
+  capacityNotice?: { users: number; limit: number };
 }
 
 interface CheckoutContextValue {
@@ -482,6 +484,7 @@ export const CheckoutProvider: React.FC<CheckoutProviderProps> = ({
             minimumSeats={minimumSeats}
             combinedChoose={currentOptions.combinedChoose}
             currentLimit={currentOptions.currentLimit ?? null}
+            capacityNotice={currentOptions.capacityNotice}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             onLicenseActivated={handleLicenseActivated}

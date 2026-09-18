@@ -43,6 +43,7 @@ import "@portal/components/billing/billing.css";
 export interface UsageProps {
   /** Local occupied seats for self-hosted; undefined keeps the SaaS membership count. */
   localUsersInUse?: number | null;
+  localUserLimit?: number | null;
   serverPlan?: ServerPlan;
   serverPlanAction?: ReactNode;
   /**
@@ -73,6 +74,7 @@ export interface UsageProps {
  */
 export function Usage({
   localUsersInUse,
+  localUserLimit,
   serverPlan,
   serverPlanAction,
   onWalletLoaded,
@@ -267,9 +269,63 @@ export function Usage({
       combinedChoose: true,
       currentLimit: heldLimit,
       minimumSeats: usersInUse ?? undefined,
+      capacityNotice:
+        !serverPlan &&
+        !wallet?.team?.held &&
+        localUsersInUse != null &&
+        localUserLimit != null &&
+        localUsersInUse > localUserLimit
+          ? { users: localUsersInUse, limit: localUserLimit }
+          : undefined,
       onSuccess: () => setRefreshKey((k) => k + 1),
     });
-  }, [checkout, heldLimit, usersInUse]);
+  }, [
+    checkout,
+    heldLimit,
+    usersInUse,
+    serverPlan,
+    wallet?.team?.held,
+    localUsersInUse,
+    localUserLimit,
+  ]);
+
+  const handledTeamRequest = useRef(false);
+  useEffect(() => {
+    if (searchParams.get("upgrade") !== "team") {
+      handledTeamRequest.current = false;
+      return;
+    }
+    if (
+      handledTeamRequest.current ||
+      !wallet ||
+      !checkout ||
+      (hasLocalInstance && localUsersInUse == null)
+    )
+      return;
+    handledTeamRequest.current = true;
+    const next = new URLSearchParams(searchParams);
+    next.delete("upgrade");
+    setSearchParams(next, { replace: true });
+    if (
+      wallet.role === "leader" &&
+      !wallet.team?.held &&
+      !serverPlan &&
+      localUsersInUse != null &&
+      localUserLimit != null &&
+      localUsersInUse > localUserLimit
+    )
+      addCapacity();
+  }, [
+    searchParams,
+    setSearchParams,
+    wallet,
+    checkout,
+    localUsersInUse,
+    localUserLimit,
+    serverPlan,
+    addCapacity,
+    hasLocalInstance,
+  ]);
 
   const confirmSubscription = useCallback(async (): Promise<boolean> => {
     // Stripe's onComplete fires before the subscription webhook lands, so poll the
