@@ -59,7 +59,10 @@ def sort_file(path: str, fix: bool) -> bool:
         raise SortError(f"{path}: refusing to sort, sorting would change the file's contents")
 
     if fix:
-        Path(path).write_text(expected, encoding="utf-8")
+        # newline="" keeps LF: the default rewrites every line as CRLF on Windows,
+        # which breaks readers that split on "\n".
+        with Path(path).open("w", encoding="utf-8", newline="") as handle:
+            handle.write(expected)
     return True
 
 
