@@ -66,6 +66,7 @@ import {
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
@@ -147,6 +148,17 @@ export default function FileManagerView() {
   const signInRequiredReason = isAnonymous
     ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
     : null;
+  // Refresh pulls from the server. True on web (server-backed); on desktop it tracks the
+  // signed-in connection, so the control falls inert with an explanation until connected.
+  const connectedServer = useConnectedServer();
+  const refreshDisabledReason =
+    signInRequiredReason ??
+    (connectedServer
+      ? null
+      : t(
+          "filesPage.refreshNeedsConnection",
+          "Sign in to refresh from the server.",
+        ));
   // Server storage gate; mirrors ConfigController's storageEnabled
   // (enableLogin && storage.isEnabled). When off, Save-to-server stays
   // visible but disabled with an explanatory tooltip (discoverability beats
@@ -1426,14 +1438,14 @@ export default function FileManagerView() {
     () => (
       <>
         <Tooltip
-          label={signInRequiredReason ?? t("filesPage.refresh", "Refresh")}
+          label={refreshDisabledReason ?? t("filesPage.refresh", "Refresh")}
           withinPortal
         >
           <ActionIcon
             variant="tertiary"
             size="sm"
             loading={refreshing}
-            disabled={refreshing || Boolean(signInRequiredReason)}
+            disabled={refreshing || Boolean(refreshDisabledReason)}
             aria-busy={refreshing}
             aria-label={t("filesPage.refresh", "Refresh")}
             onClick={handleRefresh}
@@ -1456,7 +1468,7 @@ export default function FileManagerView() {
     ),
     [
       t,
-      signInRequiredReason,
+      refreshDisabledReason,
       refreshing,
       handleRefresh,
       newFolderControl,
