@@ -96,6 +96,12 @@ test.describe("Console hygiene: representative routes load cleanly", () => {
   for (const route of ROUTES) {
     test(`${route.name} (${route.path})`, async ({ page }) => {
       const entries = attachListeners(page);
+      const scriptRequests: string[] = [];
+      page.on("request", (request) => {
+        if (request.resourceType() === "script") {
+          scriptRequests.push(request.url());
+        }
+      });
       await page.goto(route.path, { waitUntil: "domcontentloaded" });
       // Give async effects (i18n load, lazy chunks, posthog init) a beat to
       // surface anything they were going to log.
@@ -109,6 +115,17 @@ test.describe("Console hygiene: representative routes load cleanly", () => {
           if (!(err instanceof errors.TimeoutError)) throw err;
         });
       await expectCleanConsole(entries);
+      const entryUrls = await page
+        .locator('script[type="module"][src]')
+        .evaluateAll((scripts) =>
+          scripts.map((script) => (script as HTMLScriptElement).src),
+        );
+      for (const url of entryUrls) {
+        expect(
+          scriptRequests.filter((requestUrl) => requestUrl === url),
+          `Entry module was fetched again by a lazy import: ${url}`,
+        ).toHaveLength(1);
+      }
     });
   }
 });
