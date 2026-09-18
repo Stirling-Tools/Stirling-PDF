@@ -5,6 +5,7 @@ import { AppLayout } from "@app/components/AppLayout";
 import { LoadingFallback } from "@app/components/shared/LoadingFallback";
 import { PreferencesProvider } from "@app/contexts/PreferencesContext";
 import { ThemeProvider } from "@app/components/shared/ThemeProvider";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
 
 const Landing = lazy(() => import("@app/routes/Landing"));
 const Login = lazy(() => import("@app/routes/Login"));
@@ -54,6 +55,7 @@ function ParticipantViewPage() {
 }
 
 export default function App() {
+  const connectedServer = useConnectedServer();
   return (
     <Suspense fallback={<LoadingFallback />}>
       <Routes>
@@ -126,7 +128,9 @@ export default function App() {
                       <Route path="/*" element={<Landing />} />
                     </Routes>
                     <Onboarding />
-                    {WATCHED_FOLDERS_ENABLED && <WatchedFoldersRegistration />}
+                    {WATCHED_FOLDERS_ENABLED && connectedServer && (
+                      <WatchedFoldersRegistration />
+                    )}
                   </AppLayout>
                 </AppProviders>
               </RootGate>
