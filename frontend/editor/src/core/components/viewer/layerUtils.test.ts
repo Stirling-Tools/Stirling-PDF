@@ -1,4 +1,7 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { join, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
 import {
   readPdfLayers,
   applyOCGVisibilityToPdf,
@@ -112,6 +115,76 @@ describe("layerUtils", () => {
         },
       ];
       expect(collectLeafIds(layers)).toEqual(["1", "2", "3"]);
+    });
+  });
+
+  describe("readPdfLayers on object-stream-compressed files", () => {
+    // Produced by `qpdf --object-streams=generate` from a two-layer file: the
+    // catalog (with /OCProperties) lives inside a compressed object stream, so
+    // a raw byte scan for /OCProperties finds nothing. Regression net for a
+    // parser that reported zero layers on such files.
+    const fixtureDir = join(
+      dirname(fileURLToPath(import.meta.url)),
+      "..",
+      "..",
+      "tests",
+      "test-fixtures",
+    );
+
+    function fixtureBlobSlice(
+      bytes: Uint8Array,
+      start: number,
+      end?: number,
+    ): Blob {
+      const copy = bytes.slice(start, end);
+      return {
+        size: copy.byteLength,
+        type: "application/pdf",
+        slice: (s: number, e?: number) => fixtureBlobSlice(copy, s, e),
+        arrayBuffer: async () => copy.buffer as ArrayBuffer,
+      } as unknown as Blob;
+    }
+
+    function fixtureBlob(name: string): Blob {
+      return fixtureBlobSlice(
+        Uint8Array.from(readFileSync(join(fixtureDir, name))),
+        0,
+      );
+    }
+
+    it("reports layers whose catalog is inside an object stream", async () => {
+      const raw = readFileSync(
+        join(fixtureDir, "layers-object-streams.pdf"),
+        "latin1",
+      );
+      expect(raw).not.toContain("/OCProperties");
+      const layers = await readPdfLayers(
+        fixtureBlob("layers-object-streams.pdf"),
+      );
+      expect(layers.map((l) => l.name).sort()).toEqual([
+        "Background Layer",
+        "Watermark Layer",
+      ]);
+    });
+
+    it("reads names containing escaped parens", async () => {
+      const doc = await PDFDocument.create();
+      doc.addPage([400, 400]);
+      const ocgRef = doc.context.register(
+        doc.context.obj({ Type: "OCG", Name: PDFString.of("A (nick) B") }),
+      );
+      const ocProperties = doc.context.obj({
+        OCGs: [ocgRef],
+        D: doc.context.register(
+          doc.context.obj({ BaseState: PDFName.of("ON"), Order: [ocgRef] }),
+        ),
+      });
+      doc.catalog.set(
+        PDFName.of("OCProperties"),
+        doc.context.register(ocProperties),
+      );
+      const layers = await readPdfLayers(toBlob(await doc.save()));
+      expect(layers.map((l) => l.name)).toEqual(["A (nick) B"]);
     });
   });
 });
