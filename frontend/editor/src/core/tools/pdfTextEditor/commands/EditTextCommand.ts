@@ -1411,23 +1411,19 @@ function boundsFromPtr(
   ptr: number,
   fallbackX: number,
 ): { x: number; right: number } {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
+  // Single scratch rect: four separate allocs per emitted word showed up as
+  // malloc traffic on every keystroke.
+  const buf = m.pdfium.wasmExports.malloc(16);
   try {
-    if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) {
+    if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
       return { x: fallbackX, right: fallbackX };
     }
     return {
-      x: m.pdfium.getValue(l, "float"),
-      right: m.pdfium.getValue(r, "float"),
+      x: m.pdfium.getValue(buf, "float"),
+      right: m.pdfium.getValue(buf + 8, "float"),
     };
   } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+    m.pdfium.wasmExports.free(buf);
   }
 }
 

@@ -29,6 +29,9 @@ export class Page {
   // Sticky: regenerated at least once. Regeneration is what drops shadings, so
   // the save-time repair needs this long after `dirty` was cleared.
   regenerated: boolean;
+  // Appearances present before form-layer rendering. Null until snapshotted
+  // or when the build lacks the annotation entry points.
+  initialAnnotAPs: Set<string> | null;
 
   constructor(opts: {
     index: number;
@@ -51,6 +54,7 @@ export class Page {
     this.revision = 0;
     this.needsGenerateContent = false;
     this.regenerated = false;
+    this.initialAnnotAPs = null;
   }
 
   setRuns(runs: TextRun[]): void {

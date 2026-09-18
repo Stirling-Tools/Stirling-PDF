@@ -62,3 +62,28 @@ export function pageElements(): HTMLElement[] {
     document.querySelectorAll<HTMLElement>('[data-testid^="pdf-editor-page-"]'),
   ).filter((el) => /^pdf-editor-page-\d+$/.test(el.dataset.testid ?? ""));
 }
+
+// Yield without the 4ms floor of nested setTimeout, so load and save steps
+// still let the browser paint progress. Falls back where scheduler is absent.
+// See https://developer.mozilla.org/en-US/docs/Web/API/Scheduler/yield
+interface SchedulerRoot {
+  scheduler?: { yield?: () => Promise<void> };
+}
+
+export function yieldToBrowser(): Promise<void> {
+  const scheduler = (globalThis as SchedulerRoot).scheduler;
+  if (typeof scheduler?.yield === "function") return scheduler.yield();
+  return new Promise<void>((resolve) => {
+    if (typeof MessageChannel !== "undefined") {
+      const channel = new MessageChannel();
+      channel.port1.onmessage = () => {
+        channel.port1.close();
+        channel.port2.close();
+        resolve();
+      };
+      channel.port2.postMessage(0);
+      return;
+    }
+    setTimeout(resolve, 0);
+  });
+}

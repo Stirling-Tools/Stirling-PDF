@@ -5,6 +5,7 @@ import {
   openRawDocument,
 } from "@app/services/pdfiumService";
 import { Page } from "@app/tools/pdfTextEditor/model/Page";
+import { snapshotAnnotAppearances } from "@app/tools/pdfTextEditor/pdfium/PdfiumAppearanceSnapshot";
 import { DisplayTransform } from "@app/tools/pdfTextEditor/model/DisplayTransform";
 import { FontRef } from "@app/tools/pdfTextEditor/model/FontRef";
 import { prepareForEditing } from "@app/tools/pdfTextEditor/pdfdoc/prepareForEditing";
@@ -101,6 +102,18 @@ export class EditorDocument {
   notifyFormPageLoaded(page: Page): void {
     const env = this.formEnvironment();
     if (!env || this.formLoadedPages.has(page.pagePtr)) return;
+    // Snapshot before OnAfterLoadPage/FFLDraw can materialise missing
+    // appearances. Lazy here keeps text-only pages off the annot walk.
+    if (page.initialAnnotAPs === null) {
+      try {
+        page.initialAnnotAPs = snapshotAnnotAppearances(
+          this.module,
+          page.pagePtr,
+        );
+      } catch {
+        page.initialAnnotAPs = null;
+      }
+    }
     const m = this.module as unknown as {
       FORM_OnAfterLoadPage?: (pagePtr: number, env: number) => void;
     };

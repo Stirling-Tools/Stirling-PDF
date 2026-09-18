@@ -126,6 +126,8 @@ export class EditorStore {
   private positionRefreshTimer: number | null = null;
   /** When the debounced position refresh last actually ran. */
   private lastPositionRefreshAt = 0;
+  /** Revision seen at the last refresh, per page, so idle pages are skipped. */
+  private lastRefreshRevisions = new Map<number, number>();
   /** Monotonic token so a superseded async load can detect it lost the race. */
   private loadToken = 0;
   /** File awaiting a password retry; held off the view state (not serialisable). */
@@ -268,6 +270,7 @@ export class EditorStore {
 
   async setDocument(doc: EditorDocument): Promise<void> {
     this.disposeDocumentIfAny();
+    this.lastRefreshRevisions.clear();
     resetCharcodeCaches();
     this.doc = doc;
     this.history.clear();
@@ -290,6 +293,7 @@ export class EditorStore {
 
   clearDocument(): void {
     this.disposeDocumentIfAny();
+    this.lastRefreshRevisions.clear();
     resetCharcodeCaches();
     this.history.clear();
     this.savedTop = null;
@@ -353,6 +357,13 @@ export class EditorStore {
       if (!doc) return;
       const changedByPage = new Map<number, Set<TextRun>>();
       for (const page of doc.loadedPages()) {
+        // Unedited pages keep their pen positions, so re-reading them each
+        // tick is pure wasm traffic on the typing path.
+        const seen = this.lastRefreshRevisions.get(page.index);
+        if (!page.dirty && seen !== undefined && seen === page.revision) {
+          continue;
+        }
+        this.lastRefreshRevisions.set(page.index, page.revision);
         try {
           // Positions only. `PdfiumModelSync.resyncPage` re-reads the whole
           // page and would give identity-preserved RUNS too, but it re-runs
@@ -501,6 +512,13 @@ export class EditorStore {
   // Push a fresh page snapshot list into the store - called by the React loader
   // once `PdfiumTextReader` finishes for a page.
   publishPages(pages: PageSnapshot[]): void {
+    // Seed the refresh filter from already-loaded pages only. Reading via
+    // doc.page() here would force-load every placeholder page.
+    if (this.doc) {
+      for (const loaded of this.doc.loadedPages()) {
+        this.lastRefreshRevisions.set(loaded.index, loaded.revision);
+      }
+    }
     this.patch({ pages });
   }
 

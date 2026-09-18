@@ -1290,18 +1290,16 @@ export function measureObjRightEdgePt(
   m: WrappedPdfiumModule,
   objPtr: number,
 ): number {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
+  // One allocation for the four out-params, so a per-word emit costs one
+  // malloc/free pair instead of four.
+  const buf = m.pdfium.wasmExports.malloc(16);
   try {
-    if (!m.FPDFPageObj_GetBounds(objPtr, l, b, r, t)) return 0;
-    return m.pdfium.getValue(r, "float");
+    if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+      return 0;
+    }
+    return m.pdfium.getValue(buf + 8, "float");
   } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+    m.pdfium.wasmExports.free(buf);
   }
 }
 
@@ -1316,32 +1314,29 @@ export function measureObjSpanPt(
   m: WrappedPdfiumModule,
   ptrs: number[],
 ): { left: number; right: number } | null {
-  const l = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const r = m.pdfium.wasmExports.malloc(4);
-  const t = m.pdfium.wasmExports.malloc(4);
+  // One scratch rect reused across the whole span, not four allocs per call.
+  const buf = m.pdfium.wasmExports.malloc(16);
   try {
     let left = Infinity;
     let right = -Infinity;
     for (const ptr of ptrs) {
       if (!ptr) continue;
       try {
-        if (!m.FPDFPageObj_GetBounds(ptr, l, b, r, t)) continue;
+        if (!m.FPDFPageObj_GetBounds(ptr, buf, buf + 4, buf + 8, buf + 12)) {
+          continue;
+        }
       } catch {
         continue;
       }
-      const lo = m.pdfium.getValue(l, "float");
-      const hi = m.pdfium.getValue(r, "float");
+      const lo = m.pdfium.getValue(buf, "float");
+      const hi = m.pdfium.getValue(buf + 8, "float");
       if (!Number.isFinite(lo) || !Number.isFinite(hi)) continue;
       if (lo < left) left = lo;
       if (hi > right) right = hi;
     }
     return right > left ? { left, right } : null;
   } finally {
-    m.pdfium.wasmExports.free(l);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(t);
+    m.pdfium.wasmExports.free(buf);
   }
 }
 

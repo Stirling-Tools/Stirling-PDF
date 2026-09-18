@@ -7,12 +7,9 @@ import {
 } from "@app/services/pdfiumService";
 import type { EditorStore } from "@app/tools/pdfTextEditor/store/EditorStore";
 import type { PageSnapshot } from "@app/tools/pdfTextEditor/types";
+import { yieldToBrowser } from "@app/tools/pdfTextEditor/util/dom";
 
 const EAGER_PAGE_LIMIT = 5;
-
-/** Yield to the event loop so the React layer can paint progress. */
-const yieldToBrowser = () =>
-  new Promise<void>((resolve) => setTimeout(resolve, 0));
 
 /** Open a PDF in PDFium and lazily populate pages on first visibility. */
 export function useDocumentLoader(store: EditorStore) {

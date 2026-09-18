@@ -1,4 +1,5 @@
 import type { EditorDocument } from "@app/tools/pdfTextEditor/model/EditorDocument";
+import { stripGeneratedAppearances } from "@app/tools/pdfTextEditor/pdfium/PdfiumAppearanceSnapshot";
 import { assertSavedPdf } from "@app/tools/pdfTextEditor/util/savedBytes";
 
 /** `FPDF_SaveAsCopy` flags. */
@@ -39,6 +40,13 @@ export class PdfiumSave {
         `Could not apply edits on page${failedPages.length > 1 ? "s" : ""} ` +
           `${failedPages.join(", ")}; save aborted so no edits are silently lost.`,
       );
+    }
+
+    // Drop display-generated appearances from untouched pages. Regenerated
+    // pages keep whatever the render produced alongside the edited content.
+    for (const page of doc.loadedPages()) {
+      if (page.regenerated || !page.initialAnnotAPs) continue;
+      stripGeneratedAppearances(m, page.pagePtr, page.initialAnnotAPs);
     }
 
     // The writer the shim hands back is the FPDF_FILEWRITE the flagged

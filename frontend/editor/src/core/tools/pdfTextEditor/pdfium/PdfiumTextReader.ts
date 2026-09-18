@@ -498,16 +498,16 @@ function getFormContainer(
 }
 
 function readBounds(m: WrappedPdfiumModule, objPtr: number): PageRect | null {
-  const lPtr = m.pdfium.wasmExports.malloc(4);
-  const bPtr = m.pdfium.wasmExports.malloc(4);
-  const rPtr = m.pdfium.wasmExports.malloc(4);
-  const tPtr = m.pdfium.wasmExports.malloc(4);
+  // One 16-byte scratch rect per object instead of four 4-byte allocs.
+  const buf = m.pdfium.wasmExports.malloc(16);
   try {
-    if (!m.FPDFPageObj_GetBounds(objPtr, lPtr, bPtr, rPtr, tPtr)) return null;
-    const left = m.pdfium.getValue(lPtr, "float");
-    const bottom = m.pdfium.getValue(bPtr, "float");
-    const right = m.pdfium.getValue(rPtr, "float");
-    const top = m.pdfium.getValue(tPtr, "float");
+    if (!m.FPDFPageObj_GetBounds(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+      return null;
+    }
+    const left = m.pdfium.getValue(buf, "float");
+    const bottom = m.pdfium.getValue(buf + 4, "float");
+    const right = m.pdfium.getValue(buf + 8, "float");
+    const top = m.pdfium.getValue(buf + 12, "float");
     return {
       x: Math.min(left, right),
       y: Math.min(bottom, top),
@@ -515,10 +515,7 @@ function readBounds(m: WrappedPdfiumModule, objPtr: number): PageRect | null {
       height: Math.abs(top - bottom),
     };
   } finally {
-    m.pdfium.wasmExports.free(lPtr);
-    m.pdfium.wasmExports.free(bPtr);
-    m.pdfium.wasmExports.free(rPtr);
-    m.pdfium.wasmExports.free(tPtr);
+    m.pdfium.wasmExports.free(buf);
   }
 }
 
@@ -542,24 +539,25 @@ function readMatrix(m: WrappedPdfiumModule, objPtr: number): Affine {
 }
 
 function readFill(m: WrappedPdfiumModule, objPtr: number): RGBA {
-  const r = m.pdfium.wasmExports.malloc(4);
-  const g = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const a = m.pdfium.wasmExports.malloc(4);
+  // One scratch block for the RGBA out-params, freed once per object.
+  const buf = m.pdfium.wasmExports.malloc(16);
   try {
-    const ok = m.FPDFPageObj_GetFillColor(objPtr, r, g, b, a);
+    const ok = m.FPDFPageObj_GetFillColor(
+      objPtr,
+      buf,
+      buf + 4,
+      buf + 8,
+      buf + 12,
+    );
     if (!ok) return { r: 0, g: 0, b: 0, a: 255 };
     return {
-      r: m.pdfium.getValue(r, "i32") & 0xff,
-      g: m.pdfium.getValue(g, "i32") & 0xff,
-      b: m.pdfium.getValue(b, "i32") & 0xff,
-      a: m.pdfium.getValue(a, "i32") & 0xff,
+      r: m.pdfium.getValue(buf, "i32") & 0xff,
+      g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
+      b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
+      a: m.pdfium.getValue(buf + 12, "i32") & 0xff,
     };
   } finally {
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(g);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(a);
+    m.pdfium.wasmExports.free(buf);
   }
 }
 
@@ -589,24 +587,23 @@ function readStroke(
   const getColor = mod.FPDFPageObj_GetStrokeColor;
   const getWidth = mod.FPDFPageObj_GetStrokeWidth;
   if (!getColor) return { stroke: null, strokeWidth: 0 };
-  const r = m.pdfium.wasmExports.malloc(4);
-  const g = m.pdfium.wasmExports.malloc(4);
-  const b = m.pdfium.wasmExports.malloc(4);
-  const a = m.pdfium.wasmExports.malloc(4);
-  const w = m.pdfium.wasmExports.malloc(4);
+  // One block for RGBA plus width, freed once per stroked object.
+  const buf = m.pdfium.wasmExports.malloc(20);
   try {
-    if (!getColor(objPtr, r, g, b, a)) return { stroke: null, strokeWidth: 0 };
-    const alpha = m.pdfium.getValue(a, "i32") & 0xff;
+    if (!getColor(objPtr, buf, buf + 4, buf + 8, buf + 12)) {
+      return { stroke: null, strokeWidth: 0 };
+    }
+    const alpha = m.pdfium.getValue(buf + 12, "i32") & 0xff;
     let strokeWidth = 0;
-    if (getWidth && getWidth(objPtr, w)) {
-      const raw = m.pdfium.getValue(w, "float");
+    if (getWidth && getWidth(objPtr, buf + 16)) {
+      const raw = m.pdfium.getValue(buf + 16, "float");
       if (Number.isFinite(raw) && raw > 0) strokeWidth = raw;
     }
     return {
       stroke: {
-        r: m.pdfium.getValue(r, "i32") & 0xff,
-        g: m.pdfium.getValue(g, "i32") & 0xff,
-        b: m.pdfium.getValue(b, "i32") & 0xff,
+        r: m.pdfium.getValue(buf, "i32") & 0xff,
+        g: m.pdfium.getValue(buf + 4, "i32") & 0xff,
+        b: m.pdfium.getValue(buf + 8, "i32") & 0xff,
         a: alpha,
       },
       strokeWidth,
@@ -614,11 +611,7 @@ function readStroke(
   } catch {
     return { stroke: null, strokeWidth: 0 };
   } finally {
-    m.pdfium.wasmExports.free(r);
-    m.pdfium.wasmExports.free(g);
-    m.pdfium.wasmExports.free(b);
-    m.pdfium.wasmExports.free(a);
-    m.pdfium.wasmExports.free(w);
+    m.pdfium.wasmExports.free(buf);
   }
 }
 

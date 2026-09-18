@@ -2,7 +2,7 @@ import {
   assertFilesNotBlocked,
   policySourceIds,
 } from "@app/services/policyFileGuard";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Stack } from "@mantine/core";
 import { useTranslation } from "react-i18next";
 import { Icon } from "@app/ui/Icon";
@@ -46,7 +46,11 @@ import {
   type SaveRisks,
 } from "@app/tools/pdfTextEditor/util/documentRisks";
 import { preloadFallbackFontBytes } from "@app/tools/pdfTextEditor/util/fallbackFont";
-import { visiblePageNumber } from "@app/tools/pdfTextEditor/util/dom";
+import {
+  pageElements,
+  visiblePageNumber,
+  yieldToBrowser,
+} from "@app/tools/pdfTextEditor/util/dom";
 import type { SelectionState } from "@app/tools/pdfTextEditor/types";
 
 const WORKBENCH_ID = "custom:pdfTextEditor" as const;
@@ -176,7 +180,7 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         assertFilesNotBlocked([sourceId ?? undefined]);
         // Yield once so React can paint the disabled/saving state before the
         // synchronous PDFium serialize blocks the main thread.
-        await new Promise((resolve) => setTimeout(resolve, 0));
+        await yieldToBrowser();
         // The position that is about to be written out. Anything the user edits
         // while the export runs is NOT in these bytes, so it must stay dirty.
         const exported = store.savedPosition();
@@ -322,11 +326,13 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   const getSelectedText = useCallback((): string | null => {
     const ids = store.selection.value.runIds;
     if (ids.length === 0) return null;
-    const texts = store
-      .getState()
-      .pages.flatMap((p) => p.runs)
-      .filter((r) => ids.includes(r.id))
-      .map((r) => r.text);
+    const wanted = new Set(ids);
+    const texts: string[] = [];
+    for (const p of store.getState().pages) {
+      for (const r of p.runs) {
+        if (wanted.has(r.id)) texts.push(r.text);
+      }
+    }
     return texts.length === 0 ? null : texts.join("\n");
   }, [store]);
 
@@ -347,26 +353,31 @@ export default function PdfTextEditor(_props: BaseToolProps) {
         ? text.replace(/\r\n?/g, "\n").trim()
         : text.replace(/\r\n?/g, "\n");
       if (!normalised) return;
-      // Find the visible page (Ctrl+End behaves the same way).
+      // One DOM query for all pages, then one rect read pass. The old loop
+      // queried per loaded page and forced layout once per page.
       const stage = document.querySelector<HTMLElement>(
         '[data-testid="pdf-editor-stage"]',
       );
       const stageRect = stage?.getBoundingClientRect();
       const stageCentreY = stageRect ? stageRect.top + stageRect.height / 2 : 0;
-      let pageIndex = 0;
-      let bestDist = Infinity;
-      for (const p of doc.loadedPages()) {
-        const el = document.querySelector<HTMLElement>(
-          `[data-testid="pdf-editor-page-${p.index}"]`,
-        );
-        if (!el) continue;
-        const r = el.getBoundingClientRect();
-        const centre = r.top + r.height / 2;
-        const dist = Math.abs(centre - stageCentreY);
-        if (dist < bestDist) {
-          bestDist = dist;
-          pageIndex = p.index;
+      let pageIndex = visiblePageNumber();
+      const elements = pageElements();
+      if (elements.length > 0 && stageRect) {
+        let bestDist = Infinity;
+        let best = pageIndex;
+        for (const el of elements) {
+          const n = Number(
+            (el.dataset.testid ?? "").replace("pdf-editor-page-", ""),
+          );
+          if (!Number.isFinite(n)) continue;
+          const r = el.getBoundingClientRect();
+          const dist = Math.abs(r.top + r.height / 2 - stageCentreY);
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = n;
+          }
         }
+        pageIndex = best;
       }
       const page = doc.page(pageIndex);
       // Position roughly at the page centre, biased toward the upper third so
@@ -493,13 +504,18 @@ export default function PdfTextEditor(_props: BaseToolProps) {
   });
 
   const canGroup = selection.runIds.length >= 2;
-  const canUngroup = (() => {
+  // Memoized: the old IIFE scanned every run on every render, even for
+  // unrelated state changes such as typing in an open run.
+  const canUngroup = useMemo(() => {
     if (selection.runIds.length !== 1) return false;
-    const run = state.pages
-      .flatMap((p) => p.runs)
-      .find((r) => r.id === selection.runIds[0]);
-    return !!run && (run.paragraphLineCount ?? 0) > 1;
-  })();
+    const wanted = selection.runIds[0];
+    for (const p of state.pages) {
+      for (const r of p.runs) {
+        if (r.id === wanted) return (r.paragraphLineCount ?? 0) > 1;
+      }
+    }
+    return false;
+  }, [selection.runIds, state.pages]);
   const openDocument = useCallback(
     (file: File, fromDisk: boolean) => {
       if (!fromDisk) {
