@@ -5843,6 +5843,7 @@ adoptFailed = "The document was unlocked but could not be opened here. Try the t
 empty = "You're all caught up."
 handoffUnavailable = "This browser will not let the processor pass the document to the editor. Open it from the editor instead."
 inSmartFolder = "This document is in a smart folder, so it is handled on the server rather than here."
+inSmartFolderNamed = "{{name}} is in a smart folder, so it is handled on the server rather than here."
 noDocumentLinked = "This failure is not linked to a specific document, so it cannot be opened or retried here."
 notOnThisDevice = "This document is not on this device, so it cannot be opened or retried here."
 occurrences = "{{count}} times"

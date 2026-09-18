@@ -2,9 +2,11 @@ package stirling.software.proprietary.failure;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +24,9 @@ import stirling.software.proprietary.notification.NotificationSource;
 import stirling.software.proprietary.notification.NotificationView;
 import stirling.software.proprietary.policy.config.PolicyManagementAuthority;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
 /**
  * What the bell is given to render: never a raw event id, and only the actions the client itself
@@ -39,6 +44,7 @@ class NotificationProjectionTest {
     private FileRunEventStore store;
     private FileRunEventService failures;
     @Mock private PolicyStore policyStore;
+    @Mock private StoredFileRepository storedFiles;
 
     private NotificationController controller;
 
@@ -55,7 +61,9 @@ class NotificationProjectionTest {
                         authority,
                         userService,
                         props);
-        controller = new NotificationController(new NotificationService(failures, policyStore));
+        controller =
+                new NotificationController(
+                        new NotificationService(failures, policyStore, storedFiles));
 
         lenient().when(authority.currentUserTeamId()).thenReturn(TEAM);
         lenient().when(authority.canEditPolicies()).thenReturn(true);
@@ -173,6 +181,93 @@ class NotificationProjectionTest {
             assertThat(notification.documentLocation())
                     .isEqualTo(FileRunEventView.DocumentLocation.SMART_FOLDER);
             assertThat(notification.fileId()).isNull();
+        }
+
+        @Test
+        void namesAStoredDocumentForItsOwnerAndNobodyElse() {
+            // The one reader entitled to the name already has the file. A storage-backed folder can
+            // answer because its identity is the stored row's id.
+            User owner = new User();
+            owner.setUsername(ACTOR);
+            StoredFile file = new StoredFile();
+            file.setOwner(owner);
+            file.setOriginalFilename("march.pdf");
+            when(storedFiles.findById(42L)).thenReturn(Optional.of(file));
+            store.record(
+                    RecordFailure.forRun(
+                            FailureKind.UNKNOWN,
+                            TEAM,
+                            ACTOR,
+                            "policy-1",
+                            "run-1",
+                            "source-7",
+                            "storage:42",
+                            "boom"));
+
+            assertThat(controller.list(null).notifications().getFirst().documentName())
+                    .isEqualTo("march.pdf");
+        }
+
+        @Test
+        void withholdsTheNameFromAReaderWhoIsNotTheRowsOwner() {
+            // A leader reads the team's rows. A colleague's filename is not theirs to read, so the
+            // lookup never happens.
+            store.record(
+                    RecordFailure.forRun(
+                            FailureKind.UNKNOWN,
+                            TEAM,
+                            "someone.else@example.com",
+                            "policy-1",
+                            "run-1",
+                            "source-7",
+                            "storage:42",
+                            "boom"));
+
+            assertThat(controller.list(null).notifications().getFirst().documentName()).isNull();
+            verifyNoInteractions(storedFiles);
+        }
+
+        @Test
+        void withholdsTheNameWhenTheStoredFileBelongsToSomeoneElse() {
+            // The row says the reader raised it; the file says otherwise. A row outlives the file
+            // it named, and an id can be reused.
+            User someoneElse = new User();
+            someoneElse.setUsername("someone.else@example.com");
+            StoredFile file = new StoredFile();
+            file.setOwner(someoneElse);
+            file.setOriginalFilename("payroll.pdf");
+            when(storedFiles.findById(42L)).thenReturn(Optional.of(file));
+            store.record(
+                    RecordFailure.forRun(
+                            FailureKind.UNKNOWN,
+                            TEAM,
+                            ACTOR,
+                            "policy-1",
+                            "run-1",
+                            "source-7",
+                            "storage:42",
+                            "boom"));
+
+            assertThat(controller.list(null).notifications().getFirst().documentName()).isNull();
+        }
+
+        @Test
+        void neverNamesADiskFoldersDocument() {
+            // Its identity is a path, so the only name available is the last segment of one - the
+            // same disclosure by another route.
+            store.record(
+                    RecordFailure.forRun(
+                            FailureKind.UNKNOWN,
+                            TEAM,
+                            ACTOR,
+                            "policy-1",
+                            "run-1",
+                            "source-7",
+                            "/Users/someone/Payroll/march.pdf",
+                            "boom"));
+
+            assertThat(controller.list(null).notifications().getFirst().documentName()).isNull();
+            verifyNoInteractions(storedFiles);
         }
 
         @Test

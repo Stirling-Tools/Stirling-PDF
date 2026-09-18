@@ -25,6 +25,7 @@ export function notification(
     defaultTitle: "Password-protected document",
     detail: "The PDF Document is passworded",
     fileId: "f-1",
+    documentName: null,
     documentLocation: "BROWSER",
     sourceKind: "EDITOR",
     sourceId: null,

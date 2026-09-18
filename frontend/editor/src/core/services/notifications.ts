@@ -51,6 +51,8 @@ export interface AppNotification {
   detail: string | null;
   /** Only ever an id this browser minted, so it needs no disambiguating: null otherwise. */
   fileId: string | null;
+  /** What to call a document this browser does not hold. The owner's own files only. */
+  documentName: string | null;
   documentLocation: DocumentLocation;
   /** What produced the row, so it can say where the work came from. */
   sourceKind: SourceKind;

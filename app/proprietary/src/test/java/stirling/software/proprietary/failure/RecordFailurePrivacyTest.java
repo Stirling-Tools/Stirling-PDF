@@ -44,20 +44,19 @@ class RecordFailurePrivacyTest {
     @Test
     void hasNoFileNameFieldAtAll() {
         // Structural, not behavioural: if a name component is ever added back, this fails. Both
-        // spellings, because the view grew a documentName that this test did not catch.
+        // spellings, because a view once grew a documentName that this test did not catch.
+        //
+        // NotificationView is deliberately absent: it carries a documentName derived per reader
+        // and owner-scoped, which is the opposite of storing one. Nothing here may hold a name,
+        // so nothing here can disclose one to a reader who is not the owner.
         assertThat(List.of(RecordFailure.class.getRecordComponents()))
                 .extracting(RecordComponent::getName)
                 .doesNotContain("fileName", "documentName");
         assertThat(List.of(FileRunEventEntity.class.getDeclaredFields()))
                 .extracting(Field::getName)
                 .doesNotContain("fileName", "documentName");
+        // The portal's shape, read by reviewers over rows that are not theirs.
         assertThat(List.of(FileRunEventView.class.getRecordComponents()))
-                .extracting(RecordComponent::getName)
-                .doesNotContain("fileName", "documentName");
-        assertThat(
-                        List.of(
-                                stirling.software.proprietary.notification.NotificationView.class
-                                        .getRecordComponents()))
                 .extracting(RecordComponent::getName)
                 .doesNotContain("fileName", "documentName");
     }

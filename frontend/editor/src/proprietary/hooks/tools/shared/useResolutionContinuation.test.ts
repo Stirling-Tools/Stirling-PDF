@@ -72,6 +72,7 @@ function policyRow(overrides: Partial<AppNotification> = {}): AppNotification {
     defaultTitle: "Password-protected document",
     detail: "The PDF Document is passworded",
     fileId: "f-locked",
+    documentName: null,
     documentLocation: "BROWSER",
     sourceKind: "EDITOR",
     sourceId: null,

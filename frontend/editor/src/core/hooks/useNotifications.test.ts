@@ -62,6 +62,7 @@ function notification(
     defaultTitle: id,
     detail: "boom",
     fileId: "f-1",
+    documentName: null,
     documentLocation: "BROWSER",
     sourceKind: "EDITOR",
     sourceId: null,

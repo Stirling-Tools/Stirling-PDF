@@ -14,6 +14,7 @@ import {
   PORTAL_REVIEW_PATH,
 } from "@app/routes/portalBasename";
 import { EDITOR_BASENAME } from "@app/routes/editorBasename";
+import { HAS_PORTAL } from "@app/routes/hasPortal";
 import { fileStorage } from "@app/services/fileStorage";
 import { rerunPolicy } from "@app/services/notificationPolicyRetry";
 import { dispatchNotificationAction } from "@app/services/notifications";
@@ -204,7 +205,9 @@ export function useNotificationActions(): ClientActionRegistry {
     };
 
     const viewInProcessor: ClientActionSpec = {
-      available: () => true,
+      // Desktop ships the app without the processor, so the destination is not routed there and
+      // the button navigated to nothing.
+      available: () => HAS_PORTAL,
       closesPanel: true,
       run: () => navigate(REVIEW_DESTINATION),
     };

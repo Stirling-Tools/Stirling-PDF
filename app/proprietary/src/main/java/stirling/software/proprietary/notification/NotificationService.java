@@ -12,7 +12,11 @@ import stirling.software.proprietary.failure.FailureActionId;
 import stirling.software.proprietary.failure.FileRunEvent;
 import stirling.software.proprietary.failure.FileRunEventService;
 import stirling.software.proprietary.failure.FileRunEventView;
+import stirling.software.proprietary.failure.Ownership;
+import stirling.software.proprietary.policy.ledger.StorageFileIdentities;
 import stirling.software.proprietary.policy.store.PolicyStore;
+import stirling.software.proprietary.storage.model.StoredFile;
+import stirling.software.proprietary.storage.repository.StoredFileRepository;
 
 /**
  * Derived on read rather than stored: one source today, and a table would need a write path,
@@ -24,6 +28,7 @@ public class NotificationService {
 
     private final FileRunEventService fileRunEvents;
     private final PolicyStore policyStore;
+    private final StoredFileRepository storedFiles;
 
     /**
      * Newest first, and only open failures about a document: one already dealt with is not news,
@@ -42,6 +47,33 @@ public class NotificationService {
                 .filter(event -> event.fileId() != null && !event.fileId().isBlank())
                 .map(event -> fromFailure(event, kinds))
                 .toList();
+    }
+
+    /**
+     * What to call the document, for the one reader entitled to know: the person the row belongs
+     * to, looking at a file they own.
+     *
+     * <p>Derived, never stored, and never sent to anyone else — a colleague's filename is not a
+     * team leader's to read. Only a storage-backed folder can answer at all: its identity is the
+     * stored row's id, so the name comes from the row. A disk folder's identity is a path, and
+     * returning the last segment of it would be the same disclosure by another route.
+     */
+    private String documentNameFor(FileRunEvent event, Ownership ownership) {
+        if (ownership != Ownership.MINE || event.actor() == null) {
+            return null;
+        }
+        Long storedFileId = StorageFileIdentities.storedFileIdOf(event.fileId());
+        if (storedFileId == null) {
+            return null;
+        }
+        return storedFiles
+                .findById(storedFileId)
+                // Belt and braces over the ownership above: that says the reader raised the row,
+                // this says the document is theirs. A row can outlive the file it named.
+                .filter(file -> file.getOwner() != null)
+                .filter(file -> event.actor().equals(file.getOwner().getUsername()))
+                .map(StoredFile::getOriginalFilename)
+                .orElse(null);
     }
 
     /**
@@ -104,12 +136,13 @@ public class NotificationService {
     private NotificationView fromFailure(FileRunEvent event, Map<String, SourceKind> kinds) {
         FileRunEventView.DocumentLocation location = FileRunEventView.DocumentLocation.of(event);
         boolean resolvableHere = location == FileRunEventView.DocumentLocation.BROWSER;
+        Ownership ownership = fileRunEvents.ownershipOf(event);
         return new NotificationView(
                 NotificationSource.FAILURE.qualify(event.id()),
                 NotificationSource.FAILURE,
                 event.kind().getId(),
                 event.origin(),
-                fileRunEvents.ownershipOf(event),
+                ownership,
                 event.severity(),
                 event.status(),
                 event.kind().getTitleKey(),
@@ -118,6 +151,7 @@ public class NotificationService {
                 // Only an id this reader's own client minted. A source's reference is a location on
                 // the server's disk, and no client has anything to match it against.
                 resolvableHere ? event.fileId() : null,
+                resolvableHere ? null : documentNameFor(event, ownership),
                 location,
                 sourceKindOf(event, kinds),
                 event.sourceId(),
