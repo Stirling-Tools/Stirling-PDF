@@ -6,23 +6,12 @@
  *
  * <h2>Render efficiency</h2>
  *
- * The hook is designed so {@code Plan}, {@code PaygFreeLeader/Member}, and
- * {@code PaygLeader/Member} re-render only on actual data change:
- *
- * <ul>
- *   <li>{@link Wallet} snapshot is stored as a plain object — but every
- *       successful fetch deep-compares with the previous snapshot and reuses
- *       the prior reference if the payload is unchanged. Consumers that hold
- *       a stable {@code wallet} reference get stable child memoisation.
- *   <li>The returned {@link UseWalletResult} keeps stable callback identities
- *       via {@code useCallback}. {@code Plan} can pass {@code markSubscribed}
- *       to {@code UpgradeModal} without forcing a remount.
- *   <li>{@code refetch / markSubscribed / updateCap} bump an internal counter
- *       that the {@code useEffect} watches — no global state plumbing.
- *   <li>A monotonic {@code requestId} ref drops stale responses so a slow
- *       refetch from tick=N can't overwrite a faster one from tick=N+1
- *       (out-of-order resolution would otherwise show old data).
- * </ul>
+ * {@code Plan}, {@code PaygFreeLeader/Member} and {@code PaygLeader/Member}
+ * re-render only on actual data change: the query client's structural sharing
+ * reuses the previous snapshot when the payload is unchanged, and drops a
+ * response superseded by a later one. The returned callbacks keep stable
+ * identities, so {@code Plan} can pass {@code markSubscribed} to
+ * {@code UpgradeModal} without forcing a remount.
  *
  * <h2>Mutation semantics</h2>
  *
@@ -35,10 +24,11 @@
  * <h2>Freshness</h2>
  *
  * The figures drain as metered work runs, so a mounted consumer re-reads the
- * wallet every {@link WALLET_POLL_MS} and again whenever the tab regains
- * visibility. Those refreshes are silent — they leave {@code loading} and
- * {@code error} alone and only commit fresher data — so consumers that gate on
- * those flags don't flicker on a background tick.
+ * wallet every {@link WALLET_POLL_MS} and again on returning to the tab once
+ * they are stale. Those refreshes are silent: {@code loading} tracks "nothing
+ * to show yet" rather than "a request is out", and a failure with a good
+ * snapshot behind it never surfaces — so consumers that gate on those flags
+ * don't flicker on a background tick.
  *
  * <h2>Dev preview fallback</h2>
  *
@@ -53,8 +43,10 @@
  * it. Desktop's cascade falls through to the cloud default (no dev preview), so
  * it always fetches the real wallet.
  */
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import { useQuery } from "@tanstack/react-query";
 import apiClient from "@app/services/apiClient";
+import { qk } from "@app/query/keys";
 import { createPortalSession } from "@app/services/billing";
 import { openExternal } from "@app/platform/openExternal";
 import { getWalletDevPreview } from "@app/hooks/walletDevPreview";
@@ -115,80 +107,6 @@ export interface UseWalletResult {
 // ─── Implementation ─────────────────────────────────────────────────────
 
 /**
- * Stable reference reuse — if the new payload deep-equals the previous one,
- * return the previous object so React's reference check short-circuits child
- * renders. Walks the top-level scalars first (cheapest), then the nested
- * {@code categoryBreakdown} object, then the {@code members} array. The
- * {@code recent} array is identity-compared only — Wave 1 always returns
- * {@code []} so a reference-stability check is sufficient; we'll deepen
- * this once the activity surface lands.
- */
-function reuseIfEqual(prev: Wallet | null, next: Wallet): Wallet {
-  if (!prev) return next;
-  if (
-    prev.status !== next.status ||
-    prev.teamId !== next.teamId ||
-    prev.role !== next.role ||
-    prev.billingPeriodStart !== next.billingPeriodStart ||
-    prev.billingPeriodEnd !== next.billingPeriodEnd ||
-    prev.billableUsed !== next.billableUsed ||
-    prev.billableLimit !== next.billableLimit ||
-    prev.freeAllowance !== next.freeAllowance ||
-    prev.freeRemaining !== next.freeRemaining ||
-    prev.includedPeriodStart !== next.includedPeriodStart ||
-    prev.includedPeriodEnd !== next.includedPeriodEnd ||
-    prev.pricePerDocMinor !== next.pricePerDocMinor ||
-    prev.bundleRatePerCreditMinor !== next.bundleRatePerCreditMinor ||
-    prev.currency !== next.currency ||
-    prev.estimatedBillMinor !== next.estimatedBillMinor ||
-    prev.capUsd !== next.capUsd ||
-    prev.noCap !== next.noCap ||
-    prev.stripeSubscriptionId !== next.stripeSubscriptionId ||
-    prev.spendUnitsThisPeriod !== next.spendUnitsThisPeriod ||
-    prev.docsProcessedThisPeriod !== next.docsProcessedThisPeriod ||
-    prev.uniquePdfsThisPeriod !== next.uniquePdfsThisPeriod ||
-    prev.sizeMultiplierPdfsThisPeriod !== next.sizeMultiplierPdfsThisPeriod ||
-    prev.billingMode !== next.billingMode ||
-    prev.prepaidUnitsRemaining !== next.prepaidUnitsRemaining ||
-    prev.prepaidUnitsTotal !== next.prepaidUnitsTotal ||
-    prev.prepaidExpiresAt !== next.prepaidExpiresAt
-  ) {
-    return next;
-  }
-  if (prev.recent.length !== next.recent.length) {
-    return next;
-  }
-  if (
-    prev.categoryBreakdown.api !== next.categoryBreakdown.api ||
-    prev.categoryBreakdown.ai !== next.categoryBreakdown.ai ||
-    prev.categoryBreakdown.automation !== next.categoryBreakdown.automation ||
-    prev.categoryDocs.api !== next.categoryDocs.api ||
-    prev.categoryDocs.ai !== next.categoryDocs.ai ||
-    prev.categoryDocs.automation !== next.categoryDocs.automation
-  ) {
-    return next;
-  }
-  if (prev.members.length !== next.members.length) {
-    return next;
-  }
-  for (let i = 0; i < prev.members.length; i++) {
-    const a = prev.members[i];
-    const b = next.members[i];
-    if (
-      a.userId !== b.userId ||
-      a.name !== b.name ||
-      a.email !== b.email ||
-      a.spendUnits !== b.spendUnits
-    ) {
-      return next;
-    }
-  }
-  // recent length-mismatch already returned `next` above; content (Wave 1 = []) is identical
-  // otherwise, so reuse the prior reference for stable child memoisation.
-  return prev;
-}
-
-/**
  * How often a mounted consumer re-reads the wallet. Matches the app query
  * client's staleTime, so the sidebar meter and anything cached elsewhere age
  * out on the same clock.
@@ -204,148 +122,49 @@ export function useWallet(enabled = true): UseWalletResult {
   // cloud/ may not touch directly.
   const devPreview = useRef(getWalletDevPreview()).current;
 
-  const [wallet, setWallet] = useState<Wallet | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refetchTick, setRefetchTick] = useState(0);
+  const {
+    data,
+    isPending,
+    error: readError,
+    refetch: read,
+  } = useQuery({
+    queryKey: qk.paygWallet(),
+    queryFn: async () =>
+      devPreview
+        ? devPreview.buildWallet(devPreview.role())
+        : (await apiClient.get<Wallet>("/api/v1/payg/wallet")).data,
+    enabled,
+    // The dev-preview wallet is synthesised locally, so there is nothing to
+    // re-read; a hidden tab pauses either way.
+    refetchInterval: devPreview ? false : WALLET_POLL_MS,
+    refetchOnWindowFocus: !devPreview,
+    staleTime: WALLET_POLL_MS,
+    // A failure self-heals on the next tick, so a retry only doubles the wait.
+    retry: false,
+  });
 
-  // Monotonic request id — used to discard stale responses if a faster
-  // refetch lands first. Only the latest issued id is permitted to commit
-  // its result.
-  const latestReqId = useRef(0);
+  // Disabling shows nothing, rather than the last team's figures.
+  const wallet = enabled ? (data ?? null) : null;
+  // A failed refresh with a snapshot behind it is a non-event: the figures
+  // stand and the next tick self-heals. Only a failure that leaves nothing to
+  // show surfaces.
+  const surfaced = enabled && !wallet ? readError : null;
 
-  // Promise tracking the most recent in-flight load. Mutations await this
-  // so their resolution semantics are "the new state is visible," not
-  // "the request fired." Cleared when no load is pending.
-  const inFlight = useRef<Promise<void> | null>(null);
-
-  // Set for refreshes the user didn't ask for (the poll below). Silence governs
-  // whether a load may RAISE `loading` / `error`, never whether it may clear
-  // them: consumers gate on both — the limit modals do
-  // `if (loading || !wallet) return null`, and Plan swaps in an error alert —
-  // so a background tick must not blink an open modal out or replace a working
-  // page over a transient failure. Clearing is always the latest request's job,
-  // silent or not; a silent load that skipped the clear would strand `loading`
-  // true after superseding a visible one, which suppresses those modals for the
-  // rest of the session.
-  const silentRefresh = useRef(false);
-
+  // Once per failure, not once per tick, or an offline tab warns every poll.
+  const warned = useRef(false);
   useEffect(() => {
-    const reqId = ++latestReqId.current;
-    let cancelled = false;
-
-    const silent = silentRefresh.current;
-    silentRefresh.current = false;
-
-    if (!enabled) {
-      setWallet(null);
-      setLoading(false);
-      setError(null);
+    if (!surfaced) {
+      warned.current = false;
       return;
     }
-
-    const promise = (async () => {
-      if (!silent) {
-        setLoading(true);
-        setError(null);
-      }
-
-      if (devPreview) {
-        const synth = devPreview.buildWallet(devPreview.role());
-        if (cancelled || reqId !== latestReqId.current) return;
-        setWallet((prev) => reuseIfEqual(prev, synth));
-        setLoading(false);
-        return;
-      }
-
-      try {
-        const res = await apiClient.get<Wallet>("/api/v1/payg/wallet");
-        if (cancelled || reqId !== latestReqId.current) return;
-        setWallet((prev) => reuseIfEqual(prev, res.data));
-        // Fresh data retires any earlier failure, including one a silent poll
-        // is recovering from — otherwise Plan keeps its alert over good data.
-        setError(null);
-      } catch (e: unknown) {
-        if (cancelled || reqId !== latestReqId.current) return;
-        if (!silent) {
-          console.warn("[useWallet] fetch failed", e);
-          setError(e instanceof Error ? e.message : "Failed to load wallet");
-        }
-        // A failed background refresh is a non-event: the last good snapshot
-        // stands and the next tick self-heals, so it neither surfaces nor
-        // logs — otherwise an offline tab warns every WALLET_POLL_MS.
-      } finally {
-        // Deliberately not gated on `silent`: whichever load is latest owns
-        // settling the flag, or a silent refresh that supersedes a visible one
-        // leaves it stuck true.
-        if (!cancelled && reqId === latestReqId.current) {
-          setLoading(false);
-        }
-      }
-    })();
-
-    inFlight.current = promise;
-
-    return () => {
-      cancelled = true;
-      // Don't clear inFlight here — let it resolve so mutations awaiting it
-      // still see a definitive "load completed" point. The reqId guard
-      // upstream ensures stale results don't commit.
-    };
-  }, [devPreview, enabled, refetchTick]);
-
-  // The wallet drains as automation, AI and API work runs, so a figure fetched
-  // on mount goes stale while the user watches it. Refresh on a timer, and
-  // immediately on returning to the tab — coming back to a stale number is the
-  // case people actually notice. Hidden tabs don't poll, and the dev-preview
-  // wallet is synthesised locally so there is nothing to re-read.
-  useEffect(() => {
-    if (!enabled || devPreview) return;
-
-    let timer: ReturnType<typeof setInterval> | undefined;
-    const refresh = () => {
-      silentRefresh.current = true;
-      setRefetchTick((t) => t + 1);
-    };
-    const stop = () => {
-      if (timer !== undefined) {
-        clearInterval(timer);
-        timer = undefined;
-      }
-    };
-    const start = () => {
-      stop();
-      timer = setInterval(refresh, WALLET_POLL_MS);
-    };
-    const onVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        refresh();
-        start();
-      } else {
-        stop();
-      }
-    };
-
-    if (document.visibilityState === "visible") start();
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    return () => {
-      stop();
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-    };
-  }, [devPreview, enabled]);
+    if (warned.current) return;
+    warned.current = true;
+    console.warn("[useWallet] fetch failed", surfaced);
+  }, [surfaced]);
 
   const refetch = useCallback(async () => {
-    setRefetchTick((t) => t + 1);
-    // Snapshot the next-tick promise so the caller awaits this refetch
-    // specifically — the in-flight ref will be updated to it on the next
-    // effect run, but we can't reference that synchronously, so settle for
-    // a microtask handoff: await the *current* effect to flush, then await
-    // the new in-flight promise.
-    await Promise.resolve();
-    if (inFlight.current) {
-      await inFlight.current;
-    }
-  }, []);
+    await read();
+  }, [read]);
 
   const markSubscribed = useCallback(
     async (capUsd: number | null) => {
@@ -428,8 +247,14 @@ export function useWallet(enabled = true): UseWalletResult {
 
   return {
     wallet,
-    loading,
-    error,
+    // "Nothing to show yet", not "a request is out": a background tick must not
+    // blink an open limit modal, which gates on `loading || !wallet`.
+    loading: enabled && isPending,
+    error: surfaced
+      ? surfaced instanceof Error
+        ? surfaced.message
+        : "Failed to load wallet"
+      : null,
     refetch,
     markSubscribed,
     updateCap,

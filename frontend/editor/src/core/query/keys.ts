@@ -14,6 +14,8 @@ export const qk = {
   groupEnabled: (group: string) => ["editor", "groupEnabled", group] as const,
   signingSessions: (userId: string | null) =>
     ["editor", "signingSessions", userId] as const,
+  /** The PAYG wallet: usage, allowance and cap for the signed-in team. */
+  paygWallet: () => ["editor", "paygWallet"] as const,
   /** Keyed on the asking identity: two users must never share one answer. */
   portalAccess: (userId: string | null) =>
     ["editor", "portalAccess", userId] as const,
