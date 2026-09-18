@@ -24,6 +24,18 @@ import { startEagerWasmCompilation } from "@app/services/wasmPrecompiler";
 applyDevWorktreeLabel();
 
 if (typeof window !== "undefined") {
+  // Suppress browser-level page zoom on pinch gestures so only open documents zoom
+  window.addEventListener(
+    "wheel",
+    (event) => {
+      if (event.ctrlKey || event.metaKey) {
+        event.preventDefault();
+      }
+    },
+    { passive: false },
+  );
+  window.addEventListener("gesturestart", (event) => event.preventDefault());
+
   const scheduleCompilation = () =>
     requestIdleCallback(() => startEagerWasmCompilation(), { timeout: 2000 });
 
