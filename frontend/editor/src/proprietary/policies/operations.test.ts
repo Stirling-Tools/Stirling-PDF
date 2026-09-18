@@ -24,6 +24,7 @@ describe("POLICY_OPERATIONS", () => {
       "pdfa",
       "purviewApplyLabel",
       "purviewReadLabel",
+      "ragIngest",
       "redact",
       "sanitize",
       "timestampPdf",
@@ -155,5 +156,48 @@ describe("compliance steps", () => {
     });
     expect(back?.toolId).toBe("complianceCheck");
     expect(back?.params).toEqual({});
+  });
+});
+
+describe("rag ingest wire round-trip", () => {
+  test("sends positive integer sizes and real booleans, and round-trips them", () => {
+    const wire = policyStepToWire(
+      policyStep("ragIngest", {
+        chunkSize: "1024",
+        overlap: "32",
+        exportMarkdown: "true",
+      }),
+    );
+    expect(wire.operation).toBe("/api/v1/docparse/rag-ingest");
+    expect(wire.parameters).toEqual({
+      chunkSize: 1024,
+      overlap: 32,
+      index: true,
+      exportMarkdown: true,
+      exportChunksJsonl: false,
+      includeOriginal: true,
+    });
+
+    const back = policyStepFromWire(wire);
+    expect(back?.toolId).toBe("ragIngest");
+    if (back?.toolId === "ragIngest") {
+      expect(back.params.chunkSize).toBe("1024");
+      expect(back.params.exportMarkdown).toBe("true");
+      expect(back.params.index).toBe("true");
+    }
+  });
+
+  test("preserves zero overlap through editing and save", () => {
+    const wire = policyStepToWire(policyStep("ragIngest", { overlap: "0" }));
+    expect(wire.parameters.overlap).toBe(0);
+    const decoded = policyStepFromWire(wire);
+    expect(decoded?.params).toMatchObject({ overlap: "0" });
+  });
+
+  test("retains an invalid pair so validation can report it without silently changing settings", () => {
+    const wire = policyStepToWire(
+      policyStep("ragIngest", { chunkSize: "256", overlap: "512" }),
+    );
+    expect(wire.parameters).toMatchObject({ chunkSize: 256, overlap: 512 });
   });
 });

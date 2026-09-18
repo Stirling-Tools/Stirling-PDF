@@ -178,6 +178,13 @@ const CAPABILITY_META: Record<
     descKey: "portal.policies.wizard.capability.watermark.desc",
     descEn: "Stamps a visible mark (e.g. “Confidential”) across every page.",
   },
+  ragIngest: {
+    labelKey: "portal.policies.wizard.capability.ragIngest.label",
+    labelEn: "Prepare for knowledge search",
+    descKey: "portal.policies.wizard.capability.ragIngest.desc",
+    descEn:
+      "Prepare searchable chunks for the built-in knowledge base, a connected RAG database, or a corpus export.",
+  },
   ocr: {
     labelKey: "portal.policies.wizard.capability.ocr.label",
     labelEn: "Make text searchable",
