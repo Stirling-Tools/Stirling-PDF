@@ -41,6 +41,55 @@ fn get_keyring_entry() -> Result<Entry, String> {
     Ok(entry)
 }
 
+/// The keychain read blocks until its OS prompt is answered, and an unanswered prompt never
+/// returns. Past this bound the caller falls through to the Store rather than hanging the app.
+const KEYRING_READ_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(10);
+
+/// None means "no usable keyring value" for every reason - missing, errored, or timed out - so
+/// the caller always has the Store fallback available.
+async fn read_keyring_password(
+    entry: fn() -> Result<Entry, String>,
+    label: &'static str,
+) -> Option<String> {
+    let (tx, rx) = tokio::sync::oneshot::channel();
+    std::thread::spawn(move || {
+        let password = match entry() {
+            Ok(entry) => match entry.get_password() {
+                Ok(password) => Some(password),
+                Err(keyring::Error::NoEntry) => {
+                    log::debug!("No {} in keyring, trying Tauri Store", label);
+                    None
+                }
+                Err(e) => {
+                    log::warn!("Keyring error reading {}: {} - trying Tauri Store", label, e);
+                    None
+                }
+            },
+            Err(e) => {
+                log::warn!("Keyring entry unavailable for {}: {} - trying Tauri Store", label, e);
+                None
+            }
+        };
+        let _ = tx.send(password);
+    });
+
+    match tokio::time::timeout(KEYRING_READ_TIMEOUT, rx).await {
+        Ok(Ok(Some(password))) => {
+            log::info!("{} retrieved from keyring", label);
+            Some(password)
+        }
+        Ok(Ok(None)) => None,
+        Ok(Err(_)) => {
+            log::warn!("Keyring read for {} was dropped - trying Tauri Store", label);
+            None
+        }
+        Err(_) => {
+            log::warn!("Keyring read for {} timed out - trying Tauri Store", label);
+            None
+        }
+    }
+}
+
 pub fn get_refresh_token_keyring_entry() -> Result<Entry, String> {
     if std::env::var("STIRLING_PDF_TEST_FORCE_REFRESH_KEYRING_FAIL").is_ok() {
         return Err("Forced keyring failure for tests".to_string());
@@ -133,19 +182,8 @@ pub async fn save_auth_token(app_handle: AppHandle, token: String) -> Result<(),
 pub async fn get_auth_token(app_handle: AppHandle) -> Result<Option<String>, String> {
     // Try keyring first (production / unrestricted environments). Any failure -
     // including entry creation - falls through to the Tauri Store fallback below.
-    match get_keyring_entry() {
-        Ok(entry) => match entry.get_password() {
-            Ok(token) => return Ok(Some(token)),
-            Err(keyring::Error::NoEntry) => {
-                log::debug!("No auth token in keyring, trying Tauri Store");
-            }
-            Err(e) => {
-                log::warn!("Keyring error reading auth token: {} - trying Tauri Store", e);
-            }
-        },
-        Err(e) => {
-            log::warn!("Keyring entry unavailable for auth token: {} - trying Tauri Store", e);
-        }
+    if let Some(token) = read_keyring_password(get_keyring_entry, "auth token").await {
+        return Ok(Some(token));
     }
 
     // Fallback to Tauri Store
@@ -241,22 +279,10 @@ pub async fn save_refresh_token<R: Runtime>(app_handle: AppHandle<R>, token: Str
 pub async fn get_refresh_token<R: Runtime>(app_handle: AppHandle<R>) -> Result<Option<String>, String> {
     // Try keyring first (production / unrestricted environments). Any failure -
     // including entry creation - falls through to the Tauri Store fallback below.
-    match get_refresh_token_keyring_entry() {
-        Ok(entry) => match entry.get_password() {
-            Ok(token) => {
-                log::info!("Refresh token retrieved from keyring");
-                return Ok(Some(token));
-            }
-            Err(keyring::Error::NoEntry) => {
-                log::debug!("No refresh token in keyring, trying Tauri Store");
-            }
-            Err(e) => {
-                log::warn!("Keyring error reading refresh token: {} - trying Tauri Store", e);
-            }
-        },
-        Err(e) => {
-            log::warn!("Keyring entry unavailable for refresh token: {} - trying Tauri Store", e);
-        }
+    if let Some(token) =
+        read_keyring_password(get_refresh_token_keyring_entry, "refresh token").await
+    {
+        return Ok(Some(token));
     }
 
     // Fallback to Tauri Store (dev or restricted environments)
@@ -934,4 +960,21 @@ fn parse_oauth_callback(url_str: &str) -> Result<OAuthCallbackData, String> {
 
     // No authorization code or error found
     Err("No authorization code or error found in OAuth callback".to_string())
+}
+
+#[cfg(test)]
+mod keyring_timeout_tests {
+    use super::*;
+
+    fn never_returns() -> Result<Entry, String> {
+        std::thread::sleep(std::time::Duration::from_secs(60));
+        Err("the bound fires long before this".to_string())
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn gives_up_on_a_keyring_read_that_never_returns() {
+        assert!(read_keyring_password(never_returns, "test token")
+            .await
+            .is_none());
+    }
 }
