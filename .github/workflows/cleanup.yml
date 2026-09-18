@@ -1,8 +1,11 @@
-name: Garbage collection
+name: Cache garbage collection
 concurrency:
   group: cache-garbage-collection
   cancel-in-progress: false
+
 on:
+  schedule:
+    - cron: "17 3 * * *"
   workflow_dispatch:
     inputs:
       mode:
@@ -22,30 +25,37 @@ on:
         required: false
         default: false
         type: boolean
-  schedule: [{ cron: "0 3 * * *" }]
+
+permissions:
+  contents: read
+
 jobs:
   gc:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions: 
+    permissions:
       contents: write
+
     steps:
-      - name: Check out repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Harden the runner (Audit all outbound calls)
+        uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
         with:
-          persist-credentials: false
-      - name: Set up Node.js
-        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+          egress-policy: audit
+
+      - name: Checkout repository
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Setup GitHub App Bot
+        id: setup-bot
+        uses: ./.github/actions/setup-bot
         with:
-          node-version: 24
-          package-manager-cache: false
-      - name: Run garbage collection
-        run: node dist/gc.js
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GC_MODE: ${{ github.event_name == 'schedule' && 'expired' || inputs.mode || 'expired' }}
-          GC_EXPIRE_ALL_UNTRUSTED: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'expired' && 'true' || 'false' }}
-          GC_DELETE_SHARED: ${{ github.event_name == 'workflow_dispatch' && inputs.mode == 'expired' && inputs.delete_shared && 'true' || 'false' }}
-          UNTRUSTED_TTL_HOURS: 24
-          GC_OBJECT: ${{ inputs.object || '' }}
-          DRY_RUN: ${{ github.event_name == 'schedule' && 'false' || (inputs.dry_run && 'true' || 'false') }}
+          app-id: ${{ secrets.GH_APP_ID }}
+          private-key: ${{ secrets.GH_APP_PRIVATE_KEY }}
+          
+      - name: Garbage collect cache
+        uses: Ludy87/cache-the-planet/gc@v1
+        with:
+          repository: Ludy87/cache-the-planet
+          token: ${{ secrets.CACHE_REPOSITORY_TOKEN }}
+          mode: expired
+          untrusted-ttl-hours: "24"
+          dry-run: "false"
