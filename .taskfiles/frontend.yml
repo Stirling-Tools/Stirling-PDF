@@ -12,6 +12,8 @@ vars:
   DEV_LABEL:
     sh: >-
       {{if eq OS "windows"}}powershell -NoProfile -Command '$root = git rev-parse --show-toplevel 2>$null; if (-not $root) { $root = (Get-Location).Path }; Split-Path -Leaf $root'{{else}}basename "$(git rev-parse --show-toplevel 2>/dev/null || pwd)"{{end}}
+  VITEST_JOBS: '{{if .STIRLING_CHECK_JOBS}} --maxWorkers={{.STIRLING_CHECK_JOBS}}{{end}}'
+  OX_THREADS: '{{if .STIRLING_CHECK_JOBS}} --threads={{.STIRLING_CHECK_JOBS}}{{end}}'
 
 tasks:
   install:
@@ -394,7 +396,7 @@ tasks:
     desc: "Run oxlint linting"
     deps: [install]
     cmds:
-      - npx oxlint --config oxlint.config.ts --max-warnings=0
+      - npx oxlint --config oxlint.config.ts --max-warnings=0{{.OX_THREADS}}
 
   lint:fix:
     desc: "Auto-fix lint issues"
@@ -412,7 +414,7 @@ tasks:
     desc: "Check code formatting"
     deps: [install]
     cmds:
-      - npx oxfmt --check .
+      - npx oxfmt --check .{{.OX_THREADS}}
 
   fix:
     desc: "Auto-fix lint and format"
@@ -556,7 +558,7 @@ tasks:
       COVERAGE: '{{.COVERAGE | default .CI | default "false"}}'
     cmds:
       - >
-        npx vitest run --root editor
+        npx vitest run --root editor{{.VITEST_JOBS}}
         {{if eq .COVERAGE "true"}}--coverage
         --coverage.provider=v8
         --coverage.reporter=text-summary
