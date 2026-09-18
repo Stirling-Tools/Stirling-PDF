@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<office:document xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"
+ xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"
+ xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0"
+ xmlns:xlink="http://www.w3.org/1999/xlink"
+ xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0"
+ office:version="1.2" office:mimetype="application/vnd.oasis.opendocument.text">
+ <office:body><office:text>
+  <text:p>flat ODF security fixture</text:p>
+  <text:p><draw:frame svg:width="2cm" svg:height="2cm"><draw:image xlink:href="http://192.0.2.1/should-be-stripped.png" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame></text:p>
+ </office:text></office:body></office:document>
