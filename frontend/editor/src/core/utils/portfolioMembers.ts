@@ -9,11 +9,8 @@ import { getDocumentBytes } from "@app/services/documentBytesCache";
 // Reads a portfolio's members from the file's own bytes. The viewer's attachment
 // capability only covers the open document, which stops being the portfolio.
 //
-// pdf-lib (~628kB raw / ~266kB gzip) is loaded lazily via dynamic import so it
-// never blocks the Viewer chunk. The Viewer statically imports this module
-// (via usePortfolioSession + AttachmentSidebar), so a static value import here
-// would force every /editor open to download+parse vendor-pdflib before the
-// viewer can run — even though <1% of documents are portfolios.
+// pdf-lib (~628kB raw) stays a dynamic import: this module loads with the
+// Viewer, so a static import would block every open on a portfolio-only dep.
 
 type PdfLib = typeof import("@cantoo/pdf-lib");
 
