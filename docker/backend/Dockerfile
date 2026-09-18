@@ -68,6 +68,15 @@ RUN apt-get update \
     && sh /tmp/slim-onnxruntime.sh /layers/dependencies
 
 
+# Compile the network guard here (not only in base) so it ships regardless of the pinned base version.
+FROM ubuntu:noble@sha256:33ceb71981b602c1a7443a53469e4dba065f7503eab3078a2d7a57a2ab987517 AS office-guard-build
+RUN apt-get update && apt-get install -y --no-install-recommends gcc libc6-dev && \
+    rm -rf /var/lib/apt/lists/*
+COPY docker/base/security/soffice_no_network.c /tmp/soffice_no_network.c
+RUN gcc -shared -fPIC -O2 -Wall -Werror -o /soffice_no_network.so /tmp/soffice_no_network.c -ldl && \
+    test -s /soffice_no_network.so
+
+
 # Stage 3: Final runtime image on top of pre-built base
 FROM ${BASE_IMAGE}
 
@@ -84,6 +93,10 @@ COPY --link --from=jar-extract --chown=1000:1000 /layers/application/           
 COPY --link --from=app-build --chown=1000:1000 \
      /app/build/libs/restart-helper.jar /restart-helper.jar
 COPY --link --chown=1000:1000 scripts/ /scripts/
+
+# LibreOffice network guard (loaded via LD_PRELOAD for soffice/unoserver only).
+COPY --link --from=office-guard-build \
+     /soffice_no_network.so /usr/local/lib/stirling/soffice_no_network.so
 
 COPY --link --from=app-build --chown=1000:1000 /preinstalled-models/ /opt/stirling/preinstalled-models/
 

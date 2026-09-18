@@ -18,6 +18,25 @@ case "$RECYCLE_INTERVAL_SECONDS" in ''|*[!0-9]*) log "Invalid UNOSERVER_RECYCLE_
 
 mkdir -p "$PROFILE_DIR"
 
+# LibreOffice egress guard (SSRF): refuses non-loopback connect(). It does not stop
+# DNS or any path that skips the dynamic symbol, so it narrows the reachable surface
+# rather than isolating the process. Default on; LIBREOFFICE_ALLOW_NETWORK=true opts out.
+OFFICE_GUARD_LIB="/usr/local/lib/stirling/soffice_no_network.so"
+OFFICE_LD_PRELOAD=""
+case "$(printf '%s' "${LIBREOFFICE_ALLOW_NETWORK:-false}" | tr '[:upper:]' '[:lower:]')" in
+  1|true|yes|on)
+    log "LibreOffice egress guard DISABLED (LIBREOFFICE_ALLOW_NETWORK=${LIBREOFFICE_ALLOW_NETWORK})"
+    ;;
+  *)
+    if [ -f "$OFFICE_GUARD_LIB" ]; then
+      OFFICE_LD_PRELOAD="$OFFICE_GUARD_LIB"
+      log "LibreOffice egress guard loaded ($OFFICE_GUARD_LIB): non-loopback connect() refused"
+    else
+      log "WARNING: LibreOffice egress guard missing at $OFFICE_GUARD_LIB; conversions can reach the network"
+    fi
+    ;;
+esac
+
 start_xvfb() {
   if command -v Xvfb >/dev/null 2>&1 && [ -z "${DISPLAY:-}" ]; then
     Xvfb :99 -screen 0 1024x768x24 -ac +extension GLX +render -noreset >/dev/null 2>&1 &
@@ -46,7 +65,7 @@ start_unoserver() {
   log "Starting unoserver on ${INTERFACE}:${PORT} (uno-port ${UNO_PORT}, timeout ${CONVERSION_TIMEOUT}s, profile ${PROFILE_DIR})"
   # Pass --user-installation as a plain path; unoserver 3.6 wraps it itself
   # and crashes if pre-wrapped as a file:// URI.
-  unoserver \
+  env ${OFFICE_LD_PRELOAD:+LD_PRELOAD="$OFFICE_LD_PRELOAD"} unoserver \
     --interface "$INTERFACE" \
     --port "$PORT" \
     --uno-port "$UNO_PORT" \
