@@ -17,6 +17,7 @@ import type {
   DiskFileEntry,
   DiskListing,
 } from "@core/services/localFolderContents";
+import { pendingFilePathMappings } from "@app/services/pendingFilePathMappings";
 export type { DiskDirEntry, DiskFileEntry, DiskListing };
 
 /**
@@ -134,10 +135,12 @@ export async function readDiskFile(entry: DiskFileEntry): Promise<File | null> {
   if (!canListDirectory) return null;
   if (!(await isWithinMount(entry.path))) return null;
   const bytes = await readFile(entry.path);
-  return new File([new Uint8Array(bytes)], entry.name, {
+  const file = new File([new Uint8Array(bytes)], entry.name, {
     type: mimeForName(entry.name),
     lastModified: entry.lastModified || undefined,
   });
+  pendingFilePathMappings.set(file, entry.path);
+  return file;
 }
 
 /** How many "(n)" suffixes to try before conceding the directory is hostile. */

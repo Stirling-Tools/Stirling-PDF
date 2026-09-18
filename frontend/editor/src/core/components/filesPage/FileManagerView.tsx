@@ -34,6 +34,7 @@ import { useOpenFolder } from "@app/components/filesPage/useOpenFolder";
 import { useFileActions } from "@app/contexts/file/fileHooks";
 import { useAllFiles } from "@app/contexts/FileContext";
 import { useFileHandler } from "@app/hooks/useFileHandler";
+import { openFilesFromDisk } from "@app/services/openFilesFromDisk";
 import { useServerFolderBlock } from "@app/hooks/useServerFolderBlock";
 import {
   useNavigationActions,
@@ -1388,7 +1389,12 @@ export default function FileManagerView() {
   // Stable identities, here and for the controls built below: the bar re-registers
   // whenever what it was given changes, so a value rebuilt per render turns that into
   // an endless register -> render -> register loop.
-  const openFilePicker = useCallback(() => fileInputRef.current?.click(), []);
+  const openFilePicker = useCallback(async () => {
+    const files = await openFilesFromDisk({
+      onFallbackOpen: () => fileInputRef.current?.click(),
+    });
+    await handleNativeUpload(files);
+  }, [handleNativeUpload]);
 
   const newFolderControl = useMemo(
     () => (
@@ -1928,7 +1934,7 @@ export default function FileManagerView() {
               // handlers the corner header buttons use so behaviour
               // (disabled tooltips, native file picker, dialog) is
               // identical regardless of where the user clicks from.
-              onEmptyUpload={() => fileInputRef.current?.click()}
+              onEmptyUpload={openFilePicker}
               emptyNewFolderControl={
                 <NewFolderButton
                   label={t("filesPage.newFolder", "New folder")}
