@@ -1168,7 +1168,12 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ProblemDetail> handleRuntimeException(
             RuntimeException ex, HttpServletRequest request) {
 
-        // Check if this RuntimeException wraps a typed exception from job execution
+        // Check if this RuntimeException wraps a typed exception from job execution.
+        //
+        // Must stay in step with the @ExceptionHandler methods above: Spring resolves on the type
+        // thrown, so a wrapped exception reaches this handler and never theirs. A subtype missing
+        // from this ladder falls to handleBaseApp, and the same failure answers 500 when it came
+        // through a job and its own status when it did not.
         Throwable cause = ex.getCause();
         if (cause instanceof BaseAppException appEx) {
             // Delegate to specific BaseAppException handlers
@@ -1176,6 +1181,8 @@ public class GlobalExceptionHandler {
                 return handlePdfPassword((PdfPasswordException) appEx, request);
             } else if (appEx instanceof ComplianceNotMetException complianceEx) {
                 return handleComplianceNotMet(complianceEx, request);
+            } else if (appEx instanceof PdfUnrepairableException unrepairableEx) {
+                return handlePdfUnrepairable(unrepairableEx, request);
             } else if (appEx instanceof PdfCorruptedException
                     || appEx instanceof PdfEncryptionException
                     || appEx instanceof OutOfMemoryDpiException) {
