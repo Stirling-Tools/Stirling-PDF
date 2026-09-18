@@ -14,7 +14,7 @@ import {
   Z_INDEX_DROP_INDICATOR,
   Z_INDEX_DRAG_BADGE,
 } from "@app/styles/zIndex";
-import { LocalIcon } from "@app/components/shared/LocalIcon";
+import { Icon } from "@app/ui/Icon";
 import {
   DndContext,
   DragEndEvent,
@@ -1015,7 +1015,7 @@ const DragDropGrid = <T extends DragDropItem>({
                   color: "var(--mantine-color-dimmed)",
                 }}
               >
-                <LocalIcon icon="description" width="3rem" height="3rem" />
+                <Icon name="file-text" size="3rem" />
               </div>
             )}
           </div>

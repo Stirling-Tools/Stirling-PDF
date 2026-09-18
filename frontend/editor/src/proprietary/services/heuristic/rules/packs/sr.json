@@ -1,0 +1,226 @@
+{
+  "version": 2,
+  "language": "sr",
+  "labels": [
+    {
+      "id": "invoice",
+      "phrases": [
+        { "text": "фактура", "weight": 24, "where": "title" },
+        { "text": "порез на додату вредност", "weight": 8 }
+      ]
+    },
+    {
+      "id": "financial-statement",
+      "phrases": [
+        { "text": "финансијски извештај", "weight": 20, "where": "title" },
+        { "text": "bilans stanja", "weight": 12 }
+      ]
+    },
+    {
+      "id": "contract",
+      "phrases": [{ "text": "ugovor", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "employment-contract",
+      "phrases": [{ "text": "уговор о делу", "weight": 24, "where": "title" }]
+    },
+    {
+      "id": "nda",
+      "phrases": [
+        {
+          "text": "уговор о поверљивости података",
+          "weight": 24,
+          "where": "title"
+        }
+      ]
+    },
+    {
+      "id": "privacy-policy",
+      "phrases": [
+        { "text": "zaštita podataka", "weight": 24, "where": "title" },
+        { "text": "opšta uredba o zaštiti podataka", "weight": 10 }
+      ]
+    },
+    {
+      "id": "will",
+      "phrases": [{ "text": "тестамент", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "deed",
+      "phrases": [{ "text": "књига тапија", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "resume",
+      "phrases": [{ "text": "резиме", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "cover-letter",
+      "phrases": [{ "text": "propratno pismo", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "certificate",
+      "phrases": [{ "text": "диплома", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "research-paper",
+      "phrases": [{ "text": "академско издаваштво", "weight": 10 }]
+    },
+    {
+      "id": "patent",
+      "phrases": [{ "text": "патент", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "prescription",
+      "phrases": [
+        { "text": "recipe", "weight": 20, "where": "title" },
+        { "text": "фармација", "weight": 10 }
+      ]
+    },
+    {
+      "id": "medical-report",
+      "phrases": [{ "text": "дијагноза", "weight": 10 }]
+    },
+    {
+      "id": "immunization-record",
+      "phrases": [{ "text": "вакцинација", "weight": 12 }]
+    },
+    {
+      "id": "questionnaire",
+      "phrases": [{ "text": "анкета", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "safety-data-sheet",
+      "phrases": [
+        { "text": "bezbednosni list", "weight": 24, "where": "title" }
+      ]
+    },
+    {
+      "id": "technical-drawing",
+      "phrases": [{ "text": "kotiranje", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "press-release",
+      "phrases": [{ "text": "саопштење", "weight": 22, "where": "title" }]
+    },
+    {
+      "id": "newsletter",
+      "phrases": [{ "text": "годишњак", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "brochure",
+      "phrases": [{ "text": "брошура", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "business-plan",
+      "phrases": [{ "text": "бизнис план", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "white-paper",
+      "phrases": [{ "text": "bela knjiga", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "visa-document",
+      "phrases": [{ "text": "виза", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "utility-bill",
+      "phrases": [{ "text": "струјомер", "weight": 12 }]
+    },
+    {
+      "id": "menu",
+      "phrases": [{ "text": "јеловник", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "recipe",
+      "phrases": [{ "text": "куварски рецепт", "weight": 18, "where": "title" }]
+    },
+    {
+      "id": "presentation",
+      "phrases": [{ "text": "презентација", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "letter",
+      "phrases": [{ "text": "писмо", "weight": 8, "where": "title" }]
+    },
+    {
+      "id": "license",
+      "phrases": [{ "text": "лиценца", "weight": 12, "where": "title" }]
+    },
+    {
+      "id": "risk-assessment",
+      "phrases": [{ "text": "процена ризика", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "property-listing",
+      "phrases": [{ "text": "некретнина", "weight": 8 }]
+    },
+    {
+      "id": "grant-agreement",
+      "phrases": [{ "text": "грант", "weight": 12 }]
+    },
+    {
+      "id": "email-thread",
+      "phrases": [{ "text": "електронска пошта", "weight": 8 }]
+    },
+    {
+      "id": "magazine-article",
+      "phrases": [{ "text": "часопис", "weight": 10 }]
+    },
+    {
+      "id": "offer-letter",
+      "phrases": [{ "text": "regrutacija", "weight": 8 }]
+    },
+    {
+      "id": "purchase-agreement",
+      "phrases": [
+        { "text": "ugovor o prodaji robe", "weight": 18, "where": "title" }
+      ]
+    },
+    {
+      "id": "insurance-claim",
+      "phrases": [{ "text": "осигурање", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "quality-report",
+      "phrases": [{ "text": "контрола квалитета", "weight": 10 }]
+    },
+    {
+      "id": "license-agreement",
+      "phrases": [
+        { "text": "ugovor o licenci", "weight": 20, "where": "title" }
+      ]
+    },
+    {
+      "id": "budget",
+      "phrases": [{ "text": "буџет", "weight": 14, "where": "title" }]
+    },
+    {
+      "id": "remittance-advice",
+      "phrases": [{ "text": "авиза", "weight": 20, "where": "title" }]
+    },
+    {
+      "id": "case-study",
+      "phrases": [{ "text": "студија случаја", "weight": 16, "where": "title" }]
+    },
+    {
+      "id": "board-report",
+      "phrases": [{ "text": "управни одбор", "weight": 10 }]
+    },
+    {
+      "id": "investment-summary",
+      "phrases": [{ "text": "улагање", "weight": 8 }]
+    },
+    {
+      "id": "analytics-report",
+      "phrases": [{ "text": "веб аналитика", "weight": 10 }]
+    },
+    {
+      "id": "assignment-brief",
+      "phrases": [{ "text": "домаћи задатак", "weight": 12 }]
+    }
+  ],
+  "patterns": {
+    "references": [{ "pattern": "библиографија" }],
+    "signature": [{ "pattern": "потпис" }]
+  }
+}

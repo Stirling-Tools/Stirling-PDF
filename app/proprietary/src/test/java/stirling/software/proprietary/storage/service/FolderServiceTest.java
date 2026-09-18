@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.Optional;
@@ -17,6 +19,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -24,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import stirling.software.common.model.ApplicationProperties;
 import stirling.software.proprietary.security.model.User;
+import stirling.software.proprietary.storage.event.StorageFolderArrivalEvent;
 import stirling.software.proprietary.storage.model.Folder;
 import stirling.software.proprietary.storage.model.api.CreateFolderRequest;
 import stirling.software.proprietary.storage.repository.FolderRepository;
@@ -52,6 +56,8 @@ class FolderServiceTest {
     @Mock private ApplicationProperties.Security security;
     @Mock private ApplicationProperties.Storage storage;
 
+    @Mock private ApplicationEventPublisher eventPublisher;
+
     private FolderService service;
     private User user;
 
@@ -64,7 +70,12 @@ class FolderServiceTest {
         lenient().when(security.isEnableLogin()).thenReturn(true);
         lenient().when(storage.isEnabled()).thenReturn(true);
 
-        service = new FolderService(folderRepository, storedFileRepository, applicationProperties);
+        service =
+                new FolderService(
+                        folderRepository,
+                        storedFileRepository,
+                        applicationProperties,
+                        eventPublisher);
 
         user = new User();
         user.setId(42L);
@@ -283,6 +294,36 @@ class FolderServiceTest {
 
         assertThat(result.movedFileIds()).containsExactly(1L, 2L);
         assertThat(result.skippedFileIds()).containsExactly(3L, 4L);
+    }
+
+    @Test
+    void bulkMove_announces_the_arrival_once_for_the_whole_batch() {
+        Folder target = makeFolder(UUID.randomUUID(), null);
+        when(folderRepository.findByIdAndOwner(eq(target.getId()), eq(user)))
+                .thenReturn(Optional.of(target));
+        stirling.software.proprietary.storage.model.StoredFile fileA =
+                mock(stirling.software.proprietary.storage.model.StoredFile.class);
+        when(fileA.getId()).thenReturn(1L);
+        when(storedFileRepository.findAllByIdInAndOwner(any(), eq(user)))
+                .thenReturn(java.util.List.of(fileA));
+
+        service.bulkMoveFilesToFolder(target.getId(), java.util.List.of(1L, 2L));
+
+        verify(eventPublisher).publishEvent(new StorageFolderArrivalEvent(target.getId()));
+    }
+
+    @Test
+    void bulkMove_stays_quiet_when_the_caller_owns_none_of_the_files() {
+        // Nothing moved, so a processing folder has no reason to enumerate itself.
+        Folder target = makeFolder(UUID.randomUUID(), null);
+        when(folderRepository.findByIdAndOwner(eq(target.getId()), eq(user)))
+                .thenReturn(Optional.of(target));
+        when(storedFileRepository.findAllByIdInAndOwner(any(), eq(user)))
+                .thenReturn(java.util.List.of());
+
+        service.bulkMoveFilesToFolder(target.getId(), java.util.List.of(9L));
+
+        verify(eventPublisher, never()).publishEvent(any(StorageFolderArrivalEvent.class));
     }
 
     // ─── helpers ────────────────────────────────────────────────────────────────

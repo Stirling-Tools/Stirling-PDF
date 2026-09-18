@@ -11,6 +11,18 @@ export function classificationCondition(
   };
 }
 
+/** Creates a deterministic comparison against facts read directly from the document. */
+export function documentFieldCondition(
+  field: string,
+  values: string[] = [],
+): MatchesAnyCondition {
+  return {
+    input: { source: "document", field },
+    operator: "matches-any",
+    values,
+  };
+}
+
 /** Classification facts require a classifier-produced verdict; unrelated facts do not. */
 export function requiresClassification(condition: Condition): boolean {
   return (

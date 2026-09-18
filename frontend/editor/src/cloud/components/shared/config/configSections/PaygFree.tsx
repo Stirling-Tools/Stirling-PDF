@@ -114,7 +114,7 @@ function ProcessorCard({ snap, isLeader, onTurnOn }: ProcessorCardProps) {
           </h3>
           <p className="paygf-cta__subtitle">
             {t(
-              "payg.free.cta.subtitle",
+              "payg.free.cta.subtitleWithAllowance",
               "Keep going past your {{limit}} free PDFs with automation, AI, and the API. Set a monthly ceiling, so you stay in control.",
               { limit: snap.billableLimit.toLocaleString() },
             )}
@@ -219,6 +219,8 @@ function PaygFreeLeaderInner({ onUpgraded }: PaygFreeLeaderProps = {}) {
   const { wallet } = useWallet();
   const [upgradeOpen, setUpgradeOpen] = useState(false);
 
+  if (!snap) return null;
+
   return (
     <div className="payg">
       <Stack gap="md">
@@ -262,6 +264,8 @@ function PaygFreeMemberInner() {
   useRenderCount("PaygFreeMember");
   const { t } = useTranslation();
   const snap = useFreeSnapshot();
+
+  if (!snap) return null;
 
   return (
     <div className="payg">

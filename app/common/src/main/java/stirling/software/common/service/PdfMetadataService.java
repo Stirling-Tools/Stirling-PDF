@@ -89,6 +89,9 @@ public class PdfMetadataService {
     private final UserServiceInterface userService;
     private final boolean runningProOrHigher;
 
+    @Autowired(required = false)
+    private LicenseServiceInterface licenseService;
+
     public PdfMetadataService(
             ApplicationProperties applicationProperties,
             @Qualifier("StirlingPDFLabel") String stirlingPDFLabel,
@@ -220,6 +223,10 @@ public class PdfMetadataService {
                 .build();
     }
 
+    private boolean hasPaidPlan() {
+        return licenseService == null ? runningProOrHigher : licenseService.isRunningProOrHigher();
+    }
+
     private void setNewDocumentMetadata(PDDocument pdf, PdfMetadata pdfMetadata) {
 
         String creator = stirlingPDFLabel;
@@ -229,7 +236,7 @@ public class PdfMetadataService {
                         .getProFeatures()
                         .getCustomMetadata()
                         .isAutoUpdateMetadata()
-                && runningProOrHigher) {
+                && hasPaidPlan()) {
 
             creator =
                     applicationProperties
@@ -268,7 +275,7 @@ public class PdfMetadataService {
                         .getProFeatures()
                         .getCustomMetadata()
                         .isAutoUpdateMetadata()
-                && runningProOrHigher) {
+                && hasPaidPlan()) {
             author =
                     applicationProperties
                             .getPremium()

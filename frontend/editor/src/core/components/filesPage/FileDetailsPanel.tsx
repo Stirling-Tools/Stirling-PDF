@@ -3,17 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Badge, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
 import { ActionIcon } from "@app/ui/ActionIcon";
-import CloseIcon from "@mui/icons-material/Close";
-import OpenInNewIcon from "@mui/icons-material/OpenInNew";
-import DriveFileMoveIcon from "@mui/icons-material/DriveFileMove";
-import DeleteIcon from "@mui/icons-material/Delete";
-import DownloadIcon from "@mui/icons-material/Download";
-import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import HistoryIcon from "@mui/icons-material/History";
-import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
-import LinkIcon from "@mui/icons-material/Link";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
-
+import { Icon } from "@app/ui/Icon";
 import { FileId } from "@app/types/file";
 import { FolderRecord } from "@app/types/folder";
 import { StirlingFileStub } from "@app/types/fileContext";
@@ -32,6 +22,8 @@ import {
   VersionTimeline,
   DetailField,
 } from "@app/components/filesPage/VersionTimeline";
+import { FileDetailsActions } from "@app/components/filesPage/FileDetailsActions";
+import "@app/components/filesPage/FilesPage.css";
 
 interface FileDetailsPanelProps {
   selectedFileIds: FileId[];
@@ -184,7 +176,7 @@ export function FileDetailsPanel({
             onClick={onClose}
             aria-label={t("filesPage.closeDetails", "Close details")}
           >
-            <CloseIcon fontSize="small" />
+            <Icon name="x" size={20} />
           </ActionIcon>
         </Tooltip>
       </div>
@@ -200,8 +192,10 @@ export function FileDetailsPanel({
               {single.thumbnailUrl ? (
                 <img src={single.thumbnailUrl} alt="" />
               ) : (
-                <PictureAsPdfIcon
-                  style={{ fontSize: "3rem", color: "var(--c-text-subtle)" }}
+                <Icon
+                  name="file-pdf"
+                  size={"3rem"}
+                  style={{ color: "var(--c-text-subtle)" }}
                 />
               )}
             </div>
@@ -232,11 +226,12 @@ export function FileDetailsPanel({
               onClick={() => setFieldsOpen((o) => !o)}
               aria-expanded={fieldsOpen}
               rightSection={
-                <KeyboardArrowDownIcon
+                <Icon
+                  name="chevron-down"
+                  size={20}
                   className={`files-page-details-collapse-chevron${
                     fieldsOpen ? " is-open" : ""
                   }`}
-                  fontSize="small"
                 />
               }
             >
@@ -284,11 +279,12 @@ export function FileDetailsPanel({
                   onClick={() => setClassificationOpen((o) => !o)}
                   aria-expanded={classificationOpen}
                   rightSection={
-                    <KeyboardArrowDownIcon
+                    <Icon
+                      name="chevron-down"
+                      size={20}
                       className={`files-page-details-collapse-chevron${
                         classificationOpen ? " is-open" : ""
                       }`}
-                      fontSize="small"
                     />
                   }
                 >
@@ -336,7 +332,7 @@ export function FileDetailsPanel({
             {versionChain.length > 1 &&
               (compactVersions && onOpenVersionHistory ? (
                 <Button
-                  leftSection={<HistoryIcon fontSize="small" />}
+                  leftSection={<Icon name="rotate-ccw-clock" size={20} />}
                   variant="secondary"
                   onClick={onOpenVersionHistory}
                 >
@@ -356,11 +352,12 @@ export function FileDetailsPanel({
                     onClick={() => setVersionsOpen((o) => !o)}
                     aria-expanded={versionsOpen}
                     rightSection={
-                      <KeyboardArrowDownIcon
+                      <Icon
+                        name="chevron-down"
+                        size={20}
                         className={`files-page-details-collapse-chevron${
                           versionsOpen ? " is-open" : ""
                         }`}
-                        fontSize="small"
                       />
                     }
                   >
@@ -398,98 +395,21 @@ export function FileDetailsPanel({
         )}
       </div>
 
-      <div className="files-page-details-actions">
-        <Button
-          leftSection={<OpenInNewIcon fontSize="small" />}
-          onClick={() => onAddToWorkspace(selectedFileIds)}
-        >
-          {files.length === 1
-            ? t("filesPage.addToWorkspace", "Add to workspace")
-            : t("filesPage.addToWorkspaceCount", "Add {{count}} to workspace", {
-                count: files.length,
-              })}
-        </Button>
-        <Button
-          leftSection={<DownloadIcon fontSize="small" />}
-          variant="secondary"
-          onClick={handleDownload}
-          loading={downloading}
-        >
-          {single
-            ? t("filesPage.download", "Download")
-            : t("filesPage.downloadAll", "Download all")}
-        </Button>
-        {/* Share is single-file only. When sharing is disabled in
-              server config (storage.sharing.enabled=false) we still
-              render the button - disabled with an explanatory tooltip -
-              so users discover the feature exists and know how to
-              enable it, rather than wondering why "share" is missing
-              from the action stack on their build. */}
-        {single && (
-          <Tooltip
-            label={t(
-              "filesPage.shareDisabledHint",
-              "File sharing isn't enabled on this server. Ask your admin to enable it.",
-            )}
-            disabled={sharingEnabled}
-            withinPortal
-            multiline
-            w={260}
-          >
-            <Button
-              leftSection={<LinkIcon fontSize="small" />}
-              variant="secondary"
-              disabled={!sharingEnabled}
-              onClick={() => setShareModalOpen(true)}
-              style={{
-                // Keep tooltip hoverable while button is disabled.
-                pointerEvents: sharingEnabled ? undefined : "auto",
-              }}
-            >
-              {t("filesPage.shareManage", "Manage sharing")}
-            </Button>
-          </Tooltip>
-        )}
-        <Button
-          leftSection={<DriveFileMoveIcon fontSize="small" />}
-          variant="secondary"
-          onClick={() => onMove(selectedFileIds)}
-        >
-          {t("filesPage.moveTo", "Move to…")}
-        </Button>
-        {/* Save to server; shown when any selected file is local-only. When
-              storage is off it stays visible but disabled with a tooltip (same
-              treatment as Manage sharing above). */}
-        {onSaveToServer && localOnlyFiles.length > 0 && (
-          <Tooltip
-            label={saveToServerDisabledReason}
-            disabled={!saveToServerDisabledReason}
-            withinPortal
-            multiline
-            w={260}
-          >
-            <Button
-              leftSection={<CloudUploadIcon fontSize="small" />}
-              variant="secondary"
-              disabled={Boolean(saveToServerDisabledReason)}
-              onClick={() => onSaveToServer(localOnlyFiles)}
-              style={{
-                // Keep tooltip hoverable while button is disabled.
-                pointerEvents: saveToServerDisabledReason ? "auto" : undefined,
-              }}
-            >
-              {t("filesPage.saveToServer", "Save to server")}
-            </Button>
-          </Tooltip>
-        )}
-        <Button
-          leftSection={<DeleteIcon fontSize="small" />}
-          accent="danger"
-          onClick={() => onRemove(selectedFileIds)}
-        >
-          {t("filesPage.remove", "Delete")}
-        </Button>
-      </div>
+      <FileDetailsActions
+        selectedFileIds={selectedFileIds}
+        single={single}
+        fileCount={files.length}
+        localOnlyFiles={localOnlyFiles}
+        sharingEnabled={sharingEnabled}
+        downloading={downloading}
+        onDownload={handleDownload}
+        onAddToWorkspace={onAddToWorkspace}
+        onMove={onMove}
+        onRemove={onRemove}
+        onSaveToServer={onSaveToServer}
+        saveToServerDisabledReason={saveToServerDisabledReason}
+        onShare={() => setShareModalOpen(true)}
+      />
       {/* Single panel-level mount; gated on sharingEnabled. */}
       {single && sharingEnabled && (
         <ShareManagementModal

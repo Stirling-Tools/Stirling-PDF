@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { PortalTestProviders } from "@portal/test/TestQueryProvider";
@@ -46,11 +47,11 @@ const BALANCE = {
   periodEnd: "2026-10-01T00:00:00",
 };
 
-const renderView = () =>
+const renderView = (licenseSection?: ReactNode) =>
   render(
     <PortalTestProviders>
       <MemoryRouter>
-        <FreeTierPlanView />
+        <FreeTierPlanView licenseSection={licenseSection} />
       </MemoryRouter>
     </PortalTestProviders>,
   );
@@ -63,13 +64,33 @@ describe("FreeTierPlanView", () => {
     openLinkModal.mockReset();
   });
 
+  it.each(["ready", "failed"])(
+    "retains license management at the end of the shared card when the ledger is %s",
+    async (state) => {
+      if (state === "ready") fetchFreeTier.mockResolvedValue(BALANCE);
+      else
+        fetchFreeTier.mockRejectedValue(
+          new HttpError(500, "Server Error", null),
+        );
+      renderView(<button>Manage local license</button>);
+      await screen.findByText(
+        state === "ready" ? "120 of 500 used" : "Couldn't load credit usage",
+      );
+      const section = screen
+        .getByRole("button", { name: "Manage local license" })
+        .closest("section");
+      expect(section).toHaveAttribute("id", "ub-license");
+      expect(section?.parentElement?.lastElementChild).toBe(section);
+    },
+  );
+
   it("meters the local ledger on the shared screen", async () => {
     fetchFreeTier.mockResolvedValue(BALANCE);
     renderView();
 
     expect(await screen.findByText("120 of 500 used")).toBeInTheDocument();
     // No rate is known locally, so the row quotes the allowance rather than a price.
-    expect(screen.getByText("500 free every month")).toBeInTheDocument();
+    expect(screen.getByText("500 included every month")).toBeInTheDocument();
   });
 
   it("reads only the instance's own ledger for the meter", async () => {

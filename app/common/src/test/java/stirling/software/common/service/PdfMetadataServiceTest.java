@@ -40,6 +40,32 @@ import stirling.software.common.model.PdfMetadata;
 
 class PdfMetadataServiceTest {
 
+    @Test
+    void teamPromotionAndRevocationChangeWrittenMetadataWithoutRestart() throws Exception {
+        ApplicationProperties properties = new ApplicationProperties();
+        CustomMetadata metadata = properties.getPremium().getProFeatures().getCustomMetadata();
+        metadata.setAutoUpdateMetadata(true);
+        metadata.setAuthor("Our organisation");
+        metadata.setCreator("Our editor");
+        PdfMetadataService service = new PdfMetadataService(properties, "Stirling", false, null);
+        LicenseServiceInterface licence = mock(LicenseServiceInterface.class);
+        org.springframework.test.util.ReflectionTestUtils.setField(
+                service, "licenseService", licence);
+        for (boolean paid : new boolean[] {false, true, false}) {
+            when(licence.isRunningProOrHigher()).thenReturn(paid);
+            try (PDDocument pdf = new PDDocument()) {
+                service.setMetadataToPdf(
+                        pdf, PdfMetadata.builder().author("Original").build(), true);
+                assertEquals(
+                        paid ? "Our organisation" : "Original",
+                        pdf.getDocumentInformation().getAuthor());
+                assertEquals(
+                        paid ? "Our editor" : "Stirling",
+                        pdf.getDocumentInformation().getCreator());
+            }
+        }
+    }
+
     private static final String LABEL = "Stirling-PDF v1.0.0";
 
     /**
