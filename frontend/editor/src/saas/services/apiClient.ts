@@ -3,6 +3,7 @@ import { supabase } from "@app/auth/supabase";
 import { handleHttpError } from "@app/services/httpErrorHandler";
 import {
   classifyPaygError,
+  normalizePaygError,
   handlePaygError,
 } from "@app/services/paygErrorInterceptor";
 import { stripBasePath, withBasePath } from "@app/constants/app";
@@ -159,6 +160,7 @@ apiClient.interceptors.response.use(
     //   - The handleHttpError() generic toast at the bottom won't fire.
     // The error itself is still propagated to the caller so any
     // component-level catch can react if needed.
+    await normalizePaygError(error);
     const paygKind = classifyPaygError(error);
     if (paygKind !== null) {
       handlePaygError(paygKind, error);
