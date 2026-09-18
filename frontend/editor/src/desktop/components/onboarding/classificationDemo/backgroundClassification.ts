@@ -11,7 +11,7 @@ export interface BackgroundClassificationJob {
   directory: string;
   /** Shown in the rail tooltip. */
   folderName: string;
-  /** How many documents this job may take on; the free allowance caps it. */
+  /** Maximum documents to include in this job. */
   limit: number;
   /** Absolute paths earlier sweeps covered, so this one starts where they stopped. */
   exclude: ReadonlySet<string>;

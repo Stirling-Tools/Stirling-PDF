@@ -66,6 +66,8 @@ import {
 import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import { FolderProcessingSetup } from "@app/components/policies/FolderProcessingSetup";
 import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { useConnectedServer } from "@app/hooks/useConnectedServer";
+import { usePoliciesEnabled } from "@app/components/policies/usePoliciesEnabled";
 import { FolderSweepWall } from "@app/components/policies/SweepRunWall";
 import { RestoreOriginalsDialog } from "@app/components/filesPage/RestoreOriginalsDialog";
 import { FileDetailsPanel } from "@app/components/filesPage/FileDetailsPanel";
@@ -146,6 +148,17 @@ export default function FileManagerView() {
   const signInRequiredReason = isAnonymous
     ? t("filesPage.signInRequired", "Sign in to use cloud storage.")
     : null;
+  // Refresh pulls from the server. True on web (server-backed); on desktop it tracks the
+  // signed-in connection, so the control falls inert with an explanation until connected.
+  const connectedServer = useConnectedServer();
+  const refreshDisabledReason =
+    signInRequiredReason ??
+    (connectedServer
+      ? null
+      : t(
+          "filesPage.refreshNeedsConnection",
+          "Sign in to refresh from the server.",
+        ));
   // Server storage gate; mirrors ConfigController's storageEnabled
   // (enableLogin && storage.isEnabled). When off, Save-to-server stays
   // visible but disabled with an explanatory tooltip (discoverability beats
@@ -564,6 +577,7 @@ export default function FileManagerView() {
   // A working folder lists its real contents; each file wears its pipeline state and a state
   // filter narrows the listing. Files the pipeline never claims carry no state at all.
   const processingApi = useProcessingFolders();
+  const processingEnabled = usePoliciesEnabled();
   const currentProcessing = currentFolder
     ? processingApi.stateFor(currentFolder)
     : undefined;
@@ -1424,14 +1438,14 @@ export default function FileManagerView() {
     () => (
       <>
         <Tooltip
-          label={signInRequiredReason ?? t("filesPage.refresh", "Refresh")}
+          label={refreshDisabledReason ?? t("filesPage.refresh", "Refresh")}
           withinPortal
         >
           <ActionIcon
             variant="tertiary"
             size="sm"
             loading={refreshing}
-            disabled={refreshing || Boolean(signInRequiredReason)}
+            disabled={refreshing || Boolean(refreshDisabledReason)}
             aria-busy={refreshing}
             aria-label={t("filesPage.refresh", "Refresh")}
             onClick={handleRefresh}
@@ -1454,7 +1468,7 @@ export default function FileManagerView() {
     ),
     [
       t,
-      signInRequiredReason,
+      refreshDisabledReason,
       refreshing,
       handleRefresh,
       newFolderControl,
@@ -1553,7 +1567,7 @@ export default function FileManagerView() {
               totalCount={totalCount}
               selectedCount={selectedFiles.length}
             />
-            {currentFolder && !mobileSelection && (
+            {currentFolder && !mobileSelection && processingEnabled && (
               <div className="files-page-folder-actions">
                 <FolderMenu
                   folder={currentFolder}
@@ -1891,7 +1905,9 @@ export default function FileManagerView() {
               onSelectFile={handleSelectFile}
               onSetSelection={setSelectedFileIds}
               onOpenFolder={handleOpenFolder}
-              onStartProcessing={setProcessingSetupFolder}
+              onStartProcessing={
+                processingEnabled ? setProcessingSetupFolder : undefined
+              }
               onOpenDiskFile={(entry) => void openDiskFile(entry)}
               onRetryFile={retryDiskFile}
               onRevertFile={setRevertConfirmName}
@@ -2000,10 +2016,12 @@ export default function FileManagerView() {
           if (revertAllTarget) revertAllInFolder(revertAllTarget);
         }}
       />
-      <FolderProcessingSetup
-        folder={processingBlock ? null : processingSetupFolder}
-        onClose={() => setProcessingSetupFolder(null)}
-      />
+      {processingEnabled && (
+        <FolderProcessingSetup
+          folder={processingBlock ? null : processingSetupFolder}
+          onClose={() => setProcessingSetupFolder(null)}
+        />
+      )}
 
       {/* Drawer hosts the details panel on ≤800px viewports. */}
       {isCompactDetailsViewport && (
