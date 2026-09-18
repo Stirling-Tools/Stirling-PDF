@@ -9,6 +9,7 @@ import {
   claimTeamOwnership,
   changeMemberRole,
   disableMemberMfa,
+  resendInvite,
   setMemberSuspended,
   unlockMember,
   type Member,
@@ -274,6 +275,19 @@ export function Users() {
       action: () => disableMemberMfa(member),
     });
   }
+  function resendInviteAction(member: Member) {
+    setConfirm({
+      title: t("users.confirm.resendInviteTitle", "Resend invite"),
+      body: t(
+        "users.confirm.resendInviteBody",
+        "Email {{name}} a fresh invitation? This issues a new temporary password, so any earlier invitation stops working.",
+        { name: member.name },
+      ),
+      confirmLabel: t("users.action.resendInvite", "Resend invite"),
+      action: () => resendInvite(member),
+    });
+  }
+
   function transferOwner(member: Member) {
     setConfirm({
       title: t(
@@ -482,6 +496,8 @@ export function Users() {
             onToggleEnabled={toggleEnabled}
             onUnlock={unlock}
             onDisableMfa={disableMfa}
+            onResendInvite={resendInviteAction}
+            emailInvitesEnabled={canEmailInvite}
             onRemove={removeUser}
             onTransferOwnership={transferOwner}
             onRenameTeam={(team) =>
