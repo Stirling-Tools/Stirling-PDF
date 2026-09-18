@@ -9129,6 +9129,7 @@ editor-upload = "Every upload"
 folder-watch = "Folder watch"
 manual = "Manual"
 schedule = "Scheduled"
+storage-folder-watch = "New files in storage folder"
 
 [portal.pipelines.type]
 pipeline = "Pipeline"
