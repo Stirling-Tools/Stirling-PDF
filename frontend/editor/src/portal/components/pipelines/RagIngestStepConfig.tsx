@@ -17,9 +17,7 @@ export function RagIngestStepConfig({
 }: RagIngestStepConfigProps) {
   const { t } = useTranslation();
   const { config, loading } = useAppConfig();
-  // DocParse has its own master switch, so the engine being on is not enough to run the step.
-  const available =
-    Boolean(config?.aiEngineEnabled) && config?.docparseEnabled !== false;
+  const available = Boolean(config?.aiEngineEnabled);
   const chunkSize = parameters.chunkSize ?? 512;
   const overlap = parameters.overlap ?? 64;
   const index = parameters.index !== false;

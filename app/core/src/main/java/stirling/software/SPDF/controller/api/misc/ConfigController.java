@@ -355,9 +355,6 @@ public class ConfigController {
             // AI Engine settings
             ApplicationProperties.AiEngine aiEngineConfig = applicationProperties.getAiEngine();
             configData.put("aiEngineEnabled", aiEngineConfig.isEnabled());
-            // Separate switch: the engine can be on while DocParse ingestion is off, and the
-            // pipeline builder has no other way to warn that a rag-ingest step will 503.
-            configData.put("docparseEnabled", applicationProperties.getDocparse().isEnabled());
             // Per-capability flags let the UI hide individual AI tools an admin has turned off.
             ApplicationProperties.AiEngine.Features aiFeatures = aiEngineConfig.getFeatures();
             configData.put(

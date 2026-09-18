@@ -70,7 +70,6 @@ export interface AppConfig {
   timestampCustomTsaUrls?: string[];
   timestampTsaPresets?: { label: string; url: string }[];
   aiEngineEnabled?: boolean;
-  docparseEnabled?: boolean;
   aiFeatures?: {
     chat?: boolean;
     documentQuestions?: boolean;
