@@ -110,7 +110,7 @@ it("omits folder processing in builds without the feature", () => {
   ).toBeNull();
 });
 
-it("disables folder processing and automate with no connected server", () => {
+it("disables folder processing but keeps automate with no connected server", () => {
   connected.value = false;
   const createProcessingFolder = vi.fn();
   setup("/compress-pdf", { createProcessingFolder });
@@ -122,7 +122,7 @@ it("disables folder processing and automate with no connected server", () => {
     name: "quickAccess.automate",
   });
   expect(processing).toBeDisabled();
-  expect(automate).toBeDisabled();
+  expect(automate).toBeEnabled();
 
   fireEvent.click(processing);
   expect(createProcessingFolder).not.toHaveBeenCalled();
