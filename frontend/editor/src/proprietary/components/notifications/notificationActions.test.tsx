@@ -634,7 +634,9 @@ describe("RETRY_IN_FOLDER", () => {
   });
 
   it("reports the server's refusal rather than claiming it worked", async () => {
-    dispatchNotificationAction.mockResolvedValue("No smart folder to run this document in");
+    dispatchNotificationAction.mockResolvedValue(
+      "No smart folder to run this document in",
+    );
 
     const outcome = await registry().RETRY_IN_FOLDER?.run(inFolder());
 
