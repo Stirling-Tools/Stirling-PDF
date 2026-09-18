@@ -308,6 +308,10 @@ class AutoSplitPdfParams(ApiModel):
 
 
 class BatchProcessAttachmentsParams(ApiModel):
+    """
+    This endpoint applies batch renames, deletions, and additions to PDF attachments in a single pass. Unknown rename or delete targets are skipped, so re-list attachments afterwards to reconcile. Input:PDF Output:PDF Type:SISO
+    """
+
     attachments: list[bytes] | None = None
     convert_to_pdf_a3b: bool | None = None
     ops_json: str | None = None
@@ -632,6 +636,10 @@ class ExtractImagesParams(ApiModel):
 
 
 class ExtractSingleAttachmentParams(ApiModel):
+    """
+    This endpoint extracts a single embedded attachment from a PDF by name. Input:PDF Output:ANY Type:SISO
+    """
+
     attachment_name: str | None = None
 
 
