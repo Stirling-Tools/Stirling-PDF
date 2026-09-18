@@ -324,6 +324,7 @@ public class PolicyEngine {
         }
         PolicyRun run =
                 new PolicyRun(runId, policyId, definition, sourceId, fileIdentity, triggeringUser);
+        taskManager.putMetadata(runId, "externalOutput", String.valueOf(run.externalOutput()));
         registry.register(run);
         return run;
     }
