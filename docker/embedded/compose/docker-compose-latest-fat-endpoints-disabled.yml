@@ -6,6 +6,23 @@ services:
     build:
       context: ../../../
       dockerfile: docker/embedded/Dockerfile.fat
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    # The entrypoint boots as root to reconcile mount ownership, then setpriv's down to
+    # PUID/PGID. SETUID and SETGID are always fatal to drop: the drop itself needs them.
+    # CHOWN and DAC_OVERRIDE are fatal whenever root has to reconcile data dirs owned by a
+    # different uid, which is any PUID/PGID remap or foreign-owned mount. FOWNER only lets
+    # root chmod what it has just handed over. KILL lets PID 1 signal across the uid boundary
+    # it created, so docker stop reaches the JVM instead of the kernel SIGKILLing it.
+    cap_add:
+      - CHOWN
+      - DAC_OVERRIDE
+      - FOWNER
+      - KILL
+      - SETGID
+      - SETUID
     deploy:
       resources:
         limits:

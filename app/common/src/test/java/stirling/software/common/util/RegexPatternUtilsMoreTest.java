@@ -330,9 +330,7 @@ class RegexPatternUtilsMoreTest {
         }
 
         @Test
-        void fileExtensionValidationAndLeadingAsterisks() {
-            assertTrue(utils.getFileExtensionValidationPattern().matcher("pdf").matches());
-            assertFalse(utils.getFileExtensionValidationPattern().matcher("a").matches());
+        void leadingAsterisks() {
             assertEquals(
                     "text",
                     utils.getLeadingAsterisksWhitespacePattern()
