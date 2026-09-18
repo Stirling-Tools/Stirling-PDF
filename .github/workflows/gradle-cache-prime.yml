@@ -50,6 +50,8 @@ jobs:
     needs: hash_pr
     runs-on: ubuntu-latest
     timeout-minutes: 15
+    env:
+      GRADLE_USER_HOME: ${{ github.workspace }}/.cache/gradle-java${{ env.JAVA_VERSION }}
     steps:
       - name: Harden the runner (Audit all outbound calls)
         uses: step-security/harden-runner@05e31511f85b41b11d1cf0ef85d0992719546e2c # v2.21.0
