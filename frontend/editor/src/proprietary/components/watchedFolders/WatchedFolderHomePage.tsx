@@ -283,7 +283,7 @@ function HowItWorks() {
       title: t("watchedFolders.howItWorks.step1Title", "Drop files"),
       desc: t(
         "watchedFolders.howItWorks.step1Desc",
-        "Drag PDFs onto any Watched Folder card — or send them from your file list",
+        "Drag PDFs onto any Watched Folder card - or send them from your file list",
       ),
     },
     {
@@ -398,7 +398,7 @@ function EmptyState({ onCreate }: { onCreate: () => void }) {
       <div className="wf-empty-hint">
         {t(
           "watchedFolders.home.emptyDesc",
-          "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged — whatever your pipeline does.",
+          "Set up a Watched Folder once. Drop PDFs in and they're automatically compressed, OCR'd, split, merged - whatever your pipeline does.",
         )}
       </div>
 

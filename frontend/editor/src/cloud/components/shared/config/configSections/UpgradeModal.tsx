@@ -1,19 +1,16 @@
 /**
- * Upgrade-to-Processor modal. Three sequential panels inside one frame:
- *
- *   Step 1: Cap selection         — local state only, no side effects
- *   Step 2: Stripe Checkout       — POSTs to /api/v1/payg/checkout, mounts the
- *                                   Stripe Embedded Checkout iframe (lazy-loaded)
- *   Step 3: Confirmation          — brief "Welcome to Processor" beat before
- *                                   the modal closes and the parent's
- *                                   {@code onComplete} triggers a wallet refetch
+ * Upgrade-to-Processor modal. Three sequential panels inside one frame: cap
+ * selection holds local state only and has no side effects; Stripe Checkout POSTs
+ * to /api/v1/payg/checkout and mounts the Stripe Embedded Checkout iframe; and a
+ * brief "Welcome to Processor" beat plays before the modal closes and the parent's
+ * {@code onComplete} triggers a wallet refetch.
  *
  * <p>The Stripe SDK ({@code @stripe/stripe-js} + {@code @stripe/react-stripe-js})
  * is loaded via {@code React.lazy} on a dedicated module so the chunk only
  * downloads when the user actually advances to step 2. The main bundle pays
  * nothing for users who never open the modal.
  *
- * <p>Cap state is held locally — nothing reaches the backend until the user
+ * <p>Cap state is held locally - nothing reaches the backend until the user
  * commits in step 2. A user who cancels mid-modal leaves no side effects.
  */
 import React, { Suspense, useState } from "react";
@@ -57,7 +54,7 @@ interface UpgradeModalProps {
   /** ISO 4217 currency code for the cap input. Default USD. */
   currency?: "USD" | "EUR" | "GBP";
   /**
-   * The team's free grant in documents per billing period — the real {@code
+   * The team's free grant in documents per billing period - the real {@code
    * wallet.freeAllowance}, threaded from the free-leader view so the step copy
    * quotes the backend's number instead of a hardcoded one.
    */
@@ -127,7 +124,7 @@ export default function UpgradeModal({
     <div className="upm" role="dialog" aria-modal="true">
       <div className="upm-backdrop" onClick={closeAndReset}>
         <div className="upm-frame" onClick={(e) => e.stopPropagation()}>
-          {/* Header — title + close. Title stays constant; the step indicator
+          {/* Header - title + close. Title stays constant; the step indicator
               below tells the user where they are. */}
           <header className="upm-header">
             <div className="upm-header__left">
@@ -305,7 +302,7 @@ function CapStep({
           </span>{" "}
           {t(
             "payg.upgrade.promise.body",
-            "You only pay for automation pipelines, AI tools, and API calls — the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge.",
+            "You only pay for automation pipelines, AI tools, and API calls - the work that goes beyond a single click. Edit, merge, split, sign, compress as much as you want, no charge.",
           )}
         </div>
       </div>
@@ -337,7 +334,7 @@ function CapStep({
         currency={rateCurrency}
         note={t(
           "payg.upgrade.cap.usdNote",
-          "Estimated in USD. You can adjust your cap any time after subscribing — in your own currency.",
+          "Estimated in USD. You can adjust your cap any time after subscribing - in your own currency.",
         )}
       />
 
@@ -350,7 +347,7 @@ function CapStep({
             <strong>
               {t("payg.upgrade.help.automationTitle", "Automation pipelines")}
             </strong>
-            {" — "}
+            {" - "}
             {t(
               "payg.upgrade.help.automationBody",
               "chained tools or scheduled runs that don't need clicks",
@@ -358,7 +355,7 @@ function CapStep({
           </li>
           <li>
             <strong>{t("payg.upgrade.help.aiTitle", "AI tools")}</strong>
-            {" — "}
+            {" - "}
             {t(
               "payg.upgrade.help.aiBody",
               "summarise, classify, redact, AI-OCR",
@@ -366,7 +363,7 @@ function CapStep({
           </li>
           <li>
             <strong>{t("payg.upgrade.help.apiTitle", "API calls")}</strong>
-            {" — "}
+            {" - "}
             {t(
               "payg.upgrade.help.apiBody",
               "programmatic access to any Stirling endpoint",
@@ -376,7 +373,7 @@ function CapStep({
         <div style={{ marginTop: 8, fontStyle: "italic" }}>
           {t(
             "payg.upgrade.help.footnoteUnlimited",
-            "Manual tools — viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR — are always free, even after your included credits are used. The distinction is the type of work, not where you click.",
+            "Manual tools - viewing, editing, merging, splitting, signing, watermarking, compressing, manual OCR - are always free, even after your included credits are used. The distinction is the type of work, not where you click.",
           )}
         </div>
       </div>

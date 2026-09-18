@@ -264,7 +264,7 @@ const StripeCheckoutPanel: React.FC<StripeCheckoutPanelProps> = ({
               )
             : t(
                 "payg.checkout.mock.backend",
-                "Backend is in mock mode — no real Stripe session was created.",
+                "Backend is in mock mode - no real Stripe session was created.",
               )}
         </div>
         <div style={{ marginTop: 12 }}>

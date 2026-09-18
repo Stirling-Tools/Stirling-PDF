@@ -34,19 +34,19 @@ export const useCertificateTypeTips = (): TooltipContent => {
         bullets: [
           t(
             "certSign.certType.tooltip.which.bullet1",
-            "PKCS12 (.p12) – one combined file (most common)",
+            "PKCS12 (.p12) - one combined file (most common)",
           ),
           t(
             "certSign.certType.tooltip.which.bullet2",
-            "PFX (.pfx) – Microsoft's version of PKCS12",
+            "PFX (.pfx) - Microsoft's version of PKCS12",
           ),
           t(
             "certSign.certType.tooltip.which.bullet3",
-            "PEM – separate private-key and certificate .pem files",
+            "PEM - separate private-key and certificate .pem files",
           ),
           t(
             "certSign.certType.tooltip.which.bullet4",
-            "JKS – Java .jks keystore for dev / CI-CD workflows",
+            "JKS - Java .jks keystore for dev / CI-CD workflows",
           ),
         ],
       },
