@@ -62,8 +62,8 @@ test("exiting redaction restores text selection", async ({ page }) => {
   await expect
     .poll(async () => (await viewerMode(page)).cursor, { timeout: 15_000 })
     .toBe("crosshair");
-  // The cursor comes from the mode immediately; the touch-scroll attribute
-  // follows through React state, so poll instead of reading once.
+  // cursor and touchScroll settle independently, so poll each rather than
+  // reading touchScroll one-shot the instant the cursor flips.
   await expect
     .poll(async () => (await viewerMode(page)).touchScroll, { timeout: 15_000 })
     .toBe("off");
@@ -80,7 +80,9 @@ test("exiting redaction restores text selection", async ({ page }) => {
   await expect
     .poll(async () => (await viewerMode(page)).touchScroll, { timeout: 15_000 })
     .toBe("on");
-  expect((await viewerMode(page)).cursor).toBe("auto");
+  await expect
+    .poll(async () => (await viewerMode(page)).cursor, { timeout: 15_000 })
+    .toBe("auto");
 
   const box = await firstPage.boundingBox();
   if (!box) throw new Error("Page wrapper has no bounding box");
