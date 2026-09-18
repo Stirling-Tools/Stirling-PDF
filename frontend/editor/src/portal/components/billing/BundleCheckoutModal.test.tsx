@@ -13,6 +13,7 @@ import type { LatestBundleQuote } from "@portal/billing/stripe";
 
 const api = vi.hoisted(() => ({
   getLatestBundleQuote: vi.fn(),
+  fetchBundlePricing: vi.fn(),
   upsertBundleQuote: vi.fn(),
   createBundleStripeQuote: vi.fn(),
   acceptBundleStripeQuote: vi.fn(),
@@ -44,6 +45,10 @@ describe("annual credit purchases", () => {
     vi.clearAllMocks();
     sessionStorage.clear();
     api.getLatestBundleQuote.mockResolvedValue(null);
+    api.fetchBundlePricing.mockResolvedValue({
+      currency: "usd",
+      unitAmountMinor: 1,
+    });
     api.finalizeBundleInvoice.mockResolvedValue({
       invoiceId: "in_test",
       status: "open",
@@ -120,6 +125,10 @@ describe("annual credit purchases", () => {
       validUntil: "2027-01-01",
     };
     api.getLatestBundleQuote.mockResolvedValue(latest);
+    api.fetchBundlePricing.mockResolvedValue({
+      currency: "gbp",
+      unitAmountMinor: 2,
+    });
     showCheckout();
     expect(await screen.findByText("≈ 576,000 credits")).toBeInTheDocument();
     expect(screen.getByText("£4,800.00")).toBeInTheDocument();
