@@ -32,9 +32,9 @@ export function QuickNavRailHost() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const host = useQuickNavHost();
-  // Processing folders and Automate run on the non-core API server. True on web (served by
-  // that backend); on desktop it tracks the signed-in connection, so both entries fall
-  // inert until the user signs in to Stirling Cloud or a self-hosted server.
+  // Processing folders run on the non-core API server. True on web (served by that backend);
+  // on desktop it tracks the signed-in connection, so the entry falls inert until the user
+  // signs in to Stirling Cloud or a self-hosted server.
   const connectedServer = useConnectedServer();
 
   const appMounted = Boolean(host?.appMounted);
@@ -212,13 +212,6 @@ export function QuickNavRailHost() {
       icon: <Icon name="git-branch" size={SIZE} />,
       ...openingTool("automate"),
       ...unusable("automate"),
-      // Overrides the endpoint reason above: without a server there is nothing to run on.
-      ...(connectedServer
-        ? {}
-        : {
-            disabled: true,
-            reason: t("quickNav.signInToUse", "Sign in to use this"),
-          }),
       onClick: () => openTool("automate", "/automate"),
     },
     {
