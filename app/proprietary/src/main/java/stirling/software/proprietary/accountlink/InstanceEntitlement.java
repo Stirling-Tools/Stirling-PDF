@@ -34,7 +34,8 @@ public record InstanceEntitlement(
         LocalDateTime periodStart,
         LocalDateTime periodEnd,
         Integer licensedUsers,
-        int automationStepLimit) {
+        int automationStepLimit,
+        long prepaidRemainingUnits) {
 
     public InstanceEntitlement {
         automationStepLimit = BillingStepLimit.resolve(automationStepLimit);
@@ -61,7 +62,8 @@ public record InstanceEntitlement(
                 periodStart,
                 periodEnd,
                 licensedUsers,
-                BillingStepLimit.resolve(null));
+                BillingStepLimit.resolve(null),
+                0L);
     }
 
     /** Gate-only view with no metering config — used by the revoked sentinel and gate tests. */
