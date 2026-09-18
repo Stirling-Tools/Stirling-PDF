@@ -56,8 +56,6 @@ import { alert } from "@app/components/toast";
 // ──────────────────────────────────────────────────────────────────────────────
 
 export interface EmbedPdfViewerProps {
-  sidebarsVisible: boolean;
-  setSidebarsVisible: (v: boolean) => void;
   onClose?: () => void;
   previewFile?: File | null;
   // ── Signature overlay pass-through (opt-in; all default off) ──────────────
@@ -80,8 +78,6 @@ const documentCacheKey = (file: StirlingFile): string =>
   `${file.fileId}|${file.quickKey}`;
 
 const EmbedPdfViewerContent = ({
-  sidebarsVisible: _sidebarsVisible,
-  setSidebarsVisible: _setSidebarsVisible,
   onClose,
   previewFile,
   signaturePreviews,

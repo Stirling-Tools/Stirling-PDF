@@ -42,6 +42,7 @@ import stirling.software.proprietary.policy.engine.PolicyRunner;
 import stirling.software.proprietary.policy.engine.PolicyValidator;
 import stirling.software.proprietary.policy.engine.SweepKind;
 import stirling.software.proprietary.policy.engine.SweepOutcome;
+import stirling.software.proprietary.policy.input.StorageFolderInputSource;
 import stirling.software.proprietary.policy.ledger.ClaimState;
 import stirling.software.proprietary.policy.ledger.FolderIdentities;
 import stirling.software.proprietary.policy.ledger.ProcessedFileStatus;
@@ -88,7 +89,7 @@ public class ProcessingFolderController {
     public static final String SURFACE = Policy.SURFACE_PROCESSING_FOLDER;
 
     /** The paired source's type; the policies/pipelines surfaces hide sources of this type too. */
-    public static final String SOURCE_TYPE = "storage-folder";
+    public static final String SOURCE_TYPE = StorageFolderInputSource.TYPE;
 
     static final String DISK_SOURCE_TYPE = FolderAccessGuard.FOLDER_TYPE;
 
@@ -271,14 +272,14 @@ public class ProcessingFolderController {
                                 request.enabled() == null || request.enabled(),
                                 false,
                                 "",
-                                // Disk directories watch, so arrivals process on their
-                                // own; storage-backed folders stay manual for now.
                                 List.of(
                                         new PipelineInput(
                                                 source.id(),
                                                 onDisk
                                                         ? new TriggerConfig(WATCH_TRIGGER, Map.of())
-                                                        : null)),
+                                                        : new TriggerConfig(
+                                                                TriggerConfig.STORAGE_FOLDER_WATCH,
+                                                                Map.of()))),
                                 request.steps() == null ? List.of() : request.steps(),
                                 outputSpecFor(request, folder),
                                 outputIds,
@@ -359,7 +360,7 @@ public class ProcessingFolderController {
         Policy policy = requireOwn(id, user);
         Path directory = watchedDirectory(policy);
         if (directory == null) {
-            return storageFiles(policy);
+            return storageFiles(policy, user);
         }
         // Re-check on read: the permitted roots may have narrowed since the folder was created.
         Path permitted = folderAccessGuard.requirePermitted(directory);
@@ -431,18 +432,8 @@ public class ProcessingFolderController {
      * A storage-backed folder's files, joined to the ledger by the identity the storage source
      * claims by.
      */
-    private List<MountedFileView> storageFiles(Policy policy) {
-        UUID folderId = storageFolderId(policy);
-        if (folderId == null) {
-            return List.of();
-        }
-        List<StoredFile> files =
-                storedFileRepository.findAllByFolderId(folderId).stream()
-                        .filter(
-                                file ->
-                                        file.getPurpose() == null
-                                                || file.getPurpose() == FilePurpose.GENERIC)
-                        .toList();
+    private List<MountedFileView> storageFiles(Policy policy, User user) {
+        List<StoredFile> files = ownedStorageFiles(policy, user);
         Map<String, ClaimState> states =
                 processedLedger.statesFor(
                         policy.id(), files.stream().map(StorageFileIdentities::identity).toList());
@@ -456,6 +447,20 @@ public class ProcessingFolderController {
                                         stateLabel(
                                                 states.get(StorageFileIdentities.identity(file))),
                                         false))
+                .toList();
+    }
+
+    private List<StoredFile> ownedStorageFiles(Policy policy, User user) {
+        UUID folderId = storageFolderId(policy);
+        if (folderId == null) {
+            return List.of();
+        }
+        requireOwnedFolder(folderId.toString(), user);
+        return storedFileRepository.findAllByFolderIdAndOwner(folderId, user).stream()
+                .filter(
+                        file ->
+                                file.getPurpose() == null
+                                        || file.getPurpose() == FilePurpose.GENERIC)
                 .toList();
     }
 
@@ -545,7 +550,7 @@ public class ProcessingFolderController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "a file name is required");
         }
         String name = request.name().trim();
-        String identity = identityForName(policy, name);
+        String identity = identityForName(policy, name, user);
         if (identity == null || !processedLedger.forgetFailure(policy.id(), identity)) {
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT, "'" + name + "' has no failure to retry");
@@ -710,14 +715,10 @@ public class ProcessingFolderController {
     }
 
     /** The ledger identity of a named file in this folder; null when no such file is listed. */
-    private String identityForName(Policy policy, String name) {
+    private String identityForName(Policy policy, String name, User user) {
         Path directory = watchedDirectory(policy);
         if (directory == null) {
-            UUID folderId = storageFolderId(policy);
-            if (folderId == null) {
-                return null;
-            }
-            return storedFileRepository.findAllByFolderId(folderId).stream()
+            return ownedStorageFiles(policy, user).stream()
                     .filter(file -> name.equals(file.getOriginalFilename()))
                     .map(StorageFileIdentities::identity)
                     .findFirst()

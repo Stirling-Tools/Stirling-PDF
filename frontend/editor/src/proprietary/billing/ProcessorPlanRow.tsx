@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { formatMinor, formatMoneyMajor } from "@app/billing/format";
+import {
+  formatMinor,
+  formatMoneyMajor,
+  formatPeriodDate,
+} from "@app/billing/format";
 import { MeterRow } from "@app/billing/MeterRow";
 import { estimatedBillWithPending } from "@app/billing/pendingUsage";
 import type { Wallet } from "@app/billing/types";
@@ -55,7 +59,8 @@ export function ProcessorPlanRow({
   if (!wallet) return null;
   const rate = wallet.pricePerDocMinor;
 
-  if (!wallet.processor.active) {
+  const includedCredits = (() => {
+    if (wallet.freeAllowance <= 0) return null;
     const used = Math.min(
       wallet.freeAllowance,
       Math.max(0, wallet.freeAllowance - wallet.freeRemaining + pendingUnits),
@@ -65,16 +70,16 @@ export function ProcessorPlanRow({
     const mid =
       rate != null
         ? t(
-            "portal.billing.processor.midFree",
-            "{{rate}} per credit · {{allowance}} free every month",
+            "portal.billing.processor.midIncluded",
+            "{{rate}} per credit · {{allowance}} included every month",
             {
               rate: formatMinor(rate, wallet.currency),
               allowance: wallet.freeAllowance.toLocaleString(),
             },
           )
         : t(
-            "portal.billing.processor.midFreeNoRate",
-            "{{allowance}} free every month",
+            "portal.billing.processor.midIncludedNoRate",
+            "{{allowance}} included every month",
             {
               allowance: wallet.freeAllowance.toLocaleString(),
             },
@@ -82,8 +87,23 @@ export function ProcessorPlanRow({
 
     return (
       <MeterRow
-        name={name}
-        mid={mid}
+        name={
+          wallet.processor.active
+            ? t("portal.billing.processor.includedCredits", "Included credits")
+            : name
+        }
+        mid={
+          wallet.includedPeriodEnd
+            ? t(
+                "portal.billing.processor.includedRenewal",
+                "{{summary}} · Renews {{date}}",
+                {
+                  summary: mid,
+                  date: formatPeriodDate(wallet.includedPeriodEnd),
+                },
+              )
+            : mid
+        }
         pct={pct}
         tone="free"
         fact={t(
@@ -95,15 +115,36 @@ export function ProcessorPlanRow({
           },
         )}
         door={
-          onActivate
+          !wallet.processor.active && onActivate
             ? (activateLabel ??
               t("portal.billing.processor.activate", "Switch on the Processor"))
             : undefined
         }
-        onDoor={onActivate}
+        onDoor={!wallet.processor.active ? onActivate : undefined}
       />
     );
-  }
+  })();
+  if (!wallet.processor.active)
+    return (
+      includedCredits ?? (
+        <MeterRow
+          name={name}
+          mid=""
+          fact=""
+          showTrack={false}
+          door={
+            onActivate
+              ? (activateLabel ??
+                t(
+                  "portal.billing.processor.activate",
+                  "Switch on the Processor",
+                ))
+              : undefined
+          }
+          onDoor={onActivate}
+        />
+      )
+    );
 
   const spentMinor = estimatedBillWithPending(wallet, pendingUnits);
   const capped = !wallet.noCap && wallet.capUsd != null;
@@ -111,7 +152,9 @@ export function ProcessorPlanRow({
   const spentMajor = spentMinor != null ? spentMinor / 100 : null;
   const pct =
     capped && spentMajor != null
-      ? (spentMajor / (wallet.capUsd as number)) * 100
+      ? wallet.capUsd === 0
+        ? 100
+        : (spentMajor / (wallet.capUsd as number)) * 100
       : 0;
 
   const mid =
@@ -139,23 +182,26 @@ export function ProcessorPlanRow({
       : undefined);
 
   return (
-    <MeterRow
-      name={name}
-      mid={mid}
-      pct={pct}
-      tone={capped && pct >= 90 ? "warn" : "paid"}
-      showTrack={capped}
-      fact={fact}
-      door={onGovern ? door : undefined}
-      onDoor={onGovern}
-      midTitle={
-        capped
-          ? t(
-              "portal.billing.processor.capTooltip",
-              "Pauses PDF processing at your spend limit.",
-            )
-          : undefined
-      }
-    />
+    <>
+      {includedCredits}
+      <MeterRow
+        name={name}
+        mid={mid}
+        pct={pct}
+        tone={capped && pct >= 90 ? "warn" : "paid"}
+        showTrack={capped}
+        fact={fact}
+        door={onGovern ? door : undefined}
+        onDoor={onGovern}
+        midTitle={
+          capped
+            ? t(
+                "portal.billing.processor.meteredCapTooltip",
+                "Pauses metered processing at your spend limit.",
+              )
+            : undefined
+        }
+      />
+    </>
   );
 }
