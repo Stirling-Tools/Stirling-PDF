@@ -1561,6 +1561,19 @@
 .processor-checkout--simple .portal-billing__checkout-finePrint {
   margin: 0.875rem 0;
 }
+.processor-spend-modal .sui-modal__body {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 0 1.25rem 1.25rem;
+}
+.processor-spend-modal .portal-billing__checkout-finePrint {
+  margin: 0;
+}
+.processor-spend-modal .portal-billing__checkout-cap-actions {
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
 .processor-prepay__picker {
   border: 1px solid var(--c-border);
   border-radius: 0.75rem;

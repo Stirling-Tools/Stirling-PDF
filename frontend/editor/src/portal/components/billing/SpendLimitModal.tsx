@@ -48,6 +48,7 @@ export function SpendLimitModal({
       open={open}
       onClose={onClose}
       width="md"
+      className="processor-checkout--simple processor-spend-modal"
       title={t("portal.billing.simple.setLimit", "Set a spend limit")}
       subtitle={t(
         "portal.billing.simple.limitIntro",
