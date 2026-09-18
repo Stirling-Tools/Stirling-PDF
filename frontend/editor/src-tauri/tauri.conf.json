@@ -19,7 +19,10 @@
         "resizable": true,
         "fullscreen": false,
         "dragDropEnabled": false,
-        "additionalBrowserArgs": "--enable-features=CertVerifierBuiltinFeature"
+        "additionalBrowserArgs": "--enable-features=CertVerifierBuiltinFeature",
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 13, "y": 18 }
       }
     ]
   },

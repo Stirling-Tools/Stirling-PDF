@@ -33,6 +33,7 @@ import RightSidebar from "@app/components/tools/RightSidebar";
 import { ReaderRail } from "@app/components/viewer/readerRail/ReaderRail";
 import { ReaderSuperSearch } from "@app/components/viewer/readerRail/ReaderSuperSearch";
 import Workbench from "@app/components/layout/Workbench";
+import { WorkbenchTopBar } from "@app/components/shared/WorkbenchTopBar";
 import FileSidebar from "@app/components/shared/FileSidebar";
 import FileManager from "@app/components/FileManager";
 import {
@@ -708,36 +709,40 @@ export default function HomePage() {
             <FileManager selectedTool={selectedTool} />
           </div>
         ) : (
-          <Group
-            align="flex-start"
-            gap={0}
-            h="100%"
-            className="flex-nowrap flex"
-            bg="var(--c-bg)"
-            data-wings={wingsPhase ?? undefined}
-          >
-            {/* Reading leaves the document and nothing beside it, so the wing goes
+          <>
+            {/* Hoists the workbench toolbar into the shell's full-width top bar. */}
+            <WorkbenchTopBar />
+            <Group
+              align="flex-start"
+              gap={0}
+              h="100%"
+              className="flex-nowrap flex"
+              bg="var(--c-bg)"
+              data-wings={wingsPhase ?? undefined}
+            >
+              {/* Reading leaves the document and nothing beside it, so the wing goes
                 rather than shrinking to a rail. Everywhere else it is fixed open. */}
-            {wingsMounted && (
-              <div className="workspace-frame">
-                <MyFilesAwareFileSidebar
-                  ref={quickAccessRef}
-                  accountHoisted
-                  active={navigationState.workbench === "myFiles"}
-                  onOpenSettings={openSettings}
-                  onRegisterOpenFromComputer={registerOpenFromComputer}
-                />
-              </div>
-            )}
-            <Workbench />
-            {/* The reader's rail takes the slot the tool panel holds otherwise: the
+              {wingsMounted && (
+                <div className="workspace-frame">
+                  <MyFilesAwareFileSidebar
+                    ref={quickAccessRef}
+                    accountHoisted
+                    active={navigationState.workbench === "myFiles"}
+                    onOpenSettings={openSettings}
+                    onRegisterOpenFromComputer={registerOpenFromComputer}
+                  />
+                </div>
+              )}
+              <Workbench />
+              {/* The reader's rail takes the slot the tool panel holds otherwise: the
                 panel's controls are the editor's, and reading wants the viewer's.
                 Both render together only while the panel is on its way out. */}
-            {wingsMounted && !hideToolPanel && <RightSidebar />}
-            {readerMode && <ReaderRail />}
-            {readerMode && <ReaderSuperSearch />}
-            <FileManager selectedTool={selectedTool} />
-          </Group>
+              {wingsMounted && !hideToolPanel && <RightSidebar />}
+              {readerMode && <ReaderRail />}
+              {readerMode && <ReaderSuperSearch />}
+              <FileManager selectedTool={selectedTool} />
+            </Group>
+          </>
         )}
       </FilesPageProvider>
     </div>

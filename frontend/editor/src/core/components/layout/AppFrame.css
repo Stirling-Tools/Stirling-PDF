@@ -1,11 +1,26 @@
 /* ========== APP FRAME ========== */
-/* The rail's column, then whichever app is mounted, so a switch changes only the app. */
+/* A full-width top bar, then the rail's column beside whichever app is mounted. */
 .app-frame {
   display: flex;
+  flex-direction: column;
   height: 100vh;
   height: 100dvh; /* track mobile browser chrome */
   overflow: hidden;
   background-color: var(--c-bg);
+}
+
+/* The bar the workbench portals its toolbar into (empty on other pages). Spans
+   edge to edge above both sidebars; the workbench toolbar supplies its height,
+   so it collapses where nothing fills it. */
+.app-frame__topbar {
+  flex-shrink: 0;
+}
+
+/* The rail + mounted app, below the top bar. */
+.app-frame__body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
 }
 
 /* min-width: 0 so the app shrinks instead of forcing the frame past the window. */
@@ -13,6 +28,13 @@
   flex: 1;
   min-width: 0;
   height: 100%;
+}
+
+/* On mobile the layout carries its own top bar, so the shell's stays empty. */
+@media (max-width: 48rem) {
+  .app-frame__topbar {
+    display: none;
+  }
 }
 
 /* The rail hides itself below the mobile breakpoint - see QuickNavRailContainer.css. */

@@ -9,62 +9,81 @@ import styles from "@app/components/WindowTitleBar.module.css";
 // surfaces; every rule is gated by the data-window-controls flag set below.
 import "@app/components/windowChrome.css";
 
-// Seed from the UA so the bar (and its reserved height) is present on the first
-// frame on Windows, avoiding a layout shift. getDesktopOs() confirms it right
-// after via the Rust command.
-const seedIsWindows =
-  typeof navigator !== "undefined" && /Windows/i.test(navigator.userAgent);
+// Seed from the UA so the reserved corner is present on the first frame,
+// avoiding a layout shift. getDesktopOs() confirms it right after via the Rust
+// command.
+const seedOs: DesktopOs | null =
+  typeof navigator === "undefined"
+    ? null
+    : /Windows/i.test(navigator.userAgent)
+      ? DesktopOs.Windows
+      : /Macintosh/i.test(navigator.userAgent)
+        ? DesktopOs.Mac
+        : null;
 
 /**
- * Custom window controls for the Windows desktop build. The native caption is
- * removed in Rust (decorations:false), so this draws minimize/maximize/close as
- * a fixed overlay pinned to the top-right corner — the rail and panels run all
- * the way to the window edge, and the app chrome reserves the corner via the
- * data-window-controls flag this sets on <html> (consumed by windowChrome.css).
- * Renders nothing on macOS/Linux (native decorations kept); not bundled in the
- * browser build. tao provides edge/corner resize for the undecorated window, so
- * no manual resize handles are needed here.
+ * Integrates the window controls into the app content on desktop, so neither OS
+ * draws a separate title bar strip above it. On Windows the native caption is
+ * removed in Rust (decorations:false) and this draws minimize/maximize/close as
+ * a fixed overlay in the top-right corner. On macOS the native traffic lights
+ * are overlaid on the content in the top-left (titleBarStyle:Overlay), so no
+ * buttons are drawn — only the shared drag region runs.
+ *
+ * Both flag the app via data-window-controls on <html> ("custom" on Windows,
+ * "native-overlay" on macOS) so windowChrome.css reserves the controls' corner,
+ * and both make the top strip draggable. Renders nothing on Linux (native
+ * decorations kept); not bundled in the browser build. tao provides edge/corner
+ * resize for the undecorated Windows window, so no manual resize handles are
+ * needed here.
  */
 export function WindowTitleBar() {
-  const [isWindows, setIsWindows] = useState(seedIsWindows);
+  const [os, setOs] = useState<DesktopOs | null>(seedOs);
   const [maximized, setMaximized] = useState(false);
-  const active = isWindows && isTauri();
+  const inTauri = isTauri();
+  const isWindows = os === DesktopOs.Windows;
+  const isMac = os === DesktopOs.Mac;
+  // Active whenever the OS overlays controls on the content and thus needs the
+  // shared drag region and a reserved corner.
+  const active = inTauri && (isWindows || isMac);
 
   // Confirm the OS authoritatively (the UA seed is only a first-frame guess).
   useEffect(() => {
     if (!isTauri()) {
-      setIsWindows(false);
+      setOs(null);
       return;
     }
     let mounted = true;
-    void getDesktopOs().then((os) => {
-      if (mounted) setIsWindows(os === DesktopOs.Windows);
+    void getDesktopOs().then((resolved) => {
+      if (mounted) setOs(resolved);
     });
     return () => {
       mounted = false;
     };
   }, []);
 
-  // Flag the custom chrome on <html> so windowChrome.css can reserve the
-  // controls' corner across the app. Set only when active (Windows desktop);
-  // absent otherwise, so the skin is inert on macOS/Linux. Layout effect so it
-  // lands before paint.
+  // Flag the chrome on <html> so windowChrome.css can reserve the controls'
+  // corner: top-right for the custom Windows buttons, top-left for the macOS
+  // traffic lights. Absent otherwise, so the skin is inert on Linux/web. Layout
+  // effect so it lands before paint.
   useIsomorphicEffect(() => {
     const root = document.documentElement;
-    if (active) {
+    if (active && isWindows) {
       root.setAttribute("data-window-controls", "custom");
+    } else if (active && isMac) {
+      root.setAttribute("data-window-controls", "native-overlay");
     } else {
       root.removeAttribute("data-window-controls");
     }
     return () => {
       root.removeAttribute("data-window-controls");
     };
-  }, [active]);
+  }, [active, isWindows, isMac]);
 
   // Keep the maximize/restore icon in sync with the actual window state
-  // (double-click, snap, or the button itself all change it).
+  // (double-click, snap, or the button itself all change it). Windows only:
+  // macOS draws no such button.
   useEffect(() => {
-    if (!active) return;
+    if (!active || !isWindows) return;
     const appWindow = getCurrentWindow();
     let unlisten: (() => void) | undefined;
     void appWindow.isMaximized().then(setMaximized);
@@ -76,7 +95,7 @@ export function WindowTitleBar() {
         unlisten = u;
       });
     return () => unlisten?.();
-  }, [active]);
+  }, [active, isWindows]);
 
   // Let the window be dragged, and double-click-maximized, from any
   // non-interactive spot in the top strip. data-tauri-drag-region only fires on
@@ -141,7 +160,10 @@ export function WindowTitleBar() {
     };
   }, [active]);
 
-  if (!active) return null;
+  // macOS draws no buttons: the native traffic lights sit in the full-width top
+  // bar, which reserves their inset (windowChrome.css). Its flag + drag effects
+  // ran above.
+  if (!active || !isWindows) return null;
 
   const appWindow = getCurrentWindow();
   return (
