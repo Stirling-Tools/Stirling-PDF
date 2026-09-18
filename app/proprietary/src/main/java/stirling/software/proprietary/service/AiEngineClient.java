@@ -171,7 +171,7 @@ public class AiEngineClient {
             throw new ResponseStatusException(HttpStatus.GATEWAY_TIMEOUT, "AI engine timed out", e);
         } catch (IOException e) {
             throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + describe(e), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ResponseStatusException(
@@ -252,6 +252,18 @@ public class AiEngineClient {
         return response.body();
     }
 
+    /**
+     * A ConnectException from the JDK client carries no message, so the obvious {@code
+     * e.getMessage()} renders as "unreachable: null" - the most common failure of all, reported as
+     * if something were missing from the code rather than from the network.
+     */
+    private static String describe(Exception e) {
+        String message = e.getMessage();
+        return message != null && !message.isBlank()
+                ? message
+                : e.getClass().getSimpleName() + " (nothing listening on the configured URL?)";
+    }
+
     private HttpResponse<String> sendRequest(HttpRequest request) throws IOException {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString());
@@ -262,7 +274,7 @@ public class AiEngineClient {
             // SERVICE_UNAVAILABLE so every caller of this client sees a structured
             // status rather than a raw 500 from an unhandled IOException.
             throw new ResponseStatusException(
-                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + e.getMessage(), e);
+                    HttpStatus.SERVICE_UNAVAILABLE, "AI engine unreachable: " + describe(e), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new ResponseStatusException(

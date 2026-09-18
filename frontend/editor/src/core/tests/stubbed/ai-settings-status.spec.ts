@@ -1,4 +1,5 @@
-import { test, expect, type Page } from "@app/tests/helpers/stub-test-base";
+import { test, expect } from "@app/tests/helpers/stub-test-base";
+import type { Page, Route } from "@playwright/test";
 
 /**
  * The AI page's status card and mode chooser.
@@ -39,18 +40,34 @@ async function openAiSettings(
   settings: Record<string, unknown> = ENABLED_SETTINGS,
   linked = false,
 ) {
-  await page.route("**/api/v1/account-link/status", (route) =>
+  await page.route("**/api/v1/account-link/status", (route: Route) =>
     route.fulfill({ json: { linked } }),
   );
-  await page.route("**/api/v1/admin/settings/section/aiEngine", (route) =>
-    route.fulfill({ json: settings }),
+  await page.route(
+    "**/api/v1/admin/settings/section/aiEngine",
+    (route: Route) => route.fulfill({ json: settings }),
   );
-  await page.route("**/api/v1/ai/status", (route) =>
+  await page.route("**/api/v1/ai/status", (route: Route) =>
     route.fulfill({ json: status }),
   );
   await page.goto("/settings/adminAi");
   await expect(page.locator(".settings-page")).toBeVisible({ timeout: 30_000 });
   await page.locator(".settings-card").first().waitFor({ timeout: 20_000 });
+}
+
+/** The card with this heading, so a word the status strip also uses stays unambiguous. */
+function cardNamed(page: Page, heading: string) {
+  return page.locator(".settings-card").filter({ hasText: heading }).first();
+}
+
+/**
+ * Its label carries the info-tooltip text too, and "Smart model max tokens" shares the prefix, so
+ * match far enough in to land on the model field itself.
+ */
+function smartModelInput(page: Page) {
+  return cardNamed(page, "Models & Providers").getByRole("textbox", {
+    name: /^Smart model High-capability/,
+  });
 }
 
 test("a healthy engine reports its models and an accepted secret", async ({
@@ -139,15 +156,18 @@ test("the status card adds a Status anchor to the section nav", async ({
     authenticated: true,
   });
 
-  const cards = await page.locator(".settings-card__toggle").allInnerTexts();
-  expect(cards).toEqual([
-    "Status",
-    "Connection",
-    "Capabilities",
-    "Models & Providers",
-    "Documents & RAG",
-    "Limits & Performance",
-  ]);
+  // The section's cards mount lazily, and WebKit gets here before the last of them has,
+  // so wait on the list settling rather than reading it once.
+  await expect
+    .poll(() => page.locator(".settings-card__toggle").allInnerTexts())
+    .toEqual([
+      "Status",
+      "Connection",
+      "Capabilities",
+      "Models & Providers",
+      "Documents & RAG",
+      "Limits & Performance",
+    ]);
 });
 
 test("the mode chooser owns the engine fields, and cloud is not selectable", async ({
@@ -256,4 +276,98 @@ test("a server already in cloud mode opens on it", async ({ page }) => {
   await expect(
     page.getByRole("switch", { name: /Send documents to Stirling Cloud/i }),
   ).toBeChecked();
+});
+
+test("an unlinked server is pointed at where to link one", async ({ page }) => {
+  await openAiSettings(
+    page,
+    { enabled: true, reachable: true, authenticated: true },
+    ENABLED_SETTINGS,
+    false,
+  );
+
+  const link = page.getByRole("link", {
+    name: /Connect this server to a Stirling account/i,
+  });
+  await expect(link).toBeVisible();
+  await expect(link).toHaveAttribute("href", "/settings/account-link");
+});
+
+test("cloud mode reports on Stirling Cloud, not on a local engine", async ({
+  page,
+}) => {
+  await openAiSettings(
+    page,
+    {
+      enabled: true,
+      reachable: true,
+      authenticated: true,
+      smartModel: "managed-smart",
+    },
+    { ...ENABLED_SETTINGS, mode: "CLOUD" },
+    true,
+  );
+
+  const statusCard = page.locator(".settings-card").first();
+  await expect(
+    statusCard.getByText("Running on Stirling Cloud", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    statusCard.getByText("Running on", { exact: true }),
+  ).toBeVisible();
+  await expect(
+    statusCard.getByText("Account link", { exact: true }),
+  ).toBeVisible();
+  // The engine URL belongs to a server that is no longer doing the work.
+  await expect(statusCard.getByText("Engine URL", { exact: true })).toHaveCount(
+    0,
+  );
+  await expect(
+    statusCard.getByText("Shared secret", { exact: true }),
+  ).toHaveCount(0);
+});
+
+test("cloud mode makes the settings Stirling Cloud owns read-only", async ({
+  page,
+}) => {
+  await openAiSettings(
+    page,
+    { enabled: true, reachable: true, authenticated: true },
+    { ...ENABLED_SETTINGS, mode: "CLOUD" },
+    true,
+  );
+
+  await expect(
+    page.getByText("Managed by Stirling Cloud", { exact: true }).first(),
+  ).toBeVisible();
+  // Provider and embedding model are the cloud's to choose in this mode.
+  await expect(smartModelInput(page)).toBeDisabled();
+  await expect(
+    cardNamed(page, "Documents & RAG").getByRole("textbox", {
+      name: /^Embedding model/,
+    }),
+  ).toBeDisabled();
+  // Capabilities and limits stay the admin's.
+  await expect(
+    // Mantine's NumberInput is a text input with inputmode=decimal, so its role is textbox.
+    cardNamed(page, "Limits & Performance").getByRole("textbox", {
+      name: /^Max pages per request/,
+    }),
+  ).toBeEnabled();
+});
+
+test("self-hosted mode leaves the model settings editable", async ({
+  page,
+}) => {
+  await openAiSettings(
+    page,
+    { enabled: true, reachable: true, authenticated: true },
+    ENABLED_SETTINGS,
+    true,
+  );
+
+  await expect(smartModelInput(page)).toBeEnabled();
+  await expect(
+    page.getByText("Managed by Stirling Cloud", { exact: true }),
+  ).toHaveCount(0);
 });

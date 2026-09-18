@@ -63,6 +63,7 @@ function Fact({
 export function AiStatusCard({ settings }: AiStatusCardProps) {
   const { t } = useTranslation();
   const enabled = settings.enabled ?? false;
+  const cloud = settings.mode === "CLOUD";
   const { status, loading, checkedAt, refresh } = useAiEngineStatus(enabled);
   const [now, setNow] = useState(() => Date.now());
 
@@ -78,12 +79,27 @@ export function AiStatusCard({ settings }: AiStatusCardProps) {
   const HEADLINE: Record<AiEngineHealth, string> = {
     loading: t("admin.settings.ai.status.checking", "Checking the engine…"),
     off: t("admin.settings.ai.status.off.title", "AI is switched off"),
-    down: t("admin.settings.ai.status.down.title", "Engine unreachable"),
-    degraded: t(
-      "admin.settings.ai.status.degraded.title",
-      "Engine is up, but refusing this server",
-    ),
-    ok: t("admin.settings.ai.status.ok.title", "Engine running"),
+    down: cloud
+      ? t(
+          "admin.settings.ai.status.cloud.down.title",
+          "Stirling Cloud unreachable",
+        )
+      : t("admin.settings.ai.status.down.title", "Engine unreachable"),
+    degraded: cloud
+      ? t(
+          "admin.settings.ai.status.cloud.degraded.title",
+          "Stirling Cloud is refusing this server",
+        )
+      : t(
+          "admin.settings.ai.status.degraded.title",
+          "Engine is up, but refusing this server",
+        ),
+    ok: cloud
+      ? t(
+          "admin.settings.ai.status.cloud.ok.title",
+          "Running on Stirling Cloud",
+        )
+      : t("admin.settings.ai.status.ok.title", "Engine running"),
   };
 
   const DETAIL: Record<AiEngineHealth, string> = {
@@ -92,18 +108,33 @@ export function AiStatusCard({ settings }: AiStatusCardProps) {
       "admin.settings.ai.status.off.body",
       "Choose how AI runs below, then save and restart.",
     ),
-    down: t(
-      "admin.settings.ai.status.down.body",
-      "Check the URL, that the engine container is running, and that you restarted after enabling AI.",
-    ),
-    degraded: t(
-      "admin.settings.ai.status.degraded.body",
-      "It answered the health check but rejected a real request. The two sides are using different shared secrets.",
-    ),
-    ok: t(
-      "admin.settings.ai.status.ok.body",
-      "Health check and an authenticated request both succeeded.",
-    ),
+    down: cloud
+      ? t(
+          "admin.settings.ai.status.cloud.down.body",
+          "This server could not reach Stirling Cloud. Check the account link and that this server can reach the internet.",
+        )
+      : t(
+          "admin.settings.ai.status.down.body",
+          "Check the URL, that the engine container is running, and that you restarted after enabling AI.",
+        ),
+    degraded: cloud
+      ? t(
+          "admin.settings.ai.status.cloud.degraded.body",
+          "Stirling Cloud answered but refused this server. The account link may have been revoked.",
+        )
+      : t(
+          "admin.settings.ai.status.degraded.body",
+          "It answered the health check but rejected a real request. The two sides are using different shared secrets.",
+        ),
+    ok: cloud
+      ? t(
+          "admin.settings.ai.status.cloud.ok.body",
+          "Stirling Cloud accepted this server. Nothing to run or patch here.",
+        )
+      : t(
+          "admin.settings.ai.status.ok.body",
+          "Health check and an authenticated request both succeeded.",
+        ),
   };
 
   const featuresOn = Object.values(settings.features ?? {}).filter(
@@ -186,12 +217,24 @@ export function AiStatusCard({ settings }: AiStatusCardProps) {
             }}
           >
             <Fact
-              label={t("admin.settings.ai.status.url", "Engine URL")}
-              value={settings.url || "—"}
-              title={settings.url || undefined}
+              label={
+                cloud
+                  ? t("admin.settings.ai.status.runningOn", "Running on")
+                  : t("admin.settings.ai.status.url", "Engine URL")
+              }
+              value={
+                cloud
+                  ? t("admin.settings.ai.status.cloud.name", "Stirling Cloud")
+                  : settings.url || "—"
+              }
+              title={cloud ? undefined : settings.url || undefined}
             />
             <Fact
-              label={t("admin.settings.ai.status.secretLabel", "Shared secret")}
+              label={
+                cloud
+                  ? t("admin.settings.ai.status.linkLabel", "Account link")
+                  : t("admin.settings.ai.status.secretLabel", "Shared secret")
+              }
               value={authLabel}
             />
             <Fact

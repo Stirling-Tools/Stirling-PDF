@@ -732,6 +732,8 @@ permissionNotice = "The tessdata path is not writable. Downloads will be opened 
 
 [admin.settings.ai]
 description = "Connect Stirling to the Python AI engine, choose its models, and set the guardrails it runs under."
+managedByCloud = "Managed by Stirling Cloud in this mode."
+managedByCloudShort = "Managed by Stirling Cloud"
 
 [admin.settings.ai.documents]
 description = "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved."
@@ -789,6 +791,10 @@ description = "Chat and single questions send only the text a request needs. Ind
 help = "Off means document questions are unavailable rather than quietly uploading your files."
 label = "Send documents to Stirling Cloud"
 
+[admin.settings.ai.general.cloudNote]
+body = "The reasoning runs on Stirling's infrastructure, billed to the account this server is linked to. There is no container to run and no provider key to hold here. Whatever the AI reads is processed by Stirling Cloud rather than on your own hardware."
+title = "About Stirling Cloud AI"
+
 [admin.settings.ai.general.enabled]
 description = "Master switch. When off, no AI tools, agents, or engine calls are available."
 label = "Enable AI"
@@ -825,8 +831,9 @@ label = "Long-running timeout (seconds)"
 label = "Where AI runs"
 
 [admin.settings.ai.general.mode.cloud]
-notLinked = "Link an account first"
 description = "No container, no provider key, no model choice — the work runs on Stirling Cloud and is billed to the account this server is linked to."
+linkCta = "Connect this server to a Stirling account"
+notLinked = "Link an account first"
 title = "Use Stirling Cloud AI"
 
 [admin.settings.ai.general.mode.off]
@@ -840,7 +847,7 @@ title = "Run your own engine"
 [admin.settings.ai.general.note]
 docs = "Set-up guide"
 intro = "A separate container you run next to Stirling. It does the reasoning; Stirling still does every page operation itself. It needs the same"
-outro = "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick \u2014 an Ollama you host keeps every page in-house."
+outro = "on both containers and a model provider key. Whatever the AI reads is sent to the provider you pick — an Ollama you host keeps every page in-house."
 title = "About the AI engine"
 
 [admin.settings.ai.general.streamTimeoutSeconds]
@@ -924,18 +931,35 @@ title = "AI settings saved"
 capabilities = "Capabilities"
 capabilitiesValue = "{{on}} of {{total}} on"
 checked = "checked"
-checking = "Checking the engine\u2026"
+checking = "Checking the engine…"
 description = "Whether the engine is reachable, whether it accepts this server, and what it is running."
 fastModel = "Fast model"
 justNow = "just now"
 latency = "Response time"
+linkLabel = "Account link"
 minutesAgo = "{{count}}m ago"
 recheck = "Check again"
+runningOn = "Running on"
 secondsAgo = "{{count}}s ago"
 secretLabel = "Shared secret"
 smartModel = "Smart model"
 title = "Status"
 url = "Engine URL"
+
+[admin.settings.ai.status.cloud]
+name = "Stirling Cloud"
+
+[admin.settings.ai.status.cloud.degraded]
+body = "Stirling Cloud answered but refused this server. The account link may have been revoked."
+title = "Stirling Cloud is refusing this server"
+
+[admin.settings.ai.status.cloud.down]
+body = "This server could not reach Stirling Cloud. Check the account link and that this server can reach the internet."
+title = "Stirling Cloud unreachable"
+
+[admin.settings.ai.status.cloud.ok]
+body = "Stirling Cloud accepted this server. Nothing to run or patch here."
+title = "Running on Stirling Cloud"
 
 [admin.settings.ai.status.degraded]
 body = "It answered the health check but rejected a real request. The two sides are using different shared secrets."

@@ -16,9 +16,10 @@ import PendingBadge from "@app/components/shared/config/PendingBadge";
 import apiClient from "@app/services/apiClient";
 import { Button } from "@app/ui/Button";
 import { StatusBadge } from "@app/ui/StatusBadge";
-import { Switch } from "@mantine/core";
+import { Switch, Anchor } from "@mantine/core";
 import { useAccountLinked } from "@app/components/shared/config/configSections/ai/useAiEngineStatus";
 import type { AiCardProps } from "@app/components/shared/config/configSections/ai/aiCardProps";
+import "@app/components/shared/config/configSections/ai/AiModeOption.css";
 
 /** The three places AI could run. Only two of them exist. */
 type AiMode = "off" | "self" | "cloud";
@@ -32,6 +33,8 @@ interface ModeOptionProps {
   disabled?: boolean;
   badge?: ReactNode;
   icon?: string;
+  /** Shown under the description even when the option cannot be selected. */
+  footer?: ReactNode;
   children?: ReactNode;
 }
 
@@ -48,6 +51,7 @@ function ModeOption({
   disabled = false,
   badge,
   icon,
+  footer,
   children,
 }: ModeOptionProps) {
   const active = selected === mode;
@@ -56,10 +60,16 @@ function ModeOption({
       withBorder
       p="md"
       radius="md"
-      style={{
-        borderColor: active ? "var(--c-accent-text)" : undefined,
-        opacity: disabled ? 0.75 : 1,
-      }}
+      className={[
+        "ai-mode-option",
+        active ? "ai-mode-option--selected" : "",
+        disabled ? "ai-mode-option--disabled" : "",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+      // Clicking anywhere on the card picks the mode; the radio stays the real control, so
+      // keyboard and screen readers are unaffected.
+      onClick={disabled ? undefined : () => onSelect(mode)}
     >
       <Group gap="sm" align="flex-start" wrap="nowrap">
         <Radio
@@ -81,7 +91,10 @@ function ModeOption({
           <Text size="sm" c="dimmed" mt={2}>
             {description}
           </Text>
-          {active && children ? <div>{children}</div> : null}
+          {footer ? <div style={{ marginTop: "0.5rem" }}>{footer}</div> : null}
+          {active && children ? (
+            <div className="ai-mode-option__body">{children}</div>
+          ) : null}
         </div>
       </Group>
     </Paper>
@@ -197,7 +210,7 @@ export function AiConnectionCard({
           )}
           badge={<PendingBadge show={isFieldPending("enabled")} />}
         >
-          <Stack gap="sm" mt="md">
+          <Stack gap="sm">
             <TextInput
               label={
                 <Group gap="xs">
@@ -355,8 +368,25 @@ export function AiConnectionCard({
               </StatusBadge>
             ) : null
           }
+          footer={
+            linked === false ? (
+              <Anchor
+                href="/settings/account-link"
+                size="sm"
+                c="var(--c-accent-text)"
+                // Stop the card's own click handler swallowing the link.
+                onClick={(event) => event.stopPropagation()}
+              >
+                {t(
+                  "admin.settings.ai.general.mode.cloud.linkCta",
+                  "Connect this server to a Stirling account",
+                )}{" "}
+                &rsaquo;
+              </Anchor>
+            ) : null
+          }
         >
-          <Stack gap="sm" mt="md">
+          <Stack gap="sm">
             <Group justify="space-between" align="flex-start" wrap="nowrap">
               <div style={{ flexGrow: 1, minWidth: 0 }}>
                 <Group gap={4} wrap="nowrap">

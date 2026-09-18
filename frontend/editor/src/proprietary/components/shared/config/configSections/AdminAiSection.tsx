@@ -2,6 +2,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { SettingsCard } from "@app/components/shared/config/SettingsCard";
 import { Stack, Loader } from "@mantine/core";
+import { StatusBadge } from "@app/ui/StatusBadge";
 import { alert } from "@app/components/toast";
 import RestartConfirmationModal from "@app/components/shared/config/RestartConfirmationModal";
 import { useRestartServer } from "@app/components/shared/config/useRestartServer";
@@ -214,6 +215,20 @@ export default function AdminAiSection() {
   }
 
   const card = { settings, setSettings, isFieldPending, loginEnabled };
+  // Stirling Cloud picks the models and holds the provider keys, so these sections describe an
+  // engine this server no longer talks to. Shown but inert, rather than hidden, so an admin can
+  // still see what their own engine is set to before switching back.
+  const cloudManaged = settings.mode === "CLOUD";
+  const managedNote = t(
+    "admin.settings.ai.managedByCloud",
+    "Managed by Stirling Cloud in this mode.",
+  );
+  // The badge slot sits in the card heading, so it takes a chip rather than a sentence.
+  const managedBadge = cloudManaged ? (
+    <StatusBadge tone="neutral" size="sm" showDot={false}>
+      {t("admin.settings.ai.managedByCloudShort", "Managed by Stirling Cloud")}
+    </StatusBadge>
+  ) : undefined;
 
   return (
     <div className="settings-section-container">
@@ -238,7 +253,7 @@ export default function AdminAiSection() {
           )}
         >
           <AiConnectionCard {...card} />
-          <AiAboutNotice />
+          <AiAboutNotice cloud={cloudManaged} />
         </SettingsCard>
 
         <SettingsCard
@@ -258,32 +273,52 @@ export default function AdminAiSection() {
         <SettingsCard
           id="adminAiModels"
           title={t("settings.ai.models", "Models & Providers")}
-          description={t(
-            "admin.settings.ai.models.description",
-            "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved.",
-          )}
+          description={
+            cloudManaged
+              ? managedNote
+              : t(
+                  "admin.settings.ai.models.description",
+                  "Choose the LLM provider and the smart/fast models the AI engine uses. Applied to the AI engine when saved.",
+                )
+          }
+          badge={managedBadge}
         >
-          <AiModelsCard
-            {...card}
-            apiKeyDirty={apiKeyDirty}
-            setApiKeyDirty={setApiKeyDirty}
-          />
+          <fieldset
+            disabled={cloudManaged}
+            style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}
+          >
+            <AiModelsCard
+              {...card}
+              apiKeyDirty={apiKeyDirty}
+              setApiKeyDirty={setApiKeyDirty}
+            />
+          </fieldset>
         </SettingsCard>
 
         <SettingsCard
           id="adminAiDocuments"
           title={t("settings.ai.documents", "Documents & RAG")}
-          description={t(
-            "admin.settings.ai.documents.description",
-            "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved.",
-          )}
+          description={
+            cloudManaged
+              ? managedNote
+              : t(
+                  "admin.settings.ai.documents.description",
+                  "Configure the embedding model and retrieval settings used to answer questions over documents. Applied to the AI engine when saved.",
+                )
+          }
+          badge={managedBadge}
         >
-          <AiDocumentsCard
-            {...card}
-            embeddingModelChanged={embeddingModelChanged}
-            embeddingApiKeyDirty={embeddingApiKeyDirty}
-            setEmbeddingApiKeyDirty={setEmbeddingApiKeyDirty}
-          />
+          <fieldset
+            disabled={cloudManaged}
+            style={{ border: 0, margin: 0, padding: 0, minWidth: 0 }}
+          >
+            <AiDocumentsCard
+              {...card}
+              embeddingModelChanged={embeddingModelChanged}
+              embeddingApiKeyDirty={embeddingApiKeyDirty}
+              setEmbeddingApiKeyDirty={setEmbeddingApiKeyDirty}
+            />
+          </fieldset>
         </SettingsCard>
 
         <SettingsCard

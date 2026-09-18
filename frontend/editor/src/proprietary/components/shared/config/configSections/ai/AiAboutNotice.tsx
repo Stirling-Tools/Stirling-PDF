@@ -17,8 +17,29 @@ export const AI_ENGINE_DOCS_URL =
  * Replaces a note that led with the shared-secret environment variable - true, but meaningless to
  * anyone who did not already know there was a second container to run.
  */
-export function AiAboutNotice() {
+export function AiAboutNotice({ cloud = false }: { cloud?: boolean }) {
   const { t } = useTranslation();
+
+  if (cloud) {
+    return (
+      <Alert
+        variant="light"
+        color="blue"
+        title={t(
+          "admin.settings.ai.general.cloudNote.title",
+          "About Stirling Cloud AI",
+        )}
+        icon={<LocalIcon icon="info-rounded" width="1rem" height="1rem" />}
+      >
+        <Text size="xs">
+          {t(
+            "admin.settings.ai.general.cloudNote.body",
+            "The reasoning runs on Stirling's infrastructure, billed to the account this server is linked to. There is no container to run and no provider key to hold here. Whatever the AI reads is processed by Stirling Cloud rather than on your own hardware.",
+          )}
+        </Text>
+      </Alert>
+    );
+  }
 
   return (
     <Alert
