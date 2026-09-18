@@ -11,7 +11,7 @@ beforeAll(async () => {
   await ensureRulesLoaded();
 });
 
-function classify(
+async function classify(
   title: string,
   body: string,
   fileName = "doc.pdf",
@@ -38,8 +38,8 @@ describe("scoring explanations", () => {
     allZone: "Invoice Number: INV-9 Invoice Total: 950.00",
   };
 
-  it("returns candidates with per-rule signals when requested", () => {
-    const r = classifyHeuristic(doc, { explain: true });
+  it("returns candidates with per-rule signals when requested", async () => {
+    const r = await classifyHeuristic(doc, { explain: true });
     expect(r.labels[0]).toBe("invoice");
     const top = r.explain?.candidates[0];
     expect(top?.id).toBe("invoice");
@@ -50,13 +50,13 @@ describe("scoring explanations", () => {
     expect(top?.signals.some((s) => s.includes("filename"))).toBe(true);
   });
 
-  it("omits the explanation by default", () => {
-    expect(classifyHeuristic(doc).explain).toBeUndefined();
+  it("omits the explanation by default", async () => {
+    expect((await classifyHeuristic(doc)).explain).toBeUndefined();
   });
 });
 
 describe("documents observed lost on upload (engine must label them)", () => {
-  it("labels a resume", () => {
+  it("labels a resume", async () => {
     const body = [
       "CURRICULUM VITAE",
       "Jane Doe    jane.doe@example.com    +44 7700 900123    London, United Kingdom",
@@ -72,11 +72,11 @@ describe("documents observed lost on upload (engine must label them)", () => {
       "Education: BSc Computer Science, University of Manchester.",
       "References available upon request.",
     ].join("\n");
-    const r = classify("CURRICULUM VITAE", body, "resume_jane_doe.pdf");
+    const r = await classify("CURRICULUM VITAE", body, "resume_jane_doe.pdf");
     expect(r.labels[0]).toBe("resume");
   });
 
-  it("labels a purchase order", () => {
+  it("labels a purchase order", async () => {
     const body = [
       "PURCHASE ORDER",
       "Purchase Order Number: PO-55231    Requisition Number: REQ-9910    Date: 2 April 2024",
@@ -89,11 +89,11 @@ describe("documents observed lost on upload (engine must label them)", () => {
       "requisition number on the delivery note and on your invoice.",
       "Authorised by: Procurement Department, Northwind Ltd.",
     ].join("\n");
-    const r = classify("PURCHASE ORDER", body, "purchase_order.pdf");
+    const r = await classify("PURCHASE ORDER", body, "purchase_order.pdf");
     expect(r.labels[0]).toBe("purchase-order");
   });
 
-  it("labels a master services agreement", () => {
+  it("labels a master services agreement", async () => {
     const body = [
       "MASTER SERVICES AGREEMENT",
       "This Master Services Agreement is made between the Client and the Service Provider and sets",
@@ -108,7 +108,7 @@ describe("documents observed lost on upload (engine must label them)", () => {
       "other party that it receives under this agreement.",
       "We are pleased to act for you and look forward to a productive working relationship.",
     ].join("\n");
-    const r = classify(
+    const r = await classify(
       "MASTER SERVICES AGREEMENT",
       body,
       "service_agreement.pdf",
