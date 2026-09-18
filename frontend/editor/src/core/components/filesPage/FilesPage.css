@@ -8,9 +8,8 @@
   overflow: hidden;
 }
 
-/* The library's own row: the tabs, then the folder path. What the library brings
-   sits here rather than in the shared bar above, which carries only what every view
-   has. */
+/* The library's own row. The shared bar above carries only what every view has,
+   so the folder path sits here instead. */
 .files-page-tabs-row {
   display: flex;
   align-items: center;
@@ -135,41 +134,31 @@
   margin-left: auto;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
   gap: 0.5rem;
-  /* Allow this container to shrink below its intrinsic content width so
-     the bulk-action group + filter selects + view toggle can compete for
-     space without bursting out of the toolbar (which previously bled
-     under the right-hand details panel at wider viewports). */
+  /* Allow this container to shrink below its intrinsic content width so it
+     wraps inside the toolbar rather than bursting out of it (it would bleed
+     under the right-hand details panel). */
   min-width: 0;
 }
 
-/* Bulk-action buttons (Add to workspace, Quick view, Move to, Remove)
-   are ICON-ONLY at every viewport. Even at 1280px when both side panels
-   are visible, the main area is only ~616px wide - the labelled versions
-   of these 4 buttons plus the 2 filter selects + view toggle simply
-   don't fit. Each button has a Tooltip + aria-label, so the icon alone
-   is accessible. */
-.files-page-toolbar-actions .mantine-Button-root {
-  padding-left: 0.55rem;
-  padding-right: 0.55rem;
+/* The filter, search and sort controls are text: shrinking them renders
+   "All sources" as "All s". They keep their declared width and the group
+   above wraps to a second line when the toolbar runs out of room. */
+.files-page-toolbar-actions > .mantine-Select-root,
+.files-page-toolbar-actions > .mantine-MultiSelect-root,
+.files-page-toolbar-actions > .mantine-TextInput-root {
   flex-shrink: 0;
 }
-.files-page-toolbar-actions .mantine-Button-section[data-position="left"] {
-  margin-right: 0;
-}
-.files-page-toolbar-actions .mantine-Button-label {
-  display: none;
-}
-/* Exception: the bulk-actions trigger IS its label. Collapsed to an icon it
-   would read as a bare chevron with nothing to say what it opens. */
-.files-page-toolbar-actions
-  .files-page-toolbar-bulk-trigger
-  .mantine-Button-label {
-  display: inline;
-}
-.files-page-toolbar-actions .files-page-toolbar-bulk-trigger {
+
+/* The menu triggers in the toolbar - selection actions, folder settings. Tighter
+   on the chevron side than the label side so the caret sits against the edge
+   rather than floating in its own margin. */
+.files-page-toolbar-bulk-trigger {
   padding-left: 0.75rem;
   padding-right: 0.5rem;
+  flex-shrink: 0;
 }
 /* Pin the view toggle: never let it clip off the right. flex-shrink:0
    keeps its width fixed; the rest of the row shrinks around it. */
@@ -274,13 +263,30 @@
   flex-direction: column;
   border: 1px solid var(--c-border-subtle);
   border-radius: 0.6rem;
-  overflow: hidden;
+  /* Scrolls sideways once the rows hit their floors - see the narrow step
+     below. Still clips vertically, so rows stay inside the rounded corners. */
+  overflow-x: auto;
+  overflow-y: hidden;
   background: var(--c-surface);
 }
 
 .files-page-list-row {
   display: grid;
-  grid-template-columns: 2.25rem minmax(0, 3fr) 1fr 1fr 1fr 2.5rem;
+  /* No column is ever dropped, so every track carries a floor: denied its width
+     a value wraps and the row grows, a timestamp into three lines. Type floors
+     for "Processing folder" and status for two chips ("1 Failed  12 Ready"),
+     the widest those cells hold; name floors widest, being what stays on screen
+     when the row is wider than the list.
+
+     Floors are lengths, never max-content: each row is its own grid, so a track
+     measuring its own text lands a few pixels off its neighbours and the
+     columns drift apart while scrolled. */
+  grid-template-columns:
+    2.25rem minmax(17rem, 3fr) minmax(7.5rem, 1fr) minmax(4.5rem, 1fr)
+    minmax(9.5rem, 1.5fr) minmax(8rem, 11rem) 2.5rem;
+  /* The sum of those floors: a flex item will not grow to its own content, so
+     without this the tracks overflow a box that never grew and nothing scrolls. */
+  min-width: 56rem;
   gap: 0.5rem;
   align-items: center;
   /* Same offscreen skip as .files-page-card. */
@@ -305,6 +311,34 @@
   letter-spacing: 0.05em;
   cursor: default;
   user-select: none;
+  /* Tall enough for the selection bar's button, so swapping the column labels
+     for it leaves the rows below where they were. A header that grows on the
+     first click moves the row under the pointer mid-double-click. */
+  min-height: 3rem;
+}
+
+/* Selecting replaces the column labels with what acts on the selection: they
+   have nothing to sort while a selection is the subject. The select-all box
+   keeps its track so it does not jump. */
+.files-page-list-row.is-header.is-selecting {
+  grid-template-columns: 2.25rem minmax(0, 1fr);
+  background: color-mix(in srgb, var(--c-primary) 10%, var(--c-bg-raised));
+  color: var(--c-text);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.files-page-list-selection-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+}
+
+.files-page-list-selection-count {
+  font-size: 0.85rem;
+  font-weight: 600;
+  white-space: nowrap;
 }
 
 .files-page-list-row.is-header [data-sortable="true"] {
@@ -462,6 +496,9 @@
 .files-page-processing-tag {
   display: inline-flex;
   align-items: center;
+  /* Wrapping would make this row taller than the rest, and the list is
+     virtualised on a single row height. */
+  white-space: nowrap;
   gap: 0.3rem;
   padding: 0.05rem 0.4rem;
   border-radius: var(--radius-sm, 4px);
@@ -487,9 +524,6 @@
    state; a not-yet-processed file is also inert (no open, no menu) until its
    result exists, and reads that way. */
 .files-page-state-badge {
-  position: absolute;
-  top: 6px;
-  right: 6px;
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
@@ -500,6 +534,14 @@
   background: var(--c-surface-raised);
   border: 1px solid var(--c-border-subtle);
   color: var(--c-text-muted);
+}
+
+/* Cards only: a row is a grid whose nearest positioned ancestor is the scrolling
+   area, so the same rule would take the badge out of the row entirely. */
+.files-page-card .files-page-state-badge {
+  position: absolute;
+  top: 6px;
+  right: 6px;
 }
 
 .files-page-state-badge.is-failed {
@@ -534,10 +576,25 @@
 .files-page-folder-actions {
   display: flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.15rem;
   margin-left: 0.6rem;
   padding-left: 0.6rem;
   border-left: 1px solid var(--c-border-subtle);
+}
+
+/* The strip between the toolbar and the listing: state chips on the left, and
+   in grid view the selection's actions on the right, list view having a column
+   header to hold them. They sit here rather than in the toolbar because a
+   toolbar that reflows on selection moves every row under it, which breaks
+   double-click-to-open. Side padding matches the toolbar so the chips line up
+   with the count above them. */
+.files-page-above-table {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  /* Same space empty as full, so filling it moves nothing below. */
+  min-height: 2.5rem;
+  padding: 0 1.25rem;
 }
 
 /* State filter chips above a working folder's listing. */
@@ -545,7 +602,6 @@
   display: flex;
   align-items: center;
   gap: 0.4rem;
-  padding: 0 0 0.6rem;
   flex-wrap: wrap;
 }
 
@@ -575,19 +631,37 @@
 }
 
 /* Retry on a failed file's badge; must stay clickable inside an inert card. */
+/* The failed chip is the retry control: hovering it swaps its label for the
+   action. Both labels occupy one grid cell so the chip keeps the width of the
+   wider of them and the row's other cells never shift. */
 .files-page-state-retry {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.15rem;
-  margin-left: 0.3rem;
-  padding: 0;
+  display: inline-grid;
   font: inherit;
-  color: inherit;
-  background: none;
-  border: none;
-  text-decoration: underline;
   cursor: pointer;
   pointer-events: auto;
+}
+
+.files-page-state-retry-rest,
+.files-page-state-retry-hover {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.15rem;
+}
+
+.files-page-state-retry-hover {
+  visibility: hidden;
+}
+
+.files-page-state-retry:hover .files-page-state-retry-rest,
+.files-page-state-retry:focus-visible .files-page-state-retry-rest {
+  visibility: hidden;
+}
+
+.files-page-state-retry:hover .files-page-state-retry-hover,
+.files-page-state-retry:focus-visible .files-page-state-retry-hover {
+  visibility: visible;
 }
 
 /* A working folder's per-state counts, one dotted chip per non-zero state. */
@@ -596,6 +670,43 @@
   flex-wrap: wrap;
   gap: 0.35rem;
   margin-top: 0.3rem;
+}
+
+/* The row's height is fixed, so the breakdown stays on the one line the status
+   cell gives it and clips rather than wrapping. */
+.files-page-folder-stats.is-row {
+  margin-top: 0;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+/* One width whatever the row has to show, so every name in the column starts at
+   the same x and none of them move when a thumbnail resolves. */
+.files-page-list-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.files-page-list-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.25rem;
+}
+
+/* The state has a column of its own: beside the name it outgrows the cell and
+   runs under the actions. */
+.files-page-list-status {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .files-page-folder-stat {
@@ -993,6 +1104,19 @@
   padding: 0.6rem 1.1rem;
   border-top: 1px solid var(--c-border-subtle);
   background: var(--c-bg-raised);
+}
+
+.files-page-details-actions-row {
+  display: flex;
+  align-items: stretch;
+  gap: 0.4rem;
+}
+
+/* The panel is narrow enough that "Add {{count}} to workspace" wraps to two
+   lines. ActionIcon is square by default, so without this the icons keep their
+   own height and the row stops sharing a baseline. */
+.files-page-details-actions-row .mantine-ActionIcon-root {
+  height: auto;
 }
 
 /* Collapsible "File info" header (size/type/dates). */
@@ -1427,25 +1551,17 @@
   }
 }
 
-/* ── Tablet / narrow desktop (≤900px) ────────────────────────────────
-   As soon as the right-hand details panel disappears (at 800px) and
-   even slightly before, the toolbar gets crowded - the bulk-action
-   strip ("Add to workspace", "Quick view", "Move to…", "Remove") +
-   filter selects + grid/list toggle is too wide to fit. This block
-   collapses bulk-action button labels to icon-only, shrinks the
-   filter selects, and pins the view toggle so it never clips off the
-   right edge. */
+/* Below this width the toolbar holds the count, the filter and sort triggers
+   and the view toggle in the room the details panel used to leave it. What
+   follows tightens their spacing and collapses the controls that can afford to
+   lose their labels. */
 @media (max-width: 1024px) {
   .files-page-toolbar {
-    /* nowrap so "7 items" + "Select all" sit on the same row as the
-       filter dropdowns and view-toggle instead of stacking on three
-       separate lines. Runs to the app's mobile breakpoint: capping it at
-       900px left 901-1024px wrapping to two rows, which is the band the
-       mobile layout actually renders in.
-
-       Scrolls rather than clips. With a selection active the bulk-action
-       strip cannot fit any phone width, and `overflow-x: hidden` put those
-       buttons permanently out of reach behind the edge. */
+    /* nowrap so the count shares a row with the filter and sort triggers and
+       the view toggle. Runs to the app's own mobile breakpoint: stopping at
+       900px left 901-1024px wrapping to two rows, and that band is where the
+       mobile layout renders. Scrolls rather than clips, so nothing the row
+       cannot fit ends up unreachable behind its edge. */
     flex-wrap: nowrap;
     gap: 0.35rem;
     padding: 0.35rem 0.5rem;
@@ -1468,6 +1584,32 @@
   .files-page-toolbar-icon-btn {
     flex-shrink: 0;
   }
+
+  /* The desktop inset cost the state chips a chip's worth of room and wrapped
+     the last one onto a second line. */
+  .files-page-above-table {
+    padding: 0 0.5rem;
+  }
+
+  /* The gear alone: its label and caret cost more width here than the two
+     filter controls beside it. */
+  .files-page-folder-actions .files-page-toolbar-bulk-trigger {
+    padding-left: 0.4rem;
+    padding-right: 0.4rem;
+  }
+  .files-page-folder-actions
+    .files-page-toolbar-bulk-trigger
+    .mantine-Button-label,
+  .files-page-folder-actions
+    .files-page-toolbar-bulk-trigger
+    .mantine-Button-section[data-position="right"] {
+    display: none;
+  }
+  .files-page-folder-actions
+    .files-page-toolbar-bulk-trigger
+    .mantine-Button-section[data-position="left"] {
+    margin-right: 0;
+  }
   .files-page-toolbar-actions {
     flex-wrap: nowrap;
     gap: 0.3rem;
@@ -1480,15 +1622,6 @@
     min-width: 0;
     max-width: 7.5rem;
     width: auto !important;
-  }
-  /* The "Select all" / "Clear selection" toggle is a Mantine Button
-     directly inside .files-page-toolbar (NOT inside the actions group),
-     so the icon-only collapse from base styles doesn't apply to it.
-     Pin it to full text + nowrap so it never truncates to "Select al"
-     mid-word. */
-  .files-page-toolbar > .mantine-Button-root {
-    flex-shrink: 0;
-    white-space: nowrap;
   }
 }
 
@@ -1516,16 +1649,6 @@
   .files-page-grid {
     grid-template-columns: repeat(auto-fill, minmax(8rem, 1fr));
     gap: 0.5rem;
-  }
-  /* List view at tiny widths becomes cramped - drop the size + type + modified
-     columns and let name + actions take the room. */
-  .files-page-list-row {
-    grid-template-columns: 1.75rem minmax(0, 1fr) 2rem;
-  }
-  .files-page-list-row > :nth-child(3),
-  .files-page-list-row > :nth-child(4),
-  .files-page-list-row > :nth-child(5) {
-    display: none;
   }
 }
 

@@ -1,10 +1,4 @@
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { Checkbox, Loader, Menu, Tooltip } from "@mantine/core";
 import { Button } from "@app/ui/Button";
@@ -21,10 +15,8 @@ import {
 } from "@app/types/folder";
 import type { DiskFileEntry } from "@app/services/localFolderContents";
 import { usePolicyFileBadges } from "@app/hooks/usePolicyFileBadges";
-import {
-  useProcessingFolders,
-  type ProcessingFolderState,
-} from "@app/hooks/useProcessingFolders";
+import { useServerProcessingBlock } from "@app/hooks/useServerProcessingBlock";
+import { useProcessingFolders } from "@app/hooks/useProcessingFolders";
 import {
   useVirtualFileRows,
   rowHeightPx,
@@ -39,13 +31,13 @@ import {
 import { useDropTarget } from "@app/components/filesPage/useDropTarget";
 import { getFileOrigin } from "@app/components/filesPage/fileOrigin";
 import { FileOriginBadge } from "@app/components/filesPage/FileOriginBadge";
-import { FolderListRow } from "@app/components/filesPage/FolderListRow";
 import { FolderProcessingTag } from "@app/components/filesPage/FolderProcessingTag";
 import { FolderOriginBadge } from "@app/components/filesPage/FolderOriginBadge";
 import { DiskLinkBadge } from "@app/components/filesPage/DiskLinkBadge";
 import { FolderThumbnail } from "@app/components/filesPage/FolderThumbnail";
+import { useProcessingFolderCounts } from "@app/components/filesPage/processingFolderCounts";
 import { findFolderIcon } from "@app/components/filesPage/folderIcons";
-import { FolderAppearancePicker } from "@app/components/filesPage/FolderAppearancePicker";
+import { FolderMenu } from "@app/components/filesPage/FolderMenu";
 import {
   useLazyThumbnail,
   useDiskThumbnail,
@@ -147,6 +139,11 @@ interface FileGridProps {
    * so no item needs a context subscription that memoization would then fight.
    */
   onActionError?: (message: string) => void;
+  /**
+   * What acts on the current selection, built by the page that owns the
+   * handlers. Rendered in the list's column header, which grid view lacks.
+   */
+  selectionActions?: React.ReactNode;
 }
 
 /**
@@ -633,6 +630,7 @@ const FolderCard = React.memo(function FolderCard({
       actions.reportError(err, label),
     );
   const editsDisabled = kind === "server" && !serverReachable;
+  const processingBlock = useServerProcessingBlock();
   const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -731,289 +729,85 @@ const FolderCard = React.memo(function FolderCard({
         )}
       </div>
       <div className="files-page-card-actions">
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              ref={kebabRef}
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.folderMenu", "Folder actions")}
-            >
-              <Icon name="ellipsis-vertical" size={20} />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<Icon name="external-link" size={20} />}
-              onClick={onOpen}
-            >
-              {t("filesPage.open", "Open")}
-            </Menu.Item>
-            {editsHidden && (
-              <ProcessingMenuItems
-                processing={processing}
-                disabled={false}
-                onRun={() => void runProcessing("process folder now")}
-                onStop={() => void stopProcessing("pause processing folder")}
-                onStart={() => actions.startProcessing(folder)}
-                onResume={() => void resumeProcessing("resume processing")}
-                onRevertAll={
-                  kind === "local"
-                    ? () => actions.requestRevertAll(folder)
-                    : undefined
-                }
-                onEdit={() => actions.startProcessing(folder)}
-                onRemove={() =>
-                  void removeProcessing("remove processing folder")
-                }
-              />
-            )}
-            {/* Only a mount root can be removed; a subdirectory is the
-                disk's, and the app never deletes directories. */}
-            {editsHidden && folder.parentFolderId === null && (
-              <Menu.Item
-                color="red"
-                leftSection={<Icon name="trash" size={20} />}
-                onClick={() => actions.deleteFolder(folder)}
-              >
-                {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
-              </Menu.Item>
-            )}
-            {!editsHidden && (
-              <>
-                <Menu.Item
-                  leftSection={<Icon name="file-pen" size={20} />}
-                  onClick={() => actions.renameFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.rename", "Rename")}
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Label>
-                  {t("filesPage.appearance.title", "Appearance")}
-                </Menu.Label>
-                <FolderAppearancePicker
-                  folder={folder}
-                  onChange={(appearance) =>
-                    actions.changeFolderAppearance(folder.id, appearance)
-                  }
-                  disabled={editsDisabled}
-                />
-                <Menu.Divider />
-                <ProcessingMenuItems
-                  processing={processing}
-                  continuous={kind === "virtual"}
-                  disabled={editsDisabled}
-                  disabledHint={offlineHint}
-                  onRun={() => void runProcessing("process folder now")}
-                  onStop={() => void stopProcessing("pause processing folder")}
-                  onStart={() => actions.startProcessing(folder)}
-                  onResume={() => void resumeProcessing("resume processing")}
-                  onEdit={() => actions.startProcessing(folder)}
-                  onRemove={() =>
-                    void removeProcessing("remove processing folder")
-                  }
-                />
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<Icon name="trash" size={20} />}
-                  onClick={() => actions.deleteFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.deleteFolder", "Delete folder")}
-                </Menu.Item>
-              </>
-            )}
-          </Menu.Dropdown>
-        </Menu>
+        <FolderMenu
+          folder={folder}
+          processing={processing}
+          continuous={kind === "virtual"}
+          isMount={editsHidden}
+          canUnmount={folder.parentFolderId === null}
+          editsDisabled={editsDisabled}
+          editsDisabledHint={offlineHint}
+          processingBlock={processingBlock}
+          variant="kebab"
+          triggerRef={kebabRef}
+          onOpen={onOpen}
+          onStartProcessing={() => actions.startProcessing(folder)}
+          onRunProcessing={() => void runProcessing("process folder now")}
+          onStopProcessing={() =>
+            void stopProcessing("pause processing folder")
+          }
+          onResumeProcessing={() => void resumeProcessing("resume processing")}
+          onRemoveProcessing={() =>
+            void removeProcessing("remove processing folder")
+          }
+          onEditProcessing={() => actions.startProcessing(folder)}
+          onRevertAll={
+            kind === "local"
+              ? () => actions.requestRevertAll(folder)
+              : undefined
+          }
+          onRename={() => actions.renameFolder(folder)}
+          onChangeAppearance={(appearance) =>
+            actions.changeFolderAppearance(folder.id, appearance)
+          }
+          onDelete={() => actions.deleteFolder(folder)}
+        />
       </div>
     </div>
   );
 });
 
 /**
- * A working folder's live per-state counts on its card. Light polling: a handful of
- * processing folders at most, and the numbers are the card's whole story.
+ * A working folder's live per-state counts. The row variant clips, so the states
+ * worth acting on come first and the title repeats the whole breakdown.
  */
 function ProcessingFolderStats({
   recordId,
   listFiles,
+  variant = "card",
 }: {
   recordId: string;
   listFiles: (recordId: string) => Promise<{ state: string }[]>;
+  variant?: "card" | "row";
 }) {
   const { t } = useTranslation();
-  const [counts, setCounts] = useState<Record<string, number> | null>(null);
-  useEffect(() => {
-    let cancelled = false;
-    const tick = async () => {
-      const files = await listFiles(recordId).catch(() => []);
-      if (cancelled) return;
-      const next: Record<string, number> = {};
-      for (const file of files) {
-        next[file.state] = (next[file.state] ?? 0) + 1;
-      }
-      setCounts(next);
-    };
-    void tick();
-    const timer = setInterval(() => void tick(), 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(timer);
-    };
-  }, [recordId, listFiles]);
+  const counts = useProcessingFolderCounts(recordId, listFiles);
   if (!counts) return null;
-  const parts = (
-    [
-      ["done", t("filesPage.diskState.done", "Ready")],
-      ["processing", t("filesPage.diskState.processing", "Processing")],
-      ["failed", t("filesPage.diskState.failed", "Failed")],
-      ["waiting", t("filesPage.diskState.waiting", "Queued")],
-    ] as const
-  ).filter(([state]) => (counts[state] ?? 0) > 0);
+  const labels = {
+    done: t("filesPage.diskState.done", "Ready"),
+    processing: t("filesPage.diskState.processing", "Processing"),
+    failed: t("filesPage.diskState.failed", "Failed"),
+    waiting: t("filesPage.diskState.waiting", "Queued"),
+  } as const;
+  const order =
+    variant === "row"
+      ? (["failed", "done", "processing", "waiting"] as const)
+      : (["done", "processing", "failed", "waiting"] as const);
+  const parts = order.filter((state) => (counts[state] ?? 0) > 0);
   if (parts.length === 0) return null;
   return (
-    <div className="files-page-folder-stats">
-      {parts.map(([state, label]) => (
+    <div
+      className={`files-page-folder-stats${variant === "row" ? " is-row" : ""}`}
+      title={parts
+        .map((state) => `${counts[state]} ${labels[state]}`)
+        .join(" · ")}
+    >
+      {parts.map((state) => (
         <span key={state} className={`files-page-folder-stat is-${state}`}>
-          {counts[state]} {label}
+          {counts[state]} {labels[state]}
         </span>
       ))}
     </div>
-  );
-}
-
-/**
- * The processing entries of a folder's action menu, carried by every folder kind including
- * mounts, whose other edit actions are hidden. `continuous` marks a folder whose engine
- * processes arrivals on its own, where an explicit "process now" would have nothing to do.
- */
-export function ProcessingMenuItems({
-  processing,
-  continuous = false,
-  disabled,
-  disabledHint,
-  onRun,
-  onStop,
-  onStart,
-  onResume,
-  onRemove,
-  onEdit,
-  onRevertAll,
-}: {
-  processing: ProcessingFolderState | undefined;
-  continuous?: boolean;
-  disabled: boolean;
-  disabledHint?: string;
-  onRun: () => void;
-  onStop: () => void;
-  onStart: () => void;
-  onResume: () => void;
-  onRemove: () => void;
-  /** Open the setup dialog seeded from the existing record; absent hides Edit. */
-  onEdit?: () => void;
-  /** Restore every archived original in the folder; absent hides the entry. */
-  onRevertAll?: () => void;
-}) {
-  const { t } = useTranslation();
-  const heading = (
-    <Menu.Label>{t("filesPage.processing.section", "Processing")}</Menu.Label>
-  );
-  if (!processing) {
-    return (
-      <>
-        {heading}
-        <Menu.Item
-          leftSection={<Icon name="workflow" size={20} />}
-          onClick={onStart}
-          disabled={disabled}
-          title={disabled ? disabledHint : undefined}
-        >
-          {t("filesPage.processing.start", "Process files in this folder...")}
-        </Menu.Item>
-      </>
-    );
-  }
-  if (!processing.enabled) {
-    // Paused, not gone: the pair kept its history, so resuming never re-runs
-    // what was already done. Removing is the destructive option, named as such.
-    return (
-      <>
-        {heading}
-        <Menu.Item
-          leftSection={<Icon name="play" size={20} />}
-          onClick={onResume}
-          disabled={disabled}
-          title={disabled ? disabledHint : undefined}
-        >
-          {t("filesPage.processing.resume", "Resume processing")}
-        </Menu.Item>
-        {onEdit && (
-          <Menu.Item
-            leftSection={<Icon name="sliders-horizontal" size={20} />}
-            onClick={onEdit}
-            disabled={disabled}
-            title={disabled ? disabledHint : undefined}
-          >
-            {t("filesPage.processing.edit", "Edit processing...")}
-          </Menu.Item>
-        )}
-        {onRevertAll && (
-          <Menu.Item
-            leftSection={<Icon name="rotate-ccw-clock" size={20} />}
-            onClick={onRevertAll}
-            disabled={disabled}
-            title={disabled ? disabledHint : undefined}
-          >
-            {t("filesPage.processing.restoreAll", "Restore all originals")}
-          </Menu.Item>
-        )}
-        <Menu.Item
-          color="red"
-          leftSection={<Icon name="workflow" size={20} />}
-          onClick={onRemove}
-          disabled={disabled}
-          title={disabled ? disabledHint : undefined}
-        >
-          {t("filesPage.processing.remove", "Remove processing")}
-        </Menu.Item>
-      </>
-    );
-  }
-  return (
-    <>
-      {heading}
-      {!continuous && (
-        <Menu.Item
-          leftSection={<Icon name="rotate-ccw" size={20} />}
-          onClick={onRun}
-        >
-          {t("filesPage.processing.sweep", "Retry failed files")}
-        </Menu.Item>
-      )}
-      <Menu.Item leftSection={<Icon name="pause" size={20} />} onClick={onStop}>
-        {t("filesPage.processing.stop", "Pause processing")}
-      </Menu.Item>
-      {onEdit && (
-        <Menu.Item
-          leftSection={<Icon name="sliders-horizontal" size={20} />}
-          onClick={onEdit}
-        >
-          {t("filesPage.processing.edit", "Edit processing...")}
-        </Menu.Item>
-      )}
-      {onRevertAll && (
-        <Menu.Item
-          leftSection={<Icon name="rotate-ccw-clock" size={20} />}
-          onClick={onRevertAll}
-        >
-          {t("filesPage.processing.restoreAll", "Restore all originals")}
-        </Menu.Item>
-      )}
-    </>
   );
 }
 
@@ -1044,24 +838,32 @@ function FileStateBadge({
     );
   }
   if (state === "failed") {
+    const failed = t("filesPage.diskState.failed", "Failed");
+    if (!onRetry) {
+      return <span className="files-page-state-badge is-failed">{failed}</span>;
+    }
+    const retryHint = t("filesPage.diskState.retryHint", "Run this file again");
     return (
-      <span className="files-page-state-badge is-failed">
-        {t("filesPage.diskState.failed", "Failed")}
-        {onRetry && (
-          <button
-            type="button"
-            className="files-page-state-retry"
-            onClick={(e) => {
-              e.stopPropagation();
-              onRetry();
-            }}
-            title={t("filesPage.diskState.retryHint", "Run this file again")}
-          >
-            <Icon name="rotate-ccw" size="0.8rem" />
-            {t("filesPage.diskState.retry", "Retry")}
-          </button>
-        )}
-      </span>
+      <button
+        type="button"
+        className="files-page-state-badge is-failed files-page-state-retry"
+        onClick={(e) => {
+          e.stopPropagation();
+          onRetry();
+        }}
+        title={retryHint}
+        aria-label={`${failed}: ${retryHint}`}
+      >
+        {/* Both labels share one grid cell, so the chip is as wide as the wider
+            of them and swapping on hover moves nothing around it. */}
+        <span className="files-page-state-retry-rest" aria-hidden="true">
+          {failed}
+        </span>
+        <span className="files-page-state-retry-hover" aria-hidden="true">
+          <Icon name="rotate-ccw" size="0.8rem" />
+          {t("filesPage.diskState.retry", "Retry")}
+        </span>
+      </button>
     );
   }
   return (
@@ -1440,6 +1242,7 @@ function ListView({
   selectedFileIds,
   activeWorkspaceFileIds,
   onSetSelection,
+  selectionActions,
   onSaveToServer,
   onVersionHistory,
   onDownloadFile,
@@ -1475,6 +1278,7 @@ function ListView({
     visibleFileIds.every((id) => selectedFileIds.has(id));
   const someSelected =
     !allSelected && visibleFileIds.some((id) => selectedFileIds.has(id));
+  const selecting = Boolean(selectionActions) && selectedFileIds.size > 0;
 
   const sortIndicator = (asc: FilesPageSortMode, desc: FilesPageSortMode) => {
     if (sortMode === asc) return " ↑";
@@ -1508,7 +1312,10 @@ function ListView({
     <div className="files-page-list" role="grid" ref={setContainer}>
       {/* Each direct child is a columnheader: a role="row" may only own cells, so
           the sort controls and the select-all box have to sit inside one. */}
-      <div className="files-page-list-row is-header" role="row">
+      <div
+        className={`files-page-list-row is-header${selecting ? " is-selecting" : ""}`}
+        role="row"
+      >
         {onSetSelection && visibleFileIds.length > 0 ? (
           <span role="columnheader">
             <Checkbox
@@ -1529,26 +1336,44 @@ function ListView({
         ) : (
           <span aria-hidden="true" />
         )}
-        <span role="columnheader">
-          <span {...headerProps("name-asc", "name-desc")}>
-            {t("filesPage.column.name", "Name")}
-            {sortIndicator("name-asc", "name-desc")}
+        {selecting ? (
+          <span role="columnheader" className="files-page-list-selection-bar">
+            <span className="files-page-list-selection-count">
+              {t("filesPage.selectedCount", "{{count}} selected", {
+                count: selectedFileIds.size,
+              })}
+            </span>
+            {selectionActions}
           </span>
-        </span>
-        <span role="columnheader">{t("filesPage.column.type", "Type")}</span>
-        <span role="columnheader">
-          <span {...headerProps("size-asc", "size-desc")}>
-            {t("filesPage.column.size", "Size")}
-            {sortIndicator("size-asc", "size-desc")}
-          </span>
-        </span>
-        <span role="columnheader">
-          <span {...headerProps("modified-asc", "modified-desc")}>
-            {t("filesPage.column.modified", "Modified")}
-            {sortIndicator("modified-asc", "modified-desc")}
-          </span>
-        </span>
-        <span aria-hidden="true" />
+        ) : (
+          <>
+            <span role="columnheader">
+              <span {...headerProps("name-asc", "name-desc")}>
+                {t("filesPage.column.name", "Name")}
+                {sortIndicator("name-asc", "name-desc")}
+              </span>
+            </span>
+            <span role="columnheader">
+              {t("filesPage.column.type", "Type")}
+            </span>
+            <span role="columnheader">
+              <span {...headerProps("size-asc", "size-desc")}>
+                {t("filesPage.column.size", "Size")}
+                {sortIndicator("size-asc", "size-desc")}
+              </span>
+            </span>
+            <span role="columnheader">
+              <span {...headerProps("modified-asc", "modified-desc")}>
+                {t("filesPage.column.modified", "Modified")}
+                {sortIndicator("modified-asc", "modified-desc")}
+              </span>
+            </span>
+            <span role="columnheader">
+              {t("filesPage.column.status", "Status")}
+            </span>
+            <span aria-hidden="true" />
+          </>
+        )}
       </div>
       {padTop > 0 && (
         <div
@@ -1642,6 +1467,7 @@ const FolderRow = React.memo(function FolderRow({
     disable: disableProcessing,
     remove: removeProcessingFolder,
     sweep: sweepProcessing,
+    listFiles: listProcessingFiles,
   } = useProcessingFolders();
   const processing = processingStateFor(folder);
   // Each action surfaces its own failure the way a failed drop does; the
@@ -1663,6 +1489,7 @@ const FolderRow = React.memo(function FolderRow({
       actions.reportError(err, label),
     );
   const editsDisabled = kind === "server" && !serverReachable;
+  const processingBlock = useServerProcessingBlock();
   const editsHidden = kind === "local";
   const offlineHint = t(
     "filesPage.offlineNoFolderEdits",
@@ -1683,116 +1510,8 @@ const FolderRow = React.memo(function FolderRow({
   });
 
   return (
-    <FolderListRow
-      folder={folder}
-      fileCount={fileCount}
-      parentPath={parentPath}
-      status={
-        processing ? (
-          <FolderProcessingTag enabled={processing.enabled} />
-        ) : undefined
-      }
-      trailing={
-        <Menu shadow="md" position="bottom-end" withinPortal>
-          <Menu.Target>
-            <ActionIcon
-              ref={kebabRef}
-              variant="tertiary"
-              size="sm"
-              onClick={(e) => e.stopPropagation()}
-              aria-label={t("filesPage.folderMenu", "Folder actions")}
-            >
-              <Icon name="ellipsis-vertical" size={20} />
-            </ActionIcon>
-          </Menu.Target>
-          <Menu.Dropdown>
-            <Menu.Item
-              leftSection={<Icon name="external-link" size={20} />}
-              onClick={onOpen}
-            >
-              {t("filesPage.open", "Open")}
-            </Menu.Item>
-            {editsHidden && (
-              <ProcessingMenuItems
-                processing={processing}
-                disabled={false}
-                onRun={() => void runProcessing("process folder now")}
-                onStop={() => void stopProcessing("pause processing folder")}
-                onStart={() => actions.startProcessing(folder)}
-                onResume={() => void resumeProcessing("resume processing")}
-                onRevertAll={
-                  kind === "local"
-                    ? () => actions.requestRevertAll(folder)
-                    : undefined
-                }
-                onEdit={() => actions.startProcessing(folder)}
-                onRemove={() =>
-                  void removeProcessing("remove processing folder")
-                }
-              />
-            )}
-            {/* Only a mount root can be removed; a subdirectory is the
-                disk's, and the app never deletes directories. */}
-            {editsHidden && folder.parentFolderId === null && (
-              <Menu.Item
-                color="red"
-                leftSection={<Icon name="trash" size={20} />}
-                onClick={() => actions.deleteFolder(folder)}
-              >
-                {t("filesPage.removeLocalFolder", "Unmount from Stirling")}
-              </Menu.Item>
-            )}
-            {!editsHidden && (
-              <>
-                <Menu.Item
-                  leftSection={<Icon name="file-pen" size={20} />}
-                  onClick={() => actions.renameFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.rename", "Rename")}
-                </Menu.Item>
-                <Menu.Divider />
-                <Menu.Label>
-                  {t("filesPage.appearance.title", "Appearance")}
-                </Menu.Label>
-                <FolderAppearancePicker
-                  folder={folder}
-                  onChange={(appearance) =>
-                    actions.changeFolderAppearance(folder.id, appearance)
-                  }
-                  disabled={editsDisabled}
-                />
-                <Menu.Divider />
-                <ProcessingMenuItems
-                  processing={processing}
-                  continuous={kind === "virtual"}
-                  disabled={editsDisabled}
-                  disabledHint={offlineHint}
-                  onRun={() => void runProcessing("process folder now")}
-                  onStop={() => void stopProcessing("pause processing folder")}
-                  onStart={() => actions.startProcessing(folder)}
-                  onResume={() => void resumeProcessing("resume processing")}
-                  onEdit={() => actions.startProcessing(folder)}
-                  onRemove={() =>
-                    void removeProcessing("remove processing folder")
-                  }
-                />
-                <Menu.Divider />
-                <Menu.Item
-                  color="red"
-                  leftSection={<Icon name="trash" size={20} />}
-                  onClick={() => actions.deleteFolder(folder)}
-                  disabled={editsDisabled}
-                  title={editsDisabled ? offlineHint : undefined}
-                >
-                  {t("filesPage.deleteFolder", "Delete folder")}
-                </Menu.Item>
-              </>
-            )}
-          </Menu.Dropdown>
-        </Menu>
-      }
+    <div
+      role="row"
       tabIndex={0}
       draggable
       onDragStart={(e) => {
@@ -1814,8 +1533,111 @@ const FolderRow = React.memo(function FolderRow({
       onKeyDown={(e) => {
         if (e.key === "Enter") onOpen();
       }}
-      className={isDropTarget ? "is-drop-target" : undefined}
-    />
+      className={`files-page-list-row${isDropTarget ? " is-drop-target" : ""}`}
+    >
+      <span aria-hidden="true" />
+      {/* Each direct child is a gridcell: a role="row" may only own cells, so the
+          actions menu has to sit inside one. */}
+      <span
+        role="gridcell"
+        style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+      >
+        <FolderThumbnail
+          color={folder.color}
+          size="row"
+          iconGlyph={findFolderIcon(folder.icon)?.glyph}
+        />
+        <span
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            minWidth: 0,
+            overflow: "hidden",
+          }}
+        >
+          <span style={{ overflow: "hidden", textOverflow: "ellipsis" }}>
+            {folder.name}
+          </span>
+          {parentPath && (
+            <span
+              className="files-page-card-path"
+              style={{ marginTop: 0 }}
+              title={parentPath}
+            >
+              {t("filesPage.inPath", "in {{path}}", { path: parentPath })}
+            </span>
+          )}
+        </span>
+        <FolderOriginBadge folder={folder} />
+      </span>
+      <span role="gridcell">
+        {processing ? (
+          <span className="files-page-processing-tag">
+            {processing.enabled
+              ? t("filesPage.processing.active", "Processing folder")
+              : t("filesPage.processing.paused", "Processing paused")}
+          </span>
+        ) : kind === "virtual" ? (
+          t("filesPage.folderKind.virtual", "Browser folder")
+        ) : kind === "local" ? (
+          t("filesPage.folderKind.local", "Local folder")
+        ) : (
+          t("filesPage.folder", "Folder")
+        )}
+      </span>
+      <span role="gridcell">
+        {fileCount === 0
+          ? "-"
+          : t("filesPage.folderItems", "{{count}} items", { count: fileCount })}
+      </span>
+      <span role="gridcell">
+        {getFileDate({ lastModified: folder.updatedAt })}
+      </span>
+      <span role="gridcell" className="files-page-list-status">
+        {processing && (
+          <ProcessingFolderStats
+            recordId={processing.id}
+            listFiles={listProcessingFiles}
+            variant="row"
+          />
+        )}
+      </span>
+      <span role="gridcell">
+        <FolderMenu
+          folder={folder}
+          processing={processing}
+          continuous={kind === "virtual"}
+          isMount={editsHidden}
+          canUnmount={folder.parentFolderId === null}
+          editsDisabled={editsDisabled}
+          editsDisabledHint={offlineHint}
+          processingBlock={processingBlock}
+          variant="kebab"
+          triggerRef={kebabRef}
+          onOpen={onOpen}
+          onStartProcessing={() => actions.startProcessing(folder)}
+          onRunProcessing={() => void runProcessing("process folder now")}
+          onStopProcessing={() =>
+            void stopProcessing("pause processing folder")
+          }
+          onResumeProcessing={() => void resumeProcessing("resume processing")}
+          onRemoveProcessing={() =>
+            void removeProcessing("remove processing folder")
+          }
+          onEditProcessing={() => actions.startProcessing(folder)}
+          onRevertAll={
+            kind === "local"
+              ? () => actions.requestRevertAll(folder)
+              : undefined
+          }
+          onRename={() => actions.renameFolder(folder)}
+          onChangeAppearance={(appearance) =>
+            actions.changeFolderAppearance(folder.id, appearance)
+          }
+          onDelete={() => actions.deleteFolder(folder)}
+        />
+      </span>
+    </div>
   );
 });
 
@@ -1934,22 +1756,21 @@ const FileRow = React.memo(function FileRow({
           minWidth: 0,
         }}
       >
-        {resolvedThumbnail ? (
-          <img
-            src={resolvedThumbnail}
-            alt=""
-            // draggable={false} so row's onDragStart fires, not native image drag.
-            draggable={false}
-            style={{
-              width: "1.5rem",
-              height: "1.5rem",
-              objectFit: "cover",
-              borderRadius: "0.25rem",
-            }}
-          />
-        ) : (
-          <Icon name="file-pdf" size={20} />
-        )}
+        {/* Fixed slot: the fallback and the thumbnail are different sizes, and a
+            thumbnail arrives after first paint, so sizing to the content would
+            leave the names ragged and then shift them as each one landed. */}
+        <span className="files-page-list-thumb">
+          {resolvedThumbnail ? (
+            <img
+              src={resolvedThumbnail}
+              alt=""
+              // draggable={false} so row's onDragStart fires, not native image drag.
+              draggable={false}
+            />
+          ) : (
+            <Icon name="file-pdf" size={20} />
+          )}
+        </span>
         <span
           style={{
             display: "flex",
@@ -1980,10 +1801,6 @@ const FileRow = React.memo(function FileRow({
         <FileOriginBadge origin={getFileOrigin(file)} compact />
         <DiskLinkBadge file={file} compact />
         <PolicyBadgeRow policies={badges} />
-        <FileStateBadge
-          state={processingState}
-          onRetry={() => actions.retryFile(file.name)}
-        />
         {isInWorkspace && (
           <span className="files-page-row-open-pill">
             <span className="files-page-card-open-dot" />
@@ -1994,6 +1811,12 @@ const FileRow = React.memo(function FileRow({
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{fileSize}</span>
       <span role="gridcell">{fileDate}</span>
+      <span role="gridcell" className="files-page-list-status">
+        <FileStateBadge
+          state={processingState}
+          onRetry={() => actions.retryFile(file.name)}
+        />
+      </span>
       <span role="gridcell">
         <FileActionsMenu
           file={file}
@@ -2180,23 +2003,15 @@ const DiskFileRow = React.memo(function DiskFileRow({
           minWidth: 0,
         }}
       >
-        {thumbnail ? (
-          <img
-            src={thumbnail}
-            alt=""
-            draggable={false}
-            style={{
-              width: "1.5rem",
-              height: "1.5rem",
-              objectFit: "cover",
-              borderRadius: "0.25rem",
-            }}
-          />
-        ) : ext === "PDF" ? (
-          <Icon name="file-pdf" size={20} />
-        ) : (
-          <Icon name="file" size={20} />
-        )}
+        <span className="files-page-list-thumb">
+          {thumbnail ? (
+            <img src={thumbnail} alt="" draggable={false} />
+          ) : ext === "PDF" ? (
+            <Icon name="file-pdf" size={20} />
+          ) : (
+            <Icon name="file" size={20} />
+          )}
+        </span>
         <span
           style={{
             overflow: "hidden",
@@ -2215,15 +2030,17 @@ const DiskFileRow = React.memo(function DiskFileRow({
           )}
           compact
         />
-        <FileStateBadge
-          state={state}
-          onRetry={() => actions.retryFile(entry.name)}
-        />
       </span>
       <span role="gridcell">{ext || t("filesPage.file", "File")}</span>
       <span role="gridcell">{formatFileSize(entry.sizeBytes)}</span>
       <span role="gridcell">
         {getFileDate({ lastModified: entry.lastModified })}
+      </span>
+      <span role="gridcell" className="files-page-list-status">
+        <FileStateBadge
+          state={state}
+          onRetry={() => actions.retryFile(entry.name)}
+        />
       </span>
       <span role="gridcell">
         <Menu shadow="md" position="bottom-end" withinPortal>

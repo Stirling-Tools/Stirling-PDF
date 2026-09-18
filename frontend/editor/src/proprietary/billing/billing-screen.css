@@ -12,6 +12,11 @@
 }
 
 .billing-page__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
   flex-shrink: 0;
   padding: 1.75rem 2.5rem 0.75rem;
 }

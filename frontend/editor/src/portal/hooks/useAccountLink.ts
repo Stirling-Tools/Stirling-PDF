@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import { errorMessage } from "@portal/api/http";
 import { isSaasSupabaseConfigured } from "@portal/auth/saasSupabase";
 import { fetchStatus, unlinkInstance, type LinkStatus } from "@portal/api/link";
@@ -20,7 +20,7 @@ export interface UseAccountLink {
   /** Unlink this instance. */
   unlink: () => Promise<void>;
   /** Re-read the status, for when something outside this hook changed it. */
-  refresh: () => Promise<void>;
+  refresh: (force?: boolean) => Promise<void>;
 }
 
 export function useAccountLink(): UseAccountLink {
@@ -31,22 +31,30 @@ export function useAccountLink(): UseAccountLink {
   const [phase, setPhase] = useState<LinkPhase>("idle");
   const [error, setError] = useState<string | null>(null);
 
-  const refresh = useCallback(async () => {
-    setStatusError(null);
-    try {
-      const s = await fetchStatus();
-      setStatus(s);
-      // A linked instance is at least linked-free; subscription comes from the wallet.
-      if (s.linked) applyLinkFacts(true, false);
-      // Success only: marking this in the catch would read "could not ask" as "not linked".
-      markStatusKnown();
-    } catch (e) {
-      setStatusError(errorMessage(e));
-    }
-  }, [applyLinkFacts, markStatusKnown]);
+  const previousLinked = useRef<boolean | null>(null);
+  const refresh = useCallback(
+    async (force = false) => {
+      setStatusError(null);
+      try {
+        const s = await fetchStatus(force);
+        setStatus(s);
+        // A linked instance is at least linked-free; subscription comes from the wallet.
+        if (s.linked && previousLinked.current !== true)
+          applyLinkFacts(true, false);
+        previousLinked.current = s.linked;
+        // Success only: marking this in the catch would read "could not ask" as "not linked".
+        markStatusKnown();
+      } catch (e) {
+        setStatusError(errorMessage(e));
+      }
+    },
+    [applyLinkFacts, markStatusKnown],
+  );
 
   useEffect(() => {
     void refresh();
+    const timer = window.setInterval(() => void refresh(), 60_000);
+    return () => window.clearInterval(timer);
   }, [refresh]);
 
   const unlink = useCallback(async () => {
@@ -55,6 +63,7 @@ export function useAccountLink(): UseAccountLink {
     try {
       await unlinkInstance();
       setStatus({ linked: false, name: null });
+      previousLinked.current = false;
       setPhase("idle");
       applyLinkFacts(false, false);
     } catch (e) {
