@@ -40,6 +40,41 @@ test.describe("Viewer PDF.js worker elimination & performance verification", () 
     ).toEqual([]);
   });
 
+  // Layer detection runs on panel open, not on document open, so plain viewer
+  // opens stay pdf.js-free. Regression net: 526 KiB of pdf.js transfer per
+  // open before the deferral.
+  test("opening a PDF does not download pdf.worker or vendor-pdfjs", async ({
+    page,
+  }) => {
+    test.setTimeout(60_000);
+
+    const workerRequests: string[] = [];
+    page.on("request", (req) => {
+      const url = req.url();
+      if (isPdfWorkerOrPdfJsRequest(url)) {
+        workerRequests.push(url);
+      }
+    });
+
+    await page.goto("/");
+    await page.waitForLoadState("domcontentloaded");
+
+    const fileInput = page.locator('[data-testid="file-input"]').first();
+    await fileInput.setInputFiles(
+      path.join(FIXTURES_DIR, "multi-page-sample.pdf"),
+    );
+
+    await expect(page.locator('[data-page-index="0"]').first()).toBeVisible({
+      timeout: 30_000,
+    });
+    await page.waitForTimeout(2_000);
+
+    expect(
+      workerRequests,
+      `Expected zero pdf.worker or vendor-pdfjs requests when opening a PDF, but observed:\n${workerRequests.join("\n")}`,
+    ).toEqual([]);
+  });
+
   // Layers intentionally stay on pdf.js: the sidebar parses OCG structures
   // that need a real PDF parser, so opening it loads the worker on demand.
   // This test proves detection works on a compressed-catalog file instead of
