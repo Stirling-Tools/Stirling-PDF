@@ -376,6 +376,28 @@ public class GlobalExceptionHandler {
     }
 
     /**
+     * Handle a damaged document that every available repair tool has declined.
+     *
+     * @param ex the PdfUnrepairableException
+     * @param request the HTTP servlet request
+     * @return ProblemDetail with HTTP 422 UNPROCESSABLE_ENTITY: the request was understood and the
+     *     tools ran, the document is simply beyond repair
+     */
+    @ExceptionHandler(PdfUnrepairableException.class)
+    public ResponseEntity<ProblemDetail> handlePdfUnrepairable(
+            PdfUnrepairableException ex, HttpServletRequest request) {
+        // A verdict on the document, not a fault on this server: without its own handler it fell to
+        // the catch-all, which answers 500 and logs at ERROR, so every refusal read as an outage.
+        logException("warn", "PDF Unrepairable", request, ex, ex.getErrorCode());
+
+        String title =
+                getLocalizedMessage(
+                        "error.pdfUnrepairable.title", ErrorTitles.PDF_UNREPAIRABLE_DEFAULT);
+        return createProblemDetailResponse(
+                ex, HttpStatus.UNPROCESSABLE_ENTITY, ErrorTypes.PDF_UNREPAIRABLE, title, request);
+    }
+
+    /**
      * Handle FFmpeg dependency missing errors when media conversion endpoints are invoked.
      *
      * @param ex the FfmpegRequiredException
@@ -1482,6 +1504,7 @@ public class GlobalExceptionHandler {
         static final String INVALID_ARGUMENT = "/errors/invalid-argument";
         static final String IO_ERROR = "/errors/io-error";
         static final String COMPLIANCE_NOT_MET = "/errors/compliance-not-met";
+        static final String PDF_UNREPAIRABLE = "/errors/pdf-unrepairable";
         static final String UNEXPECTED = "/errors/unexpected";
     }
 
@@ -1495,6 +1518,7 @@ public class GlobalExceptionHandler {
         static final String PDF_ENCRYPTION_DEFAULT = "PDF Encryption Error";
         static final String APPLICATION_DEFAULT = "Application Error";
         static final String COMPLIANCE_NOT_MET_DEFAULT = "Compliance Standard Not Met";
+        static final String PDF_UNREPAIRABLE_DEFAULT = "PDF Could Not Be Repaired";
         static final String CBR_FORMAT_DEFAULT = "Invalid CBR File Format";
         static final String CBZ_FORMAT_DEFAULT = "Invalid CBZ File Format";
         static final String EML_FORMAT_DEFAULT = "Invalid EML File Format";
