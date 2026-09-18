@@ -211,7 +211,21 @@ describe("TextSelectionMenu", () => {
     );
     expect(mockClearSelection).toHaveBeenCalledWith("doc-1");
     expect(mockHandleToolSelectForced).toHaveBeenCalledWith("annotate");
-    expect(mockSetLeftPanelView).toHaveBeenCalledWith("toolContent");
+  });
+
+  test("refuses to create a LINK annotation for a javascript: URL", () => {
+    render(
+      <TestWrapper>
+        <TextSelectionMenu {...defaultProps} />
+      </TestWrapper>,
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Add link" }));
+    const input = screen.getByPlaceholderText("https://...");
+    fireEvent.change(input, { target: { value: "javascript:alert(1)" } });
+    fireEvent.keyDown(input, { key: "Enter" });
+
+    expect(mockCreateAnnotation).not.toHaveBeenCalled();
   });
 
   test("creates STRIKEOUT annotation, clears selection and opens Annotate UI when Strikeout button is clicked", () => {

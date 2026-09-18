@@ -24,6 +24,7 @@ import {
 } from "@app/hooks/tools/redact/useRedactParameters";
 import { MARKUP_ANNOTATION_COLORS } from "@app/components/viewer/annotationDefaults";
 import { alert } from "@app/components/toast";
+import { getExternalHref } from "@app/utils/externalUrl";
 import "@app/components/viewer/TextSelectionMenu.css";
 
 export type TextSelectionMenuProps = SelectionSelectionMenuProps & {
@@ -214,6 +215,10 @@ function TextSelectionMenuInner({
     (url: string) => {
       const uri = url.trim();
       if (!documentId || !uri) return;
+      // User input is untrusted: refuse URI schemes the viewer itself would
+      // not open, so javascript: and friends cannot ride out in the PDF. The
+      // original string is persisted verbatim once it passes the allowlist.
+      if (!getExternalHref(uri)) return;
       const selections = selection?.getFormattedSelection(documentId) ?? [];
       if (!selections.length) return;
 
