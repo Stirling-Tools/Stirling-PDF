@@ -17,8 +17,11 @@ import type { ErasedToolParams } from "@app/hooks/tools/shared/toolOperationType
 import type { WorkingToolStep } from "@app/hooks/tools/shared/toolAutomation";
 import {
   buildStepParameters,
+  customCallUnknownReference,
   emptyOperationValues,
   operationById,
+  operationFormValid,
+  type ExternalApiStepParams,
   type StepOperation,
 } from "@portal/components/policies/stepOperations";
 
@@ -54,9 +57,39 @@ export function stepOperation(
   return typeof id === "string" && id ? operationById(id) : undefined;
 }
 
-/** True once the step can actually run: an operation chosen and an account selected. */
-export function integrationStepConfigured(step: WorkingToolStep): boolean {
+/**
+ * True once the step can actually run: an operation chosen, an account selected, and every
+ * operator answer one the backend would accept - a bad size cap or a `{{reference}}` the run
+ * cannot fill in fails every run, so it must not be saveable. `stepPosition` (1-based) lets the
+ * check reject steps.N references at or past this step.
+ */
+export function integrationStepConfigured(
+  step: WorkingToolStep,
+  stepPosition?: number,
+): boolean {
   if (!isIntegrationStep(step)) return true;
   const params = step.params as Record<string, unknown>;
-  return Boolean(params.operationId) && Boolean(params.connectionId);
+  if (!params.operationId || !params.connectionId) return false;
+  const op = operationById(String(params.operationId));
+  // A step authored through the API with an unknown operationId round-trips untouched.
+  if (!op) return true;
+  const values = decodeOperationValues(params.operationValues);
+  if (!operationFormValid(op, values, undefined, stepPosition)) return false;
+  if (op.custom) {
+    const custom = step.params as unknown as ExternalApiStepParams;
+    return customCallUnknownReference(custom, undefined, stepPosition) === null;
+  }
+  return true;
+}
+
+function decodeOperationValues(raw: unknown): Record<string, string> {
+  if (typeof raw !== "string" || raw === "") return {};
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    return parsed && typeof parsed === "object"
+      ? (parsed as Record<string, string>)
+      : {};
+  } catch {
+    return {};
+  }
 }
