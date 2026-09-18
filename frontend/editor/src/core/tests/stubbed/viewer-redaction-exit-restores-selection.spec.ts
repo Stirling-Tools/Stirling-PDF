@@ -53,7 +53,11 @@ test("exiting redaction restores text selection", async ({ page }) => {
   await expect
     .poll(async () => (await viewerMode(page)).cursor, { timeout: 15_000 })
     .toBe("crosshair");
-  expect((await viewerMode(page)).touchScroll).toBe("off");
+  // cursor and touchScroll settle independently, so poll each rather than
+  // reading touchScroll one-shot the instant the cursor flips.
+  await expect
+    .poll(async () => (await viewerMode(page)).touchScroll, { timeout: 15_000 })
+    .toBe("off");
 
   const exitButton = page
     .getByRole("button", { name: /exit redaction mode/i })
@@ -67,7 +71,9 @@ test("exiting redaction restores text selection", async ({ page }) => {
   await expect
     .poll(async () => (await viewerMode(page)).touchScroll, { timeout: 15_000 })
     .toBe("on");
-  expect((await viewerMode(page)).cursor).toBe("auto");
+  await expect
+    .poll(async () => (await viewerMode(page)).cursor, { timeout: 15_000 })
+    .toBe("auto");
 
   const box = await firstPage.boundingBox();
   if (!box) throw new Error("Page wrapper has no bounding box");
